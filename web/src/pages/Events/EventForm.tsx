@@ -927,7 +927,7 @@ export const EventForm: React.FC = () => {
     }
 
     if (!user) {
-      setError("Usuario no autenticado.");
+      setError(t("events:form.error_unauthenticated"));
       return;
     }
 
@@ -945,7 +945,7 @@ export const EventForm: React.FC = () => {
         });
 
         if (isUnavailable) {
-          setError("La fecha seleccionada no está disponible.");
+          setError(t("events:form.error_unavailable_date"));
           setIsLoading(false);
           return;
         }
@@ -966,7 +966,7 @@ export const EventForm: React.FC = () => {
       } else {
         const newEvent = await eventService.create(payload);
         if (!newEvent || !newEvent.id)
-          throw new Error("Error al crear el evento.");
+          throw new Error(t("events:form.error_create"));
         eventId = newEvent.id;
       }
 
@@ -1017,7 +1017,7 @@ export const EventForm: React.FC = () => {
     } catch (err: unknown) {
       logError("Error saving event", err);
       setError(
-        err instanceof Error ? err.message : "Error al guardar el evento. Por favor intenta de nuevo.",
+        err instanceof Error ? err.message : t("events:form.error_save"),
       );
     } finally {
       setIsLoading(false);
@@ -1083,19 +1083,19 @@ export const EventForm: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }, { label: id ? 'Editar Evento' : 'Nueva Cotización' }]} />
+      <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }, { label: id ? t('events:form.title_edit') : t('events:form.title_new') }]} />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center">
           <button
             type="button"
             onClick={() => navigate("/calendar")}
             className="mr-4 p-2 rounded-full hover:bg-surface-alt text-text-secondary"
-            aria-label="Volver al calendario"
+            aria-label={t("events:form.back_to_calendar_aria")}
           >
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </button>
           <h1 className="text-2xl font-bold tracking-tight text-text">
-            {id ? "Editar Evento" : "Nuevo Evento"}
+            {id ? t("events:form.title_edit") : t("events:form.title_new")}
           </h1>
         </div>
         {id && (
@@ -1105,12 +1105,12 @@ export const EventForm: React.FC = () => {
             className="inline-flex items-center px-4 py-2 border border-border rounded-xl shadow-xs text-sm font-medium text-text-secondary bg-card hover:bg-surface-alt transition-colors"
           >
             <FileText className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
-            Ver Resumen
+            {t("events:list.actions.view_summary")}
           </button>
         )}
       </div>
 
-      <nav aria-label="Progreso del formulario de evento" className="mb-8">
+      <nav aria-label={t("events:form.progress_aria")} className="mb-8">
         <div className="relative">
           {/* Progress Line */}
           <div
@@ -1197,12 +1197,8 @@ export const EventForm: React.FC = () => {
               <AlertCircle className="h-6 w-6 text-error" aria-hidden="true" />
             </div>
             <div>
-              <p className="text-sm text-error font-black uppercase tracking-tight mb-2">
-                Errores en el formulario
-              </p>
-              <p className="text-sm text-text-secondary mb-3">
-                Por favor revisa todos los pasos antes de guardar el evento.
-              </p>
+              <p className="text-sm text-error font-black uppercase tracking-tight mb-2">{t("events:form.error_title")}</p>
+              <p className="text-sm text-text-secondary mb-3">{t("events:form.error_save")}</p>
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 list-none">
                 {Object.entries(errors).map(([key, err]) => (
                   <li key={key} className="text-xs text-error/80 flex items-center">
@@ -1317,9 +1313,9 @@ export const EventForm: React.FC = () => {
               onClick={prevStep}
               disabled={activeStep === 1}
               className={`px-4 py-2 border border-border rounded-xl shadow-sm text-sm font-medium text-text-secondary bg-card hover:bg-surface-alt transition-colors ${activeStep === 1 ? "invisible" : ""}`}
-              aria-label="Volver al paso anterior del formulario"
+              aria-label={t("events:form.previous")}
             >
-              Anterior
+              {t("events:form.previous")}
             </button>
 
             {activeStep < STEPS.length ? (
@@ -1328,9 +1324,9 @@ export const EventForm: React.FC = () => {
                 onClick={nextStep}
                 disabled={isStepLoading}
                 className="inline-flex justify-center py-2 px-4 border border-transparent shadow-xs text-sm font-medium rounded-xl text-white premium-gradient hover:opacity-90 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 transition-opacity"
-                aria-label="Ir al siguiente paso del formulario"
+                aria-label={t("events:form.next")}
               >
-                {isStepLoading ? "Cargando..." : "Siguiente"}
+                {isStepLoading ? t("events:form.loading") : t("events:form.next")}
                 <ChevronRight className="ml-2 h-4 w-4" aria-hidden="true" />
               </button>
             ) : (
@@ -1341,7 +1337,7 @@ export const EventForm: React.FC = () => {
                 className="inline-flex justify-center py-2 px-4 border border-transparent shadow-xs text-sm font-medium rounded-xl text-white bg-success hover:bg-success/90 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-success/50 disabled:opacity-50 transition-colors"
               >
                 <Save className="h-5 w-5 mr-2" aria-hidden="true" />
-                {isLoading ? "Guardando..." : "Guardar Evento"}
+                {isLoading ? t("events:form.saving") : t("events:form.save")}
               </button>
             )}
           </div>

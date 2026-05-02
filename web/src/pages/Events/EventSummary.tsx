@@ -195,7 +195,7 @@ export const EventSummary: React.FC = () => {
 
     // Equipment
     (equipment as EventEquipment[]).forEach((eq) => {
-      clItems.push({ id: `eq_${eq.id}`, name: eq.equipment_name || "Equipo", quantity: eq.quantity || 1, unit: eq.unit || "pza", section: "equipment" });
+      clItems.push({ id: `eq_${eq.id}`, name: eq.equipment_name || t('events:summary.equipment_fallback'), quantity: eq.quantity || 1, unit: eq.unit || t('events:summary.unit_piece'), section: "equipment" });
     });
 
     // Product ingredients with bring_to_event (from already-cached allProdIngredients)
@@ -206,7 +206,7 @@ export const EventSummary: React.FC = () => {
         const key = ing.inventory_id;
         const qty = productQuantities.get(ing.product_id) || 0;
         if (!aggregated[key]) {
-          aggregated[key] = { name: ing.ingredient_name || "Insumo", unit: ing.unit || "", quantity: 0 };
+          aggregated[key] = { name: ing.ingredient_name || t('events:summary.supply_fallback'), unit: ing.unit || "", quantity: 0 };
         }
         aggregated[key].quantity += (ing.quantity_required || 0) * qty;
       });
@@ -216,12 +216,12 @@ export const EventSummary: React.FC = () => {
 
     // Supplies
     (supplies as EventSupply[]).forEach((s) => {
-      clItems.push({ id: `sup_${s.id}`, name: s.supply_name || "Insumo", quantity: s.quantity || 1, unit: s.unit || "und", section: s.source === "stock" ? "stock" : "purchase" });
+      clItems.push({ id: `sup_${s.id}`, name: s.supply_name || t('events:summary.supply_fallback'), quantity: s.quantity || 1, unit: s.unit || t('events:summary.unit_each'), section: s.source === "stock" ? "stock" : "purchase" });
     });
 
     // Extras with include_in_checklist
     (extras as EventExtra[]).filter((e) => e.include_in_checklist !== false && e.description).forEach((e) => {
-      clItems.push({ id: `ext_${e.id}`, name: e.description, quantity: 1, unit: "pza", section: "extra" });
+      clItems.push({ id: `ext_${e.id}`, name: e.description, quantity: 1, unit: t('events:summary.unit_piece'), section: "extra" });
     });
 
     setChecklistItems(clItems);
@@ -480,9 +480,9 @@ export const EventSummary: React.FC = () => {
                     const purchaseSupplies = supplies
                       .filter((s: EventSupply) => s.source === 'purchase')
                       .map((s: EventSupply) => ({
-                        name: s.supply_name || 'Insumo',
+                        name: s.supply_name || t('events:summary.supply_fallback'),
                         quantity: s.quantity,
-                        unit: s.unit || 'und',
+                        unit: s.unit || t('events:summary.unit_each'),
                       }));
                     generateShoppingListPDF(event, profile as UserProfile | null, [...ingredients, ...purchaseSupplies], i18n.language);
                     setActionsDropdownOpen(false);
@@ -508,20 +508,20 @@ export const EventSummary: React.FC = () => {
                           const key = ing.inventory_id;
                           const qty = productQuantities.get(ing.product_id) || 0;
                           if (!aggregated[key]) {
-                            aggregated[key] = { name: ing.ingredient_name || 'Insumo', unit: ing.unit || '', quantity: 0 };
+                            aggregated[key] = { name: ing.ingredient_name || t('events:summary.supply_fallback'), unit: ing.unit || '', quantity: 0 };
                           }
                           aggregated[key].quantity += (ing.quantity_required || 0) * qty;
                         });
                       const allEventSupplies = supplies
                         .map((s: EventSupply) => ({
-                          name: s.supply_name || 'Insumo',
+                          name: s.supply_name || t('events:summary.supply_fallback'),
                           quantity: s.quantity,
-                          unit: s.unit || 'und',
+                          unit: s.unit || t('events:summary.unit_each'),
                         }));
                       generateChecklistPDF(event, profile as UserProfile | null, products, equipment, [...Object.values(aggregated), ...allEventSupplies], extras, i18n.language);
                     } catch (err) {
                       logError("Error generating checklist", err);
-                      addToast("Error al generar checklist.", "error");
+                      addToast(t('events:summary.error_checklist'), "error");
                     }
                     setActionsDropdownOpen(false);
                   }}
@@ -600,7 +600,7 @@ export const EventSummary: React.FC = () => {
 
       {/* Tab bar */}
       <div className="print:hidden flex justify-center">
-        <div className="inline-flex bg-surface-alt dark:bg-surface-alt/50 rounded-2xl p-1.5 overflow-x-auto no-scrollbar shadow-sm" role="group" aria-label="Modos de visualización del evento">
+        <div className="inline-flex bg-surface-alt dark:bg-surface-alt/50 rounded-2xl p-1.5 overflow-x-auto no-scrollbar shadow-sm" role="group" aria-label={t('events:summary.view_modes_aria')}>
           <button
             type="button"
             onClick={() => setViewMode("summary")}
@@ -836,7 +836,7 @@ export const EventSummary: React.FC = () => {
                 <ShoppingCart className="h-5 w-5 text-primary" />
                 {t('common:products')}
               </h2>
-              <table className="w-full text-sm" aria-label="Productos incluidos en el evento">
+              <table className="w-full text-sm" aria-label={t('events:summary.aria_products_included')}>
                 <thead>
                   <tr className="text-left text-text-tertiary border-b border-border">
                     <th className="pb-3 px-1 font-semibold uppercase tracking-wide text-xs">{t('common:product')}</th>
@@ -1130,8 +1130,8 @@ export const EventSummary: React.FC = () => {
           </div>
 
           <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 border border-border overflow-hidden">
-            <table className="w-full text-sm" aria-label="Insumos necesarios para el evento">
-              <caption className="sr-only">Lista de insumos con cantidades necesarias para el evento</caption>
+            <table className="w-full text-sm" aria-label={t('events:summary.aria_supplies_needed')}>
+              <caption className="sr-only">{t('events:summary.supplies_caption')}</caption>
               <thead>
                 <tr className="text-left text-text-secondary border-b border-border">
                   <th className="pb-3 pt-2">{t('common:supply')}</th>
@@ -1196,7 +1196,7 @@ export const EventSummary: React.FC = () => {
             <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 border border-border overflow-hidden">
               <h2 className="text-lg font-bold text-text mb-1">{t('events:summary.supplies_purchase_title')}</h2>
               <p className="text-xs text-text-secondary mb-4">{t('events:summary.supplies_purchase_desc')}</p>
-              <table className="w-full text-sm" aria-label="Insumos por evento de compra nueva">
+              <table className="w-full text-sm" aria-label={t('events:summary.aria_supplies_purchase')}>
                 <thead>
                   <tr className="text-left text-text-secondary border-b border-border">
                     <th className="pb-3 pt-2">{t('common:supply')}</th>
@@ -1231,7 +1231,7 @@ export const EventSummary: React.FC = () => {
             <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 border border-border overflow-hidden">
               <h2 className="text-lg font-bold text-text mb-1">{t('events:summary.supplies_stock_title')}</h2>
               <p className="text-xs text-text-secondary mb-4">{t('events:summary.supplies_stock_desc')}</p>
-              <table className="w-full text-sm" aria-label="Insumos por evento del stock">
+              <table className="w-full text-sm" aria-label={t('events:summary.aria_supplies_stock')}>
                 <thead>
                   <tr className="text-left text-text-secondary border-b border-border">
                     <th className="pb-3 pt-2">{t('common:supply')}</th>
@@ -1246,8 +1246,8 @@ export const EventSummary: React.FC = () => {
                     return (
                       <tr key={s.id || `stock-${idx}`} className="hover:bg-surface-alt/50 transition-colors">
                         <td className="py-3 font-medium text-text">
-                          {s.supply_name || 'Insumo'}
-                          <div className="text-xs text-text-secondary uppercase tracking-tight">{s.unit || 'und'}</div>
+                          {s.supply_name || t('events:summary.supply_fallback')}
+                          <div className="text-xs text-text-secondary uppercase tracking-tight">{s.unit || t('events:summary.unit_each')}</div>
                         </td>
                         <td className="py-3 text-right text-text font-bold">{s.quantity}</td>
                         <td className="py-3 text-right">

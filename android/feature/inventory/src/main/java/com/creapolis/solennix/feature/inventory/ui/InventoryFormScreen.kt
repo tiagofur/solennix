@@ -25,6 +25,7 @@ import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCente
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveFormRow
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.InventoryType
+import com.creapolis.solennix.feature.inventory.InventoryStrings
 import com.creapolis.solennix.feature.inventory.viewmodel.InventoryFormViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,7 +46,7 @@ fun InventoryFormScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Item de Inventario") },
+                title = { Text(InventoryStrings.formTitle) },
                 onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -81,7 +82,7 @@ fun InventoryFormScreen(
                         )
                     } else if (limitResult is LimitCheckResult.NearLimit) {
                         UpgradeBanner(
-                            message = "Te quedan ${limitResult.remaining} ítem(s) disponibles en tu plan.",
+                            message = InventoryStrings.nearLimitMessage(limitResult.remaining),
                             style = UpgradeBannerStyle.WARNING,
                             onUpgradeClick = { /* Handled via Settings > Suscripción */ },
                             visible = true
@@ -90,7 +91,7 @@ fun InventoryFormScreen(
 
                     Column(modifier = Modifier.padding(16.dp)) {
                         // Form fields — side-by-side on tablet via AdaptiveFormRow
-                        val commonUnits = listOf("pieza", "kg", "g", "l", "ml", "caja", "paquete")
+                        val commonUnits = InventoryStrings.commonUnits()
                         var unitExpanded by remember { mutableStateOf(false) }
 
                         // Row 1: Name + Type selector
@@ -99,23 +100,23 @@ fun InventoryFormScreen(
                                 SolennixTextField(
                                     value = viewModel.ingredientName,
                                     onValueChange = { viewModel.ingredientName = it },
-                                    label = "Nombre del Item *",
+                                    label = InventoryStrings.itemNameRequired,
                                     leadingIcon = Icons.Default.Archive
                                 )
                             },
                             right = {
                                 Column {
                                     Text(
-                                        text = "Tipo *",
+                                        text = InventoryStrings.typeRequired,
                                         style = MaterialTheme.typography.labelMedium,
                                         color = SolennixTheme.colors.secondaryText
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                                         val types = listOf(
-                                            InventoryType.INGREDIENT to "Ingrediente",
-                                            InventoryType.EQUIPMENT to "Equipo",
-                                            InventoryType.SUPPLY to "Insumo"
+                                            InventoryType.INGREDIENT to InventoryStrings.ingredientType,
+                                            InventoryType.EQUIPMENT to InventoryStrings.equipmentType,
+                                            InventoryType.SUPPLY to InventoryStrings.supplyType
                                         )
                                         types.forEachIndexed { index, (type, label) ->
                                             SegmentedButton(
@@ -138,7 +139,7 @@ fun InventoryFormScreen(
                                 SolennixTextField(
                                     value = viewModel.currentStock,
                                     onValueChange = { viewModel.currentStock = it },
-                                    label = "Stock Actual *",
+                                    label = InventoryStrings.stockCurrentRequired,
                                     keyboardType = KeyboardType.Decimal
                                 )
                             },
@@ -146,7 +147,7 @@ fun InventoryFormScreen(
                                 SolennixTextField(
                                     value = viewModel.minimumStock,
                                     onValueChange = { viewModel.minimumStock = it },
-                                    label = "Stock Mínimo *",
+                                    label = InventoryStrings.stockMinimumRequired,
                                     keyboardType = KeyboardType.Decimal
                                 )
                             }
@@ -166,7 +167,7 @@ fun InventoryFormScreen(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .menuAnchor(MenuAnchorType.PrimaryEditable),
-                                        label = { Text("Unidad *") },
+                                        label = { Text(InventoryStrings.unitRequired) },
                                         leadingIcon = {
                                             Icon(
                                                 imageVector = Icons.Default.Scale,
@@ -207,7 +208,7 @@ fun InventoryFormScreen(
                                 SolennixTextField(
                                     value = viewModel.unitCost,
                                     onValueChange = { viewModel.unitCost = it },
-                                    label = "Costo Unitario",
+                                    label = InventoryStrings.unitCostOptional,
                                     leadingIcon = Icons.Default.AttachMoney,
                                     keyboardType = KeyboardType.Decimal
                                 )
@@ -225,7 +226,7 @@ fun InventoryFormScreen(
                         }
 
                         PremiumButton(
-                            text = "Guardar",
+                            text = InventoryStrings.save,
                             onClick = { viewModel.saveItem() },
                             isLoading = viewModel.isSaving,
                             enabled = viewModel.isFormValid && !viewModel.isLimitReached

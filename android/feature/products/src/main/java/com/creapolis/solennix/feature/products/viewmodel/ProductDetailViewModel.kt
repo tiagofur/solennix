@@ -12,6 +12,7 @@ import com.creapolis.solennix.core.data.repository.ProductRepository
 import com.creapolis.solennix.core.model.Product
 import com.creapolis.solennix.core.model.ProductIngredient
 import com.creapolis.solennix.core.model.InventoryType
+import com.creapolis.solennix.feature.products.ProductStrings
 import com.creapolis.solennix.feature.products.ui.DemandDataPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -108,7 +109,7 @@ class ProductDetailViewModel @Inject constructor(
 
                         if (matchingProduct != null) {
                             val client = clientRepository.getClient(event.clientId)
-                            val clientName = client?.name ?: "Cliente"
+                            val clientName = client?.name ?: ProductStrings.fallbackClient
 
                             demandPoints.add(
                                 DemandDataPoint(
@@ -139,7 +140,7 @@ class ProductDetailViewModel @Inject constructor(
                 productRepository.deleteProduct(productId)
                 deleteSuccess = true
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(errorMessage = "Error al eliminar producto: ${e.message}")
+                _uiState.value = _uiState.value.copy(errorMessage = ProductStrings.deleteError(e.message))
             }
         }
     }

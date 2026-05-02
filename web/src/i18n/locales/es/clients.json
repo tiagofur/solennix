@@ -1,17 +1,26 @@
 {
   "title": "Clientes",
   "new_client": "Nuevo Cliente",
-  "search_placeholder": "Buscar cliente por nombre o correo...",
+  "search_placeholder": "Buscar cliente por nombre, correo o teléfono...",
   "no_clients": "No se encontraron clientes",
+  "empty_description": "Agregá tu primer cliente para empezar",
+  "search_no_results": "No se encontraron clientes que coincidan con tu búsqueda",
   "client_added": "Cliente agregado exitosamente",
   "client_updated": "Cliente actualizado exitosamente",
   "client_deleted": "Cliente eliminado exitosamente",
   "delete_confirm": "¿Estás seguro de que deseas eliminar este cliente? Esta acción no se puede deshacer.",
+  "export_file_name": "clientes",
+  "event_singular": "evento",
+  "event_plural": "eventos",
   "table": {
     "name": "Nombre",
     "contact": "Contacto",
     "events": "Eventos",
     "last_event": "Último evento",
+    "service": "Servicio",
+    "guests": "Invitados",
+    "status": "Estado",
+    "total": "Total",
     "actions": "Acciones"
   },
   "form": {
@@ -21,13 +30,17 @@
     "email": "Correo electrónico",
     "phone": "Teléfono",
     "address": "Dirección",
+    "city": "Ciudad",
     "notes": "Notas",
+    "photo_optional": "Foto (opcional)",
     "notes_placeholder": "Información adicional sobre el cliente...",
     "validation": {
       "name_required": "El nombre es requerido",
       "name_min": "El nombre debe tener al menos 2 caracteres",
       "phone_min": "El teléfono debe tener al menos 10 dígitos",
-      "email_invalid": "Email inválido. Usa el formato: nombre@dominio.com"
+      "email_invalid": "Email inválido. Usa el formato: nombre@dominio.com",
+      "photo_too_large": "La foto debe ser menor a 10 MB",
+      "photo_upload_error": "No se pudo subir la foto"
     }
   },
   "details": {
@@ -40,6 +53,9 @@
     "registered": "Registrado",
     "not_registered": "No registrado",
     "no_notes": "Sin notas adicionales",
-    "total_spent": "Total Gastado"
+    "total_spent": "Total Gastado",
+    "email": "Correo electrónico",
+    "city": "Ciudad",
+    "create_event": "Crear evento"
   }
 }

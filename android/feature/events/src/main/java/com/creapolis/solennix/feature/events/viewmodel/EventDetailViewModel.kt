@@ -3,6 +3,7 @@ package com.creapolis.solennix.feature.events.viewmodel
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
+import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -34,7 +35,9 @@ import com.creapolis.solennix.core.network.EventDayNotificationManager
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.creapolis.solennix.feature.events.R
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -65,6 +68,7 @@ data class EventDetailUiState(
 
 @HiltViewModel
 class EventDetailViewModel @Inject constructor(
+    @ApplicationContext private val appContext: Context,
     private val eventRepository: EventRepository,
     private val clientRepository: ClientRepository,
     private val paymentRepository: PaymentRepository,
@@ -74,6 +78,8 @@ class EventDetailViewModel @Inject constructor(
     private val eventDayNotificationManager: EventDayNotificationManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    private fun tr(@StringRes id: Int, vararg args: Any): String = appContext.getString(id, *args)
 
     private val eventId: String = checkNotNull(savedStateHandle["eventId"])
 
@@ -219,11 +225,11 @@ class EventDetailViewModel @Inject constructor(
 
     fun addPayment(amount: Double, method: String, notes: String?, date: String? = null) {
         if (amount <= 0) {
-            _errorMessage.value = "El monto debe ser mayor a 0"
+            _errorMessage.value = tr(R.string.events_detail_error_positive_amount)
             return
         }
         if (method.isBlank()) {
-            _errorMessage.value = "Selecciona un método de pago"
+            _errorMessage.value = tr(R.string.events_detail_error_payment_method_required)
             return
         }
         viewModelScope.launch {
@@ -249,7 +255,7 @@ class EventDetailViewModel @Inject constructor(
                     _event.value = updated
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "Error adding payment: ${e.message}"
+                _errorMessage.value = tr(R.string.events_detail_error_add_payment, e.message.orEmpty())
             }
         }
     }
@@ -260,7 +266,7 @@ class EventDetailViewModel @Inject constructor(
                 paymentRepository.deletePayment(paymentId)
                 // Flow automatically updates via Room -> paymentRepository.getPaymentsByEventId
             } catch (e: Exception) {
-                _errorMessage.value = "Error al eliminar pago: ${e.message}"
+                _errorMessage.value = tr(R.string.events_detail_error_delete_payment, e.message.orEmpty())
             }
         }
     }
@@ -272,7 +278,7 @@ class EventDetailViewModel @Inject constructor(
                 val photos = eventRepository.getEventPhotos(eventId)
                 _photos.value = photos
             } catch (e: Exception) {
-                _errorMessage.value = "Error loading photos: ${e.message}"
+                _errorMessage.value = tr(R.string.events_detail_error_load_photos, e.message.orEmpty())
             } finally {
                 _isPhotosLoading.value = false
             }
@@ -314,10 +320,10 @@ class EventDetailViewModel @Inject constructor(
                     )
                     _photos.value = _photos.value + newPhoto
                 } else {
-                    _errorMessage.value = "No se pudo leer la imagen seleccionada"
+                    _errorMessage.value = tr(R.string.events_detail_error_read_image)
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "Error uploading photo: ${e.message}"
+                _errorMessage.value = tr(R.string.events_detail_error_upload_photo, e.message.orEmpty())
             } finally {
                 _isPhotoUploading.value = false
             }
@@ -344,7 +350,7 @@ class EventDetailViewModel @Inject constructor(
                 eventRepository.deleteEventPhoto(eventId, photo.id)
                 _photos.value = _photos.value.filter { it.id != photo.id }
             } catch (e: Exception) {
-                _errorMessage.value = "Error deleting photo: ${e.message}"
+                _errorMessage.value = tr(R.string.events_detail_error_delete_photo, e.message.orEmpty())
             }
         }
     }
@@ -384,7 +390,7 @@ class EventDetailViewModel @Inject constructor(
                 eventRepository.updateEvent(updated)
                 _event.value = updated
             } catch (e: Exception) {
-                _errorMessage.value = "Error al cambiar status: ${e.message}"
+                _errorMessage.value = tr(R.string.events_detail_error_change_status, e.message.orEmpty())
             }
         }
     }
@@ -418,7 +424,7 @@ class EventDetailViewModel @Inject constructor(
                 eventRepository.deleteEvent(eventId)
                 deleteSuccess = true
             } catch (e: Exception) {
-                _errorMessage.value = "Error al eliminar evento: ${e.message}"
+                _errorMessage.value = tr(R.string.events_detail_error_delete_event, e.message.orEmpty())
             }
         }
     }

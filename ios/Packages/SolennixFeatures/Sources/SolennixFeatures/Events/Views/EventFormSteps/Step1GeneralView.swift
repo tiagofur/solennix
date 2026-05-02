@@ -26,19 +26,19 @@ struct Step1GeneralView: View {
                 // Hora Inicio / Hora Fin — siempre 2 columnas. Gap central =
                 // mismo tamaño que los márgenes laterales (Spacing.md).
                 HStack(alignment: .top, spacing: Spacing.md) {
-                    timeFieldSection(title: "Hora Inicio", binding: $viewModel.startTime)
-                    timeFieldSection(title: "Hora Fin", binding: $viewModel.endTime)
+                    timeFieldSection(title: tr("events.form.general.start_time", "Hora inicio"), binding: $viewModel.startTime)
+                    timeFieldSection(title: tr("events.form.general.end_time", "Hora fin"), binding: $viewModel.endTime)
                 }
 
                 // Tipo de Servicio + Personas
                 HStack(alignment: .top, spacing: Spacing.md) {
                     SolennixTextField(
-                        label: "Tipo de Servicio",
+                        label: tr("events.form.general.service_type", "Tipo de servicio"),
                         text: $viewModel.serviceType,
-                        placeholder: "Ej: Banquete, Coffee Break",
+                        placeholder: tr("events.form.general.service_placeholder", "Ej: Banquete, Coffee Break"),
                         leftIcon: "briefcase",
                         errorMessage: !viewModel.serviceType.isEmpty && viewModel.serviceType.count < 2
-                            ? "Minimo 2 caracteres" : nil
+                            ? tr("events.form.general.service_min", "Mínimo 2 caracteres") : nil
                     )
                     peopleSection
                 }
@@ -47,16 +47,16 @@ struct Step1GeneralView: View {
                 // textos largos, no conviene apretar).
                 AdaptiveFormRow {
                     SolennixTextField(
-                        label: "Lugar",
+                        label: tr("events.form.general.location", "Lugar"),
                         text: $viewModel.location,
-                        placeholder: "Lugar del evento (opcional)",
+                        placeholder: tr("events.form.general.location_placeholder", "Lugar del evento (opcional)"),
                         leftIcon: "mappin.and.ellipse"
                     )
                 } right: {
                     SolennixTextField(
-                        label: "Ciudad",
+                        label: tr("events.form.general.city", "Ciudad"),
                         text: $viewModel.city,
-                        placeholder: "Ciudad (opcional)",
+                        placeholder: tr("events.form.general.city_placeholder", "Ciudad (opcional)"),
                         leftIcon: "building.2"
                     )
                 }
@@ -98,7 +98,7 @@ struct Step1GeneralView: View {
 
     private var clientPickerSection: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text("Cliente")
+            Text(tr("events.form.general.client", "Cliente"))
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundStyle(SolennixColors.text)
@@ -112,7 +112,7 @@ struct Step1GeneralView: View {
                         .foregroundStyle(SolennixColors.textTertiary)
                         .frame(width: 20)
 
-                    Text(viewModel.clientName.isEmpty ? "Seleccionar cliente" : viewModel.clientName)
+                    Text(viewModel.clientName.isEmpty ? tr("events.form.general.select_client", "Seleccionar cliente") : viewModel.clientName)
                         .font(.body)
                         .foregroundStyle(viewModel.clientName.isEmpty ? SolennixColors.textTertiary : SolennixColors.text)
 
@@ -179,12 +179,12 @@ struct Step1GeneralView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .searchable(text: $clientSearch, prompt: "Buscar cliente")
-            .navigationTitle("Seleccionar Cliente")
+            .searchable(text: $clientSearch, prompt: tr("events.form.general.search_client", "Buscar cliente"))
+            .navigationTitle(tr("events.form.general.select_client_title", "Seleccionar cliente"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancelar") {
+                    Button(tr("events.form.cancel", "Cancelar")) {
                         showClientPicker = false
                     }
                     .foregroundStyle(SolennixColors.textSecondary)
@@ -197,7 +197,7 @@ struct Step1GeneralView: View {
                     } label: {
                         HStack(spacing: Spacing.xs) {
                             Image(systemName: "plus")
-                            Text("Agregar")
+                            Text(tr("events.form.general.add_client", "Agregar"))
                         }
                         .font(.subheadline)
                         .fontWeight(.medium)
@@ -220,7 +220,7 @@ struct Step1GeneralView: View {
 
     private var dateSection: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text("Fecha del Evento")
+            Text(tr("events.form.general.event_date", "Fecha del evento"))
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundStyle(SolennixColors.text)
@@ -264,7 +264,7 @@ struct Step1GeneralView: View {
 
     private var formattedEventDate: String {
         let formatter = DateFormatter()
-        formatter.locale = Locale.autoupdatingCurrent
+        formatter.locale = FeatureL10n.locale
         formatter.setLocalizedDateFormatFromTemplate("dMMMMyyyy")
         return formatter.string(from: viewModel.eventDate)
     }
@@ -274,7 +274,7 @@ struct Step1GeneralView: View {
     private var datePickerSheet: some View {
         NavigationStack {
             DatePicker(
-                "Fecha del Evento",
+                tr("events.form.general.event_date", "Fecha del evento"),
                 selection: $viewModel.eventDate,
                 displayedComponents: .date
             )
@@ -282,11 +282,11 @@ struct Step1GeneralView: View {
             .tint(SolennixColors.primary)
             .labelsHidden()
             .padding()
-            .navigationTitle("Fecha del Evento")
+            .navigationTitle(tr("events.form.general.event_date", "Fecha del evento"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Listo") { showDatePickerSheet = false }
+                    Button(tr("events.form.general.done", "Listo")) { showDatePickerSheet = false }
                         .fontWeight(.semibold)
                 }
             }
@@ -305,7 +305,7 @@ struct Step1GeneralView: View {
 
             OptionalTimePicker(
                 selection: binding,
-                placeholder: "Opcional"
+                placeholder: tr("events.form.general.optional", "Opcional")
             )
         }
     }
@@ -314,7 +314,7 @@ struct Step1GeneralView: View {
 
     private var notesSection: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text("Notas Adicionales")
+            Text(tr("events.form.general.notes", "Notas adicionales"))
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundStyle(SolennixColors.text)
@@ -323,7 +323,7 @@ struct Step1GeneralView: View {
             // multiline inputs. reservesSpace hace que el field arranque ya
             // con la altura de 3 líneas aunque esté vacío.
             TextField(
-                "Instrucciones especiales para el montaje...",
+                tr("events.form.general.notes_placeholder", "Instrucciones especiales para el montaje..."),
                 text: $viewModel.notes,
                 axis: .vertical
             )
@@ -345,7 +345,7 @@ struct Step1GeneralView: View {
 
     private var peopleSection: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text("Numero de Personas")
+            Text(tr("events.form.general.people", "Número de personas"))
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundStyle(SolennixColors.text)
@@ -407,13 +407,13 @@ struct Step1GeneralView: View {
 
     private var statusSection: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text("Estado")
+            Text(tr("events.form.general.status", "Estado"))
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundStyle(SolennixColors.text)
 
             Menu {
-                Picker("Estado", selection: $viewModel.status) {
+                Picker(tr("events.form.general.status", "Estado"), selection: $viewModel.status) {
                     ForEach(EventStatus.allCases, id: \.self) { status in
                         Label(statusLabel(status), systemImage: statusSymbol(status))
                             .tag(status)
@@ -456,10 +456,10 @@ struct Step1GeneralView: View {
 
     private func statusLabel(_ status: EventStatus) -> String {
         switch status {
-        case .quoted: return "Cotizado"
-        case .confirmed: return "Confirmado"
-        case .completed: return "Completado"
-        case .cancelled: return "Cancelado"
+        case .quoted: return tr("events.detail.status.quoted", "Cotizado")
+        case .confirmed: return tr("events.detail.status.confirmed", "Confirmado")
+        case .completed: return tr("events.detail.status.completed", "Completado")
+        case .cancelled: return tr("events.detail.status.cancelled", "Cancelado")
         }
     }
 
@@ -479,6 +479,10 @@ struct Step1GeneralView: View {
         case .completed: return SolennixColors.statusCompletedBg
         case .cancelled: return SolennixColors.statusCancelledBg
         }
+    }
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
     }
 }
 
@@ -544,7 +548,7 @@ private struct OptionalTimePicker: View {
     private var displayLabel: String {
         guard let selection else { return placeholder }
         let formatter = DateFormatter()
-        formatter.locale = Locale.autoupdatingCurrent
+        formatter.locale = FeatureL10n.locale
         formatter.setLocalizedDateFormatFromTemplate("HHmm")
         return formatter.string(from: selection)
     }

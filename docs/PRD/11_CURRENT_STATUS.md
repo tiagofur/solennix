@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-04-30
+updated: 2026-05-01
 status: active
 ---
 
@@ -28,8 +28,21 @@ status: active
 > [!info] 2026-04-29 — i18n parity planning reset (issue #202 + #203–#209)
 > La estrategia de multilanguage dejó de organizarse por plataforma y pasó a slices cross-platform con una copy matrix canónica. Objetivo: asegurar misma intención y terminología entre iOS, Android y Web, permitiendo variantes mobile más cortas sólo cuando el espacio lo exija.
 > - **Epic**: #202 `feat(cross-platform): complete product-wide i18n parity`
-> - **Slices**: #94 Dashboard ✅ cerrado, #95 Events list, #203 governance/matrix, #204 event detail + form, #205 auth + settings, #206 clients, #207 products + inventory, #208 public flows ✅ listo para merge en PR #225, #209 final sweep.
+> - **Slices**: #94 Dashboard ✅ cerrado, #95 Events list, #203 governance/matrix, #204 event detail + form ✅ implementado cross-platform, #205 auth + settings, #206 clients, #207 products + inventory, #208 public flows ✅ listo para merge en PR #225, #209 final sweep.
 > - **Documento fuente**: [[19_I18N_STRATEGY]] ahora define copy governance, canonical vs compact variants y checklist de review por slice.
+
+> [!success] 2026-04-29 — i18n slice #204 event detail + form ✅
+> Paridad real de i18n cerrada para Event detail + Event form en Web, iOS y Android.
+> - **Web**: `EventSummary`, `EventForm`, `Payments` y `ClientPortalShareCard` consumen copy localizada en `events.json` para detalle, formulario, pagos, share link, checklist, contrato y fotos.
+> - **iOS**: `EventDetailView`, `EventFormView`, steps del formulario, `EventPaymentsDetailView` y `ClientPortalShareSheet` migraron a `FeatureL10n` con claves `events.detail.*` y `events.form.*`.
+> - **Android**: `EventDetailScreen`, `EventDetailSubScreens`, `EventFormScreen` y viewmodels usan `stringResource` / `strings.xml` ES+EN para detalle, formulario, pagos, staff, supplies y documentos.
+
+> [!success] 2026-04-29 — iOS i18n runtime application fix ✅
+> Corrección del problema donde cambiar idioma en iOS no se aplicaba de forma consistente dentro de la app.
+> - **Runtime locale**: `SolennixApp` inyecta `\.locale` desde `@AppStorage("preferredLocale")`, sincronizado con `User.preferredLanguage`.
+> - **SPM resources**: `SolennixFeatures` usa `FeatureL10n` para resolver `Localizable.xcstrings` con `bundle: .module` y el locale elegido por el usuario.
+> - **Coverage**: navegación, Dashboard, Calendar, Events, Auth y Settings migrados a claves localizadas; verificación local: 815 usos iOS de `FeatureL10n`, 0 claves faltantes.
+> - **Persistencia**: selector de idioma en Settings guarda `preferred_language` vía `PUT /api/users/me`.
 
 > [!success] 2026-05-01 — i18n slice #208 public/client-facing flows listo para merge (PR #225)
 > El slice cross-platform de Quick Quote + organizer-facing Client Portal Share quedó refrescado sobre `main`, con CI verde en PR `#225` y sin hacer build local.
@@ -39,6 +52,20 @@ status: active
 > - **Validación**: `web/src/pages/QuickQuote/QuickQuotePage.test.tsx` ✅, `web/src/pages/Events/components/QuickClientModal.test.tsx` ✅, `Backend Tests` ✅, `Frontend Tests` ✅, `iOS Validation` ✅, `Stage 1..6` ✅ en PR `#225`.
 > - **Estado**: PR `#225` (`feat(cross-platform): localize quick quote and client portal (#208)`) quedó `CLEAN` tras refrescar la branch sobre `main`.
 
+> [!success] 2026-04-30 — Slice #206 Clients i18n parity (list + detail + form)
+> Se cerró la localización cross-platform del flujo de Clientes en Web, iOS y Android para lista, detalle y formulario. Quick Quote quedó fuera del slice y sigue como deuda explícita para otro issue.
+> - **Web**: `clients.json` ES/EN ampliado con labels de ciudad, total, servicio, invitados, export CSV, empty/search states, CTA de crear evento y errores de foto; `ClientList.tsx`, `ClientDetails.tsx` y `ClientForm.tsx` ya consumen el catálogo sin hardcodes funcionales en esas pantallas.
+> - **Android**: nuevo catálogo por feature `android/feature/clients/src/main/res/values*/strings.xml`; `ClientListScreen`, `ClientDetailScreen`, `ClientFormScreen` y sus ViewModels ahora consumen resources para títulos, placeholders, diálogos destructivos, validaciones, CSV, plan-limit copy y errores visibles al usuario.
+> - **iOS**: `ClientListView`, `ClientDetailView`, `ClientFormView` y sus ViewModels migrados a `String(localized:, bundle: .module)` con nuevas keys `clients.*` en `Localizable.xcstrings`; se alinearon empty states, sort labels, errores, confirmaciones y copy de acciones con la matrix canónica.
+> - **Scope explícito**: `QuickQuoteView.swift` y `QuickQuoteScreen.kt` NO entraron en `#206` porque el issue acepta sólo list/detail/form; requieren slice propio para no mezclar alcance.
+
+> [!info] 2026-04-30 — i18n slice #207: Products + Inventory cross-platform
+> Se completó la extracción de copy hardcodeada de Productos + Inventario en Web, Android e iOS siguiendo el slice cross-platform de `#207`.
+> - **Web**: namespaces `products` + `inventory` ampliados en `web/src/i18n/locales/{es,en}/`, cubriendo list/detail/form y estados vacíos.
+> - **Android**: módulos `feature/products` y `feature/inventory` migrados a helpers bilingües temporales (`ProductStrings.kt`, `InventoryStrings.kt`) porque todavía no existen `res/values*.xml` por feature.
+> - **iOS**: `ProductStrings.swift` + `InventoryStrings.swift` usados como shim pragmático para cerrar list/detail/form y componentes compartidos sin tocar todavía `Localizable.xcstrings`.
+> - **Alcance**: copy de catálogo, composición/receta, demanda, alerts, stock adjustment, filtros, sort labels, formularios y estados vacíos/errores.
+> - **Pendiente**: PR limpio del slice `#207` y sweep final `#209` para remanentes fuera de Products/Inventory.
 > [!success] 2026-04-29 — Sprint 7.E: Payment Submissions Phase 1 (issue #191, backend + web service ✅)
 > Implementación de la capa de infraestructura para que clientes (vía portal público tokenizado) envíen comprobantes de transferencias bancarias y organizadores revisen/aprueben. Backend completo + Web service listos. UI (cliente portal + organizer inbox) pendiente para Fase 2.
 > - **Backend model**: `PaymentSubmission` struct con fields: event_id, client_id, user_id, amount, transfer_ref, receipt_file_url, status (pending|approved|rejected), reviewed_by, reviewed_at, rejection_reason, linked_payment_id.
@@ -66,6 +93,12 @@ status: active
 > - **Follow-up absorbidos**: `#226` / PR `#229` (quick client modal) y `#232` / PR `#233` (financial baseline tests) se cerraron como redundantes después de ser incorporados en la rama principal de `#230`.
 > - **Validation**: `npm run test:run -- src/pages/Dashboard.test.tsx src/pages/Events/EventForm.test.tsx src/pages/Events/EventList.test.tsx src/pages/Events/EventSummary.test.tsx src/pages/Events/EventSummary.contract.test.tsx src/pages/Events/EventSummary.payments.test.tsx src/pages/Events/EventSummary.photos.test.tsx` → **111 tests PASS**; luego `Frontend Tests` ✅, `Backend Tests` ✅ y `Stage 1..6` ✅ en PR `#231`.
 > - **Estado**: PR `#231` mergeado a `main`; merge commit `2284996d`.
+
+> [!info] 2026-05-01 — Web EventForm staff i18n drift repaired
+> Se corrigió un drift puntual del catálogo web en `EventForm`: el subformulario de personal consumía varias keys `events.staff.*` que no existían en `events.json`, dejando labels sin traducir o mostrando raw keys.
+> - **Scope**: `web/src/pages/Events/components/EventStaff.tsx` dentro del paso `Inventario y Personal` del crear/editar evento.
+> - **Fix aplicado**: se completaron en ES/EN las keys faltantes para descripción, empty state, selector, badge de disponibilidad, placeholders, CTA de horario, alta de equipo completo, selector de equipos y estados (`pending/confirmed/declined/cancelled`).
+> - **Resultado**: el formulario web de staff vuelve a mostrar copy localizada consistente con el slice `#204` sin tocar iOS/Android, que ya estaban cubiertos por resources nativos.
 
 > [!success] 2026-04-29 — Sprint 7.D: OpenAPI Sync Phase 2 (issue #187, web types auto-generated ✅)
 > Migración Web al modo "tipos auto-generados desde OpenAPI". Ahora `npm run openapi:types` regenera `src/types/api.ts` — no hay drift manual. CI verifica que los tipos estén en sync con el spec.
@@ -245,9 +278,9 @@ status: active
 | Plataforma                | Estado           | Notas                                                                                                                                                                                                                                                                            |
 | ------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Backend (Go)              | Funcional ✅ + **MVP Contract Freeze cerrado 2026-04-10** | API completa, 47 migraciones, auth multi-proveedor, Stripe, RevenueCat, push notifications (FCM+APNs), paginacion server-side, dashboard analytics (KPIs server-side), FTS, audit logging, CSRF, refresh token rotation, **OpenAPI parcial — 5 grupos de rutas sin documentar (formularios, portal, staff/teams)**, **event handlers a ≥85% coverage** (E1.B2), coverage handlers 78.6%, **Personal completo (Phase 1+2+Olas 1-3)** |
-| Web (React)               | Funcional ✅ + **paridad funcional alta; contrato en revisión 2026-04-27** | Todas las paginas principales, panel admin, cotizacion rapida, formularios públicos y portal cliente. `npm run check` regenera tipos desde `backend/docs/openapi.yaml`, pero el spec sigue parcial para rutas públicas nuevas y staff teams; esos flujos web usan tipos/manual fetch hasta cerrar #99. Tests: 95 archivos unit/component en `web/src` + 6 e2e/integration en `web/tests`. Dashboard consume KPIs/revenue/status/activity desde backend; quedan sin UI `top-clients`, `product-demand`, `forecast`. i18n foundation (i18next + ES/EN). |
-| iOS (SwiftUI)             | En desarrollo 🔄 · **v1.1.0** | Features principales + widgets (4 tipos) + Live Activity + 7 generadores PDF + **Dashboard KPIs server-side** + **Personal completo** + **Portal Cliente** + **i18n foundation** |
-| Android (Jetpack Compose) | En desarrollo 🔄 · **v1.1.2 (versionCode 5)** + **CI job activo** | Features principales, arquitectura modular multi-feature, 8 generadores PDF. **CI Android activo (gradle test + assembleDebug)**. **Dashboard KPIs server-side** + **Personal completo** + **Portal Cliente** + **i18n foundation** + **Google Play compliance**. |
+| Web (React)               | Funcional ✅ + **paridad funcional alta; contrato en revisión 2026-04-27** | Todas las paginas principales, panel admin, cotizacion rapida, formularios públicos y portal cliente. `npm run check` regenera tipos desde `backend/docs/openapi.yaml`, pero el spec sigue parcial para rutas públicas nuevas y staff teams; esos flujos web usan tipos/manual fetch hasta cerrar #99. Tests: 95 archivos unit/component en `web/src` + 6 e2e/integration en `web/tests`. Dashboard consume KPIs/revenue/status/activity desde backend; quedan sin UI `top-clients`, `product-demand`, `forecast`. i18n foundation (i18next + ES/EN) + slice `#207` aplicado en Products/Inventory. |
+| iOS (SwiftUI)             | En desarrollo 🔄 · **v1.1.0** | Features principales + widgets (4 tipos) + Live Activity + 7 generadores PDF + **Dashboard KPIs server-side** + **Personal completo** + **Portal Cliente** + **i18n foundation** + slice `#207` en Products/Inventory con shim bilingüe temporal (`ProductStrings` / `InventoryStrings`). |
+| Android (Jetpack Compose) | En desarrollo 🔄 · **v1.1.2 (versionCode 5)** + **CI job activo** | Features principales, arquitectura modular multi-feature, 8 generadores PDF. **CI Android activo (gradle test + assembleDebug)**. **Dashboard KPIs server-side** + **Personal completo** + **Portal Cliente** + **i18n foundation** + slice `#207` en Products/Inventory con helpers bilingües temporales por feature + **Google Play compliance**. |
 
 ---
 
@@ -702,6 +735,7 @@ Primera pantalla de paridad post-Dashboard:
 - ✅ Lista de productos (ProductListView) — con busqueda, filtros por categoria, ordenamiento
 - ✅ Detalle de producto (ProductDetailView) — KPI cards (precio, costo/unidad, margen, eventos), alerta inteligente, tablas de composicion con costos, demanda por fecha con urgencia y revenue
 - ✅ Formulario de producto (ProductFormView) — con gestion estructurada de ingredientes/equipo/insumos con costos estimados
+- ✅ i18n slice `#207` aplicado en lista, detalle, formulario y componentes compartidos (`RecipeSection`, `DemandForecastChart`) via `ProductStrings.swift`
 
 ### Inventario
 
@@ -709,6 +743,7 @@ Primera pantalla de paridad post-Dashboard:
 - ✅ Regla stock bajo iOS alineada: solo alerta si `minimumStock > 0` y `currentStock < minimumStock` (caso 0/0 sin alerta)
 - ✅ Detalle de inventario (InventoryDetailView) — KPI cards (costo, valor en stock), pronostico de demanda, alerta inteligente 7 dias, barras de salud de stock, ajuste rapido
 - ✅ Formulario de inventario (InventoryFormView)
+- ✅ i18n slice `#207` aplicado en lista, detalle y formulario via `InventoryStrings.swift`
 
 ### Calendario
 

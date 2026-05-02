@@ -13,10 +13,10 @@ public enum InventorySortKey: String, CaseIterable {
 
     public var label: String {
         switch self {
-        case .name:         return "Nombre"
-        case .currentStock: return "Stock actual"
-        case .minimumStock: return "Stock minimo"
-        case .unitCost:     return "Costo unitario"
+        case .name:         return InventoryStrings.sortName
+        case .currentStock: return InventoryStrings.sortCurrentStock
+        case .minimumStock: return InventoryStrings.sortMinimumStock
+        case .unitCost:     return InventoryStrings.sortUnitCost
         }
     }
 }
@@ -271,7 +271,7 @@ public final class InventoryListViewModel {
 
         // Validate non-negative stock
         guard adjustmentQuantity >= 0 else {
-            errorMessage = "El stock no puede ser negativo"
+            errorMessage = InventoryStrings.validationStockNegative
             return
         }
 
@@ -343,8 +343,8 @@ public final class InventoryListViewModel {
 
     private func mapError(_ error: Error) -> String {
         if let apiError = error as? APIError {
-            return apiError.errorDescription ?? "Ocurrio un error inesperado."
+            return apiError.errorDescription ?? InventoryStrings.unexpectedError
         }
-        return "Ocurrio un error inesperado. Intenta de nuevo."
+        return InventoryStrings.unexpectedRetryError
     }
 }

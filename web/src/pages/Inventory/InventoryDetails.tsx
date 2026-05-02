@@ -445,7 +445,7 @@ export const InventoryDetails: React.FC = () => {
           <div className="flex items-center gap-2 mb-4 pb-4 border-b border-border">
             <Calendar className="h-5 w-5 text-primary" />
             <h2 className="text-sm font-semibold text-text">{t("inventory:details.history")}</h2>
-            <span className="ml-auto text-xs text-text-secondary">{t("common:status.confirmed")}</span>
+            <span className="ml-auto text-xs text-text-secondary">{t("inventory:details.confirmed_events")}</span>
           </div>
 
           {demandLoading ? (
@@ -454,7 +454,7 @@ export const InventoryDetails: React.FC = () => {
             <div className="text-center py-10">
               <Calendar className="h-9 w-9 text-text-secondary opacity-25 mx-auto mb-3" />
               <p className="text-sm text-text-secondary">
-                {t("inventory:list.no_results")}
+                {t("inventory:details.no_confirmed_events_using_item")}
               </p>
             </div>
           ) : (
@@ -583,7 +583,7 @@ export const InventoryDetails: React.FC = () => {
                         : isLowStock && demand7Days === 0
                           ? t("inventory:details.stats.alert_title")
                           : demand7Days > 0
-                            ? t("inventory:details.stats.alert_title")
+                            ? t("inventory:details.stock_enough_week")
                             : t("inventory:list.no_alerts")}
                   </p>
                   <p className="text-sm text-text-secondary mt-1">
@@ -611,14 +611,14 @@ export const InventoryDetails: React.FC = () => {
                         <strong className="text-text">
                           {item.current_stock} {item.unit}
                         </strong>
-                        ) {t("inventory:list.no_alerts")} (
+                        ) {t("inventory:details.minimum_recommended")} (
                         <strong className="text-text">
                           {item.minimum_stock} {item.unit}
                         </strong>
                         ).
                       </>
                     ) : (
-                      t("inventory:list.no_results")
+                      t("inventory:list.no_alerts")
                     )}
                   </p>
                 </div>
@@ -644,7 +644,7 @@ export const InventoryDetails: React.FC = () => {
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between text-xs text-text-secondary mb-1.5">
-                      <span>{t("inventory:form.current_stock")}</span>
+                      <span>{t("inventory:details.stock_actual")}</span>
                       <span className="font-medium text-text">
                         {item.current_stock} {item.unit}
                       </span>
@@ -662,7 +662,7 @@ export const InventoryDetails: React.FC = () => {
 
                   <div>
                     <div className="flex justify-between text-xs text-text-secondary mb-1.5">
-                      <span>{t("inventory:list.min_stock")}</span>
+                      <span>{t("inventory:details.minimum_recommended")}</span>
                       <span className="font-medium text-text">
                         {item.minimum_stock} {item.unit}
                       </span>

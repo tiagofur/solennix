@@ -3,6 +3,14 @@ import SolennixCore
 import SolennixDesign
 import SolennixNetwork
 
+private func tr(_ key: String, _ value: String) -> String {
+    FeatureL10n.text(key, value)
+}
+
+private func trf(_ key: String, _ value: String, _ arg: String) -> String {
+    String(format: tr(key, value), locale: FeatureL10n.locale, arg)
+}
+
 // MARK: - Step 4: Personnel Panel
 
 /// Subpanel dentro del Step 4 del form de eventos. Permite elegir
@@ -27,7 +35,7 @@ struct Step4PersonnelPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Personal")
+            Text(tr("events.form.inventory.staff", "Personal"))
                 .font(.headline)
                 .foregroundStyle(SolennixColors.text)
 
@@ -87,7 +95,7 @@ struct Step4PersonnelPanel: View {
                         Image(systemName: "person.crop.circle.badge.plus")
                             .foregroundStyle(SolennixColors.primary)
 
-                        Text("Agregar Personal")
+                        Text(tr("events.form.staff.add_person", "Agregar personal"))
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundStyle(SolennixColors.primary)
@@ -112,7 +120,7 @@ struct Step4PersonnelPanel: View {
                         Image(systemName: "person.3.fill")
                             .foregroundStyle(SolennixColors.primary)
 
-                        Text("Agregar equipo completo")
+                        Text(tr("events.form.staff.add_team", "Agregar equipo completo"))
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundStyle(SolennixColors.primary)
@@ -133,7 +141,7 @@ struct Step4PersonnelPanel: View {
             // Staff cost total (informativo — no suma al total en Phase 1)
             if !viewModel.selectedStaff.isEmpty {
                 HStack {
-                    Text("Costo Personal")
+                    Text(tr("events.form.staff.total_cost", "Costo personal"))
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundStyle(SolennixColors.textSecondary)
@@ -166,18 +174,18 @@ struct Step4PersonnelPanel: View {
         NavigationStack {
             Group {
                 if isLoadingTeams && teams.isEmpty {
-                    ProgressView("Cargando equipos...")
+                    ProgressView(tr("events.form.staff.loading_teams", "Cargando equipos..."))
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if teams.isEmpty {
                     EmptyStateView(
                         icon: "person.3.sequence",
-                        title: "Sin equipos todavía",
-                        message: "Agrupá a tu equipo de meseros o fotógrafos desde Personal > Equipos para asignarlos con un solo toque."
+                        title: tr("events.form.staff.empty_teams_title", "Sin equipos todavía"),
+                        message: tr("events.form.staff.empty_teams_message", "Agrupá a tu equipo de meseros o fotógrafos desde Personal > Equipos para asignarlos con un solo toque.")
                     )
                 } else {
                     List {
                         Section {
-                            Text("Seleccioná un equipo para asignar a todos sus miembros. Los que ya esten asignados se ignoran.")
+                            Text(tr("events.form.staff.team_picker_hint", "Seleccioná un equipo para asignar a todos sus miembros. Los que ya estén asignados se ignoran."))
                                 .font(.caption)
                                 .foregroundStyle(SolennixColors.textSecondary)
                         }
@@ -211,7 +219,9 @@ struct Step4PersonnelPanel: View {
                                                     .foregroundStyle(SolennixColors.textSecondary)
                                             }
                                             if let count = team.memberCount {
-                                                Text(count == 1 ? "1 miembro" : "\(count) miembros")
+                                                Text(count == 1
+                                                    ? tr("events.form.staff.member_singular", "1 miembro")
+                                                    : trf("events.form.staff.member_plural", "%@ miembros", String(count)))
                                                     .font(.caption)
                                                     .foregroundStyle(SolennixColors.textTertiary)
                                             }
@@ -231,11 +241,11 @@ struct Step4PersonnelPanel: View {
                     .listStyle(.insetGrouped)
                 }
             }
-            .navigationTitle("Agregar equipo")
+            .navigationTitle(tr("events.form.staff.add_team_short", "Agregar equipo"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cerrar") { showTeamPicker = false }
+                    Button(tr("events.detail.share.close", "Cerrar")) { showTeamPicker = false }
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
             }
@@ -274,8 +284,8 @@ struct Step4PersonnelPanel: View {
                 if viewModel.staff.isEmpty {
                     EmptyStateView(
                         icon: "person.3",
-                        title: "Sin personal",
-                        message: "Agrega colaboradores desde el menu Personal para asignarlos a este evento"
+                        title: tr("events.form.staff.empty_title", "Sin personal"),
+                        message: tr("events.form.staff.empty_message", "Agrega colaboradores desde el menú Personal para asignarlos a este evento")
                     )
                 } else {
                     List {
@@ -302,7 +312,7 @@ struct Step4PersonnelPanel: View {
                                             HStack(spacing: 4) {
                                                 Image(systemName: "clock.badge.exclamationmark")
                                                     .font(.caption2)
-                                                Text("Ocupado ese día")
+                                                Text(tr("events.form.staff.busy", "Ocupado ese día"))
                                                     .font(.caption2)
                                                     .fontWeight(.medium)
                                             }
@@ -321,14 +331,14 @@ struct Step4PersonnelPanel: View {
                             .buttonStyle(.plain)
                         }
                     }
-                    .searchable(text: $staffSearch, prompt: "Buscar personal")
+                    .searchable(text: $staffSearch, prompt: tr("events.form.staff.search", "Buscar personal"))
                 }
             }
-            .navigationTitle("Agregar Personal")
+            .navigationTitle(tr("events.form.staff.add_person", "Agregar personal"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cerrar") {
+                    Button(tr("events.detail.share.close", "Cerrar")) {
                         showStaffPicker = false
                     }
                     .foregroundStyle(SolennixColors.textSecondary)
@@ -397,10 +407,10 @@ struct Step4PersonnelPanel: View {
 
     func label(for status: AssignmentStatus) -> String {
         switch status {
-        case .pending:   return "Sin confirmar"
-        case .confirmed: return "Confirmado"
-        case .declined:  return "Rechazó"
-        case .cancelled: return "Cancelado"
+        case .pending:   return tr("events.form.staff.status.pending", "Sin confirmar")
+        case .confirmed: return tr("events.form.staff.status.confirmed", "Confirmado")
+        case .declined:  return tr("events.form.staff.status.declined", "Rechazó")
+        case .cancelled: return tr("events.form.staff.status.cancelled", "Cancelado")
         }
     }
 
@@ -486,11 +496,11 @@ private struct StaffRowView: View {
 
             // Fee amount
             VStack(alignment: .leading, spacing: 2) {
-                Text("Costo (MXN)")
+                Text(tr("events.form.staff.fee", "Costo (MXN)"))
                     .font(.caption2)
                     .foregroundStyle(SolennixColors.textTertiary)
 
-                TextField("0.00", text: $feeText)
+                TextField(tr("events.form.staff.amount_placeholder", "0.00"), text: $feeText)
                     .keyboardType(.decimalPad)
                     .font(.body)
                     .foregroundStyle(SolennixColors.text)
@@ -512,12 +522,12 @@ private struct StaffRowView: View {
 
             // Role override
             VStack(alignment: .leading, spacing: 2) {
-                Text("Rol en este evento (opcional)")
+                Text(tr("events.form.staff.role_override", "Rol en este evento (opcional)"))
                     .font(.caption2)
                     .foregroundStyle(SolennixColors.textTertiary)
 
                 TextField(
-                    "Ej: Lider de barra",
+                    tr("events.form.staff.role_placeholder", "Ej: Líder de barra"),
                     text: Binding(
                         get: { assignment.roleOverride },
                         set: onRoleOverrideChange
@@ -537,12 +547,12 @@ private struct StaffRowView: View {
 
             // Notes
             VStack(alignment: .leading, spacing: 2) {
-                Text("Notas (opcional)")
+                Text(tr("events.form.staff.notes", "Notas (opcional)"))
                     .font(.caption2)
                     .foregroundStyle(SolennixColors.textTertiary)
 
                 TextField(
-                    "Notas de la asignación",
+                    tr("events.form.staff.notes_placeholder", "Notas de la asignación"),
                     text: Binding(
                         get: { assignment.notes },
                         set: onNotesChange
@@ -614,7 +624,7 @@ private struct StaffRowView: View {
                 HStack(spacing: Spacing.xs) {
                     Image(systemName: isShiftExpanded ? "chevron.down" : "chevron.right")
                         .font(.caption2)
-                    Text("Agregar horario (opcional)")
+                    Text(tr("events.form.staff.shift", "Agregar horario (opcional)"))
                         .font(.caption)
                         .fontWeight(.medium)
                 }
@@ -625,7 +635,7 @@ private struct StaffRowView: View {
             if isShiftExpanded {
                 HStack(spacing: Spacing.sm) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Entra")
+                        Text(tr("events.form.staff.shift_start", "Entra"))
                             .font(.caption2)
                             .foregroundStyle(SolennixColors.textTertiary)
                         DatePicker(
@@ -640,7 +650,7 @@ private struct StaffRowView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Sale")
+                        Text(tr("events.form.staff.shift_end", "Sale"))
                             .font(.caption2)
                             .foregroundStyle(SolennixColors.textTertiary)
                         DatePicker(

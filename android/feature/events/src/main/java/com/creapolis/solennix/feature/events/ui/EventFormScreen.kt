@@ -26,6 +26,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -38,10 +39,12 @@ import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.*
 import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.EventFormViewModel
 import com.creapolis.solennix.feature.events.viewmodel.SelectedStaffAssignment
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.UUID
 import java.util.Locale
 
@@ -73,11 +76,11 @@ fun EventFormScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text(if (viewModel.isEditMode) "Editar Evento" else "Nuevo Evento") },
+                title = { Text(stringResource(if (viewModel.isEditMode) R.string.events_form_title_edit else R.string.events_form_title_new)) },
                 onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.events_form_back))
                     }
                 }
             )
@@ -159,11 +162,11 @@ fun EventFormScreen(
     viewModel.saveError?.let { error ->
         AlertDialog(
             onDismissRequest = { viewModel.saveError = null },
-            title = { Text("Error") },
+            title = { Text(stringResource(R.string.events_form_error_title)) },
             text = { Text(error) },
             confirmButton = {
                 TextButton(onClick = { viewModel.saveError = null }) {
-                    Text("OK")
+                    Text(stringResource(R.string.events_form_ok))
                 }
             }
         )
@@ -207,7 +210,7 @@ private fun EventLoadErrorCard(
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "No se pudo cargar el evento",
+            text = stringResource(R.string.events_form_load_error_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = SolennixTheme.colors.primaryText,
@@ -232,11 +235,11 @@ private fun EventLoadErrorCard(
                 modifier = Modifier.size(18.dp),
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Reintentar")
+            Text(stringResource(R.string.events_form_retry))
         }
         Spacer(modifier = Modifier.height(8.dp))
         TextButton(onClick = onNavigateBack) {
-            Text("Volver")
+            Text(stringResource(R.string.events_form_back_action))
         }
     }
 }
@@ -273,7 +276,7 @@ fun BottomStepNavigation(
                         modifier = Modifier.size(18.dp),
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Anterior")
+                    Text(stringResource(R.string.events_form_previous))
                 }
             } else {
                 Spacer(modifier = Modifier.width(1.dp))
@@ -295,7 +298,7 @@ fun BottomStepNavigation(
                     Spacer(modifier = Modifier.width(8.dp))
                 }
                 Text(
-                    text = if (isLastPage) (if (isEditMode) "Guardar Cambios" else "Finalizar") else "Siguiente",
+                    text = if (isLastPage) (if (isEditMode) stringResource(R.string.events_form_save_changes) else stringResource(R.string.events_form_finish)) else stringResource(R.string.events_form_next),
                     fontWeight = FontWeight.SemiBold,
                 )
                 Spacer(modifier = Modifier.width(6.dp))
@@ -321,11 +324,11 @@ private fun EventFormStepIndicator(
 ) {
     data class StepMeta(val icon: androidx.compose.ui.graphics.vector.ImageVector, val label: String)
     val steps = listOf(
-        StepMeta(Icons.Default.Info, "General"),
-        StepMeta(Icons.Default.Inventory2, "Productos"),
-        StepMeta(Icons.Default.AutoAwesome, "Extras"),
-        StepMeta(Icons.Default.ShoppingCart, "Inventario"),
-        StepMeta(Icons.Default.Payments, "Finanzas"),
+        StepMeta(Icons.Default.Info, stringResource(R.string.events_form_step_general)),
+        StepMeta(Icons.Default.Inventory2, stringResource(R.string.events_form_step_products)),
+        StepMeta(Icons.Default.AutoAwesome, stringResource(R.string.events_form_step_extras)),
+        StepMeta(Icons.Default.ShoppingCart, stringResource(R.string.events_form_step_inventory)),
+        StepMeta(Icons.Default.Payments, stringResource(R.string.events_form_step_finances)),
     )
     val progress = (currentPage + 1).toFloat() / steps.size.toFloat()
 
@@ -393,6 +396,8 @@ private fun EventFormStepIndicator(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StepGeneralInfo(viewModel: EventFormViewModel) {
+    val context = LocalContext.current
+    val locale = context.resources.configuration.locales[0] ?: Locale.getDefault()
     var showClientPicker by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showStartTimePicker by remember { mutableStateOf(false) }
@@ -401,10 +406,10 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
     var showQuickClientDialog by remember { mutableStateOf(false) }
 
     val statusLabels = mapOf(
-        EventStatus.QUOTED to "Cotizado",
-        EventStatus.CONFIRMED to "Confirmado",
-        EventStatus.COMPLETED to "Completado",
-        EventStatus.CANCELLED to "Cancelado"
+        EventStatus.QUOTED to stringResource(R.string.events_form_general_status_quoted),
+        EventStatus.CONFIRMED to stringResource(R.string.events_form_general_status_confirmed),
+        EventStatus.COMPLETED to stringResource(R.string.events_form_general_status_completed),
+        EventStatus.CANCELLED to stringResource(R.string.events_form_general_status_cancelled)
     )
 
     LazyColumn(modifier = Modifier.padding(24.dp)) {
@@ -413,7 +418,7 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
             Column {
 
             // Client Selection
-            Text("Cliente", style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.secondaryText)
+            Text(stringResource(R.string.events_form_general_client), style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.secondaryText)
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -429,7 +434,7 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
                     Icon(Icons.Default.Person, contentDescription = null, tint = SolennixTheme.colors.primary)
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(
-                        text = viewModel.selectedClient?.name ?: "Seleccionar cliente",
+                        text = viewModel.selectedClient?.name ?: stringResource(R.string.events_form_general_select_client),
                         style = MaterialTheme.typography.bodyLarge,
                         color = if (viewModel.selectedClient == null) SolennixTheme.colors.secondaryText else SolennixTheme.colors.primaryText,
                         modifier = Modifier.weight(1f)
@@ -441,7 +446,7 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
 
             // Date Selection
-            Text("Fecha del Evento", style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.secondaryText)
+            Text(stringResource(R.string.events_form_general_event_date), style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.secondaryText)
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -457,7 +462,7 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
                     Icon(Icons.Default.CalendarToday, contentDescription = null, tint = SolennixTheme.colors.primary)
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(
-                        text = viewModel.eventDate.format(DateTimeFormatter.ofPattern("dd 'de' MMMM, yyyy", Locale("es", "MX"))),
+                        text = viewModel.eventDate.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).localizedBy(locale)),
                         style = MaterialTheme.typography.bodyLarge,
                         color = SolennixTheme.colors.primaryText,
                         modifier = Modifier.weight(1f)
@@ -476,14 +481,14 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
             ) {
                 Box(modifier = Modifier.weight(1f)) {
                     TimePickerField(
-                        label = "Hora Inicio",
+                        label = stringResource(R.string.events_form_general_start_time),
                         value = viewModel.startTime,
                         onClick = { showStartTimePicker = true },
                     )
                 }
                 Box(modifier = Modifier.weight(1f)) {
                     TimePickerField(
-                        label = "Hora Fin",
+                        label = stringResource(R.string.events_form_general_end_time),
                         value = viewModel.endTime,
                         onClick = { showEndTimePicker = true },
                     )
@@ -503,8 +508,8 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
                     SolennixTextField(
                         value = viewModel.serviceType,
                         onValueChange = { viewModel.serviceType = it },
-                        label = "Tipo de Servicio",
-                        placeholder = "Ej: Boda, XV Años"
+                        label = stringResource(R.string.events_form_general_service_type),
+                        placeholder = stringResource(R.string.events_form_general_service_placeholder)
                     )
                 }
                 Box(modifier = Modifier.weight(1f)) {
@@ -522,16 +527,16 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
                     SolennixTextField(
                         value = viewModel.location,
                         onValueChange = { viewModel.location = it },
-                        label = "Lugar / Salon",
-                        placeholder = "Ej: Salon Gardenia"
+                        label = stringResource(R.string.events_form_general_location),
+                        placeholder = stringResource(R.string.events_form_general_location_placeholder)
                     )
                 },
                 right = {
                     SolennixTextField(
                         value = viewModel.city,
                         onValueChange = { viewModel.city = it },
-                        label = "Ciudad",
-                        placeholder = "Ej: Mexico DF"
+                        label = stringResource(R.string.events_form_general_city),
+                        placeholder = stringResource(R.string.events_form_general_city_placeholder)
                     )
                 }
             )
@@ -541,7 +546,7 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
             // ExposedDropdownMenu en vez de FilterChip row — 4 chips en una
             // pantalla pequeña hacían wrap a 2 líneas. Un single-line dropdown
             // es el patrón M3 cuando hay 3+ opciones exclusivas.
-            Text("Estado del Evento", style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.secondaryText)
+            Text(stringResource(R.string.events_form_general_status), style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.secondaryText)
             ExposedDropdownMenuBox(
                 expanded = showStatusMenu,
                 onExpandedChange = { showStatusMenu = it },
@@ -587,8 +592,8 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
             OutlinedTextField(
                 value = viewModel.notes,
                 onValueChange = { viewModel.notes = it },
-                label = { Text("Notas Adicionales") },
-                placeholder = { Text("Instrucciones especiales para el montaje...") },
+                label = { Text(stringResource(R.string.events_form_general_notes)) },
+                placeholder = { Text(stringResource(R.string.events_form_general_notes_placeholder)) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3,
                 maxLines = 6,
@@ -614,11 +619,11 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
         ) {
             Column(modifier = Modifier.padding(16.dp).fillMaxHeight(0.8f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Seleccionar Cliente", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                    Text(stringResource(R.string.events_form_general_select_client_title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
                     TextButton(onClick = { showQuickClientDialog = true }) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Nuevo")
+                        Text(stringResource(R.string.events_form_general_new_client))
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -626,7 +631,7 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
                     value = searchQuery,
                     onValueChange = { viewModel.onClientSearchQueryChange(it) },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Buscar cliente...") },
+                    placeholder = { Text(stringResource(R.string.events_form_general_search_client)) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     shape = RoundedCornerShape(12.dp)
                 )
@@ -675,7 +680,7 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
                         viewModel.eventDate = java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
                     }
                     showDatePicker = false
-                }) { Text("Seleccionar") }
+                }) { Text(stringResource(R.string.events_form_general_select)) }
             }
         ) {
             DatePicker(state = datePickerState)
@@ -711,14 +716,14 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
 
         AlertDialog(
             onDismissRequest = { showQuickClientDialog = false },
-            title = { Text("Creacion Rapida de Cliente") },
+            title = { Text(stringResource(R.string.events_form_general_quick_client_title)) },
             text = {
                 Column {
-                    SolennixTextField(value = name, onValueChange = { name = it }, label = "Nombre Completo")
+                    SolennixTextField(value = name, onValueChange = { name = it }, label = stringResource(R.string.events_form_general_full_name))
                     Spacer(modifier = Modifier.height(8.dp))
-                    SolennixTextField(value = email, onValueChange = { email = it }, label = "Email", keyboardType = androidx.compose.ui.text.input.KeyboardType.Email)
+                    SolennixTextField(value = email, onValueChange = { email = it }, label = stringResource(R.string.events_form_general_email), keyboardType = androidx.compose.ui.text.input.KeyboardType.Email)
                     Spacer(modifier = Modifier.height(8.dp))
-                    SolennixTextField(value = phone, onValueChange = { phone = it }, label = "Telefono", keyboardType = androidx.compose.ui.text.input.KeyboardType.Phone)
+                    SolennixTextField(value = phone, onValueChange = { phone = it }, label = stringResource(R.string.events_form_general_phone), keyboardType = androidx.compose.ui.text.input.KeyboardType.Phone)
                     
                     viewModel.quickClientError?.let {
                         Text(it, color = SolennixTheme.colors.error, style = MaterialTheme.typography.bodySmall)
@@ -734,11 +739,11 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
                     enabled = !viewModel.isCreatingClient
                 ) {
                     if (viewModel.isCreatingClient) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                    else Text("Guardar")
+                    else Text(stringResource(R.string.events_form_general_save))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showQuickClientDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { showQuickClientDialog = false }) { Text(stringResource(R.string.events_form_cancel)) }
             }
         )
     }
@@ -780,7 +785,7 @@ fun StepProducts(viewModel: EventFormViewModel) {
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    "Agregar Producto",
+                    stringResource(R.string.events_form_products_add),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                     color = SolennixTheme.colors.primary,
@@ -799,13 +804,13 @@ fun StepProducts(viewModel: EventFormViewModel) {
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(
-                        viewModel.productLoadError ?: "Error cargando productos",
+                        viewModel.productLoadError ?: stringResource(R.string.events_form_products_load_error),
                         style = MaterialTheme.typography.bodySmall,
                         color = SolennixTheme.colors.error
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     TextButton(onClick = { viewModel.retryLoadProducts() }) {
-                        Text("Reintentar")
+                        Text(stringResource(R.string.events_form_retry))
                     }
                 }
             }
@@ -829,13 +834,13 @@ fun StepProducts(viewModel: EventFormViewModel) {
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    "Sin productos",
+                    stringResource(R.string.events_form_products_empty_title),
                     style = MaterialTheme.typography.titleMedium,
                     color = SolennixTheme.colors.secondaryText,
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    "Agrega productos al evento",
+                    stringResource(R.string.events_form_products_empty_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText,
                 )
@@ -902,7 +907,7 @@ fun StepProducts(viewModel: EventFormViewModel) {
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                "Subtotal Productos",
+                                stringResource(R.string.events_form_products_subtotal),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Medium,
                                 color = SolennixTheme.colors.secondaryText,
@@ -960,7 +965,7 @@ fun ProductSelectionItem(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("¿Eliminar ${product.name}?") },
+            title = { Text(stringResource(R.string.events_form_products_delete_named, product.name)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -968,11 +973,11 @@ fun ProductSelectionItem(
                         onRemove()
                     }
                 ) {
-                    Text("Eliminar", color = SolennixTheme.colors.error)
+                    Text(stringResource(R.string.events_form_products_delete), color = SolennixTheme.colors.error)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(R.string.events_form_cancel)) }
             }
         )
     }
@@ -989,7 +994,7 @@ fun ProductSelectionItem(
             // separado del contenido.
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "Producto ${index + 1}",
+                    stringResource(R.string.events_form_products_row_title, index + 1),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = SolennixTheme.colors.secondaryText,
@@ -998,7 +1003,7 @@ fun ProductSelectionItem(
                 IconButton(onClick = { showDeleteDialog = true }, modifier = Modifier.size(32.dp)) {
                     Icon(
                         Icons.Default.Delete,
-                        contentDescription = "Eliminar",
+                        contentDescription = stringResource(R.string.events_form_products_delete_a11y),
                         tint = SolennixTheme.colors.error,
                         modifier = Modifier.size(18.dp),
                     )
@@ -1015,7 +1020,7 @@ fun ProductSelectionItem(
                         fontWeight = FontWeight.Medium,
                     )
                     Text(
-                        "${item.unitPrice.asMXN()} c/u",
+                        stringResource(R.string.events_form_products_unit_price, item.unitPrice.asMXN()),
                         style = MaterialTheme.typography.bodyMedium,
                         color = SolennixTheme.colors.primary,
                     )
@@ -1026,7 +1031,7 @@ fun ProductSelectionItem(
                             enabled = false,
                             label = {
                                 Text(
-                                    "Incluye equipo",
+                                    stringResource(R.string.events_form_products_includes_team),
                                     style = MaterialTheme.typography.labelSmall
                                 )
                             },
@@ -1062,7 +1067,7 @@ fun ProductSelectionItem(
                     ) {
                         Icon(
                             Icons.Default.RemoveCircle,
-                            contentDescription = "Menos",
+                            contentDescription = stringResource(R.string.events_form_products_decrease_a11y),
                             tint = if (item.quantity > 1) SolennixTheme.colors.primary
                                    else SolennixTheme.colors.secondaryText,
                             modifier = Modifier.size(26.dp),
@@ -1084,7 +1089,7 @@ fun ProductSelectionItem(
                     ) {
                         Icon(
                             Icons.Default.AddCircle,
-                            contentDescription = "Mas",
+                            contentDescription = stringResource(R.string.events_form_products_increase_a11y),
                             tint = SolennixTheme.colors.primary,
                             modifier = Modifier.size(26.dp),
                         )
@@ -1115,7 +1120,7 @@ fun ProductSelectionItem(
                             onDiscountChange(normalized.toDoubleOrNull() ?: 0.0)
                         }
                     },
-                    label = { Text("Descuento") },
+                    label = { Text(stringResource(R.string.events_form_products_discount)) },
                     placeholder = { Text("0") },
                     modifier = Modifier.width(140.dp),
                     singleLine = true,
@@ -1124,7 +1129,7 @@ fun ProductSelectionItem(
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = "Total: ${lineTotal.asMXN()}",
+                    text = stringResource(R.string.events_form_products_total, lineTotal.asMXN()),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = if (item.discount > 0) SolennixTheme.colors.success else SolennixTheme.colors.primaryText
@@ -1164,7 +1169,7 @@ fun StepExtras(viewModel: EventFormViewModel) {
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    "Agregar Extra",
+                    stringResource(R.string.events_form_extras_add),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                     color = SolennixTheme.colors.primary,
@@ -1189,13 +1194,13 @@ fun StepExtras(viewModel: EventFormViewModel) {
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    "Sin extras",
+                    stringResource(R.string.events_form_extras_empty_title),
                     style = MaterialTheme.typography.titleMedium,
                     color = SolennixTheme.colors.secondaryText,
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    "Agrega servicios o items adicionales",
+                    stringResource(R.string.events_form_extras_empty_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText,
                 )
@@ -1232,7 +1237,7 @@ fun StepExtras(viewModel: EventFormViewModel) {
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            "Subtotal Extras",
+                            stringResource(R.string.events_form_extras_subtotal),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
                             color = SolennixTheme.colors.secondaryText,
@@ -1289,7 +1294,7 @@ private fun EditableExtraCard(
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "Extra ${index + 1}",
+                    stringResource(R.string.events_form_extras_row_title, index + 1),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = SolennixTheme.colors.secondaryText,
@@ -1298,7 +1303,7 @@ private fun EditableExtraCard(
                 IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
                     Icon(
                         Icons.Default.Delete,
-                        contentDescription = "Eliminar",
+                        contentDescription = stringResource(R.string.events_form_extras_delete_a11y),
                         tint = SolennixTheme.colors.error,
                         modifier = Modifier.size(18.dp),
                     )
@@ -1310,8 +1315,8 @@ private fun EditableExtraCard(
             SolennixTextField(
                 value = extra.description,
                 onValueChange = onDescriptionChange,
-                label = "Descripcion",
-                placeholder = "Descripcion del extra",
+                label = stringResource(R.string.events_form_extras_description),
+                placeholder = stringResource(R.string.events_form_extras_description_placeholder),
                 leadingIcon = Icons.Default.Description,
             )
 
@@ -1327,7 +1332,7 @@ private fun EditableExtraCard(
                             onCostChange(normalized.toDoubleOrNull() ?: 0.0)
                         }
                     },
-                    label = { Text("Costo") },
+                    label = { Text(stringResource(R.string.events_form_extras_cost)) },
                     placeholder = { Text("0.00") },
                     leadingIcon = { Text("$", color = SolennixTheme.colors.secondaryText) },
                     keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal),
@@ -1346,7 +1351,7 @@ private fun EditableExtraCard(
                             }
                         }
                     },
-                    label = { Text("Precio") },
+                    label = { Text(stringResource(R.string.events_form_extras_price)) },
                     placeholder = { Text("0.00") },
                     leadingIcon = { Text("$", color = SolennixTheme.colors.secondaryText) },
                     enabled = !extra.excludeUtility,
@@ -1366,7 +1371,7 @@ private fun EditableExtraCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    "Solo cobrar costo (sin utilidad)",
+                    stringResource(R.string.events_form_extras_exclude_utility),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText,
                     modifier = Modifier.weight(1f),
@@ -1388,7 +1393,7 @@ private fun EditableExtraCard(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    "Incluir en checklist",
+                    stringResource(R.string.events_form_extras_include_checklist),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText,
                     modifier = Modifier.weight(1f),
@@ -1416,7 +1421,7 @@ private fun EquipmentSection(viewModel: EventFormViewModel) {
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            "Equipamiento",
+            stringResource(R.string.events_form_inventory_equipment),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             color = SolennixTheme.colors.primaryText,
@@ -1435,7 +1440,7 @@ private fun EquipmentSection(viewModel: EventFormViewModel) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Warning, contentDescription = null, tint = SolennixTheme.colors.error, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Conflictos de disponibilidad", style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.error)
+                        Text(stringResource(R.string.events_form_inventory_conflicts), style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.error)
                     }
                     Spacer(modifier = Modifier.height(6.dp))
                     conflicts.forEach { conflict ->
@@ -1461,7 +1466,7 @@ private fun EquipmentSection(viewModel: EventFormViewModel) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Lightbulb, contentDescription = null, tint = SolennixTheme.colors.warning, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Sugerencias por productos", style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.warning)
+                        Text(stringResource(R.string.events_form_inventory_suggestions), style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.warning)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(
@@ -1483,7 +1488,7 @@ private fun EquipmentSection(viewModel: EventFormViewModel) {
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        AddItemCard(label = "Agregar Equipamiento") { showEquipmentPicker = true }
+        AddItemCard(label = stringResource(R.string.events_form_inventory_add_equipment)) { showEquipmentPicker = true }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -1502,13 +1507,13 @@ private fun EquipmentSection(viewModel: EventFormViewModel) {
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    "Sin equipamiento (opcional)",
+                    stringResource(R.string.events_form_inventory_empty_equipment_title),
                     style = MaterialTheme.typography.titleSmall,
                     color = SolennixTheme.colors.secondaryText,
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    "Agrega equipo reutilizable para el evento",
+                    stringResource(R.string.events_form_inventory_empty_equipment_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText,
                 )
@@ -1573,7 +1578,7 @@ private fun EquipmentSection(viewModel: EventFormViewModel) {
 private fun StaffSection(viewModel: EventFormViewModel) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            "Personal",
+            stringResource(R.string.events_form_inventory_staff),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             color = SolennixTheme.colors.primaryText,
@@ -1606,7 +1611,7 @@ private fun EquipmentCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    equipment.equipmentName ?: "Equipo",
+                    equipment.equipmentName ?: stringResource(R.string.events_detail_equipment_fallback),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                 )
@@ -1643,7 +1648,7 @@ private fun EquipmentCard(
                 ) {
                     Icon(
                         Icons.Default.RemoveCircle,
-                        contentDescription = "Menos",
+                        contentDescription = stringResource(R.string.events_form_products_decrease_a11y),
                         tint = if (equipment.quantity > 1) SolennixTheme.colors.primary
                                else SolennixTheme.colors.secondaryText,
                         modifier = Modifier.size(26.dp),
@@ -1666,7 +1671,7 @@ private fun EquipmentCard(
                 ) {
                     Icon(
                         Icons.Default.AddCircle,
-                        contentDescription = "Mas",
+                        contentDescription = stringResource(R.string.events_form_products_increase_a11y),
                         tint = SolennixTheme.colors.primary,
                         modifier = Modifier.size(26.dp),
                     )
@@ -1676,7 +1681,7 @@ private fun EquipmentCard(
             IconButton(onClick = onRemove) {
                 Icon(
                     Icons.Default.Delete,
-                    contentDescription = "Eliminar",
+                    contentDescription = stringResource(R.string.events_form_products_delete_a11y),
                     tint = SolennixTheme.colors.error,
                 )
             }
@@ -1684,11 +1689,16 @@ private fun EquipmentCard(
     }
 }
 
+@Composable
 private fun stockLabel(stock: Double?, unit: String?): String {
     val stockStr = stock?.let {
         if (it % 1.0 == 0.0) it.toInt().toString() else "%.1f".format(it)
-    } ?: "—"
-    return if (unit.isNullOrBlank()) "Stock: $stockStr" else "Stock: $stockStr $unit"
+    } ?: stringResource(R.string.events_form_inventory_not_available)
+    return if (unit.isNullOrBlank()) {
+        stringResource(R.string.events_form_inventory_stock_only_value, stockStr)
+    } else {
+        stringResource(R.string.events_form_inventory_stock_value, stockStr, unit)
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1714,11 +1724,11 @@ private fun EquipmentPickerSheet(
         containerColor = SolennixTheme.colors.card
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp)) {
-            Text("Seleccionar Equipo", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 12.dp))
+            Text(stringResource(R.string.events_form_inventory_select_equipment), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 12.dp))
             SolennixTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                label = "Buscar equipo",
+                label = stringResource(R.string.events_form_inventory_search_equipment),
                 leadingIcon = Icons.Default.Search,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -1747,13 +1757,13 @@ private fun EquipmentPickerSheet(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(item.ingredientName, style = MaterialTheme.typography.bodyLarge)
                                 Text(
-                                    "Disponible: ${item.currentStock.toInt()} ${item.unit}",
+                                    stringResource(R.string.events_form_inventory_available_value, item.currentStock.toInt().toString(), item.unit),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = SolennixTheme.colors.secondaryText
                                 )
                             }
                             if (isSelected) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = "Seleccionado", tint = SolennixTheme.colors.success, modifier = Modifier.size(20.dp))
+                                Icon(Icons.Default.CheckCircle, contentDescription = stringResource(R.string.events_form_products_selected_a11y), tint = SolennixTheme.colors.success, modifier = Modifier.size(20.dp))
                             }
                         }
                     }
@@ -1776,7 +1786,7 @@ private fun SuppliesSection(viewModel: EventFormViewModel) {
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            "Insumos",
+            stringResource(R.string.events_form_inventory_supplies),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             color = SolennixTheme.colors.primaryText,
@@ -1795,7 +1805,7 @@ private fun SuppliesSection(viewModel: EventFormViewModel) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Lightbulb, contentDescription = null, tint = SolennixTheme.colors.warning, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Sugerencias por productos", style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.warning)
+                        Text(stringResource(R.string.events_form_inventory_suggestions), style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.warning)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(
@@ -1818,7 +1828,7 @@ private fun SuppliesSection(viewModel: EventFormViewModel) {
         }
 
         // Card prominente "Agregar Insumo" — mismo patrón que StepProducts.
-        AddItemCard(label = "Agregar Insumo") { showSupplyPicker = true }
+        AddItemCard(label = stringResource(R.string.events_form_inventory_add_supply)) { showSupplyPicker = true }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -1838,13 +1848,13 @@ private fun SuppliesSection(viewModel: EventFormViewModel) {
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    "Sin insumos (opcional)",
+                    stringResource(R.string.events_form_inventory_empty_supplies_title),
                     style = MaterialTheme.typography.titleSmall,
                     color = SolennixTheme.colors.secondaryText,
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    "Agrega consumibles del inventario",
+                    stringResource(R.string.events_form_inventory_empty_supplies_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText,
                 )
@@ -1908,7 +1918,7 @@ private fun SuppliesSection(viewModel: EventFormViewModel) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        "Costo insumos",
+                        stringResource(R.string.events_form_inventory_supplies_cost),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = SolennixTheme.colors.secondaryText,
@@ -2028,22 +2038,23 @@ private fun SupplyCard(
         Column(modifier = Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(supply.supplyName ?: "Insumo", style = MaterialTheme.typography.titleSmall)
+                    Text(supply.supplyName ?: stringResource(R.string.events_detail_supplies_fallback), style = MaterialTheme.typography.titleSmall)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (supply.unit != null) {
-                            Text("Unidad: ${supply.unit}", style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
+                        val unit = supply.unit
+                        if (unit != null) {
+                            Text(stringResource(R.string.events_form_inventory_unit_value, unit), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
                         }
                         val currentStock = supply.currentStock
                         if (currentStock != null) {
                             Text(
-                                "Stock: ${String.format("%.1f", currentStock)}",
+                                stringResource(R.string.events_form_inventory_stock_only_value, String.format("%.1f", currentStock)),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = if (currentStock >= supply.quantity) SolennixTheme.colors.success else SolennixTheme.colors.error
                             )
                         }
                     }
                     Text(
-                        "Costo: ${supply.unitCost.asMXN()} × ${String.format("%.1f", supply.quantity)} = ${(supply.unitCost * supply.quantity).asMXN()}",
+                        stringResource(R.string.events_form_inventory_cost_formula, supply.unitCost.asMXN(), String.format("%.1f", supply.quantity), (supply.unitCost * supply.quantity).asMXN()),
                         style = MaterialTheme.typography.bodySmall,
                         color = SolennixTheme.colors.primary
                     )
@@ -2051,7 +2062,7 @@ private fun SupplyCard(
                 IconButton(onClick = onRemove) {
                     Icon(
                         Icons.Default.Delete,
-                        contentDescription = "Eliminar",
+                        contentDescription = stringResource(R.string.events_form_products_delete_a11y),
                         tint = SolennixTheme.colors.error,
                     )
                 }
@@ -2069,7 +2080,7 @@ private fun SupplyCard(
                     ) {
                         Icon(
                             Icons.Default.RemoveCircle,
-                            contentDescription = "Menos",
+                            contentDescription = stringResource(R.string.events_form_products_decrease_a11y),
                             tint = if (supply.quantity > 1) SolennixTheme.colors.primary
                                    else SolennixTheme.colors.secondaryText,
                             modifier = Modifier.size(22.dp),
@@ -2091,7 +2102,7 @@ private fun SupplyCard(
                     ) {
                         Icon(
                             Icons.Default.AddCircle,
-                            contentDescription = "Mas",
+                            contentDescription = stringResource(R.string.events_form_products_increase_a11y),
                             tint = SolennixTheme.colors.primary,
                             modifier = Modifier.size(22.dp),
                         )
@@ -2106,7 +2117,7 @@ private fun SupplyCard(
                                 onQuantityChange(normalized.toDoubleOrNull() ?: 0.0)
                             }
                         },
-                        label = { Text("Cantidad") },
+                        label = { Text(stringResource(R.string.events_form_inventory_quantity)) },
                         placeholder = { Text("0.0") },
                         modifier = Modifier.width(110.dp),
                         singleLine = true,
@@ -2121,12 +2132,12 @@ private fun SupplyCard(
                 FilterChip(
                     selected = supply.source == SupplySource.STOCK,
                     onClick = { onSourceChange(SupplySource.STOCK) },
-                    label = { Text("Stock") }
+                    label = { Text(stringResource(R.string.events_form_inventory_source_stock)) }
                 )
                 FilterChip(
                     selected = supply.source == SupplySource.PURCHASE,
                     onClick = { onSourceChange(SupplySource.PURCHASE) },
-                    label = { Text("Compra") }
+                    label = { Text(stringResource(R.string.events_form_inventory_source_purchase)) }
                 )
             }
 
@@ -2139,7 +2150,7 @@ private fun SupplyCard(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
-                        "Sin costo (reaprovechado)",
+                        stringResource(R.string.events_form_inventory_exclude_cost),
                         style = MaterialTheme.typography.bodySmall,
                         color = SolennixTheme.colors.secondaryText,
                         modifier = Modifier.weight(1f),
@@ -2194,11 +2205,11 @@ private fun SupplyPickerSheet(
         containerColor = SolennixTheme.colors.card
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp)) {
-            Text("Seleccionar Insumo", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 12.dp))
+            Text(stringResource(R.string.events_form_inventory_select_supply), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 12.dp))
             SolennixTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                label = "Buscar insumo",
+                label = stringResource(R.string.events_form_inventory_search_supply),
                 leadingIcon = Icons.Default.Search,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -2228,14 +2239,14 @@ private fun SupplyPickerSheet(
                                 Text(item.ingredientName, style = MaterialTheme.typography.bodyLarge)
                                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                     Text(
-                                        "Stock: ${String.format("%.1f", item.currentStock)} ${item.unit}",
+                                        stringResource(R.string.events_form_inventory_stock_value, String.format("%.1f", item.currentStock), item.unit),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = SolennixTheme.colors.secondaryText
                                     )
                                     val unitCost = item.unitCost
                                     if (unitCost != null) {
                                         Text(
-                                            "Costo: ${unitCost.asMXN()}/${item.unit}",
+                                            stringResource(R.string.events_form_inventory_unit_cost_value, unitCost.asMXN(), item.unit),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = SolennixTheme.colors.primary
                                         )
@@ -2243,7 +2254,7 @@ private fun SupplyPickerSheet(
                                 }
                             }
                             if (isSelected) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = "Seleccionado", tint = SolennixTheme.colors.success, modifier = Modifier.size(20.dp))
+                                Icon(Icons.Default.CheckCircle, contentDescription = stringResource(R.string.events_form_products_selected_a11y), tint = SolennixTheme.colors.success, modifier = Modifier.size(20.dp))
                             }
                         }
                     }
@@ -2264,13 +2275,13 @@ fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean) {
                 .padding(24.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            Text("Finanzas y Resumen", style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(R.string.events_form_summary_title), style = MaterialTheme.typography.headlineSmall)
             Spacer(modifier = Modifier.height(20.dp))
 
             // Discount section — tipo (%/$) como chips segmented ANTES del
             // textfield (mismo patrón que iOS). Siempre una sola línea, no
             // stackea en phone.
-            Text("Descuento", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.events_form_summary_discount_title), style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -2297,7 +2308,7 @@ fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean) {
                 SolennixTextField(
                     value = viewModel.discount,
                     onValueChange = { viewModel.discount = it },
-                    label = if (viewModel.discountType == DiscountType.PERCENT) "Descuento (%)" else "Descuento ($)",
+                    label = if (viewModel.discountType == DiscountType.PERCENT) stringResource(R.string.events_form_summary_discount_percent) else stringResource(R.string.events_form_summary_discount_amount),
                     keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
                     modifier = Modifier.weight(1f),
                 )
@@ -2306,10 +2317,10 @@ fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean) {
             Spacer(modifier = Modifier.height(20.dp))
 
             // Invoice / Tax section
-            Text("Facturación", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.events_form_summary_invoice_title), style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Requiere Factura (IVA)", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                Text(stringResource(R.string.events_form_summary_invoice_required), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                 Switch(
                     checked = viewModel.requiresInvoice,
                     onCheckedChange = { viewModel.requiresInvoice = it }
@@ -2320,7 +2331,7 @@ fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean) {
                 SolennixTextField(
                     value = viewModel.taxRate,
                     onValueChange = { viewModel.taxRate = it },
-                    label = "Tasa IVA (%)",
+                    label = stringResource(R.string.events_form_summary_tax_rate),
                     keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
                 )
             }
@@ -2329,7 +2340,7 @@ fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean) {
 
             // Deposit section — % a la izquierda, monto calculado a la
             // derecha. Siempre una línea (no stackea), igual que iOS.
-            Text("Anticipo", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.events_form_summary_deposit_title), style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -2339,12 +2350,12 @@ fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean) {
                 SolennixTextField(
                     value = viewModel.depositPercent,
                     onValueChange = { viewModel.depositPercent = it },
-                    label = "Anticipo (%)",
+                    label = stringResource(R.string.events_form_summary_deposit_percent),
                     keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
                     modifier = Modifier.weight(1f),
                 )
                 Text(
-                    "= ${depositAmount.asMXN()}",
+                    stringResource(R.string.events_form_summary_deposit_amount, depositAmount.asMXN()),
                     style = MaterialTheme.typography.titleSmall,
                     color = SolennixTheme.colors.primary,
                     fontWeight = FontWeight.SemiBold,
@@ -2354,7 +2365,7 @@ fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean) {
             Spacer(modifier = Modifier.height(20.dp))
 
             // Cancellation policy — 2 columnas inline siempre (no stackea).
-            Text("Política de Cancelación", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.events_form_summary_cancellation_title), style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -2365,7 +2376,7 @@ fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean) {
                     SolennixTextField(
                         value = viewModel.cancellationDays,
                         onValueChange = { viewModel.cancellationDays = it },
-                        label = "Días anticipación",
+                        label = stringResource(R.string.events_form_summary_cancellation_days),
                         keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
                     )
                 }
@@ -2373,7 +2384,7 @@ fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean) {
                     SolennixTextField(
                         value = viewModel.refundPercent,
                         onValueChange = { viewModel.refundPercent = it },
-                        label = "Reembolso (%)",
+                        label = stringResource(R.string.events_form_summary_refund_percent),
                         keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
                     )
                 }
@@ -2383,13 +2394,13 @@ fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean) {
 
             // Notes — multiline 3 líneas por default (SolennixTextField no
             // expone minLines, uso OutlinedTextField directo aquí).
-            Text("Notas", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.events_form_summary_notes_title), style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = viewModel.notes,
                 onValueChange = { viewModel.notes = it },
-                label = { Text("Notas del evento") },
-                placeholder = { Text("Instrucciones especiales, observaciones...") },
+                label = { Text(stringResource(R.string.events_form_summary_notes_label)) },
+                placeholder = { Text(stringResource(R.string.events_form_summary_notes_placeholder)) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3,
                 maxLines = 6,
@@ -2411,53 +2422,53 @@ fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean) {
                 shape = MaterialTheme.shapes.medium
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Resumen", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.events_form_summary_summary), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
 
                     if (viewModel.hasPendingProductCosts) {
                         Text(
-                            "Algunos costos de productos siguen cargando. La rentabilidad puede ajustarse en segundos.",
+                            stringResource(R.string.events_form_summary_pending_costs),
                             style = MaterialTheme.typography.bodySmall,
                             color = SolennixTheme.colors.warning
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
 
-                    SummaryRow("Subtotal productos", viewModel.subtotalProducts.asMXN())
-                    SummaryRow("Subtotal extras", viewModel.subtotalExtras.asMXN())
+                    SummaryRow(stringResource(R.string.events_form_summary_subtotal_products), viewModel.subtotalProducts.asMXN())
+                    SummaryRow(stringResource(R.string.events_form_summary_subtotal_extras), viewModel.subtotalExtras.asMXN())
 
                     if (viewModel.discountAmount > 0) {
-                        SummaryRow("Descuento", "-${viewModel.discountAmount.asMXN()}", valueColor = SolennixTheme.colors.error)
+                        SummaryRow(stringResource(R.string.events_form_summary_discount_title), "-${viewModel.discountAmount.asMXN()}", valueColor = SolennixTheme.colors.error)
                     }
 
                     if (viewModel.requiresInvoice && viewModel.taxAmount > 0) {
                         val rate = viewModel.taxRate.toDoubleOrNull() ?: 0.0
-                        SummaryRow("IVA (${String.format("%.0f", rate)}%)", "+${viewModel.taxAmount.asMXN()}")
+                        SummaryRow(stringResource(R.string.events_form_summary_tax_value, String.format("%.0f", rate)), "+${viewModel.taxAmount.asMXN()}")
                     }
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = SolennixTheme.colors.borderLight)
 
                     Row(modifier = Modifier.fillMaxWidth()) {
-                        Text("Total", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                        Text(stringResource(R.string.events_form_summary_total), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                         Text(viewModel.total.asMXN(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = SolennixTheme.colors.primary)
                     }
 
                     Spacer(modifier = Modifier.height(4.dp))
-                    SummaryRow("Anticipo (${String.format("%.0f", depositPct)}%)", depositAmount.asMXN(), valueColor = SolennixTheme.colors.primary)
+                    SummaryRow(stringResource(R.string.events_form_summary_deposit_value, String.format("%.0f", depositPct)), depositAmount.asMXN(), valueColor = SolennixTheme.colors.primary)
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = SolennixTheme.colors.borderLight)
 
                     // Profitability section
-                    Text("Rentabilidad", style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.secondaryText)
+                    Text(stringResource(R.string.events_form_summary_profitability), style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.secondaryText)
                     Spacer(modifier = Modifier.height(6.dp))
-                    SummaryRow("Costos totales", viewModel.totalCosts.asMXN())
+                    SummaryRow(stringResource(R.string.events_form_summary_total_costs), viewModel.totalCosts.asMXN())
                     SummaryRow(
-                        "Ganancia neta",
+                        stringResource(R.string.events_form_summary_net_profit),
                         viewModel.netProfit.asMXN(),
                         valueColor = if (viewModel.netProfit >= 0) SolennixTheme.colors.success else SolennixTheme.colors.error
                     )
                     SummaryRow(
-                        "Margen",
+                        stringResource(R.string.events_form_summary_margin),
                         "${String.format("%.1f", viewModel.profitMargin)}%",
                         valueColor = if (viewModel.profitMargin >= 20) SolennixTheme.colors.success else SolennixTheme.colors.warning
                     )
@@ -2539,30 +2550,30 @@ fun ProductPickerSheet(
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp)) {
             Text(
-                "Seleccionar Producto",
+                stringResource(R.string.events_form_products_picker_title),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
             SolennixTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                label = "Buscar producto",
+                label = stringResource(R.string.events_form_products_search),
                 leadingIcon = Icons.Default.Search,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(12.dp))
             if (viewModel.isLoadingProducts && products.value.isEmpty()) {
                 Text(
-                    "Cargando productos...",
+                    stringResource(R.string.events_form_products_loading),
                     style = MaterialTheme.typography.bodyMedium,
                     color = SolennixTheme.colors.secondaryText
                 )
             } else if (filteredProducts.isEmpty()) {
                 EmptyState(
                     icon = Icons.Default.RestaurantMenu,
-                    title = "Sin resultados",
-                    message = "No encontramos productos con ese criterio.",
-                    actionText = "Reintentar",
+                    title = stringResource(R.string.events_form_products_no_results),
+                    message = stringResource(R.string.events_form_products_no_results_message),
+                    actionText = stringResource(R.string.events_form_retry),
                     onAction = { viewModel.retryLoadProducts() }
                 )
             } else {
@@ -2604,7 +2615,7 @@ fun ProductPickerSheet(
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Icon(
                                         Icons.Default.CheckCircle,
-                                        contentDescription = "Seleccionado",
+                                        contentDescription = stringResource(R.string.events_form_products_selected_a11y),
                                         tint = SolennixTheme.colors.success,
                                         modifier = Modifier.size(20.dp)
                                     )
@@ -2639,14 +2650,14 @@ private fun StaffAssignmentPanel(viewModel: EventFormViewModel) {
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                "Personal asignado",
+                stringResource(R.string.events_form_staff_assigned_title),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.weight(1f)
             )
             IconButton(onClick = { showStaffPicker = true }) {
                 Icon(
                     Icons.Default.AddCircle,
-                    contentDescription = "Añadir colaborador",
+                    contentDescription = stringResource(R.string.events_form_staff_add_collaborator_a11y),
                     tint = SolennixTheme.colors.primary
                 )
             }
@@ -2654,8 +2665,7 @@ private fun StaffAssignmentPanel(viewModel: EventFormViewModel) {
 
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            "Asigná colaboradores (fotógrafo, DJ, meseros, coordinador). El costo es opcional y se " +
-                "registra por evento — el mismo colaborador puede cobrar distinto en cada uno.",
+            stringResource(R.string.events_form_staff_helper),
             style = MaterialTheme.typography.bodySmall,
             color = SolennixTheme.colors.secondaryText
         )
@@ -2672,13 +2682,13 @@ private fun StaffAssignmentPanel(viewModel: EventFormViewModel) {
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        "Aún no tenés colaboradores en tu catálogo.",
+                        stringResource(R.string.events_form_staff_empty_catalog_title),
                         style = MaterialTheme.typography.bodyMedium,
                         color = SolennixTheme.colors.primaryText
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        "Agregá tu primer colaborador desde el menú Más → Personal.",
+                        stringResource(R.string.events_form_staff_empty_catalog_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = SolennixTheme.colors.secondaryText
                     )
@@ -2692,7 +2702,7 @@ private fun StaffAssignmentPanel(viewModel: EventFormViewModel) {
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Agregar colaborador")
+                    Text(stringResource(R.string.events_form_staff_add_collaborator))
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedButton(
@@ -2704,7 +2714,7 @@ private fun StaffAssignmentPanel(viewModel: EventFormViewModel) {
                 ) {
                     Icon(Icons.Default.Group, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Agregar equipo completo")
+                    Text(stringResource(R.string.events_form_staff_add_team))
                 }
             }
         } else {
@@ -2729,7 +2739,7 @@ private fun StaffAssignmentPanel(viewModel: EventFormViewModel) {
             if (viewModel.costStaff > 0) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    "Costo total de personal: ${viewModel.costStaff.asMXN()}",
+                    stringResource(R.string.events_form_staff_total_cost, viewModel.costStaff.asMXN()),
                     style = MaterialTheme.typography.labelMedium,
                     color = SolennixTheme.colors.primary
                 )
@@ -2745,7 +2755,7 @@ private fun StaffAssignmentPanel(viewModel: EventFormViewModel) {
             ) {
                 Icon(Icons.Default.Group, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Agregar equipo completo")
+                Text(stringResource(R.string.events_form_staff_add_team))
             }
         }
     }
@@ -2823,7 +2833,7 @@ private fun StaffAssignmentCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        assignment.staffName ?: "Colaborador",
+                        assignment.staffName ?: stringResource(R.string.events_detail_staff_fallback),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = SolennixTheme.colors.primaryText
@@ -2839,7 +2849,7 @@ private fun StaffAssignmentCard(
                 IconButton(onClick = onRemove) {
                     Icon(
                         Icons.Default.Delete,
-                        contentDescription = "Quitar",
+                        contentDescription = stringResource(R.string.events_form_staff_remove_a11y),
                         tint = SolennixTheme.colors.error
                     )
                 }
@@ -2877,7 +2887,7 @@ private fun StaffAssignmentCard(
                             feeText = newValue
                             onFeeChange(newValue.replace(",", ".").toDoubleOrNull())
                         },
-                        label = { Text("Costo (opcional)") },
+                        label = { Text(stringResource(R.string.events_form_staff_fee_optional)) },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
                         ),
@@ -2890,7 +2900,7 @@ private fun StaffAssignmentCard(
                     OutlinedTextField(
                         value = assignment.roleOverride,
                         onValueChange = onRoleChange,
-                        label = { Text("Rol en este evento (opcional)") },
+                        label = { Text(stringResource(R.string.events_form_staff_role_optional)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -2900,7 +2910,7 @@ private fun StaffAssignmentCard(
             OutlinedTextField(
                 value = assignment.notes,
                 onValueChange = onNotesChange,
-                label = { Text("Notas (opcional)") },
+                label = { Text(stringResource(R.string.events_form_staff_notes_optional)) },
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 3
             )
@@ -2918,7 +2928,7 @@ private fun StaffAssignmentCard(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    if (shiftExpanded) "Horario del turno" else "Agregar horario (opcional)",
+                    if (shiftExpanded) stringResource(R.string.events_form_staff_shift_schedule) else stringResource(R.string.events_form_staff_shift_add),
                     style = MaterialTheme.typography.labelLarge
                 )
             }
@@ -2936,7 +2946,7 @@ private fun StaffAssignmentCard(
                         Icon(Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            startLocalTime?.let { formatTime(it) } ?: "Entrada"
+                            startLocalTime?.let { formatTime(it) } ?: stringResource(R.string.events_form_staff_shift_start)
                         )
                     }
                     OutlinedButton(
@@ -2946,14 +2956,14 @@ private fun StaffAssignmentCard(
                         Icon(Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            endLocalTime?.let { formatTime(it) } ?: "Salida"
+                            endLocalTime?.let { formatTime(it) } ?: stringResource(R.string.events_form_staff_shift_end)
                         )
                     }
                     if (startLocalTime != null || endLocalTime != null) {
                         IconButton(onClick = onShiftClear) {
                             Icon(
                                 Icons.Default.Clear,
-                                contentDescription = "Limpiar turno",
+                                contentDescription = stringResource(R.string.events_form_staff_shift_clear_a11y),
                                 tint = SolennixTheme.colors.secondaryText
                             )
                         }
@@ -2974,10 +2984,10 @@ private fun StaffAssignmentCard(
                             val picked = java.time.LocalTime.of(pickerState.hour, pickerState.minute)
                             onShiftChange(picked, endLocalTime)
                             showStartPicker = false
-                        }) { Text("Listo") }
+                        }) { Text(stringResource(R.string.events_form_staff_done)) }
                     },
                     dismissButton = {
-                        TextButton(onClick = { showStartPicker = false }) { Text("Cancelar") }
+                        TextButton(onClick = { showStartPicker = false }) { Text(stringResource(R.string.events_form_cancel)) }
                     },
                     text = { TimePicker(state = pickerState) }
                 )
@@ -2995,10 +3005,10 @@ private fun StaffAssignmentCard(
                             val picked = java.time.LocalTime.of(pickerState.hour, pickerState.minute)
                             onShiftChange(startLocalTime, picked)
                             showEndPicker = false
-                        }) { Text("Listo") }
+                        }) { Text(stringResource(R.string.events_form_staff_done)) }
                     },
                     dismissButton = {
-                        TextButton(onClick = { showEndPicker = false }) { Text("Cancelar") }
+                        TextButton(onClick = { showEndPicker = false }) { Text(stringResource(R.string.events_form_cancel)) }
                     },
                     text = { TimePicker(state = pickerState) }
                 )
@@ -3117,7 +3127,7 @@ private fun GuestCountStepper(
     // digitos; los botones +/- en leading/trailing siguen funcionando.
     Column {
         Text(
-            "Personas",
+            stringResource(R.string.events_form_general_people),
             style = MaterialTheme.typography.labelMedium,
             color = SolennixTheme.colors.secondaryText,
         )
@@ -3138,7 +3148,7 @@ private fun GuestCountStepper(
                 ) {
                     Icon(
                         Icons.Default.RemoveCircle,
-                        contentDescription = "Menos",
+                        contentDescription = stringResource(R.string.events_form_products_decrease_a11y),
                         tint = if (value > 0) SolennixTheme.colors.primary
                                else SolennixTheme.colors.secondaryText,
                         modifier = Modifier.size(28.dp),
@@ -3161,7 +3171,7 @@ private fun GuestCountStepper(
                 IconButton(onClick = { onValueChange(value + 1) }) {
                     Icon(
                         Icons.Default.AddCircle,
-                        contentDescription = "Más",
+                        contentDescription = stringResource(R.string.events_form_products_increase_a11y),
                         tint = SolennixTheme.colors.primary,
                         modifier = Modifier.size(28.dp),
                     )
@@ -3187,7 +3197,7 @@ private fun TimePickerField(
     // (iOS hace lo mismo). Truco: al pasar un value no vacío, el label flota
     // al tope del OutlinedTextField aún con enabled=false; sin eso, el label
     // quedaría en el medio y no se vería la pista de "opcional".
-    val displayValue = if (isBlank) "Opcional" else value
+    val displayValue = if (isBlank) stringResource(R.string.events_form_general_optional) else value
     OutlinedTextField(
         value = displayValue,
         onValueChange = {},
@@ -3232,26 +3242,27 @@ private fun TimePickerDialogM3(
     )
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Elegir hora") },
+        title = { Text(stringResource(R.string.events_form_general_time_picker_title)) },
         text = {
             TimePicker(state = state)
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(state.hour, state.minute) }) {
-                Text("Aceptar")
+                Text(stringResource(R.string.events_form_general_time_picker_confirm))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.events_form_cancel)) }
         },
     )
 }
 
+@Composable
 private fun AssignmentStatus.uiLabel(): String = when (this) {
-    AssignmentStatus.PENDING -> "Sin confirmar"
-    AssignmentStatus.CONFIRMED -> "Confirmado"
-    AssignmentStatus.DECLINED -> "Rechazó"
-    AssignmentStatus.CANCELLED -> "Cancelado"
+    AssignmentStatus.PENDING -> stringResource(R.string.events_form_staff_status_pending)
+    AssignmentStatus.CONFIRMED -> stringResource(R.string.events_form_staff_status_confirmed)
+    AssignmentStatus.DECLINED -> stringResource(R.string.events_form_staff_status_declined)
+    AssignmentStatus.CANCELLED -> stringResource(R.string.events_form_staff_status_cancelled)
 }
 
 private fun AssignmentStatus.uiColor(): Color = when (this) {
@@ -3292,7 +3303,7 @@ private fun StaffPickerSheet(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                "Seleccionar colaborador",
+                stringResource(R.string.events_form_staff_select_collaborator),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold
             )
@@ -3301,7 +3312,7 @@ private fun StaffPickerSheet(
                 value = query,
                 onValueChange = { query = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Buscar por nombre o rol...") },
+                placeholder = { Text(stringResource(R.string.events_form_staff_search_placeholder)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 singleLine = true,
                 shape = MaterialTheme.shapes.medium
@@ -3317,9 +3328,9 @@ private fun StaffPickerSheet(
                 ) {
                     Text(
                         if (availableStaff.isEmpty())
-                            "Aún no tenés colaboradores. Agregalos desde Más → Personal."
+                            stringResource(R.string.events_form_staff_empty_picker_message)
                         else
-                            "Sin resultados",
+                            stringResource(R.string.events_form_products_no_results),
                         style = MaterialTheme.typography.bodyMedium,
                         color = SolennixTheme.colors.secondaryText
                     )
@@ -3371,7 +3382,7 @@ private fun StaffPickerSheet(
                                         modifier = Modifier.padding(end = 8.dp)
                                     ) {
                                         Text(
-                                            "Ocupado ese día",
+                                            stringResource(R.string.events_form_staff_busy),
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = Color(0xFFB7791F),
@@ -3381,7 +3392,7 @@ private fun StaffPickerSheet(
                                 }
                                 Icon(
                                     Icons.Default.Add,
-                                    contentDescription = "Asignar",
+                                    contentDescription = stringResource(R.string.events_form_staff_assign_a11y),
                                     tint = SolennixTheme.colors.primary
                                 )
                             }
@@ -3403,18 +3414,18 @@ private fun TeamPickerSheet(
     val teams by viewModel.availableTeams.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                "Seleccioná un equipo",
+                stringResource(R.string.events_form_staff_select_team),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                "Los miembros se suman como asignaciones nuevas. Podés ajustar el " +
-                    "fee, turno o estado de cada uno después.",
+                stringResource(R.string.events_form_staff_team_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = SolennixTheme.colors.secondaryText
             )
@@ -3446,7 +3457,7 @@ private fun TeamPickerSheet(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            "Sin equipos todavía. Creá uno desde Personal → Equipos.",
+                            stringResource(R.string.events_form_staff_empty_teams_picker),
                             style = MaterialTheme.typography.bodyMedium,
                             color = SolennixTheme.colors.secondaryText
                         )
@@ -3459,15 +3470,17 @@ private fun TeamPickerSheet(
                                 onClick = {
                                     viewModel.addTeamAssignment(team.id) { added, skipped ->
                                         val msg = buildString {
-                                            append("Equipo aplicado: ")
+                                            append(context.getString(R.string.events_form_staff_team_applied_prefix))
                                             append(
                                                 when (added) {
-                                                    0 -> "sin nuevos miembros"
-                                                    1 -> "1 agregado"
-                                                    else -> "$added agregados"
+                                                    0 -> context.getString(R.string.events_form_staff_team_applied_none)
+                                                    1 -> context.getString(R.string.events_form_staff_team_applied_one)
+                                                    else -> context.getString(R.string.events_form_staff_team_applied_many, added)
                                                 }
                                             )
-                                            if (skipped > 0) append(" · $skipped ya estaban")
+                                            if (skipped > 0) {
+                                                append(context.getString(R.string.events_form_staff_team_skipped, skipped))
+                                            }
                                         }
                                         scope.launch { snackbarHostState.showSnackbar(msg) }
                                     }
@@ -3509,9 +3522,9 @@ private fun TeamPickerSheet(
                                         val count = team.memberCount ?: team.members?.size ?: 0
                                         Text(
                                             when (count) {
-                                                0 -> "Sin miembros"
-                                                1 -> "1 miembro"
-                                                else -> "$count miembros"
+                                                0 -> stringResource(R.string.events_form_staff_team_members_none)
+                                                1 -> stringResource(R.string.events_form_staff_team_members_one)
+                                                else -> stringResource(R.string.events_form_staff_team_members_many, count)
                                             },
                                             style = MaterialTheme.typography.labelSmall,
                                             color = SolennixTheme.colors.secondaryText
@@ -3519,7 +3532,7 @@ private fun TeamPickerSheet(
                                     }
                                     Icon(
                                         Icons.Default.Add,
-                                        contentDescription = "Aplicar",
+                                        contentDescription = stringResource(R.string.events_form_staff_apply_a11y),
                                         tint = SolennixTheme.colors.primary
                                     )
                                 }

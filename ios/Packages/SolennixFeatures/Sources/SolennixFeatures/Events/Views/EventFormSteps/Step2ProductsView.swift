@@ -3,6 +3,14 @@ import SolennixCore
 import SolennixDesign
 import SolennixNetwork
 
+private func tr(_ key: String, _ value: String) -> String {
+    FeatureL10n.text(key, value)
+}
+
+private func trf(_ key: String, _ value: String, _ arg: String) -> String {
+    String(format: tr(key, value), locale: FeatureL10n.locale, arg)
+}
+
 // MARK: - Step 2: Products
 
 struct Step2ProductsView: View {
@@ -25,7 +33,7 @@ struct Step2ProductsView: View {
                         Image(systemName: "plus.circle.fill")
                             .foregroundStyle(SolennixColors.primary)
 
-                        Text("Agregar Producto")
+                        Text(tr("events.form.products.add", "Agregar producto"))
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundStyle(SolennixColors.primary)
@@ -51,11 +59,11 @@ struct Step2ProductsView: View {
                             .font(.largeTitle)
                             .foregroundStyle(SolennixColors.textTertiary)
 
-                        Text("Sin productos")
+                        Text(tr("events.form.products.empty_title", "Sin productos"))
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.textSecondary)
 
-                        Text("Agrega productos al evento")
+                        Text(tr("events.form.products.empty_desc", "Agrega productos al evento"))
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textTertiary)
                     }
@@ -71,7 +79,7 @@ struct Step2ProductsView: View {
                             productRow(item: item, index: index)
                                 .draggable(item.id.uuidString) {
                                     // Drag preview
-                                    Text(item.product?.name ?? "Producto")
+                                    Text(item.product?.name ?? tr("events.detail.product_fallback", "Producto"))
                                         .padding(Spacing.sm)
                                         .background(SolennixColors.card)
                                         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
@@ -89,7 +97,7 @@ struct Step2ProductsView: View {
                 // Subtotal
                 if !viewModel.selectedProducts.isEmpty {
                     HStack {
-                        Text("Subtotal Productos")
+                        Text(tr("events.form.products.subtotal", "Subtotal productos"))
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundStyle(SolennixColors.textSecondary)
@@ -115,13 +123,13 @@ struct Step2ProductsView: View {
             isPresented: deleteDialogBinding,
             titleVisibility: .visible
         ) {
-            Button("Eliminar", role: .destructive) {
+            Button(tr("events.list.delete_confirm.confirm", "Eliminar"), role: .destructive) {
                 if let idx = pendingDeleteIndex {
                     viewModel.removeProduct(at: idx)
                 }
                 pendingDeleteIndex = nil
             }
-            Button("Cancelar", role: .cancel) {
+            Button(tr("events.form.cancel", "Cancelar"), role: .cancel) {
                 pendingDeleteIndex = nil
             }
         }
@@ -137,10 +145,10 @@ struct Step2ProductsView: View {
     private var deleteDialogTitle: String {
         guard let idx = pendingDeleteIndex,
               viewModel.selectedProducts.indices.contains(idx) else {
-            return "¿Eliminar producto?"
+            return tr("events.form.products.delete_title", "¿Eliminar producto?")
         }
-        let name = viewModel.selectedProducts[idx].product?.name ?? "este producto"
-        return "¿Eliminar \(name)?"
+        let name = viewModel.selectedProducts[idx].product?.name ?? tr("events.form.products.delete_fallback", "este producto")
+        return trf("events.form.products.delete_named", "¿Eliminar %@?", name)
     }
 
     // MARK: - Product Row
@@ -154,7 +162,7 @@ struct Step2ProductsView: View {
             // visual con Step 3 (Extras) — el trash vive en su propia fila
             // separado del contenido editable.
             HStack {
-                Text("Producto \(index + 1)")
+                Text(trf("events.form.products.row_title", "Producto %@", String(index + 1)))
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.textSecondary)
@@ -174,13 +182,13 @@ struct Step2ProductsView: View {
             // Producto + stepper.
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(item.product?.name ?? "Producto")
+                    Text(item.product?.name ?? tr("events.detail.product_fallback", "Producto"))
                         .font(.body)
                         .fontWeight(.semibold)
                         .foregroundStyle(SolennixColors.text)
 
                     // Precio unitario en primary — parity con Android.
-                    Text("\(formatCurrency(item.unitPrice)) c/u")
+                    Text(trf("events.form.products.unit_price", "%@ c/u", formatCurrency(item.unitPrice)))
                         .font(.subheadline)
                         .foregroundStyle(SolennixColors.primary)
 
@@ -188,7 +196,7 @@ struct Step2ProductsView: View {
                         HStack(spacing: 2) {
                             Image(systemName: "person.3.fill")
                                 .font(.caption2)
-                            Text("Incluye equipo")
+                            Text(tr("events.form.products.includes_team", "Incluye equipo"))
                                 .font(.caption2)
                                 .fontWeight(.medium)
                         }
@@ -250,7 +258,7 @@ struct Step2ProductsView: View {
 
                 Spacer()
 
-                Text("Total: \(formatCurrency(lineTotal))")
+                Text(trf("events.form.products.total", "Total: %@", formatCurrency(lineTotal)))
                     .font(.subheadline)
                     .fontWeight(.bold)
                     .foregroundStyle(item.discount > 0 ? SolennixColors.success : SolennixColors.text)
@@ -303,12 +311,12 @@ struct Step2ProductsView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .searchable(text: $productSearch, prompt: "Buscar producto")
-            .navigationTitle("Agregar Producto")
+            .searchable(text: $productSearch, prompt: tr("events.form.products.search", "Buscar producto"))
+            .navigationTitle(tr("events.form.products.add", "Agregar producto"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cerrar") {
+                    Button(tr("events.detail.share.close", "Cerrar")) {
                         showProductPicker = false
                     }
                     .foregroundStyle(SolennixColors.textSecondary)
@@ -349,7 +357,7 @@ private struct ProductDiscountField: View {
 
     var body: some View {
         SolennixTextField(
-            label: "Descuento",
+            label: tr("events.form.finances.discount", "Descuento"),
             text: $discountText,
             placeholder: "0",
             keyboardType: .decimalPad
@@ -368,6 +376,7 @@ private struct ProductDiscountField: View {
         let discount = viewModel.selectedProducts[index].discount
         discountText = discount > 0 ? String(format: "%g", discount) : ""
     }
+
 }
 
 // MARK: - Preview

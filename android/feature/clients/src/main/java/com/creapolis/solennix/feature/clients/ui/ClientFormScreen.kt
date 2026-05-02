@@ -26,11 +26,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.network.UrlResolver
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
@@ -39,6 +41,7 @@ import com.creapolis.solennix.core.designsystem.component.UpgradePlanDialog
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveFormRow
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
+import com.creapolis.solennix.feature.clients.R
 import com.creapolis.solennix.feature.clients.viewmodel.ClientFormViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,11 +69,16 @@ fun ClientFormScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Cliente") },
+                title = {
+                    Text(
+                        if (viewModel.isEdit) stringResource(R.string.clients_form_title_edit)
+                        else stringResource(R.string.clients_form_title_new)
+                    )
+                },
                 onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(DesignSystemR.string.cd_back))
                     }
                 }
             )
@@ -107,7 +115,7 @@ fun ClientFormScreen(
                                     .data(UrlResolver.resolve(viewModel.photoUrl))
                                     .crossfade(true)
                                     .build(),
-                                contentDescription = "Foto del cliente",
+                                contentDescription = stringResource(R.string.clients_label_photo),
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop
                             )
@@ -140,7 +148,7 @@ fun ClientFormScreen(
                             } else {
                                 Icon(
                                     Icons.Default.PhotoCamera,
-                                    contentDescription = "Seleccionar foto",
+                                    contentDescription = stringResource(R.string.clients_action_select_photo),
                                     modifier = Modifier.size(18.dp),
                                     tint = SolennixTheme.colors.card
                                 )
@@ -151,8 +159,8 @@ fun ClientFormScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = if (viewModel.isUploadingPhoto) "Subiendo foto..."
-                        else "Toca para agregar foto",
+                        text = if (viewModel.isUploadingPhoto) stringResource(R.string.clients_photo_hint_loading)
+                        else stringResource(R.string.clients_photo_hint_idle),
                         style = MaterialTheme.typography.bodySmall,
                         color = SolennixTheme.colors.secondaryText
                     )
@@ -162,25 +170,25 @@ fun ClientFormScreen(
                     // Form fields — side-by-side on tablet via AdaptiveFormRow
                     AdaptiveFormRow(
                         left = {
-                            SolennixTextField(value = viewModel.name, onValueChange = { viewModel.name = it }, label = "Nombre *", leadingIcon = Icons.Default.Person, errorMessage = viewModel.nameError)
+                            SolennixTextField(value = viewModel.name, onValueChange = { viewModel.name = it }, label = stringResource(R.string.clients_field_name), leadingIcon = Icons.Default.Person, errorMessage = viewModel.nameError)
                         },
                         right = {
-                            SolennixTextField(value = viewModel.phone, onValueChange = { viewModel.phone = it }, label = "Telefono *", leadingIcon = Icons.Default.Phone, keyboardType = KeyboardType.Phone, errorMessage = viewModel.phoneError)
+                            SolennixTextField(value = viewModel.phone, onValueChange = { viewModel.phone = it }, label = stringResource(R.string.clients_field_phone), leadingIcon = Icons.Default.Phone, keyboardType = KeyboardType.Phone, errorMessage = viewModel.phoneError)
                         }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     AdaptiveFormRow(
                         left = {
-                            SolennixTextField(value = viewModel.email, onValueChange = { viewModel.email = it }, label = "Correo Electrónico", leadingIcon = Icons.Default.Email, keyboardType = KeyboardType.Email, errorMessage = viewModel.emailError)
+                            SolennixTextField(value = viewModel.email, onValueChange = { viewModel.email = it }, label = stringResource(R.string.clients_field_email), leadingIcon = Icons.Default.Email, keyboardType = KeyboardType.Email, errorMessage = viewModel.emailError)
                         },
                         right = {
-                            SolennixTextField(value = viewModel.city, onValueChange = { viewModel.city = it }, label = "Ciudad", leadingIcon = Icons.Default.LocationCity)
+                            SolennixTextField(value = viewModel.city, onValueChange = { viewModel.city = it }, label = stringResource(R.string.clients_field_city), leadingIcon = Icons.Default.LocationCity)
                         }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    SolennixTextField(value = viewModel.address, onValueChange = { viewModel.address = it }, label = "Dirección", leadingIcon = Icons.Default.LocationOn)
+                    SolennixTextField(value = viewModel.address, onValueChange = { viewModel.address = it }, label = stringResource(R.string.clients_field_address), leadingIcon = Icons.Default.LocationOn)
                     Spacer(modifier = Modifier.height(16.dp))
-                    SolennixTextField(value = viewModel.notes, onValueChange = { viewModel.notes = it }, label = "Notas", leadingIcon = Icons.Default.Notes)
+                    SolennixTextField(value = viewModel.notes, onValueChange = { viewModel.notes = it }, label = stringResource(R.string.clients_field_notes), leadingIcon = Icons.Default.Notes)
                     Spacer(modifier = Modifier.height(32.dp))
 
                     if (viewModel.errorMessage != null) {
@@ -193,7 +201,7 @@ fun ClientFormScreen(
                     }
 
                     PremiumButton(
-                        text = "Guardar",
+                        text = stringResource(R.string.clients_action_save),
                         onClick = { viewModel.saveClient() },
                         isLoading = viewModel.isSaving,
                         enabled = !viewModel.isSaving

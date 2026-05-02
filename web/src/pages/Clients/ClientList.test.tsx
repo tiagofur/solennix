@@ -132,7 +132,7 @@ describe('ClientList', () => {
       expect(screen.getByText('Juan Lopez')).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByPlaceholderText('Buscar cliente por nombre o correo...'), {
+    fireEvent.change(screen.getByPlaceholderText('Buscar cliente por nombre, correo o teléfono...'), {
       target: { value: 'Ana' },
     });
 
@@ -309,12 +309,12 @@ describe('ClientList', () => {
       expect(screen.getByText('Ana Perez')).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByPlaceholderText('Buscar cliente por nombre o correo...'), {
+    fireEvent.change(screen.getByPlaceholderText('Buscar cliente por nombre, correo o teléfono...'), {
       target: { value: 'zzzznonexistent' },
     });
 
     expect(screen.getByText('No se encontraron clientes')).toBeInTheDocument();
-    expect(screen.getByText('No se encontraron resultados')).toBeInTheDocument();
+    expect(screen.getByText('No se encontraron clientes que coincidan con tu búsqueda')).toBeInTheDocument();
   });
 
   it('sorts by total_events column and shows sort icons', async () => {
