@@ -40,6 +40,12 @@ interface EventRepository {
 
     // Direct API access (bypasses Room cache)
     suspend fun getEventsFromApi(): List<Event>
+    suspend fun getEventsFromSearchApi(
+        query: String? = null,
+        status: String? = null,
+        fromDate: String? = null,
+        toDate: String? = null
+    ): List<Event>
     suspend fun getEventProductsFromApi(eventId: String): List<EventProduct>
     suspend fun getEventEquipmentFromApi(eventId: String): List<EventEquipment>
     suspend fun getEventSuppliesFromApi(eventId: String): List<EventSupply>
@@ -206,6 +212,21 @@ class OfflineFirstEventRepository @Inject constructor(
 
     override suspend fun getEventsFromApi(): List<Event> =
         apiService.get(Endpoints.EVENTS)
+
+    override suspend fun getEventsFromSearchApi(
+        query: String?,
+        status: String?,
+        fromDate: String?,
+        toDate: String?
+    ): List<Event> {
+        val params = buildMap {
+            query?.let { put("q", it) }
+            status?.let { put("status", it) }
+            fromDate?.let { put("from", it) }
+            toDate?.let { put("to", it) }
+        }
+        return apiService.get(Endpoints.EVENTS_SEARCH, params)
+    }
 
     override suspend fun getEventProductsFromApi(eventId: String): List<EventProduct> =
         try {
