@@ -444,7 +444,8 @@ fun EventListScreen(
         )
     }
 
-    // Delete confirmation — destructive, so always a dialog (not a sheet).
+    // Delete confirmation — still shows dialog first, then triggers soft delete.
+    // The screen shows the snackbar; user can undo for 30s.
     deleteConfirmEvent?.let { event ->
         AlertDialog(
             onDismissRequest = { deleteConfirmEvent = null },
@@ -454,8 +455,17 @@ fun EventListScreen(
             },
             confirmButton = {
                 TextButton(onClick = {
-                    viewModel.deleteEvent(event)
+                    val removed = viewModel.softDeleteEvent(event)
                     deleteConfirmEvent = null
+                    if (removed != null) {
+                        val (deletedEvent, index) = removed
+                        // Show undo snackbar
+                        viewModel.showUndoSnackbar(
+                            snackbarHostState = snackbarHostState,
+                            onUndo = { viewModel.restoreEvent(deletedEvent, index) },
+                            onExpire = { viewModel.confirmDeleteEvent(deletedEvent) { viewModel.restoreEvent(deletedEvent, index) } }
+                        )
+                    }
                 }) {
                     Text(stringResource(R.string.events_list_delete), color = SolennixTheme.colors.error)
                 }

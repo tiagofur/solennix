@@ -212,6 +212,16 @@ export const eventService = {
     return api.post('/events/equipment/suggestions', { products });
   },
 
+  async getEquipmentAvailability(
+    date: string,
+    inventory_ids: string[],
+    exclude_event_id?: string
+  ): Promise<{ inventory_id: string; available: number }[]> {
+    const params = new URLSearchParams({ date, inventory_ids: inventory_ids.join(',') });
+    if (exclude_event_id) params.append('exclude_event_id', exclude_event_id);
+    return api.get(`/events/equipment/availability?${params}`);
+  },
+
   // Supply Management
 
   async getSupplies(eventId: string): Promise<EventSupply[]> {

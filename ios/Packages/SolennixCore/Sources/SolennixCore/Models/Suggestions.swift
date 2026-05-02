@@ -43,3 +43,10 @@ public struct EquipmentConflict: Codable, Sendable, Hashable {
     public var clientName: String?
     public let conflictType: ConflictType
 }
+
+// MARK: - EquipmentAvailability
+
+public struct EquipmentAvailability: Codable, Sendable, Hashable {
+    public let inventoryId: String
+    public let available: Int
+}

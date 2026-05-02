@@ -3,6 +3,9 @@ package com.creapolis.solennix.feature.events.viewmodel
 import android.content.Context
 import android.util.Log
 import androidx.annotation.StringRes
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.core.data.repository.ClientRepository
@@ -17,6 +20,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -79,6 +84,8 @@ class EventListViewModel @Inject constructor(
     private val _isRefreshing = MutableStateFlow(false)
     private val _error = MutableStateFlow<String?>(null)
     private val _updatingStatusEventId = MutableStateFlow<String?>(null)
+    /** Local events list for soft-delete modifications. */
+    private val _localEvents = MutableStateFlow<List<Event>>(emptyList())
 
     private data class FilterState(
         val query: String,
@@ -111,11 +118,17 @@ class EventListViewModel @Inject constructor(
     }
 
     val uiState: StateFlow<EventListUiState> = combine(
+        _localEvents,
         eventRepository.getEvents(),
         clientRepository.getClients(),
         filterState,
         sortAndStatusFlow
-    ) { events, clients, filters, sortTriple ->
+    ) { localEvents, repoEvents, clients, filters, sortTriple ->
+        // Merge local modifications with repo events - local overrides take precedence
+        // but new repo updates are still visible (except for soft-deleted IDs)
+        val softDeletedIds = localEvents.map { it.id }.toSet()
+        val mergedRepo = repoEvents.filter { it.id !in softDeletedIds }
+        val events = localEvents + mergedRepo
         val (sortField, sortAscending, updatingId) = sortTriple
         val clientMap = clients.associateBy { it.id }
         val statusFilters = buildStatusFilters(events)
@@ -264,17 +277,75 @@ class EventListViewModel @Inject constructor(
     }
 
     /**
-     * Hard delete an event via the repository. The UI triggers this from a
-     * confirm dialog. No soft-delete/undo on Android today (iOS has it via
-     * ToastManager — candidate for a future slice).
+     * Soft-delete an event — removes from the local UI list immediately.
+     * Returns the removed event and its index so the UI can show an undo snackbar.
+     * The caller should call `confirmDelete` after the undo window expires.
      */
-    fun deleteEvent(event: Event) {
+    fun softDeleteEvent(event: Event): Pair<Event, Int>? {
+        val events = _localEvents.value.ifEmpty { uiState.value.events }
+        val index = events.indexOfFirst { it.id == event.id }
+        if (index < 0) return null
+        // Remove from local list
+        val updated = events.toMutableList().apply { removeAt(index) }
+        _localEvents.value = updated
+        return Pair(event, index)
+    }
+
+    /**
+     * Restore a previously soft-deleted event at the same index.
+     */
+    fun restoreEvent(event: Event, atIndex: Int) {
+        val events = _localEvents.value.ifEmpty { uiState.value.events }
+        val safeIndex = minOf(atIndex, events.size)
+        val updated = events.toMutableList().apply { add(safeIndex, event) }
+        _localEvents.value = updated
+    }
+
+    /**
+     * Hard delete an event via the repository. Call this after the undo
+     * window expires OR if the caller knows there's no undo needed.
+     */
+    fun confirmDeleteEvent(event: Event, onRestore: () -> Unit) {
         viewModelScope.launch {
             try {
                 eventRepository.deleteEvent(event.id)
+                // Clear local copy after successful hard delete
+                _localEvents.value = _localEvents.value.filter { it.id != event.id }
             } catch (e: Exception) {
                 Log.w(TAG, "deleteEvent failed for ${event.id}", e)
+                // Restore the event in local list since hard delete failed
+                onRestore()
                 _error.value = e.message ?: tr(R.string.events_list_error_delete)
+            }
+        }
+    }
+
+    /**
+     * Show an undo snackbar with 30-second expiry.
+     * Timer starts concurrently when snackbar is shown, not after it returns.
+     */
+    fun showUndoSnackbar(
+        snackbarHostState: SnackbarHostState,
+        onUndo: () -> Unit,
+        onExpire: () -> Unit
+    ) {
+        viewModelScope.launch {
+            // Start 30s timer concurrently with snackbar display
+            val expiryJob = launch {
+                delay(30_000)
+                onExpire()
+            }
+
+            val result = snackbarHostState.showSnackbar(
+                message = tr(R.string.events_list_delete_undone),
+                actionLabel = tr(R.string.events_list_delete_undo),
+                duration = SnackbarDuration.Short
+            )
+
+            // If user tapped undo, cancel the expiry timer
+            if (result == SnackbarResult.ActionPerformed) {
+                expiryJob.cancel()
+                onUndo()
             }
         }
     }

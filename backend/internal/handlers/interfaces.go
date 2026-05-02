@@ -53,6 +53,7 @@ type FullEventRepository interface {
 	MarkStaffNotificationResult(ctx context.Context, eventStaffID uuid.UUID, result string) error
 	GetEquipment(ctx context.Context, eventID uuid.UUID) ([]models.EventEquipment, error)
 	CheckEquipmentConflicts(ctx context.Context, userID uuid.UUID, eventDate string, startTime, endTime *string, inventoryIDs []uuid.UUID, excludeEventID *uuid.UUID) ([]models.EquipmentConflict, error)
+	GetEquipmentAvailability(ctx context.Context, userID uuid.UUID, date string, inventoryIDs []uuid.UUID, excludeEventID *uuid.UUID) ([]repository.EquipmentAvailability, error)
 	GetEquipmentSuggestionsFromProducts(ctx context.Context, userID uuid.UUID, products []repository.ProductQuantity) ([]models.EquipmentSuggestion, error)
 	GetSupplies(ctx context.Context, eventID uuid.UUID) ([]models.EventSupply, error)
 	GetSupplySuggestionsFromProducts(ctx context.Context, userID uuid.UUID, products []repository.ProductQuantity) ([]models.SupplySuggestion, error)

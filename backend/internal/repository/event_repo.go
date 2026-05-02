@@ -698,6 +698,60 @@ func (r *EventRepo) CheckEquipmentConflicts(ctx context.Context, userID uuid.UUI
 	return conflicts, nil
 }
 
+// EquipmentAvailability holds available quantity for a specific date.
+type EquipmentAvailability struct {
+	InventoryID uuid.UUID `json:"inventory_id"`
+	Available  int       `json:"available"`
+}
+
+// GetEquipmentAvailability returns available quantity for each inventory item on a given date.
+// This is: current_stock - sum(qty) from confirmed events on that date (excluding the event being edited).
+func (r *EventRepo) GetEquipmentAvailability(ctx context.Context, userID uuid.UUID, date string, inventoryIDs []uuid.UUID, excludeEventID *uuid.UUID) ([]EquipmentAvailability, error) {
+	if len(inventoryIDs) == 0 {
+		return nil, nil
+	}
+
+	// Get current stock and subtract reserved qty from confirmed events on the same date
+	query := `SELECT i.id, COALESCE(i.current_stock, 0) - COALESCE(SUM(ee.quantity)::int, 0) as available
+		FROM inventory i
+		LEFT JOIN event_equipment ee ON ee.inventory_id = i.id
+		LEFT JOIN events e ON ee.event_id = e.id AND e.event_date = $2::date AND e.status IN ('quoted', 'confirmed')
+		LEFT JOIN events exclude_e ON exclude_e.id = $4
+		WHERE i.id = ANY($1)
+		AND i.user_id = $3`
+
+	args := []interface{}{inventoryIDs, date, userID}
+	argIdx := 4
+
+	if excludeEventID != nil {
+		query += fmt.Sprintf(" AND (exclude_e.id IS NULL OR ee.event_id != $%d)", argIdx)
+		args = append(args, *excludeEventID)
+	} else {
+		query += " AND $4 IS NULL"
+	}
+
+	query += " GROUP BY i.id, i.current_stock"
+
+	rows, err := r.pool.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	availability := make([]EquipmentAvailability, 0)
+	for rows.Next() {
+		var a EquipmentAvailability
+		if err := rows.Scan(&a.InventoryID, &a.Available); err != nil {
+			return nil, err
+		}
+		availability = append(availability, a)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating equipment availability: %w", err)
+	}
+	return availability, nil
+}
+
 // ProductQuantity pairs a product ID with the number of units in the event.
 type ProductQuantity struct {
 	ID       uuid.UUID

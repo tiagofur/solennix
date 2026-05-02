@@ -243,6 +243,14 @@ func (m *MockFullEventRepo) CheckEquipmentConflicts(ctx context.Context, userID 
 	return args.Get(0).([]models.EquipmentConflict), args.Error(1)
 }
 
+func (m *MockFullEventRepo) GetEquipmentAvailability(ctx context.Context, userID uuid.UUID, date string, inventoryIDs []uuid.UUID, excludeEventID *uuid.UUID) ([]repository.EquipmentAvailability, error) {
+	args := m.Called(ctx, userID, date, inventoryIDs, excludeEventID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]repository.EquipmentAvailability), args.Error(1)
+}
+
 func (m *MockFullEventRepo) GetEquipmentSuggestionsFromProducts(ctx context.Context, userID uuid.UUID, products []repository.ProductQuantity) ([]models.EquipmentSuggestion, error) {
 	args := m.Called(ctx, userID, products)
 	if args.Get(0) == nil {

@@ -185,6 +185,7 @@ public final class EventFormViewModel {
     public var extras: [SelectedExtra] = []
     public var equipmentInventory: [InventoryItem] = []
     public var selectedEquipment: [SelectedEquipmentItem] = []
+    public var equipmentAvailability: [EquipmentAvailability] = []
     public var supplyInventory: [InventoryItem] = []
     public var selectedSupplies: [SelectedSupplyItem] = []
     public var equipmentConflicts: [FormEquipmentConflict] = []

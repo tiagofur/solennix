@@ -23,6 +23,8 @@
     <string name="events_list_delete_title">Delete event</string>
     <string name="events_list_delete_description">"%1$s" will be deleted. This action cannot be undone.</string>
     <string name="events_list_delete">Delete</string>
+    <string name="events_list_delete_undone">Event deleted</string>
+    <string name="events_list_delete_undo">Undo</string>
     <string name="events_list_sort_by">Sort by</string>
     <string name="events_list_sort_date">Date</string>
     <string name="events_list_sort_service">Service</string>

@@ -57,6 +57,12 @@ interface EventRepository {
         excludeEventId: String? = null
     ): List<EquipmentConflict>
 
+    suspend fun getEquipmentAvailability(
+        date: String,
+        equipmentIds: List<String>,
+        excludeEventId: String? = null
+    ): List<EquipmentAvailability>
+
     suspend fun getEquipmentSuggestions(
         productIds: List<String>
     ): List<EquipmentSuggestion>
@@ -261,6 +267,20 @@ class OfflineFirstEventRepository @Inject constructor(
             excludeEventId?.let { put("exclude_event_id", it) }
         }
         return apiService.get(Endpoints.EQUIPMENT_CONFLICTS, params)
+    }
+
+    override suspend fun getEquipmentAvailability(
+        date: String,
+        equipmentIds: List<String>,
+        excludeEventId: String?
+    ): List<EquipmentAvailability> {
+        if (equipmentIds.isEmpty()) return emptyList()
+        val params = buildMap {
+            put("date", date)
+            put("inventory_ids", equipmentIds.joinToString(","))
+            excludeEventId?.let { put("exclude_event_id", it) }
+        }
+        return apiService.get(Endpoints.EQUIPMENT_AVAILABILITY, params)
     }
 
     override suspend fun getEquipmentSuggestions(

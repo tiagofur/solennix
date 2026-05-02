@@ -56,6 +56,7 @@ public enum Endpoint {
 
     public static let equipmentConflicts = "/events/equipment/conflicts"
     public static let equipmentSuggestions = "/events/equipment/suggestions"
+    public static let equipmentAvailability = "/events/equipment/availability"
     public static let supplySuggestions = "/events/supplies/suggestions"
 
     public static func eventStaff(_ id: String) -> String {

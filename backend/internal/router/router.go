@@ -223,6 +223,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			// POST for web (JSON body), GET for mobile (query params)
 			r.Get("/equipment/conflicts", crudHandler.CheckEquipmentConflictsGET)
 			r.Post("/equipment/conflicts", crudHandler.CheckEquipmentConflicts)
+			r.Get("/equipment/availability", crudHandler.GetEquipmentAvailabilityGET)
 			r.Get("/equipment/suggestions", crudHandler.GetEquipmentSuggestionsGET)
 			r.Post("/equipment/suggestions", crudHandler.GetEquipmentSuggestions)
 			r.Get("/supplies/suggestions", crudHandler.GetSupplySuggestionsGET)
