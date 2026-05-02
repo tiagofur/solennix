@@ -905,6 +905,50 @@ func (h *CRUDHandler) CheckEquipmentConflicts(w http.ResponseWriter, r *http.Req
 	writeJSON(w, http.StatusOK, conflicts)
 }
 
+// GetEquipmentAvailabilityGET handles GET /api/equipment/availability?date=YYYY-MM-DD&inventory_ids=...
+func (h *CRUDHandler) GetEquipmentAvailabilityGET(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	date := r.URL.Query().Get("date")
+	inventoryIDsStr := r.URL.Query().Get("inventory_ids")
+	excludeEventIDStr := r.URL.Query().Get("exclude_event_id")
+
+	if date == "" || inventoryIDsStr == "" {
+		writeError(w, http.StatusBadRequest, "date and inventory_ids are required")
+		return
+	}
+
+	// Parse inventory IDs
+	var inventoryUUIDs []uuid.UUID
+	for _, idStr := range splitCSV(inventoryIDsStr) {
+		id, err := uuid.Parse(idStr)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "Invalid inventory ID: "+idStr)
+			return
+		}
+		inventoryUUIDs = append(inventoryUUIDs, id)
+	}
+
+	// Parse exclude event ID (optional)
+	var excludeEventID *uuid.UUID
+	if excludeEventIDStr != "" {
+		id, err := uuid.Parse(excludeEventIDStr)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "Invalid exclude_event_id")
+			return
+		}
+		excludeEventID = &id
+	}
+
+	availability, err := h.eventRepo.GetEquipmentAvailability(r.Context(), userID, date, inventoryUUIDs, excludeEventID)
+	if err != nil {
+		slog.Error("Get equipment availability failed", "error", err, "user_id", userID)
+		writeError(w, http.StatusInternalServerError, "Failed to get equipment availability")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, availability)
+}
+
 // CheckEquipmentConflictsGET handles GET requests with query params (for mobile apps)
 func (h *CRUDHandler) CheckEquipmentConflictsGET(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
