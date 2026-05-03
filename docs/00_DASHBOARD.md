@@ -218,6 +218,12 @@ gantt
 | Revenue chart 6 meses (premium) | ✅ | ✅ | ✅ | ✅ |
 | Events-by-status (backend) | ✅ | ✅ | ✅ | ✅ |
 | Pending events + inline CTAs | ✅ | ✅ | ✅ | — |
+| **Top clients** (`/api/dashboard/top-clients`) | ✅ | ✅ | ✅ | ✅ |
+| **Product demand** (`/api/dashboard/product-demand`) | ✅ | ✅ | ✅ | ✅ |
+| **Revenue forecast** (`/api/dashboard/forecast`) | ✅ | ✅ | ✅ | ✅ |
+
+> [!success] Analytics widgets shipped (2026-05-02)
+> Los 3 widgets de analytics (Top clients, Product demand, Forecast) fueron implementados en las 3 plataformas consumiendo los endpoints existentes del backend. Ver [[GitHub/tiagofur/solennix/issues/193|Issue #193]].
 
 ### Transparencia & delight (PRD/12 features B–L) — 📋 Q3-Q4 2026
 
