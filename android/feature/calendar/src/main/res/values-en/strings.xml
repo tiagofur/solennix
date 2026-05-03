@@ -65,4 +65,7 @@
     <string name="calendar_unknown_client">Client</string>
     <string name="calendar_event_time_range">%1$s - %2$s</string>
     <string name="calendar_event_people_count">%1$d pax</string>
+    <string name="calendar_new_event">New event</string>
+    <string name="calendar_error_export_failed">Could not export calendar</string>
+    <string name="calendar_export_ical">Export .ics</string>
 </resources>
