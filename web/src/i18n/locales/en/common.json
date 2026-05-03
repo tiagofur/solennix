@@ -29,7 +29,10 @@
     "show": "Show",
     "close_notification": "Close notification",
     "view_all": "View all",
-    "view_alerts": "View alerts"
+    "view_alerts": "View alerts",
+    "loading_activity": "Loading recent activity...",
+    "activity_error": "Could not load recent activity.",
+    "no_activity": "No activity recorded yet."
   },
   "actions": {
     "save": "Save",
@@ -120,6 +123,8 @@
   },
   "error": {
     "generic": "Something went wrong",
+    "unexpected": "An unexpected error occurred. You can try reloading the section or go to the home page.",
+    "technical_details": "Technical details",
     "try_again": "Please try again",
     "not_found": "Not found",
     "unauthorized": "Unauthorized",

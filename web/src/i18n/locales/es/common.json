@@ -29,7 +29,10 @@
     "show": "Mostrar",
     "close_notification": "Cerrar notificación",
     "view_all": "Ver todos",
-    "view_alerts": "Ver alertas"
+    "view_alerts": "Ver alertas",
+    "loading_activity": "Cargando actividad reciente...",
+    "activity_error": "No se pudo cargar la actividad reciente.",
+    "no_activity": "Sin actividad registrada todavía."
   },
   "actions": {
     "save": "Guardar",
@@ -120,6 +123,8 @@
   },
   "error": {
     "generic": "Algo salió mal",
+    "unexpected": "Ocurrió un error inesperado. Podés intentar recargar la sección o volver al inicio.",
+    "technical_details": "Detalles técnicos",
     "try_again": "Intenta de nuevo",
     "not_found": "No encontrado",
     "unauthorized": "No autorizado",

@@ -2,6 +2,7 @@ import React from "react";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { Activity, AlertTriangle, Clock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useDashboardActivity } from "@/hooks/queries/useActivityQueries";
 import type { AuditLog } from "@/services/activityService";
 
@@ -66,6 +67,7 @@ function formatRelative(createdAt: string): string {
 }
 
 export const RecentActivityCard: React.FC<RecentActivityCardProps> = ({ limit = 8 }) => {
+  const { t } = useTranslation();
   const { data: entries, isLoading, isError } = useDashboardActivity(limit);
 
   return (
@@ -91,17 +93,17 @@ export const RecentActivityCard: React.FC<RecentActivityCardProps> = ({ limit = 
                 </div>
               </div>
             ))}
-            <span className="sr-only">Cargando actividad reciente...</span>
+            <span className="sr-only">{t('loading_activity')}</span>
           </div>
         ) : isError ? (
           <div className="flex items-center gap-3 text-sm text-text-secondary">
             <AlertTriangle className="h-4 w-4 text-warning shrink-0" aria-hidden="true" />
-            <span>No se pudo cargar la actividad reciente.</span>
+            <span>{t('activity_error')}</span>
           </div>
         ) : !entries || entries.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-6 text-center">
             <Clock className="h-8 w-8 text-text-tertiary opacity-40" aria-hidden="true" />
-            <p className="text-xs text-text-secondary">Sin actividad registrada todavía.</p>
+            <p className="text-xs text-text-secondary">{t('no_activity')}</p>
           </div>
         ) : (
           <ul className="space-y-3" aria-label="Lista de eventos de actividad reciente">
