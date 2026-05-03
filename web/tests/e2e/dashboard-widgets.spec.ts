@@ -10,15 +10,14 @@ test.describe('Dashboard Analytics Widgets', () => {
   test('TopClientsWidget displays client list', async ({ page }) => {
     await page.goto('/');
 
-    // Find the Top Clients widget
-    const topClientsWidget = page.locator('section, div').filter({ hasText: /top clientes|top clients/i }).first();
+    // Find the Top Clients widget - use getByText for better matching
+    const topClientsWidget = page.locator('section, div').filter({ has: page.getByText(/top clientes/i) }).first();
     await expect(topClientsWidget).toBeVisible({ timeout: 5000 });
 
     // Should show loading state initially or data after load
-    // Either skeleton or actual content
-    const hasContent = await topClientsWidget.locator('text=/\\d+ evento/').isVisible().catch(() => false);
-    const hasEmpty = await topClientsWidget.locator(/sin clientes|no clients/i).isVisible().catch(() => false);
-    const hasError = await topClientsWidget.locator(/error|fallo/i).isVisible().catch(() => false);
+    const hasContent = await topClientsWidget.getByText(/\d+ evento/).isVisible().catch(() => false);
+    const hasEmpty = await topClientsWidget.getByText(/sin clientes/i).isVisible().catch(() => false);
+    const hasError = await topClientsWidget.getByText(/error/i).isVisible().catch(() => false);
 
     // One of these states should be visible
     expect(hasContent || hasEmpty || hasError).toBeTruthy();
@@ -27,14 +26,12 @@ test.describe('Dashboard Analytics Widgets', () => {
   test('ProductDemandWidget displays product demand', async ({ page }) => {
     await page.goto('/');
 
-    // Find the Product Demand widget
-    const productDemandWidget = page.locator('section, div').filter({ hasText: /productos más solicitados|product demand/i }).first();
+    const productDemandWidget = page.locator('section, div').filter({ has: page.getByText(/productos/i) }).first();
     await expect(productDemandWidget).toBeVisible({ timeout: 5000 });
 
-    // Should show loading state or data
-    const hasContent = await productDemandWidget.locator('text=/\\d+ vez|times used/i').isVisible().catch(() => false);
-    const hasEmpty = await productDemandWidget.locator(/sin productos|no products/i).isVisible().catch(() => false);
-    const hasError = await productDemandWidget.locator(/error|fallo/i).isVisible().catch(() => false);
+    const hasContent = await productDemandWidget.getByText(/\d+ vez/).isVisible().catch(() => false);
+    const hasEmpty = await productDemandWidget.getByText(/sin productos/i).isVisible().catch(() => false);
+    const hasError = await productDemandWidget.getByText(/error/i).isVisible().catch(() => false);
 
     expect(hasContent || hasEmpty || hasError).toBeTruthy();
   });
@@ -42,14 +39,12 @@ test.describe('Dashboard Analytics Widgets', () => {
   test('ForecastWidget displays revenue forecast', async ({ page }) => {
     await page.goto('/');
 
-    // Find the Forecast widget
-    const forecastWidget = page.locator('section, div').filter({ hasText: /pronóstico de ingresos|forecast/i }).first();
+    const forecastWidget = page.locator('section, div').filter({ has: page.getByText(/pronóstico/i) }).first();
     await expect(forecastWidget).toBeVisible({ timeout: 5000 });
 
-    // Should show loading state or data
-    const hasContent = await forecastWidget.locator(/\$\d|mn|mx/i).isVisible().catch(() => false);
-    const hasEmpty = await forecastWidget.locator(/sin eventos|no events/i).isVisible().catch(() => false);
-    const hasError = await forecastWidget.locator(/error|fallo/i).isVisible().catch(() => false);
+    const hasContent = await forecastWidget.getByText(/\$/).isVisible().catch(() => false);
+    const hasEmpty = await forecastWidget.getByText(/sin eventos/i).isVisible().catch(() => false);
+    const hasError = await forecastWidget.getByText(/error/i).isVisible().catch(() => false);
 
     expect(hasContent || hasEmpty || hasError).toBeTruthy();
   });
@@ -69,18 +64,16 @@ test.describe('Dashboard Analytics Widgets', () => {
     await page.goto('/');
 
     // Should show error state for each widget
-    // Wait a bit for the error to surface
     await page.waitForTimeout(2000);
 
-    const topClientsError = page.locator('section, div').filter({ hasText: /top clientes|top clients/i }).first();
-    const productDemandError = page.locator('section, div').filter({ hasText: /productos más solicitados|product demand/i }).first();
-    const forecastError = page.locator('section, div').filter({ hasText: /pronóstico de ingresos|forecast/i }).first();
+    const topClientsError = page.locator('section, div').filter({ has: page.getByText(/top clientes/i) }).first();
+    const productDemandError = page.locator('section, div').filter({ has: page.getByText(/productos/i) }).first();
+    const forecastError = page.locator('section, div').filter({ has: page.getByText(/pronóstico/i) }).first();
 
-    // Verify error message appears in at least one widget
     const hasAnyError = await Promise.all([
-      topClientsError.locator(/error|fallo/i).isVisible().catch(() => false),
-      productDemandError.locator(/error|fallo/i).isVisible().catch(() => false),
-      forecastError.locator(/error|fallo/i).isVisible().catch(() => false),
+      topClientsError.getByText(/error/i).isVisible().catch(() => false),
+      productDemandError.getByText(/error/i).isVisible().catch(() => false),
+      forecastError.getByText(/error/i).isVisible().catch(() => false),
     ]);
 
     expect(hasAnyError.some(Boolean)).toBeTruthy();
