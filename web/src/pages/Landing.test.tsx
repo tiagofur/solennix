@@ -246,28 +246,28 @@ describe('Landing', () => {
 
   it('renders all feature cards', () => {
     renderLanding();
-    expect(screen.getByText('Calendario Inteligente')).toBeInTheDocument();
-    expect(screen.getByText('Gestión de Clientes')).toBeInTheDocument();
-    expect(screen.getByText('Control de Inventario')).toBeInTheDocument();
-    expect(screen.getByText('Reportes y Análisis')).toBeInTheDocument();
-    expect(screen.getByText('Cotizaciones y Pagos')).toBeInTheDocument();
-    expect(screen.getByText('Recordatorios')).toBeInTheDocument();
+    expect(screen.getByText('Cotizaciones profesionales')).toBeInTheDocument();
+    expect(screen.getByText('Cobros y Pagos')).toBeInTheDocument();
+    expect(screen.getByText('Portal del Cliente')).toBeInTheDocument();
+    expect(screen.getByText('Inventario y Recursos')).toBeInTheDocument();
+    expect(screen.getByText('Staff y Equipos')).toBeInTheDocument();
   });
 
   it('renders how-it-works steps', () => {
     renderLanding();
     expect(screen.getByText('Crea tu cuenta')).toBeInTheDocument();
-    expect(screen.getByText('Agrega tus clientes y eventos')).toBeInTheDocument();
-    expect(screen.getByText('Gestiona tu inventario')).toBeInTheDocument();
-    expect(screen.getByText('Crece tu negocio')).toBeInTheDocument();
+    expect(screen.getByText('Cotiza en minutos')).toBeInTheDocument();
+    expect(screen.getByText('Cobra online')).toBeInTheDocument();
+    expect(screen.getByText('Ejecuta y cumpli')).toBeInTheDocument();
   });
 
-  it('renders stats section', () => {
+  it('renders product proof section', () => {
     renderLanding();
-    expect(screen.getByText('500+')).toBeInTheDocument();
-    expect(screen.getByText('12,000+')).toBeInTheDocument();
-    expect(screen.getByText('98%')).toBeInTheDocument();
-    expect(screen.getByText('40%')).toBeInTheDocument();
+    expect(screen.getByText('Todo el ciclo operativo')).toBeInTheDocument();
+    expect(screen.getByText('Cotizaciones PDF')).toBeInTheDocument();
+    expect(screen.getByText('Cobros Online')).toBeInTheDocument();
+    expect(screen.getByText('Portal Cliente')).toBeInTheDocument();
+    expect(screen.getByText('Gestion Staff')).toBeInTheDocument();
   });
 
   it('renders testimonials', () => {
