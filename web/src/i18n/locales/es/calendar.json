@@ -47,11 +47,13 @@
     "completed": "Completado",
     "cancelled": "Cancelado"
   },
+  "export_ics": "Exportar .ics",
   "error": {
     "load_failed": "No se pudieron cargar los eventos",
     "block_failed": "No se pudo bloquear la fecha",
     "unblock_failed": "No se pudo desbloquear",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "export_failed": "No se pudo exportar el calendario"
   },
   "action": {
     "cancel": "Cancelar",

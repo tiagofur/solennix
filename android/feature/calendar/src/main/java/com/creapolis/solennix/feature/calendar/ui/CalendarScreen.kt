@@ -55,8 +55,14 @@ import com.creapolis.solennix.feature.calendar.viewmodel.CalendarError
 import com.creapolis.solennix.feature.calendar.viewmodel.CalendarUiState
 import com.creapolis.solennix.feature.calendar.viewmodel.CalendarViewModel
 import kotlinx.coroutines.launch
+import java.io.File
 import java.time.LocalDate
 import java.time.YearMonth
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.FileProvider
+import android.content.Intent
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -67,11 +73,14 @@ import java.util.*
 fun CalendarScreen(
     viewModel: CalendarViewModel,
     onEventClick: (String) -> Unit,
+    onCreateEventClick: (LocalDate) -> Unit = {},
     onSearchClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
+    val isExportingCalendar by viewModel.isExportingCalendar.collectAsStateWithLifecycle()
     val isWideScreen = LocalIsWideScreen.current
+    val context = LocalContext.current
     var showBlockDialog by remember { mutableStateOf(false) }
 
     LifecycleResumeEffect(viewModel) {
@@ -91,12 +100,14 @@ fun CalendarScreen(
     val loadFailedMessage = stringResource(R.string.calendar_error_load_failed)
     val blockFailedMessage = stringResource(R.string.calendar_error_block_failed)
     val unblockFailedMessage = stringResource(R.string.calendar_error_unblock_failed)
+    val exportFailedMessage = stringResource(R.string.calendar_error_export_failed)
 
     LaunchedEffect(error) {
         val message = when (error) {
             CalendarError.LoadFailed -> loadFailedMessage
             CalendarError.BlockFailed -> blockFailedMessage
             CalendarError.UnblockFailed -> unblockFailedMessage
+            CalendarError.ExportFailed -> exportFailedMessage
             null -> null
         }
         if (message != null) {
@@ -107,12 +118,46 @@ fun CalendarScreen(
         }
     }
 
+    // Share .ics file when the ViewModel emits a successful export
+    LaunchedEffect(Unit) {
+        viewModel.exportIcalResult.collect { icsContent ->
+            val file = withContext(Dispatchers.IO) {
+                File(context.cacheDir, "solennix-calendar.ics").also { it.writeText(icsContent) }
+            }
+            val uri = FileProvider.getUriForFile(
+                context, "${context.packageName}.fileprovider", file
+            )
+            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/calendar"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(Intent.createChooser(sendIntent, null))
+        }
+    }
+
     Scaffold(
         topBar = {
             SolennixSectionTopAppBar(
                 title = stringResource(R.string.calendar_title),
                 onSearchClick = onSearchClick,
                 actions = {
+                    IconButton(
+                        onClick = { viewModel.exportCalendar() },
+                        enabled = !isExportingCalendar
+                    ) {
+                        if (isExportingCalendar) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                Icons.Default.IosShare,
+                                contentDescription = stringResource(R.string.calendar_export_ical)
+                            )
+                        }
+                    }
                     IconButton(onClick = {
                         viewModel.loadAllUnavailableDates()
                         showManageUnavailableSheet = true
@@ -125,7 +170,19 @@ fun CalendarScreen(
                 }
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { onCreateEventClick(uiState.selectedDate) },
+                containerColor = SolennixTheme.colors.primary,
+                contentColor = androidx.compose.ui.graphics.Color.White
+            ) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = stringResource(R.string.calendar_new_event)
+                )
+            }
+        }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
             StatusFilterChips(

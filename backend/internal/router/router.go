@@ -26,9 +26,9 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	r := chi.NewRouter()
 
 	// Global middleware
-	r.Use(mw.Recovery)        // Panic recovery — outermost so it catches the repanic from Sentry
-	r.Use(mw.Sentry)          // Per-request Sentry hub; captures panics then repanics (no-op if Sentry DSN unset)
-	r.Use(mw.RequestID)       // X-Request-ID for tracing
+	r.Use(mw.Recovery)  // Panic recovery — outermost so it catches the repanic from Sentry
+	r.Use(mw.Sentry)    // Per-request Sentry hub; captures panics then repanics (no-op if Sentry DSN unset)
+	r.Use(mw.RequestID) // X-Request-ID for tracing
 	r.Use(mw.CORS(corsOrigins))
 	r.Use(mw.SecurityHeaders) // Security headers (X-Frame-Options, CSP, HSTS, etc.)
 	r.Use(mw.Logger)
@@ -142,7 +142,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	apiRouter.Route("/public/events", func(r chi.Router) {
 		r.Use(mw.RateLimit(10, 1*time.Minute))
 		r.Get("/{token}", eventPublicLinkHandler.GetPortalData)
-		
+
 		// Payment submissions (client portal) — tokenized access
 		r.Post("/{token}/payment-submissions", paymentSubmissionHandler.CreatePublic)
 		r.Get("/{token}/payment-submissions", paymentSubmissionHandler.GetHistoryPublic)
@@ -204,7 +204,8 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Route("/events", func(r chi.Router) {
 			r.Get("/", crudHandler.ListEvents)
 			r.Get("/upcoming", crudHandler.GetUpcomingEvents)
-			r.Get("/search", crudHandler.SearchEvents) // Advanced search — before /{id} to avoid conflict
+			r.Get("/search", crudHandler.SearchEvents)    // Advanced search — before /{id} to avoid conflict
+			r.Get("/ical", crudHandler.GetCalendarExport) // iCal export — before /{id} to avoid conflict
 			r.Post("/", crudHandler.CreateEvent)
 			r.Get("/{id}", crudHandler.GetEvent)
 			r.Put("/{id}", crudHandler.UpdateEvent)

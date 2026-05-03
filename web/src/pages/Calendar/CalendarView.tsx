@@ -23,8 +23,10 @@ import {
   Lock,
   Unlock,
   AlertTriangle,
+  Download,
 } from "lucide-react";
 import { useToast } from "../../hooks/useToast";
+import { API_URL } from "../../lib/api";
 import { logError } from "../../lib/errorHandler";
 import {
   format,
@@ -108,6 +110,8 @@ export const CalendarView: React.FC = () => {
     startOfMonth(normalizedToday),
   );
   const [isManagingBlocks, setIsManagingBlocks] = useState(false);
+  const [isExportingIcal, setIsExportingIcal] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [isConfirmingUnblock, setIsConfirmingUnblock] = useState(false);
   const [contextMenuDate, setContextMenuDate] = useState<string | undefined>();
 
@@ -115,6 +119,30 @@ export const CalendarView: React.FC = () => {
   // React Query keys, so caching is automatic per month.
   const rangeStart = format(startOfMonth(currentMonth), "yyyy-MM-dd");
   const rangeEnd = format(endOfMonth(currentMonth), "yyyy-MM-dd");
+
+  const handleExportIcal = useCallback(async () => {
+    if (isExportingIcal) return;
+    setIsExportingIcal(true);
+    try {
+      const response = await fetch(
+        `${API_URL}/events/ical?start=${rangeStart}&end=${rangeEnd}`,
+        { credentials: "include" },
+      );
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `solennix-${rangeStart}-${rangeEnd}.ics`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      logError(err, "CalendarView.handleExportIcal");
+      addToast(t("error.export_failed"), "error");
+    } finally {
+      setIsExportingIcal(false);
+    }
+  }, [isExportingIcal, rangeStart, rangeEnd, addToast, t]);
 
   const { data: eventsData, isLoading: eventsLoading, isFetching: eventsFetching, error: eventsError } =
     useEventsByDateRange(rangeStart, rangeEnd);
@@ -138,8 +166,10 @@ export const CalendarView: React.FC = () => {
   // Filtered event list respects the active status chip. Filtering
   // happens client-side from the cached React Query data — no refetch,
   // matching iOS & Android behavior.
-  // FASE 7C: status filter removed (moved to Events section), filteredEvents = events
-  const filteredEvents = events;
+  const filteredEvents = useMemo(
+    () => statusFilter ? events.filter((e) => e.status === statusFilter) : events,
+    [events, statusFilter],
+  );
 
   // Surface query errors via toast (once per transition).
   useEffect(() => {
@@ -293,6 +323,22 @@ export const CalendarView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-2xl font-bold text-text">{t("title")}</h1>
          <div className="flex items-center gap-3 flex-wrap">
+           {/* Botón exportar .ics */}
+           <button
+             type="button"
+             onClick={handleExportIcal}
+             disabled={isExportingIcal}
+             className="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text bg-surface hover:bg-surface-alt shadow-sm transition-colors disabled:opacity-50"
+             aria-label={t("export_ics")}
+           >
+             {isExportingIcal ? (
+               <span className="animate-spin rounded-full h-4 w-4 border-2 border-text border-t-transparent mr-2" aria-hidden="true" />
+             ) : (
+               <Download className="h-4 w-4 mr-2" aria-hidden="true" />
+             )}
+             {t("export_ics")}
+           </button>
+
            {/* Botón gestionar bloqueos */}
            <button
              type="button"
@@ -320,7 +366,23 @@ export const CalendarView: React.FC = () => {
          </div>
        </div>
 
-       {/* REFACTOR FASE 7C — Eliminado filtros de estado (pertenecen a sección Eventos) */}
+       {/* Status filter chips — client-side filter, matches iOS & Android behavior */}
+       <div className="flex items-center gap-2 flex-wrap mt-2">
+         {([null, "quoted", "confirmed", "completed", "cancelled"] as const).map((s) => (
+           <button
+             key={s ?? "all"}
+             type="button"
+             onClick={() => setStatusFilter(s)}
+             className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
+               statusFilter === s
+                 ? "bg-primary text-white border-primary"
+                 : "bg-card text-text-secondary border-border hover:border-primary hover:text-primary"
+             }`}
+           >
+             {s === null ? t("filter.all") : t(`status.${s}`)}
+           </button>
+         ))}
+       </div>
 
       {/* Inline error banner with retry — React Query already retried on its
           own, so this is the user-visible recovery affordance for a sticky

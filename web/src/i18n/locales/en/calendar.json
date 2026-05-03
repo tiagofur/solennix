@@ -47,11 +47,13 @@
     "completed": "Completed",
     "cancelled": "Cancelled"
   },
+  "export_ics": "Export .ics",
   "error": {
     "load_failed": "Failed to load events",
     "block_failed": "Failed to block date",
     "unblock_failed": "Failed to unblock date",
-    "retry": "Retry"
+    "retry": "Retry",
+    "export_failed": "Failed to export calendar"
   },
   "action": {
     "cancel": "Cancel",

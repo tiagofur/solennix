@@ -456,14 +456,24 @@ fun EventListScreen(
             confirmButton = {
                 TextButton(onClick = {
                     val removed = viewModel.softDeleteEvent(event)
+<<<<<<< HEAD
                     deleteConfirmEvent = null
                     if (removed != null) {
                         val (deletedEvent, index) = removed
+=======
+                    if (removed != null) {
+                        val (deletedEvent, index) = removed
+                        deleteConfirmEvent = null
+>>>>>>> b156e3ff (feat(android): add soft-delete + undo snackbar to events list)
                         // Show undo snackbar
                         viewModel.showUndoSnackbar(
                             snackbarHostState = snackbarHostState,
                             onUndo = { viewModel.restoreEvent(deletedEvent, index) },
+<<<<<<< HEAD
                             onExpire = { viewModel.confirmDeleteEvent(deletedEvent) { viewModel.restoreEvent(deletedEvent, index) } }
+=======
+                            onExpire = { viewModel.confirmDeleteEvent(deletedEvent) }
+>>>>>>> b156e3ff (feat(android): add soft-delete + undo snackbar to events list)
                         )
                     }
                 }) {

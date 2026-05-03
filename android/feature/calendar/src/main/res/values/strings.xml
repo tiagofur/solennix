@@ -8,6 +8,7 @@
     <string name="calendar_previous_month">Mes anterior</string>
     <string name="calendar_next_month">Mes siguiente</string>
     <string name="calendar_manage_blocks">Gestionar Bloqueos</string>
+    <string name="calendar_new_event">Nuevo evento</string>
 
     <!-- Empty / day states -->
     <string name="calendar_no_events_scheduled">No hay eventos programados</string>
@@ -55,7 +56,9 @@
     <string name="calendar_error_load_failed">No se pudieron cargar los eventos</string>
     <string name="calendar_error_block_failed">No se pudo bloquear la fecha</string>
     <string name="calendar_error_unblock_failed">No se pudo desbloquear</string>
+    <string name="calendar_error_export_failed">No se pudo exportar el calendario</string>
     <string name="calendar_error_retry">Reintentar</string>
+    <string name="calendar_export_ical">Exportar .ics</string>
 
     <!-- Shared dialog actions (scoped to the calendar module to avoid
          cross-module R dependencies on :app or :core:designsystem which

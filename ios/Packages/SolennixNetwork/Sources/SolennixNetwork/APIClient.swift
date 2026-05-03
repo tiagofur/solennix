@@ -118,6 +118,16 @@ public actor APIClient {
         return try await execute(request)
     }
 
+    /// Perform a GET request and return the raw response `Data`.
+    /// Used for endpoints that return non-JSON content (e.g. iCal `.ics` files).
+    public func getData(
+        _ endpoint: String,
+        params: [String: String]? = nil
+    ) async throws -> Data {
+        let request = try buildRequest(endpoint, method: "GET", params: params)
+        return try await performRaw(request)
+    }
+
     /// Fetch a paginated response, with fallback to plain array.
     /// Use this for list views that expect PaginatedResponse but the backend may return a plain array.
     public func getPaginated<T: Decodable>(
