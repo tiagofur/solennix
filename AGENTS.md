@@ -80,11 +80,26 @@ Todo cambio en cualquier plataforma DEBE aplicarse a las otras tres. No esperes 
 
 PRD en `PRD/`. Siempre actualiza `11_CURRENT_STATUS.md` + doc de la plataforma afectada. Para features nuevas, también `02_FEATURES.md`.
 
-### 3. Auto-Commit
+### 3. Flujo de PR
 
-Cada corrección o feature → commit inmediato.
+**main** está protegida — requiere 1 approval para merging.
 
-**Formato:** `type(scope): description` (Conventional Commits, inglés)
+```
+1. git checkout -b tipo/descripcion-corta   # feature/fix/docs
+2. Commitear y pushear
+3. gh pr create --title "..." --body "..."
+4. Esperar approval
+5. Squash & Merge
+```
+
+**Formato de branch:** `tipo/descripcion-corta`
+- `feat/nombre-feature`
+- `fix/descripcion-breve`
+- `docs/tema`
+- `refactor/area`
+- `test modulo`
+
+**Formato de commit** (en PR): `type(scope): description` (Conventional Commits, inglés)
 **Co-autor:** `Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>`
 
 Types: `feat` · `fix` · `refactor` · `docs` · `test` · `chore` · `style` · `perf`
@@ -219,6 +234,39 @@ func TestEventRepo(t *testing.T) {
 - Filtrar por `user_id` en todas las queries (multi-tenant)
 - Validar inputs en frontend y backend
 - Params en queries SQL, nunca concatenación
+
+---
+
+## Git + PR
+
+### Crear branch y changes
+
+```bash
+git checkout -b fix/descripcion-corta
+# hacer cambios
+git add .
+git commit -m "type(scope): description"
+git push -u origin fix/descripcion-corta
+```
+
+### Crear PR
+
+```bash
+gh pr create --title "titulo" --body "$(cat <<'EOF'
+## Summary
+- cambio 1
+- cambio 2
+EOF
+)"
+```
+
+### Revisar y merge
+
+```bash
+gh pr view 123   # ver PR
+gh pr review 123 --approve  # approve
+gh pr merge 123 --squash    # merge
+```
 
 ---
 
