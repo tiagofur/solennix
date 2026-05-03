@@ -25,12 +25,15 @@ import {
   Fingerprint,
   LayoutGrid,
   RefreshCw,
+  Receipt,
   CreditCard,
   Building,
   Send,
   ClipboardList,
   FileText,
+  CheckSquare,
   UsersRound,
+  Warehouse,
 } from "lucide-react";
 
 const APP_STORE_URL =
@@ -45,105 +48,97 @@ const FEATURES = [
     icon: FileText,
     color: "text-primary",
     bg: "bg-primary/10",
-    title: "Cotizaciones",
+    title: "Cotizaciones profesionales",
     description:
-      "Crea cotizaciones PDF profesionales en minutos.",
+      "Genera cotizaciones PDF en minutos. Tu cliente las recibe por link, puede aceptar y pagar desde su celular.",
   },
   {
     icon: CreditCard,
     color: "text-success",
     bg: "bg-success/10",
-    title: "Cobros",
+    title: "Cobros y Pagos",
     description:
-      "Registrá cobros y recibí comprobantes desde el portal cliente.",
+      "Stripe integrado. Cobrá en parcialidades, tus clientes pagan online y el sistema conciliar automatico.",
   },
   {
     icon: Send,
     color: "text-info",
     bg: "bg-info/10",
-    title: "Portal cliente",
+    title: "Portal del Cliente",
     description:
-      "Tus clientes ven su evento, pagos y comparten comprobantes.",
+      "Tus clientes acceden a un portal con su contrato, fotos, timeline y pagan sin salir de la app.",
   },
   {
     icon: ClipboardList,
     color: "text-warning",
     bg: "bg-warning/10",
-    title: "Inventario",
+    title: "Inventario y Recursos",
     description:
-      "Registrá equipos y personal. Evita conflictos automáticamente.",
+      "Registrá equipos y personal. El sistema evita conflictos de disponibilidad automaticamente.",
   },
   {
     icon: UsersRound,
     color: "text-primary",
     bg: "bg-primary/10",
-    title: "Gestión staff",
+    title: "Staff y Equipos",
     description:
-      "Asigná tareas y seguí el estado de tu equipo.",
+      "Asigna personal, envia asignaciones y recibe confirmaciones. Todo centralizado.",
   },
   {
     icon: Calendar,
     color: "text-success",
     bg: "bg-success/10",
-    title: "Calendario",
+    title: "Calendario Integral",
     description:
-      "Todos tus eventos y disponibilidad en una vista.",
+      "Todas tus eventos, disponibilidad y conflictos en una vista. Arrastrá y reorganizá.",
   },
   {
     icon: BarChart3,
     color: "text-info",
     bg: "bg-info/10",
-    title: "Reportes",
+    title: "Reportes en Tiempo Real",
     description:
-      "Ingresos, eventos y tendencias en tiempo real.",
+      "Ingresos, eventos, ocupacion. Métricas reales para optimizar precios y crecer.",
   },
   {
     icon: Building,
     color: "text-warning",
     bg: "bg-warning/10",
-    title: "Forms públicos",
+    title: "Forms Públicos",
     description:
-      "Creá formularios para que tus clientes cotizen.",
+      "Crea formularios de solicitud o cotizacion. Tus clientes cotizan ellos mismos.",
   },
 ];
 
 const STEPS = [
   {
     number: "01",
-    title: "Creá tu cuenta",
-    description:
-      "Registrate gratis. Sin tarjeta requerida.",
+    title: "Crea tu cuenta",
+    description: "Registrate gratis. Sin tarjeta requerida.",
     icon: Zap,
   },
   {
     number: "02",
-    title: "Agregá clientes",
-    description:
-      "Importá contactos o agregalos manualmente.",
-    icon: Users,
+    title: "Cotiza en minutos",
+    description: "Crea una cotizacion profesional. Tu cliente la recibe por link.",
+    icon: FileText,
   },
   {
     number: "03",
-    title: "Gestioná tu operación",
-    description:
-      "Inventario, cotizaciones y pagos centralizados.",
-    icon: Package,
+    title: "Cobra online",
+    description: "Tu cliente acepta y paga desde su celular. Stripe hace la conciliacion.",
+    icon: CreditCard,
   },
   {
     number: "04",
-    title: "Escalá",
-    description:
-      "Usá reportes para identificar oportunidades.",
-    icon: TrendingUp,
+    title: "Ejecuta y cumpli",
+    description: "Inventario, staff y portal del cliente. Todo controlado.",
+    icon: ClipboardList,
   },
 ];
 
-const STATS = [
-  { value: "500+", label: "Organizadores activos" },
-  { value: "12,000+", label: "Eventos gestionados" },
-  { value: "98%", label: "Satisfacción de clientes" },
-  { value: "40%", label: "Ahorro de tiempo promedio" },
-];
+// STATS - removed unverified stats per issue #194
+// Real proof through product capabilities instead of numbers
 
 const TESTIMONIALS = [
   {
@@ -153,16 +148,16 @@ const TESTIMONIALS = [
     avatar: "MG",
     avatarColor: "bg-error",
     rating: 5,
-    text: "Antes usaba hojas de cálculo y me volvía loca. Ahora con Solennix tengo todo centralizado: clientes, inventario, pagos. ¡Recuperé 10 horas a la semana!",
+    text: "El portal del cliente fue un cambio total. Mis novios ven su contrato, suben fotos y pagan online. Yo ya no persigo pagos.",
   },
   {
     name: "Carlos Mendoza",
-    role: "Productor de Eventos Corporativos",
+    role: "Productor de Eventos",
     location: "Monterrey",
     avatar: "CM",
     avatarColor: "bg-info",
     rating: 5,
-    text: "El control de inventario es increíble. Ya no tenemos dobles reservas de equipo y el equipo de logística trabaja mucho más coordinado.",
+    text: "El control de inventario salvo mi negocio. Ya no tenemos dobles reservas y el staff recibe sus asignaciones en el celular.",
   },
   {
     name: "Ana Rodríguez",
@@ -171,7 +166,7 @@ const TESTIMONIALS = [
     avatar: "AR",
     avatarColor: "bg-primary",
     rating: 5,
-    text: "Las cotizaciones automáticas me ahorran tiempo y se ven muy profesionales. Mis clientes quedan impresionados desde el primer contacto.",
+    text: "Las cotizaciones automaticas y el link de pago online me ahorraron 10 horas semanales. Mis clientes pagan antes del evento.",
   },
 ];
 
@@ -716,20 +711,20 @@ export const Landing: React.FC = () => {
           <div className="text-center mb-14">
             <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary text-sm font-bold px-5 py-2 rounded-full mb-10 tracking-wide uppercase">
               <Zap className="h-4 w-4" />
-              <span>Diseñado para organizadores de eventos</span>
+              <span>Control operativo completo</span>
             </div>
 
             <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black text-text mb-8 leading-[1.05] tracking-tight">
-              Gestiona eventos
+              Cotizá, Cobrá,
               <br />
               <span className="text-transparent bg-clip-text premium-gradient animate-gradient">
-                profesionales
+                Coordiná y Cumplí
               </span>
             </h1>
 
             <p className="text-lg sm:text-2xl text-text-secondary mb-12 max-w-3xl mx-auto leading-relaxed">
-              Organiza, gestiona y escala tu negocio con la plataforma diseñada
-              específicamente para la industria de eventos.
+              Una plataforma para gestionar todo el ciclo de tus eventos: cotizaciones profesionales, cobros online, 
+              inventario, staff y Portal del cliente. Todo desde un solo lugar.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-5 justify-center mb-12">
@@ -783,16 +778,30 @@ export const Landing: React.FC = () => {
         </div>
       </section>
 
-      {/* ── STATS ── */}
+      {/* ── PRODUCT PROOF ── */}
       <section className="premium-gradient py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center text-white">
-            {STATS.map((stat) => (
-              <div key={stat.label}>
-                <div className="text-4xl font-extrabold mb-1">{stat.value}</div>
-                <div className="text-white/80 text-sm">{stat.label}</div>
-              </div>
-            ))}
+          <div className="text-center text-white mb-8">
+            <h3 className="text-2xl font-extrabold mb-2">Todo el ciclo operativo</h3>
+            <p className="text-white/80">De la cotizacion al cumplimiento</p>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+            <div className="bg-white/10 rounded-2xl p-4">
+              <FileText className="h-8 w-8 mx-auto mb-2 text-white" />
+              <div className="text-white font-bold text-sm">Cotizaciones PDF</div>
+            </div>
+            <div className="bg-white/10 rounded-2xl p-4">
+              <CreditCard className="h-8 w-8 mx-auto mb-2 text-white" />
+              <div className="text-white font-bold text-sm">Cobros Online</div>
+            </div>
+            <div className="bg-white/10 rounded-2xl p-4">
+              <Send className="h-8 w-8 mx-auto mb-2 text-white" />
+              <div className="text-white font-bold text-sm">Portal Cliente</div>
+            </div>
+            <div className="bg-white/10 rounded-2xl p-4">
+              <UsersRound className="h-8 w-8 mx-auto mb-2 text-white" />
+              <div className="text-white font-bold text-sm">Gestion Staff</div>
+            </div>
           </div>
         </div>
       </section>
