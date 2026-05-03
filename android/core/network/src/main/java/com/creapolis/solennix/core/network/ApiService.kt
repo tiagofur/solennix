@@ -132,6 +132,15 @@ class ApiService @Inject constructor(
         }.body(type)
     }
 
+    suspend fun getRawText(
+        endpoint: String,
+        params: Map<String, String> = emptyMap()
+    ): String = wrapError {
+        client.httpClient.get(endpoint) {
+            params.forEach { (key, value) -> parameter(key, value) }
+        }.body()
+    }
+
     suspend fun upload(
         endpoint: String,
         fileBytes: ByteArray,

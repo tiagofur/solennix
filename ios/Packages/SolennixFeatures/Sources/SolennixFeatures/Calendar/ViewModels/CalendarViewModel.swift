@@ -44,6 +44,9 @@ public final class CalendarViewModel {
     /// null = no filter ("Todos"). Filters both the grid dots and the
     /// selected-day list to events matching the chosen status.
     public var statusFilter: EventStatus?
+    /// True while the iCal export request is in-flight. Used to show a
+    /// loading indicator on the export button and prevent double-taps.
+    public var isExportingCalendar: Bool = false
 
     /// Map of client ID -> Client for resolving client names.
     public var clientMap: [String: Client] = [:]
@@ -407,6 +410,37 @@ public final class CalendarViewModel {
         }
 
         isLoading = false
+    }
+
+    /// Downloads the iCal export for the current displayed month and writes it
+    /// to a temporary file. Returns the file URL on success, or nil on failure
+    /// (the `.loadFailed` error is also set so the view can show an alert).
+    public func exportCalendarToFile() async -> URL? {
+        isExportingCalendar = true
+        defer { isExportingCalendar = false }
+
+        let firstDay = calendar.date(from: calendar.dateComponents([.year, .month], from: currentMonth)) ?? currentMonth
+        guard let lastDay = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: firstDay) else {
+            self.error = .loadFailed
+            return nil
+        }
+
+        let start = Self.apiDateFormatter.string(from: firstDay)
+        let end = Self.apiDateFormatter.string(from: lastDay)
+
+        do {
+            let data = try await apiClient.getData(
+                Endpoint.events + "/ical",
+                params: ["start": start, "end": end]
+            )
+            let fileName = "solennix-\(start)-\(end).ics"
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+            try data.write(to: url)
+            return url
+        } catch {
+            self.error = .loadFailed
+            return nil
+        }
     }
 }
 

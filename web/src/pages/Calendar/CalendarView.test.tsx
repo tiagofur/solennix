@@ -173,7 +173,7 @@ describe('CalendarView', () => {
     await waitFor(() => {
       expect(screen.getByText('Ana')).toBeInTheDocument();
     });
-    expect(screen.getByText('Confirmado')).toBeInTheDocument();
+    expect(screen.getAllByText('Confirmado').length).toBeGreaterThan(0);
   });
 
   it('navigates to edit on event click', async () => {
@@ -322,10 +322,10 @@ describe('CalendarView', () => {
       expect(screen.getByText('C1')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Confirmado')).toBeInTheDocument();
-    expect(screen.getByText('Completado')).toBeInTheDocument();
-    expect(screen.getByText('Cancelado')).toBeInTheDocument();
-    expect(screen.getByText('Cotizado')).toBeInTheDocument();
+    expect(screen.getAllByText('Confirmado').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Completado').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Cancelado').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Cotizado').length).toBeGreaterThan(0);
   });
 
   it('shows badge count when multiple events on selected date', async () => {

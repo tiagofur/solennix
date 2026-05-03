@@ -180,6 +180,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 CalendarScreen(
                     viewModel = hiltViewModel(),
                     onEventClick = { id -> navController.navigate("event_detail/$id") },
+                    onCreateEventClick = { date -> navController.navigate("event_form?eventId=&date=${date}") },
                     onSearchClick = { navController.navigate(buildSearchRoute()) }
                 )
             }

@@ -264,6 +264,22 @@
         }
       }
     },
+    "calendar.action.retry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar"
+          }
+        }
+      }
+    },
     "calendar.all_day": {
       "localizations": {
         "en": {
@@ -647,6 +663,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cotizados"
+          }
+        }
+      }
+    },
+    "calendar.export_ical": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export calendar"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportar calendario"
           }
         }
       }

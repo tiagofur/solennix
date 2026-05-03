@@ -167,6 +167,9 @@ private struct DayCellView: View {
         .frame(maxWidth: .infinity)
         .frame(height: 52)
         .contentShape(Rectangle())
+        // G10 — accessibility label describing the day's full state:
+        // e.g. "15 de marzo, 2 eventos, confirmado y cotizado"
+        .accessibilityLabel(accessibilityLabelForDay)
     }
 
     private var dayTextColor: Color {
@@ -188,6 +191,32 @@ private struct DayCellView: View {
         case .confirmed: return SolennixColors.statusConfirmed
         case .completed: return SolennixColors.statusCompleted
         case .cancelled: return SolennixColors.statusCancelled
+        }
+    }
+
+    // G10 — human-readable accessibility label for the day cell.
+    // Format: "15 de marzo, confirmado y cotizado"
+    // or "15 de marzo, bloqueado" for blocked days.
+    private var accessibilityLabelForDay: String {
+        if isBlocked {
+            return String(localized: "calendar.a11y.day_blocked", bundle: .module)
+        }
+        if dots.isEmpty {
+            return String(localized: "calendar.a11y.day_no_events", bundle: .module)
+        }
+        let statusDescriptions = dots.map { statusName(for: $0) }.joined(separator: " y ")
+        return String(
+            format: String(localized: "calendar.a11y.day_with_events", bundle: .module),
+            statusDescriptions
+        )
+    }
+
+    private func statusName(for status: EventStatus) -> String {
+        switch status {
+        case .quoted: return String(localized: "calendar.status.quoted", bundle: .module)
+        case .confirmed: return String(localized: "calendar.status.confirmed", bundle: .module)
+        case .completed: return String(localized: "calendar.status.completed", bundle: .module)
+        case .cancelled: return String(localized: "calendar.status.cancelled", bundle: .module)
         }
     }
 }

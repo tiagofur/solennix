@@ -34,10 +34,10 @@ type CRUDHandler struct {
 	paymentRepo     FullPaymentRepository
 	userRepo        FullUserRepository
 	unavailRepo     UnavailableDateRepository
-	staffTeamRepo   StaffTeamRepository         // optional, may be nil (Ola 3)
-	notifier        NotificationSender          // optional, may be nil
-	emailService    *services.EmailService      // optional, may be nil
-	liveActivitySvc LiveActivityNotifier        // optional, may be nil
+	staffTeamRepo   StaffTeamRepository    // optional, may be nil (Ola 3)
+	notifier        NotificationSender     // optional, may be nil
+	emailService    *services.EmailService // optional, may be nil
+	liveActivitySvc LiveActivityNotifier   // optional, may be nil
 }
 
 // LiveActivityNotifier is the subset of services.LiveActivityService the handler needs.
@@ -334,7 +334,7 @@ func (h *CRUDHandler) SearchEvents(w http.ResponseWriter, r *http.Request) {
 		FromDate: q.Get("from"),
 		ToDate:   q.Get("to"),
 		Offset:   0,
-		Limit:   50,
+		Limit:    50,
 	}
 
 	// Parse pagination params (optional, defaults above)
@@ -414,6 +414,151 @@ func (h *CRUDHandler) GetEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, event)
+}
+
+// GetCalendarExport handles GET /api/events/ical
+// Returns a .ics file (RFC 5545) for the authenticated user's events within
+// the given date range. Defaults to the current calendar month.
+//
+// Query params:
+//
+//	start  YYYY-MM-DD  (default: first day of current month)
+//	end    YYYY-MM-DD  (default: last day of current month)
+//	status (optional)  quoted | confirmed | completed | cancelled
+func (h *CRUDHandler) GetCalendarExport(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+
+	now := time.Now()
+	startStr := r.URL.Query().Get("start")
+	endStr := r.URL.Query().Get("end")
+	if startStr == "" {
+		startStr = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).Format("2006-01-02")
+	}
+	if endStr == "" {
+		endStr = time.Date(now.Year(), now.Month()+1, 0, 0, 0, 0, 0, now.Location()).Format("2006-01-02")
+	}
+
+	startDate, err := normalizeDateParam(startStr)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid start date")
+		return
+	}
+	endDate, err := normalizeDateParam(endStr)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid end date")
+		return
+	}
+
+	statusFilter := r.URL.Query().Get("status")
+	if statusFilter != "" {
+		validStatuses := map[string]bool{
+			"quoted": true, "confirmed": true,
+			"completed": true, "cancelled": true,
+		}
+		if !validStatuses[statusFilter] {
+			writeError(w, http.StatusBadRequest, "Invalid status value")
+			return
+		}
+	}
+
+	events, err := h.eventRepo.GetByDateRange(r.Context(), userID, startDate, endDate)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to fetch events")
+		return
+	}
+
+	dtstamp := time.Now().UTC().Format("20060102T150405Z")
+
+	var buf strings.Builder
+	buf.WriteString("BEGIN:VCALENDAR\r\n")
+	buf.WriteString("VERSION:2.0\r\n")
+	buf.WriteString("PRODID:-//Solennix//Solennix Calendar//ES\r\n")
+	buf.WriteString("CALSCALE:GREGORIAN\r\n")
+	buf.WriteString("METHOD:PUBLISH\r\n")
+	buf.WriteString("X-WR-CALNAME:Solennix\r\n")
+
+	for _, event := range events {
+		if statusFilter != "" && event.Status != statusFilter {
+			continue
+		}
+
+		summary := icalEscape(event.ServiceType)
+		if event.Client != nil && event.Client.Name != "" {
+			summary = icalEscape(event.Client.Name) + " — " + icalEscape(event.ServiceType)
+		}
+
+		dateCompact := strings.ReplaceAll(event.EventDate, "-", "")
+		var dtstart, dtend string
+		if event.StartTime != nil && *event.StartTime != "" {
+			stimeStr := strings.ReplaceAll(*event.StartTime, ":", "")
+			if len(stimeStr) > 6 {
+				stimeStr = stimeStr[:6]
+			} else if len(stimeStr) == 4 {
+				stimeStr += "00"
+			}
+			dtstart = "DTSTART:" + dateCompact + "T" + stimeStr
+			if event.EndTime != nil && *event.EndTime != "" {
+				etimeStr := strings.ReplaceAll(*event.EndTime, ":", "")
+				if len(etimeStr) > 6 {
+					etimeStr = etimeStr[:6]
+				} else if len(etimeStr) == 4 {
+					etimeStr += "00"
+				}
+				dtend = "DTEND:" + dateCompact + "T" + etimeStr
+			} else {
+				dtend = dtstart
+			}
+		} else {
+			dtstart = "DTSTART;VALUE=DATE:" + dateCompact
+			t, _ := time.Parse("2006-01-02", event.EventDate)
+			nextDay := t.AddDate(0, 0, 1).Format("20060102")
+			dtend = "DTEND;VALUE=DATE:" + nextDay
+		}
+
+		desc := fmt.Sprintf("Estado: %s\\nPersonas: %d\\nTotal: $%.0f MXN",
+			event.Status, event.NumPeople, event.TotalAmount)
+		if event.Notes != nil && *event.Notes != "" {
+			desc += "\\nNotas: " + icalEscape(*event.Notes)
+		}
+
+		icalStatus := "TENTATIVE"
+		switch event.Status {
+		case "confirmed", "completed":
+			icalStatus = "CONFIRMED"
+		case "cancelled":
+			icalStatus = "CANCELLED"
+		}
+
+		buf.WriteString("BEGIN:VEVENT\r\n")
+		buf.WriteString("UID:" + event.ID.String() + "@solennix.app\r\n")
+		buf.WriteString("DTSTAMP:" + dtstamp + "\r\n")
+		buf.WriteString(dtstart + "\r\n")
+		buf.WriteString(dtend + "\r\n")
+		buf.WriteString("SUMMARY:" + summary + "\r\n")
+		buf.WriteString("DESCRIPTION:" + desc + "\r\n")
+		if event.Location != nil && *event.Location != "" {
+			buf.WriteString("LOCATION:" + icalEscape(*event.Location) + "\r\n")
+		}
+		buf.WriteString("STATUS:" + icalStatus + "\r\n")
+		buf.WriteString("END:VEVENT\r\n")
+	}
+
+	buf.WriteString("END:VCALENDAR\r\n")
+
+	w.Header().Set("Content-Type", "text/calendar; charset=utf-8")
+	w.Header().Set("Content-Disposition", `attachment; filename="solennix.ics"`)
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, buf.String())
+}
+
+// icalEscape escapes special characters in iCal text values (RFC 5545 §3.3.11).
+func icalEscape(s string) string {
+	s = strings.ReplaceAll(s, `\`, `\\`)
+	s = strings.ReplaceAll(s, ";", `\;`)
+	s = strings.ReplaceAll(s, ",", `\,`)
+	s = strings.ReplaceAll(s, "\n", `\n`)
+	s = strings.ReplaceAll(s, "\r", "")
+	return s
 }
 
 func (h *CRUDHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {

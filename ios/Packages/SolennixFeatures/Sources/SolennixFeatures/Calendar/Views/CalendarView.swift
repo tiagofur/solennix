@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import SolennixCore
 import SolennixDesign
 import SolennixNetwork
@@ -18,6 +19,7 @@ public struct CalendarView: View {
     @State private var showBlockedDatesSheet = false
     @State private var showQuickQuote = false
     @State private var hapticTrigger: Int = 0
+    @State private var icsExportURL: URL?
     @Environment(PlanLimitsManager.self) private var planLimitsManager
     @Environment(\.apiClient) private var apiClient
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -102,6 +104,29 @@ public struct CalendarView: View {
                             .fontWeight(.semibold)
                             .foregroundStyle(SolennixColors.primary)
                     }
+
+                    // iCal export — fetches /api/events/ical for the current
+                    // month and opens the native share sheet. The button
+                    // switches to a spinner while the request is in-flight.
+                    Button {
+                        Task {
+                            if let url = await viewModel.exportCalendarToFile() {
+                                icsExportURL = url
+                            }
+                        }
+                    } label: {
+                        if viewModel.isExportingCalendar {
+                            ProgressView()
+                                .controlSize(.small)
+                                .tint(SolennixColors.primary)
+                        } else {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.body)
+                                .foregroundStyle(SolennixColors.primary)
+                        }
+                    }
+                    .disabled(viewModel.isExportingCalendar)
+                    .accessibilityLabel(String(localized: "calendar.export_ical", bundle: .module))
                 }
             }
         }
@@ -110,6 +135,17 @@ public struct CalendarView: View {
         }
         .sheet(isPresented: $showQuickQuote) {
             QuickQuoteView(apiClient: apiClient)
+        }
+        .sheet(
+            isPresented: Binding(
+                get: { icsExportURL != nil },
+                set: { if !$0 { icsExportURL = nil } }
+            )
+        ) {
+            if let url = icsExportURL {
+                ActivityView(activityItems: [url])
+                    .ignoresSafeArea()
+            }
         }
         .sheet(isPresented: $showBlockSheet) {
             BlockDateSheet(
@@ -145,12 +181,27 @@ public struct CalendarView: View {
             }
         }
         // Generic error alert — the ViewModel emits a typed `CalendarError`,
-        // we map each case to a localized string. No freetext in-memory.
+        // we map each case to a localized string. Retry re-runs the failed
+        // operation; Cancel dismisses without retrying.
         .alert(
             errorAlertTitle,
             isPresented: $showErrorAlert
         ) {
-            Button(String(localized: "calendar.action.ok", bundle: .module), role: .cancel) {
+            Button(String(localized: "calendar.action.retry", bundle: .module)) {
+                let failedError = viewModel.error
+                viewModel.clearError()
+                Task {
+                    switch failedError {
+                    case .loadFailed:
+                        await viewModel.loadEvents()
+                    case .blockFailed, .unblockFailed:
+                        await viewModel.loadUnavailableDates()
+                    case .none:
+                        break
+                    }
+                }
+            }
+            Button(String(localized: "calendar.action.cancel", bundle: .module), role: .cancel) {
                 viewModel.clearError()
             }
         }
@@ -513,6 +564,20 @@ public struct CalendarView: View {
         case .cancelled: return SolennixColors.statusCancelled
         }
     }
+}
+
+// MARK: - Activity View
+
+/// Thin UIViewControllerRepresentable wrapper over UIActivityViewController.
+/// Used to present the native share sheet for the iCal export file.
+private struct ActivityView: UIViewControllerRepresentable {
+    let activityItems: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 // MARK: - Preview

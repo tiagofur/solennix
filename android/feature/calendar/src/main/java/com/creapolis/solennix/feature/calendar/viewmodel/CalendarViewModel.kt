@@ -31,7 +31,8 @@ private const val TAG = "CalendarViewModel"
 enum class CalendarError {
     LoadFailed,
     BlockFailed,
-    UnblockFailed
+    UnblockFailed,
+    ExportFailed
 }
 
 data class CalendarUiState(
@@ -72,6 +73,12 @@ class CalendarViewModel @Inject constructor(
     fun clearError() {
         _error.value = null
     }
+
+    private val _isExportingCalendar = MutableStateFlow(false)
+    val isExportingCalendar: StateFlow<Boolean> = _isExportingCalendar.asStateFlow()
+
+    private val _exportIcalResult = MutableSharedFlow<String>()
+    val exportIcalResult: SharedFlow<String> = _exportIcalResult.asSharedFlow()
 
     fun setStatusFilter(filter: EventStatus?) {
         _statusFilter.value = filter
@@ -264,6 +271,27 @@ class CalendarViewModel @Inject constructor(
     fun isDateBlocked(date: LocalDate): Boolean = existingBlockFor(date) != null
 
     fun getUnavailableDateFor(date: LocalDate): UnavailableDate? = existingBlockFor(date)
+
+    fun exportCalendar() {
+        viewModelScope.launch {
+            _isExportingCalendar.value = true
+            try {
+                val month = _currentMonth.value
+                val start = month.atDay(1).toString()
+                val end = month.atEndOfMonth().toString()
+                val content = apiService.getRawText(
+                    Endpoints.EVENTS_ICAL,
+                    mapOf("start" to start, "end" to end)
+                )
+                _exportIcalResult.emit(content)
+            } catch (e: Exception) {
+                Log.e(TAG, "exportCalendar failed", e)
+                _error.value = CalendarError.ExportFailed
+            } finally {
+                _isExportingCalendar.value = false
+            }
+        }
+    }
 
     private fun existingBlockFor(date: LocalDate): UnavailableDate? {
         val dateStr = date.toString()
