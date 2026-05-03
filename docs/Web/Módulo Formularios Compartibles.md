@@ -30,7 +30,7 @@ PublicEventFormPage.tsx
 ### Comportamiento
 
 1. Extrae `token` de URL params
-2. Fetch `GET /api/v1/public/event-forms/{token}` (fetch standalone, no el `api` client con auth)
+2. Fetch `GET /api/public/event-forms/{token}` (fetch standalone, no el `api` client con auth)
 3. Token invalido → `PublicFormExpired`
 4. Token valido → formulario con branding del organizador:
    - **Header**: logo, business_name, brand_color del organizador
@@ -38,7 +38,7 @@ PublicEventFormPage.tsx
    - **Seccion 2**: Datos del evento (fecha, tipo servicio, personas, ubicacion, notas)
    - **Seccion 3**: Catalogo de productos (grid responsive, sin precios, qty picker)
    - **Seccion 4**: Resumen y boton enviar
-5. Submit → `POST /api/v1/public/event-forms/{token}`
+5. Submit → `POST /api/public/event-forms/{token}`
 6. Exito → `PublicFormSuccess`
 7. 409 (ya usado) → `PublicFormExpired`
 

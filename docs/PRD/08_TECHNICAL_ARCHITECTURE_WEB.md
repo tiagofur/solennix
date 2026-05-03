@@ -60,7 +60,7 @@ platform: Web
 | **Lenguaje**         | TypeScript                | ~5.9.3        | Tipado estatico, IntelliSense, deteccion de errores en compilacion                                  |
 | **Build Tool**       | Vite                      | 7.3.1         | HMR instantaneo, ESBuild para dev, Rollup para produccion, mucho mas rapido que CRA/Webpack         |
 | **Estilos**          | Tailwind CSS              | 4.2.0         | Utility-first, purge automatico, consistencia de diseno sin escribir CSS custom                     |
-| **Estado Global**    | Zustand                   | 5.0.11        | Minimalista, sin boilerplate, compatible con React 19, reemplaza Redux/Context para estado complejo |
+| **Estado Global**    | React Context             | —             | AuthContext, ThemeContext; server state via React Query                                             |
 | **Routing**          | react-router-dom          | 7.13.0        | Rutas declarativas, rutas protegidas, parametros dinamicos                                          |
 | **Formularios**      | react-hook-form           | 7.71.2        | Rendimiento superior (uncontrolled inputs), integracion nativa con zod via `@hookform/resolvers`    |
 | **Validacion**       | zod                       | 4.3.6         | Schemas de validacion type-safe, inferencia de tipos TypeScript, validacion en runtime              |

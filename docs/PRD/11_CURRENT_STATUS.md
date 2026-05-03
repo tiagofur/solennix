@@ -1259,7 +1259,7 @@ Primera pantalla de paridad post-Dashboard:
 | Framework | React                                       | 19      |                                                                    |
 | Routing   | React Router                                | 7.13    |                                                                    |
 | Lenguaje  | TypeScript                                  |         |                                                                    |
-| Estado    | Context API (primary) + Zustand (available) |         | AuthContext, ThemeContext. Zustand disponible para estado complejo |
+| Estado    | React Context + React Query         |         | AuthContext, ThemeContext (client), React Query (server) |
 | Build     | Vite                                        |         |                                                                    |
 
 ### iOS

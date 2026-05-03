@@ -113,10 +113,10 @@ UI en español · código y DB en inglés · endpoints en `kebab-case`.
 
 ### Web
 
-- React 18+ · TypeScript · Tailwind CSS · Vite
-- Estado: Zustand · Routing: React Router · Forms: React Hook Form + Zod
-- HTTP: Axios o fetch tipado
-- Estructura: `pages/` · `components/` · `services/` · `stores/` · `types/` · `hooks/`
+- React 19+ · TypeScript · Tailwind CSS · Vite
+- Estado: React Context (client) + React Query (server) · Routing: React Router · Forms: React Hook Form + Zod
+- HTTP: fetch nativo con ApiClient
+- Estructura: `pages/` · `components/` · `services/` · `types/` · `hooks/` · `contexts/`
 - Naming: `PascalCase` components, `camelCase` hooks/utils
 
 ### Backend

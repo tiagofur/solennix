@@ -18,7 +18,7 @@
 - [[Arquitectura General]] — Vista de alto nivel, capas, flujo de datos
 - [[Design System]] — Tokens, colores, tipografía, dark mode
 - [[Autenticación]] — Flujo de login, SSO, cookies httpOnly, refresh tokens
-- [[Manejo de Estado]] — Context, Zustand, React Hook Form, local state
+- [[Manejo de Estado]] — React Context, React Query, React Hook Form, local state
 - [[Routing y Guards]] — Rutas protegidas, admin guards, estructura de navegación
 
 ## Módulos por Dominio
