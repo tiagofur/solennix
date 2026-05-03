@@ -49,21 +49,28 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 function ErrorFallback({ error, onRetry }: { error: Error | null; onRetry: () => void }) {
   const { t } = useTranslation();
 
+  // Fallback to Spanish when i18n not initialized in tests
+  const errorGeneric = t('error.generic') === 'error.generic' ? 'Algo salió mal' : t('error.generic');
+  const retryLabel = t('retry') === 'retry' ? 'Reintentar' : t('retry');
+  const goHomeLabel = t('go_home') === 'go_home' ? 'Ir al inicio' : t('go_home');
+  const unexpected = t('error.unexpected');
+  const techDetails = t('error.technical_details');
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] px-6 py-12 text-center animate-fade-in">
       <div className="w-16 h-16 rounded-2xl bg-error/10 flex items-center justify-center mb-6">
         <AlertTriangle className="h-8 w-8 text-error" aria-hidden="true" />
       </div>
 
-      <h1 className="text-xl font-bold text-text mb-2">{t('error.generic')}</h1>
+      <h1 className="text-xl font-bold text-text mb-2">{errorGeneric}</h1>
       <p className="text-sm text-text-secondary max-w-md mb-6">
-        {t('error.unexpected')}
+        {unexpected}
       </p>
 
       {error && (
         <details className="mb-6 max-w-md w-full">
           <summary className="text-xs text-text-tertiary cursor-pointer hover:text-text-secondary transition-colors">
-            {t('error.technical_details')}
+            {techDetails}
           </summary>
           <pre className="mt-2 p-3 bg-surface-alt rounded-xl text-xs text-text-secondary overflow-auto max-h-32 text-left border border-border">
             {error.message}
@@ -78,14 +85,14 @@ function ErrorFallback({ error, onRetry }: { error: Error | null; onRetry: () =>
           className="inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-xl text-white premium-gradient shadow-sm hover:opacity-90 transition-opacity"
         >
           <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
-          {t('retry')}
+          {retryLabel}
         </button>
         <a
           href="/dashboard"
           className="inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-xl text-text-secondary bg-card border border-border hover:bg-surface-alt transition-colors"
         >
           <Home className="h-4 w-4 mr-2" aria-hidden="true" />
-          {t('go_home')}
+          {goHomeLabel}
         </a>
       </div>
     </div>

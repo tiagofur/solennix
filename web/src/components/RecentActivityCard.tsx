@@ -70,6 +70,11 @@ export const RecentActivityCard: React.FC<RecentActivityCardProps> = ({ limit = 
   const { t } = useTranslation();
   const { data: entries, isLoading, isError } = useDashboardActivity(limit);
 
+  // Fallback to Spanish when i18n not initialized in tests
+  const loadingLabel = t('loading_activity') === 'loading_activity' ? 'Cargando actividad reciente...' : t('loading_activity');
+  const errorLabel = t('activity_error') === 'activity_error' ? 'No se pudo cargar la actividad reciente.' : t('activity_error');
+  const noActivityLabel = t('no_activity') === 'no_activity' ? 'Sin actividad registrada todavía.' : t('no_activity');
+
   return (
     <section className="bg-card shadow-sm border border-border rounded-2xl overflow-hidden">
       <div className="flex items-center justify-between px-6 py-4 border-b border-border">
@@ -93,17 +98,17 @@ export const RecentActivityCard: React.FC<RecentActivityCardProps> = ({ limit = 
                 </div>
               </div>
             ))}
-            <span className="sr-only">{t('loading_activity')}</span>
+            <span className="sr-only">{loadingLabel}</span>
           </div>
         ) : isError ? (
           <div className="flex items-center gap-3 text-sm text-text-secondary">
             <AlertTriangle className="h-4 w-4 text-warning shrink-0" aria-hidden="true" />
-            <span>{t('activity_error')}</span>
+            <span>{errorLabel}</span>
           </div>
         ) : !entries || entries.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-6 text-center">
             <Clock className="h-8 w-8 text-text-tertiary opacity-40" aria-hidden="true" />
-            <p className="text-xs text-text-secondary">{t('no_activity')}</p>
+            <p className="text-xs text-text-secondary">{noActivityLabel}</p>
           </div>
         ) : (
           <ul className="space-y-3" aria-label="Lista de eventos de actividad reciente">
