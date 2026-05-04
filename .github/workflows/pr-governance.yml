@@ -82,6 +82,11 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            if (context.actor === 'dependabot[bot]') {
+              core.info('Skipping type label check for Dependabot PR.');
+              return;
+            }
+
             const { owner, repo } = context.repo;
             const issue_number = context.payload.pull_request.number;
             const labels = await github.paginate(github.rest.issues.listLabelsOnIssue, {
