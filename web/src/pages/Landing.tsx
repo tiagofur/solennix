@@ -25,6 +25,12 @@ import {
   Fingerprint,
   LayoutGrid,
   RefreshCw,
+  CreditCard,
+  Building,
+  Send,
+  ClipboardList,
+  FileText,
+  UsersRound,
 } from "lucide-react";
 
 const APP_STORE_URL =
@@ -36,82 +42,98 @@ import { Logo } from "@/components/Logo";
 
 const FEATURES = [
   {
-    icon: Calendar,
+    icon: FileText,
     color: "text-primary",
     bg: "bg-primary/10",
-    title: "Calendario Inteligente",
+    title: "Cotizaciones",
     description:
-      "Visualiza todos tus eventos en un calendario interactivo. Arrastra, suelta y reorganiza con facilidad.",
+      "Crea cotizaciones PDF profesionales en minutos.",
   },
   {
-    icon: Users,
+    icon: CreditCard,
     color: "text-success",
     bg: "bg-success/10",
-    title: "Gestión de Clientes",
+    title: "Cobros",
     description:
-      "CRM integrado para mantener el historial completo de cada cliente: contratos, pagos y más.",
+      "Cobr\'a con Stripe integrado. Tus clientes pagan online.",
   },
   {
-    icon: Package,
+    icon: Send,
     color: "text-info",
     bg: "bg-info/10",
-    title: "Control de Inventario",
+    title: "Portal cliente",
     description:
-      "Administra equipos y recursos. Evita dobles reservas y asegura disponibilidad.",
+      "Tus clientes acceden a sus pagos, evento y documentos.",
+  },
+  {
+    icon: ClipboardList,
+    color: "text-warning",
+    bg: "bg-warning/10",
+    title: "Inventario",
+    description:
+      "Registrá equipos y personal. Evita conflictos automáticamente.",
+  },
+  {
+    icon: UsersRound,
+    color: "text-primary",
+    bg: "bg-primary/10",
+    title: "Gestión staff",
+    description:
+      "Asigná tareas y seguí el estado de tu equipo.",
+  },
+  {
+    icon: Calendar,
+    color: "text-success",
+    bg: "bg-success/10",
+    title: "Calendario",
+    description:
+      "Todas tus eventos y disponibilidad en una vista.",
   },
   {
     icon: BarChart3,
     color: "text-info",
     bg: "bg-info/10",
-    title: "Reportes y Análisis",
+    title: "Reportes",
     description:
-      "Dashboards en tiempo real con métricas de ingresos, eventos y tendencias.",
+      "Ingresos, eventos y tendencias en tiempo real.",
   },
   {
-    icon: DollarSign,
-    color: "text-success",
-    bg: "bg-success/10",
-    title: "Cotizaciones y Pagos",
-    description:
-      "Genera cotizaciones profesionales. Registra anticipos y pagos automáticamente.",
-  },
-  {
-    icon: Bell,
+    icon: Building,
     color: "text-warning",
     bg: "bg-warning/10",
-    title: "Recordatorios",
+    title: "Forms públicos",
     description:
-      "Notificaciones automáticas: confirmaciones, recordatorios de pago y seguimiento.",
+      "Creá formularios para que tus clientes cotizen.",
   },
 ];
 
 const STEPS = [
   {
     number: "01",
-    title: "Crea tu cuenta",
+    title: "Creá tu cuenta",
     description:
-      "Regístrate gratis en menos de 2 minutos. Sin tarjeta de crédito requerida.",
+      "Registrate gratis. Sin tarjeta requerida.",
     icon: Zap,
   },
   {
     number: "02",
-    title: "Agrega tus clientes y eventos",
+    title: "Agregá clientes",
     description:
-      "Importa tus contactos existentes o agrégalos manualmente. Crea tu primer evento en segundos.",
+      "Importá contactos o agregalos manualmente.",
     icon: Users,
   },
   {
     number: "03",
-    title: "Gestiona tu inventario",
+    title: "Gestiona eventos",
     description:
-      "Registra todos tus equipos y recursos. El sistema evitará conflictos de disponibilidad automáticamente.",
+      "Inventario, cotizaciones y pagos centralizados.",
     icon: Package,
   },
   {
     number: "04",
-    title: "Crece tu negocio",
+    title: "Escalá",
     description:
-      "Usa los reportes para identificar oportunidades, optimizar precios y escalar tu operación.",
+      "Usá reportes para identificar oportunidades.",
     icon: TrendingUp,
   },
 ];
