@@ -55,7 +55,7 @@ const FEATURES = [
     bg: "bg-success/10",
     title: "Cobros",
     description:
-      "Cobrá con Stripe integrado. Tus clientes pagan online.",
+      "Registrá cobros y recibí comprobantes desde el portal cliente.",
   },
   {
     icon: Send,
@@ -63,7 +63,7 @@ const FEATURES = [
     bg: "bg-info/10",
     title: "Portal cliente",
     description:
-      "Tus clientes acceden a sus pagos, evento y documentos.",
+      "Tus clientes ven su evento, pagos y comparten comprobantes.",
   },
   {
     icon: ClipboardList,
@@ -87,7 +87,7 @@ const FEATURES = [
     bg: "bg-success/10",
     title: "Calendario",
     description:
-      "Todas tus eventos y disponibilidad en una vista.",
+      "Todos tus eventos y disponibilidad en una vista.",
   },
   {
     icon: BarChart3,
@@ -124,7 +124,7 @@ const STEPS = [
   },
   {
     number: "03",
-    title: "Gestiona eventos",
+    title: "Gestioná tu operación",
     description:
       "Inventario, cotizaciones y pagos centralizados.",
     icon: Package,

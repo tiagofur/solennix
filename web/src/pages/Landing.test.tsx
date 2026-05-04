@@ -258,9 +258,10 @@ describe('Landing', () => {
 
   it('renders how-it-works steps', () => {
     renderLanding();
-    // Steps are in a section, not in the hero or other places
-    const steps = screen.getAllByText(/Gestiona eventos/);
-    expect(steps.length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Creá tu cuenta')).toBeInTheDocument();
+    expect(screen.getByText('Agregá clientes')).toBeInTheDocument();
+    expect(screen.getByText('Gestioná tu operación')).toBeInTheDocument();
+    expect(screen.getByText('Escalá')).toBeInTheDocument();
   });
 
   it('renders stats section', () => {
