@@ -246,30 +246,28 @@ describe('Landing', () => {
 
   it('renders all feature cards', () => {
     renderLanding();
-    expect(screen.getByText('Cotizaciones')).toBeInTheDocument();
-    expect(screen.getByText('Cobros')).toBeInTheDocument();
-    expect(screen.getByText('Portal cliente')).toBeInTheDocument();
-    expect(screen.getByText('Inventario')).toBeInTheDocument();
-    expect(screen.getByText('Gestión staff')).toBeInTheDocument();
-    expect(screen.getByText('Calendario')).toBeInTheDocument();
-    expect(screen.getByText('Reportes')).toBeInTheDocument();
-    expect(screen.getByText('Forms públicos')).toBeInTheDocument();
+    expect(screen.getByText('Cotizaciones profesionales')).toBeInTheDocument();
+    expect(screen.getByText('Cobros y Pagos')).toBeInTheDocument();
+    expect(screen.getByText('Portal del Cliente')).toBeInTheDocument();
+    expect(screen.getByText('Inventario y Recursos')).toBeInTheDocument();
+    expect(screen.getByText('Staff y Equipos')).toBeInTheDocument();
   });
 
   it('renders how-it-works steps', () => {
     renderLanding();
-    expect(screen.getByText('Creá tu cuenta')).toBeInTheDocument();
-    expect(screen.getByText('Agregá clientes')).toBeInTheDocument();
-    expect(screen.getByText('Gestioná tu operación')).toBeInTheDocument();
-    expect(screen.getByText('Escalá')).toBeInTheDocument();
+    expect(screen.getByText('Crea tu cuenta')).toBeInTheDocument();
+    expect(screen.getByText('Cotiza en minutos')).toBeInTheDocument();
+    expect(screen.getByText('Cobra online')).toBeInTheDocument();
+    expect(screen.getByText('Ejecuta y cumpli')).toBeInTheDocument();
   });
 
-  it('renders stats section', () => {
+  it('renders product proof section', () => {
     renderLanding();
-    expect(screen.getByText('500+')).toBeInTheDocument();
-    expect(screen.getByText('12,000+')).toBeInTheDocument();
-    expect(screen.getByText('98%')).toBeInTheDocument();
-    expect(screen.getByText('40%')).toBeInTheDocument();
+    expect(screen.getByText('Todo el ciclo operativo')).toBeInTheDocument();
+    expect(screen.getByText('Cotizaciones PDF')).toBeInTheDocument();
+    expect(screen.getByText('Cobros Online')).toBeInTheDocument();
+    expect(screen.getByText('Portal Cliente')).toBeInTheDocument();
+    expect(screen.getByText('Gestion Staff')).toBeInTheDocument();
   });
 
   it('renders testimonials', () => {
