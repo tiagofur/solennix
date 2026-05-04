@@ -21,7 +21,7 @@
     "@remotion/zod-types": "^4.0.456",
     "react": "^19.0.0",
     "react-dom": "^19.2.5",
-    "zod": "^4.0.0"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
