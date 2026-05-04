@@ -501,10 +501,6 @@ public final class DashboardViewModel {
     }
 
     private static func isUpcomingEvent(_ event: Event, now: Date = Date()) -> Bool {
-        guard event.status != .cancelled, event.status != .completed else {
-            return false
-        }
-
         guard let eventDate = dashboardDateFormatter.date(from: String(event.eventDate.prefix(10))) else {
             return false
         }
