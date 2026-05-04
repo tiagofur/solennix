@@ -237,11 +237,6 @@ public final class DashboardViewModel {
             params: ["start": startStr, "end": endStr],
             label: "month events"
         )
-        let upcoming: [Event] = await loadOrEmpty(
-            Endpoint.upcomingEvents,
-            params: ["limit": "5"],
-            label: "upcoming events"
-        )
         let loadedAllEvents: [Event] = await loadOrEmpty(
             Endpoint.events,
             label: "all events"
@@ -268,7 +263,10 @@ public final class DashboardViewModel {
         allPayments = loadedAllPayments
 
         // Upcoming events
-        upcomingEvents = upcoming
+        let derivedUpcoming = loadedAllEvents
+            .filter { Self.isUpcomingEvent($0) }
+            .sorted(by: Self.compareDashboardEvents)
+        upcomingEvents = Array(derivedUpcoming.prefix(5))
 
         // Low stock items = inventory where current_stock < minimum_stock AND minimum_stock > 0
         lowStockItems = inventory.filter { $0.minimumStock > 0 && $0.currentStock < $0.minimumStock }
@@ -286,8 +284,8 @@ public final class DashboardViewModel {
             now: now
         )
 
-        NSLog("[Dashboard] 📊 Summary: clients=%d, monthEvents=%d, upcoming=%d, allEvents=%d, inventory=%d, products=%d, allPayments=%d, encounteredError=%@",
-              clients.count, monthEvents.count, upcoming.count, loadedAllEvents.count,
+          NSLog("[Dashboard] 📊 Summary: clients=%d, monthEvents=%d, upcoming=%d, allEvents=%d, inventory=%d, products=%d, allPayments=%d, encounteredError=%@",
+              clients.count, monthEvents.count, upcomingEvents.count, loadedAllEvents.count,
               inventory.count, products.count, loadedAllPayments.count,
               encounteredError ? "YES" : "NO")
 
@@ -500,6 +498,15 @@ public final class DashboardViewModel {
         }
 
         return lhs.id < rhs.id
+    }
+
+    private static func isUpcomingEvent(_ event: Event, now: Date = Date()) -> Bool {
+        guard let eventDate = dashboardDateFormatter.date(from: String(event.eventDate.prefix(10))) else {
+            return false
+        }
+
+        let today = dashboardDateFormatter.date(from: dashboardDateFormatter.string(from: now)) ?? now
+        return eventDate >= today
     }
 
     private static let dashboardDateFormatter: DateFormatter = {

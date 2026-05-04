@@ -7,6 +7,12 @@ public enum EventStatus: String, Codable, Sendable, CaseIterable, Hashable {
     case confirmed
     case completed
     case cancelled
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        self = EventStatus(rawValue: raw.lowercased()) ?? .quoted
+    }
 }
 
 // MARK: - DiscountType
@@ -14,6 +20,12 @@ public enum EventStatus: String, Codable, Sendable, CaseIterable, Hashable {
 public enum DiscountType: String, Codable, Sendable, CaseIterable, Hashable {
     case percent
     case fixed
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        self = DiscountType(rawValue: raw.lowercased()) ?? .percent
+    }
 }
 
 // MARK: - Event
