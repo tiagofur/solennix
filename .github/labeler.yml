@@ -25,23 +25,9 @@ platform:cross-platform:
           - "docs/PRD/**"
           - "openspec/**"
 
-type:docs:
-  - changed-files:
-      - any-glob-to-any-file:
-          - "docs/**"
-          - "README.md"
-          - "AGENTS.md"
-          - "CLAUDE.md"
-
 type:infra:
   - changed-files:
       - any-glob-to-any-file:
           - ".github/**"
           - "infra/**"
           - "docker-compose.yml"
-
-type:test:
-  - changed-files:
-      - any-glob-to-any-file:
-          - "testsprite_tests/**"
-          - "**/*test*"

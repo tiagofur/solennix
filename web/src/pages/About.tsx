@@ -2,12 +2,12 @@ import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Globe, Mail, FileText, Shield, Heart, History, HelpCircle } from 'lucide-react';
 import { useTranslation, Trans } from 'react-i18next';
-
-const APP_VERSION = '1.0.0';
+import { changelogData } from '@/content/changelog.generated';
 
 export const About: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation(['static']);
+  const appVersion = changelogData.currentVersions.web.version;
 
   return (
     <div className="min-h-screen bg-surface-alt">
@@ -30,7 +30,7 @@ export const About: React.FC = () => {
           />
           <h1 className="text-3xl font-bold text-text">Solennix</h1>
           <p className="text-sm text-text-secondary mt-1">
-            {t('static:about.version')} {APP_VERSION}
+            {t('static:about.version')} {appVersion}
           </p>
         </div>
 

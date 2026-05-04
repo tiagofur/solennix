@@ -21,14 +21,21 @@ platform: Backend
 > [[PRD MOC]] | [[01_PRODUCT_VISION]] | [[02_FEATURES]] | [[05_TECHNICAL_ARCHITECTURE_IOS]] | [[06_TECHNICAL_ARCHITECTURE_ANDROID]] | [[08_TECHNICAL_ARCHITECTURE_WEB]] | [[11_CURRENT_STATUS]] | [[04_MONETIZATION]]
 
 **Version:** 1.0
-**Fecha:** 2026-03-20 · **Última actualización:** 2026-04-28
+**Fecha:** 2026-03-20 · **Última actualización:** 2026-05-04
 **Plataforma:** Go REST API + PostgreSQL
 
 > [!success] Producción (2026-04-16)
 >
 > - **Base URL prod:** `https://api.solennix.com/api`
-> - **Fuente de verdad versiones:** `backend/go.mod`
+> - **Fuente de verdad versiones:** `backend/VERSION`
 > - **Fuente de verdad endpoints:** `backend/internal/router/router.go` + `backend/docs/openapi.yaml`
+
+> [!success] 2026-05-04 — Backend 1.0.0 + governance estable
+>
+> - **Version actual backend:** `1.0.0`
+> - **Manifest canonico:** `versioning/releases.json`
+> - **Changelog oficial:** `CHANGELOG.md` + `web/src/content/changelog.generated.ts`
+> - **CI de governance:** valida sincronía entre `versioning/releases.json` y `backend/VERSION`
 
 > [!info] Migraciones recientes (2026-04-16)
 >
