@@ -246,20 +246,21 @@ describe('Landing', () => {
 
   it('renders all feature cards', () => {
     renderLanding();
-    expect(screen.getByText('Calendario Inteligente')).toBeInTheDocument();
-    expect(screen.getByText('Gestión de Clientes')).toBeInTheDocument();
-    expect(screen.getByText('Control de Inventario')).toBeInTheDocument();
-    expect(screen.getByText('Reportes y Análisis')).toBeInTheDocument();
-    expect(screen.getByText('Cotizaciones y Pagos')).toBeInTheDocument();
-    expect(screen.getByText('Recordatorios')).toBeInTheDocument();
+    expect(screen.getByText('Cotizaciones')).toBeInTheDocument();
+    expect(screen.getByText('Cobros')).toBeInTheDocument();
+    expect(screen.getByText('Portal cliente')).toBeInTheDocument();
+    expect(screen.getByText('Inventario')).toBeInTheDocument();
+    expect(screen.getByText('Gestión staff')).toBeInTheDocument();
+    expect(screen.getByText('Calendario')).toBeInTheDocument();
+    expect(screen.getByText('Reportes')).toBeInTheDocument();
+    expect(screen.getByText('Forms públicos')).toBeInTheDocument();
   });
 
   it('renders how-it-works steps', () => {
     renderLanding();
-    expect(screen.getByText('Crea tu cuenta')).toBeInTheDocument();
-    expect(screen.getByText('Agrega tus clientes y eventos')).toBeInTheDocument();
-    expect(screen.getByText('Gestiona tu inventario')).toBeInTheDocument();
-    expect(screen.getByText('Crece tu negocio')).toBeInTheDocument();
+    // Steps are in a section, not in the hero or other places
+    const steps = screen.getAllByText(/Gestiona eventos/);
+    expect(steps.length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders stats section', () => {

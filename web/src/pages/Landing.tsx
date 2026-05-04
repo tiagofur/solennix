@@ -55,7 +55,7 @@ const FEATURES = [
     bg: "bg-success/10",
     title: "Cobros",
     description:
-      "Cobr\'a con Stripe integrado. Tus clientes pagan online.",
+      "Cobrá con Stripe integrado. Tus clientes pagan online.",
   },
   {
     icon: Send,
