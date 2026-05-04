@@ -15,15 +15,7 @@ import {
   Bell,
   Trash2,
   Zap,
-  CheckCircle2,
-  AlertCircle,
   ExternalLink,
-  ChevronRight,
-  ShieldCheck,
-  History,
-  LogOut,
-  MapPin,
-  Lock,
   Loader2,
 } from "lucide-react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";

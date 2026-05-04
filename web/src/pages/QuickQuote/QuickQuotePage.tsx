@@ -66,7 +66,7 @@ export const QuickQuotePage: React.FC = () => {
     "percent",
   );
   const [discountValue, setDiscountValue] = useState(0);
-  const [requiresInvoice, setRequiresInvoice] = useState(false);
+  const [requiresInvoice] = useState(false);
   const [taxRate] = useState(16);
 
   // Optional client info
