@@ -1,40 +1,40 @@
 [versions]
 agp = "8.13.2"
-kotlin = "2.1.0"
+kotlin = "2.3.21"
 compose-bom = "2024.12.01"
-ktor = "3.0.3"
-hilt = "2.53.1"
-room = "2.6.1"
-coil = "3.0.4"
-kotlinx-serialization = "1.7.3"
-navigation = "2.8.5"
-lifecycle = "2.8.7"
-biometric = "1.2.0-alpha05"
-credentials = "1.5.0-rc01"
-datastore = "1.1.1"
+ktor = "3.4.3"
+hilt = "2.59.2"
+room = "2.8.4"
+coil = "3.4.0"
+kotlinx-serialization = "1.11.0"
+navigation = "2.9.8"
+lifecycle = "2.10.0"
+biometric = "1.4.0-alpha07"
+credentials = "1.7.0-alpha01"
+datastore = "1.2.1"
 security-crypto = "1.1.0-alpha06"
 glance = "1.1.1"
 firebase-bom = "33.9.0"
-google-services = "4.4.2"
-window = "1.3.0"
-vico = "2.0.0-alpha.28"
+google-services = "4.4.4"
+window = "1.5.1"
+vico = "2.4.4"
 billing = "7.1.1"
 revenuecat = "8.10.1"
-workmanager = "2.10.0"
-paging = "3.3.4"
+workmanager = "2.11.2"
+paging = "3.4.2"
 junit5 = "5.11.3"
-mockk = "1.13.13"
-turbine = "1.2.0"
-kotlinx-coroutines-test = "1.9.0"
-benchmark = "1.3.3"
-baselineprofile-plugin = "1.3.3"
+mockk = "1.14.9"
+turbine = "1.2.1"
+kotlinx-coroutines-test = "1.10.2"
+benchmark = "1.4.1"
+baselineprofile-plugin = "1.4.1"
 uiautomator = "2.3.0"
-test-ext-junit = "1.2.1"
+test-ext-junit = "1.3.0"
 
 [libraries]
 # Window Manager
 androidx-window = { group = "androidx.window", name = "window", version.ref = "window" }
-androidx-exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version = "1.3.7" }
+androidx-exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version = "1.4.2" }
 
 # Testing
 junit-jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit5" }
@@ -95,7 +95,7 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 # Hilt
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version = "1.2.0" }
+hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version = "1.3.0" }
 
 # Coil
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
@@ -108,7 +108,7 @@ biometric = { group = "androidx.biometric", name = "biometric", version.ref = "b
 # Credentials (Google One Tap)
 credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
 credentials-play = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentials" }
-google-id = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version = "1.1.0" }
+google-id = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version = "1.2.0" }
 
 # DataStore
 datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
@@ -124,8 +124,8 @@ revenuecat = { group = "com.revenuecat.purchases", name = "purchases", version.r
 
 # WorkManager
 work-runtime = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workmanager" }
-hilt-work = { group = "androidx.hilt", name = "hilt-work", version = "1.2.0" }
-hilt-work-compiler = { group = "androidx.hilt", name = "hilt-compiler", version = "1.2.0" }
+hilt-work = { group = "androidx.hilt", name = "hilt-work", version = "1.3.0" }
+hilt-work-compiler = { group = "androidx.hilt", name = "hilt-compiler", version = "1.3.0" }
 
 # Paging
 androidx-paging-runtime = { group = "androidx.paging", name = "paging-runtime", version.ref = "paging" }
@@ -141,7 +141,7 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-ksp = { id = "com.google.devtools.ksp", version = "2.1.0-1.0.29" }
+ksp = { id = "com.google.devtools.ksp", version = "2.3.7" }
 android-junit5 = { id = "de.mannodermaus.android-junit5", version = "1.11.3.0" }
 google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
 baselineprofile = { id = "androidx.baselineprofile", version.ref = "baselineprofile-plugin" }
