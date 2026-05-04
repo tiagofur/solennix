@@ -26,48 +26,48 @@ public struct StaffTeamDetailView: View {
     public var body: some View {
         Group {
             if isLoading && team == nil {
-                ProgressView("Cargando equipo...")
+                ProgressView(StaffStrings.teamsLoadingDetail)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let team {
                 scrollContent(team)
             } else {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
-                    title: "Error",
-                    message: errorMessage ?? "No se pudo cargar el equipo"
+                    title: StaffStrings.errorTitle,
+                    message: errorMessage ?? StaffStrings.teamNotFoundMessage
                 )
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle(team?.name ?? "Equipo")
+        .navigationTitle(team?.name ?? StaffStrings.teamNavFallback)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if team != nil {
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink(value: Route.staffTeamForm(id: teamId)) {
-                        Text("Editar")
+                        Text(StaffStrings.edit)
                             .foregroundStyle(SolennixColors.primary)
                     }
                 }
             }
         }
         .confirmationDialog(
-            "Eliminar equipo",
+            StaffStrings.teamDeleteTitle,
             isPresented: $showDeleteConfirm
         ) {
-            Button("Eliminar", role: .destructive) {
+            Button(StaffStrings.deleteAction, role: .destructive) {
                 Task {
                     do {
                         try await apiClient.deleteStaffTeam(id: teamId)
                         dismiss()
                     } catch {
-                        errorMessage = "Error al eliminar el equipo"
+                        errorMessage = StaffStrings.teamDeleteError
                     }
                 }
             }
-            Button("Cancelar", role: .cancel) {}
+            Button(StaffStrings.cancel, role: .cancel) {}
         } message: {
-            Text("Se eliminará el equipo \(team?.name ?? ""). Los colaboradores individuales no se borran.")
+            Text(StaffStrings.teamDeleteMessage(team?.name ?? ""))
         }
         .task { await loadData() }
     }
@@ -129,7 +129,7 @@ public struct StaffTeamDetailView: View {
                 Image(systemName: "person.2")
                     .font(.caption)
                     .foregroundStyle(SolennixColors.textTertiary)
-                Text(count == 1 ? "1 miembro" : "\(count) miembros")
+                Text(StaffStrings.memberCount(count))
                     .font(.caption)
                     .foregroundStyle(SolennixColors.textTertiary)
             }
@@ -149,7 +149,7 @@ public struct StaffTeamDetailView: View {
                 Image(systemName: "note.text")
                     .font(.caption)
                     .foregroundStyle(SolennixColors.primary)
-                Text("Notas")
+                Text(StaffStrings.notesTitle)
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.textSecondary)
@@ -170,7 +170,7 @@ public struct StaffTeamDetailView: View {
 
     private func membersSection(_ team: StaffTeam) -> some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text("Miembros")
+            Text(StaffStrings.membersTitle)
                 .font(.caption)
                 .fontWeight(.semibold)
                 .foregroundStyle(SolennixColors.textSecondary)
@@ -179,7 +179,7 @@ public struct StaffTeamDetailView: View {
             let sorted = (team.members ?? []).sorted { $0.position < $1.position }
 
             if sorted.isEmpty {
-                Text("Este equipo todavía no tiene miembros. Editalo para agregarlos.")
+                Text(StaffStrings.teamEmptyMembers)
                     .font(.body)
                     .foregroundStyle(SolennixColors.textTertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -202,7 +202,7 @@ public struct StaffTeamDetailView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: Spacing.xs) {
-                    Text(member.staffName ?? "(sin nombre)")
+                    Text(member.staffName ?? StaffStrings.memberNoName)
                         .font(.body)
                         .fontWeight(.semibold)
                         .foregroundStyle(SolennixColors.text)
@@ -211,7 +211,7 @@ public struct StaffTeamDetailView: View {
                         Image(systemName: "crown.fill")
                             .font(.caption2)
                             .foregroundStyle(SolennixColors.primary)
-                            .accessibilityLabel("Lidera el equipo")
+                            .accessibilityLabel(StaffStrings.memberLeadAccessibility)
                     }
                 }
 
@@ -257,7 +257,7 @@ public struct StaffTeamDetailView: View {
         } label: {
             HStack(spacing: Spacing.sm) {
                 Image(systemName: "trash")
-                Text("Eliminar equipo")
+                Text(StaffStrings.teamDeleteTitle)
             }
             .font(.subheadline)
             .fontWeight(.medium)
@@ -283,7 +283,7 @@ public struct StaffTeamDetailView: View {
             if let apiError = error as? APIError {
                 errorMessage = apiError.errorDescription
             } else {
-                errorMessage = "Ocurrio un error inesperado."
+                errorMessage = StaffStrings.unexpectedError
             }
         }
 

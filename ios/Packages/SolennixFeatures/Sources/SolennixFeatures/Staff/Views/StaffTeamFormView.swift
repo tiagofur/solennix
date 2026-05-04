@@ -26,7 +26,7 @@ public struct StaffTeamFormView: View {
         }
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle(teamId != nil ? "Editar Equipo" : "Nuevo Equipo")
+        .navigationTitle(teamId != nil ? StaffStrings.teamEditTitle : StaffStrings.teamNewTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -40,7 +40,7 @@ public struct StaffTeamFormView: View {
                     if viewModel.isSaving {
                         ProgressView()
                     } else {
-                        Text("Guardar")
+                        Text(StaffStrings.save)
                             .fontWeight(.semibold)
                             .foregroundStyle(viewModel.isFormValid ? SolennixColors.primary : SolennixColors.textTertiary)
                     }
@@ -50,7 +50,7 @@ public struct StaffTeamFormView: View {
         }
         .overlay {
             if viewModel.isLoading {
-                ProgressView("Cargando...")
+                ProgressView(StaffStrings.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(SolennixColors.background.opacity(0.6))
             }
@@ -77,22 +77,22 @@ public struct StaffTeamFormView: View {
     // MARK: - Info
 
     private var infoSection: some View {
-        Section("Informacion") {
+        Section(StaffStrings.sectionInfo) {
             SolennixTextField(
-                label: "Nombre",
+                label: StaffStrings.fieldName,
                 text: $viewModel.name,
-                placeholder: "Ej: Cuadrilla de meseros A",
+                placeholder: StaffStrings.teamNamePlaceholder,
                 leftIcon: "person.3",
                 errorMessage: !viewModel.name.isEmpty && !viewModel.isNameValid
-                    ? "El nombre es obligatorio (max 255)" : nil,
+                    ? StaffStrings.teamNameError : nil,
                 autocapitalization: .sentences
             )
             .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
 
             SolennixTextField(
-                label: "Rol del equipo (opcional)",
+                label: StaffStrings.teamRoleLabel,
                 text: $viewModel.roleLabel,
-                placeholder: "Ej: Meseros, Fotografia",
+                placeholder: StaffStrings.teamRolePlaceholder,
                 leftIcon: "briefcase",
                 autocapitalization: .words
             )
@@ -103,9 +103,9 @@ public struct StaffTeamFormView: View {
     // MARK: - Notes
 
     private var notesSection: some View {
-        Section("Notas") {
+        Section(StaffStrings.sectionNotes) {
             VStack(alignment: .leading, spacing: Spacing.xs) {
-                Text("Notas internas")
+                Text(StaffStrings.teamNotesLabel)
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundStyle(SolennixColors.text)
@@ -147,7 +147,7 @@ public struct StaffTeamFormView: View {
                 HStack(spacing: Spacing.sm) {
                     Image(systemName: "person.crop.circle.badge.plus")
                         .foregroundStyle(SolennixColors.primary)
-                    Text("Agregar miembro")
+                    Text(StaffStrings.addMember)
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundStyle(SolennixColors.primary)
@@ -158,7 +158,7 @@ public struct StaffTeamFormView: View {
             .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
         } header: {
             HStack {
-                Text("Miembros")
+                Text(StaffStrings.membersTitle)
                 Spacer()
                 if !viewModel.members.isEmpty {
                     EditButton()
@@ -167,7 +167,7 @@ public struct StaffTeamFormView: View {
                 }
             }
         } footer: {
-            Text("Ordenalos como deberian aparecer al asignar el equipo a un evento. El lider se marca con la corona.")
+            Text(StaffStrings.membersFooter)
                 .font(.caption)
                 .foregroundStyle(SolennixColors.textTertiary)
         }
@@ -199,7 +199,7 @@ public struct StaffTeamFormView: View {
                 Image(systemName: member.isLead ? "crown.fill" : "crown")
                     .font(.body)
                     .foregroundStyle(member.isLead ? SolennixColors.primary : SolennixColors.textTertiary)
-                    .accessibilityLabel(member.isLead ? "Quitar liderazgo" : "Marcar como lider")
+                    .accessibilityLabel(member.isLead ? StaffStrings.removeLead : StaffStrings.setLead)
             }
             .buttonStyle(.plain)
         }
@@ -214,8 +214,8 @@ public struct StaffTeamFormView: View {
                 if viewModel.staffCatalog.isEmpty {
                     EmptyStateView(
                         icon: "person.3",
-                        title: "Sin personal",
-                        message: "Agrega colaboradores en la seccion Personal antes de armar equipos"
+                        title: StaffStrings.emptyTitle,
+                        message: StaffStrings.pickerEmptyMessage
                     )
                 } else {
                     MemberPickerList(
@@ -228,11 +228,11 @@ public struct StaffTeamFormView: View {
                     )
                 }
             }
-            .navigationTitle("Agregar miembro")
+            .navigationTitle(StaffStrings.pickerTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cerrar") { showMemberPicker = false }
+                    Button(StaffStrings.close) { showMemberPicker = false }
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
             }
@@ -282,7 +282,7 @@ private struct MemberPickerList: View {
                 .disabled(alreadySelected.contains(item.id))
             }
         }
-        .searchable(text: $search, prompt: "Buscar personal")
+        .searchable(text: $search, prompt: StaffStrings.searchPrompt)
     }
 
     private var filtered: [Staff] {

@@ -20,9 +20,9 @@ public struct StaffListView: View {
     public var body: some View {
         content
             .background(SolennixColors.surfaceGrouped)
-            .navigationTitle("Personal")
+            .navigationTitle(StaffStrings.title)
             .navigationBarTitleDisplayMode(.large)
-            .searchable(text: $viewModel.searchText, prompt: "Buscar personal")
+            .searchable(text: $viewModel.searchText, prompt: StaffStrings.searchPrompt)
             .refreshable { await viewModel.loadStaff() }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -31,7 +31,7 @@ public struct StaffListView: View {
                         Image(systemName: "plus")
                             .font(.body)
                             .foregroundStyle(SolennixColors.primary)
-                            .accessibilityLabel("Agregar personal")
+                            .accessibilityLabel(StaffStrings.addAccessibility)
                     }
 
                     sortMenu
@@ -39,15 +39,15 @@ public struct StaffListView: View {
             }
         }
         .confirmationDialog(
-            "Eliminar personal",
+            StaffStrings.deleteTitle,
             isPresented: $viewModel.showDeleteConfirm,
             presenting: viewModel.deleteTarget
         ) { item in
-            Button("Eliminar", role: .destructive) {
+            Button(StaffStrings.deleteAction, role: .destructive) {
                 HapticsHelper.play(.success)
                 guard let removed = viewModel.softDeleteStaff(item) else { return }
                 toastManager.showUndo(
-                    message: "\(item.name) eliminado",
+                    message: StaffStrings.deletedToast(item.name),
                     onUndo: {
                         viewModel.restoreStaff(removed.staff, at: removed.index)
                         HapticsHelper.play(.success)
@@ -57,9 +57,9 @@ public struct StaffListView: View {
                     }
                 )
             }
-            Button("Cancelar", role: .cancel) {}
+            Button(StaffStrings.cancel, role: .cancel) {}
         } message: { item in
-            Text("Se eliminará a \(item.name). Podrás deshacer durante unos segundos.")
+            Text(StaffStrings.deleteMessage(item.name))
         }
         .task {
             await viewModel.loadStaff()
@@ -73,9 +73,9 @@ public struct StaffListView: View {
         if let error = viewModel.errorMessage, viewModel.staff.isEmpty, !viewModel.isLoading {
             EmptyStateView(
                 icon: "wifi.exclamationmark",
-                title: "Error al cargar",
+                title: StaffStrings.errorLoadingTitle,
                 message: error,
-                actionTitle: "Reintentar"
+                actionTitle: StaffStrings.retry
             ) {
                 Task { await viewModel.loadStaff() }
             }
@@ -85,17 +85,17 @@ public struct StaffListView: View {
             if viewModel.searchText.isEmpty {
                 EmptyStateView(
                     icon: "person.3",
-                    title: "Sin personal",
-                    message: "Agregá a tu primer colaborador para asignarlo a eventos",
-                    actionTitle: "Agregar Personal"
+                    title: StaffStrings.emptyTitle,
+                    message: StaffStrings.emptyMessage,
+                    actionTitle: StaffStrings.emptyAction
                 ) {
                     // FAB handles navigation; empty state CTA is visual only
                 }
             } else {
                 EmptyStateView(
                     icon: "magnifyingglass",
-                    title: "Sin resultados",
-                    message: "No se encontró personal que coincida con tu búsqueda"
+                    title: StaffStrings.filteredEmptyTitle,
+                    message: StaffStrings.filteredEmptyMessage
                 )
             }
         } else {
@@ -127,11 +127,11 @@ public struct StaffListView: View {
                             .foregroundStyle(SolennixColors.primary)
                     }
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Equipos")
+                        Text(StaffStrings.teamsLinkTitle)
                             .font(.body)
                             .fontWeight(.semibold)
                             .foregroundStyle(SolennixColors.text)
-                        Text("Armá cuadrillas para asignarlas de un toque")
+                        Text(StaffStrings.teamsLinkSubtitle)
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textSecondary)
                     }
@@ -161,7 +161,7 @@ public struct StaffListView: View {
                     .buttonStyle(.plain)
                     .contextMenu {
                         NavigationLink(value: Route.staffForm(id: item.id)) {
-                            Label("Editar", systemImage: "pencil")
+                            Label(StaffStrings.edit, systemImage: "pencil")
                         }
                         if let phone = item.phone, !phone.isEmpty {
                             Button {
@@ -170,7 +170,7 @@ public struct StaffListView: View {
                                 }
                                 HapticsHelper.play(.success)
                             } label: {
-                                Label("Llamar", systemImage: "phone")
+                                Label(StaffStrings.callAction, systemImage: "phone")
                             }
                         }
                         if let email = item.email, !email.isEmpty {
@@ -189,7 +189,7 @@ public struct StaffListView: View {
                             viewModel.deleteTarget = item
                             viewModel.showDeleteConfirm = true
                         } label: {
-                            Label("Eliminar", systemImage: "trash")
+                            Label(StaffStrings.deleteAction, systemImage: "trash")
                         }
                     }
                     .task {
@@ -228,11 +228,11 @@ public struct StaffListView: View {
                                 .foregroundStyle(SolennixColors.primary)
                         }
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Equipos")
+                            Text(StaffStrings.teamsLinkTitle)
                                 .font(.body)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(SolennixColors.text)
-                            Text("Armá cuadrillas para asignarlas de un toque")
+                            Text(StaffStrings.teamsLinkSubtitle)
                                 .font(.caption)
                                 .foregroundStyle(SolennixColors.textSecondary)
                         }
@@ -250,11 +250,11 @@ public struct StaffListView: View {
                         viewModel.deleteTarget = item
                         viewModel.showDeleteConfirm = true
                     } label: {
-                        Label("Eliminar", systemImage: "trash")
+                        Label(StaffStrings.deleteAction, systemImage: "trash")
                     }
 
                     NavigationLink(value: Route.staffForm(id: item.id)) {
-                        Label("Editar", systemImage: "pencil")
+                        Label(StaffStrings.edit, systemImage: "pencil")
                     }
                     .tint(.blue)
                 }
@@ -276,14 +276,14 @@ public struct StaffListView: View {
                             HapticsHelper.play(.success)
                             openURL(url)
                         } label: {
-                            Label("Llamar", systemImage: "phone.fill")
+                            Label(StaffStrings.callAction, systemImage: "phone.fill")
                         }
                         .tint(.green)
                     }
                 }
                 .contextMenu {
                     NavigationLink(value: Route.staffForm(id: item.id)) {
-                        Label("Editar", systemImage: "pencil")
+                        Label(StaffStrings.edit, systemImage: "pencil")
                     }
                     if let phone = item.phone, !phone.isEmpty {
                         Button {
@@ -292,7 +292,7 @@ public struct StaffListView: View {
                             }
                             HapticsHelper.play(.success)
                         } label: {
-                            Label("Llamar", systemImage: "phone")
+                            Label(StaffStrings.callAction, systemImage: "phone")
                         }
                     }
                     if let email = item.email, !email.isEmpty {
@@ -311,7 +311,7 @@ public struct StaffListView: View {
                         viewModel.deleteTarget = item
                         viewModel.showDeleteConfirm = true
                     } label: {
-                        Label("Eliminar", systemImage: "trash")
+                        Label(StaffStrings.deleteAction, systemImage: "trash")
                     }
                 }
                 .task {
@@ -419,7 +419,7 @@ public struct StaffListView: View {
 
     private var sortMenu: some View {
         Menu {
-            Picker("Ordenar por", selection: $viewModel.sortKey) {
+            Picker(StaffStrings.sortTitle, selection: $viewModel.sortKey) {
                 ForEach(StaffSortKey.allCases, id: \.self) { key in
                     Text(key.label).tag(key)
                 }
@@ -431,7 +431,7 @@ public struct StaffListView: View {
                 viewModel.sortAscending.toggle()
             } label: {
                 Label(
-                    viewModel.sortAscending ? "Ascendente" : "Descendente",
+                    viewModel.sortAscending ? StaffStrings.sortAscending : StaffStrings.sortDescending,
                     systemImage: viewModel.sortAscending ? "arrow.up" : "arrow.down"
                 )
             }
@@ -439,7 +439,7 @@ public struct StaffListView: View {
             Image(systemName: "arrow.up.arrow.down")
                 .font(.body)
                 .foregroundStyle(SolennixColors.primary)
-                .accessibilityLabel("Ordenar personal")
+                .accessibilityLabel(StaffStrings.sortAccessibility)
         }
     }
 }

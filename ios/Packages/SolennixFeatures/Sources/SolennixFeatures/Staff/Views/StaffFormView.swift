@@ -26,7 +26,7 @@ public struct StaffFormView: View {
         }
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle(staffId != nil ? "Editar Personal" : "Nuevo Personal")
+        .navigationTitle(staffId != nil ? StaffStrings.editTitle : StaffStrings.newTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -40,7 +40,7 @@ public struct StaffFormView: View {
                     if viewModel.isSaving {
                         ProgressView()
                     } else {
-                        Text("Guardar")
+                        Text(StaffStrings.save)
                             .fontWeight(.semibold)
                             .foregroundStyle(viewModel.isFormValid ? SolennixColors.primary : SolennixColors.textTertiary)
                     }
@@ -50,16 +50,16 @@ public struct StaffFormView: View {
         }
         .overlay {
             if viewModel.isLoading {
-                ProgressView("Cargando...")
+                ProgressView(StaffStrings.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(SolennixColors.background.opacity(0.6))
             }
         }
-        .alert("Error", isPresented: .init(
+        .alert(StaffStrings.errorTitle, isPresented: .init(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
-            Button("OK", role: .cancel) {}
+            Button(StaffStrings.cancel, role: .cancel) {}
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
@@ -73,23 +73,23 @@ public struct StaffFormView: View {
     // MARK: - Info Section
 
     private var infoSection: some View {
-        Section("Informacion") {
+        Section(StaffStrings.sectionInfo) {
             AdaptiveFormRow {
                 SolennixTextField(
-                    label: "Nombre",
+                    label: StaffStrings.fieldName,
                     text: $viewModel.name,
-                    placeholder: "Nombre completo",
+                    placeholder: StaffStrings.fieldNamePlaceholder,
                     leftIcon: "person",
                     errorMessage: !viewModel.name.isEmpty && !viewModel.isNameValid
-                        ? "Minimo 2 caracteres" : nil,
+                        ? StaffStrings.nameMinError : nil,
                     textContentType: .name,
                     autocapitalization: .words
                 )
             } right: {
                 SolennixTextField(
-                    label: "Rol",
+                    label: StaffStrings.fieldRole,
                     text: $viewModel.roleLabel,
-                    placeholder: "Ej: Mesero, DJ, Fotografo",
+                    placeholder: StaffStrings.fieldRolePlaceholder,
                     leftIcon: "briefcase",
                     autocapitalization: .words
                 )
@@ -101,24 +101,24 @@ public struct StaffFormView: View {
     // MARK: - Contact Section
 
     private var contactSection: some View {
-        Section("Contacto") {
+        Section(StaffStrings.sectionContact) {
             AdaptiveFormRow {
                 SolennixTextField(
-                    label: "Telefono",
+                    label: StaffStrings.fieldPhone,
                     text: $viewModel.phone,
-                    placeholder: "10 digitos",
+                    placeholder: StaffStrings.fieldPhonePlaceholder,
                     leftIcon: "phone",
                     textContentType: .telephoneNumber,
                     keyboardType: .phonePad
                 )
             } right: {
                 SolennixTextField(
-                    label: "Email",
+                    label: StaffStrings.fieldEmail,
                     text: $viewModel.email,
-                    placeholder: "correo@ejemplo.com",
+                    placeholder: StaffStrings.fieldEmailPlaceholder,
                     leftIcon: "envelope",
                     errorMessage: !viewModel.email.isEmpty && !viewModel.isEmailValidIfProvided
-                        ? "Email invalido" : nil,
+                        ? StaffStrings.emailInvalidError : nil,
                     textContentType: .emailAddress,
                     keyboardType: .emailAddress,
                     autocapitalization: .never
@@ -135,12 +135,12 @@ public struct StaffFormView: View {
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 Toggle(isOn: $viewModel.notificationEmailOptIn) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Avisarle por email al asignarlo a un evento")
+                        Text(StaffStrings.notifToggleLabel)
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundStyle(SolennixColors.text)
 
-                        Text("Se activara en Phase 2 (Pro+). Por ahora guardamos la preferencia.")
+                        Text(StaffStrings.notifToggleSubtitle)
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textSecondary)
                     }
@@ -148,23 +148,23 @@ public struct StaffFormView: View {
                 .tint(SolennixColors.primary)
 
                 if viewModel.notificationEmailOptIn && !viewModel.isOptInConsistent {
-                    Text("Para activar el aviso necesitas un email valido")
+                    Text(StaffStrings.notifEmailRequired)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.error)
                 }
             }
             .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
         } header: {
-            Text("Avisos")
+            Text(StaffStrings.sectionNotif)
         }
     }
 
     // MARK: - Notes Section
 
     private var notesSection: some View {
-        Section("Notas") {
+        Section(StaffStrings.sectionNotes) {
             VStack(alignment: .leading, spacing: Spacing.xs) {
-                Text("Notas")
+                Text(StaffStrings.sectionNotes)
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundStyle(SolennixColors.text)
