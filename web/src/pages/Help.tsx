@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ChevronDown,
   ChevronUp,
@@ -17,6 +17,8 @@ interface FAQItem {
   answer: string | React.ReactNode;
   category: "general" | "technical" | "billing" | "changelog";
 }
+
+type FAQCategory = FAQItem["category"] | "all";
 
 const faqItems: FAQItem[] = [
   {
@@ -122,7 +124,7 @@ const faqItems: FAQItem[] = [
     answer: (
       <div className="space-y-2">
         <p>
-          Sí. Usamos cifrado end-to-end (HTTPS/TLS) para transmisión y almacenamiento
+          Sí. Usamos cifrado en tránsito (HTTPS/TLS) para transmisión y almacenamiento
           en bases de datos protegidas.
         </p>
         <p className="text-sm text-gray-600">
@@ -339,7 +341,7 @@ const guides: GuideItem[] = [
 export function Help() {
   const navigate = useNavigate();
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>("general");
+  const [selectedCategory, setSelectedCategory] = useState<FAQCategory>("general");
 
   const filteredFAQ = faqItems.filter(
     (item) =>
@@ -375,9 +377,9 @@ export function Help() {
 
       {/* Changelog Quick Link */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div
+        <Link
+          to="/changelog"
           className="bg-linear-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 sm:p-6 cursor-pointer hover:shadow-lg transition"
-          onClick={() => navigate("/changelog")}
         >
           <div className="flex items-start gap-4">
             <div className="shrink-0">
@@ -391,12 +393,12 @@ export function Help() {
                 Revisa las últimas versiones y cambios de Web, iOS, Android y
                 Backend.
               </p>
-              <button className="mt-3 inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium hover:underline">
+              <span className="mt-3 inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium hover:underline">
                 Ver Changelog →
-              </button>
+              </span>
             </div>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Quick Links / Guides */}

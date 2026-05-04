@@ -97,7 +97,7 @@ Solennix mantiene **una única fuente de verdad** para todas las versiones en `v
 **Paso 3:** Valida y genera:
 
 ```bash
-cd /Users/tiagofur/dev/solennix
+# desde la raíz del repo
 
 # Valida que versiones match
 npm run version:check
@@ -163,7 +163,7 @@ web: expected 0.1.0 but got 0.0.0
 Corre toda la cadena de validación:
 
 ```bash
-cd /Users/tiagofur/dev/solennix
+# desde la raíz del repo
 
 # Paso 1: Valida archivos fuente vs manifest
 npm run version:check

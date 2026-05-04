@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const rootDir = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../..");
+const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const manifestPath = path.join(rootDir, "versioning", "releases.json");
 const markdownPath = path.join(rootDir, "CHANGELOG.md");
 const webContentDir = path.join(rootDir, "web", "src", "content");
@@ -20,11 +21,11 @@ function renderMarkdown(data) {
   lines.push("");
   lines.push("Historial oficial de cambios de Solennix para Web, iOS, Android y Backend.");
   lines.push("");
-  lines.push(`Ultima actualizacion: ${data.updatedAt}`);
+  lines.push(`Última actualización: ${data.updatedAt}`);
   lines.push("");
   lines.push("## Versiones actuales");
   lines.push("");
-  lines.push("| Plataforma | Version | Build | Source |\n| --- | --- | --- | --- |");
+  lines.push("| Plataforma | Versión | Build | Source |\n| --- | --- | --- | --- |");
   lines.push(`| Web | ${currentVersions.web.version} | - | ${currentVersions.web.source} |`);
   lines.push(`| iOS | ${currentVersions.ios.version} | ${currentVersions.ios.build} | ${currentVersions.ios.source} |`);
   lines.push(`| Android | ${currentVersions.android.version} | ${currentVersions.android.build} | ${currentVersions.android.source} |`);

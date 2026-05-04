@@ -2,11 +2,11 @@
 
 Historial oficial de cambios de Solennix para Web, iOS, Android y Backend.
 
-Ultima actualizacion: 2026-05-03
+Última actualización: 2026-05-03
 
 ## Versiones actuales
 
-| Plataforma | Version | Build | Source |
+| Plataforma | Versión | Build | Source |
 | --- | --- | --- | --- |
 | Web | 0.0.0 | - | web/package.json |
 | iOS | 1.1.0 | 6 | ios/project.yml |

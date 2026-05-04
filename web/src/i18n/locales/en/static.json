@@ -6,6 +6,8 @@
     "legal": "Legal",
     "terms": "Terms and Conditions",
     "privacy": "Privacy Policy",
+    "changelog": "Changelog",
+    "help": "Help",
     "about_app": "About the app",
     "description": "Solennix is a SaaS application designed for event organizers of all types. Manage clients, events, product catalog, inventory, quotes, and payments all in one place.",
     "footer": "Made with {{heart}} by the Creapolis.Dev team"

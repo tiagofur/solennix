@@ -91,7 +91,7 @@ export const About: React.FC = () => {
             className="flex items-center gap-3 py-2 text-primary hover:underline"
           >
             <History className="h-5 w-5" />
-            <span className="text-sm font-medium">Changelog</span>
+            <span className="text-sm font-medium">{t('static:about.changelog')}</span>
           </Link>
 
           <Link
