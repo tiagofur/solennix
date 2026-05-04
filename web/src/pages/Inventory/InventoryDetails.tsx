@@ -49,12 +49,6 @@ export const InventoryDetails: React.FC = () => {
   const loading = itemLoading;
   const error = itemError ? t("common:error.load_failed") : null;
 
-  useEffect(() => {
-    if (id && item) {
-      loadDemandForecast(id, item);
-    }
-  }, [id, item]);
-
   const loadDemandForecast = async (itemId: string, currentItem: InventoryItem) => {
     try {
       setDemandLoading(true);
@@ -142,6 +136,13 @@ export const InventoryDetails: React.FC = () => {
       setDemandLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (id && item) {
+      loadDemandForecast(id, item);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, item]);
 
   const handleDeleteItem = () => {
     if (!id) return;
