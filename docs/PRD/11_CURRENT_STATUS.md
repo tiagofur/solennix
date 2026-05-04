@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-05-01
+updated: 2026-05-03
 status: active
 ---
 
@@ -25,11 +25,19 @@ status: active
 **Fecha:** Abril 2026
 **Version:** 1.5
 
-> [!info] 2026-04-29 — i18n parity planning reset (issue #202 + #203–#209)
-> La estrategia de multilanguage dejó de organizarse por plataforma y pasó a slices cross-platform con una copy matrix canónica. Objetivo: asegurar misma intención y terminología entre iOS, Android y Web, permitiendo variantes mobile más cortas sólo cuando el espacio lo exija.
-> - **Epic**: #202 `feat(cross-platform): complete product-wide i18n parity`
-> - **Slices**: #94 Dashboard ✅ cerrado, #95 Events list, #203 governance/matrix, #204 event detail + form ✅ implementado cross-platform, #205 auth + settings, #206 clients, #207 products + inventory, #208 public flows ✅ listo para merge en PR #225, #209 final sweep.
-> - **Documento fuente**: [[19_I18N_STRATEGY]] ahora define copy governance, canonical vs compact variants y checklist de review por slice.
+> [!success] 2026-05-03 — Version governance + changelog unificado
+> Se implemento un control de version central para Web, iOS, Android y Backend con validacion automatica en CI y changelog en dos superficies (GitHub + web publica).
+> - **Fuente canonica**: `versioning/releases.json` (versiones actuales + releases por plataforma).
+> - **Validacion CI**: workflow `Version Governance` ejecuta `check-versions.mjs` y `generate-changelog.mjs --check` para bloquear drift.
+> - **Backend versionado explicito**: `backend/VERSION` pasa a ser la referencia estable de version del API.
+> - **Changelog GitHub**: `CHANGELOG.md` ahora se genera desde la fuente canonica.
+> - **Changelog publico web**: nuevas rutas `/changelog` y `/help/changelog` muestran historial y versiones actuales por plataforma.
+
+> [!info] 2026-05-03 — i18n parity tracker #202 cerrado
+> La estrategia de multilanguage quedó consolidada por slices cross-platform con copy matrix canónica, y el tracker epic de ejecución ya se completó end-to-end.
+> - **Epic**: #202 `feat(cross-platform): complete product-wide i18n parity` ✅ cerrado
+> - **Slices**: #94 Dashboard ✅, #95 Events list ✅, #203 governance/matrix ✅, #204 event detail + form ✅, #205 auth + settings ✅, #206 clients ✅, #207 products + inventory ✅, #208 public/client-facing ✅, #209 final sweep ✅.
+> - **Documento fuente**: [[19_I18N_STRATEGY]] mantiene governance, canonical vs compact variants y checklist de review por slice.
 
 > [!success] 2026-04-29 — i18n slice #204 event detail + form ✅
 > Paridad real de i18n cerrada para Event detail + Event form en Web, iOS y Android.
