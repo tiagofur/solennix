@@ -10,7 +10,7 @@ aliases:
   - Arquitectura Web
   - Web Architecture
 date: 2026-03-20
-updated: 2026-04-27
+updated: 2026-05-03
 status: active
 platform: Web
 ---
@@ -20,8 +20,15 @@ platform: Web
 > [!tip] Para documentacion detallada de cada modulo web, ver [[Web MOC]]
 
 **Version:** 1.0
-**Fecha:** 2026-03-20 · **Última actualización:** 2026-04-17
+**Fecha:** 2026-03-20 · **Última actualización:** 2026-05-03
 **Plataforma:** Web (navegadores modernos: Chrome, Firefox, Safari, Edge)
+
+> [!success] 2026-05-03 — Changelog publico + version governance
+> La web expone changelog publico en `/changelog` (alias `/help/changelog`) y consume artefacto generado desde `versioning/releases.json`.
+> - Generado web: `web/src/content/changelog.generated.ts`
+> - Generado GitHub: `CHANGELOG.md`
+> - Scripts: `node scripts/versioning/check-versions.mjs` y `node scripts/versioning/generate-changelog.mjs`
+> - CI: workflow `Version Governance` valida sincronia entre manifest y archivos fuente de version por plataforma.
 
 > [!abstract] Resumen
 > SPA construida con **React 19 + TypeScript** sobre **Vite**, con **Tailwind CSS** para estilos, estado client vía **React Context** (AuthContext, ThemeContext), estado server vía **TanStack React Query 5**, y **zod + react-hook-form** para formularios tipados. Arquitectura por capas: Pages → Hooks/Contexts → Services → Backend API (Go). Ver tambien [[07_TECHNICAL_ARCHITECTURE_BACKEND]] para la contraparte del servidor.

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Globe, Mail, FileText, Shield, Heart } from 'lucide-react';
+import { ArrowLeft, Globe, Mail, FileText, Shield, Heart, History, HelpCircle } from 'lucide-react';
 import { useTranslation, Trans } from 'react-i18next';
 
 const APP_VERSION = '1.0.0';
@@ -84,6 +84,22 @@ export const About: React.FC = () => {
           >
             <Shield className="h-5 w-5" />
             <span className="text-sm font-medium">{t('static:about.privacy')}</span>
+          </Link>
+
+          <Link
+            to="/changelog"
+            className="flex items-center gap-3 py-2 text-primary hover:underline"
+          >
+            <History className="h-5 w-5" />
+            <span className="text-sm font-medium">{t('static:about.changelog')}</span>
+          </Link>
+
+          <Link
+            to="/help"
+            className="flex items-center gap-3 py-2 text-primary hover:underline"
+          >
+            <HelpCircle className="h-5 w-5" />
+            <span className="text-sm font-medium">{t('static:about.help')}</span>
           </Link>
         </div>
 

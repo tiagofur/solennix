@@ -8,14 +8,17 @@
 - **Epic**: #202 — `feat(cross-platform): complete product-wide i18n parity`
 - **Slices**:
   - #94 — Dashboard ✅ implementado en web + iOS + Android; issue cerrado
-  - #95 — Events list
-  - #203 — Canonical copy matrix + governance
+  - #95 — Events list ✅ implementado en web + iOS + Android; issue cerrado
+  - #203 — Canonical copy matrix + governance ✅ issue cerrado
   - #204 — Event detail + event form ✅ implementado en web + iOS + Android; issue cerrado
-  - #205 — Auth + settings
-  - #206 — Clients
-  - #207 — Products + inventory
-  - #208 — Public/client-facing flows ✅ PR #225 en estado `CLEAN` tras refresh sobre `main`
-  - #209 — Final hardcoded-string parity sweep
+  - #205 — Auth + settings ✅ implementado en web + iOS + Android; issue cerrado
+  - #206 — Clients ✅ implementado en web + iOS + Android; issue cerrado
+  - #207 — Products + inventory ✅ implementado en web + iOS + Android; issue cerrado
+  - #208 — Public/client-facing flows ✅ mergeado y issue cerrado
+  - #209 — Final hardcoded-string parity sweep ✅ issue cerrado
+
+> [!success] 2026-05-03 — Epic #202 cerrada
+> Con todos los slices cerrados y sin issues hijas abiertas, el tracker cross-platform de i18n queda cerrado administrativamente.
 
 > [!info] 2026-04-30 — Web baseline repair under issue #230
 > Durante la estabilización de suites web se confirmó que parte del problema no era sólo drift de tests: `web/src/i18n/locales/{es,en}/events.json` había quedado incompleto tras restores merge-safe y `Dashboard.tsx` consumía una key (`dashboard.upcoming.no_events`) que no existía en los catálogos.

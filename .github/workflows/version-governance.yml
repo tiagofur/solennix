@@ -1,0 +1,26 @@
+name: Version Governance
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  version-governance:
+    name: Validate versions and changelog
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validate platform versions
+        run: node scripts/versioning/check-versions.mjs
+
+      - name: Validate generated changelog artifacts
+        run: node scripts/versioning/generate-changelog.mjs --check

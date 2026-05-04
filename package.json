@@ -1,4 +1,10 @@
 {
+  "private": true,
+  "scripts": {
+    "changelog:generate": "node scripts/versioning/generate-changelog.mjs",
+    "version:check": "node scripts/versioning/check-versions.mjs",
+    "version:ci": "npm run version:check && npm run changelog:generate -- --check"
+  },
   "devDependencies": {
     "openapi-typescript": "^7.13.0"
   }

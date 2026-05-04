@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-05-03",
+  "currentVersions": {
+    "web": {
+      "version": "0.0.0",
+      "source": "web/package.json"
+    },
+    "ios": {
+      "version": "1.1.0",
+      "build": "6",
+      "source": "ios/project.yml"
+    },
+    "android": {
+      "version": "1.1.2",
+      "build": "5",
+      "source": "android/app/build.gradle.kts"
+    },
+    "backend": {
+      "version": "0.1.0",
+      "source": "backend/VERSION"
+    }
+  },
+  "releases": [
+    {
+      "id": "2026-05-03-platform-parity-and-stability",
+      "date": "2026-05-03",
+      "title": "Paridad de flujo de eventos y estabilidad general",
+      "summary": "Se consolidaron mejoras de UX y fixes criticos en mobile y web para formulario, pagos y PDFs.",
+      "platforms": {
+        "web": [
+          "Fix de descuento en PDF de contrato/cotizacion para que coincida con Finanzas.",
+          "Confirmacion antes de eliminar productos, extras, equipo o insumos.",
+          "Alerta inline de sobrestock en equipamiento en formulario de evento."
+        ],
+        "ios": [
+          "Fix de crash al eliminar extra o insumo vacio en formulario de evento.",
+          "Fix de descuento en PDF de contrato para mantener consistencia con pantalla financiera.",
+          "Paridad de UI de equipamiento con alerta de sobrestock no bloqueante."
+        ],
+        "android": [
+          "Boton Liquidar en pagos para autocompletar saldo pendiente.",
+          "Confirmacion previa para eliminar pagos.",
+          "Generacion de PDF en segundo plano para evitar congelamiento de UI."
+        ],
+        "backend": [
+          "Contratos de API y reglas de negocio alineados con los fixes de descuentos y pagos.",
+          "Refuerzo de consistencia para calculos mostrados en clientes API."
+        ]
+      }
+    }
+  ]
+}
