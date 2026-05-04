@@ -482,42 +482,44 @@ export function Help() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+    <div className="min-h-screen bg-surface-alt">
+      <div className="sticky top-0 z-10 border-b border-border bg-bg/90 backdrop-blur-md">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <button
             onClick={() => navigate(-1)}
-            className="mb-4 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+            className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text transition-colors"
           >
             ← {copy.back}
           </button>
           <div className="flex items-center gap-3">
-            <LifeBuoy className="w-8 h-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <LifeBuoy className="w-7 h-7" />
+            </div>
+            <h1 className="text-3xl font-black tracking-tight text-text">
               {copy.title}
             </h1>
           </div>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">{copy.subtitle}</p>
+          <p className="mt-2 text-text-secondary">{copy.subtitle}</p>
         </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Link
-          to="/changelog"
-          className="bg-linear-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 sm:p-6 cursor-pointer hover:shadow-lg transition"
+          to="/help/changelog"
+          className="block rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-6"
         >
           <div className="flex items-start gap-4">
-            <div className="shrink-0">
-              <History className="w-6 h-6 text-blue-600 dark:text-blue-400 mt-1" />
+            <div className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-info/10 text-info">
+              <History className="w-5 h-5" />
             </div>
             <div className="flex-1">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-lg font-semibold text-text">
                 {copy.changelogTitle}
               </h2>
-              <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+              <p className="mt-1 text-sm text-text-secondary">
                 {copy.changelogDesc}
               </p>
-              <span className="mt-3 inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium hover:underline">
+              <span className="mt-3 inline-flex items-center gap-2 font-medium text-primary hover:underline">
                 {copy.changelogCta} →
               </span>
             </div>
@@ -526,31 +528,31 @@ export function Help() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+        <h2 className="mb-6 text-2xl font-bold text-text">
           {copy.guidesTitle}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {copy.guides.map((guide) => (
             <div
               key={guide.id}
-              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 sm:p-6 hover:shadow-md transition"
+              className="rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-6"
             >
               <div className="flex items-start gap-3 mb-3">
-                <div className="shrink-0 text-gray-400 dark:text-gray-500">
+                <div className="shrink-0 text-primary">
                   {GUIDE_ICONS[guide.id]}
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                  <h3 className="font-semibold text-text">
                     {guide.title}
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="mt-1 text-sm text-text-secondary">
                     {guide.description}
                   </p>
                 </div>
               </div>
               <ul className="space-y-2">
                 {guide.topics.map((topic) => (
-                  <li key={topic} className="text-sm text-gray-500 dark:text-gray-400">
+                  <li key={topic} className="text-sm text-text-secondary">
                     • {topic}
                   </li>
                 ))}
@@ -561,7 +563,7 @@ export function Help() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+        <h2 className="mb-6 text-2xl font-bold text-text">
           {copy.faqTitle}
         </h2>
 
@@ -573,8 +575,8 @@ export function Help() {
                 onClick={() => setSelectedCategory(category)}
                 className={`px-3 py-1 rounded-full text-sm font-medium transition ${
                   selectedCategory === category
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600"
+                    ? "bg-primary text-white"
+                    : "bg-surface-grouped text-text hover:bg-surface-alt"
                 }`}
               >
                 {copy.categories[category]}
@@ -587,24 +589,24 @@ export function Help() {
           {filteredFAQ.map((item) => (
             <div
               key={item.id}
-              className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-md transition"
+              className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition hover:shadow-md"
             >
               <button
                 onClick={() => toggleFAQ(item.id)}
-                className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
+                className="flex w-full items-center justify-between px-6 py-4 text-left transition hover:bg-surface-alt"
               >
-                <h3 className="text-left font-semibold text-gray-900 dark:text-white">
+                <h3 className="text-left font-semibold text-text">
                   {item.question}
                 </h3>
                 {expandedFAQ === item.id ? (
-                  <ChevronUp className="w-5 h-5 text-gray-600 dark:text-gray-400 shrink-0" />
+                  <ChevronUp className="h-5 w-5 shrink-0 text-text-secondary" />
                 ) : (
-                  <ChevronDown className="w-5 h-5 text-gray-600 dark:text-gray-400 shrink-0" />
+                  <ChevronDown className="h-5 w-5 shrink-0 text-text-secondary" />
                 )}
               </button>
 
               {expandedFAQ === item.id && (
-                <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-gray-700 dark:text-gray-300 text-sm space-y-2">
+                <div className="space-y-2 border-t border-border bg-surface-alt px-6 py-4 text-sm text-text-secondary">
                   {item.paragraphs.map((p) => (
                     <p key={p}>{p}</p>
                   ))}
@@ -615,7 +617,7 @@ export function Help() {
                       ))}
                     </ul>
                   )}
-                  {item.note && <p className="text-sm text-gray-600 dark:text-gray-400">{item.note}</p>}
+                  {item.note && <p className="text-sm text-text-secondary">{item.note}</p>}
                 </div>
               )}
             </div>
@@ -623,23 +625,23 @@ export function Help() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
+      <div className="mt-12 border-t border-border bg-card">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 className="mb-4 text-2xl font-bold text-text">
             {copy.contactTitle}
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">{copy.contactSubtitle}</p>
+          <p className="mb-6 text-text-secondary">{copy.contactSubtitle}</p>
           <div className="flex flex-col sm:flex-row gap-4">
             <a
               href="mailto:soporte@solennix.com"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-medium text-white transition hover:opacity-90"
             >
               <MessageSquare className="w-5 h-5" />
               {copy.contactSupport}
             </a>
             <a
               href="https://github.com/tiagofur/solennix/issues"
-              className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+              className="inline-flex items-center gap-2 rounded-xl border border-border px-6 py-3 font-medium text-text transition hover:bg-surface-alt"
             >
               <BookOpen className="w-5 h-5" />
               {copy.contactGithub}

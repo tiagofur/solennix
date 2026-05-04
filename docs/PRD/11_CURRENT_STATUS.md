@@ -25,6 +25,14 @@ status: active
 **Fecha:** Abril 2026
 **Version:** 1.5
 
+> [!success] 2026-05-04 — Web + Backend pasan a 1.0.0
+> El baseline de producción ya no usa versiones menores a `1.0.0` para Web y Backend.
+> - **Web:** `1.0.0` en `web/package.json`
+> - **Backend:** `1.0.0` en `backend/VERSION`
+> - **Manifest canónico:** `versioning/releases.json` sincronizado
+> - **Outputs oficiales:** `CHANGELOG.md` y `web/src/content/changelog.generated.ts` regenerados
+> - **Help Center:** reestilado para respetar el design system y el tema activo en vez de usar grises/azules hardcodeados
+
 > [!success] 2026-05-03 — Version governance + changelog unificado
 > Se implemento un control de version central para Web, iOS, Android y Backend con validacion automatica en CI y changelog en dos superficies (GitHub + web publica).
 > - **Fuente canonica**: `versioning/releases.json` (versiones actuales + releases por plataforma).

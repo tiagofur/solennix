@@ -23,7 +23,7 @@ describe("Help", () => {
     expect(screen.getByText("Changelog — Qué hay de nuevo")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Ver Changelog/i })).toHaveAttribute(
       "href",
-      "/changelog"
+      "/help/changelog"
     );
   });
 
@@ -35,7 +35,7 @@ describe("Help", () => {
     expect(screen.getByText("Changelog — What's New")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /View Changelog/i })).toHaveAttribute(
       "href",
-      "/changelog"
+      "/help/changelog"
     );
   });
 });

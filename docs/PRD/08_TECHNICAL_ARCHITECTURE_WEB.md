@@ -20,8 +20,15 @@ platform: Web
 > [!tip] Para documentacion detallada de cada modulo web, ver [[Web MOC]]
 
 **Version:** 1.0
-**Fecha:** 2026-03-20 · **Última actualización:** 2026-05-03
+**Fecha:** 2026-03-20 · **Última actualización:** 2026-05-04
 **Plataforma:** Web (navegadores modernos: Chrome, Firefox, Safari, Edge)
+
+> [!success] 2026-05-04 — Web 1.0.0 + Help Center alineado al design system
+> La Web queda formalmente en `1.0.0` y el Help Center deja de usar una paleta paralela para adoptar los tokens del sistema (`bg-*`, `text-*`, `border-*`).
+> - **Fuente canonica de version:** `versioning/releases.json`
+> - **Fuente de plataforma:** `web/package.json`
+> - **About:** la version visual ya no se hardcodea; consume `web/src/content/changelog.generated.ts`
+> - **Help:** usa superficies, bordes y colores del tema activo para mantener consistencia con landing/app.
 
 > [!success] 2026-05-03 — Changelog publico + version governance
 > La web expone changelog publico en `/changelog` (alias `/help/changelog`) y consume artefacto generado desde `versioning/releases.json`.

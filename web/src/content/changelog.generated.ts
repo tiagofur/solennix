@@ -2,10 +2,10 @@
 // Source: versioning/releases.json
 export const changelogData = {
   "schemaVersion": 1,
-  "updatedAt": "2026-05-03",
+  "updatedAt": "2026-05-04",
   "currentVersions": {
     "web": {
-      "version": "0.0.0",
+      "version": "1.0.0",
       "source": "web/package.json"
     },
     "ios": {
@@ -19,11 +19,30 @@ export const changelogData = {
       "source": "android/app/build.gradle.kts"
     },
     "backend": {
-      "version": "0.1.0",
+      "version": "1.0.0",
       "source": "backend/VERSION"
     }
   },
   "releases": [
+    {
+      "id": "2026-05-04-web-backend-1-0-0-and-help-polish",
+      "date": "2026-05-04",
+      "title": "Baseline 1.0.0 para Web y Backend + Help alineado al diseño",
+      "summary": "Web y Backend quedan formalmente en 1.0.0 bajo el manifest canónico, con changelog oficial regenerado y Help Center visualmente alineado al sistema de diseño.",
+      "platforms": {
+        "web": [
+          "La versión pública de Web sube a 1.0.0 y queda gobernada desde versioning/releases.json + web/package.json.",
+          "About deja de hardcodear la versión y consume el valor generado desde changelog.generated.ts.",
+          "Help Center adopta tokens del design system (bg/card/border/text/primary) para respetar light/dark theme y consistencia visual con el resto de la app."
+        ],
+        "ios": [],
+        "android": [],
+        "backend": [
+          "backend/VERSION sube a 1.0.0 como referencia estable del API en producción.",
+          "La documentación de arquitectura backend deja explícito que backend/VERSION, no go.mod, es la fuente de verdad para versionado del servicio."
+        ]
+      }
+    },
     {
       "id": "2026-05-03-platform-parity-and-stability",
       "date": "2026-05-03",

@@ -2,16 +2,33 @@
 
 Historial oficial de cambios de Solennix para Web, iOS, Android y Backend.
 
-Última actualización: 2026-05-03
+Última actualización: 2026-05-04
 
 ## Versiones actuales
 
 | Plataforma | Versión | Build | Source |
 | --- | --- | --- | --- |
-| Web | 0.0.0 | - | web/package.json |
+| Web | 1.0.0 | - | web/package.json |
 | iOS | 1.1.0 | 6 | ios/project.yml |
 | Android | 1.1.2 | 5 | android/app/build.gradle.kts |
-| Backend | 0.1.0 | - | backend/VERSION |
+| Backend | 1.0.0 | - | backend/VERSION |
+
+## 2026-05-04 - Baseline 1.0.0 para Web y Backend + Help alineado al diseño
+
+Web y Backend quedan formalmente en 1.0.0 bajo el manifest canónico, con changelog oficial regenerado y Help Center visualmente alineado al sistema de diseño.
+
+### WEB
+- La versión pública de Web sube a 1.0.0 y queda gobernada desde versioning/releases.json + web/package.json.
+- About deja de hardcodear la versión y consume el valor generado desde changelog.generated.ts.
+- Help Center adopta tokens del design system (bg/card/border/text/primary) para respetar light/dark theme y consistencia visual con el resto de la app.
+
+### IOS
+
+### ANDROID
+
+### BACKEND
+- backend/VERSION sube a 1.0.0 como referencia estable del API en producción.
+- La documentación de arquitectura backend deja explícito que backend/VERSION, no go.mod, es la fuente de verdad para versionado del servicio.
 
 ## 2026-05-03 - Paridad de flujo de eventos y estabilidad general
 
