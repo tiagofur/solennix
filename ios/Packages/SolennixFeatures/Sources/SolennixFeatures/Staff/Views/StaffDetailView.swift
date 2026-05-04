@@ -26,38 +26,38 @@ public struct StaffDetailView: View {
     public var body: some View {
         Group {
             if isLoading && staff == nil {
-                ProgressView("Cargando personal...")
+                ProgressView(StaffStrings.loadingStaff)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let item = staff {
                 scrollContent(item)
             } else {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
-                    title: "Error",
-                    message: errorMessage ?? "No se pudo cargar el personal"
+                    title: StaffStrings.errorTitle,
+                    message: errorMessage ?? StaffStrings.notFoundMessage
                 )
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle(staff?.name ?? "Personal")
+        .navigationTitle(staff?.name ?? StaffStrings.navTitleFallback)
         .navigationBarTitleDisplayMode(.inline)
         .confirmationDialog(
-            "Eliminar personal",
+            StaffStrings.deleteTitle,
             isPresented: $showDeleteConfirm
         ) {
-            Button("Eliminar", role: .destructive) {
+            Button(StaffStrings.deleteAction, role: .destructive) {
                 Task {
                     do {
                         try await apiClient.delete(Endpoint.staff(staffId))
                         dismiss()
                     } catch {
-                        errorMessage = "Error al eliminar el personal"
+                        errorMessage = StaffStrings.deleteError
                     }
                 }
             }
-            Button("Cancelar", role: .cancel) {}
+            Button(StaffStrings.cancel, role: .cancel) {}
         } message: {
-            Text("Estas seguro de que quieres eliminar a \(staff?.name ?? "este colaborador")? Esta accion no se puede deshacer.")
+            Text(StaffStrings.deleteConfirmMessage(staff?.name ?? ""))
         }
         .task { await loadData() }
     }
@@ -155,12 +155,12 @@ public struct StaffDetailView: View {
                 .foregroundStyle(SolennixColors.primary)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Avisos por email activados")
+                Text(StaffStrings.emailNotifTitle)
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.text)
 
-                Text("Se activara en Phase 2 (Pro+). Por ahora queda registrada la preferencia.")
+                Text(StaffStrings.emailNotifSubtitle)
                     .font(.caption)
                     .foregroundStyle(SolennixColors.textSecondary)
             }
@@ -180,7 +180,7 @@ public struct StaffDetailView: View {
                 Image(systemName: "note.text")
                     .font(.caption)
                     .foregroundStyle(SolennixColors.primary)
-                Text("Notas")
+                Text(StaffStrings.notesTitle)
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.textSecondary)
@@ -245,7 +245,7 @@ public struct StaffDetailView: View {
             NavigationLink(value: Route.staffForm(id: staffId)) {
                 actionButton(
                     icon: "pencil",
-                    label: "Editar",
+                    label: StaffStrings.edit,
                     fg: SolennixColors.info
                 )
             }
@@ -255,7 +255,7 @@ public struct StaffDetailView: View {
             } label: {
                 actionButton(
                     icon: "trash",
-                    label: "Eliminar",
+                    label: StaffStrings.deleteAction,
                     fg: SolennixColors.error
                 )
             }
@@ -293,7 +293,7 @@ public struct StaffDetailView: View {
             if let apiError = error as? APIError {
                 errorMessage = apiError.errorDescription
             } else {
-                errorMessage = "Ocurrio un error inesperado."
+                errorMessage = StaffStrings.unexpectedError
             }
         }
 

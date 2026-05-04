@@ -12,9 +12,9 @@ public enum StaffSortKey: String, CaseIterable {
 
     public var label: String {
         switch self {
-        case .name:        return "Nombre"
-        case .roleLabel:   return "Rol"
-        case .createdAt:   return "Fecha de creacion"
+        case .name:        return StaffStrings.sortName
+        case .roleLabel:   return StaffStrings.sortRole
+        case .createdAt:   return StaffStrings.sortCreatedAt
         }
     }
 }
@@ -256,8 +256,8 @@ public final class StaffListViewModel {
 
     private func mapError(_ error: Error) -> String {
         if let apiError = error as? APIError {
-            return apiError.errorDescription ?? "Ocurrio un error inesperado."
+            return apiError.errorDescription ?? StaffStrings.unexpectedError
         }
-        return "Ocurrio un error inesperado. Intenta de nuevo."
+        return StaffStrings.unexpectedErrorRetry
     }
 }

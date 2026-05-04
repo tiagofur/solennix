@@ -16,9 +16,9 @@ public struct StaffTeamListView: View {
     public var body: some View {
         content
             .background(SolennixColors.surfaceGrouped)
-            .navigationTitle("Equipos")
+            .navigationTitle(StaffStrings.teamsTitle)
             .navigationBarTitleDisplayMode(.large)
-            .searchable(text: $viewModel.searchText, prompt: "Buscar equipos")
+            .searchable(text: $viewModel.searchText, prompt: StaffStrings.teamsSearchPrompt)
             .refreshable { await viewModel.load() }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -26,22 +26,22 @@ public struct StaffTeamListView: View {
                         Image(systemName: "plus")
                             .font(.body)
                             .foregroundStyle(SolennixColors.primary)
-                            .accessibilityLabel("Crear equipo")
+                            .accessibilityLabel(StaffStrings.teamsAddAccessibility)
                     }
                 }
             }
             .confirmationDialog(
-                "Eliminar equipo",
+                StaffStrings.teamDeleteTitle,
                 isPresented: $viewModel.showDeleteConfirm,
                 presenting: viewModel.deleteTarget
             ) { team in
-                Button("Eliminar", role: .destructive) {
+                Button(StaffStrings.deleteAction, role: .destructive) {
                     HapticsHelper.play(.warning)
                     Task { await viewModel.deleteTeam(team) }
                 }
-                Button("Cancelar", role: .cancel) {}
+                Button(StaffStrings.cancel, role: .cancel) {}
             } message: { team in
-                Text("Se eliminará el equipo \(team.name). Los colaboradores individuales no se borran.")
+                Text(StaffStrings.teamDeleteMessage(team.name))
             }
             .task {
                 await viewModel.load()
@@ -55,30 +55,30 @@ public struct StaffTeamListView: View {
         if let error = viewModel.errorMessage, viewModel.teams.isEmpty, !viewModel.isLoading {
             EmptyStateView(
                 icon: "wifi.exclamationmark",
-                title: "Error al cargar",
+                title: StaffStrings.errorLoadingTitle,
                 message: error,
-                actionTitle: "Reintentar"
+                actionTitle: StaffStrings.retry
             ) {
                 Task { await viewModel.load() }
             }
         } else if viewModel.isLoading && viewModel.teams.isEmpty {
-            ProgressView("Cargando equipos...")
+            ProgressView(StaffStrings.teamsLoading)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if viewModel.filteredTeams.isEmpty && !viewModel.isLoading {
             if viewModel.searchText.isEmpty {
                 EmptyStateView(
                     icon: "person.3.sequence",
-                    title: "Sin equipos todavía",
-                    message: "Agrupá a tu equipo de meseros o fotógrafos para asignarlos a un evento con un solo toque.",
-                    actionTitle: "Crear equipo"
+                    title: StaffStrings.teamsEmptyTitle,
+                    message: StaffStrings.teamsEmptyMessage,
+                    actionTitle: StaffStrings.teamsEmptyAction
                 ) {
                     // El boton del toolbar navega — este CTA es visual.
                 }
             } else {
                 EmptyStateView(
                     icon: "magnifyingglass",
-                    title: "Sin resultados",
-                    message: "No encontramos equipos que coincidan con tu búsqueda"
+                    title: StaffStrings.filteredEmptyTitle,
+                    message: StaffStrings.teamsFilteredEmptyMessage
                 )
             }
         } else {
@@ -98,11 +98,11 @@ public struct StaffTeamListView: View {
                         viewModel.deleteTarget = team
                         viewModel.showDeleteConfirm = true
                     } label: {
-                        Label("Eliminar", systemImage: "trash")
+                        Label(StaffStrings.deleteAction, systemImage: "trash")
                     }
 
                     NavigationLink(value: Route.staffTeamForm(id: team.id)) {
-                        Label("Editar", systemImage: "pencil")
+                        Label(StaffStrings.edit, systemImage: "pencil")
                     }
                     .tint(.blue)
                 }
@@ -160,7 +160,7 @@ public struct StaffTeamListView: View {
     }
 
     private func memberCountLabel(_ count: Int) -> String {
-        count == 1 ? "1 miembro" : "\(count) miembros"
+        StaffStrings.memberCount(count)
     }
 }
 
