@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Calendar,
   Users,
@@ -110,6 +111,73 @@ const FEATURES = [
   },
 ];
 
+const FEATURES_EN = [
+  {
+    icon: FileText,
+    color: "text-primary",
+    bg: "bg-primary/10",
+    title: "Professional Quotes",
+    description:
+      "Generate PDF quotes in minutes. Your client receives a link, can accept, and pay from their phone.",
+  },
+  {
+    icon: CreditCard,
+    color: "text-success",
+    bg: "bg-success/10",
+    title: "Collections and Payments",
+    description:
+      "Stripe integrated. Charge in installments, let clients pay online, and reconcile payments automatically.",
+  },
+  {
+    icon: Send,
+    color: "text-info",
+    bg: "bg-info/10",
+    title: "Client Portal",
+    description:
+      "Your clients access their contract, photos, timeline, and can pay without leaving the app.",
+  },
+  {
+    icon: ClipboardList,
+    color: "text-warning",
+    bg: "bg-warning/10",
+    title: "Inventory and Resources",
+    description:
+      "Register equipment and staff. The system prevents availability conflicts automatically.",
+  },
+  {
+    icon: UsersRound,
+    color: "text-primary",
+    bg: "bg-primary/10",
+    title: "Staff and Teams",
+    description:
+      "Assign team members, send assignments, and collect confirmations in one place.",
+  },
+  {
+    icon: Calendar,
+    color: "text-success",
+    bg: "bg-success/10",
+    title: "Integrated Calendar",
+    description:
+      "All events, availability, and conflicts in one view. Drag and reorder as needed.",
+  },
+  {
+    icon: BarChart3,
+    color: "text-info",
+    bg: "bg-info/10",
+    title: "Real-Time Reports",
+    description:
+      "Revenue, events, and utilization. Real metrics to optimize pricing and grow.",
+  },
+  {
+    icon: Building,
+    color: "text-warning",
+    bg: "bg-warning/10",
+    title: "Public Forms",
+    description:
+      "Create request and quote forms. Let clients request quotes on their own.",
+  },
+];
+
 const STEPS = [
   {
     number: "01",
@@ -133,6 +201,33 @@ const STEPS = [
     number: "04",
     title: "Ejecuta y cumpli",
     description: "Inventario, staff y portal del cliente. Todo controlado.",
+    icon: ClipboardList,
+  },
+];
+
+const STEPS_EN = [
+  {
+    number: "01",
+    title: "Create your account",
+    description: "Sign up for free. No credit card required.",
+    icon: Zap,
+  },
+  {
+    number: "02",
+    title: "Quote in minutes",
+    description: "Create a professional quote. Your client receives it by link.",
+    icon: FileText,
+  },
+  {
+    number: "03",
+    title: "Collect online",
+    description: "Your client accepts and pays from their phone. Stripe handles reconciliation.",
+    icon: CreditCard,
+  },
+  {
+    number: "04",
+    title: "Execute with confidence",
+    description: "Inventory, staff, and client portal. Everything under control.",
     icon: ClipboardList,
   },
 ];
@@ -167,6 +262,36 @@ const TESTIMONIALS = [
     avatarColor: "bg-primary",
     rating: 5,
     text: "Las cotizaciones automaticas y el link de pago online me ahorraron 10 horas semanales. Mis clientes pagan antes del evento.",
+  },
+];
+
+const TESTIMONIALS_EN = [
+  {
+    name: "María González",
+    role: "Wedding Planner",
+    location: "Mexico City",
+    avatar: "MG",
+    avatarColor: "bg-error",
+    rating: 5,
+    text: "The client portal changed everything. Couples review contracts, upload photos, and pay online. I no longer chase payments.",
+  },
+  {
+    name: "Carlos Mendoza",
+    role: "Event Producer",
+    location: "Monterrey",
+    avatar: "CM",
+    avatarColor: "bg-info",
+    rating: 5,
+    text: "Inventory control saved our operation. No more double bookings and the team receives assignments on mobile.",
+  },
+  {
+    name: "Ana Rodríguez",
+    role: "DJ & Entertainer",
+    location: "Guadalajara",
+    avatar: "AR",
+    avatarColor: "bg-primary",
+    rating: 5,
+    text: "Automated quotes and payment links save me 10 hours a week. Clients pay before the event.",
   },
 ];
 
@@ -210,6 +335,46 @@ const PLANS = [
   },
 ];
 
+const PLANS_EN = [
+  {
+    name: "Basic",
+    price: "Free",
+    originalPrice: null,
+    period: "",
+    description: "Perfect to get started",
+    promo: null,
+    features: [
+      "Up to 3 events per month",
+      "Up to 50 registered clients",
+      "Up to 20 catalog items",
+      "Basic client management",
+      "Event calendar",
+    ],
+    cta: "Start Free",
+    href: "/register",
+    highlighted: false,
+  },
+  {
+    name: "Pro",
+    price: "$99",
+    originalPrice: "$199",
+    period: "MXN/month",
+    description: "For growing professionals",
+    promo: "🎉 Launch price",
+    features: [
+      "Unlimited events, clients, and catalog",
+      "PDF quote generation",
+      "Multi-installment payment tracking",
+      "Advanced reports and analytics",
+      "Priority support",
+    ],
+    cta: "Start Now",
+    href: "/register",
+    highlighted: true,
+    ctaClass: "premium-gradient text-white",
+  },
+];
+
 const FAQS = [
   {
     question: "¿Necesito tarjeta de crédito para registrarme?",
@@ -233,12 +398,229 @@ const FAQS = [
   },
 ];
 
+const FAQS_EN = [
+  {
+    question: "Do I need a credit card to sign up?",
+    answer:
+      "No. The Basic plan is fully free and does not require a credit card. You only need an email address.",
+  },
+  {
+    question: "Can I import my existing data?",
+    answer:
+      "Yes. You can import clients from CSV or Excel. We also offer assisted migration for Pro accounts.",
+  },
+  {
+    question: "Is my data secure?",
+    answer:
+      "Absolutely. We use end-to-end encryption, automatic daily backups, and SOC 2 certified infrastructure.",
+  },
+  {
+    question: "Can I cancel anytime?",
+    answer:
+      "Yes, with no penalties or lock-in contracts. You can cancel at any time and keep access until the end of your paid period.",
+  },
+];
+
 const MOBILE_FEATURES = [
   { icon: Fingerprint, text: "Face ID y Touch ID para entrar al instante" },
   { icon: LayoutGrid, text: "Widgets en la pantalla de inicio" },
   { icon: Bell, text: "Notificaciones en tiempo real" },
   { icon: RefreshCw, text: "Sincronización automática con web" },
 ];
+
+const MOBILE_FEATURES_EN = [
+  { icon: Fingerprint, text: "Face ID and Touch ID for instant access" },
+  { icon: LayoutGrid, text: "Home screen widgets" },
+  { icon: Bell, text: "Real-time notifications" },
+  { icon: RefreshCw, text: "Automatic sync with web" },
+];
+
+const LANDING_COPY = {
+  es: {
+    nav: {
+      features: "Características",
+      howItWorks: "Cómo funciona",
+      pricing: "Precios",
+      app: "App Móvil",
+      faq: "FAQ",
+      login: "Ingresar",
+      trial: "Probar Gratis",
+      openMenu: "Abrir menú",
+      closeMenu: "Cerrar menú",
+      switchLight: "Cambiar a modo claro",
+      switchDark: "Cambiar a modo oscuro",
+      loginMobile: "Iniciar Sesión",
+    },
+    hero: {
+      badge: "Control operativo completo",
+      titleTop: "Cotizá, Cobrá,",
+      titleBottom: "Coordiná y Cumplí",
+      subtitle:
+        "Una plataforma para gestionar todo el ciclo de tus eventos: cotizaciones profesionales, cobros online, inventario, staff y Portal del cliente. Todo desde un solo lugar.",
+      start: "Empezar Gratis Ahora",
+      haveAccount: "Ya tengo cuenta",
+      noCard: "Sin tarjeta de crédito",
+      setup: "Instala en 2 minutos",
+      cancel: "Cancela cuando quieras",
+      alsoOn: "También disponible en",
+    },
+    proof: {
+      title: "Todo el ciclo operativo",
+      subtitle: "De la cotizacion al cumplimiento",
+      quote: "Cotizaciones PDF",
+      payments: "Cobros Online",
+      portal: "Portal Cliente",
+      staff: "Gestion Staff",
+    },
+    sections: {
+      featureBadge: "✨ Características",
+      featureTitle: "Todo lo que necesitas en un solo lugar",
+      featureDesc:
+        "Deja de usar hojas de cálculo, WhatsApp y notas dispersas. Centraliza toda tu operación en una plataforma diseñada para organizadores de eventos.",
+      howBadge: "🚀 Cómo funciona",
+      howTitle: "Empieza en minutos, no en días",
+      howDesc:
+        "Diseñamos la plataforma para que sea intuitiva y potente desde el primer segundo.",
+      appBadge: "App Móvil",
+      appTitle: "Tu negocio en el bolsillo",
+      appDesc:
+        "Gestiona eventos, revisá pagos y confirmá inventario desde tu iPhone. La misma potencia de la plataforma web, ahora disponible donde estés.",
+      testimonialBadge: "💬 Testimonios",
+      testimonialTitle: "Lo que dicen nuestros usuarios",
+      testimonialDesc:
+        "Más de 500 organizadores ya confían en Solennix para gestionar su negocio.",
+      pricingBadge: "💰 Precios",
+      pricingTitle: "Planes para cada etapa",
+      pricingDesc: "Comienza gratis y activa el plan Pro cuando lo necesites.",
+      faqBadge: "❓ Preguntas frecuentes",
+      faqTitle: "Resolvemos tus dudas",
+      popular: "Más popular",
+      closeAnswer: "Cerrar",
+      openAnswer: "Abrir",
+    },
+    cta: {
+      title: "¿Listo para escalar",
+      title2: "tu negocio?",
+      subtitle:
+        "Únete a la nueva generación de organizadores que ya profesionalizaron su operación.",
+      start: "Comenzar Gratis",
+      haveAccount: "Ya tengo cuenta",
+      noCard: "Sin tarjeta de crédito",
+      cancel: "Cancela cuando quieras",
+      supportEs: "Soporte en español",
+    },
+    footer: {
+      desc:
+        "La plataforma todo-en-uno para organizadores de eventos profesionales en México y Latinoamérica.",
+      product: "Producto",
+      download: "Descargar",
+      account: "Cuenta",
+      legal: "Legal",
+      register: "Registrarse",
+      login: "Iniciar Sesión",
+      forgot: "Recuperar contraseña",
+      about: "Acerca de",
+      terms: "Términos y Condiciones",
+      privacy: "Política de Privacidad",
+      rights: "© 2026 Solennix. Todos los derechos reservados.",
+      encryption: "Datos protegidos con encriptación de extremo a extremo",
+      scrollTop: "Volver al inicio",
+      appStore: "iOS — App Store",
+      playStore: "Android — Google Play",
+    },
+  },
+  en: {
+    nav: {
+      features: "Features",
+      howItWorks: "How it works",
+      pricing: "Pricing",
+      app: "Mobile App",
+      faq: "FAQ",
+      login: "Login",
+      trial: "Try Free",
+      openMenu: "Open menu",
+      closeMenu: "Close menu",
+      switchLight: "Switch to light mode",
+      switchDark: "Switch to dark mode",
+      loginMobile: "Sign in",
+    },
+    hero: {
+      badge: "Complete operations control",
+      titleTop: "Quote, Collect,",
+      titleBottom: "Coordinate and Deliver",
+      subtitle:
+        "One platform to run your full event cycle: professional quotes, online payments, inventory, staff, and a client portal. All in one place.",
+      start: "Start Free Now",
+      haveAccount: "I already have an account",
+      noCard: "No credit card required",
+      setup: "Set up in 2 minutes",
+      cancel: "Cancel anytime",
+      alsoOn: "Also available on",
+    },
+    proof: {
+      title: "Full operations cycle",
+      subtitle: "From quote to execution",
+      quote: "PDF Quotes",
+      payments: "Online Payments",
+      portal: "Client Portal",
+      staff: "Staff Management",
+    },
+    sections: {
+      featureBadge: "✨ Features",
+      featureTitle: "Everything you need in one place",
+      featureDesc:
+        "Stop juggling spreadsheets, chat threads, and scattered notes. Centralize your operation in a platform built for event professionals.",
+      howBadge: "🚀 How it works",
+      howTitle: "Start in minutes, not days",
+      howDesc: "We designed the platform to feel intuitive and powerful from second one.",
+      appBadge: "Mobile App",
+      appTitle: "Your business in your pocket",
+      appDesc:
+        "Manage events, review payments, and confirm inventory from your iPhone. The same power as the web platform, now wherever you are.",
+      testimonialBadge: "💬 Testimonials",
+      testimonialTitle: "What our users say",
+      testimonialDesc: "More than 500 organizers already trust Solennix to run their business.",
+      pricingBadge: "💰 Pricing",
+      pricingTitle: "Plans for every stage",
+      pricingDesc: "Start free and activate Pro when you need it.",
+      faqBadge: "❓ Frequently asked questions",
+      faqTitle: "Your questions, answered",
+      popular: "Most popular",
+      closeAnswer: "Close",
+      openAnswer: "Open",
+    },
+    cta: {
+      title: "Ready to scale",
+      title2: "your business?",
+      subtitle:
+        "Join the next generation of organizers already running a professional operation.",
+      start: "Start Free",
+      haveAccount: "I already have an account",
+      noCard: "No credit card required",
+      cancel: "Cancel anytime",
+      supportEs: "Support in Spanish",
+    },
+    footer: {
+      desc:
+        "The all-in-one platform for professional event organizers in Mexico and LATAM.",
+      product: "Product",
+      download: "Download",
+      account: "Account",
+      legal: "Legal",
+      register: "Sign up",
+      login: "Sign in",
+      forgot: "Forgot password",
+      about: "About",
+      terms: "Terms and Conditions",
+      privacy: "Privacy Policy",
+      rights: "© 2026 Solennix. All rights reserved.",
+      encryption: "Data protected with end-to-end encryption",
+      scrollTop: "Back to top",
+      appStore: "iOS — App Store",
+      playStore: "Android — Google Play",
+    },
+  },
+};
 
 function AppStoreBadge() {
   return (
@@ -598,6 +980,12 @@ export const Landing: React.FC = () => {
               >
                 FAQ
               </a>
+              <Link
+                to="/help"
+                className="text-sm font-medium text-text-secondary hover:text-primary transition-colors"
+              >
+                Ayuda
+              </Link>
             </div>
 
             <div className="flex items-center space-x-4">
@@ -687,6 +1075,13 @@ export const Landing: React.FC = () => {
             >
               FAQ
             </a>
+            <Link
+              to="/help"
+              className="block text-sm text-text-secondary py-2"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Ayuda
+            </Link>
             <Link
               to="/login"
               className="block text-sm text-text-secondary py-2"
@@ -1308,6 +1703,14 @@ export const Landing: React.FC = () => {
                     className="hover:text-text transition-colors"
                   >
                     Acerca de
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/help"
+                    className="hover:text-text transition-colors"
+                  >
+                    Ayuda
                   </Link>
                 </li>
                 <li>
