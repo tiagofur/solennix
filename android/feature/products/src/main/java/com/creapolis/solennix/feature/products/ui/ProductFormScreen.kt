@@ -68,6 +68,7 @@ fun ProductFormScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         topBar = {
             SolennixTopAppBar(
                 title = { Text(ProductStrings.formTitle) },
@@ -93,7 +94,7 @@ fun ProductFormScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .consumeWindowInsets(padding)
+                    .navigationBarsPadding()
                     .imePadding()
                     .verticalScroll(scrollState)
                     .padding(16.dp),

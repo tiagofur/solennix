@@ -44,6 +44,7 @@ fun InventoryFormScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         topBar = {
             SolennixTopAppBar(
                 title = { Text(InventoryStrings.formTitle) },
@@ -69,7 +70,7 @@ fun InventoryFormScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(padding)
-                        .consumeWindowInsets(padding)
+                        .navigationBarsPadding()
                         .imePadding()
                         .verticalScroll(scrollState)
                 ) {

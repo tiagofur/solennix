@@ -74,6 +74,7 @@ fun EventFormScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         topBar = {
             SolennixTopAppBar(
                 title = { Text(stringResource(if (viewModel.isEditMode) R.string.events_form_title_edit else R.string.events_form_title_new)) },
@@ -101,7 +102,7 @@ fun EventFormScreen(
                 Column(modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .consumeWindowInsets(padding)
+                    .navigationBarsPadding()
                     .imePadding()
                 ) {
                     EventFormStepIndicator(
