@@ -20,7 +20,7 @@ require (
 	github.com/stripe/stripe-go/v81 v81.4.0
 	golang.org/x/crypto v0.50.0
 	golang.org/x/image v0.39.0
-	google.golang.org/api v0.277.0
+	google.golang.org/api v0.278.0
 )
 
 require (
