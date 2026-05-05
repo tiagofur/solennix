@@ -94,6 +94,7 @@ fun ClientFormScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(padding)
+                        .consumeWindowInsets(padding)
                         .imePadding()
                         .verticalScroll(scrollState)
                         .padding(16.dp),

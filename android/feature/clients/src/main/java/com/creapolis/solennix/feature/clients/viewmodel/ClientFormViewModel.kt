@@ -42,6 +42,7 @@ class ClientFormViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val clientId: String? = savedStateHandle["clientId"]
+    val isEdit: Boolean get() = clientId != null
 
     // Plan limit check
     var limitCheckResult by mutableStateOf<LimitCheckResult?>(null)

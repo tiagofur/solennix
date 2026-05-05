@@ -99,9 +99,10 @@ fun EventFormScreen(
             }
             else -> {
                 Column(modifier = Modifier
-                    .padding(padding)
-                    .imePadding()
                     .fillMaxSize()
+                    .padding(padding)
+                    .consumeWindowInsets(padding)
+                    .imePadding()
                 ) {
                     EventFormStepIndicator(
                         currentPage = pagerState.currentPage,

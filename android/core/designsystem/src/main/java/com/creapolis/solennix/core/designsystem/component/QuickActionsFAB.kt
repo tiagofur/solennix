@@ -1,5 +1,6 @@
 package com.creapolis.solennix.core.designsystem.component
 
+import com.creapolis.solennix.core.designsystem.R
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
