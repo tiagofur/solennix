@@ -854,11 +854,14 @@ fun StepProducts(viewModel: EventFormViewModel) {
                 )
             }
         } else {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
+            // LazyColumn removed: outer Column already has verticalScroll.
+            // Nesting a lazy scrollable in the same direction causes an
+            // IllegalStateException at runtime. A plain Column is sufficient
+            // because event product lists are short (< 50 items).
+            Column(modifier = Modifier.fillMaxWidth()) {
                 if (isWideScreen) {
                     val chunkedProducts = viewModel.selectedProducts.chunked(2)
-                    items(chunkedProducts.size) { chunkIndex ->
-                        val pair = chunkedProducts[chunkIndex]
+                    chunkedProducts.forEachIndexed { chunkIndex, pair ->
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                             Box(modifier = Modifier.weight(1f)) {
                                 ProductSelectionItem(
@@ -887,8 +890,7 @@ fun StepProducts(viewModel: EventFormViewModel) {
                         }
                     }
                 } else {
-                    items(viewModel.selectedProducts.size) { index ->
-                        val item = viewModel.selectedProducts[index]
+                    viewModel.selectedProducts.forEachIndexed { index, item ->
                         ProductSelectionItem(
                             index = index,
                             item = item,
@@ -901,33 +903,31 @@ fun StepProducts(viewModel: EventFormViewModel) {
                 }
 
                 // Subtotal Productos — mismo patrón visual que iOS.
-                item {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = SolennixTheme.colors.surfaceAlt,
-                        ),
-                        shape = MaterialTheme.shapes.medium,
+                Spacer(modifier = Modifier.height(12.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = SolennixTheme.colors.surfaceAlt,
+                    ),
+                    shape = MaterialTheme.shapes.medium,
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                stringResource(R.string.events_form_products_subtotal),
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
-                                color = SolennixTheme.colors.secondaryText,
-                                modifier = Modifier.weight(1f),
-                            )
-                            Text(
-                                viewModel.subtotalProducts.asMXN(),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = SolennixTheme.colors.primary,
-                            )
-                        }
+                        Text(
+                            stringResource(R.string.events_form_products_subtotal),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = SolennixTheme.colors.secondaryText,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            viewModel.subtotalProducts.asMXN(),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = SolennixTheme.colors.primary,
+                        )
                     }
                 }
             }
