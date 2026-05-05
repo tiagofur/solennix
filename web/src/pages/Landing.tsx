@@ -678,7 +678,7 @@ function GooglePlayBadge() {
 
 function PhoneMockup() {
   return (
-    <div className="relative w-full max-w-[280px] mx-auto select-none pointer-events-none">
+    <div className="relative w-full max-w-70 mx-auto select-none pointer-events-none">
       {/* Phone frame */}
       <div className="relative bg-card border-[3px] border-border rounded-[44px] overflow-hidden shadow-2xl">
         {/* Notch */}
@@ -688,7 +688,7 @@ function PhoneMockup() {
         </div>
 
         {/* Screen content */}
-        <div className="pt-10 pb-6 px-4 bg-bg min-h-[520px] flex flex-col gap-3">
+        <div className="pt-10 pb-6 px-4 bg-bg min-h-130 flex flex-col gap-3">
           {/* Header */}
           <div className="flex items-center justify-between px-1 pt-2 pb-1">
             <div>
@@ -832,7 +832,7 @@ function AppMockup() {
       {/* App window */}
       <div className="bg-surface-alt rounded-b-2xl border-x border-b border-border shadow-2xl overflow-hidden">
         {/* Sidebar + content layout */}
-        <div className="flex h-[340px]">
+        <div className="flex h-85">
           {/* Sidebar */}
           <div className="w-14 bg-card border-r border-border flex flex-col items-center py-4 gap-4">
             <div className="w-8 h-8 rounded-lg premium-gradient flex items-center justify-center">
@@ -1062,7 +1062,7 @@ export const Landing: React.FC = () => {
             </a>
             <a
               href="#app"
-              className="block text-sm text-text-secondary py-2 flex items-center gap-2"
+              className="flex text-sm text-text-secondary py-2 items-center gap-2"
               onClick={() => setMobileMenuOpen(false)}
             >
               <Smartphone className="h-4 w-4" aria-hidden="true" />
@@ -1267,7 +1267,7 @@ export const Landing: React.FC = () => {
             {STEPS.map((step, index) => (
               <div key={step.number} className="relative group">
                 {index < STEPS.length - 1 && (
-                  <div className="hidden lg:block absolute top-[44px] left-[calc(50%+40px)] w-[calc(100%-80px)] h-1 bg-border/40 rounded-full" />
+                  <div className="hidden lg:block absolute top-11 left-[calc(50%+40px)] w-[calc(100%-80px)] h-1 bg-border/40 rounded-full" />
                 )}
                 <div className="relative text-center">
                   <div className="inline-flex items-center justify-center w-20 h-20 rounded-[28px] premium-gradient text-white font-black text-2xl mb-8 shadow-xl shadow-primary/25 transform group-hover:scale-110 transition-transform">

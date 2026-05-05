@@ -128,7 +128,7 @@ export const Layout: React.FC = () => {
 
   return (
     <div className="h-screen bg-bg flex transition-colors relative overflow-hidden">
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[999] focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-xl focus:text-sm focus:font-bold">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-999 focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-xl focus:text-sm focus:font-bold">
         {t('nav.skip_to_content')}
       </a>
       {/* Mobile Sidebar Overlay */}
@@ -192,13 +192,13 @@ export const Layout: React.FC = () => {
                         ? "lg:w-11 lg:h-11 lg:rounded-xl lg:justify-center px-4 py-3 rounded-2xl w-full"
                         : "justify-start px-4 py-3 rounded-2xl w-full",
                       isActive
-                        ? "bg-[var(--color-primary-light)] text-primary"
+                        ? "bg-primary-light text-primary"
                         : "text-text-secondary hover:bg-surface-alt hover:text-text"
                     )}
                     onClick={() => setIsSidebarOpen(false)}
                     title={isCollapsed ? item.name : undefined}
                   >
-                    <Icon className={clsx("h-[22px] w-[22px] shrink-0", !isCollapsed && "mr-3")} aria-hidden="true" />
+                    <Icon className={clsx("h-5.5 w-5.5 shrink-0", !isCollapsed && "mr-3")} aria-hidden="true" />
                     <span className={clsx(isCollapsed && "lg:hidden")}>{item.name}</span>
                   </Link>
                 );

@@ -25,9 +25,3 @@ platform:cross-platform:
           - "docs/PRD/**"
           - "openspec/**"
 
-type:infra:
-  - changed-files:
-      - any-glob-to-any-file:
-          - ".github/**"
-          - "infra/**"
-          - "docker-compose.yml"
