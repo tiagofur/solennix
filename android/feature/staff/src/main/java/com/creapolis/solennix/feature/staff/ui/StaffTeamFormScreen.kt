@@ -95,6 +95,7 @@ fun StaffTeamFormScreen(
                     .fillMaxSize()
                     .padding(padding)
                     .verticalScroll(scrollState)
+                    .imePadding()
                     .padding(16.dp)
             ) {
                 SolennixTextField(

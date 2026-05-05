@@ -95,6 +95,7 @@ fun ClientFormScreen(
                         .fillMaxSize()
                         .padding(padding)
                         .verticalScroll(scrollState)
+                        .imePadding()
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {

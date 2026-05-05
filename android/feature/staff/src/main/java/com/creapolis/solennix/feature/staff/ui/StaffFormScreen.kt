@@ -85,6 +85,7 @@ fun StaffFormScreen(
                         .fillMaxSize()
                         .padding(padding)
                         .verticalScroll(scrollState)
+                        .imePadding()
                         .padding(16.dp)
                 ) {
                     // Form fields

@@ -412,7 +412,11 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
         EventStatus.CANCELLED to stringResource(R.string.events_form_general_status_cancelled)
     )
 
-    LazyColumn(modifier = Modifier.padding(24.dp)) {
+    LazyColumn(
+        modifier = Modifier
+            .padding(24.dp)
+            .imePadding()
+    ) {
         item {
             AdaptiveCenteredContent(maxWidth = 800.dp) {
             Column {
@@ -757,9 +761,13 @@ fun StepProducts(viewModel: EventFormViewModel) {
     val availableProducts by viewModel.availableProducts.collectAsStateWithLifecycle()
 
     AdaptiveCenteredContent(maxWidth = 800.dp) {
-    Column(modifier = Modifier.padding(24.dp)) {
+    Column(
+        modifier = Modifier
+            .padding(24.dp)
+            .verticalScroll(rememberScrollState())
+            .imePadding()
+    ) {
         // Botón prominente de "Agregar Producto" — mismo patrón que iOS.
-        // Reemplaza el header "Productos y Menú" + icon button pequeño que
         // saturaban visualmente el paso.
         Card(
             modifier = Modifier
@@ -1142,9 +1150,13 @@ fun ProductSelectionItem(
 @Composable
 fun StepExtras(viewModel: EventFormViewModel) {
     AdaptiveCenteredContent(maxWidth = 800.dp) {
-    Column(modifier = Modifier.padding(24.dp)) {
+    Column(
+        modifier = Modifier
+            .padding(24.dp)
+            .verticalScroll(rememberScrollState())
+            .imePadding()
+    ) {
         // Botón prominente "Agregar Extra" — mismo patrón que iOS y que
-        // StepProducts. Agrega un extra vacío que se edita in-place.
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1996,8 +2008,8 @@ fun StepInventoryAndPersonnel(viewModel: EventFormViewModel) {
             modifier = Modifier
                 .padding(24.dp)
                 .verticalScroll(rememberScrollState())
+                .imePadding()
         ) {
-            SuppliesSection(viewModel)
             Spacer(modifier = Modifier.height(32.dp))
             HorizontalDivider(color = SolennixTheme.colors.divider)
             Spacer(modifier = Modifier.height(32.dp))
@@ -2274,8 +2286,8 @@ fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean) {
             modifier = Modifier
                 .padding(24.dp)
                 .verticalScroll(rememberScrollState())
+                .imePadding()
         ) {
-            Text(stringResource(R.string.events_form_summary_title), style = MaterialTheme.typography.headlineSmall)
             Spacer(modifier = Modifier.height(20.dp))
 
             // Discount section — tipo (%/$) como chips segmented ANTES del

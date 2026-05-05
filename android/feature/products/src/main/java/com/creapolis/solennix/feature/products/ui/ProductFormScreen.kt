@@ -94,6 +94,7 @@ fun ProductFormScreen(
                     .fillMaxSize()
                     .padding(padding)
                     .verticalScroll(scrollState)
+                    .imePadding()
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
