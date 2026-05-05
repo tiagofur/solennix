@@ -85,36 +85,7 @@ fun EventFormScreen(
                 }
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        bottomBar = {
-            // Hide step navigation when the form failed to load — the only valid action
-            // is "Reintentar" (shown in the error card below).
-            if (viewModel.loadError == null) {
-                BottomStepNavigation(
-                    currentPage = pagerState.currentPage,
-                    totalPages = 5,
-                    onNext = {
-                        val error = viewModel.validateStep(pagerState.currentPage)
-                        if (error != null) {
-                            viewModel.saveError = error
-                        } else if (pagerState.currentPage < 4) {
-                            scope.launch {
-                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                            }
-                        } else {
-                            viewModel.saveEvent()
-                        }
-                    },
-                    onBack = {
-                        scope.launch {
-                            pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                        }
-                    },
-                    isLoading = viewModel.isLoading,
-                    isEditMode = viewModel.isEditMode
-                )
-            }
-        }
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         val loadError = viewModel.loadError
         when {
@@ -127,7 +98,11 @@ fun EventFormScreen(
                 )
             }
             else -> {
-                Column(modifier = Modifier.padding(padding)) {
+                Column(modifier = Modifier
+                    .padding(padding)
+                    .imePadding()
+                    .fillMaxSize()
+                ) {
                     EventFormStepIndicator(
                         currentPage = pagerState.currentPage,
                         onStepClick = { target ->
@@ -139,7 +114,7 @@ fun EventFormScreen(
 
                     HorizontalPager(
                         state = pagerState,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.weight(1f),
                         userScrollEnabled = false
                     ) { page ->
                         when (page) {
@@ -149,6 +124,33 @@ fun EventFormScreen(
                             3 -> StepInventoryAndPersonnel(viewModel)
                             4 -> StepSummary(viewModel, isEditMode = viewModel.isEditMode)
                         }
+                    }
+
+                    // Bottom step navigation — inside Column so IME insets are respected
+                    if (viewModel.loadError == null) {
+                        BottomStepNavigation(
+                            currentPage = pagerState.currentPage,
+                            totalPages = 5,
+                            onNext = {
+                                val error = viewModel.validateStep(pagerState.currentPage)
+                                if (error != null) {
+                                    viewModel.saveError = error
+                                } else if (pagerState.currentPage < 4) {
+                                    scope.launch {
+                                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                                    }
+                                } else {
+                                    viewModel.saveEvent()
+                                }
+                            },
+                            onBack = {
+                                scope.launch {
+                                    pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                                }
+                            },
+                            isLoading = viewModel.isLoading,
+                            isEditMode = viewModel.isEditMode
+                        )
                     }
                 }
             }

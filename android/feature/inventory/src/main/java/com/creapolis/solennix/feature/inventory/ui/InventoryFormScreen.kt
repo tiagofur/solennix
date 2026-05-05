@@ -69,8 +69,8 @@ fun InventoryFormScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(padding)
-                        .verticalScroll(scrollState)
                         .imePadding()
+                        .verticalScroll(scrollState)
                 ) {
                     // Plan limit banner (only shown when creating a new item)
                     val limitResult = viewModel.limitCheckResult
