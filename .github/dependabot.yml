@@ -66,6 +66,18 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    # Hilt 2.59+ requires AGP 9.0+, but project is on AGP 8.x.
+    # Lift this guard only after AGP 9 migration.
+    ignore:
+      - dependency-name: "com.google.dagger.hilt.android"
+        versions:
+          - ">= 2.59.0"
+      - dependency-name: "com.google.dagger:hilt-android"
+        versions:
+          - ">= 2.59.0"
+      - dependency-name: "com.google.dagger:hilt-android-compiler"
+        versions:
+          - ">= 2.59.0"
 
   - package-ecosystem: "github-actions"
     directory: "/"

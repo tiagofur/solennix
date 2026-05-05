@@ -62,7 +62,6 @@ import com.creapolis.solennix.feature.events.pdf.ContractPdfGenerator
 import com.creapolis.solennix.feature.events.pdf.EquipmentListPdfGenerator
 import com.creapolis.solennix.feature.events.pdf.PaymentReportPdfGenerator
 import com.creapolis.solennix.feature.events.pdf.ShoppingListPdfGenerator
-import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailUiState
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
 import androidx.window.layout.FoldingFeature

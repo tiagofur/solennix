@@ -67,6 +67,7 @@ fun ClientFormScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         topBar = {
             SolennixTopAppBar(
                 title = {
@@ -94,6 +95,8 @@ fun ClientFormScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(padding)
+                        .navigationBarsPadding()
+                        .imePadding()
                         .verticalScroll(scrollState)
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally

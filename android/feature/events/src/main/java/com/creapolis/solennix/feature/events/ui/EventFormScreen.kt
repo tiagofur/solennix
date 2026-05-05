@@ -74,6 +74,7 @@ fun EventFormScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         topBar = {
             SolennixTopAppBar(
                 title = { Text(stringResource(if (viewModel.isEditMode) R.string.events_form_title_edit else R.string.events_form_title_new)) },
@@ -85,36 +86,7 @@ fun EventFormScreen(
                 }
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        bottomBar = {
-            // Hide step navigation when the form failed to load — the only valid action
-            // is "Reintentar" (shown in the error card below).
-            if (viewModel.loadError == null) {
-                BottomStepNavigation(
-                    currentPage = pagerState.currentPage,
-                    totalPages = 5,
-                    onNext = {
-                        val error = viewModel.validateStep(pagerState.currentPage)
-                        if (error != null) {
-                            viewModel.saveError = error
-                        } else if (pagerState.currentPage < 4) {
-                            scope.launch {
-                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                            }
-                        } else {
-                            viewModel.saveEvent()
-                        }
-                    },
-                    onBack = {
-                        scope.launch {
-                            pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                        }
-                    },
-                    isLoading = viewModel.isLoading,
-                    isEditMode = viewModel.isEditMode
-                )
-            }
-        }
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         val loadError = viewModel.loadError
         when {
@@ -127,7 +99,12 @@ fun EventFormScreen(
                 )
             }
             else -> {
-                Column(modifier = Modifier.padding(padding)) {
+                Column(modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .navigationBarsPadding()
+                    .imePadding()
+                ) {
                     EventFormStepIndicator(
                         currentPage = pagerState.currentPage,
                         onStepClick = { target ->
@@ -139,7 +116,7 @@ fun EventFormScreen(
 
                     HorizontalPager(
                         state = pagerState,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.weight(1f),
                         userScrollEnabled = false
                     ) { page ->
                         when (page) {
@@ -149,6 +126,33 @@ fun EventFormScreen(
                             3 -> StepInventoryAndPersonnel(viewModel)
                             4 -> StepSummary(viewModel, isEditMode = viewModel.isEditMode)
                         }
+                    }
+
+                    // Bottom step navigation — inside Column so IME insets are respected
+                    if (viewModel.loadError == null) {
+                        BottomStepNavigation(
+                            currentPage = pagerState.currentPage,
+                            totalPages = 5,
+                            onNext = {
+                                val error = viewModel.validateStep(pagerState.currentPage)
+                                if (error != null) {
+                                    viewModel.saveError = error
+                                } else if (pagerState.currentPage < 4) {
+                                    scope.launch {
+                                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                                    }
+                                } else {
+                                    viewModel.saveEvent()
+                                }
+                            },
+                            onBack = {
+                                scope.launch {
+                                    pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                                }
+                            },
+                            isLoading = viewModel.isLoading,
+                            isEditMode = viewModel.isEditMode
+                        )
                     }
                 }
             }
@@ -412,7 +416,11 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
         EventStatus.CANCELLED to stringResource(R.string.events_form_general_status_cancelled)
     )
 
-    LazyColumn(modifier = Modifier.padding(24.dp)) {
+    LazyColumn(
+        modifier = Modifier
+            .padding(24.dp)
+            .imePadding()
+    ) {
         item {
             AdaptiveCenteredContent(maxWidth = 800.dp) {
             Column {
@@ -757,9 +765,13 @@ fun StepProducts(viewModel: EventFormViewModel) {
     val availableProducts by viewModel.availableProducts.collectAsStateWithLifecycle()
 
     AdaptiveCenteredContent(maxWidth = 800.dp) {
-    Column(modifier = Modifier.padding(24.dp)) {
+    Column(
+        modifier = Modifier
+            .padding(24.dp)
+            .verticalScroll(rememberScrollState())
+            .imePadding()
+    ) {
         // Botón prominente de "Agregar Producto" — mismo patrón que iOS.
-        // Reemplaza el header "Productos y Menú" + icon button pequeño que
         // saturaban visualmente el paso.
         Card(
             modifier = Modifier
@@ -846,11 +858,14 @@ fun StepProducts(viewModel: EventFormViewModel) {
                 )
             }
         } else {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
+            // LazyColumn removed: outer Column already has verticalScroll.
+            // Nesting a lazy scrollable in the same direction causes an
+            // IllegalStateException at runtime. A plain Column is sufficient
+            // because event product lists are short (< 50 items).
+            Column(modifier = Modifier.fillMaxWidth()) {
                 if (isWideScreen) {
                     val chunkedProducts = viewModel.selectedProducts.chunked(2)
-                    items(chunkedProducts.size) { chunkIndex ->
-                        val pair = chunkedProducts[chunkIndex]
+                    chunkedProducts.forEachIndexed { chunkIndex, pair ->
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                             Box(modifier = Modifier.weight(1f)) {
                                 ProductSelectionItem(
@@ -879,8 +894,7 @@ fun StepProducts(viewModel: EventFormViewModel) {
                         }
                     }
                 } else {
-                    items(viewModel.selectedProducts.size) { index ->
-                        val item = viewModel.selectedProducts[index]
+                    viewModel.selectedProducts.forEachIndexed { index, item ->
                         ProductSelectionItem(
                             index = index,
                             item = item,
@@ -893,33 +907,31 @@ fun StepProducts(viewModel: EventFormViewModel) {
                 }
 
                 // Subtotal Productos — mismo patrón visual que iOS.
-                item {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = SolennixTheme.colors.surfaceAlt,
-                        ),
-                        shape = MaterialTheme.shapes.medium,
+                Spacer(modifier = Modifier.height(12.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = SolennixTheme.colors.surfaceAlt,
+                    ),
+                    shape = MaterialTheme.shapes.medium,
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                stringResource(R.string.events_form_products_subtotal),
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
-                                color = SolennixTheme.colors.secondaryText,
-                                modifier = Modifier.weight(1f),
-                            )
-                            Text(
-                                viewModel.subtotalProducts.asMXN(),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = SolennixTheme.colors.primary,
-                            )
-                        }
+                        Text(
+                            stringResource(R.string.events_form_products_subtotal),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = SolennixTheme.colors.secondaryText,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            viewModel.subtotalProducts.asMXN(),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = SolennixTheme.colors.primary,
+                        )
                     }
                 }
             }
@@ -1142,9 +1154,13 @@ fun ProductSelectionItem(
 @Composable
 fun StepExtras(viewModel: EventFormViewModel) {
     AdaptiveCenteredContent(maxWidth = 800.dp) {
-    Column(modifier = Modifier.padding(24.dp)) {
+    Column(
+        modifier = Modifier
+            .padding(24.dp)
+            .verticalScroll(rememberScrollState())
+            .imePadding()
+    ) {
         // Botón prominente "Agregar Extra" — mismo patrón que iOS y que
-        // StepProducts. Agrega un extra vacío que se edita in-place.
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1996,8 +2012,8 @@ fun StepInventoryAndPersonnel(viewModel: EventFormViewModel) {
             modifier = Modifier
                 .padding(24.dp)
                 .verticalScroll(rememberScrollState())
+                .imePadding()
         ) {
-            SuppliesSection(viewModel)
             Spacer(modifier = Modifier.height(32.dp))
             HorizontalDivider(color = SolennixTheme.colors.divider)
             Spacer(modifier = Modifier.height(32.dp))
@@ -2274,8 +2290,8 @@ fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean) {
             modifier = Modifier
                 .padding(24.dp)
                 .verticalScroll(rememberScrollState())
+                .imePadding()
         ) {
-            Text(stringResource(R.string.events_form_summary_title), style = MaterialTheme.typography.headlineSmall)
             Spacer(modifier = Modifier.height(20.dp))
 
             // Discount section — tipo (%/$) como chips segmented ANTES del
