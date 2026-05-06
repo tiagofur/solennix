@@ -158,7 +158,7 @@ func main() {
 	liveActivityHandler := handlers.NewLiveActivityHandler(liveActivityRepo)
 	eventFormHandler := handlers.NewEventFormHandler(eventFormLinkRepo, productRepo, userRepo, cfg.FrontendURL, pool)
 	eventPublicLinkHandler := handlers.NewEventPublicLinkHandler(eventPublicLinkRepo, eventRepo, clientRepo, userRepo, paymentRepo, cfg.FrontendURL)
-	paymentSubmissionHandler := handlers.NewPaymentSubmissionHandler(paymentSubmissionRepo, paymentRepo, pool)
+	paymentSubmissionHandler := handlers.NewPaymentSubmissionHandler(paymentSubmissionRepo, paymentRepo, pool, cfg.UploadDir)
 	staffHandler := handlers.NewStaffHandler(staffRepo, userRepo)
 	staffTeamHandler := handlers.NewStaffTeamHandler(staffTeamRepo)
 
