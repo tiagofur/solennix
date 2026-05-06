@@ -201,6 +201,7 @@ type PublicOrganizerBrand struct {
 }
 
 type PublicClientInfo struct {
+	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
@@ -391,6 +392,7 @@ func (h *EventPublicLinkHandler) buildPublicEventView(
 		},
 		Organizer: organizerBrand,
 		Client: PublicClientInfo{
+			ID:   event.ClientID.String(),
 			Name: clientName,
 		},
 		Payment: paymentSummary,
