@@ -5,14 +5,14 @@ tags:
   - v05
 date: 2026-04-21
 status: done
-duration: 17s
+duration: 18s
 screenshots: mixed
 ---
 
 # V05 — Cotizaciones en Segundos
 
 > [!quote] Mensaje clave
-> "Cotizaciones profesionales en segundos. No en horas."
+> "Agregas servicios, se calcula el total y mandas el PDF. Todo en minutos."
 
 ---
 
@@ -28,29 +28,29 @@ Organizadores que arman presupuestos a mano en Excel o Word perdiendo 30+ minuto
 
 ## Storyboard
 
-### Escena 1: Hook (Frames 0-60 / 0-2s)
+### Escena 1: Hook (Frames 0-80 / 0-2.7s)
 
-- Texto animado con cuenta regresiva:
+- Texto animado con comparación clara:
   - "¿30 minutos? ¿1 hora? ¿Medio día?"
 - Números cruzados con línea roja
-- Aparece: "**Segundos.**"
+- Aparece: "**Ahora: minutos.**"
 
-### Escena 2: Quick Quote (Frames 60-210 / 2-7s)
+### Escena 2: Cotización rápida (Frames 80-250 / 2.7-8.3s)
 
-- Screenshot `quick-quote.png` aparece
-- Animación: productos se agregan uno por uno al carrito
-- Cada línea aparece con slide-from-right
-- Total se actualiza con efecto "count-up"
+- Mockup del celular con una cotización real
+- Se agregan servicios uno por uno
+- El total se actualiza automáticamente
+- Mensaje clave: "Agregas servicios y el total se calcula solo"
 
-### Escena 3: PDF Generado (Frames 210-420 / 7-14s)
+### Escena 3: PDF listo (Frames 250-410 / 8.3-13.7s)
 
-- Transición fade → `quote-pdf.png`
-- Animación de "imprimir": el PDF aparece como si saliera de una impresora
-- Se ve profesional: logo, productos, precios, totales
+- Reveal vertical del PDF
+- Se ve: logo, conceptos, precios y total
+- Badge final: "Enviar al cliente"
 
-### Escena 4: Beneficio + CTA (Frames 420-750 / 14-25s)
+### Escena 4: Beneficio + CTA (Frames 410-550 / 13.7-18.3s)
 
-- Texto: "Cotizaciones profesionales. En segundos. Con tu marca."
+- Texto: "Tu cotización queda lista. Con total, PDF y tu marca en segundos."
 - Logo + CTA
 
 ---
@@ -64,9 +64,9 @@ Organizadores que arman presupuestos a mano en Excel o Word perdiendo 30+ minuto
 
 ## Notas Técnicas
 
-- Cuenta regresiva inicial: `interpolate()` con texto dinámico
-- Productos agregándose: reveal escalonado por frame
-- Efecto "impresora": reveal vertical del PDF
+- Hook comparativo con before/after más claro
+- Productos agregándose con reveal escalonado
+- Reveal vertical del PDF para reforzar la entrega final
 - Count-up en total: `interpolate(frame, [0, 60], [0, totalPrice])`
 - Composición implementada: `V05-Quotes-Reel`
 - Output renderizado: `remotion/out/v05-quotes-reel.mp4`

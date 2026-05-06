@@ -204,4 +204,5 @@ public enum Endpoint {
     public static func liveActivityByEvent(_ eventId: String) -> String {
         "/live-activities/by-event/\(eventId)"
     }
+
 }

@@ -30,7 +30,7 @@ export const About: React.FC = () => {
           />
           <h1 className="text-3xl font-bold text-text">Solennix</h1>
           <p className="text-sm text-text-secondary mt-1">
-            {t('static:about.version')} {appVersion}
+            {`${t('static:about.version')} ${appVersion}`}
           </p>
         </div>
 

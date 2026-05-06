@@ -25,7 +25,7 @@ export const V05_Quotes: React.FC<V05QuotesProps> = ({
       }}
     >
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={70}>
+        <TransitionSeries.Sequence durationInFrames={80}>
           <HookScene hookTimes={hookTimes} />
         </TransitionSeries.Sequence>
 
@@ -34,7 +34,7 @@ export const V05_Quotes: React.FC<V05QuotesProps> = ({
           timing={linearTiming({ durationInFrames: 10 })}
         />
 
-        <TransitionSeries.Sequence durationInFrames={160}>
+        <TransitionSeries.Sequence durationInFrames={170}>
           <QuickQuoteScene clientName={clientName} eventName={eventName} items={items} totalAmount={totalAmount} />
         </TransitionSeries.Sequence>
 
@@ -43,7 +43,7 @@ export const V05_Quotes: React.FC<V05QuotesProps> = ({
           timing={linearTiming({ durationInFrames: 10 })}
         />
 
-        <TransitionSeries.Sequence durationInFrames={150}>
+        <TransitionSeries.Sequence durationInFrames={160}>
           <PdfScene clientName={clientName} eventName={eventName} items={items} totalAmount={totalAmount} />
         </TransitionSeries.Sequence>
 
@@ -52,11 +52,11 @@ export const V05_Quotes: React.FC<V05QuotesProps> = ({
           timing={linearTiming({ durationInFrames: 10 })}
         />
 
-        <TransitionSeries.Sequence durationInFrames={160}>
+        <TransitionSeries.Sequence durationInFrames={170}>
           <MarketingCTA
-            accent="Listo para enviar"
-            headline="Cotizaciones profesionales."
-            subheadline="En segundos. Con tu marca."
+            accent="Lista para enviar"
+            headline="Tu cotización queda lista."
+            subheadline="Con total, PDF y tu marca en segundos."
             url={url}
           />
         </TransitionSeries.Sequence>
@@ -73,38 +73,53 @@ const HookScene: React.FC<Pick<V05QuotesProps, 'hookTimes'>> = ({ hookTimes }) =
       style={{
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '0 96px',
+        padding: '0 90px',
       }}
     >
       <div
         style={{
           fontFamily: cinzel,
-          fontSize: 62,
+          fontSize: 60,
           fontWeight: 700,
           color: SOCIAL_COLORS.cream,
           textAlign: 'center',
-          lineHeight: 1.15,
-          marginBottom: 40,
+          lineHeight: 1.16,
+          marginBottom: 22,
           opacity: interpolate(frame, [0, 14], [0, 1], { extrapolateRight: 'clamp' }),
         }}
       >
-        ¿Cuánto tarda
+        ¿Cuánto te tardas
         <br />
-        cotizar?
+        en cotizar?
+      </div>
+
+      <div
+        style={{
+          fontFamily: inter,
+          fontSize: 24,
+          fontWeight: 600,
+          color: SOCIAL_COLORS.gold,
+          textTransform: 'uppercase',
+          letterSpacing: 3,
+          marginBottom: 28,
+          opacity: interpolate(frame, [8, 20], [0, 1], { extrapolateRight: 'clamp' }),
+        }}
+      >
+        Antes vs ahora
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18, width: '100%' }}>
         {hookTimes.map((time, index) => {
-          const start = 8 + index * 10;
+          const start = 10 + index * 10;
           const opacity = interpolate(frame, [start, start + 10], [0, 1], { extrapolateRight: 'clamp' });
-          const slashWidth = interpolate(frame, [start + 6, start + 16], [0, 520], { extrapolateRight: 'clamp' });
+          const slashWidth = interpolate(frame, [start + 6, start + 16], [0, 500], { extrapolateRight: 'clamp' });
 
           return (
             <div
               key={time}
               style={{
                 position: 'relative',
-                height: 96,
+                height: 92,
                 borderRadius: 28,
                 background: 'rgba(255,255,255,0.06)',
                 border: '1px solid rgba(255,255,255,0.08)',
@@ -117,7 +132,7 @@ const HookScene: React.FC<Pick<V05QuotesProps, 'hookTimes'>> = ({ hookTimes }) =
               <span
                 style={{
                   fontFamily: inter,
-                  fontSize: 38,
+                  fontSize: 36,
                   fontWeight: 700,
                   color: SOCIAL_COLORS.cream,
                   letterSpacing: 1,
@@ -143,17 +158,17 @@ const HookScene: React.FC<Pick<V05QuotesProps, 'hookTimes'>> = ({ hookTimes }) =
 
       <div
         style={{
-          marginTop: 38,
+          marginTop: 34,
           fontFamily: inter,
           fontSize: 28,
           fontWeight: 700,
           color: SOCIAL_COLORS.gold,
           textTransform: 'uppercase',
           letterSpacing: 4,
-          opacity: interpolate(frame, [32, 46], [0, 1], { extrapolateRight: 'clamp' }),
+          opacity: interpolate(frame, [34, 48], [0, 1], { extrapolateRight: 'clamp' }),
         }}
       >
-        <TypewriterText text="Segundos." startFrame={32} charFrames={2} showCursor={false} />
+        <TypewriterText text="Ahora: minutos." startFrame={34} charFrames={2} showCursor={false} />
       </div>
     </AbsoluteFill>
   );
@@ -175,7 +190,7 @@ const QuickQuoteScene: React.FC<Pick<V05QuotesProps, 'clientName' | 'eventName' 
   });
 
   const animatedTotal = Math.round(
-    interpolate(frame, [54, 118], [0, parseMoney(totalAmount)], {
+    interpolate(frame, [56, 122], [0, parseMoney(totalAmount)], {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
     }),
@@ -189,7 +204,7 @@ const QuickQuoteScene: React.FC<Pick<V05QuotesProps, 'clientName' | 'eventName' 
             position: 'absolute',
             inset: 0,
             background: 'linear-gradient(180deg, #fbf8f2 0%, #f2eee7 100%)',
-            padding: '96px 52px 42px',
+            padding: '92px 52px 42px',
             transform: `scale(${0.92 + phoneScale * 0.08})`,
           }}
         >
@@ -201,11 +216,11 @@ const QuickQuoteScene: React.FC<Pick<V05QuotesProps, 'clientName' | 'eventName' 
               background: 'rgba(196,162,101,0.14)',
               color: SOCIAL_COLORS.navyDark,
               fontFamily: inter,
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: 700,
               letterSpacing: 1,
               textTransform: 'uppercase',
-              marginBottom: 26,
+              marginBottom: 24,
             }}
           >
             Cotización rápida
@@ -214,11 +229,11 @@ const QuickQuoteScene: React.FC<Pick<V05QuotesProps, 'clientName' | 'eventName' 
           <div
             style={{
               fontFamily: cinzel,
-              fontSize: 44,
+              fontSize: 42,
               fontWeight: 700,
               color: SOCIAL_COLORS.navyDark,
               lineHeight: 1.15,
-              marginBottom: 14,
+              marginBottom: 12,
             }}
           >
             {eventName}
@@ -227,12 +242,26 @@ const QuickQuoteScene: React.FC<Pick<V05QuotesProps, 'clientName' | 'eventName' 
           <div
             style={{
               fontFamily: inter,
-              fontSize: 24,
+              fontSize: 23,
               color: '#475569',
-              marginBottom: 28,
+              marginBottom: 26,
             }}
           >
             Cliente: {clientName}
+          </div>
+
+          <div
+            style={{
+              fontFamily: inter,
+              fontSize: 18,
+              fontWeight: 700,
+              color: SOCIAL_COLORS.goldDark,
+              textTransform: 'uppercase',
+              letterSpacing: 2,
+              marginBottom: 18,
+            }}
+          >
+            Agregas servicios y el total se calcula solo
           </div>
 
           <div
@@ -244,7 +273,7 @@ const QuickQuoteScene: React.FC<Pick<V05QuotesProps, 'clientName' | 'eventName' 
             }}
           >
             {items.map((item, index) => {
-              const start = 14 + index * 16;
+              const start = 16 + index * 16;
               const opacity = interpolate(frame, [start, start + 10], [0, 1], { extrapolateRight: 'clamp' });
               const translateX = interpolate(frame, [start, start + 10], [80, 0], { extrapolateRight: 'clamp' });
 
@@ -320,7 +349,7 @@ const QuickQuoteScene: React.FC<Pick<V05QuotesProps, 'clientName' | 'eventName' 
                 marginBottom: 10,
               }}
             >
-              Total listo
+              Total actualizado
             </div>
             <div
               style={{
@@ -393,7 +422,7 @@ const PdfScene: React.FC<Pick<V05QuotesProps, 'clientName' | 'eventName' | 'item
                   marginBottom: 8,
                 }}
               >
-                Cotización PDF
+                PDF profesional
               </div>
               <div style={{ fontFamily: inter, fontSize: 22, color: '#64748b' }}>
                 {clientName} · {eventName}
@@ -412,7 +441,7 @@ const PdfScene: React.FC<Pick<V05QuotesProps, 'clientName' | 'eventName' | 'item
                 letterSpacing: 2,
               }}
             >
-              Tu marca
+              Logo y total listos
             </div>
           </div>
 
@@ -470,7 +499,6 @@ const PdfScene: React.FC<Pick<V05QuotesProps, 'clientName' | 'eventName' | 'item
           <div
             style={{
               marginTop: 26,
-              alignSelf: 'flex-start',
               display: 'inline-flex',
               padding: '14px 24px',
               borderRadius: 999,
@@ -484,7 +512,7 @@ const PdfScene: React.FC<Pick<V05QuotesProps, 'clientName' | 'eventName' | 'item
               opacity: stampOpacity,
             }}
           >
-            PDF listo para enviar
+            Enviar al cliente
           </div>
         </div>
       </div>

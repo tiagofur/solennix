@@ -69,7 +69,7 @@ Organizadores de eventos que usan Excel + WhatsApp + Google Calendar + papel par
 ### Escena 5: CTA (Frames 540-900 / 18-30s)
 
 - Texto: "Cero caos. Cero Excel. Cero papel."
-- Aparece logo + "Probá gratis → solennix.com"
+- Aparece logo + "Pruébalo gratis → solennix.com"
 - Badges App Store + Google Play
 
 ---

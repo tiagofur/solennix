@@ -18,8 +18,8 @@ const { fontFamily: inter } = loadInter();
  */
 export const FeatureCarousel: React.FC<FeatureCarouselProps> = ({
   slides = [
-    { title: 'Presupuestos PDF', description: 'Cotizá en minutos, no en horas', icon: '📄' },
-    { title: 'Control de Pagos', description: 'Señas y saldos automáticos', icon: '💰' },
+    { title: 'Presupuestos PDF', description: 'Cotiza en minutos, no en horas', icon: '📄' },
+    { title: 'Control de Pagos', description: 'Anticipos y saldos automáticos', icon: '💰' },
     { title: 'Calendario Visual', description: 'Tus fechas siempre organizadas', icon: '📅' },
     { title: 'Inventario Exacto', description: 'Stock, insumos y compras', icon: '📦' },
   ]
@@ -89,7 +89,7 @@ const IntroSlide: React.FC<{ title: string, subtitle: string }> = ({ title, subt
       {/* Swipe indicator */}
       <div style={{ position: 'absolute', bottom: 60, display: 'flex', alignItems: 'center', gap: 10, opacity: interpolate(frame, [60, 90], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }) }}>
         <span style={{ fontSize: 30 }}>👉</span>
-        <span style={{ fontFamily: inter, fontSize: 24, color: SOCIAL_COLORS.textMuted }}>Deslizá</span>
+          <span style={{ fontFamily: inter, fontSize: 24, color: SOCIAL_COLORS.textMuted }}>Desliza</span>
       </div>
     </AbsoluteFill>
   );
@@ -157,7 +157,7 @@ const OutroSlide: React.FC = () => {
       <div style={{ transform: `translateY(${logoY}px)`, opacity: logoO, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 40 }}>
         <SolennixLogoDark size={80} animateIn={false} showWordmark />
         <div style={{ fontFamily: cinzel, fontSize: 44, color: SOCIAL_COLORS.cream, fontWeight: 600, textAlign: 'center' }}>
-          Empezá hoy.
+          Empieza hoy.
         </div>
         <div style={{ fontFamily: inter, fontSize: 24, letterSpacing: 6, color: SOCIAL_COLORS.gold, marginTop: 20 }}>
           SOLENNIX.COM

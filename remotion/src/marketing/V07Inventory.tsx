@@ -61,7 +61,7 @@ export const V07_Inventory: React.FC<V07InventoryProps> = ({
         <TransitionSeries.Sequence durationInFrames={150}>
           <MarketingCTA
             accent="Antes del evento"
-            headline="Inventario controlado."
+            headline="Inventario bajo control."
             subheadline="Alertas automáticas. Cero sorpresas."
             url={url}
           />
@@ -94,7 +94,7 @@ const HookScene: React.FC = () => {
           opacity: interpolate(frame, [0, 14], [0, 1], { extrapolateRight: 'clamp' }),
         }}
       >
-        ¿Tenés suficiente
+        ¿Tienes suficiente
         <br />
         para el sábado?
       </div>
@@ -292,8 +292,8 @@ const LowStockScene: React.FC<Pick<V07InventoryProps, 'lowStockItem'>> = ({ lowS
             gap: 18,
           }}
         >
-          <AlertStat label="Disponible" value={`${lowStockItem.stock} ${lowStockItem.unit}`} tone="danger" />
-          <AlertStat label="Mínimo" value={`${lowStockItem.minimum} ${lowStockItem.unit}`} tone="danger" />
+          <AlertStat label="Disponible" value={`${lowStockItem.stock} ${lowStockItem.unit}`} />
+          <AlertStat label="Mínimo" value={`${lowStockItem.minimum} ${lowStockItem.unit}`} />
         </div>
       </div>
     </AbsoluteFill>
@@ -324,7 +324,7 @@ const EquipmentScene: React.FC<Pick<V07InventoryProps, 'equipmentAssignments'>> 
             marginBottom: 12,
           }}
         >
-          Equipos para el evento
+          Equipo para el evento
         </div>
         <div
           style={{
@@ -396,17 +396,13 @@ const EquipmentScene: React.FC<Pick<V07InventoryProps, 'equipmentAssignments'>> 
   );
 };
 
-const AlertStat: React.FC<{ label: string; value: string; tone: 'danger' | 'default' }> = ({
-  label,
-  value,
-  tone,
-}) => {
+const AlertStat: React.FC<{ label: string; value: string }> = ({ label, value }) => {
   return (
     <div
       style={{
         borderRadius: 24,
         padding: '24px 22px',
-        background: tone === 'danger' ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.08)',
+        background: 'rgba(239,68,68,0.12)',
       }}
     >
       <div

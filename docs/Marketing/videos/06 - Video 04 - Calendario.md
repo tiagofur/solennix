@@ -30,7 +30,7 @@ Organizadores que usan Google Calendar + papel para llevar la agenda de eventos.
 
 ### Escena 1: Hook (0-2s)
 
-- Pregunta: "¿Qué eventos tenés esta semana?"
+- Pregunta: "¿Qué eventos tienes esta semana?"
 - Fondo oscuro
 
 ### Escena 2: Calendario Mensual (2-7s)

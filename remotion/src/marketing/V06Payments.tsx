@@ -52,9 +52,9 @@ export const V06_Payments: React.FC<V06PaymentsProps> = ({
 
         <TransitionSeries.Sequence durationInFrames={150}>
           <MarketingCTA
-            accent="Control total"
-            headline="Sabés quién pagó."
-            subheadline="Y cuánto te deben. Siempre."
+            accent="Control de pagos"
+            headline="Sabes quién ya pagó."
+            subheadline="Y cuánto te falta cobrar, sin adivinar."
             url={url}
           />
         </TransitionSeries.Sequence>
@@ -86,7 +86,7 @@ const HookScene: React.FC = () => {
           opacity: interpolate(frame, [0, 14], [0, 1], { extrapolateRight: 'clamp' }),
         }}
       >
-        ¿Quién pagó
+        ¿Quién ya pagó
         <br />
         y quién no?
       </div>
@@ -100,7 +100,7 @@ const HookScene: React.FC = () => {
           opacity: interpolate(frame, [14, 28], [0, 1], { extrapolateRight: 'clamp' }),
         }}
       >
-        Sin perseguir mensajes
+        Todo queda claro
       </div>
     </AbsoluteFill>
   );
@@ -210,7 +210,7 @@ const AlertsScene: React.FC<Pick<V06PaymentsProps, 'alertCount' | 'pendingAmount
                 marginBottom: 8,
               }}
             >
-              Cobros por cerrar
+              Cobros pendientes
             </div>
             <div style={{ fontFamily: cinzel, fontSize: 42, fontWeight: 700 }}>{pendingAmount}</div>
           </div>

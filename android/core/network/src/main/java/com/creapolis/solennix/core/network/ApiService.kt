@@ -114,6 +114,16 @@ class ApiService @Inject constructor(
         }.body(type)
     }
 
+    suspend fun <T> patch(
+        endpoint: String,
+        body: Any,
+        type: io.ktor.util.reflect.TypeInfo
+    ): T = wrapError {
+        client.httpClient.patch(endpoint) {
+            setBody(body)
+        }.body(type)
+    }
+
     suspend fun delete(endpoint: String) = wrapError {
         client.httpClient.delete(endpoint)
     }
@@ -173,6 +183,11 @@ suspend inline fun <reified T> ApiService.put(
     endpoint: String,
     body: Any
 ): T = put(endpoint, body, io.ktor.util.reflect.typeInfo<T>())
+
+suspend inline fun <reified T> ApiService.patch(
+    endpoint: String,
+    body: Any
+): T = patch(endpoint, body, io.ktor.util.reflect.typeInfo<T>())
 
 suspend inline fun <reified T> ApiService.getPaginated(
     endpoint: String,

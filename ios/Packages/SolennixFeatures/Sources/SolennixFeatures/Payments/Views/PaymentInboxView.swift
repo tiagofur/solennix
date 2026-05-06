@@ -70,7 +70,7 @@ public struct PaymentInboxView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(submission.clientName ?? "Cliente")
                         .font(.headline)
-                        .foregroundStyle(SolennixColors.textPrimary)
+                        .foregroundStyle(SolennixColors.text)
                     Text(submission.eventLabel ?? "Evento")
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)

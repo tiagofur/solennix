@@ -10,7 +10,6 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Modal } from '@/components/Modal';
 
 const QUERY_KEY = ['payment-submissions', 'pending'];
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 export const PaymentInboxPage: React.FC = () => {
   const { t, i18n } = useTranslation(['payments', 'common']);
@@ -32,6 +31,9 @@ export const PaymentInboxPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       setApproveId(null);
     },
+    onError: () => {
+      setApproveId(null);
+    },
   });
 
   const rejectMutation = useMutation({
@@ -39,6 +41,11 @@ export const PaymentInboxPage: React.FC = () => {
       paymentSubmissionService.reviewSubmission(id, 'rejected', reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      setRejectId(null);
+      setRejectReason('');
+      setRejectError('');
+    },
+    onError: () => {
       setRejectId(null);
       setRejectReason('');
       setRejectError('');
@@ -73,7 +80,8 @@ export const PaymentInboxPage: React.FC = () => {
     amount.toLocaleString(i18n.language.startsWith('en') ? 'en-US' : 'es-MX', {
       style: 'currency',
       currency: 'MXN',
-      maximumFractionDigits: 0,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     });
 
   if (error) {
@@ -152,7 +160,7 @@ export const PaymentInboxPage: React.FC = () => {
                       <div className="flex items-center gap-2">
                         {sub.receipt_file_url && (
                           <a
-                            href={`${API_BASE.replace('/api', '')}/api/uploads/${sub.receipt_file_url.replace(/^.*uploads\//, '')}`}
+                            href={sub.receipt_file_url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
@@ -165,7 +173,8 @@ export const PaymentInboxPage: React.FC = () => {
                           <>
                             <button
                               onClick={() => setApproveId(sub.id)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-green-500 text-white text-xs font-semibold hover:bg-green-600 transition-colors"
+                              disabled={approveMutation.isPending}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-green-500 text-white text-xs font-semibold hover:bg-green-600 transition-colors disabled:opacity-50"
                             >
                               <CheckCircle className="h-3.5 w-3.5" />
                               Aprobar

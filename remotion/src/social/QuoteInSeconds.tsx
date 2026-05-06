@@ -18,12 +18,12 @@ const { fontFamily: inter } = loadInter();
 export const QuoteInSeconds: React.FC<QuoteInSecondsProps> = ({
   title = 'Cotización profesional en 60 segundos',
   steps = [
-    'Abrí Solennix',
-    'Creá un evento',
-    'Agregá servicios del catálogo',
-    'Generá el PDF',
+    'Abre Solennix',
+    'Crea un evento',
+    'Agrega servicios del catálogo',
+    'Genera el PDF',
   ],
-  closingQuestion = '¿Todavía cotizás en Word?',
+  closingQuestion = '¿Todavía haces cotizaciones en Word?',
 }) => {
   return (
     <AbsoluteFill>

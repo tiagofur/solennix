@@ -12,7 +12,7 @@ screenshots: mixed
 # V07 — Inventario y Equipamiento
 
 > [!quote] Mensaje clave
-> "Stock bajo? Te avisamos antes de que sea un problema."
+> "Si algo va a faltar, te enteras antes del evento."
 
 ---
 
@@ -30,7 +30,7 @@ Organizadores que descubren que faltan sillas/mesas/equipos el día del evento.
 
 ### Escena 1: Hook (Frames 0-60 / 0-2s)
 
-- Pregunta: "¿Tenés suficientes sillas para el evento del sábado?"
+- Pregunta: "¿Tienes suficiente para el sábado?"
 - Fondo oscuro
 
 ### Escena 2: Lista de Inventario (Frames 60-210 / 2-7s)
@@ -64,7 +64,7 @@ Organizadores que descubren que faltan sillas/mesas/equipos el día del evento.
 |---------|-------------|-------|
 | `09-inventario.png` | Lista de inventario con stocks | ✅ |
 | Mockup animado en código | Alerta de stock bajo (rojo) | ✅ |
-| Mockup animado en código | Equipos asignados a evento | ✅ |
+| Mockup animado en código | Equipo asignado al evento | ✅ |
 
 ## Notas Técnicas
 
