@@ -121,6 +121,16 @@ public enum Endpoint {
         "/payments/\(id)"
     }
 
+    // MARK: - Payment Submissions (organizer review inbox)
+
+    /// GET /organizer/payment-submissions — pending submissions for the organizer
+    public static let paymentSubmissionsInbox = "/organizer/payment-submissions"
+
+    /// PATCH /organizer/payment-submissions/{id} — approve or reject a submission
+    public static func paymentSubmission(_ id: String) -> String {
+        "/organizer/payment-submissions/\(id)"
+    }
+
     // MARK: - Unavailable Dates
 
     public static let unavailableDates = "/unavailable-dates"
@@ -194,4 +204,5 @@ public enum Endpoint {
     public static func liveActivityByEvent(_ eventId: String) -> String {
         "/live-activities/by-event/\(eventId)"
     }
+
 }

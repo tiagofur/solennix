@@ -1,0 +1,70 @@
+schema: spec-driven
+
+context: |
+  Tech stack:
+    - iOS: SwiftUI + @Observable (iOS 17+) + SPM packages (SolennixCore, SolennixNetwork, SolennixFeatures)
+    - Android: Jetpack Compose + Hilt + Ktor Client + Kotlinx Serialization + multi-module (app, core/*, feature/*)
+    - Web: React 19 + TypeScript + Vite + Tailwind CSS + Zustand + React Query + React Hook Form + Zod
+    - Backend: Go 1.25 + Chi v5 + PostgreSQL + pgx/v5 + JWT + AWS S3 + Firebase + Stripe + Sentry
+  Architecture:
+    - iOS: MVVM (@Observable ViewModels) + NavigationStack/NavigationSplitView with Route enum
+    - Android: MVVM (StateFlow UiState) + Clean layers (UI -> ViewModel -> Repository -> Remote/Local) + Hilt DI
+    - Web: Service-layer pattern (services/ -> api client) + Zustand for state + React Query for server state
+    - Backend: Handler -> Service -> Repository pattern, Chi router, REST API under /api/
+  Testing:
+    - Web unit: Vitest + @testing-library/react
+    - Web E2E: Playwright
+    - Backend: go test ./... (stretchr/testify)
+    - Android: JUnit 5 + MockK (not yet fully implemented)
+    - iOS: XCTest
+  Style:
+    - Web: ESLint + TypeScript strict
+    - Backend: gofmt / golangci-lint
+    - Commits: Conventional Commits (feat/fix/refactor/docs/test/chore)
+    - Naming: UI in Spanish, code/DB in English, API endpoints in kebab-case
+  Auth:
+    - JWT Bearer token in Authorization header
+    - Web: auth_token in localStorage, 401 triggers auth:logout event
+    - Multi-tenant: all queries filter by user_id
+  Key integrations:
+    - Firebase (FCM push notifications + Google auth)
+    - Stripe (subscriptions/payments)
+    - AWS S3 (file uploads)
+    - Sentry (error tracking)
+    - Resend (transactional email)
+    - APNS (iOS push)
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Identify affected modules/packages across ALL 4 platforms (iOS, Android, Web, Backend)
+    - Enforce cross-platform parity: a change on one platform MUST be applied to all others
+  specs:
+    - Use Given/When/Then format for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+    - Note platform-specific behaviors when they differ
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+    - Address cross-platform data model consistency
+  tasks:
+    - Group tasks by phase (infrastructure, backend, web, iOS, Android, testing, docs)
+    - Use hierarchical numbering (1.1, 1.2, etc.)
+    - Keep tasks small enough to complete in one session
+    - PRD update (docs/PRD/11_CURRENT_STATUS.md) is always the last task
+  apply:
+    - Follow existing code patterns and conventions per platform
+    - Never build after changes
+    - No console.log debug statements in commits
+    - No Co-Authored-By or AI attribution in commits
+    - Run tests before marking a task done
+  verify:
+    - Web unit: cd web && npm run test:run
+    - Web E2E: cd web && npm run test:e2e
+    - Backend: cd backend && go test ./...
+    - Compare implementation against every spec scenario
+    - Validate cross-platform parity
+  archive:
+    - Warn before merging destructive deltas (large removals)
+    - Update docs/PRD/11_CURRENT_STATUS.md
+    - Update platform-specific architecture docs in docs/

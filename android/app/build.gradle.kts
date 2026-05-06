@@ -80,8 +80,8 @@ android {
         applicationId = "com.solennix.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
-        versionName = "1.1.2"
+        versionCode = 6
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -143,6 +143,7 @@ dependencies {
     implementation(project(":feature:settings"))
     implementation(project(":feature:staff"))
     implementation(project(":feature:events"))
+    implementation(project(":feature:payments"))
     implementation(project(":widget"))
 
     implementation(libs.kotlinx.serialization.json)

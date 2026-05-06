@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-05-03
+updated: 2026-05-06
 status: active
 ---
 
@@ -22,8 +22,16 @@ status: active
 > - **Stripe se usa EXCLUSIVAMENTE** para la suscripción Pro del organizador a Solennix (cobro B2B).
 > - El flujo de `payment_submissions` (Sprint 7.E) es un formulario de reporte de transferencias bancarias externas — Solennix NO procesa ni mueve dinero.
 
-**Fecha:** Abril 2026
-**Version:** 1.5
+**Fecha:** Mayo 2026
+**Version:** 1.6
+
+> [!success] 2026-05-06 — Release audit de mayo + próximos números
+> Se revisaron **42 PRs mergeados en mayo** (11 features, 6 bugs, 22 chores/deps) para separar el material realmente release-facing del ruido de mantenimiento.
+> - **iOS próximo:** `1.2.0` · **build:** `7`
+> - **Android próximo:** `1.2.0` · **versionCode:** `6`
+> - **Web próximo:** `1.0.1`
+> - **Backend:** se mantiene en `1.0.0` hasta el siguiente cambio canónico de API
+> - **Cambios ancla del release:** `#242` búsqueda por backend, `#244` disponibilidad de equipo, `#245` calendar parity, `#254` dashboard iOS, `#303` `imePadding()` Android
 
 > [!success] 2026-05-04 — Web + Backend pasan a 1.0.0
 > El baseline de producción ya no usa versiones menores a `1.0.0` para Web y Backend.
@@ -60,13 +68,13 @@ status: active
 > - **Coverage**: navegación, Dashboard, Calendar, Events, Auth y Settings migrados a claves localizadas; verificación local: 815 usos iOS de `FeatureL10n`, 0 claves faltantes.
 > - **Persistencia**: selector de idioma en Settings guarda `preferred_language` vía `PUT /api/users/me`.
 
-> [!success] 2026-05-01 — i18n slice #208 public/client-facing flows listo para merge (PR #225)
-> El slice cross-platform de Quick Quote + organizer-facing Client Portal Share quedó refrescado sobre `main`, con CI verde en PR `#225` y sin hacer build local.
+> [!success] 2026-05-01 — i18n slice #208 public/client-facing flows mergeado (PR #225)
+> El slice cross-platform de Quick Quote + organizer-facing Client Portal Share quedó mergeado a `main` como parte del cierre del tracker de i18n.
 > - **Web**: `QuickQuotePage.tsx` ahora exporta PDF usando el idioma activo; `ClientPortalShareCard.tsx` dejó los hardcodes y consume `events.client_portal_share` en ES/EN.
 > - **iOS**: nuevos shims `QuickQuoteStrings.swift` y `ClientPortalShareStrings.swift` centralizan copy ES/EN para `QuickQuoteView`, `QuickQuotePDFGenerator`, `ClientPortalShareSheet`, `ClientPortalShareViewModel`, `EventDetailView`, `QuickActionsFAB` y `OnboardingTips`.
 > - **Android**: se agregaron resources ES/EN para `feature:clients`, `feature:events` y `core:designsystem`; `QuickQuoteScreen`, `QuickQuoteViewModel`, `QuickQuotePdfGenerator`, `ClientPortalShareBottomSheet`, `ClientPortalShareViewModel`, `EventDetailScreen` y `QuickActionsFAB` dejaron de hardcodear copy del slice.
 > - **Validación**: `web/src/pages/QuickQuote/QuickQuotePage.test.tsx` ✅, `web/src/pages/Events/components/QuickClientModal.test.tsx` ✅, `Backend Tests` ✅, `Frontend Tests` ✅, `iOS Validation` ✅, `Stage 1..6` ✅ en PR `#225`.
-> - **Estado**: PR `#225` (`feat(cross-platform): localize quick quote and client portal (#208)`) quedó `CLEAN` tras refrescar la branch sobre `main`.
+> - **Estado**: PR `#225` (`feat(cross-platform): localize quick quote and client portal (#208)`) ya forma parte de `main`.
 
 > [!success] 2026-04-30 — Slice #206 Clients i18n parity (list + detail + form)
 > Se cerró la localización cross-platform del flujo de Clientes en Web, iOS y Android para lista, detalle y formulario. Quick Quote quedó fuera del slice y sigue como deuda explícita para otro issue.

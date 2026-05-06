@@ -109,7 +109,7 @@ const HookScene: React.FC = () => {
           letterSpacing: 2,
         }}
       >
-        tenés esta semana?
+        tienes esta semana?
       </div>
     </AbsoluteFill>
   );

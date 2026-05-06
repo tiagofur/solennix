@@ -1,148 +1,146 @@
 # Release Notes — Próxima versión
 
-Notas listas para copiar/pegar en App Store Connect y Google Play Console
-cuando subas la actualización. Hay 2 versiones:
+Notas listas para copiar/pegar en App Store Connect y Google Play Console.
+Este archivo acompaña el release train **iOS 1.2.0 (7)** + **Android 1.2.0 (6)**.
 
-- **Corta (< 500 chars)** — para Play Store short description + App Store subtítulos
-- **Larga** — para el cuerpo "What's New" de ambas stores
+- **Corta (< 500 chars)** — App Store / Play Store resumen breve
+- **Larga** — cuerpo completo de "What's New"
 
-El CHANGELOG.md técnico completo está en la raíz del repo.
+El changelog técnico canónico vive en `versioning/releases.json` y genera `CHANGELOG.md`.
 
 ---
 
-## 🇲🇽 Español (LATAM) — versión corta
+## iOS 1.2.0 (build 7)
 
+### 🇲🇽 Español (LATAM) — versión corta
+
+```text
+📅 Mejoramos calendario, búsqueda y planeación de eventos
+
+• El calendario ahora tiene mejor paridad: filtros por estado, exportación iCal y navegación más fluida
+• La búsqueda de eventos se apoya en backend para resultados más consistentes
+• Mejoramos la disponibilidad de equipo al planear eventos
+• Arreglamos widgets clave del Dashboard y el guardado de ajustes de stock
 ```
-🎨 Rediseñamos el formulario de Nuevo Evento
 
-• Tocá el número en cualquier contador para escribirlo directo (sin 50 clicks)
-• Botones más grandes y cómodos, visualmente más consistentes
-• Paso 4: Equipamiento e Insumos con alerta de stock y separación clara por tipo de unidad (kg vs bolsa)
-• En Android ahora también tenés botón "Liquidar" + confirmación antes de borrar un pago
-• PDFs se generan en segundo plano — la app ya no se congela al tocar "Contrato"
+### 🇲🇽 Español (LATAM) — versión larga
 
-Arreglos: corregido un crash en Extras/Insumos al eliminar, decimales que se pisaban al tipear, y el monto del descuento en el contrato PDF ahora coincide con lo que ves en Finanzas.
-```
-
-## 🇲🇽 Español (LATAM) — versión larga
-
-```
-Esta actualización se enfoca en pulir el formulario de Nuevo Evento y la pantalla de detalle, con varios arreglos de estabilidad y paridad entre iOS y Android.
+```text
+Esta actualización prepara el siguiente salto de calidad de Solennix en iPhone y iPad.
 
 Nuevo
-• Stepper híbrido: en todos los contadores (Personas, Cantidad producto, Equipo, Insumo) ahora podés tocar el número y escribir directo. Ideal para cantidades grandes.
-• Alerta de stock en Equipamiento: cuando pedís más del stock disponible, el número y la info de stock se pintan en rojo con un ícono de warning.
-• Diferenciación por tipo de insumo: bolsa, caja, pack, unidad se ordenan con +/- (no tiene sentido pedir media bolsa). Kg, litros, gramos se escriben como decimales.
-• [Android] Nuevo botón "Liquidar" en la pantalla de Pagos. Auto-rellena el saldo pendiente.
-• [Android] Diálogo de confirmación antes de eliminar un pago.
+• La búsqueda de eventos ahora usa resultados apoyados en backend, con más coherencia entre vistas y plataformas.
+• El calendario gana mejor paridad funcional: filtro por estado, exportación iCal, retry y navegación más clara desde los eventos.
+• La disponibilidad de equipo entra al flujo de planeación para ayudarte a detectar capacidad real antes de cerrar cambios.
 
 Mejorado
-• Paso 2 (Productos): header más claro con "Producto N" y botón de eliminar. Los botones +/- más grandes y el número no hace saltar el layout con 3 dígitos.
-• Paso 3 (Extras): ahora podés tipear decimales sin que el formato pise lo que estás escribiendo.
-• Paso 4 (Equipamiento): un solo layout iOS y Android con stock + unidad debajo del nombre.
-• [Android] Botones primarios más compactos — antes se veían muy altos vs el resto.
-• [Android] PDFs se generan en segundo plano, sin bloquear la interfaz.
-• El Número de Personas arranca en 0 y exige que pongas un valor antes de continuar.
+• El módulo de Staff queda mejor localizado y más consistente con el resto de la app.
+• La experiencia general de detalle y calendar queda más alineada con Web y Android.
 
 Arreglado
-• [iOS] Crash al eliminar un Extra o un Insumo vacío.
-• [iOS] El descuento en el contrato PDF daba un monto distinto al que se veía en Finanzas. Ahora coincide exacto.
-• [Android] Vaciar la cantidad de un Insumo para re-tipear ya no elimina el insumo.
-• [Android] Ícono de eliminar en Equipamiento/Insumos ahora es el mismo que en el resto de la app (antes era una X inconsistente).
+• Restauramos tarjetas clave del Dashboard: próximos eventos y top clients.
+• El botón Guardar en ajustes de stock vuelve a persistir correctamente aunque el PUT sea parcial.
 ```
 
----
+### 🇺🇸 English — short version
 
-## 🇺🇸 English — versión corta
+```text
+📅 Better calendar, search, and event planning
 
-```
-🎨 Redesigned the New Event form
-
-• Tap any counter number to type it directly (no more 50 clicks)
-• Bigger, more consistent buttons
-• Step 4: Equipment & Supplies now show stock warnings and split counters by unit type (kg vs bag)
-• Android now has a "Settle" button + confirmation before deleting a payment
-• PDFs generate in the background — the app no longer freezes when tapping "Contract"
-
-Fixes: crashes when deleting Extras/Supplies, decimal typing that got overwritten mid-edit, and contract PDF discount now matches what you see in Finances.
+• Calendar now has stronger parity: status filters, iCal export, and smoother navigation
+• Event search now uses backend-powered results for better consistency
+• Equipment availability is clearer during planning
+• Fixed key Dashboard widgets and stock adjustment saving
 ```
 
-## 🇺🇸 English — versión larga
+### 🇺🇸 English — long version
 
-```
-This update focuses on polishing the New Event form and detail screen, with stability and iOS/Android parity fixes.
+```text
+This release improves the core planning workflow on iPhone and iPad.
 
 New
-• Hybrid stepper: every counter (People, Product qty, Equipment, Supply) now lets you tap the number to type directly. Great for large quantities.
-• Stock warnings in Equipment: if you request more than available stock, the number and stock line turn red with a warning icon.
-• Supply unit-aware input: bag, box, pack, unit use +/- (no half-bags). Kg, liters, grams accept decimals.
-• [Android] New "Settle" button in Payments. Auto-fills remaining balance.
-• [Android] Confirmation dialog before deleting a payment.
+• Event search now relies on backend-powered results for stronger consistency across screens and platforms.
+• Calendar reaches better functional parity with status filters, iCal export, retry states, and clearer event navigation.
+• Equipment availability is now surfaced more clearly while planning event changes.
 
 Improved
-• Step 2 (Products): clearer header with "Product N" + delete button. Bigger +/- buttons, fixed-width number.
-• Step 3 (Extras): you can now type decimals without the formatter overwriting mid-typing.
-• Step 4 (Equipment): unified iOS/Android layout with stock + unit under the name.
-• [Android] Primary buttons more compact — used to look taller than the rest of the UI.
-• [Android] PDFs generate on a background thread, no UI freeze.
-• People count starts at 0 and requires a value before moving on.
+• Staff flows are better localized and more consistent with the rest of the app.
+• Event detail and calendar behavior are better aligned with Web and Android.
 
 Fixed
-• [iOS] Crash when deleting an empty Extra or Supply.
-• [iOS] Contract PDF discount amount didn't match the Finances screen. Now exact.
-• [Android] Clearing a Supply quantity to re-type no longer deletes the supply.
-• [Android] Delete icon in Equipment/Supplies now matches the rest of the app (previously an inconsistent X).
+• Restored key Dashboard cards: upcoming events and top clients.
+• Fixed stock adjustment saving when the request body is partial.
 ```
 
 ---
 
+## Android 1.2.0 (versionCode 6)
+
+### 🇲🇽 Español (LATAM) — versión corta
+
+```text
+📱 Android gana mejor paridad en calendario y formularios
+
+• Búsqueda de eventos conectada al backend para resultados más consistentes
+• Calendario con filtro por estado, exportación iCal, retry y navegación refinada
+• Mejor visibilidad de disponibilidad de equipo al planear eventos
+• Los formularios ya no quedan tapados por el teclado en pantallas largas
+```
+
+### 🇲🇽 Español (LATAM) — versión larga
+
+```text
+Esta actualización fortalece la experiencia Android en los flujos diarios de operación.
+
+Nuevo
+• La búsqueda de eventos ahora usa `/api/events/search`, con resultados más coherentes entre pantallas y plataformas.
+• El calendario alcanza mejor paridad funcional con filtro por estado, exportación iCal, retry, FAB y navegación desde eventos.
+• La disponibilidad de equipo se integra mejor al flujo de eventos para planear con menos sorpresas.
+
+Mejorado
+• Ajustamos formularios scrolleables para que el teclado no tape inputs ni acciones importantes.
+• La experiencia general de calendar y eventos queda más alineada con iOS y Web.
+
+Arreglado
+• `imePadding()` se aplica en los contenedores correctos para evitar fricción al editar formularios largos.
+```
+
+### 🇺🇸 English — short version
+
+```text
+📱 Better calendar parity and forms on Android
+
+• Event search now uses backend-powered results
+• Calendar gets status filters, iCal export, retry, and smoother navigation
+• Equipment availability is clearer while planning events
+• Long forms no longer get blocked by the keyboard
+```
+
+### 🇺🇸 English — long version
+
+```text
+This release sharpens the daily event workflow on Android.
+
+New
+• Event search now uses `/api/events/search` for more consistent results across screens and platforms.
+• Calendar reaches better parity with status filters, iCal export, retry states, FAB entry points, and event navigation.
+• Equipment availability is surfaced more clearly while planning event changes.
+
+Improved
+• Scrollable forms now behave better when the keyboard is open, so key inputs and actions stay reachable.
+• Calendar and event flows are better aligned with iOS and Web.
+
+Fixed
+• Applied `imePadding()` in the right containers to remove friction on long form screens.
+```
+
 ---
 
-## 🌐 Web app (dashboard) — cambios incluidos
+## 🌐 Web 1.0.1 — cambios incluidos
 
-La versión web (`app.solennix.com`) recibe los mismos fixes críticos que mobile.
-No requiere release en store — se despliega con el próximo deploy:
+La web no requiere store release, pero este batch acompaña la comunicación pública del mismo tren:
 
-**Bugs corregidos**
-- PDF de Contrato y Cotización: el monto del descuento era incorrecto
-  cuando el tipo era porcentaje (mostraba el % como si fuera dólares).
-  Ahora coincide con lo que ves en Finanzas.
-- Eliminar un producto/extra/equipo/insumo ahora pide confirmación antes
-  de borrar (igual que en mobile).
-
-**Mejoras UX**
-- Alerta inline cuando pedís más equipo del disponible en inventario.
-- "Número de Personas" arranca en 0 y exige que pongas un valor antes
-  de continuar al siguiente paso.
-
----
-
-## Canales de comunicación adicionales (opcional)
-
-Si querés avisar a usuarios fuera de la store:
-
-### Email / Push
-```
-Asunto: ¿Le diste una vuelta al formulario de evento?
-
-Rediseñamos cómo creás eventos en Solennix. Los puntos clave:
-
-1. Tocás el número — en cualquier contador, ya no hace falta el +/- 50 veces.
-2. Alertas cuando pedís más equipo del que tenés en stock.
-3. Botón "Liquidar" en Android para cerrar el saldo de un toque.
-4. Los PDFs generan sin congelar la app.
-
-Abrí la app para probarlos.
-```
-
-### Post Instagram / Twitter
-```
-Nueva actualización de Solennix 🎉
-
-+ Contadores con tap-to-edit (adiós a los 50 clicks)
-+ Alertas de stock en equipamiento
-+ "Liquidar" en Android
-+ PDFs más rápidos
-
-Arreglos de estabilidad en iOS y Android. Actualizá desde el App Store / Google Play.
-```
+- versión declarada `1.0.1`
+- búsqueda de eventos apoyada en backend
+- paridad documentada de calendario (estado, iCal, retry, navegación)
+- landing/help/changelog público alineados para comunicar mejor el producto

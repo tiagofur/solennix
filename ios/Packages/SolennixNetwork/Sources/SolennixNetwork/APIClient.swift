@@ -273,6 +273,38 @@ public actor APIClient {
         }
     }
 
+    public func patch<T: Decodable>(
+        _ endpoint: String,
+        body: some Encodable
+    ) async throws -> T {
+        var request = try buildRequest(endpoint, method: "PATCH")
+        let bodyData = try encoder.encode(body)
+        request.httpBody = bodyData
+
+        do {
+            return try await execute(request, suppressNetworkToast: true)
+        } catch let apiError as APIError {
+            if await queueMutationIfNeeded(
+                apiError: apiError,
+                endpoint: endpoint,
+                method: "PATCH",
+                bodyData: bodyData,
+                idempotencyKey: request.value(forHTTPHeaderField: "X-Idempotency-Key")
+            ) {
+                let queuedError = APIError.networkError(
+                    "Sin conexión: guardamos tu cambio y se enviará automáticamente al reconectarte."
+                )
+                showErrorToast(for: queuedError)
+                throw queuedError
+            }
+            if case .networkError = apiError {
+                showErrorToast(for: apiError)
+            }
+
+            throw apiError
+        }
+    }
+
     /// Perform a DELETE request.
     /// - Parameter endpoint: The API endpoint path.
     public func delete(_ endpoint: String) async throws {

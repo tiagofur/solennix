@@ -12,7 +12,7 @@ screenshots: done
 # V06 — Control de Pagos
 
 > [!quote] Mensaje clave
-> "Sabés exactamente cuánto te deben. Siempre."
+> "Sabes quién ya pagó y cuánto te falta cobrar. Siempre."
 
 ---
 
@@ -48,7 +48,7 @@ Organizadores que no saben cuánto les deben porque lo rastrean en notas o mensa
 
 ### Escena 4: Beneficio + CTA (Frames 390-600 / 13-20s)
 
-- Texto: "Sabés exactamente cuánto te deben. Siempre."
+- Texto: "Sabes quién ya pagó. Y cuánto te falta cobrar."
 - Logo + CTA
 
 ---

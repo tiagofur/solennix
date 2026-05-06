@@ -32,7 +32,7 @@ describe('About', () => {
       renderAbout();
 
       expect(screen.getByText('Solennix')).toBeInTheDocument();
-      expect(screen.getByText('Versión 1.0.0')).toBeInTheDocument();
+      expect(screen.getByText(/^Versión \d+\.\d+\.\d+/)).toBeInTheDocument();
     });
 
     it('renders the developer info section', () => {

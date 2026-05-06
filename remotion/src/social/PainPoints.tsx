@@ -16,9 +16,9 @@ const { fontFamily: inter } = loadInter();
 export const PainPoints: React.FC<PainPointsProps> = ({
   title = 'Levanta la mano si...',
   items = [
-    'Cotizás en Word o Excel',
-    'Llevás las finanzas en un cuaderno',
-    'No sabés cuánto ganaste este mes',
+    'Haces cotizaciones en Word o Excel',
+    'Llevas las finanzas en una libreta',
+    'No sabes cuánto ganaste este mes',
     'Tu agenda está en 3 apps distintas',
     'Tus cambios tardan 1 hora',
   ],

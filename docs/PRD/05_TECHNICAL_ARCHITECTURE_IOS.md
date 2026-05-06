@@ -9,7 +9,7 @@ aliases:
   - Arquitectura iOS
   - iOS Architecture
 date: 2026-03-20
-updated: 2026-04-29
+updated: 2026-05-06
 status: active
 platform: iOS
 ---
@@ -23,13 +23,21 @@ platform: iOS
 > **Framework UI:** SwiftUI
 > **Arquitectura:** MVVM con @Observable
 
-> [!success] Producción (2026-04-16)
+> [!success] Versionado actual (2026-05-06)
 >
 > - **App Store live:** https://apps.apple.com/mx/app/solennix/id6760874129
-> - **Versión:** 1.0.4 (build 5)
+> - **Manifest canónico:** `versioning/releases.json`
+> - **Versión app (`ios/project.yml`):** `1.2.0` (build `7`)
+> - **Targets embebidos:** widget + notification service alineados a `1.2.0` (build `7`)
 > - **Bundle ID:** `com.solennix.app`
 > - **Development Team:** `T5SKULSP2M`
 > - **Base URL API:** `https://api.solennix.com/api`
+
+> [!info] Release train 2026-05-06
+>
+> - **Búsqueda de eventos:** iOS consume resultados alineados al backend vía `/api/events/search`
+> - **Calendario:** paridad con filtro por estado, retry, navegación e iCal
+> - **Detalle/Dashboard:** restore de upcoming events/top clients y fix en guardado de stock adjustment
 
 > [!info] Dependencias externas SPM (2026-04-16)
 >

@@ -165,9 +165,9 @@ export const RemotionRoot = () => {
           defaultProps={{
             title: 'Levanta la mano si...',
             items: [
-              'Cotizás en Word o Excel',
-              'Llevás las finanzas en un cuaderno',
-              'No sabés cuánto ganaste este mes',
+              'Haces cotizaciones en Word o Excel',
+              'Llevas las finanzas en una libreta',
+              'No sabes cuánto ganaste este mes',
               'Tu agenda está en 3 apps distintas',
               'Tus cambios tardan 1 hora',
             ],
@@ -223,12 +223,12 @@ export const RemotionRoot = () => {
           defaultProps={{
             title: 'Cotización profesional en 60 segundos',
             steps: [
-              'Abrí Solennix',
-              'Creá un evento',
-              'Agregá servicios del catálogo',
-              'Generá el PDF',
+              'Abre Solennix',
+              'Crea un evento',
+              'Agrega servicios del catálogo',
+              'Genera el PDF',
             ],
-            closingQuestion: '¿Todavía cotizás en Word?',
+            closingQuestion: '¿Todavía haces cotizaciones en Word?',
           }}
         />
 
@@ -258,8 +258,8 @@ export const RemotionRoot = () => {
           height={SOCIAL_FORMATS.FEED.height}
           defaultProps={{
             slides: [
-              { title: 'Presupuestos PDF', description: 'Cotizá en minutos, no en horas', icon: '📄' },
-              { title: 'Control de Pagos', description: 'Señas y saldos automáticos', icon: '💰' },
+              { title: 'Presupuestos PDF', description: 'Cotiza en minutos, no en horas', icon: '📄' },
+              { title: 'Control de Pagos', description: 'Anticipos y saldos automáticos', icon: '💰' },
               { title: 'Calendario Visual', description: 'Tus fechas siempre organizadas', icon: '📅' },
               { title: 'Inventario Exacto', description: 'Stock, insumos y compras', icon: '📦' },
             ]
@@ -383,7 +383,7 @@ export const RemotionRoot = () => {
           id="V05-Quotes-Reel"
           component={V05_Quotes}
           schema={V05QuotesSchema}
-          durationInFrames={510}
+          durationInFrames={550}
           fps={SOCIAL_FPS}
           width={SOCIAL_FORMATS.REEL.width}
           height={SOCIAL_FORMATS.REEL.height}
@@ -393,8 +393,8 @@ export const RemotionRoot = () => {
             eventName: 'Boda Jardín Primavera',
             items: [
               { name: 'Banquete premium', description: '120 invitados', price: '$42,000' },
-              { name: 'Decoración floral', description: 'Mesa principal + ceremonia', price: '$18,500' },
-              { name: 'DJ + audio', description: '5 horas de servicio', price: '$9,800' },
+              { name: 'Decoración floral', description: 'Mesa principal y ceremonia', price: '$18,500' },
+              { name: 'DJ y audio', description: '5 horas de servicio', price: '$9,800' },
             ],
             totalAmount: '$70,300',
             url: 'solennix.com',
@@ -429,20 +429,20 @@ export const RemotionRoot = () => {
           height={SOCIAL_FORMATS.REEL.height}
           defaultProps={{
             inventoryItems: [
-              { name: 'Sillas Tiffany', category: 'Mobiliario', stock: 140, minimum: 100, unit: 'pz' },
-              { name: 'Manteles marfil', category: 'Textiles', stock: 32, minimum: 18, unit: 'pz' },
-              { name: 'Copas de cristal', category: 'Cristalería', stock: 18, minimum: 24, unit: 'pz' },
+              { name: 'Sillas Tiffany', category: 'Mobiliario', stock: 140, minimum: 100, unit: 'pzas' },
+              { name: 'Manteles marfil', category: 'Textiles', stock: 32, minimum: 18, unit: 'pzas' },
+              { name: 'Copas de cristal', category: 'Cristalería', stock: 18, minimum: 24, unit: 'pzas' },
             ],
             lowStockItem: {
               name: 'Copas de cristal',
               stock: 18,
               minimum: 24,
-              unit: 'pz',
+              unit: 'pzas',
             },
             equipmentAssignments: [
               { name: 'Cabina DJ', quantity: '1 set', notes: 'Escenario principal' },
               { name: 'Letras gigantes', quantity: '4 piezas', notes: 'Recepción jardín' },
-              { name: 'Luces uplight', quantity: '12 piezas', notes: 'Pasillo + pista' },
+              { name: 'Luces uplight', quantity: '12 piezas', notes: 'Pasillo y pista' },
             ],
             url: 'solennix.com',
           }}

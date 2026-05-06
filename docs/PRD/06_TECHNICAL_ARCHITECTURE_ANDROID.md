@@ -9,24 +9,32 @@ aliases:
   - Arquitectura Android
   - Android Architecture
 date: 2026-03-20
-updated: 2026-04-17
+updated: 2026-05-06
 status: active
 platform: Android
 ---
 
 # Arquitectura Técnica — Android
 
-**Versión:** 1.0
-**Fecha:** 2026-03-20 · **Última actualización:** 2026-04-17
+**Versión:** 1.2.0
+**Fecha:** 2026-03-20 · **Última actualización:** 2026-05-06
 **Plataforma:** Android (teléfono/tablet)
 
-> [!success] Producción (2026-04-16)
+> [!success] Versionado actual (2026-05-06)
 >
 > - **App ID:** `com.solennix.app`
 > - **Namespace Gradle:** `com.creapolis.solennix`
-> - **versionCode:** 2 · **versionName:** 1.0
-> - **Kotlin:** 2.1.0 · **AGP:** 8.13.2 · **KSP:** 2.1.0-1.0.29
+> - **Manifest canónico:** `versioning/releases.json`
+> - **versionCode:** `6` · **versionName:** `1.2.0`
+> - **Kotlin:** `2.3.21` · **AGP:** `8.13.2` · **KSP plugin:** `2.3.7`
 > - **RevenueCat SDK:** 8.10.1 (activo para Play Billing)
+
+> [!info] Release train 2026-05-06
+>
+> - **Búsqueda de eventos:** Android usa `/api/events/search`
+> - **Disponibilidad de equipo:** integrada en el flujo de planeación de eventos
+> - **Calendario:** paridad con estado, retry, iCal, FAB y navegación
+> - **Formularios:** `imePadding()` evita que el teclado tape inputs/acciones en pantallas scrolleables
 
 > [!tip] Documentos relacionados
 > [[PRD MOC]] · [[01_PRODUCT_VISION]] · [[02_FEATURES]] · [[05_TECHNICAL_ARCHITECTURE_IOS]] · [[07_TECHNICAL_ARCHITECTURE_BACKEND]] · [[08_TECHNICAL_ARCHITECTURE_WEB]] · [[11_CURRENT_STATUS]] · [[19_I18N_STRATEGY]]
@@ -36,34 +44,34 @@ platform: Android
 ## 1. Stack Tecnológico
 
 > [!info] Stack principal
-> **Kotlin 2.0** + **Jetpack Compose** (Material 3) + **Hilt** + **Ktor Client** + **Room** — orientado a offline-first con arquitectura multi-módulo MVVM.
+> **Kotlin 2.3** + **Jetpack Compose** (Material 3) + **Hilt** + **Ktor Client** + **Room** — orientado a offline-first con arquitectura multi-módulo MVVM.
 
 | Capa              | Tecnología                        | Versión         | Justificación                                                               |
 | ----------------- | --------------------------------- | --------------- | --------------------------------------------------------------------------- |
-| **Lenguaje**      | Kotlin                            | 2.0.21          | Coroutines, null safety, first-class Android                                |
-| **KSP**           | kotlin-symbol-processing          | 2.0.21-1.0.28   | Debe coincidir exactamente con la versión de Kotlin                         |
-| **Build**         | AGP + Gradle                      | 8.13.2 + Gradle | Version Catalogs (`libs.versions.toml`)                                     |
-| **UI**            | Jetpack Compose + Material 3      | BOM 2024.12.01  | Declarativa, Material You dynamic color                                     |
+| **Lenguaje**      | Kotlin                            | 2.3.21          | Coroutines, null safety, first-class Android                                |
+| **KSP**           | kotlin-symbol-processing          | 2.3.7           | Debe coincidir con la línea actual del toolchain                            |
+| **Build**         | AGP + Gradle                      | 8.13.2 + 9.5.0  | Version Catalogs (`libs.versions.toml`)                                     |
+| **UI**            | Jetpack Compose + Material 3      | BOM 2025.12.01  | Declarativa, Material You dynamic color                                     |
 | **Arquitectura**  | MVVM                              | —               | ViewModel por pantalla, StateFlow + mutableStateOf para reactividad         |
-| **DI**            | Hilt (Dagger)                     | 2.53.1          | Constructor injection, `@HiltViewModel`, `@HiltWorker` para WorkManager     |
-| **DB Local**      | Room                              | 2.6.1           | SQLite typesafe con KSP, cache offline                                      |
-| **Networking**    | Ktor Client                       | 3.0.3           | Motor OkHttp, Kotlinx Serialization, DTOs alineados con backend Go          |
-| **Background**    | WorkManager                       | 2.10.0          | Sync diferido y tareas en segundo plano                                     |
+| **DI**            | Hilt (Dagger)                     | 2.59.2          | Constructor injection, `@HiltViewModel`, `@HiltWorker` para WorkManager     |
+| **DB Local**      | Room                              | 2.8.4           | SQLite typesafe con KSP, cache offline                                      |
+| **Networking**    | Ktor Client                       | 3.4.3           | Motor OkHttp, Kotlinx Serialization, DTOs alineados con backend Go          |
+| **Background**    | WorkManager                       | 2.11.2          | Sync diferido y tareas en segundo plano                                     |
 | **Widgets**       | Glance                            | 1.1.1           | Compose-based widgets para Home Screen                                      |
-| **Imágenes**      | Coil 3                            | 3.0.4           | Carga de imágenes con motor Ktor                                            |
-| **Serialización** | Kotlinx Serialization             | 1.7.3           | JSON parsing compartido con Ktor                                            |
-| **Billing**       | Play Billing Library              | 7.1.1           | Suscripciones in-app (FREE/PRO)                                             |
-| **Biometría**     | AndroidX Biometric                | 1.2.0-alpha05   | Autenticación biométrica                                                    |
-| **Credenciales**  | Credential Manager                | 1.5.0-rc01      | Google One Tap Sign-In                                                      |
+| **Imágenes**      | Coil 3                            | 3.4.0           | Carga de imágenes con motor Ktor                                            |
+| **Serialización** | Kotlinx Serialization             | 1.11.0          | JSON parsing compartido con Ktor                                            |
+| **Billing**       | Play Billing Library              | 8.3.0           | Suscripciones in-app (FREE/PRO)                                             |
+| **Biometría**     | AndroidX Biometric                | 1.4.0-alpha07   | Autenticación biométrica                                                    |
+| **Credenciales**  | Credential Manager                | 1.7.0-alpha01   | Google One Tap Sign-In                                                      |
 | **Seguridad**     | Security Crypto                   | 1.1.0-alpha06   | EncryptedSharedPreferences para tokens                                      |
-| **DataStore**     | Preferences DataStore             | 1.1.1           | Preferencias de usuario                                                     |
-| **Charts**        | Vico                              | 2.0.0-alpha.28  | Gráficos para dashboard                                                     |
+| **DataStore**     | Preferences DataStore             | 1.2.1           | Preferencias de usuario                                                     |
+| **Charts**        | Vico                              | 2.4.4           | Gráficos para dashboard                                                     |
 | **Adaptive**      | material3-window-size-class       | via BOM         | `WindowWidthSizeClass` para layouts responsivos                             |
 | **Window**        | androidx.window                   | 1.3.0           | Soporte para foldables                                                      |
-| **Navegación**    | Navigation Compose                | 2.8.5           | Navegación declarativa con type safety                                      |
+| **Navegación**    | Navigation Compose                | 2.9.8           | Navegación declarativa con type safety                                      |
 | **Firebase**      | Firebase BOM                      | 33.9.0          | Messaging + Analytics                                                       |
 | **Testing**       | JUnit5 + MockK + Turbine          | —               | Unit tests de ViewModels + validaciones de labels de accesibilidad TalkBack |
-| **Performance**   | Baseline Profile + Macrobenchmark | 1.3.3           | Perfilado de startup y optimización de tiempos de arranque en release       |
+| **Performance**   | Baseline Profile + Macrobenchmark | 1.4.1           | Perfilado de startup y optimización de tiempos de arranque en release       |
 | **SDK**           | minSdk 26 — targetSdk 35          | —               | Android 8.0+ hasta Android 15                                               |
 
 ---
