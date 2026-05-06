@@ -5,9 +5,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -99,6 +102,8 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val density = LocalDensity.current
+    val imeVisible = WindowInsets.ime.getBottom(density) > 0
 
     LaunchedEffect(initialDeepLinkRoute) {
         initialDeepLinkRoute?.let { route ->
@@ -112,30 +117,32 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
 
     Scaffold(
         bottomBar = {
-            NavigationBar(containerColor = SolennixTheme.colors.tabBarBg) {
-                TopLevelDestination.entries.forEach { destination ->
-                    NavigationBarItem(
-                        selected = selectedDestination == destination,
-                        onClick = {
-                            selectedDestination = destination
-                            navController.navigate(destination.route) {
-                                popUpTo(navController.graph.startDestinationId) { inclusive = false }
-                                launchSingleTop = true
-                            }
-                        },
-                        icon = {
-                            Icon(
-                                if (selectedDestination == destination) destination.selectedIcon else destination.unselectedIcon,
-                                contentDescription = destination.label
+            if (!imeVisible) {
+                NavigationBar(containerColor = SolennixTheme.colors.tabBarBg) {
+                    TopLevelDestination.entries.forEach { destination ->
+                        NavigationBarItem(
+                            selected = selectedDestination == destination,
+                            onClick = {
+                                selectedDestination = destination
+                                navController.navigate(destination.route) {
+                                    popUpTo(navController.graph.startDestinationId) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                            },
+                            icon = {
+                                Icon(
+                                    if (selectedDestination == destination) destination.selectedIcon else destination.unselectedIcon,
+                                    contentDescription = destination.label
+                                )
+                            },
+                            label = { Text(destination.label) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = SolennixTheme.colors.tabBarActive,
+                                unselectedIconColor = SolennixTheme.colors.tabBarInactive,
+                                indicatorColor = SolennixTheme.colors.primaryLight
                             )
-                        },
-                        label = { Text(destination.label) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = SolennixTheme.colors.tabBarActive,
-                            unselectedIconColor = SolennixTheme.colors.tabBarInactive,
-                            indicatorColor = SolennixTheme.colors.primaryLight
                         )
-                    )
+                    }
                 }
             }
         },
@@ -143,7 +150,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
             val showQuickActions = isAtTopLevel &&
                 currentRoute != TopLevelDestination.MORE.route &&
                 currentRoute != TopLevelDestination.CLIENTS.route
-            if (showQuickActions) {
+            if (showQuickActions && !imeVisible) {
                 QuickActionsFAB(
                     onNewEventClick = { navController.navigate("event_form?eventId=") },
                     onQuickQuoteClick = { navController.navigate("quick_quote") }
