@@ -161,9 +161,10 @@ func main() {
 	paymentSubmissionHandler := handlers.NewPaymentSubmissionHandler(paymentSubmissionRepo, paymentRepo, pool, cfg.UploadDir)
 	staffHandler := handlers.NewStaffHandler(staffRepo, userRepo)
 	staffTeamHandler := handlers.NewStaffTeamHandler(staffTeamRepo)
+	pdfHandler := handlers.NewPDFHandler(eventRepo, clientRepo, paymentRepo, userRepo)
 
 	// Create router
-	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, dashboardHandler, auditHandler, unavailHandler, deviceHandler, liveActivityHandler, eventFormHandler, eventPublicLinkHandler, paymentSubmissionHandler, staffHandler, staffTeamHandler, authService, userRepo, auditRepo, pool, cfg.CORSAllowedOrigins, cfg.UploadDir)
+	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, dashboardHandler, auditHandler, unavailHandler, deviceHandler, liveActivityHandler, eventFormHandler, eventPublicLinkHandler, paymentSubmissionHandler, staffHandler, staffTeamHandler, pdfHandler, authService, userRepo, auditRepo, pool, cfg.CORSAllowedOrigins, cfg.UploadDir)
 
 	// Background job: expire gifted plans that have passed their expiry date.
 	// Runs once at startup then every hour.

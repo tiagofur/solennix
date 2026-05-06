@@ -21,6 +21,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	paymentSubmissionHandler *handlers.PaymentSubmissionHandler,
 	staffHandler *handlers.StaffHandler,
 	staffTeamHandler *handlers.StaffTeamHandler,
+	pdfHandler *handlers.PDFHandler,
 	authService *services.AuthService, userRepo *repository.UserRepo, auditRepo mw.AuditLogger, pool *pgxpool.Pool, corsOrigins []string, uploadDir string) http.Handler {
 
 	r := chi.NewRouter()
@@ -237,6 +238,15 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Post("/{id}/public-link", eventPublicLinkHandler.CreateOrRotate)
 			r.Get("/{id}/public-link", eventPublicLinkHandler.GetActive)
 			r.Delete("/{id}/public-link", eventPublicLinkHandler.Revoke)
+
+			// PDF downloads — one endpoint per document type
+			r.Get("/{id}/pdf/budget", pdfHandler.GetBudgetPDF)
+			r.Get("/{id}/pdf/invoice", pdfHandler.GetInvoicePDF)
+			r.Get("/{id}/pdf/payment-report", pdfHandler.GetPaymentReportPDF)
+			r.Get("/{id}/pdf/contract", pdfHandler.GetContractPDF)
+			r.Get("/{id}/pdf/shopping-list", pdfHandler.GetShoppingListPDF)
+			r.Get("/{id}/pdf/checklist", pdfHandler.GetChecklistPDF)
+			r.Get("/{id}/pdf/equipment-list", pdfHandler.GetEquipmentListPDF)
 		})
 
 		// Products
