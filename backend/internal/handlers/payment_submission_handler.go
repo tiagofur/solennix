@@ -4,26 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
 	"github.com/tiagofur/solennix-backend/internal/repository"
 )
-
-// allowedReceiptMIME maps accepted content types to file extensions.
-var allowedReceiptMIME = map[string]string{
-	"image/jpeg":      ".jpg",
-	"image/png":       ".png",
-	"image/webp":      ".webp",
-	"application/pdf": ".pdf",
-}
 
 type PaymentSubmissionHandler struct {
 	repo        *repository.PaymentSubmissionRepo
@@ -35,8 +29,7 @@ type PaymentSubmissionHandler struct {
 func NewPaymentSubmissionHandler(repo *repository.PaymentSubmissionRepo, paymentRepo *repository.PaymentRepo, pool *pgxpool.Pool, uploadDir string) *PaymentSubmissionHandler {
 	receiptsDir := filepath.Join(uploadDir, "receipts")
 	if err := os.MkdirAll(receiptsDir, 0755); err != nil {
-		// Non-fatal: log and continue; uploads will fail at runtime if dir missing.
-		_ = err
+		slog.Error("Failed to create receipts upload directory", "dir", receiptsDir, "error", err)
 	}
 	return &PaymentSubmissionHandler{repo: repo, paymentRepo: paymentRepo, pool: pool, uploadDir: uploadDir}
 }
@@ -53,12 +46,14 @@ type CreatePublicPaymentRequest struct {
 // Client submits transfer payment with optional receipt file via multipart form.
 func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	token := r.PathValue("token")
+	token := chi.URLParam(r, "token")
 	if token == "" {
 		writeError(w, http.StatusBadRequest, "Token is required")
 		return
 	}
 
+	// Cap total request body before parsing multipart (DoS protection, mirrors upload_handler.go).
+	r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
 	// Parse request body (multipart form for file upload)
 	if err := r.ParseMultipartForm(10 << 20); err != nil { // 10MB limit
 		writeError(w, http.StatusBadRequest, "Failed to parse form data")
@@ -94,43 +89,64 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	// Validate event public link first — avoids orphaned files if the token is invalid.
+	eventPublicLinkRepo := repository.NewEventPublicLinkRepo(h.pool)
+	link, err := eventPublicLinkRepo.GetByToken(ctx, token)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "Invalid or expired link")
+		return
+	}
+	if link.Status != "active" {
+		writeError(w, http.StatusGone, "Link is no longer active")
+		return
+	}
+	if link.EventID != eventID {
+		writeError(w, http.StatusBadRequest, "Event ID mismatch")
+		return
+	}
+
 	// Parse receipt file if provided (optional)
 	var receiptFileURL *string
 	file, fileHeader, fileErr := r.FormFile("receipt_file")
+	if fileErr != nil && fileErr != http.ErrMissingFile {
+		writeError(w, http.StatusBadRequest, "Failed to read receipt file")
+		return
+	}
 	if fileErr == nil {
 		defer file.Close()
 
+		// Validate size (double-check header after MaxBytesReader cap).
+		if fileHeader.Size > 10<<20 {
+			writeError(w, http.StatusBadRequest, "receipt_file must be 10 MB or smaller")
+			return
+		}
+
 		// Validate MIME type by reading the first 512 bytes.
 		buf := make([]byte, 512)
-		n, err := file.Read(buf)
-		if err != nil && err != io.EOF {
+		n, readErr := file.Read(buf)
+		if readErr != nil && readErr != io.EOF {
 			writeError(w, http.StatusBadRequest, "Failed to read uploaded file")
 			return
 		}
 		detectedMIME := http.DetectContentType(buf[:n])
-		// Normalise: http.DetectContentType returns "image/jpeg" etc., but PDF
-		// may be detected as "application/octet-stream" — fall back to extension.
-		ext, mimeOK := allowedReceiptMIME[detectedMIME]
-		if !mimeOK {
-			// Try extension as secondary signal (e.g. PDF).
-			lowerName := strings.ToLower(fileHeader.Filename)
-			for mime, e := range allowedReceiptMIME {
-				if strings.HasSuffix(lowerName, e) {
-					ext = e
-					_ = mime
-					mimeOK = true
-					break
-				}
+
+		var ext string
+		var mimeOK bool
+		switch detectedMIME {
+		case "image/jpeg":
+			ext, mimeOK = ".jpg", true
+		case "image/png":
+			ext, mimeOK = ".png", true
+		case "image/webp":
+			ext, mimeOK = ".webp", true
+		case "application/octet-stream", "text/plain; charset=utf-8":
+			// http.DetectContentType misidentifies PDFs; validate magic bytes instead.
+			if n >= 4 && strings.HasPrefix(string(buf[:4]), "%PDF") {
+				ext, mimeOK = ".pdf", true
 			}
 		}
 		if !mimeOK {
 			writeError(w, http.StatusBadRequest, "receipt_file must be jpeg, png, webp, or pdf")
-			return
-		}
-
-		// Validate size (already capped by ParseMultipartForm, but double-check header).
-		if fileHeader.Size > 10<<20 {
-			writeError(w, http.StatusBadRequest, "receipt_file must be 10 MB or smaller")
 			return
 		}
 
@@ -160,25 +176,6 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 		receiptFileURL = &url
 	}
 
-	// Validate event public link
-	eventPublicLinkRepo := repository.NewEventPublicLinkRepo(h.pool)
-	link, err := eventPublicLinkRepo.GetByToken(ctx, token)
-	if err != nil {
-		writeError(w, http.StatusNotFound, "Invalid or expired link")
-		return
-	}
-
-	if link.Status != "active" {
-		writeError(w, http.StatusGone, "Link is no longer active")
-		return
-	}
-
-	// Verify event ID matches
-	if link.EventID != eventID {
-		writeError(w, http.StatusBadRequest, "Event ID mismatch")
-		return
-	}
-
 	ps := &models.PaymentSubmission{
 		EventID:        eventID,
 		ClientID:       clientID,
@@ -202,7 +199,7 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 // GetHistoryPublic handles GET /api/public/events/{token}/payment-submissions (client portal - history)
 func (h *PaymentSubmissionHandler) GetHistoryPublic(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	token := r.PathValue("token")
+	token := chi.URLParam(r, "token")
 	if token == "" {
 		writeError(w, http.StatusBadRequest, "Token is required")
 		return
@@ -289,7 +286,7 @@ func (h *PaymentSubmissionHandler) ReviewSubmission(w http.ResponseWriter, r *ht
 	ctx := r.Context()
 	userID := middleware.GetUserID(ctx)
 
-	submissionID, err := uuid.Parse(r.PathValue("id"))
+	submissionID, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "Invalid submission ID")
 		return
