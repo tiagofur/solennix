@@ -57,6 +57,23 @@ Solennix mantiene **una única fuente de verdad** para todas las versiones en `v
 
 ## Cómo usar
 
+## Regla rápida para elegir la siguiente versión
+
+Usá esta heurística antes de tocar `versioning/releases.json`:
+
+- **Minor (`X.Y.0`)**: hay capacidades nuevas visibles para usuarios o nuevos flujos cross-platform desde la última versión publicada.
+- **Patch (`X.Y.Z+1`)**: sólo hay fixes, polish, marketing/help o mantenimiento técnico sin cambio claro de alcance funcional.
+- **Build / versionCode**: iOS y Android siempre suben **+1** por cada envío a tienda, incluso si `MARKETING_VERSION` / `versionName` no cambia.
+- **Web**: no hace falta bump por cada deploy; sí cuando querés que changelog/About/help reflejen un batch público identificable.
+- **Backend**: sólo sube cuando el contrato o la superficie canónica del API cambia de forma que merezca release propio.
+
+### Recomendación aplicada para el release train 2026-05-06
+
+- **iOS:** `1.2.0` build `7`
+- **Android:** `1.2.0` versionCode `6`
+- **Web:** `1.0.1`
+- **Backend:** mantener `1.0.0`
+
 ### Escenario 1: Agregar un nuevo release
 
 **Paso 1:** Actualiza versiones en archivos fuente (solo si cambió versión):

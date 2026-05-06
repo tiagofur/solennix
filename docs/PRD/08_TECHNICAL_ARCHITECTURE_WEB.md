@@ -10,7 +10,7 @@ aliases:
   - Arquitectura Web
   - Web Architecture
 date: 2026-03-20
-updated: 2026-05-03
+updated: 2026-05-06
 status: active
 platform: Web
 ---
@@ -19,9 +19,16 @@ platform: Web
 
 > [!tip] Para documentacion detallada de cada modulo web, ver [[Web MOC]]
 
-**Version:** 1.0
-**Fecha:** 2026-03-20 · **Última actualización:** 2026-05-04
+**Version:** 1.0.1
+**Fecha:** 2026-03-20 · **Última actualización:** 2026-05-06
 **Plataforma:** Web (navegadores modernos: Chrome, Firefox, Safari, Edge)
+
+> [!success] 2026-05-06 — Web 1.0.1 release prep
+> La web prepara el siguiente patch público con foco en superficies de comunicación y alineación operativa.
+> - **Versión declarada:** `1.0.1` en `web/package.json`
+> - **Búsqueda:** el flujo web usa `/api/events/search` para converger con mobile/backend
+> - **Calendario:** se documenta paridad funcional ya mergeada para filtros, retry, iCal y navegación
+> - **Marketing/help:** landing y help acompañan el changelog público como capa visible del release
 
 > [!success] 2026-05-04 — Web 1.0.0 + Help Center alineado al design system
 > La Web queda formalmente en `1.0.0` y el Help Center deja de usar una paleta paralela para adoptar los tokens del sistema (`bg-*`, `text-*`, `border-*`).
@@ -66,29 +73,29 @@ platform: Web
 ## 1. Stack Tecnologico
 
 > [!info] Stack principal
-> React 19.2 · TypeScript ~5.9.3 · Vite 7.3.1 · Tailwind CSS 4.2.0 · Zustand 5.0.11
+> React 19.2.5 · TypeScript ~5.9.3 · Vite 8.0.10 · Tailwind CSS 4.2.0 · TanStack React Query 5
 
 | Capa                 | Tecnologia                | Version       | Justificacion                                                                                       |
 | -------------------- | ------------------------- | ------------- | --------------------------------------------------------------------------------------------------- |
-| **Framework UI**     | React                     | 19.2          | Componentes declarativos, Hooks, Concurrent Features, ecosistema maduro                             |
+| **Framework UI**     | React                     | 19.2.5        | Componentes declarativos, Hooks, Concurrent Features, ecosistema maduro                             |
 | **Lenguaje**         | TypeScript                | ~5.9.3        | Tipado estatico, IntelliSense, deteccion de errores en compilacion                                  |
-| **Build Tool**       | Vite                      | 7.3.1         | HMR instantaneo, ESBuild para dev, Rollup para produccion, mucho mas rapido que CRA/Webpack         |
+| **Build Tool**       | Vite                      | 8.0.10        | HMR instantaneo, ESBuild para dev, Rollup para produccion, mucho mas rapido que CRA/Webpack         |
 | **Estilos**          | Tailwind CSS              | 4.2.0         | Utility-first, purge automatico, consistencia de diseno sin escribir CSS custom                     |
 | **Estado Global**    | React Context             | —             | AuthContext, ThemeContext; server state via React Query                                             |
-| **Routing**          | react-router-dom          | 7.13.0        | Rutas declarativas, rutas protegidas, parametros dinamicos                                          |
-| **Formularios**      | react-hook-form           | 7.71.2        | Rendimiento superior (uncontrolled inputs), integracion nativa con zod via `@hookform/resolvers`    |
-| **Validacion**       | zod                       | 4.3.6         | Schemas de validacion type-safe, inferencia de tipos TypeScript, validacion en runtime              |
-| **Graficos**         | recharts                  | 3.7.0         | Graficos declarativos basados en D3, componibles con React, responsive                              |
-| **PDF**              | jsPDF + jspdf-autotable   | 4.2.0 / 5.0.7 | Generacion de PDF en el cliente (cotizaciones, contratos, resumen de eventos)                       |
+| **Routing**          | react-router-dom          | 7.15.0        | Rutas declarativas, rutas protegidas, parametros dinamicos                                          |
+| **Formularios**      | react-hook-form           | 7.75.0        | Rendimiento superior (uncontrolled inputs), integracion nativa con zod via `@hookform/resolvers`    |
+| **Validacion**       | zod                       | 4.4.3         | Schemas de validacion type-safe, inferencia de tipos TypeScript, validacion en runtime              |
+| **Graficos**         | recharts                  | 3.8.1         | Graficos declarativos basados en D3, componibles con React, responsive                              |
+| **PDF**              | jsPDF + jspdf-autotable   | 4.2.1 / 5.0.7 | Generacion de PDF en el cliente (cotizaciones, contratos, resumen de eventos)                       |
 | **Calendario**       | react-day-picker          | 9.13.2        | Selector de fechas accesible, personalizable con Tailwind                                           |
 | **Fechas**           | date-fns                  | 4.1.0         | Funciones puras e inmutables para manipulacion de fechas, tree-shakeable                            |
-| **Iconos**           | lucide-react              | 0.575.0       | Iconos SVG ligeros, consistentes, tree-shakeable                                                    |
+| **Iconos**           | lucide-react              | 1.14.0        | Iconos SVG ligeros, consistentes, tree-shakeable                                                    |
 | **CSS Utils**        | clsx + tailwind-merge     | 2.1.1 / 3.5.0 | Composicion condicional de clases sin conflictos de Tailwind                                        |
 | **Testing Unitario** | Vitest                    | 4.0.18        | Compatible con Vite, API compatible con Jest, rapido, coverage con v8                               |
-| **Testing E2E**      | Playwright                | 1.58.2        | Multi-navegador, auto-waiting, paralelismo, screenshots                                             |
+| **Testing E2E**      | Playwright                | 1.59.1        | Multi-navegador, auto-waiting, paralelismo, screenshots                                             |
 | **API Mocking**      | MSW (Mock Service Worker) | 2.12.10       | Intercepta requests a nivel de red, reutilizable entre tests unitarios y E2E                        |
 | **Testing Library**  | @testing-library/react    | 16.3.2        | Tests centrados en el usuario, queries accesibles                                                   |
-| **Linting**          | ESLint                    | 10.0.1        | Analisis estatico con plugins para React Hooks y React Refresh                                      |
+| **Linting**          | ESLint                    | 10.3.0        | Analisis estatico con plugins para React Hooks y React Refresh                                      |
 
 ---
 
