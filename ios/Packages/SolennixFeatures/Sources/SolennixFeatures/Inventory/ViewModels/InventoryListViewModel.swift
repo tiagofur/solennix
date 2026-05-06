@@ -280,7 +280,7 @@ public final class InventoryListViewModel {
                 id: item.id,
                 userId: item.userId,
                 ingredientName: item.ingredientName,
-                currentStock: adjustmentQuantity,
+                currentStock: max(0, adjustmentQuantity),
                 minimumStock: item.minimumStock,
                 unit: item.unit,
                 unitCost: item.unitCost,
