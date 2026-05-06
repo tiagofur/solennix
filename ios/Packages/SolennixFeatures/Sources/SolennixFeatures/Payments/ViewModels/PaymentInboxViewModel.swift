@@ -61,7 +61,7 @@ public final class PaymentInboxViewModel {
         errorMessage = nil
         do {
             let body = ReviewPaymentSubmissionRequest(status: "approved", rejectionReason: nil)
-            let updated: PaymentSubmission = try await apiClient.put(
+            let updated: PaymentSubmission = try await apiClient.patch(
                 Endpoint.paymentSubmission(id),
                 body: body
             )
@@ -78,7 +78,7 @@ public final class PaymentInboxViewModel {
         errorMessage = nil
         do {
             let body = ReviewPaymentSubmissionRequest(status: "rejected", rejectionReason: reason)
-            let updated: PaymentSubmission = try await apiClient.put(
+            let updated: PaymentSubmission = try await apiClient.patch(
                 Endpoint.paymentSubmission(id),
                 body: body
             )
