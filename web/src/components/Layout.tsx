@@ -20,6 +20,7 @@ import {
   Link2,
   UserCog,
   HelpCircle,
+  Wallet,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
@@ -105,6 +106,7 @@ export const Layout: React.FC = () => {
     { name: t('nav.products'), href: '/products', icon: Package },
     { name: t('nav.inventory'), href: '/inventory', icon: Boxes },
     { name: t('nav.forms'), href: '/event-forms', icon: Link2 },
+    { name: t('nav.payments_inbox', { defaultValue: 'Cobros' }), href: '/payments/inbox', icon: Wallet },
     { name: t('nav.help'), href: '/help', icon: HelpCircle },
     { name: t('nav.settings'), href: '/settings', icon: Settings },
     // Admin link — only visible to admins

@@ -59,6 +59,7 @@ const PublicEventFormPage = React.lazy(() => import("@/pages/PublicEventForm/Pub
 const ClientPortalPage = React.lazy(() => import("@/pages/ClientPortal/ClientPortalPage").then((m) => ({ default: m.ClientPortalPage })));
 
 const EventFormLinksPage = React.lazy(() => import("@/pages/EventForms/EventFormLinksPage").then((m) => ({ default: m.EventFormLinksPage })));
+const PaymentInboxPage = React.lazy(() => import("@/pages/Payments/PaymentInboxPage").then((m) => ({ default: m.PaymentInboxPage })));
 
 const AdminDashboard = React.lazy(() => import("@/pages/Admin/AdminDashboard").then((m) => ({ default: m.AdminDashboard })));
 const AdminUsers = React.lazy(() => import("@/pages/Admin/AdminUsers").then((m) => ({ default: m.AdminUsers })));
@@ -140,6 +141,7 @@ function App() {
                 <Route path="/inventory/:id/edit" element={<InventoryForm />} />
 
                 <Route path="/event-forms" element={<EventFormLinksPage />} />
+                <Route path="/payments/inbox" element={<PaymentInboxPage />} />
                 <Route path="/settings" element={<Settings />} />
 
                 <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
