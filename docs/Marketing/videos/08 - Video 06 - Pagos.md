@@ -4,15 +4,15 @@ tags:
   - video
   - v06
 date: 2026-04-21
-status: concept
-duration: 20s
-screenshots: pending
+status: done
+duration: 16s
+screenshots: done
 ---
 
 # V06 — Control de Pagos
 
 > [!quote] Mensaje clave
-> "Sabés exactamente cuánto te deben. Siempre."
+> "Sabes quién ya pagó y cuánto te falta cobrar. Siempre."
 
 ---
 
@@ -48,7 +48,7 @@ Organizadores que no saben cuánto les deben porque lo rastrean en notas o mensa
 
 ### Escena 4: Beneficio + CTA (Frames 390-600 / 13-20s)
 
-- Texto: "Sabés exactamente cuánto te deben. Siempre."
+- Texto: "Sabes quién ya pagó. Y cuánto te falta cobrar."
 - Logo + CTA
 
 ---
@@ -57,14 +57,16 @@ Organizadores que no saben cuánto les deben porque lo rastrean en notas o mensa
 
 | Archivo | Qué mostrar | Listo |
 |---------|-------------|-------|
-| `dashboard-alerts.png` | Alertas de cobros pendientes | ⬜ |
-| `payments-tab.png` | Tab de pagos de un evento | ⬜ |
+| `01-dashboard.png` | Dashboard con alertas y cobros pendientes | ✅ |
+| `05-evento-pagos.png` | Tab de pagos de un evento | ✅ |
 
 ## Notas Técnicas
 
 - Badge pulsante: `interpolate()` con `scale` entre 1.0 y 1.15 en loop
 - Highlight en alertas: overlay con `opacity` interpolado
 - Checkmarks: aparecen con `spring()` animation
+- Composición implementada: `V06-Payments-Reel`
+- Output renderizado: `remotion/out/v06-payments-reel.mp4`
 
 ---
 

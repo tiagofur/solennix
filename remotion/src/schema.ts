@@ -62,9 +62,9 @@ export type BrandIntroProps = z.infer<typeof BrandIntroSchema>;
 export const PainPointsSchema = z.object({
   title: z.string().default('Levanta la mano si...'),
   items: z.array(z.string()).default([
-    'Cotizás en Word o Excel',
-    'Llevás las finanzas en un cuaderno',
-    'No sabés cuánto ganaste este mes',
+    'Haces cotizaciones en Word o Excel',
+    'Llevas las finanzas en una libreta',
+    'No sabes cuánto ganaste este mes',
     'Tu agenda está en 3 apps distintas',
     'Tus cambios tardan 1 hora',
   ]),
@@ -105,12 +105,12 @@ export type FeatureShowcaseProps = z.infer<typeof FeatureShowcaseSchema>;
 export const QuoteInSecondsSchema = z.object({
   title: z.string().default('Cotización profesional en 60 segundos'),
   steps: z.array(z.string()).default([
-    'Abrí Solennix',
-    'Creá un evento',
-    'Agregá servicios del catálogo',
-    'Generá el PDF',
+    'Abre Solennix',
+    'Crea un evento',
+    'Agrega servicios del catálogo',
+    'Genera el PDF',
   ]),
-  closingQuestion: z.string().default('¿Todavía cotizás en Word?'),
+  closingQuestion: z.string().default('¿Todavía haces cotizaciones en Word?'),
 });
 export type QuoteInSecondsProps = z.infer<typeof QuoteInSecondsSchema>;
 
@@ -138,8 +138,8 @@ export const FeatureCarouselSchema = z.object({
     description: z.string(),
     icon: z.string(),
   })).default([
-    { title: 'Presupuestos PDF', description: 'Cotizá en minutos, no en horas', icon: '📄' },
-    { title: 'Control de Pagos', description: 'Señas y saldos automáticos', icon: '💰' },
+    { title: 'Presupuestos PDF', description: 'Cotiza en minutos, no en horas', icon: '📄' },
+    { title: 'Control de Pagos', description: 'Anticipos y saldos automáticos', icon: '💰' },
     { title: 'Calendario Visual', description: 'Tus fechas siempre organizadas', icon: '📅' },
     { title: 'Inventario Exacto', description: 'Stock, insumos y compras', icon: '📦' },
   ])
@@ -165,3 +165,82 @@ export const ChaosToOrderSchema = z.object({
   url: z.string().default('solennix.com'),
 });
 export type ChaosToOrderProps = z.infer<typeof ChaosToOrderSchema>;
+
+export const V05QuotesSchema = z.object({
+  hookTimes: z.array(z.string()).default(['30 minutos', '1 hora', 'medio día']),
+  clientName: z.string().default('Sofía Martínez'),
+  eventName: z.string().default('Boda Jardín Primavera'),
+  items: z.array(
+    z.object({
+      name: z.string(),
+      description: z.string(),
+      price: z.string(),
+    }),
+  ).default([
+    { name: 'Banquete premium', description: '120 invitados', price: '$42,000' },
+    { name: 'Decoración floral', description: 'Mesa principal y ceremonia', price: '$18,500' },
+    { name: 'DJ y audio', description: '5 horas de servicio', price: '$9,800' },
+  ]),
+  totalAmount: z.string().default('$70,300'),
+  url: z.string().default('solennix.com'),
+});
+export type V05QuotesProps = z.infer<typeof V05QuotesSchema>;
+
+export const V06PaymentsSchema = z.object({
+  alertCount: z.number().default(4),
+  pendingAmount: z.string().default('$28,400'),
+  payments: z.array(
+    z.object({
+      label: z.string(),
+      method: z.string(),
+      amount: z.string(),
+      status: z.enum(['paid', 'pending']),
+    }),
+  ).default([
+    { label: 'Anticipo inicial', method: 'Transferencia', amount: '$12,000', status: 'paid' },
+    { label: 'Segundo pago', method: 'Tarjeta', amount: '$8,400', status: 'paid' },
+    { label: 'Saldo final', method: 'Pendiente', amount: '$8,000', status: 'pending' },
+  ]),
+  url: z.string().default('solennix.com'),
+});
+export type V06PaymentsProps = z.infer<typeof V06PaymentsSchema>;
+
+export const V07InventorySchema = z.object({
+  inventoryItems: z.array(
+    z.object({
+      name: z.string(),
+      category: z.string(),
+      stock: z.number(),
+      minimum: z.number(),
+      unit: z.string(),
+    }),
+  ).default([
+    { name: 'Sillas Tiffany', category: 'Mobiliario', stock: 140, minimum: 100, unit: 'pzas' },
+    { name: 'Manteles marfil', category: 'Textiles', stock: 32, minimum: 18, unit: 'pzas' },
+    { name: 'Copas de cristal', category: 'Cristalería', stock: 18, minimum: 24, unit: 'pzas' },
+  ]),
+  lowStockItem: z.object({
+    name: z.string(),
+    stock: z.number(),
+    minimum: z.number(),
+    unit: z.string(),
+  }).default({
+    name: 'Copas de cristal',
+    stock: 18,
+    minimum: 24,
+    unit: 'pzas',
+  }),
+  equipmentAssignments: z.array(
+    z.object({
+      name: z.string(),
+      quantity: z.string(),
+      notes: z.string(),
+    }),
+  ).default([
+    { name: 'Cabina DJ', quantity: '1 set', notes: 'Escenario principal' },
+    { name: 'Letras gigantes', quantity: '4 piezas', notes: 'Recepción jardín' },
+    { name: 'Luces uplight', quantity: '12 piezas', notes: 'Pasillo y pista' },
+  ]),
+  url: z.string().default('solennix.com'),
+});
+export type V07InventoryProps = z.infer<typeof V07InventorySchema>;

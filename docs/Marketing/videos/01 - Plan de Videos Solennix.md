@@ -155,7 +155,7 @@ Cada video tiene 5 fases:
 │ Mensaje clave: "Todo en un solo lugar" / "En segundos"   │
 ├──────────────────────────────────────────────────────────┤
 │ CTA (25-30s)                                              │
-│ "Probá gratis → solennix.com" + App Store / Play Store    │
+│ "Pruébalo gratis → solennix.com" + App Store / Play Store │
 └──────────────────────────────────────────────────────────┘
 ```
 

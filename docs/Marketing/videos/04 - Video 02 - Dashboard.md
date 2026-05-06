@@ -55,7 +55,7 @@ Organizadores que cierran el mes sin saber si ganaron o perdieron.
 ### Escena 5: Beneficio + CTA (Frames 480-600 / 16-20s)
 
 - Texto: "Tus números. De un vistazo. Sin Excel."
-- Logo + CTA "Probá gratis"
+- Logo + CTA "Pruébalo gratis"
 
 ---
 
@@ -78,7 +78,7 @@ Organizadores que cierran el mes sin saber si ganaron o perdieron.
 ## Redes Sociales & Promoción
 
 ### Descripción sugerida
-Dejá de adivinar si tu negocio es rentable. 📈 Con el Dashboard de Solennix, tenés tus ventas, cobros y eventos pendientes de un vistazo. Tomá decisiones basadas en datos, no en presentimientos. ¡Tus números bajo control!
+Deja de adivinar si tu negocio es rentable. 📈 Con el Dashboard de Solennix, tienes tus ventas, cobros y eventos pendientes de un vistazo. Toma decisiones basadas en datos, no en presentimientos. ¡Tus números bajo control!
 
 ### Hashtags
 #Solennix #FinanzasEventos #DataDriven #WeddingPlanner #EventosMexico #ControlTotal #BusinessIntelligence
