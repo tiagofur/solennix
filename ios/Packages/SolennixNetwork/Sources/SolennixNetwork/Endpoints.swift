@@ -205,11 +205,4 @@ public enum Endpoint {
         "/live-activities/by-event/\(eventId)"
     }
 
-    // MARK: - Payment Submissions
-
-    public static let paymentSubmissionsInbox = "/organizer/payment-submissions"
-
-    public static func paymentSubmission(_ id: String) -> String {
-        "/organizer/payment-submissions/\(id)"
-    }
 }
