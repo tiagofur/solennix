@@ -6,7 +6,7 @@ import com.creapolis.solennix.core.model.PaymentSubmission
 import com.creapolis.solennix.core.model.ReviewSubmissionRequest
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.get
-import com.creapolis.solennix.core.network.put
+import com.creapolis.solennix.core.network.patch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,7 +41,7 @@ class PaymentInboxViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = !isRefresh, isRefreshing = isRefresh, error = null) }
             try {
                 val result = apiService.get<Map<String, List<PaymentSubmission>>>(
-                    "/organizer/payment-submissions"
+                    "organizer/payment-submissions"
                 )
                 _uiState.update {
                     it.copy(
@@ -74,11 +74,11 @@ class PaymentInboxViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(actionLoading = id, actionError = null) }
             try {
-                apiService.put<Map<String, PaymentSubmission>>(
-                    "/organizer/payment-submissions/$id",
+                apiService.patch<Map<String, PaymentSubmission>>(
+                    "organizer/payment-submissions/$id",
                     ReviewSubmissionRequest(status = status, rejectionReason = rejectionReason)
                 )
-                // Refresh list after action
+                _uiState.update { it.copy(actionLoading = null) }
                 loadSubmissions()
             } catch (e: Exception) {
                 _uiState.update {
