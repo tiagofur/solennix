@@ -276,22 +276,22 @@ public final class InventoryListViewModel {
         }
 
         do {
-            let body = ["current_stock": adjustmentQuantity]
-            let _: InventoryItem = try await apiClient.put(Endpoint.inventoryItem(item.id), body: body)
+            let body = InventoryItem(
+                id: item.id,
+                userId: item.userId,
+                ingredientName: item.ingredientName,
+                currentStock: max(0, adjustmentQuantity),
+                minimumStock: item.minimumStock,
+                unit: item.unit,
+                unitCost: item.unitCost,
+                lastUpdated: item.lastUpdated,
+                type: item.type
+            )
+            let result: InventoryItem = try await apiClient.put(Endpoint.inventoryItem(item.id), body: body)
 
             // Update local state
             if let index = items.firstIndex(where: { $0.id == item.id }) {
-                items[index] = InventoryItem(
-                    id: item.id,
-                    userId: item.userId,
-                    ingredientName: item.ingredientName,
-                    currentStock: adjustmentQuantity,
-                    minimumStock: item.minimumStock,
-                    unit: item.unit,
-                    unitCost: item.unitCost,
-                    lastUpdated: ISO8601DateFormatter().string(from: Date()),
-                    type: item.type
-                )
+                items[index] = result
             }
             applyFilters()
             showStockAdjustment = false
