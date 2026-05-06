@@ -60,6 +60,15 @@ struct MoreMenuView: View {
 
             // Settings section
             Section {
+                NavigationLink(value: Route.paymentInbox) {
+                    menuRow(
+                        icon: "wallet.pass.fill",
+                        title: "Comprobantes",
+                        subtitle: "Revisión de pagos de clientes",
+                        color: SolennixColors.primary
+                    )
+                }
+
                 NavigationLink(value: Route.settings) {
                     menuRow(
                         icon: "gearshape.fill",
