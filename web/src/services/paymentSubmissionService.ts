@@ -99,7 +99,7 @@ class PaymentSubmissionService {
     status: 'approved' | 'rejected',
     rejectionReason?: string
   ): Promise<PaymentSubmission> {
-    const response = await api.put<{ data: PaymentSubmission }>(
+    const response = await api.patch<{ data: PaymentSubmission }>(
       `/organizer/payment-submissions/${submissionId}`,
       {
         status,

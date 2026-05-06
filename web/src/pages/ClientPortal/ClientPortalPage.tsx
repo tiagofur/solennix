@@ -124,7 +124,7 @@ export const ClientPortalPage: React.FC = () => {
   const handleTabChange = (tab: TabId) => {
     setActiveTab(tab);
     if (tab === "historial" && data && token) {
-      fetchHistory(token, data.event.id, (data.client as { id: string }).id);
+      fetchHistory(token, data.event.id, data.client.id);
     }
   };
 
@@ -142,7 +142,7 @@ export const ClientPortalPage: React.FC = () => {
       await paymentSubmissionService.submitPaymentFromPortal(
         token,
         data.event.id,
-        (data.client as { id: string }).id,
+        data.client.id,
         amount,
         submitRef || undefined,
         submitFile || undefined
@@ -505,7 +505,23 @@ export const ClientPortalPage: React.FC = () => {
                     type="file"
                     accept="image/jpeg,image/png,image/webp,application/pdf"
                     className="hidden"
-                    onChange={(e) => setSubmitFile(e.target.files?.[0] ?? null)}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const allowed = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+                      if (!allowed.includes(file.type)) {
+                        setSubmitError("Formato no válido. Usá jpeg, png, webp o pdf.");
+                        e.target.value = "";
+                        return;
+                      }
+                      if (file.size > 10 * 1024 * 1024) {
+                        setSubmitError("El archivo no puede superar los 10 MB.");
+                        e.target.value = "";
+                        return;
+                      }
+                      setSubmitError(null);
+                      setSubmitFile(file);
+                    }}
                   />
                 </div>
 
@@ -556,7 +572,7 @@ export const ClientPortalPage: React.FC = () => {
                             )}
                             {sub.receipt_file_url && sub.status === "approved" && (
                               <a
-                                href={`${import.meta.env.VITE_API_URL || "http://localhost:8080/api"}/uploads/${sub.receipt_file_url}`}
+                                href={`${(import.meta.env.VITE_API_URL || "http://localhost:8080/api").replace(/\/api$/, "")}${sub.receipt_file_url}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-xs text-primary hover:underline mt-1 inline-block"
