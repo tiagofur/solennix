@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Wallet
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FabPosition
@@ -92,6 +93,7 @@ import com.creapolis.solennix.feature.staff.ui.StaffListScreen
 import com.creapolis.solennix.feature.staff.ui.StaffTeamDetailScreen
 import com.creapolis.solennix.feature.staff.ui.StaffTeamFormScreen
 import com.creapolis.solennix.feature.staff.ui.StaffTeamListScreen
+import com.creapolis.solennix.feature.payments.ui.PaymentInboxScreen
 
 @Composable
 fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
@@ -210,7 +212,15 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onInventoryClick = { navController.navigate("inventory") },
                     onStaffClick = { navController.navigate("staff") },
                     onEventFormLinksClick = { navController.navigate("event_form_links") },
-                    onSettingsClick = { navController.navigate("settings") }
+                    onSettingsClick = { navController.navigate("settings") },
+                    onPaymentInboxClick = { navController.navigate("payment_inbox") }
+                )
+            }
+
+            composable("payment_inbox") {
+                PaymentInboxScreen(
+                    viewModel = hiltViewModel(),
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
 
@@ -523,7 +533,8 @@ fun MoreMenuScreen(
     onInventoryClick: () -> Unit,
     onStaffClick: () -> Unit,
     onEventFormLinksClick: () -> Unit,
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
+    onPaymentInboxClick: () -> Unit = {}
 ) {
     Scaffold(topBar = { SolennixTopAppBar(title = { Text("Más") }) }) { padding ->
         Column(
@@ -556,6 +567,12 @@ fun MoreMenuScreen(
                 subtitle = "Compartir con clientes",
                 icon = Icons.Default.Link,
                 onClick = onEventFormLinksClick
+            )
+            MenuOptionItem(
+                title = "Comprobantes de pago",
+                subtitle = "Revisar envíos de clientes",
+                icon = Icons.Default.Wallet,
+                onClick = onPaymentInboxClick
             )
             MenuOptionItem(
                 title = "Configuración",
