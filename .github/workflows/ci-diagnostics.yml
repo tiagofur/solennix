@@ -3,8 +3,18 @@ name: CI Diagnostics
 on:
   push:
     branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - 'android/**'
+      - 'web/**'
+      - '.github/workflows/ci-diagnostics.yml'
   pull_request:
     branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - 'android/**'
+      - 'web/**'
+      - '.github/workflows/ci-diagnostics.yml'
 
 concurrency:
   group: ci-diagnostics-${{ github.ref }}
