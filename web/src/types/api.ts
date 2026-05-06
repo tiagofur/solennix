@@ -2190,6 +2190,7 @@ export interface components {
             brand_color?: string | null;
         };
         PublicClientInfo: {
+            id: string;
             name: string;
         };
         PublicPaymentSummary: {
