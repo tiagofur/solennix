@@ -307,6 +307,24 @@ public actor APIClient {
 
     /// Perform a DELETE request.
     /// - Parameter endpoint: The API endpoint path.
+    public func patch<T: Decodable>(
+        _ endpoint: String,
+        body: some Encodable
+    ) async throws -> T {
+        var request = try buildRequest(endpoint, method: "PATCH")
+        let bodyData = try encoder.encode(body)
+        request.httpBody = bodyData
+
+        do {
+            return try await execute(request, suppressNetworkToast: true)
+        } catch let apiError as APIError {
+            if case .networkError = apiError {
+                showErrorToast(for: apiError)
+            }
+            throw apiError
+        }
+    }
+
     public func delete(_ endpoint: String) async throws {
         let request = try buildRequest(endpoint, method: "DELETE")
         do {
