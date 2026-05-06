@@ -72,6 +72,7 @@ public struct MonthlyRevenueTrendPoint: Identifiable {
 
 // MARK: - Dashboard View Model
 
+@MainActor
 @Observable
 public final class DashboardViewModel {
 
@@ -201,7 +202,7 @@ public final class DashboardViewModel {
             // everything; we just lose the progressive-paint advantage.
         }
 
-        func loadOrEmpty<T: Decodable>(
+        func loadOrEmpty<T: Decodable & Sendable>(
             _ endpoint: String,
             params: [String: String]? = nil,
             label: String

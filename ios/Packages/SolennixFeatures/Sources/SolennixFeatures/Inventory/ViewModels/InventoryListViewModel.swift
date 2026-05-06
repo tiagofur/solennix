@@ -23,6 +23,7 @@ public enum InventorySortKey: String, CaseIterable {
 
 // MARK: - Inventory List View Model
 
+@MainActor
 @Observable
 public final class InventoryListViewModel {
 

@@ -5,6 +5,7 @@ import SolennixNetwork
 
 // MARK: - Product Detail View Model
 
+@MainActor
 @Observable
 final class ProductDetailViewModel {
 

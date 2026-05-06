@@ -3,7 +3,7 @@ import Sentry
 
 public struct SentryHelper {
 
-    public static var isEnabled: Bool = false
+    nonisolated(unsafe) public static var isEnabled: Bool = false
 
     public static func configure(
         dsn: String?,

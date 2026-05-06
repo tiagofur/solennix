@@ -11,7 +11,7 @@ import Foundation
 /// `data.count` when missing. Older backend builds and bare `{"data": [...]}`
 /// responses must keep working — Codable's strictness is wrong for a wire
 /// protocol that evolves on the server side.
-public struct PaginatedResponse<T: Decodable>: Decodable {
+public struct PaginatedResponse<T: Decodable>: Decodable, Sendable where T: Sendable {
     public let data: [T]
     public let total: Int
     public let page: Int

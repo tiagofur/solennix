@@ -5,10 +5,10 @@ import SwiftUI
 
 struct ShowMonthlyRevenueIntent: AppIntent {
 
-    static var title: LocalizedStringResource = "Ingresos del Mes"
-    static var description = IntentDescription("Muestra los ingresos totales del mes actual")
+    static let title: LocalizedStringResource = "Ingresos del Mes"
+    static let description = IntentDescription("Muestra los ingresos totales del mes actual")
 
-    static var openAppWhenRun: Bool = false
+    static let openAppWhenRun: Bool = false
 
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         let revenue = await fetchMonthlyRevenue()

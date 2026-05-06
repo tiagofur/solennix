@@ -6,6 +6,7 @@ import Observation
 ///
 /// Inject via `@Environment` and observe `isConnected` to show
 /// offline banners or disable network-dependent actions.
+@MainActor
 @Observable
 public final class NetworkMonitor {
 
@@ -27,9 +28,11 @@ public final class NetworkMonitor {
         self.queue = DispatchQueue(label: "com.solennix.app.networkMonitor", qos: .utility)
 
         monitor.pathUpdateHandler = { [weak self] path in
-            DispatchQueue.main.async {
-                self?.isConnected = path.status == .satisfied
-                self?.connectionType = Self.resolveConnectionType(path)
+            let connected = path.status == .satisfied
+            let connType = Self.resolveConnectionType(path)
+            Task { @MainActor [weak self] in
+                self?.isConnected = connected
+                self?.connectionType = connType
             }
         }
 
@@ -42,7 +45,7 @@ public final class NetworkMonitor {
 
     // MARK: - Helpers
 
-    private static func resolveConnectionType(_ path: NWPath) -> NWInterface.InterfaceType? {
+    private nonisolated static func resolveConnectionType(_ path: NWPath) -> NWInterface.InterfaceType? {
         if path.usesInterfaceType(.wifi) { return .wifi }
         if path.usesInterfaceType(.cellular) { return .cellular }
         if path.usesInterfaceType(.wiredEthernet) { return .wiredEthernet }

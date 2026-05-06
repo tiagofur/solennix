@@ -73,7 +73,7 @@ public struct SelectedSupplyItem: Identifiable, Hashable {
     }
 }
 
-public struct FormEquipmentConflict: Identifiable, Hashable, Codable {
+public struct FormEquipmentConflict: Identifiable, Hashable, Codable, Sendable {
     public let id: String
     public let equipmentName: String
     public let conflictDate: String
@@ -85,7 +85,7 @@ public struct FormEquipmentConflict: Identifiable, Hashable, Codable {
 /// APIClient. Antes tenía `inventoryId`/`name`/`suggestedQty` que no
 /// matcheaban el payload — el decode fallaba silencioso y la lista siempre
 /// venía vacía, por eso el usuario no veía las sugerencias.
-public struct FormEquipmentSuggestion: Identifiable, Hashable, Codable {
+public struct FormEquipmentSuggestion: Identifiable, Hashable, Codable, Sendable {
     public let id: String
     public let ingredientName: String
     public let currentStock: Double
@@ -94,7 +94,7 @@ public struct FormEquipmentSuggestion: Identifiable, Hashable, Codable {
     public let suggestedQuantity: Double
 }
 
-public struct FormSupplySuggestion: Identifiable, Hashable, Codable {
+public struct FormSupplySuggestion: Identifiable, Hashable, Codable, Sendable {
     public let id: String
     public let ingredientName: String
     public let currentStock: Double
@@ -153,6 +153,7 @@ public struct SelectedStaffAssignment: Identifiable, Hashable {
 
 // MARK: - Event Form View Model
 
+@MainActor
 @Observable
 public final class EventFormViewModel {
 
@@ -875,15 +876,16 @@ public final class EventFormViewModel {
             ] },
             "num_people": numPeople
         ]
+        let encodedBody = AnyCodable(body)
 
         do {
             async let fetchEquipSugg: [FormEquipmentSuggestion] = apiClient.post(
                 Endpoint.equipmentSuggestions,
-                body: AnyCodable(body)
+                body: encodedBody
             )
             async let fetchSupplySugg: [FormSupplySuggestion] = apiClient.post(
                 Endpoint.supplySuggestions,
-                body: AnyCodable(body)
+                body: encodedBody
             )
 
             let (equipSugg, supplySugg) = try await (fetchEquipSugg, fetchSupplySugg)

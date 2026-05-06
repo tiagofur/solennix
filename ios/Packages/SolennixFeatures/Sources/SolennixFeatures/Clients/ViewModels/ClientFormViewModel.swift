@@ -5,6 +5,7 @@ import SolennixNetwork
 
 // MARK: - Client Form View Model
 
+@MainActor
 @Observable
 public final class ClientFormViewModel {
 

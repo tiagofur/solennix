@@ -130,7 +130,7 @@ public actor APIClient {
 
     /// Fetch a paginated response, with fallback to plain array.
     /// Use this for list views that expect PaginatedResponse but the backend may return a plain array.
-    public func getPaginated<T: Decodable>(
+    public func getPaginated<T: Decodable & Sendable>(
         _ endpoint: String,
         params: [String: String]? = nil
     ) async throws -> PaginatedResponse<T> {
@@ -153,7 +153,7 @@ public actor APIClient {
 
     /// Fetch all items from a paginated endpoint by requesting a high limit.
     /// Handles both paginated (`{ "data": [...] }`) and plain array responses.
-    public func getAll<T: Decodable>(
+    public func getAll<T: Decodable & Sendable>(
         _ endpoint: String,
         params: [String: String]? = nil
     ) async throws -> [T] {

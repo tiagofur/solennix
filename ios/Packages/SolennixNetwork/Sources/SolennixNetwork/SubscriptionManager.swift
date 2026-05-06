@@ -41,6 +41,7 @@ public enum SubscriptionError: LocalizedError, Sendable {
 /// RevenueCat unifica Apple/Google purchases y se sincroniza con el backend
 /// via webhooks. El backend es la fuente de verdad del plan del usuario.
 /// Inyectar via `@Environment(SubscriptionManager.self)`.
+@MainActor
 @Observable
 public final class SubscriptionManager {
 

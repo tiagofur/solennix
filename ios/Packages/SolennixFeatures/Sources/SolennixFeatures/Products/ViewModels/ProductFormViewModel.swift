@@ -58,6 +58,7 @@ public struct RecipeItem: Identifiable, Hashable {
 
 // MARK: - Product Form View Model
 
+@MainActor
 @Observable
 public final class ProductFormViewModel {
 

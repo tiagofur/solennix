@@ -3,6 +3,7 @@ import UIKit
 import SolennixCore
 import SolennixNetwork
 
+@MainActor
 @Observable
 public final class QuickQuoteViewModel {
     let apiClient: APIClient

@@ -116,17 +116,18 @@ public final class LiveActivityManager {
     private func observePushToken(for activity: Activity<SolennixEventAttributes>, eventId: String) {
         tokenObservers[eventId]?.cancel()
 
+        nonisolated(unsafe) let capturedActivity = activity
         let task = Task { [weak self] in
             // Stream paralelo: tokens y estado.
             await withTaskGroup(of: Void.self) { group in
-                group.addTask { [weak self] in
-                    for await tokenData in activity.pushTokenUpdates {
+                group.addTask { @MainActor [weak self] in
+                    for await tokenData in capturedActivity.pushTokenUpdates {
                         let tokenString = tokenData.map { String(format: "%02x", $0) }.joined()
                         await self?.sendTokenToBackend(eventId: eventId, pushToken: tokenString)
                     }
                 }
-                group.addTask { [weak self] in
-                    for await state in activity.activityStateUpdates {
+                group.addTask { @MainActor [weak self] in
+                    for await state in capturedActivity.activityStateUpdates {
                         if state == .dismissed || state == .ended {
                             await self?.cleanupBackendTokens(eventId: eventId)
                             return
@@ -185,11 +186,12 @@ public final class LiveActivityManager {
         }
 
         // Buscar la actividad activa por ID
-        guard let activity = Activity<SolennixEventAttributes>.activities.first(where: { $0.id == activityId }) else {
+        guard let foundActivity = Activity<SolennixEventAttributes>.activities.first(where: { $0.id == activityId }) else {
             print("[LiveActivityManager] Actividad \(activityId) no encontrada en el sistema")
             activeActivities.removeValue(forKey: eventId)
             return
         }
+        nonisolated(unsafe) let activity = foundActivity
 
         let statusLabel: String
         switch status {
@@ -227,10 +229,11 @@ public final class LiveActivityManager {
             return
         }
 
-        guard let activity = Activity<SolennixEventAttributes>.activities.first(where: { $0.id == activityId }) else {
+        guard let foundActivity = Activity<SolennixEventAttributes>.activities.first(where: { $0.id == activityId }) else {
             activeActivities.removeValue(forKey: eventId)
             return
         }
+        nonisolated(unsafe) let activity = foundActivity
 
         // Estado final
         let startTime = activity.content.state.startTime

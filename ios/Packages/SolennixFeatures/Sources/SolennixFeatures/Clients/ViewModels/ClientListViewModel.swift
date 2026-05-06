@@ -30,6 +30,7 @@ public enum ClientSortKey: String, CaseIterable {
 
 // MARK: - Client List View Model
 
+@MainActor
 @Observable
 public final class ClientListViewModel {
 

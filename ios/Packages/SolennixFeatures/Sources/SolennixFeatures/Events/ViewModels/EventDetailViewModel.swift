@@ -6,6 +6,7 @@ import SolennixNetwork
 
 // MARK: - Event Detail View Model
 
+@MainActor
 @Observable
 public final class EventDetailViewModel {
 

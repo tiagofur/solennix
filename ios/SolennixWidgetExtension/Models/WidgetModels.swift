@@ -80,7 +80,7 @@ struct WidgetKPIs: Codable {
 
 // MARK: - Widget Data Provider
 
-final class WidgetDataProvider {
+final class WidgetDataProvider: @unchecked Sendable {
 
     static let shared = WidgetDataProvider()
 

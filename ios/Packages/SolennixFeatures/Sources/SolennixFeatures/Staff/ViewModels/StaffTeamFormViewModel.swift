@@ -36,6 +36,7 @@ public struct StaffTeamMemberDraft: Identifiable, Hashable {
 
 // MARK: - Staff Team Form View Model
 
+@MainActor
 @Observable
 public final class StaffTeamFormViewModel {
 

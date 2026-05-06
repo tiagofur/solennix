@@ -22,6 +22,7 @@ private struct ContractDefaultsBody: Encodable {
 
 // MARK: - Business Settings View Model
 
+@MainActor
 @Observable
 public final class BusinessSettingsViewModel {
 

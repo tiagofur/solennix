@@ -5,10 +5,10 @@ import SwiftUI
 
 struct EventCountIntent: AppIntent {
 
-    static var title: LocalizedStringResource = "Conteo de Eventos"
-    static var description = IntentDescription("Cuenta cuantos eventos tienes programados")
+    static let title: LocalizedStringResource = "Conteo de Eventos"
+    static let description = IntentDescription("Cuenta cuantos eventos tienes programados")
 
-    static var openAppWhenRun: Bool = false
+    static let openAppWhenRun: Bool = false
 
     @Parameter(title: "Periodo", default: .thisWeek)
     var period: EventPeriod
@@ -59,9 +59,9 @@ enum EventPeriod: String, AppEnum {
     case thisWeek = "esta_semana"
     case thisMonth = "este_mes"
 
-    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Periodo")
+    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Periodo")
 
-    static var caseDisplayRepresentations: [EventPeriod: DisplayRepresentation] = [
+    static let caseDisplayRepresentations: [EventPeriod: DisplayRepresentation] = [
         .today: "Hoy",
         .thisWeek: "Esta semana",
         .thisMonth: "Este mes"

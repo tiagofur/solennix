@@ -9,6 +9,7 @@ private struct PreferredLanguagePayload: Encodable {
 
 // MARK: - Settings View Model
 
+@MainActor
 @Observable
 public final class SettingsViewModel {
 

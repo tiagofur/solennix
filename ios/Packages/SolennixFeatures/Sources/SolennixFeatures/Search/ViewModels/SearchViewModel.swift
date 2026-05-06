@@ -59,6 +59,7 @@ private struct ProductResult: Decodable {
 
 // MARK: - Search View Model
 
+@MainActor
 @Observable
 public final class SearchViewModel {
 

@@ -5,6 +5,7 @@ import SolennixNetwork
 
 // MARK: - Staff Form View Model
 
+@MainActor
 @Observable
 public final class StaffFormViewModel {
 

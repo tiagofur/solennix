@@ -3,7 +3,7 @@ import Foundation
 // MARK: - Route
 
 /// All navigable destinations in the app. Used with NavigationPath / .navigationDestination(for:).
-public enum Route: Hashable {
+public enum Route: Hashable, Sendable {
 
     // MARK: Events
     case eventList

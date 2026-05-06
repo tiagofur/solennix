@@ -23,6 +23,7 @@ public struct ChecklistItem: Identifiable, Sendable, Hashable {
 
 // MARK: - Event Checklist View Model
 
+@MainActor
 @Observable
 public final class EventChecklistViewModel {
 

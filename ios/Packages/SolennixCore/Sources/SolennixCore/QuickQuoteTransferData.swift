@@ -26,6 +26,7 @@ public struct QuickQuoteTransferData {
     }
 }
 
+@MainActor
 @Observable
 public class QuickQuoteDataHolder {
     public static let shared = QuickQuoteDataHolder()

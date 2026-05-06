@@ -16,6 +16,7 @@ public enum EventSortField: String, CaseIterable, Sendable {
 
 // MARK: - Event List View Model
 
+@MainActor
 @Observable
 public final class EventListViewModel {
 

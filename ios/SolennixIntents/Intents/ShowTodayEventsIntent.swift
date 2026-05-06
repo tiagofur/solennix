@@ -5,10 +5,10 @@ import SwiftUI
 
 struct ShowTodayEventsIntent: AppIntent {
 
-    static var title: LocalizedStringResource = "Eventos de Hoy"
-    static var description = IntentDescription("Muestra los eventos programados para hoy")
+    static let title: LocalizedStringResource = "Eventos de Hoy"
+    static let description = IntentDescription("Muestra los eventos programados para hoy")
 
-    static var openAppWhenRun: Bool = false
+    static let openAppWhenRun: Bool = false
 
     nonisolated init() {}
 

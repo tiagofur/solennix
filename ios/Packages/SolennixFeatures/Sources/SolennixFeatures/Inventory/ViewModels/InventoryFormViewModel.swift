@@ -16,6 +16,7 @@ private struct InventoryFormBody: Encodable {
 
 // MARK: - Inventory Form View Model
 
+@MainActor
 @Observable
 public final class InventoryFormViewModel {
 

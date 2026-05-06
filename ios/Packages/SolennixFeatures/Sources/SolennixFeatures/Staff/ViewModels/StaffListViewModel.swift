@@ -21,6 +21,7 @@ public enum StaffSortKey: String, CaseIterable {
 
 // MARK: - Staff List View Model
 
+@MainActor
 @Observable
 public final class StaffListViewModel {
 

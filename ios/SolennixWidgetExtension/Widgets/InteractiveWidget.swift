@@ -9,8 +9,8 @@ import AppIntents
 // MARK: - Mark Event Complete Intent
 
 struct MarkEventCompleteIntent: AppIntent {
-    static var title: LocalizedStringResource = "Marcar Evento Completado"
-    static var description = IntentDescription("Marca un evento como completado")
+    static let title: LocalizedStringResource = "Marcar Evento Completado"
+    static let description = IntentDescription("Marca un evento como completado")
 
     @Parameter(title: "Event ID")
     var eventId: String
@@ -40,8 +40,8 @@ struct MarkEventCompleteIntent: AppIntent {
 
 @available(iOS 18.0, *)
 struct QuickAddPaymentIntent: AppIntent {
-    static var title: LocalizedStringResource = "Agregar Pago Rapido"
-    static var description = IntentDescription("Abre la app para agregar un pago")
+    static let title: LocalizedStringResource = "Agregar Pago Rapido"
+    static let description = IntentDescription("Abre la app para agregar un pago")
 
     @Parameter(title: "Event ID")
     var eventId: String

@@ -5,10 +5,10 @@ import SwiftUI
 
 struct CheckLowStockIntent: AppIntent {
 
-    static var title: LocalizedStringResource = "Revisar Stock Bajo"
-    static var description = IntentDescription("Muestra los items de inventario con stock bajo")
+    static let title: LocalizedStringResource = "Revisar Stock Bajo"
+    static let description = IntentDescription("Muestra los items de inventario con stock bajo")
 
-    static var openAppWhenRun: Bool = false
+    static let openAppWhenRun: Bool = false
 
     nonisolated init() {}
 

@@ -26,6 +26,7 @@ public enum CalendarError: Sendable, Equatable {
 
 // MARK: - Calendar View Model
 
+@MainActor
 @Observable
 public final class CalendarViewModel {
 

@@ -28,7 +28,7 @@ packages:
 
 settings:
   base:
-    SWIFT_VERSION: "5.9"
+    SWIFT_VERSION: "6.0"
     DEVELOPMENT_TEAM: "T5SKULSP2M"
     DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
   configs:
@@ -62,7 +62,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.solennix.app
         MARKETING_VERSION: "1.1.0"
         CURRENT_PROJECT_VERSION: "6"
-        SWIFT_VERSION: "5.9"
+        SWIFT_VERSION: "6.0"
         INFOPLIST_FILE: Solennix/Info.plist
         GENERATE_INFOPLIST_FILE: NO
         CODE_SIGN_ENTITLEMENTS: Solennix/Solennix.entitlements
@@ -93,7 +93,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.solennix.app.notifications
         MARKETING_VERSION: "1.0.4"
         CURRENT_PROJECT_VERSION: "5"
-        SWIFT_VERSION: "5.9"
+        SWIFT_VERSION: "6.0"
         GENERATE_INFOPLIST_FILE: YES
         CODE_SIGN_ENTITLEMENTS: SolennixNotificationServiceExtension/SolennixNotificationServiceExtension.entitlements
 
@@ -111,7 +111,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.solennix.app.widgets
         MARKETING_VERSION: "1.0.4"
         CURRENT_PROJECT_VERSION: "5"
-        SWIFT_VERSION: "5.9"
+        SWIFT_VERSION: "6.0"
         INFOPLIST_FILE: SolennixWidgetExtension/Info.plist
         GENERATE_INFOPLIST_FILE: NO
         CODE_SIGN_ENTITLEMENTS: SolennixWidgetExtension/SolennixWidgetExtension.entitlements
@@ -130,7 +130,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.solennix.app.tests
         GENERATE_INFOPLIST_FILE: YES
-        SWIFT_VERSION: "5.9"
+        SWIFT_VERSION: "6.0"
     dependencies:
       - target: Solennix
       - package: SolennixCore

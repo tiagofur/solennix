@@ -12,6 +12,7 @@ private struct CreateEventFormLinkRequest: Encodable {
 
 // MARK: - Event Form Links View Model
 
+@MainActor
 @Observable
 public final class EventFormLinksViewModel {
 

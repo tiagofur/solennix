@@ -80,7 +80,7 @@ enum PDFConstants {
         return fmt
     }()
 
-    static let isoDateTimeFormatter: ISO8601DateFormatter = {
+    nonisolated(unsafe) static let isoDateTimeFormatter: ISO8601DateFormatter = {
         let fmt = ISO8601DateFormatter()
         fmt.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return fmt

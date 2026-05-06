@@ -8,6 +8,7 @@ import SolennixNetwork
 /// Cachea la disponibilidad por fecha para que el picker de personal pueda
 /// marcar "Ocupado ese dia" sin hacer una llamada por staff.
 /// Usa `@Observable` (iOS 17+) — nada de Combine, nada de @Published.
+@MainActor
 @Observable
 public final class StaffAvailabilityViewModel {
 

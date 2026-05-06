@@ -9,13 +9,13 @@ extension Date {
 
     // MARK: - ISO 8601 Parsing
 
-    private static let isoFormatter: ISO8601DateFormatter = {
+    private nonisolated(unsafe) static let isoFormatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter
     }()
 
-    private static let isoFormatterNoFraction: ISO8601DateFormatter = {
+    private nonisolated(unsafe) static let isoFormatterNoFraction: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime]
         return formatter
@@ -84,7 +84,7 @@ extension Date {
     ///
     /// NSCache is thread-safe for read/write; DateFormatter itself is safe
     /// to READ concurrently (we never mutate an already-cached formatter).
-    private static let formatterCache: NSCache<NSString, DateFormatter> = {
+    private nonisolated(unsafe) static let formatterCache: NSCache<NSString, DateFormatter> = {
         let cache = NSCache<NSString, DateFormatter>()
         cache.countLimit = 32
         return cache

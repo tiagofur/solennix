@@ -24,6 +24,7 @@ private struct CreatePublicLinkBody: Encodable {
 ///
 /// The 404 returned by `GET /public-link` when no active link exists is
 /// treated as a normal empty state, NOT as an error.
+@MainActor
 @Observable
 public final class ClientPortalShareViewModel {
 

@@ -5,6 +5,7 @@ import SolennixNetwork
 
 // MARK: - Staff Team List View Model
 
+@MainActor
 @Observable
 public final class StaffTeamListViewModel {
 

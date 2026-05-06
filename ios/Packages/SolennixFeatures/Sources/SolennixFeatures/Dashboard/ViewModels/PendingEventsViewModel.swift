@@ -31,6 +31,7 @@ public struct PendingEventWithReason: Identifiable {
 
 // MARK: - Pending Events View Model
 
+@MainActor
 @Observable
 public final class PendingEventsViewModel {
     let apiClient: APIClient

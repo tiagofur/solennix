@@ -6,6 +6,7 @@ import SolennixNetwork
 /// Single view model shared across all auth screens (Login, Register, ForgotPassword, ResetPassword).
 ///
 /// Manages form state, validation (Spanish messages), and API calls via `AuthManager`.
+@MainActor
 @Observable
 public final class AuthViewModel {
 

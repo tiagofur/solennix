@@ -77,6 +77,7 @@ public protocol UserTrackingDelegate: AnyObject, Sendable {
 /// **Dependency cycle resolution:** `AuthManager` holds an optional reference to `APIClient`,
 /// set after both are initialized. `APIClient` reads tokens directly from `KeychainHelper`
 /// (not via `AuthManager`) to avoid the circular dependency.
+@MainActor
 @Observable
 public final class AuthManager {
 
@@ -352,7 +353,7 @@ public final class AuthManager {
     // MARK: - Profile Update
 
     /// Update the current user's profile.
-    public func updateProfile(data: some Encodable) async throws {
+    public func updateProfile(data: sending some Encodable) async throws {
         isLoading = true
         defer { isLoading = false }
 

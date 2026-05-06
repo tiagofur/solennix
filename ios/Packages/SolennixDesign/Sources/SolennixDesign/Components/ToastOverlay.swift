@@ -57,6 +57,7 @@ public enum ToastType {
 // MARK: - Toast Manager
 
 /// Manages toast messages with auto-dismiss after 3 seconds.
+@MainActor
 @Observable
 public final class ToastManager {
     public var toasts: [ToastMessage] = []

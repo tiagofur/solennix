@@ -5,6 +5,7 @@ import SolennixNetwork
 
 // MARK: - Plan Limits Manager
 
+@MainActor
 @Observable
 public final class PlanLimitsManager {
 

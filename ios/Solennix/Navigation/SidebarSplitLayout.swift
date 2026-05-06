@@ -219,7 +219,7 @@ struct SidebarSplitLayout: View {
 extension SidebarSection {
 
     /// Main navigation sections (displayed first in the sidebar).
-    static let mainSections: [SidebarSection] = [
+    nonisolated(unsafe) static let mainSections: [SidebarSection] = [
         .dashboard, .calendar, .events, .clients, .personnel, .products, .inventory, .eventFormLinks
     ]
 }

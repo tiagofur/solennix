@@ -5,10 +5,10 @@ import SwiftUI
 
 struct ShowUpcomingEventsIntent: AppIntent {
 
-    static var title: LocalizedStringResource = "Mostrar Proximos Eventos"
-    static var description = IntentDescription("Muestra tus proximos eventos programados")
+    static let title: LocalizedStringResource = "Mostrar Proximos Eventos"
+    static let description = IntentDescription("Muestra tus proximos eventos programados")
 
-    static var openAppWhenRun: Bool = false
+    static let openAppWhenRun: Bool = false
 
     nonisolated init() {}
 

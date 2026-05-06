@@ -21,6 +21,7 @@ public enum ProductSortKey: String, CaseIterable {
 
 // MARK: - Product List View Model
 
+@MainActor
 @Observable
 public final class ProductListViewModel {
 

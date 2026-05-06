@@ -18,6 +18,7 @@ private struct NotificationPreferencesBody: Encodable {
 
 // MARK: - Notification Preferences View Model
 
+@MainActor
 @Observable
 public final class NotificationPreferencesViewModel {
 
