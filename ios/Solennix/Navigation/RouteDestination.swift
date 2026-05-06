@@ -90,6 +90,10 @@ struct RouteDestination: View {
         case .eventFormLinks:
             EventFormLinksView(apiClient: apiClient)
 
+        // Payment Submissions
+        case .paymentInbox:
+            PaymentInboxView(apiClient: apiClient)
+
         // Tools
         case .search(let query):
             SearchView(initialQuery: query)

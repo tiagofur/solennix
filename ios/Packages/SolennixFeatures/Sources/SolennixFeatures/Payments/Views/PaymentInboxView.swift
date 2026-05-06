@@ -99,7 +99,7 @@ public struct PaymentInboxView: View {
 
             // Receipt link
             if let urlString = submission.receiptFileUrl,
-               let url = APIClient.resolveURL(urlString) {
+               let url = URL(string: urlString) {
                 Link(destination: url) {
                     Label("Ver comprobante", systemImage: "paperclip")
                         .font(.caption)
@@ -258,12 +258,9 @@ public struct PaymentInboxView: View {
     }
 
     private func formatDate(_ isoString: String) -> String {
-        let isoFormatterFull = ISO8601DateFormatter()
-        isoFormatterFull.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let isoFormatterBasic = ISO8601DateFormatter()
-        isoFormatterBasic.formatOptions = [.withInternetDateTime]
-        let date = isoFormatterFull.date(from: isoString) ?? isoFormatterBasic.date(from: isoString)
-        if let date {
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = isoFormatter.date(from: isoString) {
             let formatter = DateFormatter()
             formatter.dateStyle = .medium
             formatter.timeStyle = .short

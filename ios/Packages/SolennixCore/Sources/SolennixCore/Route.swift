@@ -54,6 +54,9 @@ public enum Route: Hashable {
     // MARK: Event Form Links
     case eventFormLinks
 
+    // MARK: Payment Submissions (organizer inbox)
+    case paymentInbox
+
     // MARK: Settings Sub-Routes
     case editProfile
     case changePassword
