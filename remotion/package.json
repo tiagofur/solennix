@@ -11,7 +11,10 @@
     "render:cotizacion": "remotion render CotizacionTutorial out/cotizacion-tutorial.mp4",
     "render:cotizacion:gif": "remotion render CotizacionTutorial out/cotizacion-tutorial.gif --image-format=png",
     "render:all": "npm run render && npm run render:product && npm run render:cotizacion",
-    "render:chaos": "remotion render ChaosToOrder-Reel out/chaos-to-order.mp4"
+    "render:chaos": "remotion render ChaosToOrder-Reel out/chaos-to-order.mp4",
+    "render:v05": "remotion render V05-Quotes-Reel out/v05-quotes-reel.mp4",
+    "render:v06": "remotion render V06-Payments-Reel out/v06-payments-reel.mp4",
+    "render:v07": "remotion render V07-Inventory-Reel out/v07-inventory-reel.mp4"
   },
   "dependencies": {
     "remotion": "^4.0.457",

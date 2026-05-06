@@ -4,9 +4,9 @@ tags:
   - video
   - v06
 date: 2026-04-21
-status: concept
-duration: 20s
-screenshots: pending
+status: done
+duration: 16s
+screenshots: done
 ---
 
 # V06 — Control de Pagos
@@ -57,14 +57,16 @@ Organizadores que no saben cuánto les deben porque lo rastrean en notas o mensa
 
 | Archivo | Qué mostrar | Listo |
 |---------|-------------|-------|
-| `dashboard-alerts.png` | Alertas de cobros pendientes | ⬜ |
-| `payments-tab.png` | Tab de pagos de un evento | ⬜ |
+| `01-dashboard.png` | Dashboard con alertas y cobros pendientes | ✅ |
+| `05-evento-pagos.png` | Tab de pagos de un evento | ✅ |
 
 ## Notas Técnicas
 
 - Badge pulsante: `interpolate()` con `scale` entre 1.0 y 1.15 en loop
 - Highlight en alertas: overlay con `opacity` interpolado
 - Checkmarks: aparecen con `spring()` animation
+- Composición implementada: `V06-Payments-Reel`
+- Output renderizado: `remotion/out/v06-payments-reel.mp4`
 
 ---
 

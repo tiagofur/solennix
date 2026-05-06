@@ -18,6 +18,9 @@ import {
   TestimonialTemplateSchema,
   CountdownLaunchSchema,
   ChaosToOrderSchema,
+  V05QuotesSchema,
+  V06PaymentsSchema,
+  V07InventorySchema,
 } from './schema';
 import { FPS, DURATION_FRAMES, COTIZACION_DURATION_FRAMES, SOCIAL_FPS, SOCIAL_FORMATS } from './constants';
 import { BrandIntro } from './social/BrandIntro';
@@ -37,6 +40,9 @@ import { V02_Clients } from './marketing/V03Clients';
 import { V02_ClientsSquare } from './marketing/V03ClientsSquare';
 import { V04_Calendar } from './marketing/V04Calendar';
 import { V04_CalendarSquare } from './marketing/V04CalendarSquare';
+import { V05_Quotes } from './marketing/V05Quotes';
+import { V06_Payments } from './marketing/V06Payments';
+import { V07_Inventory } from './marketing/V07Inventory';
 
 export const RemotionRoot = () => {
   return (
@@ -372,6 +378,74 @@ export const RemotionRoot = () => {
           fps={SOCIAL_FPS}
           width={SOCIAL_FORMATS.REEL.width}
           height={SOCIAL_FORMATS.REEL.height}
+        />
+        <Composition
+          id="V05-Quotes-Reel"
+          component={V05_Quotes}
+          schema={V05QuotesSchema}
+          durationInFrames={510}
+          fps={SOCIAL_FPS}
+          width={SOCIAL_FORMATS.REEL.width}
+          height={SOCIAL_FORMATS.REEL.height}
+          defaultProps={{
+            hookTimes: ['30 minutos', '1 hora', 'medio día'],
+            clientName: 'Sofía Martínez',
+            eventName: 'Boda Jardín Primavera',
+            items: [
+              { name: 'Banquete premium', description: '120 invitados', price: '$42,000' },
+              { name: 'Decoración floral', description: 'Mesa principal + ceremonia', price: '$18,500' },
+              { name: 'DJ + audio', description: '5 horas de servicio', price: '$9,800' },
+            ],
+            totalAmount: '$70,300',
+            url: 'solennix.com',
+          }}
+        />
+        <Composition
+          id="V06-Payments-Reel"
+          component={V06_Payments}
+          schema={V06PaymentsSchema}
+          durationInFrames={480}
+          fps={SOCIAL_FPS}
+          width={SOCIAL_FORMATS.REEL.width}
+          height={SOCIAL_FORMATS.REEL.height}
+          defaultProps={{
+            alertCount: 4,
+            pendingAmount: '$28,400',
+            payments: [
+              { label: 'Anticipo inicial', method: 'Transferencia', amount: '$12,000', status: 'paid' },
+              { label: 'Segundo pago', method: 'Tarjeta', amount: '$8,400', status: 'paid' },
+              { label: 'Saldo final', method: 'Pendiente', amount: '$8,000', status: 'pending' },
+            ],
+            url: 'solennix.com',
+          }}
+        />
+        <Composition
+          id="V07-Inventory-Reel"
+          component={V07_Inventory}
+          schema={V07InventorySchema}
+          durationInFrames={560}
+          fps={SOCIAL_FPS}
+          width={SOCIAL_FORMATS.REEL.width}
+          height={SOCIAL_FORMATS.REEL.height}
+          defaultProps={{
+            inventoryItems: [
+              { name: 'Sillas Tiffany', category: 'Mobiliario', stock: 140, minimum: 100, unit: 'pz' },
+              { name: 'Manteles marfil', category: 'Textiles', stock: 32, minimum: 18, unit: 'pz' },
+              { name: 'Copas de cristal', category: 'Cristalería', stock: 18, minimum: 24, unit: 'pz' },
+            ],
+            lowStockItem: {
+              name: 'Copas de cristal',
+              stock: 18,
+              minimum: 24,
+              unit: 'pz',
+            },
+            equipmentAssignments: [
+              { name: 'Cabina DJ', quantity: '1 set', notes: 'Escenario principal' },
+              { name: 'Letras gigantes', quantity: '4 piezas', notes: 'Recepción jardín' },
+              { name: 'Luces uplight', quantity: '12 piezas', notes: 'Pasillo + pista' },
+            ],
+            url: 'solennix.com',
+          }}
         />
         <Composition
           id="V04-Calendar-Square"

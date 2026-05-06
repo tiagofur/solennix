@@ -165,3 +165,82 @@ export const ChaosToOrderSchema = z.object({
   url: z.string().default('solennix.com'),
 });
 export type ChaosToOrderProps = z.infer<typeof ChaosToOrderSchema>;
+
+export const V05QuotesSchema = z.object({
+  hookTimes: z.array(z.string()).default(['30 minutos', '1 hora', 'medio día']),
+  clientName: z.string().default('Sofía Martínez'),
+  eventName: z.string().default('Boda Jardín Primavera'),
+  items: z.array(
+    z.object({
+      name: z.string(),
+      description: z.string(),
+      price: z.string(),
+    }),
+  ).default([
+    { name: 'Banquete premium', description: '120 invitados', price: '$42,000' },
+    { name: 'Decoración floral', description: 'Mesa principal + ceremonia', price: '$18,500' },
+    { name: 'DJ + audio', description: '5 horas de servicio', price: '$9,800' },
+  ]),
+  totalAmount: z.string().default('$70,300'),
+  url: z.string().default('solennix.com'),
+});
+export type V05QuotesProps = z.infer<typeof V05QuotesSchema>;
+
+export const V06PaymentsSchema = z.object({
+  alertCount: z.number().default(4),
+  pendingAmount: z.string().default('$28,400'),
+  payments: z.array(
+    z.object({
+      label: z.string(),
+      method: z.string(),
+      amount: z.string(),
+      status: z.enum(['paid', 'pending']),
+    }),
+  ).default([
+    { label: 'Anticipo inicial', method: 'Transferencia', amount: '$12,000', status: 'paid' },
+    { label: 'Segundo pago', method: 'Tarjeta', amount: '$8,400', status: 'paid' },
+    { label: 'Saldo final', method: 'Pendiente', amount: '$8,000', status: 'pending' },
+  ]),
+  url: z.string().default('solennix.com'),
+});
+export type V06PaymentsProps = z.infer<typeof V06PaymentsSchema>;
+
+export const V07InventorySchema = z.object({
+  inventoryItems: z.array(
+    z.object({
+      name: z.string(),
+      category: z.string(),
+      stock: z.number(),
+      minimum: z.number(),
+      unit: z.string(),
+    }),
+  ).default([
+    { name: 'Sillas Tiffany', category: 'Mobiliario', stock: 140, minimum: 100, unit: 'pz' },
+    { name: 'Manteles marfil', category: 'Textiles', stock: 32, minimum: 18, unit: 'pz' },
+    { name: 'Copas de cristal', category: 'Cristalería', stock: 18, minimum: 24, unit: 'pz' },
+  ]),
+  lowStockItem: z.object({
+    name: z.string(),
+    stock: z.number(),
+    minimum: z.number(),
+    unit: z.string(),
+  }).default({
+    name: 'Copas de cristal',
+    stock: 18,
+    minimum: 24,
+    unit: 'pz',
+  }),
+  equipmentAssignments: z.array(
+    z.object({
+      name: z.string(),
+      quantity: z.string(),
+      notes: z.string(),
+    }),
+  ).default([
+    { name: 'Cabina DJ', quantity: '1 set', notes: 'Escenario principal' },
+    { name: 'Letras gigantes', quantity: '4 piezas', notes: 'Recepción jardín' },
+    { name: 'Luces uplight', quantity: '12 piezas', notes: 'Pasillo + pista' },
+  ]),
+  url: z.string().default('solennix.com'),
+});
+export type V07InventoryProps = z.infer<typeof V07InventorySchema>;

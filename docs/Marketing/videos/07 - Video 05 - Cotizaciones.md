@@ -4,9 +4,9 @@ tags:
   - video
   - v05
 date: 2026-04-21
-status: concept
-duration: 25s
-screenshots: pending
+status: done
+duration: 17s
+screenshots: mixed
 ---
 
 # V05 — Cotizaciones en Segundos
@@ -59,15 +59,17 @@ Organizadores que arman presupuestos a mano en Excel o Word perdiendo 30+ minuto
 
 | Archivo | Qué mostrar | Listo |
 |---------|-------------|-------|
-| `quick-quote.png` | Pantalla de cotización rápida con productos | ⬜ |
-| `quote-pdf.png` | PDF generado profesional | ⬜ |
+| Mockup animado en código | Pantalla de cotización rápida con productos | ✅ |
+| Mockup animado en código | PDF generado profesional | ✅ |
 
 ## Notas Técnicas
 
 - Cuenta regresiva inicial: `interpolate()` con texto dinámico
-- Productos agregándose: `Sequence` con offset escalonado
-- Efecto "impresora": slide-from-top con clip-path animado
+- Productos agregándose: reveal escalonado por frame
+- Efecto "impresora": reveal vertical del PDF
 - Count-up en total: `interpolate(frame, [0, 60], [0, totalPrice])`
+- Composición implementada: `V05-Quotes-Reel`
+- Output renderizado: `remotion/out/v05-quotes-reel.mp4`
 
 ---
 

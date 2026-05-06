@@ -4,9 +4,9 @@ tags:
   - video
   - v07
 date: 2026-04-21
-status: concept
-duration: 20s
-screenshots: pending
+status: done
+duration: 19s
+screenshots: mixed
 ---
 
 # V07 — Inventario y Equipamiento
@@ -62,15 +62,17 @@ Organizadores que descubren que faltan sillas/mesas/equipos el día del evento.
 
 | Archivo | Qué mostrar | Listo |
 |---------|-------------|-------|
-| `inventory-list.png` | Lista de inventario con stocks | ⬜ |
-| `low-stock-alert.png` | Alerta de stock bajo (rojo) | ⬜ |
-| `event-equipment.png` | Equipos asignados a evento | ⬜ |
+| `09-inventario.png` | Lista de inventario con stocks | ✅ |
+| Mockup animado en código | Alerta de stock bajo (rojo) | ✅ |
+| Mockup animado en código | Equipos asignados a evento | ✅ |
 
 ## Notas Técnicas
 
 - Items apareciendo en secuencia: `Sequence` con offsets de ~10 frames
 - Alerta roja pulsante: `interpolate()` con scale y boxShadow
 - Icono warning: rotación suave con `interpolate()`
+- Composición implementada: `V07-Inventory-Reel`
+- Output renderizado: `remotion/out/v07-inventory-reel.mp4`
 
 ---
 
