@@ -505,6 +505,8 @@ export const Settings: React.FC = () => {
                 <div className="pt-6 border-t border-border">
                   <Link
                     to="/help"
+                    target="_blank"
+                    rel="noreferrer"
                     className="flex items-start justify-between gap-4 rounded-2xl border border-border bg-surface-alt px-4 py-4 transition-colors hover:bg-surface"
                   >
                     <div>

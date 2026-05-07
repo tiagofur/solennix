@@ -107,6 +107,8 @@ describe('Settings', () => {
     renderSettings();
     const helpLink = screen.getByRole('link', { name: /Centro de ayuda/i });
     expect(helpLink).toHaveAttribute('href', '/help');
+    expect(helpLink).toHaveAttribute('target', '_blank');
+    expect(helpLink).toHaveAttribute('rel', 'noreferrer');
   });
 
   it('renders all tab buttons', () => {
