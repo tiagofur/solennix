@@ -347,6 +347,9 @@
     "Apariencia" : {
 
     },
+    "Aprobar" : {
+
+    },
     "Armá cuadrillas para asignarlas de un toque" : {
 
     },
@@ -3760,6 +3763,9 @@
     "Comprar" : {
 
     },
+    "Comprobantes" : {
+
+    },
     "Confirmado" : {
 
     },
@@ -3827,6 +3833,9 @@
 
     },
     "Crear un Evento" : {
+
+    },
+    "Cuando un cliente envíe un comprobante de transferencia, aparecerá aquí para tu revisión." : {
 
     },
     "Cuenta" : {
@@ -9159,6 +9168,12 @@
     "Mostrar stock bajo" : {
 
     },
+    "Motivo del rechazo" : {
+
+    },
+    "Motivo: %@" : {
+
+    },
     "Necesario: %@ %@" : {
       "localizations" : {
         "es" : {
@@ -9341,6 +9356,12 @@
 
     },
     "Quitar liderazgo" : {
+
+    },
+    "Rechazar" : {
+
+    },
+    "Rechazar comprobante" : {
 
     },
     "Recomendado" : {
@@ -11784,6 +11805,9 @@
     "Siguiente" : {
 
     },
+    "Sin comprobantes pendientes" : {
+
+    },
     "Sin costo (reaprovechado)" : {
 
     },
@@ -11975,6 +11999,9 @@
 
     },
     "Vence el %@" : {
+
+    },
+    "Ver comprobante" : {
 
     },
     "Ver Detalle" : {

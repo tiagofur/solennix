@@ -1009,7 +1009,7 @@ public struct EventDetailView: View {
                       spacing: Spacing.sm) {
                 ForEach(pdfOptions, id: \.key) { option in
                     Button {
-                        generateAndSharePDF(key: option.key, event: event)
+                        Task { await generateAndSharePDF(key: option.key, event: event) }
                     } label: {
                         VStack(spacing: Spacing.xs) {
                             Image(systemName: option.icon)
@@ -1082,97 +1082,43 @@ public struct EventDetailView: View {
         ]
     }
 
-    // MARK: - PDF Generation & Share
+    // MARK: - PDF Download & Share
 
-    private func generateAndSharePDF(key: String, event: Event) {
-        let profile = authManager.currentUser
-        let productNames = viewModel.productMap.mapValues { $0.name }
+    private func generateAndSharePDF(key: String, event: Event) async {
+        let pdfType: String
         let filename: String
-        let pdfData: Data
+        let sanitized = sanitizedFileComponent(event.serviceType)
 
         switch key {
         case "cotizacion":
-            guard let client = viewModel.client else {
-                toastManager.show(message: tr("events.detail.error.client_unavailable", "Cliente no disponible"), type: .error)
-                return
-            }
-            filename = trf("events.detail.documents.filename.quote", "Quote_%@.pdf", sanitizedFileComponent(event.serviceType))
-            pdfData = BudgetPDFGenerator.generate(
-                event: event,
-                client: client,
-                profile: profile,
-                products: viewModel.products,
-                extras: viewModel.extras,
-                productNames: productNames
-            )
+            pdfType = "budget"
+            filename = trf("events.detail.documents.filename.quote", "Quote_%@.pdf", sanitized)
         case "contrato":
-            guard let client = viewModel.client else {
-                toastManager.show(message: tr("events.detail.error.client_unavailable", "Cliente no disponible"), type: .error)
-                return
-            }
-            filename = trf("events.detail.documents.filename.contract", "Contract_%@.pdf", sanitizedFileComponent(client.name))
-            pdfData = ContractPDFGenerator.generate(
-                event: event,
-                client: client,
-                profile: profile,
-                products: viewModel.products,
-                payments: viewModel.payments,
-                productNames: productNames
-            )
+            pdfType = "contract"
+            let clientName = viewModel.client?.name ?? event.serviceType
+            filename = trf("events.detail.documents.filename.contract", "Contract_%@.pdf", sanitizedFileComponent(clientName))
         case "insumos":
-            let ingredients = viewModel.supplies.map { s in
-                ShoppingListPDFGenerator.Ingredient(
-                    name: s.supplyName ?? tr("events.detail.supplies.fallback", "Insumo"),
-                    quantity: s.quantity,
-                    unit: s.unit ?? ""
-                )
-            }
-            filename = trf("events.detail.documents.filename.supplies", "Supplies_%@.pdf", sanitizedFileComponent(event.serviceType))
-            pdfData = ShoppingListPDFGenerator.generate(
-                event: event,
-                profile: profile,
-                ingredients: ingredients
-            )
+            pdfType = "shopping-list"
+            filename = trf("events.detail.documents.filename.supplies", "Supplies_%@.pdf", sanitized)
         case "equipo":
-            filename = trf("events.detail.documents.filename.equipment", "Equipment_%@.pdf", sanitizedFileComponent(event.serviceType))
-            pdfData = EquipmentListPDFGenerator.generate(
-                event: event,
-                client: viewModel.client,
-                profile: profile,
-                equipment: viewModel.equipment
-            )
+            pdfType = "equipment-list"
+            filename = trf("events.detail.documents.filename.equipment", "Equipment_%@.pdf", sanitized)
         case "checklist":
-            let ingredients = viewModel.supplies.map { s in
-                ShoppingListPDFGenerator.Ingredient(
-                    name: s.supplyName ?? tr("events.detail.supplies.fallback", "Insumo"),
-                    quantity: s.quantity,
-                    unit: s.unit ?? ""
-                )
-            }
-            filename = trf("events.detail.documents.filename.checklist", "Checklist_%@.pdf", sanitizedFileComponent(event.serviceType))
-            pdfData = ChecklistPDFGenerator.generate(
-                event: event,
-                client: viewModel.client,
-                profile: profile,
-                products: viewModel.products,
-                equipment: viewModel.equipment,
-                ingredients: ingredients,
-                extras: viewModel.extras,
-                productNames: productNames
-            )
+            pdfType = "checklist"
+            filename = trf("events.detail.documents.filename.checklist", "Checklist_%@.pdf", sanitized)
         case "pagos":
-            guard let client = viewModel.client else {
-                toastManager.show(message: tr("events.detail.error.client_unavailable", "Cliente no disponible"), type: .error)
-                return
-            }
-            filename = trf("events.detail.documents.filename.payments", "Payments_%@.pdf", sanitizedFileComponent(client.name))
-            pdfData = PaymentReportPDFGenerator.generate(
-                event: event,
-                client: client,
-                profile: profile,
-                payments: viewModel.payments
-            )
+            pdfType = "payment-report"
+            let clientName = viewModel.client?.name ?? event.serviceType
+            filename = trf("events.detail.documents.filename.payments", "Payments_%@.pdf", sanitizedFileComponent(clientName))
         default:
+            return
+        }
+
+        let pdfData: Data
+        do {
+            pdfData = try await apiClient.getData(Endpoint.eventPDF(eventId, type: pdfType))
+        } catch {
+            toastManager.show(message: tr("events.detail.error.save_pdf", "No se pudo generar el PDF"), type: .error)
             return
         }
 
@@ -1184,18 +1130,19 @@ public struct EventDetailView: View {
             return
         }
 
-        guard let presenter = topMostViewController() else {
-            toastManager.show(message: tr("events.detail.error.share_sheet", "No se pudo presentar el compartir"), type: .error)
-            return
+        await MainActor.run {
+            guard let presenter = topMostViewController() else {
+                toastManager.show(message: tr("events.detail.error.share_sheet", "No se pudo presentar el compartir"), type: .error)
+                return
+            }
+            let activityVC = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
+            if let popover = activityVC.popoverPresentationController {
+                popover.sourceView = presenter.view
+                popover.sourceRect = CGRect(x: presenter.view.bounds.midX, y: presenter.view.bounds.midY, width: 0, height: 0)
+                popover.permittedArrowDirections = []
+            }
+            presenter.present(activityVC, animated: true)
         }
-
-        let activityVC = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
-        if let popover = activityVC.popoverPresentationController {
-            popover.sourceView = presenter.view
-            popover.sourceRect = CGRect(x: presenter.view.bounds.midX, y: presenter.view.bounds.midY, width: 0, height: 0)
-            popover.permittedArrowDirections = []
-        }
-        presenter.present(activityVC, animated: true)
     }
 
     private func topMostViewController() -> UIViewController? {

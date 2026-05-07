@@ -91,6 +91,12 @@ public enum Endpoint {
         "/staff/teams/\(id)"
     }
 
+    // MARK: - PDF Downloads
+
+    public static func eventPDF(_ eventId: String, type: String) -> String {
+        "/events/\(eventId)/pdf/\(type)"
+    }
+
     // MARK: - Products
 
     public static let products = "/products"
