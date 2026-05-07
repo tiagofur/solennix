@@ -68,13 +68,13 @@ func ComputeFinancialSummary(event models.Event, totalPaid float64) FinancialSum
 // PaymentMethodLabel returns the Spanish label for a payment method code.
 func PaymentMethodLabel(method string) string {
 	labels := map[string]string{
-		"cash":      "Efectivo",
-		"transfer":  "Transferencia",
-		"card":      "Tarjeta",
-		"check":     "Cheque",
-		"other":     "Otro",
-		"deposit":   "Depósito",
-		"credit":    "Crédito",
+		"cash":     "Efectivo",
+		"transfer": "Transferencia",
+		"card":     "Tarjeta",
+		"check":    "Cheque",
+		"other":    "Otro",
+		"deposit":  "Depósito",
+		"credit":   "Crédito",
 	}
 	if label, ok := labels[method]; ok {
 		return label
@@ -131,6 +131,7 @@ func (d *PDFDoc) DrawDepositInfo(y float64, fs FinancialSummary) float64 {
 	d.SetFont(FontDejaVuSans, "", 9)
 	d.SetTextColorDefault()
 	text := fmt.Sprintf("Se requiere un anticipo del %.0f%% (%s) para confirmar la reserva.", fs.DepositPercent, FormatCurrency(fs.DepositAmount))
+	d.SetXY(MarginLeft, y)
 	d.MultiCell(ContentWidth, 4, text, "", "", false)
 	y = d.GetY() + 3
 	return y
