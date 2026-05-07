@@ -81,7 +81,6 @@
     <string name="events_detail_more_actions">More actions</string>
     <string name="events_detail_action_edit">Edit</string>
     <string name="events_detail_action_duplicate">Duplicate event</string>
-    <string name="events_detail_action_share_whatsapp">Share on WhatsApp</string>
     <string name="events_detail_action_delete">Delete</string>
     <string name="events_detail_delete_title">Delete event</string>
     <string name="events_detail_delete_message">This action cannot be undone.</string>

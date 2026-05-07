@@ -172,21 +172,6 @@ fun EventDetailScreen(
                                         }
                                     }
                                 )
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.events_detail_action_share_whatsapp)) },
-                                    leadingIcon = {
-                                        Icon(Icons.Default.Share, contentDescription = null)
-                                    },
-                                    onClick = {
-                                        showMoreMenu = false
-                                        shareEventOnWhatsApp(
-                                            context = context,
-                                            event = event,
-                                            client = uiState.client,
-                                            totalPaid = uiState.totalPaid
-                                        )
-                                    }
-                                )
                                 HorizontalDivider()
                                 DropdownMenuItem(
                                     text = {
@@ -1648,60 +1633,6 @@ fun DocumentActionsGrid(
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(modifier = Modifier.size(24.dp))
-        }
-    }
-}
-
-private fun shareEventOnWhatsApp(
-    context: android.content.Context,
-    event: com.creapolis.solennix.core.model.Event,
-    client: Client?,
-    totalPaid: Double
-) {
-    val remaining = (event.totalAmount - totalPaid).coerceAtLeast(0.0)
-    val clientName = client?.name ?: "Cliente"
-    val locationParts = listOfNotNull(
-        event.location?.takeIf { it.isNotBlank() },
-        event.city?.takeIf { it.isNotBlank() }
-    )
-
-    val lines = buildList {
-        add("*Resumen de Evento — Solennix*")
-        add("")
-        add("📋 *${event.serviceType}*")
-        add("👤 Cliente: $clientName")
-        add("📅 Fecha: ${event.eventDate}")
-        add("👥 Personas: ${event.numPeople} PAX")
-        if (locationParts.isNotEmpty()) {
-            add("📍 Lugar: ${locationParts.joinToString(", ")}")
-        }
-        add("")
-        add("💰 Total: ${event.totalAmount.asMXN()}")
-        add("✅ Pagado: ${totalPaid.asMXN()}")
-        if (remaining > 0.01) {
-            add("⏳ Saldo pendiente: ${remaining.asMXN()}")
-        }
-    }
-
-    val message = lines.joinToString("\n")
-
-    // Try the WhatsApp-specific intent first. Falls back to a generic share
-    // sheet if WhatsApp isn't installed so the user still gets somewhere useful.
-    val whatsappIntent = Intent(Intent.ACTION_VIEW).apply {
-        data = Uri.parse("https://wa.me/?text=${Uri.encode(message)}")
-        setPackage("com.whatsapp")
-    }
-    try {
-        context.startActivity(whatsappIntent)
-    } catch (e: android.content.ActivityNotFoundException) {
-        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, message)
-        }
-        try {
-            context.startActivity(Intent.createChooser(shareIntent, "Compartir resumen"))
-        } catch (_: Exception) {
-            Toast.makeText(context, "No hay aplicación para compartir", Toast.LENGTH_SHORT).show()
         }
     }
 }

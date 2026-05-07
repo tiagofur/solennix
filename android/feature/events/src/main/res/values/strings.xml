@@ -81,7 +81,6 @@
     <string name="events_detail_more_actions">Más acciones</string>
     <string name="events_detail_action_edit">Editar</string>
     <string name="events_detail_action_duplicate">Duplicar evento</string>
-    <string name="events_detail_action_share_whatsapp">Compartir por WhatsApp</string>
     <string name="events_detail_action_delete">Eliminar</string>
     <string name="events_detail_delete_title">Eliminar evento</string>
     <string name="events_detail_delete_message">Esta acción no se puede deshacer.</string>
