@@ -120,11 +120,15 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	v1FileServer := http.StripPrefix("/api/v1/uploads/", http.FileServer(http.Dir(uploadDir)))
 	legacyFileServer := http.StripPrefix("/api/uploads/", http.FileServer(http.Dir(uploadDir)))
 	r.Get("/api/v1/uploads/*", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
 		w.Header().Set("Cache-Control", "public, max-age=31536000")
 		w.Header().Set("X-API-Version", "v1")
 		v1FileServer.ServeHTTP(w, r)
 	})
 	r.Get("/api/uploads/*", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
 		w.Header().Set("Cache-Control", "public, max-age=31536000")
 		w.Header().Set("X-API-Version", "v1")
 		legacyFileServer.ServeHTTP(w, r)
@@ -241,7 +245,6 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 
 			// PDF downloads — one endpoint per document type
 			r.Get("/{id}/pdf/budget", pdfHandler.GetBudgetPDF)
-			r.Get("/{id}/pdf/invoice", pdfHandler.GetInvoicePDF)
 			r.Get("/{id}/pdf/payment-report", pdfHandler.GetPaymentReportPDF)
 			r.Get("/{id}/pdf/contract", pdfHandler.GetContractPDF)
 			r.Get("/{id}/pdf/shopping-list", pdfHandler.GetShoppingListPDF)
