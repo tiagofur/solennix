@@ -32,6 +32,7 @@ import com.creapolis.solennix.core.model.extensions.formatQuantity
 import com.creapolis.solennix.core.model.extensions.toPaymentMethodLabel
 import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
+import kotlinx.coroutines.launch
 
 // ==================== Finances Detail Screen ====================
 
@@ -894,6 +895,7 @@ fun EventContractPreviewScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -906,27 +908,26 @@ fun EventContractPreviewScreen(
                 },
                 actions = {
                     val event = uiState.event
-                    val user = uiState.currentUser
                     if (event != null) {
                         IconButton(onClick = {
-                            val client = uiState.client ?: return@IconButton
-                            val file = com.creapolis.solennix.feature.events.pdf.ContractPdfGenerator.generate(
-                                context = context,
-                                event = event,
-                                client = client,
-                                products = uiState.products,
-                                extras = uiState.extras,
-                                user = user
-                            )
-                            val uri = androidx.core.content.FileProvider.getUriForFile(
-                                context, "${context.packageName}.fileprovider", file
-                            )
-                            val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                                type = "application/pdf"
-                                putExtra(android.content.Intent.EXTRA_STREAM, uri)
-                                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            scope.launch {
+                                try {
+                                    val bytes = viewModel.downloadEventPdf("contract")
+                                    val file = java.io.File(context.cacheDir, "contrato_${event.id.take(8)}.pdf")
+                                    file.writeBytes(bytes)
+                                    val uri = androidx.core.content.FileProvider.getUriForFile(
+                                        context, "${context.packageName}.fileprovider", file
+                                    )
+                                    val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                        type = "application/pdf"
+                                        putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                                        addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    }
+                                    context.startActivity(android.content.Intent.createChooser(shareIntent, "Compartir Contrato"))
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Error al generar contrato", Toast.LENGTH_SHORT).show()
+                                }
                             }
-                            context.startActivity(android.content.Intent.createChooser(shareIntent, "Compartir Contrato"))
                         }) {
                             Icon(Icons.Default.Share, contentDescription = "Compartir PDF")
                         }

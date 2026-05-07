@@ -151,6 +151,11 @@ class ApiService @Inject constructor(
         }.body()
     }
 
+    /** GET request that returns raw bytes (e.g. PDF downloads). */
+    suspend fun getBytes(endpoint: String): ByteArray = wrapError {
+        client.httpClient.get(endpoint).body()
+    }
+
     suspend fun upload(
         endpoint: String,
         fileBytes: ByteArray,

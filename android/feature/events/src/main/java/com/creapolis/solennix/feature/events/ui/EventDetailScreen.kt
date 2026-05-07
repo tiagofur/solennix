@@ -56,12 +56,6 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import com.creapolis.solennix.feature.events.pdf.BudgetPdfGenerator
-import com.creapolis.solennix.feature.events.pdf.ChecklistPdfGenerator
-import com.creapolis.solennix.feature.events.pdf.ContractPdfGenerator
-import com.creapolis.solennix.feature.events.pdf.EquipmentListPdfGenerator
-import com.creapolis.solennix.feature.events.pdf.PaymentReportPdfGenerator
-import com.creapolis.solennix.feature.events.pdf.ShoppingListPdfGenerator
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailUiState
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
 import androidx.window.layout.FoldingFeature
@@ -366,6 +360,7 @@ fun EventDetailScreen(
                             DocumentActionsGrid(
                                 uiState = uiState,
                                 context = context,
+                                viewModel = viewModel,
                                 onSharePdf = { file -> sharePdfFile(context, file) }
                             )
                         }
@@ -1537,6 +1532,7 @@ private fun statusColor(status: EventStatus): androidx.compose.ui.graphics.Color
 fun DocumentActionsGrid(
     uiState: EventDetailUiState,
     context: android.content.Context,
+    viewModel: EventDetailViewModel,
     onSharePdf: (File) -> Unit
 ) {
     val event = uiState.event ?: return
@@ -1553,17 +1549,23 @@ fun DocumentActionsGrid(
     var isGenerating by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    // Helper: mueve la generacion del PDF a IO-dispatcher para no freezar la
-    // UI. Los PDFs grandes (Contrato con productos + extras + clausulas) en
-    // main thread congelaban el boton por 1-2s en devices lentos.
-    val generatePdfAsync: (() -> File) -> Unit = { generator ->
+    // Helper: fetches PDF bytes from backend on IO dispatcher, writes to a
+    // temp file in cacheDir, then calls onSharePdf with the File.
+    val downloadPdfAsync: (type: String, filename: String) -> Unit = { type, filename ->
         isGenerating = true
         scope.launch {
             try {
-                val file = withContext(kotlinx.coroutines.Dispatchers.IO) { generator() }
+                val bytes = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    viewModel.downloadEventPdf(type)
+                }
+                val file = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    val f = File(context.cacheDir, filename)
+                    f.writeBytes(bytes)
+                    f
+                }
                 onSharePdf(file)
             } catch (e: Exception) {
-                Toast.makeText(context, "Error generando PDF: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Error descargando PDF: ${e.message}", Toast.LENGTH_SHORT).show()
             } finally {
                 isGenerating = false
             }
@@ -1578,16 +1580,7 @@ fun DocumentActionsGrid(
                 label = "Cotizaci\u00f3n",
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    generatePdfAsync {
-                        BudgetPdfGenerator.generate(
-                            context = context,
-                            event = event,
-                            client = client,
-                            products = uiState.products,
-                            extras = uiState.extras,
-                            user = uiState.currentUser
-                        )
-                    }
+                    downloadPdfAsync("budget", "cotizacion_${event.id}.pdf")
                 }
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -1596,16 +1589,7 @@ fun DocumentActionsGrid(
                 label = "Contrato",
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    generatePdfAsync {
-                        ContractPdfGenerator.generate(
-                            context = context,
-                            event = event,
-                            client = client,
-                            products = uiState.products,
-                            extras = uiState.extras,
-                            user = uiState.currentUser
-                        )
-                    }
+                    downloadPdfAsync("contract", "contrato_${event.id}.pdf")
                 }
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -1614,16 +1598,7 @@ fun DocumentActionsGrid(
                 label = "Checklist",
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    generatePdfAsync {
-                        ChecklistPdfGenerator.generate(
-                            context = context,
-                            event = event,
-                            client = client,
-                            products = uiState.products,
-                            inventoryItems = emptyList(),
-                            user = uiState.currentUser
-                        )
-                    }
+                    downloadPdfAsync("checklist", "checklist_${event.id}.pdf")
                 }
             )
         }
@@ -1635,15 +1610,7 @@ fun DocumentActionsGrid(
                 label = "Pagos",
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    generatePdfAsync {
-                        PaymentReportPdfGenerator.generate(
-                            context = context,
-                            event = event,
-                            client = client,
-                            payments = uiState.payments,
-                            user = uiState.currentUser
-                        )
-                    }
+                    downloadPdfAsync("payment-report", "pagos_${event.id}.pdf")
                 }
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -1652,15 +1619,7 @@ fun DocumentActionsGrid(
                 label = "Compras",
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    generatePdfAsync {
-                        ShoppingListPdfGenerator.generate(
-                            context = context,
-                            event = event,
-                            client = client,
-                            supplies = emptyList(),
-                            user = uiState.currentUser
-                        )
-                    }
+                    downloadPdfAsync("shopping-list", "compras_${event.id}.pdf")
                 }
             )
         }
@@ -1673,15 +1632,7 @@ fun DocumentActionsGrid(
                 label = "Equipo",
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    generatePdfAsync {
-                        EquipmentListPdfGenerator.generate(
-                            context = context,
-                            event = event,
-                            client = client,
-                            inventoryItems = emptyList(),
-                            user = uiState.currentUser
-                        )
-                    }
+                    downloadPdfAsync("equipment-list", "equipo_${event.id}.pdf")
                 }
             )
             Spacer(modifier = Modifier.width(8.dp))

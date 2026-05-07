@@ -41,6 +41,7 @@ object Endpoints {
     fun eventPhotos(id: String) = "events/$id/photos"
     fun eventPhoto(eventId: String, photoId: String) = "events/$eventId/photos/$photoId"
     fun eventPublicLink(eventId: String) = "events/$eventId/public-link"
+    fun eventPdf(eventId: String, type: String) = "events/$eventId/pdf/$type"
     const val EQUIPMENT_CONFLICTS = "events/equipment/conflicts"
     const val EQUIPMENT_SUGGESTIONS = "events/equipment/suggestions"
     const val EQUIPMENT_AVAILABILITY = "events/equipment/availability"
