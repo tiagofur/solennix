@@ -104,7 +104,6 @@ vi.mock('../../services/subscriptionService', () => ({
 vi.mock('../../lib/pdfGenerator', () => ({
   generateBudgetPDF: vi.fn(),
   generateContractPDF: vi.fn(),
-  generateInvoicePDF: vi.fn(),
   generateShoppingListPDF: vi.fn(),
   generatePaymentReportPDF: vi.fn(),
 }));
