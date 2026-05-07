@@ -17,31 +17,31 @@ import (
 // Helpers
 // ---------------------------------------------------------------------------
 
-func strPtr(s string) *string { return &s }
+func strPtr(s string) *string     { return &s }
 func floatPtr(f float64) *float64 { return &f }
-func boolPtr(b bool) *bool { return &b }
+func boolPtr(b bool) *bool        { return &b }
 
 func sampleTokenData() TokenData {
 	profile := models.User{
-		Name:          "Juan Eventos",
-		BusinessName:  strPtr("Mi Empresa de Eventos"),
-		Email:         "info@mieventos.com",
+		Name:         "Juan Eventos",
+		BusinessName: strPtr("Mi Empresa de Eventos"),
+		Email:        "info@mieventos.com",
 	}
 	return TokenData{
 		Event: models.Event{
-			EventDate:    "2026-06-15",
-			StartTime:    strPtr("14:00"),
-			EndTime:      strPtr("22:00"),
-			ServiceType:  "Banquete",
-			NumPeople:    150,
-			Location:     strPtr("Salón Los Arcos"),
-			City:         strPtr("Ciudad de México"),
-			TotalAmount:  45000,
-			Discount:     10,
-			DiscountType: "percent",
-			DepositPercent:    floatPtr(50),
-			CancellationDays:  floatPtr(15),
-			RefundPercent:     floatPtr(80),
+			EventDate:        "2026-06-15",
+			StartTime:        strPtr("14:00"),
+			EndTime:          strPtr("22:00"),
+			ServiceType:      "Banquete",
+			NumPeople:        150,
+			Location:         strPtr("Salón Los Arcos"),
+			City:             strPtr("Ciudad de México"),
+			TotalAmount:      45000,
+			Discount:         10,
+			DiscountType:     "percent",
+			DepositPercent:   floatPtr(50),
+			CancellationDays: floatPtr(15),
+			RefundPercent:    floatPtr(80),
 		},
 		Client: &models.Client{
 			Name:    "María García López",
@@ -394,19 +394,45 @@ func TestNewPDFDoc_WithLogo(t *testing.T) {
 	assert.Greater(t, doc.logoHeight, 0.0)
 }
 
+func TestNewPDFDoc_WithLogo_RendersOutput(t *testing.T) {
+	img := image.NewRGBA(image.Rect(0, 0, 10, 10))
+	for y := 0; y < 10; y++ {
+		for x := 0; x < 10; x++ {
+			img.Set(x, y, color.RGBA{R: 196, G: 162, B: 101, A: 255})
+		}
+	}
+	var buf bytes.Buffer
+	png.Encode(&buf, img)
+	pngBytes := buf.Bytes()
+
+	doc, err := NewPDFDoc("#C4A265", "Test Logo Co", true, pngBytes)
+	assert.NoError(t, err)
+
+	doc.AddPage()
+	y := doc.DrawHeader("Presupuesto")
+	doc.SetFont(FontDejaVuSans, "", 10)
+	doc.SetTextColorDefault()
+	doc.Text(MarginLeft, y+10, "Contenido con logo")
+
+	pdfBytes, err := doc.Output()
+	assert.NoError(t, err)
+	assert.NotEmpty(t, pdfBytes)
+	assert.True(t, strings.HasPrefix(string(pdfBytes[:5]), "%PDF-"), "should be valid PDF")
+}
+
 // ---------------------------------------------------------------------------
 // hexColorToRGB
 // ---------------------------------------------------------------------------
 
 func TestHexColorToRGB(t *testing.T) {
 	tests := []struct {
-		hex string
+		hex     string
 		r, g, b int
 	}{
 		{"#C4A265", 196, 162, 101},
 		{"#FF0000", 255, 0, 0},
 		{"#000000", 0, 0, 0},
-		{"FFFFFF", 255, 255, 255}, // without #
+		{"FFFFFF", 255, 255, 255},  // without #
 		{"invalid", 196, 162, 101}, // fallback to default
 	}
 	for _, tt := range tests {
@@ -455,7 +481,7 @@ func TestEnsureSpace_NotEnoughSpace(t *testing.T) {
 	doc.AddPage()
 
 	y := doc.EnsureSpace(PageHeight-10, 30) // near bottom, needs 30mm
-	assert.Equal(t, MarginTop, y) // new page started
+	assert.Equal(t, MarginTop, y)           // new page started
 }
 
 // ---------------------------------------------------------------------------

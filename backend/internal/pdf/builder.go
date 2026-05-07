@@ -122,7 +122,7 @@ func NewPDFDoc(brandColor, businessName string, showName bool, logoBytes []byte)
 
 // registerLogo parses the logo bytes and registers the image with fpdf.
 func (d *PDFDoc) registerLogo() error {
-	img, _, err := image.Decode(bytes.NewReader(d.LogoBytes))
+	img, format, err := image.Decode(bytes.NewReader(d.LogoBytes))
 	if err != nil {
 		return err
 	}
@@ -148,7 +148,11 @@ func (d *PDFDoc) registerLogo() error {
 
 	// Register image via bytes reader for reuse across pages
 	d.logoImageID = "__solennix_logo__"
-	opts := fpdf.ImageOptions{ImageType: "auto"}
+	imageType := strings.ToUpper(format)
+	if imageType == "JPEG" {
+		imageType = "JPG"
+	}
+	opts := fpdf.ImageOptions{ImageType: imageType}
 	d.RegisterImageOptionsReader(d.logoImageID, opts, bytes.NewReader(d.LogoBytes))
 
 	return nil

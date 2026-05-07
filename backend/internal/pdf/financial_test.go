@@ -397,6 +397,29 @@ func TestGenerateBudget_EmojiInSharedHeaderText(t *testing.T) {
 	assert.NotEmpty(t, pdfBytes)
 }
 
+func TestGenerateBudget_EmojiFormattingSequenceInSharedText(t *testing.T) {
+	profile := sampleProfile()
+	profile.BusinessName = strPtr("Solennix Eventos ❤️")
+
+	event := sampleEvent()
+	event.ServiceType = "Boda 👨‍👩‍👧‍👦"
+
+	client := sampleClient()
+	client.Name = "María ❤️ López"
+
+	data := BudgetData{
+		Event:    event,
+		Client:   client,
+		Profile:  profile,
+		Products: sampleProducts(),
+		Extras:   sampleExtras(),
+	}
+
+	pdfBytes, err := GenerateBudget(data)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, pdfBytes)
+}
+
 func TestGenerateBudget_FixedDiscount(t *testing.T) {
 	event := sampleEvent()
 	event.Discount = 2000
