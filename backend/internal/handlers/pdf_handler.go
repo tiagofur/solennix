@@ -5,6 +5,8 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -32,6 +34,7 @@ type PDFHandler struct {
 	clientRepo  ClientRepository
 	paymentRepo FullPaymentRepository
 	userRepo    FullUserRepository
+	uploadDir   string // base dir for local uploads (resolves relative logo URLs)
 }
 
 func NewPDFHandler(
@@ -39,12 +42,14 @@ func NewPDFHandler(
 	clientRepo ClientRepository,
 	paymentRepo FullPaymentRepository,
 	userRepo FullUserRepository,
+	uploadDir string,
 ) *PDFHandler {
 	return &PDFHandler{
 		eventRepo:   eventRepo,
 		clientRepo:  clientRepo,
 		paymentRepo: paymentRepo,
 		userRepo:    userRepo,
+		uploadDir:   uploadDir,
 	}
 }
 
@@ -184,7 +189,7 @@ func (h *PDFHandler) GetBudgetPDF(w http.ResponseWriter, r *http.Request) {
 		Profile:   ctx.profile,
 		Products:  products,
 		Extras:    extras,
-		LogoBytes: logoURLToBytes(ctx.profile),
+		LogoBytes: h.logoURLToBytes(ctx.profile),
 	})
 	if err != nil {
 		slog.Error("pdf: generate budget", "event_id", ctx.eventID, "error", err)
@@ -213,7 +218,7 @@ func (h *PDFHandler) GetPaymentReportPDF(w http.ResponseWriter, r *http.Request)
 		Client:    ctx.client,
 		Profile:   ctx.profile,
 		Payments:  payments,
-		LogoBytes: logoURLToBytes(ctx.profile),
+		LogoBytes: h.logoURLToBytes(ctx.profile),
 	})
 	if err != nil {
 		slog.Error("pdf: generate payment report", "event_id", ctx.eventID, "error", err)
@@ -249,7 +254,7 @@ func (h *PDFHandler) GetContractPDF(w http.ResponseWriter, r *http.Request) {
 		Profile:   ctx.profile,
 		Products:  products,
 		Payments:  payments,
-		LogoBytes: logoURLToBytes(ctx.profile),
+		LogoBytes: h.logoURLToBytes(ctx.profile),
 	})
 	if err != nil {
 		slog.Error("pdf: generate contract", "event_id", ctx.eventID, "error", err)
@@ -281,7 +286,7 @@ func (h *PDFHandler) GetShoppingListPDF(w http.ResponseWriter, r *http.Request) 
 		Client:      ctx.client,
 		Profile:     ctx.profile,
 		Ingredients: ingredients,
-		LogoBytes:   logoURLToBytes(ctx.profile),
+		LogoBytes:   h.logoURLToBytes(ctx.profile),
 	})
 	if err != nil {
 		slog.Error("pdf: generate shopping list", "event_id", ctx.eventID, "error", err)
@@ -331,7 +336,7 @@ func (h *PDFHandler) GetChecklistPDF(w http.ResponseWriter, r *http.Request) {
 		Extras:    extras,
 		Equipment: equipment,
 		Supplies:  supplies,
-		LogoBytes: logoURLToBytes(ctx.profile),
+		LogoBytes: h.logoURLToBytes(ctx.profile),
 	})
 	if err != nil {
 		slog.Error("pdf: generate checklist", "event_id", ctx.eventID, "error", err)
@@ -360,7 +365,7 @@ func (h *PDFHandler) GetEquipmentListPDF(w http.ResponseWriter, r *http.Request)
 		Client:    ctx.client,
 		Profile:   ctx.profile,
 		Equipment: equipment,
-		LogoBytes: logoURLToBytes(ctx.profile),
+		LogoBytes: h.logoURLToBytes(ctx.profile),
 	})
 	if err != nil {
 		slog.Error("pdf: generate equipment list", "event_id", ctx.eventID, "error", err)
@@ -370,11 +375,30 @@ func (h *PDFHandler) GetEquipmentListPDF(w http.ResponseWriter, r *http.Request)
 	servePDF(w, safeFilename(ctx.event.ServiceType, "lista_equipo"), data)
 }
 
-// logoURLToBytes fetches logo bytes from the profile's LogoURL.
-// Returns nil when no logo is configured — generators treat nil as "no logo".
-func logoURLToBytes(profile *models.User) []byte {
+// logoURLToBytes resolves logo bytes from the profile's LogoURL.
+// Handles both relative local paths (/api/uploads/... or /api/v1/uploads/...)
+// and absolute URLs (S3/CDN). Returns nil when no logo is configured.
+func (h *PDFHandler) logoURLToBytes(profile *models.User) []byte {
 	if profile == nil || profile.LogoURL == nil || *profile.LogoURL == "" {
 		return nil
 	}
-	return fetchLogoBytes(*profile.LogoURL)
+	logoURL := *profile.LogoURL
+
+	// Relative URL → local filesystem (e.g. "/api/uploads/{userID}/file.jpg"
+	// or "/api/v1/uploads/{userID}/file.jpg")
+	for _, prefix := range []string{"/api/v1/uploads/", "/api/uploads/"} {
+		if strings.HasPrefix(logoURL, prefix) {
+			relPath := strings.TrimPrefix(logoURL, prefix)
+			filePath := filepath.Join(h.uploadDir, relPath)
+			b, err := os.ReadFile(filepath.Clean(filePath))
+			if err != nil {
+				slog.Warn("pdf: failed to read local logo", "path", filePath, "err", err)
+				return nil
+			}
+			return b
+		}
+	}
+
+	// Absolute URL (S3 / CDN) → HTTP GET
+	return fetchLogoBytes(logoURL)
 }
