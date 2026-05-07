@@ -2,6 +2,7 @@ package pdf
 
 import (
 	"bytes"
+	"fmt"
 	"image"
 	_ "image/jpeg" // decode JPEG
 	_ "image/png"  // decode PNG
@@ -30,17 +31,59 @@ const (
 // PDFDoc wraps fpdf.Fpdf with Solennix-specific helpers.
 type PDFDoc struct {
 	*fpdf.Fpdf
-	BrandColor     string
-	ShowName       bool
-	BusinessName   string
-	LogoBytes      []byte
-	CurrentPage    int
-	FooterText     string
-	footerSet      bool
-	hasLogo        bool
-	logoWidth      float64
-	logoHeight     float64
-	logoImageID    string
+	BrandColor   string
+	ShowName     bool
+	BusinessName string
+	LogoBytes    []byte
+	CurrentPage  int
+	FooterText   string
+	footerSet    bool
+	hasLogo      bool
+	logoWidth    float64
+	logoHeight   float64
+	logoImageID  string
+}
+
+// sanitizePDFText strips characters that go-pdf/fpdf cannot encode safely.
+// In practice, this avoids panics for non-BMP runes such as emoji.
+func sanitizePDFText(text string) string {
+	if text == "" {
+		return ""
+	}
+
+	var builder strings.Builder
+	builder.Grow(len(text))
+	for _, r := range text {
+		switch {
+		case r == '\r':
+			continue
+		case r == '\n' || r == '\t':
+			builder.WriteRune(r)
+		case r < 0x20 || r == 0x7f:
+			continue
+		case r > 0xFFFF:
+			continue
+		default:
+			builder.WriteRune(r)
+		}
+	}
+
+	return builder.String()
+}
+
+// Text sanitizes the string before forwarding to fpdf.
+func (d *PDFDoc) Text(x, y float64, txt string) {
+	d.Fpdf.Text(x, y, sanitizePDFText(txt))
+}
+
+// MultiCell sanitizes the string before forwarding to fpdf.
+func (d *PDFDoc) MultiCell(w, h float64, txtStr, border, alignStr string, fill bool) {
+	d.Fpdf.MultiCell(w, h, sanitizePDFText(txtStr), border, alignStr, fill)
+}
+
+// GetStringWidth sanitizes the string before measuring it.
+func (d *PDFDoc) GetStringWidth(s string) float64 {
+	return d.Fpdf.GetStringWidth(sanitizePDFText(s))
 }
 
 // NewPDFDoc creates a new PDF document with embedded Unicode fonts and standard config.
@@ -330,9 +373,15 @@ func (d *PDFDoc) EnsureSpace(y, needed float64) float64 {
 
 // Output returns the PDF as raw bytes.
 func (d *PDFDoc) Output() ([]byte, error) {
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			d.Fpdf.SetErrorf("pdf render panic: %v", recovered)
+		}
+	}()
+
 	var buf bytes.Buffer
 	if err := d.Fpdf.Output(&buf); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("render PDF: %w", err)
 	}
 	return buf.Bytes(), nil
 }

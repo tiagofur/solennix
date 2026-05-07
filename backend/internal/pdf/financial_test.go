@@ -15,23 +15,23 @@ import (
 
 func sampleEvent() models.Event {
 	return models.Event{
-		ID:            uuid.MustParse("a1b2c3d4-e5f6-7890-abcd-ef1234567890"),
-		EventDate:     "2026-06-15",
-		StartTime:     strPtr("14:00"),
-		EndTime:       strPtr("22:00"),
-		ServiceType:   "Banquete",
-		NumPeople:     150,
-		TotalAmount:   45000,
-		Discount:      10,
-		DiscountType:  "percent",
-		RequiresInvoice: true,
-		TaxRate:       16,
-		TaxAmount:     0, // will be computed
-		Location:      strPtr("Salón Los Arcos"),
-		City:          strPtr("Ciudad de México"),
-		DepositPercent:    floatPtr(50),
-		CancellationDays:  floatPtr(15),
-		RefundPercent:     floatPtr(80),
+		ID:               uuid.MustParse("a1b2c3d4-e5f6-7890-abcd-ef1234567890"),
+		EventDate:        "2026-06-15",
+		StartTime:        strPtr("14:00"),
+		EndTime:          strPtr("22:00"),
+		ServiceType:      "Banquete",
+		NumPeople:        150,
+		TotalAmount:      45000,
+		Discount:         10,
+		DiscountType:     "percent",
+		RequiresInvoice:  true,
+		TaxRate:          16,
+		TaxAmount:        0, // will be computed
+		Location:         strPtr("Salón Los Arcos"),
+		City:             strPtr("Ciudad de México"),
+		DepositPercent:   floatPtr(50),
+		CancellationDays: floatPtr(15),
+		RefundPercent:    floatPtr(80),
 	}
 }
 
@@ -88,10 +88,10 @@ func TestComputeFinancialSummary_NoDiscount(t *testing.T) {
 
 func TestComputeFinancialSummary_PercentDiscount(t *testing.T) {
 	event := models.Event{
-		TotalAmount: 44000, // total after discount + tax
-		Discount:    10,
-		DiscountType: "percent",
-		TaxAmount:   0,
+		TotalAmount:     44000, // total after discount + tax
+		Discount:        10,
+		DiscountType:    "percent",
+		TaxAmount:       0,
 		RequiresInvoice: false,
 	}
 	fs := ComputeFinancialSummary(event, 0)
@@ -104,10 +104,10 @@ func TestComputeFinancialSummary_PercentDiscount(t *testing.T) {
 
 func TestComputeFinancialSummary_FixedDiscount(t *testing.T) {
 	event := models.Event{
-		TotalAmount: 10000,
-		Discount:    500,
+		TotalAmount:  10000,
+		Discount:     500,
 		DiscountType: "fixed",
-		TaxAmount:   0,
+		TaxAmount:    0,
 	}
 	fs := ComputeFinancialSummary(event, 0)
 
@@ -365,6 +365,29 @@ func TestGenerateBudget_UnicodeChars(t *testing.T) {
 		Event:    event,
 		Client:   client,
 		Profile:  sampleProfile(),
+		Products: sampleProducts(),
+		Extras:   sampleExtras(),
+	}
+
+	pdfBytes, err := GenerateBudget(data)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, pdfBytes)
+}
+
+func TestGenerateBudget_EmojiInSharedHeaderText(t *testing.T) {
+	profile := sampleProfile()
+	profile.BusinessName = strPtr("Solennix Eventos ✨")
+
+	event := sampleEvent()
+	event.ServiceType = "Boda 💍"
+
+	client := sampleClient()
+	client.Name = "María 💖 López"
+
+	data := BudgetData{
+		Event:    event,
+		Client:   client,
+		Profile:  profile,
 		Products: sampleProducts(),
 		Extras:   sampleExtras(),
 	}
