@@ -9578,6 +9578,22 @@
         }
       }
     },
+    "settings.action.help" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Help Center"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Centro de ayuda"
+          }
+        }
+      }
+    },
     "settings.action.logout" : {
       "localizations" : {
         "en" : {
@@ -10150,6 +10166,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abre la página de solicitud de eliminación de cuenta en Safari"
+          }
+        }
+      }
+    },
+    "settings.legal.help_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the Help Center in Safari"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre el centro de ayuda en Safari"
           }
         }
       }

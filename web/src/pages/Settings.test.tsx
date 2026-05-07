@@ -103,6 +103,12 @@ describe('Settings', () => {
     expect(screen.getByText('ana@example.com')).toBeInTheDocument();
   });
 
+  it('keeps help access inside settings', () => {
+    renderSettings();
+    const helpLink = screen.getByRole('link', { name: /Centro de ayuda/i });
+    expect(helpLink).toHaveAttribute('href', '/help');
+  });
+
   it('renders all tab buttons', () => {
     renderSettings();
     expect(screen.getByRole('tab', { name: /Mi Cuenta/i })).toBeInTheDocument();

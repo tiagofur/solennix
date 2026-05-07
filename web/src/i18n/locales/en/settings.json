@@ -18,6 +18,8 @@
     "dark_mode_desc": "Application appearance",
     "language": "Language",
     "language_desc": "Interface language",
+    "help_center": "Help Center",
+    "help_center_desc": "Guides, frequent answers, and product updates.",
     "delete_account": "Delete my account",
     "delete_account_desc": "This action is irreversible and will permanently delete all your data.",
     "password_form": {

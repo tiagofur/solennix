@@ -39,6 +39,7 @@ platform: iOS
 > - **Calendario:** paridad con filtro por estado, retry, navegación e iCal
 > - **Detalle/Dashboard:** restore de upcoming events/top clients y fix en guardado de stock adjustment
 > - **Detalle de evento:** se removió la acción legacy de WhatsApp; la compartición oficial queda en `ClientPortalShareSheet`
+> - **Settings:** el centro de ayuda vive como acción secundaria en Ajustes y la apariencia se mantiene concentrada en esa pantalla
 
 > [!info] Dependencias externas SPM (2026-04-16)
 >

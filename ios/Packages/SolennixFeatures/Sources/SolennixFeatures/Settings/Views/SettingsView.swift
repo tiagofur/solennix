@@ -185,6 +185,24 @@ public struct SettingsView: View {
 
     @ViewBuilder
     private var legalContent: some View {
+        Button {
+            HapticsHelper.play(.selection)
+            if let url = URL(string: "https://solennix.com/help") {
+                legalSheetURL = IdentifiableURL(url)
+            }
+        } label: {
+            HStack {
+                Label(tr("settings.action.help", "Centro de ayuda"), systemImage: "questionmark.circle")
+                    .foregroundStyle(SolennixColors.text)
+                Spacer()
+                Image(systemName: "arrow.up.right.square")
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textTertiary)
+            }
+            .contentShape(Rectangle())
+        }
+        .accessibilityHint(tr("settings.legal.help_hint", "Abre el centro de ayuda en Safari"))
+
         NavigationLink(value: Route.about) {
             Label(tr("settings.action.about", "Acerca de"), systemImage: "info.circle")
         }

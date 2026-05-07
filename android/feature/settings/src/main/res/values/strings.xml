@@ -26,6 +26,7 @@
     <string name="settings_action_contract_defaults">Valores del contrato</string>
     <string name="settings_tab_notifications">Notificaciones</string>
     <string name="settings_action_manage_plan">Gestionar plan</string>
+    <string name="settings_action_help_center">Centro de ayuda</string>
     <string name="settings_action_about">Acerca de</string>
     <string name="settings_action_privacy_policy">Política de privacidad</string>
     <string name="settings_action_terms_conditions">Términos y condiciones</string>

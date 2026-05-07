@@ -40,6 +40,7 @@ fun SettingsScreen(
     onContractDefaults: () -> Unit,
     onNotificationPreferences: () -> Unit = {},
     onPricing: () -> Unit,
+    onHelp: () -> Unit,
     onAbout: () -> Unit,
     onPrivacy: () -> Unit,
     onTerms: () -> Unit,
@@ -176,6 +177,7 @@ fun SettingsScreen(
                             SettingsItem(icon = Icons.Default.Star, label = stringResource(R.string.settings_action_manage_plan), onClick = onPricing)
                         }
                         SettingsSection(title = stringResource(R.string.settings_section_information)) {
+                            SettingsItem(icon = Icons.Default.HelpOutline, label = stringResource(R.string.settings_action_help_center), onClick = onHelp)
                             SettingsItem(icon = Icons.Default.Info, label = stringResource(R.string.settings_action_about), onClick = onAbout)
                             SettingsItem(icon = Icons.Default.Shield, label = stringResource(R.string.settings_action_privacy_policy), onClick = onPrivacy)
                             SettingsItem(icon = Icons.Default.Description, label = stringResource(R.string.settings_action_terms_conditions), onClick = onTerms)
@@ -206,6 +208,7 @@ fun SettingsScreen(
                     SettingsItem(icon = Icons.Default.Star, label = stringResource(R.string.settings_action_manage_plan), onClick = onPricing)
                 }
                 SettingsSection(title = stringResource(R.string.settings_section_information)) {
+                    SettingsItem(icon = Icons.Default.HelpOutline, label = stringResource(R.string.settings_action_help_center), onClick = onHelp)
                     SettingsItem(icon = Icons.Default.Info, label = stringResource(R.string.settings_action_about), onClick = onAbout)
                     SettingsItem(icon = Icons.Default.Shield, label = stringResource(R.string.settings_action_privacy_policy), onClick = onPrivacy)
                     SettingsItem(icon = Icons.Default.Description, label = stringResource(R.string.settings_action_terms_conditions), onClick = onTerms)

@@ -5,23 +5,14 @@ import { Layout } from './Layout';
 import { logError } from '../lib/errorHandler';
 
 const mockSignOut = vi.fn();
-const mockToggleTheme = vi.fn();
 const mockNavigate = vi.fn();
 let mockLocation = { pathname: '/dashboard', search: '' };
-let mockTheme = 'light';
 let mockUser: { name: string; email: string; role?: string } | null = { name: 'Ana', email: 'ana@example.com' };
 
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({
     signOut: mockSignOut,
     user: mockUser,
-  }),
-}));
-
-vi.mock('@/hooks/useTheme', () => ({
-  useTheme: () => ({
-    theme: mockTheme,
-    toggleTheme: mockToggleTheme,
   }),
 }));
 
@@ -58,7 +49,6 @@ describe('Layout', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockLocation = { pathname: '/dashboard', search: '' };
-    mockTheme = 'light';
     mockUser = { name: 'Ana', email: 'ana@example.com' };
     Object.defineProperty(window, 'location', {
       value: { href: '' },
@@ -75,25 +65,10 @@ describe('Layout', () => {
     expect(screen.getByText('ana@example.com')).toBeInTheDocument();
   });
 
-  it('toggles theme from sidebar control', () => {
-    renderLayout();
-    const sidebar = screen.getByRole('complementary', { name: /navegación principal/i });
-    const themeButton = within(sidebar).getByRole('button', { name: /modo oscuro|theme\.switch_dark/i });
-    fireEvent.click(themeButton);
-    expect(mockToggleTheme).toHaveBeenCalled();
-  });
-
   it('signs out from sidebar action', () => {
     renderLayout();
     fireEvent.click(screen.getByRole('button', { name: /cerrar sesión|cerrar sesion|nav\.logout/i }));
     expect(mockSignOut).toHaveBeenCalledTimes(1);
-  });
-
-  it('shows dark theme label in sidebar', () => {
-    mockTheme = 'dark';
-    renderLayout();
-    const sidebar = screen.getByRole('complementary', { name: /navegación principal/i });
-    expect(within(sidebar).getByRole('button', { name: /modo claro|theme\.switch_light/i })).toBeInTheDocument();
   });
 
   it('handles sign out failure and redirects', async () => {
@@ -246,6 +221,7 @@ describe('Layout', () => {
     expect(within(sidebar).getByText(/Productos|nav\.products/)).toBeInTheDocument();
     expect(within(sidebar).getByText(/Inventario|nav\.inventory/)).toBeInTheDocument();
     expect(within(sidebar).getByText(/Configuración|nav\.settings/)).toBeInTheDocument();
+    expect(within(sidebar).queryByText(/Ayuda|Help|nav\.help/)).not.toBeInTheDocument();
   });
 
   it('highlights active nav item based on current route', () => {

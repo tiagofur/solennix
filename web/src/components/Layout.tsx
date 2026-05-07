@@ -12,18 +12,14 @@ import {
   Menu,
   X,
   Search,
-  Moon,
-  Sun,
   Shield,
   ChevronsLeft,
   ChevronsRight,
   Link2,
   UserCog,
-  HelpCircle,
   Wallet,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useTheme } from '@/hooks/useTheme';
 import { logError } from '@/lib/errorHandler';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
@@ -37,7 +33,6 @@ import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 
 export const Layout: React.FC = () => {
   const { signOut, user } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const { t } = useTranslation('common');
   const location = useLocation();
   const navigate = useNavigate();
@@ -107,7 +102,6 @@ export const Layout: React.FC = () => {
     { name: t('nav.inventory'), href: '/inventory', icon: Boxes },
     { name: t('nav.forms'), href: '/event-forms', icon: Link2 },
     { name: t('nav.payments_inbox', { defaultValue: 'Cobros' }), href: '/payments/inbox', icon: Wallet },
-    { name: t('nav.help'), href: '/help', icon: HelpCircle },
     { name: t('nav.settings'), href: '/settings', icon: Settings },
     // Admin link — only visible to admins
     ...(user?.role === 'admin' ? [{ name: t('nav.admin'), href: '/admin', icon: Shield }] : []),
@@ -240,24 +234,12 @@ export const Layout: React.FC = () => {
               </div>
             </div>
 
-            {/* Theme + Logout buttons */}
-            <div className={clsx("mb-2", isCollapsed ? "lg:flex lg:flex-col lg:gap-2 flex gap-2" : "flex gap-2")}>
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="flex-1 flex items-center justify-center px-3 py-2.5 text-sm font-semibold rounded-xl bg-surface hover:bg-surface-alt transition-colors border border-border text-text shadow-sm"
-                aria-label={theme === 'dark' ? t('theme.switch_light') : t('theme.switch_dark')}
-              >
-                {theme === 'dark' ? (
-                  <Sun className="h-4 w-4" aria-hidden="true" />
-                ) : (
-                  <Moon className="h-4 w-4" aria-hidden="true" />
-                )}
-              </button>
+            {/* Sign out button */}
+            <div className="mb-2">
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="flex-1 flex items-center justify-center px-3 py-2.5 text-sm font-semibold rounded-xl bg-surface hover:bg-error/10 hover:text-error hover:border-error/30 transition-colors border border-border text-text shadow-sm"
+                className="w-full flex items-center justify-center px-3 py-2.5 text-sm font-semibold rounded-xl bg-surface hover:bg-error/10 hover:text-error hover:border-error/30 transition-colors border border-border text-text shadow-sm"
                 aria-label={t('nav.logout')}
               >
                 <LogOut className="h-4 w-4" aria-hidden="true" />

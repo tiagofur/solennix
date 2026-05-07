@@ -17,6 +17,7 @@ import {
   Zap,
   ExternalLink,
   Loader2,
+  HelpCircle,
 } from "lucide-react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import clsx from "clsx";
@@ -498,7 +499,22 @@ export const Settings: React.FC = () => {
                   >
                     <option value="es">Español</option>
                     <option value="en">English</option>
-                  </select>
+                    </select>
+                  </div>
+
+                <div className="pt-6 border-t border-border">
+                  <Link
+                    to="/help"
+                    className="flex items-start justify-between gap-4 rounded-2xl border border-border bg-surface-alt px-4 py-4 transition-colors hover:bg-surface"
+                  >
+                    <div>
+                      <p className="font-bold text-text">{t("settings:profile.help_center")}</p>
+                      <p className="text-xs text-text-secondary mt-1">
+                        {t("settings:profile.help_center_desc")}
+                      </p>
+                    </div>
+                    <HelpCircle className="h-5 w-5 shrink-0 text-text-secondary" />
+                  </Link>
                 </div>
 
                 <div className="pt-6 border-t border-border">

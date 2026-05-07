@@ -33,6 +33,12 @@ status: active
 > - **Backend:** se mantiene en `1.0.0` hasta el siguiente cambio canónico de API
 > - **Cambios ancla del release:** `#242` búsqueda por backend, `#244` disponibilidad de equipo, `#245` calendar parity, `#254` dashboard iOS, `#303` `imePadding()` Android
 
+> [!info] 2026-05-06 — Navegación de ayuda y tema más secundaria
+> Se bajó la prioridad visual de acciones de soporte/apariencia para no competir con navegación core.
+> - **Web:** `Ayuda` sale del sidebar principal y queda dentro de `Settings`; el switch de tema se elimina del footer lateral junto a logout.
+> - **iOS:** `Centro de ayuda` queda en Ajustes > Legal/Información y la selección de apariencia sigue concentrada en Ajustes.
+> - **Android:** `Centro de ayuda` queda en Ajustes > Información y el selector de tema sigue concentrado en Ajustes.
+
 > [!success] 2026-05-06 — Limpieza de share manual en detalle de evento móvil
 > Se retiró la acción legacy **Compartir por WhatsApp** del detalle de evento en iOS y Android.
 > - **iOS:** `EventDetailView` ya no arma ni intenta enviar un resumen manual por `whatsapp://`.

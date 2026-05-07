@@ -302,6 +302,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onContractDefaults = { navController.navigate("contract_defaults") },
                     onNotificationPreferences = { navController.navigate("notification_preferences") },
                     onPricing = { navController.navigate("pricing") },
+                    onHelp = { uriHandler.openUri("https://solennix.com/help") },
                     onAbout = { navController.navigate("about") },
                     onPrivacy = { uriHandler.openUri("https://creapolis.dev/privacy-policy") },
                     onTerms = { navController.navigate("terms") },
