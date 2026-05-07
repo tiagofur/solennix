@@ -380,9 +380,11 @@ func (h *PDFHandler) GetEquipmentListPDF(w http.ResponseWriter, r *http.Request)
 // and absolute URLs (S3/CDN). Returns nil when no logo is configured.
 func (h *PDFHandler) logoURLToBytes(profile *models.User) []byte {
 	if profile == nil || profile.LogoURL == nil || *profile.LogoURL == "" {
+		slog.Info("pdf: logo debug — no logo_url on profile")
 		return nil
 	}
 	logoURL := *profile.LogoURL
+	slog.Info("pdf: logo debug — logo_url", "url", logoURL, "uploadDir", h.uploadDir)
 
 	// Relative URL → local filesystem (e.g. "/api/uploads/{userID}/file.jpg"
 	// or "/api/v1/uploads/{userID}/file.jpg")
@@ -390,15 +392,20 @@ func (h *PDFHandler) logoURLToBytes(profile *models.User) []byte {
 		if strings.HasPrefix(logoURL, prefix) {
 			relPath := strings.TrimPrefix(logoURL, prefix)
 			filePath := filepath.Join(h.uploadDir, relPath)
+			slog.Info("pdf: logo debug — trying local path", "filePath", filePath)
 			b, err := os.ReadFile(filepath.Clean(filePath))
 			if err != nil {
 				slog.Warn("pdf: failed to read local logo", "path", filePath, "err", err)
 				return nil
 			}
+			slog.Info("pdf: logo debug — loaded local logo", "bytes", len(b))
 			return b
 		}
 	}
 
 	// Absolute URL (S3 / CDN) → HTTP GET
-	return fetchLogoBytes(logoURL)
+	slog.Info("pdf: logo debug — treating as absolute URL, fetching via HTTP")
+	b := fetchLogoBytes(logoURL)
+	slog.Info("pdf: logo debug — HTTP fetch result", "bytes_nil", b == nil, "bytes_len", len(b))
+	return b
 }
