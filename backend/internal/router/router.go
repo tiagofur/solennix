@@ -288,6 +288,12 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Patch("/{id}", paymentSubmissionHandler.ReviewSubmission)
 		})
 
+		// Backward-compatible alias for older organizer clients still calling the prefixed path.
+		r.Route("/organizer/payment-submissions", func(r chi.Router) {
+			r.Get("/", paymentSubmissionHandler.GetPendingOrganizerInbox)
+			r.Patch("/{id}", paymentSubmissionHandler.ReviewSubmission)
+		})
+
 		// Unavailable Dates
 		r.Route("/unavailable-dates", func(r chi.Router) {
 			r.Get("/", unavailHandler.GetUnavailableDates)

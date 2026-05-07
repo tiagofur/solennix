@@ -109,8 +109,8 @@ status: active
 > - **Repository + Handlers**: 6 methods en repo (Create, GetByID, GetByEventID, GetPendingByOrganizerID, GetHistoryByClientEventID, Update) + 4 endpoints:
 >   - `POST /api/public/events/{token}/payment-submissions` — cliente envía FormData con receipt
 >   - `GET /api/public/events/{token}/payment-submissions?event_id=...&client_id=...` — historial del cliente
->   - `GET /api/organizer/payment-submissions` — pending inbox del organizador
->   - `PUT /api/organizer/payment-submissions/{id}` — review (approve crea auto-Payment row)
+>   - `GET /api/payment-submissions` — pending inbox del organizador
+>   - `PATCH /api/payment-submissions/{id}` — review (approve crea auto-Payment row)
 > - **Web service layer**: `paymentSubmissionService.ts` con 4 async methods tipados, FormData + multipart, query params.
 > - **Testing**: backend `go test ./...` ✅, web `npm run test:run` 1162 tests ✅, CI all stages SUCCESS ✅
 > - **PR #199 merged to main** ✅
@@ -400,7 +400,7 @@ status: active
 - ✅ CRUD public link (`POST/GET/DELETE /api/events/{id}/public-link`)
 - ✅ Vista pública (`GET /api/public/events/{token}`) — rate limited 10/min, tier-gated shapes (gratis vs pro)
 - ✅ Payment submissions (public client side): `POST /api/public/events/{token}/payment-submissions`, `GET /api/public/events/{token}/payment-submissions?event_id=...&client_id=...`
-- ✅ Payment submissions (organizer review): `GET /api/organizer/payment-submissions`, `PUT /api/organizer/payment-submissions/{id}`
+- ✅ Payment submissions (organizer review): `GET /api/payment-submissions`, `PATCH /api/payment-submissions/{id}`
 
 ### Busqueda
 

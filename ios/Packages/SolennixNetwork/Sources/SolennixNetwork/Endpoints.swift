@@ -129,12 +129,12 @@ public enum Endpoint {
 
     // MARK: - Payment Submissions (organizer review inbox)
 
-    /// GET /organizer/payment-submissions — pending submissions for the organizer
-    public static let paymentSubmissionsInbox = "/organizer/payment-submissions"
+    /// GET /payment-submissions — pending submissions for the organizer
+    public static let paymentSubmissionsInbox = "/payment-submissions"
 
-    /// PATCH /organizer/payment-submissions/{id} — approve or reject a submission
+    /// PATCH /payment-submissions/{id} — approve or reject a submission
     public static func paymentSubmission(_ id: String) -> String {
-        "/organizer/payment-submissions/\(id)"
+        "/payment-submissions/\(id)"
     }
 
     // MARK: - Unavailable Dates

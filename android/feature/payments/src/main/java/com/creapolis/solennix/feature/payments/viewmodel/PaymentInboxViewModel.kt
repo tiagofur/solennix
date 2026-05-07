@@ -41,7 +41,7 @@ class PaymentInboxViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = !isRefresh, isRefreshing = isRefresh, error = null) }
             try {
                 val result = apiService.get<Map<String, List<PaymentSubmission>>>(
-                    "organizer/payment-submissions"
+                    "payment-submissions"
                 )
                 _uiState.update {
                     it.copy(
@@ -75,7 +75,7 @@ class PaymentInboxViewModel @Inject constructor(
             _uiState.update { it.copy(actionLoading = id, actionError = null) }
             try {
                 apiService.patch<Map<String, PaymentSubmission>>(
-                    "organizer/payment-submissions/$id",
+                    "payment-submissions/$id",
                     ReviewSubmissionRequest(status = status, rejectionReason = rejectionReason)
                 )
                 _uiState.update { it.copy(actionLoading = null) }

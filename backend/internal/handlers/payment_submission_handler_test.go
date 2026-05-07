@@ -235,7 +235,7 @@ func TestPaymentSubmissionOrganizerReviewValidation(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			bodyJSON, _ := json.Marshal(tc.body)
-			url := fmt.Sprintf("/api/organizer/payment-submissions/%s", tc.submissionID)
+			url := fmt.Sprintf("/api/payment-submissions/%s", tc.submissionID)
 			req := httptest.NewRequest(http.MethodPut, url, bytes.NewReader(bodyJSON))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
@@ -295,11 +295,11 @@ func TestEventFormTokenInvalidVsExpiredSemantics(t *testing.T) {
 // TestStaffTeamTenantIsolation verifies team operations respect tenant boundaries.
 func TestStaffTeamTenantIsolation(t *testing.T) {
 	tests := []struct {
-		name              string
-		operatorUserID    string
-		targetTeamUserID  string
-		shouldSucceed     bool
-		expectedStatus    int
+		name             string
+		operatorUserID   string
+		targetTeamUserID string
+		shouldSucceed    bool
+		expectedStatus   int
 	}{
 		{
 			name:             "same user can modify own team",
@@ -333,12 +333,12 @@ func TestStaffTeamTenantIsolation(t *testing.T) {
 // TestStaffTeamMemberReplacementBehavior verifies team member update semantics.
 func TestStaffTeamMemberReplacementBehavior(t *testing.T) {
 	tests := []struct {
-		name                  string
-		operationDescription  string
-		initialMemberCount    int
-		newMembers            int
-		expectedFinalCount    int
-		expectedBehavior      string
+		name                 string
+		operationDescription string
+		initialMemberCount   int
+		newMembers           int
+		expectedFinalCount   int
+		expectedBehavior     string
 	}{
 		{
 			name:                 "add member to existing team",
@@ -381,9 +381,9 @@ func TestErrorEnvelopeConsistency(t *testing.T) {
 	// Expected: { "error": "error_code", "message": "human readable message" }
 
 	tests := []struct {
-		name             string
-		handlerEndpoint  string
-		expectedFields   []string
+		name            string
+		handlerEndpoint string
+		expectedFields  []string
 	}{
 		{
 			name:            "event_form_handler error envelope",
@@ -418,11 +418,11 @@ func TestErrorEnvelopeConsistency(t *testing.T) {
 // TestPublicHandlerRateLimitingContractDocumented verifies rate limit contracts are explicit.
 func TestPublicHandlerRateLimitingContractDocumented(t *testing.T) {
 	tests := []struct {
-		name              string
-		endpoint          string
-		publicAccess      bool
-		rateLimitPerMin   int
-		rateLimitScope    string
+		name            string
+		endpoint        string
+		publicAccess    bool
+		rateLimitPerMin int
+		rateLimitScope  string
 	}{
 		{
 			name:            "event_form GetFormData rate limit",
@@ -447,7 +447,7 @@ func TestPublicHandlerRateLimitingContractDocumented(t *testing.T) {
 		},
 		{
 			name:            "payment_submission ReviewSubmission rate limit",
-			endpoint:        "PUT /api/organizer/payment-submissions/{id}",
+			endpoint:        "PATCH /api/payment-submissions/{id}",
 			publicAccess:    false,
 			rateLimitPerMin: 30,
 			rateLimitScope:  "user_id (authenticated)",

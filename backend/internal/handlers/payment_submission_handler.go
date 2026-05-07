@@ -260,7 +260,7 @@ func (h *PaymentSubmissionHandler) GetHistoryPublic(w http.ResponseWriter, r *ht
 	writeJSON(w, http.StatusOK, map[string]interface{}{"data": submissions})
 }
 
-// GetPendingOrganizerInbox handles GET /api/organizer/payment-submissions (organizer review inbox)
+// GetPendingOrganizerInbox handles GET /api/payment-submissions (organizer review inbox)
 func (h *PaymentSubmissionHandler) GetPendingOrganizerInbox(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := middleware.GetUserID(ctx)
@@ -284,7 +284,7 @@ type ReviewRequest struct {
 	RejectionReason *string `json:"rejection_reason,omitempty"`
 }
 
-// ReviewSubmission handles PATCH /api/organizer/payment-submissions/{id} (approve/reject)
+// ReviewSubmission handles PATCH /api/payment-submissions/{id} (approve/reject)
 func (h *PaymentSubmissionHandler) ReviewSubmission(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := middleware.GetUserID(ctx)

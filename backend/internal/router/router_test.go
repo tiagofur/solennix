@@ -95,6 +95,8 @@ func TestProtectedRoutesRequireValidBearerToken(t *testing.T) {
 		{"InventoryCreate", http.MethodPost, "/api/inventory"},
 		{"PaymentsList", http.MethodGet, "/api/payments"},
 		{"PaymentsCreate", http.MethodPost, "/api/payments"},
+		{"PaymentSubmissionsInboxLegacy", http.MethodGet, "/api/organizer/payment-submissions"},
+		{"PaymentSubmissionReviewLegacy", http.MethodPatch, "/api/organizer/payment-submissions/123"},
 		{"CurrentUser", http.MethodGet, "/api/auth/me"},
 		{"UpdateProfile", http.MethodPut, "/api/users/me"},
 	}
