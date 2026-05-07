@@ -15,6 +15,7 @@ type ChecklistData struct {
 	Extras    []models.EventExtra
 	Equipment []models.EventEquipment // items to bring (type = equipment)
 	Supplies  []models.EventSupply    // consumables to prepare
+	LogoBytes []byte
 }
 
 // GenerateChecklist creates a Checklist de Carga PDF and returns the raw bytes.
@@ -29,7 +30,7 @@ func GenerateChecklist(data ChecklistData) ([]byte, error) {
 		brandColor = *data.Profile.BrandColor
 	}
 
-	doc, err := NewPDFDoc(brandColor, businessName, showName, nil)
+	doc, err := NewPDFDoc(brandColor, businessName, showName, data.LogoBytes)
 	if err != nil {
 		return nil, fmt.Errorf("create PDF: %w", err)
 	}

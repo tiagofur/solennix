@@ -12,6 +12,7 @@ type EquipmentListData struct {
 	Client    *models.Client
 	Profile   *models.User
 	Equipment []models.EventEquipment
+	LogoBytes []byte
 }
 
 // GenerateEquipmentList creates a Lista de Equipo PDF and returns the raw bytes.
@@ -26,7 +27,7 @@ func GenerateEquipmentList(data EquipmentListData) ([]byte, error) {
 		brandColor = *data.Profile.BrandColor
 	}
 
-	doc, err := NewPDFDoc(brandColor, businessName, showName, nil)
+	doc, err := NewPDFDoc(brandColor, businessName, showName, data.LogoBytes)
 	if err != nil {
 		return nil, fmt.Errorf("create PDF: %w", err)
 	}

@@ -14,6 +14,7 @@ type ShoppingListData struct {
 	Client      *models.Client
 	Profile     *models.User
 	Ingredients []models.ProductIngredient // supply/ingredient items to bring
+	LogoBytes   []byte
 }
 
 // GenerateShoppingList creates a Lista de Insumos PDF and returns the raw bytes.
@@ -28,7 +29,7 @@ func GenerateShoppingList(data ShoppingListData) ([]byte, error) {
 		brandColor = *data.Profile.BrandColor
 	}
 
-	doc, err := NewPDFDoc(brandColor, businessName, showName, nil)
+	doc, err := NewPDFDoc(brandColor, businessName, showName, data.LogoBytes)
 	if err != nil {
 		return nil, fmt.Errorf("create PDF: %w", err)
 	}

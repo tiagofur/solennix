@@ -9,11 +9,12 @@ import (
 
 // BudgetData holds all data needed to generate a Budget PDF.
 type BudgetData struct {
-	Event    models.Event
-	Client   *models.Client
-	Profile  *models.User
-	Products []models.EventProduct
-	Extras   []models.EventExtra
+	Event     models.Event
+	Client    *models.Client
+	Profile   *models.User
+	Products  []models.EventProduct
+	Extras    []models.EventExtra
+	LogoBytes []byte // optional — fetched by handler from profile.logo_url
 }
 
 // GenerateBudget creates a Presupuesto PDF and returns the raw bytes.
@@ -28,7 +29,7 @@ func GenerateBudget(data BudgetData) ([]byte, error) {
 		brandColor = *data.Profile.BrandColor
 	}
 
-	doc, err := NewPDFDoc(brandColor, businessName, showName, nil) // logo fetched separately
+	doc, err := NewPDFDoc(brandColor, businessName, showName, data.LogoBytes)
 	if err != nil {
 		return nil, fmt.Errorf("create PDF: %w", err)
 	}

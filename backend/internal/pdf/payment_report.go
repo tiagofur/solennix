@@ -8,10 +8,11 @@ import (
 
 // PaymentReportData holds all data needed to generate a Payment Report PDF.
 type PaymentReportData struct {
-	Event    models.Event
-	Client   *models.Client
-	Profile  *models.User
-	Payments []models.Payment
+	Event     models.Event
+	Client    *models.Client
+	Profile   *models.User
+	Payments  []models.Payment
+	LogoBytes []byte
 }
 
 // GeneratePaymentReport creates a Reporte de Pagos PDF and returns the raw bytes.
@@ -26,7 +27,7 @@ func GeneratePaymentReport(data PaymentReportData) ([]byte, error) {
 		brandColor = *data.Profile.BrandColor
 	}
 
-	doc, err := NewPDFDoc(brandColor, businessName, showName, nil)
+	doc, err := NewPDFDoc(brandColor, businessName, showName, data.LogoBytes)
 	if err != nil {
 		return nil, fmt.Errorf("create PDF: %w", err)
 	}

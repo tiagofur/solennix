@@ -8,11 +8,12 @@ import (
 
 // ContractData holds all data needed to generate a Contract PDF.
 type ContractData struct {
-	Event    models.Event
-	Client   *models.Client
-	Profile  *models.User
-	Products []models.EventProduct
-	Payments []models.Payment
+	Event     models.Event
+	Client    *models.Client
+	Profile   *models.User
+	Products  []models.EventProduct
+	Payments  []models.Payment
+	LogoBytes []byte
 }
 
 // GenerateContract creates a Contrato PDF by resolving template tokens and
@@ -28,7 +29,7 @@ func GenerateContract(data ContractData) ([]byte, error) {
 		brandColor = *data.Profile.BrandColor
 	}
 
-	doc, err := NewPDFDoc(brandColor, businessName, showName, nil)
+	doc, err := NewPDFDoc(brandColor, businessName, showName, data.LogoBytes)
 	if err != nil {
 		return nil, fmt.Errorf("create PDF: %w", err)
 	}

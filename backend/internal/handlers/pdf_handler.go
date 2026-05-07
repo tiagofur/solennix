@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -53,6 +55,31 @@ func servePDF(w http.ResponseWriter, filename string, data []byte) {
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(data)))
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(data)
+}
+
+// fetchLogoBytes downloads logo bytes from a URL. Returns nil (no error) when
+// the URL is empty or the download fails — logo is optional.
+func fetchLogoBytes(logoURL string) []byte {
+	if logoURL == "" {
+		return nil
+	}
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get(logoURL) //nolint:noctx
+	if err != nil {
+		slog.Warn("pdf: failed to fetch logo", "url", logoURL, "err", err)
+		return nil
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		slog.Warn("pdf: logo fetch non-200", "url", logoURL, "status", resp.StatusCode)
+		return nil
+	}
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		slog.Warn("pdf: failed to read logo body", "url", logoURL, "err", err)
+		return nil
+	}
+	return b
 }
 
 // loadEventContext fetches the event + client + profile for the authenticated user.
@@ -152,11 +179,12 @@ func (h *PDFHandler) GetBudgetPDF(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data, err := pdf.GenerateBudget(pdf.BudgetData{
-		Event:    *ctx.event,
-		Client:   ctx.client,
-		Profile:  ctx.profile,
-		Products: products,
-		Extras:   extras,
+		Event:     *ctx.event,
+		Client:    ctx.client,
+		Profile:   ctx.profile,
+		Products:  products,
+		Extras:    extras,
+		LogoBytes: logoURLToBytes(ctx.profile),
 	})
 	if err != nil {
 		slog.Error("pdf: generate budget", "event_id", ctx.eventID, "error", err)
@@ -164,41 +192,6 @@ func (h *PDFHandler) GetBudgetPDF(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	servePDF(w, safeFilename(ctx.event.ServiceType, "presupuesto"), data)
-}
-
-// GetInvoicePDF handles GET /events/{id}/pdf/invoice
-func (h *PDFHandler) GetInvoicePDF(w http.ResponseWriter, r *http.Request) {
-	ctx, ok := h.loadEventContext(w, r)
-	if !ok {
-		return
-	}
-
-	products, err := h.eventRepo.GetProducts(r.Context(), ctx.eventID)
-	if err != nil {
-		slog.Error("pdf: get products", "event_id", ctx.eventID, "error", err)
-		writeError(w, http.StatusInternalServerError, "Failed to load event products")
-		return
-	}
-	extras, err := h.eventRepo.GetExtras(r.Context(), ctx.eventID)
-	if err != nil {
-		slog.Error("pdf: get extras", "event_id", ctx.eventID, "error", err)
-		writeError(w, http.StatusInternalServerError, "Failed to load event extras")
-		return
-	}
-
-	data, err := pdf.GenerateInvoice(pdf.InvoiceData{
-		Event:    *ctx.event,
-		Client:   ctx.client,
-		Profile:  ctx.profile,
-		Products: products,
-		Extras:   extras,
-	})
-	if err != nil {
-		slog.Error("pdf: generate invoice", "event_id", ctx.eventID, "error", err)
-		writeError(w, http.StatusInternalServerError, "Failed to generate PDF")
-		return
-	}
-	servePDF(w, safeFilename(ctx.event.ServiceType, "factura"), data)
 }
 
 // GetPaymentReportPDF handles GET /events/{id}/pdf/payment-report
@@ -216,10 +209,11 @@ func (h *PDFHandler) GetPaymentReportPDF(w http.ResponseWriter, r *http.Request)
 	}
 
 	data, err := pdf.GeneratePaymentReport(pdf.PaymentReportData{
-		Event:    *ctx.event,
-		Client:   ctx.client,
-		Profile:  ctx.profile,
-		Payments: payments,
+		Event:     *ctx.event,
+		Client:    ctx.client,
+		Profile:   ctx.profile,
+		Payments:  payments,
+		LogoBytes: logoURLToBytes(ctx.profile),
 	})
 	if err != nil {
 		slog.Error("pdf: generate payment report", "event_id", ctx.eventID, "error", err)
@@ -250,11 +244,12 @@ func (h *PDFHandler) GetContractPDF(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data, err := pdf.GenerateContract(pdf.ContractData{
-		Event:    *ctx.event,
-		Client:   ctx.client,
-		Profile:  ctx.profile,
-		Products: products,
-		Payments: payments,
+		Event:     *ctx.event,
+		Client:    ctx.client,
+		Profile:   ctx.profile,
+		Products:  products,
+		Payments:  payments,
+		LogoBytes: logoURLToBytes(ctx.profile),
 	})
 	if err != nil {
 		slog.Error("pdf: generate contract", "event_id", ctx.eventID, "error", err)
@@ -286,6 +281,7 @@ func (h *PDFHandler) GetShoppingListPDF(w http.ResponseWriter, r *http.Request) 
 		Client:      ctx.client,
 		Profile:     ctx.profile,
 		Ingredients: ingredients,
+		LogoBytes:   logoURLToBytes(ctx.profile),
 	})
 	if err != nil {
 		slog.Error("pdf: generate shopping list", "event_id", ctx.eventID, "error", err)
@@ -335,6 +331,7 @@ func (h *PDFHandler) GetChecklistPDF(w http.ResponseWriter, r *http.Request) {
 		Extras:    extras,
 		Equipment: equipment,
 		Supplies:  supplies,
+		LogoBytes: logoURLToBytes(ctx.profile),
 	})
 	if err != nil {
 		slog.Error("pdf: generate checklist", "event_id", ctx.eventID, "error", err)
@@ -363,6 +360,7 @@ func (h *PDFHandler) GetEquipmentListPDF(w http.ResponseWriter, r *http.Request)
 		Client:    ctx.client,
 		Profile:   ctx.profile,
 		Equipment: equipment,
+		LogoBytes: logoURLToBytes(ctx.profile),
 	})
 	if err != nil {
 		slog.Error("pdf: generate equipment list", "event_id", ctx.eventID, "error", err)
@@ -370,4 +368,13 @@ func (h *PDFHandler) GetEquipmentListPDF(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	servePDF(w, safeFilename(ctx.event.ServiceType, "lista_equipo"), data)
+}
+
+// logoURLToBytes fetches logo bytes from the profile's LogoURL.
+// Returns nil when no logo is configured — generators treat nil as "no logo".
+func logoURLToBytes(profile *models.User) []byte {
+	if profile == nil || profile.LogoURL == nil || *profile.LogoURL == "" {
+		return nil
+	}
+	return fetchLogoBytes(*profile.LogoURL)
 }
