@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { api } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +14,12 @@ export const GoogleSignInButton: React.FC<Props> = ({ onError }) => {
   const { checkAuth } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [gsiReady, setGsiReady] = useState(false);
+  const initializedRef = useRef(false);
+  const onErrorRef = useRef(onError);
+
+  useEffect(() => {
+    onErrorRef.current = onError;
+  }, [onError]);
 
   const handleCredentialResponse = useCallback(async (
     response: google.accounts.id.CredentialResponse
@@ -24,11 +30,11 @@ export const GoogleSignInButton: React.FC<Props> = ({ onError }) => {
       await checkAuth();
       navigate("/dashboard");
     } catch (err: any) {
-      onError?.(err.message || "Error al iniciar sesión con Google");
+      onErrorRef.current?.(err.message || "Error al iniciar sesión con Google");
     } finally {
       setIsLoading(false);
     }
-  }, [checkAuth, navigate, onError]);
+  }, [checkAuth, navigate]);
 
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
@@ -39,11 +45,17 @@ export const GoogleSignInButton: React.FC<Props> = ({ onError }) => {
         return () => clearTimeout(timer);
       }
 
+      if (initializedRef.current) {
+        setGsiReady(true);
+        return;
+      }
+
       google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: handleCredentialResponse,
       });
 
+      initializedRef.current = true;
       setGsiReady(true);
     };
 
@@ -58,7 +70,7 @@ export const GoogleSignInButton: React.FC<Props> = ({ onError }) => {
       google.accounts.id.renderButton(container, {
         theme: "outline",
         size: "large",
-        width: "100%",
+        width: 400,
         text: "signin_with",
         shape: "rectangular",
       });

@@ -319,12 +319,12 @@ export const generateBudgetPDF = (
       head: [[pdfT('description', lang), pdfT('qty', lang), pdfT('unit_price', lang), pdfT('total', lang)]],
       body: body,
       headStyles: { fillColor: [245, 245, 245], textColor: brandColor },
-      styles: { cellPadding: 2, fontSize: 10 },
+      styles: { cellPadding: 3, fontSize: 10, overflow: 'linebreak' },
       columnStyles: {
-        0: { halign: 'left' },
-        1: { halign: 'center' },
-        2: { halign: 'right' },
-        3: { halign: 'right' },
+        0: { halign: 'left', cellWidth: 88 },
+        1: { halign: 'center', cellWidth: 20 },
+        2: { halign: 'right', cellWidth: 32 },
+        3: { halign: 'right', cellWidth: 30 },
       },
       theme: 'grid',
     });
@@ -377,9 +377,19 @@ export const generateBudgetPDF = (
     doc.text(formatCurrency(taxAmount, lang), pageWidth - 20, currentY, { align: 'right' });
   }
 
-
+  // TOTAL
+  currentY += 9;
+  doc.setDrawColor(brandColor);
+  doc.setLineWidth(0.3);
+  doc.line(summaryX, currentY - 4, pageWidth - 20, currentY - 4);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
+  doc.setFontSize(13);
+  doc.setTextColor(brandColor);
+  doc.text('TOTAL:', summaryX, currentY);
+  doc.text(formatCurrency(event.total_amount, lang), pageWidth - 20, currentY, { align: 'right' });
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
   doc.setTextColor(GRAY_COLOR);
 
   const pageHeight = doc.internal.pageSize.height;
