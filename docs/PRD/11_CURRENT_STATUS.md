@@ -33,6 +33,12 @@ status: active
 > - **Backend:** se mantiene en `1.0.0` hasta el siguiente cambio canónico de API
 > - **Cambios ancla del release:** `#242` búsqueda por backend, `#244` disponibilidad de equipo, `#245` calendar parity, `#254` dashboard iOS, `#303` `imePadding()` Android
 
+> [!success] 2026-05-06 — Limpieza de share manual en detalle de evento móvil
+> Se retiró la acción legacy **Compartir por WhatsApp** del detalle de evento en iOS y Android.
+> - **iOS:** `EventDetailView` ya no arma ni intenta enviar un resumen manual por `whatsapp://`.
+> - **Android:** `EventDetailScreen` ya no expone el share manual por `wa.me`.
+> - **Portal del cliente:** queda sin cambios en las 3 plataformas como flujo oficial de compartición.
+
 > [!success] 2026-05-04 — Web + Backend pasan a 1.0.0
 > El baseline de producción ya no usa versiones menores a `1.0.0` para Web y Backend.
 > - **Web:** `1.0.0` en `web/package.json`

@@ -38,6 +38,7 @@ platform: iOS
 > - **Búsqueda de eventos:** iOS consume resultados alineados al backend vía `/api/events/search`
 > - **Calendario:** paridad con filtro por estado, retry, navegación e iCal
 > - **Detalle/Dashboard:** restore de upcoming events/top clients y fix en guardado de stock adjustment
+> - **Detalle de evento:** se removió la acción legacy de WhatsApp; la compartición oficial queda en `ClientPortalShareSheet`
 
 > [!info] Dependencias externas SPM (2026-04-16)
 >

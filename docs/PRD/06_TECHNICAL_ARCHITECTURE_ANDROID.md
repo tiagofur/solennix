@@ -35,6 +35,7 @@ platform: Android
 > - **Disponibilidad de equipo:** integrada en el flujo de planeación de eventos
 > - **Calendario:** paridad con estado, retry, iCal, FAB y navegación
 > - **Formularios:** `imePadding()` evita que el teclado tape inputs/acciones en pantallas scrolleables
+> - **Detalle de evento:** se removió la acción legacy de WhatsApp; la compartición oficial queda en `ClientPortalShareBottomSheet`
 
 > [!tip] Documentos relacionados
 > [[PRD MOC]] · [[01_PRODUCT_VISION]] · [[02_FEATURES]] · [[05_TECHNICAL_ARCHITECTURE_IOS]] · [[07_TECHNICAL_ARCHITECTURE_BACKEND]] · [[08_TECHNICAL_ARCHITECTURE_WEB]] · [[11_CURRENT_STATUS]] · [[19_I18N_STRATEGY]]
