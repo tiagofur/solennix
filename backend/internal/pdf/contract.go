@@ -17,6 +17,26 @@ type ContractData struct {
 	LogoBytes []byte
 }
 
+func stripLegacySignatureSection(text string) string {
+	lower := strings.ToLower(text)
+	markers := []string{
+		"\n\nfirmas:",
+		"\nfirmas:",
+		"\n\nfirmas :",
+		"\nfirmas :",
+	}
+
+	cut := len(text)
+	for _, marker := range markers {
+		idx := strings.Index(lower, marker)
+		if idx >= 0 && idx < cut {
+			cut = idx
+		}
+	}
+
+	return strings.TrimSpace(text[:cut])
+}
+
 // GenerateContract creates a Contrato PDF by resolving template tokens and
 // rendering the filled text. Returns the raw bytes.
 func GenerateContract(data ContractData) ([]byte, error) {
@@ -52,6 +72,7 @@ func GenerateContract(data ContractData) ([]byte, error) {
 		Payments: data.Payments,
 	}
 	resolvedText := ResolveTokens(templateText, tokenData)
+	resolvedText = stripLegacySignatureSection(resolvedText)
 
 	if resolvedText == "" {
 		resolvedText = "El organizador no ha configurado una plantilla de contrato.\n\nPor favor, configura tu plantilla de contrato en Ajustes > Contrato."
