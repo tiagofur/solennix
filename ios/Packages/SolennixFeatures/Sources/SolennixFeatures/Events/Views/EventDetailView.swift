@@ -60,14 +60,6 @@ public struct EventDetailView: View {
 
                     Divider()
 
-                    Button {
-                        shareOnWhatsApp()
-                    } label: {
-                        Label(tr("events.detail.action.share_whatsapp", "Compartir por WhatsApp"), systemImage: "square.and.arrow.up")
-                    }
-
-                    Divider()
-
                     Button(role: .destructive) {
                         viewModel.showDeleteConfirm = true
                     } label: {
@@ -1172,50 +1164,6 @@ public struct EventDetailView: View {
         )
         duplicateViewModel = vm
         showDuplicateSheet = true
-    }
-
-    // MARK: - WhatsApp Share
-
-    private func shareOnWhatsApp() {
-        guard let event = viewModel.event else { return }
-        HapticsHelper.play(.selection)
-
-        let displayDate = Date.fromServerDay(event.eventDate)
-            .map { $0.formatted(date: .long, time: .omitted) } ?? event.eventDate
-
-        let clientName = viewModel.client?.name ?? tr("events.detail.client_fallback", "Cliente")
-
-        var lines = [
-            tr("events.detail.share.whatsapp_header", "*Event summary — Solennix*"),
-            "",
-            "📋 *\(event.serviceType)*",
-            trf("events.detail.share.whatsapp_client", "👤 Client: %@", clientName),
-            trf("events.detail.share.whatsapp_date", "📅 Date: %@", displayDate),
-            trf("events.detail.share.whatsapp_people", "👥 People: %@ PAX", String(event.numPeople)),
-        ]
-
-        let locationParts = [event.location, event.city]
-            .compactMap { val -> String? in
-                guard let v = val, !v.isEmpty else { return nil }
-                return v
-            }
-        if !locationParts.isEmpty {
-            lines.append(trf("events.detail.share.whatsapp_location", "📍 Location: %@", locationParts.joined(separator: ", ")))
-        }
-
-        lines += [
-            "",
-            trf("events.detail.share.whatsapp_total", "💰 Total: %@", event.totalAmount.asMXN),
-            trf("events.detail.share.whatsapp_paid", "✅ Paid: %@", viewModel.totalPaid.asMXN),
-        ]
-        if viewModel.remaining > 0.01 {
-            lines.append(trf("events.detail.share.whatsapp_balance", "⏳ Pending balance: %@", viewModel.remaining.asMXN))
-        }
-
-        let message = lines.joined(separator: "\n")
-        guard let encoded = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: "whatsapp://send?text=\(encoded)") else { return }
-        UIApplication.shared.open(url)
     }
 
     private func sanitizedFileComponent(_ value: String) -> String {
