@@ -74,12 +74,12 @@ fun PaymentInboxScreen(
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(Icons.Default.Inbox, contentDescription = null,
-                                tint = SolennixTheme.colors.textSecondary,
+                                tint = SolennixTheme.colors.secondaryText,
                                 modifier = Modifier.size(48.dp))
                             Spacer(Modifier.height(12.dp))
                             Text("Sin comprobantes pendientes",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = SolennixTheme.colors.textSecondary)
+                                color = SolennixTheme.colors.secondaryText)
                         }
                     }
                 }
@@ -172,6 +172,8 @@ private fun PaymentSubmissionCard(
     onApprove: () -> Unit,
     onReject: () -> Unit
 ) {
+    val eventLabel = submission.eventLabel
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
@@ -188,13 +190,13 @@ private fun PaymentSubmissionCard(
                         submission.clientName ?: "Cliente",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = SolennixTheme.colors.text
+                        color = SolennixTheme.colors.primaryText
                     )
-                    if (submission.eventLabel != null) {
+                    if (eventLabel != null) {
                         Text(
-                            submission.eventLabel,
+                            eventLabel,
                             style = MaterialTheme.typography.bodySmall,
-                            color = SolennixTheme.colors.textSecondary
+                            color = SolennixTheme.colors.secondaryText
                         )
                     }
                 }
@@ -211,7 +213,7 @@ private fun PaymentSubmissionCard(
                 Text(
                     "Ref: ${submission.transferRef}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = SolennixTheme.colors.textSecondary
+                    color = SolennixTheme.colors.secondaryText
                 )
             }
 
@@ -219,7 +221,7 @@ private fun PaymentSubmissionCard(
             Text(
                 formatDate(submission.submittedAt),
                 style = MaterialTheme.typography.bodySmall,
-                color = SolennixTheme.colors.textTertiary
+                color = SolennixTheme.colors.tertiaryText
             )
 
             if (submission.status == "pending") {
