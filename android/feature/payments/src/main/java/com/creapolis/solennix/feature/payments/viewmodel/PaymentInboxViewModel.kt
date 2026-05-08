@@ -13,12 +13,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Locale
 import javax.inject.Inject
 
 data class PaymentInboxUiState(
     val submissions: List<PaymentSubmission> = emptyList(),
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
+    val isPlanLocked: Boolean = false,
     val error: String? = null,
     val actionLoading: String? = null, // submission id being acted on
     val actionError: String? = null
@@ -38,7 +40,7 @@ class PaymentInboxViewModel @Inject constructor(
 
     fun loadSubmissions(isRefresh: Boolean = false) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = !isRefresh, isRefreshing = isRefresh, error = null) }
+            _uiState.update { it.copy(isLoading = !isRefresh, isRefreshing = isRefresh, isPlanLocked = false, error = null) }
             try {
                 val result = apiService.get<Map<String, List<PaymentSubmission>>>(
                     "payment-submissions"
@@ -47,15 +49,18 @@ class PaymentInboxViewModel @Inject constructor(
                     it.copy(
                         submissions = result["data"] ?: emptyList(),
                         isLoading = false,
-                        isRefreshing = false
+                        isRefreshing = false,
+                        isPlanLocked = false
                     )
                 }
             } catch (e: Exception) {
+                val rawError = e.message ?: ""
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         isRefreshing = false,
-                        error = e.message ?: "Error al cargar comprobantes"
+                        isPlanLocked = isProOnlyError(rawError),
+                        error = if (isProOnlyError(rawError)) null else localizeError(rawError)
                     )
                 }
             }
@@ -84,7 +89,7 @@ class PaymentInboxViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         actionLoading = null,
-                        actionError = e.message ?: "Error al procesar la acción"
+                        actionError = localizeActionError(e.message ?: "")
                     )
                 }
             }
@@ -94,4 +99,21 @@ class PaymentInboxViewModel @Inject constructor(
     fun clearActionError() {
         _uiState.update { it.copy(actionError = null) }
     }
+
+    private fun isProOnlyError(message: String): Boolean {
+        val lowered = message.lowercase(Locale.ROOT)
+        return lowered.contains("pro-exclusive") || lowered.contains("paid plan") || lowered.contains("upgrade")
+    }
+
+    private fun localizeError(message: String): String {
+        if (message.isNotBlank()) return message
+        return if (isSpanish()) "Error al cargar comprobantes" else "Failed to load payment receipts"
+    }
+
+    private fun localizeActionError(message: String): String {
+        if (message.isNotBlank()) return message
+        return if (isSpanish()) "Error al procesar la accion" else "Failed to process action"
+    }
+
+    private fun isSpanish(): Boolean = Locale.getDefault().language.startsWith("es")
 }

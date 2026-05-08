@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/tiagofur/solennix-backend/internal/models"
@@ -14,13 +15,30 @@ type PlanError struct {
 	Plan    string `json:"required_plan"`
 }
 
+// normalizePlan maps historical and cross-platform aliases into stable tiers.
+// free/basic/gratis -> basic, premium -> pro.
+func normalizePlan(plan string) string {
+	switch strings.ToLower(strings.TrimSpace(plan)) {
+	case "gratis", "free", "basic", "plan_basic":
+		return "basic"
+	case "pro", "plan_pro":
+		return "pro"
+	case "business", "plan_business":
+		return "business"
+	case "premium":
+		return "pro"
+	default:
+		return strings.ToLower(strings.TrimSpace(plan))
+	}
+}
+
 // IsPlanActive checks if the organizer's subscription plan is currently active.
 // Gratis plans are always active; paid plans check expiry date.
 func IsPlanActive(user *models.User) bool {
 	if user == nil {
 		return false
 	}
-	if user.Plan == "gratis" {
+	if normalizePlan(user.Plan) == "basic" {
 		return true
 	}
 	if user.PlanExpiresAt == nil {
@@ -38,8 +56,10 @@ func RequiresPaidPlan(w http.ResponseWriter, user *models.User) bool {
 		return false
 	}
 
-	// Gratis always requires upgrade
-	if user.Plan == "gratis" {
+	plan := normalizePlan(user.Plan)
+
+	// Free/basic always requires upgrade
+	if plan == "basic" {
 		writeError(w, http.StatusForbidden, "This feature requires a paid plan. Please upgrade to access it.")
 		return false
 	}
@@ -56,7 +76,7 @@ func RequiresPaidPlan(w http.ResponseWriter, user *models.User) bool {
 // PlanTiers defines the features available at each tier.
 // This is documentation + reference for what needs to be enforced.
 var PlanTiers = map[string]map[string]bool{
-	"gratis": {
+	"basic": {
 		// Client portal: limited shape (no detailed event info)
 		"public_event_portal":    true,
 		"public_event_form":      true,
@@ -125,7 +145,7 @@ var PlanTiers = map[string]map[string]bool{
 // FeatureAvailable checks if a feature is available for the given plan.
 // Returns true if the feature is available, false otherwise.
 func FeatureAvailable(plan string, feature string) bool {
-	tierFeatures, ok := PlanTiers[plan]
+	tierFeatures, ok := PlanTiers[normalizePlan(plan)]
 	if !ok {
 		return false // Unknown plan defaults to deny
 	}

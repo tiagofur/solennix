@@ -8,12 +8,14 @@ import paymentSubmissionService from '@/services/paymentSubmissionService';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Modal } from '@/components/Modal';
+import { useAuth } from '@/contexts/AuthContext';
 
 const QUERY_KEY = ['payment-submissions', 'pending'];
 
 export const PaymentInboxPage: React.FC = () => {
   const { t, i18n } = useTranslation(['payments', 'common']);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const [approveId, setApproveId] = useState<string | null>(null);
   const [rejectId, setRejectId] = useState<string | null>(null);
@@ -84,10 +86,18 @@ export const PaymentInboxPage: React.FC = () => {
       maximumFractionDigits: 2,
     });
 
-  if (error) {
+  const normalizedPlan = String(user?.plan || '').trim().toLowerCase();
+  const isFreePlan = ["basic", "gratis", "free", "plan_basic"].includes(normalizedPlan);
+
+  const errorMessage = error instanceof Error ? error.message : null;
+  const shouldShowPlanLocked =
+    isFreePlan ||
+    Boolean(errorMessage && /pro-exclusive|paid plan|upgrade/i.test(errorMessage));
+
+  if (error && !shouldShowPlanLocked) {
     return (
       <div className="p-6 text-center text-text-secondary">
-        {t('common:error.loading', { defaultValue: 'Error al cargar los datos.' })}
+        {errorMessage || t('common:error.loading', { defaultValue: 'Error al cargar los datos.' })}
       </div>
     );
   }
@@ -108,9 +118,19 @@ export const PaymentInboxPage: React.FC = () => {
         )}
       </div>
 
-      {isLoading ? (
+      {isLoading && !shouldShowPlanLocked ? (
         <div className="flex justify-center items-center h-48">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      ) : shouldShowPlanLocked ? (
+        <div className="flex flex-col items-center justify-center gap-3 py-20 text-text-secondary">
+          <Inbox className="h-12 w-12 opacity-60" />
+          <p className="text-base font-medium text-center">
+            {t('payments:inbox.pro_only', { defaultValue: 'Función exclusiva para usuarios Pro.' })}
+          </p>
+          <p className="text-sm text-center max-w-xl">
+            {t('payments:inbox.pro_only_hint', { defaultValue: 'Actualizá tu plan para revisar y aprobar comprobantes enviados por clientes.' })}
+          </p>
         </div>
       ) : submissions.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 py-20 text-text-secondary">
@@ -125,7 +145,15 @@ export const PaymentInboxPage: React.FC = () => {
             <table className="min-w-full divide-y divide-border">
               <thead className="bg-surface-alt">
                 <tr>
-                  {['Cliente', 'Evento', 'Monto', 'Referencia', 'Fecha', 'Estado', ''].map((col) => (
+                  {[
+                    t('payments:table.client', { defaultValue: 'Cliente' }),
+                    t('payments:table.event', { defaultValue: 'Evento' }),
+                    t('payments:table.amount', { defaultValue: 'Monto' }),
+                    t('payments:table.reference', { defaultValue: 'Referencia' }),
+                    t('payments:table.date', { defaultValue: 'Fecha' }),
+                    t('payments:table.status', { defaultValue: 'Estado' }),
+                    '',
+                  ].map((col) => (
                     <th
                       key={col}
                       className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider"
@@ -166,7 +194,7 @@ export const PaymentInboxPage: React.FC = () => {
                             className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
                           >
                             <ExternalLink className="h-3.5 w-3.5" />
-                            Comprobante
+                            {t('payments:table.receipt', { defaultValue: 'Comprobante' })}
                           </a>
                         )}
                         {sub.status === 'pending' && (
@@ -177,14 +205,14 @@ export const PaymentInboxPage: React.FC = () => {
                               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-green-500 text-white text-xs font-semibold hover:bg-green-600 transition-colors disabled:opacity-50"
                             >
                               <CheckCircle className="h-3.5 w-3.5" />
-                              Aprobar
+                              {t('payments:actions.approve', { defaultValue: 'Aprobar' })}
                             </button>
                             <button
                               onClick={() => handleOpenReject(sub.id)}
                               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-error text-white text-xs font-semibold hover:opacity-90 transition-opacity"
                             >
                               <XCircle className="h-3.5 w-3.5" />
-                              Rechazar
+                              {t('payments:actions.reject', { defaultValue: 'Rechazar' })}
                             </button>
                           </>
                         )}
@@ -201,14 +229,17 @@ export const PaymentInboxPage: React.FC = () => {
       {/* Approve confirmation dialog */}
       <ConfirmDialog
         open={approveId !== null}
-        title="Aprobar pago"
+        title={t('payments:dialogs.approve_title')}
         description={
           pendingForApprove
-            ? `¿Confirmás aprobar el pago de ${formatCurrency(pendingForApprove.amount)} de ${pendingForApprove.client_name ?? 'este cliente'}? Se registrará automáticamente como pago del evento.`
-            : '¿Confirmás aprobar este pago?'
+            ? t('payments:dialogs.approve_description_with_client', {
+                amount: formatCurrency(pendingForApprove.amount),
+                client: pendingForApprove.client_name ?? t('payments:dialogs.this_client'),
+              })
+            : t('payments:dialogs.approve_description')
         }
-        confirmText={approveMutation.isPending ? 'Aprobando...' : 'Aprobar'}
-        cancelText="Cancelar"
+        confirmText={approveMutation.isPending ? t('payments:dialogs.approving') : t('payments:actions.approve')}
+        cancelText={t('common:actions.cancel')}
         onConfirm={() => approveId && approveMutation.mutate(approveId)}
         onCancel={() => setApproveId(null)}
       />
@@ -217,19 +248,19 @@ export const PaymentInboxPage: React.FC = () => {
       <Modal
         isOpen={rejectId !== null}
         onClose={() => { setRejectId(null); setRejectReason(''); setRejectError(''); }}
-        title="Rechazar pago"
+        title={t('payments:dialogs.reject_title')}
         maxWidth="sm"
         titleId="reject-modal-title"
       >
         <div className="space-y-4">
           <p className="text-sm text-text-secondary">
-            Indicá el motivo del rechazo. El cliente podrá verlo en su historial.
+            {t('payments:dialogs.reject_description')}
           </p>
           <div>
             <textarea
               value={rejectReason}
               onChange={(e) => { setRejectReason(e.target.value); setRejectError(''); }}
-              placeholder="Motivo del rechazo..."
+              placeholder={t('payments:dialogs.reject_placeholder')}
               rows={4}
               className="w-full rounded-xl border border-border bg-surface text-text text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
             />
@@ -243,7 +274,7 @@ export const PaymentInboxPage: React.FC = () => {
               onClick={() => { setRejectId(null); setRejectReason(''); setRejectError(''); }}
               className="px-4 py-2 rounded-xl bg-surface-alt text-text border border-border hover:bg-surface transition-colors text-sm font-medium"
             >
-              Cancelar
+              {t('common:actions.cancel')}
             </button>
             <button
               type="button"
@@ -251,7 +282,7 @@ export const PaymentInboxPage: React.FC = () => {
               disabled={rejectMutation.isPending}
               className="px-4 py-2 rounded-xl bg-error text-white text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
             >
-              {rejectMutation.isPending ? 'Rechazando...' : 'Rechazar'}
+              {rejectMutation.isPending ? t('payments:dialogs.rejecting') : t('payments:actions.reject')}
             </button>
           </div>
         </div>

@@ -288,6 +288,15 @@ func (h *PaymentSubmissionHandler) GetHistoryPublic(w http.ResponseWriter, r *ht
 func (h *PaymentSubmissionHandler) GetPendingOrganizerInbox(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := middleware.GetUserID(ctx)
+	organizer, err := h.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to load organizer")
+		return
+	}
+	if !FeatureAvailable(organizer.Plan, "payment_submissions") || !IsPlanActive(organizer) {
+		writeError(w, http.StatusForbidden, "This is a Pro-exclusive feature. Upgrade to review payment submissions.")
+		return
+	}
 
 	submissions, err := h.repo.GetPendingByOrganizerID(ctx, userID)
 	if err != nil {

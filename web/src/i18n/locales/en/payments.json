@@ -1,0 +1,35 @@
+{
+  "inbox": {
+    "title": "Pending payments",
+    "empty": "No payments pending review.",
+    "pro_only": "Pro-only feature.",
+    "pro_only_hint": "Upgrade your plan to review and approve payment receipts submitted by clients."
+  },
+  "table": {
+    "client": "Client",
+    "event": "Event",
+    "amount": "Amount",
+    "reference": "Reference",
+    "date": "Date",
+    "status": "Status",
+    "receipt": "Receipt"
+  },
+  "actions": {
+    "approve": "Approve",
+    "reject": "Reject"
+  },
+  "reject": {
+    "reason_min": "Reason must be at least 10 characters long."
+  },
+  "dialogs": {
+    "approve_title": "Approve payment",
+    "approve_description": "Do you want to approve this payment?",
+    "approve_description_with_client": "Do you want to approve the payment of {{amount}} from {{client}}? It will be automatically registered as an event payment.",
+    "this_client": "this client",
+    "approving": "Approving...",
+    "reject_title": "Reject payment",
+    "reject_description": "Provide a rejection reason. The client will see it in their history.",
+    "reject_placeholder": "Rejection reason...",
+    "rejecting": "Rejecting..."
+  }
+}

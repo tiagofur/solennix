@@ -330,7 +330,7 @@ func firstTenChars(s string) string {
 // isPlanActive checks if the organizer's subscription plan is currently active.
 // Gratis plans are always active; paid plans check expiry date.
 func (h *EventPublicLinkHandler) isPlanActive(organizer *models.User) bool {
-	if organizer.Plan == "gratis" {
+	if normalizePlan(organizer.Plan) == "basic" {
 		return true
 	}
 	if organizer.PlanExpiresAt == nil {
@@ -351,7 +351,7 @@ func (h *EventPublicLinkHandler) buildPublicEventView(
 	remaining float64,
 ) PublicEventView {
 	// Free (gratis or expired plan): teaser-only shape — no branding, no payment data.
-	if organizer.Plan == "gratis" || !planActive {
+	if normalizePlan(organizer.Plan) == "basic" || !planActive {
 		return PublicEventView{
 			PortalTier: "free",
 			Event: PublicEventDetails{

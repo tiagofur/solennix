@@ -30,6 +30,7 @@ fun PaymentInboxScreen(
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val strings = remember { paymentInboxStrings() }
     var showRejectDialog by remember { mutableStateOf<PaymentSubmission?>(null) }
     var showApproveDialog by remember { mutableStateOf<PaymentSubmission?>(null) }
     var rejectReason by remember { mutableStateOf("") }
@@ -46,9 +47,9 @@ fun PaymentInboxScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Comprobantes de pago") },
+                title = { Text(strings.title) },
                 navigationIcon = { IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.Default.Close, contentDescription = "Volver")
+                    Icon(Icons.Default.Close, contentDescription = strings.back)
                 }}
             )
         },
@@ -70,6 +71,30 @@ fun PaymentInboxScreen(
                         Text(uiState.error ?: "", color = SolennixTheme.colors.error, style = MaterialTheme.typography.bodyMedium)
                     }
                 }
+                uiState.isPlanLocked -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                Icons.Default.Inbox,
+                                contentDescription = null,
+                                tint = SolennixTheme.colors.secondaryText,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(Modifier.height(12.dp))
+                            Text(
+                                strings.proOnlyTitle,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = SolennixTheme.colors.secondaryText
+                            )
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                strings.proOnlyHint,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = SolennixTheme.colors.tertiaryText
+                            )
+                        }
+                    }
+                }
                 uiState.submissions.isEmpty() -> {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -77,7 +102,7 @@ fun PaymentInboxScreen(
                                 tint = SolennixTheme.colors.secondaryText,
                                 modifier = Modifier.size(48.dp))
                             Spacer(Modifier.height(12.dp))
-                            Text("Sin comprobantes pendientes",
+                            Text(strings.emptyTitle,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = SolennixTheme.colors.secondaryText)
                         }
@@ -91,6 +116,7 @@ fun PaymentInboxScreen(
                         items(uiState.submissions, key = { it.id }) { submission ->
                             PaymentSubmissionCard(
                                 submission = submission,
+                                strings = strings,
                                 isActionLoading = uiState.actionLoading == submission.id,
                                 onApprove = { showApproveDialog = submission },
                                 onReject = {
@@ -109,9 +135,9 @@ fun PaymentInboxScreen(
     showApproveDialog?.let { sub ->
         AlertDialog(
             onDismissRequest = { showApproveDialog = null },
-            title = { Text("Confirmar aprobación") },
+            title = { Text(strings.approveTitle) },
             text = {
-                Text("¿Aprobás el comprobante de ${sub.clientName ?: "este cliente"} por ${formatMXN(sub.amount)}?")
+                Text(strings.approveMessage(sub.clientName ?: strings.thisClient, formatMXN(sub.amount)))
             },
             confirmButton = {
                 Button(
@@ -120,10 +146,10 @@ fun PaymentInboxScreen(
                         showApproveDialog = null
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = SolennixTheme.colors.success)
-                ) { Text("Aprobar") }
+                ) { Text(strings.approveAction) }
             },
             dismissButton = {
-                TextButton(onClick = { showApproveDialog = null }) { Text("Cancelar") }
+                TextButton(onClick = { showApproveDialog = null }) { Text(strings.cancel) }
             }
         )
     }
@@ -132,15 +158,15 @@ fun PaymentInboxScreen(
     showRejectDialog?.let { sub ->
         AlertDialog(
             onDismissRequest = { showRejectDialog = null },
-            title = { Text("Rechazar comprobante") },
+            title = { Text(strings.rejectTitle) },
             text = {
                 Column {
-                    Text("Indicá el motivo del rechazo (obligatorio):", style = MaterialTheme.typography.bodyMedium)
+                    Text(strings.rejectDescription, style = MaterialTheme.typography.bodyMedium)
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(
                         value = rejectReason,
                         onValueChange = { rejectReason = it },
-                        placeholder = { Text("Ej: Monto incorrecto, referencia inválida...") },
+                        placeholder = { Text(strings.rejectPlaceholder) },
                         minLines = 3,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -156,10 +182,10 @@ fun PaymentInboxScreen(
                     },
                     enabled = rejectReason.length >= 10,
                     colors = ButtonDefaults.buttonColors(containerColor = SolennixTheme.colors.error)
-                ) { Text("Rechazar") }
+                ) { Text(strings.rejectAction) }
             },
             dismissButton = {
-                TextButton(onClick = { showRejectDialog = null }) { Text("Cancelar") }
+                TextButton(onClick = { showRejectDialog = null }) { Text(strings.cancel) }
             }
         )
     }
@@ -168,6 +194,7 @@ fun PaymentInboxScreen(
 @Composable
 private fun PaymentSubmissionCard(
     submission: PaymentSubmission,
+    strings: PaymentInboxStrings,
     isActionLoading: Boolean,
     onApprove: () -> Unit,
     onReject: () -> Unit
@@ -187,7 +214,7 @@ private fun PaymentSubmissionCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        submission.clientName ?: "Cliente",
+                        submission.clientName ?: strings.clientFallback,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = SolennixTheme.colors.primaryText
@@ -211,7 +238,7 @@ private fun PaymentSubmissionCard(
             if (submission.transferRef != null) {
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "Ref: ${submission.transferRef}",
+                    "${strings.referenceShort}: ${submission.transferRef}",
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText
                 )
@@ -241,7 +268,7 @@ private fun PaymentSubmissionCard(
                         ) {
                             Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text("Aprobar", style = MaterialTheme.typography.labelMedium)
+                            Text(strings.approveAction, style = MaterialTheme.typography.labelMedium)
                         }
                         OutlinedButton(
                             onClick = onReject,
@@ -249,17 +276,17 @@ private fun PaymentSubmissionCard(
                         ) {
                             Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text("Rechazar", style = MaterialTheme.typography.labelMedium)
+                            Text(strings.rejectAction, style = MaterialTheme.typography.labelMedium)
                         }
                     }
                 }
             } else {
                 Spacer(Modifier.height(8.dp))
-                PaymentStatusChip(status = submission.status)
+                PaymentStatusChip(status = submission.status, strings = strings)
                 if (submission.rejectionReason != null) {
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "Motivo: ${submission.rejectionReason}",
+                        "${strings.reasonLabel}: ${submission.rejectionReason}",
                         style = MaterialTheme.typography.bodySmall,
                         color = SolennixTheme.colors.error
                     )
@@ -270,11 +297,11 @@ private fun PaymentSubmissionCard(
 }
 
 @Composable
-private fun PaymentStatusChip(status: String) {
+private fun PaymentStatusChip(status: String, strings: PaymentInboxStrings) {
     val (label, color) = when (status) {
-        "approved" -> "Aprobado" to SolennixTheme.colors.success
-        "rejected" -> "Rechazado" to SolennixTheme.colors.error
-        else -> "Pendiente" to SolennixTheme.colors.warning
+        "approved" -> strings.statusApproved to SolennixTheme.colors.success
+        "rejected" -> strings.statusRejected to SolennixTheme.colors.error
+        else -> strings.statusPending to SolennixTheme.colors.warning
     }
     Surface(
         shape = RoundedCornerShape(20.dp),
@@ -298,4 +325,78 @@ private fun formatDate(isoDate: String): String = try {
     "${parts[2]}/${parts[1]}/${parts[0]}"
 } catch (e: Exception) {
     isoDate
+}
+
+private data class PaymentInboxStrings(
+    val title: String,
+    val back: String,
+    val proOnlyTitle: String,
+    val proOnlyHint: String,
+    val emptyTitle: String,
+    val approveTitle: String,
+    val approveAction: String,
+    val approveMessage: (String, String) -> String,
+    val rejectTitle: String,
+    val rejectDescription: String,
+    val rejectPlaceholder: String,
+    val rejectAction: String,
+    val cancel: String,
+    val thisClient: String,
+    val clientFallback: String,
+    val referenceShort: String,
+    val reasonLabel: String,
+    val statusApproved: String,
+    val statusRejected: String,
+    val statusPending: String,
+)
+
+private fun paymentInboxStrings(): PaymentInboxStrings {
+    val isEs = Locale.getDefault().language.startsWith("es")
+    return if (isEs) {
+        PaymentInboxStrings(
+            title = "Comprobantes de pago",
+            back = "Volver",
+            proOnlyTitle = "Funcion exclusiva para usuarios Pro.",
+            proOnlyHint = "Actualiza tu plan para revisar y aprobar comprobantes enviados por clientes.",
+            emptyTitle = "Sin comprobantes pendientes",
+            approveTitle = "Confirmar aprobacion",
+            approveAction = "Aprobar",
+            approveMessage = { client, amount -> "¿Aprobas el comprobante de $client por $amount?" },
+            rejectTitle = "Rechazar comprobante",
+            rejectDescription = "Indica el motivo del rechazo (obligatorio):",
+            rejectPlaceholder = "Ej: Monto incorrecto, referencia invalida...",
+            rejectAction = "Rechazar",
+            cancel = "Cancelar",
+            thisClient = "este cliente",
+            clientFallback = "Cliente",
+            referenceShort = "Ref",
+            reasonLabel = "Motivo",
+            statusApproved = "Aprobado",
+            statusRejected = "Rechazado",
+            statusPending = "Pendiente",
+        )
+    } else {
+        PaymentInboxStrings(
+            title = "Payment receipts",
+            back = "Back",
+            proOnlyTitle = "Pro-only feature.",
+            proOnlyHint = "Upgrade your plan to review and approve client payment receipts.",
+            emptyTitle = "No pending receipts",
+            approveTitle = "Confirm approval",
+            approveAction = "Approve",
+            approveMessage = { client, amount -> "Approve receipt from $client for $amount?" },
+            rejectTitle = "Reject receipt",
+            rejectDescription = "Provide the rejection reason (required):",
+            rejectPlaceholder = "Ex: Wrong amount, invalid reference...",
+            rejectAction = "Reject",
+            cancel = "Cancel",
+            thisClient = "this client",
+            clientFallback = "Client",
+            referenceShort = "Ref",
+            reasonLabel = "Reason",
+            statusApproved = "Approved",
+            statusRejected = "Rejected",
+            statusPending = "Pending",
+        )
+    }
 }

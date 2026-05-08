@@ -1,0 +1,35 @@
+{
+  "inbox": {
+    "title": "Pagos pendientes",
+    "empty": "Sin pagos pendientes de revision.",
+    "pro_only": "Funcion exclusiva para usuarios Pro.",
+    "pro_only_hint": "Actualiza tu plan para revisar y aprobar comprobantes enviados por clientes."
+  },
+  "table": {
+    "client": "Cliente",
+    "event": "Evento",
+    "amount": "Monto",
+    "reference": "Referencia",
+    "date": "Fecha",
+    "status": "Estado",
+    "receipt": "Comprobante"
+  },
+  "actions": {
+    "approve": "Aprobar",
+    "reject": "Rechazar"
+  },
+  "reject": {
+    "reason_min": "El motivo debe tener al menos 10 caracteres."
+  },
+  "dialogs": {
+    "approve_title": "Aprobar pago",
+    "approve_description": "¿Confirmas aprobar este pago?",
+    "approve_description_with_client": "¿Confirmas aprobar el pago de {{amount}} de {{client}}? Se registrara automaticamente como pago del evento.",
+    "this_client": "este cliente",
+    "approving": "Aprobando...",
+    "reject_title": "Rechazar pago",
+    "reject_description": "Indica el motivo del rechazo. El cliente podra verlo en su historial.",
+    "reject_placeholder": "Motivo del rechazo...",
+    "rejecting": "Rechazando..."
+  }
+}
