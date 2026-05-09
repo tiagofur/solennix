@@ -157,9 +157,11 @@ public struct EventDetailView: View {
     // MARK: - Header Card
 
     private func headerCard(_ event: Event) -> some View {
+        let components = parseDateComponents(event.eventDate)
+
         VStack(spacing: Spacing.md) {
             HStack(spacing: Spacing.md) {
-                dateBox(event.eventDate)
+                EventDetailDateBox(month: components.month, day: components.day)
 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
                     Text(event.serviceType)
@@ -184,14 +186,14 @@ public struct EventDetailView: View {
 
             // Quick info grid
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Spacing.sm) {
-                quickInfoItem(icon: "calendar", label: tr("events.detail.info.date", "Fecha"), value: formatDateShort(event.eventDate))
+                EventDetailQuickInfoItem(icon: "calendar", label: tr("events.detail.info.date", "Fecha"), value: formatDateShort(event.eventDate))
 
                 if let startTime = event.startTime {
                     let timeText = [startTime, event.endTime].compactMap { $0 }.joined(separator: " - ")
-                    quickInfoItem(icon: "clock", label: tr("events.detail.info.schedule", "Horario"), value: timeText)
+                    EventDetailQuickInfoItem(icon: "clock", label: tr("events.detail.info.schedule", "Horario"), value: timeText)
                 }
 
-                quickInfoItem(
+                EventDetailQuickInfoItem(
                     icon: "person.2",
                     label: tr("events.detail.info.people", "Personas"),
                     value: trf("events.detail.info.people_value", "%@ PAX", String(event.numPeople))
@@ -199,9 +201,9 @@ public struct EventDetailView: View {
 
                 if let location = event.location, !location.isEmpty {
                     let fullLocation = [location, event.city].compactMap { $0?.isEmpty == true ? nil : $0 }.joined(separator: ", ")
-                    quickInfoItem(icon: "mappin", label: tr("events.detail.info.location", "Ubicación"), value: fullLocation)
+                    EventDetailQuickInfoItem(icon: "mappin", label: tr("events.detail.info.location", "Ubicación"), value: fullLocation)
                 } else if let city = event.city, !city.isEmpty {
-                    quickInfoItem(icon: "mappin", label: tr("events.detail.info.city", "Ciudad"), value: city)
+                    EventDetailQuickInfoItem(icon: "mappin", label: tr("events.detail.info.city", "Ciudad"), value: city)
                 }
             }
         }
@@ -210,30 +212,6 @@ public struct EventDetailView: View {
         .background(SolennixColors.card)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
         .shadowSm()
-    }
-
-    private func quickInfoItem(icon: String, label: String, value: String) -> some View {
-        HStack(spacing: Spacing.sm) {
-            Image(systemName: icon)
-                .font(.caption)
-                .foregroundStyle(SolennixColors.primary)
-                .frame(width: 16)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(label)
-                    .font(.caption2)
-                    .foregroundStyle(SolennixColors.textTertiary)
-                    .textCase(.uppercase)
-
-                Text(value)
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(SolennixColors.text)
-                    .lineLimit(1)
-            }
-
-            Spacer()
-        }
     }
 
     // MARK: - Client Info Card
@@ -398,13 +376,13 @@ public struct EventDetailView: View {
 
                 // Mini KPIs
                 HStack(spacing: Spacing.sm) {
-                    miniKpi(
+                    EventDetailMiniKPI(
                         label: tr("events.detail.payments.kpi.paid", "Pagado"),
                         value: viewModel.totalPaid.asMXN,
                         color: SolennixColors.success,
                         bgColor: SolennixColors.successBg
                     )
-                    miniKpi(
+                    EventDetailMiniKPI(
                         label: tr("events.detail.payments.kpi.balance", "Saldo"),
                         value: viewModel.remaining.asMXN,
                         color: viewModel.isFullyPaid ? SolennixColors.success : SolennixColors.error,
@@ -460,7 +438,7 @@ public struct EventDetailView: View {
 
     private func contentCardsGrid(_ event: Event) -> some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Spacing.sm) {
-            summaryNavCard(
+            EventDetailSummaryNavCard(
                 icon: "bag.fill",
                 title: tr("events.detail.card.products", "Productos"),
                 count: viewModel.products.count,
@@ -468,7 +446,7 @@ public struct EventDetailView: View {
                 route: Route.eventProducts(id: eventId)
             )
 
-            summaryNavCard(
+            EventDetailSummaryNavCard(
                 icon: "sparkles",
                 title: tr("events.detail.card.extras", "Extras"),
                 count: viewModel.extras.count,
@@ -476,7 +454,7 @@ public struct EventDetailView: View {
                 route: Route.eventExtras(id: eventId)
             )
 
-            summaryNavCard(
+            EventDetailSummaryNavCard(
                 icon: "drop.fill",
                 title: tr("events.detail.card.supplies", "Insumos"),
                 count: viewModel.supplies.count,
@@ -484,7 +462,7 @@ public struct EventDetailView: View {
                 route: Route.eventSupplies(id: eventId)
             )
 
-            summaryNavCard(
+            EventDetailSummaryNavCard(
                 icon: "wrench.and.screwdriver.fill",
                 title: tr("events.detail.card.equipment", "Equipo"),
                 count: viewModel.equipment.count,
@@ -492,7 +470,7 @@ public struct EventDetailView: View {
                 route: Route.eventEquipment(id: eventId)
             )
 
-            summaryNavCard(
+            EventDetailSummaryNavCard(
                 icon: "cart.fill",
                 title: tr("events.detail.card.shopping", "Compras"),
                 subtitle: shoppingListSubtitle,
@@ -500,7 +478,7 @@ public struct EventDetailView: View {
                 route: Route.eventShoppingList(id: eventId)
             )
 
-            summaryNavCard(
+            EventDetailSummaryNavCard(
                 icon: "person.3.fill",
                 title: tr("events.detail.card.staff", "Personal"),
                 count: viewModel.eventStaff.count,
@@ -546,53 +524,6 @@ public struct EventDetailView: View {
             }
             .buttonStyle(.plain)
         }
-    }
-
-    private func summaryNavCard(icon: String, title: String, count: Int? = nil, subtitle: String? = nil, color: Color, route: Route) -> some View {
-        NavigationLink(value: route) {
-            VStack(alignment: .leading, spacing: Spacing.sm) {
-                HStack {
-                    Image(systemName: icon)
-                        .font(.body)
-                        .foregroundStyle(color)
-
-                    Spacer()
-
-                    if let count, count > 0 {
-                        Text("\(count)")
-                            .font(.caption)
-                            .fontWeight(.bold)
-                            .foregroundStyle(color)
-                            .padding(.horizontal, Spacing.sm)
-                            .padding(.vertical, 2)
-                            .background(color.opacity(0.1))
-                            .clipShape(Capsule())
-                    }
-                }
-
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(SolennixColors.text)
-
-                if let subtitle, !subtitle.isEmpty {
-                    Text(subtitle)
-                        .font(.caption2)
-                        .foregroundStyle(SolennixColors.textSecondary)
-                        .lineLimit(1)
-                } else {
-                    Image(systemName: "chevron.right")
-                        .font(.caption2)
-                        .foregroundStyle(SolennixColors.textTertiary)
-                }
-            }
-            .padding(Spacing.md)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-            .shadowSm()
-        }
-        .buttonStyle(.plain)
     }
 
     private var shoppingListSubtitle: String? {
@@ -857,46 +788,6 @@ public struct EventDetailView: View {
     }
 
     // MARK: - Mini KPI
-
-    private func miniKpi(label: String, value: String, color: Color, bgColor: Color) -> some View {
-        VStack(spacing: Spacing.xs) {
-            Text(value)
-                .font(.caption)
-                .fontWeight(.bold)
-                .foregroundStyle(color)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-
-            Text(label)
-                .font(.caption2)
-                .foregroundStyle(SolennixColors.textSecondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, Spacing.sm)
-        .background(bgColor)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-    }
-
-    // MARK: - Date Box
-
-    private func dateBox(_ dateString: String) -> some View {
-        let components = parseDateComponents(dateString)
-        return VStack(spacing: Spacing.xxs) {
-            Text(components.month)
-                .font(.caption2)
-                .fontWeight(.semibold)
-                .foregroundStyle(SolennixColors.primary)
-                .textCase(.uppercase)
-
-            Text(components.day)
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundStyle(SolennixColors.text)
-        }
-        .frame(width: 56, height: 56)
-        .background(SolennixColors.primaryLight)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-    }
 
     // MARK: - Payment Sheet
 

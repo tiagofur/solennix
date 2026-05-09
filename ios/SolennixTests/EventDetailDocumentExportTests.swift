@@ -3,6 +3,11 @@ import SolennixFeatures
 
 final class EventDetailDocumentExportTests: XCTestCase {
 
+    func testOptionsContainExpectedKeysInStableOrder() {
+        let keys = EventDetailDocumentExport.options.map(\.key)
+        XCTAssertEqual(keys, ["cotizacion", "contrato", "insumos", "equipo", "checklist", "pagos"])
+    }
+
     func testResolveQuoteUsesEventServiceType() {
         let result = EventDetailDocumentExport.resolve(
             for: "cotizacion",
@@ -52,6 +57,22 @@ final class EventDetailDocumentExportTests: XCTestCase {
         )
 
         XCTAssertNil(result)
+    }
+
+    func testResolveForEveryDeclaredOptionReturnsFilenameAndType() {
+        for option in EventDetailDocumentExport.options {
+            let result = EventDetailDocumentExport.resolve(
+                for: option.key,
+                eventServiceType: "Evento Test",
+                clientName: "Cliente Test",
+                localize: { _, fallback in fallback },
+                locale: Locale(identifier: "en_US_POSIX")
+            )
+
+            XCTAssertNotNil(result, "Expected resolve result for key \(option.key)")
+            XCTAssertFalse(result?.pdfType.isEmpty ?? true)
+            XCTAssertTrue(result?.filename.hasSuffix(".pdf") ?? false)
+        }
     }
 
     func testSanitizedFileComponentReplacesUnsafeCharacters() {
