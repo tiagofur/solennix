@@ -89,22 +89,26 @@ public struct DashboardView: View {
 
                 // Analytics Widgets
                 if let vm = viewModel {
-                    TopClientsWidgetView(
-                        clients: vm.topClients,
-                        isLoading: vm.isLoading
-                    )
-                    .padding(.horizontal, sectionHorizontalPadding)
+                    let columns = sizeClass == .regular
+                        ? [GridItem(.flexible(), spacing: Spacing.md), GridItem(.flexible(), spacing: Spacing.md)]
+                        : [GridItem(.flexible())]
+                    
+                    LazyVGrid(columns: columns, spacing: Spacing.md) {
+                        TopClientsWidgetView(
+                            clients: vm.topClients,
+                            isLoading: vm.isLoading
+                        )
 
-                    ProductDemandWidgetView(
-                        products: vm.productDemand,
-                        isLoading: vm.isLoading
-                    )
-                    .padding(.horizontal, sectionHorizontalPadding)
+                        ProductDemandWidgetView(
+                            products: vm.productDemand,
+                            isLoading: vm.isLoading
+                        )
 
-                    ForecastWidgetView(
-                        forecast: vm.forecast,
-                        isLoading: vm.isLoading
-                    )
+                        ForecastWidgetView(
+                            forecast: vm.forecast,
+                            isLoading: vm.isLoading
+                        )
+                    }
                     .padding(.horizontal, sectionHorizontalPadding)
                 }
 
