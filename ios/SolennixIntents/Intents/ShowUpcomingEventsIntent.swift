@@ -15,6 +15,7 @@ struct ShowUpcomingEventsIntent: AppIntent {
     @Parameter(title: "Numero de eventos", default: 5)
     var count: Int
 
+    @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         // In a real implementation, this would fetch from the API or local cache
         let events = await fetchUpcomingEvents(limit: count)

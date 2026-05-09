@@ -12,6 +12,7 @@ struct ShowTodayEventsIntent: AppIntent {
 
     nonisolated init() {}
 
+    @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         let events = await fetchTodayEvents()
 
