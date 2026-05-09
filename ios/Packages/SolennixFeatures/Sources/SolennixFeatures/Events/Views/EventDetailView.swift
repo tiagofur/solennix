@@ -159,7 +159,7 @@ public struct EventDetailView: View {
     private func headerCard(_ event: Event) -> some View {
         let components = parseDateComponents(event.eventDate)
 
-        VStack(spacing: Spacing.md) {
+        return VStack(spacing: Spacing.md) {
             HStack(spacing: Spacing.md) {
                 EventDetailDateBox(month: components.month, day: components.day)
 
