@@ -232,7 +232,7 @@ public final class EventFormViewModel {
         let supplies: [EventSupply]
     }
 
-    private var pendingPrefill: PrefillData?
+    var pendingPrefill: PrefillData?
 
     /// Queues event data to be applied after initial data loads.
     /// Date is NOT copied — user picks a new one. Payments are NOT copied.
