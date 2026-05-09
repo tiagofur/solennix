@@ -190,14 +190,9 @@ struct SidebarSplitLayout: View {
                 }
             }
             .buttonStyle(.plain)
-<<<<<<< HEAD
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-=======
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .solennixGlassSurface(cornerRadius: CornerRadius.lg, tintOpacity: 0.18)
->>>>>>> 0c9ebaa6 (refactor(ios): refine sidebar hierarchy and dark mode depth)
         }
     }
 
