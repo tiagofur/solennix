@@ -224,7 +224,7 @@ public final class EventFormViewModel {
 
     // MARK: - Prefill Support (Duplicate Event)
 
-    private struct PrefillData {
+    struct PrefillData {
         let event: Event
         let products: [EventProduct]
         let extras: [EventExtra]
