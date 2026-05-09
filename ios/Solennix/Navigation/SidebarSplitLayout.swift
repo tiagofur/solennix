@@ -146,7 +146,7 @@ struct SidebarSplitLayout: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .solennixGlassSurface(cornerRadius: CornerRadius.lg, tintOpacity: 0.2)
+        .glassSurface(opacity: 0.2, blur: 10)
         .listRowBackground(Color.clear)
         .listRowSeparator(.hidden)
         .listRowInsets(EdgeInsets(top: 4, leading: SidebarMetrics.rowInsetLeading, bottom: 6, trailing: SidebarMetrics.rowInsetTrailing))
@@ -192,7 +192,7 @@ struct SidebarSplitLayout: View {
             .buttonStyle(.plain)
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .solennixGlassSurface(cornerRadius: CornerRadius.lg, tintOpacity: 0.18)
+            .glassSurface(opacity: 0.18, blur: 10)
         }
     }
 
