@@ -523,23 +523,44 @@ public struct EventDetailView: View {
     // MARK: - Checklist Card
 
     private var checklistCard: some View {
-        NavigationLink(value: Route.eventChecklist(id: eventId)) {
-            HStack {
-                Image(systemName: "checklist")
-                    .font(.body)
-                Text(tr("events.detail.card.checklist", "Checklist de carga"))
-                    .font(.body)
-                    .fontWeight(.medium)
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(SolennixColors.textTertiary)
+        VStack(spacing: Spacing.sm) {
+            NavigationLink(value: Route.eventChecklist(id: eventId)) {
+                HStack {
+                    Image(systemName: "checklist")
+                        .font(.body)
+                    Text(tr("events.detail.card.checklist", "Checklist de carga"))
+                        .font(.body)
+                        .fontWeight(.medium)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+                .foregroundStyle(SolennixColors.primary)
+                .padding(Spacing.md)
+                .frame(maxWidth: .infinity)
+                .background(SolennixColors.primaryLight)
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
             }
-            .foregroundStyle(SolennixColors.primary)
-            .padding(Spacing.md)
-            .frame(maxWidth: .infinity)
-            .background(SolennixColors.primaryLight)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+
+            NavigationLink(value: Route.eventPurchaseChecklist(id: eventId)) {
+                HStack {
+                    Image(systemName: "cart")
+                        .font(.body)
+                    Text("Checklist de compras")
+                        .font(.body)
+                        .fontWeight(.medium)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+                .foregroundStyle(SolennixColors.warning)
+                .padding(Spacing.md)
+                .frame(maxWidth: .infinity)
+                .background(SolennixColors.warning.opacity(0.15))
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+            }
         }
         .buttonStyle(.plain)
     }
