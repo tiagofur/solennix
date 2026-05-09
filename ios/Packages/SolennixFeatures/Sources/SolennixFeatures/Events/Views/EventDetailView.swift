@@ -486,43 +486,11 @@ public struct EventDetailView: View {
                 route: Route.eventStaff(id: eventId)
             )
 
-            NavigationLink(value: Route.eventPhotos(id: eventId)) {
-                VStack(alignment: .leading, spacing: Spacing.sm) {
-                    HStack {
-                        Image(systemName: "camera.fill")
-                            .font(.body)
-                            .foregroundStyle(SolennixColors.info)
-
-                        Spacer()
-
-                        if !viewModel.eventPhotos.isEmpty {
-                            Text("\(viewModel.eventPhotos.count)")
-                                .font(.caption)
-                                .fontWeight(.bold)
-                                .foregroundStyle(SolennixColors.info)
-                                .padding(.horizontal, Spacing.sm)
-                                .padding(.vertical, 2)
-                                .background(SolennixColors.infoBg)
-                                .clipShape(Capsule())
-                        }
-                    }
-
-                    Text(tr("events.detail.card.photos", "Fotos"))
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(SolennixColors.text)
-
-                    Image(systemName: "chevron.right")
-                        .font(.caption2)
-                        .foregroundStyle(SolennixColors.textTertiary)
-                }
-                .padding(Spacing.md)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(SolennixColors.card)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-                .shadowSm()
-            }
-            .buttonStyle(.plain)
+            EventDetailPhotosSummaryCard(
+                title: tr("events.detail.card.photos", "Fotos"),
+                count: viewModel.eventPhotos.count,
+                route: Route.eventPhotos(id: eventId)
+            )
         }
     }
 
@@ -539,55 +507,11 @@ public struct EventDetailView: View {
     @ViewBuilder
     private var photosPreviewCard: some View {
         if !viewModel.eventPhotos.isEmpty {
-            NavigationLink(value: Route.eventPhotos(id: eventId)) {
-                VStack(alignment: .leading, spacing: Spacing.sm) {
-                    HStack {
-                        Text(tr("events.detail.card.photos", "Fotos"))
-                            .font(.headline)
-                            .foregroundStyle(SolennixColors.text)
-                        Spacer()
-                        Text("\(viewModel.eventPhotos.count)")
-                            .font(.caption)
-                            .fontWeight(.bold)
-                            .foregroundStyle(SolennixColors.info)
-                        Image(systemName: "chevron.right")
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.textTertiary)
-                    }
-
-                    HStack(spacing: Spacing.sm) {
-                        ForEach(Array(viewModel.eventPhotos.prefix(4).enumerated()), id: \.offset) { index, url in
-                            AsyncImage(url: APIClient.resolveURL(url)) { image in
-                                image
-                                    .resizable()
-                                    .scaledToFill()
-                            } placeholder: {
-                                ProgressView()
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    .background(SolennixColors.surfaceAlt)
-                            }
-                            .frame(height: 60)
-                            .frame(maxWidth: .infinity)
-                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
-                            .overlay {
-                                if index == 3 && viewModel.eventPhotos.count > 4 {
-                                    RoundedRectangle(cornerRadius: CornerRadius.sm)
-                                        .fill(.black.opacity(0.5))
-                                    Text("+\(viewModel.eventPhotos.count - 4)")
-                                        .font(.caption)
-                                        .fontWeight(.bold)
-                                        .foregroundStyle(.white)
-                                }
-                            }
-                        }
-                    }
-                }
-                .padding(Spacing.md)
-                .background(SolennixColors.card)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-                .shadowSm()
-            }
-            .buttonStyle(.plain)
+            EventDetailPhotosPreviewCard(
+                title: tr("events.detail.card.photos", "Fotos"),
+                photos: viewModel.eventPhotos,
+                route: Route.eventPhotos(id: eventId)
+            )
         }
     }
 
