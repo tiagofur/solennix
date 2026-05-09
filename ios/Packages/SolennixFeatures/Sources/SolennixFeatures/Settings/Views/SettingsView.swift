@@ -34,16 +34,16 @@ public struct SettingsView: View {
     @AppStorage("preferredLocale") private var preferredLocale: String = ""
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(ToastManager.self) private var toastManager
+    private var isRegularWidth: Bool { sizeClass == .regular }
+    private var sectionHorizontalPadding: CGFloat { isRegularWidth ? Spacing.xl : Spacing.md }
 
     public init(apiClient: APIClient, authManager: AuthManager) {
         _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient, authManager: authManager))
     }
 
     public var body: some View {
-        settingsList
-            .listStyle(.insetGrouped)
+        settingsContent
             .tint(SolennixColors.primary)
-            .scrollContentBackground(.hidden)
             .background(SolennixColors.surfaceGrouped)
             .navigationTitle(tr("settings.title", "Ajustes"))
             .navigationBarTitleDisplayMode(.large)
@@ -79,9 +79,55 @@ public struct SettingsView: View {
             }
     }
 
+    // MARK: - Adaptive Layout
+
+    @ViewBuilder
+    private var settingsContent: some View {
+        if isRegularWidth {
+            settingsGridRegular
+        } else {
+            settingsListCompact
+                .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+        }
+    }
+
+    private var settingsGridRegular: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: Spacing.lg) {
+                if let user = viewModel.user {
+                    userHeaderCard(user)
+                        .padding(.horizontal, sectionHorizontalPadding)
+                }
+
+                LazyVGrid(
+                    columns: [
+                        GridItem(.flexible(), spacing: Spacing.md),
+                        GridItem(.flexible(), spacing: Spacing.md)
+                    ],
+                    spacing: Spacing.md
+                ) {
+                    appearanceCard
+                    accountCard
+                    subscriptionCard
+                    businessCard
+                    legalCard
+                    sessionCard
+                }
+                .padding(.horizontal, sectionHorizontalPadding)
+
+                versionCard
+                    .padding(.horizontal, sectionHorizontalPadding)
+
+                Spacer(minLength: Spacing.xl)
+            }
+            .padding(.vertical, Spacing.sm)
+        }
+    }
+
     // MARK: - Settings List
 
-    private var settingsList: some View {
+    private var settingsListCompact: some View {
         List {
             // User profile header
             if let user = viewModel.user {
@@ -137,6 +183,272 @@ public struct SettingsView: View {
             }
             .listRowBackground(SolennixColors.card)
         }
+    }
+
+    // MARK: - Regular Width Cards
+
+    private var appearanceCard: some View {
+        settingsCard(title: tr("settings.section.appearance", "Apariencia")) {
+            HStack(spacing: Spacing.sm) {
+                Label(tr("settings.theme.label", "Tema"), systemImage: "paintbrush")
+                Spacer()
+                Picker("", selection: $appearance) {
+                    ForEach(AppearanceTheme.allCases) { theme in
+                        Text(theme.displayName).tag(theme.rawValue)
+                    }
+                }
+                .pickerStyle(.menu)
+                .labelsHidden()
+            }
+
+            Divider()
+
+            HStack(spacing: Spacing.sm) {
+                Label(tr("settings.profile.language", "Idioma"), systemImage: "globe")
+                Spacer()
+                Picker("", selection: $selectedLanguage) {
+                    Text(tr("settings.language.option.es", "Español")).tag("es")
+                    Text(tr("settings.language.option.en", "English")).tag("en")
+                }
+                .pickerStyle(.menu)
+                .labelsHidden()
+            }
+        }
+    }
+
+    private var accountCard: some View {
+        settingsCard(title: tr("settings.section.account", "Cuenta")) {
+            NavigationLink(value: Route.editProfile) {
+                settingsNavRow(title: tr("settings.action.edit_profile", "Editar perfil"), systemImage: "person.circle")
+            }
+            .buttonStyle(.plain)
+
+            Divider()
+
+            NavigationLink(value: Route.changePassword) {
+                settingsNavRow(title: tr("settings.action.change_password", "Cambiar contraseña"), systemImage: "lock.rotation")
+            }
+            .buttonStyle(.plain)
+
+            Divider()
+
+            NavigationLink(value: Route.notificationPreferences) {
+                settingsNavRow(title: tr("settings.tab.notifications", "Notificaciones"), systemImage: "bell.badge")
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var subscriptionCard: some View {
+        settingsCard(title: tr("settings.section.subscription", "Suscripción")) {
+            NavigationLink(value: Route.subscription) {
+                HStack {
+                    Label(tr("settings.action.manage_plan", "Gestionar plan"), systemImage: "star")
+                        .foregroundStyle(SolennixColors.text)
+
+                    Spacer()
+
+                    if let user = viewModel.user {
+                        PlanBadge(plan: user.plan)
+                    }
+
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var businessCard: some View {
+        settingsCard(title: tr("settings.section.business", "Negocio")) {
+            NavigationLink(value: Route.businessSettings) {
+                settingsNavRow(title: tr("settings.action.business_settings", "Ajustes del negocio"), systemImage: "building.2")
+            }
+            .buttonStyle(.plain)
+
+            Divider()
+
+            NavigationLink(value: Route.contractDefaults) {
+                settingsNavRow(title: tr("settings.action.contract_defaults", "Valores del contrato"), systemImage: "doc.text")
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var legalCard: some View {
+        settingsCard(title: tr("settings.section.legal", "Legal")) {
+            Button {
+                HapticsHelper.play(.selection)
+                if let url = URL(string: "https://solennix.com/help") {
+                    legalSheetURL = IdentifiableURL(url)
+                }
+            } label: {
+                settingsExternalRow(title: tr("settings.action.help", "Centro de ayuda"), systemImage: "questionmark.circle")
+            }
+            .buttonStyle(.plain)
+
+            Divider()
+
+            NavigationLink(value: Route.about) {
+                settingsNavRow(title: tr("settings.action.about", "Acerca de"), systemImage: "info.circle")
+            }
+            .buttonStyle(.plain)
+
+            Divider()
+
+            Button {
+                HapticsHelper.play(.selection)
+                if let url = URL(string: "https://creapolis.dev/privacy-policy") {
+                    legalSheetURL = IdentifiableURL(url)
+                }
+            } label: {
+                settingsExternalRow(title: tr("settings.action.privacy_policy", "Política de privacidad"), systemImage: "hand.raised")
+            }
+            .buttonStyle(.plain)
+
+            Divider()
+
+            Button {
+                HapticsHelper.play(.selection)
+                legalSheetURL = IdentifiableURL(LegalURL.terms)
+            } label: {
+                settingsExternalRow(title: tr("settings.action.terms_conditions", "Términos y condiciones"), systemImage: "doc.plaintext")
+            }
+            .buttonStyle(.plain)
+
+            Divider()
+
+            Button {
+                HapticsHelper.play(.selection)
+                if let url = URL(string: "https://creapolis.dev/delete-account") {
+                    legalSheetURL = IdentifiableURL(url)
+                }
+            } label: {
+                settingsExternalRow(
+                    title: tr("settings.action.delete_account", "Eliminar cuenta"),
+                    systemImage: "trash",
+                    color: SolennixColors.error
+                )
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var sessionCard: some View {
+        settingsCard(title: tr("settings.action.logout", "Cerrar sesión")) {
+            Button(role: .destructive) {
+                showLogoutConfirm = true
+            } label: {
+                HStack {
+                    Label(tr("settings.action.logout", "Cerrar sesión"), systemImage: "rectangle.portrait.and.arrow.right")
+                    Spacer()
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var versionCard: some View {
+        HStack {
+            Text(tr("settings.version", "Versión"))
+                .foregroundStyle(SolennixColors.text)
+            Spacer()
+            Text(Bundle.main.appVersion)
+                .foregroundStyle(SolennixColors.textSecondary)
+        }
+        .padding(Spacing.md)
+        .background(SolennixColors.card)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
+        .shadowSm()
+    }
+
+    private func settingsCard<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            Text(title)
+                .font(.headline)
+                .foregroundStyle(SolennixColors.text)
+
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                content()
+            }
+        }
+        .padding(Spacing.lg)
+        .background(SolennixColors.card)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
+        .shadowSm()
+    }
+
+    private func settingsNavRow(title: String, systemImage: String) -> some View {
+        HStack {
+            Label(title, systemImage: systemImage)
+                .foregroundStyle(SolennixColors.text)
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundStyle(SolennixColors.textTertiary)
+        }
+        .contentShape(Rectangle())
+    }
+
+    private func settingsExternalRow(title: String, systemImage: String, color: Color = SolennixColors.text) -> some View {
+        HStack {
+            Label(title, systemImage: systemImage)
+                .foregroundStyle(color)
+
+            Spacer()
+
+            Image(systemName: "arrow.up.right.square")
+                .font(.caption)
+                .foregroundStyle(SolennixColors.textTertiary)
+        }
+        .contentShape(Rectangle())
+    }
+
+    private func userHeaderCard(_ user: User) -> some View {
+        HStack(spacing: Spacing.md) {
+            ZStack {
+                Circle()
+                    .fill(SolennixGradient.premium)
+                    .frame(width: 60, height: 60)
+
+                Text(user.name.prefix(1).uppercased())
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.white)
+            }
+
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                Text(user.name)
+                    .font(.headline)
+                    .foregroundStyle(SolennixColors.text)
+
+                Text(user.email)
+                    .font(.subheadline)
+                    .foregroundStyle(SolennixColors.textSecondary)
+
+                HStack(spacing: Spacing.xs) {
+                    PlanBadge(plan: user.plan)
+
+                    if let businessName = user.businessName, !businessName.isEmpty {
+                        Text(businessName)
+                            .font(.caption)
+                            .foregroundStyle(SolennixColors.textTertiary)
+                    }
+                }
+            }
+
+            Spacer()
+        }
+        .padding(Spacing.lg)
+        .background(SolennixColors.card)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
+        .shadowSm()
     }
 
     // MARK: - Section Content Views

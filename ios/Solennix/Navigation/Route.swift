@@ -47,6 +47,7 @@ public enum SidebarSection: String, Hashable, CaseIterable {
     case personnel
     case products
     case inventory
+    case paymentInbox
     case eventFormLinks
     case settings
 
@@ -60,6 +61,7 @@ public enum SidebarSection: String, Hashable, CaseIterable {
         case .personnel:       return "person.3.fill"
         case .products:        return "shippingbox.fill"
         case .inventory:       return "archivebox.fill"
+        case .paymentInbox:    return "wallet.pass.fill"
         case .eventFormLinks:  return "link"
         case .settings:        return "gearshape.fill"
         }
@@ -75,6 +77,7 @@ public enum SidebarSection: String, Hashable, CaseIterable {
         case .personnel:       return "Personal"
         case .products:        return "Productos"
         case .inventory:       return "Inventario"
+        case .paymentInbox:    return "Comprobantes"
         case .eventFormLinks:  return "Formularios"
         case .settings:        return "Ajustes"
         }

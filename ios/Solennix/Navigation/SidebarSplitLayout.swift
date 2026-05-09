@@ -102,6 +102,7 @@ struct SidebarSplitLayout: View {
                 }
 
                 Section {
+                    sidebarRow(for: .paymentInbox)
                     sidebarRow(for: .settings)
                 } header: {
                     sidebarSectionHeader("Configuracion")
@@ -269,6 +270,8 @@ struct SidebarSplitLayout: View {
             ProductListView(apiClient: apiClient)
         case .inventory:
             InventoryListView(apiClient: apiClient)
+        case .paymentInbox:
+            PaymentInboxView(apiClient: apiClient)
         case .eventFormLinks:
             EventFormLinksView(apiClient: apiClient)
         case .settings:
@@ -284,7 +287,7 @@ extension SidebarSection {
 
     /// Main navigation sections (displayed first in the sidebar).
     static let mainSections: [SidebarSection] = [
-        .dashboard, .calendar, .events, .clients, .personnel, .products, .inventory, .eventFormLinks
+        .dashboard, .calendar, .events, .clients, .personnel, .products, .inventory, .paymentInbox, .eventFormLinks
     ]
 }
 

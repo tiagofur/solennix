@@ -15,6 +15,7 @@ public struct PaymentInboxView: View {
     @State private var rejectTarget: PaymentSubmission? = nil
     @State private var rejectionReason: String = ""
     @State private var showRejectSheet = false
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
     // MARK: - Init
 
@@ -54,13 +55,15 @@ public struct PaymentInboxView: View {
     // MARK: - Submission List
 
     private var submissionList: some View {
-        List {
-            ForEach(viewModel.submissions) { submission in
-                submissionRow(submission)
+        ScrollView {
+            LazyVStack(spacing: Spacing.sm) {
+                ForEach(viewModel.submissions) { submission in
+                    submissionRow(submission)
+                }
             }
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.md)
         }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
     }
 
@@ -126,14 +129,15 @@ public struct PaymentInboxView: View {
                     } label: {
                         if viewModel.approvingId == submission.id {
                             ProgressView()
-                                .frame(maxWidth: .infinity)
+                                .frame(maxWidth: horizontalSizeClass == .regular ? 140 : .infinity)
                         } else {
                             Label("Aprobar", systemImage: "checkmark.circle.fill")
-                                .frame(maxWidth: .infinity)
+                                .frame(maxWidth: horizontalSizeClass == .regular ? 140 : .infinity)
                         }
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(SolennixColors.success)
+                    .clipShape(Capsule())
                     .disabled(viewModel.approvingId != nil || viewModel.rejectingId != nil)
 
                     // Reject
@@ -143,16 +147,19 @@ public struct PaymentInboxView: View {
                         showRejectSheet = true
                     } label: {
                         Label("Rechazar", systemImage: "xmark.circle.fill")
-                            .frame(maxWidth: .infinity)
+                            .frame(maxWidth: horizontalSizeClass == .regular ? 140 : .infinity)
                     }
                     .buttonStyle(.bordered)
                     .tint(SolennixColors.error)
+                    .clipShape(Capsule())
                     .disabled(viewModel.approvingId != nil || viewModel.rejectingId != nil)
                 }
                 .padding(.top, 4)
             }
         }
-        .padding(.vertical, 4)
+        .padding(Spacing.md)
+        .solennixGlassSurface(cornerRadius: CornerRadius.card, tintOpacity: 0.12)
+        .shadowSm()
     }
 
     // MARK: - Status Badge
@@ -233,21 +240,26 @@ public struct PaymentInboxView: View {
     // MARK: - Plan Locked State
 
     private var planLockedState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "lock.fill")
-                .font(.largeTitle)
-                .foregroundStyle(SolennixColors.textTertiary)
-            Text(String(localized: "payment_inbox.pro_only_title",
-                        defaultValue: "Función exclusiva para usuarios Pro."))
-                .font(.headline)
-                .foregroundStyle(SolennixColors.textSecondary)
-                .multilineTextAlignment(.center)
-            Text(String(localized: "payment_inbox.pro_only_hint",
-                        defaultValue: "Actualiza tu plan para revisar y aprobar comprobantes enviados por clientes."))
-                .font(.subheadline)
-                .foregroundStyle(SolennixColors.textTertiary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+        VStack {
+            VStack(spacing: 16) {
+                Image(systemName: "lock.fill")
+                    .font(.largeTitle)
+                    .foregroundStyle(SolennixColors.textTertiary)
+                Text(String(localized: "payment_inbox.pro_only_title",
+                            defaultValue: "Función exclusiva para usuarios Pro."))
+                    .font(.headline)
+                    .foregroundStyle(SolennixColors.textSecondary)
+                    .multilineTextAlignment(.center)
+                Text(String(localized: "payment_inbox.pro_only_hint",
+                            defaultValue: "Actualiza tu plan para revisar y aprobar comprobantes enviados por clientes."))
+                    .font(.subheadline)
+                    .foregroundStyle(SolennixColors.textTertiary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(Spacing.lg)
+            .solennixGlassSurface(cornerRadius: CornerRadius.card, tintOpacity: 0.14)
+            .shadowSm()
+            .padding(.horizontal, Spacing.lg)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -255,18 +267,23 @@ public struct PaymentInboxView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "tray.fill")
-                .font(.largeTitle)
-                .foregroundStyle(SolennixColors.textTertiary)
-            Text("Sin comprobantes pendientes")
-                .font(.headline)
-                .foregroundStyle(SolennixColors.textSecondary)
-            Text("Cuando un cliente envíe un comprobante de transferencia, aparecerá aquí para tu revisión.")
-                .font(.subheadline)
-                .foregroundStyle(SolennixColors.textTertiary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+        VStack {
+            VStack(spacing: 16) {
+                Image(systemName: "tray.fill")
+                    .font(.largeTitle)
+                    .foregroundStyle(SolennixColors.textTertiary)
+                Text("Sin comprobantes pendientes")
+                    .font(.headline)
+                    .foregroundStyle(SolennixColors.textSecondary)
+                Text("Cuando un cliente envíe un comprobante de transferencia, aparecerá aquí para tu revisión.")
+                    .font(.subheadline)
+                    .foregroundStyle(SolennixColors.textTertiary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(Spacing.lg)
+            .solennixGlassSurface(cornerRadius: CornerRadius.card, tintOpacity: 0.14)
+            .shadowSm()
+            .padding(.horizontal, Spacing.lg)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

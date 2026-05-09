@@ -108,6 +108,7 @@ public struct DashboardView: View {
                             forecast: vm.forecast,
                             isLoading: vm.isLoading
                         )
+                        .gridCellColumns(sizeClass == .regular ? 2 : 1)
                     }
                     .padding(.horizontal, sectionHorizontalPadding)
                 }
