@@ -10,6 +10,10 @@ private struct ReviewPaymentSubmissionRequest: Encodable {
     let rejectionReason: String?
 }
 
+private struct DataEnvelope<T: Decodable>: Decodable {
+    let data: T
+}
+
 // MARK: - View Model
 
 @Observable
@@ -70,11 +74,11 @@ public final class PaymentInboxViewModel {
         errorMessage = nil
         do {
             let body = ReviewPaymentSubmissionRequest(status: "approved", rejectionReason: nil)
-            let updated: PaymentSubmission = try await apiClient.patch(
+            let response: DataEnvelope<PaymentSubmission> = try await apiClient.patch(
                 Endpoint.paymentSubmission(id),
                 body: body
             )
-            updateSubmission(updated)
+            updateSubmission(response.data)
         } catch {
             errorMessage = mapError(error)
         }
@@ -87,11 +91,11 @@ public final class PaymentInboxViewModel {
         errorMessage = nil
         do {
             let body = ReviewPaymentSubmissionRequest(status: "rejected", rejectionReason: reason)
-            let updated: PaymentSubmission = try await apiClient.patch(
+            let response: DataEnvelope<PaymentSubmission> = try await apiClient.patch(
                 Endpoint.paymentSubmission(id),
                 body: body
             )
-            updateSubmission(updated)
+            updateSubmission(response.data)
         } catch {
             errorMessage = mapError(error)
         }
@@ -101,8 +105,13 @@ public final class PaymentInboxViewModel {
     // MARK: - Helpers
 
     private func updateSubmission(_ updated: PaymentSubmission) {
-        if let index = submissions.firstIndex(where: { $0.id == updated.id }) {
-            submissions[index] = updated
+        // Organizer inbox should only show pending submissions.
+        if updated.status == .pending {
+            if let index = submissions.firstIndex(where: { $0.id == updated.id }) {
+                submissions[index] = updated
+            }
+        } else {
+            submissions.removeAll { $0.id == updated.id }
         }
     }
 }
