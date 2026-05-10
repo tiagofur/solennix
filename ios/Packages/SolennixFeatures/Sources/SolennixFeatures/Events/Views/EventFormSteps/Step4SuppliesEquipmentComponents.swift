@@ -186,6 +186,31 @@ struct Step4SuppliesCostSummary: View {
     }
 }
 
+struct Step4PickerSheet<Content: View>: View {
+    @Binding var searchText: String
+    let searchPrompt: String
+    let title: String
+    let onClose: () -> Void
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        NavigationStack {
+            List {
+                content()
+            }
+            .searchable(text: $searchText, prompt: searchPrompt)
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(tr("events.detail.share.close", "Cerrar")) { onClose() }
+                        .foregroundStyle(SolennixColors.textSecondary)
+                }
+            }
+        }
+    }
+}
+
 struct Step4SupplyPickerRow: View {
     let item: InventoryItem
     let isSelected: Bool

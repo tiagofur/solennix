@@ -217,8 +217,12 @@ struct Step4SuppliesEquipmentView: View {
     // MARK: - Picker Sheets
 
     private var supplyPickerSheet: some View {
-        NavigationStack {
-            List {
+        Step4PickerSheet(
+            searchText: $supplySearch,
+            searchPrompt: tr("events.form.inventory.search_supply", "Buscar insumo"),
+            title: tr("events.form.inventory.add_supply", "Agregar insumo"),
+            onClose: { showSupplyPicker = false }
+        ) {
                 ForEach(filteredSupplies) { item in
                     Button {
                         viewModel.addSupply(item: item, suggestedQty: 1)
@@ -231,22 +235,16 @@ struct Step4SuppliesEquipmentView: View {
                     }
                     .buttonStyle(.plain)
                 }
-            }
-            .searchable(text: $supplySearch, prompt: tr("events.form.inventory.search_supply", "Buscar insumo"))
-            .navigationTitle(tr("events.form.inventory.add_supply", "Agregar insumo"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button(tr("events.detail.share.close", "Cerrar")) { showSupplyPicker = false }
-                        .foregroundStyle(SolennixColors.textSecondary)
-                }
-            }
         }
     }
 
     private var equipmentPickerSheet: some View {
-        NavigationStack {
-            List {
+        Step4PickerSheet(
+            searchText: $equipmentSearch,
+            searchPrompt: tr("events.form.inventory.search_equipment", "Buscar equipo"),
+            title: tr("events.form.inventory.add_equipment", "Agregar equipamiento"),
+            onClose: { showEquipmentPicker = false }
+        ) {
                 ForEach(filteredEquipment) { item in
                     Button {
                         viewModel.addEquipment(inventoryId: item.id, name: item.ingredientName, quantity: 1)
@@ -259,16 +257,6 @@ struct Step4SuppliesEquipmentView: View {
                     }
                     .buttonStyle(.plain)
                 }
-            }
-            .searchable(text: $equipmentSearch, prompt: tr("events.form.inventory.search_equipment", "Buscar equipo"))
-            .navigationTitle(tr("events.form.inventory.add_equipment", "Agregar equipamiento"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button(tr("events.detail.share.close", "Cerrar")) { showEquipmentPicker = false }
-                        .foregroundStyle(SolennixColors.textSecondary)
-                }
-            }
         }
     }
 
