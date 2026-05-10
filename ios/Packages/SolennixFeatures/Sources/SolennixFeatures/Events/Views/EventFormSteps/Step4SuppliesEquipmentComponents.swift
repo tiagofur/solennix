@@ -125,6 +125,34 @@ struct Step4SuggestionsBanner: View {
     }
 }
 
+struct Step4EquipmentConflictsBanner: View {
+    let conflicts: [FormEquipmentConflict]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            HStack(spacing: Spacing.xs) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.error)
+
+                Text(tr("events.form.inventory.availability_conflicts", "Conflictos de disponibilidad"))
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(SolennixColors.error)
+            }
+
+            ForEach(conflicts) { conflict in
+                Text(trf2("events.form.inventory.conflict_item", "%@ ya reservado para \"%@\"", conflict.equipmentName, conflict.eventName))
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.error)
+            }
+        }
+        .padding(Spacing.md)
+        .background(SolennixColors.errorBg)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+    }
+}
+
 struct Step4SupplyPickerRow: View {
     let item: InventoryItem
     let isSelected: Bool

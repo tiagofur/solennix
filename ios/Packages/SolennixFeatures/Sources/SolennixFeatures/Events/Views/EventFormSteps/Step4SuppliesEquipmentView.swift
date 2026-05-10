@@ -154,27 +154,7 @@ struct Step4SuppliesEquipmentView: View {
                 .foregroundStyle(SolennixColors.text)
 
             if !viewModel.equipmentConflicts.isEmpty {
-                VStack(alignment: .leading, spacing: Spacing.sm) {
-                    HStack(spacing: Spacing.xs) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.error)
-
-                        Text(tr("events.form.inventory.availability_conflicts", "Conflictos de disponibilidad"))
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(SolennixColors.error)
-                    }
-
-                    ForEach(viewModel.equipmentConflicts) { conflict in
-                        Text(trf2("events.form.inventory.conflict_item", "%@ ya reservado para \"%@\"", conflict.equipmentName, conflict.eventName))
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.error)
-                    }
-                }
-                .padding(Spacing.md)
-                .background(SolennixColors.errorBg)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                Step4EquipmentConflictsBanner(conflicts: viewModel.equipmentConflicts)
             }
 
             if !viewModel.equipmentSuggestions.isEmpty {
