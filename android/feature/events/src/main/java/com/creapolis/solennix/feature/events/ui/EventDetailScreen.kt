@@ -30,7 +30,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.ui.res.stringResource
 import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.designsystem.component.*
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
@@ -90,7 +89,6 @@ fun EventDetailScreen(
     var showPhotoGallery by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showClientPortalSheet by remember { mutableStateOf(false) }
-    var showMoreMenu by remember { mutableStateOf(false) }
 
     val windowInfoTracker = WindowInfoTracker.getOrCreate(context)
     val windowLayoutInfo by (context as? android.app.Activity)?.let { activity ->
@@ -138,61 +136,15 @@ fun EventDetailScreen(
                 },
                 actions = {
                     uiState.event?.let { event ->
-                        Box {
-                            IconButton(onClick = { showMoreMenu = true }) {
-                                Icon(
-                                    imageVector = Icons.Default.MoreVert,
-                                    contentDescription = stringResource(R.string.events_detail_more_actions)
-                                )
-                            }
-                            DropdownMenu(
-                                expanded = showMoreMenu,
-                                onDismissRequest = { showMoreMenu = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.events_detail_action_edit)) },
-                                    leadingIcon = {
-                                        Icon(Icons.Default.Edit, contentDescription = null)
-                                    },
-                                    onClick = {
-                                        showMoreMenu = false
-                                        onEditClick(event.id)
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.events_detail_action_duplicate)) },
-                                    leadingIcon = {
-                                        Icon(Icons.Default.ContentCopy, contentDescription = null)
-                                    },
-                                    onClick = {
-                                        showMoreMenu = false
-                                        if (viewModel.prepareDuplicate()) {
-                                            onDuplicateClick()
-                                        }
-                                    }
-                                )
-                                HorizontalDivider()
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            stringResource(R.string.events_detail_action_delete),
-                                            color = SolennixTheme.colors.error
-                                        )
-                                    },
-                                    leadingIcon = {
-                                        Icon(
-                                            Icons.Default.Delete,
-                                            contentDescription = null,
-                                            tint = SolennixTheme.colors.error
-                                        )
-                                    },
-                                    onClick = {
-                                        showMoreMenu = false
-                                        showDeleteDialog = true
-                                    }
-                                )
-                            }
-                        }
+                        EventDetailTopBarActions(
+                            onEditClick = { onEditClick(event.id) },
+                            onDuplicateClick = {
+                                if (viewModel.prepareDuplicate()) {
+                                    onDuplicateClick()
+                                }
+                            },
+                            onDeleteClick = { showDeleteDialog = true }
+                        )
                     }
                 }
             )
