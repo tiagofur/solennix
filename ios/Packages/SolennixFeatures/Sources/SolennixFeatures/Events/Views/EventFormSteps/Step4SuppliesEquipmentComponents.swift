@@ -16,7 +16,7 @@ private func trf(_ key: String, _ value: String, _ arg: String) -> String {
 // sus modifiers (.onChange, $bindings subscript), evita el crash de out-
 // of-bounds que ocurria al tocar el trash - SwiftUI re-samplea esas
 // expresiones antes de desmontar el view y el index quedaba stale.
-private struct SupplyRowView: View {
+struct SupplyRowView: View {
 
     let item: SelectedSupplyItem
     let index: Int
@@ -196,7 +196,7 @@ private struct SupplyRowView: View {
 
 // MARK: - Equipment Row
 
-private struct EquipmentRowView: View {
+struct EquipmentRowView: View {
 
     let item: SelectedEquipmentItem
     let index: Int
@@ -289,7 +289,7 @@ private struct EquipmentRowView: View {
 
 // MARK: - Flow Layout
 
-private struct FlowLayout: Layout {
+struct FlowLayout: Layout {
     var spacing: CGFloat
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
