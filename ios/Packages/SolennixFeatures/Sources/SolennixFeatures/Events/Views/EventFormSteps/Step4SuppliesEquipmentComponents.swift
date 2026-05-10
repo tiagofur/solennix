@@ -50,6 +50,17 @@ struct Step4AddButton: View {
     }
 }
 
+struct Step4SectionHeader: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(.title3)
+            .fontWeight(.semibold)
+            .foregroundStyle(SolennixColors.text)
+    }
+}
+
 struct Step4EmptyState: View {
     let icon: String
     let title: String
@@ -149,6 +160,28 @@ struct Step4EquipmentConflictsBanner: View {
         }
         .padding(Spacing.md)
         .background(SolennixColors.errorBg)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+    }
+}
+
+struct Step4SuppliesCostSummary: View {
+    let total: Double
+
+    var body: some View {
+        HStack {
+            Text(tr("events.form.inventory.supplies_cost", "Costo insumos"))
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundStyle(SolennixColors.textSecondary)
+
+            Spacer()
+
+            Text(formatCurrency(total))
+                .font(.headline)
+                .foregroundStyle(SolennixColors.primary)
+        }
+        .padding(Spacing.md)
+        .background(SolennixColors.surfaceAlt)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
     }
 }

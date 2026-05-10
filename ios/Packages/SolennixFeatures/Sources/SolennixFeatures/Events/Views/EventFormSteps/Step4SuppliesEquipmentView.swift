@@ -71,10 +71,7 @@ struct Step4SuppliesEquipmentView: View {
 
     private var suppliesSection: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text(tr("events.form.inventory.supplies", "Insumos"))
-                .font(.title3)
-                .fontWeight(.semibold)
-                .foregroundStyle(SolennixColors.text)
+            Step4SectionHeader(title: tr("events.form.inventory.supplies", "Insumos"))
 
             if !viewModel.supplySuggestions.isEmpty {
                 Step4SuggestionsBanner(
@@ -125,21 +122,7 @@ struct Step4SuppliesEquipmentView: View {
                     )
                 }
 
-                HStack {
-                    Text(tr("events.form.inventory.supplies_cost", "Costo insumos"))
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundStyle(SolennixColors.textSecondary)
-
-                    Spacer()
-
-                    Text(formatCurrency(viewModel.suppliesCost))
-                        .font(.headline)
-                        .foregroundStyle(SolennixColors.primary)
-                }
-                .padding(Spacing.md)
-                .background(SolennixColors.surfaceAlt)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                Step4SuppliesCostSummary(total: viewModel.suppliesCost)
             }
         }
     }
@@ -148,10 +131,7 @@ struct Step4SuppliesEquipmentView: View {
 
     private var equipmentSection: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text(tr("events.form.inventory.equipment", "Equipamiento"))
-                .font(.title3)
-                .fontWeight(.semibold)
-                .foregroundStyle(SolennixColors.text)
+            Step4SectionHeader(title: tr("events.form.inventory.equipment", "Equipamiento"))
 
             if !viewModel.equipmentConflicts.isEmpty {
                 Step4EquipmentConflictsBanner(conflicts: viewModel.equipmentConflicts)
@@ -203,10 +183,7 @@ struct Step4SuppliesEquipmentView: View {
 
     private var personnelSection: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text(tr("events.form.inventory.staff", "Personal"))
-                .font(.title3)
-                .fontWeight(.semibold)
-                .foregroundStyle(SolennixColors.text)
+            Step4SectionHeader(title: tr("events.form.inventory.staff", "Personal"))
 
             Step4PersonnelPanel(viewModel: viewModel)
         }
