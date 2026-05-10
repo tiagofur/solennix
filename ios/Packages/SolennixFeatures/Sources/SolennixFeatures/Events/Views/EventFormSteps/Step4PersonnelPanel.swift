@@ -88,73 +88,27 @@ struct Step4PersonnelPanel: View {
 
             // Add staff / team buttons
             HStack(spacing: Spacing.sm) {
-                Button {
+                Step4PersonnelActionButton(
+                    icon: "person.crop.circle.badge.plus",
+                    label: tr("events.form.staff.add_person", "Agregar personal"),
+                    background: SolennixColors.primaryLight
+                ) {
                     showStaffPicker = true
-                } label: {
-                    HStack(spacing: Spacing.sm) {
-                        Image(systemName: "person.crop.circle.badge.plus")
-                            .foregroundStyle(SolennixColors.primary)
-
-                        Text(tr("events.form.staff.add_person", "Agregar personal"))
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundStyle(SolennixColors.primary)
-
-                        Spacer()
-                    }
-                    .padding(Spacing.md)
-                    .background(SolennixColors.primaryLight)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: CornerRadius.md)
-                            .stroke(SolennixColors.primary.opacity(0.3), lineWidth: 1)
-                    )
                 }
-                .buttonStyle(.plain)
 
-                Button {
+                Step4PersonnelActionButton(
+                    icon: "person.3.fill",
+                    label: tr("events.form.staff.add_team", "Agregar equipo completo"),
+                    background: SolennixColors.surface
+                ) {
                     showTeamPicker = true
                     Task { await loadTeamsIfNeeded() }
-                } label: {
-                    HStack(spacing: Spacing.sm) {
-                        Image(systemName: "person.3.fill")
-                            .foregroundStyle(SolennixColors.primary)
-
-                        Text(tr("events.form.staff.add_team", "Agregar equipo completo"))
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundStyle(SolennixColors.primary)
-
-                        Spacer()
-                    }
-                    .padding(Spacing.md)
-                    .background(SolennixColors.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: CornerRadius.md)
-                            .stroke(SolennixColors.primary.opacity(0.3), lineWidth: 1)
-                    )
                 }
-                .buttonStyle(.plain)
             }
 
             // Staff cost total (informativo — no suma al total en Phase 1)
             if !viewModel.selectedStaff.isEmpty {
-                HStack {
-                    Text(tr("events.form.staff.total_cost", "Costo personal"))
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundStyle(SolennixColors.textSecondary)
-
-                    Spacer()
-
-                    Text(formatCurrency(viewModel.staffCost))
-                        .font(.headline)
-                        .foregroundStyle(SolennixColors.text)
-                }
-                .padding(Spacing.md)
-                .background(SolennixColors.surface)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                Step4PersonnelCostSummary(total: viewModel.staffCost)
             }
         }
         .sheet(isPresented: $showStaffPicker) {
@@ -430,6 +384,59 @@ struct Step4PersonnelPanel: View {
         case .declined:  return SolennixColors.errorBg
         case .cancelled: return SolennixColors.surfaceAlt
         }
+    }
+}
+
+private struct Step4PersonnelActionButton: View {
+    let icon: String
+    let label: String
+    let background: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: Spacing.sm) {
+                Image(systemName: icon)
+                    .foregroundStyle(SolennixColors.primary)
+
+                Text(label)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(SolennixColors.primary)
+
+                Spacer()
+            }
+            .padding(Spacing.md)
+            .background(background)
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+            .overlay(
+                RoundedRectangle(cornerRadius: CornerRadius.md)
+                    .stroke(SolennixColors.primary.opacity(0.3), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct Step4PersonnelCostSummary: View {
+    let total: Double
+
+    var body: some View {
+        HStack {
+            Text(tr("events.form.staff.total_cost", "Costo personal"))
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundStyle(SolennixColors.textSecondary)
+
+            Spacer()
+
+            Text(formatCurrency(total))
+                .font(.headline)
+                .foregroundStyle(SolennixColors.text)
+        }
+        .padding(Spacing.md)
+        .background(SolennixColors.surface)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
     }
 }
 

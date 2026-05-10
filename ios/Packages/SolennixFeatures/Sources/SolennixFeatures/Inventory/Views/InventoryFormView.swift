@@ -63,7 +63,7 @@ public struct InventoryFormView: View {
             }
 
             // Stock
-            Section(InventoryStrings.stockTitle) {
+                        SharedFlowLayout(spacing: Spacing.xs) {
                 AdaptiveFormRow {
                     HStack {
                         Text(InventoryStrings.currentStockTitle)
@@ -101,56 +101,9 @@ public struct InventoryFormView: View {
 
                         FlowLayout(spacing: Spacing.xs) {
                             ForEach(group.1, id: \.self) { unit in
-                                Button {
                                     viewModel.unit = unit
                                 } label: {
                                     Text(unit)
-                                        .font(.subheadline)
-                                        .padding(.horizontal, Spacing.md)
-                                        .padding(.vertical, Spacing.xs)
-                                        .background(
-                                            viewModel.unit == unit
-                                                ? SolennixColors.primary
-                                                : SolennixColors.surface
-                                        )
-                                        .foregroundStyle(
-                                            viewModel.unit == unit
-                                                ? .white
-                                                : SolennixColors.text
-                                        )
-                                        .clipShape(Capsule())
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Cost
-            Section(InventoryStrings.costOptionalTitle) {
-                HStack {
-                    Text("$")
-                    TextField(InventoryStrings.costPlaceholder, value: $viewModel.unitCost, format: .number)
-                        .keyboardType(.decimalPad)
-                }
-            }
-        }
-    }
-
-    // MARK: - Save Button
-
-    private var saveButton: some View {
-        Button {
-            Task {
-                let success = await viewModel.save()
-                if success {
-                    dismiss()
-                }
-            }
-        } label: {
-            if viewModel.isSaving {
-                ProgressView()
             } else {
                 Text(InventoryStrings.save)
                     .fontWeight(.semibold)
