@@ -292,7 +292,7 @@ private struct ContractVariablePickerSheet: View {
                                 .foregroundStyle(SolennixColors.textTertiary)
                                 .textCase(.uppercase)
 
-                            FlowLayout(spacing: Spacing.xs) {
+                            ContractFlowLayout(spacing: Spacing.xs) {
                                 ForEach(variables) { variable in
                                     Button {
                                         onSelect(variable)
@@ -333,7 +333,7 @@ private struct ContractVariablePickerSheet: View {
 
 // MARK: - Flow Layout
 
-private struct FlowLayout: Layout {
+private struct ContractFlowLayout: Layout {
 
     var spacing: CGFloat = 8
 

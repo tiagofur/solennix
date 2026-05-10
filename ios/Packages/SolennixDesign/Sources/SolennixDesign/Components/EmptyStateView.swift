@@ -45,7 +45,7 @@ public struct EmptyStateView: View {
             }
         }
         .padding(Spacing.xxl)
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 }
 

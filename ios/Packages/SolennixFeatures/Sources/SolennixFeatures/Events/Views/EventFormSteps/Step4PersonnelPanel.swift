@@ -430,7 +430,7 @@ private struct Step4PersonnelCostSummary: View {
 
             Spacer()
 
-            Text(formatCurrency(total))
+            Text("$\(String(format: "%.2f", total))")
                 .font(.headline)
                 .foregroundStyle(SolennixColors.text)
         }

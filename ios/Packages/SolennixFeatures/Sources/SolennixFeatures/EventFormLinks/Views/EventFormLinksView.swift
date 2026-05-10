@@ -21,6 +21,7 @@ public struct EventFormLinksView: View {
         VStack(spacing: 0) {
             content
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(SolennixColors.surfaceGrouped)
         .navigationTitle("Links de Formulario")
         .navigationBarTitleDisplayMode(.large)
