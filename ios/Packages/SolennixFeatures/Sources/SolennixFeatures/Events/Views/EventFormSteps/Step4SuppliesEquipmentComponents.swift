@@ -10,6 +10,10 @@ private func trf(_ key: String, _ value: String, _ arg: String) -> String {
     String(format: tr(key, value), locale: FeatureL10n.locale, arg)
 }
 
+private func trf2(_ key: String, _ value: String, _ arg1: String, _ arg2: String) -> String {
+    String(format: tr(key, value), locale: FeatureL10n.locale, arg1, arg2)
+}
+
 struct Step4SuggestionChip: Identifiable {
     let id: String
     let label: String
@@ -119,6 +123,68 @@ struct Step4SuggestionsBanner: View {
         .background(SolennixColors.warningBg)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
     }
+}
+
+struct Step4SupplyPickerRow: View {
+    let item: InventoryItem
+    let isSelected: Bool
+
+    var body: some View {
+        HStack(spacing: Spacing.sm) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.ingredientName)
+                    .font(.body)
+                    .foregroundStyle(SolennixColors.text)
+
+                Text(trf2("events.form.inventory.stock_value_unit", "Stock: %@ %@", String(format: "%.1f", item.currentStock), item.unit))
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textSecondary)
+            }
+
+            Spacer()
+
+            if let cost = item.unitCost {
+                Text(formatCurrency(cost))
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textSecondary)
+            }
+
+            if isSelected {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(SolennixColors.success)
+            }
+        }
+    }
+}
+
+struct Step4EquipmentPickerRow: View {
+    let item: InventoryItem
+    let isSelected: Bool
+
+    var body: some View {
+        HStack(spacing: Spacing.sm) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.ingredientName)
+                    .font(.body)
+                    .foregroundStyle(SolennixColors.text)
+
+                Text(trf2("events.form.inventory.available_value_unit", "Disponible: %@ %@", String(format: "%.0f", item.currentStock), item.unit))
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textSecondary)
+            }
+
+            Spacer()
+
+            if isSelected {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(SolennixColors.success)
+            }
+        }
+    }
+}
+
+private func formatCurrency(_ value: Double) -> String {
+    "$\(String(format: "%.2f", value))"
 }
 
 // MARK: - Supply Row

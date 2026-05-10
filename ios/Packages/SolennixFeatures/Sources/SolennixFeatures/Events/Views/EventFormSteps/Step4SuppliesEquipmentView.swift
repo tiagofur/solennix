@@ -267,30 +267,10 @@ struct Step4SuppliesEquipmentView: View {
                         viewModel.addSupply(item: item, suggestedQty: 1)
                         showSupplyPicker = false
                     } label: {
-                        HStack(spacing: Spacing.sm) {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(item.ingredientName)
-                                    .font(.body)
-                                    .foregroundStyle(SolennixColors.text)
-
-                                Text(trf2("events.form.inventory.stock_value_unit", "Stock: %@ %@", String(format: "%.1f", item.currentStock), item.unit))
-                                    .font(.caption)
-                                    .foregroundStyle(SolennixColors.textSecondary)
-                            }
-
-                            Spacer()
-
-                            if let cost = item.unitCost {
-                                Text(formatCurrency(cost))
-                                    .font(.caption)
-                                    .foregroundStyle(SolennixColors.textSecondary)
-                            }
-
-                            if viewModel.selectedSupplies.contains(where: { $0.inventoryId == item.id }) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(SolennixColors.success)
-                            }
-                        }
+                        Step4SupplyPickerRow(
+                            item: item,
+                            isSelected: viewModel.selectedSupplies.contains(where: { $0.inventoryId == item.id })
+                        )
                     }
                     .buttonStyle(.plain)
                 }
@@ -315,24 +295,10 @@ struct Step4SuppliesEquipmentView: View {
                         viewModel.addEquipment(inventoryId: item.id, name: item.ingredientName, quantity: 1)
                         showEquipmentPicker = false
                     } label: {
-                        HStack(spacing: Spacing.sm) {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(item.ingredientName)
-                                    .font(.body)
-                                    .foregroundStyle(SolennixColors.text)
-
-                                Text(trf2("events.form.inventory.available_value_unit", "Disponible: %@ %@", String(format: "%.0f", item.currentStock), item.unit))
-                                    .font(.caption)
-                                    .foregroundStyle(SolennixColors.textSecondary)
-                            }
-
-                            Spacer()
-
-                            if viewModel.selectedEquipment.contains(where: { $0.inventoryId == item.id }) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(SolennixColors.success)
-                            }
-                        }
+                        Step4EquipmentPickerRow(
+                            item: item,
+                            isSelected: viewModel.selectedEquipment.contains(where: { $0.inventoryId == item.id })
+                        )
                     }
                     .buttonStyle(.plain)
                 }
@@ -366,10 +332,6 @@ struct Step4SuppliesEquipmentView: View {
     }
 
     // MARK: - Helpers
-
-    private func formatCurrency(_ value: Double) -> String {
-        "$\(String(format: "%.2f", value))"
-    }
 
     private func formatQty(_ value: Double) -> String {
         if value.truncatingRemainder(dividingBy: 1) == 0 {
