@@ -158,60 +158,39 @@ public struct EventDetailView: View {
 
     private func headerCard(_ event: Event) -> some View {
         let components = parseDateComponents(event.eventDate)
+        let scheduleText = event.startTime.map { [ $0, event.endTime ].compactMap { $0 }.joined(separator: " - ") }
+        let locationLabel: String?
+        let locationValue: String?
 
-        return VStack(spacing: Spacing.md) {
-            HStack(spacing: Spacing.md) {
-                EventDetailDateBox(month: components.month, day: components.day)
-
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text(event.serviceType)
-                        .font(.headline)
-                        .foregroundStyle(SolennixColors.text)
-
-                    if let client = viewModel.client {
-                        Text(client.name)
-                            .font(.subheadline)
-                            .foregroundStyle(SolennixColors.textSecondary)
-                    }
-
-                    Button {
-                        viewModel.showStatusSheet = true
-                    } label: {
-                        StatusBadge(status: event.status.rawValue)
-                    }
-                }
-
-                Spacer()
-            }
-
-            // Quick info grid
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Spacing.sm) {
-                EventDetailQuickInfoItem(icon: "calendar", label: tr("events.detail.info.date", "Fecha"), value: formatDateShort(event.eventDate))
-
-                if let startTime = event.startTime {
-                    let timeText = [startTime, event.endTime].compactMap { $0 }.joined(separator: " - ")
-                    EventDetailQuickInfoItem(icon: "clock", label: tr("events.detail.info.schedule", "Horario"), value: timeText)
-                }
-
-                EventDetailQuickInfoItem(
-                    icon: "person.2",
-                    label: tr("events.detail.info.people", "Personas"),
-                    value: trf("events.detail.info.people_value", "%@ PAX", String(event.numPeople))
-                )
-
-                if let location = event.location, !location.isEmpty {
-                    let fullLocation = [location, event.city].compactMap { $0?.isEmpty == true ? nil : $0 }.joined(separator: ", ")
-                    EventDetailQuickInfoItem(icon: "mappin", label: tr("events.detail.info.location", "Ubicación"), value: fullLocation)
-                } else if let city = event.city, !city.isEmpty {
-                    EventDetailQuickInfoItem(icon: "mappin", label: tr("events.detail.info.city", "Ciudad"), value: city)
-                }
-            }
+        if let location = event.location, !location.isEmpty {
+            locationLabel = tr("events.detail.info.location", "Ubicación")
+            locationValue = [location, event.city].compactMap { value in
+                guard let value, !value.isEmpty else { return nil }
+                return value
+            }.joined(separator: ", ")
+        } else if let city = event.city, !city.isEmpty {
+            locationLabel = tr("events.detail.info.city", "Ciudad")
+            locationValue = city
+        } else {
+            locationLabel = nil
+            locationValue = nil
         }
-        .padding(Spacing.lg)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-        .shadowSm()
+
+        return EventDetailHeaderCard(
+            event: event,
+            clientName: viewModel.client?.name,
+            month: components.month,
+            day: components.day,
+            dateLabel: tr("events.detail.info.date", "Fecha"),
+            dateValue: formatDateShort(event.eventDate),
+            scheduleLabel: tr("events.detail.info.schedule", "Horario"),
+            scheduleValue: scheduleText,
+            peopleLabel: tr("events.detail.info.people", "Personas"),
+            peopleValue: trf("events.detail.info.people_value", "%@ PAX", String(event.numPeople)),
+            locationLabel: locationLabel,
+            locationValue: locationValue,
+            onStatusTap: { viewModel.showStatusSheet = true }
+        )
     }
 
     // MARK: - Client Info Card
@@ -219,47 +198,7 @@ public struct EventDetailView: View {
     private func clientInfoCard(_ event: Event) -> some View {
         Group {
             if let client = viewModel.client {
-                VStack(alignment: .leading, spacing: Spacing.sm) {
-                    HStack(spacing: Spacing.sm) {
-                        Image(systemName: "person.circle.fill")
-                            .font(.title2)
-                            .foregroundStyle(SolennixColors.primary)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(client.name)
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(SolennixColors.text)
-
-                            if let city = client.city, !city.isEmpty {
-                                Text(city)
-                                    .font(.caption)
-                                    .foregroundStyle(SolennixColors.textSecondary)
-                            }
-                        }
-
-                        Spacer()
-                    }
-
-                    HStack(spacing: Spacing.lg) {
-                        if !client.phone.isEmpty {
-                            Label(client.phone, systemImage: "phone")
-                                .font(.caption)
-                                .foregroundStyle(SolennixColors.textSecondary)
-                        }
-
-                        if let email = client.email, !email.isEmpty {
-                            Label(email, systemImage: "envelope")
-                                .font(.caption)
-                                .foregroundStyle(SolennixColors.textSecondary)
-                                .lineLimit(1)
-                        }
-                    }
-                }
-                .padding(Spacing.md)
-                .background(SolennixColors.card)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-                .shadowSm()
+                EventDetailClientInfoCard(client: client)
             }
         }
     }
@@ -267,236 +206,81 @@ public struct EventDetailView: View {
     // MARK: - Finance Summary Card (navigable)
 
     private func financeSummaryCard(_ event: Event) -> some View {
-        NavigationLink(value: Route.eventFinances(id: eventId)) {
-            VStack(alignment: .leading, spacing: Spacing.sm) {
-                HStack {
-                    Image(systemName: "chart.bar.fill")
-                        .font(.body)
-                        .foregroundStyle(SolennixColors.primary)
+        let supplyCost = viewModel.supplies.reduce(0.0) { $0 + ($1.quantity * $1.unitCost) }
+        let netSales = event.totalAmount - event.taxAmount
+        let profit = netSales - supplyCost
+        let margin = netSales > 0 ? (profit / netSales) * 100 : 0
+        let discountText = event.discount > 0
+            ? (event.discountType == .percent
+                ? trf("events.detail.finances.discount_percent", "Descuento %@%%", String(Int(event.discount)))
+                : tr("events.detail.finances.discount", "Descuento"))
+            : nil
+        let taxText = event.requiresInvoice
+            ? trf("events.detail.finances.tax", "IVA %@%%", String(Int(event.taxRate)))
+            : nil
 
-                    Text(tr("events.detail.card.finances", "Finanzas"))
-                        .font(.headline)
-                        .foregroundStyle(SolennixColors.text)
-
-                    Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textTertiary)
-                }
-
-                Divider().background(SolennixColors.border)
-
-                HStack(spacing: Spacing.md) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(tr("events.detail.finances.total", "Total"))
-                            .font(.caption2)
-                            .foregroundStyle(SolennixColors.textTertiary)
-                            .textCase(.uppercase)
-                        Text(event.totalAmount.asMXN)
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundStyle(SolennixColors.primary)
-                    }
-
-                    Spacer()
-
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text(tr("events.detail.finances.profit", "Utilidad"))
-                            .font(.caption2)
-                            .foregroundStyle(SolennixColors.textTertiary)
-                            .textCase(.uppercase)
-
-                        let supplyCost = viewModel.supplies.reduce(0.0) { $0 + ($1.quantity * $1.unitCost) }
-                        let netSales = event.totalAmount - event.taxAmount
-                        let profit = netSales - supplyCost
-                        let margin = netSales > 0 ? (profit / netSales) * 100 : 0
-
-                        Text("\(String(format: "%.0f", margin))%")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundStyle(SolennixColors.success)
-                    }
-                }
-
-                if event.discount > 0 {
-                    let discountLabel = event.discountType == .percent
-                        ? trf("events.detail.finances.discount_percent", "Descuento %@%%", String(Int(event.discount)))
-                        : tr("events.detail.finances.discount", "Descuento")
-                    Text(discountLabel)
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.error)
-                }
-
-                if event.requiresInvoice {
-                    Text(trf("events.detail.finances.tax", "IVA %@%%", String(Int(event.taxRate))))
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textSecondary)
-                }
-            }
-            .padding(Spacing.lg)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-            .shadowSm()
-        }
-        .buttonStyle(.plain)
+        return EventDetailFinanceSummaryCard(
+            title: tr("events.detail.card.finances", "Finanzas"),
+            totalLabel: tr("events.detail.finances.total", "Total"),
+            totalValue: event.totalAmount.asMXN,
+            profitLabel: tr("events.detail.finances.profit", "Utilidad"),
+            profitValue: "\(String(format: "%.0f", margin))%",
+            discountText: discountText,
+            taxText: taxText,
+            route: Route.eventFinances(id: eventId)
+        )
     }
 
     // MARK: - Payment Summary Card (navigable)
 
     private func paymentSummaryCard(_ event: Event) -> some View {
-        NavigationLink(value: Route.eventPayments(id: eventId)) {
-            VStack(alignment: .leading, spacing: Spacing.sm) {
-                HStack {
-                    Image(systemName: "dollarsign.circle.fill")
-                        .font(.body)
-                        .foregroundStyle(SolennixColors.success)
+        let depositText: String?
+        let isDepositMet: Bool
 
-                    Text(tr("events.detail.card.payments", "Pagos"))
-                        .font(.headline)
-                        .foregroundStyle(SolennixColors.text)
-
-                    Spacer()
-
-                    Text("\(viewModel.payments.count)")
-                        .font(.caption)
-                        .fontWeight(.bold)
-                        .foregroundStyle(SolennixColors.primary)
-                        .padding(.horizontal, Spacing.sm)
-                        .padding(.vertical, 2)
-                        .background(SolennixColors.primaryLight)
-                        .clipShape(Capsule())
-
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textTertiary)
-                }
-
-                Divider().background(SolennixColors.border)
-
-                // Mini KPIs
-                HStack(spacing: Spacing.sm) {
-                    EventDetailMiniKPI(
-                        label: tr("events.detail.payments.kpi.paid", "Pagado"),
-                        value: viewModel.totalPaid.asMXN,
-                        color: SolennixColors.success,
-                        bgColor: SolennixColors.successBg
-                    )
-                    EventDetailMiniKPI(
-                        label: tr("events.detail.payments.kpi.balance", "Saldo"),
-                        value: viewModel.remaining.asMXN,
-                        color: viewModel.isFullyPaid ? SolennixColors.success : SolennixColors.error,
-                        bgColor: viewModel.isFullyPaid ? SolennixColors.successBg : SolennixColors.errorBg
-                    )
-                }
-
-                // Progress bar
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(SolennixColors.surfaceAlt)
-                            .frame(height: 6)
-
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(SolennixColors.primary)
-                            .frame(width: geo.size.width * viewModel.progress / 100, height: 6)
-                    }
-                }
-                .frame(height: 6)
-
-                HStack {
-                    Spacer()
-                    Text("\(String(format: "%.0f", viewModel.progress))%")
-                        .font(.caption2)
-                        .fontWeight(.bold)
-                        .foregroundStyle(SolennixColors.textSecondary)
-                }
-
-                // Deposit status
-                if let depositPercent = event.depositPercent, depositPercent > 0 {
-                    let depositAmount = event.totalAmount * (depositPercent / 100)
-                    let isDepositMet = viewModel.totalPaid >= (depositAmount - 0.1)
-                    HStack(spacing: Spacing.xs) {
-                        Image(systemName: isDepositMet ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
-                            .font(.caption)
-                            .foregroundStyle(isDepositMet ? SolennixColors.success : SolennixColors.warning)
-                        Text(trf2("events.detail.payments.deposit_card", "Anticipo %@%%: %@", String(Int(depositPercent)), depositAmount.asMXN))
-                            .font(.caption)
-                            .foregroundStyle(isDepositMet ? SolennixColors.success : SolennixColors.warning)
-                    }
-                }
-            }
-            .padding(Spacing.lg)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-            .shadowSm()
+        if let depositPercent = event.depositPercent, depositPercent > 0 {
+            let depositAmount = event.totalAmount * (depositPercent / 100)
+            isDepositMet = viewModel.totalPaid >= (depositAmount - 0.1)
+            depositText = trf2("events.detail.payments.deposit_card", "Anticipo %@%%: %@", String(Int(depositPercent)), depositAmount.asMXN)
+        } else {
+            depositText = nil
+            isDepositMet = false
         }
-        .buttonStyle(.plain)
+
+        return EventDetailPaymentSummaryCard(
+            title: tr("events.detail.card.payments", "Pagos"),
+            paymentsCount: viewModel.payments.count,
+            paidLabel: tr("events.detail.payments.kpi.paid", "Pagado"),
+            paidValue: viewModel.totalPaid.asMXN,
+            balanceLabel: tr("events.detail.payments.kpi.balance", "Saldo"),
+            balanceValue: viewModel.remaining.asMXN,
+            isFullyPaid: viewModel.isFullyPaid,
+            progress: viewModel.progress,
+            depositText: depositText,
+            isDepositMet: isDepositMet,
+            route: Route.eventPayments(id: eventId)
+        )
     }
 
     // MARK: - Content Cards Grid
 
     private func contentCardsGrid(_ event: Event) -> some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Spacing.sm) {
-            EventDetailSummaryNavCard(
-                icon: "bag.fill",
-                title: tr("events.detail.card.products", "Productos"),
-                count: viewModel.products.count,
-                subtitle: nil,
-                color: SolennixColors.primary,
-                route: Route.eventProducts(id: eventId)
-            )
-
-            EventDetailSummaryNavCard(
-                icon: "sparkles",
-                title: tr("events.detail.card.extras", "Extras"),
-                count: viewModel.extras.count,
-                subtitle: nil,
-                color: SolennixColors.info,
-                route: Route.eventExtras(id: eventId)
-            )
-
-            EventDetailSummaryNavCard(
-                icon: "drop.fill",
-                title: tr("events.detail.card.supplies", "Insumos"),
-                count: viewModel.supplies.count,
-                subtitle: nil,
-                color: SolennixColors.warning,
-                route: Route.eventSupplies(id: eventId)
-            )
-
-            EventDetailSummaryNavCard(
-                icon: "wrench.and.screwdriver.fill",
-                title: tr("events.detail.card.equipment", "Equipo"),
-                count: viewModel.equipment.count,
-                subtitle: nil,
-                color: SolennixColors.success,
-                route: Route.eventEquipment(id: eventId)
-            )
-
-            EventDetailSummaryNavCard(
-                icon: "cart.fill",
-                title: tr("events.detail.card.shopping", "Compras"),
-                subtitle: shoppingListSubtitle,
-                color: SolennixColors.error,
-                route: Route.eventShoppingList(id: eventId)
-            )
-
-            EventDetailSummaryNavCard(
-                icon: "person.3.fill",
-                title: tr("events.detail.card.staff", "Personal"),
-                count: viewModel.eventStaff.count,
-                subtitle: nil,
-                color: SolennixColors.info,
-                route: Route.eventStaff(id: eventId)
-            )
-
-            EventDetailPhotosSummaryCard(
-                title: tr("events.detail.card.photos", "Fotos"),
-                count: viewModel.eventPhotos.count,
-                route: Route.eventPhotos(id: eventId)
-            )
-        }
+        EventDetailContentGridSection(
+            productsTitle: tr("events.detail.card.products", "Productos"),
+            productsCount: viewModel.products.count,
+            extrasTitle: tr("events.detail.card.extras", "Extras"),
+            extrasCount: viewModel.extras.count,
+            suppliesTitle: tr("events.detail.card.supplies", "Insumos"),
+            suppliesCount: viewModel.supplies.count,
+            equipmentTitle: tr("events.detail.card.equipment", "Equipo"),
+            equipmentCount: viewModel.equipment.count,
+            shoppingTitle: tr("events.detail.card.shopping", "Compras"),
+            shoppingSubtitle: shoppingListSubtitle,
+            staffTitle: tr("events.detail.card.staff", "Personal"),
+            staffCount: viewModel.eventStaff.count,
+            photosTitle: tr("events.detail.card.photos", "Fotos"),
+            photosCount: viewModel.eventPhotos.count,
+            eventId: eventId
+        )
     }
 
     private var shoppingListSubtitle: String? {
@@ -524,67 +308,32 @@ public struct EventDetailView: View {
 
     private var checklistCard: some View {
         VStack(spacing: Spacing.sm) {
-            NavigationLink(value: Route.eventChecklist(id: eventId)) {
-                HStack {
-                    Image(systemName: "checklist")
-                        .font(.body)
-                    Text(tr("events.detail.card.checklist", "Checklist de carga"))
-                        .font(.body)
-                        .fontWeight(.medium)
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textTertiary)
-                }
-                .foregroundStyle(SolennixColors.primary)
-                .padding(Spacing.md)
-                .frame(maxWidth: .infinity)
-                .background(SolennixColors.primaryLight)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-            }
+            EventDetailPrimaryLinkCard(
+                icon: "checklist",
+                title: tr("events.detail.card.checklist", "Checklist de carga"),
+                tint: SolennixColors.primary,
+                background: SolennixColors.primaryLight,
+                route: Route.eventChecklist(id: eventId)
+            )
 
-            NavigationLink(value: Route.eventPurchaseChecklist(id: eventId)) {
-                HStack {
-                    Image(systemName: "cart")
-                        .font(.body)
-                    Text("Checklist de compras")
-                        .font(.body)
-                        .fontWeight(.medium)
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textTertiary)
-                }
-                .foregroundStyle(SolennixColors.warning)
-                .padding(Spacing.md)
-                .frame(maxWidth: .infinity)
-                .background(SolennixColors.warning.opacity(0.15))
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-            }
+            EventDetailPrimaryLinkCard(
+                icon: "cart",
+                title: "Checklist de compras",
+                tint: SolennixColors.warning,
+                background: SolennixColors.warning.opacity(0.15),
+                route: Route.eventPurchaseChecklist(id: eventId)
+            )
         }
-        .buttonStyle(.plain)
     }
 
     private var contractPreviewCard: some View {
-        NavigationLink(value: Route.eventContractPreview(id: eventId)) {
-            HStack {
-                Image(systemName: "doc.richtext")
-                    .font(.body)
-                Text(tr("events.detail.card.contract", "Ver contrato"))
-                    .font(.body)
-                    .fontWeight(.medium)
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(SolennixColors.textTertiary)
-            }
-            .foregroundStyle(SolennixColors.info)
-            .padding(Spacing.md)
-            .frame(maxWidth: .infinity)
-            .background(SolennixColors.info.opacity(0.1))
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        }
-        .buttonStyle(.plain)
+        EventDetailPrimaryLinkCard(
+            icon: "doc.richtext",
+            title: tr("events.detail.card.contract", "Ver contrato"),
+            tint: SolennixColors.info,
+            background: SolennixColors.info.opacity(0.1),
+            route: Route.eventContractPreview(id: eventId)
+        )
     }
 
     // MARK: - Client Portal Card (PRD/12 feature A)
@@ -592,27 +341,13 @@ public struct EventDetailView: View {
     /// Opens a sheet that lets the organizer generate, copy, share, rotate
     /// or revoke the client-portal share link for this event.
     private var clientPortalCard: some View {
-        Button {
-            showClientPortalSheet = true
-        } label: {
-            HStack {
-                Image(systemName: "person.2.circle")
-                    .font(.body)
-                Text(tr("events.detail.share.title", "Portal del cliente"))
-                    .font(.body)
-                    .fontWeight(.medium)
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(SolennixColors.textTertiary)
-            }
-            .foregroundStyle(SolennixColors.primary)
-            .padding(Spacing.md)
-            .frame(maxWidth: .infinity)
-            .background(SolennixColors.primaryLight)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        }
-        .buttonStyle(.plain)
+        EventDetailPrimaryButtonCard(
+            icon: "person.2.circle",
+            title: tr("events.detail.share.title", "Portal del cliente"),
+            tint: SolennixColors.primary,
+            background: SolennixColors.primaryLight,
+            action: { showClientPortalSheet = true }
+        )
     }
 
     // MARK: - Action Buttons Row 1 (Payments)
@@ -620,25 +355,16 @@ public struct EventDetailView: View {
     private func actionButtonsRow1(_ event: Event) -> some View {
         Group {
             if viewModel.remaining > 0.01 {
-                VStack(spacing: Spacing.sm) {
-                    HStack(spacing: Spacing.sm) {
-                        PremiumButton(title: tr("events.detail.payments.action.record", "Registrar pago"), fullWidth: true) {
-                            viewModel.showPaymentSheet = true
-                        }
-
-                        PremiumButton(title: trf("events.detail.payments.action.settle", "Liquidar %@", viewModel.remaining.asMXN), fullWidth: true) {
-                            viewModel.payRemaining()
-                        }
-                    }
-
-                    if let depositPct = event.depositPercent, depositPct > 0, viewModel.depositBalance > 0.01 {
-                        // Titulo corto — el porcentaje ya se ve en la card
-                        // "Anticipo X%" arriba. Evita truncado en iPhone mini.
-                        PremiumButton(title: trf("events.detail.payments.action.deposit", "Anticipo %@", viewModel.depositBalance.asMXN), fullWidth: true) {
-                            viewModel.payDeposit()
-                        }
-                    }
-                }
+                EventDetailPaymentActionsCard(
+                    recordTitle: tr("events.detail.payments.action.record", "Registrar pago"),
+                    settleTitle: trf("events.detail.payments.action.settle", "Liquidar %@", viewModel.remaining.asMXN),
+                    depositTitle: (event.depositPercent ?? 0) > 0 && viewModel.depositBalance > 0.01
+                        ? trf("events.detail.payments.action.deposit", "Anticipo %@", viewModel.depositBalance.asMXN)
+                        : nil,
+                    onRecord: { viewModel.showPaymentSheet = true },
+                    onSettle: { viewModel.payRemaining() },
+                    onDeposit: { viewModel.payDeposit() }
+                )
             }
         }
     }
@@ -648,93 +374,39 @@ public struct EventDetailView: View {
     @ViewBuilder
     private var liveActivityButton: some View {
         if viewModel.canStartLiveActivity || viewModel.isLiveActivityActive {
-            Button {
-                if viewModel.isLiveActivityActive {
-                    Task { await viewModel.stopLiveActivity() }
-                } else {
-                    viewModel.startLiveActivity()
-                }
-            } label: {
-                HStack(spacing: Spacing.sm) {
-                    Image(systemName: viewModel.isLiveActivityActive ? "stop.circle.fill" : "dot.radiowaves.left.and.right")
-                        .font(.body)
-                        .foregroundStyle(viewModel.isLiveActivityActive ? SolennixColors.error : .white)
-                        .symbolEffect(.pulse, isActive: viewModel.isLiveActivityActive)
-
-                    Text(viewModel.isLiveActivityActive ? tr("events.detail.live_activity.stop", "Detener actividad en vivo") : tr("events.detail.live_activity.start", "Iniciar actividad en vivo"))
-                        .font(.body)
-                        .fontWeight(.medium)
-                        .foregroundStyle(viewModel.isLiveActivityActive ? SolennixColors.error : .white)
-
-                    Spacer()
-
+            EventDetailLiveActivityCard(
+                isActive: viewModel.isLiveActivityActive,
+                startTitle: tr("events.detail.live_activity.start", "Iniciar actividad en vivo"),
+                stopTitle: tr("events.detail.live_activity.stop", "Detener actividad en vivo"),
+                action: {
                     if viewModel.isLiveActivityActive {
-                        Circle()
-                            .fill(SolennixColors.success)
-                            .frame(width: 8, height: 8)
+                        Task { await viewModel.stopLiveActivity() }
+                    } else {
+                        viewModel.startLiveActivity()
                     }
                 }
-                .padding(Spacing.md)
-                .frame(maxWidth: .infinity)
-                .background(
-                    viewModel.isLiveActivityActive
-                        ? SolennixColors.errorBg
-                        : SolennixColors.success
-                )
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-            }
-            .buttonStyle(.plain)
+            )
         }
     }
 
     // MARK: - Action Buttons Row 3 (Edit)
 
     private var actionButtonsRow3: some View {
-        NavigationLink(value: Route.eventForm(id: eventId)) {
-            actionButton(icon: "pencil", label: tr("events.detail.action.edit_event", "Editar evento"), fg: SolennixColors.info)
-        }
-    }
-
-    private func actionButton(icon: String, label: String, fg: Color) -> some View {
-        VStack(spacing: Spacing.xs) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundStyle(fg)
-
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(SolennixColors.textSecondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadowSm()
+        EventDetailIconTileLinkCard(
+            icon: "pencil",
+            label: tr("events.detail.action.edit_event", "Editar evento"),
+            tint: SolennixColors.info,
+            route: Route.eventForm(id: eventId)
+        )
     }
 
     // MARK: - Notes Section
 
     private func notesSection(_ notes: String) -> some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            HStack(spacing: Spacing.sm) {
-                Image(systemName: "note.text")
-                    .font(.caption)
-                    .foregroundStyle(SolennixColors.primary)
-                Text(tr("events.detail.notes", "Notas"))
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(SolennixColors.textSecondary)
-            }
-
-            Text(notes)
-                .font(.caption)
-                .foregroundStyle(SolennixColors.textSecondary)
-                .lineLimit(3)
-        }
-        .padding(Spacing.md)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        EventDetailNotesCard(
+            title: tr("events.detail.notes", "Notas"),
+            notes: notes
+        )
     }
 
     // MARK: - Mini KPI
