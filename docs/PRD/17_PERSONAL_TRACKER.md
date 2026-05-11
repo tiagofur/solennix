@@ -9,7 +9,7 @@ aliases:
   - Staff Tracker
   - Colaboradores
 date: 2026-04-16
-updated: 2026-04-26
+updated: 2026-05-11
 status: phase-2-done-olas-1-2-3-complete
 ---
 
@@ -218,6 +218,9 @@ CREATE TABLE event_staff (
 - Si `response=accept` y el grupo ya llenó cupos, devuelve conflicto (`offer already filled`).
 - Cuando el cupo se completa, los demás `pending` del mismo `offer_group_id` se marcan `declined` automáticamente.
 - `GET /api/staff/my-assignments` devuelve las asignaciones del colaborador autenticado (`staff.invited_user_id = auth user`).
+- Web agrega portal dedicado `/team/assignments` para que `team_member` acepte/rechace asignaciones pendientes.
+- Web agrega `/team/events` (lista filtrable) y `/team/calendar` (agenda mensual filtrable) usando solo asignaciones del colaborador autenticado.
+- Guard de rol en Web: acceso a rutas operativas del organizer redirige automáticamente al portal de asignaciones.
 
 **Backend:**
 - `UpdateEventItems` usa `COALESCE($status, event_staff.status)` para preservar RSVP cuando un cliente viejo no envía el campo.

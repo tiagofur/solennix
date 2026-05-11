@@ -4,6 +4,7 @@ import { queryKeys } from './queryKeys';
 import { useToast } from '@/hooks/useToast';
 import { logError, getErrorMessage } from '@/lib/errorHandler';
 import type {
+  AssignmentPortalResponse,
   PaginationParams,
   StaffInsert,
   StaffTeamInsert,
@@ -63,6 +64,33 @@ export function useStaffAvailabilityRange(start: string | null | undefined, end:
     queryFn: () => staffService.getAvailability({ start: start!, end: end! }),
     enabled: !!start && !!end,
     staleTime: 30 * 1000,
+  });
+}
+
+export function useMyAssignments() {
+  return useQuery({
+    queryKey: queryKeys.staff.myAssignments,
+    queryFn: () => staffService.getMyAssignments(),
+    refetchInterval: 30 * 1000,
+  });
+}
+
+export function useRespondAssignment() {
+  const queryClient = useQueryClient();
+  const { addToast } = useToast();
+
+  return useMutation({
+    mutationKey: ['staff', 'respond-assignment'],
+    mutationFn: ({ id, response }: { id: string; response: AssignmentPortalResponse }) =>
+      staffService.respondAssignment(id, response),
+    onSuccess: (_result, { response }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.staff.myAssignments });
+      addToast(response === 'accept' ? 'Asignación aceptada.' : 'Asignación rechazada.', 'success');
+    },
+    onError: (error) => {
+      logError('Error responding assignment', error);
+      addToast(getErrorMessage(error, 'No se pudo responder la asignación.'), 'error');
+    },
   });
 }
 

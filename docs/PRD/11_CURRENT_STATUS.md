@@ -29,6 +29,9 @@ status: active
 > Se implementó el MVP operativo para colaboradores con login (`team_member`) dentro de Personal:
 > - Nuevo endpoint `GET /api/staff/my-assignments` para listar asignaciones del colaborador autenticado.
 > - Nuevo endpoint `POST /api/staff/assignments/{id}/respond` con `accept|decline`.
+> - Web: nuevo portal `/team/assignments` para ver y responder asignaciones pendientes.
+> - Web: nuevas vistas `/team/events` y `/team/calendar` para visibilidad operativa del colaborador autenticado.
+> - Guard de rol en Web: `team_member` se redirige al portal y no navega el layout operativo del organizer.
 > - Nueva migración `050` en `event_staff` con `offer_group_id` y `offer_slots` para soportar ofertas competitivas.
 > - Semántica transaccional: si el cupo del `offer_group_id` se completa, los demás `pending` del grupo se marcan `declined` automáticamente (first-accept-wins).
 > - Paridad de contrato agregada en Web / iOS / Android (types/endpoints/repos) para habilitar UI en siguiente iteración.

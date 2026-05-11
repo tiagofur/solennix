@@ -2,7 +2,12 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  allowTeamMember?: boolean;
+}
+
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowTeamMember = true }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
@@ -17,6 +22,10 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
 
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (!allowTeamMember && user.role === 'team_member') {
+    return <Navigate to="/team/events" replace />;
   }
 
   return <>{children}</>;

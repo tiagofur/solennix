@@ -37,6 +37,10 @@ Se habilita el flujo base para que colaboradores con usuario puedan responder as
 
 - Contratos de tipos agregados para `TeamMemberAssignment` y `AssignmentResponseOutcome`.
 - `staffService` agrega `getMyAssignments()` y `respondAssignment()`.
+- Nuevo portal `team_member` en `/team/assignments` para listar y responder asignaciones (aceptar/rechazar).
+- Guard de rutas: `team_member` es redirigido al portal y queda fuera del layout operativo del organizer.
+- Nueva pantalla `/team/events` con filtros por estado, rango de fechas y búsqueda, siempre acotada a asignaciones del team_member autenticado.
+- Nueva pantalla `/team/calendar` con filtros por mes y estado, mostrando solo eventos asignados al team_member autenticado.
 
 ### IOS
 

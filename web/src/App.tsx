@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { queryClient } from "@/lib/queryClient";
@@ -60,6 +60,9 @@ const ClientPortalPage = React.lazy(() => import("@/pages/ClientPortal/ClientPor
 
 const EventFormLinksPage = React.lazy(() => import("@/pages/EventForms/EventFormLinksPage").then((m) => ({ default: m.EventFormLinksPage })));
 const PaymentInboxPage = React.lazy(() => import("@/pages/Payments/PaymentInboxPage").then((m) => ({ default: m.PaymentInboxPage })));
+const TeamMemberAssignmentsPage = React.lazy(() => import("@/pages/TeamMember/AssignmentsPage").then((m) => ({ default: m.AssignmentsPage })));
+const TeamMemberEventsPage = React.lazy(() => import("@/pages/TeamMember/TeamEventsPage").then((m) => ({ default: m.TeamEventsPage })));
+const TeamMemberCalendarPage = React.lazy(() => import("@/pages/TeamMember/TeamCalendarPage").then((m) => ({ default: m.TeamCalendarPage })));
 
 const AdminDashboard = React.lazy(() => import("@/pages/Admin/AdminDashboard").then((m) => ({ default: m.AdminDashboard })));
 const AdminUsers = React.lazy(() => import("@/pages/Admin/AdminUsers").then((m) => ({ default: m.AdminUsers })));
@@ -102,7 +105,7 @@ function App() {
 
               <Route
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowTeamMember={false}>
                     <Layout />
                   </ProtectedRoute>
                 }
@@ -147,6 +150,32 @@ function App() {
                 <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
                 <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
               </Route>
+
+              <Route
+                path="/team/assignments"
+                element={
+                  <ProtectedRoute>
+                    <TeamMemberAssignmentsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/team/events"
+                element={
+                  <ProtectedRoute>
+                    <TeamMemberEventsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/team/calendar"
+                element={
+                  <ProtectedRoute>
+                    <TeamMemberCalendarPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/team" element={<Navigate to="/team/events" replace />} />
 
               <Route path="/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
