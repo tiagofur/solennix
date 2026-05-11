@@ -12,6 +12,7 @@ import com.creapolis.solennix.core.model.EventStaff
 import com.creapolis.solennix.core.model.PaginatedResponse
 import com.creapolis.solennix.core.model.Staff
 import com.creapolis.solennix.core.model.StaffAvailability
+import com.creapolis.solennix.core.model.StaffInviteResponse
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.Endpoints
 import com.creapolis.solennix.core.network.SolennixException
@@ -32,6 +33,7 @@ interface StaffRepository {
     suspend fun createStaff(staff: Staff): Staff
     suspend fun updateStaff(staff: Staff): Staff
     suspend fun deleteStaff(id: String)
+    suspend fun inviteStaffUser(id: String): StaffInviteResponse
 
     fun getStaffRemotePaging(
         sort: String = "name",
@@ -105,6 +107,10 @@ class OfflineFirstStaffRepository @Inject constructor(
             // Offline support: mark pending delete, SyncWorker will push later.
             staffDao.updateSyncStatus(id, SyncStatus.PENDING_DELETE)
         }
+    }
+
+    override suspend fun inviteStaffUser(id: String): StaffInviteResponse {
+        return apiService.post(Endpoints.staffInvite(id), emptyMap<String, String>())
     }
 
     override fun getStaffRemotePaging(

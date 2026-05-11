@@ -424,6 +424,11 @@ func (m *MockStaffRepo) GetAvailability(ctx context.Context, userID uuid.UUID, s
 	return args.Get(0).([]repository.StaffAvailability), args.Error(1)
 }
 
+func (m *MockStaffRepo) CreateInvite(ctx context.Context, invite *models.StaffInvite) error {
+	args := m.Called(ctx, invite)
+	return args.Error(0)
+}
+
 // ---------------------------------------------------------------------------
 // MockProductRepo — implements ProductRepository
 // ---------------------------------------------------------------------------

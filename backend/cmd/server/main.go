@@ -160,6 +160,7 @@ func main() {
 	eventPublicLinkHandler := handlers.NewEventPublicLinkHandler(eventPublicLinkRepo, eventRepo, clientRepo, userRepo, paymentRepo, cfg.FrontendURL)
 	paymentSubmissionHandler := handlers.NewPaymentSubmissionHandler(paymentSubmissionRepo, paymentRepo, userRepo, pool, cfg.UploadDir)
 	staffHandler := handlers.NewStaffHandler(staffRepo, userRepo)
+	staffHandler.SetInviteSupport(authService, emailService, cfg.FrontendURL)
 	staffTeamHandler := handlers.NewStaffTeamHandler(staffTeamRepo)
 	pdfHandler := handlers.NewPDFHandler(eventRepo, clientRepo, paymentRepo, userRepo, cfg.UploadDir)
 

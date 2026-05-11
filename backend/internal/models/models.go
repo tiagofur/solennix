@@ -7,18 +7,18 @@ import (
 )
 
 type User struct {
-	ID                      uuid.UUID  `json:"id"`
-	Email                   string     `json:"email"`
-	PasswordHash            string     `json:"-"` // Never expose in JSON
-	Name                    string     `json:"name"`
-	BusinessName            *string    `json:"business_name,omitempty"`
-	LogoURL                 *string    `json:"logo_url,omitempty"`
-	BrandColor              *string    `json:"brand_color,omitempty"`
-	ShowBusinessNameInPdf   *bool      `json:"show_business_name_in_pdf,omitempty"`
-	DefaultDepositPercent   *float64   `json:"default_deposit_percent,omitempty"`
-	DefaultCancellationDays *float64   `json:"default_cancellation_days,omitempty"`
-	DefaultRefundPercent    *float64   `json:"default_refund_percent,omitempty"`
-	ContractTemplate        *string    `json:"contract_template,omitempty"`
+	ID                      uuid.UUID `json:"id"`
+	Email                   string    `json:"email"`
+	PasswordHash            string    `json:"-"` // Never expose in JSON
+	Name                    string    `json:"name"`
+	BusinessName            *string   `json:"business_name,omitempty"`
+	LogoURL                 *string   `json:"logo_url,omitempty"`
+	BrandColor              *string   `json:"brand_color,omitempty"`
+	ShowBusinessNameInPdf   *bool     `json:"show_business_name_in_pdf,omitempty"`
+	DefaultDepositPercent   *float64  `json:"default_deposit_percent,omitempty"`
+	DefaultCancellationDays *float64  `json:"default_cancellation_days,omitempty"`
+	DefaultRefundPercent    *float64  `json:"default_refund_percent,omitempty"`
+	ContractTemplate        *string   `json:"contract_template,omitempty"`
 	// Notification preferences
 	EmailPaymentReceipt      *bool `json:"email_payment_receipt,omitempty"`
 	EmailEventReminder       *bool `json:"email_event_reminder,omitempty"`
@@ -29,15 +29,15 @@ type User struct {
 	PushEventReminder        *bool `json:"push_event_reminder,omitempty"`
 	PushPaymentReceived      *bool `json:"push_payment_received,omitempty"`
 	// i18n: user's preferred language for emails and notifications ('es' | 'en')
-	PreferredLanguage       string     `json:"preferred_language"`
-	Plan                    string     `json:"plan"`
-	Role                    string     `json:"role"`
-	StripeCustomerID        *string    `json:"stripe_customer_id,omitempty"`
-	GoogleUserID            *string    `json:"google_user_id,omitempty"`
-	AppleUserID             *string    `json:"apple_user_id,omitempty"`
-	PlanExpiresAt           *time.Time `json:"plan_expires_at,omitempty"`
-	CreatedAt               time.Time  `json:"created_at"`
-	UpdatedAt               time.Time  `json:"updated_at"`
+	PreferredLanguage string     `json:"preferred_language"`
+	Plan              string     `json:"plan"`
+	Role              string     `json:"role"`
+	StripeCustomerID  *string    `json:"stripe_customer_id,omitempty"`
+	GoogleUserID      *string    `json:"google_user_id,omitempty"`
+	AppleUserID       *string    `json:"apple_user_id,omitempty"`
+	PlanExpiresAt     *time.Time `json:"plan_expires_at,omitempty"`
+	CreatedAt         time.Time  `json:"created_at"`
+	UpdatedAt         time.Time  `json:"updated_at"`
 }
 
 type Client struct {
@@ -342,6 +342,22 @@ type Staff struct {
 	UpdatedAt              time.Time  `json:"updated_at"`
 }
 
+// StaffInvite tracks invitation lifecycle for Phase 3 (team member portal).
+// A pending invite is represented by a one-time token hash + expiry and is
+// scoped to the organizer (owner_user_id) and the target staff row.
+type StaffInvite struct {
+	ID          uuid.UUID  `json:"id"`
+	StaffID     uuid.UUID  `json:"staff_id"`
+	OwnerUserID uuid.UUID  `json:"owner_user_id"`
+	Email       string     `json:"email"`
+	TokenHash   string     `json:"-"`
+	Status      string     `json:"status"` // "pending" | "accepted" | "revoked" | "expired"
+	ExpiresAt   time.Time  `json:"expires_at"`
+	ConsumedAt  *time.Time `json:"consumed_at,omitempty"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+}
+
 // AssignmentStatus values for EventStaff.Status.
 const (
 	AssignmentStatusPending   = "pending"
@@ -355,18 +371,18 @@ const (
 // and NotificationLastResult are Phase 2 tracking columns (dedup + outcome).
 // ShiftStart/End and Status are Ola 1 operational fields (shift window + RSVP).
 type EventStaff struct {
-	ID                     uuid.UUID  `json:"id"`
-	EventID                uuid.UUID  `json:"event_id"`
-	StaffID                uuid.UUID  `json:"staff_id"`
-	FeeAmount              *float64   `json:"fee_amount,omitempty"`
-	RoleOverride           *string    `json:"role_override,omitempty"`
-	Notes                  *string    `json:"notes,omitempty"`
-	ShiftStart             *time.Time `json:"shift_start,omitempty"`
-	ShiftEnd               *time.Time `json:"shift_end,omitempty"`
+	ID           uuid.UUID  `json:"id"`
+	EventID      uuid.UUID  `json:"event_id"`
+	StaffID      uuid.UUID  `json:"staff_id"`
+	FeeAmount    *float64   `json:"fee_amount,omitempty"`
+	RoleOverride *string    `json:"role_override,omitempty"`
+	Notes        *string    `json:"notes,omitempty"`
+	ShiftStart   *time.Time `json:"shift_start,omitempty"`
+	ShiftEnd     *time.Time `json:"shift_end,omitempty"`
 	// Status is a pointer so an omitted field in the payload is distinguishable
 	// from an empty string. UPSERT uses COALESCE to preserve the stored status
 	// when clients (e.g. older app versions) don't send the field at all.
-	Status *string `json:"status,omitempty"`
+	Status                 *string    `json:"status,omitempty"`
 	NotificationSentAt     *time.Time `json:"notification_sent_at,omitempty"`
 	NotificationLastResult *string    `json:"notification_last_result,omitempty"`
 	CreatedAt              time.Time  `json:"created_at"`
@@ -440,13 +456,13 @@ type PaymentSubmission struct {
 	ID              uuid.UUID  `json:"id"`
 	EventID         uuid.UUID  `json:"event_id"`
 	ClientID        uuid.UUID  `json:"client_id"`
-	UserID          uuid.UUID  `json:"user_id"`        // Organizer (event owner)
+	UserID          uuid.UUID  `json:"user_id"` // Organizer (event owner)
 	Amount          float64    `json:"amount"`
 	TransferRef     *string    `json:"transfer_ref,omitempty"`     // Bank transfer reference / confirmation number
 	ReceiptFileURL  *string    `json:"receipt_file_url,omitempty"` // S3 or CDN path to receipt photo
-	Status          string     `json:"status"`                      // "pending" | "approved" | "rejected"
+	Status          string     `json:"status"`                     // "pending" | "approved" | "rejected"
 	SubmittedAt     time.Time  `json:"submitted_at"`
-	ReviewedBy      *uuid.UUID `json:"reviewed_by,omitempty"`       // Organizer who approved/rejected
+	ReviewedBy      *uuid.UUID `json:"reviewed_by,omitempty"` // Organizer who approved/rejected
 	ReviewedAt      *time.Time `json:"reviewed_at,omitempty"`
 	RejectionReason *string    `json:"rejection_reason,omitempty"`
 	LinkedPaymentID *uuid.UUID `json:"linked_payment_id,omitempty"` // Payment row created on approval

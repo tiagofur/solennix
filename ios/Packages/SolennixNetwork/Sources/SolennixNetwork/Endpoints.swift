@@ -78,6 +78,10 @@ public enum Endpoint {
         "/staff/\(id)"
     }
 
+    public static func staffInvite(_ id: String) -> String {
+        "/staff/\(id)/invite"
+    }
+
     /// Reporte de disponibilidad de staff para una fecha o rango.
     /// Consumido via `GET /api/staff/availability?date=YYYY-MM-DD` o
     /// `?start=YYYY-MM-DD&end=YYYY-MM-DD`.

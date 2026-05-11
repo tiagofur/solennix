@@ -200,6 +200,16 @@ export interface Staff {
 export type StaffInsert = Omit<Staff, 'id' | 'user_id' | 'created_at' | 'updated_at'>
 export type StaffUpdate = Partial<StaffInsert>
 
+export interface StaffInviteResponse {
+    invite_id: string
+    staff_id: string
+    email: string
+    status: 'pending' | 'accepted' | 'revoked' | 'expired'
+    accept_url: string
+    expires_at: string
+    created_at: string
+}
+
 // Status de una asignación Staff↔Evento. Default backend: 'confirmed'.
 // En writes: null/omit = preservar el valor actual en upsert.
 export type AssignmentStatus = 'pending' | 'confirmed' | 'declined' | 'cancelled'

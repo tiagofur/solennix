@@ -167,12 +167,12 @@ func (r *StaffRepo) Search(ctx context.Context, userID uuid.UUID, query string) 
 // StaffAvailabilityAssignment is a single assignment for a staff member inside a
 // date window, used to surface "who is busy" in the event form.
 type StaffAvailabilityAssignment struct {
-	EventID    uuid.UUID  `json:"event_id"`
-	EventName  string     `json:"event_name"`
-	EventDate  string     `json:"event_date"`
-	ShiftStart *string    `json:"shift_start,omitempty"`
-	ShiftEnd   *string    `json:"shift_end,omitempty"`
-	Status     string     `json:"status"`
+	EventID    uuid.UUID `json:"event_id"`
+	EventName  string    `json:"event_name"`
+	EventDate  string    `json:"event_date"`
+	ShiftStart *string   `json:"shift_start,omitempty"`
+	ShiftEnd   *string   `json:"shift_end,omitempty"`
+	Status     string    `json:"status"`
 }
 
 // StaffAvailability groups assignments per staff inside a date window.
@@ -257,4 +257,47 @@ func (r *StaffRepo) GetAvailability(ctx context.Context, userID uuid.UUID, start
 		out = append(out, *byStaff[id])
 	}
 	return out, nil
+}
+
+// CreateInvite revokes any existing pending invite for the same staff row and
+// inserts a new pending invite atomically.
+func (r *StaffRepo) CreateInvite(ctx context.Context, invite *models.StaffInvite) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin tx create invite: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback(ctx)
+		}
+	}()
+
+	_, err = tx.Exec(ctx,
+		`UPDATE staff_invites
+			SET status='revoked', updated_at=NOW()
+			WHERE staff_id=$1 AND owner_user_id=$2 AND status='pending'`,
+		invite.StaffID, invite.OwnerUserID,
+	)
+	if err != nil {
+		return fmt.Errorf("revoke existing pending invite: %w", err)
+	}
+
+	err = tx.QueryRow(ctx,
+		`INSERT INTO staff_invites (staff_id, owner_user_id, email, token_hash, status, expires_at)
+			VALUES ($1, $2, $3, $4, 'pending', $5)
+			RETURNING id, status, created_at, updated_at`,
+		invite.StaffID,
+		invite.OwnerUserID,
+		invite.Email,
+		invite.TokenHash,
+		invite.ExpiresAt,
+	).Scan(&invite.ID, &invite.Status, &invite.CreatedAt, &invite.UpdatedAt)
+	if err != nil {
+		return fmt.Errorf("insert staff invite: %w", err)
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit create invite: %w", err)
+	}
+	return nil
 }

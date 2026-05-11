@@ -21,6 +21,7 @@ object Endpoints {
     const val STAFF = "staff"
     const val STAFF_AVAILABILITY = "staff/availability"
     fun staff(id: String) = "staff/$id"
+    fun staffInvite(id: String) = "staff/$id/invite"
     fun eventStaff(eventId: String) = "events/$eventId/staff"
 
     // Staff Teams (Equipos)

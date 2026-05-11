@@ -6,6 +6,7 @@ import type {
   Staff,
   StaffAvailability,
   StaffInsert,
+  StaffInviteResponse,
   StaffTeam,
   StaffTeamInsert,
   StaffTeamUpdate,
@@ -44,6 +45,10 @@ export const staffService = {
 
   async delete(id: string): Promise<void> {
     return api.delete(`/staff/${id}`);
+  },
+
+  async inviteUser(id: string): Promise<StaffInviteResponse> {
+    return api.post<StaffInviteResponse>(`/staff/${id}/invite`, {});
   },
 
   async getByEvent(eventId: string): Promise<EventStaff[]> {

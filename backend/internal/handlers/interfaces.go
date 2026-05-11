@@ -85,6 +85,7 @@ type StaffRepository interface {
 	CountByUserID(ctx context.Context, userID uuid.UUID) (int, error)
 	Search(ctx context.Context, userID uuid.UUID, query string) ([]models.Staff, error)
 	GetAvailability(ctx context.Context, userID uuid.UUID, start, end string) ([]repository.StaffAvailability, error)
+	CreateInvite(ctx context.Context, invite *models.StaffInvite) error
 }
 
 // StaffTeamRepository defines staff team repo operations (Ola 2).

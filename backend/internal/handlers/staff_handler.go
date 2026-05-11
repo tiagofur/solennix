@@ -1,24 +1,40 @@
 package handlers
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"log/slog"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
+	"github.com/tiagofur/solennix-backend/internal/services"
 )
 
 // StaffHandler handles CRUD for the organizer's staff catalog (PRD: Personal feature).
 type StaffHandler struct {
 	staffRepo StaffRepository
 	userRepo  UserRepository
+	authSvc   *services.AuthService
+	emailSvc  *services.EmailService
+	frontend  string
 }
 
 func NewStaffHandler(staffRepo StaffRepository, userRepo UserRepository) *StaffHandler {
 	return &StaffHandler{staffRepo: staffRepo, userRepo: userRepo}
+}
+
+// SetInviteSupport enables Phase 3 invitation generation (token + optional email).
+// Keeping this optional avoids impacting tests that only validate CRUD behavior.
+func (h *StaffHandler) SetInviteSupport(authSvc *services.AuthService, emailSvc *services.EmailService, frontendURL string) {
+	h.authSvc = authSvc
+	h.emailSvc = emailSvc
+	h.frontend = strings.TrimRight(frontendURL, "/")
 }
 
 var staffSortAllowlist = map[string]string{
@@ -222,4 +238,85 @@ func (h *StaffHandler) GetStaffAvailability(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	writeJSON(w, http.StatusOK, items)
+}
+
+// InviteStaffUser creates (or rotates) an invitation for a staff collaborator
+// to activate a team-member account. Business plan only.
+//
+// POST /api/staff/{id}/invite
+func (h *StaffHandler) InviteStaffUser(w http.ResponseWriter, r *http.Request) {
+	if h.authSvc == nil {
+		writeError(w, http.StatusServiceUnavailable, "Invite support is not configured")
+		return
+	}
+
+	userID := middleware.GetUserID(r.Context())
+	staffID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid staff ID")
+		return
+	}
+
+	user, err := h.userRepo.GetByID(r.Context(), userID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to fetch user")
+		return
+	}
+	if normalizePlan(user.Plan) != "business" {
+		writeError(w, http.StatusForbidden, "Team member login is available on Business plan")
+		return
+	}
+
+	staff, err := h.staffRepo.GetByID(r.Context(), staffID, userID)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "Staff not found")
+		return
+	}
+	if staff.Email == nil || strings.TrimSpace(*staff.Email) == "" {
+		writeError(w, http.StatusBadRequest, "Staff must have an email before sending an invite")
+		return
+	}
+
+	rawToken, err := generateFormToken()
+	if err != nil {
+		slog.Error("failed to generate staff invite token", "error", err, "user_id", userID, "staff_id", staffID)
+		writeError(w, http.StatusInternalServerError, "Failed to create invite token")
+		return
+	}
+	expiresAt := time.Now().UTC().Add(7 * 24 * time.Hour)
+	hash := sha256.Sum256([]byte(rawToken))
+
+	invite := &models.StaffInvite{
+		StaffID:     staff.ID,
+		OwnerUserID: userID,
+		Email:       strings.TrimSpace(*staff.Email),
+		TokenHash:   hex.EncodeToString(hash[:]),
+		ExpiresAt:   expiresAt,
+	}
+
+	if err := h.staffRepo.CreateInvite(r.Context(), invite); err != nil {
+		slog.Error("failed to create staff invite", "error", err, "user_id", userID, "staff_id", staffID)
+		writeError(w, http.StatusInternalServerError, "Failed to create invite")
+		return
+	}
+
+	acceptPath := "/team-invite?token=" + url.QueryEscape(rawToken)
+	acceptURL := acceptPath
+	if h.frontend != "" {
+		acceptURL = h.frontend + acceptPath
+	}
+
+	if h.emailSvc == nil {
+		slog.Info("staff invite created without email delivery", "user_id", userID, "staff_id", staffID)
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]any{
+		"invite_id":  invite.ID,
+		"staff_id":   invite.StaffID,
+		"email":      invite.Email,
+		"status":     invite.Status,
+		"accept_url": acceptURL,
+		"expires_at": invite.ExpiresAt,
+		"created_at": invite.CreatedAt,
+	})
 }

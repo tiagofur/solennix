@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/tiagofur/solennix-backend/internal/models"
 	"github.com/tiagofur/solennix-backend/internal/repository"
+	"github.com/tiagofur/solennix-backend/internal/services"
 )
 
 // ---------------------------------------------------------------------------
@@ -272,6 +273,61 @@ func TestDeleteStaff_NotFound_Returns404(t *testing.T) {
 	h.DeleteStaff(rr, req)
 
 	assert.Equal(t, http.StatusNotFound, rr.Code)
+}
+
+// ---------------------------------------------------------------------------
+// InviteStaffUser
+// ---------------------------------------------------------------------------
+
+func TestInviteStaffUser_BusinessPlan_Returns201(t *testing.T) {
+	userID := uuid.New()
+	staffID := uuid.New()
+	email := "staff@example.com"
+
+	staffRepo := new(MockStaffRepo)
+	staffRepo.On("GetByID", mock.Anything, staffID, userID).Return(&models.Staff{
+		ID: staffID, UserID: userID, Name: "Carlos", Email: &email,
+	}, nil)
+	staffRepo.On("CreateInvite", mock.Anything, mock.AnythingOfType("*models.StaffInvite")).Return(nil).Run(func(args mock.Arguments) {
+		inv := args.Get(1).(*models.StaffInvite)
+		inv.ID = uuid.New()
+		inv.CreatedAt = time.Now().UTC()
+	})
+
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "business", Name: "Owner"}, nil)
+
+	authSvc := services.NewAuthService("test-secret", 24)
+	h := NewStaffHandler(staffRepo, userRepo)
+	h.SetInviteSupport(authSvc, nil, "https://app.solennix.com")
+
+	req := makeReqWithIDParam(http.MethodPost, "/api/staff/"+staffID.String()+"/invite", "{}", staffID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.InviteStaffUser(rr, req)
+
+	assert.Equal(t, http.StatusCreated, rr.Code)
+	assert.Contains(t, rr.Body.String(), "accept_url")
+	assert.Contains(t, rr.Body.String(), "team-invite")
+}
+
+func TestInviteStaffUser_ProPlan_Returns403(t *testing.T) {
+	userID := uuid.New()
+	staffID := uuid.New()
+
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "pro", Name: "Owner"}, nil)
+
+	authSvc := services.NewAuthService("test-secret", 24)
+	h := NewStaffHandler(staffRepo, userRepo)
+	h.SetInviteSupport(authSvc, nil, "https://app.solennix.com")
+
+	req := makeReqWithIDParam(http.MethodPost, "/api/staff/"+staffID.String()+"/invite", "{}", staffID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.InviteStaffUser(rr, req)
+
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	staffRepo.AssertNotCalled(t, "CreateInvite", mock.Anything, mock.Anything)
 }
 
 // ---------------------------------------------------------------------------

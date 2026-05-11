@@ -176,6 +176,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Route("/staff", func(r chi.Router) {
 			r.Get("/", staffHandler.ListStaff)
 			r.Post("/", staffHandler.CreateStaff)
+			r.Post("/{id}/invite", staffHandler.InviteStaffUser)
 			// availability must be registered before /{id} so chi does not treat
 			// "availability" as an id param.
 			r.Get("/availability", staffHandler.GetStaffAvailability)
