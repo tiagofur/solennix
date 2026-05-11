@@ -374,6 +374,8 @@ type EventStaff struct {
 	ID           uuid.UUID  `json:"id"`
 	EventID      uuid.UUID  `json:"event_id"`
 	StaffID      uuid.UUID  `json:"staff_id"`
+	OfferGroupID *uuid.UUID `json:"offer_group_id,omitempty"`
+	OfferSlots   *int       `json:"offer_slots,omitempty"`
 	FeeAmount    *float64   `json:"fee_amount,omitempty"`
 	RoleOverride *string    `json:"role_override,omitempty"`
 	Notes        *string    `json:"notes,omitempty"`

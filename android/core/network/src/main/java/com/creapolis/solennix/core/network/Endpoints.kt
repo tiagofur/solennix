@@ -21,8 +21,10 @@ object Endpoints {
     // Staff (Personal / Colaboradores)
     const val STAFF = "staff"
     const val STAFF_AVAILABILITY = "staff/availability"
+    const val STAFF_MY_ASSIGNMENTS = "staff/my-assignments"
     fun staff(id: String) = "staff/$id"
     fun staffInvite(id: String) = "staff/$id/invite"
+    fun staffRespondAssignment(id: String) = "staff/assignments/$id/respond"
     fun eventStaff(eventId: String) = "events/$eventId/staff"
 
     // Staff Teams (Equipos)

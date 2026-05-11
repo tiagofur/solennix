@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-05-10
+updated: 2026-05-11
 status: active
 ---
 
@@ -24,6 +24,14 @@ status: active
 
 **Fecha:** Mayo 2026
 **Version:** 1.7
+
+> [!success] 2026-05-11 — Personal Phase 3.5: team_member responde asignación + first-accept-wins
+> Se implementó el MVP operativo para colaboradores con login (`team_member`) dentro de Personal:
+> - Nuevo endpoint `GET /api/staff/my-assignments` para listar asignaciones del colaborador autenticado.
+> - Nuevo endpoint `POST /api/staff/assignments/{id}/respond` con `accept|decline`.
+> - Nueva migración `050` en `event_staff` con `offer_group_id` y `offer_slots` para soportar ofertas competitivas.
+> - Semántica transaccional: si el cupo del `offer_group_id` se completa, los demás `pending` del grupo se marcan `declined` automáticamente (first-accept-wins).
+> - Paridad de contrato agregada en Web / iOS / Android (types/endpoints/repos) para habilitar UI en siguiente iteración.
 
 > [!success] 2026-05-10 — iOS UX refinements: filtro de fechas Apple HIG + KPI responsivo
 > Se aplicaron dos mejoras de calidad UX en iOS siguiendo las guías oficiales de Apple (HIG).

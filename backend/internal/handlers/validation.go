@@ -441,6 +441,9 @@ func ValidateEventStaff(es *models.EventStaff) error {
 	if es.FeeAmount != nil && *es.FeeAmount < 0 {
 		return ValidationError{Field: "fee_amount", Message: "must be greater than or equal to 0"}
 	}
+	if es.OfferSlots != nil && *es.OfferSlots < 1 {
+		return ValidationError{Field: "offer_slots", Message: "must be greater than or equal to 1"}
+	}
 	if es.RoleOverride != nil {
 		if err := validateStringLength("role_override", *es.RoleOverride, MaxNameLength); err != nil {
 			return err

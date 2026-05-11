@@ -2,12 +2,21 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tiagofur/solennix-backend/internal/models"
+)
+
+var (
+	ErrAssignmentNotFound   = errors.New("assignment not found")
+	ErrAssignmentForbidden  = errors.New("assignment does not belong to current user")
+	ErrAssignmentNotPending = errors.New("assignment is not pending")
+	ErrOfferAlreadyFilled   = errors.New("offer slots are already filled")
 )
 
 type StaffRepo struct {
@@ -183,6 +192,32 @@ type StaffAvailability struct {
 	Assignments []StaffAvailabilityAssignment `json:"assignments"`
 }
 
+// TeamMemberAssignment is the team-member portal projection of an event_staff row.
+type TeamMemberAssignment struct {
+	EventStaffID   uuid.UUID  `json:"event_staff_id"`
+	EventID        uuid.UUID  `json:"event_id"`
+	EventName      string     `json:"event_name"`
+	EventDate      string     `json:"event_date"`
+	StaffID        uuid.UUID  `json:"staff_id"`
+	Status         string     `json:"status"`
+	RoleOverride   *string    `json:"role_override,omitempty"`
+	Notes          *string    `json:"notes,omitempty"`
+	ShiftStart     *string    `json:"shift_start,omitempty"`
+	ShiftEnd       *string    `json:"shift_end,omitempty"`
+	OfferGroupID   *uuid.UUID `json:"offer_group_id,omitempty"`
+	OfferSlots     *int       `json:"offer_slots,omitempty"`
+	Notification   *string    `json:"notification_last_result,omitempty"`
+	NotificationAt *string    `json:"notification_sent_at,omitempty"`
+}
+
+// AssignmentResponseOutcome returns the resolved state after accept/decline.
+type AssignmentResponseOutcome struct {
+	EventStaffID      uuid.UUID `json:"event_staff_id"`
+	FinalStatus       string    `json:"final_status"`
+	SeatsRemaining    int       `json:"seats_remaining"`
+	AutoDeclinedCount int       `json:"auto_declined_count"`
+}
+
 // GetAvailability returns busy staff for the user in [start, end] inclusive.
 // Dates are YYYY-MM-DD strings matching events.event_date. Only staff with at
 // least one assignment in the window are returned; the UI infers "free" from
@@ -257,6 +292,216 @@ func (r *StaffRepo) GetAvailability(ctx context.Context, userID uuid.UUID, start
 		out = append(out, *byStaff[id])
 	}
 	return out, nil
+}
+
+// ListMyAssignments returns event assignments for the authenticated team-member.
+func (r *StaffRepo) ListMyAssignments(ctx context.Context, invitedUserID uuid.UUID) ([]TeamMemberAssignment, error) {
+	query := `
+		SELECT es.id, es.event_id, e.name, e.event_date, es.staff_id,
+			COALESCE(es.status, 'confirmed'), es.role_override, es.notes,
+			es.shift_start, es.shift_end, es.offer_group_id, es.offer_slots,
+			es.notification_last_result, es.notification_sent_at
+		FROM event_staff es
+		JOIN staff s ON s.id = es.staff_id
+		JOIN events e ON e.id = es.event_id
+		WHERE s.invited_user_id = $1
+		ORDER BY e.event_date ASC, e.name ASC`
+
+	rows, err := r.pool.Query(ctx, query, invitedUserID)
+	if err != nil {
+		return nil, fmt.Errorf("query my assignments: %w", err)
+	}
+	defer rows.Close()
+
+	items := make([]TeamMemberAssignment, 0)
+	for rows.Next() {
+		var (
+			item               TeamMemberAssignment
+			eventDate          time.Time
+			shiftStart         *time.Time
+			shiftEnd           *time.Time
+			notificationSentAt *time.Time
+		)
+		if err := rows.Scan(
+			&item.EventStaffID,
+			&item.EventID,
+			&item.EventName,
+			&eventDate,
+			&item.StaffID,
+			&item.Status,
+			&item.RoleOverride,
+			&item.Notes,
+			&shiftStart,
+			&shiftEnd,
+			&item.OfferGroupID,
+			&item.OfferSlots,
+			&item.Notification,
+			&notificationSentAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan my assignment: %w", err)
+		}
+		item.EventDate = eventDate.Format("2006-01-02")
+		if shiftStart != nil {
+			s := shiftStart.UTC().Format(time.RFC3339)
+			item.ShiftStart = &s
+		}
+		if shiftEnd != nil {
+			s := shiftEnd.UTC().Format(time.RFC3339)
+			item.ShiftEnd = &s
+		}
+		if notificationSentAt != nil {
+			s := notificationSentAt.UTC().Format(time.RFC3339)
+			item.NotificationAt = &s
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate my assignments: %w", err)
+	}
+
+	return items, nil
+}
+
+// RespondToAssignment updates assignment status from the team-member portal.
+// For grouped offers, acceptance is first-come-first-served and can auto-decline
+// the remaining pending candidates when capacity is reached.
+func (r *StaffRepo) RespondToAssignment(ctx context.Context, invitedUserID, eventStaffID uuid.UUID, response string) (*AssignmentResponseOutcome, error) {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("begin respond assignment tx: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback(ctx)
+		}
+	}()
+
+	var (
+		status       string
+		staffUserID  *uuid.UUID
+		eventID      uuid.UUID
+		offerGroupID *uuid.UUID
+		offerSlots   *int
+	)
+
+	err = tx.QueryRow(ctx, `
+		SELECT es.status, s.invited_user_id, es.event_id, es.offer_group_id, es.offer_slots
+		FROM event_staff es
+		JOIN staff s ON s.id = es.staff_id
+		WHERE es.id = $1
+		FOR UPDATE
+	`, eventStaffID).Scan(&status, &staffUserID, &eventID, &offerGroupID, &offerSlots)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrAssignmentNotFound
+		}
+		return nil, fmt.Errorf("load assignment for response: %w", err)
+	}
+
+	if staffUserID == nil || *staffUserID != invitedUserID {
+		return nil, ErrAssignmentForbidden
+	}
+
+	if status != models.AssignmentStatusPending {
+		return nil, ErrAssignmentNotPending
+	}
+
+	if response == "decline" {
+		if _, err = tx.Exec(ctx,
+			`UPDATE event_staff SET status = 'declined' WHERE id = $1`,
+			eventStaffID,
+		); err != nil {
+			return nil, fmt.Errorf("decline assignment: %w", err)
+		}
+
+		if err = tx.Commit(ctx); err != nil {
+			return nil, fmt.Errorf("commit decline assignment: %w", err)
+		}
+
+		return &AssignmentResponseOutcome{
+			EventStaffID:      eventStaffID,
+			FinalStatus:       models.AssignmentStatusDeclined,
+			SeatsRemaining:    0,
+			AutoDeclinedCount: 0,
+		}, nil
+	}
+
+	seats := 1
+	if offerSlots != nil && *offerSlots > 0 {
+		seats = *offerSlots
+	}
+
+	if offerGroupID != nil {
+		if _, err = tx.Exec(ctx,
+			`SELECT 1 FROM event_staff WHERE event_id = $1 AND offer_group_id = $2 FOR UPDATE`,
+			eventID,
+			offerGroupID,
+		); err != nil {
+			return nil, fmt.Errorf("lock offer group rows: %w", err)
+		}
+
+		var confirmedCount int
+		if err = tx.QueryRow(ctx,
+			`SELECT COUNT(*) FROM event_staff WHERE event_id = $1 AND offer_group_id = $2 AND status = 'confirmed'`,
+			eventID,
+			offerGroupID,
+		).Scan(&confirmedCount); err != nil {
+			return nil, fmt.Errorf("count confirmed in offer group: %w", err)
+		}
+
+		if confirmedCount >= seats {
+			return nil, ErrOfferAlreadyFilled
+		}
+	}
+
+	if _, err = tx.Exec(ctx,
+		`UPDATE event_staff SET status = 'confirmed' WHERE id = $1`,
+		eventStaffID,
+	); err != nil {
+		return nil, fmt.Errorf("accept assignment: %w", err)
+	}
+
+	result := &AssignmentResponseOutcome{
+		EventStaffID: eventStaffID,
+		FinalStatus:  models.AssignmentStatusConfirmed,
+	}
+
+	if offerGroupID != nil {
+		var confirmedAfter int
+		if err = tx.QueryRow(ctx,
+			`SELECT COUNT(*) FROM event_staff WHERE event_id = $1 AND offer_group_id = $2 AND status = 'confirmed'`,
+			eventID,
+			offerGroupID,
+		).Scan(&confirmedAfter); err != nil {
+			return nil, fmt.Errorf("count confirmed after accept: %w", err)
+		}
+
+		remaining := seats - confirmedAfter
+		if remaining < 0 {
+			remaining = 0
+		}
+		result.SeatsRemaining = remaining
+
+		if remaining == 0 {
+			tag, updErr := tx.Exec(ctx,
+				`UPDATE event_staff
+				 SET status = 'declined'
+				 WHERE event_id = $1 AND offer_group_id = $2 AND status = 'pending'`,
+				eventID,
+				offerGroupID,
+			)
+			if updErr != nil {
+				return nil, fmt.Errorf("auto decline remaining offer candidates: %w", updErr)
+			}
+			result.AutoDeclinedCount = int(tag.RowsAffected())
+		}
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("commit accept assignment: %w", err)
+	}
+
+	return result, nil
 }
 
 // CreateInvite revokes any existing pending invite for the same staff row and

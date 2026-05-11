@@ -331,6 +331,83 @@ func TestInviteStaffUser_ProPlan_Returns403(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
+// Team-member assignments (Phase 3.5)
+// ---------------------------------------------------------------------------
+
+func TestGetMyAssignments_Success(t *testing.T) {
+	userID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	staffRepo.On("ListMyAssignments", mock.Anything, userID).Return([]repository.TeamMemberAssignment{
+		{
+			EventStaffID: uuid.New(),
+			EventID:      uuid.New(),
+			EventName:    "Boda Sofia y Diego",
+			EventDate:    "2026-06-20",
+			Status:       models.AssignmentStatusPending,
+		},
+	}, nil)
+
+	h := NewStaffHandler(staffRepo, nil)
+	req := makeReqWithUserID(http.MethodGet, "/api/staff/my-assignments", "", userID)
+	rr := httptest.NewRecorder()
+	h.GetMyAssignments(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Boda Sofia y Diego")
+	assert.Contains(t, rr.Body.String(), "pending")
+}
+
+func TestRespondAssignment_Accept_Success(t *testing.T) {
+	userID := uuid.New()
+	eventStaffID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	staffRepo.On("RespondToAssignment", mock.Anything, userID, eventStaffID, "accept").Return(&repository.AssignmentResponseOutcome{
+		EventStaffID:      eventStaffID,
+		FinalStatus:       models.AssignmentStatusConfirmed,
+		SeatsRemaining:    0,
+		AutoDeclinedCount: 2,
+	}, nil)
+
+	h := NewStaffHandler(staffRepo, nil)
+	req := makeReqWithIDParam(http.MethodPost, "/api/staff/assignments/"+eventStaffID.String()+"/respond", `{"response":"accept"}`, eventStaffID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.RespondAssignment(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), "confirmed")
+	assert.Contains(t, rr.Body.String(), "auto_declined_count")
+}
+
+func TestRespondAssignment_OfferAlreadyFilled_Returns409(t *testing.T) {
+	userID := uuid.New()
+	eventStaffID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	staffRepo.On("RespondToAssignment", mock.Anything, userID, eventStaffID, "accept").Return((*repository.AssignmentResponseOutcome)(nil), repository.ErrOfferAlreadyFilled)
+
+	h := NewStaffHandler(staffRepo, nil)
+	req := makeReqWithIDParam(http.MethodPost, "/api/staff/assignments/"+eventStaffID.String()+"/respond", `{"response":"accept"}`, eventStaffID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.RespondAssignment(rr, req)
+
+	assert.Equal(t, http.StatusConflict, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Offer slot already taken")
+}
+
+func TestRespondAssignment_InvalidResponse_Returns400(t *testing.T) {
+	userID := uuid.New()
+	eventStaffID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+
+	h := NewStaffHandler(staffRepo, nil)
+	req := makeReqWithIDParam(http.MethodPost, "/api/staff/assignments/"+eventStaffID.String()+"/respond", `{"response":"maybe"}`, eventStaffID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.RespondAssignment(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	staffRepo.AssertNotCalled(t, "RespondToAssignment", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+}
+
+// ---------------------------------------------------------------------------
 // Validation — exercised via the handler so the integration is tested
 // ---------------------------------------------------------------------------
 

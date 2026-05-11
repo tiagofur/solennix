@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
+	"github.com/tiagofur/solennix-backend/internal/repository"
 	"github.com/tiagofur/solennix-backend/internal/services"
 )
 
@@ -23,6 +24,10 @@ type StaffHandler struct {
 	authSvc   *services.AuthService
 	emailSvc  *services.EmailService
 	frontend  string
+}
+
+type assignmentResponseRequest struct {
+	Response string `json:"response"`
 }
 
 func NewStaffHandler(staffRepo StaffRepository, userRepo UserRepository) *StaffHandler {
@@ -319,4 +324,65 @@ func (h *StaffHandler) InviteStaffUser(w http.ResponseWriter, r *http.Request) {
 		"expires_at": invite.ExpiresAt,
 		"created_at": invite.CreatedAt,
 	})
+}
+
+// GetMyAssignments lists event assignments for the authenticated team-member.
+//
+// GET /api/staff/my-assignments
+func (h *StaffHandler) GetMyAssignments(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+
+	items, err := h.staffRepo.ListMyAssignments(r.Context(), userID)
+	if err != nil {
+		slog.Error("failed to list team-member assignments", "error", err, "user_id", userID)
+		writeError(w, http.StatusInternalServerError, "Failed to fetch assignments")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, items)
+}
+
+// RespondAssignment allows a team-member to accept or decline an assignment.
+// For grouped offers, acceptance follows first-come-first-served semantics.
+//
+// POST /api/staff/assignments/{id}/respond
+func (h *StaffHandler) RespondAssignment(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	eventStaffID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid assignment ID")
+		return
+	}
+
+	var req assignmentResponseRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	response := strings.ToLower(strings.TrimSpace(req.Response))
+	if response != "accept" && response != "decline" {
+		writeError(w, http.StatusBadRequest, "response must be one of: accept, decline")
+		return
+	}
+
+	outcome, err := h.staffRepo.RespondToAssignment(r.Context(), userID, eventStaffID, response)
+	if err != nil {
+		switch {
+		case err == repository.ErrAssignmentNotFound:
+			writeError(w, http.StatusNotFound, "Assignment not found")
+		case err == repository.ErrAssignmentForbidden:
+			writeError(w, http.StatusForbidden, "Assignment does not belong to current user")
+		case err == repository.ErrAssignmentNotPending:
+			writeError(w, http.StatusConflict, "Assignment is no longer pending")
+		case err == repository.ErrOfferAlreadyFilled:
+			writeError(w, http.StatusConflict, "Offer slot already taken")
+		default:
+			slog.Error("failed to respond assignment", "error", err, "user_id", userID, "event_staff_id", eventStaffID)
+			writeError(w, http.StatusInternalServerError, "Failed to update assignment response")
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, outcome)
 }

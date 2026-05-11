@@ -166,6 +166,8 @@ CREATE TABLE event_staff (
 | `GET` | `/api/events/{id}/staff` | Listar asignaciones con joined staff_name/role_label/phone/email |
 | `PUT` | `/api/events/{id}/items` | Ahora acepta `staff: [{staff_id, fee_amount?, role_override?, notes?, shift_start?, shift_end?, status?}]` |
 | `GET` | `/api/staff/availability?date=` | Disponibilidad del staff en una fecha o rango (Ola 1) |
+| `GET` | `/api/staff/my-assignments` | Portal team_member: lista sus asignaciones |
+| `POST` | `/api/staff/assignments/{id}/respond` | Portal team_member: `accept` o `decline` |
 | `GET` | `/api/staff/teams` | Listado de equipos con member_count (Ola 2) |
 | `POST` | `/api/staff/teams` | Crear equipo con miembros (Ola 2) |
 | `GET` | `/api/staff/teams/{id}` | Detalle de equipo con miembros joined (Ola 2) |
@@ -207,6 +209,15 @@ CREATE TABLE event_staff (
 ## ✅ Ola 1 — Turnos + RSVP + Disponibilidad (shipped 2026-04-19)
 
 **Migration 043:** `event_staff` recibe `shift_start`, `shift_end` (TIMESTAMPTZ nullables) y `status` (enum `pending | confirmed | declined | cancelled`, default `confirmed`).
+
+## ✅ Ola 3.5 — Team member response + first-accept-wins (shipped 2026-05-11)
+
+**Migration 050:** `event_staff` recibe `offer_group_id` + `offer_slots` para dispatch de oportunidad a múltiples colaboradores con cupos limitados.
+
+- `POST /api/staff/assignments/{id}/respond` implementa respuesta transaccional.
+- Si `response=accept` y el grupo ya llenó cupos, devuelve conflicto (`offer already filled`).
+- Cuando el cupo se completa, los demás `pending` del mismo `offer_group_id` se marcan `declined` automáticamente.
+- `GET /api/staff/my-assignments` devuelve las asignaciones del colaborador autenticado (`staff.invited_user_id = auth user`).
 
 **Backend:**
 - `UpdateEventItems` usa `COALESCE($status, event_staff.status)` para preservar RSVP cuando un cliente viejo no envía el campo.

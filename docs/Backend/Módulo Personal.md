@@ -59,6 +59,13 @@ related:
 | `PUT` | `/api/events/{id}/items` | Persiste `staff[]` junto con productos/extras/equipo/insumos |
 | `GET` | `/api/events/{id}/staff` | Lee las asignaciones del evento |
 
+### Portal de Personal (team_member)
+
+| Método | Ruta | Descripción |
+| --- | --- | --- |
+| `GET` | `/api/staff/my-assignments` | Lista asignaciones del colaborador autenticado (`staff.invited_user_id`) |
+| `POST` | `/api/staff/assignments/{id}/respond` | Responde `accept|decline` una asignación |
+
 ---
 
 ## Modelos principales
@@ -74,6 +81,7 @@ related:
 - `fee_amount`, `role_override`, `notes`
 - `shift_start`, `shift_end`
 - `status`: `pending | confirmed | declined | cancelled`
+- `offer_group_id`, `offer_slots` para flujo first-accept-wins (tipo dispatch)
 - `notification_sent_at`, `notification_last_result`
 
 ### `StaffTeam` y `StaffTeamMember`

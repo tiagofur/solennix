@@ -83,6 +83,12 @@ public enum Endpoint {
         "/staff/\(id)/invite"
     }
 
+    public static let staffMyAssignments = "/staff/my-assignments"
+
+    public static func staffRespondAssignment(_ id: String) -> String {
+        "/staff/assignments/\(id)/respond"
+    }
+
     /// Reporte de disponibilidad de staff para una fecha o rango.
     /// Consumido via `GET /api/staff/availability?date=YYYY-MM-DD` o
     /// `?start=YYYY-MM-DD&end=YYYY-MM-DD`.

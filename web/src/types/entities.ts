@@ -219,6 +219,8 @@ export interface EventStaff {
     id: string
     event_id: string
     staff_id: string
+    offer_group_id?: string | null
+    offer_slots?: number | null
     fee_amount?: number | null
     role_override?: string | null
     notes?: string | null
@@ -315,6 +317,32 @@ export interface StaffAvailability {
     staff_id: string
     staff_name: string
     assignments: StaffAvailabilityAssignment[]
+}
+
+export type AssignmentPortalResponse = 'accept' | 'decline'
+
+export interface TeamMemberAssignment {
+    event_staff_id: string
+    event_id: string
+    event_name: string
+    event_date: string
+    staff_id: string
+    status: AssignmentStatus
+    role_override?: string | null
+    notes?: string | null
+    shift_start?: string | null
+    shift_end?: string | null
+    offer_group_id?: string | null
+    offer_slots?: number | null
+    notification_last_result?: string | null
+    notification_sent_at?: string | null
+}
+
+export interface AssignmentResponseOutcome {
+    event_staff_id: string
+    final_status: AssignmentStatus
+    seats_remaining: number
+    auto_declined_count: number
 }
 
 // ===== Pagination =====

@@ -1,5 +1,7 @@
 import { api } from '../lib/api';
 import type {
+  AssignmentPortalResponse,
+  AssignmentResponseOutcome,
   EventStaff,
   PaginatedResponse,
   PaginationParams,
@@ -7,6 +9,7 @@ import type {
   StaffAvailability,
   StaffInsert,
   StaffInviteResponse,
+  TeamMemberAssignment,
   StaffTeam,
   StaffTeamInsert,
   StaffTeamUpdate,
@@ -61,6 +64,14 @@ export const staffService = {
     if (params.start) query.start = params.start;
     if (params.end) query.end = params.end;
     return api.get<StaffAvailability[]>('/staff/availability', query);
+  },
+
+  async getMyAssignments(): Promise<TeamMemberAssignment[]> {
+    return api.get<TeamMemberAssignment[]>('/staff/my-assignments');
+  },
+
+  async respondAssignment(id: string, response: AssignmentPortalResponse): Promise<AssignmentResponseOutcome> {
+    return api.post<AssignmentResponseOutcome>(`/staff/assignments/${id}/respond`, { response });
   },
 
   // ── Staff Teams (Ola 2) ──

@@ -437,6 +437,22 @@ func (m *MockStaffRepo) CreateInvite(ctx context.Context, invite *models.StaffIn
 	return args.Error(0)
 }
 
+func (m *MockStaffRepo) ListMyAssignments(ctx context.Context, invitedUserID uuid.UUID) ([]repository.TeamMemberAssignment, error) {
+	args := m.Called(ctx, invitedUserID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]repository.TeamMemberAssignment), args.Error(1)
+}
+
+func (m *MockStaffRepo) RespondToAssignment(ctx context.Context, invitedUserID, eventStaffID uuid.UUID, response string) (*repository.AssignmentResponseOutcome, error) {
+	args := m.Called(ctx, invitedUserID, eventStaffID, response)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*repository.AssignmentResponseOutcome), args.Error(1)
+}
+
 // ---------------------------------------------------------------------------
 // MockProductRepo — implements ProductRepository
 // ---------------------------------------------------------------------------
