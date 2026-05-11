@@ -8532,6 +8532,7 @@
       }
     },
     "events.list.filters.select" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8860,9 +8861,6 @@
 
     },
     "Fecha" : {
-
-    },
-    "Filtros" : {
 
     },
     "Finanzas" : {
@@ -9309,9 +9307,6 @@
 
     },
     "Selecciona el nuevo estado del evento" : {
-
-    },
-    "Seleccionar" : {
 
     },
     "Seleccionar Item" : {
