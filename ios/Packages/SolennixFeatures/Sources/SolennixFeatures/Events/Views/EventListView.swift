@@ -121,7 +121,7 @@ public struct EventListView: View {
                     endDate: $viewModel.dateRangeEnd,
                     onClear: { viewModel.clearAdvancedFilters() }
                 )
-                .presentationDetents([.height(260)])
+                .presentationDetents([.height(380)])
                 .presentationDragIndicator(.visible)
             }
             .confirmationDialog(
