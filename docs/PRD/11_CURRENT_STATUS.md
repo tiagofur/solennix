@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-05-08
+updated: 2026-05-10
 status: active
 ---
 
@@ -23,7 +23,39 @@ status: active
 > - El flujo de `payment_submissions` (Sprint 7.E) es un formulario de reporte de transferencias bancarias externas — Solennix NO procesa ni mueve dinero.
 
 **Fecha:** Mayo 2026
-**Version:** 1.6
+**Version:** 1.7
+
+> [!success] 2026-05-10 — iOS UX refinements: filtro de fechas Apple HIG + KPI responsivo
+> Se aplicaron dos mejoras de calidad UX en iOS siguiendo las guías oficiales de Apple (HIG).
+> - **Events list**: se reemplazó el panel expandible inline ("Filtros" en texto) por un ícono `calendar` en la toolbar que abre un sheet nativo con `DatePicker(.compact)` — el patrón oficial de Apple para date-range en espacio restringido.
+> - **Product detail**: KPI grid pasó de dos `HStack` fijos a `LazyVGrid` responsivo: 2 cols en iPhone, 4 cols en iPad. Usa `horizontalSizeClass` ya existente.
+> - **Archivos**: `EventListView.swift`, `ProductDetailView.swift`
+
+> [!warning] 2026-05-10 — Deuda técnica pendiente — próximas sesiones
+> Trabajo importante aún por hacer. La app avanza pero está lejos de estar terminada:
+>
+> **Web — Refactor y componentización (PRIORIDAD ALTA)**
+> - No se hizo ningún refactor de componentes en Web. Las páginas principales (`EventList`, `EventDetail`, `ClientList`, etc.) siguen siendo archivos monolíticos.
+> - Falta extraer componentes reutilizables (cards, filtros, formularios de sección, states vacíos).
+> - No hay patrón container/presentational consistente en Web todavía.
+> - Archivos candidatos a componentizar: `EventDetail.tsx`, `EventForm.tsx`, `ClientDetails.tsx`, `ProductDetail.tsx`.
+>
+> **Traducciones — sweep pendiente**
+> - El epic #202 de i18n se cerró, pero hay hardcodes residuales en pantallas nuevas y vistas refactorizadas desde entonces.
+> - iOS: vistas nuevas del Apple UI refresh lab y componentes de Event Detail post-refactor pueden tener copy hardcodeada en inglés.
+> - Android: módulos `feature/products` y `feature/inventory` usan shims temporales (`ProductStrings.kt`, `InventoryStrings.kt`) en lugar de `res/values*.xml` por feature — deuda explícita.
+> - Web: revisar si el date filter sheet y las nuevas rutas de calendario tienen claves en `events.json` ES/EN.
+>
+> **Android — Calendar FAB**
+> - La consolidación del FAB en `CalendarScreen.kt` (single FAB, no overlap) fue mencionada pero no verificada ni commiteada en esta sesión. Revisar estado real.
+>
+> **iOS — Apple UI Refresh Lab**
+> - Branch `feat/apple-ui-refresh-lab` con `SolennixGlassSurface`, `SidebarSplitLayout` y semantic color cleanup todavía NO mergeada a `main`.
+> - Requiere QA visual en simuladores (iPhone 15, iPad Pro, macOS Catalyst) antes del merge.
+>
+> **Plan iOS i18n + QA + Refactor por pantalla**
+> - Plan definido en `docs/iOS/Plan iOS i18n + QA + Refactor por Pantalla.md`.
+> - Olas P0/P1/P2 aún sin ejecutar en su mayoría. `EventListView` tuvo trabajo parcial de i18n; falta ejecutar el DoD completo (estados UI, validación funcional, tests, tamaño de archivos).
 
 > [!success] 2026-05-08 — Apple UI refresh lab (iOS/iPadOS/macOS) en branch experimental
 > Se inició la branch `feat/apple-ui-refresh-lab` para unificar UI/UX visual en Apple platforms antes de aplicar glass más agresivo.

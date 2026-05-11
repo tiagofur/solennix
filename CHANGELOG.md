@@ -2,7 +2,7 @@
 
 Historial oficial de cambios de Solennix para Web, iOS, Android y Backend.
 
-Última actualización: 2026-05-06
+Última actualización: 2026-05-10
 
 ## Versiones actuales
 
@@ -12,6 +12,15 @@ Historial oficial de cambios de Solennix para Web, iOS, Android y Backend.
 | iOS | 1.2.0 | 7 | ios/project.yml |
 | Android | 1.2.0 | 6 | android/app/build.gradle.kts |
 | Backend | 1.0.0 | - | backend/VERSION |
+
+## 2026-05-10 — iOS UX: filtro de fechas Apple HIG + KPI responsivo en productos
+
+Mejoras de calidad UX en iOS siguiendo las guías oficiales de Apple (HIG). Sin cambios en otras plataformas.
+
+### IOS
+
+- **Events list — filtro por fecha**: se reemplazó el panel expandible inline ("Filtros" en texto) por un ícono `calendar` en la toolbar que abre un sheet nativo de 380pt. Dentro del sheet, dos `DatePicker` con estilo `.compact` (Apple HIG recomendado para espacio restringido) permiten seleccionar rango "Desde / Hasta" con toggle de activación. El ícono cambia a `calendar.badge.clock` cuando hay filtros activos.
+- **Products detail — KPI grid responsivo**: la grilla de 4 KPIs (precio base, costo unitario, margen, próximos eventos) pasó de dos `HStack` fijos a un `LazyVGrid` dinámico: 2 columnas en iPhone, 4 en iPad/Mac Catalyst. Usa el `horizontalSizeClass` ya presente en la vista.
 
 ## 2026-05-06 - Release train móvil 1.2.0 + Web 1.0.1
 
