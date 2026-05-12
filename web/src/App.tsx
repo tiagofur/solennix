@@ -17,6 +17,7 @@ const Login = React.lazy(() => import("@/pages/Login").then((m) => ({ default: m
 const Register = React.lazy(() => import("@/pages/Register").then((m) => ({ default: m.Register })));
 const ForgotPassword = React.lazy(() => import("@/pages/ForgotPassword").then((m) => ({ default: m.ForgotPassword })));
 const ResetPassword = React.lazy(() => import("@/pages/ResetPassword").then((m) => ({ default: m.ResetPassword })));
+const TeamInviteAccept = React.lazy(() => import("@/pages/TeamInviteAccept").then((m) => ({ default: m.TeamInviteAccept })));
 const About = React.lazy(() => import("@/pages/About").then((m) => ({ default: m.About })));
 const Privacy = React.lazy(() => import("@/pages/Privacy").then((m) => ({ default: m.Privacy })));
 const Terms = React.lazy(() => import("@/pages/Terms").then((m) => ({ default: m.Terms })));
@@ -92,6 +93,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/team-invite" element={<TeamInviteAccept />} />
               <Route path="/register" element={<Register />} />
               <Route path="/about" element={<About />} />
               <Route path="/privacy" element={<Privacy />} />

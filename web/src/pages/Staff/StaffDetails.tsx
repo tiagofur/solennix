@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, CalendarClock, Edit, Mail, Phone, Trash2, UserCog } from "lucide-react";
+import { ArrowLeft, CalendarClock, Edit, Mail, Phone, Send, Trash2, UserCog } from "lucide-react";
 import {
   useStaffMember,
   useDeleteStaff,
@@ -9,6 +9,9 @@ import {
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useTranslation } from "react-i18next";
 import type { AssignmentStatus } from "@/types/entities";
+import { staffService } from "@/services/staffService";
+import { useToast } from "@/hooks/useToast";
+import { getErrorMessage, logError } from "@/lib/errorHandler";
 
 const formatShiftRange = (
   start: string | null | undefined,
@@ -57,9 +60,12 @@ export const StaffDetails: React.FC = () => {
   const { t, i18n } = useTranslation(["staff"]);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const { data: staff, isLoading } = useStaffMember(id);
   const deleteMut = useDeleteStaff();
   const [confirmOpen, setConfirmOpen] = React.useState(false);
+  const [inviteURL, setInviteURL] = React.useState<string | null>(null);
+  const [inviting, setInviting] = React.useState(false);
 
   // Próximas asignaciones — ventana rolling de 90 días desde hoy. Usamos la
   // fecha en zona local (no UTC) para que la ventana coincida con lo que el
@@ -106,6 +112,43 @@ export const StaffDetails: React.FC = () => {
     navigate("/staff");
   };
 
+  const onInviteAccess = async () => {
+    if (!staff?.email || inviting) return;
+    setInviting(true);
+    try {
+      const result = await staffService.inviteUser(staff.id);
+      setInviteURL(result.accept_url);
+      addToast(
+        t("staff:details.actions.invite_sent", { defaultValue: "Invitación creada correctamente." }),
+        "success",
+      );
+    } catch (error) {
+      logError("Error creating staff invite", error);
+      addToast(
+        getErrorMessage(
+          error,
+          t("staff:details.actions.invite_error", { defaultValue: "No se pudo crear la invitación." }),
+        ),
+        "error",
+      );
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const onCopyInviteURL = async () => {
+    if (!inviteURL) return;
+    try {
+      await navigator.clipboard.writeText(inviteURL);
+      addToast(
+        t("staff:details.actions.invite_copied", { defaultValue: "Link copiado al portapapeles." }),
+        "success",
+      );
+    } catch {
+      addToast(inviteURL, "info");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <ConfirmDialog
@@ -139,6 +182,19 @@ export const StaffDetails: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {staff.email && !staff.invited_user_id && (
+              <button
+                type="button"
+                onClick={onInviteAccess}
+                disabled={inviting}
+                className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-xl text-white premium-gradient disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Send className="h-4 w-4 mr-2" aria-hidden="true" />
+                {inviting
+                  ? t("staff:details.actions.inviting", { defaultValue: "Invitando..." })
+                  : t("staff:details.actions.invite", { defaultValue: "Invitar acceso" })}
+              </button>
+            )}
             <Link
               to={`/staff/${staff.id}/edit`}
               className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-xl text-text bg-surface-alt hover:bg-card border border-border transition-colors"
@@ -154,6 +210,24 @@ export const StaffDetails: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {inviteURL && (
+          <div className="mt-4 rounded-xl border border-border bg-surface-alt p-3">
+            <p className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-1">
+              {t("staff:details.actions.invite_link", { defaultValue: "Link de invitación" })}
+            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <code className="flex-1 text-xs text-text break-all">{inviteURL}</code>
+              <button
+                type="button"
+                onClick={onCopyInviteURL}
+                className="inline-flex items-center justify-center px-3 py-2 text-xs font-medium rounded-lg text-text bg-card border border-border hover:bg-surface-alt transition-colors"
+              >
+                {t("staff:details.actions.copy_link", { defaultValue: "Copiar" })}
+              </button>
+            </div>
+          </div>
+        )}
 
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
           <div>
