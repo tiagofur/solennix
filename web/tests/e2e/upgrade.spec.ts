@@ -1,234 +1,150 @@
 import { test, expect } from '@playwright/test';
-import { isSetupRequired, setupTestUser } from './helpers';
+import { setupTestUser, skipIfBackendUnavailable } from './helpers';
 
 test.describe('Subscription Upgrade Flow', () => {
+  async function openPricing(page: Parameters<typeof test>[0]['page']) {
+    await page.goto('/pricing');
+    await expect(page.getByRole('heading', { name: /planes y precios|plans and pricing/i })).toBeVisible();
+  }
+
   test.beforeEach(async ({ page }) => {
     await setupTestUser(page);
 
-    test.skip(await isSetupRequired(page), 'Backend not configured');
+    await skipIfBackendUnavailable(page);
   });
 
   test('view pricing page from dashboard', async ({ page }) => {
     await page.goto('/dashboard');
 
-    // Look for "Upgrade" or "Actualizar" link/button
-    const upgradeLink = page.getByRole('link', { name: /upgrade|actualizar|pro|premium/i });
-
-    if (await upgradeLink.isVisible({ timeout: 3000 }).catch(() => false)) {
+    const upgradeLink = page.getByRole('link', { name: /ver planes pro|view pro plans/i });
+    if (await upgradeLink.isVisible({ timeout: 2000 }).catch(() => false)) {
       await upgradeLink.click();
-
-      // Should navigate to pricing page
       await expect(page).toHaveURL(/.*pricing/);
-      await expect(page.getByRole('heading', { name: /planes|pricing|precios/i })).toBeVisible();
-    } else {
-      // Try navigating directly
-      await page.goto('/pricing');
-      await expect(page.getByRole('heading', { name: /planes|pricing|precios/i })).toBeVisible();
+      await expect(page.getByRole('heading', { name: /planes y precios|plans and pricing/i })).toBeVisible();
+      return;
     }
+
+    await openPricing(page);
   });
 
   test('display plan features comparison', async ({ page }) => {
-    await page.goto('/pricing');
+    await openPricing(page);
 
-    // Verify both Basic and Pro plans are displayed
     await expect(page.getByText(/básico|basic/i)).toBeVisible();
-    await expect(page.getByText(/pro|premium/i)).toBeVisible();
-
-    // Verify key features are shown
-    const features = [
-      /eventos|events/i,
-      /clientes|clients/i,
-      /productos|products/i,
-      /inventario|inventory/i,
-    ];
-
-    for (const feature of features) {
-      const featureText = page.getByText(feature).first();
-      const isVisible = await featureText.isVisible({ timeout: 2000 }).catch(() => false);
-
-      if (isVisible) {
-        expect(isVisible).toBe(true);
-      }
-    }
+    await expect(page.getByText(/^pro$/i)).toBeVisible();
+    await expect(page.getByText(/^business$/i)).toBeVisible();
+    await expect(page.getByText(/eventos ilimitados|unlimited events/i)).toBeVisible();
+    await expect(page.getByText(/portal del cliente con tu marca|client portal with your brand/i)).toBeVisible();
   });
 
   test('show plan limits for current user', async ({ page }) => {
-    await page.goto('/dashboard');
-
-    // Look for plan indicator or usage stats
-    const planBadge = page.getByText(/plan:|plan básico|basic plan/i);
-
-    if (await planBadge.isVisible({ timeout: 3000 }).catch(() => false)) {
-      // Verify plan is displayed
-      expect(await planBadge.isVisible()).toBe(true);
-
-      // Look for usage indicators (e.g., "3/10 events")
-      const usageIndicator = page.locator('text=/\\d+\\/\\d+/').first();
-
-      if (await usageIndicator.isVisible({ timeout: 2000 }).catch(() => false)) {
-        const usageText = await usageIndicator.textContent();
-        expect(usageText).toMatch(/\d+\/\d+/);
-      }
-    }
+    await page.goto('/settings?tab=subscription');
+    await expect(page.getByRole('heading', { name: /suscripción y facturación|subscription and billing/i })).toBeVisible();
+    await expect(page.getByText(/eventos este mes|events this month/i)).toBeVisible();
+    await expect(page.getByText(/clientes registrados|registered clients/i)).toBeVisible();
   });
 
   test('initiate upgrade to Pro plan', async ({ page }) => {
-    await page.goto('/pricing');
-
-    // Find "Upgrade to Pro" or "Actualizar a Pro" button
-    const upgradeBtn = page.getByRole('button', {
-      name: /actualizar a pro|upgrade to pro|suscribirse/i,
+    await page.route('**/api/subscriptions/checkout-session', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          url: 'http://localhost:5173/pricing?checkout=simulated',
+        }),
+      });
     });
 
-    if (await upgradeBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await upgradeBtn.click();
+    await openPricing(page);
+    const upgradeBtn = page.getByRole('button', { name: /suscribirse al plan pro|subscribe to pro plan/i });
+    await expect(upgradeBtn).toBeVisible();
+    await upgradeBtn.click();
 
-      // Should either:
-      // 1. Open Stripe checkout (new window/redirect)
-      // 2. Show upgrade confirmation dialog
-      // 3. Navigate to checkout page
-
-      // Wait for navigation or modal
-      await page.waitForTimeout(2000);
-
-      // Check if we're on Stripe checkout (URL contains stripe.com or checkout)
-      const currentUrl = page.url();
-
-      if (currentUrl.includes('stripe.com') || currentUrl.includes('checkout')) {
-        // Successfully redirected to Stripe
-        expect(currentUrl).toMatch(/stripe|checkout/i);
-      } else {
-        // Check if a modal or confirmation appeared
-        const modal = page.locator('[role="dialog"], .modal, [data-testid="upgrade-modal"]');
-        const hasModal = await modal.isVisible({ timeout: 2000 }).catch(() => false);
-
-        if (hasModal) {
-          await expect(modal).toBeVisible();
-        } else {
-          // May need Stripe configuration in test environment
-          test.skip(true, 'Stripe checkout not configured in test environment');
-        }
-      }
-    } else {
-      test.skip(true, 'Upgrade button not found - may require Stripe configuration');
-    }
+    await expect(page).toHaveURL(/.*checkout=simulated/);
   });
 
   test('show upgrade prompt when reaching plan limits', async ({ page }) => {
-    await page.goto('/events');
+    await page.goto('/settings?tab=subscription');
+    const upgradeBtn = page.getByRole('button', {
+      name: /mejorar a pro para límites ilimitados|upgrade to pro for unlimited limits/i,
+    });
 
-    // Look for limit warning banner or modal
-    const limitWarning = page.getByText(/límite|limit|upgrade|actualizar/i);
-
-    // This test is conditional - only fails if we can verify limits are enforced
-    const hasWarning = await limitWarning.isVisible({ timeout: 3000 }).catch(() => false);
-
-    if (hasWarning) {
-      // If warning is shown, verify it contains useful info
-      await expect(limitWarning).toBeVisible();
-
-      // Look for "Upgrade" button in warning
-      const upgradeInWarning = page.getByRole('button', { name: /upgrade|actualizar/i });
-
-      if (await upgradeInWarning.isVisible().catch(() => false)) {
-        await expect(upgradeInWarning).toBeVisible();
-      }
-    }
-
-    // Test doesn't fail if no warning - limits may not be reached yet
-    expect(true).toBe(true);
+    await expect(upgradeBtn).toBeVisible();
+    await upgradeBtn.click();
+    await expect(page).toHaveURL(/.*pricing/);
   });
 
   test('manage billing through customer portal', async ({ page }) => {
-    await page.goto('/settings');
-
-    // Look for "Manage Billing" or "Administrar Facturación" link
-    const billingLink = page.getByRole('link', {
-      name: /administrar facturación|manage billing|billing portal/i,
+    await page.route('**/api/subscriptions/status', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          plan: 'pro',
+          has_stripe_account: true,
+          subscription: {
+            provider: 'stripe',
+            status: 'active',
+            cancel_instructions: 'You can manage billing from portal',
+          },
+        }),
+      });
+    });
+    await page.route('**/api/subscriptions/portal-session', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          url: 'http://localhost:5173/settings?tab=subscription&portal=simulated',
+        }),
+      });
     });
 
-    if (await billingLink.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await billingLink.click();
+    await page.goto('/settings?tab=subscription');
+    const manageBtn = page.getByRole('button', { name: /gestionar suscripción|manage subscription/i });
+    await expect(manageBtn).toBeVisible();
+    await manageBtn.click();
 
-      // Should redirect to Stripe billing portal
-      await page.waitForTimeout(2000);
-
-      const currentUrl = page.url();
-
-      if (currentUrl.includes('stripe.com') || currentUrl.includes('billing')) {
-        expect(currentUrl).toMatch(/stripe|billing/i);
-      } else {
-        test.skip(true, 'Billing portal not configured');
-      }
-    } else {
-      test.skip(true, 'Billing portal link not found - may require Pro subscription');
-    }
+    await expect(page).toHaveURL(/.*portal=simulated/);
   });
 
   test('display Pro features correctly after upgrade', async ({ page }) => {
-    // This test assumes user is on Pro plan (manual setup required)
-    await page.goto('/dashboard');
+    await openPricing(page);
 
-    // Check if user is on Pro plan
-    const proBadge = page.getByText(/pro|premium/i).first();
-    const isProUser = await proBadge.isVisible({ timeout: 2000 }).catch(() => false);
+    const debugBtn = page.getByRole('button', {
+      name: /modo desarrollo - actualizar a pro sin pago|\[dev\] upgrade/i,
+    });
+    await expect(debugBtn).toBeVisible();
 
-    test.skip(!isProUser, 'User is not on Pro plan - cannot test Pro features');
+    const dialogPromise = page.waitForEvent('dialog');
+    await debugBtn.click();
+    const dialog = await dialogPromise;
+    expect(dialog.message()).toMatch(/plan actualizado a pro|plan updated to pro/i);
+    await dialog.accept();
 
-    // Verify Pro features are accessible
-
-    // 1. Check increased limits
-    const usageIndicator = page.locator('text=/\\d+\\/\\d+/').first();
-    if (await usageIndicator.isVisible({ timeout: 2000 }).catch(() => false)) {
-      const usageText = await usageIndicator.textContent();
-
-      // Pro plan should have higher limits (e.g., "5/unlimited" or "5/100")
-      expect(usageText).toBeTruthy();
-    }
-
-    // 2. Check for Pro-only features (adjust based on your app)
-    const proFeatures = [
-      /reportes|reports/i,
-      /análisis|analytics/i,
-      /personalización|customization/i,
-    ];
-
-    for (const feature of proFeatures) {
-      const featureLink = page.getByRole('link', { name: feature });
-      const hasFeature = await featureLink.isVisible({ timeout: 1000 }).catch(() => false);
-
-      if (hasFeature) {
-        // Pro feature is visible
-        expect(hasFeature).toBe(true);
-        break;
-      }
-    }
+    await expect(page.getByRole('button', { name: /plan pro - tu plan actual|pro plan - your current plan/i })).toBeVisible();
   });
 
   test('handle downgrade scenario', async ({ page }) => {
-    await page.goto('/settings');
+    await openPricing(page);
+    await expect(page.getByRole('button', { name: /plan básico - plan actual|basic plan - current plan/i })).toBeDisabled();
+    await expect(page.getByRole('button', { name: /suscribirse al plan pro|subscribe to pro plan/i })).toBeVisible();
+  });
 
-    // Look for billing portal or plan management
-    const managePlanLink = page.getByRole('link', {
-      name: /manage|administrar|cambiar plan|change plan/i,
+  test('show error when checkout session fails', async ({ page }) => {
+    await page.route('**/api/subscriptions/checkout-session', async (route) => {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'Stripe not configured' }),
+      });
     });
 
-    if (await managePlanLink.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await managePlanLink.click();
+    await openPricing(page);
+    const upgradeBtn = page.getByRole('button', { name: /suscribirse al plan pro|subscribe to pro plan/i });
+    await upgradeBtn.click();
 
-      // If on Pro, should see option to downgrade
-      const downgradeOption = page.getByText(/downgrade|cancelar|básico|basic/i);
-
-      if (await downgradeOption.isVisible({ timeout: 3000 }).catch(() => false)) {
-        // Verify downgrade warning is shown
-        const warning = page.getByText(/perder|lose|límite|limit/i);
-        const hasWarning = await warning.isVisible({ timeout: 2000 }).catch(() => false);
-
-        expect(hasWarning || true).toBe(true); // Don't fail if no warning
-      }
-    }
-
-    // This is a smoke test - doesn't actually downgrade
-    expect(true).toBe(true);
+    await expect(page.getByRole('alert')).toBeVisible();
+    await expect(page.getByText(/hubo un error al iniciar el proceso de pago|error starting the checkout process/i)).toBeVisible();
   });
 });

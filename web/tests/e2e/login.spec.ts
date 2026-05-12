@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
-import { isSetupRequired, register } from './helpers';
+import { register, skipIfBackendUnavailable } from './helpers';
 
-test.describe('Authentication Flow', () => {
+test.describe('Authentication Flow (Static)', () => {
   test('login page loads correctly', async ({ page }) => {
     await page.goto('/login');
 
@@ -18,6 +18,28 @@ test.describe('Authentication Flow', () => {
     await expect(page.getByRole('link', { name: /crear cuenta/i })).toBeVisible();
   });
 
+  test('protected routes redirect to login when not authenticated', async ({ page }) => {
+    // Navigate somewhere in the app origin first — `localStorage` is
+    // scoped to an origin and cannot be accessed on about:blank.
+    await page.goto('/login');
+    await page.context().clearCookies();
+    await page.evaluate(() => localStorage.clear());
+
+    // Try to access protected route
+    await page.goto('/dashboard');
+
+    // Should redirect to login
+    await expect(page).toHaveURL(/.*login/);
+    await expect(page.getByRole('heading', { name: /iniciar sesión/i })).toBeVisible();
+  });
+});
+
+test.describe('Authentication Flow (Backend Dependent)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/login');
+    await skipIfBackendUnavailable(page);
+  });
+
   test('register new user successfully', async ({ page }) => {
     const testEmail = `test-${Date.now()}@playwright.test`;
     const testPassword = 'TestPass123!';
@@ -25,7 +47,7 @@ test.describe('Authentication Flow', () => {
 
     const success = await register(page, testEmail, testPassword, testName);
 
-    test.skip(!success, 'Backend not configured');
+    expect(success).toBe(true);
 
     // Should redirect to dashboard after registration
     await expect(page).toHaveURL(/.*dashboard/);
@@ -34,8 +56,6 @@ test.describe('Authentication Flow', () => {
 
   test('login with invalid credentials shows error', async ({ page }) => {
     await page.goto('/login');
-
-    test.skip(await isSetupRequired(page), 'Backend not configured');
 
     await page.getByLabel('Correo electrónico').fill('invalid@example.com');
     await page.getByLabel('Contraseña', { exact: true }).fill('wrongpassword');
@@ -51,7 +71,7 @@ test.describe('Authentication Flow', () => {
     const testEmail = `test-${Date.now()}@playwright.test`;
     const success = await register(page, testEmail, 'TestPass123!', 'Test User');
 
-    test.skip(!success, 'Backend not configured');
+    expect(success).toBe(true);
 
     // Should be on dashboard
     await expect(page).toHaveURL(/.*dashboard/);
@@ -61,21 +81,6 @@ test.describe('Authentication Flow', () => {
     await logoutButton.click();
 
     // Should redirect to login page
-    await expect(page).toHaveURL(/.*login/);
-    await expect(page.getByRole('heading', { name: /iniciar sesión/i })).toBeVisible();
-  });
-
-  test('protected routes redirect to login when not authenticated', async ({ page }) => {
-    // Navigate somewhere in the app origin first — `localStorage` is
-    // scoped to an origin and cannot be accessed on about:blank.
-    await page.goto('/login');
-    await page.context().clearCookies();
-    await page.evaluate(() => localStorage.clear());
-
-    // Try to access protected route
-    await page.goto('/dashboard');
-
-    // Should redirect to login
     await expect(page).toHaveURL(/.*login/);
     await expect(page.getByRole('heading', { name: /iniciar sesión/i })).toBeVisible();
   });

@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { isSetupRequired, setupTestUser } from './helpers';
+import { setupTestUser, skipIfBackendUnavailable } from './helpers';
 
 test.describe('Dashboard Analytics Widgets', () => {
   test.beforeEach(async ({ page }) => {
     await setupTestUser(page);
-    test.skip(await isSetupRequired(page), 'Backend not configured');
+    await skipIfBackendUnavailable(page);
   });
 
   test('TopClientsWidget displays client list', async ({ page }) => {

@@ -1,12 +1,14 @@
 import { test, expect } from '@playwright/test';
-import { isSetupRequired, setupTestUser, navigateTo } from './helpers';
+import { skipIfBackendUnavailable, setupTestUserWithEvent, navigateTo } from './helpers';
 
 test.describe('Events Management Flow', () => {
-  test.beforeEach(async ({ page }) => {
-    // Setup test user and login
-    await setupTestUser(page);
+  let seededEventId: string | null = null;
 
-    test.skip(await isSetupRequired(page), 'Backend not configured');
+  test.beforeEach(async ({ page }) => {
+    const seed = await setupTestUserWithEvent(page);
+    seededEventId = seed?.eventId ?? null;
+
+    await skipIfBackendUnavailable(page);
   });
 
   test('create new event with client', async ({ page }) => {
@@ -47,16 +49,9 @@ test.describe('Events Management Flow', () => {
   });
 
   test('add products to event', async ({ page }) => {
-    // First create an event (assuming we have one)
     await page.goto('/events');
 
-    // Click on first event or create one
-    const firstEvent = page.locator('[href^="/events/"]').first();
-    const hasEvents = await firstEvent.isVisible({ timeout: 3000 }).catch(() => false);
-
-    test.skip(!hasEvents, 'No events available - run create event test first');
-
-    await firstEvent.click();
+    await page.goto(`/events/${seededEventId}/summary`);
 
     // Should be on event summary page
     await expect(page).toHaveURL(/.*events\/.*\/summary/);
@@ -88,13 +83,7 @@ test.describe('Events Management Flow', () => {
   test('change event status', async ({ page }) => {
     await page.goto('/events');
 
-    // Click on first event
-    const firstEvent = page.locator('[href^="/events/"]').first();
-    const hasEvents = await firstEvent.isVisible({ timeout: 3000 }).catch(() => false);
-
-    test.skip(!hasEvents, 'No events available');
-
-    await firstEvent.click();
+    await page.goto(`/events/${seededEventId}/summary`);
 
     // Look for status change options
     const statusSelect = page.getByLabel(/estado|status/i);

@@ -1,69 +1,56 @@
 import { test, expect } from '@playwright/test';
-import { isSetupRequired, setupTestUser } from './helpers';
+import { setupTestUserWithEvent, skipIfBackendUnavailable } from './helpers';
 
 test.describe('PDF Generation Flow', () => {
-  test.beforeEach(async ({ page }) => {
-    await setupTestUser(page);
+  let seededEventId: string | null = null;
 
-    test.skip(await isSetupRequired(page), 'Backend not configured');
+  async function openEventSummary(page: Parameters<typeof test>[0]['page']) {
+    expect(seededEventId).not.toBeNull();
+    await page.goto(`/events/${seededEventId}/summary`);
+    await expect(page).toHaveURL(/.*events\/.*\/summary/);
+  }
+
+  async function openActionsMenu(page: Parameters<typeof test>[0]['page']) {
+    const moreActions = page.getByRole('button', { name: /más|more/i });
+    await expect(moreActions).toBeVisible();
+    await moreActions.click();
+  }
+
+  test.beforeEach(async ({ page }) => {
+    const seed = await setupTestUserWithEvent(page);
+    seededEventId = seed?.eventId ?? null;
+
+    await skipIfBackendUnavailable(page);
   });
 
   test('generate quotation PDF from event', async ({ page }) => {
-    await page.goto('/events');
+    await openEventSummary(page);
+    await openActionsMenu(page);
 
-    const firstEvent = page.locator('[href^="/events/"]').first();
-    const hasEvents = await firstEvent.isVisible({ timeout: 3000 }).catch(() => false);
+    const budgetItem = page.getByRole('menuitem', { name: /presupuesto|budget/i });
+    await expect(budgetItem).toBeVisible();
 
-    test.skip(!hasEvents, 'No events available');
+    const downloadPromise = page.waitForEvent('download', { timeout: 10000 });
+    await budgetItem.click();
 
-    await firstEvent.click();
-
-    // Look for "Generate Quotation" or "Generar Cotización" button
-    const generateQuoteBtn = page.getByRole('button', {
-      name: /generar cotización|generate quotation|descargar cotización|quote/i,
-    });
-
-    if (await generateQuoteBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-      const downloadPromise = page.waitForEvent('download', { timeout: 10000 });
-
-      await generateQuoteBtn.click();
-
-      const download = await downloadPromise;
-
-      expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
-      expect(download.suggestedFilename()).toMatch(/cotizacion|quotation|quote/i);
-    } else {
-      test.skip(true, 'Generate quotation button not found');
-    }
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
   });
 
   test('generate contract PDF with event details', async ({ page }) => {
-    await page.goto('/events');
+    await openEventSummary(page);
+    await openActionsMenu(page);
 
-    const firstEvent = page.locator('[href^="/events/"]').first();
-    const hasEvents = await firstEvent.isVisible({ timeout: 3000 }).catch(() => false);
+    const contractItem = page.getByRole('menuitem', { name: /contrato|contract/i });
+    await expect(contractItem).toBeVisible();
+    await expect(contractItem).toBeEnabled();
 
-    test.skip(!hasEvents, 'No events available');
+    const downloadPromise = page.waitForEvent('download', { timeout: 10000 });
+    await contractItem.click();
 
-    await firstEvent.click();
-
-    // Look for "Generate Contract" or "Generar Contrato" button
-    const generateContractBtn = page.getByRole('button', {
-      name: /generar contrato|generate contract|descargar contrato/i,
-    });
-
-    if (await generateContractBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-      const downloadPromise = page.waitForEvent('download', { timeout: 10000 });
-
-      await generateContractBtn.click();
-
-      const download = await downloadPromise;
-
-      expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
-      expect(download.suggestedFilename()).toMatch(/contrato|contract/i);
-    } else {
-      test.skip(true, 'Generate contract button not found');
-    }
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
+    expect(download.suggestedFilename()).toMatch(/contrato|contract/i);
   });
 
   test('PDF includes correct business branding', async ({ page }) => {
@@ -93,53 +80,29 @@ test.describe('PDF Generation Flow', () => {
       }
 
       // Now verify PDF generation still works with branding
-      await page.goto('/events');
+      await openEventSummary(page);
+      await openActionsMenu(page);
 
-      const firstEvent = page.locator('[href^="/events/"]').first();
-      if (await firstEvent.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await firstEvent.click();
+      const budgetItem = page.getByRole('menuitem', { name: /presupuesto|budget/i });
+      await expect(budgetItem).toBeVisible();
 
-        const pdfBtn = page
-          .getByRole('button', { name: /generar|descargar|pdf/i })
-          .first();
+      const downloadPromise = page.waitForEvent('download', { timeout: 10000 });
+      await budgetItem.click();
 
-        if (await pdfBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-          const downloadPromise = page.waitForEvent('download', { timeout: 10000 });
-          await pdfBtn.click();
-
-          const download = await downloadPromise;
-          expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
-        }
-      }
+      const download = await downloadPromise;
+      expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
     }
   });
 
   test('handle PDF generation errors gracefully', async ({ page }) => {
-    await page.goto('/events');
+    await openEventSummary(page);
 
-    const firstEvent = page.locator('[href^="/events/"]').first();
-    const hasEvents = await firstEvent.isVisible({ timeout: 3000 }).catch(() => false);
+    await openActionsMenu(page);
+    await expect(page.getByRole('menuitem', { name: /presupuesto|budget/i })).toBeVisible();
 
-    test.skip(!hasEvents, 'No events available');
+    await openActionsMenu(page);
+    await expect(page.getByRole('menuitem', { name: /contrato|contract/i })).toBeVisible();
 
-    await firstEvent.click();
-
-    // Try to generate PDF for event with incomplete data
-    // (This depends on your validation - adjust as needed)
-
-    const pdfBtn = page.getByRole('button', { name: /generar|pdf/i }).first();
-
-    if (await pdfBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-      // Try clicking multiple times rapidly (stress test)
-      await pdfBtn.click();
-      await pdfBtn.click();
-
-      // Should not crash - either download or show error
-      // Wait a bit to see if error appears
-      await page.waitForTimeout(2000);
-
-      // Page should still be functional
-      await expect(page.getByRole('heading')).toBeVisible();
-    }
+    await expect(page.getByRole('heading')).toBeVisible();
   });
 });

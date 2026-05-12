@@ -1,4 +1,4 @@
-import { Page, expect, request as pwRequest } from '@playwright/test';
+import { Page, expect, request as pwRequest, test } from '@playwright/test';
 
 /**
  * Cache the backend health check per test run so we don't hammer the
@@ -65,6 +65,13 @@ export async function isSetupRequired(page: Page): Promise<boolean> {
 }
 
 /**
+ * Standard backend guard for E2E specs that require API access.
+ */
+export async function skipIfBackendUnavailable(page: Page, reason = 'Backend not configured') {
+  test.skip(await isSetupRequired(page), reason);
+}
+
+/**
  * Login with email and password
  * Assumes you're on the login page
  *
@@ -125,6 +132,68 @@ export async function setupTestUser(page: Page) {
   await register(page, testEmail, testPassword, testName);
 
   return { email: testEmail, password: testPassword, name: testName };
+}
+
+type SeedEventData = {
+  eventId: string;
+  clientId: string;
+};
+
+async function postJson<T>(page: Page, path: string, body: unknown): Promise<T> {
+  const apiUrl = process.env.PLAYWRIGHT_BACKEND_URL ?? 'http://localhost:8080/api';
+  return page.evaluate(async ({ apiUrl, path, body }) => {
+    const response = await fetch(`${apiUrl}${path}`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Request failed for ${path}: ${response.status} ${text}`);
+    }
+
+    return response.json();
+  }, { apiUrl, path, body }) as Promise<T>;
+}
+
+export async function setupTestUserWithEvent(page: Page): Promise<SeedEventData | null> {
+  const user = await setupTestUser(page);
+
+  if (await isSetupRequired(page)) {
+    return null;
+  }
+
+  const uniqueSuffix = Date.now();
+  const client = await postJson<{ id: string }>(page, '/clients', {
+    name: `Cliente E2E ${uniqueSuffix}`,
+    phone: `555${String(uniqueSuffix).slice(-7)}`,
+    email: `client-${uniqueSuffix}@playwright.test`,
+  });
+
+  const futureDate = new Date();
+  futureDate.setDate(futureDate.getDate() + 30);
+  const dateStr = futureDate.toISOString().split('T')[0];
+
+  const event = await postJson<{ id: string }>(page, '/events', {
+    client_id: client.id,
+    event_date: dateStr,
+    service_type: 'Boda Corporativa',
+    num_people: 100,
+    status: 'quoted',
+    tax_rate: 16,
+    tax_amount: 1600,
+    total_amount: 10000,
+    discount: 0,
+    discount_type: 'percent',
+    requires_invoice: false,
+    notes: `Seeded by Playwright for ${user.email}`,
+  });
+
+  return { eventId: event.id, clientId: client.id };
 }
 
 /**
