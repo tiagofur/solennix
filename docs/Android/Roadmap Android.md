@@ -2,10 +2,13 @@
 
 # Roadmap Android — Hacia la Paridad y Más Allá
 
-> [!success] 🆕 Actualizado 2026-04-26 — v1.1.2 (versionCode 5) · CI activo · Dashboard KPIs server-side · Personal completo · Portal Cliente · i18n · Google Play compliance
+> [!success] 🆕 Actualizado 2026-05-12 — baseline de testing documentado (56 tests, 0 fallos) + plan de hardening incremental
 > Ver [[../00_DASHBOARD|Dashboard]] para el panorama completo.
 >
-> **Hitos desde 2026-04-16:**
+> **Hitos recientes:**
+> - Baseline de tests Android medido y consolidado en docs
+> - Matriz de gaps por módulo (4/19 con tests)
+> - Roadmap de hardening en 4 fases listo para ejecución
 > - Dashboard KPIs consume backend — zero client-side aggregation
 > - Revenue chart 6 meses (premium-only)
 > - Personal completo: CRUD + turnos + equipos + product+staff
@@ -21,9 +24,40 @@
 > - ~~**Sprint 7.B** — `UpgradePlanDialog` wiring cuando API devuelve 403 `plan_limit_exceeded`.~~ ✅ Cerrado 2026-04-26. `SolennixException.PlanLimitExceeded` + wired en Event/Client/Product form ViewModels + Screens.
 > - **Sprint 7.C** — Enforcement tier matrix completo.
 > - **i18n** — Extraer Dashboard + Events strings (issues #94, #95).
+> - **Quality Sprint 1** — cubrir `core/model`, `core/database`, `feature/auth` con unit tests.
 
 > [!tip] Filosofía
 > Priorizado por **impacto en usuario** × **esfuerzo técnico**. Alineado con el [[Roadmap Web]] para mantener paridad cross-platform. Las fases son incrementales — cada una deja la app shippable.
+
+---
+
+## Baseline de Testing (2026-05-12)
+
+> [!info] Estado verificado por ejecución
+> - **56 tests** unitarios totales (debug+release)
+> - **0 failures**, **0 errors**, **0 skipped**
+> - **4/19 módulos** Android con tests actualmente
+> - **Sin `androidTest` detectados** en el repo
+
+| Módulo | Tests debug | Tests release | Total |
+| ------ | ----------: | ------------: | ----: |
+| `core/data` | 7 | 7 | 14 |
+| `core/network` | 6 | 6 | 12 |
+| `feature/dashboard` | 8 | 8 | 16 |
+| `feature/events` | 7 | 7 | 14 |
+| **Total** | **28** | **28** | **56** |
+
+### Gap estructural actual
+
+- Módulos con tests: `core/data`, `core/network`, `feature/dashboard`, `feature/events`
+- Módulos sin tests (15): `app`, `baselineprofile`, `core/database`, `core/designsystem`, `core/model`, `feature/auth`, `feature/calendar`, `feature/clients`, `feature/inventory`, `feature/payments`, `feature/products`, `feature/search`, `feature/settings`, `feature/staff`, `widget`
+
+### Plan incremental de hardening
+
+1. **Fase 1**: `core/model`, `core/database`, `feature/auth`
+2. **Fase 2**: `feature/clients`, `feature/products`, `feature/inventory`
+3. **Fase 3**: smoke tests `androidTest` (login + dashboard)
+4. **Fase 4**: gate de cobertura gradual por módulo
 
 ---
 
@@ -101,7 +135,7 @@
 | Offline-first               | ❌             | ✅ (completo p/Eventos) | Android adelante |
 | React Query / cache         | 🔄 En progreso | N/A (Room)              | —                |
 | Push notifications          | ❌             | ✅ Activo (Firebase)    | **Fase 2 OK**    |
-| Test coverage               | ❌ 0%          | 🔄 15% (Infra OK)       | Ambos            |
+| Test coverage               | ❌ 0%          | 🔄 Baseline 56 tests (4/19 módulos) | Ambos            |
 | i18n                        | ❌             | ❌                      | Ambos            |
 | Analytics                   | ❌             | ❌                      | Ambos            |
 | Suscripciones (billing)     | ❌             | ✅ RevenueCat OK        | **Fase 2 OK**    |
@@ -153,8 +187,9 @@
 - [x] Setup: JUnit 5 + MockK + Turbine + Hilt Testing
 - [x] Tests para `AuthManager` (tokens, refresh, biometric state)
 - [x] Tests para repositories (sync logic, entity mapping)
-- [ ] Tests para ViewModels clave (Dashboard, EventForm, EventDetail)
-- [🔄] Target: 40% coverage en `core/` modules (Infraestructura lista)
+- [x] Tests para ViewModels clave de Dashboard y Events
+- [ ] Tests para módulos críticos restantes (`feature/auth`, `feature/clients`, `feature/products`, `feature/inventory`)
+- [🔄] Target incremental: pasar de 4/19 a 7/19 módulos con tests (Fase 1)
 
 ### 1.2 Paginación con Paging 3 ✅
 

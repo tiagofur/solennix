@@ -9,7 +9,7 @@ aliases:
   - Arquitectura Android
   - Android Architecture
 date: 2026-03-20
-updated: 2026-05-06
+updated: 2026-05-12
 status: active
 platform: Android
 ---
@@ -17,7 +17,7 @@ platform: Android
 # Arquitectura Técnica — Android
 
 **Versión:** 1.2.0
-**Fecha:** 2026-03-20 · **Última actualización:** 2026-05-06
+**Fecha:** 2026-03-20 · **Última actualización:** 2026-05-12
 **Plataforma:** Android (teléfono/tablet)
 
 > [!success] Versionado actual (2026-05-06)
@@ -37,6 +37,14 @@ platform: Android
 > - **Formularios:** `imePadding()` evita que el teclado tape inputs/acciones en pantallas scrolleables
 > - **Detalle de evento:** se removió la acción legacy de WhatsApp; la compartición oficial queda en `ClientPortalShareBottomSheet`
 > - **Settings:** `Centro de ayuda` queda como acción secundaria dentro de Ajustes; el control de tema sigue concentrado ahí
+
+> [!info] Baseline de testing Android (2026-05-12)
+>
+> - **56 tests unitarios** en verde (debug+release)
+> - **0 failures**, **0 errors**, **0 skipped**
+> - **4/19 módulos** con tests (`core/data`, `core/network`, `feature/dashboard`, `feature/events`)
+> - **15/19 módulos** sin tests aún (plan incremental activo)
+> - Ver detalle en [[../Android/Testing]]
 
 > [!tip] Documentos relacionados
 > [[PRD MOC]] · [[01_PRODUCT_VISION]] · [[02_FEATURES]] · [[05_TECHNICAL_ARCHITECTURE_IOS]] · [[07_TECHNICAL_ARCHITECTURE_BACKEND]] · [[08_TECHNICAL_ARCHITECTURE_WEB]] · [[11_CURRENT_STATUS]] · [[19_I18N_STRATEGY]]

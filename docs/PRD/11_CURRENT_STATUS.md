@@ -1122,6 +1122,36 @@ Primera pantalla de paridad post-Dashboard:
 | **E**  | `EventFormViewModel` sin validación de tiempo client-side | ✅ Agregado `isValidTime24h` + `normalizeTime` helpers; validación en `validateStep(0)` y defensivo en `saveEvent`. Formato `HH:mm` requerido. Rechaza horas iguales pero permite overnight events (20:00→02:00 común en bodas LATAM) | `feature/events/.../EventFormViewModel.kt:validateStep, saveEvent` |
 | **F**  | Sync final de docs con realidad       | ✅ Completado — `Roadmap Android.md` corregido (Fase 0.3 y 2.2 dejaron de mentir) | `PRD/11_CURRENT_STATUS.md`, `Android/Roadmap Android.md`, `Android/Firma y Secretos de Release.md` |
 
+### Baseline de Testing Android (2026-05-12)
+
+> [!info] Estado medido por ejecución real
+>
+> - Total tests unitarios: **56** (debug+release)
+> - Resultado: **0 failures**, **0 errors**, **0 skipped**
+> - Cobertura estructural: **4/19 módulos** con tests
+> - `androidTest`: **no detectado** aún
+
+| Módulo | Tests debug | Tests release | Total |
+| ------ | ----------: | ------------: | ----: |
+| `core/data` | 7 | 7 | 14 |
+| `core/network` | 6 | 6 | 12 |
+| `feature/dashboard` | 8 | 8 | 16 |
+| `feature/events` | 7 | 7 | 14 |
+| **Total** | **28** | **28** | **56** |
+
+| Indicador | Valor |
+| --------- | ----: |
+| Módulos Android totales | 19 |
+| Módulos con tests | 4 |
+| Módulos sin tests | 15 |
+
+#### Hardening incremental acordado
+
+1. Fase 1: `core/model`, `core/database`, `feature/auth`
+2. Fase 2: `feature/clients`, `feature/products`, `feature/inventory`
+3. Fase 3: smoke tests instrumentados (`androidTest`) para login + dashboard
+4. Fase 4: gate de cobertura gradual por módulo en CI
+
 ### Pendiente Android (no blocker)
 
 > [!warning] Items pendientes Android
