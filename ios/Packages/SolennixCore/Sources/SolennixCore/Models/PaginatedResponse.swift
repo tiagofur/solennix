@@ -35,8 +35,10 @@ public struct PaginatedResponse<T: Decodable>: Decodable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let decodedData = try container.decode([T].self, forKey: .data)
         let decodedTotal = try container.decodeIfPresent(Int.self, forKey: .total) ?? decodedData.count
-        let decodedPage = try container.decodeIfPresent(Int.self, forKey: .page) ?? 1
-        let decodedLimit = try container.decodeIfPresent(Int.self, forKey: .limit) ?? max(decodedData.count, 1)
+        let rawPage = try container.decodeIfPresent(Int.self, forKey: .page) ?? 1
+        let rawLimit = try container.decodeIfPresent(Int.self, forKey: .limit) ?? max(decodedData.count, 1)
+        let decodedPage = max(rawPage, 1)
+        let decodedLimit = max(rawLimit, 1)
         let decodedTotalPages = try container.decodeIfPresent(Int.self, forKey: .totalPages)
             ?? max(1, Int((Double(decodedTotal) / Double(decodedLimit)).rounded(.up)))
 

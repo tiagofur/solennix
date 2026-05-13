@@ -36,7 +36,7 @@ public final class CacheManager {
 
     /// Replaces all cached clients with the provided list.
     public func cacheClients(_ clients: [Client]) throws {
-        try deleteAll(CachedClient.self)
+        try deleteAllCachedClients()
         for client in clients {
             modelContext.insert(CachedClient(from: client))
         }
@@ -58,7 +58,7 @@ public final class CacheManager {
 
     /// Replaces all cached events with the provided list.
     public func cacheEvents(_ events: [Event]) throws {
-        try deleteAll(CachedEvent.self)
+        try deleteAllCachedEvents()
         for event in events {
             modelContext.insert(CachedEvent(from: event))
         }
@@ -80,7 +80,7 @@ public final class CacheManager {
 
     /// Replaces all cached products with the provided list.
     public func cacheProducts(_ products: [Product]) throws {
-        try deleteAll(CachedProduct.self)
+        try deleteAllCachedProducts()
         for product in products {
             modelContext.insert(CachedProduct(from: product))
         }
@@ -102,7 +102,7 @@ public final class CacheManager {
 
     /// Replaces all cached inventory items with the provided list.
     public func cacheInventoryItems(_ items: [InventoryItem]) throws {
-        try deleteAll(CachedInventoryItem.self)
+        try deleteAllCachedInventoryItems()
         for item in items {
             modelContext.insert(CachedInventoryItem(from: item))
         }
@@ -124,7 +124,7 @@ public final class CacheManager {
 
     /// Replaces all cached payments with the provided list.
     public func cachePayments(_ payments: [Payment]) throws {
-        try deleteAll(CachedPayment.self)
+        try deleteAllCachedPayments()
         for payment in payments {
             modelContext.insert(CachedPayment(from: payment))
         }
@@ -147,19 +147,35 @@ public final class CacheManager {
 
     /// Removes all cached data from the local store.
     public func clearAll() throws {
-        try deleteAll(CachedClient.self)
-        try deleteAll(CachedEvent.self)
-        try deleteAll(CachedProduct.self)
-        try deleteAll(CachedInventoryItem.self)
-        try deleteAll(CachedPayment.self)
+        try deleteAllCachedClients()
+        try deleteAllCachedEvents()
+        try deleteAllCachedProducts()
+        try deleteAllCachedInventoryItems()
+        try deleteAllCachedPayments()
         try modelContext.save()
         clearCacheTimestamps()
     }
 
     // MARK: - Helpers
 
-    private func deleteAll<T: PersistentModel>(_ type: T.Type) throws {
-        try modelContext.delete(model: type)
+    private func deleteAllCachedClients() throws {
+        try modelContext.delete(model: CachedClient.self)
+    }
+
+    private func deleteAllCachedEvents() throws {
+        try modelContext.delete(model: CachedEvent.self)
+    }
+
+    private func deleteAllCachedProducts() throws {
+        try modelContext.delete(model: CachedProduct.self)
+    }
+
+    private func deleteAllCachedInventoryItems() throws {
+        try modelContext.delete(model: CachedInventoryItem.self)
+    }
+
+    private func deleteAllCachedPayments() throws {
+        try modelContext.delete(model: CachedPayment.self)
     }
 
     private func timestampKey(for domain: CacheDomain) -> String {
