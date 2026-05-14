@@ -7,6 +7,8 @@ on:
     branches: [main, develop]
   workflow_dispatch: {}
 
+# Touching this workflow forces all CI domains via paths-filter rules.
+
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
