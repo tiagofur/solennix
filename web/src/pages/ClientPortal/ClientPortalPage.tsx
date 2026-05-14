@@ -205,6 +205,15 @@ export const ClientPortalPage: React.FC = () => {
     return "#C4A265";
   }, [data?.organizer.brand_color]);
 
+  const isGratisView = data?.portal_tier === "free";
+
+  useEffect(() => {
+    if (!data) return;
+    if (isGratisView && activeTab !== "resumen") {
+      setActiveTab("resumen");
+    }
+  }, [data, isGratisView, activeTab]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
@@ -229,15 +238,6 @@ export const ClientPortalPage: React.FC = () => {
   }
 
   const { event, organizer, client } = data;
-  
-  // Use the explicit tier contract from the backend — never infer from missing fields.
-  const isGratisView = data.portal_tier === "free";
-
-  useEffect(() => {
-    if (isGratisView && activeTab !== "resumen") {
-      setActiveTab("resumen");
-    }
-  }, [isGratisView, activeTab]);
 
   const days = daysUntil(event.event_date);
   const countdownLabel =

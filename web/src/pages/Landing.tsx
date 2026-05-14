@@ -259,7 +259,7 @@ export const Landing: React.FC = () => {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-  const AppStoreBadge = () => (
+  const appStoreBadge = (
     <a
       href={APP_STORE_URL}
       target="_blank"
@@ -277,7 +277,7 @@ export const Landing: React.FC = () => {
     </a>
   );
 
-  const GooglePlayBadge = () => (
+  const googlePlayBadge = (
     <a
       href={PLAY_STORE_URL}
       target="_blank"
@@ -295,7 +295,7 @@ export const Landing: React.FC = () => {
     </a>
   );
 
-  const PhoneMockup = () => (
+  const phoneMockup = (
     <div className="relative w-full max-w-[280px] mx-auto select-none pointer-events-none">
       <div className="relative bg-card border-[3px] border-border rounded-[44px] overflow-hidden shadow-2xl">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-7 bg-card border-b border-border rounded-b-2xl z-10 flex items-center justify-center gap-1.5">
@@ -357,7 +357,7 @@ export const Landing: React.FC = () => {
     </div>
   );
 
-  const AppMockup = () => (
+  const appMockup = (
     <div className="relative w-full max-w-2xl mx-auto select-none pointer-events-none">
       <div className="bg-surface-alt rounded-t-2xl px-4 py-3 flex items-center gap-2">
         <span className="w-3 h-3 rounded-full bg-red-400" />
@@ -524,12 +524,12 @@ export const Landing: React.FC = () => {
                 <span className="h-px w-10 bg-border" />
               </div>
               <div className="flex flex-wrap items-center justify-center gap-4">
-                <AppStoreBadge />
-                <GooglePlayBadge />
+                {appStoreBadge}
+                {googlePlayBadge}
               </div>
             </div>
           </div>
-          <AppMockup />
+          {appMockup}
         </div>
       </section>
 
@@ -632,12 +632,12 @@ export const Landing: React.FC = () => {
                 ))}
               </ul>
               <div className="flex flex-wrap gap-4">
-                <AppStoreBadge />
-                <GooglePlayBadge />
+                {appStoreBadge}
+                {googlePlayBadge}
               </div>
             </div>
             <div className="flex justify-center lg:justify-end">
-              <PhoneMockup />
+              {phoneMockup}
             </div>
           </div>
         </div>
