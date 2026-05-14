@@ -2,12 +2,14 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"math"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tiagofur/solennix-backend/internal/models"
 )
@@ -502,6 +504,26 @@ func (r *EventRepo) UpdateEventItems(ctx context.Context, eventID uuid.UUID,
 				st.ShiftEnd,
 				status,
 			)
+			if err != nil {
+				var pgErr *pgconn.PgError
+				// Backward compatibility: some environments can still run with a
+				// pre-Ola schema that lacks offer/shift/status columns.
+				if errors.As(err, &pgErr) && pgErr.Code == "42703" {
+					_, err = tx.Exec(ctx,
+						`INSERT INTO event_staff (event_id, staff_id, fee_amount, role_override, notes)
+						VALUES ($1, $2, $3, $4, $5)
+						ON CONFLICT (event_id, staff_id) DO UPDATE SET
+							fee_amount = EXCLUDED.fee_amount,
+							role_override = EXCLUDED.role_override,
+							notes = EXCLUDED.notes`,
+						eventID,
+						st.StaffID,
+						st.FeeAmount,
+						st.RoleOverride,
+						st.Notes,
+					)
+				}
+			}
 			if err != nil {
 				return err
 			}
