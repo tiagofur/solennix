@@ -21,7 +21,8 @@ object WidgetFormatters {
             val monthFormatter = DateTimeFormatter.ofPattern("MMM", esMxLocale)
             FormattedDate(
                 day = date.format(dayFormatter),
-                month = date.format(monthFormatter).uppercase()
+                // CLDR data may include trailing punctuation in abbreviated months (e.g. "mar.").
+                month = date.format(monthFormatter).replace(".", "").uppercase(esMxLocale)
             )
         } catch (_: Exception) {
             FormattedDate("--", "---")
