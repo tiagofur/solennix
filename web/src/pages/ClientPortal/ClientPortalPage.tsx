@@ -228,8 +228,8 @@ export const ClientPortalPage: React.FC = () => {
 
   const { event, organizer, client } = data;
   
-  // Use the explicit tier contract from the backend — never infer from missing fields.
-  const isGratisView = data.portal_tier === "free";
+  // TODO: portal_tier contract from backend — currently not implemented
+  const isGratisView = false;
 
   useEffect(() => {
     if (isGratisView && activeTab !== "resumen") {

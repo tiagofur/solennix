@@ -87,6 +87,7 @@ const baseProps = {
   onAdd: vi.fn(),
   onRemove: vi.fn(),
   onChange: vi.fn(),
+  onAddTeamMembers: vi.fn(),
 };
 
 function renderComponent(overrides: Partial<typeof baseProps> = {}) {

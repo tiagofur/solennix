@@ -1,8 +1,8 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { setupTestUser, skipIfBackendUnavailable } from './helpers';
 
 test.describe('Subscription Upgrade Flow', () => {
-  async function openPricing(page: Parameters<typeof test>[0]['page']) {
+  async function openPricing(page: Page) {
     await page.goto('/pricing');
     await expect(page.getByRole('heading', { name: /planes y precios|plans and pricing/i })).toBeVisible();
   }

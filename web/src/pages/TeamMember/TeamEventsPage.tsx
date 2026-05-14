@@ -19,7 +19,7 @@ const statusBadgeClass: Record<TeamMemberAssignment['status'], string> = {
   cancelled: 'bg-slate-200 text-slate-700 dark:bg-slate-700/40 dark:text-slate-200',
 };
 
-const statusLabel = (status: TeamMemberAssignment['status'], t: (k: string, o?: unknown) => string) =>
+const statusLabel = (status: TeamMemberAssignment['status'], t: ReturnType<typeof useTranslation>['t']) =>
   t(`team.status.${status}`, {
     defaultValue:
       status === 'pending'

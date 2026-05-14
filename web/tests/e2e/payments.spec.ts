@@ -4,7 +4,7 @@ import { setupTestUserWithEvent, skipIfBackendUnavailable } from './helpers';
 test.describe('Payments Flow', () => {
   let seededEventId: string | null = null;
 
-  async function openEventPaymentsTab(page: Parameters<typeof test>[0]['page']) {
+  async function openEventPaymentsTab(page: import('@playwright/test').Page) {
     expect(seededEventId).not.toBeNull();
     await page.goto(`/events/${seededEventId}/summary`);
 
