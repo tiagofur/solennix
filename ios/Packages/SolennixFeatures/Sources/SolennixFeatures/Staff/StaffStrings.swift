@@ -74,8 +74,15 @@ enum StaffStrings {
     static let inviteLinkCopied = isEnglish ? "Invite link copied" : "Link copiado"
     static let inviteCreated = isEnglish ? "Invite created successfully" : "Invitación creada correctamente"
     static let inviteCreateError = isEnglish ? "Could not create invite" : "No se pudo crear la invitación"
+    static let invitePendingActive = isEnglish ? "There is an active pending invite." : "Hay una invitación activa pendiente."
     static let inviteEmailRequired = isEnglish ? "This staff member needs an email to activate access" : "Este colaborador necesita email para activar acceso"
     static let inviteAlreadyActivated = isEnglish ? "This staff member already has activated access" : "Este colaborador ya tiene acceso activado"
+    static let revokeInvite = isEnglish ? "Revoke invite" : "Revocar invitación"
+    static let revoking = isEnglish ? "Revoking..." : "Revocando..."
+    static let revokeConfirmTitle = isEnglish ? "Revoke invite" : "Revocar invitación"
+    static let revokeConfirmMessage = isEnglish ? "The invite will be deactivated and the link will stop working." : "La invitación quedará desactivada y el enlace dejará de funcionar."
+    static let inviteRevoked = isEnglish ? "Invite revoked" : "Invitación revocada"
+    static let inviteRevokeError = isEnglish ? "Could not revoke invite" : "No se pudo revocar la invitación"
 
     static func deleteConfirmMessage(_ name: String) -> String {
         isEnglish

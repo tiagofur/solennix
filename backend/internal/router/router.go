@@ -181,6 +181,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Get("/my-assignments", staffHandler.GetMyAssignments)
 			r.Post("/assignments/{id}/respond", staffHandler.RespondAssignment)
 			r.Post("/{id}/invite", staffHandler.InviteStaffUser)
+			r.Delete("/{id}/invite", staffHandler.RevokeStaffInvite)
 			// availability must be registered before /{id} so chi does not treat
 			// "availability" as an id param.
 			r.Get("/availability", staffHandler.GetStaffAvailability)

@@ -21,6 +21,7 @@ data class StaffDetailUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val isInviting: Boolean = false,
+    val isRevoking: Boolean = false,
     val inviteUrl: String? = null,
     val inviteFeedback: String? = null,
     val inviteFeedbackIsError: Boolean = false,
@@ -108,6 +109,39 @@ class StaffDetailViewModel @Inject constructor(
                     it.copy(
                         isInviting = false,
                         inviteFeedback = "No se pudo crear la invitación: ${e.message ?: "error"}",
+                        inviteFeedbackIsError = true
+                    )
+                }
+            }
+        }
+    }
+
+    fun revokeInviteAccess() {
+        val current = _uiState.value.staff ?: return
+        if (current.inviteStatus != "pending" && _uiState.value.inviteUrl.isNullOrBlank()) {
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(isRevoking = true, inviteFeedback = null, inviteFeedbackIsError = false)
+            }
+            try {
+                staffRepository.revokeStaffInvite(staffId)
+                _uiState.update {
+                    it.copy(
+                        isRevoking = false,
+                        staff = it.staff?.copy(inviteStatus = null),
+                        inviteUrl = null,
+                        inviteFeedback = "Invitación revocada correctamente.",
+                        inviteFeedbackIsError = false
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isRevoking = false,
+                        inviteFeedback = "No se pudo revocar la invitación: ${e.message ?: "error"}",
                         inviteFeedbackIsError = true
                     )
                 }

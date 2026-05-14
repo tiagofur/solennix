@@ -28,6 +28,7 @@ data class Staff(
     val notes: String? = null,
     @SerialName("notification_email_opt_in") val notificationEmailOptIn: Boolean = false,
     @SerialName("invited_user_id") val invitedUserId: String? = null,
+    @SerialName("invite_status") val inviteStatus: String? = null,
     @SerialName("created_at") val createdAt: String = "",
     @SerialName("updated_at") val updatedAt: String = ""
 )

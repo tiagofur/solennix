@@ -87,6 +87,7 @@ type StaffRepository interface {
 	Search(ctx context.Context, userID uuid.UUID, query string) ([]models.Staff, error)
 	GetAvailability(ctx context.Context, userID uuid.UUID, start, end string) ([]repository.StaffAvailability, error)
 	CreateInvite(ctx context.Context, invite *models.StaffInvite) error
+	RevokeInvite(ctx context.Context, staffID, ownerUserID uuid.UUID) error
 	ListMyAssignments(ctx context.Context, invitedUserID uuid.UUID) ([]repository.TeamMemberAssignment, error)
 	RespondToAssignment(ctx context.Context, invitedUserID, eventStaffID uuid.UUID, response string) (*repository.AssignmentResponseOutcome, error)
 }

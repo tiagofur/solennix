@@ -54,6 +54,10 @@ export const staffService = {
     return api.post<StaffInviteResponse>(`/staff/${id}/invite`, {});
   },
 
+  async revokeInvite(id: string): Promise<void> {
+    return api.delete(`/staff/${id}/invite`);
+  },
+
   async getByEvent(eventId: string): Promise<EventStaff[]> {
     return api.get<EventStaff[]>(`/events/${eventId}/staff`);
   },

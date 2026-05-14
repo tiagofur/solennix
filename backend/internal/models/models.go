@@ -338,6 +338,7 @@ type Staff struct {
 	Notes                  *string    `json:"notes,omitempty"`
 	NotificationEmailOptIn bool       `json:"notification_email_opt_in"`
 	InvitedUserID          *uuid.UUID `json:"invited_user_id,omitempty"`
+	InviteStatus           *string    `json:"invite_status,omitempty"`
 	CreatedAt              time.Time  `json:"created_at"`
 	UpdatedAt              time.Time  `json:"updated_at"`
 }

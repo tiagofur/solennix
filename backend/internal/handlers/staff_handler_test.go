@@ -436,6 +436,21 @@ func TestInviteStaffUser_BasicPlan_Returns403(t *testing.T) {
 	staffRepo.AssertNotCalled(t, "CreateInvite", mock.Anything, mock.Anything)
 }
 
+func TestRevokeStaffInvite_Success_Returns204(t *testing.T) {
+	userID := uuid.New()
+	staffID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	staffRepo.On("GetByID", mock.Anything, staffID, userID).Return(&models.Staff{ID: staffID, UserID: userID, Name: "Carlos"}, nil)
+	staffRepo.On("RevokeInvite", mock.Anything, staffID, userID).Return(nil)
+
+	h := NewStaffHandler(staffRepo, nil)
+	req := makeReqWithIDParam(http.MethodDelete, "/api/staff/"+staffID.String()+"/invite", "", staffID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.RevokeStaffInvite(rr, req)
+
+	assert.Equal(t, http.StatusNoContent, rr.Code)
+}
+
 // ---------------------------------------------------------------------------
 // Team-member assignments (Phase 3.5)
 // ---------------------------------------------------------------------------

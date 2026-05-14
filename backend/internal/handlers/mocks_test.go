@@ -437,6 +437,11 @@ func (m *MockStaffRepo) CreateInvite(ctx context.Context, invite *models.StaffIn
 	return args.Error(0)
 }
 
+func (m *MockStaffRepo) RevokeInvite(ctx context.Context, staffID, ownerUserID uuid.UUID) error {
+	args := m.Called(ctx, staffID, ownerUserID)
+	return args.Error(0)
+}
+
 func (m *MockStaffRepo) ListMyAssignments(ctx context.Context, invitedUserID uuid.UUID) ([]repository.TeamMemberAssignment, error) {
 	args := m.Called(ctx, invitedUserID)
 	if args.Get(0) == nil {

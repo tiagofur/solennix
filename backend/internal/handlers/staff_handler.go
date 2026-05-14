@@ -355,6 +355,30 @@ func (h *StaffHandler) InviteStaffUser(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// RevokeStaffInvite revokes the pending invite for a staff member.
+// DELETE /api/staff/{id}/invite
+func (h *StaffHandler) RevokeStaffInvite(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	staffID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid staff ID")
+		return
+	}
+
+	if _, err := h.staffRepo.GetByID(r.Context(), staffID, userID); err != nil {
+		writeError(w, http.StatusNotFound, "Staff not found")
+		return
+	}
+
+	if err := h.staffRepo.RevokeInvite(r.Context(), staffID, userID); err != nil {
+		slog.Error("failed to revoke staff invite", "error", err, "user_id", userID, "staff_id", staffID)
+		writeError(w, http.StatusInternalServerError, "Failed to revoke invite")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // GetMyAssignments lists event assignments for the authenticated team-member.
 //
 // GET /api/staff/my-assignments

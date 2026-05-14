@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"time"
@@ -41,6 +42,22 @@ func scanStaff(rows interface {
 }, s *models.Staff) error {
 	return rows.Scan(&s.ID, &s.UserID, &s.Name, &s.RoleLabel, &s.Phone, &s.Email,
 		&s.Notes, &s.NotificationEmailOptIn, &s.InvitedUserID, &s.CreatedAt, &s.UpdatedAt)
+}
+
+func scanStaffWithInvite(row interface {
+	Scan(...any) error
+}, s *models.Staff) error {
+	var inviteStatus sql.NullString
+	if err := row.Scan(&s.ID, &s.UserID, &s.Name, &s.RoleLabel, &s.Phone, &s.Email,
+		&s.Notes, &s.NotificationEmailOptIn, &s.InvitedUserID, &s.CreatedAt, &s.UpdatedAt, &inviteStatus); err != nil {
+		return err
+	}
+	if inviteStatus.Valid {
+		s.InviteStatus = &inviteStatus.String
+	} else {
+		s.InviteStatus = nil
+	}
+	return nil
 }
 
 func (r *StaffRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Staff, error) {
@@ -101,9 +118,18 @@ func (r *StaffRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offse
 
 func (r *StaffRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Staff, error) {
 	s := &models.Staff{}
-	query := fmt.Sprintf(`SELECT %s FROM staff WHERE id = $1 AND user_id = $2`, staffColumns)
+	query := fmt.Sprintf(`SELECT %s, i.status
+		FROM staff s
+		LEFT JOIN LATERAL (
+			SELECT status
+			FROM staff_invites
+			WHERE staff_id = s.id AND owner_user_id = s.user_id AND status = 'pending'
+			ORDER BY created_at DESC
+			LIMIT 1
+		) i ON TRUE
+		WHERE s.id = $1 AND s.user_id = $2`, staffColumns)
 	row := r.pool.QueryRow(ctx, query, id, userID)
-	if err := scanStaff(row, s); err != nil {
+	if err := scanStaffWithInvite(row, s); err != nil {
 		return nil, fmt.Errorf("staff not found: %w", err)
 	}
 	return s, nil
@@ -544,6 +570,20 @@ func (r *StaffRepo) CreateInvite(ctx context.Context, invite *models.StaffInvite
 
 	if err = tx.Commit(ctx); err != nil {
 		return fmt.Errorf("commit create invite: %w", err)
+	}
+	return nil
+}
+
+// RevokeInvite marks the active pending invite for a staff member as revoked.
+func (r *StaffRepo) RevokeInvite(ctx context.Context, staffID, ownerUserID uuid.UUID) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE staff_invites
+			SET status='revoked', updated_at=NOW()
+			WHERE staff_id=$1 AND owner_user_id=$2 AND status='pending'`,
+		staffID, ownerUserID,
+	)
+	if err != nil {
+		return fmt.Errorf("revoke staff invite: %w", err)
 	}
 	return nil
 }

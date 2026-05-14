@@ -67,6 +67,8 @@ fun StaffDetailScreen(
     val scrollState = rememberScrollState()
     val clipboard = LocalClipboardManager.current
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showRevokeDialog by remember { mutableStateOf(false) }
+    val hasPendingInvite = uiState.inviteUrl != null || uiState.staff?.inviteStatus == "pending"
 
     LaunchedEffect(viewModel.deleteSuccess) {
         if (viewModel.deleteSuccess) {
@@ -313,6 +315,48 @@ fun StaffDetailScreen(
                                 }
                             }
                         }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        TextButton(
+                            onClick = { showRevokeDialog = true },
+                            enabled = !uiState.isInviting && !uiState.isRevoking,
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = SolennixTheme.colors.error
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(if (uiState.isRevoking) "Revocando..." else "Revocar invitación")
+                        }
+                    } else if (uiState.staff?.inviteStatus == "pending") {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    text = "Invitación activa pendiente",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = SolennixTheme.colors.primaryText
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "La invitación sigue activa. Puedes revocarla para invalidar el enlace.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = SolennixTheme.colors.secondaryText
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        TextButton(
+                            onClick = { showRevokeDialog = true },
+                            enabled = !uiState.isInviting && !uiState.isRevoking,
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = SolennixTheme.colors.error
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(if (uiState.isRevoking) "Revocando..." else "Revocar invitación")
+                        }
                     }
 
                     if (!uiState.inviteFeedback.isNullOrBlank()) {
@@ -326,7 +370,7 @@ fun StaffDetailScreen(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    if (!staff.email.isNullOrBlank() && staff.invitedUserId.isNullOrBlank()) {
+                    if (!staff.email.isNullOrBlank() && staff.invitedUserId.isNullOrBlank() && !hasPendingInvite) {
                         TextButton(
                             onClick = { viewModel.inviteAccess() },
                             enabled = !uiState.isInviting,
@@ -365,6 +409,34 @@ fun StaffDetailScreen(
                         },
                         dismissButton = {
                             TextButton(onClick = { showDeleteDialog = false }) {
+                                Text("Cancelar")
+                            }
+                        }
+                    )
+                }
+
+                if (showRevokeDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showRevokeDialog = false },
+                        title = { Text("Revocar invitación") },
+                        text = {
+                            Text("La invitación quedará desactivada y el enlace dejará de funcionar.")
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    showRevokeDialog = false
+                                    viewModel.revokeInviteAccess()
+                                },
+                                colors = ButtonDefaults.textButtonColors(
+                                    contentColor = SolennixTheme.colors.error
+                                )
+                            ) {
+                                Text("Revocar")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showRevokeDialog = false }) {
                                 Text("Cancelar")
                             }
                         }

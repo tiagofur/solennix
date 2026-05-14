@@ -9,4 +9,9 @@ public extension APIClient {
         struct EmptyBody: Encodable {}
         return try await post(Endpoint.staffInvite(staffId), body: EmptyBody())
     }
+
+    /// Revokes the active pending invite for the given staff member.
+    func revokeStaffInvite(staffId: String) async throws {
+        try await delete(Endpoint.staffInvite(staffId))
+    }
 }

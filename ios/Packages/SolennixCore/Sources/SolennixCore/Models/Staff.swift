@@ -19,6 +19,9 @@ public struct Staff: Codable, Identifiable, Sendable, Hashable {
     /// Hook Phase 3 — poblado cuando el organizer invita al colaborador a
     /// registrarse (solo tier Business). Phase 1 siempre es `nil`.
     public var invitedUserId: String?
+    /// Estado de la invitación activa cuando existe (`pending`, `accepted`,
+    /// `revoked`, `expired`).
+    public var inviteStatus: String?
     public let createdAt: String
     public let updatedAt: String
 
@@ -34,6 +37,7 @@ public struct Staff: Codable, Identifiable, Sendable, Hashable {
         notes: String? = nil,
         notificationEmailOptIn: Bool = false,
         invitedUserId: String? = nil,
+        inviteStatus: String? = nil,
         createdAt: String,
         updatedAt: String
     ) {
@@ -46,6 +50,7 @@ public struct Staff: Codable, Identifiable, Sendable, Hashable {
         self.notes = notes
         self.notificationEmailOptIn = notificationEmailOptIn
         self.invitedUserId = invitedUserId
+        self.inviteStatus = inviteStatus
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
