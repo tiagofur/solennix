@@ -252,7 +252,7 @@ type AssignmentResponseOutcome struct {
 // absence.
 func (r *StaffRepo) GetAvailability(ctx context.Context, userID uuid.UUID, start, end string) ([]StaffAvailability, error) {
 	query := `
-		SELECT s.id, s.name, e.id, e.name, e.event_date,
+		SELECT s.id, s.name, e.id, e.service_type, e.event_date,
 			es.shift_start, es.shift_end, es.status
 		FROM event_staff es
 		JOIN staff s ON s.id = es.staff_id
@@ -325,7 +325,7 @@ func (r *StaffRepo) GetAvailability(ctx context.Context, userID uuid.UUID, start
 // ListMyAssignments returns event assignments for the authenticated team-member.
 func (r *StaffRepo) ListMyAssignments(ctx context.Context, invitedUserID uuid.UUID) ([]TeamMemberAssignment, error) {
 	query := `
-		SELECT es.id, es.event_id, e.name, e.event_date, es.staff_id,
+		SELECT es.id, es.event_id, e.service_type, e.event_date, es.staff_id,
 			COALESCE(es.status, 'confirmed'), es.fee_amount, es.role_override, es.notes,
 			es.shift_start, es.shift_end, es.offer_group_id, es.offer_slots,
 			es.notification_last_result, es.notification_sent_at
@@ -333,7 +333,7 @@ func (r *StaffRepo) ListMyAssignments(ctx context.Context, invitedUserID uuid.UU
 		JOIN staff s ON s.id = es.staff_id
 		JOIN events e ON e.id = es.event_id
 		WHERE s.invited_user_id = $1
-		ORDER BY e.event_date ASC, e.name ASC`
+		ORDER BY e.event_date ASC, e.service_type ASC`
 
 	rows, err := r.pool.Query(ctx, query, invitedUserID)
 	if err != nil {
@@ -402,13 +402,13 @@ func scanMyAssignments(rows pgx.Rows) ([]TeamMemberAssignment, error) {
 
 func (r *StaffRepo) listMyAssignmentsLegacy(ctx context.Context, invitedUserID uuid.UUID) ([]TeamMemberAssignment, error) {
 	query := `
-		SELECT es.id, es.event_id, e.name, e.event_date, es.staff_id,
+		SELECT es.id, es.event_id, e.service_type, e.event_date, es.staff_id,
 			es.fee_amount, es.role_override, es.notes
 		FROM event_staff es
 		JOIN staff s ON s.id = es.staff_id
 		JOIN events e ON e.id = es.event_id
 		WHERE s.invited_user_id = $1
-		ORDER BY e.event_date ASC, e.name ASC`
+		ORDER BY e.event_date ASC, e.service_type ASC`
 
 	rows, err := r.pool.Query(ctx, query, invitedUserID)
 	if err != nil {
