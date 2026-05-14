@@ -266,7 +266,8 @@ describe('EventList', () => {
 
     fireEvent.click(screen.getByText(/Servicio/i));
 
-    const lastCall = mockUseEventsPaginated.mock.calls.at(-1)?.[0];
+    const calls = mockUseEventsPaginated.mock.calls;
+    const lastCall = calls[calls.length - 1]?.[0];
     expect(lastCall).toEqual(
       expect.objectContaining({ sort: 'service_type', order: 'asc' }),
     );

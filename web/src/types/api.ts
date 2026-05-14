@@ -2204,7 +2204,6 @@ export interface components {
             currency: string;
         };
         PublicEventView: {
-            portal_tier: "free" | "pro";
             event: components["schemas"]["PublicEventDetails"];
             organizer: components["schemas"]["PublicOrganizerBrand"];
             client: components["schemas"]["PublicClientInfo"];

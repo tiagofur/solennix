@@ -1,16 +1,16 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { setupTestUserWithEvent, skipIfBackendUnavailable } from './helpers';
 
 test.describe('PDF Generation Flow', () => {
   let seededEventId: string | null = null;
 
-  async function openEventSummary(page: Parameters<typeof test>[0]['page']) {
+  async function openEventSummary(page: Page) {
     expect(seededEventId).not.toBeNull();
     await page.goto(`/events/${seededEventId}/summary`);
     await expect(page).toHaveURL(/.*events\/.*\/summary/);
   }
 
-  async function openActionsMenu(page: Parameters<typeof test>[0]['page']) {
+  async function openActionsMenu(page: Page) {
     const moreActions = page.getByRole('button', { name: /más|more/i });
     await expect(moreActions).toBeVisible();
     await moreActions.click();

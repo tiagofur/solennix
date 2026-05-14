@@ -89,8 +89,10 @@ const baseProps = {
   onChange: vi.fn(),
 };
 
-function renderComponent(overrides: Partial<typeof baseProps> = {}) {
-  const props = { ...baseProps, ...overrides };
+type EventStaffProps = React.ComponentProps<typeof EventStaff>;
+
+function renderComponent(overrides: Partial<EventStaffProps> = {}) {
+  const props: EventStaffProps = { ...baseProps, ...overrides };
   return render(
     <MemoryRouter>
       <EventStaff {...props} />

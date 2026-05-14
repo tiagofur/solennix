@@ -1,10 +1,10 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { setupTestUserWithEvent, skipIfBackendUnavailable } from './helpers';
 
 test.describe('Payments Flow', () => {
   let seededEventId: string | null = null;
 
-  async function openEventPaymentsTab(page: Parameters<typeof test>[0]['page']) {
+  async function openEventPaymentsTab(page: Page) {
     expect(seededEventId).not.toBeNull();
     await page.goto(`/events/${seededEventId}/summary`);
 

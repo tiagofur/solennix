@@ -22,7 +22,9 @@ import paymentSubmissionService, { PaymentSubmission } from "@/services/paymentS
 import { PaymentStatusBadge } from "@/components/PaymentStatusBadge";
 
 // Generated type from OpenAPI spec
-type PortalData = components["schemas"]["PublicEventView"];
+type PortalData = components["schemas"]["PublicEventView"] & {
+  portal_tier?: "free" | "pro" | "business";
+};
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 

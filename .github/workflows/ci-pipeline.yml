@@ -92,6 +92,44 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
+      - name: Prepare Firebase config for CI
+        run: |
+          mkdir -p app
+          if [ -f app/google-services.json ]; then
+            echo "google-services.json already present"
+          else
+            cat > app/google-services.json <<'EOF'
+          {
+            "project_info": {
+              "project_number": "1234567890",
+              "project_id": "solennix-ci",
+              "storage_bucket": "solennix-ci.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:1234567890:android:abcdef123456",
+                  "android_client_info": {
+                    "package_name": "com.solennix.app"
+                  }
+                },
+                "oauth_client": [],
+                "api_key": [
+                  {
+                    "current_key": "ci-placeholder-key"
+                  }
+                ],
+                "services": {
+                  "appinvite_service": {
+                    "other_platform_oauth_client": []
+                  }
+                }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
+          fi
       - name: Unit tests (debug)
         run: ./gradlew testDebugUnitTest --no-daemon
       - name: Coverage gate (phase 4.1 + 4.4 + app/widget/designsystem)
