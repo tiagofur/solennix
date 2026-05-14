@@ -90,6 +90,34 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
+      - name: Prepare google-services for CI
+        run: |
+          mkdir -p app/src/debug
+          cat > app/src/debug/google-services.json <<'EOF'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "solennix-ci",
+              "storage_bucket": "solennix-ci.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                  "android_client_info": {
+                    "package_name": "com.solennix.app"
+                  }
+                },
+                "api_key": [
+                  {
+                    "current_key": "CI_DUMMY_KEY"
+                  }
+                ]
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
       - name: Unit tests (debug)
         run: ./gradlew testDebugUnitTest --no-daemon
       - name: Coverage gate (phase 4.1 + 4.4 + app/widget/designsystem)
