@@ -35,6 +35,10 @@ export const TeamEventsPage: React.FC = () => {
   const { t, i18n } = useTranslation(['common']);
   const { data: assignments = [], isLoading, isError, refetch } = useMyAssignments();
   const respondMutation = useRespondAssignment();
+  const moneyFormatter = React.useMemo(
+    () => new Intl.NumberFormat(i18n.language || 'es-MX', { style: 'currency', currency: 'MXN' }),
+    [i18n.language],
+  );
 
   const [statusFilter, setStatusFilter] = React.useState<TeamStatusFilter>('all');
   const [search, setSearch] = React.useState('');
@@ -169,6 +173,11 @@ export const TeamEventsPage: React.FC = () => {
                           <span className="inline-flex items-center gap-1">
                             <Clock3 className="h-4 w-4" aria-hidden="true" />
                             {shift}
+                          </span>
+                        ) : null}
+                        {assignment.fee_amount != null ? (
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                            {t('team.fee', { defaultValue: 'Pago' })}: {moneyFormatter.format(assignment.fee_amount)}
                           </span>
                         ) : null}
                       </div>

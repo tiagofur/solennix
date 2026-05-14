@@ -17,6 +17,10 @@ export const AssignmentsPage: React.FC = () => {
   const { t, i18n } = useTranslation(['common']);
   const { data: assignments = [], isLoading, isError, refetch } = useMyAssignments();
   const respondMutation = useRespondAssignment();
+  const moneyFormatter = React.useMemo(
+    () => new Intl.NumberFormat(i18n.language || 'es-MX', { style: 'currency', currency: 'MXN' }),
+    [i18n.language],
+  );
 
   const pendingIds = new Set(
     assignments.filter((item) => item.status === 'pending').map((item) => item.event_staff_id),
@@ -94,6 +98,11 @@ export const AssignmentsPage: React.FC = () => {
                           {formatEventDate(assignment.event_date, i18n.language)}
                         </span>
                         {shift ? <span>{shift}</span> : null}
+                        {assignment.fee_amount != null ? (
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                            {t('team.fee', { defaultValue: 'Pago' })}: {moneyFormatter.format(assignment.fee_amount)}
+                          </span>
+                        ) : null}
                       </div>
                     </div>
                     <span

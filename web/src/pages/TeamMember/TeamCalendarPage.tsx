@@ -30,6 +30,10 @@ const byDate = (list: TeamMemberAssignment[]) => {
 export const TeamCalendarPage: React.FC = () => {
   const { t, i18n } = useTranslation(['common']);
   const { data: assignments = [], isLoading, isError, refetch } = useMyAssignments();
+  const moneyFormatter = React.useMemo(
+    () => new Intl.NumberFormat(i18n.language || 'es-MX', { style: 'currency', currency: 'MXN' }),
+    [i18n.language],
+  );
 
   const [month, setMonth] = React.useState(toMonthInput(new Date()));
   const [statusFilter, setStatusFilter] = React.useState<TeamStatusFilter>('all');
@@ -149,7 +153,14 @@ export const TeamCalendarPage: React.FC = () => {
                       >
                         <div>
                           <p className="text-sm font-medium text-text">{assignment.event_name}</p>
-                          {shift ? <p className="text-xs text-text-secondary">{shift}</p> : null}
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">
+                            {shift ? <span>{shift}</span> : null}
+                            {assignment.fee_amount != null ? (
+                              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                                {t('team.fee', { defaultValue: 'Pago' })}: {moneyFormatter.format(assignment.fee_amount)}
+                              </span>
+                            ) : null}
+                          </div>
                         </div>
                         <span className="inline-flex items-center gap-1 text-xs text-text-secondary">
                           <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />

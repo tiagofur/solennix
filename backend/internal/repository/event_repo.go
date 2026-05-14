@@ -507,21 +507,10 @@ func (r *EventRepo) UpdateEventItems(ctx context.Context, eventID uuid.UUID,
 			if err != nil {
 				var pgErr *pgconn.PgError
 				// Backward compatibility: some environments can still run with a
-				// pre-Ola schema that lacks offer/shift/status columns.
-				if errors.As(err, &pgErr) && pgErr.Code == "42703" {
-					_, err = tx.Exec(ctx,
-						`INSERT INTO event_staff (event_id, staff_id, fee_amount, role_override, notes)
-						VALUES ($1, $2, $3, $4, $5)
-						ON CONFLICT (event_id, staff_id) DO UPDATE SET
-							fee_amount = EXCLUDED.fee_amount,
-							role_override = EXCLUDED.role_override,
-							notes = EXCLUDED.notes`,
-						eventID,
-						st.StaffID,
-						st.FeeAmount,
-						st.RoleOverride,
-						st.Notes,
-					)
+				// pre-Ola schema that lacks newer columns, or with a legacy
+				// event_staff table missing the conflict target constraint.
+				if errors.As(err, &pgErr) && (pgErr.Code == "42703" || pgErr.Code == "42P10") {
+					err = upsertEventStaffCompat(ctx, tx, eventID, st, status)
 				}
 			}
 			if err != nil {
@@ -531,6 +520,113 @@ func (r *EventRepo) UpdateEventItems(ctx context.Context, eventID uuid.UUID,
 	}
 
 	return tx.Commit(ctx)
+}
+
+func upsertEventStaffCompat(ctx context.Context, tx pgx.Tx, eventID uuid.UUID, st models.EventStaff, status *string) error {
+	updateSQL := `UPDATE event_staff
+		SET offer_group_id = $3,
+			offer_slots = CASE
+				WHEN $3 IS NULL THEN NULL
+				ELSE COALESCE($4, offer_slots, 1)
+			END,
+			fee_amount = $5,
+			role_override = $6,
+			notes = $7,
+			shift_start = COALESCE($8, shift_start),
+			shift_end = COALESCE($9, shift_end),
+			status = COALESCE($10, status)
+		WHERE event_id = $1 AND staff_id = $2`
+
+	cmd, err := tx.Exec(ctx, updateSQL,
+		eventID,
+		st.StaffID,
+		st.OfferGroupID,
+		st.OfferSlots,
+		st.FeeAmount,
+		st.RoleOverride,
+		st.Notes,
+		st.ShiftStart,
+		st.ShiftEnd,
+		status,
+	)
+	if err == nil {
+		if cmd.RowsAffected() > 0 {
+			return nil
+		}
+		return insertEventStaffCompat(ctx, tx, eventID, st, status)
+	}
+
+	var pgErr *pgconn.PgError
+	if !errors.As(err, &pgErr) || pgErr.Code != "42703" {
+		return err
+	}
+
+	cmd, err = tx.Exec(ctx,
+		`UPDATE event_staff
+		SET fee_amount = $3,
+			role_override = $4,
+			notes = $5
+		WHERE event_id = $1 AND staff_id = $2`,
+		eventID,
+		st.StaffID,
+		st.FeeAmount,
+		st.RoleOverride,
+		st.Notes,
+	)
+	if err != nil {
+		return err
+	}
+	if cmd.RowsAffected() > 0 {
+		return nil
+	}
+
+	_, err = tx.Exec(ctx,
+		`INSERT INTO event_staff (event_id, staff_id, fee_amount, role_override, notes)
+		VALUES ($1, $2, $3, $4, $5)`,
+		eventID,
+		st.StaffID,
+		st.FeeAmount,
+		st.RoleOverride,
+		st.Notes,
+	)
+	return err
+}
+
+func insertEventStaffCompat(ctx context.Context, tx pgx.Tx, eventID uuid.UUID, st models.EventStaff, status *string) error {
+	_, err := tx.Exec(ctx,
+		`INSERT INTO event_staff (event_id, staff_id, offer_group_id, offer_slots,
+			fee_amount, role_override, notes, shift_start, shift_end, status)
+		VALUES ($1, $2, $3, CASE WHEN $3 IS NULL THEN NULL ELSE COALESCE($4, 1) END, $5, $6, $7, $8, $9, COALESCE($10, 'confirmed'))`,
+		eventID,
+		st.StaffID,
+		st.OfferGroupID,
+		st.OfferSlots,
+		st.FeeAmount,
+		st.RoleOverride,
+		st.Notes,
+		st.ShiftStart,
+		st.ShiftEnd,
+		status,
+	)
+	if err == nil {
+		return nil
+	}
+
+	var pgErr *pgconn.PgError
+	if !errors.As(err, &pgErr) || pgErr.Code != "42703" {
+		return err
+	}
+
+	_, err = tx.Exec(ctx,
+		`INSERT INTO event_staff (event_id, staff_id, fee_amount, role_override, notes)
+		VALUES ($1, $2, $3, $4, $5)`,
+		eventID,
+		st.StaffID,
+		st.FeeAmount,
+		st.RoleOverride,
+		st.Notes,
+	)
+	return err
 }
 
 // StaffPendingNotification is a row from event_staff JOIN staff that still
@@ -611,6 +707,10 @@ func (r *EventRepo) GetStaff(ctx context.Context, eventID uuid.UUID) ([]models.E
 		ORDER BY s.name`
 	rows, err := r.pool.Query(ctx, query, eventID)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "42703" {
+			return r.getStaffLegacy(ctx, eventID)
+		}
 		return nil, err
 	}
 	defer rows.Close()
@@ -631,6 +731,38 @@ func (r *EventRepo) GetStaff(ctx context.Context, eventID uuid.UUID) ([]models.E
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("error iterating event staff: %w", err)
+	}
+	return items, nil
+}
+
+func (r *EventRepo) getStaffLegacy(ctx context.Context, eventID uuid.UUID) ([]models.EventStaff, error) {
+	query := `SELECT es.id, es.event_id, es.staff_id, es.fee_amount, es.role_override,
+		es.notes, es.notification_sent_at, es.notification_last_result, es.created_at,
+		s.name, s.role_label, s.phone, s.email
+		FROM event_staff es
+		LEFT JOIN staff s ON es.staff_id = s.id
+		WHERE es.event_id = $1
+		ORDER BY s.name`
+	rows, err := r.pool.Query(ctx, query, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]models.EventStaff, 0)
+	for rows.Next() {
+		var es models.EventStaff
+		if err := rows.Scan(&es.ID, &es.EventID, &es.StaffID, &es.FeeAmount,
+			&es.RoleOverride, &es.Notes, &es.NotificationSentAt, &es.NotificationLastResult,
+			&es.CreatedAt, &es.StaffName, &es.StaffRoleLabel, &es.StaffPhone, &es.StaffEmail); err != nil {
+			return nil, err
+		}
+		status := models.AssignmentStatusConfirmed
+		es.Status = &status
+		items = append(items, es)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating legacy event staff: %w", err)
 	}
 	return items, nil
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tiagofur/solennix-backend/internal/models"
 )
@@ -226,6 +227,7 @@ type TeamMemberAssignment struct {
 	EventDate      string     `json:"event_date"`
 	StaffID        uuid.UUID  `json:"staff_id"`
 	Status         string     `json:"status"`
+	FeeAmount      *float64   `json:"fee_amount,omitempty"`
 	RoleOverride   *string    `json:"role_override,omitempty"`
 	Notes          *string    `json:"notes,omitempty"`
 	ShiftStart     *string    `json:"shift_start,omitempty"`
@@ -324,7 +326,7 @@ func (r *StaffRepo) GetAvailability(ctx context.Context, userID uuid.UUID, start
 func (r *StaffRepo) ListMyAssignments(ctx context.Context, invitedUserID uuid.UUID) ([]TeamMemberAssignment, error) {
 	query := `
 		SELECT es.id, es.event_id, e.name, e.event_date, es.staff_id,
-			COALESCE(es.status, 'confirmed'), es.role_override, es.notes,
+			COALESCE(es.status, 'confirmed'), es.fee_amount, es.role_override, es.notes,
 			es.shift_start, es.shift_end, es.offer_group_id, es.offer_slots,
 			es.notification_last_result, es.notification_sent_at
 		FROM event_staff es
@@ -335,9 +337,18 @@ func (r *StaffRepo) ListMyAssignments(ctx context.Context, invitedUserID uuid.UU
 
 	rows, err := r.pool.Query(ctx, query, invitedUserID)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "42703" {
+			return r.listMyAssignmentsLegacy(ctx, invitedUserID)
+		}
 		return nil, fmt.Errorf("query my assignments: %w", err)
 	}
 	defer rows.Close()
+
+	return scanMyAssignments(rows)
+}
+
+func scanMyAssignments(rows pgx.Rows) ([]TeamMemberAssignment, error) {
 
 	items := make([]TeamMemberAssignment, 0)
 	for rows.Next() {
@@ -355,6 +366,7 @@ func (r *StaffRepo) ListMyAssignments(ctx context.Context, invitedUserID uuid.UU
 			&eventDate,
 			&item.StaffID,
 			&item.Status,
+			&item.FeeAmount,
 			&item.RoleOverride,
 			&item.Notes,
 			&shiftStart,
@@ -383,6 +395,51 @@ func (r *StaffRepo) ListMyAssignments(ctx context.Context, invitedUserID uuid.UU
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("iterate my assignments: %w", err)
+	}
+
+	return items, nil
+}
+
+func (r *StaffRepo) listMyAssignmentsLegacy(ctx context.Context, invitedUserID uuid.UUID) ([]TeamMemberAssignment, error) {
+	query := `
+		SELECT es.id, es.event_id, e.name, e.event_date, es.staff_id,
+			es.fee_amount, es.role_override, es.notes
+		FROM event_staff es
+		JOIN staff s ON s.id = es.staff_id
+		JOIN events e ON e.id = es.event_id
+		WHERE s.invited_user_id = $1
+		ORDER BY e.event_date ASC, e.name ASC`
+
+	rows, err := r.pool.Query(ctx, query, invitedUserID)
+	if err != nil {
+		return nil, fmt.Errorf("query my assignments legacy: %w", err)
+	}
+	defer rows.Close()
+
+	items := make([]TeamMemberAssignment, 0)
+	for rows.Next() {
+		var (
+			item      TeamMemberAssignment
+			eventDate time.Time
+		)
+		if err := rows.Scan(
+			&item.EventStaffID,
+			&item.EventID,
+			&item.EventName,
+			&eventDate,
+			&item.StaffID,
+			&item.FeeAmount,
+			&item.RoleOverride,
+			&item.Notes,
+		); err != nil {
+			return nil, fmt.Errorf("scan my assignment legacy: %w", err)
+		}
+		item.EventDate = eventDate.Format("2006-01-02")
+		item.Status = models.AssignmentStatusConfirmed
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate my assignments legacy: %w", err)
 	}
 
 	return items, nil

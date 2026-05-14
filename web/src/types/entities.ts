@@ -329,6 +329,7 @@ export interface TeamMemberAssignment {
     event_date: string
     staff_id: string
     status: AssignmentStatus
+    fee_amount?: number | null
     role_override?: string | null
     notes?: string | null
     shift_start?: string | null
