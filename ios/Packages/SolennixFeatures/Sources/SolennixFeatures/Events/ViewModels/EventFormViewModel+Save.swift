@@ -71,15 +71,29 @@ extension EventFormViewModel {
 
         // Defensive validation: avoid sending malformed staff rows that can fail
         // server-side in legacy environments.
-        let normalizedStaff = selectedStaff.filter {
-            UUID(uuidString: $0.staffId.trimmingCharacters(in: .whitespacesAndNewlines)) != nil
-        }
-        if normalizedStaff.count != selectedStaff.count {
-            HapticsHelper.play(.error)
-            throw APIError.serverError(
-                statusCode: 400,
-                message: tr("events.form.error.staff_required", "Hay personal sin seleccionar. Eliminá las filas vacías antes de guardar.")
-            )
+        var normalizedStaff = [SelectedStaffAssignment]()
+        for (idx, assignment) in selectedStaff.enumerated() {
+            let trimmedId = assignment.staffId.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            // Validate UUID
+            if UUID(uuidString: trimmedId) == nil {
+                HapticsHelper.play(.error)
+                throw APIError.serverError(
+                    statusCode: 400,
+                    message: tr("events.form.error.staff_invalid_id", "Personal #\(idx + 1): ID inválido")
+                )
+            }
+            
+            // Validate fee >= 0
+            if assignment.feeAmount < 0 {
+                HapticsHelper.play(.error)
+                throw APIError.serverError(
+                    statusCode: 400,
+                    message: tr("events.form.error.staff_fee_negative", "Personal #\(idx + 1): El pago no puede ser negativo")
+                )
+            }
+            
+            normalizedStaff.append(assignment)
         }
 
         let iso = ISO8601DateFormatter()

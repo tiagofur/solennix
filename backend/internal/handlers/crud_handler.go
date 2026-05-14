@@ -891,14 +891,14 @@ func (h *CRUDHandler) UpdateEventItems(w http.ResponseWriter, r *http.Request) {
 			slog.Error("update event items failed", "code", pgErr.Code, "detail", pgErr.Detail, "message", pgErr.Message)
 			switch pgErr.Code {
 			case "22P02", "23503", "23514":
-				writeError(w, http.StatusBadRequest, "Invalid event items payload")
+				writeError(w, http.StatusBadRequest, fmt.Sprintf("Invalid event items: %s", pgErr.Message))
 				return
 			case "42703", "42P10", "42P01":
 				writeError(w, http.StatusBadRequest, "Event staff schema is outdated. Run latest database migrations")
 				return
 			}
 			if strings.HasPrefix(pgErr.Code, "22") || strings.HasPrefix(pgErr.Code, "23") || strings.HasPrefix(pgErr.Code, "42") {
-				writeError(w, http.StatusBadRequest, "Invalid event items payload")
+				writeError(w, http.StatusBadRequest, fmt.Sprintf("Invalid event items: %s", pgErr.Message))
 				return
 			}
 		}

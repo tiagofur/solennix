@@ -888,8 +888,8 @@ func TestUpdateEventItems_PgConstraintError_Returns400(t *testing.T) {
 	if rr.Code != http.StatusBadRequest {
 		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusBadRequest, rr.Body.String())
 	}
-	if !strings.Contains(rr.Body.String(), "Invalid event items payload") {
-		t.Fatalf("body = %q, expected to contain invalid payload message", rr.Body.String())
+	if !strings.Contains(rr.Body.String(), "Invalid event items:") {
+		t.Fatalf("body = %q, expected to contain 'Invalid event items:' message", rr.Body.String())
 	}
 }
 
