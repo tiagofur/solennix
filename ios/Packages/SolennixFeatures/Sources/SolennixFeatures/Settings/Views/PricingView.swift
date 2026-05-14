@@ -98,7 +98,7 @@ public struct PricingView: View {
                 Image(systemName: "crown.fill")
                     .foregroundStyle(SolennixColors.warning)
 
-                Text(FeatureL10n.text("Suscripción Pro activa", "Suscripción Pro activa"))
+                Text(activeSubscriptionTitle)
                     .font(.subheadline)
                     .fontWeight(.semibold)
 
@@ -148,7 +148,7 @@ public struct PricingView: View {
                     "Soporte prioritario",
                     "Sin marca de agua en PDFs"
                 ],
-                isCurrentPlan: (viewModel.user?.plan.isPaid ?? false) || subscriptionManager.isPremium,
+                isCurrentPlan: isCurrentProTier,
                 isRecommended: true
             )
         }
@@ -213,8 +213,8 @@ public struct PricingView: View {
                         .font(.headline)
                         .foregroundStyle(SolennixColors.primary)
 
-                    // Mostrar precio anual siempre para plan premium
-                    if plan == .premium {
+                    // Mostrar precio anual para la tarjeta Pro (incluye alias legacy premium).
+                    if plan == .pro || plan == .premium {
                         Text(formattedYearlyPrice)
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textSecondary)
@@ -527,6 +527,33 @@ public struct PricingView: View {
 
             faqItem(
                 question: "Puedo cancelar en cualquier momento?",
+
+    // MARK: - Plan Helpers
+
+    /// Android parity: Business is a paid tier but not the same as Pro.
+    /// Keep Pro card highlighted only for users on Pro (or legacy Premium)
+    /// and for RC-only users where backend plan is not yet loaded.
+    private var isCurrentProTier: Bool {
+        if let user = viewModel.user {
+            return user.plan == .pro || user.plan == .premium
+        }
+        return subscriptionManager.isPremium
+    }
+
+    private var activeSubscriptionTitle: String {
+        switch viewModel.user?.plan {
+        case .business:
+            return FeatureL10n.text("Suscripción Business activa", "Suscripción Business activa")
+        case .pro, .premium:
+            return FeatureL10n.text("Suscripción Pro activa", "Suscripción Pro activa")
+        case .basic:
+            return FeatureL10n.text("Suscripción activa", "Suscripción activa")
+        case .none:
+            return subscriptionManager.isPremium
+                ? FeatureL10n.text("Suscripción Pro activa", "Suscripción Pro activa")
+                : FeatureL10n.text("Suscripción activa", "Suscripción activa")
+        }
+    }
                 answer: "Si, puedes cancelar tu suscripcion en cualquier momento. Tu plan premium seguira activo hasta el final del periodo de facturacion."
             )
 

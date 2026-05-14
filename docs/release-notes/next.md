@@ -79,59 +79,61 @@ Fixed
 ### 🇲🇽 Español (LATAM) — versión corta
 
 ```text
-📱 Android gana mejor paridad en calendario y formularios
+📱 Android llega más sólido a stores
 
-• Búsqueda de eventos conectada al backend para resultados más consistentes
-• Calendario con filtro por estado, exportación iCal, retry y navegación refinada
-• Mejor visibilidad de disponibilidad de equipo al planear eventos
-• Los formularios ya no quedan tapados por el teclado en pantallas largas
+• Mejoramos formularios largos: el teclado ya no tapa campos ni acciones
+• Integramos mejor la bandeja de pagos del organizador
+• Migramos PDFs a backend para mayor consistencia y estabilidad
+• Reforzamos calidad general con más validaciones pre-release
 ```
 
 ### 🇲🇽 Español (LATAM) — versión larga
 
 ```text
-Esta actualización fortalece la experiencia Android en los flujos diarios de operación.
+Esta actualización deja Android listo para release con foco en estabilidad y experiencia diaria.
 
 Nuevo
-• La búsqueda de eventos ahora usa `/api/events/search`, con resultados más coherentes entre pantallas y plataformas.
-• El calendario alcanza mejor paridad funcional con filtro por estado, exportación iCal, retry, FAB y navegación desde eventos.
-• La disponibilidad de equipo se integra mejor al flujo de eventos para planear con menos sorpresas.
+• La bandeja de pagos del organizador queda integrada dentro del flujo operativo para revisar y resolver envíos pendientes.
+• La generación de PDFs se ejecuta vía backend para mantener consistencia de resultados y reducir carga local.
 
 Mejorado
 • Ajustamos formularios scrolleables para que el teclado no tape inputs ni acciones importantes.
-• La experiencia general de calendar y eventos queda más alineada con iOS y Web.
+• Pulimos consistencia visual y de navegación en pantallas clave de eventos/pagos.
 
 Arreglado
-• `imePadding()` se aplica en los contenedores correctos para evitar fricción al editar formularios largos.
+• `imePadding()` ahora se aplica en los contenedores correctos para eliminar fricción en pantallas largas.
+• Se removió la acción legacy de WhatsApp en detalle de evento para evitar caminos duplicados de compartición.
+• Se reforzó confiabilidad de build/dependencias y se elevó la cobertura de validaciones pre-store.
 ```
 
 ### 🇺🇸 English — short version
 
 ```text
-📱 Better calendar parity and forms on Android
+📱 Android is now stronger for store rollout
 
-• Event search now uses backend-powered results
-• Calendar gets status filters, iCal export, retry, and smoother navigation
-• Equipment availability is clearer while planning events
 • Long forms no longer get blocked by the keyboard
+• Organizer payment inbox is better integrated
+• PDF generation moved to backend for consistency
+• Broader pre-release quality checks improve reliability
 ```
 
 ### 🇺🇸 English — long version
 
 ```text
-This release sharpens the daily event workflow on Android.
+This release prepares Android for store publication with stronger reliability and day-to-day UX.
 
 New
-• Event search now uses `/api/events/search` for more consistent results across screens and platforms.
-• Calendar reaches better parity with status filters, iCal export, retry states, FAB entry points, and event navigation.
-• Equipment availability is surfaced more clearly while planning event changes.
+• Organizer payment inbox is integrated into the operational flow for faster pending-payment resolution.
+• PDF generation now runs through backend endpoints for more consistent output and lower client-side load.
 
 Improved
-• Scrollable forms now behave better when the keyboard is open, so key inputs and actions stay reachable.
-• Calendar and event flows are better aligned with iOS and Web.
+• Scrollable forms now behave better with the keyboard open, keeping key fields and actions reachable.
+• Visual and navigation consistency was refined across key event/payment screens.
 
 Fixed
-• Applied `imePadding()` in the right containers to remove friction on long form screens.
+• `imePadding()` is now applied in the correct containers to remove friction on long forms.
+• Removed legacy WhatsApp action from event detail to avoid duplicate sharing paths.
+• Build/dependency reliability and pre-store quality hardening were reinforced.
 ```
 
 ---

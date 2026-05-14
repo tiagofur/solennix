@@ -2,7 +2,7 @@
 
 Historial oficial de cambios de Solennix para Web, iOS, Android y Backend.
 
-Última actualización: 2026-05-11
+Última actualización: 2026-05-14
 
 ## Versiones actuales
 
@@ -13,45 +13,23 @@ Historial oficial de cambios de Solennix para Web, iOS, Android y Backend.
 | Android | 1.2.0 | 6 | android/app/build.gradle.kts |
 | Backend | 1.0.0 | - | backend/VERSION |
 
-## 2026-05-10 — iOS UX: filtro de fechas Apple HIG + KPI responsivo en productos
+## 2026-05-14 - Android 1.2.0 pre-publicación: hardening y paridad final
 
-Mejoras de calidad UX en iOS siguiendo las guías oficiales de Apple (HIG). Sin cambios en otras plataformas.
-
-### IOS
-
-- **Events list — filtro por fecha**: se reemplazó el panel expandible inline ("Filtros" en texto) por un ícono `calendar` en la toolbar que abre un sheet nativo de 380pt. Dentro del sheet, dos `DatePicker` con estilo `.compact` (Apple HIG recomendado para espacio restringido) permiten seleccionar rango "Desde / Hasta" con toggle de activación. El ícono cambia a `calendar.badge.clock` cuando hay filtros activos.
-- **Products detail — KPI grid responsivo**: la grilla de 4 KPIs (precio base, costo unitario, margen, próximos eventos) pasó de dos `HStack` fijos a un `LazyVGrid` dinámico: 2 columnas en iPhone, 4 en iPad/Mac Catalyst. Usa el `horizontalSizeClass` ya presente en la vista.
-
-## 2026-05-11 — Personal: respuesta de asignaciones team_member + first-accept-wins (MVP)
-
-Se habilita el flujo base para que colaboradores con usuario puedan responder asignaciones y para operar ofertas competitivas estilo dispatch (primer aceptación gana).
-
-### BACKEND
-
-- Nuevo `POST /api/staff/assignments/{id}/respond` con respuestas `accept|decline`.
-- Nuevo `GET /api/staff/my-assignments` para que el team_member vea sus asignaciones.
-- Nueva migración `050` en `event_staff`: `offer_group_id` + `offer_slots`.
-- Lógica transaccional first-accept-wins: al llenarse cupos, se auto-marcan `declined` los pendientes del mismo grupo.
+Se completa el hardening previo a publicación de Android 1.2.0 con mejoras de estabilidad, UX en formularios, consistencia visual y mayor confiabilidad de calidad para stores.
 
 ### WEB
 
-- Contratos de tipos agregados para `TeamMemberAssignment` y `AssignmentResponseOutcome`.
-- `staffService` agrega `getMyAssignments()` y `respondAssignment()`.
-- Nuevo portal `team_member` en `/team/assignments` para listar y responder asignaciones (aceptar/rechazar).
-- Guard de rutas: `team_member` es redirigido al portal y queda fuera del layout operativo del organizer.
-- Nueva pantalla `/team/events` con filtros por estado, rango de fechas y búsqueda, siempre acotada a asignaciones del team_member autenticado.
-- Nueva pantalla `/team/calendar` con filtros por mes y estado, mostrando solo eventos asignados al team_member autenticado.
-
 ### IOS
 
-- Endpoints de red agregados para `staff/my-assignments` y `staff/assignments/{id}/respond`.
-- Modelos nuevos `TeamMemberAssignment` y `AssignmentResponseOutcome`.
-
 ### ANDROID
+- Se corrige fricción en formularios largos aplicando `imePadding()` en contenedores scrolleables para que el teclado no tape campos ni acciones.
+- La bandeja de pagos del organizador queda integrada y alineada visualmente (tema y referencias de diseño corregidas).
+- La generación de PDFs migra a endpoints backend para mejorar consistencia y reducir trabajo pesado en cliente.
+- Se elimina la acción legacy de WhatsApp en detalle de evento para consolidar el flujo oficial de compartición.
+- Se refuerza estabilidad de dependencias/build (alineación Hilt-AGP y actualizaciones de toolchain Android).
+- Se consolida baseline de calidad con batería de tests unitarios en verde y gate de umbral de startup para hardening pre-store.
 
-- Endpoints de red agregados para `staff/my-assignments` y `staff/assignments/{id}/respond`.
-- Modelos nuevos `TeamMemberAssignment` y `AssignmentResponseOutcome`.
-- `StaffRepository` agrega métodos para listar y responder asignaciones.
+### BACKEND
 
 ## 2026-05-06 - Release train móvil 1.2.0 + Web 1.0.1
 

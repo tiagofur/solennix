@@ -2,7 +2,7 @@
 // Source: versioning/releases.json
 export const changelogData = {
   "schemaVersion": 1,
-  "updatedAt": "2026-05-06",
+  "updatedAt": "2026-05-14",
   "currentVersions": {
     "web": {
       "version": "1.0.1",
@@ -24,6 +24,25 @@ export const changelogData = {
     }
   },
   "releases": [
+    {
+      "id": "2026-05-14-android-prelaunch-hardening",
+      "date": "2026-05-14",
+      "title": "Android 1.2.0 pre-publicación: hardening y paridad final",
+      "summary": "Se completa el hardening previo a publicación de Android 1.2.0 con mejoras de estabilidad, UX en formularios, consistencia visual y mayor confiabilidad de calidad para stores.",
+      "platforms": {
+        "web": [],
+        "ios": [],
+        "android": [
+          "Se corrige fricción en formularios largos aplicando `imePadding()` en contenedores scrolleables para que el teclado no tape campos ni acciones.",
+          "La bandeja de pagos del organizador queda integrada y alineada visualmente (tema y referencias de diseño corregidas).",
+          "La generación de PDFs migra a endpoints backend para mejorar consistencia y reducir trabajo pesado en cliente.",
+          "Se elimina la acción legacy de WhatsApp en detalle de evento para consolidar el flujo oficial de compartición.",
+          "Se refuerza estabilidad de dependencias/build (alineación Hilt-AGP y actualizaciones de toolchain Android).",
+          "Se consolida baseline de calidad con batería de tests unitarios en verde y gate de umbral de startup para hardening pre-store."
+        ],
+        "backend": []
+      }
+    },
     {
       "id": "2026-05-06-mobile-1-2-0-and-web-1-0-1-release-train",
       "date": "2026-05-06",
