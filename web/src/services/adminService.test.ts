@@ -32,7 +32,7 @@ describe('adminService', () => {
 
     const result = await adminService.getUsers();
 
-    expect(api.get).toHaveBeenCalledWith('/admin/users');
+    expect(api.get).toHaveBeenCalledWith('/admin/users', { account_type: 'users' });
     expect(result).toEqual(mockUsers);
   });
 

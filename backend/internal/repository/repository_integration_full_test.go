@@ -447,7 +447,7 @@ func TestAdminRepoGetAllUsers(t *testing.T) {
 	_ = seedUser(t, pool, "admin.user2@test.dev")
 
 	repo := NewAdminRepo(pool)
-	users, err := repo.GetAllUsers(context.Background())
+	users, err := repo.GetAllUsers(context.Background(), AdminAccountTypeUsers)
 	if err != nil {
 		t.Fatalf("GetAllUsers() error = %v", err)
 	}

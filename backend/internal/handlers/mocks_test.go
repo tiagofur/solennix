@@ -691,8 +691,8 @@ func (m *MockAdminRepo) GetPlatformStats(ctx context.Context) (*repository.Platf
 	return args.Get(0).(*repository.PlatformStats), args.Error(1)
 }
 
-func (m *MockAdminRepo) GetAllUsers(ctx context.Context) ([]repository.AdminUser, error) {
-	args := m.Called(ctx)
+func (m *MockAdminRepo) GetAllUsers(ctx context.Context, accountType string) ([]repository.AdminUser, error) {
+	args := m.Called(ctx, accountType)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

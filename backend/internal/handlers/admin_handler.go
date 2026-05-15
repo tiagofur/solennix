@@ -3,6 +3,7 @@ package handlers
 import (
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -37,8 +38,17 @@ func (h *AdminHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 // ListUsers returns all users with their usage counts.
 // GET /api/admin/users
 func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
-	users, err := h.adminRepo.GetAllUsers(r.Context())
+	accountType := strings.TrimSpace(r.URL.Query().Get("account_type"))
+	if accountType == "" {
+		accountType = repository.AdminAccountTypeUsers
+	}
+
+	users, err := h.adminRepo.GetAllUsers(r.Context(), accountType)
 	if err != nil {
+		if strings.Contains(strings.ToLower(err.Error()), "invalid account type") {
+			writeError(w, http.StatusBadRequest, "Invalid account_type. Must be one of: users, team, assistants, admins, all")
+			return
+		}
 		slog.Error("admin: failed to list users", "error", err)
 		writeError(w, http.StatusInternalServerError, "Failed to list users")
 		return
@@ -110,6 +120,14 @@ func (h *AdminHandler) UpgradeUser(w http.ResponseWriter, r *http.Request) {
 	user, err := h.adminRepo.GetUserByID(r.Context(), id)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "User not found")
+		return
+	}
+	role := strings.ToLower(strings.TrimSpace(user.Role))
+	if role == "" {
+		role = "user"
+	}
+	if role != "user" {
+		writeError(w, http.StatusForbidden, "Only end-user accounts can be upgraded/downgraded from this panel")
 		return
 	}
 

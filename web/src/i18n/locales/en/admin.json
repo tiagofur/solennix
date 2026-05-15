@@ -90,6 +90,19 @@
       "pro": "Pro",
       "business": "Business"
     },
+    "account_types": {
+      "users": "Users",
+      "team": "Team Members",
+      "assistants": "Assistants",
+      "admins": "Admins",
+      "all": "All"
+    },
+    "roles": {
+      "user": "User",
+      "team_member": "Team Member",
+      "assistant": "Assistant",
+      "admin": "Admin"
+    },
     "stats": {
       "active": "Active (with activity)",
       "no_activity": "No activity",

@@ -171,7 +171,7 @@ type AuditRepository interface {
 // AdminRepository defines admin repo operations.
 type AdminRepository interface {
 	GetPlatformStats(ctx context.Context) (*repository.PlatformStats, error)
-	GetAllUsers(ctx context.Context) ([]repository.AdminUser, error)
+	GetAllUsers(ctx context.Context, accountType string) ([]repository.AdminUser, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (*repository.AdminUser, error)
 	UpdateUserPlan(ctx context.Context, id uuid.UUID, plan string, expiresAt *time.Time) error
 	HasActiveSubscription(ctx context.Context, userID uuid.UUID) (bool, error)

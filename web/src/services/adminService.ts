@@ -1,5 +1,7 @@
 import { api } from '@/lib/api';
 
+export type AdminAccountType = 'users' | 'team' | 'assistants' | 'admins' | 'all';
+
 // Types matching backend responses
 export interface PlatformStats {
   total_users: number;
@@ -49,8 +51,8 @@ export const adminService = {
     return api.get<PlatformStats>("/admin/stats");
   },
 
-  async getUsers() {
-    return api.get<AdminUser[]>("/admin/users");
+  async getUsers(accountType: AdminAccountType = 'users') {
+    return api.get<AdminUser[]>("/admin/users", { account_type: accountType });
   },
 
   async getUserById(id: string) {

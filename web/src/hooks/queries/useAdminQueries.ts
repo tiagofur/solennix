@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminService } from '@/services/adminService';
+import { adminService, type AdminAccountType } from '@/services/adminService';
 import { queryKeys } from './queryKeys';
 import { useToast } from '@/hooks/useToast';
 import { logError, getErrorMessage } from '@/lib/errorHandler';
@@ -15,10 +15,10 @@ export function useAdminStats() {
   });
 }
 
-export function useAdminUsers() {
+export function useAdminUsers(accountType: AdminAccountType = 'users') {
   return useQuery({
-    queryKey: queryKeys.admin.users,
-    queryFn: () => adminService.getUsers(),
+    queryKey: [...queryKeys.admin.users, accountType] as const,
+    queryFn: () => adminService.getUsers(accountType),
   });
 }
 
@@ -41,7 +41,7 @@ export function useUpgradeUser() {
     mutationFn: ({ id, plan, expiresAt }: { id: string; plan: string; expiresAt: string | null }) =>
       adminService.upgradeUser(id, plan, expiresAt),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.admin.users });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.users, exact: false });
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.stats });
       addToast(t('users.plan_updated'), 'success');
     },

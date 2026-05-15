@@ -480,7 +480,7 @@ func (r *EventRepo) UpdateEventItems(ctx context.Context, eventID uuid.UUID,
 			_, err := tx.Exec(ctx,
 				`INSERT INTO event_staff (event_id, staff_id, offer_group_id, offer_slots,
 					fee_amount, role_override, notes, shift_start, shift_end, status)
-				VALUES ($1, $2, $3, CASE WHEN $3 IS NULL THEN NULL ELSE COALESCE($4, 1) END, $5, $6, $7, $8, $9, COALESCE($10, 'confirmed'))
+				VALUES ($1, $2, $3, CASE WHEN $3::uuid IS NULL THEN NULL ELSE COALESCE($4::int, 1) END, $5, $6, $7, $8, $9, COALESCE($10::text, 'confirmed'))
 				ON CONFLICT (event_id, staff_id) DO UPDATE SET
 					offer_group_id = EXCLUDED.offer_group_id,
 					offer_slots = CASE
@@ -526,15 +526,15 @@ func upsertEventStaffCompat(ctx context.Context, tx pgx.Tx, eventID uuid.UUID, s
 	updateSQL := `UPDATE event_staff
 		SET offer_group_id = $3,
 			offer_slots = CASE
-				WHEN $3 IS NULL THEN NULL
-				ELSE COALESCE($4, offer_slots, 1)
+				WHEN $3::uuid IS NULL THEN NULL
+				ELSE COALESCE($4::int, offer_slots, 1)
 			END,
 			fee_amount = $5,
 			role_override = $6,
 			notes = $7,
 			shift_start = COALESCE($8, shift_start),
 			shift_end = COALESCE($9, shift_end),
-			status = COALESCE($10, status)
+			status = COALESCE($10::text, status)
 		WHERE event_id = $1 AND staff_id = $2`
 
 	cmd, err := tx.Exec(ctx, updateSQL,
@@ -596,7 +596,7 @@ func insertEventStaffCompat(ctx context.Context, tx pgx.Tx, eventID uuid.UUID, s
 	_, err := tx.Exec(ctx,
 		`INSERT INTO event_staff (event_id, staff_id, offer_group_id, offer_slots,
 			fee_amount, role_override, notes, shift_start, shift_end, status)
-		VALUES ($1, $2, $3, CASE WHEN $3 IS NULL THEN NULL ELSE COALESCE($4, 1) END, $5, $6, $7, $8, $9, COALESCE($10, 'confirmed'))`,
+		VALUES ($1, $2, $3, CASE WHEN $3::uuid IS NULL THEN NULL ELSE COALESCE($4::int, 1) END, $5, $6, $7, $8, $9, COALESCE($10::text, 'confirmed'))`,
 		eventID,
 		st.StaffID,
 		st.OfferGroupID,

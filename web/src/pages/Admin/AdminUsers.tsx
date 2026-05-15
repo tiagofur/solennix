@@ -21,6 +21,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAdminUsers, useUpgradeUser } from '@/hooks/queries/useAdminQueries';
+import type { AdminAccountType } from '@/services/adminService';
 import { queryKeys } from '@/hooks/queries/queryKeys';
 import { useToast } from '@/hooks/useToast';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -32,7 +33,8 @@ import clsx from 'clsx';
 // Internal Types & Constants
 // ─────────────────────────────────────────────────────────────────────────
 
-type PlanFilter = 'all' | 'basic' | 'pro' | 'premium';
+type PlanFilter = 'all' | 'basic' | 'pro' | 'business' | 'premium';
+type AccountTypeFilter = AdminAccountType;
 type SortField = 'name' | 'plan' | 'activity' | 'created_at';
 type SortDir = 'asc' | 'desc';
 
@@ -73,7 +75,9 @@ export const AdminUsers: React.FC = () => {
   const { t, i18n } = useTranslation(['admin', 'common']);
   const dateLocale = i18n.language === 'es' ? es : enUS;
   const qc = useQueryClient();
-  const { data: users = [], isLoading: loading, error: usersError } = useAdminUsers();
+  const [accountType, setAccountType] = useState<AccountTypeFilter>('users');
+  const { data: users = [], isLoading: loading, error: usersError } = useAdminUsers(accountType);
+  const { data: allAccounts = [] } = useAdminUsers('all');
   const upgradeUser = useUpgradeUser();
   const error = usersError ? t('admin:users.errors.loading') : null;
   const [searchQuery, setSearchQuery] = useState('');
@@ -83,6 +87,14 @@ export const AdminUsers: React.FC = () => {
   const [gift, setGift] = useState<GiftState | null>(null);
   const [downgradeTarget, setDowngradeTarget] = useState<AdminUser | null>(null);
   const { addToast } = useToast();
+
+  const accountTypeOptions: Array<{ value: AccountTypeFilter; label: string }> = [
+    { value: 'users', label: t('admin:users.account_types.users') },
+    { value: 'team', label: t('admin:users.account_types.team') },
+    { value: 'assistants', label: t('admin:users.account_types.assistants') },
+    { value: 'admins', label: t('admin:users.account_types.admins') },
+    { value: 'all', label: t('admin:users.account_types.all') },
+  ];
 
   const activityScore = (u: AdminUser) =>
     u.events_count + u.clients_count + u.products_count;
@@ -208,7 +220,7 @@ export const AdminUsers: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `users-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `users-${accountType}-${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -227,6 +239,33 @@ export const AdminUsers: React.FC = () => {
     const matchesPlan = planFilter === 'all' || user.plan === planFilter;
     return matchesSearch && matchesPlan;
   });
+
+  const filteredAllAccounts = allAccounts.filter((user) => {
+    const matchesSearch =
+      searchQuery === '' ||
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (user.business_name &&
+        user.business_name.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesPlan = planFilter === 'all' || user.plan === planFilter;
+    return matchesSearch && matchesPlan;
+  });
+
+  const accountTypeCards: Array<{ value: AccountTypeFilter; icon: typeof Users }> = [
+    { value: 'all', icon: Users },
+    { value: 'users', icon: Users },
+    { value: 'team', icon: Shield },
+    { value: 'assistants', icon: Activity },
+    { value: 'admins', icon: Crown },
+  ];
+
+  const accountTypeCounts = {
+    all: filteredAllAccounts.length,
+    users: filteredAllAccounts.filter((u) => u.role === 'user').length,
+    team: filteredAllAccounts.filter((u) => u.role === 'team_member').length,
+    assistants: filteredAllAccounts.filter((u) => u.role === 'assistant').length,
+    admins: filteredAllAccounts.filter((u) => u.role === 'admin').length,
+  };
 
   // Sort
   const sortedUsers = [...filteredUsers].sort((a, b) => {
@@ -247,6 +286,7 @@ export const AdminUsers: React.FC = () => {
     all: users.length,
     basic: users.filter((u) => u.plan === 'basic').length,
     pro: users.filter((u) => u.plan === 'pro').length,
+    business: users.filter((u) => u.plan === 'business').length,
     premium: users.filter((u) => u.plan === 'premium').length,
   };
 
@@ -265,6 +305,26 @@ export const AdminUsers: React.FC = () => {
       <span className={clsx('inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold', styles[plan] || styles.basic)}>
         {(plan === 'pro' || plan === 'premium') && <Crown className="h-3 w-3" />}
         {labels[plan] || plan}
+      </span>
+    );
+  };
+
+  const getRoleBadge = (role: string) => {
+    const styles: Record<string, string> = {
+      user: 'bg-info/10 text-info',
+      team_member: 'bg-success/10 text-success',
+      assistant: 'bg-warning/10 text-warning',
+      admin: 'bg-error/10 text-error',
+    };
+    const labels: Record<string, string> = {
+      user: t('admin:users.roles.user'),
+      team_member: t('admin:users.roles.team_member'),
+      assistant: t('admin:users.roles.assistant'),
+      admin: t('admin:users.roles.admin'),
+    };
+    return (
+      <span className={clsx('inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide', styles[role] || styles.user)}>
+        {labels[role] || role}
       </span>
     );
   };
@@ -400,7 +460,7 @@ export const AdminUsers: React.FC = () => {
           <div>
             <h1 className="text-2xl font-bold text-text">{t('admin:users.title')}</h1>
             <p className="text-sm text-text-secondary">
-              {t('admin:users.summary', { count: users.length })}
+              {t('admin:users.summary', { count: users.length })} · {accountTypeOptions.find((option) => option.value === accountType)?.label}
             </p>
           </div>
         </div>
@@ -416,7 +476,7 @@ export const AdminUsers: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => qc.invalidateQueries({ queryKey: queryKeys.admin.users })}
+            onClick={() => qc.invalidateQueries({ queryKey: queryKeys.admin.users, exact: false })}
             className="p-2 text-text-secondary hover:text-primary transition-colors"
             aria-label={t('admin:users.actions.reload')}
           >
@@ -450,9 +510,47 @@ export const AdminUsers: React.FC = () => {
         </div>
       )}
 
+      {/* Account type cards */}
+      {!loading && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          {accountTypeCards.map((card) => {
+            const Icon = card.icon;
+            const active = accountType === card.value;
+            const count = accountTypeCounts[card.value];
+            return (
+              <button
+                key={card.value}
+                type="button"
+                onClick={() => setAccountType(card.value)}
+                className={clsx(
+                  'text-left p-4 rounded-2xl border transition-all',
+                  active
+                    ? 'bg-primary/10 border-primary/40 shadow-sm'
+                    : 'bg-card border-border hover:border-primary/30 hover:bg-surface-alt',
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={clsx('text-xs font-semibold uppercase tracking-wide', active ? 'text-primary' : 'text-text-secondary')}>
+                    {t(`admin:users.account_types.${card.value}`)}
+                  </span>
+                  <Icon className={clsx('h-4 w-4', active ? 'text-primary' : 'text-text-secondary')} />
+                </div>
+                <p className={clsx('mt-2 text-2xl font-bold', active ? 'text-primary-dark' : 'text-text')}>
+                  {count}
+                </p>
+                <p className="text-xs text-text-secondary mt-1">
+                  {t('admin:users.table.footer.showing', { filtered: count, total: filteredAllAccounts.length, count })}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Filters */}
       <div className="bg-card shadow-sm border border-border rounded-2xl p-5">
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-secondary" aria-hidden="true" />
             <input
@@ -466,7 +564,7 @@ export const AdminUsers: React.FC = () => {
           </div>
           <div className="flex items-center gap-1 bg-surface-alt rounded-2xl p-1">
             <Filter className="h-4 w-4 text-text-secondary ml-2 mr-1" aria-hidden="true" />
-            {(['all', 'basic', 'pro', 'premium'] as PlanFilter[]).map((filter) => (
+            {(['all', 'basic', 'pro', 'business', 'premium'] as PlanFilter[]).map((filter) => (
               <button
                 key={filter}
                 type="button"
@@ -478,11 +576,20 @@ export const AdminUsers: React.FC = () => {
                     : 'text-text-secondary hover:text-text hover:bg-surface',
                 )}
               >
-                {filter === 'all' ? t('admin:users.filters.all') : filter === 'basic' ? t('admin:users.filters.basic') : filter === 'pro' ? t('admin:users.filters.pro') : t('admin:users.filters.pro')}{' '}
+                {filter === 'all'
+                  ? t('admin:users.filters.all')
+                  : filter === 'basic'
+                    ? t('admin:users.filters.basic')
+                    : filter === 'pro'
+                      ? t('admin:users.filters.pro')
+                      : filter === 'business'
+                        ? t('admin:users.filters.business')
+                        : t('admin:users.filters.pro')}{' '}
                 <span className="opacity-70">({planCounts[filter]})</span>
               </button>
             ))}
           </div>
+        </div>
         </div>
       </div>
 
@@ -560,6 +667,7 @@ export const AdminUsers: React.FC = () => {
                               )}
                             </div>
                             <div className="text-xs text-text-secondary truncate">{user.email}</div>
+                            <div>{getRoleBadge(user.role)}</div>
                             {user.business_name && (
                               <div className="text-xs text-text-tertiary truncate">{user.business_name}</div>
                             )}
@@ -618,7 +726,7 @@ export const AdminUsers: React.FC = () => {
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           {/* Gift button: for basic users, or gifted users without paid sub */}
-                          {!user.has_paid_subscription && user.plan === 'basic' && (
+                          {user.role === 'user' && !user.has_paid_subscription && user.plan === 'basic' && (
                             <button
                               type="button"
                               onClick={() => openGiftDialog(user)}
@@ -632,7 +740,7 @@ export const AdminUsers: React.FC = () => {
                           )}
 
                           {/* Extend/change gift for users already on a gifted plan */}
-                          {!user.has_paid_subscription && (user.plan === 'pro' || user.plan === 'premium') && isGifted && (
+                          {user.role === 'user' && !user.has_paid_subscription && (user.plan === 'pro' || user.plan === 'premium') && isGifted && (
                             <button
                               type="button"
                               onClick={() => openGiftDialog(user)}
@@ -646,7 +754,7 @@ export const AdminUsers: React.FC = () => {
                           )}
 
                           {/* Downgrade: only for gifted or permanent manual upgrades without paid sub */}
-                          {!user.has_paid_subscription && (user.plan === 'pro' || user.plan === 'premium') && (
+                          {user.role === 'user' && !user.has_paid_subscription && (user.plan === 'pro' || user.plan === 'premium') && (
                             <button
                               type="button"
                               onClick={() => handleDowngrade(user)}
@@ -659,7 +767,7 @@ export const AdminUsers: React.FC = () => {
                           )}
 
                           {/* Paid subscription: no manual action allowed */}
-                          {user.has_paid_subscription && (
+                          {user.role === 'user' && user.has_paid_subscription && (
                             <span className="text-xs text-text-tertiary italic" title={t('admin:users.actions.active_sub_help')}>
                               {t('admin:users.actions.active_sub')}
                             </span>

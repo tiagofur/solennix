@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -91,7 +92,7 @@ func TestAdminHandler_ListUsers(t *testing.T) {
 			{ID: uuid.New(), Email: "a@b.com", Name: "Alice", Plan: "pro"},
 			{ID: uuid.New(), Email: "c@d.com", Name: "Bob", Plan: "basic"},
 		}
-		repo.On("GetAllUsers", mock.Anything).Return(users, nil)
+		repo.On("GetAllUsers", mock.Anything, "users").Return(users, nil)
 
 		req := httptest.NewRequest("GET", "/api/admin/users", nil)
 		w := httptest.NewRecorder()
@@ -111,7 +112,7 @@ func TestAdminHandler_ListUsers(t *testing.T) {
 		repo := new(MockAdminRepo)
 		handler := NewAdminHandler(repo)
 
-		repo.On("GetAllUsers", mock.Anything).Return(nil, nil)
+		repo.On("GetAllUsers", mock.Anything, "users").Return(nil, nil)
 
 		req := httptest.NewRequest("GET", "/api/admin/users", nil)
 		w := httptest.NewRecorder()
@@ -132,7 +133,7 @@ func TestAdminHandler_ListUsers(t *testing.T) {
 		repo := new(MockAdminRepo)
 		handler := NewAdminHandler(repo)
 
-		repo.On("GetAllUsers", mock.Anything).Return(nil, assert.AnError)
+		repo.On("GetAllUsers", mock.Anything, "users").Return(nil, assert.AnError)
 
 		req := httptest.NewRequest("GET", "/api/admin/users", nil)
 		w := httptest.NewRecorder()
@@ -141,6 +142,22 @@ func TestAdminHandler_ListUsers(t *testing.T) {
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 		assert.Contains(t, w.Body.String(), "Failed to list users")
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("invalid account_type", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		repo.On("GetAllUsers", mock.Anything, "invalid").Return(nil, fmt.Errorf("invalid account type"))
+
+		req := httptest.NewRequest("GET", "/api/admin/users?account_type=invalid", nil)
+		w := httptest.NewRecorder()
+
+		handler.ListUsers(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Contains(t, w.Body.String(), "Invalid account_type")
 		repo.AssertExpectations(t)
 	})
 }
@@ -314,6 +331,24 @@ func TestAdminHandler_UpgradeUser(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 		assert.Contains(t, w.Body.String(), "User not found")
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("non end-user account cannot be upgraded", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		userID := uuid.New()
+		user := &repository.AdminUser{ID: userID, Plan: "business", Role: "assistant", HasPaidSub: false}
+		repo.On("GetUserByID", mock.Anything, userID).Return(user, nil)
+
+		req := buildReq(userID, map[string]string{"plan": "pro"})
+		w := httptest.NewRecorder()
+
+		handler.UpgradeUser(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
+		assert.Contains(t, w.Body.String(), "Only end-user accounts")
 		repo.AssertExpectations(t)
 	})
 

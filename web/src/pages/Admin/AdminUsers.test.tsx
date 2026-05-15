@@ -111,7 +111,10 @@ describe('AdminUsers', () => {
     vi.mocked(adminService.getUsers).mockResolvedValueOnce([getMockData()[0]]);
     render(<MemoryRouter><AdminUsers /></MemoryRouter>);
     await waitFor(() => expect(screen.queryByText('Cargando usuarios...')).not.toBeInTheDocument());
-    expect(screen.getByText('1 usuario registrado')).toBeInTheDocument();
+    const singularSummary = screen.getAllByText(
+      (_, element) => element?.textContent?.includes('1 usuario registrado') ?? false
+    );
+    expect(singularSummary.length).toBeGreaterThan(0);
     expect(screen.getByText('Mostrando 1 de 1 usuario')).toBeInTheDocument();
   });
 
@@ -147,9 +150,13 @@ describe('AdminUsers', () => {
 
     const proFilterBtn = screen.getAllByRole('button', { name: /Pro/i })[0];
     fireEvent.click(proFilterBtn);
-    fireEvent.click(screen.getByText('Todos').closest('button')!);
+    const allPlanBtn = screen
+      .getAllByRole('button')
+      .find((button) => (button.textContent || '').trim().startsWith('Todos ('));
+    expect(allPlanBtn).toBeTruthy();
+    fireEvent.click(allPlanBtn!);
 
-    const nameBtn = screen.getByText('Usuario').closest('button')!;
+    const nameBtn = screen.getByRole('button', { name: /^Usuario$/i });
     fireEvent.click(nameBtn);
     fireEvent.click(nameBtn);
     fireEvent.click(nameBtn);
@@ -254,7 +261,7 @@ describe('AdminUsers', () => {
     expect(mockAddToast).toHaveBeenCalledWith(expect.stringContaining('exportados'), 'success');
 
     // 5. Subscription Status Logic
-    expect(screen.getByText('Suscripción activa')).toBeInTheDocument();
+    expect(screen.getAllByText('Pagado').length).toBeGreaterThan(0);
 
     // 6. Admin User View (No management buttons)
     const adminRow = screen.getByText('Real Admin').closest('tr')!;

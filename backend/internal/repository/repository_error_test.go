@@ -260,7 +260,7 @@ func TestAdminRepoWithClosedPool(t *testing.T) {
 	if _, err := repo.GetPlatformStats(ctx); err == nil {
 		t.Fatal("AdminRepo.GetPlatformStats() expected error with closed pool")
 	}
-	if _, err := repo.GetAllUsers(ctx); err == nil {
+	if _, err := repo.GetAllUsers(ctx, AdminAccountTypeUsers); err == nil {
 		t.Fatal("AdminRepo.GetAllUsers() expected error with closed pool")
 	}
 	if _, err := repo.GetUserByID(ctx, id); err == nil {
@@ -368,8 +368,8 @@ func TestUserRepoCreateWithOAuthDefaults(t *testing.T) {
 	user := &models.User{
 		Email: "oauth-defaults@test.dev",
 		Name:  "OAuth Defaults",
-		Role:  "",  // triggers default role = "user"
-		Plan:  "",  // triggers default plan = "basic"
+		Role:  "", // triggers default role = "user"
+		Plan:  "", // triggers default plan = "basic"
 	}
 	if err := NewUserRepo(pool).CreateWithOAuth(ctx, user); err == nil {
 		t.Fatal("UserRepo.CreateWithOAuth(defaults) expected error with closed pool")
@@ -441,13 +441,13 @@ func TestEventCreateUpdateBranches(t *testing.T) {
 	// Create with empty DiscountType (triggers default "percent"), empty start/end times
 	emptyStr := ""
 	ev := &models.Event{
-		UserID:      userID,
-		ClientID:    clientID,
-		EventDate:   "2026-01-01",
-		StartTime:   &emptyStr, // non-nil but empty → should be set to nil
-		EndTime:     &emptyStr,
-		ServiceType: "catering",
-		Status:      "quoted",
+		UserID:       userID,
+		ClientID:     clientID,
+		EventDate:    "2026-01-01",
+		StartTime:    &emptyStr, // non-nil but empty → should be set to nil
+		EndTime:      &emptyStr,
+		ServiceType:  "catering",
+		Status:       "quoted",
 		DiscountType: "", // triggers default
 	}
 	if err := repo.Create(ctx, ev); err == nil {
@@ -777,7 +777,6 @@ func TestRepositoryEdgeCases(t *testing.T) {
 		t.Fatalf("EventRepo.GetEquipmentSuggestionsFromProducts(empty) expected nil, got %d items", len(suggestions))
 	}
 }
-
 
 // TestStaffRepoClosedPool covers all StaffRepo methods + the Phase 2 helpers
 // against a closed pgxpool. Validates that SQL compiles, param binding works,

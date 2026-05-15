@@ -90,6 +90,19 @@
       "pro": "Pro",
       "business": "Business"
     },
+    "account_types": {
+      "users": "Usuarios",
+      "team": "Miembros de equipo",
+      "assistants": "Secretarios",
+      "admins": "Admins",
+      "all": "Todos"
+    },
+    "roles": {
+      "user": "Usuario",
+      "team_member": "Miembro",
+      "assistant": "Secretario",
+      "admin": "Admin"
+    },
     "stats": {
       "active": "Activos (con actividad)",
       "no_activity": "Sin actividad",

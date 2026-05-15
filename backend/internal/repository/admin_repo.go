@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,8 +15,33 @@ type AdminRepo struct {
 	pool *pgxpool.Pool
 }
 
+const (
+	AdminAccountTypeAll        = "all"
+	AdminAccountTypeUsers      = "users"
+	AdminAccountTypeTeam       = "team"
+	AdminAccountTypeAssistants = "assistants"
+	AdminAccountTypeAdmins     = "admins"
+)
+
 func NewAdminRepo(pool *pgxpool.Pool) *AdminRepo {
 	return &AdminRepo{pool: pool}
+}
+
+func normalizeAdminAccountType(accountType string) string {
+	switch strings.ToLower(strings.TrimSpace(accountType)) {
+	case "", AdminAccountTypeUsers:
+		return AdminAccountTypeUsers
+	case AdminAccountTypeAll:
+		return AdminAccountTypeAll
+	case AdminAccountTypeTeam:
+		return AdminAccountTypeTeam
+	case AdminAccountTypeAssistants:
+		return AdminAccountTypeAssistants
+	case AdminAccountTypeAdmins:
+		return AdminAccountTypeAdmins
+	default:
+		return ""
+	}
 }
 
 // PlatformStats holds global platform KPIs.
@@ -73,28 +99,28 @@ type SubscriptionOverview struct {
 func (r *AdminRepo) GetPlatformStats(ctx context.Context) (*PlatformStats, error) {
 	stats := &PlatformStats{}
 
-	// Users by plan
-	err := r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users`).Scan(&stats.TotalUsers)
+	// Users by plan (end-user accounts only, excludes internal collaborator roles).
+	err := r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE role = 'user'`).Scan(&stats.TotalUsers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count users: %w", err)
 	}
 
-	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE plan = 'basic'`).Scan(&stats.BasicUsers)
+	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE role = 'user' AND plan = 'basic'`).Scan(&stats.BasicUsers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count basic users: %w", err)
 	}
 
-	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE plan = 'pro'`).Scan(&stats.ProUsers)
+	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE role = 'user' AND plan = 'pro'`).Scan(&stats.ProUsers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count pro users: %w", err)
 	}
 
-	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE plan = 'business'`).Scan(&stats.BusinessUsers)
+	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE role = 'user' AND plan = 'business'`).Scan(&stats.BusinessUsers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count business users: %w", err)
 	}
 
-	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE plan = 'premium'`).Scan(&stats.PremiumUsers)
+	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE role = 'user' AND plan = 'premium'`).Scan(&stats.PremiumUsers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count premium users: %w", err)
 	}
@@ -121,23 +147,27 @@ func (r *AdminRepo) GetPlatformStats(ctx context.Context) (*PlatformStats, error
 	weekStart := todayStart.AddDate(0, 0, -7)
 	monthStart := todayStart.AddDate(0, -1, 0)
 
-	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE created_at >= $1`, todayStart).Scan(&stats.NewUsersToday)
+	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE role = 'user' AND created_at >= $1`, todayStart).Scan(&stats.NewUsersToday)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count today's users: %w", err)
 	}
 
-	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE created_at >= $1`, weekStart).Scan(&stats.NewUsersWeek)
+	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE role = 'user' AND created_at >= $1`, weekStart).Scan(&stats.NewUsersWeek)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count week's users: %w", err)
 	}
 
-	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE created_at >= $1`, monthStart).Scan(&stats.NewUsersMonth)
+	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE role = 'user' AND created_at >= $1`, monthStart).Scan(&stats.NewUsersMonth)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count month's users: %w", err)
 	}
 
 	// Active subscriptions
-	err = r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM subscriptions WHERE status = 'active'`).Scan(&stats.ActiveSubscriptions)
+	err = r.pool.QueryRow(ctx, `
+		SELECT COUNT(*)
+		FROM subscriptions s
+		JOIN users u ON u.id = s.user_id
+		WHERE s.status = 'active' AND u.role = 'user'`).Scan(&stats.ActiveSubscriptions)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count active subs: %w", err)
 	}
@@ -145,8 +175,28 @@ func (r *AdminRepo) GetPlatformStats(ctx context.Context) (*PlatformStats, error
 	return stats, nil
 }
 
-// GetAllUsers returns all users with their usage counts.
-func (r *AdminRepo) GetAllUsers(ctx context.Context) ([]AdminUser, error) {
+// GetAllUsers returns admin-user rows filtered by account type.
+func (r *AdminRepo) GetAllUsers(ctx context.Context, accountType string) ([]AdminUser, error) {
+	normalized := normalizeAdminAccountType(accountType)
+	if normalized == "" {
+		return nil, fmt.Errorf("invalid account type")
+	}
+
+	whereClause := ""
+	args := make([]any, 0)
+	switch normalized {
+	case AdminAccountTypeUsers:
+		whereClause = "WHERE u.role = 'user'"
+	case AdminAccountTypeTeam:
+		whereClause = "WHERE u.role = 'team_member'"
+	case AdminAccountTypeAssistants:
+		whereClause = "WHERE u.role = 'assistant'"
+	case AdminAccountTypeAdmins:
+		whereClause = "WHERE u.role = 'admin'"
+	case AdminAccountTypeAll:
+		// No WHERE clause.
+	}
+
 	query := `
 		SELECT
 			u.id, u.email, u.name, u.business_name, u.plan, u.role, u.stripe_customer_id,
@@ -158,10 +208,10 @@ func (r *AdminRepo) GetAllUsers(ctx context.Context) ([]AdminUser, error) {
 			COALESCE((SELECT COUNT(*) FROM clients c WHERE c.user_id = u.id), 0) AS clients_count,
 			COALESCE((SELECT COUNT(*) FROM products p WHERE p.user_id = u.id), 0) AS products_count,
 			u.created_at, u.updated_at
-		FROM users u
+		FROM users u ` + whereClause + `
 		ORDER BY u.created_at DESC`
 
-	rows, err := r.pool.Query(ctx, query)
+	rows, err := r.pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list users: %w", err)
 	}
