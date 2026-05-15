@@ -9,7 +9,7 @@ aliases:
   - Arquitectura Android
   - Android Architecture
 date: 2026-03-20
-updated: 2026-05-13
+updated: 2026-05-15
 status: active
 platform: Android
 ---
@@ -45,6 +45,13 @@ platform: Android
 > - **18/19 módulos** con suites JVM (`app`, `core/data`, `core/database`, `core:designsystem`, `core:model`, `core:network`, `feature:auth`, `feature:calendar`, `feature:clients`, `feature:dashboard`, `feature:events`, `feature:inventory`, `feature:payments`, `feature:products`, `feature:search`, `feature:settings`, `feature:staff`, `widget`)
 > - `baselineprofile` cubierto por macrobenchmark/instrumentado (sin suite JVM aún)
 > - Ver detalle en [[../Android/Testing]]
+
+> [!success] 2026-05-15 — Team Member Portal (Ola 4) base implementada
+>
+> - Implementado: `User.role` en modelo compartido + routing por rol en `MainNavHost`.
+> - Implementado: `TeamMemberPortalScreen` y `TeamMemberPortalViewModel` con carga y respuesta de asignaciones (`accept|decline`).
+> - Pendiente: `TeamHomeScreen`, calendario completo mes/semana/día y detalle Team scoped.
+> - Fuente de roadmap y DoD: `docs/PRD/17_PERSONAL_TRACKER.md`.
 
 > [!tip] Documentos relacionados
 > [[PRD MOC]] · [[01_PRODUCT_VISION]] · [[02_FEATURES]] · [[05_TECHNICAL_ARCHITECTURE_IOS]] · [[07_TECHNICAL_ARCHITECTURE_BACKEND]] · [[08_TECHNICAL_ARCHITECTURE_WEB]] · [[11_CURRENT_STATUS]] · [[19_I18N_STRATEGY]]

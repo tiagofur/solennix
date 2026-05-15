@@ -9,8 +9,8 @@ aliases:
   - Staff Tracker
   - Colaboradores
 date: 2026-04-16
-updated: 2026-05-11
-status: phase-2-done-olas-1-2-3-complete
+updated: 2026-05-15
+status: phase-2-done-olas-1-2-3-complete-ola-4-in-progress
 ---
 
 # 🤝 Personal / Colaboradores — Tracker
@@ -29,6 +29,9 @@ status: phase-2-done-olas-1-2-3-complete
 
 > [!success] Ola 3 cerrada 2026-04-20 — Product con staff team
 > `products.staff_team_id` nullable FK. Tenant isolation via `SetStaffTeamRepo`. Cross-platform: selector "Equipo asociado" en Product form, chip "Incluye equipo" en EventForm. **Migration 045**.
+
+> [!info] Ola 4 iniciada 2026-05-15 — Team Member Portal Utility-First
+> Se definió el backlog funcional y ya se implementó el slice base móvil: entrada por rol `team_member` + bandeja mínima de asignaciones en iOS/Android.
 
 ---
 
@@ -81,6 +84,169 @@ flowchart LR
     style O3 fill:#1B5E20,stroke:#4CAF50,color:#fff
     style P3 fill:#6A1B9A,stroke:#CE93D8,color:#fff
 ```
+
+## 🧩 Ola 4 — Team Member Portal Utility (plan de producto)
+
+### Objetivo
+
+Pasar de "listas con filtros" a un portal operativo diario para miembros invitados: ver su jornada, responder rápido asignaciones, operar por calendario real y ejecutar en evento con contexto útil.
+
+### Alcance funcional (paridad obligatoria)
+
+| Pantalla / capacidad | Web | iOS | Android | Backend |
+|---|:-:|:-:|:-:|:-:|
+| Home "Mi Jornada" (hoy/próximos/pendientes) | 🔲 | 🔲 | 🔲 | 🔲 agregados por rango |
+| Bandeja de Asignaciones (accept/decline + motivo opcional) | 🔲 | 🔲 | 🔲 | 🔲 extender payload opcional |
+| Calendario real (mes/semana/día) | 🔲 | 🔲 | 🔲 | ✅ base (`my-assignments`) + 🔲 optimización |
+| Detalle de Evento Team (brief, turno, mapa, checklist personal) | 🔲 | 🔲 | 🔲 | 🔲 endpoint detalle scoped |
+| Timeline de cambios/notificaciones de asignación | 🔲 | 🔲 | 🔲 | 🔲 feed de cambios |
+| Disponibilidad del miembro (bloqueos/preferencias) | 🔲 | 🔲 | 🔲 | 🔲 endpoint + persistencia |
+
+### Historias de usuario priorizadas
+
+#### H1 — Mi Jornada
+- Como miembro de equipo, quiero abrir la app y ver en 1 pantalla qué tengo hoy y qué requiere respuesta para decidir rápido mi día.
+- Criterios:
+  - Muestra "Hoy", "Próximos 7 días", "Pendientes por responder".
+  - CTA directos: "Ir a agenda de hoy" y "Responder asignaciones".
+  - Empty state claro cuando no hay eventos.
+
+#### H2 — Bandeja de Asignaciones
+- Como miembro, quiero aceptar/rechazar asignaciones sin navegar múltiples pantallas.
+- Criterios:
+  - Card con fecha, turno, rol, fee (si existe), notas y lugar.
+  - Acción `accept`/`decline` inmediata, con confirmación visual de estado final.
+  - Motivo de rechazo opcional (si backend lo soporta).
+
+#### H3 — Calendario operativo real
+- Como miembro, quiero ver mi carga en calendario mensual/semanal/diario para planear trabajo.
+- Criterios:
+  - Vista mes con densidad por día.
+  - Vista semana para turnos y solapes.
+  - Vista día tipo agenda por hora.
+  - Tap en evento abre detalle Team.
+
+#### H4 — Detalle de Evento Team
+- Como miembro, quiero un detalle enfocado en ejecución del evento, no en CRM completo.
+- Criterios:
+  - Brief: nombre, fecha/hora, rol asignado, turno, contacto operativo.
+  - Ubicación con acción de abrir mapa.
+  - Checklist personal y notas del organizador.
+  - Estado de asignación visible y editable solo cuando aplique.
+
+#### H5 — Timeline de cambios
+- Como miembro, quiero saber si cambiaron horario/lugar/rol para no llegar desinformado.
+- Criterios:
+  - Feed cronológico de cambios relevantes del evento asignado.
+  - Marcado leído/no leído.
+  - Push/deeplink al evento afectado.
+
+#### H6 — Disponibilidad del miembro
+- Como miembro, quiero marcar bloqueos y disponibilidad para evitar choques.
+- Criterios:
+  - Bloqueos por fecha y rango horario.
+  - Preferencias básicas de notificación.
+  - Impacto visible en futuras asignaciones.
+
+### Definition of Done por plataforma
+
+#### Web DoD
+- Rutas Team Member con guard de rol (`team_member`) sin acceso a layout de organizer.
+- Superficies nuevas: `TeamHome`, `TeamAssignmentsInbox`, `TeamCalendar` (mes/semana/día), `TeamEventDetail`.
+- Accesibilidad: focus states, navegación teclado, labels ARIA para acciones críticas.
+- i18n ES/EN completo para cada nueva clave.
+- Tests:
+  - Unit de utilidades y estado de filtros/calendario.
+  - Integration de acciones accept/decline + refetch.
+  - Smoke e2e de flujo team member.
+
+#### iOS DoD
+- Navegación nativa Team Member con tabs/secciones dedicadas sin mezclar vistas de organizer.
+- Pantallas SwiftUI: `TeamHomeView`, `TeamAssignmentsView`, `TeamCalendarView`, `TeamEventDetailView`.
+- Patrones nativos:
+  - iPhone: navegación compacta con acciones en toolbar/sheets.
+  - iPad: split/adaptivo con detalle persistente cuando aplique.
+- `FeatureL10n` aplicado (sin hardcodes visibles).
+- Tests:
+  - ViewModel tests de carga y respuestas.
+  - Snapshot/preview sanity para estados clave (loading/empty/error).
+
+#### Android DoD
+- Navegación Team Member dedicada (bottom nav o rail según tamaño), sin mezclar rutas owner.
+- Pantallas Compose: `TeamHomeScreen`, `TeamAssignmentsScreen`, `TeamCalendarScreen`, `TeamEventDetailScreen`.
+- Patrones nativos Material 3:
+  - FAB solo contextual donde agregue valor.
+  - `imePadding()` y estados accesibles para TalkBack.
+- Recursos ES/EN en `strings.xml` por feature (sin shims temporales nuevos).
+- Tests:
+  - ViewModel unit tests para responder asignaciones y filtros de agenda.
+  - Compose tests para acciones críticas y empty/error states.
+
+### Definition of Done de backend para Ola 4
+
+- Endpoints y contratos OpenAPI completos para:
+  - Home agregada de miembro (hoy/próximos/pendientes).
+  - Detalle de evento scoped a `team_member`.
+  - Feed de cambios de asignación/evento.
+  - Disponibilidad del miembro (CRUD básico).
+- Tenant isolation estricta: `team_member` solo ve eventos donde esté asignado.
+- Tests de integración de autorizaciones y escenarios first-accept-wins.
+
+### Plan de ejecución sugerido
+
+| Fase | Objetivo | Entregables |
+|---|---|---|
+| Fase A (rápida, alto impacto) | Utilidad diaria inmediata | H1 + H2 + calendario día básico |
+| Fase B | Operación completa en evento | H3 completo + H4 |
+| Fase C | Coordinación y confiabilidad | H5 + H6 |
+
+### Roadmap ejecutable (issues + dependencias)
+
+| Orden | Issue | Nombre | Fase | Depende de |
+|---|---|---|---|---|
+| 1 | #337 | H2 Assignments inbox with fast accept/decline | A | base actual Phase 3.5 |
+| 2 | #336 | H1 My Day home for invited team members | A | #337 |
+| 3 | #338 | H3 Operational calendar (month/week/day) | A/B | #337 |
+| 4 | #339 | H4 Team-scoped event detail | B | #338 |
+| 5 | #340 | H5 Assignment/event change timeline | C | #339 |
+| 6 | #341 | H6 Team member availability management | C | #338 |
+
+#### Orden recomendado de implementación
+
+1. **#337** primero: mejora el flujo ya existente de respuesta a asignaciones y consolida la acción principal del portal.
+2. **#336** después: reutiliza los datos de asignaciones para construir la home "Mi Jornada" sin abrir todavía toda la complejidad del detalle.
+3. **#338** tercero: convierte el calendario en superficie realmente útil y habilita navegación natural hacia detalle.
+4. **#339** cuarto: construye el detalle Team scoped una vez que ya existe navegación desde inbox/home/calendario.
+5. **#340** quinto: agrega coordinación y trazabilidad sobre la base del detalle Team.
+6. **#341** sexto: cierra el loop operativo al permitir que el miembro gestione disponibilidad futura.
+
+#### Slicing recomendado por PR
+
+- **PR Slice A1:** #337
+- **PR Slice A2:** #336
+- **PR Slice A3:** #338 (arrancar con vista día/agenda, luego semana/mes dentro del mismo issue si entra en tamaño revisable)
+- **PR Slice B1:** #339
+- **PR Slice C1:** #340
+- **PR Slice C2:** #341
+
+### KPIs de adopción del portal team member
+
+- Tiempo medio de respuesta a asignación.
+- % de asignaciones respondidas antes de deadline.
+- MAU/WAU de miembros invitados en portal.
+- % sesiones que completan acción en "Mi Jornada".
+
+### Avance real de implementación (2026-05-15)
+
+| Slice | Web | iOS | Android | Backend |
+|---|---:|---:|---:|---:|
+| Routing por rol a shell Team Member | ✅ | ✅ | ✅ | ✅ (contrato ya disponible) |
+| Inbox mínima de asignaciones (load + accept/decline) | ✅ | ✅ | ✅ | ✅ |
+| Home Mi Jornada | 🔲 | 🔲 | 🔲 | 🔲 |
+| Calendario mes/semana/día | 🔲 | 🔲 | 🔲 | 🔲 |
+| Detalle Team scoped | 🔲 | 🔲 | 🔲 | 🔲 |
+| Timeline de cambios | 🔲 | 🔲 | 🔲 | 🔲 |
+| Disponibilidad del miembro | 🔲 | 🔲 | 🔲 | 🔲 |
 
 > [!info] Gating por phase
 > - **Phase 1:** sin gate — todos los planes pueden usar el catálogo (es CRM interno, no cara-al-cliente).

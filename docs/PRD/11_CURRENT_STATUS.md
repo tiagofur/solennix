@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-05-11
+updated: 2026-05-15
 status: active
 ---
 
@@ -24,6 +24,20 @@ status: active
 
 **Fecha:** Mayo 2026
 **Version:** 1.7
+
+> [!info] 2026-05-14 — Plan de producto definido para Team Member Portal (Ola 4)
+> Se formalizó el backlog funcional para evolucionar el portal `team_member` desde vistas listadas hacia una experiencia de utilidad diaria y calendario operativo real.
+> - **Documento fuente:** `docs/PRD/17_PERSONAL_TRACKER.md` (sección "Ola 4 — Team Member Portal Utility")
+> - **Pantallas objetivo:** Mi Jornada, Bandeja de Asignaciones, Calendario mes/semana/día, Detalle de Evento Team, Timeline de cambios y Disponibilidad del miembro.
+> - **Paridad requerida:** Web + iOS + Android con UX nativa en cada stack y misma cobertura funcional.
+> - **Estado:** planificación cerrada; ejecución iniciada.
+
+> [!success] 2026-05-15 — Team Member Portal: base móvil operativa (slice inicial)
+> Se implementó la base funcional en mobile para que el usuario `team_member` entre a una superficie dedicada y pueda responder asignaciones sin pasar por el shell de organizer.
+> - **iOS:** `User.role` agregado al contrato, routing por rol en `ContentView`, nueva `TeamMemberPortalView` con carga y respuesta de asignaciones.
+> - **Android:** `User.role` agregado al contrato, routing por rol en `MainNavHost`, nueva `TeamMemberPortalScreen` con carga y respuesta de asignaciones.
+> - **Backend:** sin cambios requeridos para este slice (ya existían `GET /api/staff/my-assignments` y `POST /api/staff/assignments/{id}/respond`).
+> - **Estado:** Ola 4 en progreso; faltan Mi Jornada, calendario completo mes/semana/día, detalle Team, timeline y disponibilidad.
 
 > [!success] 2026-05-11 — Personal Phase 3.5: team_member responde asignación + first-accept-wins
 > Se implementó el MVP operativo para colaboradores con login (`team_member`) dentro de Personal:

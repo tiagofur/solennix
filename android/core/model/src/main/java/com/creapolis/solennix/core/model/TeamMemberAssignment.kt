@@ -17,6 +17,7 @@ data class TeamMemberAssignment(
     @SerialName("event_date") val eventDate: String,
     @SerialName("staff_id") val staffId: String,
     val status: String,
+    @SerialName("fee_amount") val feeAmount: Double? = null,
     @SerialName("role_override") val roleOverride: String? = null,
     val notes: String? = null,
     @SerialName("shift_start") val shiftStart: String? = null,

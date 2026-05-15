@@ -9,7 +9,7 @@ aliases:
   - Arquitectura iOS
   - iOS Architecture
 date: 2026-03-20
-updated: 2026-05-08
+updated: 2026-05-15
 status: active
 platform: iOS
 ---
@@ -47,6 +47,13 @@ platform: iOS
 > - Se estandarizó la migración a `SolennixColors` en vistas SwiftUI para evitar drift de colores de sistema hardcodeados.
 > - `SidebarSplitLayout` refuerza consistencia de fondo/superficies y aplica glass sutil en header/footer del sidebar para iPad/macOS.
 > - `SearchView` y `EventDetailView` mejoran comportamiento de regular width con límites de ancho y espaciado desktop-class.
+
+> [!success] 2026-05-15 — Team Member Portal (Ola 4) base implementada
+>
+> - Implementado: `User.role` en modelo compartido + routing por rol en `ContentView`.
+> - Implementado: `TeamMemberPortalView` y `TeamMemberPortalViewModel` con carga y respuesta de asignaciones (`accept|decline`).
+> - Pendiente: `TeamHomeView`, calendario completo mes/semana/día y detalle Team scoped.
+> - Fuente de roadmap y DoD: `docs/PRD/17_PERSONAL_TRACKER.md`.
 
 > [!info] Dependencias externas SPM (2026-04-16)
 >

@@ -10,7 +10,7 @@ aliases:
   - Arquitectura Web
   - Web Architecture
 date: 2026-03-20
-updated: 2026-05-06
+updated: 2026-05-14
 status: active
 platform: Web
 ---
@@ -30,6 +30,12 @@ platform: Web
 > - **Calendario:** se documenta paridad funcional ya mergeada para filtros, retry, iCal y navegación
 > - **Marketing/help:** landing y help acompañan el changelog público como capa visible del release
 > - **Navegación:** `Help` sale del sidebar principal y queda accesible desde `Settings`; el switch de tema ya no compite con logout
+
+> [!info] 2026-05-14 — Team Member Portal (Ola 4) planificado
+> Se definió la evolución del portal `team_member` para pasar de vistas de lista/filtro a una experiencia operativa diaria.
+> - Superficies objetivo: `TeamHome`, `TeamAssignmentsInbox`, `TeamCalendar` (mes/semana/día) y `TeamEventDetail`.
+> - Requisito: mantener guard de rol para aislar miembros invitados del layout de organizer.
+> - Fuente de backlog y DoD: `docs/PRD/17_PERSONAL_TRACKER.md`.
 
 > [!success] 2026-05-04 — Web 1.0.0 + Help Center alineado al design system
 > La Web queda formalmente en `1.0.0` y el Help Center deja de usar una paleta paralela para adoptar los tokens del sistema (`bg-*`, `text-*`, `border-*`).

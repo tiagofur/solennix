@@ -30,6 +30,7 @@ public struct User: Codable, Identifiable, Sendable, Hashable {
     public let id: String
     public let email: String
     public let name: String
+    public var role: String? = nil
     public var preferredLanguage: String?
     public var businessName: String?
     public var logoUrl: String?

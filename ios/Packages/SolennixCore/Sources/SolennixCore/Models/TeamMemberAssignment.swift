@@ -9,6 +9,7 @@ public struct TeamMemberAssignment: Codable, Identifiable, Sendable, Hashable {
     public let eventDate: String
     public let staffId: String
     public let status: AssignmentStatus
+    public let feeAmount: Double?
     public let roleOverride: String?
     public let notes: String?
     public let shiftStart: String?

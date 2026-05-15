@@ -13,6 +13,7 @@ import SolennixFeatures
 struct ContentView: View {
 
     @Environment(AuthManager.self) private var authManager
+    @Environment(\.apiClient) private var apiClient
     @Environment(NetworkMonitor.self) private var networkMonitor
     @Environment(\.horizontalSizeClass) private var sizeClass
 
@@ -43,7 +44,7 @@ struct ContentView: View {
                     BiometricGateView()
 
                 case .authenticated:
-                    mainLayout
+                    authenticatedLayout
                 }
             }
             .frame(maxHeight: .infinity)
@@ -104,6 +105,15 @@ struct ContentView: View {
                     CompactTabLayout(pendingSpotlightRoute: $pendingSpotlightRoute)
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private var authenticatedLayout: some View {
+        if authManager.currentUser?.role == "team_member" {
+            TeamMemberPortalView(apiClient: apiClient)
+        } else {
+            mainLayout
         }
     }
 

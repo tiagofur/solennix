@@ -21,6 +21,8 @@ import com.creapolis.solennix.core.model.User
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.feature.auth.ui.BiometricGateScreen
 import com.creapolis.solennix.feature.auth.viewmodel.AuthViewModel
+import com.creapolis.solennix.feature.staff.ui.TeamMemberPortalScreen
+import com.creapolis.solennix.feature.staff.viewmodel.TeamMemberPortalViewModel
 import com.creapolis.solennix.ui.navigation.AdaptiveNavigationRailLayout
 import com.creapolis.solennix.ui.navigation.AuthNavHost
 import com.creapolis.solennix.ui.navigation.CompactBottomNavLayout
@@ -78,7 +80,12 @@ fun MainNavHost(deepLinkIntent: Intent? = null) {
         }
         AuthManager.AuthState.Authenticated -> {
             val currentUser by authViewModel.authManager.currentUser.collectAsStateWithLifecycle()
-            if (windowSizeClass != null && windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact) {
+            if (currentUser?.role == "team_member") {
+                TeamMemberPortalScreen(
+                    viewModel = hiltViewModel<TeamMemberPortalViewModel>(),
+                    authManager = authViewModel.authManager
+                )
+            } else if (windowSizeClass != null && windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact) {
                 AdaptiveNavigationRailLayout(
                     initialDeepLinkRoute = appDeepLinkRoute,
                     currentUser = currentUser
