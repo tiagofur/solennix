@@ -45,7 +45,11 @@ android {
         unitTests {
             isIncludeAndroidResources = true
             all {
-                it.failOnNoDiscoveredTests = false
+                it.javaClass.methods
+                    .firstOrNull { method ->
+                        method.name == "setFailOnNoDiscoveredTests" && method.parameterTypes.contentEquals(arrayOf(Boolean::class.javaPrimitiveType))
+                    }
+                    ?.invoke(it, false)
             }
         }
     }

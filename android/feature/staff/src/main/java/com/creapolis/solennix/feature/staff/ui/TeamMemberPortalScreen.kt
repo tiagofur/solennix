@@ -233,7 +233,7 @@ private fun TeamMemberAssignmentCard(
                         AssignmentStatus.CONFIRMED -> "Confirmada"
                         AssignmentStatus.DECLINED -> "Rechazada"
                         AssignmentStatus.CANCELLED -> "Cancelada"
-                        else -> "Pendiente"
+                        AssignmentStatus.PENDING -> "Pendiente"
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText

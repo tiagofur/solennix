@@ -515,7 +515,7 @@ fun CalendarHeader(
             OutlinedButton(
                 onClick = onGoToToday,
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                border = ButtonDefaults.outlinedButtonBorder.copy(
+                border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(
                     brush = androidx.compose.ui.graphics.SolidColor(SolennixTheme.colors.primary)
                 ),
                 modifier = Modifier.height(32.dp)

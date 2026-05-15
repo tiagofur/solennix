@@ -152,7 +152,7 @@ class InventoryDetailViewModel @Inject constructor(
                                         InventoryDemandEntry(
                                             eventId = event.id,
                                             eventDate = event.eventDate.take(10),
-                                            eventName = event.serviceType ?: InventoryStrings.fallbackEvent,
+                                            eventName = event.serviceType,
                                             quantity = eventDemand,
                                             unit = item.unit
                                         )

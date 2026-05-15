@@ -145,7 +145,7 @@ private fun TeamInviteAcceptFormContent(
 
         PremiumButton(
             text = stringResource(R.string.auth_team_invite_submit),
-            onClick = { viewModel.acceptTeamInvite(token ?: "") },
+            onClick = { viewModel.acceptTeamInvite(token) },
             isLoading = viewModel.isLoading,
             enabled = viewModel.teamInvitePassword.length >= 8
                 && viewModel.teamInvitePassword.any { it.isUpperCase() }

@@ -29,6 +29,8 @@ import com.creapolis.solennix.core.network.Endpoints
 import com.creapolis.solennix.feature.events.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -37,6 +39,7 @@ import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
+@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 class EventFormViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context,
     private val eventRepository: EventRepository,

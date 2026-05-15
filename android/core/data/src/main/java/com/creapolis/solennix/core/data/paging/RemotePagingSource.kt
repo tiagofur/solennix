@@ -27,11 +27,11 @@ class RemotePagingSource<T : Any>(
     private val pageSize: Int = 20
 ) : PagingSource<Int, T>() {
 
-    override suspend fun load(loadParams: LoadParams<Int>): LoadResult<Int, T> {
-        val page = loadParams.key ?: 1
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, T> {
+        val page = params.key ?: 1
         return try {
             val queryParams = buildMap {
-                putAll(params)
+                putAll(this@RemotePagingSource.params)
                 put("page", page.toString())
                 put("limit", pageSize.toString())
             }

@@ -229,7 +229,7 @@ fun DateBox(dateString: String) {
         null
     }
     val month = parsed?.format(
-        java.time.format.DateTimeFormatter.ofPattern("MMM", java.util.Locale("es", "ES"))
+        java.time.format.DateTimeFormatter.ofPattern("MMM", java.util.Locale.forLanguageTag("es-ES"))
     )?.uppercase() ?: dateString.take(3).uppercase()
     val day = parsed?.dayOfMonth?.toString() ?: dateString.takeLast(2)
 
