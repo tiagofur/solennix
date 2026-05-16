@@ -55,6 +55,13 @@ platform: iOS
 > - Pendiente: `TeamHomeView`, calendario completo mes/semana/día y detalle Team scoped.
 > - Fuente de roadmap y DoD: `docs/PRD/17_PERSONAL_TRACKER.md`.
 
+> [!success] 2026-05-15 — Team Member Portal iOS: consolidación + calendario (slice A3)
+>
+> - `TeamMemberPortalView` se consolidó en una única superficie operativa con selector segmentado: `Mi jornada` + `Calendario`.
+> - `Mi jornada` contiene pendientes accionables y agenda completa en la misma vista.
+> - `Calendario` usa `DatePicker(.graphical)` para selección real de fecha y detalle de asignaciones del día.
+> - `TeamMemberPortalViewModel.respond` ahora actualiza estado (`confirmed/declined/cancelled`) en lugar de eliminar la asignación, para mantener continuidad de agenda.
+
 > [!info] Dependencias externas SPM (2026-04-16)
 >
 > | Paquete                          | Versión mínima | Usado en                              |

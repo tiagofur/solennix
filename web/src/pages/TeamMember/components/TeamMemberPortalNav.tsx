@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { CalendarRange, ClipboardList, ListTodo, LogOut } from 'lucide-react';
+import { CalendarRange, ClipboardList, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -29,13 +29,9 @@ export const TeamMemberPortalNav: React.FC = () => {
 
   return (
     <nav className="flex flex-wrap gap-2" aria-label={t('team.portal_nav', { defaultValue: 'Navegación personal' })}>
-      <NavLink to="/team/assignments" className={linkClass}>
+      <NavLink to="/team/work" className={linkClass}>
         <ClipboardList className="h-4 w-4" aria-hidden="true" />
-        {t('team.nav.assignments', { defaultValue: 'Asignaciones' })}
-      </NavLink>
-      <NavLink to="/team/events" className={linkClass}>
-        <ListTodo className="h-4 w-4" aria-hidden="true" />
-        {t('team.nav.events', { defaultValue: 'Mis eventos' })}
+        {t('team.nav.work', { defaultValue: 'Mi jornada' })}
       </NavLink>
       <NavLink to="/team/calendar" className={linkClass}>
         <CalendarRange className="h-4 w-4" aria-hidden="true" />

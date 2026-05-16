@@ -37,6 +37,12 @@ platform: Web
 > - Requisito: mantener guard de rol para aislar miembros invitados del layout de organizer.
 > - Fuente de backlog y DoD: `docs/PRD/17_PERSONAL_TRACKER.md`.
 
+> [!success] 2026-05-15 — Team Member web A1 consolidado
+> Primera ejecución del rediseño utility-first en web:
+> - Ruta principal del miembro: `/team/work`.
+> - Consolidación de `Mis asignaciones` + `Mis eventos` en una sola pantalla operativa (pendientes + agenda).
+> - Rutas legacy (`/team/assignments`, `/team/events`) preservadas como redirect para transición.
+
 > [!success] 2026-05-04 — Web 1.0.0 + Help Center alineado al design system
 > La Web queda formalmente en `1.0.0` y el Help Center deja de usar una paleta paralela para adoptar los tokens del sistema (`bg-*`, `text-*`, `border-*`).
 > - **Fuente canonica de version:** `versioning/releases.json`

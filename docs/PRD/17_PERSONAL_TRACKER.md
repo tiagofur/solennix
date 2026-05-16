@@ -33,6 +33,51 @@ status: phase-2-done-olas-1-2-3-complete-ola-4-in-progress
 > [!info] Ola 4 iniciada 2026-05-15 — Team Member Portal Utility-First
 > Se definió el backlog funcional y ya se implementó el slice base móvil: entrada por rol `team_member` + bandeja mínima de asignaciones en iOS/Android.
 
+> [!success] Ola 4 — Slice A1 web implementado 2026-05-15
+> Se completó la consolidación inicial en web para eliminar la duplicación entre `Mis asignaciones` y `Mis eventos`.
+> - Nueva superficie unificada: `/team/work`.
+> - Estructura: sección de pendientes (aceptar/rechazar) + sección de agenda filtrable.
+> - Compatibilidad: `/team/assignments` y `/team/events` redirigen a `/team/work`.
+> - Navegación Team Member simplificada a dos entradas: `Mi jornada` y `Calendario`.
+
+> [!success] Ola 4 — Slice A2 web implementado 2026-05-15
+> Se reemplazó el pseudo-calendario de Team Member por una vista de calendario real.
+> - `TeamCalendarPage` migra a grilla mensual con selección de día.
+> - Densidad de asignaciones por fecha visible en cada celda (indicadores por estado).
+> - Panel de detalle del día con acciones rápidas accept/decline para pendientes.
+> - Filtros de estado y búsqueda aplicados sobre calendario y detalle diario.
+
+> [!success] Ola 4 — Slice A3 mobile implementado 2026-05-15
+> Se aplicó paridad de consolidación y calendario real en iOS y Android para `team_member`.
+> - **iOS:** `TeamMemberPortalView` agrega secciones `Mi jornada` + `Calendario` con `DatePicker(.graphical)` y eventos del día.
+> - **Android:** `TeamMemberPortalScreen` agrega tabs `Mi jornada` + `Calendario` con `CalendarView` nativo y eventos del día.
+> - **Comportamiento común:** pendientes accionables + agenda en una sola superficie, sin pantallas duplicadas.
+
+> [!important] Decisión 2026-05-15 — consolidación del portal miembro
+> La experiencia actual de `Mis asignaciones`, `Mis eventos` y `Calendario de trabajo` se rediseña para evitar pantallas duplicadas y darle al miembro una superficie realmente útil.
+> - **Superficie principal:** una sola experiencia de trabajo, centrada en `Mi Jornada` o `Mi Agenda`.
+> - **Bandeja operativa:** las asignaciones pendientes viven en la misma superficie, no en una pantalla aislada que repite datos.
+> - **Agenda unificada:** los próximos eventos y el historial se muestran como una sola línea de tiempo filtrable, no como dos listas clonadas.
+> - **Calendario real:** el calendario deja de ser una lista agrupada por fecha con filtro mensual y pasa a una grilla mes/semana/día con acceso a detalle.
+> - **Transición segura:** las rutas viejas pueden quedar como redirects temporales hasta cortar la redundancia por completo.
+
+### Rediseño operativo propuesto
+
+| Bloque | Decisión |
+|---|---|
+| Entrada principal | `Mi Jornada` como landing del miembro |
+| Acción inmediata | Pendientes por responder + CTA de aceptar/rechazar |
+| Consulta de trabajo | `Mi Agenda` con próximos eventos, pasados y filtros útiles |
+| Calendario | Vista real con meses, días y detalle por evento |
+| Redundancia | `Mis eventos` deja de ser una pantalla independiente |
+
+### Orden de ejecución recomendado
+
+1. Consolidar `Mis asignaciones` + `Mis eventos` en una sola superficie operativa.
+2. Reemplazar `Calendario de trabajo` por una vista de calendario real.
+3. Agregar detalle operativo del evento desde agenda/calendario.
+4. Dejar redirects o aliases temporales para las rutas viejas mientras dura la migración.
+
 ---
 
 ## 🧭 Qué resuelve

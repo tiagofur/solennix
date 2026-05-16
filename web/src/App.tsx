@@ -61,7 +61,6 @@ const ClientPortalPage = React.lazy(() => import("@/pages/ClientPortal/ClientPor
 
 const EventFormLinksPage = React.lazy(() => import("@/pages/EventForms/EventFormLinksPage").then((m) => ({ default: m.EventFormLinksPage })));
 const PaymentInboxPage = React.lazy(() => import("@/pages/Payments/PaymentInboxPage").then((m) => ({ default: m.PaymentInboxPage })));
-const TeamMemberAssignmentsPage = React.lazy(() => import("@/pages/TeamMember/AssignmentsPage").then((m) => ({ default: m.AssignmentsPage })));
 const TeamMemberEventsPage = React.lazy(() => import("@/pages/TeamMember/TeamEventsPage").then((m) => ({ default: m.TeamEventsPage })));
 const TeamMemberCalendarPage = React.lazy(() => import("@/pages/TeamMember/TeamCalendarPage").then((m) => ({ default: m.TeamCalendarPage })));
 
@@ -155,20 +154,20 @@ function App() {
               </Route>
 
               <Route
-                path="/team/assignments"
-                element={
-                  <ProtectedRoute>
-                    <TeamMemberAssignmentsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/team/events"
+                path="/team/work"
                 element={
                   <ProtectedRoute>
                     <TeamMemberEventsPage />
                   </ProtectedRoute>
                 }
+              />
+              <Route
+                path="/team/assignments"
+                element={<Navigate to="/team/work" replace />}
+              />
+              <Route
+                path="/team/events"
+                element={<Navigate to="/team/work" replace />}
               />
               <Route
                 path="/team/calendar"
@@ -178,7 +177,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route path="/team" element={<Navigate to="/team/events" replace />} />
+              <Route path="/team" element={<Navigate to="/team/work" replace />} />
 
               <Route path="/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />

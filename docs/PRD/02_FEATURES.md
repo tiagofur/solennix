@@ -1056,6 +1056,8 @@ Visualización + registro de pago por transferencia con approve/reject. Reemplaz
 - iPhone → overflow "Más" (no se agrega como 6º tab).
 - Android → overflow del bottom nav.
 
+**Decisión de UX 2026-05-15:** la experiencia del miembro se consolida en una sola superficie operativa. `Mis asignaciones` y `Mis eventos` dejan de competir como pantallas separadas y pasan a ser vistas/filtros dentro de una misma agenda; `Calendario de trabajo` se redefine como calendario real, no como lista agrupada por mes.
+
 ---
 
 ## P2 — Futuro

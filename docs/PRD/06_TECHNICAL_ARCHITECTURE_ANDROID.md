@@ -53,6 +53,13 @@ platform: Android
 > - Pendiente: `TeamHomeScreen`, calendario completo mes/semana/día y detalle Team scoped.
 > - Fuente de roadmap y DoD: `docs/PRD/17_PERSONAL_TRACKER.md`.
 
+> [!success] 2026-05-15 — Team Member Portal Android: consolidación + calendario (slice A3)
+>
+> - `TeamMemberPortalScreen` se consolidó en una sola superficie con tabs `Mi jornada` y `Calendario`.
+> - `Mi jornada` agrupa pendientes accionables y agenda completa en la misma pantalla.
+> - `Calendario` usa `CalendarView` nativo con selección de día y lista de asignaciones del día.
+> - Se mantiene refresh, manejo de errores y actualización de estado de asignaciones en `TeamMemberPortalViewModel`.
+
 > [!tip] Documentos relacionados
 > [[PRD MOC]] · [[01_PRODUCT_VISION]] · [[02_FEATURES]] · [[05_TECHNICAL_ARCHITECTURE_IOS]] · [[07_TECHNICAL_ARCHITECTURE_BACKEND]] · [[08_TECHNICAL_ARCHITECTURE_WEB]] · [[11_CURRENT_STATUS]] · [[19_I18N_STRATEGY]]
 

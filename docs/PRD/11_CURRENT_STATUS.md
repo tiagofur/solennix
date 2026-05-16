@@ -25,6 +25,27 @@ status: active
 **Fecha:** Mayo 2026
 **Version:** 1.7
 
+> [!success] 2026-05-15 — Team Member Portal web: consolidación A1 implementada
+> Se ejecutó el primer slice de consolidación en Web para reducir duplicación de pantallas en el flujo de miembro.
+> - Nueva ruta principal: `/team/work` como superficie operativa única.
+> - `Mis asignaciones` y `Mis eventos` pasan a una sola pantalla con dos bloques: pendientes accionables + agenda filtrable.
+> - Rutas legacy (`/team/assignments`, `/team/events`, `/team`) quedan como redirects a `/team/work` para transición segura.
+> - Navegación Team Member simplificada: `Mi jornada` + `Calendario`.
+
+> [!success] 2026-05-15 — Team Member Portal web: calendario real A2 implementado
+> Se reemplazó la agenda agrupada por mes por un calendario real en la ruta Team Member.
+> - `Calendario de trabajo` ahora muestra grilla mensual navegable (prev/next + hoy).
+> - Los días renderizan densidad visual de asignaciones por estado (dots).
+> - Selección de fecha con panel derecho de detalle y acciones accept/decline para pendientes del día.
+> - Filtros de estado + búsqueda integrados sobre la misma fuente de asignaciones.
+
+> [!success] 2026-05-15 — Team Member Portal móvil: paridad A3 iOS + Android implementada
+> Se alineó el flujo móvil del miembro con la decisión de consolidación y calendario real.
+> - **iOS:** `TeamMemberPortalView` ahora usa una sola superficie con secciones `Mi jornada` y `Calendario` (selector gráfico de fecha + eventos del día).
+> - **Android:** `TeamMemberPortalScreen` ahora usa tabs `Mi jornada` y `Calendario` (CalendarView nativo + eventos del día).
+> - **Consolidación:** ambas plataformas muestran pendientes accionables y agenda en la misma pantalla operativa.
+> - **Respuesta de asignación:** iOS deja de remover ítems al responder y actualiza estado final para mantener consistencia de agenda.
+
 > [!info] 2026-05-14 — Plan de producto definido para Team Member Portal (Ola 4)
 > Se formalizó el backlog funcional para evolucionar el portal `team_member` desde vistas listadas hacia una experiencia de utilidad diaria y calendario operativo real.
 > - **Documento fuente:** `docs/PRD/17_PERSONAL_TRACKER.md` (sección "Ola 4 — Team Member Portal Utility")
@@ -38,6 +59,7 @@ status: active
 > - **Android:** `User.role` agregado al contrato, routing por rol en `MainNavHost`, nueva `TeamMemberPortalScreen` con carga y respuesta de asignaciones.
 > - **Backend:** sin cambios requeridos para este slice (ya existían `GET /api/staff/my-assignments` y `POST /api/staff/assignments/{id}/respond`).
 > - **Estado:** Ola 4 en progreso; faltan Mi Jornada, calendario completo mes/semana/día, detalle Team, timeline y disponibilidad.
+> - **Decisión de UX:** la siguiente iteración consolida `Mis asignaciones` + `Mis eventos` y reemplaza el pseudo-calendario por una vista real de agenda/calendario.
 
 > [!success] 2026-05-11 — Personal Phase 3.5: team_member responde asignación + first-accept-wins
 > Se implementó el MVP operativo para colaboradores con login (`team_member`) dentro de Personal:

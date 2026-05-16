@@ -5,8 +5,17 @@ import SolennixNetwork
 
 public struct TeamMemberPortalView: View {
 
+    private enum TeamMemberSection: String, CaseIterable, Identifiable {
+        case work
+        case calendar
+
+        var id: String { rawValue }
+    }
+
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var viewModel: TeamMemberPortalViewModel
+    @State private var section: TeamMemberSection = .work
+    @State private var selectedDate: Date = Date()
 
     public init(apiClient: APIClient) {
         _viewModel = State(initialValue: TeamMemberPortalViewModel(apiClient: apiClient))
@@ -15,7 +24,7 @@ public struct TeamMemberPortalView: View {
     public var body: some View {
         NavigationStack {
             content
-                .navigationTitle("Mis asignaciones")
+                .navigationTitle("Mi jornada")
                 .navigationBarTitleDisplayMode(.large)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
@@ -60,23 +69,137 @@ public struct TeamMemberPortalView: View {
         } else {
             ScrollView {
                 LazyVStack(spacing: Spacing.md) {
-                    ForEach(viewModel.assignments) { assignment in
-                        TeamMemberAssignmentCard(
-                            assignment: assignment,
-                            isResponding: viewModel.isResponding,
-                            onAccept: {
-                                Task { await viewModel.respond(to: assignment, response: .accept) }
-                            },
-                            onDecline: {
-                                Task { await viewModel.respond(to: assignment, response: .decline) }
-                            }
-                        )
+                    Picker("Seccion", selection: $section) {
+                        Text("Mi jornada").tag(TeamMemberSection.work)
+                        Text("Calendario").tag(TeamMemberSection.calendar)
+                    }
+                    .pickerStyle(.segmented)
+
+                    if section == .work {
+                        workSection
+                    } else {
+                        calendarSection
                     }
                 }
                 .padding(.horizontal, sizeClass == .regular ? Spacing.xxxl : Spacing.xl)
                 .padding(.vertical, Spacing.lg)
             }
         }
+    }
+
+    private var pendingAssignments: [TeamMemberAssignment] {
+        viewModel.assignments.filter { $0.status == .pending }
+    }
+
+    private var selectedDayAssignments: [TeamMemberAssignment] {
+        viewModel.assignments.filter { assignment in
+            guard let assignmentDate = parseLocalDate(assignment.eventDate) else { return false }
+            return Calendar.current.isDate(assignmentDate, inSameDayAs: selectedDate)
+        }
+    }
+
+    @ViewBuilder
+    private var workSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            Text("Pendientes por responder")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(SolennixColors.textSecondary)
+
+            if pendingAssignments.isEmpty {
+                cardContainer {
+                    Text("No tenes invitaciones pendientes.")
+                        .font(.subheadline)
+                        .foregroundStyle(SolennixColors.textSecondary)
+                }
+            } else {
+                ForEach(pendingAssignments) { assignment in
+                    TeamMemberAssignmentCard(
+                        assignment: assignment,
+                        isResponding: viewModel.isResponding,
+                        onAccept: {
+                            Task { await viewModel.respond(to: assignment, response: .accept) }
+                        },
+                        onDecline: {
+                            Task { await viewModel.respond(to: assignment, response: .decline) }
+                        }
+                    )
+                }
+            }
+
+            Text("Mi agenda")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(SolennixColors.textSecondary)
+                .padding(.top, Spacing.sm)
+
+            ForEach(viewModel.assignments) { assignment in
+                TeamMemberAssignmentCard(
+                    assignment: assignment,
+                    isResponding: viewModel.isResponding,
+                    onAccept: {
+                        Task { await viewModel.respond(to: assignment, response: .accept) }
+                    },
+                    onDecline: {
+                        Task { await viewModel.respond(to: assignment, response: .decline) }
+                    }
+                )
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var calendarSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            cardContainer {
+                DatePicker(
+                    "Fecha",
+                    selection: $selectedDate,
+                    displayedComponents: [.date]
+                )
+                .datePickerStyle(.graphical)
+                .labelsHidden()
+            }
+
+            Text("Eventos del dia")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(SolennixColors.textSecondary)
+
+            if selectedDayAssignments.isEmpty {
+                cardContainer {
+                    Text("No hay asignaciones para esta fecha.")
+                        .font(.subheadline)
+                        .foregroundStyle(SolennixColors.textSecondary)
+                }
+            } else {
+                ForEach(selectedDayAssignments) { assignment in
+                    TeamMemberAssignmentCard(
+                        assignment: assignment,
+                        isResponding: viewModel.isResponding,
+                        onAccept: {
+                            Task { await viewModel.respond(to: assignment, response: .accept) }
+                        },
+                        onDecline: {
+                            Task { await viewModel.respond(to: assignment, response: .decline) }
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func cardContainer<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        content()
+            .padding(Spacing.lg)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(SolennixColors.card)
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+            .shadowSm()
+    }
+
+    private func parseLocalDate(_ value: String) -> Date? {
+        let parts = value.split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 3 else { return nil }
+        return Calendar.current.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2]))
     }
 }
 
