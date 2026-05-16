@@ -6,6 +6,17 @@ import { api } from '../lib/api';
 import { logError } from '../lib/errorHandler';
 
 vi.mock('../lib/api', () => ({
+  ApiHttpError: class ApiHttpError extends Error {
+    statusCode: number;
+    endpoint: string;
+
+    constructor(message: string, statusCode: number, endpoint: string) {
+      super(message);
+      this.name = 'ApiHttpError';
+      this.statusCode = statusCode;
+      this.endpoint = endpoint;
+    }
+  },
   api: {
     get: vi.fn(),
     post: vi.fn(),
