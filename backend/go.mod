@@ -6,7 +6,7 @@ require (
 	firebase.google.com/go/v4 v4.19.0
 	github.com/aws/aws-sdk-go-v2 v1.41.7
 	github.com/aws/aws-sdk-go-v2/config v1.32.17
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.100.1
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.101.0
 	github.com/getsentry/sentry-go v0.46.2
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/go-pdf/fpdf v0.9.0
@@ -18,8 +18,8 @@ require (
 	github.com/sideshow/apns2 v0.25.0
 	github.com/stretchr/testify v1.11.1
 	github.com/stripe/stripe-go/v81 v81.4.0
-	golang.org/x/crypto v0.50.0
-	golang.org/x/image v0.39.0
+	golang.org/x/crypto v0.51.0
+	golang.org/x/image v0.40.0
 	google.golang.org/api v0.278.0
 )
 
@@ -86,8 +86,8 @@ require (
 	golang.org/x/net v0.53.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.43.0 // indirect
-	golang.org/x/text v0.36.0 // indirect
+	golang.org/x/sys v0.44.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	google.golang.org/appengine/v2 v2.0.6 // indirect
 	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7 // indirect
