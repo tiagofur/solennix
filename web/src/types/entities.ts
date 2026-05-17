@@ -329,6 +329,11 @@ export interface TeamMemberAssignment {
     event_date: string
     staff_id: string
     status: AssignmentStatus
+    location?: string | null
+    city?: string | null
+    contact_name?: string | null
+    contact_phone?: string | null
+    organizer_notes?: string | null
     fee_amount?: number | null
     role_override?: string | null
     notes?: string | null
@@ -345,6 +350,24 @@ export interface AssignmentResponseOutcome {
     final_status: AssignmentStatus
     seats_remaining: number
     auto_declined_count: number
+}
+
+export interface TeamMemberChangeEvent {
+    id: string
+    event_id: string
+    event_staff_id: string
+    event_name: string
+    event_date: string
+    change_type: 'assignment_added' | 'assignment_removed' | 'location_changed' | 'role_changed' | 'shift_changed' | 'status_changed' | string
+    field_name: string
+    old_value?: string | null
+    new_value?: string | null
+    occurred_at: string
+    read_at?: string | null
+}
+
+export interface TeamTimelineMarkReadResponse {
+    updated: number
 }
 
 // ===== Pagination =====

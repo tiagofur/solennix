@@ -181,17 +181,6 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// Enforce Pro-only gate for payment submissions.
-	organizer, err := h.userRepo.GetByID(ctx, link.UserID)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to load organizer")
-		return
-	}
-	if !FeatureAvailable(organizer.Plan, "payment_submissions") || !IsPlanActive(organizer) {
-		writeError(w, http.StatusForbidden, "Payment submissions require a Pro or Business plan")
-		return
-	}
-
 	ps := &models.PaymentSubmission{
 		EventID:        eventID,
 		ClientID:       clientID,
@@ -257,17 +246,6 @@ func (h *PaymentSubmissionHandler) GetHistoryPublic(w http.ResponseWriter, r *ht
 	// Verify event ID matches
 	if link.EventID != eventID {
 		writeError(w, http.StatusBadRequest, "Event ID mismatch")
-		return
-	}
-
-	// Enforce Pro-only gate for payment submission history.
-	organizer, err := h.userRepo.GetByID(ctx, link.UserID)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to load organizer")
-		return
-	}
-	if !FeatureAvailable(organizer.Plan, "payment_submissions") || !IsPlanActive(organizer) {
-		writeError(w, http.StatusForbidden, "Payment submissions require a Pro or Business plan")
 		return
 	}
 

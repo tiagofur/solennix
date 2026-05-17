@@ -9,7 +9,7 @@ aliases:
   - Arquitectura iOS
   - iOS Architecture
 date: 2026-03-20
-updated: 2026-05-15
+updated: 2026-05-17
 status: active
 platform: iOS
 ---
@@ -52,15 +52,42 @@ platform: iOS
 >
 > - Implementado: `User.role` en modelo compartido + routing por rol en `ContentView`.
 > - Implementado: `TeamMemberPortalView` y `TeamMemberPortalViewModel` con carga y respuesta de asignaciones (`accept|decline`).
-> - Pendiente: `TeamHomeView`, calendario completo mes/semana/día y detalle Team scoped.
+> - Implementado: Home `Mi jornada` (Hoy + Próximos 7 días + Pendientes) con CTAs de agenda de hoy y revisión de asignaciones.
+> - Pendiente: calendario completo mes/semana/día y detalle Team scoped.
 > - Fuente de roadmap y DoD: `docs/PRD/17_PERSONAL_TRACKER.md`.
 
 > [!success] 2026-05-15 — Team Member Portal iOS: consolidación + calendario (slice A3)
 >
 > - `TeamMemberPortalView` se consolidó en una única superficie operativa con selector segmentado: `Mi jornada` + `Calendario`.
 > - `Mi jornada` contiene pendientes accionables y agenda completa en la misma vista.
-> - `Calendario` usa `DatePicker(.graphical)` para selección real de fecha y detalle de asignaciones del día.
+> - `Calendario` usa grilla mensual custom (`LazyVGrid`) con navegación de mes y dots por estado para fechas con asignaciones.
 > - `TeamMemberPortalViewModel.respond` ahora actualiza estado (`confirmed/declined/cancelled`) en lugar de eliminar la asignación, para mantener continuidad de agenda.
+> - `TeamMemberPortalView` consume `AuthManager` desde `Environment` y expone logout directo en la top bar, alineando la salida del portal con Android sin agregar otra pantalla.
+
+> [!success] 2026-05-17 — Team Member Portal iOS: H3 calendario operativo (issue #338)
+>
+> - `TeamMemberPortalView` agrega modos `Mes`, `Semana` y `Día` en la sección `Calendario`.
+> - `Semana` y `Día` ordenan asignaciones por horario de turno (`shiftStart/shiftEnd`) con fallback por fecha del evento.
+> - Tap en asignación abre `TeamPortalAssignmentDetailSheet` con fecha, turno, rol, pago y notas.
+> - Se mantiene intacto el calendario del organizer (sin cambios de comportamiento fuera del portal `team_member`).
+
+> [!success] 2026-05-17 — Team Member Portal iOS: H4 detalle Team scoped (issue #339)
+>
+> - `TeamPortalAssignmentDetailSheet` amplía el contexto operativo con brief, turno, contacto, notas del organizador y CTA `Abrir en mapas`.
+> - Se agregó checklist personal de ejecución + nota rápida persistida localmente por evento (`team_event_detail_{eventId}`).
+> - El detalle Team permanece scoped al flujo `team_member` y no introduce nuevas rutas del organizer.
+
+> [!success] 2026-05-17 — Team Member Portal iOS: H5 timeline de cambios (issue #340)
+>
+> - `TeamMemberPortalView` incorpora bloque `Cambios recientes` con badge de no leídos.
+> - Cada cambio abre el detalle Team del evento asignado y marca leído vía backend (`/staff/my-timeline/read`).
+> - El feed se consume desde `/staff/my-timeline` y queda scoped al usuario `team_member` autenticado.
+
+> [!success] 2026-05-17 — Team Member Portal iOS: H6 disponibilidad del miembro (issue #341)
+>
+> - `TeamMemberPortalView` incorpora sección `Mi disponibilidad` con alta/edición/baja de bloqueos.
+> - Se agregan bloqueos por fecha con rango horario opcional (`startTime`/`endTime`) y motivo.
+> - Los cambios refrescan inmediatamente en el portal y usan endpoints scoped del miembro (`/unavailable-dates`).
 
 > [!info] Dependencias externas SPM (2026-04-16)
 >

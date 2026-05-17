@@ -114,6 +114,9 @@ android {
             if (hasReleaseSigningConfig) {
                 signingConfig = signingConfigs.getByName("release")
             }
+            ndk {
+                debugSymbolLevel = "FULL"
+            }
         }
     }
     compileOptions {

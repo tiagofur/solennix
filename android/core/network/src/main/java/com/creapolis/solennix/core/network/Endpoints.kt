@@ -22,6 +22,8 @@ object Endpoints {
     const val STAFF = "staff"
     const val STAFF_AVAILABILITY = "staff/availability"
     const val STAFF_MY_ASSIGNMENTS = "staff/my-assignments"
+    const val STAFF_MY_TIMELINE = "staff/my-timeline"
+    const val STAFF_MY_TIMELINE_READ = "staff/my-timeline/read"
     fun staff(id: String) = "staff/$id"
     fun staffInvite(id: String) = "staff/$id/invite"
     fun staffRespondAssignment(id: String) = "staff/assignments/$id/respond"

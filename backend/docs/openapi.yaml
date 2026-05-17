@@ -2061,11 +2061,19 @@ components:
     PublicEventView:
       type: object
       required:
+        - portal_tier
+        - capabilities
         - event
         - organizer
         - client
         - payment
       properties:
+        portal_tier:
+          type: string
+          description: Portal tier behavior for this tokenized view
+          enum: [free, pro]
+        capabilities:
+          $ref: "#/components/schemas/PublicPortalCapabilities"
         event:
           $ref: "#/components/schemas/PublicEventDetails"
         organizer:
@@ -2074,6 +2082,42 @@ components:
           $ref: "#/components/schemas/PublicClientInfo"
         payment:
           $ref: "#/components/schemas/PublicPaymentSummary"
+        milestones:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicPortalMilestone"
+    PublicPortalCapabilities:
+      type: object
+      required:
+        - can_submit_payment
+        - can_view_submission_history
+        - can_view_rich_event_details
+        - can_view_milestones
+        - can_download_receipt_files
+      properties:
+        can_submit_payment:
+          type: boolean
+        can_view_submission_history:
+          type: boolean
+        can_view_rich_event_details:
+          type: boolean
+        can_view_milestones:
+          type: boolean
+        can_download_receipt_files:
+          type: boolean
+    PublicPortalMilestone:
+      type: object
+      required:
+        - label
+      properties:
+        label:
+          type: string
+        date:
+          type: string
+        status:
+          type: string
+        highlight:
+          type: boolean
     StaffTeamMember:
       type: object
       required:

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solennix Instagram Carousel</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #fafafa;
+            padding: 20px;
+        }
+        .carousel-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .slide {
+            width: 1080px;
+            height: 810px;
+            margin: 20px auto;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .slide img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* Slide 1: Problema */
+        .slide-problema {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .slide-problema h1 {
+            font-size: 82px;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 40px;
+        }
+        .slide-problema h1 span {
+            display: inline-block;
+            transform: rotate(-3deg);
+        }
+        .slide-problema .text {
+            font-size: 36px;
+            font-weight: 400;
+            margin-bottom: 60px;
+            opacity: 0.9;
+        }
+        .slide-problema .questions {
+            display: flex;
+            flex-direction: column;
+            gap: 60px;
+            padding-top: 60px;
+        }
+        .slide-problema .question {
+            font-size: 32px;
+            font-weight: 600;
+        }
+        .slide-problema .question span {
+            display: block;
+            font-size: 56px;
+            margin-bottom: 10px;
+        }
+        .slide-problema .question em {
+            color: #e94560;
+            font-style: italic;
+        }
+        
+        /* Slide 2: Solución */
+        .slide-solucion {
+            background: white;
+            color: #1a1a2e;
+            padding: 60px;
+        }
+        .slide-solucion .top {
+            text-align: center;
+        }
+        .slide-solucion .top h1 {
+            font-size: 82px;
+            font-weight: 900;
+            margin-bottom: 20px;
+        }
+        .slide-solucion .top h1 span {
+            color: #0095f6;
+        }
+        .slide-solucion .main-claim {
+            font-size: 42px;
+            font-weight: 700;
+            margin: 60px 0 40px 0;
+        }
+        .slide-solucion .app-preview {
+            background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+            border-radius: 20px;
+            height: 350px;
+            margin: 40px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #888;
+        }
+        .slide-solucion .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 60px;
+        }
+        .slide-solucion .feature {
+            text-align: center;
+        }
+        .slide-solucion .feature i {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        .slide-solucion .feature h3 {
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+        .slide-solucion .feature p {
+            font-size: 24px;
+            color: #666;
+            font-weight: 400;
+        }
+        
+        /* Slide 3: Beneficios */
+        .slide-beneficios {
+            background: linear-gradient(135deg, #0095f6 0%, #007aff 100%);
+            color: white;
+            padding: 60px;
+        }
+        .slide-beneficios .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+        .slide-beneficios .benefit {
+            position: relative;
+            padding: 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .slide-beneficios .benefit .icon {
+            font-size: 72px;
+            margin-bottom: 20px;
+        }
+        .slide-beneficios .benefit h3 {
+            font-size: 36px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        .slide-beneficios .benefit p {
+            font-size: 28px;
+            font-weight: 400;
+            opacity: 0.9;
+        }
+        .slide-beneficios .cta {
+            text-align: center;
+            background: white;
+            color: #0095f6;
+            padding: 50px;
+            border-radius: 20px;
+            margin-top: 40px;
+        }
+        .slide-beneficios .cta h2 {
+            font-size: 56px;
+            font-weight: 900;
+            margin-bottom: 15px;
+        }
+        .slide-beneficios .cta p {
+            font-size: 32px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        .slide-beneficios .cta .cta-box {
+            display: inline-block;
+            background: #0095f6;
+            color: white;
+            padding: 30px 60px;
+            border-radius: 50px;
+            font-size: 36px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .slide-beneficios .cta .verify {
+            margin-top: 30px;
+            font-size: 28px;
+        }
+        .slide-beneficios .cta .verify span {
+            color: #46d369;
+            font-weight: 900;
+        }
+        
+        /* Instagram UI overlay */
+        .instagram-ui {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.05;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div class="carousel-container">
+        
+        <!-- SLIDE 1: PROBLEMA -->
+        <div class="slide slide-problema">
+            <h1>¿<span>ASÍ PARECE</span></h1>
+            <div class="text">TU EVENTO?</div>
+            
+            <div class="questions">
+                <div class="question">
+                    <span>📊</span>
+                    <em><strong>Perdiste datos</strong><br>de clientes importantes</em>
+                </div>
+                <div class="question">
+                    <span>🤬</span>
+                    <em><strong>Clientes</strong><br>frustrados por retrasos</em>
+                </div>
+                <div class="question">
+                    <span>❓</span>
+                    <em><strong>¿Qué compraste</strong><br>para qué evento?</em>
+                </div>
+                <div class="question">
+                    <span>⏰</span>
+                    <em><strong>Tardás 3 horas</strong><br>haciendo cotizaciones</em>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 2: SOLUCIÓN -->
+        <div class="slide slide-solucion">
+            <div class="top">
+                <h1>CON <span>SOLENNIX ✅</span></h1>
+            </div>
+            
+            <div class="main-claim">UNA APP. TODO CONTROLADO. SIN ESTRÉS.</div>
+            
+            <div class="app-preview">
+                🔵 App Preview — Aquí se ve el mockup de Solennix
+            </div>
+            
+            <div class="features">
+                <div class="feature">
+                    <div>📱</div>
+                    <h3>Todo en uno</h3>
+                    <p>Clientes | Eventos | Inventario | Cotizaciones | Pagos. <br>Cerca y organizado.</p>
+                </div>
+                <div class="feature">
+                    <div>⚡</div>
+                    <h3>Rápido</h3>
+                    <p>Acceso en segundos <br>desde tu celular. <br>Sin perder tiempo.</p>
+                </div>
+                <div class="feature">
+                    <div>🎯</div>
+                    <h3>Sin errores</h3>
+                    <p>Evita olvidos,<br>recordatorios<br>automáticos, control.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 3: BENEFICIOS -->
+        <div class="slide slide-beneficios">
+            <div class="benefits-grid">
+                <div class="benefit">
+                    <div class="icon">⏰</div>
+                    <h3>Ahorrás 10+ Hrs</h3>
+                    <p>Por semana. Deja de perder tiempo en organización manual y enfocá en conductores.</p>
+                </div>
+                <div class="benefit">
+                    <div class="icon">💰</div>
+                    <h3>Ingresá Más</h3>
+                    <p>Menos errores, mejor servicio, clientes felices = más ganancias por cada evento.</p>
+                </div>
+                <div class="benefit">
+                    <div class="icon">😊</div>
+                    <h3>Clientes Felices</h3>
+                    <p>Sin esperas, sin compromiso de pagos. Referidos orgánicos se multiplican.</p>
+                </div>
+                <div class="benefit">
+                    <div class="icon">📈</div>
+                    <h3>Escalá Seguro</h3>
+                    <p>Audaría eventos sin complicarte. Sistema que crecá con vos.</p>
+                </div>
+            </div>
+            
+            <div class="cta">
+                <h2>DESCARGALO<sub>GRAITS<sub>HOY</b>HOY</b>
+                <p>4.9/5 ⭐ en la App Store</p>
+                <div class="cta-box">📲 Link en Bio</div>
+                <div class="verify">
+                    <span>✨ Como bodas</span> | <span>✨ Como quinceañeras</span> | <span>✨ Como eventos corporativos</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

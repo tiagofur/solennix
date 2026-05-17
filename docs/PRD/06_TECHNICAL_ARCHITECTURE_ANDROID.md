@@ -9,7 +9,7 @@ aliases:
   - Arquitectura Android
   - Android Architecture
 date: 2026-03-20
-updated: 2026-05-15
+updated: 2026-05-17
 status: active
 platform: Android
 ---
@@ -50,15 +50,41 @@ platform: Android
 >
 > - Implementado: `User.role` en modelo compartido + routing por rol en `MainNavHost`.
 > - Implementado: `TeamMemberPortalScreen` y `TeamMemberPortalViewModel` con carga y respuesta de asignaciones (`accept|decline`).
-> - Pendiente: `TeamHomeScreen`, calendario completo mes/semana/día y detalle Team scoped.
+> - Implementado: Home `Mi jornada` (Hoy + Próximos 7 días + Pendientes) con CTAs de agenda de hoy y revisión de asignaciones.
+> - Pendiente: calendario completo mes/semana/día y detalle Team scoped.
 > - Fuente de roadmap y DoD: `docs/PRD/17_PERSONAL_TRACKER.md`.
 
 > [!success] 2026-05-15 — Team Member Portal Android: consolidación + calendario (slice A3)
 >
 > - `TeamMemberPortalScreen` se consolidó en una sola superficie con tabs `Mi jornada` y `Calendario`.
 > - `Mi jornada` agrupa pendientes accionables y agenda completa en la misma pantalla.
-> - `Calendario` usa `CalendarView` nativo con selección de día y lista de asignaciones del día.
+> - `Calendario` usa grilla mensual Compose (`LazyVerticalGrid`) con navegación de mes y dots por estado para fechas con asignaciones.
 > - Se mantiene refresh, manejo de errores y actualización de estado de asignaciones en `TeamMemberPortalViewModel`.
+
+> [!success] 2026-05-17 — Team Member Portal Android: H3 calendario operativo (issue #338)
+>
+> - `TeamMemberPortalScreen` incorpora modos `Mes`, `Semana` y `Día` para uso operativo.
+> - `Semana` y `Día` muestran agenda cronológica ordenada por inicio de turno (`shiftStart`) con fallback por fecha.
+> - Tap en tarjeta abre `TeamMemberAssignmentDetailDialog` con datos operativos de la asignación/evento.
+> - El flujo organizer no se modifica; los cambios quedan scoped al portal `team_member`.
+
+> [!success] 2026-05-17 — Team Member Portal Android: H4 detalle Team scoped (issue #339)
+>
+> - `TeamMemberAssignmentDetailDialog` incorpora brief operativo, contacto, notas del organizador y CTA `Abrir en mapas`.
+> - Se agregó checklist personal de ejecución + nota rápida persistida por evento en `SharedPreferences` (`team_event_detail`).
+> - El detalle Team permanece scoped al flujo `team_member` sin crear rutas del organizer.
+
+> [!success] 2026-05-17 — Team Member Portal Android: H5 timeline de cambios (issue #340)
+>
+> - `TeamMemberPortalScreen` incorpora bloque `Cambios recientes` con contador de no leídos.
+> - Cada cambio abre el detalle Team del evento asignado y marca leído vía backend (`/staff/my-timeline/read`).
+> - El feed se consume desde `/staff/my-timeline` y se mantiene scoped al usuario `team_member`.
+
+> [!success] 2026-05-17 — Team Member Portal Android: H6 disponibilidad del miembro (issue #341)
+>
+> - `TeamMemberPortalScreen` incorpora sección `Mi disponibilidad` con alta/edición/baja de bloqueos.
+> - Se soportan bloqueos por fecha con rango horario opcional (`startTime`/`endTime`) y motivo.
+> - Los cambios refrescan en la misma pantalla y consumen endpoints scoped del miembro (`/unavailable-dates`).
 
 > [!tip] Documentos relacionados
 > [[PRD MOC]] · [[01_PRODUCT_VISION]] · [[02_FEATURES]] · [[05_TECHNICAL_ARCHITECTURE_IOS]] · [[07_TECHNICAL_ARCHITECTURE_BACKEND]] · [[08_TECHNICAL_ARCHITECTURE_WEB]] · [[11_CURRENT_STATUS]] · [[19_I18N_STRATEGY]]

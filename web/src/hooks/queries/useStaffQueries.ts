@@ -76,6 +76,31 @@ export function useMyAssignments() {
   });
 }
 
+export function useMyTimeline(unreadOnly = false, limit = 50) {
+  return useQuery({
+    queryKey: queryKeys.staff.myTimeline(unreadOnly, limit),
+    queryFn: () => staffService.getMyTimeline({ unreadOnly, limit }),
+    refetchInterval: 30 * 1000,
+  });
+}
+
+export function useMarkMyTimelineRead() {
+  const queryClient = useQueryClient();
+  const { addToast } = useToast();
+
+  return useMutation({
+    mutationKey: ['staff', 'timeline', 'mark-read'],
+    mutationFn: (ids?: string[]) => staffService.markMyTimelineRead(ids),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staff', 'my-timeline'] });
+    },
+    onError: (error) => {
+      logError('Error marking timeline as read', error);
+      addToast(getErrorMessage(error, 'No pudimos actualizar el estado de lectura.'), 'error');
+    },
+  });
+}
+
 export function useRespondAssignment() {
   const queryClient = useQueryClient();
   const { addToast } = useToast();

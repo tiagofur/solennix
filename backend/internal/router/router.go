@@ -179,6 +179,8 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Get("/", staffHandler.ListStaff)
 			r.Post("/", staffHandler.CreateStaff)
 			r.Get("/my-assignments", staffHandler.GetMyAssignments)
+			r.Get("/my-timeline", staffHandler.GetMyTimeline)
+			r.Post("/my-timeline/read", staffHandler.MarkMyTimelineRead)
 			r.Post("/assignments/{id}/respond", staffHandler.RespondAssignment)
 			r.Post("/{id}/invite", staffHandler.InviteStaffUser)
 			r.Delete("/{id}/invite", staffHandler.RevokeStaffInvite)
@@ -309,6 +311,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Route("/unavailable-dates", func(r chi.Router) {
 			r.Get("/", unavailHandler.GetUnavailableDates)
 			r.Post("/", unavailHandler.CreateUnavailableDate)
+			r.Put("/{id}", unavailHandler.UpdateUnavailableDate)
 			r.Delete("/{id}", unavailHandler.DeleteUnavailableDate)
 		})
 

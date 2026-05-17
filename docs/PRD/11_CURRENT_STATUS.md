@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-05-15
+updated: 2026-05-17
 status: active
 ---
 
@@ -24,6 +24,51 @@ status: active
 
 **Fecha:** Mayo 2026
 **Version:** 1.7
+
+> [!success] 2026-05-17 — Client Portal: status hub + contrato tier/capabilities (issue #325) implementado
+> Se completó la evolución del portal público en Web + Backend con contrato explícito por tier y UX orientada a estado/pagos.
+> - **Backend:** `PublicEventView` ahora expone `portal_tier` + `capabilities` y milestones públicos para tier Pro.
+> - **Free tier:** conserva autoservicio esencial (`payment summary`, `submit payment`, `submission history`) y redacción consistente de detalles operativos ricos.
+> - **Pro tier:** habilita detalles enriquecidos (tipo de servicio, horario, ubicación, invitados) + `timeline/milestones` públicos.
+> - **Evidencia de recibo:** historial muestra `Comprobante recibido` siempre que existe archivo; descarga real solo si capability lo permite.
+> - **Rechazos:** historial muestra motivo de rechazo cuando existe (`rejection_reason`).
+> - **Web:** `ClientPortalPage` consume `portal_tier/capabilities` (sin hardcode), ajusta tabs/acciones por capability y prioriza fecha, estado, totales y CTA principal en mobile.
+> - **Validación:** `go test ./internal/handlers -run "TestGetPortalData|TestPaymentSubmission"`, `npm run check`.
+
+> [!success] 2026-05-17 — Team Member Portal: H6 disponibilidad del miembro (issue #341) implementado
+> Se completó la gestión de disponibilidad con paridad iOS + Android + Web + Backend.
+> - **Backend:** `unavailable_dates` ahora soporta rango horario opcional (`start_time`, `end_time`) con validación de solapes y endpoint de edición (`PUT /api/unavailable-dates/{id}`).
+> - **Web:** `TeamEventsPage` agrega sección `Mi disponibilidad` con crear/editar/eliminar bloqueos por fecha y hora.
+> - **iOS:** `TeamMemberPortalView` agrega bloqueos con rango horario y edición/eliminación en la misma superficie del miembro.
+> - **Android:** `TeamMemberPortalScreen` agrega bloqueos con rango horario y edición/eliminación en la vista `Mi jornada`.
+> - **Asignación organizer:** `GET /api/staff/availability` considera bloqueos del miembro y lo marca como no disponible en la ventana consultada.
+> - **Preferencias de notificación:** los envíos no críticos siguen respetando `push_enabled` / `push_event_reminder`; con preferencia desactivada no se envía push.
+> - **Validación:** `go test ./internal/handlers -run "UnavailableDate|GetStaffAvailability"`, `npm run check`, `./gradlew :feature:staff:compileDebugKotlin :core:data:compileDebugKotlin :core:model:compileDebugKotlin`, `xcodebuild -project Solennix.xcodeproj -scheme Solennix -destination 'generic/platform=iOS Simulator' build`.
+
+> [!success] 2026-05-17 — Team Member Portal: H5 timeline de cambios (issue #340) implementado
+> Se completó el timeline de cambios de asignaciones con paridad iOS + Android + Web + Backend.
+> - **Backend:** nuevos endpoints `GET /api/staff/my-timeline` y `POST /api/staff/my-timeline/read` + snapshot/registro de cambios por asignación en `team_member_change_events`.
+> - **Web:** bloque `Cambios recientes` en `TeamEventsPage`, badge de no leídos y deeplink a calendario/detalle (`/team/calendar?eventStaffId=...`).
+> - **iOS:** bloque `Cambios recientes` en `TeamMemberPortalView`, badge de no leídos y apertura de detalle Team desde el cambio con mark-read.
+> - **Android:** bloque `Cambios recientes` en `TeamMemberPortalScreen`, badge de no leídos y apertura de detalle Team desde el cambio con mark-read.
+> - **Validación:** `go test ./internal/handlers -run "TestGetMyTimeline|TestMarkMyTimelineRead"`, `npm run check`, `./gradlew :feature:staff:compileDebugKotlin`, `xcodebuild -project Solennix.xcodeproj -scheme Solennix -destination 'generic/platform=iOS Simulator' build`.
+
+> [!success] 2026-05-17 — Team Member Portal: H4 detalle Team scoped (issue #339) implementado
+> Se completó el detalle operativo Team con paridad iOS + Android + Web y respaldo scoped en backend.
+> - **iOS:** `TeamPortalAssignmentDetailSheet` con brief operativo, turno, contacto, notas, apertura de mapa y checklist/nota rápida persistidos por evento.
+> - **Android:** `TeamMemberAssignmentDetailDialog` con brief operativo, apertura de mapa y checklist/nota rápida persistidos en `SharedPreferences` por evento.
+> - **Web:** panel de detalle Team en `TeamCalendarPage` con brief, contacto, notas, `Abrir en mapas` y checklist/nota rápida persistidos por evento.
+> - **Backend:** `GET /api/staff/my-assignments` entrega campos operativos scoped por asignación (`location`, `city`, `contact_name`, `contact_phone`, `organizer_notes`, `shift_start`, `shift_end`, etc.).
+> - **Acceso directo:** no existe ruta pública de detalle Team por URL; el detalle se abre desde asignaciones scoped del miembro y no expone bypass al CRM del organizer.
+> - **Validación:** `./gradlew :feature:staff:compileDebugKotlin`, `xcodebuild -project Solennix.xcodeproj -scheme Solennix -destination 'generic/platform=iOS Simulator' build`, `npm run check`.
+
+> [!success] 2026-05-17 — Team Member Portal: H3 calendario operativo (issue #338) implementado
+> Se cerró el slice H3 del calendario operativo del miembro con paridad iOS + Android + Web.
+> - Mes: densidad por día con indicadores visuales por estado.
+> - Semana: agenda agrupada por día con orden cronológico por turno.
+> - Día: agenda del día ordenada por horario.
+> - Detalle Team: tap en asignación abre detalle operativo del evento/asignación sin alterar el flujo del organizer.
+> - Validación: `./gradlew :feature:staff:compileDebugKotlin`, `xcodebuild -project Solennix.xcodeproj -scheme Solennix -destination 'generic/platform=iOS Simulator' build`, `npm run check`.
 
 > [!success] 2026-05-15 — Team Member Portal web: consolidación A1 implementada
 > Se ejecutó el primer slice de consolidación en Web para reducir duplicación de pantallas en el flujo de miembro.
@@ -41,10 +86,12 @@ status: active
 
 > [!success] 2026-05-15 — Team Member Portal móvil: paridad A3 iOS + Android implementada
 > Se alineó el flujo móvil del miembro con la decisión de consolidación y calendario real.
-> - **iOS:** `TeamMemberPortalView` ahora usa una sola superficie con secciones `Mi jornada` y `Calendario` (selector gráfico de fecha + eventos del día).
-> - **Android:** `TeamMemberPortalScreen` ahora usa tabs `Mi jornada` y `Calendario` (CalendarView nativo + eventos del día).
+> - **iOS:** `TeamMemberPortalView` ahora usa una sola superficie con secciones `Mi jornada` y `Calendario` (grilla mensual con dots por estado + eventos del día).
+> - **Android:** `TeamMemberPortalScreen` ahora usa tabs `Mi jornada` y `Calendario` (grilla mensual Compose con dots por estado + eventos del día).
 > - **Consolidación:** ambas plataformas muestran pendientes accionables y agenda en la misma pantalla operativa.
 > - **Respuesta de asignación:** iOS deja de remover ítems al responder y actualiza estado final para mantener consistencia de agenda.
+> - **Logout iOS:** el portal team member suma acción explícita de cierre de sesión en la top bar, cerrando la brecha operativa que ya estaba cubierta en Android.
+> - **Markers de calendario:** se implementaron indicadores visuales (dots) por fecha con asignaciones, resolviendo el gap operativo de escaneo rápido en mobile.
 
 > [!info] 2026-05-14 — Plan de producto definido para Team Member Portal (Ola 4)
 > Se formalizó el backlog funcional para evolucionar el portal `team_member` desde vistas listadas hacia una experiencia de utilidad diaria y calendario operativo real.
@@ -58,7 +105,7 @@ status: active
 > - **iOS:** `User.role` agregado al contrato, routing por rol en `ContentView`, nueva `TeamMemberPortalView` con carga y respuesta de asignaciones.
 > - **Android:** `User.role` agregado al contrato, routing por rol en `MainNavHost`, nueva `TeamMemberPortalScreen` con carga y respuesta de asignaciones.
 > - **Backend:** sin cambios requeridos para este slice (ya existían `GET /api/staff/my-assignments` y `POST /api/staff/assignments/{id}/respond`).
-> - **Estado:** Ola 4 en progreso; faltan Mi Jornada, calendario completo mes/semana/día, detalle Team, timeline y disponibilidad.
+> - **Estado:** Ola 4 en progreso; Mi Jornada ya está consolidada. Faltan calendario completo mes/semana/día, detalle Team, timeline y disponibilidad.
 > - **Decisión de UX:** la siguiente iteración consolida `Mis asignaciones` + `Mis eventos` y reemplaza el pseudo-calendario por una vista real de agenda/calendario.
 
 > [!success] 2026-05-11 — Personal Phase 3.5: team_member responde asignación + first-accept-wins
@@ -133,8 +180,8 @@ status: active
 
 > [!success] 2026-05-06 — Release audit de mayo + próximos números
 > Se revisaron **42 PRs mergeados en mayo** (11 features, 6 bugs, 22 chores/deps) para separar el material realmente release-facing del ruido de mantenimiento.
-> - **iOS próximo:** `1.2.0` · **build:** `7`
-> - **Android próximo:** `1.2.0` · **versionCode:** `6`
+> - **iOS próximo:** `1.2.0` · **build:** `9` (enviado 2026-05-16)
+> - **Android próximo:** `1.2.0` · **versionCode:** `6` (enviado 2026-05-16)
 > - **Web próximo:** `1.0.1`
 > - **Backend:** se mantiene en `1.0.0` hasta el siguiente cambio canónico de API
 > - **Cambios ancla del release:** `#242` búsqueda por backend, `#244` disponibilidad de equipo, `#245` calendar parity, `#254` dashboard iOS, `#303` `imePadding()` Android

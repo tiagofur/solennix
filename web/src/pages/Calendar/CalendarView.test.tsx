@@ -59,7 +59,7 @@ vi.mock('../../hooks/useToast', () => ({
   }),
 }));
 
-vi.mock('react-day-picker', () => ({
+vi.mock('@daypicker/react', () => ({
   DayPicker: ({ onSelect, onMonthChange }: any) => (
     <div>
       <button data-testid="mock-select" onClick={() => onSelect?.(new Date(2024, 0, 2))}>Select</button>

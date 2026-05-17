@@ -104,6 +104,7 @@
     "upgrade": {
       "title": "Limited access",
       "description": "The organizer has a free plan. To access all event details (schedules, location, number of guests), the organizer needs to upgrade their plan.",
+      "details_locked": "This portal keeps payments and receipts available, but some operational event details are unlocked with the organizer's Pro plan.",
       "cta": "View plans"
     },
     "details": {
@@ -111,6 +112,10 @@
       "location": "Location",
       "guests": "Guests",
       "guests_value": "{{count}} people"
+    },
+    "timeline": {
+      "title": "Event timeline",
+      "pending": "Pending"
     },
     "payments": {
       "title": "Payment status",
@@ -136,6 +141,7 @@
       "history_empty": "You have not sent any receipts yet.",
       "reference_short": "Ref",
       "rejection_reason": "Reason",
+      "receipt_file_received": "Receipt file received",
       "view_receipt": "View receipt",
       "tab_resumen": "Summary",
       "tab_enviar": "Send payment",

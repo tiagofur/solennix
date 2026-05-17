@@ -140,12 +140,12 @@ Pasar de "listas con filtros" a un portal operativo diario para miembros invitad
 
 | Pantalla / capacidad | Web | iOS | Android | Backend |
 |---|:-:|:-:|:-:|:-:|
-| Home "Mi Jornada" (hoy/próximos/pendientes) | 🔲 | 🔲 | 🔲 | 🔲 agregados por rango |
-| Bandeja de Asignaciones (accept/decline + motivo opcional) | 🔲 | 🔲 | 🔲 | 🔲 extender payload opcional |
-| Calendario real (mes/semana/día) | 🔲 | 🔲 | 🔲 | ✅ base (`my-assignments`) + 🔲 optimización |
-| Detalle de Evento Team (brief, turno, mapa, checklist personal) | 🔲 | 🔲 | 🔲 | 🔲 endpoint detalle scoped |
-| Timeline de cambios/notificaciones de asignación | 🔲 | 🔲 | 🔲 | 🔲 feed de cambios |
-| Disponibilidad del miembro (bloqueos/preferencias) | 🔲 | 🔲 | 🔲 | 🔲 endpoint + persistencia |
+| Home "Mi Jornada" (hoy/próximos/pendientes) | ✅ | ✅ | ✅ | ✅ agregados por rango |
+| Bandeja de Asignaciones (accept/decline + motivo opcional) | ✅ | ✅ | ✅ | ✅ payload base |
+| Calendario real (mes/semana/día) | ✅ | ✅ | ✅ | ✅ base (`my-assignments`) + 🔲 optimización |
+| Detalle de Evento Team (brief, turno, mapa, checklist personal) | ✅ | ✅ | ✅ | ✅ scoped desde `my-assignments` |
+| Timeline de cambios/notificaciones de asignación | ✅ | ✅ | ✅ | ✅ feed de cambios |
+| Disponibilidad del miembro (bloqueos/preferencias) | ✅ | ✅ | ✅ | ✅ endpoint + persistencia |
 
 ### Historias de usuario priorizadas
 
@@ -281,17 +281,17 @@ Pasar de "listas con filtros" a un portal operativo diario para miembros invitad
 - MAU/WAU de miembros invitados en portal.
 - % sesiones que completan acción en "Mi Jornada".
 
-### Avance real de implementación (2026-05-15)
+### Avance real de implementación (2026-05-17)
 
 | Slice | Web | iOS | Android | Backend |
 |---|---:|---:|---:|---:|
 | Routing por rol a shell Team Member | ✅ | ✅ | ✅ | ✅ (contrato ya disponible) |
 | Inbox mínima de asignaciones (load + accept/decline) | ✅ | ✅ | ✅ | ✅ |
-| Home Mi Jornada | 🔲 | 🔲 | 🔲 | 🔲 |
-| Calendario mes/semana/día | 🔲 | 🔲 | 🔲 | 🔲 |
-| Detalle Team scoped | 🔲 | 🔲 | 🔲 | 🔲 |
-| Timeline de cambios | 🔲 | 🔲 | 🔲 | 🔲 |
-| Disponibilidad del miembro | 🔲 | 🔲 | 🔲 | 🔲 |
+| Home Mi Jornada | ✅ | ✅ | ✅ | ✅ (usa /staff/my-assignments) |
+| Calendario mes/semana/día | ✅ | ✅ | ✅ | ✅ (fuente actual /staff/my-assignments) |
+| Detalle Team scoped | ✅ | ✅ | ✅ | ✅ (campos operativos scoped en /staff/my-assignments) |
+| Timeline de cambios | ✅ | ✅ | ✅ | ✅ |
+| Disponibilidad del miembro | ✅ | ✅ | ✅ | ✅ |
 
 > [!info] Gating por phase
 > - **Phase 1:** sin gate — todos los planes pueden usar el catálogo (es CRM interno, no cara-al-cliente).

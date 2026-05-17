@@ -10,6 +10,8 @@ import type {
   StaffInsert,
   StaffInviteResponse,
   TeamMemberAssignment,
+  TeamMemberChangeEvent,
+  TeamTimelineMarkReadResponse,
   StaffTeam,
   StaffTeamInsert,
   StaffTeamUpdate,
@@ -76,6 +78,17 @@ export const staffService = {
 
   async respondAssignment(id: string, response: AssignmentPortalResponse): Promise<AssignmentResponseOutcome> {
     return api.post<AssignmentResponseOutcome>(`/staff/assignments/${id}/respond`, { response });
+  },
+
+  async getMyTimeline(params?: { unreadOnly?: boolean; limit?: number }): Promise<TeamMemberChangeEvent[]> {
+    const query: Record<string, string> = {};
+    if (params?.unreadOnly) query.unread_only = 'true';
+    if (params?.limit != null) query.limit = String(params.limit);
+    return api.get<TeamMemberChangeEvent[]>('/staff/my-timeline', query);
+  },
+
+  async markMyTimelineRead(ids?: string[]): Promise<TeamTimelineMarkReadResponse> {
+    return api.post<TeamTimelineMarkReadResponse>('/staff/my-timeline/read', { ids: ids ?? [] });
   },
 
   // ── Staff Teams (Ola 2) ──

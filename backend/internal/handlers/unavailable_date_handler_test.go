@@ -103,6 +103,7 @@ func TestUnavailableDateHandler_CreateUnavailableDate(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		repo := new(MockUnavailableDateRepo)
 		h := NewUnavailableDateHandler(repo)
+		repo.On("GetByDateRange", mock.Anything, userID, "2026-04-01", "2026-04-03").Return([]models.UnavailableDate{}, nil)
 		repo.On("Create", mock.Anything, mock.AnythingOfType("*models.UnavailableDate")).Return(nil)
 
 		body := `{"start_date":"2026-04-01","end_date":"2026-04-03","reason":"conference"}`
@@ -118,6 +119,7 @@ func TestUnavailableDateHandler_CreateUnavailableDate(t *testing.T) {
 	t.Run("Success_WithoutReason", func(t *testing.T) {
 		repo := new(MockUnavailableDateRepo)
 		h := NewUnavailableDateHandler(repo)
+		repo.On("GetByDateRange", mock.Anything, userID, "2026-04-01", "2026-04-01").Return([]models.UnavailableDate{}, nil)
 		repo.On("Create", mock.Anything, mock.AnythingOfType("*models.UnavailableDate")).Return(nil)
 
 		body := `{"start_date":"2026-04-01","end_date":"2026-04-01"}`
@@ -192,6 +194,7 @@ func TestUnavailableDateHandler_CreateUnavailableDate(t *testing.T) {
 	t.Run("RepoError_Returns500", func(t *testing.T) {
 		repo := new(MockUnavailableDateRepo)
 		h := NewUnavailableDateHandler(repo)
+		repo.On("GetByDateRange", mock.Anything, userID, "2026-04-01", "2026-04-03").Return([]models.UnavailableDate{}, nil)
 		repo.On("Create", mock.Anything, mock.AnythingOfType("*models.UnavailableDate")).Return(assert.AnError)
 
 		body := `{"start_date":"2026-04-01","end_date":"2026-04-03"}`
@@ -202,6 +205,77 @@ func TestUnavailableDateHandler_CreateUnavailableDate(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, rr.Code)
 		assert.Contains(t, rr.Body.String(), "failed to create unavailable date")
 		repo.AssertExpectations(t)
+	})
+
+	t.Run("OverlappingRange_Returns409", func(t *testing.T) {
+		repo := new(MockUnavailableDateRepo)
+		h := NewUnavailableDateHandler(repo)
+		reason := "busy"
+		repo.On("GetByDateRange", mock.Anything, userID, "2026-04-01", "2026-04-03").Return([]models.UnavailableDate{
+			{ID: uuid.New(), UserID: userID, StartDate: "2026-04-02", EndDate: "2026-04-05", Reason: &reason},
+		}, nil)
+
+		body := `{"start_date":"2026-04-01","end_date":"2026-04-03"}`
+		req := makeUnavailReq(http.MethodPost, "/api/unavailable-dates", body, userID)
+		rr := httptest.NewRecorder()
+		h.CreateUnavailableDate(rr, req)
+
+		assert.Equal(t, http.StatusConflict, rr.Code)
+		assert.Contains(t, rr.Body.String(), "overlaps")
+		repo.AssertNotCalled(t, "Create", mock.Anything, mock.Anything)
+	})
+
+	t.Run("InvalidTimeRange_Returns400", func(t *testing.T) {
+		h := NewUnavailableDateHandler(new(MockUnavailableDateRepo))
+		req := makeUnavailReq(http.MethodPost, "/api/unavailable-dates", `{"start_date":"2026-04-01","end_date":"2026-04-01","start_time":"18:00","end_time":"10:00"}`, userID)
+		rr := httptest.NewRecorder()
+		h.CreateUnavailableDate(rr, req)
+
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		assert.Contains(t, rr.Body.String(), "end_time must be after start_time")
+	})
+}
+
+func TestUnavailableDateHandler_UpdateUnavailableDate(t *testing.T) {
+	userID := uuid.New()
+	dateID := uuid.New()
+
+	t.Run("Success", func(t *testing.T) {
+		repo := new(MockUnavailableDateRepo)
+		h := NewUnavailableDateHandler(repo)
+		repo.On("GetByDateRange", mock.Anything, userID, "2026-04-10", "2026-04-10").Return([]models.UnavailableDate{}, nil)
+		repo.On("Update", mock.Anything, mock.AnythingOfType("*models.UnavailableDate")).Return(nil)
+
+		req := makeUnavailReq(http.MethodPut, "/api/unavailable-dates/"+dateID.String(), `{"start_date":"2026-04-10","end_date":"2026-04-10","start_time":"09:00","end_time":"12:00","reason":"doctor"}`, userID)
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", dateID.String())
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+		rr := httptest.NewRecorder()
+		h.UpdateUnavailableDate(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		assert.Contains(t, rr.Body.String(), "09:00")
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("Overlap_Returns409", func(t *testing.T) {
+		repo := new(MockUnavailableDateRepo)
+		h := NewUnavailableDateHandler(repo)
+		existingStart := "11:00"
+		existingEnd := "13:00"
+		repo.On("GetByDateRange", mock.Anything, userID, "2026-04-10", "2026-04-10").Return([]models.UnavailableDate{{ID: uuid.New(), UserID: userID, StartDate: "2026-04-10", EndDate: "2026-04-10", StartTime: &existingStart, EndTime: &existingEnd}}, nil)
+
+		req := makeUnavailReq(http.MethodPut, "/api/unavailable-dates/"+dateID.String(), `{"start_date":"2026-04-10","end_date":"2026-04-10","start_time":"12:00","end_time":"14:00"}`, userID)
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", dateID.String())
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+		rr := httptest.NewRecorder()
+		h.UpdateUnavailableDate(rr, req)
+
+		assert.Equal(t, http.StatusConflict, rr.Code)
+		assert.Contains(t, rr.Body.String(), "overlaps")
 	})
 }
 

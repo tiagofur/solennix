@@ -458,6 +458,19 @@ func (m *MockStaffRepo) RespondToAssignment(ctx context.Context, invitedUserID, 
 	return args.Get(0).(*repository.AssignmentResponseOutcome), args.Error(1)
 }
 
+func (m *MockStaffRepo) ListMyTimeline(ctx context.Context, invitedUserID uuid.UUID, unreadOnly bool, limit int) ([]repository.TeamMemberChangeEvent, error) {
+	args := m.Called(ctx, invitedUserID, unreadOnly, limit)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]repository.TeamMemberChangeEvent), args.Error(1)
+}
+
+func (m *MockStaffRepo) MarkTimelineRead(ctx context.Context, invitedUserID uuid.UUID, ids []uuid.UUID) (int64, error) {
+	args := m.Called(ctx, invitedUserID, ids)
+	return args.Get(0).(int64), args.Error(1)
+}
+
 // ---------------------------------------------------------------------------
 // MockProductRepo — implements ProductRepository
 // ---------------------------------------------------------------------------
@@ -749,6 +762,11 @@ func (m *MockUnavailableDateRepo) GetByDateRange(ctx context.Context, userID uui
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]models.UnavailableDate), args.Error(1)
+}
+
+func (m *MockUnavailableDateRepo) Update(ctx context.Context, u *models.UnavailableDate) error {
+	args := m.Called(ctx, u)
+	return args.Error(0)
 }
 
 func (m *MockUnavailableDateRepo) Delete(ctx context.Context, id, userID uuid.UUID) error {

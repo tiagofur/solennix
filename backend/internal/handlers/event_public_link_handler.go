@@ -176,11 +176,28 @@ func (h *EventPublicLinkHandler) Revoke(w http.ResponseWriter, r *http.Request) 
 // "visibleToClient" per-field toggles from PRD/12 will land in a later
 // iteration — for v1 we return the safe default subset.
 type PublicEventView struct {
-	PortalTier string               `json:"portal_tier"` // "free" | "pro"
-	Event      PublicEventDetails   `json:"event"`
-	Organizer  PublicOrganizerBrand `json:"organizer"`
-	Client     PublicClientInfo     `json:"client"`
-	Payment    PublicPaymentSummary `json:"payment"`
+	PortalTier   string                   `json:"portal_tier"` // "free" | "pro"
+	Capabilities PublicPortalCapabilities `json:"capabilities"`
+	Event        PublicEventDetails       `json:"event"`
+	Organizer    PublicOrganizerBrand     `json:"organizer"`
+	Client       PublicClientInfo         `json:"client"`
+	Payment      PublicPaymentSummary     `json:"payment"`
+	Milestones   []PublicPortalMilestone  `json:"milestones,omitempty"`
+}
+
+type PublicPortalCapabilities struct {
+	CanSubmitPayment         bool `json:"can_submit_payment"`
+	CanViewSubmissionHistory bool `json:"can_view_submission_history"`
+	CanViewRichEventDetails  bool `json:"can_view_rich_event_details"`
+	CanViewMilestones        bool `json:"can_view_milestones"`
+	CanDownloadReceiptFiles  bool `json:"can_download_receipt_files"`
+}
+
+type PublicPortalMilestone struct {
+	Label     string `json:"label"`
+	Date      string `json:"date,omitempty"`
+	Status    string `json:"status,omitempty"`
+	Highlight bool   `json:"highlight,omitempty"`
 }
 
 type PublicEventDetails struct {
@@ -340,8 +357,9 @@ func (h *EventPublicLinkHandler) isPlanActive(organizer *models.User) bool {
 }
 
 // buildPublicEventView constructs the PublicEventView response based on plan tier.
-// Free (gratis or expired): basic event teaser only — no branding, no payment data, no payment-submission access.
-// Pro/Business: full branded response with event details, client info, and payment summary.
+// Free (gratis or expired): keeps essential self-service (payment summary, submit, history)
+// while redacting rich operational details.
+// Pro/Business: full branded response with rich details and milestones.
 func (h *EventPublicLinkHandler) buildPublicEventView(
 	organizer *models.User,
 	planActive bool,
@@ -350,25 +368,49 @@ func (h *EventPublicLinkHandler) buildPublicEventView(
 	paid float64,
 	remaining float64,
 ) PublicEventView {
-	// Free (gratis or expired plan): teaser-only shape — no branding, no payment data.
+	currency := "MXN"
+
+	// Free (gratis or expired plan): keep payment essentials, redact rich operational fields.
 	if normalizePlan(organizer.Plan) == "basic" || !planActive {
 		return PublicEventView{
 			PortalTier: "free",
+			Capabilities: PublicPortalCapabilities{
+				CanSubmitPayment:         true,
+				CanViewSubmissionHistory: true,
+				CanViewRichEventDetails:  false,
+				CanViewMilestones:        false,
+				CanDownloadReceiptFiles:  false,
+			},
 			Event: PublicEventDetails{
 				ID:        event.ID,
 				EventDate: firstTenChars(event.EventDate),
 				Status:    event.Status,
 				// Redact: ServiceType, StartTime, EndTime, Location, City, NumPeople
 			},
-			Organizer: PublicOrganizerBrand{}, // No branding for free tier
-			Client:    PublicClientInfo{},     // No client details for free tier
-			Payment:   PublicPaymentSummary{}, // No payment data for free tier
+			Organizer: PublicOrganizerBrand{},
+			Client: PublicClientInfo{
+				ID:   event.ClientID.String(),
+				Name: clientName,
+			},
+			Payment: PublicPaymentSummary{
+				Total:     event.TotalAmount,
+				Paid:      paid,
+				Remaining: remaining,
+				Currency:  currency,
+			},
 		}
 	}
 
 	// Pro/Business: full shape
 	return PublicEventView{
 		PortalTier: "pro",
+		Capabilities: PublicPortalCapabilities{
+			CanSubmitPayment:         true,
+			CanViewSubmissionHistory: true,
+			CanViewRichEventDetails:  true,
+			CanViewMilestones:        true,
+			CanDownloadReceiptFiles:  true,
+		},
 		Event: PublicEventDetails{
 			ID:          event.ID,
 			ServiceType: event.ServiceType,
@@ -393,7 +435,11 @@ func (h *EventPublicLinkHandler) buildPublicEventView(
 			Total:     event.TotalAmount,
 			Paid:      paid,
 			Remaining: remaining,
-			Currency:  "MXN",
+			Currency:  currency,
+		},
+		Milestones: []PublicPortalMilestone{
+			{Label: "Confirmación de fecha", Status: "confirmed", Highlight: true},
+			{Label: "Evento", Date: firstTenChars(event.EventDate), Status: event.Status, Highlight: true},
 		},
 	}
 }

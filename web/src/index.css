@@ -199,7 +199,7 @@ input, select, textarea {
   color: var(--color-text);
 }
 
-/* react-day-picker dark mode overrides */
+/* @daypicker/react dark mode overrides */
 .dark .rdp-head_cell,
 .dark .rdp-weekday {
   color: var(--color-text-secondary) !important;

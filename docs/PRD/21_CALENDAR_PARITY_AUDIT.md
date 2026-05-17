@@ -30,7 +30,7 @@ status: active
 
 | # | Feature | Web | iOS | Android | Notas |
 |:-:|---------|:---:|:---:|:-------:|-------|
-| 1 | Grid de calendario (7 columnas) | ✅ | ✅ | ✅ | Web: react-day-picker · iOS: LazyVGrid · Android: LazyVerticalGrid |
+| 1 | Grid de calendario (7 columnas) | ✅ | ✅ | ✅ | Web: @daypicker/react · iOS: LazyVGrid · Android: LazyVerticalGrid |
 | 2 | Navegación mensual (prev/next) | ✅ | ✅ | ✅ | Chevron buttons con animación |
 | 3 | Botón "Hoy" (ir a hoy) | ✅ | ✅ | ✅ | Web: botón gradient · iOS: toolbar · Android: OutlinedButton |
 | 4 | Selección de fecha (single) | ✅ | ✅ | ✅ | Día seleccionado con círculo filled primary |
@@ -118,7 +118,7 @@ graph LR
 
 | Aspecto | Implementación |
 |---------|---------------|
-| Grid | `react-day-picker` con `mode="single"` |
+| Grid | `@daypicker/react` con `mode="single"` |
 | Estado | React Query + `useState` |
 | CSS | Custom styles inyectados + Tailwind |
 | Context action | `onContextMenu` (right-click) |

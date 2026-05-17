@@ -567,6 +567,69 @@ func TestRespondAssignment_InvalidResponse_Returns400(t *testing.T) {
 	staffRepo.AssertNotCalled(t, "RespondToAssignment", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 }
 
+func TestGetMyTimeline_Success(t *testing.T) {
+	userID := uuid.New()
+	eventID := uuid.New()
+	eventStaffID := uuid.New()
+	changeID := uuid.New()
+
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "team_member"}, nil)
+	staffRepo.On("ListMyTimeline", mock.Anything, userID, true, 25).Return([]repository.TeamMemberChangeEvent{
+		{
+			ID:          changeID,
+			EventID:     eventID,
+			EventStaffID: eventStaffID,
+			EventName:   "Evento Demo",
+			EventDate:   "2026-06-30",
+			ChangeType:  "shift_changed",
+			FieldName:   "shift_start",
+			OccurredAt:  "2026-05-17T10:00:00Z",
+		},
+	}, nil)
+
+	h := NewStaffHandler(staffRepo, userRepo)
+	req := makeReqWithUserID(http.MethodGet, "/api/staff/my-timeline?unread_only=true&limit=25", "", userID)
+	rr := httptest.NewRecorder()
+	h.GetMyTimeline(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Evento Demo")
+	assert.Contains(t, rr.Body.String(), "shift_changed")
+}
+
+func TestMarkMyTimelineRead_All_Success(t *testing.T) {
+	userID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "assistant"}, nil)
+	staffRepo.On("MarkTimelineRead", mock.Anything, userID, []uuid.UUID{}).Return(int64(3), nil)
+
+	h := NewStaffHandler(staffRepo, userRepo)
+	req := makeReqWithUserID(http.MethodPost, "/api/staff/my-timeline/read", `{}`, userID)
+	rr := httptest.NewRecorder()
+	h.MarkMyTimelineRead(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), "\"updated\":3")
+}
+
+func TestMarkMyTimelineRead_InvalidID_Returns400(t *testing.T) {
+	userID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "team_member"}, nil)
+
+	h := NewStaffHandler(staffRepo, userRepo)
+	req := makeReqWithUserID(http.MethodPost, "/api/staff/my-timeline/read", `{"ids":["not-a-uuid"]}`, userID)
+	rr := httptest.NewRecorder()
+	h.MarkMyTimelineRead(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	staffRepo.AssertNotCalled(t, "MarkTimelineRead", mock.Anything, mock.Anything, mock.Anything)
+}
+
 // ---------------------------------------------------------------------------
 // Validation — exercised via the handler so the integration is tested
 // ---------------------------------------------------------------------------

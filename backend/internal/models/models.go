@@ -256,6 +256,8 @@ type UnavailableDate struct {
 	UserID    uuid.UUID `json:"user_id"`
 	StartDate string    `json:"start_date"` // DATE as string
 	EndDate   string    `json:"end_date"`   // DATE as string
+	StartTime *string   `json:"start_time,omitempty"` // HH:MM
+	EndTime   *string   `json:"end_time,omitempty"`   // HH:MM
 	Reason    *string   `json:"reason,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`

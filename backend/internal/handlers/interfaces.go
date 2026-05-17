@@ -90,6 +90,8 @@ type StaffRepository interface {
 	RevokeInvite(ctx context.Context, staffID, ownerUserID uuid.UUID) error
 	ListMyAssignments(ctx context.Context, invitedUserID uuid.UUID) ([]repository.TeamMemberAssignment, error)
 	RespondToAssignment(ctx context.Context, invitedUserID, eventStaffID uuid.UUID, response string) (*repository.AssignmentResponseOutcome, error)
+	ListMyTimeline(ctx context.Context, invitedUserID uuid.UUID, unreadOnly bool, limit int) ([]repository.TeamMemberChangeEvent, error)
+	MarkTimelineRead(ctx context.Context, invitedUserID uuid.UUID, ids []uuid.UUID) (int64, error)
 }
 
 // StaffTeamRepository defines staff team repo operations (Ola 2).
@@ -134,6 +136,7 @@ type InventoryRepository interface {
 type UnavailableDateRepository interface {
 	Create(ctx context.Context, u *models.UnavailableDate) error
 	GetByDateRange(ctx context.Context, userID uuid.UUID, start, end string) ([]models.UnavailableDate, error)
+	Update(ctx context.Context, u *models.UnavailableDate) error
 	Delete(ctx context.Context, id, userID uuid.UUID) error
 }
 

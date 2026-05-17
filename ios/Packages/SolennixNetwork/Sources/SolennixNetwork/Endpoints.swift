@@ -84,6 +84,8 @@ public enum Endpoint {
     }
 
     public static let staffMyAssignments = "/staff/my-assignments"
+    public static let staffMyTimeline = "/staff/my-timeline"
+    public static let staffMyTimelineRead = "/staff/my-timeline/read"
 
     public static func staffRespondAssignment(_ id: String) -> String {
         "/staff/assignments/\(id)/respond"

@@ -109,14 +109,14 @@ export const ClientPortalPage: React.FC = () => {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // TODO: portal_tier contract from backend — currently not implemented
-  const isGratisView = false;
-
-  useEffect(() => {
-    if (isGratisView && activeTab !== "resumen") {
-      setActiveTab("resumen");
-    }
-  }, [isGratisView, activeTab]);
+  const isGratisView = data?.portal_tier === "free";
+  const capabilities = data?.capabilities ?? {
+    can_submit_payment: true,
+    can_view_submission_history: true,
+    can_view_rich_event_details: !isGratisView,
+    can_view_milestones: !isGratisView,
+    can_download_receipt_files: !isGratisView,
+  };
 
   const fetchHistory = async (tok: string, eventId: string, clientId: string) => {
     setHistoryLoading(true);
@@ -131,7 +131,8 @@ export const ClientPortalPage: React.FC = () => {
   };
 
   const handleTabChange = (tab: TabId) => {
-    if (isGratisView && tab !== "resumen") return;
+    if (tab === "enviar" && !capabilities.can_submit_payment) return;
+    if (tab === "historial" && !capabilities.can_view_submission_history) return;
     setActiveTab(tab);
     if (tab === "historial" && data && token) {
       fetchHistory(token, data.event.id, data.client.id);
@@ -338,7 +339,7 @@ export const ClientPortalPage: React.FC = () => {
                   {t("portal.upgrade.title")}
                 </h3>
                 <p className="text-sm text-text-secondary mb-4">
-                  {t("portal.upgrade.description")}
+                  {t("portal.upgrade.details_locked")}
                 </p>
                 <a
                   href={`${import.meta.env.VITE_APP_URL || "https://solennix.app"}/pricing`}
@@ -353,26 +354,56 @@ export const ClientPortalPage: React.FC = () => {
 
         {/* Details grid */}
         <section className="grid sm:grid-cols-2 gap-4">
-          {(event.start_time || event.end_time) && (
+          {capabilities.can_view_rich_event_details && (event.start_time || event.end_time) && (
             <DetailCard icon={<Clock className="h-4 w-4" />} label={t("portal.details.schedule")}>
               {[event.start_time, event.end_time].filter(Boolean).join(" — ") || "—"}
             </DetailCard>
           )}
-          {(event.location || event.city) && (
+          {capabilities.can_view_rich_event_details && (event.location || event.city) && (
             <DetailCard icon={<MapPin className="h-4 w-4" />} label={t("portal.details.location")}>
               {[event.location, event.city].filter(Boolean).join(", ")}
             </DetailCard>
           )}
-          <DetailCard icon={<Users className="h-4 w-4" />} label={t("portal.details.guests")}>
-            {t("portal.details.guests_value", { count: event.num_people })}
-          </DetailCard>
+          {capabilities.can_view_rich_event_details && (
+            <DetailCard icon={<Users className="h-4 w-4" />} label={t("portal.details.guests")}>
+              {t("portal.details.guests_value", { count: event.num_people })}
+            </DetailCard>
+          )}
         </section>
+
+        {capabilities.can_view_milestones && Array.isArray(data.milestones) && data.milestones.length > 0 && (
+          <section className="bg-card rounded-2xl border border-border shadow-sm p-6 sm:p-8">
+            <h3 className="text-lg font-semibold text-text mb-4">{t("portal.timeline.title")}</h3>
+            <div className="space-y-3">
+              {data.milestones.map((milestone, idx) => (
+                <div key={`${milestone.label}-${idx}`} className="flex items-start gap-3">
+                  <div
+                    className={`mt-1 h-2.5 w-2.5 rounded-full ${milestone.highlight ? "bg-primary" : "bg-border"}`}
+                    aria-hidden="true"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-text">{milestone.label}</p>
+                    <p className="text-xs text-text-secondary">
+                      {[milestone.date, milestone.status].filter(Boolean).join(" · ") || t("portal.timeline.pending")}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Payment tabs: resumen + (pro-only: enviar + historial) */}
         <section className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
           {/* Tab strip */}
           <div className="flex border-b border-border">
-            {(isGratisView ? ["resumen"] as TabId[] : ["resumen", "enviar", "historial"] as TabId[]).map((tab) => {
+            {(["resumen", "enviar", "historial"] as TabId[])
+              .filter((tab) => {
+                if (tab === "enviar") return capabilities.can_submit_payment;
+                if (tab === "historial") return capabilities.can_view_submission_history;
+                return true;
+              })
+              .map((tab) => {
               const icons: Record<TabId, React.ReactNode> = {
                 resumen: <Wallet className="h-4 w-4" />,
                 enviar: <Send className="h-4 w-4" />,
@@ -404,34 +435,35 @@ export const ClientPortalPage: React.FC = () => {
             {/* Tab: Resumen */}
             {activeTab === "resumen" && (
               <div className="space-y-4">
-                {isGratisView ? (
+                {isGratisView && !capabilities.can_view_rich_event_details && (
                   <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
                     <p className="text-sm font-medium text-text">
-                      {t("portal.payments.pro_only")}
+                      {t("portal.upgrade.title")}
                     </p>
                     <p className="text-xs text-text-secondary mt-1">
-                      {t("portal.payments.pro_only_hint")}
+                      {t("portal.upgrade.details_locked")}
                     </p>
                   </div>
-                ) : (
-                  <>
-                    <p className="text-sm text-text-secondary">
-                      {t("portal.payments.summary_intro")}
-                    </p>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-surface-alt rounded-xl p-4">
-                        <p className="text-xs uppercase tracking-widest text-text-tertiary mb-1">{t("portal.payments.paid")}</p>
-                        <p className="text-xl font-bold text-text">
-                          {formatCurrency(data.payment.paid, data.payment.currency, i18n.language)}
-                        </p>
-                      </div>
-                      <div className="bg-surface-alt rounded-xl p-4">
-                        <p className="text-xs uppercase tracking-widest text-text-tertiary mb-1">{t("portal.payments.pending_label")}</p>
-                        <p className="text-xl font-bold text-warning">
-                          {formatCurrency(data.payment.remaining, data.payment.currency, i18n.language)}
-                        </p>
-                      </div>
+                )}
+                <>
+                  <p className="text-sm text-text-secondary">
+                    {t("portal.payments.summary_intro")}
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-surface-alt rounded-xl p-4">
+                      <p className="text-xs uppercase tracking-widest text-text-tertiary mb-1">{t("portal.payments.paid")}</p>
+                      <p className="text-xl font-bold text-text">
+                        {formatCurrency(data.payment.paid, data.payment.currency, i18n.language)}
+                      </p>
                     </div>
+                    <div className="bg-surface-alt rounded-xl p-4">
+                      <p className="text-xs uppercase tracking-widest text-text-tertiary mb-1">{t("portal.payments.pending_label")}</p>
+                      <p className="text-xl font-bold text-warning">
+                        {formatCurrency(data.payment.remaining, data.payment.currency, i18n.language)}
+                      </p>
+                    </div>
+                  </div>
+                  {capabilities.can_submit_payment && (
                     <button
                       onClick={() => handleTabChange("enviar")}
                       className="w-full py-3 px-4 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
@@ -439,8 +471,8 @@ export const ClientPortalPage: React.FC = () => {
                       <Send className="h-4 w-4" />
                       {t("portal.payments.submit_receipt")}
                     </button>
-                  </>
-                )}
+                  )}
+                </>
               </div>
             )}
 
@@ -586,15 +618,20 @@ export const ClientPortalPage: React.FC = () => {
                             {sub.rejection_reason && (
                               <p className="text-xs text-error mt-1">{t("portal.payments.rejection_reason")}: {sub.rejection_reason}</p>
                             )}
-                            {sub.receipt_file_url && sub.status === "approved" && (
-                              <a
-                                href={`${(import.meta.env.VITE_API_URL || "http://localhost:8080/api").replace(/\/api$/, "")}${sub.receipt_file_url}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-primary hover:underline mt-1 inline-block"
-                              >
-                                {t("portal.payments.view_receipt")}
-                              </a>
+                            {sub.receipt_file_url && (
+                              <>
+                                <p className="text-xs text-text-secondary mt-1">{t("portal.payments.receipt_file_received")}</p>
+                                {capabilities.can_download_receipt_files && sub.status === "approved" && (
+                                  <a
+                                    href={`${(import.meta.env.VITE_API_URL || "http://localhost:8080/api").replace(/\/api$/, "")}${sub.receipt_file_url}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-primary hover:underline mt-1 inline-block"
+                                  >
+                                    {t("portal.payments.view_receipt")}
+                                  </a>
+                                )}
+                              </>
                             )}
                           </div>
                           <PaymentStatusBadge status={sub.status} />

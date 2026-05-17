@@ -14,7 +14,7 @@ status: active
 # Módulo Calendario — Web
 
 > [!abstract] Resumen
-> Vista mensual interactiva con eventos coloreados por status, fechas bloqueadas, context menu (right-click) y creación de eventos con fecha pre-llenada. Construido sobre `react-day-picker`.
+> Vista mensual interactiva con eventos coloreados por status, fechas bloqueadas, context menu (right-click) y creación de eventos con fecha pre-llenada. Construido sobre `@daypicker/react`.
 
 > [!warning] Gap conocido
 > **Status filter eliminado en FASE 7C** — iOS y Android aún lo tienen. Ver [[../../PRD/21_CALENDAR_PARITY_AUDIT|Audit de Paridad]] gap G4.
@@ -37,7 +37,7 @@ status: active
 
 | # | Feature | Estado | Detalle |
 |:-:|---------|:------:|---------|
-| 1 | Grid mensual (`react-day-picker`) | ✅ | Celdas 45px, día 32px círculo, locale-aware |
+| 1 | Grid mensual (`@daypicker/react`) | ✅ | Celdas 45px, día 32px círculo, locale-aware |
 | 2 | Navegación prev/next | ✅ | Built-in DayPicker + reset de selección |
 | 3 | Botón "Hoy" | ✅ | `premium-gradient`, `CalendarDays` icon |
 | 4 | Selección de fecha (single) | ✅ | `mode="single"`, blue filled circle |
@@ -79,7 +79,7 @@ status: active
 ```
 CalendarView.tsx
 ├── Estado: React Query (events + unavailable dates)
-├── Grid: react-day-picker (DayPicker mode="single")
+├── Grid: @daypicker/react (DayPicker mode="single")
 ├── Right panel: event cards / blocked info / empty state
 ├── Modals:
 │   ├── UnavailableDatesModal (CRUD bloqueos)
@@ -103,7 +103,7 @@ CalendarView.tsx
 
 - [[Módulo Eventos]] — Eventos mostrados en el calendario
 - [[Capa de Servicios]] — `unavailableDatesService`
-- [[Componentes Compartidos]] — react-day-picker como base
+- [[Componentes Compartidos]] — @daypicker/react como base
 - [[Hooks Personalizados]] — `usePlanLimits`, `useEventsByDateRange`
 - [[../../PRD/21_CALENDAR_PARITY_AUDIT|Audit de Paridad Calendario]]
 

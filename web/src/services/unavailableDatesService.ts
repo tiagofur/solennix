@@ -5,9 +5,19 @@ export interface UnavailableDate {
   user_id: string;
   start_date: string;
   end_date: string;
+  start_time?: string | null;
+  end_time?: string | null;
   reason?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface UnavailableDateInput {
+  start_date: string;
+  end_date: string;
+  start_time?: string;
+  end_time?: string;
+  reason?: string;
 }
 
 export const unavailableDatesService = {
@@ -21,8 +31,13 @@ export const unavailableDatesService = {
     }
   },
 
-  addDates: async (data: { start_date: string; end_date: string; reason?: string }): Promise<UnavailableDate> => {
+  addDates: async (data: UnavailableDateInput): Promise<UnavailableDate> => {
     const response = await api.post<UnavailableDate>('/unavailable-dates', data);
+    return response;
+  },
+
+  updateDate: async (id: string, data: UnavailableDateInput): Promise<UnavailableDate> => {
+    const response = await api.put<UnavailableDate>(`/unavailable-dates/${id}`, data);
     return response;
   },
 

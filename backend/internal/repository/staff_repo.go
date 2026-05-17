@@ -2,9 +2,12 @@ package repository
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -227,6 +230,11 @@ type TeamMemberAssignment struct {
 	EventDate      string     `json:"event_date"`
 	StaffID        uuid.UUID  `json:"staff_id"`
 	Status         string     `json:"status"`
+	Location       *string    `json:"location,omitempty"`
+	City           *string    `json:"city,omitempty"`
+	ContactName    *string    `json:"contact_name,omitempty"`
+	ContactPhone   *string    `json:"contact_phone,omitempty"`
+	OrganizerNotes *string    `json:"organizer_notes,omitempty"`
 	FeeAmount      *float64   `json:"fee_amount,omitempty"`
 	RoleOverride   *string    `json:"role_override,omitempty"`
 	Notes          *string    `json:"notes,omitempty"`
@@ -244,6 +252,20 @@ type AssignmentResponseOutcome struct {
 	FinalStatus       string    `json:"final_status"`
 	SeatsRemaining    int       `json:"seats_remaining"`
 	AutoDeclinedCount int       `json:"auto_declined_count"`
+}
+
+type TeamMemberChangeEvent struct {
+	ID           uuid.UUID `json:"id"`
+	EventID      uuid.UUID `json:"event_id"`
+	EventStaffID uuid.UUID `json:"event_staff_id"`
+	EventName    string    `json:"event_name"`
+	EventDate    string    `json:"event_date"`
+	ChangeType   string    `json:"change_type"`
+	FieldName    string    `json:"field_name"`
+	OldValue     *string   `json:"old_value,omitempty"`
+	NewValue     *string   `json:"new_value,omitempty"`
+	OccurredAt   string    `json:"occurred_at"`
+	ReadAt       *string   `json:"read_at,omitempty"`
 }
 
 // GetAvailability returns busy staff for the user in [start, end] inclusive.
@@ -315,6 +337,60 @@ func (r *StaffRepo) GetAvailability(ctx context.Context, userID uuid.UUID, start
 		return nil, fmt.Errorf("iterate staff availability: %w", err)
 	}
 
+	// Include invited team-member blocked dates so organizers see them as
+	// unavailable in assignment flows that consume this endpoint.
+	blockedRows, err := r.pool.Query(ctx, `
+		SELECT s.id, s.name, ud.id, ud.start_date, ud.reason
+		FROM unavailable_dates ud
+		JOIN staff s ON s.invited_user_id = ud.user_id
+		WHERE s.user_id = $1
+			AND ud.start_date <= $3::date
+			AND ud.end_date >= $2::date
+		ORDER BY s.name, ud.start_date`, userID, start, end)
+	if err != nil {
+		return nil, fmt.Errorf("query blocked staff availability: %w", err)
+	}
+	defer blockedRows.Close()
+
+	for blockedRows.Next() {
+		var (
+			staffID   uuid.UUID
+			staffName string
+			blockID   uuid.UUID
+			startDate time.Time
+			reason    *string
+		)
+		if err := blockedRows.Scan(&staffID, &staffName, &blockID, &startDate, &reason); err != nil {
+			return nil, fmt.Errorf("scan blocked staff availability: %w", err)
+		}
+
+		entry, ok := byStaff[staffID]
+		if !ok {
+			entry = &StaffAvailability{
+				StaffID:     staffID,
+				StaffName:   staffName,
+				Assignments: []StaffAvailabilityAssignment{},
+			}
+			byStaff[staffID] = entry
+			order = append(order, staffID)
+		}
+
+		eventName := "No disponible"
+		if reason != nil && strings.TrimSpace(*reason) != "" {
+			eventName = "No disponible: " + strings.TrimSpace(*reason)
+		}
+
+		entry.Assignments = append(entry.Assignments, StaffAvailabilityAssignment{
+			EventID:   blockID,
+			EventName: eventName,
+			EventDate: startDate.Format("2006-01-02"),
+			Status:    models.AssignmentStatusConfirmed,
+		})
+	}
+	if err := blockedRows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate blocked staff availability: %w", err)
+	}
+
 	out := make([]StaffAvailability, 0, len(order))
 	for _, id := range order {
 		out = append(out, *byStaff[id])
@@ -326,12 +402,14 @@ func (r *StaffRepo) GetAvailability(ctx context.Context, userID uuid.UUID, start
 func (r *StaffRepo) ListMyAssignments(ctx context.Context, invitedUserID uuid.UUID) ([]TeamMemberAssignment, error) {
 	query := `
 		SELECT es.id, es.event_id, e.service_type, e.event_date, es.staff_id,
-			COALESCE(es.status, 'confirmed'), es.fee_amount, es.role_override, es.notes,
+			COALESCE(es.status, 'confirmed'), e.location, e.city, c.name, c.phone, e.notes,
+			es.fee_amount, es.role_override, es.notes,
 			es.shift_start, es.shift_end, es.offer_group_id, es.offer_slots,
 			es.notification_last_result, es.notification_sent_at
 		FROM event_staff es
 		JOIN staff s ON s.id = es.staff_id
 		JOIN events e ON e.id = es.event_id
+		LEFT JOIN clients c ON c.id = e.client_id
 		WHERE s.invited_user_id = $1
 		ORDER BY e.event_date ASC, e.service_type ASC`
 
@@ -366,6 +444,11 @@ func scanMyAssignments(rows pgx.Rows) ([]TeamMemberAssignment, error) {
 			&eventDate,
 			&item.StaffID,
 			&item.Status,
+			&item.Location,
+			&item.City,
+			&item.ContactName,
+			&item.ContactPhone,
+			&item.OrganizerNotes,
 			&item.FeeAmount,
 			&item.RoleOverride,
 			&item.Notes,
@@ -403,10 +486,12 @@ func scanMyAssignments(rows pgx.Rows) ([]TeamMemberAssignment, error) {
 func (r *StaffRepo) listMyAssignmentsLegacy(ctx context.Context, invitedUserID uuid.UUID) ([]TeamMemberAssignment, error) {
 	query := `
 		SELECT es.id, es.event_id, e.service_type, e.event_date, es.staff_id,
+			e.location, e.city, c.name, c.phone, e.notes,
 			es.fee_amount, es.role_override, es.notes
 		FROM event_staff es
 		JOIN staff s ON s.id = es.staff_id
 		JOIN events e ON e.id = es.event_id
+		LEFT JOIN clients c ON c.id = e.client_id
 		WHERE s.invited_user_id = $1
 		ORDER BY e.event_date ASC, e.service_type ASC`
 
@@ -428,6 +513,11 @@ func (r *StaffRepo) listMyAssignmentsLegacy(ctx context.Context, invitedUserID u
 			&item.EventName,
 			&eventDate,
 			&item.StaffID,
+			&item.Location,
+			&item.City,
+			&item.ContactName,
+			&item.ContactPhone,
+			&item.OrganizerNotes,
 			&item.FeeAmount,
 			&item.RoleOverride,
 			&item.Notes,
@@ -585,6 +675,331 @@ func (r *StaffRepo) RespondToAssignment(ctx context.Context, invitedUserID, even
 	}
 
 	return result, nil
+}
+
+type teamMemberSnapshot struct {
+	EventStaffID uuid.UUID
+	EventID      uuid.UUID
+	Location     *string
+	City         *string
+	RoleOverride *string
+	ShiftStart   *string
+	ShiftEnd     *string
+	Status       *string
+}
+
+func (r *StaffRepo) SyncTimelineSnapshots(ctx context.Context, invitedUserID uuid.UUID) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin sync timeline tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	currentRows, err := tx.Query(ctx, `
+		SELECT es.id, es.event_id, e.location, e.city, es.role_override,
+			es.shift_start, es.shift_end, COALESCE(es.status, 'confirmed')
+		FROM event_staff es
+		JOIN staff s ON s.id = es.staff_id
+		JOIN events e ON e.id = es.event_id
+		WHERE s.invited_user_id = $1
+	`, invitedUserID)
+	if err != nil {
+		return fmt.Errorf("query current timeline snapshot source: %w", err)
+	}
+	defer currentRows.Close()
+
+	current := make(map[uuid.UUID]teamMemberSnapshot)
+	for currentRows.Next() {
+		var (
+			rec        teamMemberSnapshot
+			shiftStart *time.Time
+			shiftEnd   *time.Time
+			status     string
+		)
+		if err := currentRows.Scan(
+			&rec.EventStaffID,
+			&rec.EventID,
+			&rec.Location,
+			&rec.City,
+			&rec.RoleOverride,
+			&shiftStart,
+			&shiftEnd,
+			&status,
+		); err != nil {
+			return fmt.Errorf("scan current timeline snapshot source: %w", err)
+		}
+		if shiftStart != nil {
+			s := shiftStart.UTC().Format(time.RFC3339)
+			rec.ShiftStart = &s
+		}
+		if shiftEnd != nil {
+			s := shiftEnd.UTC().Format(time.RFC3339)
+			rec.ShiftEnd = &s
+		}
+		statusCopy := status
+		rec.Status = &statusCopy
+		current[rec.EventStaffID] = rec
+	}
+	if err := currentRows.Err(); err != nil {
+		return fmt.Errorf("iterate current timeline snapshot source: %w", err)
+	}
+
+	snapRows, err := tx.Query(ctx, `
+		SELECT event_staff_id, event_id, location, city, role_override,
+			shift_start, shift_end, status
+		FROM team_member_assignment_snapshots
+		WHERE invited_user_id = $1
+	`, invitedUserID)
+	if err != nil {
+		return fmt.Errorf("query timeline snapshots: %w", err)
+	}
+	defer snapRows.Close()
+
+	snapshots := make(map[uuid.UUID]teamMemberSnapshot)
+	for snapRows.Next() {
+		var (
+			rec        teamMemberSnapshot
+			shiftStart *time.Time
+			shiftEnd   *time.Time
+		)
+		if err := snapRows.Scan(
+			&rec.EventStaffID,
+			&rec.EventID,
+			&rec.Location,
+			&rec.City,
+			&rec.RoleOverride,
+			&shiftStart,
+			&shiftEnd,
+			&rec.Status,
+		); err != nil {
+			return fmt.Errorf("scan timeline snapshots: %w", err)
+		}
+		if shiftStart != nil {
+			s := shiftStart.UTC().Format(time.RFC3339)
+			rec.ShiftStart = &s
+		}
+		if shiftEnd != nil {
+			s := shiftEnd.UTC().Format(time.RFC3339)
+			rec.ShiftEnd = &s
+		}
+		snapshots[rec.EventStaffID] = rec
+	}
+	if err := snapRows.Err(); err != nil {
+		return fmt.Errorf("iterate timeline snapshots: %w", err)
+	}
+
+	type changeField struct {
+		changeType string
+		field      string
+		oldValue   *string
+		newValue   *string
+	}
+
+	buildChanges := func(oldRec, newRec teamMemberSnapshot) []changeField {
+		changes := make([]changeField, 0)
+		if nullableString(oldRec.Location) != nullableString(newRec.Location) {
+			changes = append(changes, changeField{changeType: "location_changed", field: "location", oldValue: oldRec.Location, newValue: newRec.Location})
+		}
+		if nullableString(oldRec.City) != nullableString(newRec.City) {
+			changes = append(changes, changeField{changeType: "location_changed", field: "city", oldValue: oldRec.City, newValue: newRec.City})
+		}
+		if nullableString(oldRec.RoleOverride) != nullableString(newRec.RoleOverride) {
+			changes = append(changes, changeField{changeType: "role_changed", field: "role_override", oldValue: oldRec.RoleOverride, newValue: newRec.RoleOverride})
+		}
+		if nullableString(oldRec.ShiftStart) != nullableString(newRec.ShiftStart) {
+			changes = append(changes, changeField{changeType: "shift_changed", field: "shift_start", oldValue: oldRec.ShiftStart, newValue: newRec.ShiftStart})
+		}
+		if nullableString(oldRec.ShiftEnd) != nullableString(newRec.ShiftEnd) {
+			changes = append(changes, changeField{changeType: "shift_changed", field: "shift_end", oldValue: oldRec.ShiftEnd, newValue: newRec.ShiftEnd})
+		}
+		if nullableString(oldRec.Status) != nullableString(newRec.Status) {
+			changes = append(changes, changeField{changeType: "status_changed", field: "status", oldValue: oldRec.Status, newValue: newRec.Status})
+		}
+		return changes
+	}
+
+	insertEvent := func(eventStaffID, eventID uuid.UUID, changeType, field string, oldValue, newValue *string) error {
+		rawHash := fmt.Sprintf("%s|%s|%s|%s|%s", eventStaffID.String(), field, nullableString(oldValue), nullableString(newValue), changeType)
+		hash := sha256.Sum256([]byte(rawHash))
+		sourceHash := hex.EncodeToString(hash[:])
+		_, err := tx.Exec(ctx, `
+			INSERT INTO team_member_change_events (
+				invited_user_id, event_id, event_staff_id,
+				change_type, field_name, old_value, new_value, source_hash
+			)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+			ON CONFLICT (invited_user_id, source_hash) DO NOTHING
+		`, invitedUserID, eventID, eventStaffID, changeType, field, oldValue, newValue, sourceHash)
+		if err != nil {
+			return fmt.Errorf("insert team member change event: %w", err)
+		}
+		return nil
+	}
+
+	for eventStaffID, cur := range current {
+		snap, exists := snapshots[eventStaffID]
+		if !exists {
+			if err := insertEvent(eventStaffID, cur.EventID, "assignment_added", "status", nil, cur.Status); err != nil {
+				return err
+			}
+		} else {
+			for _, ch := range buildChanges(snap, cur) {
+				if err := insertEvent(eventStaffID, cur.EventID, ch.changeType, ch.field, ch.oldValue, ch.newValue); err != nil {
+					return err
+				}
+			}
+		}
+
+		_, err := tx.Exec(ctx, `
+			INSERT INTO team_member_assignment_snapshots (
+				invited_user_id, event_staff_id, event_id, location, city,
+				role_override, shift_start, shift_end, status, updated_at
+			)
+			VALUES (
+				$1, $2, $3, $4, $5, $6,
+				$7::timestamptz, $8::timestamptz, $9, NOW()
+			)
+			ON CONFLICT (invited_user_id, event_staff_id) DO UPDATE SET
+				event_id = EXCLUDED.event_id,
+				location = EXCLUDED.location,
+				city = EXCLUDED.city,
+				role_override = EXCLUDED.role_override,
+				shift_start = EXCLUDED.shift_start,
+				shift_end = EXCLUDED.shift_end,
+				status = EXCLUDED.status,
+				updated_at = NOW()
+		`, invitedUserID, cur.EventStaffID, cur.EventID, cur.Location, cur.City, cur.RoleOverride, cur.ShiftStart, cur.ShiftEnd, cur.Status)
+		if err != nil {
+			return fmt.Errorf("upsert timeline snapshot: %w", err)
+		}
+	}
+
+	for eventStaffID, snap := range snapshots {
+		if _, exists := current[eventStaffID]; exists {
+			continue
+		}
+		removed := "removed"
+		if err := insertEvent(eventStaffID, snap.EventID, "assignment_removed", "status", snap.Status, &removed); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(ctx,
+			`DELETE FROM team_member_assignment_snapshots WHERE invited_user_id = $1 AND event_staff_id = $2`,
+			invitedUserID, eventStaffID,
+		); err != nil {
+			return fmt.Errorf("delete stale timeline snapshot: %w", err)
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit sync timeline tx: %w", err)
+	}
+
+	return nil
+}
+
+func (r *StaffRepo) ListMyTimeline(ctx context.Context, invitedUserID uuid.UUID, unreadOnly bool, limit int) ([]TeamMemberChangeEvent, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	if limit > 200 {
+		limit = 200
+	}
+
+	if err := r.SyncTimelineSnapshots(ctx, invitedUserID); err != nil {
+		return nil, err
+	}
+
+	query := `
+		SELECT c.id, c.event_id, c.event_staff_id,
+			e.service_type, e.event_date,
+			c.change_type, c.field_name, c.old_value, c.new_value,
+			c.occurred_at, c.read_at
+		FROM team_member_change_events c
+		JOIN events e ON e.id = c.event_id
+		WHERE c.invited_user_id = $1
+	`
+	args := []any{invitedUserID}
+	if unreadOnly {
+		query += ` AND c.read_at IS NULL`
+	}
+	query += ` ORDER BY c.occurred_at DESC, c.created_at DESC LIMIT $2`
+	args = append(args, limit)
+
+	rows, err := r.pool.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("query my timeline: %w", err)
+	}
+	defer rows.Close()
+
+	items := make([]TeamMemberChangeEvent, 0)
+	for rows.Next() {
+		var (
+			item       TeamMemberChangeEvent
+			eventDate  time.Time
+			occurredAt time.Time
+			readAt     *time.Time
+		)
+		if err := rows.Scan(
+			&item.ID,
+			&item.EventID,
+			&item.EventStaffID,
+			&item.EventName,
+			&eventDate,
+			&item.ChangeType,
+			&item.FieldName,
+			&item.OldValue,
+			&item.NewValue,
+			&occurredAt,
+			&readAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan my timeline row: %w", err)
+		}
+		item.EventDate = eventDate.Format("2006-01-02")
+		item.OccurredAt = occurredAt.UTC().Format(time.RFC3339)
+		if readAt != nil {
+			s := readAt.UTC().Format(time.RFC3339)
+			item.ReadAt = &s
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate my timeline rows: %w", err)
+	}
+
+	return items, nil
+}
+
+func (r *StaffRepo) MarkTimelineRead(ctx context.Context, invitedUserID uuid.UUID, ids []uuid.UUID) (int64, error) {
+	if len(ids) == 0 {
+		tag, err := r.pool.Exec(ctx,
+			`UPDATE team_member_change_events SET read_at = NOW() WHERE invited_user_id = $1 AND read_at IS NULL`,
+			invitedUserID,
+		)
+		if err != nil {
+			return 0, fmt.Errorf("mark all timeline events read: %w", err)
+		}
+		return tag.RowsAffected(), nil
+	}
+
+	tag, err := r.pool.Exec(ctx,
+		`UPDATE team_member_change_events
+		 SET read_at = NOW()
+		 WHERE invited_user_id = $1 AND id = ANY($2) AND read_at IS NULL`,
+		invitedUserID,
+		ids,
+	)
+	if err != nil {
+		return 0, fmt.Errorf("mark timeline events read by ids: %w", err)
+	}
+
+	return tag.RowsAffected(), nil
+}
+
+func nullableString(value *string) string {
+	if value == nil {
+		return ""
+	}
+	return *value
 }
 
 // CreateInvite revokes any existing pending invite for the same staff row and

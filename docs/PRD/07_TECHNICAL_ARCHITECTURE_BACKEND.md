@@ -10,7 +10,7 @@ aliases:
   - Arquitectura Backend
   - Backend Architecture
 date: 2026-03-20
-updated: 2026-05-11
+updated: 2026-05-17
 status: active
 platform: Backend
 ---
@@ -45,6 +45,32 @@ platform: Backend
 > - **Handlers/middlewares migrados:** errores de `auth`, parte de `crud` y middlewares (`auth`, `admin`) ahora usan keys i18n en vez de strings hardcodeados.
 > - **Validación localizada:** `ValidationError` soporta traducción de mensajes (`validation.*`) manteniendo shape de error existente.
 > - **Emails localizados:** `EmailService` incorpora variantes `*Localized` para welcome, reset password, payment receipt, collaborator assigned y subscription confirmation.
+
+> [!success] 2026-05-17 — Team Member Portal backend: H4 detalle Team scoped (issue #339)
+>
+> - `GET /api/staff/my-assignments` se consolida como fuente de detalle Team scoped sin exponer CRM completo del organizer.
+> - `ListMyAssignments` retorna campos operativos para ejecución: ubicación, ciudad, venue, contacto operativo, notas del organizador, turno y estado.
+> - Se mantiene tenant isolation: `team_member` solo accede a eventos donde está asignado.
+
+> [!success] 2026-05-17 — Team Member Portal backend: H5 timeline de cambios (issue #340)
+>
+> - Nueva persistencia `team_member_change_events` + `team_member_timeline_snapshots` (migración 052) para detectar y registrar cambios por asignación.
+> - Nuevos endpoints: `GET /api/staff/my-timeline` (feed) y `POST /api/staff/my-timeline/read` (mark-read).
+> - El feed se mantiene scoped a `invited_user_id` y conserva aislamiento tenant por miembro autenticado.
+
+> [!success] 2026-05-17 — Team Member Portal backend: H6 disponibilidad del miembro (issue #341)
+>
+> - `UnavailableDate` agrega rango horario opcional (`start_time`, `end_time`) vía migración 053.
+> - Nuevos flujos de edición para bloqueos (`PUT /api/unavailable-dates/{id}`) y validación de solapes por fecha/horario.
+> - `GET /api/staff/availability` ahora contempla bloqueos del miembro invitado para marcar no disponibilidad en asignación del organizer.
+
+> [!success] 2026-05-17 — Client Portal backend: contrato explícito tier/capabilities (issue #325)
+>
+> - `GET /api/public/events/{token}` extiende `PublicEventView` con `portal_tier` + `capabilities` para evitar gating implícito por campos faltantes.
+> - Free mantiene autoservicio esencial del portal (`payment summary`, `submit payment`, `submission history`) con redacción consistente de datos operativos ricos.
+> - Pro/Business expone detalle enriquecido y `milestones` públicos para timeline.
+> - Endpoints públicos de `payment-submissions` dejan de bloquear Free; el gating de descarga de recibo queda gobernado por capability en contrato.
+> - OpenAPI actualizado para reflejar el nuevo shape (`PublicPortalCapabilities`, milestones y comportamiento de portal).
 
 > [!info] Migraciones recientes (2026-04-16)
 >

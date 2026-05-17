@@ -16,6 +16,9 @@ import com.creapolis.solennix.core.model.StaffInviteResponse
 import com.creapolis.solennix.core.model.TeamMemberAssignment
 import com.creapolis.solennix.core.model.AssignmentPortalResponse
 import com.creapolis.solennix.core.model.AssignmentResponseOutcome
+import com.creapolis.solennix.core.model.TeamMemberChangeEvent
+import com.creapolis.solennix.core.model.TeamTimelineMarkReadResponse
+import com.creapolis.solennix.core.model.UnavailableDate
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.Endpoints
 import com.creapolis.solennix.core.network.SolennixException
@@ -40,6 +43,25 @@ interface StaffRepository {
     suspend fun revokeStaffInvite(id: String)
     suspend fun getMyAssignments(): List<TeamMemberAssignment>
     suspend fun respondAssignment(id: String, response: AssignmentPortalResponse): AssignmentResponseOutcome
+    suspend fun getMyTimeline(unreadOnly: Boolean = false, limit: Int = 50): List<TeamMemberChangeEvent>
+    suspend fun markMyTimelineRead(ids: List<String> = emptyList()): TeamTimelineMarkReadResponse
+    suspend fun getMyUnavailableDates(start: String, end: String): List<UnavailableDate>
+    suspend fun createMyUnavailableDate(
+        startDate: String,
+        endDate: String,
+        startTime: String? = null,
+        endTime: String? = null,
+        reason: String? = null
+    ): UnavailableDate
+    suspend fun updateMyUnavailableDate(
+        id: String,
+        startDate: String,
+        endDate: String,
+        startTime: String? = null,
+        endTime: String? = null,
+        reason: String? = null
+    ): UnavailableDate
+    suspend fun deleteMyUnavailableDate(id: String)
 
     fun getStaffRemotePaging(
         sort: String = "name",
@@ -75,6 +97,15 @@ class OfflineFirstStaffRepository @Inject constructor(
     private val staffDao: StaffDao,
     private val apiService: ApiService
 ) : StaffRepository {
+
+    @kotlinx.serialization.Serializable
+    private data class UnavailableDateRequest(
+        @kotlinx.serialization.SerialName("start_date") val startDate: String,
+        @kotlinx.serialization.SerialName("end_date") val endDate: String,
+        @kotlinx.serialization.SerialName("start_time") val startTime: String? = null,
+        @kotlinx.serialization.SerialName("end_time") val endTime: String? = null,
+        val reason: String? = null
+    )
 
     override fun getStaff(): Flow<List<Staff>> =
         staffDao.getStaff().map { it.map { entity -> entity.asExternalModel() } }
@@ -140,6 +171,68 @@ class OfflineFirstStaffRepository @Inject constructor(
             Endpoints.staffRespondAssignment(id),
             mapOf("response" to response.raw)
         )
+    }
+
+    override suspend fun getMyTimeline(unreadOnly: Boolean, limit: Int): List<TeamMemberChangeEvent> {
+        val params = buildMap {
+            if (unreadOnly) put("unread_only", "true")
+            put("limit", limit.toString())
+        }
+        return apiService.get(Endpoints.STAFF_MY_TIMELINE, params)
+    }
+
+    override suspend fun markMyTimelineRead(ids: List<String>): TeamTimelineMarkReadResponse {
+        return apiService.post(
+            Endpoints.STAFF_MY_TIMELINE_READ,
+            mapOf("ids" to ids)
+        )
+    }
+
+    override suspend fun getMyUnavailableDates(start: String, end: String): List<UnavailableDate> {
+        return apiService.get(Endpoints.UNAVAILABLE_DATES, mapOf("start" to start, "end" to end))
+    }
+
+    override suspend fun createMyUnavailableDate(
+        startDate: String,
+        endDate: String,
+        startTime: String?,
+        endTime: String?,
+        reason: String?
+    ): UnavailableDate {
+        return apiService.post(
+            Endpoints.UNAVAILABLE_DATES,
+            UnavailableDateRequest(
+                startDate = startDate,
+                endDate = endDate,
+                startTime = startTime,
+                endTime = endTime,
+                reason = reason
+            )
+        )
+    }
+
+    override suspend fun updateMyUnavailableDate(
+        id: String,
+        startDate: String,
+        endDate: String,
+        startTime: String?,
+        endTime: String?,
+        reason: String?
+    ): UnavailableDate {
+        return apiService.put(
+            Endpoints.unavailableDate(id),
+            UnavailableDateRequest(
+                startDate = startDate,
+                endDate = endDate,
+                startTime = startTime,
+                endTime = endTime,
+                reason = reason
+            )
+        )
+    }
+
+    override suspend fun deleteMyUnavailableDate(id: String) {
+        apiService.delete(Endpoints.unavailableDate(id))
     }
 
     override fun getStaffRemotePaging(

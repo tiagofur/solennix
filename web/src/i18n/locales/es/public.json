@@ -104,6 +104,7 @@
     "upgrade": {
       "title": "Acceso limitado",
       "description": "El organizador tiene un plan gratuito. Para acceder a todos los detalles del evento (horarios, ubicación, cantidad de invitados), el organizador necesita actualizar su plan.",
+      "details_locked": "Este portal mantiene pagos y comprobantes, pero algunos detalles operativos del evento están disponibles en el plan Pro del organizador.",
       "cta": "Ver planes"
     },
     "details": {
@@ -111,6 +112,10 @@
       "location": "Ubicación",
       "guests": "Invitados",
       "guests_value": "{{count}} personas"
+    },
+    "timeline": {
+      "title": "Línea de tiempo del evento",
+      "pending": "Pendiente"
     },
     "payments": {
       "title": "Estado de pagos",
@@ -136,6 +141,7 @@
       "history_empty": "Todavia no enviaste ningun comprobante.",
       "reference_short": "Ref",
       "rejection_reason": "Motivo",
+      "receipt_file_received": "Comprobante recibido",
       "view_receipt": "Ver comprobante",
       "tab_resumen": "Resumen",
       "tab_enviar": "Enviar pago",

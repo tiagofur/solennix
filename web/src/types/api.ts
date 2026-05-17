@@ -2204,10 +2204,30 @@ export interface components {
             currency: string;
         };
         PublicEventView: {
+            /**
+             * @description Portal tier behavior for this tokenized view
+             * @enum {string}
+             */
+            portal_tier: "free" | "pro";
+            capabilities: components["schemas"]["PublicPortalCapabilities"];
             event: components["schemas"]["PublicEventDetails"];
             organizer: components["schemas"]["PublicOrganizerBrand"];
             client: components["schemas"]["PublicClientInfo"];
             payment: components["schemas"]["PublicPaymentSummary"];
+            milestones?: components["schemas"]["PublicPortalMilestone"][];
+        };
+        PublicPortalCapabilities: {
+            can_submit_payment: boolean;
+            can_view_submission_history: boolean;
+            can_view_rich_event_details: boolean;
+            can_view_milestones: boolean;
+            can_download_receipt_files: boolean;
+        };
+        PublicPortalMilestone: {
+            label: string;
+            date?: string;
+            status?: string;
+            highlight?: boolean;
         };
         StaffTeamMember: {
             /** Format: uuid */

@@ -129,7 +129,7 @@
 		158159A4245271A3507C164E /* DeepLinkHandlerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkHandlerTests.swift; sourceTree = "<group>"; };
 		1A61288722D88853A7E4E119 /* EventDetailViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventDetailViewModelTests.swift; sourceTree = "<group>"; };
 		1A639BA04B2C90E8F96B85CB /* ShowMonthlyRevenueIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowMonthlyRevenueIntent.swift; sourceTree = "<group>"; };
-		1D5FE68FCA472E277CBF66FD /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		1D5FE68FCA472E277CBF66FD /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		1EF7A9FBEE935FF6D1DCCF98 /* SolennixDesign */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SolennixDesign; path = Packages/SolennixDesign; sourceTree = SOURCE_ROOT; };
 		1F3752A818448EDDCFD8813A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		20FD5F115715FD819AE007D8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -155,7 +155,7 @@
 		5F34A685767D81C0E207E6AA /* MoreMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreMenuView.swift; sourceTree = "<group>"; };
 		5F69128CE543478DD8DF13D6 /* SolennixLiveActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolennixLiveActivityView.swift; sourceTree = "<group>"; };
 		63856E6F5C0F3C9413900FB5 /* SolennixFeatures */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SolennixFeatures; path = Packages/SolennixFeatures; sourceTree = SOURCE_ROOT; };
-		68A9B9C7CCD508780816FFD3 /* SolennixWidgetExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SolennixWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		68A9B9C7CCD508780816FFD3 /* SolennixWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SolennixWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		70877D09C7C58457DDD2F657 /* Route.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Route.swift; sourceTree = "<group>"; };
 		72F41ABD56C3074AEF875CB1 /* EventDomainModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventDomainModelTests.swift; sourceTree = "<group>"; };
 		77B8BB419FD62C7CD2B47639 /* ShowTodayEventsIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowTodayEventsIntent.swift; sourceTree = "<group>"; };
@@ -167,7 +167,7 @@
 		8C00F21C74E3F4FEFE8F1C50 /* KeyboardShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcuts.swift; sourceTree = "<group>"; };
 		8D1F4DAF0D7EE69A2EF0F374 /* DashboardMetricsModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardMetricsModelsTests.swift; sourceTree = "<group>"; };
 		93621466CB78E70396E79E29 /* ShowUpcomingEventsIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowUpcomingEventsIntent.swift; sourceTree = "<group>"; };
-		9610BC66E6D620756BD4FBBA /* SolennixTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SolennixTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9610BC66E6D620756BD4FBBA /* SolennixTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SolennixTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9F958D99D18E1F682FC6DDB7 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		A18654763EF08D7510683BCA /* BackgroundTaskManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundTaskManager.swift; sourceTree = "<group>"; };
 		A3B0FFA9AF756AB9C85E856D /* SolennixApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolennixApp.swift; sourceTree = "<group>"; };
@@ -175,13 +175,13 @@
 		AB69CCDF04807E01479F4939 /* WidgetModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetModels.swift; sourceTree = "<group>"; };
 		AE1690546D867F499D0E6B0C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		AE5D1D3BB8D8DDFF96028EDC /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
-		B2A8EE69CBED38B58E706A88 /* SolennixNotificationServiceExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SolennixNotificationServiceExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B2A8EE69CBED38B58E706A88 /* SolennixNotificationServiceExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SolennixNotificationServiceExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		BC512DE1AC7C660755ECA909 /* RouteDestination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteDestination.swift; sourceTree = "<group>"; };
 		C051B91E5F738A07F4A1E176 /* AuthFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthFlowView.swift; sourceTree = "<group>"; };
-		C2D2D2FC95DE89E91CACFC96 /* SolennixProducts.storekit */ = {isa = PBXFileReference; path = SolennixProducts.storekit; sourceTree = "<group>"; };
+		C2D2D2FC95DE89E91CACFC96 /* SolennixProducts.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = SolennixProducts.storekit; sourceTree = "<group>"; };
 		C4044E1E8D266357DF20E1A2 /* CoreFormattingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreFormattingTests.swift; sourceTree = "<group>"; };
 		C86D0D98819337D4F48773A9 /* CachedModelConversionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedModelConversionTests.swift; sourceTree = "<group>"; };
-		CB729295B156CBB8B4B765E2 /* Solennix.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Solennix.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CB729295B156CBB8B4B765E2 /* Solennix.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Solennix.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CCDE53D42FC31925A920B98C /* SolennixWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolennixWidgets.swift; sourceTree = "<group>"; };
 		CDF2A0ED96EB0D2C7CA30A42 /* SolennixNetwork */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SolennixNetwork; path = Packages/SolennixNetwork; sourceTree = SOURCE_ROOT; };
 		D0272551BEA13A36CB61CD05 /* UserPlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserPlanTests.swift; sourceTree = "<group>"; };
@@ -532,7 +532,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1500;
+				LastUpgradeCheck = 2650;
 				TargetAttributes = {
 					14FD8C2D317599754E5758B8 = {
 						DevelopmentTeam = T5SKULSP2M;
@@ -704,7 +704,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = SolennixWidgetExtension/SolennixWidgetExtension.entitlements;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 9;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = SolennixWidgetExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -725,7 +725,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = SolennixNotificationServiceExtension/SolennixNotificationServiceExtension.entitlements;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SolennixNotificationServiceExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -781,6 +781,7 @@
 				DEVELOPMENT_TEAM = T5SKULSP2M;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -802,6 +803,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.9;
@@ -831,7 +833,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = SolennixWidgetExtension/SolennixWidgetExtension.entitlements;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 9;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = SolennixWidgetExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -887,6 +889,7 @@
 				DEVELOPMENT_TEAM = T5SKULSP2M;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -901,6 +904,7 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.9;
@@ -914,7 +918,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Solennix/Solennix.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 9;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Solennix/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
@@ -938,7 +942,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Solennix/Solennix.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 9;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Solennix/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
@@ -978,7 +982,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = SolennixNotificationServiceExtension/SolennixNotificationServiceExtension.entitlements;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SolennixNotificationServiceExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;

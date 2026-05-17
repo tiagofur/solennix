@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"crypto/sha256"
+	"fmt"
 	"encoding/hex"
 	"log/slog"
 	"net/http"
@@ -32,6 +33,10 @@ type assignmentResponseRequest struct {
 
 type staffInviteRequest struct {
 	TargetRole string `json:"target_role"`
+}
+
+type markTimelineReadRequest struct {
+	IDs []string `json:"ids"`
 }
 
 func isTeamPortalRole(role string) bool {
@@ -459,4 +464,100 @@ func (h *StaffHandler) RespondAssignment(w http.ResponseWriter, r *http.Request)
 	}
 
 	writeJSON(w, http.StatusOK, outcome)
+}
+
+// GetMyTimeline lists team-member assignment changes in reverse chronological order.
+//
+// GET /api/staff/my-timeline?unread_only=true&limit=50
+func (h *StaffHandler) GetMyTimeline(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+
+	user, err := h.userRepo.GetByID(r.Context(), userID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to fetch user")
+		return
+	}
+	if !isTeamPortalRole(strings.ToLower(strings.TrimSpace(user.Role))) {
+		writeError(w, http.StatusForbidden, "Team member access required")
+		return
+	}
+
+	unreadOnly := strings.EqualFold(strings.TrimSpace(r.URL.Query().Get("unread_only")), "true")
+	limit := 50
+	if value := strings.TrimSpace(r.URL.Query().Get("limit")); value != "" {
+		if parsed, parseErr := parsePositiveInt(value, 200); parseErr != nil {
+			writeError(w, http.StatusBadRequest, "limit must be an integer between 1 and 200")
+			return
+		} else {
+			limit = parsed
+		}
+	}
+
+	items, err := h.staffRepo.ListMyTimeline(r.Context(), userID, unreadOnly, limit)
+	if err != nil {
+		slog.Error("failed to list team-member timeline", "error", err, "user_id", userID)
+		writeError(w, http.StatusInternalServerError, "Failed to fetch timeline")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, items)
+}
+
+// MarkMyTimelineRead marks timeline items as read.
+//
+// POST /api/staff/my-timeline/read
+func (h *StaffHandler) MarkMyTimelineRead(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+
+	user, err := h.userRepo.GetByID(r.Context(), userID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to fetch user")
+		return
+	}
+	if !isTeamPortalRole(strings.ToLower(strings.TrimSpace(user.Role))) {
+		writeError(w, http.StatusForbidden, "Team member access required")
+		return
+	}
+
+	var req markTimelineReadRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	ids := make([]uuid.UUID, 0, len(req.IDs))
+	for _, rawID := range req.IDs {
+		id, parseErr := uuid.Parse(strings.TrimSpace(rawID))
+		if parseErr != nil {
+			writeError(w, http.StatusBadRequest, "Invalid timeline item ID")
+			return
+		}
+		ids = append(ids, id)
+	}
+
+	updated, err := h.staffRepo.MarkTimelineRead(r.Context(), userID, ids)
+	if err != nil {
+		slog.Error("failed to mark timeline read", "error", err, "user_id", userID)
+		writeError(w, http.StatusInternalServerError, "Failed to mark timeline as read")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"updated": updated})
+}
+
+func parsePositiveInt(value string, max int) (int, error) {
+	n := 0
+	for _, ch := range value {
+		if ch < '0' || ch > '9' {
+			return 0, fmt.Errorf("invalid integer")
+		}
+		n = (n * 10) + int(ch-'0')
+		if n > max {
+			return 0, fmt.Errorf("too large")
+		}
+	}
+	if n <= 0 {
+		return 0, fmt.Errorf("must be positive")
+	}
+	return n, nil
 }

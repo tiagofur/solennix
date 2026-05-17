@@ -9,5 +9,7 @@ data class UnavailableDate(
     @SerialName("user_id") val userId: String = "",
     @SerialName("start_date") val startDate: String,
     @SerialName("end_date") val endDate: String,
+    @SerialName("start_time") val startTime: String? = null,
+    @SerialName("end_time") val endTime: String? = null,
     val reason: String? = null
 )

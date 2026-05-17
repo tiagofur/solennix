@@ -736,18 +736,24 @@ func TestGetPortalData_GratisPlan_ReturnsBasicShape(t *testing.T) {
 	assert.Nil(t, resp.Event.City)
 	assert.Equal(t, 0, resp.Event.NumPeople) // Gratis gets zero, not the actual count
 
-	// Free tier: portal_tier is "free"
+	// Free tier: portal_tier and capabilities
 	assert.Equal(t, "free", resp.PortalTier)
+	assert.True(t, resp.Capabilities.CanSubmitPayment)
+	assert.True(t, resp.Capabilities.CanViewSubmissionHistory)
+	assert.False(t, resp.Capabilities.CanViewRichEventDetails)
+	assert.False(t, resp.Capabilities.CanViewMilestones)
 
 	// Free tier: organizer branding is redacted
 	assert.Nil(t, resp.Organizer.BusinessName)
 
-	// Client details hidden for gratis
-	assert.Empty(t, resp.Client.Name)
+	// Client details still available for payment submission self-service
+	assert.Equal(t, clientID.String(), resp.Client.ID)
+	assert.Equal(t, "María López", resp.Client.Name)
 
-	// Free tier: payment summary is empty
-	assert.Equal(t, float64(0), resp.Payment.Total)
-	assert.Equal(t, float64(0), resp.Payment.Paid)
+	// Free tier keeps payment totals
+	assert.Equal(t, float64(50000), resp.Payment.Total)
+	assert.Equal(t, float64(15000), resp.Payment.Paid)
+	assert.Equal(t, float64(35000), resp.Payment.Remaining)
 }
 
 // Pro plan returns full shape with all event details

@@ -10,7 +10,7 @@ aliases:
   - Arquitectura Web
   - Web Architecture
 date: 2026-03-20
-updated: 2026-05-14
+updated: 2026-05-17
 status: active
 platform: Web
 ---
@@ -42,6 +42,38 @@ platform: Web
 > - Ruta principal del miembro: `/team/work`.
 > - Consolidación de `Mis asignaciones` + `Mis eventos` en una sola pantalla operativa (pendientes + agenda).
 > - Rutas legacy (`/team/assignments`, `/team/events`) preservadas como redirect para transición.
+
+> [!success] 2026-05-17 — Team Member web: H3 calendario operativo (issue #338)
+> Se completa la capa operativa de calendario para miembro:
+> - Modos `Mes`, `Semana` y `Día` en `TeamCalendarPage`.
+> - `Semana` y `Día` ordenados cronológicamente por turno (`shift_start/shift_end`) con fallback `all day`.
+> - Tap en asignación abre detalle Team (`selectedAssignmentDetail`) sin romper navegación del organizer.
+
+> [!success] 2026-05-17 — Team Member web: H4 detalle Team scoped (issue #339)
+> Se completa el detalle operativo Team en el calendario del miembro:
+> - `selectedAssignmentDetail` muestra brief de ejecución, turno, contacto, notas del organizador y CTA `Abrir en mapas`.
+> - Checklist personal + nota rápida persistidos por evento en `localStorage` (`team_event_detail_{eventId}`).
+> - No se agrega ruta pública de detalle Team; el acceso queda scoped a asignaciones del miembro (`/team/work`, `/team/calendar`).
+
+> [!success] 2026-05-17 — Team Member web: H5 timeline de cambios (issue #340)
+> Se incorpora trazabilidad operativa de cambios para el miembro:
+> - `TeamEventsPage` agrega bloque `Cambios recientes` con badge de no leídos.
+> - Cada ítem dispara mark-read y abre calendario en el evento afectado (`/team/calendar?eventStaffId=...`).
+> - El feed consume `/staff/my-timeline` y actualización de lectura en `/staff/my-timeline/read`.
+
+> [!success] 2026-05-17 — Team Member web: H6 disponibilidad del miembro (issue #341)
+> Se incorpora gestión operativa de disponibilidad para el miembro:
+> - `TeamEventsPage` agrega bloque `Mi disponibilidad` con alta/edición/baja de bloqueos.
+> - Se soportan bloqueos por fecha con rango horario opcional (`start_time`/`end_time`) y motivo.
+> - Los cambios refrescan inmediatamente y consumen endpoints scoped del miembro (`/unavailable-dates`).
+
+> [!success] 2026-05-17 — Client Portal web: status hub + gating por capabilities (issue #325)
+> Se actualiza el portal público del cliente para hacerlo útil como hub de estado/pagos:
+> - `ClientPortalPage` consume `portal_tier` y `capabilities` del backend (se elimina hardcode local de tier).
+> - Hero y jerarquía priorizan fecha del evento, estado actual, resumen de pagos y CTA principal.
+> - Tabs/acciones (`Resumen`, `Enviar pago`, `Mis envíos`) quedan controladas por capabilities del contrato.
+> - En historial se muestra siempre evidencia de recibo (`Comprobante recibido`) y motivo de rechazo cuando existe.
+> - Pro muestra además detalle operativo enriquecido + `Línea de tiempo del evento`.
 
 > [!success] 2026-05-04 — Web 1.0.0 + Help Center alineado al design system
 > La Web queda formalmente en `1.0.0` y el Help Center deja de usar una paleta paralela para adoptar los tokens del sistema (`bg-*`, `text-*`, `border-*`).
@@ -100,7 +132,7 @@ platform: Web
 | **Validacion**       | zod                       | 4.4.3         | Schemas de validacion type-safe, inferencia de tipos TypeScript, validacion en runtime              |
 | **Graficos**         | recharts                  | 3.8.1         | Graficos declarativos basados en D3, componibles con React, responsive                              |
 | **PDF**              | jsPDF + jspdf-autotable   | 4.2.1 / 5.0.7 | Generacion de PDF en el cliente (cotizaciones, contratos, resumen de eventos)                       |
-| **Calendario**       | react-day-picker          | 9.13.2        | Selector de fechas accesible, personalizable con Tailwind                                           |
+| **Calendario**       | @daypicker/react          | 10.0.1        | Selector de fechas accesible, personalizable con Tailwind                                           |
 | **Fechas**           | date-fns                  | 4.1.0         | Funciones puras e inmutables para manipulacion de fechas, tree-shakeable                            |
 | **Iconos**           | lucide-react              | 1.14.0        | Iconos SVG ligeros, consistentes, tree-shakeable                                                    |
 | **CSS Utils**        | clsx + tailwind-merge     | 2.1.1 / 3.5.0 | Composicion condicional de clases sin conflictos de Tailwind                                        |

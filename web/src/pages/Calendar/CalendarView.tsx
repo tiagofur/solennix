@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { DayPicker, type DayButtonProps } from "react-day-picker";
-import "react-day-picker/style.css";
+import { DayPicker, type DayButtonProps } from "@daypicker/react";
+import "@daypicker/react/style.css";
 import { useTranslation } from "react-i18next";
 import { UnavailableDatesModal } from "./components/UnavailableDatesModal";
 import { Link, useNavigate } from "react-router-dom";
@@ -211,7 +211,7 @@ export const CalendarView: React.FC = () => {
   // in the current month view. Previously we iterated each range
   // day-by-day inside `modifiers` (O(ranges × days)) and re-built an
   // array of Date objects; now we build a Set once and expose both the
-  // Date[] needed by react-day-picker's `modifiers` and a fast lookup
+  // Date[] needed by @daypicker/react's `modifiers` and a fast lookup
   // via the Set itself.
   const { blockedDateList } = useMemo(() => {
     const set = new Set<string>();

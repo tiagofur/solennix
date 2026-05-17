@@ -45,6 +45,7 @@ export const queryKeys = {
     availability: (date: string) => ['staff', 'availability', date] as const,
     assignments: (staffId: string) => ['staff', staffId, 'assignments'] as const,
     myAssignments: ['staff', 'my-assignments'] as const,
+    myTimeline: (unreadOnly?: boolean, limit?: number) => ['staff', 'my-timeline', { unreadOnly, limit }] as const,
     // Ola 2 — staff teams (cuadrillas).
     teams: ['staff', 'teams'] as const,
     team: (id: string) => ['staff', 'teams', id] as const,

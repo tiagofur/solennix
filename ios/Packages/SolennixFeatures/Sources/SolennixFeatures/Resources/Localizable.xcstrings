@@ -2572,6 +2572,9 @@
         }
       }
     },
+    "Calendario" : {
+
+    },
     "Cambiar a %@" : {
 
     },
@@ -4008,6 +4011,9 @@
 
     },
     "Eventos confirmados" : {
+
+    },
+    "Eventos del dia" : {
 
     },
     "events.detail.action.delete" : {
@@ -9022,6 +9028,12 @@
     "Métricas de Rentabilidad (Interno)" : {
 
     },
+    "Mi agenda" : {
+
+    },
+    "Mi jornada" : {
+
+    },
     "Miembros" : {
 
     },
@@ -9059,6 +9071,9 @@
     "Negocio" : {
 
     },
+    "No hay asignaciones para esta fecha." : {
+
+    },
     "No hay elementos agregados" : {
 
     },
@@ -9075,6 +9090,9 @@
 
     },
     "No se pudo previsualizar el archivo" : {
+
+    },
+    "No tenes invitaciones pendientes." : {
 
     },
     "Nombre" : {
@@ -9152,6 +9170,9 @@
     "Ordenar productos" : {
 
     },
+    "Pago: %@" : {
+
+    },
     "Pagos" : {
 
     },
@@ -9187,6 +9208,9 @@
       }
     },
     "Pendiente" : {
+
+    },
+    "Pendientes por responder" : {
 
     },
     "Personal" : {
@@ -9255,6 +9279,9 @@
     "Quitar liderazgo" : {
 
     },
+    "Recargar asignaciones" : {
+
+    },
     "Rechazar" : {
 
     },
@@ -9288,6 +9315,9 @@
     "Rol en este evento (opcional)" : {
 
     },
+    "Rol: %@" : {
+
+    },
     "Rotar enlace" : {
 
     },
@@ -9304,6 +9334,9 @@
 
     },
     "Se va a deshabilitar el enlace para el cliente. ¿Estás seguro?" : {
+
+    },
+    "Seccion" : {
 
     },
     "Selecciona el nuevo estado del evento" : {
