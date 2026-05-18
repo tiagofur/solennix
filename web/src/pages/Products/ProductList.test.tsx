@@ -341,4 +341,27 @@ describe('ProductList', () => {
       expect(productService.getAll).toHaveBeenCalled();
     });
   });
+
+  it('renders thumbnail with resolved absolute src when image_url is relative', async () => {
+    (productService.getAll as any).mockResolvedValue([
+      {
+        id: '1',
+        name: 'Churros',
+        category: 'Postres',
+        base_price: 50,
+        image_url: '/uploads/products/churros.jpg',
+        is_active: true,
+      },
+    ]);
+
+    const { container } = renderList();
+
+    await waitFor(() => {
+      expect(screen.getByText('Churros')).toBeInTheDocument();
+    });
+
+    const image = container.querySelector('img[src*="/uploads/products/churros.jpg"]');
+    expect(image).toBeTruthy();
+    expect(image?.getAttribute('src')).toBe('http://localhost:8080/uploads/products/churros.jpg');
+  });
 });

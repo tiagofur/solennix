@@ -216,4 +216,20 @@ describe('ProductDetails', () => {
     await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Paquete Premium'));
     expect(screen.getByText('Insumo desconocido')).toBeInTheDocument();
   });
+
+  it('renders product image with resolved absolute src when image_url is relative', async () => {
+    (productService.getById as any).mockResolvedValue({
+      ...baseProduct,
+      image_url: '/uploads/products/premium.jpg',
+    });
+    (productService.getIngredients as any).mockResolvedValue([]);
+
+    const { container } = renderDetails();
+
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Paquete Premium'));
+
+    const image = container.querySelector('img[src*="/uploads/products/premium.jpg"]');
+    expect(image).toBeTruthy();
+    expect(image?.getAttribute('src')).toBe('http://localhost:8080/uploads/products/premium.jpg');
+  });
 });

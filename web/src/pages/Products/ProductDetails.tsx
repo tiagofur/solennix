@@ -23,6 +23,7 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { SkeletonCard } from "@/components/Skeleton";
+import { getAssetUrl } from "@/lib/api";
 import clsx from "clsx";
 import { useProduct, useProductIngredients, useDeleteProduct } from "@/hooks/queries/useProductQueries";
 import type { ProductIngredientWithInventory } from "@/services/productService";
@@ -195,6 +196,7 @@ export const ProductDetails: React.FC = () => {
 
   const totalDemand = demandForecast.reduce((sum, d) => sum + d.quantity, 0);
   const estimatedRevenue = totalDemand * product.base_price;
+  const productImageSrc = getAssetUrl(product.image_url);
 
   return (
     <div className="space-y-6">
@@ -338,16 +340,22 @@ export const ProductDetails: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-            {product.image_url && (
-              <OptimizedImage
-                src={product.image_url}
-                alt={product.name}
-                className="w-full h-40 object-cover rounded-2xl mb-4"
-              />
-            )}
-            {!product.image_url && (
-              <div className="w-full h-40 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-                <Package className="h-12 w-12 text-primary opacity-40" />
+            <div className="mb-4 rounded-2xl border border-border bg-surface-alt/30 p-2">
+              {productImageSrc ? (
+                <OptimizedImage
+                  src={productImageSrc}
+                  alt={product.name}
+                  className="w-full h-44 object-cover rounded-xl"
+                />
+              ) : (
+                <div className="w-full h-44 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Package className="h-12 w-12 text-primary opacity-40" />
+                </div>
+              )}
+            </div>
+            {!productImageSrc && (
+              <div className="mb-4 -mt-1 text-xs text-text-secondary">
+                {t("products:form.upload_photo")}
               </div>
             )}
             <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-4 border-b border-border pb-2">

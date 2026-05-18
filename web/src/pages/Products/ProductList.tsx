@@ -19,6 +19,7 @@ import { RowActionMenu } from "@/components/RowActionMenu";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { exportToCsv } from "@/lib/exportCsv";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { getAssetUrl } from "@/lib/api";
 import Empty from "@/components/Empty";
 import { usePagination } from "@/hooks/usePagination";
 import { Pagination } from "@/components/Pagination";
@@ -272,7 +273,9 @@ export const ProductList: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-card divide-y divide-border">
-                {paginatedProducts.map((product) => (
+                {paginatedProducts.map((product) => {
+                  const imageSrc = getAssetUrl(product.image_url);
+                  return (
                   <tr
                     key={product.id}
                     className="group hover:bg-surface-alt/50 transition-colors cursor-pointer"
@@ -281,10 +284,10 @@ export const ProductList: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="shrink-0 h-10 w-10">
-                          {product.image_url ? (
+                          {imageSrc ? (
                             <OptimizedImage
                               className="h-10 w-10 rounded-lg object-cover"
-                              src={product.image_url}
+                              src={imageSrc}
                               alt=""
                             />
                           ) : (
@@ -330,7 +333,8 @@ export const ProductList: React.FC = () => {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

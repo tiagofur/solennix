@@ -25,6 +25,13 @@ status: active
 **Fecha:** Mayo 2026
 **Version:** 1.7
 
+> [!success] 2026-05-18 — Web: fix de imagen de productos en lista y detalle (issue #362)
+> Se corrigio la carga de imagenes de productos cuando `image_url` llega relativo desde backend.
+> - **Lista de productos:** `ProductList` normaliza `image_url` con `getAssetUrl` antes de renderizar thumbnail.
+> - **Detalle de producto:** `ProductDetails` usa la misma normalizacion y refuerza un bloque visual estable de imagen/fallback.
+> - **Tests web:** nuevas pruebas validan `src` absoluto para rutas relativas en lista y detalle.
+> - **Validacion:** `npx vitest run src/pages/Products/ProductList.test.tsx src/pages/Products/ProductDetails.test.tsx`, `npm run check`, `npm run lint`.
+
 > [!success] 2026-05-18 — Presupuesto PDF cliente robustecido en backend compartido
 > Se corrigió el layout del presupuesto PDF para evitar texto encimado y bloques mal posicionados en documentos enviados al cliente.
 > - **Backend PDF:** `DrawInfoGrid` ahora mide labels/values, hace wrap y avanza `y` según altura real por fila en vez de offsets fijos.

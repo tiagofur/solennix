@@ -10,7 +10,7 @@ aliases:
   - Arquitectura Web
   - Web Architecture
 date: 2026-03-20
-updated: 2026-05-17
+updated: 2026-05-18
 status: active
 platform: Web
 ---
@@ -30,6 +30,12 @@ platform: Web
 > - **Calendario:** se documenta paridad funcional ya mergeada para filtros, retry, iCal y navegación
 > - **Marketing/help:** landing y help acompañan el changelog público como capa visible del release
 > - **Navegación:** `Help` sale del sidebar principal y queda accesible desde `Settings`; el switch de tema ya no compite con logout
+
+> [!success] 2026-05-18 — Productos: normalizacion de imagen_url en lista/detalle (issue #362)
+> Se estabiliza el render de imagenes de productos para rutas relativas y absolutas.
+> - `ProductList` resuelve `image_url` con `getAssetUrl` antes del `OptimizedImage`.
+> - `ProductDetails` aplica la misma resolucion y mantiene un bloque visual dedicado de imagen/fallback.
+> - Cobertura agregada en tests de `ProductList` y `ProductDetails` para validar `src` absoluto cuando backend devuelve `/uploads/...`.
 
 > [!info] 2026-05-14 — Team Member Portal (Ola 4) planificado
 > Se definió la evolución del portal `team_member` para pasar de vistas de lista/filtro a una experiencia operativa diaria.
