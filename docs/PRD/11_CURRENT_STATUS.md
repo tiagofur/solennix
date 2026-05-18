@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-05-17
+updated: 2026-05-18
 status: active
 ---
 
@@ -24,6 +24,14 @@ status: active
 
 **Fecha:** Mayo 2026
 **Version:** 1.7
+
+> [!success] 2026-05-18 — Presupuesto PDF cliente robustecido en backend compartido
+> Se corrigió el layout del presupuesto PDF para evitar texto encimado y bloques mal posicionados en documentos enviados al cliente.
+> - **Backend PDF:** `DrawInfoGrid` ahora mide labels/values, hace wrap y avanza `y` según altura real por fila en vez de offsets fijos.
+> - **Tabla de presupuesto:** las filas del catálogo calculan altura dinámica para descripciones largas y paginan con `EnsureSpace` usando esa altura real.
+> - **Bloque financiero:** subtotal, descuento, IVA, total y anticipo se reservan como bloque antes de dibujarse para no pisarse con la tabla ni el footer.
+> - **Cobertura:** nuevas regresiones en `internal/pdf/financial_test.go` y `internal/handlers/pdf_handler_test.go` cubren textos largos, catálogo extenso y quick quote (`/quick-quotes/pdf`) que reutiliza el mismo generador.
+> - **Validación:** `go test ./internal/pdf` y `go test ./internal/handlers -run 'TestQuickQuotePDFRequestToPDFData'`.
 
 > [!success] 2026-05-17 — Backend: rate limiting autenticado por `user_id` configurable (issue #180)
 > Se completó el hardening de rate limiting para tráfico autenticado detrás de NAT/proxy.

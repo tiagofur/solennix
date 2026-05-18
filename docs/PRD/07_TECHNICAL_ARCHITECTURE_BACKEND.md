@@ -10,7 +10,7 @@ aliases:
   - Arquitectura Backend
   - Backend Architecture
 date: 2026-03-20
-updated: 2026-05-17
+updated: 2026-05-18
 status: active
 platform: Backend
 ---
@@ -21,7 +21,7 @@ platform: Backend
 > [[PRD MOC]] | [[01_PRODUCT_VISION]] | [[02_FEATURES]] | [[05_TECHNICAL_ARCHITECTURE_IOS]] | [[06_TECHNICAL_ARCHITECTURE_ANDROID]] | [[08_TECHNICAL_ARCHITECTURE_WEB]] | [[11_CURRENT_STATUS]] | [[04_MONETIZATION]]
 
 **Version:** 1.0
-**Fecha:** 2026-03-20 · **Última actualización:** 2026-05-11
+**Fecha:** 2026-03-20 · **Última actualización:** 2026-05-18
 **Plataforma:** Go REST API + PostgreSQL
 
 > [!success] Producción (2026-04-16)
@@ -63,6 +63,13 @@ platform: Backend
 > - `UnavailableDate` agrega rango horario opcional (`start_time`, `end_time`) vía migración 053.
 > - Nuevos flujos de edición para bloqueos (`PUT /api/unavailable-dates/{id}`) y validación de solapes por fecha/horario.
 > - `GET /api/staff/availability` ahora contempla bloqueos del miembro invitado para marcar no disponibilidad en asignación del organizer.
+
+> [!success] 2026-05-18 — Budget PDF layout hardening en backend compartido
+>
+> - `internal/pdf/builder.go`: `DrawInfoGrid` dejó offsets fijos y ahora mide ancho de labels, envuelve valores largos y devuelve altura real consumida por fila.
+> - `internal/pdf/budget.go`: las filas del catálogo usan altura dinámica (`estimateTableRowHeight` + `drawTableRow`) para soportar descripciones multilinea sin invadir columnas vecinas.
+> - `internal/pdf/financial.go`: el presupuesto reserva el espacio del bloque financiero completo antes de dibujarlo para evitar overlap con catálogo/footer; el anticipo sigue renderizado vía `MultiCell` con altura estimada.
+> - `POST /api/quick-quotes/pdf` reutiliza exactamente el mismo `GenerateBudget`, por lo que la mejora cubre presupuesto normal y cotización rápida en Web, iOS y Android.
 
 > [!success] 2026-05-17 — Client Portal backend: contrato explícito tier/capabilities (issue #325)
 >

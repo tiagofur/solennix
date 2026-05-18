@@ -82,6 +82,24 @@ func PaymentMethodLabel(method string) string {
 	return method
 }
 
+// EstimateFinancialSummaryHeight returns the vertical space required for the
+// summary block plus the optional deposit note.
+func (d *PDFDoc) EstimateFinancialSummaryHeight(fs FinancialSummary) float64 {
+	height := 7.0 + 6.0
+	if fs.HasDiscount {
+		height += 6.0
+	}
+	if fs.ShowTax {
+		height += 6.0
+	}
+	height += 10.0
+	if fs.HasDeposit {
+		text := fmt.Sprintf("Se requiere un anticipo del %.0f%% (%s) para confirmar la reserva.", fs.DepositPercent, FormatCurrency(fs.DepositAmount))
+		height += float64(len(d.SplitText(text, ContentWidth)))*4.0 + 3.0
+	}
+	return height
+}
+
 // DrawFinancialSummary renders the financial summary block (subtotal, discount, IVA, total).
 // Returns the Y position after the summary.
 func (d *PDFDoc) DrawFinancialSummary(y float64, fs FinancialSummary) float64 {

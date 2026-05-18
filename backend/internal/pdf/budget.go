@@ -98,24 +98,28 @@ func GenerateBudget(data BudgetData) ([]byte, error) {
 		discount := p.Discount
 		lineTotal := (unitPrice - discount) * qty
 
-		y = doc.EnsureSpace(y, 8)
-		drawTableRow(doc, y, []string{
+		cells := []string{
 			name,
 			fmt.Sprintf("%.0f", qty),
 			FormatCurrency(unitPrice),
 			FormatCurrency(lineTotal),
-		}, colWidths)
+		}
+		rowHeight := estimateTableRowHeight(doc, cells, colWidths)
+		y = ensureBudgetTableSpace(doc, y, rowHeight, headers, colWidths)
+		y = drawTableRow(doc, y, cells, colWidths)
 		rowCount++
 	}
 
 	for _, e := range data.Extras {
-		y = doc.EnsureSpace(y, 8)
-		drawTableRow(doc, y, []string{
+		cells := []string{
 			e.Description,
 			"1",
 			FormatCurrency(e.Price),
 			FormatCurrency(e.Price),
-		}, colWidths)
+		}
+		rowHeight := estimateTableRowHeight(doc, cells, colWidths)
+		y = ensureBudgetTableSpace(doc, y, rowHeight, headers, colWidths)
+		y = drawTableRow(doc, y, cells, colWidths)
 		rowCount++
 	}
 
@@ -130,6 +134,11 @@ func GenerateBudget(data BudgetData) ([]byte, error) {
 
 	// ── Financial Summary ──
 	fs := ComputeFinancialSummary(data.Event, 0)
+	summaryHeight := doc.EstimateFinancialSummaryHeight(fs) + 12
+	if y+summaryHeight > PageHeight-12 {
+		doc.AddPage()
+		y = doc.DrawHeader("Presupuesto")
+	}
 	y = doc.DrawFinancialSummary(y, fs)
 
 	// ── Deposit Info ──
@@ -167,34 +176,77 @@ func drawTableHeader(doc *PDFDoc, y float64, headers []string, colWidths []float
 	return y
 }
 
+func estimateTableRowHeight(doc *PDFDoc, cells []string, colWidths []float64) float64 {
+	const (
+		cellPadding = 2.0
+		lineHeight  = 3.8
+		minHeight   = 6.5
+	)
+	maxLines := 1
+	for i, cell := range cells {
+		availableWidth := colWidths[i] - (cellPadding * 2)
+		if availableWidth < 6 {
+			availableWidth = 6
+		}
+		lineCount := len(doc.SplitText(cell, availableWidth))
+		if lineCount > maxLines {
+			maxLines = lineCount
+		}
+	}
+	height := float64(maxLines)*lineHeight + 2
+	if height < minHeight {
+		return minHeight
+	}
+	return height
+}
+
+func ensureBudgetTableSpace(doc *PDFDoc, y, rowHeight float64, headers []string, colWidths []float64) float64 {
+	if y+rowHeight <= PageHeight-MarginBottom {
+		return y
+	}
+
+	doc.AddPage()
+	y = doc.DrawHeader("Presupuesto")
+	y = doc.DrawSectionHeader(y, "Productos y Servicios")
+	return drawTableHeader(doc, y, headers, colWidths)
+}
+
 // drawTableRow draws a single table row.
-func drawTableRow(doc *PDFDoc, y float64, cells []string, colWidths []float64) {
+func drawTableRow(doc *PDFDoc, y float64, cells []string, colWidths []float64) float64 {
+	const (
+		cellPadding = 2.0
+		lineHeight  = 3.8
+	)
 	doc.SetFont(FontDejaVuSans, "", 8)
 	doc.SetTextColorDefault()
+	rowHeight := estimateTableRowHeight(doc, cells, colWidths)
 
 	x := MarginLeft
 	for i, cell := range cells {
-		// Right-align numeric columns (index 1, 2, 3)
-		align := "L"
-		if i > 0 {
-			align = "R"
+		alignRight := i > 0
+		availableWidth := colWidths[i] - (cellPadding * 2)
+		if availableWidth < 6 {
+			availableWidth = 6
 		}
-
-		cellX := x
-		if align == "R" {
-			w := doc.GetStringWidth(cell)
-			cellX = x + colWidths[i] - w - 2
-		} else {
-			cellX = x + 2
+		lines := doc.SplitText(cell, availableWidth)
+		for lineIndex, line := range lines {
+			lineY := y + 3 + float64(lineIndex)*lineHeight
+			cellX := x + cellPadding
+			if alignRight {
+				w := doc.GetStringWidth(line)
+				cellX = x + colWidths[i] - w - cellPadding
+			}
+			doc.Text(cellX, lineY, line)
 		}
-		doc.Text(cellX, y+1, cell)
 		x += colWidths[i]
 	}
 
 	// Subtle row separator
 	doc.SetDrawColor(230, 230, 230)
 	doc.SetLineWidth(0.1)
-	doc.Line(MarginLeft, y+3.5, MarginLeft+ContentWidth, y+3.5)
+	doc.Line(MarginLeft, y+rowHeight-1, MarginLeft+ContentWidth, y+rowHeight-1)
+
+	return y + rowHeight
 }
 
 // buildProductsList returns a human-readable list of products for contracts.

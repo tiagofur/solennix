@@ -1,6 +1,7 @@
 package pdf
 
 import (
+	"regexp"
 	"strings"
 	"testing"
 
@@ -71,6 +72,11 @@ func samplePayments() []models.Payment {
 		{Amount: 15000, PaymentDate: "2026-05-01", PaymentMethod: "transfer", Notes: strPtr("Anticipo")},
 		{Amount: 7500, PaymentDate: "2026-05-15", PaymentMethod: "cash", Notes: strPtr("Segundo pago")},
 	}
+}
+
+func countPDFPages(pdfBytes []byte) int {
+	pagePattern := regexp.MustCompile(`/Type /Page\b`)
+	return len(pagePattern.FindAll(pdfBytes, -1))
 }
 
 // ---------------------------------------------------------------------------
@@ -231,6 +237,50 @@ func TestGenerateBudget_WithDiscount(t *testing.T) {
 	pdfBytes, err := GenerateBudget(data)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, pdfBytes)
+}
+
+func TestDrawInfoGrid_LongValuesIncreaseHeight(t *testing.T) {
+	doc, err := NewPDFDoc("", "", true, nil)
+	assert.NoError(t, err)
+	doc.AddPage()
+
+	startY := 40.0
+	leftItems := [][2]string{{
+		"Cliente",
+		"María Fernanda de los Ángeles García Hernández con nombre extremadamente largo",
+	}, {
+		"Email",
+		"maria.fernanda.de.los.angeles.garcia.hernandez.eventos@cliente-muy-largo-ejemplo.com",
+	}}
+	rightItems := [][2]string{{
+		"Horario",
+		"Montaje 08:00 - Evento 14:00 - Desmontaje 02:00 con observaciones adicionales y acceso restringido",
+	}}
+
+	endY := doc.DrawInfoGrid(startY, leftItems, rightItems)
+
+	assert.Greater(t, endY, startY+12.0)
+	assert.Less(t, endY, 90.0)
+}
+
+func TestDrawTableRow_LongDescriptionWraps(t *testing.T) {
+	doc, err := NewPDFDoc("", "", true, nil)
+	assert.NoError(t, err)
+	doc.AddPage()
+
+	colWidths := []float64{ContentWidth * 0.40, ContentWidth * 0.15, ContentWidth * 0.22, ContentWidth * 0.23}
+	cells := []string{
+		"Paquete premium con montaje completo, barra de postres, personal adicional y ajustes especiales para venue con acceso limitado",
+		"12",
+		"$25,000.00",
+		"$300,000.00",
+	}
+
+	startY := 55.0
+	endY := drawTableRow(doc, startY, cells, colWidths)
+
+	assert.Greater(t, endY, startY+6.5)
+	assert.Greater(t, estimateTableRowHeight(doc, cells, colWidths), 6.5)
 }
 
 // ---------------------------------------------------------------------------
@@ -474,4 +524,57 @@ func TestGenerateBudget_NoDeposit(t *testing.T) {
 	pdfBytes, err := GenerateBudget(data)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, pdfBytes)
+}
+
+func TestGenerateBudget_LongCatalogSpillsToSecondPage(t *testing.T) {
+	event := sampleEvent()
+	event.Discount = 1500
+	event.DiscountType = "fixed"
+	event.TaxAmount = 7200
+	event.TotalAmount = 52200
+
+	products := make([]models.EventProduct, 0, 48)
+	for range 48 {
+		name := "Paquete premium con montaje completo, barra de postres, personal adicional y ajustes especiales para venue con acceso restringido " + strings.Repeat("detalle ", 4)
+		products = append(products, models.EventProduct{
+			Quantity:    1,
+			UnitPrice:   2500,
+			Discount:    100,
+			ProductName: &name,
+		})
+	}
+
+	extras := []models.EventExtra{
+		{Description: "Decoracion floral integral con traslado nocturno y montaje fuera de horario", Cost: 1200, Price: 2500},
+		{Description: "Coordinacion extendida para venue con acceso restringido y ventanas de montaje", Cost: 800, Price: 1800},
+	}
+
+	data := BudgetData{
+		Event:    event,
+		Client:   sampleClient(),
+		Profile:  sampleProfile(),
+		Products: products,
+		Extras:   extras,
+	}
+
+	pdfBytes, err := GenerateBudget(data)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, pdfBytes)
+	assert.GreaterOrEqual(t, countPDFPages(pdfBytes), 2)
+	assert.True(t, strings.HasPrefix(string(pdfBytes[:5]), "%PDF-"))
+}
+
+func TestEnsureBudgetTableSpace_RedrawsHeaderAfterPageBreak(t *testing.T) {
+	doc, err := NewPDFDoc("", "", true, nil)
+	assert.NoError(t, err)
+	doc.AddPage()
+
+	headers := []string{"Descripción", "Cant.", "Precio Unit.", "Total"}
+	colWidths := []float64{ContentWidth * 0.40, ContentWidth * 0.15, ContentWidth * 0.22, ContentWidth * 0.23}
+	startY := PageHeight - MarginBottom - 2
+
+	nextY := ensureBudgetTableSpace(doc, startY, 12, headers, colWidths)
+
+	assert.Greater(t, nextY, MarginTop+10)
+	assert.Less(t, nextY, PageHeight/2)
 }

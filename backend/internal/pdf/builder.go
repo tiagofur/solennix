@@ -81,6 +81,15 @@ func (d *PDFDoc) MultiCell(w, h float64, txtStr, border, alignStr string, fill b
 	d.Fpdf.MultiCell(w, h, sanitizePDFText(txtStr), border, alignStr, fill)
 }
 
+// SplitText sanitizes the string before splitting it into wrapped lines.
+func (d *PDFDoc) SplitText(text string, width float64) []string {
+	lines := d.Fpdf.SplitText(sanitizePDFText(text), width)
+	if len(lines) == 0 {
+		return []string{""}
+	}
+	return lines
+}
+
 // GetStringWidth sanitizes the string before measuring it.
 func (d *PDFDoc) GetStringWidth(s string) float64 {
 	return d.Fpdf.GetStringWidth(sanitizePDFText(s))
@@ -294,8 +303,16 @@ func (d *PDFDoc) DrawSectionHeader(y float64, title string) float64 {
 // Each column takes half the content width.
 func (d *PDFDoc) DrawInfoGrid(y float64, leftItems, rightItems [][2]string) float64 {
 	d.SetFont(FontDejaVuSans, "", 9)
-	colWidth := ContentWidth / 2
-	lineHeight := 5.0
+	const (
+		columnGap    = 8.0
+		lineHeight   = 4.5
+		labelPadding = 2.0
+	)
+	colWidth := (ContentWidth - columnGap) / 2
+	leftX := MarginLeft
+	rightX := MarginLeft + colWidth + columnGap
+	leftLabelWidth := infoGridLabelWidth(d, leftItems, colWidth)
+	rightLabelWidth := infoGridLabelWidth(d, rightItems, colWidth)
 
 	maxRows := len(leftItems)
 	if len(rightItems) > maxRows {
@@ -303,29 +320,61 @@ func (d *PDFDoc) DrawInfoGrid(y float64, leftItems, rightItems [][2]string) floa
 	}
 
 	for i := 0; i < maxRows; i++ {
-		// Left column
-		if i < len(leftItems) {
-			label, value := leftItems[i][0], leftItems[i][1]
-			d.SetTextColorSecondary()
-			d.Text(MarginLeft, y, label+":")
-			d.SetTextColorDefault()
-			d.Text(MarginLeft+30, y, value)
+		leftRowHeight := drawInfoGridColumn(d, leftX, y, colWidth, leftLabelWidth, lineHeight, labelPadding, leftItems, i)
+		rightRowHeight := drawInfoGridColumn(d, rightX, y, colWidth, rightLabelWidth, lineHeight, labelPadding, rightItems, i)
+		if rightRowHeight > leftRowHeight {
+			leftRowHeight = rightRowHeight
 		}
-
-		// Right column
-		if i < len(rightItems) {
-			label, value := rightItems[i][0], rightItems[i][1]
-			rightX := MarginLeft + colWidth
-			d.SetTextColorSecondary()
-			d.Text(rightX, y, label+":")
-			d.SetTextColorDefault()
-			d.Text(rightX+30, y, value)
-		}
-
-		y += lineHeight
+		y += leftRowHeight
 	}
 
 	return y
+}
+
+func infoGridLabelWidth(d *PDFDoc, items [][2]string, colWidth float64) float64 {
+	maxWidth := 0.0
+	for _, item := range items {
+		width := d.GetStringWidth(item[0] + ":")
+		if width > maxWidth {
+			maxWidth = width
+		}
+	}
+	minWidth := 18.0
+	maxAllowedWidth := colWidth * 0.34
+	if maxAllowedWidth < minWidth {
+		maxAllowedWidth = minWidth
+	}
+	if maxWidth < minWidth {
+		return minWidth
+	}
+	if maxWidth > maxAllowedWidth {
+		return maxAllowedWidth
+	}
+	return maxWidth
+}
+
+func drawInfoGridColumn(d *PDFDoc, x, y, colWidth, labelWidth, lineHeight, labelPadding float64, items [][2]string, index int) float64 {
+	if index >= len(items) {
+		return lineHeight
+	}
+
+	label, value := items[index][0], items[index][1]
+	valueWidth := colWidth - labelWidth - labelPadding
+	if valueWidth < 10 {
+		valueWidth = 10
+	}
+	valueLines := d.SplitText(value, valueWidth)
+	rowHeight := float64(len(valueLines)) * lineHeight
+
+	d.SetTextColorSecondary()
+	d.Text(x, y, label+":")
+	d.SetTextColorDefault()
+	for lineIndex, line := range valueLines {
+		lineY := y + float64(lineIndex)*lineHeight
+		d.Text(x+labelWidth+labelPadding, lineY, line)
+	}
+
+	return rowHeight
 }
 
 // DrawSeparator draws a thin horizontal line.
