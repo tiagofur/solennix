@@ -1,0 +1,965 @@
+{
+  "version": "1.0.0",
+  "generated": "2026-02-17T03:06:47.349Z",
+  "stack": {
+    "primaryLanguage": "typescript",
+    "languages": [
+      "javascript",
+      "typescript"
+    ],
+    "frameworks": [],
+    "buildTools": [
+      "vite"
+    ],
+    "testFrameworks": [
+      "playwright"
+    ],
+    "packageManager": "pnpm",
+    "isMonorepo": false,
+    "hasDocker": false,
+    "hasCI": false
+  },
+  "structure": {
+    "totalFiles": 72,
+    "rootPath": ".",
+    "topDirectories": [
+      {
+        "name": "docs",
+        "fileCount": 5,
+        "description": "Documentation files"
+      },
+      {
+        "name": "public",
+        "fileCount": 1,
+        "description": "Public static assets"
+      },
+      {
+        "name": "src",
+        "fileCount": 45,
+        "description": "Source code root"
+      },
+      {
+        "name": "supabase",
+        "fileCount": 7,
+        "description": "Module directory"
+      },
+      {
+        "name": "tests",
+        "fileCount": 1,
+        "description": "Test files and fixtures"
+      }
+    ],
+    "languageDistribution": [
+      {
+        "extension": ".tsx",
+        "count": 30
+      },
+      {
+        "extension": ".ts",
+        "count": 16
+      },
+      {
+        "extension": ".md",
+        "count": 7
+      },
+      {
+        "extension": ".sql",
+        "count": 7
+      },
+      {
+        "extension": ".json",
+        "count": 4
+      },
+      {
+        "extension": ".js",
+        "count": 3
+      },
+      {
+        "extension": ".svg",
+        "count": 2
+      },
+      {
+        "extension": ".yaml",
+        "count": 1
+      },
+      {
+        "extension": ".html",
+        "count": 1
+      },
+      {
+        "extension": ".css",
+        "count": 1
+      }
+    ]
+  },
+  "architecture": {
+    "layers": [
+      {
+        "name": "Services",
+        "description": "Business logic and orchestration",
+        "directories": [
+          "src/services"
+        ],
+        "symbolCount": 17,
+        "dependsOn": [
+          "Controllers"
+        ]
+      },
+      {
+        "name": "Utils",
+        "description": "Shared utilities and helpers",
+        "directories": [
+          "src/lib"
+        ],
+        "symbolCount": 15,
+        "dependsOn": []
+      },
+      {
+        "name": "Controllers",
+        "description": "Request handling and routing",
+        "directories": [
+          "src/lib",
+          "src/components"
+        ],
+        "symbolCount": 2,
+        "dependsOn": []
+      },
+      {
+        "name": "Components",
+        "description": "UI components and views",
+        "directories": [
+          "src/pages",
+          "src/components",
+          "src/pages/Products",
+          "src/pages/Inventory",
+          "src/pages/Events",
+          "src/pages/Clients",
+          "src/pages/Calendar",
+          "src/pages/Events/components"
+        ],
+        "symbolCount": 80,
+        "dependsOn": [
+          "Controllers",
+          "Services"
+        ]
+      }
+    ],
+    "patterns": [],
+    "entryPoints": [
+      "src/main.tsx"
+    ],
+    "mainEntryPoints": [
+      "src/main.tsx"
+    ],
+    "moduleExports": []
+  },
+  "symbols": {
+    "classes": [],
+    "interfaces": [
+      {
+        "name": "Database",
+        "kind": "interface",
+        "file": "src/types/supabase.ts",
+        "line": 9,
+        "exported": true
+      },
+      {
+        "name": "AuthContextType",
+        "kind": "interface",
+        "file": "src/contexts/AuthContext.tsx",
+        "line": 9,
+        "exported": false
+      },
+      {
+        "name": "EventExtrasProps",
+        "kind": "interface",
+        "file": "src/pages/Events/components/EventExtras.tsx",
+        "line": 11,
+        "exported": false
+      },
+      {
+        "name": "EventFinancialsProps",
+        "kind": "interface",
+        "file": "src/pages/Events/components/EventFinancials.tsx",
+        "line": 17,
+        "exported": false
+      },
+      {
+        "name": "EventGeneralInfoProps",
+        "kind": "interface",
+        "file": "src/pages/Events/components/EventGeneralInfo.tsx",
+        "line": 8,
+        "exported": false
+      },
+      {
+        "name": "EventProductsProps",
+        "kind": "interface",
+        "file": "src/pages/Events/components/EventProducts.tsx",
+        "line": 15,
+        "exported": false
+      },
+      {
+        "name": "PaymentsProps",
+        "kind": "interface",
+        "file": "src/pages/Events/components/Payments.tsx",
+        "line": 11,
+        "exported": false
+      },
+      {
+        "name": "SelectedExtra",
+        "kind": "interface",
+        "file": "src/pages/Events/components/EventFinancials.tsx",
+        "line": 11,
+        "exported": false
+      },
+      {
+        "name": "SelectedExtra",
+        "kind": "interface",
+        "file": "src/pages/Events/components/EventExtras.tsx",
+        "line": 4,
+        "exported": false
+      },
+      {
+        "name": "SelectedProduct",
+        "kind": "interface",
+        "file": "src/pages/Events/components/EventProducts.tsx",
+        "line": 8,
+        "exported": false
+      },
+      {
+        "name": "SelectedProduct",
+        "kind": "interface",
+        "file": "src/pages/Events/components/EventFinancials.tsx",
+        "line": 4,
+        "exported": false
+      }
+    ],
+    "functions": [
+      {
+        "name": "cn",
+        "kind": "function",
+        "file": "src/lib/utils.ts",
+        "line": 4,
+        "exported": true
+      },
+      {
+        "name": "generateBudgetPDF",
+        "kind": "function",
+        "file": "src/lib/pdfGenerator.ts",
+        "line": 50,
+        "exported": true
+      },
+      {
+        "name": "generateContractPDF",
+        "kind": "function",
+        "file": "src/lib/pdfGenerator.ts",
+        "line": 158,
+        "exported": true
+      },
+      {
+        "name": "getCurrentUserId",
+        "kind": "function",
+        "file": "src/lib/supabase.ts",
+        "line": 42,
+        "exported": true
+      },
+      {
+        "name": "getErrorMessage",
+        "kind": "function",
+        "file": "src/lib/errorHandler.ts",
+        "line": 23,
+        "exported": true
+      },
+      {
+        "name": "getEventNetSales",
+        "kind": "function",
+        "file": "src/lib/finance.ts",
+        "line": 14,
+        "exported": true
+      },
+      {
+        "name": "getEventTaxAmount",
+        "kind": "function",
+        "file": "src/lib/finance.ts",
+        "line": 5,
+        "exported": true
+      },
+      {
+        "name": "getEventTotalCharged",
+        "kind": "function",
+        "file": "src/lib/finance.ts",
+        "line": 10,
+        "exported": true
+      },
+      {
+        "name": "isSupabaseConfigured",
+        "kind": "function",
+        "file": "src/lib/supabase.ts",
+        "line": 10,
+        "exported": true
+      },
+      {
+        "name": "logError",
+        "kind": "function",
+        "file": "src/lib/errorHandler.ts",
+        "line": 6,
+        "exported": true
+      },
+      {
+        "name": "useAuth",
+        "kind": "function",
+        "file": "src/contexts/AuthContext.tsx",
+        "line": 27,
+        "exported": true
+      },
+      {
+        "name": "useTheme",
+        "kind": "function",
+        "file": "src/hooks/useTheme.ts",
+        "line": 5,
+        "exported": true
+      },
+      {
+        "name": "addHeader",
+        "kind": "function",
+        "file": "src/lib/pdfGenerator.ts",
+        "line": 29,
+        "exported": false
+      },
+      {
+        "name": "App",
+        "kind": "function",
+        "file": "src/App.tsx",
+        "line": 24,
+        "exported": false
+      },
+      {
+        "name": "calculateTotalCost",
+        "kind": "function",
+        "file": "src/pages/Products/ProductForm.tsx",
+        "line": 129,
+        "exported": false
+      },
+      {
+        "name": "cashInMonth",
+        "kind": "function",
+        "file": "src/pages/Dashboard.tsx",
+        "line": 95,
+        "exported": false
+      },
+      {
+        "name": "clearSupabaseAuthTokens",
+        "kind": "function",
+        "file": "src/contexts/AuthContext.tsx",
+        "line": 35,
+        "exported": false
+      },
+      {
+        "name": "confirmDelete",
+        "kind": "function",
+        "file": "src/pages/Products/ProductList.tsx",
+        "line": 39,
+        "exported": false
+      },
+      {
+        "name": "confirmDelete",
+        "kind": "function",
+        "file": "src/pages/Inventory/InventoryList.tsx",
+        "line": 42,
+        "exported": false
+      },
+      {
+        "name": "confirmDelete",
+        "kind": "function",
+        "file": "src/pages/Clients/ClientList.tsx",
+        "line": 40,
+        "exported": false
+      },
+      {
+        "name": "fetchClients",
+        "kind": "function",
+        "file": "src/pages/Clients/ClientList.tsx",
+        "line": 24,
+        "exported": false
+      },
+      {
+        "name": "fetchEvents",
+        "kind": "function",
+        "file": "src/pages/Calendar/CalendarView.tsx",
+        "line": 22,
+        "exported": false
+      },
+      {
+        "name": "fetchInventory",
+        "kind": "function",
+        "file": "src/pages/Inventory/InventoryList.tsx",
+        "line": 24,
+        "exported": false
+      },
+      {
+        "name": "fetchMissingCosts",
+        "kind": "function",
+        "file": "src/pages/Events/EventForm.tsx",
+        "line": 170,
+        "exported": false
+      },
+      {
+        "name": "fetchProducts",
+        "kind": "function",
+        "file": "src/pages/Products/ProductList.tsx",
+        "line": 23,
+        "exported": false
+      },
+      {
+        "name": "fetchProfile",
+        "kind": "function",
+        "file": "src/contexts/AuthContext.tsx",
+        "line": 47,
+        "exported": false
+      },
+      {
+        "name": "formatCurrency",
+        "kind": "function",
+        "file": "src/lib/pdfGenerator.ts",
+        "line": 21,
+        "exported": false
+      },
+      {
+        "name": "handleAddExtra",
+        "kind": "function",
+        "file": "src/pages/Events/EventForm.tsx",
+        "line": 332,
+        "exported": false
+      },
+      {
+        "name": "handleAddIngredient",
+        "kind": "function",
+        "file": "src/pages/Products/ProductForm.tsx",
+        "line": 96,
+        "exported": false
+      },
+      {
+        "name": "handleAddProduct",
+        "kind": "function",
+        "file": "src/pages/Events/EventForm.tsx",
+        "line": 297,
+        "exported": false
+      }
+    ],
+    "types": [
+      {
+        "name": "Json",
+        "kind": "type",
+        "file": "src/types/supabase.ts",
+        "line": 1,
+        "exported": true
+      },
+      {
+        "name": "Client",
+        "kind": "type",
+        "file": "src/services/clientService.ts",
+        "line": 4,
+        "exported": false
+      },
+      {
+        "name": "Client",
+        "kind": "type",
+        "file": "src/pages/Events/EventForm.tsx",
+        "line": 24,
+        "exported": false
+      },
+      {
+        "name": "Client",
+        "kind": "type",
+        "file": "src/pages/Clients/ClientList.tsx",
+        "line": 10,
+        "exported": false
+      },
+      {
+        "name": "Client",
+        "kind": "type",
+        "file": "src/pages/Clients/ClientDetails.tsx",
+        "line": 11,
+        "exported": false
+      },
+      {
+        "name": "Client",
+        "kind": "type",
+        "file": "src/pages/Events/components/EventGeneralInfo.tsx",
+        "line": 6,
+        "exported": false
+      },
+      {
+        "name": "ClientFormData",
+        "kind": "type",
+        "file": "src/pages/Clients/ClientForm.tsx",
+        "line": 20,
+        "exported": false
+      },
+      {
+        "name": "ClientInsert",
+        "kind": "type",
+        "file": "src/services/clientService.ts",
+        "line": 5,
+        "exported": false
+      },
+      {
+        "name": "ClientUpdate",
+        "kind": "type",
+        "file": "src/services/clientService.ts",
+        "line": 6,
+        "exported": false
+      },
+      {
+        "name": "ConfirmDialogProps",
+        "kind": "type",
+        "file": "src/components/ConfirmDialog.tsx",
+        "line": 3,
+        "exported": false
+      },
+      {
+        "name": "EmptyProps",
+        "kind": "type",
+        "file": "src/components/Empty.tsx",
+        "line": 5,
+        "exported": false
+      },
+      {
+        "name": "Event",
+        "kind": "type",
+        "file": "src/services/eventService.ts",
+        "line": 4,
+        "exported": false
+      },
+      {
+        "name": "Event",
+        "kind": "type",
+        "file": "src/lib/pdfGenerator.ts",
+        "line": 7,
+        "exported": false
+      },
+      {
+        "name": "Event",
+        "kind": "type",
+        "file": "src/pages/Dashboard.tsx",
+        "line": 33,
+        "exported": false
+      },
+      {
+        "name": "Event",
+        "kind": "type",
+        "file": "src/pages/Clients/ClientDetails.tsx",
+        "line": 12,
+        "exported": false
+      },
+      {
+        "name": "EventFormData",
+        "kind": "type",
+        "file": "src/pages/Events/EventForm.tsx",
+        "line": 48,
+        "exported": false
+      },
+      {
+        "name": "EventInsert",
+        "kind": "type",
+        "file": "src/services/eventService.ts",
+        "line": 5,
+        "exported": false
+      },
+      {
+        "name": "EventProductInsert",
+        "kind": "type",
+        "file": "src/services/eventService.ts",
+        "line": 7,
+        "exported": false
+      },
+      {
+        "name": "EventRow",
+        "kind": "type",
+        "file": "src/lib/finance.ts",
+        "line": 3,
+        "exported": false
+      },
+      {
+        "name": "EventUpdate",
+        "kind": "type",
+        "file": "src/services/eventService.ts",
+        "line": 6,
+        "exported": false
+      },
+      {
+        "name": "ExtraItem",
+        "kind": "type",
+        "file": "src/lib/pdfGenerator.ts",
+        "line": 14,
+        "exported": false
+      },
+      {
+        "name": "ForgotForm",
+        "kind": "type",
+        "file": "src/pages/ForgotPassword.tsx",
+        "line": 15,
+        "exported": false
+      },
+      {
+        "name": "InventoryFormData",
+        "kind": "type",
+        "file": "src/pages/Inventory/InventoryForm.tsx",
+        "line": 27,
+        "exported": false
+      },
+      {
+        "name": "InventoryInsert",
+        "kind": "type",
+        "file": "src/services/inventoryService.ts",
+        "line": 5,
+        "exported": false
+      },
+      {
+        "name": "InventoryItem",
+        "kind": "type",
+        "file": "src/services/inventoryService.ts",
+        "line": 4,
+        "exported": false
+      },
+      {
+        "name": "InventoryItem",
+        "kind": "type",
+        "file": "src/pages/Products/ProductForm.tsx",
+        "line": 13,
+        "exported": false
+      },
+      {
+        "name": "InventoryItem",
+        "kind": "type",
+        "file": "src/pages/Inventory/InventoryList.tsx",
+        "line": 11,
+        "exported": false
+      },
+      {
+        "name": "InventoryUpdate",
+        "kind": "type",
+        "file": "src/services/inventoryService.ts",
+        "line": 6,
+        "exported": false
+      },
+      {
+        "name": "LoginForm",
+        "kind": "type",
+        "file": "src/pages/Login.tsx",
+        "line": 16,
+        "exported": false
+      },
+      {
+        "name": "Payment",
+        "kind": "type",
+        "file": "src/services/paymentService.ts",
+        "line": 4,
+        "exported": false
+      }
+    ],
+    "enums": []
+  },
+  "publicAPI": [
+    {
+      "name": "cn",
+      "kind": "function",
+      "file": "src/lib/utils.ts",
+      "line": 4,
+      "exported": true
+    },
+    {
+      "name": "Database",
+      "kind": "interface",
+      "file": "src/types/supabase.ts",
+      "line": 9,
+      "exported": true
+    },
+    {
+      "name": "generateBudgetPDF",
+      "kind": "function",
+      "file": "src/lib/pdfGenerator.ts",
+      "line": 50,
+      "exported": true
+    },
+    {
+      "name": "generateContractPDF",
+      "kind": "function",
+      "file": "src/lib/pdfGenerator.ts",
+      "line": 158,
+      "exported": true
+    },
+    {
+      "name": "getCurrentUserId",
+      "kind": "function",
+      "file": "src/lib/supabase.ts",
+      "line": 42,
+      "exported": true
+    },
+    {
+      "name": "getErrorMessage",
+      "kind": "function",
+      "file": "src/lib/errorHandler.ts",
+      "line": 23,
+      "exported": true
+    },
+    {
+      "name": "getEventNetSales",
+      "kind": "function",
+      "file": "src/lib/finance.ts",
+      "line": 14,
+      "exported": true
+    },
+    {
+      "name": "getEventTaxAmount",
+      "kind": "function",
+      "file": "src/lib/finance.ts",
+      "line": 5,
+      "exported": true
+    },
+    {
+      "name": "getEventTotalCharged",
+      "kind": "function",
+      "file": "src/lib/finance.ts",
+      "line": 10,
+      "exported": true
+    },
+    {
+      "name": "isSupabaseConfigured",
+      "kind": "function",
+      "file": "src/lib/supabase.ts",
+      "line": 10,
+      "exported": true
+    },
+    {
+      "name": "Json",
+      "kind": "type",
+      "file": "src/types/supabase.ts",
+      "line": 1,
+      "exported": true
+    },
+    {
+      "name": "logError",
+      "kind": "function",
+      "file": "src/lib/errorHandler.ts",
+      "line": 6,
+      "exported": true
+    },
+    {
+      "name": "useAuth",
+      "kind": "function",
+      "file": "src/contexts/AuthContext.tsx",
+      "line": 27,
+      "exported": true
+    },
+    {
+      "name": "useTheme",
+      "kind": "function",
+      "file": "src/hooks/useTheme.ts",
+      "line": 5,
+      "exported": true
+    }
+  ],
+  "dependencies": {
+    "mostImported": [
+      {
+        "file": "src/types/supabase.ts",
+        "importedBy": 19,
+        "description": "TypeScript type definitions"
+      },
+      {
+        "file": "src/lib/errorHandler.ts",
+        "importedBy": 15,
+        "description": "Shared library code"
+      },
+      {
+        "file": "src/contexts/AuthContext.tsx",
+        "importedBy": 10,
+        "description": "React contexts"
+      },
+      {
+        "file": "src/lib/supabase.ts",
+        "importedBy": 9,
+        "description": "Shared library code"
+      },
+      {
+        "file": "src/hooks/useTheme.ts",
+        "importedBy": 5,
+        "description": "React hooks"
+      },
+      {
+        "file": "src/services/eventService.ts",
+        "importedBy": 5,
+        "description": "event service"
+      },
+      {
+        "file": "src/services/inventoryService.ts",
+        "importedBy": 4,
+        "description": "inventory service"
+      },
+      {
+        "file": "src/services/productService.ts",
+        "importedBy": 4,
+        "description": "product service"
+      },
+      {
+        "file": "src/components/ConfirmDialog.tsx",
+        "importedBy": 4,
+        "description": "UI components"
+      },
+      {
+        "file": "src/services/clientService.ts",
+        "importedBy": 4,
+        "description": "client service"
+      },
+      {
+        "file": "src/components/SetupRequired.tsx",
+        "importedBy": 3,
+        "description": "UI components"
+      },
+      {
+        "file": "src/components/Empty.tsx",
+        "importedBy": 3,
+        "description": "UI components"
+      },
+      {
+        "file": "src/services/paymentService.ts",
+        "importedBy": 2,
+        "description": "payment service"
+      },
+      {
+        "file": "src/lib/finance.ts",
+        "importedBy": 2,
+        "description": "Shared library code"
+      },
+      {
+        "file": "src/App.tsx",
+        "importedBy": 1,
+        "description": "Source code root"
+      },
+      {
+        "file": "src/components/Layout.tsx",
+        "importedBy": 1,
+        "description": "UI components"
+      },
+      {
+        "file": "src/components/ProtectedRoute.tsx",
+        "importedBy": 1,
+        "description": "UI components"
+      },
+      {
+        "file": "src/pages/Landing.tsx",
+        "importedBy": 1,
+        "description": "Page components (Next.js/Nuxt)"
+      },
+      {
+        "file": "src/pages/Login.tsx",
+        "importedBy": 1,
+        "description": "Page components (Next.js/Nuxt)"
+      },
+      {
+        "file": "src/pages/Register.tsx",
+        "importedBy": 1,
+        "description": "Page components (Next.js/Nuxt)"
+      }
+    ]
+  },
+  "stats": {
+    "totalSymbols": 128,
+    "exportedSymbols": 14,
+    "analysisTimeMs": 41
+  },
+  "keyFiles": [
+    {
+      "path": "src/main.tsx",
+      "description": "Source code root",
+      "category": "entrypoint"
+    },
+    {
+      "path": "eslint.config.js",
+      "description": "Tool configuration",
+      "category": "config"
+    },
+    {
+      "path": "package.json",
+      "description": "Package manifest",
+      "category": "config"
+    },
+    {
+      "path": "playwright.config.ts",
+      "description": "Tool configuration",
+      "category": "config"
+    },
+    {
+      "path": "postcss.config.js",
+      "description": "Tool configuration",
+      "category": "config"
+    },
+    {
+      "path": "tailwind.config.js",
+      "description": "Tool configuration",
+      "category": "config"
+    },
+    {
+      "path": "tsconfig.json",
+      "description": "TypeScript configuration",
+      "category": "config"
+    },
+    {
+      "path": "vite.config.ts",
+      "description": "Tool configuration",
+      "category": "config"
+    },
+    {
+      "path": "src/services/clientService.ts",
+      "description": "Service class",
+      "category": "service"
+    },
+    {
+      "path": "src/services/eventService.ts",
+      "description": "Service class",
+      "category": "service"
+    },
+    {
+      "path": "src/services/inventoryService.ts",
+      "description": "Service class",
+      "category": "service"
+    },
+    {
+      "path": "src/services/paymentService.ts",
+      "description": "Service class",
+      "category": "service"
+    },
+    {
+      "path": "src/services/productService.ts",
+      "description": "Service class",
+      "category": "service"
+    },
+    {
+      "path": "src/lib/pdfGenerator.ts",
+      "description": "Generator class",
+      "category": "generator"
+    },
+    {
+      "path": "src/lib/utils.ts",
+      "description": "Utility functions",
+      "category": "util"
+    }
+  ],
+  "navigation": {
+    "tests": "**/*.spec.ts",
+    "config": [
+      "package.json",
+      "tsconfig.json",
+      "eslint.config.js",
+      "vite.config.ts"
+    ],
+    "types": [
+      "src/vite-env.d.ts"
+    ],
+    "mainLogic": [
+      "src/services",
+      "src/lib"
+    ]
+  }
+}
