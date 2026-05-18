@@ -58,6 +58,9 @@ public enum Route: Hashable {
     // MARK: Payment Submissions (organizer inbox)
     case paymentInbox
 
+    // MARK: Reviews (organizer inbox)
+    case reviews
+
     // MARK: Settings Sub-Routes
     case editProfile
     case changePassword

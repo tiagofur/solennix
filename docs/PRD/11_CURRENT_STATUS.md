@@ -33,6 +33,14 @@ status: active
 > - **Cobertura:** tests de middleware + tests de config para defaults/overrides/errores de parseo.
 > - **Validación:** `go test ./internal/config ./internal/middleware ./cmd/server`.
 
+> [!success] 2026-05-17 — Reviews post-evento: wiring backend + web base funcional (issue #192)
+> Se dejó operativo el flujo de reseñas para cliente y organizador con endpoints públicos/protegidos y consumo web.
+> - **Backend:** constructor de router y tests actualizados para el nuevo `EventReviewHandler`; suite vuelve a verde (`go test ./...`).
+> - **Web público:** nueva ruta `/organizer/review/:token` para submit de reseña con rating, comentario y visibilidad.
+> - **Web organizer:** nueva ruta `/reviews` para listar reseñas, responder y ajustar visibilidad.
+> - **Infra web:** nuevo `eventReviewService`, namespace i18n `reviews` (ES/EN), navegación en sidebar + command palette.
+> - **Docs:** nuevo módulo `docs/Web/Módulo Reseñas.md` y enlace en `docs/Web/Web MOC.md`.
+
 > [!success] 2026-05-17 — Voice shortcuts/App Actions nativos (issues #211 y #212) implementados
 > Se cerró la paridad de asistentes de voz con funciones útiles y datos reales en iOS + Android.
 > - **iOS:** `SolennixIntents` reemplaza mocks por datos del App Group (`widget_upcoming_events`, `widget_kpis`, `widget_user_plan`) y habilita 5 atajos útiles: próximos eventos, eventos de hoy, conteo por periodo, ingresos del mes y stock bajo.

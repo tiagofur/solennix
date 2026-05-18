@@ -54,6 +54,9 @@ import enPublic from "./locales/en/public.json";
 import esPayments from "./locales/es/payments.json";
 import enPayments from "./locales/en/payments.json";
 
+import esReviews from "./locales/es/reviews.json";
+import enReviews from "./locales/en/reviews.json";
+
 /**
  * i18next setup — namespaces are added incrementally as each screen is
  * internationalised. `common` holds shared strings (buttons, nav, errors).
@@ -81,6 +84,7 @@ void i18n
         static: esStatic,
         public: esPublic,
         payments: esPayments,
+        reviews: esReviews,
       },
       en: {
         common: enCommon,
@@ -100,6 +104,7 @@ void i18n
         static: enStatic,
         public: enPublic,
         payments: enPayments,
+        reviews: enReviews,
       },
     },
     fallbackLng: "es",
@@ -123,6 +128,7 @@ void i18n
       "static",
       "public",
       "payments",
+      "reviews",
     ],
     defaultNS: "common",
     interpolation: {

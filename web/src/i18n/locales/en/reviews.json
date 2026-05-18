@@ -1,0 +1,35 @@
+{
+  "public": {
+    "title": "Tell us how it went",
+    "subtitle": "Your feedback helps the organizer keep improving.",
+    "rating_label": "Rating",
+    "rating_aria": "Rating {{value}} out of 5",
+    "comment_label": "Comment",
+    "comment_placeholder": "What did you enjoy most about the event?",
+    "visibility_label": "Visibility",
+    "visibility_private": "Private (only the organizer)",
+    "visibility_public": "Public (can be shown as testimonial)",
+    "visibility_public_disabled": "This organizer does not have public testimonials enabled in their plan.",
+    "submit": "Submit review",
+    "submitting": "Submitting...",
+    "submit_error": "We could not submit your review. Please try again.",
+    "success_title": "Thanks for your review!",
+    "success_desc": "Your response was submitted successfully.",
+    "unavailable_title": "Link unavailable",
+    "unavailable_desc": "This review link has expired or was already used."
+  },
+  "organizer": {
+    "title": "Reviews",
+    "empty": "You have not received reviews yet.",
+    "loading_error": "Could not load reviews.",
+    "unknown_client": "Client",
+    "unknown_event": "Event",
+    "rating_aria": "Rating",
+    "visibility_label": "Visibility",
+    "visibility_private": "Private",
+    "visibility_public": "Public",
+    "response_label": "Organizer response",
+    "response_placeholder": "Write a response for this review",
+    "save_response": "Save response"
+  }
+}

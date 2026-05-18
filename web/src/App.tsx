@@ -58,9 +58,11 @@ const CalendarView = React.lazy(() => import("@/pages/Calendar/CalendarView").th
 const QuickQuotePage = React.lazy(() => import("@/pages/QuickQuote/QuickQuotePage").then((m) => ({ default: m.QuickQuotePage })));
 const PublicEventFormPage = React.lazy(() => import("@/pages/PublicEventForm/PublicEventFormPage").then((m) => ({ default: m.PublicEventFormPage })));
 const ClientPortalPage = React.lazy(() => import("@/pages/ClientPortal/ClientPortalPage").then((m) => ({ default: m.ClientPortalPage })));
+const PublicReviewPage = React.lazy(() => import("@/pages/PublicReview/PublicReviewPage").then((m) => ({ default: m.PublicReviewPage })));
 
 const EventFormLinksPage = React.lazy(() => import("@/pages/EventForms/EventFormLinksPage").then((m) => ({ default: m.EventFormLinksPage })));
 const PaymentInboxPage = React.lazy(() => import("@/pages/Payments/PaymentInboxPage").then((m) => ({ default: m.PaymentInboxPage })));
+const ReviewsPage = React.lazy(() => import("@/pages/Reviews/ReviewsPage").then((m) => ({ default: m.ReviewsPage })));
 const TeamMemberEventsPage = React.lazy(() => import("@/pages/TeamMember/TeamEventsPage").then((m) => ({ default: m.TeamEventsPage })));
 const TeamMemberCalendarPage = React.lazy(() => import("@/pages/TeamMember/TeamCalendarPage").then((m) => ({ default: m.TeamCalendarPage })));
 
@@ -104,6 +106,7 @@ function App() {
               <Route path="/eliminar-cuenta" element={<AccountDeletion />} />
               <Route path="/form/:token" element={<PublicEventFormPage />} />
               <Route path="/client/:token" element={<ClientPortalPage />} />
+              <Route path="/organizer/review/:token" element={<PublicReviewPage />} />
 
               <Route
                 element={
@@ -147,6 +150,7 @@ function App() {
 
                 <Route path="/event-forms" element={<EventFormLinksPage />} />
                 <Route path="/payments/inbox" element={<PaymentInboxPage />} />
+                <Route path="/reviews" element={<ReviewsPage />} />
                 <Route path="/settings" element={<Settings />} />
 
                 <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />

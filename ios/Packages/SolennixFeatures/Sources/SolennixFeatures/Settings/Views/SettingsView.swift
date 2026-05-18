@@ -275,6 +275,13 @@ public struct SettingsView: View {
                 SettingsNavRow(title: tr("settings.action.contract_defaults", "Valores del contrato"), systemImage: "doc.text")
             }
             .buttonStyle(.plain)
+
+            Divider()
+
+            NavigationLink(value: Route.reviews) {
+                SettingsNavRow(title: tr("settings.action.reviews", "Reseñas de clientes"), systemImage: "star.bubble")
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -425,6 +432,11 @@ public struct SettingsView: View {
 
         NavigationLink(value: Route.contractDefaults) {
             Label(tr("settings.action.contract_defaults", "Valores del contrato"), systemImage: "doc.text")
+        }
+        .listRowSeparator(.hidden)
+
+        NavigationLink(value: Route.reviews) {
+            Label(tr("settings.action.reviews", "Reseñas de clientes"), systemImage: "star.bubble")
         }
         .listRowSeparator(.hidden)
     }

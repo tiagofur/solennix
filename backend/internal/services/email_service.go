@@ -157,6 +157,19 @@ func (s *EmailService) SendMarketingUpdate(email, userName, tipsHTML string) err
 	return s.sendEmail(email, "Tips y Novedades - Solennix", body)
 }
 
+// SendReviewRequest sends a post-event testimonial request to the end client.
+func (s *EmailService) SendReviewRequest(email, clientName, organizerName, eventLabel, eventDate, reviewLink string) error {
+	body := s.renderTemplate(reviewRequestBody, map[string]any{
+		"ClientName":    clientName,
+		"OrganizerName": organizerName,
+		"EventLabel":    eventLabel,
+		"EventDate":     eventDate,
+		"ReviewLink":    reviewLink,
+	})
+
+	return s.sendEmail(email, "¿Cómo te fue con tu evento?", body)
+}
+
 // ---------------------------------------------------------------------------
 // Base Layout & Template Rendering
 // ---------------------------------------------------------------------------
@@ -397,3 +410,16 @@ const marketingUpdateBody = `
 <p>Tenemos algunos consejos y novedades para ti esta semana:</p>
 {{.Tips}}
 <p>Mantente atento a nuevas funciones en Solennix que te ayudarán a gestionar mejor tus eventos.</p>`
+
+const reviewRequestBody = `
+<p>Hola {{.ClientName}},</p>
+<p>Esperamos que hayas disfrutado tu evento con <strong>{{.OrganizerName}}</strong>.</p>
+<div class="highlight">
+	<p style="margin: 0;"><strong>{{.EventLabel}}</strong></p>
+	<p style="margin: 4px 0; color: #6b7280;">📅 {{.EventDate}}</p>
+</div>
+<p>Tu opinión ayuda a mejorar el servicio y, si lo deseas, puede aparecer en el portafolio público del organizador.</p>
+<div style="text-align: center;">
+	<a href="{{.ReviewLink}}" class="button">Dejar reseña</a>
+</div>
+<p style="font-size: 13px; color: #6b7280;">Este enlace es personal y puede vencer en unos días.</p>`

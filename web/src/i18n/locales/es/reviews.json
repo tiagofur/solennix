@@ -1,0 +1,35 @@
+{
+  "public": {
+    "title": "Contanos cómo te fue",
+    "subtitle": "Tu opinión ayuda al organizador a seguir mejorando.",
+    "rating_label": "Calificación",
+    "rating_aria": "Calificación {{value}} de 5",
+    "comment_label": "Comentario",
+    "comment_placeholder": "¿Qué fue lo que más te gustó del evento?",
+    "visibility_label": "Visibilidad",
+    "visibility_private": "Privada (solo el organizador)",
+    "visibility_public": "Pública (puede mostrarse como testimonio)",
+    "visibility_public_disabled": "Este organizador no tiene habilitados testimonios públicos en su plan.",
+    "submit": "Enviar reseña",
+    "submitting": "Enviando...",
+    "submit_error": "No pudimos enviar tu reseña. Intentá nuevamente.",
+    "success_title": "¡Gracias por tu reseña!",
+    "success_desc": "Tu respuesta fue registrada correctamente.",
+    "unavailable_title": "Enlace no disponible",
+    "unavailable_desc": "Este enlace venció o ya fue utilizado."
+  },
+  "organizer": {
+    "title": "Reseñas",
+    "empty": "Todavía no recibiste reseñas.",
+    "loading_error": "No pudimos cargar las reseñas.",
+    "unknown_client": "Cliente",
+    "unknown_event": "Evento",
+    "rating_aria": "Calificación",
+    "visibility_label": "Visibilidad",
+    "visibility_private": "Privada",
+    "visibility_public": "Pública",
+    "response_label": "Respuesta del organizador",
+    "response_placeholder": "Escribí una respuesta para esta reseña",
+    "save_response": "Guardar respuesta"
+  }
+}

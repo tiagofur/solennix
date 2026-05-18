@@ -28,6 +28,7 @@
 - [[Módulo Productos]] — Catálogo, recetas/ingredientes, imágenes
 - [[Módulo Inventario]] — Stock, alertas, equipamiento/insumos
 - [[Módulo Pagos]] — Registro de pagos, reportes
+- [[Módulo Reseñas]] — Reseñas post-evento, testimonios públicos y respuestas del organizador
 - [[Módulo Calendario]] — Vista mensual, fechas bloqueadas
 - [[Módulo Admin]] — Dashboard admin, gestión de usuarios, suscripciones
 - [[Módulo Formularios Compartibles]] — Formulario publico para clientes + gestion de enlaces

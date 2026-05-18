@@ -101,6 +101,11 @@ object Endpoints {
     const val EVENT_FORM_LINKS = "event-forms"
     fun eventFormLink(id: String) = "event-forms/$id"
 
+    // Reviews (organizer inbox)
+    const val REVIEWS = "reviews"
+    fun reviewResponse(id: String) = "reviews/$id/response"
+    fun reviewVisibility(id: String) = "reviews/$id/visibility"
+
     // Devices
     const val REGISTER_DEVICE = "devices/register"
     const val UNREGISTER_DEVICE = "devices/unregister"

@@ -152,6 +152,18 @@ public enum Endpoint {
         "/payment-submissions/\(id)"
     }
 
+    // MARK: - Reviews (organizer inbox)
+
+    public static let reviews = "/reviews"
+
+    public static func reviewResponse(_ id: String) -> String {
+        "/reviews/\(id)/response"
+    }
+
+    public static func reviewVisibility(_ id: String) -> String {
+        "/reviews/\(id)/visibility"
+    }
+
     // MARK: - Unavailable Dates
 
     public static let unavailableDates = "/unavailable-dates"

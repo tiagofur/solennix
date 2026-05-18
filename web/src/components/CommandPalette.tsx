@@ -12,6 +12,7 @@ import {
   Users,
   Settings,
   ArrowRight,
+  MessageSquare,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
@@ -62,6 +63,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       { label: t('nav.clients'), icon: Users, action: () => navigate('/clients'), group: t('command_palette.navigation_group') },
       { label: t('nav.products'), icon: Package, action: () => navigate('/products'), group: t('command_palette.navigation_group') },
       { label: t('nav.inventory'), icon: Boxes, action: () => navigate('/inventory'), group: t('command_palette.navigation_group') },
+      { label: t('nav.reviews', { defaultValue: 'Reseñas' }), icon: MessageSquare, action: () => navigate('/reviews'), group: t('command_palette.navigation_group') },
       { label: t('nav.settings'), icon: Settings, action: () => navigate('/settings'), group: t('command_palette.navigation_group') },
     ],
     [navigate, t],

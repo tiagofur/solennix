@@ -105,6 +105,7 @@ func main() {
 	eventFormLinkRepo := repository.NewEventFormLinkRepo(pool)
 	eventPublicLinkRepo := repository.NewEventPublicLinkRepo(pool)
 	paymentSubmissionRepo := repository.NewPaymentSubmissionRepo(pool)
+	reviewRepo := repository.NewEventReviewRepo(pool)
 	staffRepo := repository.NewStaffRepo(pool)
 	staffTeamRepo := repository.NewStaffTeamRepo(pool)
 
@@ -163,13 +164,14 @@ func main() {
 	eventFormHandler := handlers.NewEventFormHandler(eventFormLinkRepo, productRepo, userRepo, cfg.FrontendURL, pool)
 	eventPublicLinkHandler := handlers.NewEventPublicLinkHandler(eventPublicLinkRepo, eventRepo, clientRepo, userRepo, paymentRepo, cfg.FrontendURL)
 	paymentSubmissionHandler := handlers.NewPaymentSubmissionHandler(paymentSubmissionRepo, paymentRepo, userRepo, pool, cfg.UploadDir)
+	reviewHandler := handlers.NewEventReviewHandler(reviewRepo, userRepo, emailService, cfg.FrontendURL)
 	staffHandler := handlers.NewStaffHandler(staffRepo, userRepo)
 	staffHandler.SetInviteSupport(authService, emailService, cfg.FrontendURL)
 	staffTeamHandler := handlers.NewStaffTeamHandler(staffTeamRepo)
 	pdfHandler := handlers.NewPDFHandler(eventRepo, clientRepo, paymentRepo, userRepo, cfg.UploadDir)
 
 	// Create router
-	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, dashboardHandler, auditHandler, unavailHandler, deviceHandler, liveActivityHandler, eventFormHandler, eventPublicLinkHandler, paymentSubmissionHandler, staffHandler, staffTeamHandler, pdfHandler, authService, userRepo, auditRepo, pool, cfg.CORSAllowedOrigins, cfg.UploadDir)
+	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, dashboardHandler, auditHandler, unavailHandler, deviceHandler, liveActivityHandler, eventFormHandler, eventPublicLinkHandler, paymentSubmissionHandler, reviewHandler, staffHandler, staffTeamHandler, pdfHandler, authService, userRepo, auditRepo, pool, cfg.CORSAllowedOrigins, cfg.UploadDir)
 
 	// Background job: expire gifted plans that have passed their expiry date.
 	// Runs once at startup then every hour.
@@ -197,6 +199,20 @@ func main() {
 		defer ticker.Stop()
 		for range ticker.C {
 			notificationService.ProcessPendingReminders(context.Background())
+		}
+	}()
+
+	// Background job: send review request emails 48h after events.
+	// Runs once at startup and every 6 hours.
+	go func() {
+		runReviews := func() {
+			reviewHandler.SendScheduledReviewRequests(context.Background())
+		}
+		runReviews()
+		ticker := time.NewTicker(6 * time.Hour)
+		defer ticker.Stop()
+		for range ticker.C {
+			runReviews()
 		}
 	}()
 

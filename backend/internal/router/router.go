@@ -19,6 +19,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	liveActivityHandler *handlers.LiveActivityHandler, eventFormHandler *handlers.EventFormHandler,
 	eventPublicLinkHandler *handlers.EventPublicLinkHandler,
 	paymentSubmissionHandler *handlers.PaymentSubmissionHandler,
+	reviewHandler *handlers.EventReviewHandler,
 	staffHandler *handlers.StaffHandler,
 	staffTeamHandler *handlers.StaffTeamHandler,
 	pdfHandler *handlers.PDFHandler,
@@ -153,6 +154,17 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		// Payment submissions (client portal) — tokenized access
 		r.Post("/{token}/payment-submissions", paymentSubmissionHandler.CreatePublic)
 		r.Get("/{token}/payment-submissions", paymentSubmissionHandler.GetHistoryPublic)
+	})
+
+	apiRouter.Route("/public/reviews", func(r chi.Router) {
+		r.Use(mw.RateLimit(10, 1*time.Minute))
+		r.Get("/{token}", reviewHandler.GetPublicReviewRequest)
+		r.Post("/{token}", reviewHandler.SubmitPublicReview)
+	})
+
+	apiRouter.Route("/public/organizers", func(r chi.Router) {
+		r.Use(mw.RateLimit(20, 1*time.Minute))
+		r.Get("/{slug}/reviews", reviewHandler.ListPublicPortfolioReviews)
 	})
 
 	// Protected routes
@@ -299,6 +311,12 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Route("/payment-submissions", func(r chi.Router) {
 			r.Get("/", paymentSubmissionHandler.GetPendingOrganizerInbox)
 			r.Patch("/{id}", paymentSubmissionHandler.ReviewSubmission)
+		})
+
+		r.Route("/reviews", func(r chi.Router) {
+			r.Get("/", reviewHandler.ListOrganizerReviews)
+			r.Patch("/{id}/response", reviewHandler.UpdateOrganizerResponse)
+			r.Patch("/{id}/visibility", reviewHandler.UpdateReviewVisibility)
 		})
 
 		// Backward-compatible alias for older organizer clients still calling the prefixed path.

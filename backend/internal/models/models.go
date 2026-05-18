@@ -254,8 +254,8 @@ type SupplySuggestion struct {
 type UnavailableDate struct {
 	ID        uuid.UUID `json:"id"`
 	UserID    uuid.UUID `json:"user_id"`
-	StartDate string    `json:"start_date"` // DATE as string
-	EndDate   string    `json:"end_date"`   // DATE as string
+	StartDate string    `json:"start_date"`           // DATE as string
+	EndDate   string    `json:"end_date"`             // DATE as string
 	StartTime *string   `json:"start_time,omitempty"` // HH:MM
 	EndTime   *string   `json:"end_time,omitempty"`   // HH:MM
 	Reason    *string   `json:"reason,omitempty"`
@@ -478,4 +478,47 @@ type PaymentSubmission struct {
 	// Joined data (populated by queries with joins)
 	ClientName *string `json:"client_name,omitempty"`
 	EventLabel *string `json:"event_label,omitempty"`
+}
+
+// EventReviewRequest stores a one-time token sent to the client after an event
+// so they can submit a post-event review without authentication.
+type EventReviewRequest struct {
+	ID            uuid.UUID  `json:"id"`
+	EventID       uuid.UUID  `json:"event_id"`
+	UserID        uuid.UUID  `json:"user_id"`
+	ClientID      uuid.UUID  `json:"client_id"`
+	Token         string     `json:"token"`
+	ClientName    *string    `json:"client_name,omitempty"`
+	ClientEmail   string     `json:"client_email"`
+	SentAt        time.Time  `json:"sent_at"`
+	ExpiresAt     *time.Time `json:"expires_at,omitempty"`
+	SubmittedAt   *time.Time `json:"submitted_at,omitempty"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at"`
+	EventDate     *string    `json:"event_date,omitempty"`
+	EventLabel    *string    `json:"event_label,omitempty"`
+	OrganizerName *string    `json:"organizer_name,omitempty"`
+}
+
+// EventReview represents a post-event testimonial left by the client.
+type EventReview struct {
+	ID                uuid.UUID  `json:"id"`
+	EventID           uuid.UUID  `json:"event_id"`
+	UserID            uuid.UUID  `json:"user_id"`
+	ClientID          uuid.UUID  `json:"client_id"`
+	ReviewRequestID   *uuid.UUID `json:"review_request_id,omitempty"`
+	Rating            int        `json:"rating"`
+	Comment           *string    `json:"comment,omitempty"`
+	Visibility        string     `json:"visibility"` // "private" | "public"
+	OrganizerResponse *string    `json:"organizer_response,omitempty"`
+	RespondedAt       *time.Time `json:"responded_at,omitempty"`
+	SubmittedAt       time.Time  `json:"submitted_at"`
+	CreatedAt         time.Time  `json:"created_at"`
+	UpdatedAt         time.Time  `json:"updated_at"`
+
+	// Joined data for organizer and public views.
+	ClientName    *string `json:"client_name,omitempty"`
+	EventLabel    *string `json:"event_label,omitempty"`
+	OrganizerName *string `json:"organizer_name,omitempty"`
+	PublicSlug    *string `json:"public_slug,omitempty"`
 }

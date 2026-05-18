@@ -96,6 +96,10 @@ struct RouteDestination: View {
         case .paymentInbox:
             PaymentInboxView(apiClient: apiClient)
 
+        // Reviews
+        case .reviews:
+            ReviewsView(apiClient: apiClient)
+
         // Tools
         case .search(let query):
             SearchView(initialQuery: query)

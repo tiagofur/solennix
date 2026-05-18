@@ -18,6 +18,7 @@ import {
   Link2,
   UserCog,
   Wallet,
+  MessageSquare,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { logError } from '@/lib/errorHandler';
@@ -102,6 +103,7 @@ export const Layout: React.FC = () => {
     { name: t('nav.inventory'), href: '/inventory', icon: Boxes },
     { name: t('nav.forms'), href: '/event-forms', icon: Link2 },
     { name: t('nav.payments_inbox', { defaultValue: 'Cobros' }), href: '/payments/inbox', icon: Wallet },
+    { name: t('nav.reviews', { defaultValue: 'Reseñas' }), href: '/reviews', icon: MessageSquare },
     { name: t('nav.settings'), href: '/settings', icon: Settings },
     // Admin link — only visible to admins
     ...(user?.role === 'admin' ? [{ name: t('nav.admin'), href: '/admin', icon: Shield }] : []),
