@@ -14,7 +14,7 @@ plugins {
 
 android {
     namespace = "com.creapolis.solennix.feature.payments"
-    compileSdk = 36
+    compileSdk = 37
     defaultConfig {
         minSdk = 26
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

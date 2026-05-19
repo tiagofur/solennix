@@ -14,7 +14,7 @@ plugins {
 
 android {
     namespace = "com.creapolis.solennix.feature.search"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 26

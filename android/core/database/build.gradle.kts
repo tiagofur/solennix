@@ -12,7 +12,7 @@ plugins {
 
 android {
     namespace = "com.creapolis.solennix.core.database"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 26
