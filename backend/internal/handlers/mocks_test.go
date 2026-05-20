@@ -744,6 +744,16 @@ func (m *MockAdminRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*reposit
 	return args.Get(0).(*repository.AdminUser), args.Error(1)
 }
 
+func (m *MockAdminRepo) BlockUser(ctx context.Context, id, adminID uuid.UUID, reason string) error {
+	args := m.Called(ctx, id, adminID, reason)
+	return args.Error(0)
+}
+
+func (m *MockAdminRepo) DeleteBlockedUserIfEligible(ctx context.Context, id uuid.UUID) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
 func (m *MockAdminRepo) UpdateUserPlan(ctx context.Context, id uuid.UUID, plan string, expiresAt *time.Time) error {
 	args := m.Called(ctx, id, plan, expiresAt)
 	return args.Error(0)

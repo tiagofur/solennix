@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -21,6 +22,23 @@ const (
 	AdminAccountTypeTeam       = "team"
 	AdminAccountTypeAssistants = "assistants"
 	AdminAccountTypeAdmins     = "admins"
+
+	AccountStatusActive  = "active"
+	AccountStatusBlocked = "blocked"
+	AccountStatusDeleted = "deleted"
+
+	AdminModerationStatusAll                 = "all"
+	AdminModerationStatusActive              = "active"
+	AdminModerationStatusBlocked             = "blocked"
+	AdminModerationStatusEligibleForDeletion = "eligible_for_deletion"
+)
+
+var (
+	ErrAdminUserNotFound             = errors.New("admin user not found")
+	ErrAdminUserAlreadyDeleted       = errors.New("admin user already deleted")
+	ErrAdminUserNotBlocked           = errors.New("admin user is not blocked")
+	ErrAdminUserNotEligibleForDelete = errors.New("admin user is not eligible for deletion")
+	ErrAdminUserNotBlockable         = errors.New("admin user is not blockable")
 )
 
 func NewAdminRepo(pool *pgxpool.Pool) *AdminRepo {
@@ -68,20 +86,26 @@ type PlatformStats struct {
 
 // AdminUser represents a user with usage stats for admin views.
 type AdminUser struct {
-	ID               uuid.UUID  `json:"id"`
-	Email            string     `json:"email"`
-	Name             string     `json:"name"`
-	BusinessName     *string    `json:"business_name,omitempty"`
-	Plan             string     `json:"plan"`
-	Role             string     `json:"role"`
-	StripeCustomerID *string    `json:"stripe_customer_id,omitempty"`
-	HasPaidSub       bool       `json:"has_paid_subscription"`
-	PlanExpiresAt    *time.Time `json:"plan_expires_at,omitempty"`
-	EventsCount      int        `json:"events_count"`
-	ClientsCount     int        `json:"clients_count"`
-	ProductsCount    int        `json:"products_count"`
-	CreatedAt        time.Time  `json:"created_at"`
-	UpdatedAt        time.Time  `json:"updated_at"`
+	ID                 uuid.UUID  `json:"id"`
+	Email              string     `json:"email"`
+	Name               string     `json:"name"`
+	BusinessName       *string    `json:"business_name,omitempty"`
+	Plan               string     `json:"plan"`
+	Role               string     `json:"role"`
+	AccountStatus      string     `json:"account_status"`
+	BlockedAt          *time.Time `json:"blocked_at,omitempty"`
+	BlockedReason      *string    `json:"blocked_reason,omitempty"`
+	BlockedBy          *uuid.UUID `json:"blocked_by,omitempty"`
+	DeletionEligibleAt *time.Time `json:"deletion_eligible_at,omitempty"`
+	DeletedAt          *time.Time `json:"deleted_at,omitempty"`
+	StripeCustomerID   *string    `json:"stripe_customer_id,omitempty"`
+	HasPaidSub         bool       `json:"has_paid_subscription"`
+	PlanExpiresAt      *time.Time `json:"plan_expires_at,omitempty"`
+	EventsCount        int        `json:"events_count"`
+	ClientsCount       int        `json:"clients_count"`
+	ProductsCount      int        `json:"products_count"`
+	CreatedAt          time.Time  `json:"created_at"`
+	UpdatedAt          time.Time  `json:"updated_at"`
 }
 
 // SubscriptionOverview holds subscription stats.
@@ -199,7 +223,10 @@ func (r *AdminRepo) GetAllUsers(ctx context.Context, accountType string) ([]Admi
 
 	query := `
 		SELECT
-			u.id, u.email, u.name, u.business_name, u.plan, u.role, u.stripe_customer_id,
+			u.id, u.email, u.name, u.business_name, u.plan, u.role,
+			COALESCE(u.account_status, 'active') AS account_status,
+			u.blocked_at, u.blocked_reason, u.blocked_by, u.deletion_eligible_at, u.deleted_at,
+			u.stripe_customer_id,
 			(u.stripe_customer_id IS NOT NULL OR EXISTS(
 				SELECT 1 FROM subscriptions s WHERE s.user_id = u.id AND s.status = 'active'
 			)) AS has_paid_sub,
@@ -221,7 +248,9 @@ func (r *AdminRepo) GetAllUsers(ctx context.Context, accountType string) ([]Admi
 	for rows.Next() {
 		var u AdminUser
 		err := rows.Scan(
-			&u.ID, &u.Email, &u.Name, &u.BusinessName, &u.Plan, &u.Role, &u.StripeCustomerID,
+			&u.ID, &u.Email, &u.Name, &u.BusinessName, &u.Plan, &u.Role,
+			&u.AccountStatus, &u.BlockedAt, &u.BlockedReason, &u.BlockedBy, &u.DeletionEligibleAt, &u.DeletedAt,
+			&u.StripeCustomerID,
 			&u.HasPaidSub, &u.PlanExpiresAt,
 			&u.EventsCount, &u.ClientsCount, &u.ProductsCount,
 			&u.CreatedAt, &u.UpdatedAt,
@@ -242,7 +271,10 @@ func (r *AdminRepo) GetAllUsers(ctx context.Context, accountType string) ([]Admi
 func (r *AdminRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*AdminUser, error) {
 	query := `
 		SELECT
-			u.id, u.email, u.name, u.business_name, u.plan, u.role, u.stripe_customer_id,
+			u.id, u.email, u.name, u.business_name, u.plan, u.role,
+			COALESCE(u.account_status, 'active') AS account_status,
+			u.blocked_at, u.blocked_reason, u.blocked_by, u.deletion_eligible_at, u.deleted_at,
+			u.stripe_customer_id,
 			(u.stripe_customer_id IS NOT NULL OR EXISTS(
 				SELECT 1 FROM subscriptions s WHERE s.user_id = u.id AND s.status = 'active'
 			)) AS has_paid_sub,
@@ -256,16 +288,125 @@ func (r *AdminRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*AdminUser, 
 
 	var u AdminUser
 	err := r.pool.QueryRow(ctx, query, id).Scan(
-		&u.ID, &u.Email, &u.Name, &u.BusinessName, &u.Plan, &u.Role, &u.StripeCustomerID,
+		&u.ID, &u.Email, &u.Name, &u.BusinessName, &u.Plan, &u.Role,
+		&u.AccountStatus, &u.BlockedAt, &u.BlockedReason, &u.BlockedBy, &u.DeletionEligibleAt, &u.DeletedAt,
+		&u.StripeCustomerID,
 		&u.HasPaidSub, &u.PlanExpiresAt,
 		&u.EventsCount, &u.ClientsCount, &u.ProductsCount,
 		&u.CreatedAt, &u.UpdatedAt,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("user not found: %w", err)
+		return nil, ErrAdminUserNotFound
 	}
 
 	return &u, nil
+}
+
+// BlockUser transitions an end-user account to blocked state and sets
+// deletion eligibility to 6 months after block time.
+func (r *AdminRepo) BlockUser(ctx context.Context, id, adminID uuid.UUID, reason string) error {
+	if strings.TrimSpace(reason) == "" {
+		return fmt.Errorf("block reason is required")
+	}
+
+	var role string
+	var currentStatus string
+	err := r.pool.QueryRow(ctx, `
+		SELECT role, COALESCE(account_status, 'active')
+		FROM users
+		WHERE id = $1
+	`, id).Scan(&role, &currentStatus)
+	if err != nil {
+		return ErrAdminUserNotFound
+	}
+
+	if role != "user" {
+		return ErrAdminUserNotBlockable
+	}
+
+	if currentStatus == AccountStatusDeleted {
+		return ErrAdminUserAlreadyDeleted
+	}
+
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin block user tx: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback(ctx)
+		}
+	}()
+
+	query := `
+		UPDATE users
+		SET account_status = $2,
+			blocked_at = NOW(),
+			blocked_reason = $3,
+			blocked_by = $4,
+			deletion_eligible_at = NOW() + INTERVAL '6 months',
+			updated_at = NOW()
+		WHERE id = $1`
+	tag, err := tx.Exec(ctx, query, id, AccountStatusBlocked, strings.TrimSpace(reason), adminID)
+	if err != nil {
+		return fmt.Errorf("failed to block user: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrAdminUserNotFound
+	}
+
+	if _, err = tx.Exec(ctx, `DELETE FROM refresh_token_families WHERE user_id = $1`, id); err != nil {
+		return fmt.Errorf("failed to revoke refresh tokens for blocked user: %w", err)
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit block user tx: %w", err)
+	}
+
+	return nil
+}
+
+// DeleteBlockedUserIfEligible soft-deletes a blocked user once the 6-month
+// eligibility period has been reached.
+func (r *AdminRepo) DeleteBlockedUserIfEligible(ctx context.Context, id uuid.UUID) error {
+	var currentStatus string
+	var eligibleAt *time.Time
+	err := r.pool.QueryRow(ctx, `
+		SELECT COALESCE(account_status, 'active'), deletion_eligible_at
+		FROM users
+		WHERE id = $1
+	`, id).Scan(&currentStatus, &eligibleAt)
+	if err != nil {
+		return ErrAdminUserNotFound
+	}
+
+	if currentStatus == AccountStatusDeleted {
+		return ErrAdminUserAlreadyDeleted
+	}
+
+	if currentStatus != AccountStatusBlocked {
+		return ErrAdminUserNotBlocked
+	}
+
+	if eligibleAt == nil || eligibleAt.After(time.Now().UTC()) {
+		return ErrAdminUserNotEligibleForDelete
+	}
+
+	query := `
+		UPDATE users
+		SET account_status = $2,
+			deleted_at = NOW(),
+			updated_at = NOW()
+		WHERE id = $1`
+	tag, err := r.pool.Exec(ctx, query, id, AccountStatusDeleted)
+	if err != nil {
+		return fmt.Errorf("failed to delete blocked user: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrAdminUserNotFound
+	}
+
+	return nil
 }
 
 // UpdateUserPlan updates a user's plan (admin action).

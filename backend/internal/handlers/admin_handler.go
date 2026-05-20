@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -42,6 +43,10 @@ func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	if accountType == "" {
 		accountType = repository.AdminAccountTypeUsers
 	}
+	moderationStatus := strings.TrimSpace(r.URL.Query().Get("moderation_status"))
+	if moderationStatus == "" {
+		moderationStatus = repository.AdminModerationStatusAll
+	}
 
 	users, err := h.adminRepo.GetAllUsers(r.Context(), accountType)
 	if err != nil {
@@ -58,7 +63,52 @@ func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 		users = []repository.AdminUser{}
 	}
 
-	writeJSON(w, http.StatusOK, users)
+	filtered, err := filterUsersByModerationStatus(users, moderationStatus)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid moderation_status. Must be one of: all, active, blocked, eligible_for_deletion")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, filtered)
+}
+
+func filterUsersByModerationStatus(users []repository.AdminUser, moderationStatus string) ([]repository.AdminUser, error) {
+	normalized := strings.ToLower(strings.TrimSpace(moderationStatus))
+	now := time.Now().UTC()
+
+	switch normalized {
+	case repository.AdminModerationStatusAll:
+		return users, nil
+	case repository.AdminModerationStatusActive:
+		out := make([]repository.AdminUser, 0, len(users))
+		for _, u := range users {
+			if u.AccountStatus == repository.AccountStatusActive {
+				out = append(out, u)
+			}
+		}
+		return out, nil
+	case repository.AdminModerationStatusBlocked:
+		out := make([]repository.AdminUser, 0, len(users))
+		for _, u := range users {
+			if u.AccountStatus == repository.AccountStatusBlocked {
+				out = append(out, u)
+			}
+		}
+		return out, nil
+	case repository.AdminModerationStatusEligibleForDeletion:
+		out := make([]repository.AdminUser, 0, len(users))
+		for _, u := range users {
+			if u.AccountStatus != repository.AccountStatusBlocked {
+				continue
+			}
+			if u.DeletionEligibleAt != nil && !u.DeletionEligibleAt.After(now) {
+				out = append(out, u)
+			}
+		}
+		return out, nil
+	default:
+		return nil, errors.New("invalid moderation status")
+	}
 }
 
 // GetUser returns a single user with usage stats.
@@ -85,6 +135,10 @@ func (h *AdminHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 type upgradeRequest struct {
 	Plan      string  `json:"plan"`
 	ExpiresAt *string `json:"expires_at"` // ISO 8601 date "YYYY-MM-DD"; nil = permanent gift
+}
+
+type blockUserRequest struct {
+	Reason string `json:"reason"`
 }
 
 // UpgradeUser upgrades a free/basic user to pro.
@@ -175,6 +229,85 @@ func (h *AdminHandler) UpgradeUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, updated)
+}
+
+// BlockUser blocks an end-user account and sets deletion eligibility to 6 months.
+// PUT /api/admin/users/{id}/block
+func (h *AdminHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	var req blockUserRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	reason := strings.TrimSpace(req.Reason)
+	if reason == "" {
+		writeError(w, http.StatusBadRequest, "Block reason is required")
+		return
+	}
+
+	adminID := middleware.GetUserID(r.Context())
+	if err := h.adminRepo.BlockUser(r.Context(), id, adminID, reason); err != nil {
+		switch {
+		case errors.Is(err, repository.ErrAdminUserNotFound):
+			writeError(w, http.StatusNotFound, "User not found")
+			return
+		case errors.Is(err, repository.ErrAdminUserAlreadyDeleted):
+			writeError(w, http.StatusConflict, "User is already deleted")
+			return
+		case errors.Is(err, repository.ErrAdminUserNotBlockable):
+			writeError(w, http.StatusForbidden, "Only end-user accounts can be blocked")
+			return
+		default:
+			slog.Error("admin: failed to block user", "error", err, "target_user_id", id, "admin_id", adminID)
+			writeError(w, http.StatusInternalServerError, "Failed to block user")
+			return
+		}
+	}
+
+	updated, err := h.adminRepo.GetUserByID(r.Context(), id)
+	if err != nil {
+		writeJSON(w, http.StatusOK, map[string]string{"message": "User blocked successfully"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, updated)
+}
+
+// DeleteUser removes a previously blocked user once the 6-month retention has passed.
+// DELETE /api/admin/users/{id}
+func (h *AdminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	if err := h.adminRepo.DeleteBlockedUserIfEligible(r.Context(), id); err != nil {
+		switch {
+		case errors.Is(err, repository.ErrAdminUserNotFound):
+			writeError(w, http.StatusNotFound, "User not found")
+		case errors.Is(err, repository.ErrAdminUserNotBlocked):
+			writeError(w, http.StatusConflict, "User must be blocked before deletion")
+		case errors.Is(err, repository.ErrAdminUserNotEligibleForDelete):
+			writeError(w, http.StatusConflict, "User is not eligible for deletion yet")
+		case errors.Is(err, repository.ErrAdminUserAlreadyDeleted):
+			writeError(w, http.StatusConflict, "User is already deleted")
+		default:
+			slog.Error("admin: failed to delete user", "error", err, "target_user_id", id)
+			writeError(w, http.StatusInternalServerError, "Failed to delete user")
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"message": "User deleted successfully"})
 }
 
 // GetSubscriptions returns subscription overview stats.

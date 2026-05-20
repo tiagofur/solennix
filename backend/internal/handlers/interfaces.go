@@ -178,6 +178,8 @@ type AdminRepository interface {
 	GetPlatformStats(ctx context.Context) (*repository.PlatformStats, error)
 	GetAllUsers(ctx context.Context, accountType string) ([]repository.AdminUser, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (*repository.AdminUser, error)
+	BlockUser(ctx context.Context, id, adminID uuid.UUID, reason string) error
+	DeleteBlockedUserIfEligible(ctx context.Context, id uuid.UUID) error
 	UpdateUserPlan(ctx context.Context, id uuid.UUID, plan string, expiresAt *time.Time) error
 	HasActiveSubscription(ctx context.Context, userID uuid.UUID) (bool, error)
 	GetSubscriptionOverview(ctx context.Context) (*repository.SubscriptionOverview, error)

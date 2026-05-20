@@ -331,6 +331,21 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	accountStatus := user.AccountStatus
+	if accountStatus == "" {
+		accountStatus = repository.AccountStatusActive
+	}
+	if accountStatus == repository.AccountStatusBlocked {
+		slog.Warn("auth.event", "action", "login_failed", "email", req.Email, "reason", "account_blocked", "ip", clientIP(r))
+		writeAuthI18nError(w, r, http.StatusForbidden, "auth.account_blocked")
+		return
+	}
+	if accountStatus == repository.AccountStatusDeleted {
+		slog.Warn("auth.event", "action", "login_failed", "email", req.Email, "reason", "account_deleted", "ip", clientIP(r))
+		writeAuthI18nError(w, r, http.StatusForbidden, "auth.account_deleted")
+		return
+	}
+
 	if user.EmailVerifiedAt == nil {
 		slog.Warn("auth.event", "action", "login_failed", "email", req.Email, "reason", "email_not_verified", "ip", clientIP(r))
 		writeAuthI18nError(w, r, http.StatusForbidden, "auth.email_not_verified")
@@ -446,6 +461,19 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	accountStatus := user.AccountStatus
+	if accountStatus == "" {
+		accountStatus = repository.AccountStatusActive
+	}
+	if accountStatus == repository.AccountStatusBlocked {
+		writeAuthI18nError(w, r, http.StatusForbidden, "auth.account_blocked")
+		return
+	}
+	if accountStatus == repository.AccountStatusDeleted {
+		writeAuthI18nError(w, r, http.StatusForbidden, "auth.account_deleted")
+		return
+	}
+
 	writeJSON(w, http.StatusOK, user)
 }
 
@@ -471,6 +499,21 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	if err != nil || user == nil {
 		slog.Warn("auth.event", "action", "token_refresh_failed", "reason", "user_not_found", "user_id", claims.UserID, "ip", clientIP(r))
 		writeAuthI18nError(w, r, http.StatusUnauthorized, "auth.token_invalid_or_expired")
+		return
+	}
+
+	accountStatus := user.AccountStatus
+	if accountStatus == "" {
+		accountStatus = repository.AccountStatusActive
+	}
+	if accountStatus == repository.AccountStatusBlocked {
+		slog.Warn("auth.event", "action", "token_refresh_failed", "reason", "account_blocked", "user_id", claims.UserID, "ip", clientIP(r))
+		writeAuthI18nError(w, r, http.StatusForbidden, "auth.account_blocked")
+		return
+	}
+	if accountStatus == repository.AccountStatusDeleted {
+		slog.Warn("auth.event", "action", "token_refresh_failed", "reason", "account_deleted", "user_id", claims.UserID, "ip", clientIP(r))
+		writeAuthI18nError(w, r, http.StatusForbidden, "auth.account_deleted")
 		return
 	}
 

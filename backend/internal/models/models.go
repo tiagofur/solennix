@@ -10,6 +10,12 @@ type User struct {
 	ID                      uuid.UUID  `json:"id"`
 	Email                   string     `json:"email"`
 	PasswordHash            string     `json:"-"` // Never expose in JSON
+	AccountStatus           string     `json:"account_status"`
+	BlockedAt               *time.Time `json:"blocked_at,omitempty"`
+	BlockedReason           *string    `json:"blocked_reason,omitempty"`
+	BlockedBy               *uuid.UUID `json:"blocked_by,omitempty"`
+	DeletionEligibleAt      *time.Time `json:"deletion_eligible_at,omitempty"`
+	DeletedAt               *time.Time `json:"deleted_at,omitempty"`
 	EmailVerifiedAt         *time.Time `json:"email_verified_at,omitempty"`
 	EmailVerificationSentAt *time.Time `json:"email_verification_sent_at,omitempty"`
 	EmailVerificationHash   *string    `json:"-"`

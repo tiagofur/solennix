@@ -650,3 +650,143 @@ func TestAdminHandler_GetSubscriptions(t *testing.T) {
 		repo.AssertExpectations(t)
 	})
 }
+
+func TestAdminHandler_ListUsers_WithModerationFilter(t *testing.T) {
+	repo := new(MockAdminRepo)
+	handler := NewAdminHandler(repo)
+
+	eligibleAt := time.Now().Add(-24 * time.Hour)
+	futureEligibleAt := time.Now().Add(24 * time.Hour)
+
+	users := []repository.AdminUser{
+		{ID: uuid.New(), Email: "active@example.com", AccountStatus: repository.AccountStatusActive},
+		{ID: uuid.New(), Email: "blocked1@example.com", AccountStatus: repository.AccountStatusBlocked, DeletionEligibleAt: &eligibleAt},
+		{ID: uuid.New(), Email: "blocked2@example.com", AccountStatus: repository.AccountStatusBlocked, DeletionEligibleAt: &futureEligibleAt},
+	}
+
+	repo.On("GetAllUsers", mock.Anything, "users").Return(users, nil)
+
+	req := httptest.NewRequest("GET", "/api/admin/users?moderation_status=eligible_for_deletion", nil)
+	w := httptest.NewRecorder()
+
+	handler.ListUsers(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var resp []repository.AdminUser
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.NoError(t, err)
+	assert.Len(t, resp, 1)
+	assert.Equal(t, "blocked1@example.com", resp[0].Email)
+	repo.AssertExpectations(t)
+}
+
+func TestAdminHandler_BlockUser(t *testing.T) {
+	buildReq := func(userID uuid.UUID, body string) *http.Request {
+		req := httptest.NewRequest("PUT", "/api/admin/users/"+userID.String()+"/block", bytes.NewReader([]byte(body)))
+		req.Header.Set("Content-Type", "application/json")
+
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", userID.String())
+		ctx := context.WithValue(req.Context(), chi.RouteCtxKey, rctx)
+		ctx = context.WithValue(ctx, middleware.UserIDKey, uuid.New())
+		return req.WithContext(ctx)
+	}
+
+	t.Run("success", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		userID := uuid.New()
+		adminID := uuid.New()
+		updated := &repository.AdminUser{ID: userID, AccountStatus: repository.AccountStatusBlocked}
+
+		req := httptest.NewRequest("PUT", "/api/admin/users/"+userID.String()+"/block", bytes.NewReader([]byte(`{"reason":"fraud"}`)))
+		req.Header.Set("Content-Type", "application/json")
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", userID.String())
+		ctx := context.WithValue(req.Context(), chi.RouteCtxKey, rctx)
+		ctx = context.WithValue(ctx, middleware.UserIDKey, adminID)
+		req = req.WithContext(ctx)
+
+		repo.On("BlockUser", mock.Anything, userID, adminID, "fraud").Return(nil)
+		repo.On("GetUserByID", mock.Anything, userID).Return(updated, nil)
+
+		w := httptest.NewRecorder()
+		handler.BlockUser(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("bad request missing reason", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		userID := uuid.New()
+		w := httptest.NewRecorder()
+		handler.BlockUser(w, buildReq(userID, `{"reason":""}`))
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("forbidden for non-end-user account", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		userID := uuid.New()
+		adminID := uuid.New()
+
+		req := httptest.NewRequest("PUT", "/api/admin/users/"+userID.String()+"/block", bytes.NewReader([]byte(`{"reason":"fraud"}`)))
+		req.Header.Set("Content-Type", "application/json")
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", userID.String())
+		ctx := context.WithValue(req.Context(), chi.RouteCtxKey, rctx)
+		ctx = context.WithValue(ctx, middleware.UserIDKey, adminID)
+		req = req.WithContext(ctx)
+
+		repo.On("BlockUser", mock.Anything, userID, adminID, "fraud").Return(repository.ErrAdminUserNotBlockable)
+
+		w := httptest.NewRecorder()
+		handler.BlockUser(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
+		repo.AssertExpectations(t)
+	})
+}
+
+func TestAdminHandler_DeleteUser(t *testing.T) {
+	buildReq := func(userID uuid.UUID) *http.Request {
+		req := httptest.NewRequest("DELETE", "/api/admin/users/"+userID.String(), nil)
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", userID.String())
+		return req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+	}
+
+	t.Run("success", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+		userID := uuid.New()
+
+		repo.On("DeleteBlockedUserIfEligible", mock.Anything, userID).Return(nil)
+
+		w := httptest.NewRecorder()
+		handler.DeleteUser(w, buildReq(userID))
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("not eligible", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+		userID := uuid.New()
+
+		repo.On("DeleteBlockedUserIfEligible", mock.Anything, userID).Return(repository.ErrAdminUserNotEligibleForDelete)
+
+		w := httptest.NewRecorder()
+		handler.DeleteUser(w, buildReq(userID))
+
+		assert.Equal(t, http.StatusConflict, w.Code)
+		repo.AssertExpectations(t)
+	})
+}
