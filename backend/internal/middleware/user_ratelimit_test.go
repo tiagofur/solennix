@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"strings"
 	"testing"
 	"time"
@@ -267,6 +268,40 @@ func TestUserRateLimit_DifferentUsersIndependent(t *testing.T) {
 	handler.ServeHTTP(rr, authenticatedRequest(user2))
 	if rr.Code != http.StatusOK {
 		t.Errorf("Expected user2 to be OK, got %d", rr.Code)
+	}
+
+	if RateLimitStopFunc != nil {
+		RateLimitStopFunc()
+	}
+}
+
+func TestUserRateLimit_ConcurrentInitializationRegistersAllStopFuncs(t *testing.T) {
+	originalInterval := RateLimitCleanupInterval
+	RateLimitCleanupInterval = 10 * time.Millisecond
+	defer func() { RateLimitCleanupInterval = originalInterval }()
+
+	stopFuncsMu.Lock()
+	allStopFuncs = nil
+	stopFuncsMu.Unlock()
+
+	resolver := &mockPlanResolver{plan: "basic"}
+	const workers = 32
+
+	var wg sync.WaitGroup
+	wg.Add(workers)
+	for i := 0; i < workers; i++ {
+		go func() {
+			defer wg.Done()
+			_ = UserRateLimit(resolver, 100*time.Millisecond)
+		}()
+	}
+	wg.Wait()
+
+	stopFuncsMu.Lock()
+	got := len(allStopFuncs)
+	stopFuncsMu.Unlock()
+	if got != workers {
+		t.Fatalf("registered stop funcs = %d, want %d", got, workers)
 	}
 
 	if RateLimitStopFunc != nil {
