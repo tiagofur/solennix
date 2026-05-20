@@ -15,12 +15,16 @@ public enum AuthState: Sendable, Equatable {
 
 // MARK: - Auth Response
 
-/// Response from authentication endpoints.
-/// Backend always returns `{ tokens: { access_token: "...", refresh_token: "..." }, user: { ... } }`.
+/// Response from authentication endpoints that return user + token pair.
 public struct AuthResponse: Sendable {
     public let user: User
     public let accessToken: String
     public let refreshToken: String
+}
+
+/// Response from register endpoint when email verification is required.
+private struct RegisterResponse: Decodable {
+    let user: User
 }
 
 extension AuthResponse: Decodable {
@@ -234,13 +238,18 @@ public final class AuthManager {
         }
 
         let body = ["name": name, "email": email, "password": password]
-        let response: AuthResponse = try await client.post(Endpoint.register, body: body)
-
-        storeTokens(access: response.accessToken, refresh: response.refreshToken)
-        currentUser = response.user
-        authState = .authenticated(response.user)
-        userTrackingDelegate?.setUser(id: response.user.id, email: response.user.email, name: response.user.name)
+        let response: RegisterResponse = try await client.post(Endpoint.register, body: body)
         return response.user
+    }
+
+    /// Requests a new verification email for an existing unverified account.
+    public func resendEmailVerification(email: String) async throws {
+        guard let client = apiClient else {
+            throw APIError.unknown
+        }
+
+        let body = ["email": email]
+        let _: EmptyResponse = try await client.post(Endpoint.verifyEmailResend, body: body)
     }
 
     // MARK: - Accept Team Invite

@@ -175,6 +175,23 @@ private fun LoginFormContent(
             )
         }
 
+        if (viewModel.verificationNotice != null) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = viewModel.verificationNotice.orEmpty(),
+                color = SolennixTheme.colors.success,
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            TextButton(
+                onClick = { viewModel.resendVerificationEmail() },
+                enabled = !viewModel.isLoading
+            ) {
+                Text(stringResource(R.string.auth_verification_resend))
+            }
+        }
+
         Spacer(modifier = Modifier.height(32.dp))
 
         Row(

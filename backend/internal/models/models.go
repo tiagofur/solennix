@@ -16,6 +16,10 @@ type User struct {
 	BlockedBy               *uuid.UUID `json:"blocked_by,omitempty"`
 	DeletionEligibleAt      *time.Time `json:"deletion_eligible_at,omitempty"`
 	DeletedAt               *time.Time `json:"deleted_at,omitempty"`
+	EmailVerifiedAt         *time.Time `json:"email_verified_at,omitempty"`
+	EmailVerificationSentAt *time.Time `json:"email_verification_sent_at,omitempty"`
+	EmailVerificationHash   *string    `json:"-"`
+	EmailVerificationExpiry *time.Time `json:"-"`
 	Name                    string     `json:"name"`
 	BusinessName            *string    `json:"business_name,omitempty"`
 	LogoURL                 *string    `json:"logo_url,omitempty"`

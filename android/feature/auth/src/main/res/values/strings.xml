@@ -23,6 +23,7 @@
     <string name="auth_register_feature_free">Gratis</string>
     <string name="auth_register_feature_secure">Seguro</string>
     <string name="auth_register_feature_scalable">Escalable</string>
+    <string name="auth_register_go_to_login">Ir a iniciar sesión</string>
     <string name="auth_forgot_title">Recuperar contraseña</string>
     <string name="auth_forgot_email_label">Correo electrónico</string>
     <string name="auth_forgot_email_placeholder">tu@email.com</string>
@@ -86,4 +87,8 @@
     <string name="auth_error_decoding">Error inesperado. Intentá de nuevo.</string>
     <string name="auth_error_security">No pudimos verificar la conexión segura con el servidor. Posible red comprometida. Intentá desde otra red.</string>
     <string name="auth_error_unknown">Error inesperado. Intentá de nuevo.</string>
+    <string name="auth_verification_required_notice">Te enviamos un enlace para verificar tu correo. Revisá tu bandeja antes de iniciar sesión.</string>
+    <string name="auth_verification_resend">Reenviar enlace de verificación</string>
+    <string name="auth_verification_resent">Te enviamos un nuevo enlace de verificación.</string>
+    <string name="auth_verification_resend_requires_email">Ingresá un correo válido para reenviar el enlace.</string>
 </resources>

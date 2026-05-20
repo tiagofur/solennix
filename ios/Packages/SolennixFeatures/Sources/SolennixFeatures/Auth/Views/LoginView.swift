@@ -152,6 +152,16 @@ public struct LoginView: View {
                 errorBanner(message: error)
             }
 
+            if let notice = viewModel?.verificationNotice {
+                infoBanner(
+                    message: notice,
+                    actionTitle: tr("auth.login.resend_verification", "Reenviar enlace"),
+                    action: {
+                        Task { await viewModel?.resendVerificationEmail() }
+                    }
+                )
+            }
+
             SolennixTextField(
                 label: tr("auth.login.email_label", "Correo electrónico"),
                 text: Binding(
@@ -313,6 +323,37 @@ public struct LoginView: View {
         }
         .onTapGesture {
             viewModel?.clearError()
+        }
+    }
+
+    private func infoBanner(message: String, actionTitle: String, action: @escaping () -> Void) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Text(message)
+                .font(.subheadline)
+                .foregroundStyle(SolennixColors.success)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button(actionTitle) {
+                action()
+            }
+            .font(.subheadline)
+            .fontWeight(.semibold)
+            .foregroundStyle(SolennixColors.success)
+            .disabled(viewModel?.isLoading ?? false)
+        }
+        .padding(Spacing.sm + 4)
+        .background(SolennixColors.success.opacity(0.12))
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
+        .overlay(alignment: .leading) {
+            Rectangle()
+                .fill(SolennixColors.success)
+                .frame(width: 4)
+                .clipShape(
+                    UnevenRoundedRectangle(
+                        topLeadingRadius: CornerRadius.sm,
+                        bottomLeadingRadius: CornerRadius.sm
+                    )
+                )
         }
     }
 }

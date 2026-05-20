@@ -18,7 +18,9 @@ import com.creapolis.solennix.core.network.post
 import com.creapolis.solennix.core.network.put
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
+import com.creapolis.solennix.core.network.SolennixException
 import com.creapolis.solennix.core.network.runCatchingApi
+import com.creapolis.solennix.core.network.toApiError
 import com.creapolis.solennix.feature.auth.R
 import com.revenuecat.purchases.Purchases
 import com.revenuecat.purchases.logInWith
@@ -29,6 +31,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import javax.inject.Inject
 
 @HiltViewModel
@@ -48,6 +51,8 @@ class AuthViewModel @Inject constructor(
     // UI State
     var isLoading by mutableStateOf(false)
     var errorMessage by mutableStateOf<String?>(null)
+    var verificationNotice by mutableStateOf<String?>(null)
+    var verificationEmail by mutableStateOf("")
 
     /**
      * Forces a re-evaluation of auth state by calling restoreSession.
@@ -70,6 +75,7 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             isLoading = true
             errorMessage = null
+            verificationNotice = null
             try {
                 val response: AuthResponse = runCatchingApi {
                     apiService.post<AuthResponse>(
@@ -81,8 +87,22 @@ class AuthViewModel @Inject constructor(
                 authManager.storeUser(response.user)
                 syncRevenueCat(response.user.id)
                 _loginSuccess.tryEmit(Unit)
+            } catch (e: SolennixException.Server) {
+                if (e.code == 403) {
+                    verificationEmail = loginEmail.trim()
+                    verificationNotice = if (e.message.isNullOrBlank()) {
+                        tr(R.string.auth_verification_required_notice)
+                    } else {
+                        e.message.orEmpty()
+                    }
+                    errorMessage = null
+                } else {
+                    errorMessage = e.toApiError().userMessage(appContext = appContext, context = ErrorContext.LOGIN)
+                }
             } catch (e: ApiError) {
                 errorMessage = e.userMessage(appContext = appContext, context = ErrorContext.LOGIN)
+            } catch (e: Exception) {
+                errorMessage = e.toApiError().userMessage(appContext = appContext, context = ErrorContext.LOGIN)
             } finally {
                 isLoading = false
             }
@@ -106,9 +126,10 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             isLoading = true
             errorMessage = null
+            verificationNotice = null
             try {
-                val response: AuthResponse = runCatchingApi {
-                    apiService.post<AuthResponse>(
+                val response: RegisterResponse = runCatchingApi {
+                    apiService.post<RegisterResponse>(
                         Endpoints.REGISTER,
                         mapOf(
                             "name" to registerName,
@@ -117,12 +138,35 @@ class AuthViewModel @Inject constructor(
                         )
                     )
                 }
-                authManager.storeTokens(response.accessToken, response.refreshToken)
-                authManager.storeUser(response.user)
-                syncRevenueCat(response.user.id)
-                _loginSuccess.tryEmit(Unit)
+                verificationEmail = registerEmail.trim()
+                loginEmail = verificationEmail
+                verificationNotice = response.message?.takeIf { it.isNotBlank() }
+                    ?: tr(R.string.auth_verification_required_notice)
             } catch (e: ApiError) {
                 errorMessage = e.userMessage(appContext = appContext, context = ErrorContext.REGISTER)
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    fun resendVerificationEmail() {
+        val email = verificationEmail.trim()
+        if (!email.isValidEmail()) {
+            errorMessage = tr(R.string.auth_verification_resend_requires_email)
+            return
+        }
+
+        viewModelScope.launch {
+            isLoading = true
+            errorMessage = null
+            try {
+                runCatchingApi {
+                    apiService.post<Unit>(Endpoints.VERIFY_EMAIL_RESEND, mapOf("email" to email))
+                }
+                verificationNotice = tr(R.string.auth_verification_resent)
+            } catch (e: ApiError) {
+                errorMessage = e.userMessage(appContext = appContext, context = ErrorContext.LOGIN)
             } finally {
                 isLoading = false
             }
@@ -283,6 +327,12 @@ class AuthViewModel @Inject constructor(
         }
     }
 }
+
+@Serializable
+private data class RegisterResponse(
+    val user: User,
+    val message: String? = null
+)
 
 /** Context-specific error messages for auth operations */
 private enum class ErrorContext {
