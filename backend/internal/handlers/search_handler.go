@@ -3,10 +3,16 @@ package handlers
 import (
 	"log/slog"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
+)
+
+const (
+	maxSearchQueryLength    = 100
+	maxSearchResultsPerType = 6
 )
 
 type SearchHandler struct {
@@ -34,10 +40,15 @@ func NewSearchHandler(
 func (h *SearchHandler) SearchAll(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := middleware.GetUserID(ctx)
-	query := r.URL.Query().Get("q")
+	query := strings.TrimSpace(r.URL.Query().Get("q"))
 
 	if query == "" {
 		writeError(w, http.StatusBadRequest, "Query parameter 'q' is required")
+		return
+	}
+
+	if len(query) > maxSearchQueryLength {
+		writeError(w, http.StatusBadRequest, "Query parameter 'q' exceeds maximum length of 100 characters")
 		return
 	}
 
@@ -123,18 +134,18 @@ func (h *SearchHandler) SearchAll(w http.ResponseWriter, r *http.Request) {
 
 	wg.Wait()
 
-	// Limit results to 6 per category (as per current frontend behavior)
-	if len(result.clients) > 6 {
-		result.clients = result.clients[:6]
+	// Limit results per category to bound response size and DB amplification.
+	if len(result.clients) > maxSearchResultsPerType {
+		result.clients = result.clients[:maxSearchResultsPerType]
 	}
-	if len(result.products) > 6 {
-		result.products = result.products[:6]
+	if len(result.products) > maxSearchResultsPerType {
+		result.products = result.products[:maxSearchResultsPerType]
 	}
-	if len(result.inventory) > 6 {
-		result.inventory = result.inventory[:6]
+	if len(result.inventory) > maxSearchResultsPerType {
+		result.inventory = result.inventory[:maxSearchResultsPerType]
 	}
-	if len(result.events) > 6 {
-		result.events = result.events[:6]
+	if len(result.events) > maxSearchResultsPerType {
+		result.events = result.events[:maxSearchResultsPerType]
 	}
 
 	// Return results even if some searches failed

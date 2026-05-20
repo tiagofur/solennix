@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -76,6 +77,59 @@ func TestSearchHandler(t *testing.T) {
 		if rr.Code != http.StatusBadRequest {
 			t.Fatalf("status = %d, want %d", rr.Code, http.StatusBadRequest)
 		}
+	})
+
+	t.Run("SearchAll_WhitespaceOnlyQuery", func(t *testing.T) {
+		mockClients := new(MockClientRepo)
+		mockProducts := new(MockProductRepo)
+		mockInventory := new(MockInventoryRepo)
+		mockEvents := new(MockFullEventRepo)
+
+		h := NewSearchHandler(mockClients, mockProducts, mockInventory, mockEvents)
+		req := httptest.NewRequest(http.MethodGet, "/api/search?q=%20%20%20", nil)
+		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, uuid.New()))
+		rr := httptest.NewRecorder()
+
+		h.SearchAll(rr, req)
+
+		if rr.Code != http.StatusBadRequest {
+			t.Fatalf("status = %d, want %d", rr.Code, http.StatusBadRequest)
+		}
+		if !strings.Contains(rr.Body.String(), "Query parameter 'q' is required") {
+			t.Fatalf("body = %q, expected required query error", rr.Body.String())
+		}
+
+		mockClients.AssertNotCalled(t, "Search", mock.Anything, mock.Anything, mock.Anything)
+		mockProducts.AssertNotCalled(t, "Search", mock.Anything, mock.Anything, mock.Anything)
+		mockInventory.AssertNotCalled(t, "Search", mock.Anything, mock.Anything, mock.Anything)
+		mockEvents.AssertNotCalled(t, "Search", mock.Anything, mock.Anything, mock.Anything)
+	})
+
+	t.Run("SearchAll_QueryTooLong", func(t *testing.T) {
+		mockClients := new(MockClientRepo)
+		mockProducts := new(MockProductRepo)
+		mockInventory := new(MockInventoryRepo)
+		mockEvents := new(MockFullEventRepo)
+
+		h := NewSearchHandler(mockClients, mockProducts, mockInventory, mockEvents)
+		longQuery := strings.Repeat("a", maxSearchQueryLength+1)
+		req := httptest.NewRequest(http.MethodGet, "/api/search?q="+url.QueryEscape(longQuery), nil)
+		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, uuid.New()))
+		rr := httptest.NewRecorder()
+
+		h.SearchAll(rr, req)
+
+		if rr.Code != http.StatusBadRequest {
+			t.Fatalf("status = %d, want %d", rr.Code, http.StatusBadRequest)
+		}
+		if !strings.Contains(rr.Body.String(), "exceeds maximum length") {
+			t.Fatalf("body = %q, expected length validation error", rr.Body.String())
+		}
+
+		mockClients.AssertNotCalled(t, "Search", mock.Anything, mock.Anything, mock.Anything)
+		mockProducts.AssertNotCalled(t, "Search", mock.Anything, mock.Anything, mock.Anything)
+		mockInventory.AssertNotCalled(t, "Search", mock.Anything, mock.Anything, mock.Anything)
+		mockEvents.AssertNotCalled(t, "Search", mock.Anything, mock.Anything, mock.Anything)
 	})
 }
 
