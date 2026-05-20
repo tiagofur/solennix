@@ -34,15 +34,6 @@ func UserRateLimit(resolver PlanResolver, window time.Duration) func(http.Handle
 	stopThis := func() { close(done) }
 	stopFuncsMu.Lock()
 	allStopFuncs = append(allStopFuncs, stopThis)
-	stopFuncsSnapshot := append([]func(){}, allStopFuncs...)
-	RateLimitStopFunc = func() {
-		for _, fn := range stopFuncsSnapshot {
-			fn()
-		}
-		stopFuncsMu.Lock()
-		allStopFuncs = nil
-		stopFuncsMu.Unlock()
-	}
 	stopFuncsMu.Unlock()
 
 	// Background cleanup of stale entries

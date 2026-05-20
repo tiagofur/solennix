@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"sync"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -280,9 +280,9 @@ func TestUserRateLimit_ConcurrentInitializationRegistersAllStopFuncs(t *testing.
 	RateLimitCleanupInterval = 10 * time.Millisecond
 	defer func() { RateLimitCleanupInterval = originalInterval }()
 
-	stopFuncsMu.Lock()
-	allStopFuncs = nil
-	stopFuncsMu.Unlock()
+	if RateLimitStopFunc != nil {
+		RateLimitStopFunc()
+	}
 
 	resolver := &mockPlanResolver{plan: "basic"}
 	const workers = 32
