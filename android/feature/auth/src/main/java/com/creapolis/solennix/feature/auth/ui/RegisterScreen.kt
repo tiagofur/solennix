@@ -181,6 +181,20 @@ private fun RegisterFormContent(
                 )
             }
 
+            if (viewModel.verificationNotice != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = viewModel.verificationNotice.orEmpty(),
+                    color = SolennixTheme.colors.success,
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                TextButton(onClick = onNavigateBack) {
+                    Text(stringResource(R.string.auth_register_go_to_login))
+                }
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(

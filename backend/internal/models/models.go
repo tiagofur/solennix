@@ -7,18 +7,22 @@ import (
 )
 
 type User struct {
-	ID                      uuid.UUID `json:"id"`
-	Email                   string    `json:"email"`
-	PasswordHash            string    `json:"-"` // Never expose in JSON
-	Name                    string    `json:"name"`
-	BusinessName            *string   `json:"business_name,omitempty"`
-	LogoURL                 *string   `json:"logo_url,omitempty"`
-	BrandColor              *string   `json:"brand_color,omitempty"`
-	ShowBusinessNameInPdf   *bool     `json:"show_business_name_in_pdf,omitempty"`
-	DefaultDepositPercent   *float64  `json:"default_deposit_percent,omitempty"`
-	DefaultCancellationDays *float64  `json:"default_cancellation_days,omitempty"`
-	DefaultRefundPercent    *float64  `json:"default_refund_percent,omitempty"`
-	ContractTemplate        *string   `json:"contract_template,omitempty"`
+	ID                      uuid.UUID  `json:"id"`
+	Email                   string     `json:"email"`
+	PasswordHash            string     `json:"-"` // Never expose in JSON
+	EmailVerifiedAt         *time.Time `json:"email_verified_at,omitempty"`
+	EmailVerificationSentAt *time.Time `json:"email_verification_sent_at,omitempty"`
+	EmailVerificationHash   *string    `json:"-"`
+	EmailVerificationExpiry *time.Time `json:"-"`
+	Name                    string     `json:"name"`
+	BusinessName            *string    `json:"business_name,omitempty"`
+	LogoURL                 *string    `json:"logo_url,omitempty"`
+	BrandColor              *string    `json:"brand_color,omitempty"`
+	ShowBusinessNameInPdf   *bool      `json:"show_business_name_in_pdf,omitempty"`
+	DefaultDepositPercent   *float64   `json:"default_deposit_percent,omitempty"`
+	DefaultCancellationDays *float64   `json:"default_cancellation_days,omitempty"`
+	DefaultRefundPercent    *float64   `json:"default_refund_percent,omitempty"`
+	ContractTemplate        *string    `json:"contract_template,omitempty"`
 	// Notification preferences
 	EmailPaymentReceipt      *bool `json:"email_payment_receipt,omitempty"`
 	EmailEventReminder       *bool `json:"email_event_reminder,omitempty"`

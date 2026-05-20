@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -467,8 +468,9 @@ func TestAuthHandler_Register_HappyPaths(t *testing.T) {
 
 		assert.Equal(t, http.StatusCreated, rr.Code)
 		assert.Contains(t, rr.Body.String(), "user")
+		assert.Contains(t, rr.Body.String(), "email_verification_required")
 
-		// Verify cookie is set
+		// Registration no longer authenticates the user before email verification.
 		cookies := rr.Result().Cookies()
 		found := false
 		for _, c := range cookies {
@@ -476,7 +478,7 @@ func TestAuthHandler_Register_HappyPaths(t *testing.T) {
 				found = true
 			}
 		}
-		assert.True(t, found, "expected auth_token cookie to be set")
+		assert.False(t, found, "expected auth_token cookie to be absent until email verification")
 
 		mockRepo.AssertExpectations(t)
 	})
@@ -533,12 +535,14 @@ func TestAuthHandler_Login_HappyPaths(t *testing.T) {
 		}
 
 		hash, _ := authService.HashPassword("correct-password")
+		verifiedAt := time.Now()
 		user := &models.User{
-			ID:           uuid.New(),
-			Email:        "login@test.dev",
-			PasswordHash: hash,
-			Name:         "Login User",
-			Plan:         "basic",
+			ID:              uuid.New(),
+			Email:           "login@test.dev",
+			PasswordHash:    hash,
+			EmailVerifiedAt: &verifiedAt,
+			Name:            "Login User",
+			Plan:            "basic",
 		}
 		mockRepo.On("GetByEmail", mock.Anything, "login@test.dev").Return(user, nil)
 
@@ -603,6 +607,86 @@ func TestAuthHandler_Login_HappyPaths(t *testing.T) {
 
 		assert.Equal(t, http.StatusUnauthorized, rr.Code)
 		assert.Contains(t, rr.Body.String(), "Invalid email or password")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("UnverifiedEmail_Returns403", func(t *testing.T) {
+		mockRepo := new(MockFullUserRepo)
+		h := &AuthHandler{
+			userRepo:    mockRepo,
+			authService: authService,
+		}
+
+		hash, _ := authService.HashPassword("correct-password")
+		user := &models.User{
+			ID:           uuid.New(),
+			Email:        "pending@test.dev",
+			PasswordHash: hash,
+		}
+		mockRepo.On("GetByEmail", mock.Anything, "pending@test.dev").Return(user, nil)
+
+		body := `{"email":"pending@test.dev","password":"correct-password"}`
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(body))
+		rr := httptest.NewRecorder()
+		h.Login(rr, req)
+
+		assert.Equal(t, http.StatusForbidden, rr.Code)
+		assert.Contains(t, rr.Body.String(), "verify your email")
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestAuthHandler_VerifyEmail_Paths(t *testing.T) {
+	t.Run("MissingToken_Returns400", func(t *testing.T) {
+		h := &AuthHandler{userRepo: new(MockFullUserRepo)}
+		req := httptest.NewRequest(http.MethodGet, "/api/auth/verify-email", nil)
+		rr := httptest.NewRecorder()
+
+		h.VerifyEmail(rr, req)
+
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Token is required")
+	})
+
+	t.Run("InvalidToken_Returns401", func(t *testing.T) {
+		mockRepo := new(MockFullUserRepo)
+		h := &AuthHandler{userRepo: mockRepo}
+		mockRepo.On("VerifyEmailByTokenHash", mock.Anything, mock.AnythingOfType("string")).Return(nil, fmt.Errorf("invalid"))
+
+		req := httptest.NewRequest(http.MethodGet, "/api/auth/verify-email?token=invalid", nil)
+		rr := httptest.NewRecorder()
+
+		h.VerifyEmail(rr, req)
+
+		assert.Equal(t, http.StatusUnauthorized, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Invalid or expired email verification token")
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestAuthHandler_ResendEmailVerification_Paths(t *testing.T) {
+	t.Run("InvalidBody_Returns400", func(t *testing.T) {
+		h := &AuthHandler{userRepo: new(MockFullUserRepo)}
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/verify-email/resend", strings.NewReader(`{"email":}`))
+		rr := httptest.NewRecorder()
+
+		h.ResendEmailVerification(rr, req)
+
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+	})
+
+	t.Run("UnknownEmail_ReturnsGeneric200", func(t *testing.T) {
+		mockRepo := new(MockFullUserRepo)
+		h := &AuthHandler{userRepo: mockRepo}
+		mockRepo.On("GetByEmail", mock.Anything, "unknown@test.dev").Return(nil, fmt.Errorf("not found"))
+
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/verify-email/resend", strings.NewReader(`{"email":"unknown@test.dev"}`))
+		rr := httptest.NewRecorder()
+
+		h.ResendEmailVerification(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		assert.Contains(t, rr.Body.String(), "a new link was sent")
 		mockRepo.AssertExpectations(t)
 	})
 }
@@ -920,26 +1004,19 @@ func TestAuthHandler_Register_GenerateTokenError(t *testing.T) {
 
 	assert.Equal(t, http.StatusCreated, rr.Code)
 
-	// Verify the response contains user and tokens (tokens in both cookie AND body for backward compat)
+	// Verify the response contains user and requires email verification.
 	var response map[string]interface{}
 	err := json.Unmarshal(rr.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.NotNil(t, response["user"])
-	assert.NotNil(t, response["tokens"], "tokens should be in response body for backward compatibility")
+	assert.Equal(t, true, response["email_verification_required"])
+	assert.NotNil(t, response["message"])
 
-	// Verify cookie
+	// Verify no auth cookie is set on register before email verification.
 	cookies := rr.Result().Cookies()
-	var authCookie *http.Cookie
 	for _, c := range cookies {
-		if c.Name == "auth_token" {
-			authCookie = c
-			break
-		}
+		assert.NotEqual(t, "auth_token", c.Name)
 	}
-	assert.NotNil(t, authCookie)
-	assert.True(t, authCookie.HttpOnly)
-	assert.Equal(t, "/", authCookie.Path)
-	assert.Equal(t, 24*60*60, authCookie.MaxAge)
 	mockRepo.AssertExpectations(t)
 }
 
@@ -952,12 +1029,14 @@ func TestAuthHandler_Login_FullSuccessVerification(t *testing.T) {
 	}
 
 	hash, _ := authService.HashPassword("correct-pwd")
+	verifiedAt := time.Now()
 	user := &models.User{
-		ID:           uuid.New(),
-		Email:        "full@test.dev",
-		PasswordHash: hash,
-		Name:         "Full User",
-		Plan:         "pro",
+		ID:              uuid.New(),
+		Email:           "full@test.dev",
+		PasswordHash:    hash,
+		EmailVerifiedAt: &verifiedAt,
+		Name:            "Full User",
+		Plan:            "pro",
 	}
 	mockRepo.On("GetByEmail", mock.Anything, "full@test.dev").Return(user, nil)
 
@@ -1471,12 +1550,14 @@ func TestAuthHandler_Login_EmailTrimming(t *testing.T) {
 	}
 
 	hash, _ := authService.HashPassword("password123")
+	verifiedAt := time.Now().UTC()
 	user := &models.User{
-		ID:           uuid.New(),
-		Email:        "trimmed@test.dev",
-		PasswordHash: hash,
-		Name:         "Trimmed User",
-		Plan:         "basic",
+		ID:              uuid.New(),
+		Email:           "trimmed@test.dev",
+		PasswordHash:    hash,
+		EmailVerifiedAt: &verifiedAt,
+		Name:            "Trimmed User",
+		Plan:            "basic",
 	}
 	// The mock expects the trimmed email
 	mockRepo.On("GetByEmail", mock.Anything, "trimmed@test.dev").Return(user, nil)

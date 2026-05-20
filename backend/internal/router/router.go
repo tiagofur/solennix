@@ -70,6 +70,8 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Post("/team-invite/accept", authHandler.AcceptTeamInvite)
 			r.Post("/forgot-password", authHandler.ForgotPassword)
 			r.Post("/reset-password", authHandler.ResetPassword)
+			r.Get("/verify-email", authHandler.VerifyEmail)
+			r.Post("/verify-email/resend", authHandler.ResendEmailVerification)
 			r.Post("/google", authHandler.GoogleSignIn)
 			r.Post("/apple", authHandler.AppleSignIn)
 			r.Get("/apple/init", authHandler.AppleInit)

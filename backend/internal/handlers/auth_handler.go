@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
 	"encoding/base64"
@@ -169,9 +170,38 @@ type forgotPasswordRequest struct {
 	Email string `json:"email"`
 }
 
+type resendVerificationRequest struct {
+	Email string `json:"email"`
+}
+
 type acceptTeamInviteRequest struct {
 	Token    string `json:"token"`
 	Password string `json:"password"`
+}
+
+const (
+	emailVerificationTokenTTL = 24 * time.Hour
+	emailVerificationCooldown = 1 * time.Minute
+)
+
+func newEmailVerificationToken() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return base64.RawURLEncoding.EncodeToString(b), nil
+}
+
+func (h *AuthHandler) sendEmailVerification(user *models.User, token string) {
+	if h.emailService == nil {
+		return
+	}
+	locale := i18n.NormalizeLocale(user.PreferredLanguage)
+	go func() {
+		if err := h.emailService.SendEmailVerificationLocalized(user.Email, token, user.Name, locale); err != nil {
+			slog.Warn("Failed to send verification email", "email", user.Email, "error", err)
+		}
+	}()
 }
 
 // Register handles POST /api/auth/register
@@ -238,35 +268,33 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Send welcome email (fire-and-forget)
-	if h.emailService != nil {
-		locale := i18n.NormalizeLocale(user.PreferredLanguage)
-		go func() {
-			if err := h.emailService.SendWelcomeLocalized(user.Email, user.Name, locale); err != nil {
-				slog.Warn("Failed to send welcome email", "email", user.Email, "error", err)
-			}
-		}()
-	}
-
-	// Generate tokens
-	tokens, err := h.authService.GenerateTokenPair(user.ID, user.Email)
+	verificationToken, err := newEmailVerificationToken()
 	if err != nil {
-		slog.Error("Failed to generate tokens", "error", err)
+		slog.Error("Failed to generate verification token", "error", err)
 		writeAuthI18nError(w, r, http.StatusInternalServerError, "auth.internal_server_error")
 		return
 	}
 
-	// Store initial refresh token in family table for rotation
-	h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
-
-	// Set httpOnly cookie for auth token (SECURE)
-	setAuthCookie(w, r, tokens.AccessToken)
+	now := time.Now().UTC()
+	if err := h.userRepo.SetEmailVerificationToken(
+		r.Context(),
+		user.ID,
+		hashToken(verificationToken),
+		now,
+		now.Add(emailVerificationTokenTTL),
+	); err != nil {
+		slog.Error("Failed to store verification token", "error", err, "user_id", user.ID)
+		writeAuthI18nError(w, r, http.StatusInternalServerError, "auth.internal_server_error")
+		return
+	}
+	h.sendEmailVerification(user, verificationToken)
 
 	slog.Info("auth.event", "action", "register", "user_id", user.ID, "email", user.Email, "ip", clientIP(r))
 
 	writeJSON(w, http.StatusCreated, map[string]interface{}{
-		"user":   user,
-		"tokens": tokens,
+		"user":                        user,
+		"message":                     i18n.Message(r.Context(), "auth.email_verification_sent"),
+		"email_verification_required": true,
 	})
 }
 
@@ -303,6 +331,12 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if user.EmailVerifiedAt == nil {
+		slog.Warn("auth.event", "action", "login_failed", "email", req.Email, "reason", "email_not_verified", "ip", clientIP(r))
+		writeAuthI18nError(w, r, http.StatusForbidden, "auth.email_not_verified")
+		return
+	}
+
 	// Generate tokens
 	tokens, err := h.authService.GenerateTokenPair(user.ID, user.Email)
 	if err != nil {
@@ -322,6 +356,83 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"user":   user,
 		"tokens": tokens,
+	})
+}
+
+// VerifyEmail handles GET /api/auth/verify-email?token=<token>
+func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
+	token := strings.TrimSpace(r.URL.Query().Get("token"))
+	if token == "" {
+		writeAuthI18nError(w, r, http.StatusBadRequest, "auth.token_required")
+		return
+	}
+
+	user, err := h.userRepo.VerifyEmailByTokenHash(r.Context(), hashToken(token))
+	if err != nil || user == nil {
+		writeAuthI18nError(w, r, http.StatusUnauthorized, "auth.email_verification_invalid_or_expired")
+		return
+	}
+
+	if h.emailService != nil {
+		locale := i18n.NormalizeLocale(user.PreferredLanguage)
+		go func() {
+			if err := h.emailService.SendWelcomeLocalized(user.Email, user.Name, locale); err != nil {
+				slog.Warn("Failed to send welcome email", "email", user.Email, "error", err)
+			}
+		}()
+	}
+
+	slog.Info("auth.event", "action", "email_verified", "user_id", user.ID, "email", user.Email, "ip", clientIP(r))
+	writeJSON(w, http.StatusOK, map[string]any{
+		"message": i18n.Message(r.Context(), "auth.email_verified_success"),
+	})
+}
+
+// ResendEmailVerification handles POST /api/auth/verify-email/resend
+func (h *AuthHandler) ResendEmailVerification(w http.ResponseWriter, r *http.Request) {
+	var req resendVerificationRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeAuthI18nError(w, r, http.StatusBadRequest, "auth.invalid_request_body")
+		return
+	}
+
+	req.Email = strings.TrimSpace(req.Email)
+	if !emailRegex.MatchString(req.Email) || len(req.Email) > 255 {
+		writeAuthI18nError(w, r, http.StatusBadRequest, "auth.invalid_email_format")
+		return
+	}
+
+	user, err := h.userRepo.GetByEmail(r.Context(), req.Email)
+	if err == nil && user != nil {
+		if user.EmailVerifiedAt != nil {
+			writeJSON(w, http.StatusOK, map[string]string{
+				"message": i18n.Message(r.Context(), "auth.email_verification_resent_if_exists"),
+			})
+			return
+		}
+
+		if user.EmailVerificationSentAt != nil && time.Since(*user.EmailVerificationSentAt) < emailVerificationCooldown {
+			writeAuthI18nError(w, r, http.StatusTooManyRequests, "auth.email_verification_resend_limited")
+			return
+		}
+
+		token, err := newEmailVerificationToken()
+		if err == nil {
+			now := time.Now().UTC()
+			err = h.userRepo.SetEmailVerificationToken(r.Context(), user.ID, hashToken(token), now, now.Add(emailVerificationTokenTTL))
+			if err == nil {
+				h.sendEmailVerification(user, token)
+			}
+		}
+		if err != nil {
+			slog.Error("Failed to resend verification email", "error", err, "email", req.Email)
+			writeAuthI18nError(w, r, http.StatusInternalServerError, "auth.internal_server_error")
+			return
+		}
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{
+		"message": i18n.Message(r.Context(), "auth.email_verification_resent_if_exists"),
 	})
 }
 

@@ -91,9 +91,14 @@ describe('Register', () => {
         password: 'Password1',
       });
     });
-    // No localStorage assertions — tokens are handled via httpOnly cookies
-    expect(mockCheckAuth).toHaveBeenCalled();
-    expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
+    // Registration now sends the user to login so they can verify email first.
+    expect(mockCheckAuth).not.toHaveBeenCalled();
+    expect(mockNavigate).toHaveBeenCalledWith('/login', {
+      state: {
+        email: 'ana@example.com',
+        verificationRequired: true,
+      },
+    });
   });
 
   it('shows error on failed registration', async () => {
@@ -222,7 +227,7 @@ describe('Register', () => {
 
     resolvePost!({});
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
+      expect(mockNavigate).toHaveBeenCalledWith('/login', expect.any(Object));
     });
   });
 });

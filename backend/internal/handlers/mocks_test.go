@@ -81,6 +81,30 @@ func (m *MockFullUserRepo) UpdatePassword(ctx context.Context, userID uuid.UUID,
 	return args.Error(0)
 }
 
+func (m *MockFullUserRepo) SetEmailVerificationToken(ctx context.Context, userID uuid.UUID, tokenHash string, sentAt, expiresAt time.Time) error {
+	hasExpectation := false
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "SetEmailVerificationToken" {
+			hasExpectation = true
+			break
+		}
+	}
+	if !hasExpectation {
+		return nil
+	}
+
+	args := m.Called(ctx, userID, tokenHash, sentAt, expiresAt)
+	return args.Error(0)
+}
+
+func (m *MockFullUserRepo) VerifyEmailByTokenHash(ctx context.Context, tokenHash string) (*models.User, error) {
+	args := m.Called(ctx, tokenHash)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.User), args.Error(1)
+}
+
 func (m *MockFullUserRepo) GetByGoogleUserID(ctx context.Context, googleUserID string) (*models.User, error) {
 	args := m.Called(ctx, googleUserID)
 	if args.Get(0) == nil {

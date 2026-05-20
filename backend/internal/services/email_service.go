@@ -55,6 +55,17 @@ func (s *EmailService) SendWelcomeLocalized(email, userName, locale string) erro
 	return s.sendEmail(email, i18n.T(lang, "email.welcome.subject"), body)
 }
 
+// SendEmailVerificationLocalized sends an email verification link after registration.
+func (s *EmailService) SendEmailVerificationLocalized(email, token, userName, locale string) error {
+	lang := i18n.NormalizeLocale(locale)
+	verifyLink := fmt.Sprintf("%s/verify-email?token=%s", s.cfg.FrontendURL, token)
+	body := s.renderTemplate(emailVerificationBodyForLocale(lang), map[string]any{
+		"UserName":   userName,
+		"VerifyLink": verifyLink,
+	})
+	return s.sendEmail(email, i18n.T(lang, "email.verification.subject"), body)
+}
+
 // SendEventReminder sends a reminder about an upcoming event.
 func (s *EmailService) SendEventReminder(email, userName, eventName, eventDate, eventLink string) error {
 	body := s.renderTemplate(eventReminderBody, map[string]any{
@@ -331,9 +342,31 @@ func welcomeBodyForLocale(locale string) string {
 	)
 }
 
+func emailVerificationBodyForLocale(locale string) string {
+	lang := i18n.NormalizeLocale(locale)
+	return fmt.Sprintf(`
+<p>%s</p>
+<p>%s</p>
+<div style="text-align: center;">
+    <a href="{{.VerifyLink}}" class="button">%s</a>
+</div>
+<div class="highlight">
+    <p style="margin: 0;">%s</p>
+</div>
+<p>%s</p>
+<p style="word-break: break-all; font-size: 13px; color: #6b7280;">{{.VerifyLink}}</p>`,
+		i18n.T(lang, "email.verification.greeting"),
+		i18n.T(lang, "email.verification.instructions"),
+		i18n.T(lang, "email.verification.cta"),
+		i18n.T(lang, "email.verification.expiry"),
+		i18n.T(lang, "email.verification.ignore"),
+	)
+}
+
 // Backward-compatible defaults used by tests that validate base templates directly.
 var passwordResetBody = passwordResetBodyForLocale(i18n.DefaultLocale)
 var welcomeBody = welcomeBodyForLocale(i18n.DefaultLocale)
+var emailVerificationBody = emailVerificationBodyForLocale(i18n.DefaultLocale)
 
 const eventReminderBody = `
 <p>Hola {{.UserName}},</p>

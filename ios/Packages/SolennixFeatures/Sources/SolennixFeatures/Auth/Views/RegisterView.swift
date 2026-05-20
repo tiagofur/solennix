@@ -160,6 +160,10 @@ public struct RegisterView: View {
                 errorBanner(message: error)
             }
 
+            if let notice = viewModel?.verificationNotice {
+                infoBanner(message: notice)
+            }
+
             SolennixTextField(
                 label: tr("auth.register.name_label", "Nombre completo"),
                 text: Binding(
@@ -360,6 +364,29 @@ public struct RegisterView: View {
         }
         .onTapGesture {
             viewModel?.clearError()
+        }
+    }
+
+    private func infoBanner(message: String) -> some View {
+        HStack(spacing: Spacing.sm) {
+            Text(message)
+                .font(.subheadline)
+                .foregroundStyle(SolennixColors.success)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(Spacing.sm + 4)
+        .background(SolennixColors.success.opacity(0.12))
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
+        .overlay(alignment: .leading) {
+            Rectangle()
+                .fill(SolennixColors.success)
+                .frame(width: 4)
+                .clipShape(
+                    UnevenRoundedRectangle(
+                        topLeadingRadius: CornerRadius.sm,
+                        bottomLeadingRadius: CornerRadius.sm
+                    )
+                )
         }
     }
 }

@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslation } from "react-i18next";
 import { api } from "../lib/api";
-import { useAuth } from "../contexts/AuthContext";
 import { GoogleSignInButton } from "../components/GoogleSignInButton";
 import { AppleSignInButton } from "../components/AppleSignInButton";
 import {
@@ -30,7 +29,6 @@ import { Logo } from "../components/Logo";
 export const Register: React.FC = () => {
   const { t } = useTranslation(["auth", "common"]);
   const navigate = useNavigate();
-  const { checkAuth } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -97,8 +95,12 @@ export const Register: React.FC = () => {
         email: data.email,
         password: data.password,
       });
-      await checkAuth();
-      navigate("/dashboard");
+      navigate("/login", {
+        state: {
+          email: data.email,
+          verificationRequired: true,
+        },
+      });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "";
       if (message === "Email already registered") {

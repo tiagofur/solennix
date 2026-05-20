@@ -24,6 +24,8 @@ public final class AuthViewModel {
 
     public var isLoading: Bool = false
     public var errorMessage: String?
+    public var verificationNotice: String?
+    public var verificationEmail: String = ""
     public var isPasswordVisible: Bool = false
     public var isConfirmPasswordVisible: Bool = false
     public var showSuccess: Bool = false
@@ -82,11 +84,22 @@ public final class AuthViewModel {
 
         isLoading = true
         errorMessage = nil
+        verificationNotice = nil
 
         do {
             _ = try await authManager.signIn(email: trimmedEmail, password: password)
         } catch {
-            errorMessage = mapError(error)
+            if let apiError = error as? APIError,
+               case .serverError(let statusCode, let message) = apiError,
+               statusCode == 403 {
+                verificationEmail = trimmedEmail
+                verificationNotice = message.isEmpty
+                    ? tr("auth.login.verification_required_notice", "Verificá tu correo antes de iniciar sesión")
+                    : message
+                errorMessage = nil
+            } else {
+                errorMessage = mapError(error)
+            }
         }
 
         isLoading = false
@@ -118,6 +131,7 @@ public final class AuthViewModel {
 
         isLoading = true
         errorMessage = nil
+        verificationNotice = nil
 
         do {
             _ = try await authManager.signUp(
@@ -125,6 +139,12 @@ public final class AuthViewModel {
                 email: trimmedEmail,
                 password: password
             )
+            verificationEmail = trimmedEmail
+            verificationNotice = tr(
+                "auth.register.verification_sent",
+                "Te enviamos un enlace para verificar tu correo. Revisá tu bandeja antes de iniciar sesión."
+            )
+            showSuccess = true
         } catch {
             errorMessage = mapError(error)
         }
@@ -298,6 +318,30 @@ public final class AuthViewModel {
         errorMessage = nil
     }
 
+    @MainActor
+    public func resendVerificationEmail() async {
+        let trimmedEmail = verificationEmail.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedEmail.isEmpty else {
+            errorMessage = tr("auth.validation.email_required", "El correo es requerido")
+            return
+        }
+
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            try await authManager.resendEmailVerification(email: trimmedEmail)
+            verificationNotice = tr(
+                "auth.login.verification_resent",
+                "Te enviamos un nuevo enlace de verificación."
+            )
+        } catch {
+            errorMessage = mapError(error)
+        }
+
+        isLoading = false
+    }
+
     /// Reset all form fields (useful when navigating between auth screens).
     public func resetFields() {
         email = ""
@@ -308,6 +352,8 @@ public final class AuthViewModel {
         showSuccess = false
         isPasswordVisible = false
         isConfirmPasswordVisible = false
+        verificationNotice = nil
+        verificationEmail = ""
     }
 
     // MARK: - Error Mapping
