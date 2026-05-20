@@ -117,6 +117,8 @@
     <string name="settings_contract_tokens_title">Available tokens (tap to insert):</string>
     <string name="settings_contract_restore_default">Restore default</string>
     <string name="settings_contract_template_hint">Customize your contract text. Use tokens to insert event data automatically.</string>
+    <string name="settings_contract_pro_only">Pro-only feature</string>
+    <string name="settings_contract_pro_only_hint">You can use the default template; customizing it requires Pro.</string>
     <string name="settings_contract_preview">Preview</string>
     <string name="settings_contract_preview_terms">Terms preview</string>
     <string name="settings_contract_preview_deposit_required">Required deposit</string>

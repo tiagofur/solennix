@@ -11,6 +11,7 @@ aliases:
   - Generación PDF Backend
   - Contract Template Parity
 date: 2026-04-26
+updated: 2026-05-20
 status: proposed
 priority: high
 ---
@@ -61,7 +62,7 @@ priority: high
 | Vista previa renderizada | ✅ Edit/Preview toggle con mock data | ⚠️ Preview de términos (no template) | ⚠️ Dialog con texto plano |
 | Categorías de variables | ❌ Panel flat | ✅ Sheet agrupado (5 categorías) | ❌ Horizontal scroll chips |
 | Restablecer default | ✅ | ❌ | ✅ |
-| Plan gating (Basic → lock) | ✅ `isBasicPlan` | ❌ | ❌ |
+| Plan gating (Basic → lock) | ✅ `isBasicPlan` | ✅ read-only + Pro prompt | ✅ read-only + Pro prompt |
 | Validación de tokens | ✅ `validateContractTemplate` | ❌ | ❌ |
 | 24 tokens soportados | ✅ 24/24 | ✅ 24/24 | ✅ 24/24 |
 
@@ -280,8 +281,8 @@ Web (`ContractTemplateEditor.tsx`) es la implementación más completa. Las otra
 | 3 | **Panel de variables agrupado** | Variables organizadas por categoría (Proveedor, Evento, Condiciones, Cliente, Contrato) |
 | 4 | **Vista previa renderizada** | Toggle Edit/Preview. Preview reemplaza tokens con mock data para ver cómo queda |
 | 5 | **Formato: Negrita/Cursiva/Subrayado** | Botones B/I/U que envuelven selección con `**` `*` `__` (markdown-like) |
-| 6 | **Restablecer default** | Botón que restaura `DEFAULT_CONTRACT_TEMPLATE` |
-| 7 | **Plan gating** | Si `user.plan == "free"` → bloquear edición, mostrar upgrade prompt |
+| 6 | **Restablecer default** | Botón que restaura `DEFAULT_CONTRACT_TEMPLATE`; en Free queda bloqueado porque el default lo provee backend |
+| 7 | **Plan gating** | Si `user.plan == "free/basic"` → bloquear edición, mostrar upgrade prompt y omitir `contract_template` al guardar |
 | 8 | **Validación de tokens** | Al guardar: verificar que no haya `[tokens no soportados]` |
 | 9 | **24 tokens completos** | Todos los tokens de `CONTRACT_TEMPLATE_PLACEHOLDERS` disponibles |
 | 10 | **Guardar en profile** | PUT `/api/users/profile` con `contract_template` actualizado |

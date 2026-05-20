@@ -17,7 +17,7 @@ private struct ContractDefaultsBody: Encodable {
     let defaultDepositPercent: Double
     let defaultCancellationDays: Double
     let defaultRefundPercent: Double
-    let contractTemplate: String
+    let contractTemplate: String?
 }
 
 // MARK: - Business Settings View Model
@@ -46,6 +46,9 @@ public final class BusinessSettingsViewModel {
     public var cancellationDays: Double = 7
     public var refundPercent: Double = 50
     public var contractTemplate: String = ""
+    public var canCustomizeContractTemplate: Bool {
+        user?.plan.isPaid ?? false
+    }
 
     // Logo
     public var logoUrl: String?
@@ -88,7 +91,12 @@ public final class BusinessSettingsViewModel {
         depositPercent = user.defaultDepositPercent ?? 50
         cancellationDays = user.defaultCancellationDays ?? 7
         refundPercent = user.defaultRefundPercent ?? 50
-        contractTemplate = user.contractTemplate ?? ""
+        let savedTemplate = user.contractTemplate?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if user.plan.isPaid, let savedTemplate, !savedTemplate.isEmpty {
+            contractTemplate = savedTemplate
+        } else {
+            contractTemplate = EventContractPreviewView.defaultTemplate
+        }
 
         // Parse brand color from hex
         if let hex = user.brandColor {
@@ -131,7 +139,9 @@ public final class BusinessSettingsViewModel {
                 defaultDepositPercent: depositPercent,
                 defaultCancellationDays: cancellationDays,
                 defaultRefundPercent: refundPercent,
-                contractTemplate: contractTemplate.trimmingCharacters(in: .whitespacesAndNewlines)
+                contractTemplate: canCustomizeContractTemplate
+                    ? contractTemplate.trimmingCharacters(in: .whitespacesAndNewlines)
+                    : nil
             )
             user = try await apiClient.put(Endpoint.updateProfile, body: body)
             isSaving = false

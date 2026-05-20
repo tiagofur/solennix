@@ -117,6 +117,8 @@
     <string name="settings_contract_tokens_title">Tokens disponibles (tocá para insertar):</string>
     <string name="settings_contract_restore_default">Restaurar predeterminado</string>
     <string name="settings_contract_template_hint">Personalizá el texto de tus contratos. Usá los tokens para insertar datos del evento automáticamente.</string>
+    <string name="settings_contract_pro_only">Función exclusiva del plan Pro</string>
+    <string name="settings_contract_pro_only_hint">Puedes usar la plantilla predeterminada; personalizarla requiere Pro.</string>
     <string name="settings_contract_preview">Vista previa</string>
     <string name="settings_contract_preview_terms">Vista previa de términos</string>
     <string name="settings_contract_preview_deposit_required">Anticipo requerido</string>

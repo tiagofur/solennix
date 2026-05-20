@@ -1146,6 +1146,10 @@ func TestAuthHandler_UpdateProfile_WithValidContractTemplate(t *testing.T) {
 		Plan:  "pro",
 	}
 
+	mockRepo.On("GetByID", mock.Anything, userID).Return(&models.User{
+		ID:   userID,
+		Plan: "pro",
+	}, nil)
 	mockRepo.On("Update", mock.Anything, userID,
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
@@ -1161,6 +1165,30 @@ func TestAuthHandler_UpdateProfile_WithValidContractTemplate(t *testing.T) {
 	h.UpdateProfile(rr, req)
 
 	assert.Equal(t, http.StatusOK, rr.Code)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAuthHandler_UpdateProfile_FreeCannotUpdateContractTemplate(t *testing.T) {
+	mockRepo := new(MockFullUserRepo)
+	h := &AuthHandler{
+		userRepo:    mockRepo,
+		authService: services.NewAuthService("test-secret", 1),
+	}
+
+	userID := uuid.New()
+	mockRepo.On("GetByID", mock.Anything, userID).Return(&models.User{
+		ID:   userID,
+		Plan: "basic",
+	}, nil)
+
+	body := `{"contract_template":"Hello [client_name], your event on [event_date]."}`
+	req := httptest.NewRequest(http.MethodPut, "/api/users/me", strings.NewReader(body))
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+	rr := httptest.NewRecorder()
+	h.UpdateProfile(rr, req)
+
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	assert.Contains(t, rr.Body.String(), "paid plan")
 	mockRepo.AssertExpectations(t)
 }
 
@@ -1468,6 +1496,10 @@ func TestAuthHandler_UpdateProfile_SuccessWithAllFieldsIncludingContractTemplate
 		Plan:  "pro",
 	}
 
+	mockRepo.On("GetByID", mock.Anything, userID).Return(&models.User{
+		ID:   userID,
+		Plan: "pro",
+	}, nil)
 	mockRepo.On("Update", mock.Anything, userID,
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything,

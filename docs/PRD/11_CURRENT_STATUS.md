@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-05-18
+updated: 2026-05-20
 status: active
 ---
 
@@ -24,6 +24,14 @@ status: active
 
 **Fecha:** Mayo 2026
 **Version:** 1.7
+
+> [!success] 2026-05-20 — Contrato default backend para usuarios Free
+> Se corrigio la generación de PDF de contrato para usuarios nuevos Free cuando `contract_template` esta vacio.
+> - **Backend PDF:** `DefaultContractTemplate` queda como fallback efectivo en servidor; ya no depende de que el usuario tenga una plantilla guardada en DB.
+> - **Plan Free:** el PDF usa siempre la plantilla predeterminada, incluso si existe una plantilla custom heredada.
+> - **Plan Pro/Business:** conserva plantilla personalizada cuando existe; si esta vacia, cae al default.
+> - **API:** `PUT /api/users/me` rechaza `contract_template` en plan Free con `403`, pero permite guardar otros defaults del contrato.
+> - **iOS/Android/Web:** Free puede previsualizar el default, pero no editar ni restaurar plantillas custom.
 
 > [!success] 2026-05-18 — Web: fix de imagen de productos en lista y detalle (issue #362)
 > Se corrigio la carga de imagenes de productos cuando `image_url` llega relativo desde backend.

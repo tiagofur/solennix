@@ -29,6 +29,7 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/i18n"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
+	"github.com/tiagofur/solennix-backend/internal/pdf"
 	"github.com/tiagofur/solennix-backend/internal/repository"
 	"github.com/tiagofur/solennix-backend/internal/services"
 )
@@ -917,6 +918,17 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			writeAuthI18nError(w, r, http.StatusBadRequest, "auth.contract_template_invalid")
+			return
+		}
+
+		user, err := h.userRepo.GetByID(r.Context(), userID)
+		if err != nil || user == nil {
+			slog.Error("Failed to load user for contract template update", "error", err, "user_id", userID)
+			writeAuthI18nError(w, r, http.StatusInternalServerError, "auth.profile_update_failed")
+			return
+		}
+		if !pdf.CanUseCustomContractTemplate(user.Plan) || !IsPlanActive(user) {
+			writeError(w, http.StatusForbidden, "Custom contract templates require a paid plan.")
 			return
 		}
 	}

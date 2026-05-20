@@ -7,6 +7,44 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/models"
 )
 
+// DefaultContractTemplate is the server-owned fallback used for all free users
+// and for paid users who have not saved a custom contract template.
+const DefaultContractTemplate = `1. El Proveedor es una empresa dedicada a [Tipo de servicio], [Nombre comercial del proveedor], y cuenta con la capacidad para la prestación de dicho servicio.
+2. El Cliente: [Nombre del cliente] desea contratar los servicios del Proveedor para el evento que se llevará a cabo el [Fecha del evento], en [Lugar del evento].
+3. Servicio contratados: [Servicios del evento]
+
+Por lo tanto, las partes acuerdan las siguientes cláusulas:
+
+CLÁUSULAS:
+Primera. Objeto del Contrato
+El Proveedor se compromete a prestar los servicios de [Tipo de servicio] para [Número de personas] personas.
+
+Segunda. Horarios de Servicio
+El servicio será prestado en el evento en un horario de [Horario del evento].
+
+Tercera. Costo Total/Anticipo
+El costo total del servicio contratado será de [Monto total del evento] con un anticipo de [Total pagado].
+
+Cuarta. Condiciones de Pago
+El Cliente deberá cubrir un anticipo del [Porcentaje de anticipo]% para reservar la fecha. El resto deberá liquidarse antes del inicio del evento.
+
+Quinta. Condiciones del Servicio
+El Cliente se compromete a facilitar un espacio adecuado para la instalación del equipo necesario, que deberá contar con una superficie plana y conexión de luz.
+
+Sexta. Cancelaciones y Reembolsos
+En caso de cancelación por parte del Cliente con menos de [Días de cancelación] días de anticipación, no se realizará reembolso del apartado.
+Cuando la cancelación se realice dentro del plazo permitido, se reembolsará el [Porcentaje de reembolso]% del apartado.
+
+Octava. Jurisdicción
+Para cualquier disputa derivada de este contrato, las partes se someten a la jurisdicción de los tribunales competentes de [Ciudad del contrato].
+
+Novena. Modificaciones
+Cualquier modificación a este contrato deberá ser acordada por ambas partes por escrito.
+
+Firmas:
+Proveedor: [Nombre del proveedor]
+Cliente: [Nombre del cliente]`
+
 // ContractData holds all data needed to generate a Contract PDF.
 type ContractData struct {
 	Event     models.Event
@@ -37,6 +75,27 @@ func stripLegacySignatureSection(text string) string {
 	return strings.TrimSpace(text[:cut])
 }
 
+func CanUseCustomContractTemplate(plan string) bool {
+	switch strings.ToLower(strings.TrimSpace(plan)) {
+	case "pro", "business", "premium", "enterprise":
+		return true
+	default:
+		return false
+	}
+}
+
+func effectiveContractTemplate(profile *models.User) string {
+	if profile == nil || !CanUseCustomContractTemplate(profile.Plan) || profile.ContractTemplate == nil {
+		return DefaultContractTemplate
+	}
+
+	template := strings.TrimSpace(*profile.ContractTemplate)
+	if template == "" {
+		return DefaultContractTemplate
+	}
+	return template
+}
+
 // GenerateContract creates a Contrato PDF by resolving template tokens and
 // rendering the filled text. Returns the raw bytes.
 func GenerateContract(data ContractData) ([]byte, error) {
@@ -59,10 +118,7 @@ func GenerateContract(data ContractData) ([]byte, error) {
 	y := doc.DrawHeader("Contrato de Servicios")
 
 	// Resolve template tokens
-	templateText := ""
-	if data.Profile.ContractTemplate != nil {
-		templateText = *data.Profile.ContractTemplate
-	}
+	templateText := effectiveContractTemplate(data.Profile)
 
 	tokenData := TokenData{
 		Event:    data.Event,
@@ -73,10 +129,6 @@ func GenerateContract(data ContractData) ([]byte, error) {
 	}
 	resolvedText := ResolveTokens(templateText, tokenData)
 	resolvedText = stripLegacySignatureSection(resolvedText)
-
-	if resolvedText == "" {
-		resolvedText = "El organizador no ha configurado una plantilla de contrato.\n\nPor favor, configura tu plantilla de contrato en Ajustes > Contrato."
-	}
 
 	providerName := data.Profile.Name
 	if data.Profile.BusinessName != nil && *data.Profile.BusinessName != "" {

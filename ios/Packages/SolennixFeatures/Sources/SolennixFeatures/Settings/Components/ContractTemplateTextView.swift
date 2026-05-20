@@ -10,6 +10,7 @@ struct ContractTemplateTextView: UIViewRepresentable {
 
     @Binding var text: String
     var height: CGFloat = 250
+    var isEditable: Bool = true
 
     /// Called when a variable should be inserted; provides a closure to perform the insertion.
     /// Set externally via the coordinator's `insertVariable` method.
@@ -24,6 +25,7 @@ struct ContractTemplateTextView: UIViewRepresentable {
         textView.delegate = context.coordinator
         textView.font = .preferredFont(forTextStyle: .body)
         textView.backgroundColor = .clear
+        textView.isEditable = isEditable
         textView.isScrollEnabled = true
         textView.textContainerInset = UIEdgeInsets(top: 12, left: 8, bottom: 12, right: 8)
         textView.setContentHuggingPriority(.defaultLow, for: .vertical)
@@ -39,6 +41,8 @@ struct ContractTemplateTextView: UIViewRepresentable {
     }
 
     func updateUIView(_ textView: UITextView, context: Context) {
+        textView.isEditable = isEditable
+
         // Only update if the text actually changed (avoid cursor reset)
         if textView.text != text {
             let selectedRange = textView.selectedRange

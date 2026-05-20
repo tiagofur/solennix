@@ -56,6 +56,89 @@ func TestContractGenerationManual(t *testing.T) {
 	t.Logf("SUCCESS: %d bytes", len(result))
 }
 
+func TestGenerateContract_UsesDefaultTemplateWhenProfileHasNoTemplate(t *testing.T) {
+	userID := uuid.New()
+	client := &models.Client{
+		ID:     uuid.New(),
+		Name:   "Cliente Demo",
+		UserID: userID,
+	}
+	event := models.Event{
+		ID:          uuid.New(),
+		UserID:      userID,
+		ClientID:    client.ID,
+		ServiceType: "Boda",
+		NumPeople:   80,
+		TotalAmount: 25000,
+	}
+	profile := &models.User{
+		ID:   userID,
+		Name: "Organizador Demo",
+		Plan: "basic",
+	}
+
+	result, err := GenerateContract(ContractData{
+		Event:   event,
+		Client:  client,
+		Profile: profile,
+	})
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, result)
+}
+
+func TestEffectiveContractTemplate(t *testing.T) {
+	customTemplate := "Contrato custom para [client_name]"
+
+	tests := []struct {
+		name    string
+		profile *models.User
+		want    string
+	}{
+		{
+			name:    "nil profile uses default",
+			profile: nil,
+			want:    DefaultContractTemplate,
+		},
+		{
+			name:    "basic without template uses default",
+			profile: &models.User{Plan: "basic"},
+			want:    DefaultContractTemplate,
+		},
+		{
+			name:    "basic with custom template still uses default",
+			profile: &models.User{Plan: "basic", ContractTemplate: &customTemplate},
+			want:    DefaultContractTemplate,
+		},
+		{
+			name:    "free alias with custom template uses default",
+			profile: &models.User{Plan: "free", ContractTemplate: &customTemplate},
+			want:    DefaultContractTemplate,
+		},
+		{
+			name:    "pro with custom template uses custom",
+			profile: &models.User{Plan: "pro", ContractTemplate: &customTemplate},
+			want:    customTemplate,
+		},
+		{
+			name:    "business with custom template uses custom",
+			profile: &models.User{Plan: "business", ContractTemplate: &customTemplate},
+			want:    customTemplate,
+		},
+		{
+			name:    "pro with blank template uses default",
+			profile: &models.User{Plan: "pro", ContractTemplate: ptr("   ")},
+			want:    DefaultContractTemplate,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, effectiveContractTemplate(tt.profile))
+		})
+	}
+}
+
 func TestStripLegacySignatureSection(t *testing.T) {
 	text := "Clausula 1\n\nFirmas:\nProveedor: Demo\nCliente: Demo"
 	assert.Equal(t, "Clausula 1", stripLegacySignatureSection(text))

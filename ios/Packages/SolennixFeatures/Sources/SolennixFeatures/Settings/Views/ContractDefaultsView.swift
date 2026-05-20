@@ -118,6 +118,25 @@ public struct ContractDefaultsView: View {
             // Contract template section
             Section {
                 VStack(alignment: .leading, spacing: Spacing.sm) {
+                    if !viewModel.canCustomizeContractTemplate {
+                        HStack(spacing: Spacing.sm) {
+                            Image(systemName: "lock.fill")
+                                .foregroundStyle(SolennixColors.primary)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(tr("settings.contract.pro_only", "Función exclusiva del plan Pro"))
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(SolennixColors.text)
+                                Text(tr("settings.contract.pro_only_hint", "Puedes usar la plantilla predeterminada; personalizarla requiere Pro."))
+                                    .font(.caption)
+                                    .foregroundStyle(SolennixColors.textSecondary)
+                            }
+                        }
+                        .padding(Spacing.sm)
+                        .background(SolennixColors.primaryLight)
+                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    }
+
                     Button {
                         showVariablePicker = true
                     } label: {
@@ -134,9 +153,12 @@ public struct ContractDefaultsView: View {
                         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
                     }
                     .buttonStyle(.plain)
+                    .disabled(!viewModel.canCustomizeContractTemplate)
+                    .opacity(viewModel.canCustomizeContractTemplate ? 1 : 0.5)
 
                     ContractTemplateTextView(
                         text: $viewModel.contractTemplate,
+                        isEditable: viewModel.canCustomizeContractTemplate,
                         onCoordinatorReady: { coordinator in
                             templateCoordinator = coordinator
                         }
