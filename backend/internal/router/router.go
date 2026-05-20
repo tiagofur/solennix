@@ -23,7 +23,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	staffHandler *handlers.StaffHandler,
 	staffTeamHandler *handlers.StaffTeamHandler,
 	pdfHandler *handlers.PDFHandler,
-	authService *services.AuthService, userRepo *repository.UserRepo, auditRepo mw.AuditLogger, pool *pgxpool.Pool, corsOrigins []string, uploadDir string) http.Handler {
+	authService *services.AuthService, userRepo *repository.UserRepo, auditRepo mw.AuditLogger, pool *pgxpool.Pool, corsOrigins []string, uploadDir string, environment string, trustProxy bool) http.Handler {
 
 	r := chi.NewRouter()
 
@@ -31,6 +31,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	r.Use(mw.Recovery)  // Panic recovery — outermost so it catches the repanic from Sentry
 	r.Use(mw.Sentry)    // Per-request Sentry hub; captures panics then repanics (no-op if Sentry DSN unset)
 	r.Use(mw.RequestID) // X-Request-ID for tracing
+	r.Use(mw.RedirectToHTTPS(environment, trustProxy))
 	r.Use(mw.Localization())
 	r.Use(mw.CORS(corsOrigins))
 	r.Use(mw.SecurityHeaders) // Security headers (X-Frame-Options, CSP, HSTS, etc.)

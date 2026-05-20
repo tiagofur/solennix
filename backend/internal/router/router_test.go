@@ -25,7 +25,7 @@ func (n *noopAuditLogger) Create(_ context.Context, _ *models.AuditLog) error { 
 
 func TestNewRouter(t *testing.T) {
 	authService := services.NewAuthService("test-secret", 1)
-	h := New(&handlers.AuthHandler{}, &handlers.CRUDHandler{}, &handlers.SubscriptionHandler{}, &handlers.SearchHandler{}, &handlers.EventPaymentHandler{}, handlers.NewUploadHandler(t.TempDir(), nil), &handlers.AdminHandler{}, &handlers.DashboardHandler{}, &handlers.AuditHandler{}, &handlers.UnavailableDateHandler{}, nil, nil, nil, nil, nil, nil, nil, nil, nil, authService, &repository.UserRepo{}, &noopAuditLogger{}, nil, []string{"http://allowed.com"}, t.TempDir())
+	h := New(&handlers.AuthHandler{}, &handlers.CRUDHandler{}, &handlers.SubscriptionHandler{}, &handlers.SearchHandler{}, &handlers.EventPaymentHandler{}, handlers.NewUploadHandler(t.TempDir(), nil), &handlers.AdminHandler{}, &handlers.DashboardHandler{}, &handlers.AuditHandler{}, &handlers.UnavailableDateHandler{}, nil, nil, nil, nil, nil, nil, nil, nil, nil, authService, &repository.UserRepo{}, &noopAuditLogger{}, nil, []string{"http://allowed.com"}, t.TempDir(), "development", false)
 
 	t.Run("GivenHealthEndpoint_WhenRequest_ThenReturnsOK", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/health", nil)
@@ -64,7 +64,7 @@ func TestNewRouter(t *testing.T) {
 		testFilePath := filepath.Join(tempDir, "test.png")
 		_ = os.WriteFile(testFilePath, []byte("fake image data"), 0644)
 
-		h := New(&handlers.AuthHandler{}, &handlers.CRUDHandler{}, &handlers.SubscriptionHandler{}, &handlers.SearchHandler{}, &handlers.EventPaymentHandler{}, handlers.NewUploadHandler(tempDir, nil), &handlers.AdminHandler{}, &handlers.DashboardHandler{}, &handlers.AuditHandler{}, &handlers.UnavailableDateHandler{}, nil, nil, nil, nil, nil, nil, nil, nil, nil, authService, &repository.UserRepo{}, &noopAuditLogger{}, nil, []string{"http://allowed.com"}, tempDir)
+		h := New(&handlers.AuthHandler{}, &handlers.CRUDHandler{}, &handlers.SubscriptionHandler{}, &handlers.SearchHandler{}, &handlers.EventPaymentHandler{}, handlers.NewUploadHandler(tempDir, nil), &handlers.AdminHandler{}, &handlers.DashboardHandler{}, &handlers.AuditHandler{}, &handlers.UnavailableDateHandler{}, nil, nil, nil, nil, nil, nil, nil, nil, nil, authService, &repository.UserRepo{}, &noopAuditLogger{}, nil, []string{"http://allowed.com"}, tempDir, "development", false)
 
 		req := httptest.NewRequest(http.MethodGet, "/api/uploads/test.png", nil)
 		rr := httptest.NewRecorder()
@@ -78,7 +78,7 @@ func TestNewRouter(t *testing.T) {
 }
 func TestProtectedRoutesRequireValidBearerToken(t *testing.T) {
 	authService := services.NewAuthService("test-secret", 1)
-	h := New(&handlers.AuthHandler{}, &handlers.CRUDHandler{}, &handlers.SubscriptionHandler{}, &handlers.SearchHandler{}, &handlers.EventPaymentHandler{}, handlers.NewUploadHandler(t.TempDir(), nil), &handlers.AdminHandler{}, &handlers.DashboardHandler{}, &handlers.AuditHandler{}, &handlers.UnavailableDateHandler{}, nil, nil, nil, nil, nil, nil, nil, nil, nil, authService, &repository.UserRepo{}, &noopAuditLogger{}, nil, []string{"http://allowed.com"}, t.TempDir())
+	h := New(&handlers.AuthHandler{}, &handlers.CRUDHandler{}, &handlers.SubscriptionHandler{}, &handlers.SearchHandler{}, &handlers.EventPaymentHandler{}, handlers.NewUploadHandler(t.TempDir(), nil), &handlers.AdminHandler{}, &handlers.DashboardHandler{}, &handlers.AuditHandler{}, &handlers.UnavailableDateHandler{}, nil, nil, nil, nil, nil, nil, nil, nil, nil, authService, &repository.UserRepo{}, &noopAuditLogger{}, nil, []string{"http://allowed.com"}, t.TempDir(), "development", false)
 
 	protectedRequests := []struct {
 		name   string
@@ -135,7 +135,7 @@ func TestProtectedRoutesRequireValidBearerToken(t *testing.T) {
 
 func TestRouterErrorContractMatrix(t *testing.T) {
 	authService := services.NewAuthService("test-secret", 1)
-	h := New(&handlers.AuthHandler{}, &handlers.CRUDHandler{}, &handlers.SubscriptionHandler{}, &handlers.SearchHandler{}, &handlers.EventPaymentHandler{}, handlers.NewUploadHandler(t.TempDir(), nil), &handlers.AdminHandler{}, &handlers.DashboardHandler{}, &handlers.AuditHandler{}, &handlers.UnavailableDateHandler{}, nil, nil, nil, nil, nil, nil, nil, nil, nil, authService, &repository.UserRepo{}, &noopAuditLogger{}, nil, []string{"http://allowed.com"}, t.TempDir())
+	h := New(&handlers.AuthHandler{}, &handlers.CRUDHandler{}, &handlers.SubscriptionHandler{}, &handlers.SearchHandler{}, &handlers.EventPaymentHandler{}, handlers.NewUploadHandler(t.TempDir(), nil), &handlers.AdminHandler{}, &handlers.DashboardHandler{}, &handlers.AuditHandler{}, &handlers.UnavailableDateHandler{}, nil, nil, nil, nil, nil, nil, nil, nil, nil, authService, &repository.UserRepo{}, &noopAuditLogger{}, nil, []string{"http://allowed.com"}, t.TempDir(), "development", false)
 
 	cases := []struct {
 		name       string
