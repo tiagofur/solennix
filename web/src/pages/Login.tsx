@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslation } from "react-i18next";
-import { api } from "../lib/api";
+import { api, ApiHttpError } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import {
   Lock,
@@ -51,15 +51,6 @@ export const Login: React.FC = () => {
     { icon: BarChart3, text: t("auth:social_proof.feature_reports") },
   ], [t]);
 
-  const isEmailNotVerifiedMessage = (message: string) => {
-    const normalized = message.toLowerCase();
-    return (
-      normalized.includes("verify your email") ||
-      normalized.includes("verificar tu correo") ||
-      normalized.includes("verificar el correo")
-    );
-  };
-
   const {
     register,
     handleSubmit,
@@ -87,12 +78,11 @@ export const Login: React.FC = () => {
       await checkAuth();
       navigate("/dashboard");
     } catch (err: any) {
-      const message = err?.message || t("auth:login.error");
-      if (isEmailNotVerifiedMessage(message)) {
-        setNotice(message);
+      if (err instanceof ApiHttpError && err.statusCode === 403 && err.endpoint === "/auth/login") {
+        setNotice(err.message || t("auth:login.verification_required_notice"));
         setError(null);
       } else {
-        setError(message);
+        setError(err?.message || t("auth:login.error"));
       }
     } finally {
       setIsLoading(false);

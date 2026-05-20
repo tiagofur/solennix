@@ -91,10 +91,11 @@ public final class AuthViewModel {
         } catch {
             if let apiError = error as? APIError,
                case .serverError(let statusCode, let message) = apiError,
-               statusCode == 403,
-               isEmailNotVerified(message) {
+               statusCode == 403 {
                 verificationEmail = trimmedEmail
-                verificationNotice = message
+                verificationNotice = message.isEmpty
+                    ? tr("auth.login.verification_required_notice", "Verificá tu correo antes de iniciar sesión")
+                    : message
                 errorMessage = nil
             } else {
                 errorMessage = mapError(error)
@@ -353,13 +354,6 @@ public final class AuthViewModel {
         isConfirmPasswordVisible = false
         verificationNotice = nil
         verificationEmail = ""
-    }
-
-    private func isEmailNotVerified(_ message: String) -> Bool {
-        let normalized = message.lowercased()
-        return normalized.contains("verify your email")
-            || normalized.contains("verificar tu correo")
-            || normalized.contains("verificar el correo")
     }
 
     // MARK: - Error Mapping

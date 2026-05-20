@@ -82,7 +82,19 @@ func (m *MockFullUserRepo) UpdatePassword(ctx context.Context, userID uuid.UUID,
 }
 
 func (m *MockFullUserRepo) SetEmailVerificationToken(ctx context.Context, userID uuid.UUID, tokenHash string, sentAt, expiresAt time.Time) error {
-	return nil
+	hasExpectation := false
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "SetEmailVerificationToken" {
+			hasExpectation = true
+			break
+		}
+	}
+	if !hasExpectation {
+		return nil
+	}
+
+	args := m.Called(ctx, userID, tokenHash, sentAt, expiresAt)
+	return args.Error(0)
 }
 
 func (m *MockFullUserRepo) VerifyEmailByTokenHash(ctx context.Context, tokenHash string) (*models.User, error) {

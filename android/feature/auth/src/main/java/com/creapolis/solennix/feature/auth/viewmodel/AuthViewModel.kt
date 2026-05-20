@@ -88,7 +88,7 @@ class AuthViewModel @Inject constructor(
                 syncRevenueCat(response.user.id)
                 _loginSuccess.tryEmit(Unit)
             } catch (e: SolennixException.Server) {
-                if (e.code == 403 && isEmailNotVerifiedMessage(e.message.orEmpty())) {
+                if (e.code == 403) {
                     verificationEmail = loginEmail.trim()
                     verificationNotice = if (e.message.isNullOrBlank()) {
                         tr(R.string.auth_verification_required_notice)
@@ -279,13 +279,6 @@ class AuthViewModel @Inject constructor(
 
     private companion object {
         private const val TAG = "AuthViewModel"
-
-        private fun isEmailNotVerifiedMessage(message: String): Boolean {
-            val normalized = message.lowercase()
-            return normalized.contains("verify your email") ||
-                normalized.contains("verificar tu correo") ||
-                normalized.contains("verificar el correo")
-        }
     }
 
     fun loginWithGoogle(idToken: String, fullName: String?) {

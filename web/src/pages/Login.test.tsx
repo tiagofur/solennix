@@ -4,13 +4,17 @@ import { BrowserRouter } from 'react-router-dom';
 import { Login } from './Login';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
-import { api } from '../lib/api';
+import { api, ApiHttpError } from '../lib/api';
 
-vi.mock('../lib/api', () => ({
-  api: {
-    post: vi.fn(),
-  },
-}));
+vi.mock('../lib/api', async () => {
+  const actual = await vi.importActual<typeof import('../lib/api')>('../lib/api');
+  return {
+    ...actual,
+    api: {
+      post: vi.fn(),
+    },
+  };
+});
 
 vi.mock('../contexts/AuthContext', () => ({
   useAuth: vi.fn(),
@@ -74,13 +78,13 @@ describe('Login', () => {
     fireEvent.click(screen.getByRole('button', { name: /ingresar|iniciar sesión|login\.submit/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Credenciales incorrectas/i)).toBeInTheDocument();
+      expect(screen.getByRole('alert')).toHaveTextContent(/Credenciales incorrectas/i);
     });
   });
 
   it('shows verification notice and can resend the link', async () => {
     (api.post as any)
-      .mockRejectedValueOnce(new Error('You must verify your email before signing in'))
+      .mockRejectedValueOnce(new ApiHttpError('Debes verificar tu correo antes de iniciar sesión', 403, '/auth/login'))
       .mockResolvedValueOnce({});
 
     renderLogin();
@@ -90,7 +94,7 @@ describe('Login', () => {
     fireEvent.click(screen.getByRole('button', { name: /ingresar|iniciar sesión|login\.submit/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/verify your email|verificar tu correo/i)).toBeInTheDocument();
+      expect(screen.getByRole('status')).toHaveTextContent(/verify your email|verificar tu correo/i);
     });
 
     fireEvent.click(screen.getByRole('button', { name: /reenviar enlace de verificación|resend verification link/i }));
