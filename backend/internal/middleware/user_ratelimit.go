@@ -32,17 +32,14 @@ func UserRateLimit(resolver PlanResolver, window time.Duration) func(http.Handle
 
 	// Register cleanup stop function
 	stopThis := func() { close(done) }
+	stopFuncsMu.Lock()
 	allStopFuncs = append(allStopFuncs, stopThis)
-	RateLimitStopFunc = func() {
-		for _, fn := range allStopFuncs {
-			fn()
-		}
-		allStopFuncs = nil
-	}
+	stopFuncsMu.Unlock()
 
 	// Background cleanup of stale entries
+	cleanupInterval := RateLimitCleanupInterval
 	go func() {
-		ticker := time.NewTicker(RateLimitCleanupInterval)
+		ticker := time.NewTicker(cleanupInterval)
 		defer ticker.Stop()
 		for {
 			select {
