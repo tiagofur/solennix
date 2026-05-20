@@ -237,11 +237,23 @@ export const Settings: React.FC = () => {
     }
 
     try {
-      await updateProfile({
+      const payload: {
+        default_deposit_percent: number;
+        default_cancellation_days: number;
+        default_refund_percent: number;
+        contract_template?: string;
+      } = {
         default_deposit_percent: contractSettings.deposit,
         default_cancellation_days: contractSettings.cancellation,
         default_refund_percent: contractSettings.refund,
-        contract_template: contractTemplate,
+      };
+
+      if (!isBasicPlan) {
+        payload.contract_template = contractTemplate;
+      }
+
+      await updateProfile({
+        ...payload,
       });
       addToast(t("settings:contracts.success"), "success");
     } catch (error) {

@@ -1,0 +1,8 @@
+{
+  "name": "solennix-youtube-generator",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "puppeteer": "^24.2.1"
+  }
+}

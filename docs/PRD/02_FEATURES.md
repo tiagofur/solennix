@@ -8,7 +8,7 @@ aliases:
   - Catálogo de Features
   - Features
 date: 2026-03-20
-updated: 2026-04-17
+updated: 2026-05-20
 status: active
 ---
 
@@ -863,7 +863,7 @@ Personalizacion del perfil comercial del organizador de eventos.
 | `default_deposit_percent`   | % de deposito por defecto             | Eventos nuevos  |
 | `default_cancellation_days` | Dias de anticipacion para cancelacion | Eventos nuevos  |
 | `default_refund_percent`    | % de reembolso por defecto            | Eventos nuevos  |
-| `contract_template`         | Plantilla de contrato personalizable  | PDF de contrato |
+| `contract_template`         | Plantilla de contrato personalizable; Free usa default backend | PDF de contrato |
 
 **Endpoint:** `PUT /api/users/me` — actualiza todos los campos del perfil del usuario.
 
@@ -873,7 +873,7 @@ Personalizacion del perfil comercial del organizador de eventos.
 - **[Android]**: `BusinessSettingsScreen`, `ContractDefaultsScreen`, `EditProfileScreen`, `ChangePasswordScreen`
 - **[Web]**: `Settings`
 
-**Tier:** FREE (basico) / PRO (logo, color de marca, plantilla de contrato) — ver [[04_MONETIZATION|Monetización]]
+**Tier:** FREE (basico) usa plantilla de contrato predeterminada y no puede editarla. PRO/Business pueden personalizar plantilla, logo y color de marca — ver [[04_MONETIZATION|Monetización]]
 
 ---
 

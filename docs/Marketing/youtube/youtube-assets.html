@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solennix YouTube Assets</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #1B2A4A;
+            --navy-dark: #0F1A2E;
+            --gold: #C4A265;
+            --gold-light: #D4B87A;
+            --gold-dark: #B8965A;
+            --cream: #F5F0E8;
+            --white: #FFFFFF;
+            --text-muted: #6B7B8D;
+            --error: #e11d48;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #e2e8f0;
+            padding: 40px;
+        }
+
+        .section-label {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--navy);
+            margin: 40px 0 20px 0;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* ─── YOUTUBE THUMBNAIL (1280x720) ─── */
+        .thumbnail {
+            width: 1280px;
+            height: 720px;
+            position: relative;
+            overflow: hidden;
+            background: var(--white);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            margin-bottom: 60px;
+        }
+
+        /* Var 1: Problem/Solution */
+        .thumb-dark {
+            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            padding: 60px;
+        }
+
+        .thumb-dark .content { width: 60%; }
+        .thumb-dark h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 100px;
+            line-height: 0.9;
+            font-weight: 900;
+            margin-bottom: 20px;
+        }
+        .thumb-dark h1 span { color: var(--gold); }
+        .thumb-dark p {
+            font-size: 32px;
+            font-weight: 300;
+            opacity: 0.8;
+            margin-bottom: 40px;
+            letter-spacing: 1px;
+        }
+        .thumb-dark .badge {
+            display: inline-block;
+            background: var(--gold);
+            color: var(--navy);
+            padding: 10px 30px;
+            font-weight: 800;
+            font-size: 24px;
+            border-radius: 50px;
+            text-transform: uppercase;
+        }
+
+        .thumb-dark .visual {
+            width: 40%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .thumb-dark .mockup {
+            width: 350px;
+            height: 550px;
+            background: #cbd5e1;
+            border-radius: 30px;
+            border: 8px solid #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #475569;
+            font-weight: bold;
+            font-size: 20px;
+            transform: rotate(5deg);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+        }
+
+        /* Var 2: Light Brand Mode */
+        .thumb-light {
+            background: radial-gradient(circle at center, var(--white) 0%, var(--cream) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border: 20px solid var(--gold);
+        }
+        .thumb-light .logo-wrap { margin-bottom: 40px; }
+        .thumb-light h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 110px;
+            font-weight: 900;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            margin-bottom: 10px;
+        }
+        .thumb-light .tagline {
+            font-size: 40px;
+            font-weight: 300;
+            color: var(--navy);
+            letter-spacing: 15px;
+            margin-bottom: 50px;
+        }
+        .thumb-light .topic {
+            background: var(--navy);
+            color: var(--white);
+            padding: 20px 60px;
+            font-size: 48px;
+            font-weight: 800;
+            border-radius: 10px;
+        }
+
+        /* ─── YOUTUBE CHANNEL COVER (2560x1440) ─── */
+        .channel-cover {
+            width: 2560px;
+            height: 1440px;
+            position: relative;
+            background: var(--white);
+            background: radial-gradient(circle at center, var(--white) 0%, var(--cream) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.2);
+        }
+
+        /* Safe area guide (visible only for editing) */
+        .safe-area {
+            position: absolute;
+            width: 1546px;
+            height: 423px;
+            border: 2px dashed rgba(196, 162, 101, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .cover-content {
+            text-align: center;
+        }
+
+        .cover-logo {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            margin-bottom: 40px;
+            justify-content: center;
+        }
+
+        .cover-logo svg {
+            width: 180px;
+            height: 180px;
+        }
+
+        .cover-logo span {
+            font-family: 'Cinzel', serif;
+            font-size: 140px;
+            font-weight: 700;
+            color: var(--gold);
+            letter-spacing: 10px;
+            text-transform: uppercase;
+        }
+
+        .cover-tagline {
+            font-size: 40px;
+            font-weight: 300;
+            color: var(--navy);
+            letter-spacing: 20px;
+            text-transform: uppercase;
+        }
+
+        .cover-features {
+            display: flex;
+            gap: 40px;
+            margin-top: 60px;
+            justify-content: center;
+        }
+
+        .cover-feature {
+            background: var(--white);
+            padding: 15px 40px;
+            border-radius: 50px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 24px;
+            border: 1px solid var(--gold-light);
+        }
+
+        /* SVG Logo Component */
+        .logo-icon {
+            filter: drop-shadow(0 10px 20px rgba(196, 162, 101, 0.2));
+        }
+
+    </style>
+</head>
+<body>
+
+    <span class="section-label">Thumbnail Var 1: Impacto</span>
+    <div class="thumbnail thumb-dark" id="thumb-impact">
+        <div class="content">
+            <div class="badge">Gestión de Eventos</div>
+            <h1>ADIÓS AL <span>CAOS.</span></h1>
+            <p>Cotiza, cobra y organiza sin errores.</p>
+            <div style="font-size: 30px; font-weight: 800; color: var(--gold);">SOLENNIX.COM</div>
+        </div>
+        <div class="visual">
+            <div class="mockup">📱 APP UI PREVIEW</div>
+        </div>
+    </div>
+
+    <span class="section-label">Thumbnail Var 2: Tutorial / Marca</span>
+    <div class="thumbnail thumb-light" id="thumb-tutorial">
+        <div class="logo-wrap">
+            <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="120" height="120">
+                <defs>
+                    <linearGradient id="gYouTube" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#D4B87A"/>
+                        <stop offset="45%" stop-color="#C4A265"/>
+                        <stop offset="100%" stop-color="#B8965A"/>
+                    </linearGradient>
+                </defs>
+                <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" fill="url(#gYouTube)"/>
+                <path d="M76,38 Q72,58 76,82 Q85,104 100,112 L100,42 Q82,44 76,38 Z" fill="rgba(255,255,255,0.2)"/>
+                <ellipse cx="100" cy="124" rx="6" ry="3" fill="url(#gYouTube)"/>
+                <path d="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" fill="url(#gYouTube)"/>
+            </svg>
+        </div>
+        <h2>SOLENNIX</h2>
+        <div class="tagline">CADA DETALLE IMPORTA</div>
+        <div class="topic">TUTORIAL: COTIZACIONES</div>
+    </div>
+
+    <span class="section-label">YouTube Channel Cover (2560x1440)</span>
+    <div class="channel-cover" id="channel-cover">
+        <div class="safe-area">
+            <div class="cover-content">
+                <div class="cover-logo">
+                    <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+                        <defs>
+                            <linearGradient id="gCover" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#D4B87A"/>
+                                <stop offset="45%" stop-color="#C4A265"/>
+                                <stop offset="100%" stop-color="#B8965A"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" fill="url(#gCover)"/>
+                        <path d="M76,38 Q72,58 76,82 Q85,104 100,112 L100,42 Q82,44 76,38 Z" fill="rgba(255,255,255,0.2)"/>
+                        <ellipse cx="100" cy="124" rx="6" ry="3" fill="url(#gCover)"/>
+                        <path d="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" fill="url(#gCover)"/>
+                    </svg>
+                    <span>SOLENNIX</span>
+                </div>
+                <div class="cover-tagline">CADA DETALLE IMPORTA</div>
+                <div class="cover-features">
+                    <div class="cover-feature">CLIENTES</div>
+                    <div class="cover-feature">EVENTOS</div>
+                    <div class="cover-feature">PAGOS</div>
+                    <div class="cover-feature">INVENTARIO</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

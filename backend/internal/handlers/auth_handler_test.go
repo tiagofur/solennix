@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -177,6 +178,81 @@ func TestAcceptTeamInvite_GivenValidToken_WhenAccepted_ThenReturnsTokens(t *test
 	assert.Equal(t, http.StatusOK, rr.Code)
 	assert.Contains(t, rr.Body.String(), "access_token")
 	assert.Contains(t, rr.Body.String(), "team_member")
+}
+
+func TestAcceptTeamInvite_ErrorMappings(t *testing.T) {
+	tests := []struct {
+		name       string
+		repoErr    error
+		wantStatus int
+	}{
+		{name: "InviteNotFound", repoErr: repository.ErrStaffInviteNotFound, wantStatus: http.StatusUnauthorized},
+		{name: "InviteNotPending", repoErr: repository.ErrStaffInviteNotPending, wantStatus: http.StatusConflict},
+		{name: "InviteExpired", repoErr: repository.ErrStaffInviteExpired, wantStatus: http.StatusGone},
+		{name: "InviteEmailTaken", repoErr: repository.ErrStaffInviteEmailTaken, wantStatus: http.StatusConflict},
+		{name: "InviteRoleDenied", repoErr: repository.ErrStaffInviteRoleDenied, wantStatus: http.StatusForbidden},
+		{name: "UnknownError", repoErr: fmt.Errorf("db exploded"), wantStatus: http.StatusInternalServerError},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			authService := services.NewAuthService("test-secret", 1)
+			userRepo := new(MockFullUserRepo)
+			h := &AuthHandler{authService: authService, userRepo: userRepo}
+
+			token := "invite-token-123"
+			tokenHash := hashToken(token)
+			userRepo.On("AcceptStaffInvite", mock.Anything, tokenHash, mock.AnythingOfType("string")).Return((*models.User)(nil), tt.repoErr)
+
+			req := httptest.NewRequest(http.MethodPost, "/api/auth/team-invite/accept", strings.NewReader(`{"token":"`+token+`","password":"StrongPass123"}`))
+			rr := httptest.NewRecorder()
+
+			h.AcceptTeamInvite(rr, req)
+
+			assert.Equal(t, tt.wantStatus, rr.Code)
+			userRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestAcceptTeamInvite_ValidationFailures(t *testing.T) {
+	h := &AuthHandler{authService: services.NewAuthService("test-secret", 1)}
+
+	reqMissing := httptest.NewRequest(http.MethodPost, "/api/auth/team-invite/accept", strings.NewReader(`{"token":"","password":""}`))
+	rrMissing := httptest.NewRecorder()
+	h.AcceptTeamInvite(rrMissing, reqMissing)
+	assert.Equal(t, http.StatusBadRequest, rrMissing.Code)
+	assert.Contains(t, rrMissing.Body.String(), "Token and password are required")
+
+	reqWeak := httptest.NewRequest(http.MethodPost, "/api/auth/team-invite/accept", strings.NewReader(`{"token":"abc","password":"weak"}`))
+	rrWeak := httptest.NewRecorder()
+	h.AcceptTeamInvite(rrWeak, reqWeak)
+	assert.Equal(t, http.StatusBadRequest, rrWeak.Code)
+	assert.Contains(t, rrWeak.Body.String(), "Password must be at least 8 characters")
+}
+
+func TestClientIP_Resolution(t *testing.T) {
+	reqForwardedSingle := httptest.NewRequest(http.MethodGet, "/", nil)
+	reqForwardedSingle.Header.Set("X-Forwarded-For", "198.51.100.10")
+	assert.Equal(t, "198.51.100.10", clientIP(reqForwardedSingle))
+
+	reqForwardedMulti := httptest.NewRequest(http.MethodGet, "/", nil)
+	reqForwardedMulti.Header.Set("X-Forwarded-For", "198.51.100.11, 10.0.0.1")
+	assert.Equal(t, "198.51.100.11", clientIP(reqForwardedMulti))
+
+	reqRemote := httptest.NewRequest(http.MethodGet, "/", nil)
+	reqRemote.RemoteAddr = "203.0.113.5:4321"
+	assert.Equal(t, "203.0.113.5:4321", clientIP(reqRemote))
+}
+
+func TestSendEmailVerification_NilAndConfiguredService(t *testing.T) {
+	hNil := &AuthHandler{}
+	hNil.sendEmailVerification(&models.User{Email: "nil@test.dev", Name: "Nil"}, "token")
+
+	hWithEmail := &AuthHandler{
+		emailService: services.NewEmailService(&config.Config{FrontendURL: "http://localhost:5173"}),
+	}
+	hWithEmail.sendEmailVerification(&models.User{Email: "mail@test.dev", Name: "Mail", PreferredLanguage: "es"}, "token")
 }
 
 func TestAuthHandlerRefreshTokenSuccess(t *testing.T) {
@@ -634,6 +710,94 @@ func TestAuthHandler_Login_HappyPaths(t *testing.T) {
 		assert.Contains(t, rr.Body.String(), "verify your email")
 		mockRepo.AssertExpectations(t)
 	})
+
+	t.Run("BlockedAccount_Returns403", func(t *testing.T) {
+		mockRepo := new(MockFullUserRepo)
+		h := &AuthHandler{
+			userRepo:    mockRepo,
+			authService: authService,
+		}
+
+		hash, _ := authService.HashPassword("correct-password")
+		user := &models.User{
+			ID:            uuid.New(),
+			Email:         "blocked@test.dev",
+			PasswordHash:  hash,
+			AccountStatus: repository.AccountStatusBlocked,
+		}
+		mockRepo.On("GetByEmail", mock.Anything, "blocked@test.dev").Return(user, nil)
+
+		body := `{"email":"blocked@test.dev","password":"correct-password"}`
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(body))
+		rr := httptest.NewRecorder()
+		h.Login(rr, req)
+
+		assert.Equal(t, http.StatusForbidden, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Account is blocked")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("DeletedAccount_Returns403", func(t *testing.T) {
+		mockRepo := new(MockFullUserRepo)
+		h := &AuthHandler{
+			userRepo:    mockRepo,
+			authService: authService,
+		}
+
+		hash, _ := authService.HashPassword("correct-password")
+		user := &models.User{
+			ID:            uuid.New(),
+			Email:         "deleted@test.dev",
+			PasswordHash:  hash,
+			AccountStatus: repository.AccountStatusDeleted,
+		}
+		mockRepo.On("GetByEmail", mock.Anything, "deleted@test.dev").Return(user, nil)
+
+		body := `{"email":"deleted@test.dev","password":"correct-password"}`
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(body))
+		rr := httptest.NewRecorder()
+		h.Login(rr, req)
+
+		assert.Equal(t, http.StatusForbidden, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Account has been deleted")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("ConfiguredRefreshRepo_StoresRefreshTokenFamily", func(t *testing.T) {
+		mockRepo := new(MockFullUserRepo)
+		mockRefreshRepo := new(MockRefreshTokenRepo)
+		h := &AuthHandler{
+			userRepo:         mockRepo,
+			authService:      authService,
+			refreshTokenRepo: mockRefreshRepo,
+		}
+
+		hash, _ := authService.HashPassword("correct-password")
+		verifiedAt := time.Now().UTC()
+		user := &models.User{
+			ID:              uuid.New(),
+			Email:           "rotate-login@test.dev",
+			PasswordHash:    hash,
+			EmailVerifiedAt: &verifiedAt,
+		}
+		mockRepo.On("GetByEmail", mock.Anything, "rotate-login@test.dev").Return(user, nil)
+		mockRefreshRepo.On("Store", mock.Anything, user.ID, mock.AnythingOfType("uuid.UUID"), mock.AnythingOfType("string"), mock.AnythingOfType("time.Time")).Return(nil)
+
+		body := `{"email":"rotate-login@test.dev","password":"correct-password"}`
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(body))
+		rr := httptest.NewRecorder()
+		h.Login(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		mockRepo.AssertExpectations(t)
+		mockRefreshRepo.AssertExpectations(t)
+	})
+}
+
+func TestIsUniqueViolation(t *testing.T) {
+	assert.True(t, isUniqueViolation(&pgconn.PgError{Code: "23505"}))
+	assert.False(t, isUniqueViolation(&pgconn.PgError{Code: "22001"}))
+	assert.False(t, isUniqueViolation(fmt.Errorf("plain error")))
 }
 
 func TestAuthHandler_VerifyEmail_Paths(t *testing.T) {
@@ -662,6 +826,55 @@ func TestAuthHandler_VerifyEmail_Paths(t *testing.T) {
 		assert.Contains(t, rr.Body.String(), "Invalid or expired email verification token")
 		mockRepo.AssertExpectations(t)
 	})
+
+	t.Run("ValidToken_Returns200", func(t *testing.T) {
+		mockRepo := new(MockFullUserRepo)
+		h := &AuthHandler{userRepo: mockRepo}
+
+		user := &models.User{
+			ID:    uuid.New(),
+			Email: "verified@test.dev",
+			Name:  "Verified User",
+		}
+		mockRepo.On("VerifyEmailByTokenHash", mock.Anything, mock.AnythingOfType("string")).Return(user, nil)
+
+		req := httptest.NewRequest(http.MethodGet, "/api/auth/verify-email?token=valid-token", nil)
+		rr := httptest.NewRecorder()
+
+		h.VerifyEmail(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Email verified successfully")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("ValidToken_WithEmailService_Returns200", func(t *testing.T) {
+		mockRepo := new(MockFullUserRepo)
+		h := &AuthHandler{
+			userRepo: mockRepo,
+			emailService: services.NewEmailService(&config.Config{
+				FrontendURL: "http://localhost:5173",
+			}),
+		}
+
+		locale := "es"
+		user := &models.User{
+			ID:                uuid.New(),
+			Email:             "welcome@test.dev",
+			Name:              "Welcome User",
+			PreferredLanguage: locale,
+		}
+		mockRepo.On("VerifyEmailByTokenHash", mock.Anything, mock.AnythingOfType("string")).Return(user, nil)
+
+		req := httptest.NewRequest(http.MethodGet, "/api/auth/verify-email?token=valid-token", nil)
+		rr := httptest.NewRecorder()
+
+		h.VerifyEmail(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Email verified successfully")
+		mockRepo.AssertExpectations(t)
+	})
 }
 
 func TestAuthHandler_ResendEmailVerification_Paths(t *testing.T) {
@@ -673,6 +886,17 @@ func TestAuthHandler_ResendEmailVerification_Paths(t *testing.T) {
 		h.ResendEmailVerification(rr, req)
 
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
+	})
+
+	t.Run("InvalidEmailFormat_Returns400", func(t *testing.T) {
+		h := &AuthHandler{userRepo: new(MockFullUserRepo)}
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/verify-email/resend", strings.NewReader(`{"email":"bad-email"}`))
+		rr := httptest.NewRecorder()
+
+		h.ResendEmailVerification(rr, req)
+
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Invalid email format")
 	})
 
 	t.Run("UnknownEmail_ReturnsGeneric200", func(t *testing.T) {
@@ -687,6 +911,51 @@ func TestAuthHandler_ResendEmailVerification_Paths(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 		assert.Contains(t, rr.Body.String(), "a new link was sent")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("CooldownActive_Returns429", func(t *testing.T) {
+		mockRepo := new(MockFullUserRepo)
+		h := &AuthHandler{userRepo: mockRepo}
+
+		now := time.Now().UTC()
+		user := &models.User{
+			ID:                      uuid.New(),
+			Email:                   "cooldown@test.dev",
+			EmailVerificationSentAt: &now,
+		}
+		mockRepo.On("GetByEmail", mock.Anything, "cooldown@test.dev").Return(user, nil)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/verify-email/resend", strings.NewReader(`{"email":"cooldown@test.dev"}`))
+		rr := httptest.NewRecorder()
+
+		h.ResendEmailVerification(rr, req)
+
+		assert.Equal(t, http.StatusTooManyRequests, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Wait before requesting another verification link")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("StoreTokenError_Returns500", func(t *testing.T) {
+		mockRepo := new(MockFullUserRepo)
+		h := &AuthHandler{userRepo: mockRepo}
+
+		past := time.Now().UTC().Add(-10 * time.Minute)
+		user := &models.User{
+			ID:                      uuid.New(),
+			Email:                   "storefail@test.dev",
+			EmailVerificationSentAt: &past,
+		}
+		mockRepo.On("GetByEmail", mock.Anything, "storefail@test.dev").Return(user, nil)
+		mockRepo.On("SetEmailVerificationToken", mock.Anything, user.ID, mock.AnythingOfType("string"), mock.AnythingOfType("time.Time"), mock.AnythingOfType("time.Time")).Return(fmt.Errorf("db down"))
+
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/verify-email/resend", strings.NewReader(`{"email":"storefail@test.dev"}`))
+		rr := httptest.NewRecorder()
+
+		h.ResendEmailVerification(rr, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Internal server error")
 		mockRepo.AssertExpectations(t)
 	})
 }
@@ -730,6 +999,48 @@ func TestAuthHandler_Me_HappyPaths(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, rr.Code)
 		assert.Contains(t, rr.Body.String(), "User not found")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("BlockedAccount_Returns403", func(t *testing.T) {
+		mockRepo := new(MockFullUserRepo)
+		h := &AuthHandler{userRepo: mockRepo}
+
+		userID := uuid.New()
+		mockRepo.On("GetByID", mock.Anything, userID).Return(&models.User{
+			ID:            userID,
+			Email:         "blocked-me@test.dev",
+			AccountStatus: repository.AccountStatusBlocked,
+		}, nil)
+
+		req := httptest.NewRequest(http.MethodGet, "/api/auth/me", nil)
+		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+		rr := httptest.NewRecorder()
+		h.Me(rr, req)
+
+		assert.Equal(t, http.StatusForbidden, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Account is blocked")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("DeletedAccount_Returns403", func(t *testing.T) {
+		mockRepo := new(MockFullUserRepo)
+		h := &AuthHandler{userRepo: mockRepo}
+
+		userID := uuid.New()
+		mockRepo.On("GetByID", mock.Anything, userID).Return(&models.User{
+			ID:            userID,
+			Email:         "deleted-me@test.dev",
+			AccountStatus: repository.AccountStatusDeleted,
+		}, nil)
+
+		req := httptest.NewRequest(http.MethodGet, "/api/auth/me", nil)
+		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+		rr := httptest.NewRecorder()
+		h.Me(rr, req)
+
+		assert.Equal(t, http.StatusForbidden, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Account has been deleted")
 		mockRepo.AssertExpectations(t)
 	})
 }
@@ -1146,6 +1457,10 @@ func TestAuthHandler_UpdateProfile_WithValidContractTemplate(t *testing.T) {
 		Plan:  "pro",
 	}
 
+	mockRepo.On("GetByID", mock.Anything, userID).Return(&models.User{
+		ID:   userID,
+		Plan: "pro",
+	}, nil)
 	mockRepo.On("Update", mock.Anything, userID,
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
@@ -1161,6 +1476,30 @@ func TestAuthHandler_UpdateProfile_WithValidContractTemplate(t *testing.T) {
 	h.UpdateProfile(rr, req)
 
 	assert.Equal(t, http.StatusOK, rr.Code)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAuthHandler_UpdateProfile_FreeCannotUpdateContractTemplate(t *testing.T) {
+	mockRepo := new(MockFullUserRepo)
+	h := &AuthHandler{
+		userRepo:    mockRepo,
+		authService: services.NewAuthService("test-secret", 1),
+	}
+
+	userID := uuid.New()
+	mockRepo.On("GetByID", mock.Anything, userID).Return(&models.User{
+		ID:   userID,
+		Plan: "basic",
+	}, nil)
+
+	body := `{"contract_template":"Hello [client_name], your event on [event_date]."}`
+	req := httptest.NewRequest(http.MethodPut, "/api/users/me", strings.NewReader(body))
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+	rr := httptest.NewRecorder()
+	h.UpdateProfile(rr, req)
+
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	assert.Contains(t, rr.Body.String(), "paid plan")
 	mockRepo.AssertExpectations(t)
 }
 
@@ -1468,6 +1807,10 @@ func TestAuthHandler_UpdateProfile_SuccessWithAllFieldsIncludingContractTemplate
 		Plan:  "pro",
 	}
 
+	mockRepo.On("GetByID", mock.Anything, userID).Return(&models.User{
+		ID:   userID,
+		Plan: "pro",
+	}, nil)
 	mockRepo.On("Update", mock.Anything, userID,
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
@@ -1689,6 +2032,281 @@ func TestAuthHandler_RefreshToken_UserNotFound(t *testing.T) {
 
 	assert.Equal(t, http.StatusUnauthorized, rr.Code)
 	assert.Contains(t, rr.Body.String(), "Invalid or expired token")
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAuthHandler_RefreshToken_BlockedAndDeleted(t *testing.T) {
+	authService := services.NewAuthService("test-secret", 1)
+
+	t.Run("BlockedAccount_Returns403", func(t *testing.T) {
+		userID := uuid.New()
+		pair, err := authService.GenerateTokenPair(userID, "blocked-refresh@test.dev")
+		assert.NoError(t, err)
+
+		mockRepo := new(MockFullUserRepo)
+		mockRepo.On("GetByID", mock.Anything, userID).Return(&models.User{
+			ID:            userID,
+			Email:         "blocked-refresh@test.dev",
+			AccountStatus: repository.AccountStatusBlocked,
+		}, nil)
+
+		h := &AuthHandler{authService: authService, userRepo: mockRepo}
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", strings.NewReader(`{"refresh_token":"`+pair.RefreshToken+`"}`))
+		rr := httptest.NewRecorder()
+		h.RefreshToken(rr, req)
+
+		assert.Equal(t, http.StatusForbidden, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Account is blocked")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("DeletedAccount_Returns403", func(t *testing.T) {
+		userID := uuid.New()
+		pair, err := authService.GenerateTokenPair(userID, "deleted-refresh@test.dev")
+		assert.NoError(t, err)
+
+		mockRepo := new(MockFullUserRepo)
+		mockRepo.On("GetByID", mock.Anything, userID).Return(&models.User{
+			ID:            userID,
+			Email:         "deleted-refresh@test.dev",
+			AccountStatus: repository.AccountStatusDeleted,
+		}, nil)
+
+		h := &AuthHandler{authService: authService, userRepo: mockRepo}
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", strings.NewReader(`{"refresh_token":"`+pair.RefreshToken+`"}`))
+		rr := httptest.NewRecorder()
+		h.RefreshToken(rr, req)
+
+		assert.Equal(t, http.StatusForbidden, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Account has been deleted")
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestAuthHandler_SetRefreshTokenRepo_AssignsRepository(t *testing.T) {
+	h := &AuthHandler{}
+	repo := new(MockRefreshTokenRepo)
+
+	h.SetRefreshTokenRepo(repo)
+
+	assert.Equal(t, repo, h.refreshTokenRepo)
+}
+
+func TestAuthHandler_storeRefreshToken_EarlyReturns(t *testing.T) {
+	t.Run("NilRepo_DoesNothing", func(t *testing.T) {
+		h := &AuthHandler{authService: services.NewAuthService("test-secret", 1)}
+		h.storeRefreshToken(context.Background(), "any-token", uuid.New())
+	})
+
+	t.Run("InvalidRefreshToken_DoesNotStore", func(t *testing.T) {
+		mockRefreshRepo := new(MockRefreshTokenRepo)
+		h := &AuthHandler{
+			authService:      services.NewAuthService("test-secret", 1),
+			refreshTokenRepo: mockRefreshRepo,
+		}
+
+		h.storeRefreshToken(context.Background(), "invalid-refresh-token", uuid.New())
+
+		mockRefreshRepo.AssertNotCalled(t, "Store", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	})
+}
+
+func TestAuthHandler_RefreshToken_WithRotation_Success(t *testing.T) {
+	userID := uuid.New()
+	authService := services.NewAuthService("test-secret", 1)
+	pair, err := authService.GenerateTokenPair(userID, "rotation@test.dev")
+	assert.NoError(t, err)
+
+	mockRepo := new(MockFullUserRepo)
+	mockRepo.On("GetByID", mock.Anything, userID).Return(&models.User{
+		ID:    userID,
+		Email: "rotation@test.dev",
+	}, nil)
+
+	mockRefreshRepo := new(MockRefreshTokenRepo)
+	familyID := uuid.New()
+	mockRefreshRepo.On("Consume", mock.Anything, hashToken(pair.RefreshToken)).Return(familyID, userID, nil)
+	mockRefreshRepo.On("Store", mock.Anything, userID, familyID, mock.AnythingOfType("string"), mock.AnythingOfType("time.Time")).Return(nil)
+
+	h := &AuthHandler{authService: authService, userRepo: mockRepo, refreshTokenRepo: mockRefreshRepo}
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", strings.NewReader(`{"refresh_token":"`+pair.RefreshToken+`"}`))
+	rr := httptest.NewRecorder()
+
+	h.RefreshToken(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), "access_token")
+
+	cookies := rr.Result().Cookies()
+	found := false
+	for _, c := range cookies {
+		if c.Name == "auth_token" && c.Value != "" {
+			found = true
+		}
+	}
+	assert.True(t, found, "expected auth_token cookie to be set")
+
+	mockRepo.AssertExpectations(t)
+	mockRefreshRepo.AssertExpectations(t)
+}
+
+func TestAuthHandler_RefreshToken_WithRotation_ReuseDetectedRevokesFamily(t *testing.T) {
+	userID := uuid.New()
+	authService := services.NewAuthService("test-secret", 1)
+	pair, err := authService.GenerateTokenPair(userID, "reuse@test.dev")
+	assert.NoError(t, err)
+
+	mockRepo := new(MockFullUserRepo)
+	mockRepo.On("GetByID", mock.Anything, userID).Return(&models.User{
+		ID:    userID,
+		Email: "reuse@test.dev",
+	}, nil)
+
+	mockRefreshRepo := new(MockRefreshTokenRepo)
+	familyID := uuid.New()
+	mockRefreshRepo.On("Consume", mock.Anything, hashToken(pair.RefreshToken)).Return(familyID, userID, fmt.Errorf("reuse detected"))
+	mockRefreshRepo.On("RevokeFamily", mock.Anything, familyID).Return(nil)
+
+	h := &AuthHandler{authService: authService, userRepo: mockRepo, refreshTokenRepo: mockRefreshRepo}
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", strings.NewReader(`{"refresh_token":"`+pair.RefreshToken+`"}`))
+	rr := httptest.NewRecorder()
+
+	h.RefreshToken(rr, req)
+
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Invalid or expired token")
+
+	mockRepo.AssertExpectations(t)
+	mockRefreshRepo.AssertExpectations(t)
+}
+
+func TestAuthHandler_RefreshToken_WithRotation_ConsumeErrorWithoutReuseDoesNotRevoke(t *testing.T) {
+	userID := uuid.New()
+	authService := services.NewAuthService("test-secret", 1)
+	pair, err := authService.GenerateTokenPair(userID, "consume-error@test.dev")
+	assert.NoError(t, err)
+
+	mockRepo := new(MockFullUserRepo)
+	mockRepo.On("GetByID", mock.Anything, userID).Return(&models.User{
+		ID:    userID,
+		Email: "consume-error@test.dev",
+	}, nil)
+
+	mockRefreshRepo := new(MockRefreshTokenRepo)
+	familyID := uuid.New()
+	mockRefreshRepo.On("Consume", mock.Anything, hashToken(pair.RefreshToken)).Return(familyID, userID, fmt.Errorf("db down"))
+
+	h := &AuthHandler{authService: authService, userRepo: mockRepo, refreshTokenRepo: mockRefreshRepo}
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", strings.NewReader(`{"refresh_token":"`+pair.RefreshToken+`"}`))
+	rr := httptest.NewRecorder()
+
+	h.RefreshToken(rr, req)
+
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Invalid or expired token")
+	mockRefreshRepo.AssertNotCalled(t, "RevokeFamily", mock.Anything, mock.Anything)
+
+	mockRepo.AssertExpectations(t)
+	mockRefreshRepo.AssertExpectations(t)
+}
+
+func TestAuthHandler_RefreshToken_WithRotation_StoreErrorReturns500(t *testing.T) {
+	userID := uuid.New()
+	authService := services.NewAuthService("test-secret", 1)
+	pair, err := authService.GenerateTokenPair(userID, "store-error@test.dev")
+	assert.NoError(t, err)
+
+	mockRepo := new(MockFullUserRepo)
+	mockRepo.On("GetByID", mock.Anything, userID).Return(&models.User{
+		ID:    userID,
+		Email: "store-error@test.dev",
+	}, nil)
+
+	mockRefreshRepo := new(MockRefreshTokenRepo)
+	familyID := uuid.New()
+	mockRefreshRepo.On("Consume", mock.Anything, hashToken(pair.RefreshToken)).Return(familyID, userID, nil)
+	mockRefreshRepo.On("Store", mock.Anything, userID, familyID, mock.AnythingOfType("string"), mock.AnythingOfType("time.Time")).Return(fmt.Errorf("write failed"))
+
+	h := &AuthHandler{authService: authService, userRepo: mockRepo, refreshTokenRepo: mockRefreshRepo}
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", strings.NewReader(`{"refresh_token":"`+pair.RefreshToken+`"}`))
+	rr := httptest.NewRecorder()
+
+	h.RefreshToken(rr, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Internal server error")
+
+	cookies := rr.Result().Cookies()
+	foundAuthCookie := false
+	for _, c := range cookies {
+		if c.Name == "auth_token" && c.Value != "" {
+			foundAuthCookie = true
+		}
+	}
+	assert.False(t, foundAuthCookie, "auth_token must not be set when refresh token persistence fails")
+
+	mockRepo.AssertExpectations(t)
+	mockRefreshRepo.AssertExpectations(t)
+}
+
+func TestAuthHandler_Logout_WithToken_RevokesAllRefreshFamilies(t *testing.T) {
+	userID := uuid.New()
+	authService := services.NewAuthService("test-secret", 1)
+	pair, err := authService.GenerateTokenPair(userID, "logout@test.dev")
+	assert.NoError(t, err)
+
+	mockRefreshRepo := new(MockRefreshTokenRepo)
+	mockRefreshRepo.On("RevokeAllForUser", mock.Anything, userID).Return(nil)
+
+	h := &AuthHandler{authService: authService, refreshTokenRepo: mockRefreshRepo}
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/logout", nil)
+	req.Header.Set("Authorization", "Bearer "+pair.AccessToken)
+	rr := httptest.NewRecorder()
+
+	h.Logout(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Logged out successfully")
+	mockRefreshRepo.AssertExpectations(t)
+}
+
+func TestAuthHandler_Logout_WithInvalidToken_DoesNotRevokeRefreshFamilies(t *testing.T) {
+	mockRefreshRepo := new(MockRefreshTokenRepo)
+	h := &AuthHandler{
+		authService:      services.NewAuthService("test-secret", 1),
+		refreshTokenRepo: mockRefreshRepo,
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/logout", nil)
+	req.Header.Set("Authorization", "Bearer invalid-token")
+	rr := httptest.NewRecorder()
+
+	h.Logout(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Logged out successfully")
+	mockRefreshRepo.AssertNotCalled(t, "RevokeAllForUser", mock.Anything, mock.Anything)
+}
+
+func TestAuthHandler_ResendEmailVerification_AlreadyVerifiedReturnsGeneric200(t *testing.T) {
+	mockRepo := new(MockFullUserRepo)
+	h := &AuthHandler{userRepo: mockRepo}
+
+	now := time.Now().UTC()
+	user := &models.User{
+		ID:              uuid.New(),
+		Email:           "verified-again@test.dev",
+		EmailVerifiedAt: &now,
+	}
+	mockRepo.On("GetByEmail", mock.Anything, "verified-again@test.dev").Return(user, nil)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/verify-email/resend", strings.NewReader(`{"email":"verified-again@test.dev"}`))
+	rr := httptest.NewRecorder()
+
+	h.ResendEmailVerification(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), "a new link was sent")
 	mockRepo.AssertExpectations(t)
 }
 

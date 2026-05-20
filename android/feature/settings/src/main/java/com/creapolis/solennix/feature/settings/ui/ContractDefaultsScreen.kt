@@ -8,6 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Preview
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -268,12 +269,49 @@ fun ContractDefaultsScreen(
                             mutableStateOf(TextFieldValue(viewModel.contractTemplate))
                         }
 
+                        if (!viewModel.canCustomizeContractTemplate) {
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = MaterialTheme.shapes.medium,
+                                color = SolennixTheme.colors.primary.copy(alpha = 0.08f),
+                                border = BorderStroke(1.dp, SolennixTheme.colors.primary.copy(alpha = 0.18f))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Lock,
+                                        contentDescription = null,
+                                        tint = SolennixTheme.colors.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Column {
+                                        Text(
+                                            text = stringResource(R.string.settings_contract_pro_only),
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = SolennixTheme.colors.primaryText
+                                        )
+                                        Text(
+                                            text = stringResource(R.string.settings_contract_pro_only_hint),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = SolennixTheme.colors.secondaryText
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+
                         OutlinedTextField(
                             value = textFieldValue,
                             onValueChange = {
                                 textFieldValue = it
                                 viewModel.contractTemplate = it.text
                             },
+                            readOnly = !viewModel.canCustomizeContractTemplate,
                             label = { Text(stringResource(R.string.settings_contract_template_field)) },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -343,6 +381,7 @@ fun ContractDefaultsScreen(
                                         )
                                         viewModel.contractTemplate = newText
                                     },
+                                    enabled = viewModel.canCustomizeContractTemplate,
                                     label = {
                                         Text(
                                             text = chipLabel,
@@ -364,6 +403,7 @@ fun ContractDefaultsScreen(
                                 textFieldValue = TextFieldValue(DEFAULT_CONTRACT_TEMPLATE)
                                 viewModel.contractTemplate = DEFAULT_CONTRACT_TEMPLATE
                             },
+                            enabled = viewModel.canCustomizeContractTemplate,
                             colors = ButtonDefaults.textButtonColors(
                                 contentColor = SolennixTheme.colors.primary
                             )

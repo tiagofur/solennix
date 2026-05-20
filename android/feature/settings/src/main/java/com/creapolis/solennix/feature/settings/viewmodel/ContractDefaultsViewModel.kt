@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.feature.settings.R
+import com.creapolis.solennix.core.model.Plan
 import com.creapolis.solennix.core.model.User
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.get
@@ -61,7 +62,7 @@ private data class ContractDefaultsPayload(
     @SerialName("default_deposit_percent") val defaultDepositPercent: Double,
     @SerialName("default_cancellation_days") val defaultCancellationDays: Double,
     @SerialName("default_refund_percent") val defaultRefundPercent: Double,
-    @SerialName("contract_template") val contractTemplate: String
+    @SerialName("contract_template") val contractTemplate: String? = null
 )
 
 @HiltViewModel
@@ -75,6 +76,8 @@ class ContractDefaultsViewModel @Inject constructor(
     var cancellationDays by mutableStateOf(7f)
     var refundPercent by mutableStateOf(50f)
     var contractTemplate by mutableStateOf("")
+    var canCustomizeContractTemplate by mutableStateOf(false)
+        private set
 
     var isLoading by mutableStateOf(true)
     var isSaving by mutableStateOf(false)
@@ -109,7 +112,12 @@ class ContractDefaultsViewModel @Inject constructor(
         depositPercent = user.defaultDepositPercent?.toFloat() ?: 50f
         cancellationDays = user.defaultCancellationDays?.toFloat() ?: 7f
         refundPercent = user.defaultRefundPercent?.toFloat() ?: 50f
-        contractTemplate = user.contractTemplate?.takeIf { it.isNotBlank() } ?: DEFAULT_CONTRACT_TEMPLATE
+        canCustomizeContractTemplate = user.plan != Plan.BASIC
+        contractTemplate = if (canCustomizeContractTemplate) {
+            user.contractTemplate?.takeIf { it.isNotBlank() } ?: DEFAULT_CONTRACT_TEMPLATE
+        } else {
+            DEFAULT_CONTRACT_TEMPLATE
+        }
     }
 
     fun saveContractDefaults() {
@@ -121,7 +129,7 @@ class ContractDefaultsViewModel @Inject constructor(
                     defaultDepositPercent = depositPercent.toDouble(),
                     defaultCancellationDays = cancellationDays.toDouble(),
                     defaultRefundPercent = refundPercent.toDouble(),
-                    contractTemplate = contractTemplate.trim()
+                    contractTemplate = if (canCustomizeContractTemplate) contractTemplate.trim() else null
                 )
                 val updatedUser: User = apiService.put(Endpoints.UPDATE_PROFILE, payload)
                 authManager.storeUser(updatedUser)

@@ -10145,6 +10145,38 @@
         }
       }
     },
+    "settings.contract.pro_only" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro plan feature"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Función exclusiva del plan Pro"
+          }
+        }
+      }
+    },
+    "settings.contract.pro_only_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can use the default template; customizing it requires Pro."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podés usar la plantilla predeterminada; personalizarla requiere Pro."
+          }
+        }
+      }
+    },
     "settings.contract.template" : {
       "localizations" : {
         "en" : {

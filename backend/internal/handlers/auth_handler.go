@@ -29,6 +29,7 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/i18n"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
+	"github.com/tiagofur/solennix-backend/internal/pdf"
 	"github.com/tiagofur/solennix-backend/internal/repository"
 	"github.com/tiagofur/solennix-backend/internal/services"
 )
@@ -542,7 +543,11 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		// Store the new refresh token in the family
 		newTokenHash := hashToken(tokens.RefreshToken)
 		refreshExpiry := time.Now().Add(7 * 24 * time.Hour)
-		h.refreshTokenRepo.Store(r.Context(), claims.UserID, familyID, newTokenHash, refreshExpiry)
+		if err := h.refreshTokenRepo.Store(r.Context(), claims.UserID, familyID, newTokenHash, refreshExpiry); err != nil {
+			slog.Error("Failed to store rotated refresh token", "error", err, "user_id", claims.UserID, "family_id", familyID)
+			writeAuthI18nError(w, r, http.StatusInternalServerError, "auth.internal_server_error")
+			return
+		}
 
 		setAuthCookie(w, r, tokens.AccessToken)
 		slog.Info("auth.event", "action", "token_refresh", "user_id", claims.UserID, "family_id", familyID, "ip", clientIP(r))
@@ -917,6 +922,18 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			writeAuthI18nError(w, r, http.StatusBadRequest, "auth.contract_template_invalid")
+			return
+		}
+
+		user, err := h.userRepo.GetByID(r.Context(), userID)
+		if err != nil || user == nil {
+			slog.Error("Failed to load user for contract template update", "error", err, "user_id", userID)
+			writeAuthI18nError(w, r, http.StatusInternalServerError, "auth.profile_update_failed")
+			return
+		}
+		normalizedPlan := normalizePlan(user.Plan)
+		if !pdf.CanUseCustomContractTemplate(normalizedPlan) || !IsPlanActive(user) {
+			writeError(w, http.StatusForbidden, "Custom contract templates require a paid plan.")
 			return
 		}
 	}
