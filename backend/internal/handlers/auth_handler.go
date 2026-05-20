@@ -931,7 +931,8 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 			writeAuthI18nError(w, r, http.StatusInternalServerError, "auth.profile_update_failed")
 			return
 		}
-		if !pdf.CanUseCustomContractTemplate(user.Plan) || !IsPlanActive(user) {
+		normalizedPlan := normalizePlan(user.Plan)
+		if !pdf.CanUseCustomContractTemplate(normalizedPlan) || !IsPlanActive(user) {
 			writeError(w, http.StatusForbidden, "Custom contract templates require a paid plan.")
 			return
 		}

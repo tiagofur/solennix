@@ -20,6 +20,44 @@ private struct ContractDefaultsBody: Encodable {
     let contractTemplate: String?
 }
 
+private let serverDefaultContractTemplate = """
+1. El Proveedor es una empresa dedicada a [Tipo de servicio], [Nombre comercial del proveedor], y cuenta con la capacidad para la prestación de dicho servicio.
+2. El Cliente: [Nombre del cliente] desea contratar los servicios del Proveedor para el evento que se llevará a cabo el [Fecha del evento], en [Lugar del evento].
+3. Servicios contratados: [Servicios del evento]
+
+Por lo tanto, las partes acuerdan las siguientes cláusulas:
+
+CLÁUSULAS:
+Primera. Objeto del Contrato
+El Proveedor se compromete a prestar los servicios de [Tipo de servicio] para [Número de personas] personas.
+
+Segunda. Horarios de Servicio
+El servicio será prestado en el evento en un horario de [Horario del evento].
+
+Tercera. Costo Total/Anticipo
+El costo total del servicio contratado será de [Monto total del evento] con un anticipo de [Total pagado].
+
+Cuarta. Condiciones de Pago
+El Cliente deberá cubrir un anticipo del [Porcentaje de anticipo]% para reservar la fecha. El resto deberá liquidarse antes del inicio del evento.
+
+Quinta. Condiciones del Servicio
+El Cliente se compromete a facilitar un espacio adecuado para la instalación del equipo necesario, que deberá contar con una superficie plana y conexión de luz.
+
+Sexta. Cancelaciones y Reembolsos
+En caso de cancelación por parte del Cliente con menos de [Días de cancelación] días de anticipación, no se realizará reembolso del apartado.
+Cuando la cancelación se realice dentro del plazo permitido, se reembolsará el [Porcentaje de reembolso]% del apartado.
+
+Octava. Jurisdicción
+Para cualquier disputa derivada de este contrato, las partes se someten a la jurisdicción de los tribunales competentes de [Ciudad del contrato].
+
+Novena. Modificaciones
+Cualquier modificación a este contrato deberá ser acordada por ambas partes por escrito.
+
+Firmas:
+Proveedor: [Nombre del proveedor]
+Cliente: [Nombre del cliente]
+"""
+
 // MARK: - Business Settings View Model
 
 @Observable
@@ -95,7 +133,7 @@ public final class BusinessSettingsViewModel {
         if user.plan.isPaid, let savedTemplate, !savedTemplate.isEmpty {
             contractTemplate = savedTemplate
         } else {
-            contractTemplate = EventContractPreviewView.defaultTemplate
+            contractTemplate = serverDefaultContractTemplate
         }
 
         // Parse brand color from hex

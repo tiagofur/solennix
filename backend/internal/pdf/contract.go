@@ -11,7 +11,7 @@ import (
 // and for paid users who have not saved a custom contract template.
 const DefaultContractTemplate = `1. El Proveedor es una empresa dedicada a [Tipo de servicio], [Nombre comercial del proveedor], y cuenta con la capacidad para la prestación de dicho servicio.
 2. El Cliente: [Nombre del cliente] desea contratar los servicios del Proveedor para el evento que se llevará a cabo el [Fecha del evento], en [Lugar del evento].
-3. Servicio contratados: [Servicios del evento]
+3. Servicios contratados: [Servicios del evento]
 
 Por lo tanto, las partes acuerdan las siguientes cláusulas:
 
@@ -75,8 +75,21 @@ func stripLegacySignatureSection(text string) string {
 	return strings.TrimSpace(text[:cut])
 }
 
-func CanUseCustomContractTemplate(plan string) bool {
+func normalizeTemplatePlan(plan string) string {
 	switch strings.ToLower(strings.TrimSpace(plan)) {
+	case "gratis", "free", "basic", "plan_basic":
+		return "basic"
+	case "pro", "plan_pro", "premium":
+		return "pro"
+	case "business", "plan_business":
+		return "business"
+	default:
+		return strings.ToLower(strings.TrimSpace(plan))
+	}
+}
+
+func CanUseCustomContractTemplate(plan string) bool {
+	switch normalizeTemplatePlan(plan) {
 	case "pro", "business", "premium", "enterprise":
 		return true
 	default:
@@ -129,6 +142,12 @@ func GenerateContract(data ContractData) ([]byte, error) {
 	}
 	resolvedText := ResolveTokens(templateText, tokenData)
 	resolvedText = stripLegacySignatureSection(resolvedText)
+	if strings.TrimSpace(resolvedText) == "" {
+		resolvedText = stripLegacySignatureSection(ResolveTokens(DefaultContractTemplate, tokenData))
+		if strings.TrimSpace(resolvedText) == "" {
+			resolvedText = "Contrato de servicios"
+		}
+	}
 
 	providerName := data.Profile.Name
 	if data.Profile.BusinessName != nil && *data.Profile.BusinessName != "" {
