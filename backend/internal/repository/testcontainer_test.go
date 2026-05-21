@@ -47,7 +47,7 @@ func resolveTestDatabaseURL(t *testing.T) string {
 			postgres.WithUsername("solennix_user"),
 			postgres.WithPassword("solennix_password"),
 			testcontainers.WithWaitStrategy(
-				wait.ForListeningPort("5432/tcp").WithStartupTimeout(90*time.Second),
+					wait.ForLog("database system is ready to accept connections").WithOccurrence(2).WithStartupTimeout(90*time.Second),
 			),
 		)
 		if err != nil {
@@ -63,9 +63,15 @@ func resolveTestDatabaseURL(t *testing.T) string {
 	})
 
 	if testDBStartErr != nil {
+			if os.Getenv("CI") == "true" {
+				t.Fatalf("failed to start testcontainer postgres in CI: %v", testDBStartErr)
+			}
 		t.Skipf("Skipping integration tests: cannot start testcontainer postgres: %v", testDBStartErr)
 	}
 	if testDBURL == "" {
+			if os.Getenv("CI") == "true" {
+				t.Fatal("testcontainer postgres did not provide a connection string in CI")
+			}
 		t.Skip("Skipping integration tests: testcontainer postgres did not provide a connection string")
 	}
 
