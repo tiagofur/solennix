@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -557,10 +556,7 @@ func TestProductRepoGetIngredientsForProductsSuccessWithStandardProtocol(t *test
 func openTestPool(t *testing.T) *pgxpool.Pool {
 	t.Helper()
 
-	databaseURL := os.Getenv("TEST_DATABASE_URL")
-	if databaseURL == "" {
-		t.Skip("Skipping integration tests: TEST_DATABASE_URL is not set (safety guard)")
-	}
+	databaseURL := resolveTestDatabaseURL(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -593,10 +589,7 @@ func openTestPool(t *testing.T) *pgxpool.Pool {
 func openTestPoolStandard(t *testing.T) *pgxpool.Pool {
 	t.Helper()
 
-	databaseURL := os.Getenv("TEST_DATABASE_URL")
-	if databaseURL == "" {
-		t.Skip("Skipping integration tests: TEST_DATABASE_URL is not set (safety guard)")
-	}
+	databaseURL := resolveTestDatabaseURL(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
