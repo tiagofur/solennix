@@ -38,6 +38,21 @@ func (m *mockSecurityAuditLogger) snapshot() []*models.AuditLog {
 	return out
 }
 
+func waitForAuditLogs(t *testing.T, snapshot func() []*models.AuditLog, minCount int) []*models.AuditLog {
+	t.Helper()
+
+	deadline := time.Now().Add(500 * time.Millisecond)
+	for time.Now().Before(deadline) {
+		logs := snapshot()
+		if len(logs) >= minCount {
+			return logs
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+
+	return snapshot()
+}
+
 func (m *mockPlanResolver) GetPlan(_ context.Context, _ uuid.UUID) string {
 	return m.plan
 }
@@ -351,9 +366,7 @@ func TestUserRateLimit_Given429_WhenLimited_ThenSecurityAuditLogged(t *testing.T
 		handler.ServeHTTP(rr, authenticatedRequest(userID))
 	}
 
-	time.Sleep(30 * time.Millisecond)
-
-	logs := logger.snapshot()
+	logs := waitForAuditLogs(t, logger.snapshot, 1)
 	if len(logs) != 1 {
 		t.Fatalf("expected exactly one security audit log per window, got %d", len(logs))
 	}

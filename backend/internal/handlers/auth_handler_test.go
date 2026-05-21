@@ -45,6 +45,21 @@ func (l *authSecurityAuditLogger) snapshot() []*models.AuditLog {
 	return out
 }
 
+func waitForAuthAuditLogs(t *testing.T, snapshot func() []*models.AuditLog, minCount int) []*models.AuditLog {
+	t.Helper()
+
+	deadline := time.Now().Add(500 * time.Millisecond)
+	for time.Now().Before(deadline) {
+		logs := snapshot()
+		if len(logs) >= minCount {
+			return logs
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+
+	return snapshot()
+}
+
 func TestAuthHandlerValidationPaths(t *testing.T) {
 	h := &AuthHandler{
 		authService: services.NewAuthService("test-secret", 1),
@@ -344,9 +359,7 @@ func TestAuthHandler_Login_GivenInvalidPassword_WhenAttempted_ThenSecurityAuditL
 		t.Fatalf("status = %d, want %d", rr.Code, http.StatusUnauthorized)
 	}
 
-	time.Sleep(30 * time.Millisecond)
-
-	logs := logger.snapshot()
+	logs := waitForAuthAuditLogs(t, logger.snapshot, 1)
 	if len(logs) == 0 {
 		t.Fatal("expected security audit log for invalid password")
 	}
