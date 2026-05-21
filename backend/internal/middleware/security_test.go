@@ -9,7 +9,9 @@ import (
 )
 
 func TestSecurityHeaders(t *testing.T) {
+	var nonceFromContext string
 	handler := SecurityHeaders(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		nonceFromContext = GetCSPNonce(r.Context())
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("ok"))
 	}))
@@ -38,11 +40,46 @@ func TestSecurityHeaders(t *testing.T) {
 	if !strings.Contains(csp, "default-src 'self'") {
 		t.Errorf("CSP missing default-src, got: %s", csp)
 	}
+	if strings.Contains(csp, "'unsafe-inline'") {
+		t.Errorf("default CSP should not use unsafe-inline, got: %s", csp)
+	}
+	if strings.Contains(csp, "'nonce-") {
+		t.Errorf("default API CSP should not include nonce, got: %s", csp)
+	}
+	if nonceFromContext != "" {
+		t.Errorf("expected empty nonce for non-HTML request, got %q", nonceFromContext)
+	}
 
 	// Check HTTP behavior for strict transport security
 	// non-https request without X-Forwarded-Proto
 	if hsts := rr.Header().Get("Strict-Transport-Security"); hsts != "" {
 		t.Errorf("expected empty HSTS header for standard HTTP req, got %q", hsts)
+	}
+}
+
+func TestSecurityHeadersHTMLUsesNonceCSP(t *testing.T) {
+	var nonceFromContext string
+	handler := SecurityHeaders(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		nonceFromContext = GetCSPNonce(r.Context())
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest("GET", "/callback", nil)
+	req.Header.Set("Accept", "text/html")
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	if nonceFromContext == "" {
+		t.Fatal("expected nonce in request context for HTML request")
+	}
+
+	csp := rr.Header().Get("Content-Security-Policy")
+	if !strings.Contains(csp, "script-src 'self' 'nonce-"+nonceFromContext+"'") {
+		t.Fatalf("expected CSP nonce to match context nonce, got: %s", csp)
+	}
+	if strings.Contains(csp, "'unsafe-inline'") {
+		t.Fatalf("HTML CSP should avoid unsafe-inline for scripts, got: %s", csp)
 	}
 }
 

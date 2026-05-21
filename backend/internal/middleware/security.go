@@ -1,8 +1,53 @@
 package middleware
 
 import (
+	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"net/http"
+	"strings"
 )
+
+type cspNonceContextKey struct{}
+
+// GetCSPNonce returns the request-scoped CSP nonce for HTML responses.
+// Handlers that render HTML can use this value in nonce="..." script tags.
+func GetCSPNonce(ctx context.Context) string {
+	nonce, _ := ctx.Value(cspNonceContextKey{}).(string)
+	return nonce
+}
+
+func generateCSPNonce() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return base64.RawStdEncoding.EncodeToString(b), nil
+}
+
+func buildDefaultCSP() string {
+	return "default-src 'self'; " +
+		"script-src 'self'; " +
+		"style-src 'self'; " +
+		"img-src 'self' data: https:; " +
+		"font-src 'self' data:; " +
+		"connect-src 'self'; " +
+		"frame-ancestors 'none'; " +
+		"base-uri 'self'; " +
+		"form-action 'self'"
+}
+
+func buildHTMLCSP(nonce string) string {
+	return "default-src 'self'; " +
+		"script-src 'self' 'nonce-" + nonce + "'; " +
+		"style-src 'self'; " +
+		"img-src 'self' data: https:; " +
+		"font-src 'self' data:; " +
+		"connect-src 'self'; " +
+		"frame-ancestors 'none'; " +
+		"base-uri 'self'; " +
+		"form-action 'self'"
+}
 
 // SecurityHeaders adds essential security headers to all HTTP responses.
 // Implements OWASP recommended security headers to protect against common web vulnerabilities.
@@ -32,29 +77,17 @@ func SecurityHeaders(next http.Handler) http.Handler {
 			w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 		}
 
-		// Content Security Policy (CSP)
-		// Restricts sources from which resources can be loaded
-		// Mitigates: XSS attacks, data injection attacks, malicious script execution
-		//
-		// Policy breakdown:
-		// - default-src 'self': Only load resources from same origin by default
-		// - script-src 'self': Only execute scripts from same origin
-		// - style-src 'self' 'unsafe-inline': Styles from same origin + inline styles (for React/Tailwind)
-		// - img-src 'self' data: https:: Images from same origin, data URIs, and HTTPS
-		// - font-src 'self' data:: Fonts from same origin and data URIs
-		// - connect-src 'self': API calls only to same origin (or specific domains if needed)
-		// - frame-ancestors 'none': Don't allow embedding in frames (redundant with X-Frame-Options)
-		// - base-uri 'self': Restrict base URL to same origin
-		// - form-action 'self': Forms can only submit to same origin
-		csp := "default-src 'self'; " +
-			"script-src 'self'; " +
-			"style-src 'self' 'unsafe-inline'; " +
-			"img-src 'self' data: https:; " +
-			"font-src 'self' data:; " +
-			"connect-src 'self'; " +
-			"frame-ancestors 'none'; " +
-			"base-uri 'self'; " +
-			"form-action 'self'"
+		acceptHeader := strings.ToLower(r.Header.Get("Accept"))
+		isHTML := strings.Contains(acceptHeader, "text/html")
+
+		csp := buildDefaultCSP()
+		if isHTML {
+			nonce, err := generateCSPNonce()
+			if err == nil {
+				r = r.WithContext(context.WithValue(r.Context(), cspNonceContextKey{}, nonce))
+				csp = buildHTMLCSP(nonce)
+			}
+		}
 		w.Header().Set("Content-Security-Policy", csp)
 
 		// Referrer Policy
