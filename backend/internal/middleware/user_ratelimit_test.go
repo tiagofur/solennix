@@ -336,8 +336,9 @@ func TestUserRateLimit_Given429_WhenLimited_ThenSecurityAuditLogged(t *testing.T
 	defer func() { RateLimitCleanupInterval = originalInterval }()
 
 	logger := &mockSecurityAuditLogger{}
+	originalLogger := GetSecurityAuditLogger()
 	SetSecurityAuditLogger(logger)
-	defer SetSecurityAuditLogger(nil)
+	defer SetSecurityAuditLogger(originalLogger)
 
 	resolver := &mockPlanResolver{plan: "basic"}
 	handler := UserRateLimit(resolver, 1*time.Second)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -345,7 +346,7 @@ func TestUserRateLimit_Given429_WhenLimited_ThenSecurityAuditLogged(t *testing.T
 	}))
 
 	userID := uuid.New()
-	for i := 0; i < 61; i++ {
+	for i := 0; i < 65; i++ {
 		rr := httptest.NewRecorder()
 		handler.ServeHTTP(rr, authenticatedRequest(userID))
 	}
@@ -353,8 +354,8 @@ func TestUserRateLimit_Given429_WhenLimited_ThenSecurityAuditLogged(t *testing.T
 	time.Sleep(30 * time.Millisecond)
 
 	logs := logger.snapshot()
-	if len(logs) == 0 {
-		t.Fatal("expected at least one security audit log")
+	if len(logs) != 1 {
+		t.Fatalf("expected exactly one security audit log per window, got %d", len(logs))
 	}
 	if logs[0].Action != "rate_limited" {
 		t.Fatalf("action = %q, want %q", logs[0].Action, "rate_limited")

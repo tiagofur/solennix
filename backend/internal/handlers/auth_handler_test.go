@@ -253,6 +253,10 @@ func TestAcceptTeamInvite_ValidationFailures(t *testing.T) {
 }
 
 func TestClientIP_Resolution(t *testing.T) {
+	originalTrustProxy := middleware.TrustProxy
+	defer func() { middleware.TrustProxy = originalTrustProxy }()
+
+	middleware.TrustProxy = true
 	reqForwardedSingle := httptest.NewRequest(http.MethodGet, "/", nil)
 	reqForwardedSingle.Header.Set("X-Forwarded-For", "198.51.100.10")
 	assert.Equal(t, "198.51.100.10", clientIP(reqForwardedSingle))
@@ -261,9 +265,15 @@ func TestClientIP_Resolution(t *testing.T) {
 	reqForwardedMulti.Header.Set("X-Forwarded-For", "198.51.100.11, 10.0.0.1")
 	assert.Equal(t, "198.51.100.11", clientIP(reqForwardedMulti))
 
+	middleware.TrustProxy = false
 	reqRemote := httptest.NewRequest(http.MethodGet, "/", nil)
 	reqRemote.RemoteAddr = "203.0.113.5:4321"
-	assert.Equal(t, "203.0.113.5:4321", clientIP(reqRemote))
+	assert.Equal(t, "203.0.113.5", clientIP(reqRemote))
+
+	reqSpoofed := httptest.NewRequest(http.MethodGet, "/", nil)
+	reqSpoofed.RemoteAddr = "192.0.2.20:8080"
+	reqSpoofed.Header.Set("X-Forwarded-For", "198.51.100.99")
+	assert.Equal(t, "192.0.2.20", clientIP(reqSpoofed))
 }
 
 func TestSendEmailVerification_NilAndConfiguredService(t *testing.T) {
@@ -321,8 +331,9 @@ func TestAuthHandler_Login_GivenInvalidPassword_WhenAttempted_ThenSecurityAuditL
 
 	h := &AuthHandler{userRepo: userRepo, authService: authService}
 	logger := &authSecurityAuditLogger{}
+	originalLogger := middleware.GetSecurityAuditLogger()
 	middleware.SetSecurityAuditLogger(logger)
-	defer middleware.SetSecurityAuditLogger(nil)
+	defer middleware.SetSecurityAuditLogger(originalLogger)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(`{"email":"audit@test.dev","password":"WrongPass1!"}`))
 	rr := httptest.NewRecorder()
