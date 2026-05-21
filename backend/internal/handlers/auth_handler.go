@@ -42,8 +42,9 @@ const pwnedPasswordRangeURL = "https://api.pwnedpasswords.com/range"
 type passwordBreachCheckFunc func(ctx context.Context, password string) (bool, error)
 
 // clientIP returns the real client IP address.
-// It only trusts X-Forwarded-For when middleware.TrustProxy is set, preventing
-// IP spoofing in audit logs. Always strips the port from RemoteAddr.
+// It trusts X-Forwarded-For only when middleware.TrustProxy is set, using the
+// first IP when present, and otherwise falls back to r.RemoteAddr after stripping
+// any port.
 func clientIP(r *http.Request) string {
 	if middleware.TrustProxy {
 		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
