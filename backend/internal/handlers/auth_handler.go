@@ -37,6 +37,10 @@ import (
 
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 
+const pwnedPasswordRangeURL = "https://api.pwnedpasswords.com/range"
+
+type passwordBreachCheckFunc func(ctx context.Context, password string) (bool, error)
+
 // clientIP returns the real client IP address.
 // It only trusts X-Forwarded-For when middleware.TrustProxy is set, preventing
 // IP spoofing in audit logs. Always strips the port from RemoteAddr.
