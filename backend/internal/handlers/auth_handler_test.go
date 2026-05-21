@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -26,6 +27,41 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/repository"
 	"github.com/tiagofur/solennix-backend/internal/services"
 )
+
+type authSecurityAuditLogger struct {
+	mu   sync.Mutex
+	logs []*models.AuditLog
+}
+
+func (l *authSecurityAuditLogger) Create(_ context.Context, log *models.AuditLog) error {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.logs = append(l.logs, log)
+	return nil
+}
+
+func (l *authSecurityAuditLogger) snapshot() []*models.AuditLog {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	out := make([]*models.AuditLog, len(l.logs))
+	copy(out, l.logs)
+	return out
+}
+
+func waitForAuthAuditLogs(t *testing.T, snapshot func() []*models.AuditLog, minCount int) []*models.AuditLog {
+	t.Helper()
+
+	deadline := time.Now().Add(500 * time.Millisecond)
+	for time.Now().Before(deadline) {
+		logs := snapshot()
+		if len(logs) >= minCount {
+			return logs
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+
+	return snapshot()
+}
 
 func TestAuthHandlerValidationPaths(t *testing.T) {
 	h := &AuthHandler{
@@ -306,6 +342,10 @@ func TestAcceptTeamInvite_ValidationFailures(t *testing.T) {
 }
 
 func TestClientIP_Resolution(t *testing.T) {
+	originalTrustProxy := middleware.TrustProxy
+	defer func() { middleware.TrustProxy = originalTrustProxy }()
+
+	middleware.TrustProxy = true
 	reqForwardedSingle := httptest.NewRequest(http.MethodGet, "/", nil)
 	reqForwardedSingle.Header.Set("X-Forwarded-For", "198.51.100.10")
 	assert.Equal(t, "198.51.100.10", clientIP(reqForwardedSingle))
@@ -314,9 +354,15 @@ func TestClientIP_Resolution(t *testing.T) {
 	reqForwardedMulti.Header.Set("X-Forwarded-For", "198.51.100.11, 10.0.0.1")
 	assert.Equal(t, "198.51.100.11", clientIP(reqForwardedMulti))
 
+	middleware.TrustProxy = false
 	reqRemote := httptest.NewRequest(http.MethodGet, "/", nil)
 	reqRemote.RemoteAddr = "203.0.113.5:4321"
-	assert.Equal(t, "203.0.113.5:4321", clientIP(reqRemote))
+	assert.Equal(t, "203.0.113.5", clientIP(reqRemote))
+
+	reqSpoofed := httptest.NewRequest(http.MethodGet, "/", nil)
+	reqSpoofed.RemoteAddr = "192.0.2.20:8080"
+	reqSpoofed.Header.Set("X-Forwarded-For", "198.51.100.99")
+	assert.Equal(t, "192.0.2.20", clientIP(reqSpoofed))
 }
 
 func TestSendEmailVerification_NilAndConfiguredService(t *testing.T) {
@@ -350,6 +396,63 @@ func TestAuthHandlerRefreshTokenSuccess(t *testing.T) {
 	if !strings.Contains(rr.Body.String(), "access_token") {
 		t.Fatalf("body = %q, expected access_token", rr.Body.String())
 	}
+}
+
+func TestAuthHandler_Login_GivenInvalidPassword_WhenAttempted_ThenSecurityAuditLogged(t *testing.T) {
+	authService := services.NewAuthService("test-secret", 1)
+	userRepo := new(MockFullUserRepo)
+
+	hash, err := authService.HashPassword("StrongPass1!")
+	if err != nil {
+		t.Fatalf("hash password: %v", err)
+	}
+
+	now := time.Now().UTC()
+	user := &models.User{
+		ID:              uuid.New(),
+		Email:           "audit@test.dev",
+		PasswordHash:    hash,
+		Name:            "Audit User",
+		EmailVerifiedAt: &now,
+	}
+
+	userRepo.On("GetByEmail", mock.Anything, "audit@test.dev").Return(user, nil).Once()
+
+	h := &AuthHandler{userRepo: userRepo, authService: authService}
+	logger := &authSecurityAuditLogger{}
+	originalLogger := middleware.GetSecurityAuditLogger()
+	middleware.SetSecurityAuditLogger(logger)
+	defer middleware.SetSecurityAuditLogger(originalLogger)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(`{"email":"audit@test.dev","password":"WrongPass1!"}`))
+	rr := httptest.NewRecorder()
+
+	h.Login(rr, req)
+
+	if rr.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want %d", rr.Code, http.StatusUnauthorized)
+	}
+
+	logs := waitForAuthAuditLogs(t, logger.snapshot, 1)
+	if len(logs) == 0 {
+		t.Fatal("expected security audit log for invalid password")
+	}
+
+	var found bool
+	for _, entry := range logs {
+		if entry.Action == "auth_failed" && entry.ResourceType == "session" && entry.UserID == user.ID {
+			if entry.Details != nil && strings.Contains(*entry.Details, "invalid_password") {
+				found = true
+				break
+			}
+		}
+	}
+
+	if !found {
+		t.Fatalf("expected auth_failed security audit entry with invalid_password reason, got: %+v", logs)
+	}
+
+	userRepo.AssertExpectations(t)
 }
 
 func TestAuthHandlerErrorBranchesWithClosedRepo(t *testing.T) {

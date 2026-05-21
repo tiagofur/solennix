@@ -111,6 +111,7 @@ func main() {
 
 	// Set persistent token blacklist (replaces in-memory sync.Map)
 	mw.SetTokenBlacklist(revokedTokenRepo)
+	mw.SetSecurityAuditLogger(auditRepo)
 
 	// Initialize notification service
 	notificationService := services.NewNotificationService(pushService, deviceRepo, pool, emailService)
