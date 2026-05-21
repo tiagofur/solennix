@@ -1,7 +1,11 @@
 package handlers
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -9,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/storage"
@@ -16,9 +21,10 @@ import (
 
 // UploadHandler handles image uploads, organizing files by user ID.
 type UploadHandler struct {
-	uploadDir string
-	userRepo  UserRepository
-	storage   storage.Provider // optional, falls back to legacy disk write
+	uploadDir         string
+	userRepo          UserRepository
+	storage           storage.Provider // optional, falls back to legacy disk write
+	presignSigningKey []byte
 }
 
 type presignImageRequest struct {
@@ -27,7 +33,18 @@ type presignImageRequest struct {
 }
 
 type completePresignedUploadRequest struct {
+	ObjectKey   string `json:"object_key"`
+	UploadToken string `json:"upload_token"`
+}
+
+const presignedUploadTokenTTL = 15 * time.Minute
+
+var errPresignSigningKeyNotConfigured = errors.New("presign signing key is not configured")
+
+type presignedUploadTokenPayload struct {
+	UserID    string `json:"user_id"`
 	ObjectKey string `json:"object_key"`
+	ExpiresAt int64  `json:"expires_at"`
 }
 
 func NewUploadHandler(uploadDir string, userRepo UserRepository) *UploadHandler {
@@ -45,6 +62,63 @@ func NewUploadHandler(uploadDir string, userRepo UserRepository) *UploadHandler 
 // SetStorageProvider configures the file storage backend.
 func (h *UploadHandler) SetStorageProvider(p storage.Provider) {
 	h.storage = p
+}
+
+// SetPresignSigningKey configures the HMAC key used to bind presigned uploads
+// to a server-issued completion token.
+func (h *UploadHandler) SetPresignSigningKey(key string) {
+	h.presignSigningKey = []byte(strings.TrimSpace(key))
+}
+
+func (h *UploadHandler) issuePresignedUploadToken(userID, objectKey string, expiresAt time.Time) (string, error) {
+	if len(h.presignSigningKey) == 0 {
+		return "", errPresignSigningKeyNotConfigured
+	}
+	payloadJSON, err := json.Marshal(presignedUploadTokenPayload{
+		UserID:    userID,
+		ObjectKey: objectKey,
+		ExpiresAt: expiresAt.Unix(),
+	})
+	if err != nil {
+		return "", fmt.Errorf("marshal upload token payload: %w", err)
+	}
+	mac := hmac.New(sha256.New, h.presignSigningKey)
+	mac.Write(payloadJSON)
+	signature := base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
+	encodedPayload := base64.RawURLEncoding.EncodeToString(payloadJSON)
+	return encodedPayload + "." + signature, nil
+}
+
+func (h *UploadHandler) verifyPresignedUploadToken(userID, objectKey, token string, now time.Time) error {
+	if len(h.presignSigningKey) == 0 {
+		return errPresignSigningKeyNotConfigured
+	}
+	parts := strings.Split(token, ".")
+	if len(parts) != 2 {
+		return fmt.Errorf("invalid upload token")
+	}
+	payloadBytes, err := base64.RawURLEncoding.DecodeString(parts[0])
+	if err != nil {
+		return fmt.Errorf("invalid upload token")
+	}
+	mac := hmac.New(sha256.New, h.presignSigningKey)
+	mac.Write(payloadBytes)
+	expected := mac.Sum(nil)
+	provided, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil || !hmac.Equal(provided, expected) {
+		return fmt.Errorf("invalid upload token")
+	}
+	var payload presignedUploadTokenPayload
+	if err := json.Unmarshal(payloadBytes, &payload); err != nil {
+		return fmt.Errorf("invalid upload token")
+	}
+	if payload.UserID != userID || payload.ObjectKey != objectKey {
+		return fmt.Errorf("upload token does not match object key")
+	}
+	if now.After(time.Unix(payload.ExpiresAt, 0)) {
+		return fmt.Errorf("upload token expired")
+	}
+	return nil
 }
 
 // maxUploadsForPlan returns the maximum number of uploads allowed per user based on plan.
@@ -194,12 +268,23 @@ func (h *UploadHandler) PresignImage(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "Failed to create presigned upload")
 		return
 	}
+	expiresIn := time.Duration(result.ExpiresInSeconds) * time.Second
+	if expiresIn <= 0 {
+		expiresIn = presignedUploadTokenTTL
+	}
+	uploadToken, err := h.issuePresignedUploadToken(userID.String(), result.ObjectKey, time.Now().Add(expiresIn))
+	if err != nil {
+		slog.Error("Failed to sign presigned upload token", "error", err)
+		writeError(w, http.StatusInternalServerError, "Failed to create presigned upload")
+		return
+	}
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"upload_url":         result.UploadURL,
 		"method":             result.Method,
 		"headers":            result.Headers,
 		"object_key":         result.ObjectKey,
+		"upload_token":       uploadToken,
 		"expires_in_seconds": result.ExpiresInSeconds,
 		"content_type":       result.ContentType,
 	})
@@ -219,10 +304,25 @@ func (h *UploadHandler) CompletePresignedUpload(w http.ResponseWriter, r *http.R
 		writeError(w, http.StatusBadRequest, "object_key is required")
 		return
 	}
+	if strings.TrimSpace(req.UploadToken) == "" {
+		writeError(w, http.StatusBadRequest, "upload_token is required")
+		return
+	}
+	token := strings.TrimSpace(req.UploadToken)
 
 	presignProvider, ok := h.storage.(storage.PresignCapableProvider)
 	if !ok {
 		writeError(w, http.StatusBadRequest, "Presigned uploads are available only with S3 storage provider")
+		return
+	}
+
+	if err := h.verifyPresignedUploadToken(userID.String(), req.ObjectKey, token, time.Now()); err != nil {
+		if errors.Is(err, errPresignSigningKeyNotConfigured) {
+			slog.Error("Failed to verify presigned upload token", "error", err)
+			writeError(w, http.StatusInternalServerError, "Failed to verify upload token")
+			return
+		}
+		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
