@@ -25,6 +25,13 @@ status: active
 **Fecha:** Mayo 2026
 **Version:** 1.7
 
+> [!success] 2026-05-21 — Backend: baseline inicial de benchmarks críticos (issue #385)
+> Se agregó cobertura de benchmark para rutas críticas y lineamientos de tracking de baseline.
+> - **Handlers:** benchmark de `SearchHandler.SearchAll` y `UploadHandler.UploadImage`.
+> - **Repository:** benchmark de `ClientRepo.Search` con ejecución opt-in vía `BENCH_DB_DSN`.
+> - **Higiene de benchmark:** seed alineado al schema actual de `clients`, limpieza post-run por `user_id` y stubs livianos en handlers para evitar sesgo por `testify/mock`.
+> - **Docs:** baseline y comandos documentados en `docs/Backend/Benchmark Baseline.md`.
+
 > [!success] 2026-05-20 — Contrato default backend para usuarios Free
 > Se corrigió la generación de PDF de contrato para usuarios nuevos Free cuando `contract_template` está vacío.
 > - **Backend PDF:** `DefaultContractTemplate` queda como fallback efectivo en servidor; ya no depende de que el usuario tenga una plantilla guardada en DB.
