@@ -14,13 +14,36 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/mock"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
 	"github.com/tiagofur/solennix-backend/internal/storage"
 )
 
 type benchmarkStorageProvider struct{}
+
+type benchmarkClientSearchRepo struct{ items []models.Client }
+
+func (r benchmarkClientSearchRepo) Search(_ context.Context, _ uuid.UUID, _ string) ([]models.Client, error) {
+	return r.items, nil
+}
+
+type benchmarkProductSearchRepo struct{ items []models.Product }
+
+func (r benchmarkProductSearchRepo) Search(_ context.Context, _ uuid.UUID, _ string) ([]models.Product, error) {
+	return r.items, nil
+}
+
+type benchmarkInventorySearchRepo struct{ items []models.InventoryItem }
+
+func (r benchmarkInventorySearchRepo) Search(_ context.Context, _ uuid.UUID, _ string) ([]models.InventoryItem, error) {
+	return r.items, nil
+}
+
+type benchmarkEventSearchRepo struct{ items []models.Event }
+
+func (r benchmarkEventSearchRepo) Search(_ context.Context, _ uuid.UUID, _ string) ([]models.Event, error) {
+	return r.items, nil
+}
 
 func (b *benchmarkStorageProvider) Save(userID, originalFilename string, data io.Reader) (*storage.FileResult, error) {
 	return &storage.FileResult{
@@ -71,11 +94,6 @@ func buildBenchmarkMultipartPNG(tb testing.TB) ([]byte, string) {
 }
 
 func BenchmarkSearchHandler_SearchAll(b *testing.B) {
-	mockClients := new(MockClientRepo)
-	mockProducts := new(MockProductRepo)
-	mockInventory := new(MockInventoryRepo)
-	mockEvents := new(MockFullEventRepo)
-
 	userID := uuid.New()
 	query := "wedding"
 
@@ -96,12 +114,12 @@ func BenchmarkSearchHandler_SearchAll(b *testing.B) {
 		events[i] = models.Event{ID: uuid.New(), ServiceType: "Catering"}
 	}
 
-	mockClients.On("Search", mock.Anything, userID, query).Return(clients, nil)
-	mockProducts.On("Search", mock.Anything, userID, query).Return(products, nil)
-	mockInventory.On("Search", mock.Anything, userID, query).Return(inventory, nil)
-	mockEvents.On("Search", mock.Anything, userID, query).Return(events, nil)
-
-	h := NewSearchHandler(mockClients, mockProducts, mockInventory, mockEvents)
+	h := NewSearchHandler(
+		benchmarkClientSearchRepo{items: clients},
+		benchmarkProductSearchRepo{items: products},
+		benchmarkInventorySearchRepo{items: inventory},
+		benchmarkEventSearchRepo{items: events},
+	)
 
 	b.ReportAllocs()
 	b.ResetTimer()

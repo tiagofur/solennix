@@ -31,12 +31,18 @@ func seedBenchmarkClients(b *testing.B, pool *pgxpool.Pool, userID uuid.UUID, co
 
 	for i := 0; i < count; i++ {
 		_, err := pool.Exec(context.Background(),
-			`INSERT INTO clients (id, user_id, name, email, phone, event_date, created_at) VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
+			`INSERT INTO clients (id, user_id, name, email, phone, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
 			uuid.New(), userID, fmt.Sprintf("Benchmark Client %d", i), fmt.Sprintf("bench-%d@example.com", i), "555-1000")
 		if err != nil {
 			b.Fatalf("seed client %d failed: %v", i, err)
 		}
 	}
+
+	b.Cleanup(func() {
+		if _, err := pool.Exec(context.Background(), `DELETE FROM clients WHERE user_id = $1`, userID); err != nil {
+			b.Fatalf("cleanup seeded clients failed: %v", err)
+		}
+	})
 }
 
 func BenchmarkClientRepo_Search(b *testing.B) {
