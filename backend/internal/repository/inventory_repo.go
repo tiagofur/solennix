@@ -127,12 +127,18 @@ func (r *InventoryRepo) Search(ctx context.Context, userID uuid.UUID, query stri
 		FROM inventory
 		WHERE user_id = $1
 		AND (
+			ingredient_name % $2 OR
+			unit % $2 OR
+			type % $2 OR
 			ingredient_name ILIKE '%' || $2 || '%' OR
 			unit ILIKE '%' || $2 || '%' OR
-			type ILIKE '%' || $2 || '%' OR
-			similarity(ingredient_name, $2) > 0.3
+			type ILIKE '%' || $2 || '%'
 		)
-		ORDER BY similarity(ingredient_name, $2) DESC, last_updated DESC
+		ORDER BY GREATEST(
+			similarity(COALESCE(ingredient_name, ''), $2),
+			similarity(COALESCE(unit, ''), $2),
+			similarity(COALESCE(type, ''), $2)
+		) DESC, last_updated DESC
 		LIMIT 10`
 
 	rows, err := r.pool.Query(ctx, sqlQuery, userID, query)

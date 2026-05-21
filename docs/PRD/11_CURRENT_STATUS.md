@@ -730,6 +730,7 @@ status: active
 - ✅ 045: Product staff_team_id (Personal Ola 3)
 - ✅ 046: Event public link tiers + shape gating (Tier Enforcement)
 - ✅ 047: Payment submissions table (Pagos Phase 1)
+- ✅ 057: Indexed search v2 (pg_trgm por columna) y retiro de índices heredados `idx_*_search` para evitar duplicación de mantenimiento/planificación
 
 ### MVP Contract Freeze — Cerrado 2026-04-10 ✅
 

@@ -1137,12 +1137,18 @@ func (r *EventRepo) Search(ctx context.Context, userID uuid.UUID, query string) 
 		LEFT JOIN clients c ON e.client_id = c.id
 		WHERE e.user_id = $1
 		AND (
+			e.service_type %% $2 OR
+			e.location %% $2 OR
+			c.name %% $2 OR
 			e.service_type ILIKE '%%' || $2 || '%%' OR
 			e.location ILIKE '%%' || $2 || '%%' OR
-			c.name ILIKE '%%' || $2 || '%%' OR
-			similarity(coalesce(c.name, ''), $2) > 0.3
+			c.name ILIKE '%%' || $2 || '%%'
 		)
-		ORDER BY similarity(coalesce(c.name, ''), $2) DESC, e.event_date DESC
+		ORDER BY GREATEST(
+			similarity(COALESCE(c.name, ''), $2),
+			similarity(COALESCE(e.service_type, ''), $2),
+			similarity(COALESCE(e.location, ''), $2)
+		) DESC, e.event_date DESC
 		LIMIT 10`, eventSelectFields)
 
 	rows, err := r.pool.Query(ctx, sqlQuery, userID, query)
