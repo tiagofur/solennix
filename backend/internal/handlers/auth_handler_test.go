@@ -2,10 +2,13 @@ package handlers
 
 import (
 	"context"
+	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -63,7 +66,7 @@ func TestAuthHandlerValidationPaths(t *testing.T) {
 			body:       `{"email":"a@test.dev","password":"short","name":"A"}`,
 			call:       (*AuthHandler).Register,
 			wantStatus: http.StatusBadRequest,
-			wantBody:   "Password must be at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one digit",
+			wantBody:   "Password must be at least 8 characters and contain at least one uppercase letter, one lowercase letter, one digit, and one symbol",
 		},
 		{
 			name:       "GivenInvalidLoginBody_WhenLogin_ThenBadRequest",
@@ -148,6 +151,77 @@ func TestAuthHandlerValidationPaths(t *testing.T) {
 	}
 }
 
+func TestRegister_GivenBreachedPassword_WhenBreachCheckEnabled_ThenBadRequest(t *testing.T) {
+	h := &AuthHandler{
+		authService: services.NewAuthService("test-secret", 1),
+		cfg:         &config.Config{PasswordBreachCheckEnabled: true},
+		passwordBreachCheck: func(context.Context, string) (bool, error) {
+			return true, nil
+		},
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(`{"email":"a@test.dev","password":"ValidPass1!","name":"A"}`))
+	rr := httptest.NewRecorder()
+
+	h.Register(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "known data breaches")
+}
+
+func TestValidatePasswordStrength_GivenNoSymbol_WhenValidating_ThenReturnsError(t *testing.T) {
+	err := validatePasswordStrength("ValidPass1")
+	assert.Error(t, err)
+	assert.Equal(t, "auth.password_strength", err.Error())
+}
+
+func TestValidatePasswordPolicy_GivenBreachCheckError_WhenValidating_ThenFailOpen(t *testing.T) {
+	h := &AuthHandler{
+		cfg: &config.Config{PasswordBreachCheckEnabled: true},
+		passwordBreachCheck: func(context.Context, string) (bool, error) {
+			return false, errors.New("hibp timeout")
+		},
+	}
+
+	err := h.validatePasswordPolicy(context.Background(), "ValidPass1!")
+	assert.NoError(t, err)
+}
+
+func TestCheckPasswordBreachedWithClient(t *testing.T) {
+	t.Run("GivenPasswordSuffixPresent_WhenChecking_ThenReturnsBreached", func(t *testing.T) {
+		password := "Password1!"
+		hash := sha1HexUpper(password)
+		suffix := hash[5:]
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			_, _ = io.WriteString(w, suffix+":42\nAAAAA:1\n")
+		}))
+		defer ts.Close()
+
+		breached, err := checkPasswordBreachedWithClient(context.Background(), password, ts.URL, ts.Client())
+		assert.NoError(t, err)
+		assert.True(t, breached)
+	})
+
+	t.Run("GivenPasswordSuffixMissing_WhenChecking_ThenReturnsNotBreached", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			_, _ = io.WriteString(w, "AAAAA:1\nBBBBB:2\n")
+		}))
+		defer ts.Close()
+
+		breached, err := checkPasswordBreachedWithClient(context.Background(), "ValidPass1!", ts.URL, ts.Client())
+		assert.NoError(t, err)
+		assert.False(t, breached)
+	})
+}
+
+func sha1HexUpper(v string) string {
+	h := sha1.Sum([]byte(v))
+	return strings.ToUpper(hex.EncodeToString(h[:]))
+}
+
 func TestAcceptTeamInvite_GivenInvalidBody_WhenAccept_ThenBadRequest(t *testing.T) {
 	h := &AuthHandler{authService: services.NewAuthService("test-secret", 1)}
 	req := httptest.NewRequest(http.MethodPost, "/api/auth/team-invite/accept", strings.NewReader(`{"token":}`))
@@ -170,7 +244,7 @@ func TestAcceptTeamInvite_GivenValidToken_WhenAccepted_ThenReturnsTokens(t *test
 	user := &models.User{ID: uuid.New(), Email: "team@example.com", Name: "Team User", Role: "team_member", Plan: "business"}
 	userRepo.On("AcceptStaffInvite", mock.Anything, tokenHash, mock.AnythingOfType("string")).Return(user, nil)
 
-	req := httptest.NewRequest(http.MethodPost, "/api/auth/team-invite/accept", strings.NewReader(`{"token":"`+token+`","password":"StrongPass123"}`))
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/team-invite/accept", strings.NewReader(`{"token":"`+token+`","password":"StrongPass123!"}`))
 	rr := httptest.NewRecorder()
 
 	h.AcceptTeamInvite(rr, req)
@@ -204,7 +278,7 @@ func TestAcceptTeamInvite_ErrorMappings(t *testing.T) {
 			tokenHash := hashToken(token)
 			userRepo.On("AcceptStaffInvite", mock.Anything, tokenHash, mock.AnythingOfType("string")).Return((*models.User)(nil), tt.repoErr)
 
-			req := httptest.NewRequest(http.MethodPost, "/api/auth/team-invite/accept", strings.NewReader(`{"token":"`+token+`","password":"StrongPass123"}`))
+			req := httptest.NewRequest(http.MethodPost, "/api/auth/team-invite/accept", strings.NewReader(`{"token":"`+token+`","password":"StrongPass123!"}`))
 			rr := httptest.NewRecorder()
 
 			h.AcceptTeamInvite(rr, req)
@@ -291,7 +365,7 @@ func TestAuthHandlerErrorBranchesWithClosedRepo(t *testing.T) {
 	}
 
 	t.Run("RegisterCreateError", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(`{"email":"err@test.dev","password":"Test1234","name":"Err"}`))
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(`{"email":"err@test.dev","password":"Test1234!","name":"Err"}`))
 		rr := httptest.NewRecorder()
 		h.Register(rr, req)
 		if rr.Code != http.StatusInternalServerError {
@@ -300,7 +374,7 @@ func TestAuthHandlerErrorBranchesWithClosedRepo(t *testing.T) {
 	})
 
 	t.Run("RegisterHashError", func(t *testing.T) {
-		longPassword := "Aa1" + strings.Repeat("x", 77)
+		longPassword := "Aa1!" + strings.Repeat("x", 77)
 		req := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(`{"email":"hash@test.dev","password":"`+longPassword+`","name":"Err"}`))
 		rr := httptest.NewRecorder()
 		h.Register(rr, req)
@@ -432,7 +506,7 @@ func TestAuthHandlerResetPassword(t *testing.T) {
 	})
 
 	t.Run("InvalidToken", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/api/auth/reset-password", strings.NewReader(`{"token":"invalid-token","new_password":"Test1234"}`))
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/reset-password", strings.NewReader(`{"token":"invalid-token","new_password":"Test1234!"}`))
 		rr := httptest.NewRecorder()
 		h.ResetPassword(rr, req)
 		if rr.Code != http.StatusUnauthorized {
@@ -455,7 +529,7 @@ func TestAuthHandlerResetPassword(t *testing.T) {
 		// Generate a valid reset token
 		token, _ := hh.authService.GenerateResetToken(uuid.New(), "test@test.dev")
 
-		req := httptest.NewRequest(http.MethodPost, "/api/auth/reset-password", strings.NewReader(`{"token":"`+token+`","new_password":"Test1234"}`))
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/reset-password", strings.NewReader(`{"token":"`+token+`","new_password":"Test1234!"}`))
 		rr := httptest.NewRecorder()
 		hh.ResetPassword(rr, req)
 		if rr.Code != http.StatusUnauthorized {
@@ -465,7 +539,7 @@ func TestAuthHandlerResetPassword(t *testing.T) {
 
 	t.Run("NonResetToken", func(t *testing.T) {
 		pair, _ := h.authService.GenerateTokenPair(uuid.New(), "test@test.dev")
-		req := httptest.NewRequest(http.MethodPost, "/api/auth/reset-password", strings.NewReader(`{"token":"`+pair.AccessToken+`","new_password":"Test1234"}`))
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/reset-password", strings.NewReader(`{"token":"`+pair.AccessToken+`","new_password":"Test1234!"}`))
 		rr := httptest.NewRecorder()
 		h.ResetPassword(rr, req)
 		if rr.Code != http.StatusUnauthorized {
@@ -537,7 +611,7 @@ func TestAuthHandler_Register_HappyPaths(t *testing.T) {
 			user.ID = uuid.New()
 		}).Return(nil)
 
-		body := `{"email":"new@test.dev","password":"Test1234","name":"New User"}`
+		body := `{"email":"new@test.dev","password":"Test1234!","name":"New User"}`
 		req := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(body))
 		rr := httptest.NewRecorder()
 		h.Register(rr, req)
@@ -569,7 +643,7 @@ func TestAuthHandler_Register_HappyPaths(t *testing.T) {
 		existingUser := &models.User{ID: uuid.New(), Email: "existing@test.dev"}
 		mockRepo.On("GetByEmail", mock.Anything, "existing@test.dev").Return(existingUser, nil)
 
-		body := `{"email":"existing@test.dev","password":"Test1234","name":"Test User"}`
+		body := `{"email":"existing@test.dev","password":"Test1234!","name":"Test User"}`
 		req := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(body))
 		rr := httptest.NewRecorder()
 		h.Register(rr, req)
@@ -589,7 +663,7 @@ func TestAuthHandler_Register_HappyPaths(t *testing.T) {
 		mockRepo.On("GetByEmail", mock.Anything, "fail@test.dev").Return(nil, fmt.Errorf("not found"))
 		mockRepo.On("Create", mock.Anything, mock.AnythingOfType("*models.User")).Return(fmt.Errorf("db error"))
 
-		body := `{"email":"fail@test.dev","password":"Test1234","name":"Fail User"}`
+		body := `{"email":"fail@test.dev","password":"Test1234!","name":"Fail User"}`
 		req := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(body))
 		rr := httptest.NewRecorder()
 		h.Register(rr, req)
@@ -1211,7 +1285,7 @@ func TestAuthHandler_ResetPassword_Paths(t *testing.T) {
 		mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 		mockRepo.On("UpdatePassword", mock.Anything, userID, mock.AnythingOfType("string")).Return(nil)
 
-		body := fmt.Sprintf(`{"token":"%s","new_password":"NewPass1234"}`, token)
+		body := fmt.Sprintf(`{"token":"%s","new_password":"NewPass1234!"}`, token)
 		req := httptest.NewRequest(http.MethodPost, "/api/auth/reset-password", strings.NewReader(body))
 		rr := httptest.NewRecorder()
 		h.ResetPassword(rr, req)
@@ -1224,7 +1298,7 @@ func TestAuthHandler_ResetPassword_Paths(t *testing.T) {
 	t.Run("InvalidToken_Returns401", func(t *testing.T) {
 		h := &AuthHandler{authService: authService}
 
-		body := `{"token":"invalid-token","new_password":"Test1234"}`
+		body := `{"token":"invalid-token","new_password":"Test1234!"}`
 		req := httptest.NewRequest(http.MethodPost, "/api/auth/reset-password", strings.NewReader(body))
 		rr := httptest.NewRecorder()
 		h.ResetPassword(rr, req)
@@ -1242,7 +1316,7 @@ func TestAuthHandler_ResetPassword_Paths(t *testing.T) {
 		h.ResetPassword(rr, req)
 
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		assert.Contains(t, rr.Body.String(), "Password must be at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one digit")
+		assert.Contains(t, rr.Body.String(), "Password must be at least 8 characters and contain at least one uppercase letter, one lowercase letter, one digit, and one symbol")
 	})
 
 	t.Run("UserNotFoundFromToken_Returns404", func(t *testing.T) {
@@ -1256,7 +1330,7 @@ func TestAuthHandler_ResetPassword_Paths(t *testing.T) {
 		token, _ := authService.GenerateResetToken(userID, "missing@test.dev")
 		mockRepo.On("GetByID", mock.Anything, userID).Return(nil, fmt.Errorf("not found"))
 
-		body := fmt.Sprintf(`{"token":"%s","new_password":"Test1234"}`, token)
+		body := fmt.Sprintf(`{"token":"%s","new_password":"Test1234!"}`, token)
 		req := httptest.NewRequest(http.MethodPost, "/api/auth/reset-password", strings.NewReader(body))
 		rr := httptest.NewRecorder()
 		h.ResetPassword(rr, req)
@@ -1279,7 +1353,7 @@ func TestAuthHandler_ResetPassword_Paths(t *testing.T) {
 		mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 		mockRepo.On("UpdatePassword", mock.Anything, userID, mock.AnythingOfType("string")).Return(fmt.Errorf("db error"))
 
-		body := fmt.Sprintf(`{"token":"%s","new_password":"Test1234"}`, token)
+		body := fmt.Sprintf(`{"token":"%s","new_password":"Test1234!"}`, token)
 		req := httptest.NewRequest(http.MethodPost, "/api/auth/reset-password", strings.NewReader(body))
 		rr := httptest.NewRecorder()
 		h.ResetPassword(rr, req)
@@ -1308,7 +1382,7 @@ func TestAuthHandler_Register_GenerateTokenError(t *testing.T) {
 		user.ID = uuid.New()
 	}).Return(nil)
 
-	body := `{"email":"test@test.dev","password":"Test1234","name":"Test User"}`
+	body := `{"email":"test@test.dev","password":"Test1234!","name":"Test User"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(body))
 	rr := httptest.NewRecorder()
 	h.Register(rr, req)
@@ -1430,8 +1504,8 @@ func TestAuthHandler_ResetPassword_HashPasswordError(t *testing.T) {
 	user := &models.User{ID: userID, Email: "hashfail@test.dev"}
 	mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 
-	// Password > 72 bytes triggers bcrypt error (must pass validation: 8+ chars, upper, lower, digit, <= 128)
-	longPassword := "Aa1" + strings.Repeat("x", 77)
+	// Password > 72 bytes triggers bcrypt error (must pass validation: 8+ chars, upper, lower, digit, symbol, <= 128)
+	longPassword := "Aa1!" + strings.Repeat("x", 77)
 	body := fmt.Sprintf(`{"token":"%s","new_password":"%s"}`, token, longPassword)
 	req := httptest.NewRequest(http.MethodPost, "/api/auth/reset-password", strings.NewReader(body))
 	rr := httptest.NewRecorder()
@@ -1934,7 +2008,7 @@ func TestAuthHandler_Register_EmailAndNameTrimming(t *testing.T) {
 		user.ID = uuid.New()
 	}).Return(nil)
 
-	body := `{"email":"  trimreg@test.dev  ","password":"Test1234","name":"  Trim Name  "}`
+	body := `{"email":"  trimreg@test.dev  ","password":"Test1234!","name":"  Trim Name  "}`
 	req := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(body))
 	rr := httptest.NewRecorder()
 	h.Register(rr, req)
@@ -2343,7 +2417,7 @@ func TestAuthHandler_ChangePassword(t *testing.T) {
 		mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 		mockRepo.On("UpdatePassword", mock.Anything, userID, mock.AnythingOfType("string")).Return(nil)
 
-		body := `{"current_password":"OldPass123","new_password":"NewPass1234"}`
+		body := `{"current_password":"OldPass123","new_password":"NewPass1234!"}`
 		req := authedReq(userID, body)
 		rr := httptest.NewRecorder()
 		h.ChangePassword(rr, req)
@@ -2372,7 +2446,7 @@ func TestAuthHandler_ChangePassword(t *testing.T) {
 		h := &AuthHandler{userRepo: mockRepo, authService: authService}
 
 		userID := uuid.New()
-		body := `{"current_password":"","new_password":"NewPass1234"}`
+		body := `{"current_password":"","new_password":"NewPass1234!"}`
 		req := authedReq(userID, body)
 		rr := httptest.NewRecorder()
 		h.ChangePassword(rr, req)
@@ -2417,7 +2491,7 @@ func TestAuthHandler_ChangePassword(t *testing.T) {
 		userID := uuid.New()
 		mockRepo.On("GetByID", mock.Anything, userID).Return(nil, fmt.Errorf("not found"))
 
-		body := `{"current_password":"OldPass123","new_password":"NewPass1234"}`
+		body := `{"current_password":"OldPass123","new_password":"NewPass1234!"}`
 		req := authedReq(userID, body)
 		rr := httptest.NewRecorder()
 		h.ChangePassword(rr, req)
@@ -2436,7 +2510,7 @@ func TestAuthHandler_ChangePassword(t *testing.T) {
 
 		mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 
-		body := `{"current_password":"WrongPass123","new_password":"NewPass1234"}`
+		body := `{"current_password":"WrongPass123","new_password":"NewPass1234!"}`
 		req := authedReq(userID, body)
 		rr := httptest.NewRecorder()
 		h.ChangePassword(rr, req)
@@ -2465,7 +2539,7 @@ func TestAuthHandler_ChangePassword(t *testing.T) {
 		mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 		mockRepo.On("UpdatePassword", mock.Anything, userID, mock.AnythingOfType("string")).Return(fmt.Errorf("db connection lost"))
 
-		body := `{"current_password":"OldPass123","new_password":"NewPass1234"}`
+		body := `{"current_password":"OldPass123","new_password":"NewPass1234!"}`
 		req := authedReq(userID, body)
 		rr := httptest.NewRecorder()
 		h.ChangePassword(rr, req)

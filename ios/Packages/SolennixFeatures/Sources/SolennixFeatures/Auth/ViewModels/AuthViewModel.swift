@@ -121,7 +121,7 @@ public final class AuthViewModel {
             return
         }
         guard isPasswordComplex(password) else {
-            errorMessage = tr("auth.validation.password_min_8", "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número")
+            errorMessage = tr("auth.validation.password_min_8", "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo")
             return
         }
         guard password == confirmPassword else {
@@ -253,7 +253,7 @@ public final class AuthViewModel {
     @MainActor
     public func resetPassword(token: String) async {
         guard isPasswordComplex(password) else {
-            errorMessage = tr("auth.validation.password_min_8", "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número")
+            errorMessage = tr("auth.validation.password_min_8", "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo")
             return
         }
         guard password == confirmPassword else {
@@ -283,7 +283,7 @@ public final class AuthViewModel {
     @MainActor
     public func acceptTeamInvite(token: String) async {
         guard isPasswordComplex(password) else {
-            errorMessage = tr("auth.validation.password_min_8", "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número")
+            errorMessage = tr("auth.validation.password_min_8", "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo")
             return
         }
         guard password == confirmPassword else {
@@ -306,12 +306,13 @@ public final class AuthViewModel {
 
     // MARK: - Helpers
 
-    /// Checks password meets complexity requirements: 8+ chars, uppercase, lowercase, digit.
+    /// Checks password meets complexity requirements: 8+ chars, uppercase, lowercase, digit, symbol.
     private func isPasswordComplex(_ value: String) -> Bool {
         value.count >= 8
         && value.range(of: "[A-Z]", options: .regularExpression) != nil
         && value.range(of: "[a-z]", options: .regularExpression) != nil
         && value.range(of: "[0-9]", options: .regularExpression) != nil
+        && value.range(of: "[^A-Za-z0-9]", options: .regularExpression) != nil
     }
 
     public func clearError() {

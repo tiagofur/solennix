@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"bufio"
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
@@ -35,6 +37,10 @@ import (
 )
 
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+
+const pwnedPasswordRangeURL = "https://api.pwnedpasswords.com/range"
+
+type passwordBreachCheckFunc func(ctx context.Context, password string) (bool, error)
 
 // clientIP returns the real client IP address, checking X-Forwarded-For first
 // (for clients behind a reverse proxy), then falling back to r.RemoteAddr.
@@ -73,7 +79,7 @@ func blacklistResetToken(token string, expiry time.Time) {
 }
 
 // validatePasswordStrength checks that a password meets minimum complexity requirements:
-// at least 8 characters, one uppercase letter, one lowercase letter, and one digit.
+// at least 8 characters, one uppercase letter, one lowercase letter, one digit, and one symbol.
 func validatePasswordStrength(password string) error {
 	if len(password) < 8 {
 		return fmt.Errorf("auth.password_strength")
@@ -81,7 +87,7 @@ func validatePasswordStrength(password string) error {
 	if len(password) > 128 {
 		return fmt.Errorf("auth.password_max_length")
 	}
-	var hasUpper, hasLower, hasDigit bool
+	var hasUpper, hasLower, hasDigit, hasSymbol bool
 	for _, ch := range password {
 		switch {
 		case unicode.IsUpper(ch):
@@ -90,12 +96,61 @@ func validatePasswordStrength(password string) error {
 			hasLower = true
 		case unicode.IsDigit(ch):
 			hasDigit = true
+		case unicode.IsPunct(ch) || unicode.IsSymbol(ch):
+			hasSymbol = true
 		}
 	}
-	if !hasUpper || !hasLower || !hasDigit {
+	if !hasUpper || !hasLower || !hasDigit || !hasSymbol {
 		return fmt.Errorf("auth.password_strength")
 	}
 	return nil
+}
+
+func checkPasswordBreachedWithClient(ctx context.Context, password, baseURL string, client *http.Client) (bool, error) {
+	hash := sha1.Sum([]byte(password))
+	hashHex := strings.ToUpper(hex.EncodeToString(hash[:]))
+	prefix := hashHex[:5]
+	suffix := hashHex[5:]
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(baseURL, "/")+"/"+prefix, nil)
+	if err != nil {
+		return false, err
+	}
+	req.Header.Set("Add-Padding", "true")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("breach check status: %d", resp.StatusCode)
+	}
+
+	scanner := bufio.NewScanner(resp.Body)
+	// HIBP range responses can be large; increase scanner buffer beyond default.
+	scanner.Buffer(make([]byte, 64*1024), 4*1024*1024)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		parts := strings.SplitN(line, ":", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		if strings.EqualFold(parts[0], suffix) {
+			return true, nil
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return false, err
+	}
+
+	return false, nil
 }
 
 func writeAuthI18nError(w http.ResponseWriter, r *http.Request, status int, key string) {
@@ -109,20 +164,55 @@ func isUniqueViolation(err error) bool {
 }
 
 type AuthHandler struct {
-	userRepo         FullUserRepository
-	authService      *services.AuthService
-	emailService     *services.EmailService
-	cfg              *config.Config
-	refreshTokenRepo RefreshTokenRepository
+	userRepo            FullUserRepository
+	authService         *services.AuthService
+	emailService        *services.EmailService
+	cfg                 *config.Config
+	refreshTokenRepo    RefreshTokenRepository
+	passwordBreachCheck passwordBreachCheckFunc
 }
 
 func NewAuthHandler(userRepo FullUserRepository, authService *services.AuthService, emailService *services.EmailService, cfg *config.Config) *AuthHandler {
-	return &AuthHandler{
+	h := &AuthHandler{
 		userRepo:     userRepo,
 		authService:  authService,
 		emailService: emailService,
 		cfg:          cfg,
 	}
+
+	if cfg != nil && cfg.PasswordBreachCheckEnabled {
+		timeoutSec := cfg.PasswordBreachCheckTimeoutSec
+		if timeoutSec <= 0 {
+			timeoutSec = 2
+		}
+		client := &http.Client{Timeout: time.Duration(timeoutSec) * time.Second}
+		h.passwordBreachCheck = func(ctx context.Context, password string) (bool, error) {
+			return checkPasswordBreachedWithClient(ctx, password, pwnedPasswordRangeURL, client)
+		}
+	}
+
+	return h
+}
+
+func (h *AuthHandler) validatePasswordPolicy(ctx context.Context, password string) error {
+	if err := validatePasswordStrength(password); err != nil {
+		return err
+	}
+	if h.passwordBreachCheck == nil {
+		return nil
+	}
+
+	breached, err := h.passwordBreachCheck(ctx, password)
+	if err != nil {
+		// Optional breach check: fail open to avoid outages blocking auth flows.
+		slog.Warn("password breach check failed", "error", err)
+		return nil
+	}
+	if breached {
+		return fmt.Errorf("auth.password_breached")
+	}
+
+	return nil
 }
 
 // SetRefreshTokenRepo configures refresh token rotation. If not set, old behavior is used.
@@ -231,7 +321,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validatePasswordStrength(req.Password); err != nil {
+	if err := h.validatePasswordPolicy(r.Context(), req.Password); err != nil {
 		writeAuthI18nError(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -687,7 +777,7 @@ func (h *AuthHandler) AcceptTeamInvite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validatePasswordStrength(req.Password); err != nil {
+	if err := h.validatePasswordPolicy(r.Context(), req.Password); err != nil {
 		writeAuthI18nError(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -764,7 +854,7 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validatePasswordStrength(req.NewPassword); err != nil {
+	if err := h.validatePasswordPolicy(r.Context(), req.NewPassword); err != nil {
 		writeAuthI18nError(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -838,7 +928,7 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validatePasswordStrength(req.NewPassword); err != nil {
+	if err := h.validatePasswordPolicy(r.Context(), req.NewPassword); err != nil {
 		writeAuthI18nError(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
