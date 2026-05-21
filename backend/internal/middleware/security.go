@@ -4,11 +4,14 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"log/slog"
 	"net/http"
 	"strings"
 )
 
 type cspNonceContextKey struct{}
+
+var cspNonceGenerator = generateCSPNonce
 
 // GetCSPNonce returns the request-scoped CSP nonce for HTML responses.
 // Handlers that render HTML can use this value in nonce="..." script tags.
@@ -25,9 +28,9 @@ func generateCSPNonce() (string, error) {
 	return base64.RawStdEncoding.EncodeToString(b), nil
 }
 
-func buildDefaultCSP() string {
+func buildCSP(scriptSrc string) string {
 	return "default-src 'self'; " +
-		"script-src 'self'; " +
+		scriptSrc + "; " +
 		"style-src 'self'; " +
 		"img-src 'self' data: https:; " +
 		"font-src 'self' data:; " +
@@ -37,16 +40,12 @@ func buildDefaultCSP() string {
 		"form-action 'self'"
 }
 
+func buildDefaultCSP() string {
+	return buildCSP("script-src 'self'")
+}
+
 func buildHTMLCSP(nonce string) string {
-	return "default-src 'self'; " +
-		"script-src 'self' 'nonce-" + nonce + "'; " +
-		"style-src 'self'; " +
-		"img-src 'self' data: https:; " +
-		"font-src 'self' data:; " +
-		"connect-src 'self'; " +
-		"frame-ancestors 'none'; " +
-		"base-uri 'self'; " +
-		"form-action 'self'"
+	return buildCSP("script-src 'self' 'nonce-" + nonce + "'")
 }
 
 // SecurityHeaders adds essential security headers to all HTTP responses.
@@ -82,11 +81,14 @@ func SecurityHeaders(next http.Handler) http.Handler {
 
 		csp := buildDefaultCSP()
 		if isHTML {
-			nonce, err := generateCSPNonce()
-			if err == nil {
-				r = r.WithContext(context.WithValue(r.Context(), cspNonceContextKey{}, nonce))
-				csp = buildHTMLCSP(nonce)
+			nonce, err := cspNonceGenerator()
+			if err != nil {
+				slog.Error("security.middleware: failed to generate CSP nonce", "error", err)
+				http.Error(w, "internal server error", http.StatusInternalServerError)
+				return
 			}
+			r = r.WithContext(context.WithValue(r.Context(), cspNonceContextKey{}, nonce))
+			csp = buildHTMLCSP(nonce)
 		}
 		w.Header().Set("Content-Security-Policy", csp)
 

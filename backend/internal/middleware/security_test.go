@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"crypto/tls"
 	"net/http"
 	"net/http/httptest"
@@ -80,6 +81,26 @@ func TestSecurityHeadersHTMLUsesNonceCSP(t *testing.T) {
 	}
 	if strings.Contains(csp, "'unsafe-inline'") {
 		t.Fatalf("HTML CSP should avoid unsafe-inline for scripts, got: %s", csp)
+	}
+}
+
+func TestSecurityHeadersHTMLNonceFailureReturns500(t *testing.T) {
+	originalGenerator := cspNonceGenerator
+	cspNonceGenerator = func() (string, error) { return "", errors.New("rng failure") }
+	defer func() { cspNonceGenerator = originalGenerator }()
+
+	handler := SecurityHeaders(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("next handler should not be called when nonce generation fails")
+	}))
+
+	req := httptest.NewRequest("GET", "/callback", nil)
+	req.Header.Set("Accept", "text/html")
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want %d", rr.Code, http.StatusInternalServerError)
 	}
 }
 
