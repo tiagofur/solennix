@@ -155,6 +155,7 @@ func main() {
 
 	uploadHandler := handlers.NewUploadHandler(cfg.UploadDir, userRepo)
 	uploadHandler.SetStorageProvider(storageProvider)
+	uploadHandler.SetPresignSigningKey(cfg.JWTSecret)
 	adminHandler := handlers.NewAdminHandler(adminRepo)
 	auditHandler := handlers.NewAuditHandler(auditRepo)
 	dashboardHandler := handlers.NewDashboardHandler(dashboardRepo)
