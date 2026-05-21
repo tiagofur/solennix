@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -23,6 +24,26 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/repository"
 	"github.com/tiagofur/solennix-backend/internal/services"
 )
+
+type authSecurityAuditLogger struct {
+	mu   sync.Mutex
+	logs []*models.AuditLog
+}
+
+func (l *authSecurityAuditLogger) Create(_ context.Context, log *models.AuditLog) error {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.logs = append(l.logs, log)
+	return nil
+}
+
+func (l *authSecurityAuditLogger) snapshot() []*models.AuditLog {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	out := make([]*models.AuditLog, len(l.logs))
+	copy(out, l.logs)
+	return out
+}
 
 func TestAuthHandlerValidationPaths(t *testing.T) {
 	h := &AuthHandler{
@@ -276,6 +297,64 @@ func TestAuthHandlerRefreshTokenSuccess(t *testing.T) {
 	if !strings.Contains(rr.Body.String(), "access_token") {
 		t.Fatalf("body = %q, expected access_token", rr.Body.String())
 	}
+}
+
+func TestAuthHandler_Login_GivenInvalidPassword_WhenAttempted_ThenSecurityAuditLogged(t *testing.T) {
+	authService := services.NewAuthService("test-secret", 1)
+	userRepo := new(MockFullUserRepo)
+
+	hash, err := authService.HashPassword("StrongPass1!")
+	if err != nil {
+		t.Fatalf("hash password: %v", err)
+	}
+
+	now := time.Now().UTC()
+	user := &models.User{
+		ID:              uuid.New(),
+		Email:           "audit@test.dev",
+		PasswordHash:    hash,
+		Name:            "Audit User",
+		EmailVerifiedAt: &now,
+	}
+
+	userRepo.On("GetByEmail", mock.Anything, "audit@test.dev").Return(user, nil).Once()
+
+	h := &AuthHandler{userRepo: userRepo, authService: authService}
+	logger := &authSecurityAuditLogger{}
+	middleware.SetSecurityAuditLogger(logger)
+	defer middleware.SetSecurityAuditLogger(nil)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(`{"email":"audit@test.dev","password":"WrongPass1!"}`))
+	rr := httptest.NewRecorder()
+
+	h.Login(rr, req)
+
+	if rr.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want %d", rr.Code, http.StatusUnauthorized)
+	}
+
+	time.Sleep(30 * time.Millisecond)
+
+	logs := logger.snapshot()
+	if len(logs) == 0 {
+		t.Fatal("expected security audit log for invalid password")
+	}
+
+	var found bool
+	for _, entry := range logs {
+		if entry.Action == "auth_failed" && entry.ResourceType == "session" && entry.UserID == user.ID {
+			if entry.Details != nil && strings.Contains(*entry.Details, "invalid_password") {
+				found = true
+				break
+			}
+		}
+	}
+
+	if !found {
+		t.Fatalf("expected auth_failed security audit entry with invalid_password reason, got: %+v", logs)
+	}
+
+	userRepo.AssertExpectations(t)
 }
 
 func TestAuthHandlerErrorBranchesWithClosedRepo(t *testing.T) {

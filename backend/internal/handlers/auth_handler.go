@@ -328,6 +328,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Check password
 	if !h.authService.CheckPassword(req.Password, user.PasswordHash) {
 		slog.Warn("auth.event", "action", "login_failed", "email", req.Email, "reason", "invalid_password", "ip", clientIP(r))
+		middleware.LogSecurityAuditEvent(user.ID, "auth_failed", "session", map[string]any{
+			"reason": "invalid_password",
+		}, clientIP(r), r.UserAgent())
 		writeAuthI18nError(w, r, http.StatusUnauthorized, "auth.invalid_credentials")
 		return
 	}
@@ -338,17 +341,26 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	if accountStatus == repository.AccountStatusBlocked {
 		slog.Warn("auth.event", "action", "login_failed", "email", req.Email, "reason", "account_blocked", "ip", clientIP(r))
+		middleware.LogSecurityAuditEvent(user.ID, "auth_failed", "session", map[string]any{
+			"reason": "account_blocked",
+		}, clientIP(r), r.UserAgent())
 		writeAuthI18nError(w, r, http.StatusForbidden, "auth.account_blocked")
 		return
 	}
 	if accountStatus == repository.AccountStatusDeleted {
 		slog.Warn("auth.event", "action", "login_failed", "email", req.Email, "reason", "account_deleted", "ip", clientIP(r))
+		middleware.LogSecurityAuditEvent(user.ID, "auth_failed", "session", map[string]any{
+			"reason": "account_deleted",
+		}, clientIP(r), r.UserAgent())
 		writeAuthI18nError(w, r, http.StatusForbidden, "auth.account_deleted")
 		return
 	}
 
 	if user.EmailVerifiedAt == nil {
 		slog.Warn("auth.event", "action", "login_failed", "email", req.Email, "reason", "email_not_verified", "ip", clientIP(r))
+		middleware.LogSecurityAuditEvent(user.ID, "auth_failed", "session", map[string]any{
+			"reason": "email_not_verified",
+		}, clientIP(r), r.UserAgent())
 		writeAuthI18nError(w, r, http.StatusForbidden, "auth.email_not_verified")
 		return
 	}
@@ -499,6 +511,9 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	user, err := h.userRepo.GetByID(r.Context(), claims.UserID)
 	if err != nil || user == nil {
 		slog.Warn("auth.event", "action", "token_refresh_failed", "reason", "user_not_found", "user_id", claims.UserID, "ip", clientIP(r))
+		middleware.LogSecurityAuditEvent(claims.UserID, "auth_failed", "session", map[string]any{
+			"reason": "refresh_user_not_found",
+		}, clientIP(r), r.UserAgent())
 		writeAuthI18nError(w, r, http.StatusUnauthorized, "auth.token_invalid_or_expired")
 		return
 	}
@@ -509,11 +524,17 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	}
 	if accountStatus == repository.AccountStatusBlocked {
 		slog.Warn("auth.event", "action", "token_refresh_failed", "reason", "account_blocked", "user_id", claims.UserID, "ip", clientIP(r))
+		middleware.LogSecurityAuditEvent(claims.UserID, "auth_failed", "session", map[string]any{
+			"reason": "refresh_account_blocked",
+		}, clientIP(r), r.UserAgent())
 		writeAuthI18nError(w, r, http.StatusForbidden, "auth.account_blocked")
 		return
 	}
 	if accountStatus == repository.AccountStatusDeleted {
 		slog.Warn("auth.event", "action", "token_refresh_failed", "reason", "account_deleted", "user_id", claims.UserID, "ip", clientIP(r))
+		middleware.LogSecurityAuditEvent(claims.UserID, "auth_failed", "session", map[string]any{
+			"reason": "refresh_account_deleted",
+		}, clientIP(r), r.UserAgent())
 		writeAuthI18nError(w, r, http.StatusForbidden, "auth.account_deleted")
 		return
 	}
@@ -526,6 +547,9 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 			if strings.Contains(consumeErr.Error(), "reuse detected") {
 				// COMPROMISE: revoke entire family
 				slog.Warn("auth.event", "action", "refresh_token_reuse_detected", "family_id", familyID, "user_id", userID, "ip", clientIP(r))
+				middleware.LogSecurityAuditEvent(userID, "auth_failed", "session", map[string]any{
+					"reason": "refresh_token_reuse_detected",
+				}, clientIP(r), r.UserAgent())
 				h.refreshTokenRepo.RevokeFamily(r.Context(), familyID)
 			}
 			writeAuthI18nError(w, r, http.StatusUnauthorized, "auth.token_invalid_or_expired")

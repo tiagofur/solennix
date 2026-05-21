@@ -90,6 +90,12 @@ func UserRateLimit(resolver PlanResolver, window time.Duration) func(http.Handle
 			v.count++
 			if v.count > maxRequests {
 				mu.Unlock()
+				LogSecurityAuditEvent(userID, "rate_limited", "api_request", map[string]any{
+					"reason": "user_plan_limit_exceeded",
+					"plan":   plan,
+					"method": r.Method,
+					"path":   r.URL.Path,
+				}, extractIP(r), r.UserAgent())
 				w.Header().Set("Retry-After", time.Until(v.windowStart.Add(window)).String())
 				w.Header().Set("X-RateLimit-Limit", fmt.Sprintf("%d", maxRequests))
 				w.Header().Set("X-RateLimit-Remaining", "0")
