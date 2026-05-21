@@ -486,6 +486,76 @@ func TestCompletePresignedUpload_InvalidToken_Returns400(t *testing.T) {
 	assert.Contains(t, rr.Body.String(), "invalid upload token")
 }
 
+func TestCompletePresignedUpload_MissingUploadToken_Returns400(t *testing.T) {
+	h := NewUploadHandler(t.TempDir(), nil)
+	h.SetStorageProvider(&mockPresignProvider{})
+	h.SetPresignSigningKey(strings.Repeat("k", 32))
+	userID := uuid.New()
+	objectKey := userID.String() + "/abc.jpg"
+
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads/complete", strings.NewReader(`{"object_key":"`+objectKey+`","upload_token":"   "}`))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+	rr := httptest.NewRecorder()
+
+	h.CompletePresignedUpload(rr, req)
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "upload_token is required")
+}
+
+func TestCompletePresignedUpload_ExpiredToken_Returns400(t *testing.T) {
+	h := NewUploadHandler(t.TempDir(), nil)
+	h.SetStorageProvider(&mockPresignProvider{})
+	h.SetPresignSigningKey(strings.Repeat("k", 32))
+	userID := uuid.New()
+	objectKey := userID.String() + "/abc.jpg"
+	token, err := h.issuePresignedUploadToken(userID.String(), objectKey, time.Now().Add(-1*time.Minute))
+	assert.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads/complete", strings.NewReader(`{"object_key":"`+objectKey+`","upload_token":"`+token+`"}`))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+	rr := httptest.NewRecorder()
+
+	h.CompletePresignedUpload(rr, req)
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "upload token expired")
+}
+
+func TestCompletePresignedUpload_MismatchedObjectKeyToken_Returns400(t *testing.T) {
+	h := NewUploadHandler(t.TempDir(), nil)
+	h.SetStorageProvider(&mockPresignProvider{})
+	h.SetPresignSigningKey(strings.Repeat("k", 32))
+	userID := uuid.New()
+	token, err := h.issuePresignedUploadToken(userID.String(), userID.String()+"/abc.jpg", time.Now().Add(1*time.Minute))
+	assert.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads/complete", strings.NewReader(`{"object_key":"`+userID.String()+`/other.jpg","upload_token":"`+token+`"}`))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+	rr := httptest.NewRecorder()
+
+	h.CompletePresignedUpload(rr, req)
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "upload token does not match object key")
+}
+
+func TestCompletePresignedUpload_MissingSigningKey_Returns500(t *testing.T) {
+	h := NewUploadHandler(t.TempDir(), nil)
+	h.SetStorageProvider(&mockPresignProvider{})
+	userID := uuid.New()
+	objectKey := userID.String() + "/abc.jpg"
+
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads/complete", strings.NewReader(`{"object_key":"`+objectKey+`","upload_token":"abc.def"}`))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+	rr := httptest.NewRecorder()
+
+	h.CompletePresignedUpload(rr, req)
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Failed to verify upload token")
+}
+
 // ---------------------------------------------------------------------------
 // Security tests — Upload magic-byte validation
 // ---------------------------------------------------------------------------

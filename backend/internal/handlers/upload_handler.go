@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -38,6 +39,8 @@ type completePresignedUploadRequest struct {
 
 const presignedUploadTokenTTL = 15 * time.Minute
 
+var errPresignSigningKeyNotConfigured = errors.New("presign signing key is not configured")
+
 type presignedUploadTokenPayload struct {
 	UserID    string `json:"user_id"`
 	ObjectKey string `json:"object_key"`
@@ -69,7 +72,7 @@ func (h *UploadHandler) SetPresignSigningKey(key string) {
 
 func (h *UploadHandler) issuePresignedUploadToken(userID, objectKey string, expiresAt time.Time) (string, error) {
 	if len(h.presignSigningKey) == 0 {
-		return "", fmt.Errorf("presign signing key is not configured")
+		return "", errPresignSigningKeyNotConfigured
 	}
 	payloadJSON, err := json.Marshal(presignedUploadTokenPayload{
 		UserID:    userID,
@@ -88,7 +91,7 @@ func (h *UploadHandler) issuePresignedUploadToken(userID, objectKey string, expi
 
 func (h *UploadHandler) verifyPresignedUploadToken(userID, objectKey, token string, now time.Time) error {
 	if len(h.presignSigningKey) == 0 {
-		return fmt.Errorf("presign signing key is not configured")
+		return errPresignSigningKeyNotConfigured
 	}
 	parts := strings.Split(token, ".")
 	if len(parts) != 2 {
@@ -265,7 +268,11 @@ func (h *UploadHandler) PresignImage(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "Failed to create presigned upload")
 		return
 	}
-	uploadToken, err := h.issuePresignedUploadToken(userID.String(), result.ObjectKey, time.Now().Add(presignedUploadTokenTTL))
+	expiresIn := time.Duration(result.ExpiresInSeconds) * time.Second
+	if expiresIn <= 0 {
+		expiresIn = presignedUploadTokenTTL
+	}
+	uploadToken, err := h.issuePresignedUploadToken(userID.String(), result.ObjectKey, time.Now().Add(expiresIn))
 	if err != nil {
 		slog.Error("Failed to sign presigned upload token", "error", err)
 		writeError(w, http.StatusInternalServerError, "Failed to create presigned upload")
@@ -301,6 +308,7 @@ func (h *UploadHandler) CompletePresignedUpload(w http.ResponseWriter, r *http.R
 		writeError(w, http.StatusBadRequest, "upload_token is required")
 		return
 	}
+	token := strings.TrimSpace(req.UploadToken)
 
 	presignProvider, ok := h.storage.(storage.PresignCapableProvider)
 	if !ok {
@@ -308,7 +316,12 @@ func (h *UploadHandler) CompletePresignedUpload(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if err := h.verifyPresignedUploadToken(userID.String(), req.ObjectKey, req.UploadToken, time.Now()); err != nil {
+	if err := h.verifyPresignedUploadToken(userID.String(), req.ObjectKey, token, time.Now()); err != nil {
+		if errors.Is(err, errPresignSigningKeyNotConfigured) {
+			slog.Error("Failed to verify presigned upload token", "error", err)
+			writeError(w, http.StatusInternalServerError, "Failed to verify upload token")
+			return
+		}
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}

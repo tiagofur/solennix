@@ -1444,8 +1444,11 @@ components:
       type: object
       required:
         - object_key
+        - upload_token
       properties:
         object_key:
+          type: string
+        upload_token:
           type: string
     SearchResponse:
       type: object
