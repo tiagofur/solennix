@@ -1,6 +1,13 @@
 -- Ensure pg_trgm is available for trigram operator/index usage
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
+-- Replace legacy concatenated trigram indexes from migration 033 to avoid
+-- duplicate index maintenance and planner ambiguity.
+DROP INDEX IF EXISTS idx_clients_search;
+DROP INDEX IF EXISTS idx_events_search;
+DROP INDEX IF EXISTS idx_products_search;
+DROP INDEX IF EXISTS idx_inventory_search;
+
 -- Clients
 CREATE INDEX IF NOT EXISTS idx_clients_name_trgm ON clients USING GIN (name gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_clients_email_trgm ON clients USING GIN (email gin_trgm_ops);
