@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bufio"
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
@@ -11,7 +12,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"math/big"
 	"net/http"
@@ -128,12 +128,12 @@ func checkPasswordBreachedWithClient(ctx context.Context, password, baseURL stri
 		return false, fmt.Errorf("breach check status: %d", resp.StatusCode)
 	}
 
-	body, err := io.ReadAll(io.LimitReader(resp.Body, 2<<20))
-	if err != nil {
-		return false, err
-	}
+	scanner := bufio.NewScanner(resp.Body)
+	// HIBP range responses can be large; increase scanner buffer beyond default.
+	scanner.Buffer(make([]byte, 64*1024), 4*1024*1024)
 
-	for _, line := range strings.Split(string(body), "\n") {
+	for scanner.Scan() {
+		line := scanner.Text()
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
@@ -145,6 +145,9 @@ func checkPasswordBreachedWithClient(ctx context.Context, password, baseURL stri
 		if strings.EqualFold(parts[0], suffix) {
 			return true, nil
 		}
+	}
+	if err := scanner.Err(); err != nil {
+		return false, err
 	}
 
 	return false, nil

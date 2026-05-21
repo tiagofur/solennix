@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -166,6 +167,24 @@ func TestRegister_GivenBreachedPassword_WhenBreachCheckEnabled_ThenBadRequest(t 
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 	assert.Contains(t, rr.Body.String(), "known data breaches")
+}
+
+func TestValidatePasswordStrength_GivenNoSymbol_WhenValidating_ThenReturnsError(t *testing.T) {
+	err := validatePasswordStrength("ValidPass1")
+	assert.Error(t, err)
+	assert.Equal(t, "auth.password_strength", err.Error())
+}
+
+func TestValidatePasswordPolicy_GivenBreachCheckError_WhenValidating_ThenFailOpen(t *testing.T) {
+	h := &AuthHandler{
+		cfg: &config.Config{PasswordBreachCheckEnabled: true},
+		passwordBreachCheck: func(context.Context, string) (bool, error) {
+			return false, errors.New("hibp timeout")
+		},
+	}
+
+	err := h.validatePasswordPolicy(context.Background(), "ValidPass1!")
+	assert.NoError(t, err)
 }
 
 func TestCheckPasswordBreachedWithClient(t *testing.T) {
