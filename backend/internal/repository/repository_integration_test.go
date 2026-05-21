@@ -468,7 +468,7 @@ func TestEventRepoIntegration(t *testing.T) {
 		t.Fatalf("GetByClientID() expected at least one event")
 	}
 
-	_, err = pool.Exec(context.Background(), "UPDATE events SET event_date = CURRENT_DATE + INTERVAL '1 day' WHERE id=$1", event.ID)
+	_, err = pool.Exec(context.Background(), "UPDATE events SET event_date = CURRENT_DATE + INTERVAL '1 day', status = 'confirmed' WHERE id=$1", event.ID)
 	if err != nil {
 		t.Fatalf("failed to update event date: %v", err)
 	}
