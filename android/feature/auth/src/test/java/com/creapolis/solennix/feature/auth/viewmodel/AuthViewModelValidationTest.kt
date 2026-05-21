@@ -93,15 +93,15 @@ class AuthViewModelValidationTest {
 
         vm.registerName = "Juan"
         vm.registerEmail = "juan@example.com"
-        vm.registerPassword = "StrongPass1"
-        vm.registerConfirmPassword = "StrongPass1"
+        vm.registerPassword = "StrongPass1!"
+        vm.registerConfirmPassword = "StrongPass1!"
         assertTrue(vm.isRegisterValid)
 
         vm.registerPassword = "weak"
         vm.registerConfirmPassword = "weak"
         assertFalse(vm.isRegisterValid)
 
-        vm.registerPassword = "StrongPass1"
+        vm.registerPassword = "StrongPass1!"
         vm.registerConfirmPassword = "Different1"
         assertFalse(vm.isRegisterValid)
     }
@@ -168,7 +168,7 @@ class AuthViewModelValidationTest {
         val vm = fixture.viewModel
 
         vm.loginEmail = "pending@example.com"
-        vm.loginPassword = "StrongPass1"
+        vm.loginPassword = "StrongPass1!"
 
         coEvery {
             fixture.apiService.post<Any>(any(), any(), any())
