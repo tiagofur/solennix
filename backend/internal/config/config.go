@@ -42,15 +42,17 @@ type Config struct {
 	ApplePrivateKey  string   // Apple Private Key (.p8 file content or base64)
 	AppleRedirectURI string   // Apple Redirect URI (for REST flow)
 
-	UploadDir           string // Directory for uploaded files (default: "./uploads")
-	StorageProvider     string // "local" or "s3" (default: "local")
-	S3Bucket            string // S3 bucket name
-	S3Region            string // S3 region (default: "us-east-1")
-	S3Prefix            string // S3 key prefix (default: "uploads")
-	S3Endpoint          string // Custom S3 endpoint (for MinIO/DO Spaces)
-	S3CDNURL            string // CDN URL for serving S3 files
-	BootstrapAdminEmail string // Email to automatically promote to admin on startup
-	TrustProxy          bool   // Trust X-Forwarded-For header for client IP (only enable behind a reverse proxy)
+	UploadDir                     string // Directory for uploaded files (default: "./uploads")
+	StorageProvider               string // "local" or "s3" (default: "local")
+	S3Bucket                      string // S3 bucket name
+	S3Region                      string // S3 region (default: "us-east-1")
+	S3Prefix                      string // S3 key prefix (default: "uploads")
+	S3Endpoint                    string // Custom S3 endpoint (for MinIO/DO Spaces)
+	S3CDNURL                      string // CDN URL for serving S3 files
+	BootstrapAdminEmail           string // Email to automatically promote to admin on startup
+	TrustProxy                    bool   // Trust X-Forwarded-For header for client IP (only enable behind a reverse proxy)
+	PasswordBreachCheckEnabled    bool   // Enable Have I Been Pwned k-anonymity password breach screening
+	PasswordBreachCheckTimeoutSec int    // Timeout in seconds for breach check HTTP requests
 
 	// Authenticated user rate limits (requests per minute by plan)
 	UserRateLimitBasic    int
@@ -76,40 +78,41 @@ func Load() (*Config, error) {
 	_ = godotenv.Load()
 
 	cfg := &Config{
-		Port:                    getEnv("PORT", "8080"),
-		Environment:             getEnv("ENVIRONMENT", "development"),
-		DatabaseURL:             os.Getenv("DATABASE_URL"),
-		JWTSecret:               os.Getenv("JWT_SECRET"),
-		ResendAPIKey:            os.Getenv("RESEND_API_KEY"),
-		ResendFromEmail:         getEnv("RESEND_FROM_EMAIL", "Solennix <noreply@solennix.com>"),
-		FrontendURL:             getEnv("FRONTEND_URL", "http://localhost:5173"),
-		StripeSecretKey:         os.Getenv("STRIPE_SECRET_KEY"),
-		StripeWebhookSecret:     os.Getenv("STRIPE_WEBHOOK_SECRET"),
-		StripeProPriceID:        os.Getenv("STRIPE_PRO_PRICE_ID"),
-		StripeBusinessPriceID:   os.Getenv("STRIPE_BUSINESS_PRICE_ID"),
-		StripePortalConfigID:    os.Getenv("STRIPE_PORTAL_CONFIG_ID"),
-		RevenueCatWebhookSecret: os.Getenv("REVENUECAT_WEBHOOK_SECRET"),
-		RevenueCatAPIKey:        os.Getenv("REVENUECAT_API_KEY"),
-		UploadDir:               getEnv("UPLOAD_DIR", "./uploads"),
-		StorageProvider:         getEnv("STORAGE_PROVIDER", "local"),
-		AppleTeamID:             os.Getenv("APPLE_TEAM_ID"),
-		AppleKeyID:              os.Getenv("APPLE_KEY_ID"),
-		ApplePrivateKey:         os.Getenv("APPLE_PRIVATE_KEY"),
-		AppleRedirectURI:        os.Getenv("APPLE_REDIRECT_URI"),
-		S3Bucket:                os.Getenv("S3_BUCKET"),
-		S3Region:                getEnv("S3_REGION", "us-east-1"),
-		S3Prefix:                getEnv("S3_PREFIX", "uploads"),
-		S3Endpoint:              os.Getenv("S3_ENDPOINT"),
-		S3CDNURL:                os.Getenv("S3_CDN_URL"),
-		BootstrapAdminEmail:     os.Getenv("BOOTSTRAP_ADMIN_EMAIL"),
-		TrustProxy:              getEnv("TRUST_PROXY", "false") == "true",
-		FCMCredentialsJSON:      os.Getenv("FCM_CREDENTIALS_JSON"),
-		APNsKeyPath:             os.Getenv("APNS_KEY_PATH"),
-		APNsKeyID:               os.Getenv("APNS_KEY_ID"),
-		APNsTeamID:              os.Getenv("APNS_TEAM_ID"),
-		APNsBundleID:            getEnv("APNS_BUNDLE_ID", "com.creapolis.solennix"),
-		APNsProduction:          getEnv("APNS_PRODUCTION", "false") == "true",
-		SentryDSN:               os.Getenv("SENTRY_DSN"),
+		Port:                       getEnv("PORT", "8080"),
+		Environment:                getEnv("ENVIRONMENT", "development"),
+		DatabaseURL:                os.Getenv("DATABASE_URL"),
+		JWTSecret:                  os.Getenv("JWT_SECRET"),
+		ResendAPIKey:               os.Getenv("RESEND_API_KEY"),
+		ResendFromEmail:            getEnv("RESEND_FROM_EMAIL", "Solennix <noreply@solennix.com>"),
+		FrontendURL:                getEnv("FRONTEND_URL", "http://localhost:5173"),
+		StripeSecretKey:            os.Getenv("STRIPE_SECRET_KEY"),
+		StripeWebhookSecret:        os.Getenv("STRIPE_WEBHOOK_SECRET"),
+		StripeProPriceID:           os.Getenv("STRIPE_PRO_PRICE_ID"),
+		StripeBusinessPriceID:      os.Getenv("STRIPE_BUSINESS_PRICE_ID"),
+		StripePortalConfigID:       os.Getenv("STRIPE_PORTAL_CONFIG_ID"),
+		RevenueCatWebhookSecret:    os.Getenv("REVENUECAT_WEBHOOK_SECRET"),
+		RevenueCatAPIKey:           os.Getenv("REVENUECAT_API_KEY"),
+		UploadDir:                  getEnv("UPLOAD_DIR", "./uploads"),
+		StorageProvider:            getEnv("STORAGE_PROVIDER", "local"),
+		AppleTeamID:                os.Getenv("APPLE_TEAM_ID"),
+		AppleKeyID:                 os.Getenv("APPLE_KEY_ID"),
+		ApplePrivateKey:            os.Getenv("APPLE_PRIVATE_KEY"),
+		AppleRedirectURI:           os.Getenv("APPLE_REDIRECT_URI"),
+		S3Bucket:                   os.Getenv("S3_BUCKET"),
+		S3Region:                   getEnv("S3_REGION", "us-east-1"),
+		S3Prefix:                   getEnv("S3_PREFIX", "uploads"),
+		S3Endpoint:                 os.Getenv("S3_ENDPOINT"),
+		S3CDNURL:                   os.Getenv("S3_CDN_URL"),
+		BootstrapAdminEmail:        os.Getenv("BOOTSTRAP_ADMIN_EMAIL"),
+		TrustProxy:                 getEnv("TRUST_PROXY", "false") == "true",
+		PasswordBreachCheckEnabled: getEnv("PASSWORD_BREACH_CHECK_ENABLED", "false") == "true",
+		FCMCredentialsJSON:         os.Getenv("FCM_CREDENTIALS_JSON"),
+		APNsKeyPath:                os.Getenv("APNS_KEY_PATH"),
+		APNsKeyID:                  os.Getenv("APNS_KEY_ID"),
+		APNsTeamID:                 os.Getenv("APNS_TEAM_ID"),
+		APNsBundleID:               getEnv("APNS_BUNDLE_ID", "com.creapolis.solennix"),
+		APNsProduction:             getEnv("APNS_PRODUCTION", "false") == "true",
+		SentryDSN:                  os.Getenv("SENTRY_DSN"),
 	}
 
 	sentryRate, err := strconv.ParseFloat(getEnv("SENTRY_TRACES_SAMPLE_RATE", defaultSentryRate(cfg.Environment)), 64)
@@ -149,6 +152,11 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 	cfg.UserRateLimitPremium, err = parsePositiveInt("USER_RATE_LIMIT_PREMIUM", "500")
+	if err != nil {
+		return nil, err
+	}
+
+	cfg.PasswordBreachCheckTimeoutSec, err = parsePositiveInt("PASSWORD_BREACH_CHECK_TIMEOUT_SEC", "2")
 	if err != nil {
 		return nil, err
 	}

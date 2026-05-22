@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"strings"
 	"sync"
 
+	"github.com/google/uuid"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
 )
@@ -16,17 +18,33 @@ const (
 )
 
 type SearchHandler struct {
-	clientRepo    ClientRepository
-	productRepo   ProductRepository
-	inventoryRepo InventoryRepository
-	eventRepo     FullEventRepository
+	clientRepo    clientSearchRepository
+	productRepo   productSearchRepository
+	inventoryRepo inventorySearchRepository
+	eventRepo     eventSearchRepository
+}
+
+type clientSearchRepository interface {
+	Search(ctx context.Context, userID uuid.UUID, query string) ([]models.Client, error)
+}
+
+type productSearchRepository interface {
+	Search(ctx context.Context, userID uuid.UUID, query string) ([]models.Product, error)
+}
+
+type inventorySearchRepository interface {
+	Search(ctx context.Context, userID uuid.UUID, query string) ([]models.InventoryItem, error)
+}
+
+type eventSearchRepository interface {
+	Search(ctx context.Context, userID uuid.UUID, query string) ([]models.Event, error)
 }
 
 func NewSearchHandler(
-	clientRepo ClientRepository,
-	productRepo ProductRepository,
-	inventoryRepo InventoryRepository,
-	eventRepo FullEventRepository,
+	clientRepo clientSearchRepository,
+	productRepo productSearchRepository,
+	inventoryRepo inventorySearchRepository,
+	eventRepo eventSearchRepository,
 ) *SearchHandler {
 	return &SearchHandler{
 		clientRepo:    clientRepo,

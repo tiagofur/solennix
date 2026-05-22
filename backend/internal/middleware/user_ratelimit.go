@@ -12,6 +12,7 @@ import (
 type userVisitor struct {
 	count       int
 	windowStart time.Time
+	rateLogged  bool
 }
 
 // PlanLimits defines rate limits per subscription plan (requests per window).
@@ -89,7 +90,19 @@ func UserRateLimit(resolver PlanResolver, window time.Duration) func(http.Handle
 
 			v.count++
 			if v.count > maxRequests {
+				shouldLog := !v.rateLogged
+				if shouldLog {
+					v.rateLogged = true
+				}
 				mu.Unlock()
+				if shouldLog {
+					LogSecurityAuditEvent(userID, "rate_limited", "api_request", map[string]any{
+						"reason": "user_plan_limit_exceeded",
+						"plan":   plan,
+						"method": r.Method,
+						"path":   r.URL.Path,
+					}, extractIP(r), r.UserAgent())
+				}
 				w.Header().Set("Retry-After", time.Until(v.windowStart.Add(window)).String())
 				w.Header().Set("X-RateLimit-Limit", fmt.Sprintf("%d", maxRequests))
 				w.Header().Set("X-RateLimit-Remaining", "0")

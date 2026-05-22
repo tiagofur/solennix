@@ -1311,13 +1311,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uppercase, lowercase, and numbers"
+            "value" : "Uppercase, lowercase, numbers, and symbols"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mayúsculas, minúsculas y números"
+            "value" : "Mayúsculas, minúsculas, números y símbolos"
           }
         }
       }
@@ -1439,13 +1439,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enter your new password. It must have at least 8 characters, one uppercase letter, one lowercase letter, and one number."
+            "value" : "Enter your new password. It must have at least 8 characters, one uppercase letter, one lowercase letter, one number, and one symbol."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ingresa tu nueva contraseña. Debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número."
+            "value" : "Ingresa tu nueva contraseña. Debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo."
           }
         }
       }
@@ -1695,13 +1695,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Password must be at least 8 characters, including an uppercase letter, a lowercase letter, and a number"
+            "value" : "Password must be at least 8 characters, including an uppercase letter, a lowercase letter, a number, and a symbol"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número"
+            "value" : "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo"
           }
         }
       }

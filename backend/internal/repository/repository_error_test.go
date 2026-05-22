@@ -12,7 +12,7 @@ import (
 
 func closedPool(t *testing.T) *pgxpool.Pool {
 	t.Helper()
-	pool, err := pgxpool.New(context.Background(), "postgres://solennix_user:solennix_password@localhost:5433/solennix?sslmode=disable")
+	pool, err := pgxpool.New(context.Background(), resolveTestDatabaseURL(t))
 	if err != nil {
 		t.Skipf("pgxpool.New failed: %v", err)
 	}
@@ -21,7 +21,7 @@ func closedPool(t *testing.T) *pgxpool.Pool {
 }
 
 func TestRepositoryMethodsWithClosedPool(t *testing.T) {
-	pool, err := pgxpool.New(context.Background(), "postgres://solennix_user:solennix_password@localhost:5433/solennix?sslmode=disable")
+	pool, err := pgxpool.New(context.Background(), resolveTestDatabaseURL(t))
 	if err != nil {
 		t.Skipf("pgxpool.New failed: %v", err)
 	}
@@ -246,7 +246,7 @@ func TestRepositoryMethodsWithClosedPool(t *testing.T) {
 }
 
 func TestAdminRepoWithClosedPool(t *testing.T) {
-	pool, err := pgxpool.New(context.Background(), "postgres://solennix_user:solennix_password@localhost:5433/solennix?sslmode=disable")
+	pool, err := pgxpool.New(context.Background(), resolveTestDatabaseURL(t))
 	if err != nil {
 		t.Skipf("pgxpool.New failed: %v", err)
 	}
@@ -281,7 +281,7 @@ func TestAdminRepoWithClosedPool(t *testing.T) {
 }
 
 func TestSubscriptionRepoWithClosedPool(t *testing.T) {
-	pool, err := pgxpool.New(context.Background(), "postgres://solennix_user:solennix_password@localhost:5433/solennix?sslmode=disable")
+	pool, err := pgxpool.New(context.Background(), resolveTestDatabaseURL(t))
 	if err != nil {
 		t.Skipf("pgxpool.New failed: %v", err)
 	}

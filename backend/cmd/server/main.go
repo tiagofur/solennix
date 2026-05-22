@@ -111,6 +111,7 @@ func main() {
 
 	// Set persistent token blacklist (replaces in-memory sync.Map)
 	mw.SetTokenBlacklist(revokedTokenRepo)
+	mw.SetSecurityAuditLogger(auditRepo)
 
 	// Initialize notification service
 	notificationService := services.NewNotificationService(pushService, deviceRepo, pool, emailService)
@@ -155,6 +156,7 @@ func main() {
 
 	uploadHandler := handlers.NewUploadHandler(cfg.UploadDir, userRepo)
 	uploadHandler.SetStorageProvider(storageProvider)
+	uploadHandler.SetPresignSigningKey(cfg.JWTSecret)
 	adminHandler := handlers.NewAdminHandler(adminRepo)
 	auditHandler := handlers.NewAuditHandler(auditRepo)
 	dashboardHandler := handlers.NewDashboardHandler(dashboardRepo)

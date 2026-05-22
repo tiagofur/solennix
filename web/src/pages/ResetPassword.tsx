@@ -19,7 +19,8 @@ export function ResetPassword() {
       .min(8, t('auth:validation.password_min_8'))
       .regex(/[A-Z]/, t('auth:validation.password_min_8'))
       .regex(/[a-z]/, t('auth:validation.password_min_8'))
-      .regex(/[0-9]/, t('auth:validation.password_min_8')),
+      .regex(/[0-9]/, t('auth:validation.password_min_8'))
+      .regex(/[^A-Za-z0-9]/, t('auth:validation.password_min_8')),
     confirmPassword: z.string(),
   }).refine((data) => data.password === data.confirmPassword, {
     message: t('auth:validation.password_mismatch'),

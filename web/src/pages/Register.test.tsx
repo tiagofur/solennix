@@ -75,10 +75,10 @@ describe('Register', () => {
       target: { value: 'ana@example.com' },
     });
     fireEvent.change(screen.getByLabelText(/^contraseña$/i), {
-      target: { value: 'Password1' },
+      target: { value: 'Password1!' },
     });
     fireEvent.change(screen.getByLabelText(/confirmar contraseña/i), {
-      target: { value: 'Password1' },
+      target: { value: 'Password1!' },
     });
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /crear cuenta|register\.submit/i }));
@@ -88,7 +88,7 @@ describe('Register', () => {
       expect(api.post).toHaveBeenCalledWith('/auth/register', {
         name: 'Ana Perez',
         email: 'ana@example.com',
-        password: 'Password1',
+        password: 'Password1!',
       });
     });
     // Registration now sends the user to login so they can verify email first.
@@ -116,10 +116,10 @@ describe('Register', () => {
       target: { value: 'ana@example.com' },
     });
     fireEvent.change(screen.getByLabelText(/^contraseña$/i), {
-      target: { value: 'Password1' },
+      target: { value: 'Password1!' },
     });
     fireEvent.change(screen.getByLabelText(/confirmar contraseña/i), {
-      target: { value: 'Password1' },
+      target: { value: 'Password1!' },
     });
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /crear cuenta|register\.submit/i }));
@@ -145,10 +145,10 @@ describe('Register', () => {
       target: { value: 'ana@example.com' },
     });
     fireEvent.change(screen.getByLabelText(/^contraseña$/i), {
-      target: { value: 'Password1' },
+      target: { value: 'Password1!' },
     });
     fireEvent.change(screen.getByLabelText(/confirmar contraseña/i), {
-      target: { value: 'Password1' },
+      target: { value: 'Password1!' },
     });
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /crear cuenta|register\.submit/i }));
@@ -173,7 +173,7 @@ describe('Register', () => {
       target: { value: 'ana@example.com' },
     });
     fireEvent.change(screen.getByLabelText(/^contraseña$/i), {
-      target: { value: 'Password1' },
+      target: { value: 'Password1!' },
     });
     fireEvent.change(screen.getByLabelText(/confirmar contraseña/i), {
       target: { value: 'different' },
@@ -210,10 +210,10 @@ describe('Register', () => {
       target: { value: 'ana@example.com' },
     });
     fireEvent.change(screen.getByLabelText(/^contraseña$/i), {
-      target: { value: 'Password1' },
+      target: { value: 'Password1!' },
     });
     fireEvent.change(screen.getByLabelText(/confirmar contraseña/i), {
-      target: { value: 'Password1' },
+      target: { value: 'Password1!' },
     });
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /crear cuenta|register\.submit/i }));
