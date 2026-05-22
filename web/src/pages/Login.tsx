@@ -391,6 +391,13 @@ export const Login: React.FC = () => {
                   t("auth:login.submit")
                 )}
               </button>
+
+              <Link
+                to="/register"
+                className="w-full flex items-center justify-center py-3.5 rounded-xl border border-border bg-card text-sm font-semibold text-text transition-all hover:bg-surface-alt hover:border-primary/40"
+              >
+                {t("auth:login.create_account")}
+              </Link>
             </form>
 
             <div className="mt-6 flex items-center gap-3">

@@ -18,6 +18,7 @@ export const GoogleSignInButton: React.FC<Props> = ({ onError }) => {
   const [gsiReady, setGsiReady] = useState(false);
   const initializedRef = useRef(false);
   const onErrorRef = useRef(onError);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     onErrorRef.current = onError;
@@ -55,6 +56,9 @@ export const GoogleSignInButton: React.FC<Props> = ({ onError }) => {
       google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: handleCredentialResponse,
+        auto_select: false,
+        button_auto_select: false,
+        use_fedcm_for_button: false,
       });
 
       initializedRef.current = true;
@@ -66,14 +70,17 @@ export const GoogleSignInButton: React.FC<Props> = ({ onError }) => {
 
   const renderButton = useCallback(() => {
     if (!gsiReady) return;
-    
-    const container = document.getElementById("google-signin-button");
+
+    const container = containerRef.current;
     if (container) {
+      const width = Math.max(220, Math.floor(container.getBoundingClientRect().width));
+      container.innerHTML = "";
       google.accounts.id.renderButton(container, {
+        type: "standard",
         theme: "outline",
         size: "large",
-        width: 400,
-        text: "signin_with",
+        width,
+        text: "continue_with",
         shape: "rectangular",
       });
     }
@@ -83,9 +90,27 @@ export const GoogleSignInButton: React.FC<Props> = ({ onError }) => {
     renderButton();
   }, [renderButton]);
 
+  useEffect(() => {
+    if (!gsiReady || !containerRef.current) return;
+
+    const observer = new ResizeObserver(() => {
+      renderButton();
+    });
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [gsiReady, renderButton]);
+
   return (
     <div className="w-full">
-      <div id="google-signin-button" className="w-full min-h-[44px]"></div>
+      <div className="w-full">
+        <div
+          className="w-full rounded-xl overflow-hidden border border-border min-h-12.5"
+          aria-label={t("common:auth.sign_in_google")}
+        >
+          <div ref={containerRef} id="google-signin-button" className="w-full min-h-12.5"></div>
+        </div>
+      </div>
       {isLoading && (
         <div className="flex items-center justify-center mt-2">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
