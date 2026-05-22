@@ -23,6 +23,8 @@ declare namespace google {
         callback: (response: CredentialResponse) => void;
         auto_select?: boolean;
         cancel_on_tap_outside?: boolean;
+        button_auto_select?: boolean;
+        use_fedcm_for_button?: boolean;
       }): void;
 
       function renderButton(
