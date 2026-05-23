@@ -12,6 +12,12 @@ updated: 2025-04-05
 > [!abstract] Resumen
 > Sistema de registro manual de pagos vía `CRUDHandler`. Permite trackear el balance de cada evento (total vs. pagado). La app no intermediar pagos entre organizadores y sus clientes — los pagos son registros de lo cobrado fuera de la app. Todos los endpoints filtran por `user_id` para aislamiento multi-tenant.
 
+> [!success] 2026-05-23 — Semántica correcta para fallos de lookup en payment submissions (issue #411)
+> Los endpoints públicos de `payment_submissions` ya no disfrazan fallos reales del backend como `404`.
+> - `GetByToken` con `pgx.ErrNoRows` responde `404 Invalid or expired link`.
+> - Fallos reales de DB/backend ahora loguean y responden `500 Failed to validate link`.
+> - Links inactivos/revocados conservan `410`, y mismatch de evento conserva `400`.
+
 ## Relaciones
 
 - **Padre**: [[Backend MOC]]

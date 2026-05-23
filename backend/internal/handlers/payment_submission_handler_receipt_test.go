@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -53,28 +55,41 @@ func pngFixtureBytes() []byte {
 	}
 }
 
-func TestPaymentSubmissionCreatePublicInvalidTokenDoesNotWriteReceipt(t *testing.T) {
-	uploadDir := t.TempDir()
-	handler := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir)
-	handler.lookupPublicLink = func(context.Context, string) (*models.EventPublicLink, error) {
-		return nil, errors.New("not found")
+func TestPaymentSubmissionCreatePublicLookupFailureResponses(t *testing.T) {
+	tests := []struct {
+		name           string
+		lookupErr      error
+		expectedStatus int
+	}{
+		{name: "not found returns 404", lookupErr: fmt.Errorf("lookup failed: %w", pgx.ErrNoRows), expectedStatus: http.StatusNotFound},
+		{name: "backend failure returns 500", lookupErr: errors.New("db unavailable"), expectedStatus: http.StatusInternalServerError},
 	}
 
-	eventID := uuid.New()
-	clientID := uuid.New()
-	body, contentType := buildPaymentSubmissionMultipart(t, eventID, clientID, "1500", "receipt.png", pngFixtureBytes())
-	req := httptest.NewRequest(http.MethodPost, "/api/public/events/token-123/payment-submissions", body)
-	req.Header.Set("Content-Type", contentType)
-	req.SetPathValue("token", "token-123")
-	w := httptest.NewRecorder()
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			uploadDir := t.TempDir()
+			handler := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir)
+			handler.lookupPublicLink = func(context.Context, string) (*models.EventPublicLink, error) {
+				return nil, tc.lookupErr
+			}
 
-	handler.CreatePublic(w, req)
+			eventID := uuid.New()
+			clientID := uuid.New()
+			body, contentType := buildPaymentSubmissionMultipart(t, eventID, clientID, "1500", "receipt.png", pngFixtureBytes())
+			req := httptest.NewRequest(http.MethodPost, "/api/public/events/token-123/payment-submissions", body)
+			req.Header.Set("Content-Type", contentType)
+			req.SetPathValue("token", "token-123")
+			w := httptest.NewRecorder()
 
-	assert.Equal(t, http.StatusNotFound, w.Code)
+			handler.CreatePublic(w, req)
 
-	entries, err := os.ReadDir(handler.privateReceiptsDir)
-	require.NoError(t, err)
-	assert.Empty(t, entries)
+			assert.Equal(t, tc.expectedStatus, w.Code)
+
+			entries, err := os.ReadDir(handler.privateReceiptsDir)
+			require.NoError(t, err)
+			assert.Empty(t, entries)
+		})
+	}
 }
 
 func TestPaymentSubmissionCreatePublicStoresReceiptPrivatelyAndReturnsProtectedPath(t *testing.T) {
@@ -170,6 +185,37 @@ func TestPaymentSubmissionCreatePublicCreateFailureRemovesOrphanedReceipt(t *tes
 	entries, err := os.ReadDir(handler.privateReceiptsDir)
 	require.NoError(t, err)
 	assert.Empty(t, entries)
+}
+
+func TestPaymentSubmissionGetHistoryPublicLookupFailureResponses(t *testing.T) {
+	tests := []struct {
+		name           string
+		lookupErr      error
+		expectedStatus int
+	}{
+		{name: "not found returns 404", lookupErr: fmt.Errorf("lookup failed: %w", pgx.ErrNoRows), expectedStatus: http.StatusNotFound},
+		{name: "backend failure returns 500", lookupErr: errors.New("db unavailable"), expectedStatus: http.StatusInternalServerError},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			uploadDir := t.TempDir()
+			handler := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir)
+			eventID := uuid.New()
+			clientID := uuid.New()
+			handler.lookupPublicLink = func(context.Context, string) (*models.EventPublicLink, error) {
+				return nil, tc.lookupErr
+			}
+
+			req := httptest.NewRequest(http.MethodGet, "/api/public/events/token-123/payment-submissions?event_id="+eventID.String()+"&client_id="+clientID.String(), nil)
+			req.SetPathValue("token", "token-123")
+			w := httptest.NewRecorder()
+
+			handler.GetHistoryPublic(w, req)
+
+			assert.Equal(t, tc.expectedStatus, w.Code)
+		})
+	}
 }
 
 func TestPaymentSubmissionGetReceiptAuthorizationAndMissingFile(t *testing.T) {
