@@ -253,7 +253,7 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 		paymentType := s.Metadata["type"]
 
 		if paymentType == "event_payment" {
-			h.handleEventPayment(r.Context(), &s)
+			slog.Warn("Ignoring legacy Stripe event payment webhook", "session_id", s.ID)
 		} else if s.ClientReferenceID != "" {
 			userID, err := uuid.Parse(s.ClientReferenceID)
 			if err != nil {
@@ -771,75 +771,7 @@ func (h *SubscriptionHandler) GetSubscriptionStatus(w http.ResponseWriter, r *ht
 	writeJSON(w, http.StatusOK, resp)
 }
 
-// handleEventPayment processes a completed event payment from Stripe webhook
-func (h *SubscriptionHandler) handleEventPayment(ctx context.Context, session *stripe.CheckoutSession) {
-	eventIDStr := session.Metadata["event_id"]
-	userIDStr := session.Metadata["user_id"]
-
-	if eventIDStr == "" || userIDStr == "" {
-		slog.Error("Event payment webhook missing metadata", "session_id", session.ID)
-		return
-	}
-
-	eventID, err := uuid.Parse(eventIDStr)
-	if err != nil {
-		slog.Error("Invalid event ID in webhook metadata", "event_id", eventIDStr, "error", err)
-		return
-	}
-
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		slog.Error("Invalid user ID in webhook metadata", "user_id", userIDStr, "error", err)
-		return
-	}
-
-	// Get event details
-	event, err := h.eventRepo.GetByID(ctx, eventID, userID)
-	if err != nil {
-		slog.Error("Failed to get event for payment webhook", "event_id", eventID, "error", err)
-		return
-	}
-
-	// Create payment record
-	amountPaid := float64(session.AmountTotal) / 100.0
-	paymentDate := time.Now().Format("2006-01-02")
-
-	payment := &models.Payment{
-		EventID:       eventID,
-		UserID:        userID,
-		Amount:        amountPaid,
-		PaymentDate:   paymentDate,
-		PaymentMethod: "stripe",
-		Notes:         stringPtr("Pago online vía Stripe - Session: " + session.ID),
-	}
-
-	if err := h.paymentRepo.Create(ctx, payment); err != nil {
-		slog.Error("Failed to create payment record from webhook", "event_id", eventID, "error", err)
-		return
-	}
-
-	// Update event status to confirmed if it was quoted
-	if event.Status == "quoted" {
-		event.Status = "confirmed"
-		if err := h.eventRepo.Update(ctx, event); err != nil {
-			slog.Error("Failed to update event status after payment", "event_id", eventID, "error", err)
-		}
-	}
-
-	var customerEmail string
-	if session.CustomerDetails != nil {
-		customerEmail = session.CustomerDetails.Email
-	}
-
-	slog.Info("Event payment processed successfully",
-		"event_id", eventID,
-		"amount", amountPaid,
-		"session_id", session.ID,
-		"customer_email", customerEmail,
-	)
-}
-
-// stringPtr is a helper to create a pointer to a string
+// stringPtr is a helper to create a pointer to a string.
 func stringPtr(s string) *string {
 	return &s
 }

@@ -68,6 +68,13 @@ status: active
 > - **UX organizer:** Web/iOS/Android ya pueden caer naturalmente al estado “no active link” en vez de mostrar una URL vencida.
 > - **Validación:** `go test ./internal/repository`.
 
+> [!success] 2026-05-23 — Stripe legacy de client payments quedó bloqueado (issue #406)
+> Se apagó el flujo heredado de Stripe para pagos entre organizer y cliente, alineándolo con el contrato actual del producto.
+> - **Handlers legacy:** `POST /api/events/{id}/checkout-session` y `GET /api/events/{id}/payment-session` ahora responden `410 Gone` con mensaje explícito de no soportado.
+> - **Webhook Stripe:** `checkout.session.completed` con `metadata.type=event_payment` ahora se ignora y se acknowledgea sin crear `payments` ni tocar `events`.
+> - **Contrato/OpenAPI:** se removieron los endpoints y schemas legacy del spec y de los tipos generados web para no seguir anunciando una capacidad no soportada.
+> - **Validación:** `go test ./internal/handlers`, `go test ./internal/handlers ./internal/router`.
+
 > [!success] 2026-05-21 — Backend: baseline inicial de benchmarks críticos (issue #385)
 > Se agregó cobertura de benchmark para rutas críticas y lineamientos de tracking de baseline.
 > - **Handlers:** benchmark de `SearchHandler.SearchAll` y `UploadHandler.UploadImage`.
