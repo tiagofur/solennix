@@ -4,7 +4,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/tiagofur/solennix-backend/internal/config"
 )
 
@@ -46,10 +45,3 @@ func (h *EventPaymentHandler) HandleEventPaymentSuccess(w http.ResponseWriter, r
 	writeError(w, http.StatusGone, legacyEventPaymentBlockedMessage)
 }
 
-func legacyEventPaymentSession(userID, eventID uuid.UUID) map[string]string {
-	return map[string]string{
-		"type":     "event_payment",
-		"user_id":  userID.String(),
-		"event_id": eventID.String(),
-	}
-}
