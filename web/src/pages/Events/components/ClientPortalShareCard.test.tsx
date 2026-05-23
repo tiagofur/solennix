@@ -134,7 +134,9 @@ describe('ClientPortalShareCard', () => {
     });
 
     expect(mockAddToast).toHaveBeenCalledWith('client_portal_share.toast_copy', 'success');
-    expect(screen.getByRole('button', { name: 'client_portal_share.copied' })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'client_portal_share.copied' })).toBeInTheDocument();
+    });
   });
 
   it('logs error when copy fails', async () => {
