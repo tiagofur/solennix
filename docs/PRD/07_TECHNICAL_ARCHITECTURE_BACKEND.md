@@ -94,6 +94,8 @@ platform: Backend
 > - **Direct-to-storage** (S3): `POST /api/uploads/presign` (firma URL `PUT`) + `POST /api/uploads/complete` (finalización y thumbnail).
 >
 > Compatibilidad: `UploadImageResponse` conserva `url`, `thumbnail_url`, `filename` y agrega metadata opcional `object_key`, `thumbnail_object_key`, `content_type`.
+>
+> Hardening 2026-05-23 (issue #410): la finalización presignada ya no confía solo en el `Content-Type` declarado. `POST /api/uploads/complete` valida que el objeto almacenado decodee como imagen real; si no, borra el objeto y responde error en lugar de exponerlo como media válida.
 
 ---
 

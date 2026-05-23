@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"context"
+	"errors"
 	"image"
 	"image/color"
 	"image/png"
@@ -23,7 +24,9 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/storage"
 )
 
-type mockPresignProvider struct{}
+type mockPresignProvider struct {
+	completeErr error
+}
 
 func (m *mockPresignProvider) Save(userID, originalFilename string, data io.Reader) (*storage.FileResult, error) {
 	return &storage.FileResult{URL: "/api/uploads/u/f.jpg", ThumbnailURL: "/api/uploads/u/thumbnails/thumb_f.jpg", Filename: "f.jpg"}, nil
@@ -41,6 +44,9 @@ func (m *mockPresignProvider) PresignUpload(userID, originalFilename, contentTyp
 	}, nil
 }
 func (m *mockPresignProvider) CompletePresignedUpload(userID, objectKey string) (*storage.FileResult, error) {
+	if m.completeErr != nil {
+		return nil, m.completeErr
+	}
 	return &storage.FileResult{
 		URL:                "https://cdn.example.com/uploads/" + objectKey,
 		ThumbnailURL:       "https://cdn.example.com/uploads/" + userID + "/thumbnails/thumb_abc.jpg",
@@ -554,6 +560,25 @@ func TestCompletePresignedUpload_MissingSigningKey_Returns500(t *testing.T) {
 	h.CompletePresignedUpload(rr, req)
 	assert.Equal(t, http.StatusInternalServerError, rr.Code)
 	assert.Contains(t, rr.Body.String(), "Failed to verify upload token")
+}
+
+func TestCompletePresignedUpload_InvalidImageFinalize_Returns400(t *testing.T) {
+	h := NewUploadHandler(t.TempDir(), nil)
+	h.SetStorageProvider(&mockPresignProvider{completeErr: errors.New("uploaded object is not a valid image")})
+	h.SetPresignSigningKey(strings.Repeat("k", 32))
+	userID := uuid.New()
+	objectKey := userID.String() + "/abc.jpg"
+	token, err := h.issuePresignedUploadToken(userID.String(), objectKey, time.Now().Add(presignedUploadTokenTTL))
+	assert.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads/complete", strings.NewReader(`{"object_key":"`+objectKey+`","upload_token":"`+token+`"}`))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+	rr := httptest.NewRecorder()
+
+	h.CompletePresignedUpload(rr, req)
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Failed to finalize upload")
 }
 
 // ---------------------------------------------------------------------------

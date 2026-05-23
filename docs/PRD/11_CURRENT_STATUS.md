@@ -54,6 +54,13 @@ status: active
 > - **Reject path:** sigue sin crear pago ni tocar el evento, pero ahora comparte el mismo boundary transaccional seguro.
 > - **Validación:** `go test ./internal/handlers ./internal/router`.
 
+> [!success] 2026-05-23 — Presigned upload rechaza archivos que no son imagen real (issue #410)
+> Se cerró el fail-open del flujo `POST /api/uploads/complete` para uploads S3 presignados.
+> - **Finalize S3:** `CompletePresignedUpload` ahora valida que el objeto subido decodee como imagen real; si no, borra el objeto y devuelve error.
+> - **Seguridad/contrato:** objetos arbitrarios con `Content-Type` mentido ya no completan como `200 OK` ni quedan expuestos como media pública.
+> - **Comportamiento preservado:** imágenes válidas siguen completando normal; fallos al subir thumbnail siguen siendo soft-fail con fallback al original.
+> - **Validación:** `go test ./internal/storage`, `go test ./internal/handlers -run TestCompletePresignedUpload`.
+
 > [!success] 2026-05-21 — Backend: baseline inicial de benchmarks críticos (issue #385)
 > Se agregó cobertura de benchmark para rutas críticas y lineamientos de tracking de baseline.
 > - **Handlers:** benchmark de `SearchHandler.SearchAll` y `UploadHandler.UploadImage`.
