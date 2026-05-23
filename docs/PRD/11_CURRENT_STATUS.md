@@ -47,6 +47,13 @@ status: active
 > - **Seguridad operativa:** `CreatePublic` valida expiración antes de tocar receipts, así que una request con link expirado no deja archivos privados en disco.
 > - **Validación:** `go test ./internal/handlers`.
 
+> [!success] 2026-05-23 — Aprobación de payment submissions ahora es transaccional (issue #407)
+> Se endureció la revisión organizer para que pago, auto-confirmación del evento y actualización de la submission queden atómicos.
+> - **ReviewSubmission:** relee y bloquea la submission dentro de una transacción antes de decidir approve/reject, evitando dobles aprobaciones concurrentes.
+> - **Approve path:** creación de `payments`, eventual auto-confirm del evento y `linked_payment_id` de la submission ahora hacen commit o rollback juntos.
+> - **Reject path:** sigue sin crear pago ni tocar el evento, pero ahora comparte el mismo boundary transaccional seguro.
+> - **Validación:** `go test ./internal/handlers ./internal/router`.
+
 > [!success] 2026-05-21 — Backend: baseline inicial de benchmarks críticos (issue #385)
 > Se agregó cobertura de benchmark para rutas críticas y lineamientos de tracking de baseline.
 > - **Handlers:** benchmark de `SearchHandler.SearchAll` y `UploadHandler.UploadImage`.
