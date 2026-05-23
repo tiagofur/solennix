@@ -75,12 +75,14 @@ func (r *EventPublicLinkRepo) Create(ctx context.Context, link *models.EventPubl
 }
 
 // GetActiveByEventID returns the currently active link for the event, if
-// any. Returns pgx.ErrNoRows if there is no active link. The user_id check
-// is a multi-tenant guard — callers already know the userID from middleware.
+// any. If there is no active link, callers should use errors.Is(err,
+// pgx.ErrNoRows). The user_id check is a multi-tenant guard — callers already
+// know the userID from middleware.
 func (r *EventPublicLinkRepo) GetActiveByEventID(ctx context.Context, eventID, userID uuid.UUID) (*models.EventPublicLink, error) {
 	query := fmt.Sprintf(`
 		SELECT %s FROM event_public_links
 		WHERE event_id = $1 AND user_id = $2 AND status = 'active'
+			AND (expires_at IS NULL OR expires_at > NOW())
 		LIMIT 1`, eventPublicLinkColumns)
 
 	row := r.pool.QueryRow(ctx, query, eventID, userID)

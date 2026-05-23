@@ -31,6 +31,12 @@ updated: 2025-04-05
 > - Si falla cualquiera de esos pasos, se hace rollback y la submission sigue `pending`.
 > - Reject mantiene el mismo endpoint/JSON, pero sin crear pago ni tocar el evento.
 
+> [!success] 2026-05-23 — Organizer ya no ve links expirados como activos (issue #413)
+> La búsqueda organizer de links activos del Client Portal ahora excluye links vencidos.
+> - `GetActiveByEventID` devuelve links `active` solo si `expires_at` es nulo o futuro.
+> - El organizer deja de recibir links activos que el portal público ya rechazaría con `410`.
+> - El contrato público por token no cambia: `404` sigue siendo token inexistente y `410` sigue siendo link expirado/revocado.
+
 ## Relaciones
 
 - **Padre**: [[Backend MOC]]
