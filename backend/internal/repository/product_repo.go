@@ -222,11 +222,15 @@ func (r *ProductRepo) Search(ctx context.Context, userID uuid.UUID, query string
 		FROM products
 		WHERE user_id = $1
 		AND (
+			name % $2 OR
+			category % $2 OR
 			name ILIKE '%' || $2 || '%' OR
-			category ILIKE '%' || $2 || '%' OR
-			similarity(name, $2) > 0.3
+			category ILIKE '%' || $2 || '%'
 		)
-		ORDER BY similarity(name, $2) DESC, created_at DESC
+		ORDER BY GREATEST(
+			similarity(COALESCE(name, ''), $2),
+			similarity(COALESCE(category, ''), $2)
+		) DESC, created_at DESC
 		LIMIT 10`
 
 	rows, err := r.pool.Query(ctx, sqlQuery, userID, query)

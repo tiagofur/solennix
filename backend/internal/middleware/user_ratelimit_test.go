@@ -10,11 +10,47 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/tiagofur/solennix-backend/internal/models"
 )
 
 // mockPlanResolver returns a fixed plan for any user.
 type mockPlanResolver struct {
 	plan string
+}
+
+type mockSecurityAuditLogger struct {
+	mu   sync.Mutex
+	logs []*models.AuditLog
+}
+
+func (m *mockSecurityAuditLogger) Create(_ context.Context, log *models.AuditLog) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.logs = append(m.logs, log)
+	return nil
+}
+
+func (m *mockSecurityAuditLogger) snapshot() []*models.AuditLog {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	out := make([]*models.AuditLog, len(m.logs))
+	copy(out, m.logs)
+	return out
+}
+
+func waitForAuditLogs(t *testing.T, snapshot func() []*models.AuditLog, minCount int) []*models.AuditLog {
+	t.Helper()
+
+	deadline := time.Now().Add(500 * time.Millisecond)
+	for time.Now().Before(deadline) {
+		logs := snapshot()
+		if len(logs) >= minCount {
+			return logs
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+
+	return snapshot()
 }
 
 func (m *mockPlanResolver) GetPlan(_ context.Context, _ uuid.UUID) string {
@@ -302,6 +338,46 @@ func TestUserRateLimit_ConcurrentInitializationRegistersAllStopFuncs(t *testing.
 	stopFuncsMu.Unlock()
 	if got != workers {
 		t.Fatalf("registered stop funcs = %d, want %d", got, workers)
+	}
+
+	if RateLimitStopFunc != nil {
+		RateLimitStopFunc()
+	}
+}
+
+func TestUserRateLimit_Given429_WhenLimited_ThenSecurityAuditLogged(t *testing.T) {
+	originalInterval := RateLimitCleanupInterval
+	RateLimitCleanupInterval = 10 * time.Millisecond
+	defer func() { RateLimitCleanupInterval = originalInterval }()
+
+	logger := &mockSecurityAuditLogger{}
+	originalLogger := GetSecurityAuditLogger()
+	SetSecurityAuditLogger(logger)
+	defer SetSecurityAuditLogger(originalLogger)
+
+	resolver := &mockPlanResolver{plan: "basic"}
+	handler := UserRateLimit(resolver, 1*time.Second)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	userID := uuid.New()
+	for i := 0; i < 65; i++ {
+		rr := httptest.NewRecorder()
+		handler.ServeHTTP(rr, authenticatedRequest(userID))
+	}
+
+	logs := waitForAuditLogs(t, logger.snapshot, 1)
+	if len(logs) != 1 {
+		t.Fatalf("expected exactly one security audit log per window, got %d", len(logs))
+	}
+	if logs[0].Action != "rate_limited" {
+		t.Fatalf("action = %q, want %q", logs[0].Action, "rate_limited")
+	}
+	if logs[0].ResourceType != "api_request" {
+		t.Fatalf("resource_type = %q, want %q", logs[0].ResourceType, "api_request")
+	}
+	if logs[0].UserID != userID {
+		t.Fatalf("user_id = %v, want %v", logs[0].UserID, userID)
 	}
 
 	if RateLimitStopFunc != nil {

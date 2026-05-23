@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"bufio"
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
@@ -12,6 +14,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math/big"
+	"net"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -36,17 +39,27 @@ import (
 
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 
-// clientIP returns the real client IP address, checking X-Forwarded-For first
-// (for clients behind a reverse proxy), then falling back to r.RemoteAddr.
+const pwnedPasswordRangeURL = "https://api.pwnedpasswords.com/range"
+
+type passwordBreachCheckFunc func(ctx context.Context, password string) (bool, error)
+
+// clientIP returns the real client IP address.
+// It only trusts X-Forwarded-For when middleware.TrustProxy is set, preventing
+// IP spoofing in audit logs. Always strips the port from RemoteAddr.
 func clientIP(r *http.Request) string {
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		// X-Forwarded-For can contain multiple IPs; the first is the original client
-		if i := strings.IndexByte(xff, ','); i > 0 {
-			return strings.TrimSpace(xff[:i])
+	if middleware.TrustProxy {
+		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+			if i := strings.IndexByte(xff, ','); i > 0 {
+				return strings.TrimSpace(xff[:i])
+			}
+			return strings.TrimSpace(xff)
 		}
-		return strings.TrimSpace(xff)
 	}
-	return r.RemoteAddr
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return host
 }
 
 // dummyHash is a pre-computed bcrypt hash used to normalize timing on login attempts
@@ -73,7 +86,7 @@ func blacklistResetToken(token string, expiry time.Time) {
 }
 
 // validatePasswordStrength checks that a password meets minimum complexity requirements:
-// at least 8 characters, one uppercase letter, one lowercase letter, and one digit.
+// at least 8 characters, one uppercase letter, one lowercase letter, one digit, and one symbol.
 func validatePasswordStrength(password string) error {
 	if len(password) < 8 {
 		return fmt.Errorf("auth.password_strength")
@@ -81,7 +94,7 @@ func validatePasswordStrength(password string) error {
 	if len(password) > 128 {
 		return fmt.Errorf("auth.password_max_length")
 	}
-	var hasUpper, hasLower, hasDigit bool
+	var hasUpper, hasLower, hasDigit, hasSymbol bool
 	for _, ch := range password {
 		switch {
 		case unicode.IsUpper(ch):
@@ -90,12 +103,61 @@ func validatePasswordStrength(password string) error {
 			hasLower = true
 		case unicode.IsDigit(ch):
 			hasDigit = true
+		case unicode.IsPunct(ch) || unicode.IsSymbol(ch):
+			hasSymbol = true
 		}
 	}
-	if !hasUpper || !hasLower || !hasDigit {
+	if !hasUpper || !hasLower || !hasDigit || !hasSymbol {
 		return fmt.Errorf("auth.password_strength")
 	}
 	return nil
+}
+
+func checkPasswordBreachedWithClient(ctx context.Context, password, baseURL string, client *http.Client) (bool, error) {
+	hash := sha1.Sum([]byte(password))
+	hashHex := strings.ToUpper(hex.EncodeToString(hash[:]))
+	prefix := hashHex[:5]
+	suffix := hashHex[5:]
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(baseURL, "/")+"/"+prefix, nil)
+	if err != nil {
+		return false, err
+	}
+	req.Header.Set("Add-Padding", "true")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("breach check status: %d", resp.StatusCode)
+	}
+
+	scanner := bufio.NewScanner(resp.Body)
+	// HIBP range responses can be large; increase scanner buffer beyond default.
+	scanner.Buffer(make([]byte, 64*1024), 4*1024*1024)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		parts := strings.SplitN(line, ":", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		if strings.EqualFold(parts[0], suffix) {
+			return true, nil
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return false, err
+	}
+
+	return false, nil
 }
 
 func writeAuthI18nError(w http.ResponseWriter, r *http.Request, status int, key string) {
@@ -109,20 +171,55 @@ func isUniqueViolation(err error) bool {
 }
 
 type AuthHandler struct {
-	userRepo         FullUserRepository
-	authService      *services.AuthService
-	emailService     *services.EmailService
-	cfg              *config.Config
-	refreshTokenRepo RefreshTokenRepository
+	userRepo            FullUserRepository
+	authService         *services.AuthService
+	emailService        *services.EmailService
+	cfg                 *config.Config
+	refreshTokenRepo    RefreshTokenRepository
+	passwordBreachCheck passwordBreachCheckFunc
 }
 
 func NewAuthHandler(userRepo FullUserRepository, authService *services.AuthService, emailService *services.EmailService, cfg *config.Config) *AuthHandler {
-	return &AuthHandler{
+	h := &AuthHandler{
 		userRepo:     userRepo,
 		authService:  authService,
 		emailService: emailService,
 		cfg:          cfg,
 	}
+
+	if cfg != nil && cfg.PasswordBreachCheckEnabled {
+		timeoutSec := cfg.PasswordBreachCheckTimeoutSec
+		if timeoutSec <= 0 {
+			timeoutSec = 2
+		}
+		client := &http.Client{Timeout: time.Duration(timeoutSec) * time.Second}
+		h.passwordBreachCheck = func(ctx context.Context, password string) (bool, error) {
+			return checkPasswordBreachedWithClient(ctx, password, pwnedPasswordRangeURL, client)
+		}
+	}
+
+	return h
+}
+
+func (h *AuthHandler) validatePasswordPolicy(ctx context.Context, password string) error {
+	if err := validatePasswordStrength(password); err != nil {
+		return err
+	}
+	if h.passwordBreachCheck == nil {
+		return nil
+	}
+
+	breached, err := h.passwordBreachCheck(ctx, password)
+	if err != nil {
+		// Optional breach check: fail open to avoid outages blocking auth flows.
+		slog.Warn("password breach check failed", "error", err)
+		return nil
+	}
+	if breached {
+		return fmt.Errorf("auth.password_breached")
+	}
+
+	return nil
 }
 
 // SetRefreshTokenRepo configures refresh token rotation. If not set, old behavior is used.
@@ -231,7 +328,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validatePasswordStrength(req.Password); err != nil {
+	if err := h.validatePasswordPolicy(r.Context(), req.Password); err != nil {
 		writeAuthI18nError(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -328,6 +425,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Check password
 	if !h.authService.CheckPassword(req.Password, user.PasswordHash) {
 		slog.Warn("auth.event", "action", "login_failed", "email", req.Email, "reason", "invalid_password", "ip", clientIP(r))
+		middleware.LogSecurityAuditEvent(user.ID, "auth_failed", "session", map[string]any{
+			"reason": "invalid_password",
+		}, clientIP(r), r.UserAgent())
 		writeAuthI18nError(w, r, http.StatusUnauthorized, "auth.invalid_credentials")
 		return
 	}
@@ -338,17 +438,26 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	if accountStatus == repository.AccountStatusBlocked {
 		slog.Warn("auth.event", "action", "login_failed", "email", req.Email, "reason", "account_blocked", "ip", clientIP(r))
+		middleware.LogSecurityAuditEvent(user.ID, "auth_failed", "session", map[string]any{
+			"reason": "account_blocked",
+		}, clientIP(r), r.UserAgent())
 		writeAuthI18nError(w, r, http.StatusForbidden, "auth.account_blocked")
 		return
 	}
 	if accountStatus == repository.AccountStatusDeleted {
 		slog.Warn("auth.event", "action", "login_failed", "email", req.Email, "reason", "account_deleted", "ip", clientIP(r))
+		middleware.LogSecurityAuditEvent(user.ID, "auth_failed", "session", map[string]any{
+			"reason": "account_deleted",
+		}, clientIP(r), r.UserAgent())
 		writeAuthI18nError(w, r, http.StatusForbidden, "auth.account_deleted")
 		return
 	}
 
 	if user.EmailVerifiedAt == nil {
 		slog.Warn("auth.event", "action", "login_failed", "email", req.Email, "reason", "email_not_verified", "ip", clientIP(r))
+		middleware.LogSecurityAuditEvent(user.ID, "auth_failed", "session", map[string]any{
+			"reason": "email_not_verified",
+		}, clientIP(r), r.UserAgent())
 		writeAuthI18nError(w, r, http.StatusForbidden, "auth.email_not_verified")
 		return
 	}
@@ -499,6 +608,9 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	user, err := h.userRepo.GetByID(r.Context(), claims.UserID)
 	if err != nil || user == nil {
 		slog.Warn("auth.event", "action", "token_refresh_failed", "reason", "user_not_found", "user_id", claims.UserID, "ip", clientIP(r))
+		middleware.LogSecurityAuditEvent(claims.UserID, "auth_failed", "session", map[string]any{
+			"reason": "refresh_user_not_found",
+		}, clientIP(r), r.UserAgent())
 		writeAuthI18nError(w, r, http.StatusUnauthorized, "auth.token_invalid_or_expired")
 		return
 	}
@@ -509,11 +621,17 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	}
 	if accountStatus == repository.AccountStatusBlocked {
 		slog.Warn("auth.event", "action", "token_refresh_failed", "reason", "account_blocked", "user_id", claims.UserID, "ip", clientIP(r))
+		middleware.LogSecurityAuditEvent(claims.UserID, "auth_failed", "session", map[string]any{
+			"reason": "refresh_account_blocked",
+		}, clientIP(r), r.UserAgent())
 		writeAuthI18nError(w, r, http.StatusForbidden, "auth.account_blocked")
 		return
 	}
 	if accountStatus == repository.AccountStatusDeleted {
 		slog.Warn("auth.event", "action", "token_refresh_failed", "reason", "account_deleted", "user_id", claims.UserID, "ip", clientIP(r))
+		middleware.LogSecurityAuditEvent(claims.UserID, "auth_failed", "session", map[string]any{
+			"reason": "refresh_account_deleted",
+		}, clientIP(r), r.UserAgent())
 		writeAuthI18nError(w, r, http.StatusForbidden, "auth.account_deleted")
 		return
 	}
@@ -526,6 +644,9 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 			if strings.Contains(consumeErr.Error(), "reuse detected") {
 				// COMPROMISE: revoke entire family
 				slog.Warn("auth.event", "action", "refresh_token_reuse_detected", "family_id", familyID, "user_id", userID, "ip", clientIP(r))
+				middleware.LogSecurityAuditEvent(userID, "auth_failed", "session", map[string]any{
+					"reason": "refresh_token_reuse_detected",
+				}, clientIP(r), r.UserAgent())
 				h.refreshTokenRepo.RevokeFamily(r.Context(), familyID)
 			}
 			writeAuthI18nError(w, r, http.StatusUnauthorized, "auth.token_invalid_or_expired")
@@ -687,7 +808,7 @@ func (h *AuthHandler) AcceptTeamInvite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validatePasswordStrength(req.Password); err != nil {
+	if err := h.validatePasswordPolicy(r.Context(), req.Password); err != nil {
 		writeAuthI18nError(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -764,7 +885,7 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validatePasswordStrength(req.NewPassword); err != nil {
+	if err := h.validatePasswordPolicy(r.Context(), req.NewPassword); err != nil {
 		writeAuthI18nError(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -838,7 +959,7 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validatePasswordStrength(req.NewPassword); err != nil {
+	if err := h.validatePasswordPolicy(r.Context(), req.NewPassword); err != nil {
 		writeAuthI18nError(w, r, http.StatusBadRequest, err.Error())
 		return
 	}

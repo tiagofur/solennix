@@ -137,13 +137,21 @@ func (r *ClientRepo) Search(ctx context.Context, userID uuid.UUID, query string)
 		FROM clients
 		WHERE user_id = $1
 		AND (
+			name % $2 OR
+			email % $2 OR
+			phone % $2 OR
+			city % $2 OR
 			name ILIKE '%' || $2 || '%' OR
 			email ILIKE '%' || $2 || '%' OR
 			phone ILIKE '%' || $2 || '%' OR
-			city ILIKE '%' || $2 || '%' OR
-			similarity(name, $2) > 0.3
+			city ILIKE '%' || $2 || '%'
 		)
-		ORDER BY similarity(name, $2) DESC, created_at DESC
+		ORDER BY GREATEST(
+			similarity(COALESCE(name, ''), $2),
+			similarity(COALESCE(email, ''), $2),
+			similarity(COALESCE(phone, ''), $2),
+			similarity(COALESCE(city, ''), $2)
+		) DESC, created_at DESC
 		LIMIT 10`
 
 	rows, err := r.pool.Query(ctx, sqlQuery, userID, query)
