@@ -36,8 +36,22 @@ describe("PaymentInboxPage", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		vi.mocked(useToast).mockImplementation(
-			(selector?: (state: { addToast: typeof addToast }) => unknown) => {
-				const state = { addToast };
+			(
+				selector?: (state: {
+					toasts: Array<{
+						id: string;
+						message: string;
+						type: "success" | "error" | "info";
+					}>;
+					addToast: typeof addToast;
+					removeToast: (id: string) => void;
+				}) => unknown,
+			) => {
+				const state = {
+					toasts: [],
+					addToast,
+					removeToast: vi.fn(),
+				};
 				return selector ? selector(state) : state;
 			},
 		);
