@@ -13,7 +13,7 @@ final class PaymentSubmissionUnavailableDateTests: XCTestCase {
           "user_id": "u_1",
           "amount": 2500.75,
           "transfer_ref": "SPEI-123",
-          "receipt_file_url": "https://cdn.solennix.com/r/1.png",
+          "receipt_file_url": "/payment-submissions/ps_1/receipt/1.png",
           "status": "pending",
           "submitted_at": "2026-05-10T00:00:00Z",
           "reviewed_by": null,
@@ -38,7 +38,7 @@ final class PaymentSubmissionUnavailableDateTests: XCTestCase {
         XCTAssertEqual(submission.userId, "u_1")
         XCTAssertEqual(submission.amount, 2500.75)
         XCTAssertEqual(submission.transferRef, "SPEI-123")
-        XCTAssertEqual(submission.receiptFileUrl, "https://cdn.solennix.com/r/1.png")
+        XCTAssertEqual(submission.receiptFileUrl, "/payment-submissions/ps_1/receipt/1.png")
         XCTAssertEqual(submission.status, .pending)
         XCTAssertEqual(submission.clientName, "Ana")
         XCTAssertEqual(submission.eventLabel, "Boda Ana")

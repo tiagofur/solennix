@@ -25,6 +25,14 @@ status: active
 **Fecha:** Mayo 2026
 **Version:** 1.7
 
+> [!success] 2026-05-23 — Receipts de payment submissions protegidos (issue #408)
+> Se endureció el flujo de comprobantes de transferencias para evitar exposición pública de archivos financieros.
+> - **Backend:** los receipts nuevos se guardan fuera de `/api/uploads/*`, el token público se valida antes de escribir archivo y existe una ruta protegida para descarga organizer-only.
+> - **Legacy hardening:** `/api/uploads/receipts/*` y `/api/v1/uploads/receipts/*` ya no exponen receipts legacy aunque los archivos sigan en disco temporalmente.
+> - **Portal cliente:** `can_download_receipt_files` queda en `false` para todos los tiers; el portal puede informar “comprobante recibido” pero ya no descargarlo públicamente.
+> - **Web/iOS organizer:** la descarga ahora usa flujo autenticado; Web reutiliza refresh 401 del API client e iOS descarga/presenta el archivo localmente.
+> - **Validación:** `go test ./internal/handlers ./internal/router`, `npx vitest run src/pages/Payments/PaymentInboxPage.test.tsx src/pages/ClientPortal/ClientPortalPage.test.tsx`.
+
 > [!success] 2026-05-21 — Backend: baseline inicial de benchmarks críticos (issue #385)
 > Se agregó cobertura de benchmark para rutas críticas y lineamientos de tracking de baseline.
 > - **Handlers:** benchmark de `SearchHandler.SearchAll` y `UploadHandler.UploadImage`.
@@ -694,7 +702,7 @@ status: active
 - ✅ Configurable via STORAGE_PROVIDER=local|s3
 - ✅ S3Provider compatible con AWS S3, MinIO, DigitalOcean Spaces
 
-### Migraciones (45 total)
+### Migraciones (59 archivos `.up.sql`; numeración activa hasta 057)
 
 - ✅ 001: Tabla de usuarios
 - ✅ 002: Tabla de clientes

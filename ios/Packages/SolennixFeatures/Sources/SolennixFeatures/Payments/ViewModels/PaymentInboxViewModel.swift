@@ -30,6 +30,8 @@ public final class PaymentInboxViewModel {
     public var approvingId: String? = nil
     /// ID currently being rejected
     public var rejectingId: String? = nil
+    /// ID currently being downloaded
+    public var downloadingReceiptId: String? = nil
 
     // MARK: - Dependencies
 
@@ -100,6 +102,24 @@ public final class PaymentInboxViewModel {
             errorMessage = mapError(error)
         }
         rejectingId = nil
+    }
+
+    @MainActor
+    public func downloadReceipt(for submission: PaymentSubmission) async {
+        guard let receiptPath = submission.receiptFileUrl else { return }
+
+        downloadingReceiptId = submission.id
+        errorMessage = nil
+        do {
+            let receiptData = try await apiClient.getData(receiptPath)
+            let suggestedName = URL(string: receiptPath)?.lastPathComponent ?? "receipt-\(submission.id)"
+            let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(suggestedName)
+            try receiptData.write(to: fileURL, options: .atomic)
+            try EventPDFFileService.presentShareSheet(fileURL: fileURL)
+        } catch {
+            errorMessage = mapError(error)
+        }
+        downloadingReceiptId = nil
     }
 
     // MARK: - Helpers

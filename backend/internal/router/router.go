@@ -3,6 +3,8 @@ package router
 import (
 	"context"
 	"net/http"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -124,9 +126,18 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	// Serve uploaded files (public — images are accessible by URL)
 	// Mounted on the main router (not the subrouter) because http.StripPrefix
 	// needs the full original request path to strip correctly.
+	isReceiptUploadPath := func(requestPath string, prefix string) bool {
+		trimmed := strings.TrimPrefix(requestPath, prefix)
+		cleaned := path.Clean("/" + trimmed)
+		return cleaned == "/receipts" || strings.HasPrefix(cleaned, "/receipts/")
+	}
 	v1FileServer := http.StripPrefix("/api/v1/uploads/", http.FileServer(http.Dir(uploadDir)))
 	legacyFileServer := http.StripPrefix("/api/uploads/", http.FileServer(http.Dir(uploadDir)))
 	r.Get("/api/v1/uploads/*", func(w http.ResponseWriter, r *http.Request) {
+		if isReceiptUploadPath(r.URL.Path, "/api/v1/uploads/") {
+			http.NotFound(w, r)
+			return
+		}
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
 		w.Header().Set("Cache-Control", "public, max-age=31536000")
@@ -134,6 +145,10 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		v1FileServer.ServeHTTP(w, r)
 	})
 	r.Get("/api/uploads/*", func(w http.ResponseWriter, r *http.Request) {
+		if isReceiptUploadPath(r.URL.Path, "/api/uploads/") {
+			http.NotFound(w, r)
+			return
+		}
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
 		w.Header().Set("Cache-Control", "public, max-age=31536000")
@@ -315,6 +330,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		// Payment Submissions (organizer review inbox)
 		r.Route("/payment-submissions", func(r chi.Router) {
 			r.Get("/", paymentSubmissionHandler.GetPendingOrganizerInbox)
+			r.Get("/{id}/receipt/{filename}", paymentSubmissionHandler.GetReceipt)
 			r.Patch("/{id}", paymentSubmissionHandler.ReviewSubmission)
 		})
 
@@ -327,6 +343,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		// Backward-compatible alias for older organizer clients still calling the prefixed path.
 		r.Route("/organizer/payment-submissions", func(r chi.Router) {
 			r.Get("/", paymentSubmissionHandler.GetPendingOrganizerInbox)
+			r.Get("/{id}/receipt/{filename}", paymentSubmissionHandler.GetReceipt)
 			r.Patch("/{id}", paymentSubmissionHandler.ReviewSubmission)
 		})
 

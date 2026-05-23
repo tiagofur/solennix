@@ -50,6 +50,13 @@ El módulo usa `CRUDHandler` para el CRUD manual de pagos (abonos, efectivo, tra
 > [!info] Solo registro manual
 > Los pagos son registros manuales que el organizador lleva para trackear lo cobrado fuera de la app (efectivo, transferencia directa, etc.). Solennix no procesa ni intermediar pagos entre organizadores y sus clientes. Stripe se usa exclusivamente para las suscripciones Pro de los usuarios.
 
+> [!success] 2026-05-23 — Receipts protegidos en payment submissions (issue #408)
+> El flujo de `payment_submissions` ya no expone comprobantes por el file server público.
+> - Los receipts nuevos se guardan en una carpeta privada fuera de `/api/uploads/*`.
+> - El portal público ya no ofrece descarga de receipts; solo puede mostrar que existe comprobante recibido.
+> - El organizer descarga receipts por una ruta protegida, con auth, ownership y plan válido.
+> - Las rutas públicas `/api/uploads/receipts/*` y `/api/v1/uploads/receipts/*` quedaron bloqueadas para receipts legacy.
+
 ---
 
 ## Endpoints — Pagos Manuales

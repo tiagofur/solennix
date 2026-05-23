@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -27,20 +29,120 @@ var allowedReceiptMIME = map[string]string{
 }
 
 type PaymentSubmissionHandler struct {
-	repo        *repository.PaymentSubmissionRepo
-	paymentRepo *repository.PaymentRepo
-	userRepo    FullUserRepository
-	pool        *pgxpool.Pool
-	uploadDir   string
+	repo               *repository.PaymentSubmissionRepo
+	paymentRepo        *repository.PaymentRepo
+	userRepo           FullUserRepository
+	pool               *pgxpool.Pool
+	uploadDir          string
+	privateReceiptsDir string
+
+	lookupPublicLink func(context.Context, string) (*models.EventPublicLink, error)
+	createSubmission func(context.Context, *models.PaymentSubmission) error
+	getSubmission    func(context.Context, uuid.UUID) (*models.PaymentSubmission, error)
 }
 
 func NewPaymentSubmissionHandler(repo *repository.PaymentSubmissionRepo, paymentRepo *repository.PaymentRepo, userRepo FullUserRepository, pool *pgxpool.Pool, uploadDir string) *PaymentSubmissionHandler {
-	receiptsDir := filepath.Join(uploadDir, "receipts")
-	if err := os.MkdirAll(receiptsDir, 0755); err != nil {
-		// Non-fatal: log and continue; uploads will fail at runtime if dir missing.
-		_ = err
+	privateReceiptsDir := paymentSubmissionPrivateReceiptsDir(uploadDir)
+	if err := os.MkdirAll(privateReceiptsDir, 0o755); err != nil {
+		slog.Warn("Failed to prepare private payment receipts directory", "path", privateReceiptsDir, "error", err)
 	}
-	return &PaymentSubmissionHandler{repo: repo, paymentRepo: paymentRepo, userRepo: userRepo, pool: pool, uploadDir: uploadDir}
+	return &PaymentSubmissionHandler{
+		repo:               repo,
+		paymentRepo:        paymentRepo,
+		userRepo:           userRepo,
+		pool:               pool,
+		uploadDir:          uploadDir,
+		privateReceiptsDir: privateReceiptsDir,
+	}
+}
+
+func paymentSubmissionPrivateReceiptsDir(uploadDir string) string {
+	if strings.TrimSpace(uploadDir) == "" {
+		return filepath.Join(os.TempDir(), "solennix-private-payment-receipts")
+	}
+	return filepath.Join(filepath.Dir(filepath.Clean(uploadDir)), "private-payment-receipts")
+}
+
+func normalizeReceiptFilename(locator string) string {
+	trimmed := strings.TrimSpace(locator)
+	if trimmed == "" {
+		return ""
+	}
+	return filepath.Base(strings.TrimRight(trimmed, "/"))
+}
+
+func (h *PaymentSubmissionHandler) fetchPublicLink(ctx context.Context, token string) (*models.EventPublicLink, error) {
+	if h.lookupPublicLink != nil {
+		return h.lookupPublicLink(ctx, token)
+	}
+	return repository.NewEventPublicLinkRepo(h.pool).GetByToken(ctx, token)
+}
+
+func (h *PaymentSubmissionHandler) createPaymentSubmission(ctx context.Context, ps *models.PaymentSubmission) error {
+	if h.createSubmission != nil {
+		return h.createSubmission(ctx, ps)
+	}
+	return h.repo.Create(ctx, ps)
+}
+
+func (h *PaymentSubmissionHandler) fetchSubmission(ctx context.Context, id uuid.UUID) (*models.PaymentSubmission, error) {
+	if h.getSubmission != nil {
+		return h.getSubmission(ctx, id)
+	}
+	return h.repo.GetByID(ctx, id)
+}
+
+func (h *PaymentSubmissionHandler) receiptDownloadPath(ps *models.PaymentSubmission) *string {
+	if ps == nil || ps.ReceiptFileURL == nil {
+		return nil
+	}
+	filename := normalizeReceiptFilename(*ps.ReceiptFileURL)
+	if filename == "" {
+		return nil
+	}
+	path := fmt.Sprintf("/payment-submissions/%s/receipt/%s", ps.ID.String(), filename)
+	return &path
+}
+
+func (h *PaymentSubmissionHandler) decorateSubmissionReceipt(ps *models.PaymentSubmission) {
+	if ps == nil {
+		return
+	}
+	ps.ReceiptFileURL = h.receiptDownloadPath(ps)
+}
+
+func (h *PaymentSubmissionHandler) decorateSubmissionReceipts(submissions []*models.PaymentSubmission) {
+	for _, submission := range submissions {
+		h.decorateSubmissionReceipt(submission)
+	}
+}
+
+func (h *PaymentSubmissionHandler) resolveReceiptFile(locator string) (string, string, bool) {
+	filename := normalizeReceiptFilename(locator)
+	if filename == "" {
+		return "", "", false
+	}
+
+	privatePath := filepath.Join(h.privateReceiptsDir, filename)
+	if _, err := os.Stat(privatePath); err == nil {
+		return privatePath, filename, true
+	}
+
+	legacyPath := filepath.Join(h.uploadDir, "receipts", filename)
+	if _, err := os.Stat(legacyPath); err == nil {
+		return legacyPath, filename, true
+	}
+
+	return "", filename, false
+}
+
+func removeReceiptFile(path string) {
+	if strings.TrimSpace(path) == "" {
+		return
+	}
+	if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
+		slog.Warn("Failed to remove orphaned payment receipt file", "path", path, "error", err)
+	}
 }
 
 // CreatePublicRequest for client submitting payment from portal
@@ -96,75 +198,8 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// Parse receipt file if provided (optional)
-	var receiptFileURL *string
-	file, fileHeader, fileErr := r.FormFile("receipt_file")
-	if fileErr == nil {
-		defer file.Close()
-
-		// Validate MIME type by reading the first 512 bytes.
-		buf := make([]byte, 512)
-		n, err := file.Read(buf)
-		if err != nil && err != io.EOF {
-			writeError(w, http.StatusBadRequest, "Failed to read uploaded file")
-			return
-		}
-		detectedMIME := http.DetectContentType(buf[:n])
-		// Normalise: http.DetectContentType returns "image/jpeg" etc., but PDF
-		// may be detected as "application/octet-stream" — fall back to extension.
-		ext, mimeOK := allowedReceiptMIME[detectedMIME]
-		if !mimeOK {
-			// Try extension as secondary signal (e.g. PDF).
-			lowerName := strings.ToLower(fileHeader.Filename)
-			for mime, e := range allowedReceiptMIME {
-				if strings.HasSuffix(lowerName, e) {
-					ext = e
-					_ = mime
-					mimeOK = true
-					break
-				}
-			}
-		}
-		if !mimeOK {
-			writeError(w, http.StatusBadRequest, "receipt_file must be jpeg, png, webp, or pdf")
-			return
-		}
-
-		// Validate size (already capped by ParseMultipartForm, but double-check header).
-		if fileHeader.Size > 10<<20 {
-			writeError(w, http.StatusBadRequest, "receipt_file must be 10 MB or smaller")
-			return
-		}
-
-		// Save to {uploadDir}/receipts/{uuid}{ext}
-		receiptsDir := filepath.Join(h.uploadDir, "receipts")
-		filename := fmt.Sprintf("%s%s", uuid.New().String(), ext)
-		dstPath := filepath.Join(receiptsDir, filename)
-
-		dst, err := os.Create(dstPath)
-		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Failed to save receipt file")
-			return
-		}
-		defer dst.Close()
-
-		// Write the already-read buffer, then copy the rest.
-		if _, err := dst.Write(buf[:n]); err != nil {
-			writeError(w, http.StatusInternalServerError, "Failed to write receipt file")
-			return
-		}
-		if _, err := io.Copy(dst, file); err != nil {
-			writeError(w, http.StatusInternalServerError, "Failed to write receipt file")
-			return
-		}
-
-		url := "/api/uploads/receipts/" + filename
-		receiptFileURL = &url
-	}
-
-	// Validate event public link
-	eventPublicLinkRepo := repository.NewEventPublicLinkRepo(h.pool)
-	link, err := eventPublicLinkRepo.GetByToken(ctx, token)
+	// Validate event public link before touching any receipt file.
+	link, err := h.fetchPublicLink(ctx, token)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "Invalid or expired link")
 		return
@@ -175,10 +210,67 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// Verify event ID matches
 	if link.EventID != eventID {
 		writeError(w, http.StatusBadRequest, "Event ID mismatch")
 		return
+	}
+
+	// Parse receipt file if provided (optional)
+	var receiptFileURL *string
+	var receiptFilePath string
+	file, fileHeader, fileErr := r.FormFile("receipt_file")
+	if fileErr == nil {
+		defer file.Close()
+
+		buf := make([]byte, 512)
+		n, err := file.Read(buf)
+		if err != nil && err != io.EOF {
+			writeError(w, http.StatusBadRequest, "Failed to read uploaded file")
+			return
+		}
+		detectedMIME := http.DetectContentType(buf[:n])
+		ext, mimeOK := allowedReceiptMIME[detectedMIME]
+		if !mimeOK {
+			lowerName := strings.ToLower(fileHeader.Filename)
+			for _, candidateExt := range allowedReceiptMIME {
+				if strings.HasSuffix(lowerName, candidateExt) {
+					ext = candidateExt
+					mimeOK = true
+					break
+				}
+			}
+		}
+		if !mimeOK {
+			writeError(w, http.StatusBadRequest, "receipt_file must be jpeg, png, webp, or pdf")
+			return
+		}
+
+		if fileHeader.Size > 10<<20 {
+			writeError(w, http.StatusBadRequest, "receipt_file must be 10 MB or smaller")
+			return
+		}
+
+		filename := fmt.Sprintf("%s%s", uuid.New().String(), ext)
+		dstPath := filepath.Join(h.privateReceiptsDir, filename)
+
+		dst, err := os.Create(dstPath)
+		receiptFilePath = dstPath
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to save receipt file")
+			return
+		}
+		defer dst.Close()
+
+		if _, err := dst.Write(buf[:n]); err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to write receipt file")
+			return
+		}
+		if _, err := io.Copy(dst, file); err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to write receipt file")
+			return
+		}
+
+		receiptFileURL = &filename
 	}
 
 	ps := &models.PaymentSubmission{
@@ -191,10 +283,13 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 		Status:         "pending",
 	}
 
-	if err := h.repo.Create(ctx, ps); err != nil {
+	if err := h.createPaymentSubmission(ctx, ps); err != nil {
+		removeReceiptFile(receiptFilePath)
 		writeError(w, http.StatusInternalServerError, "Failed to create submission")
 		return
 	}
+
+	h.decorateSubmissionReceipt(ps)
 
 	writeJSON(w, http.StatusCreated, map[string]interface{}{
 		"data": ps,
@@ -230,9 +325,7 @@ func (h *PaymentSubmissionHandler) GetHistoryPublic(w http.ResponseWriter, r *ht
 		return
 	}
 
-	// Validate event public link
-	eventPublicLinkRepo := repository.NewEventPublicLinkRepo(h.pool)
-	link, err := eventPublicLinkRepo.GetByToken(ctx, token)
+	link, err := h.fetchPublicLink(ctx, token)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "Invalid or expired link")
 		return
@@ -243,7 +336,6 @@ func (h *PaymentSubmissionHandler) GetHistoryPublic(w http.ResponseWriter, r *ht
 		return
 	}
 
-	// Verify event ID matches
 	if link.EventID != eventID {
 		writeError(w, http.StatusBadRequest, "Event ID mismatch")
 		return
@@ -259,20 +351,29 @@ func (h *PaymentSubmissionHandler) GetHistoryPublic(w http.ResponseWriter, r *ht
 		submissions = make([]*models.PaymentSubmission, 0)
 	}
 
+	h.decorateSubmissionReceipts(submissions)
+
 	writeJSON(w, http.StatusOK, map[string]interface{}{"data": submissions})
 }
 
 // GetPendingOrganizerInbox handles GET /api/payment-submissions (organizer review inbox)
-func (h *PaymentSubmissionHandler) GetPendingOrganizerInbox(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	userID := middleware.GetUserID(ctx)
+func (h *PaymentSubmissionHandler) requireOrganizerReceiptAccess(w http.ResponseWriter, ctx context.Context, userID uuid.UUID) bool {
 	organizer, err := h.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to load organizer")
-		return
+		return false
 	}
 	if !FeatureAvailable(organizer.Plan, "payment_submissions") || !IsPlanActive(organizer) {
 		writeError(w, http.StatusForbidden, "This is a Pro-exclusive feature. Upgrade to review payment submissions.")
+		return false
+	}
+	return true
+}
+
+func (h *PaymentSubmissionHandler) GetPendingOrganizerInbox(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userID := middleware.GetUserID(ctx)
+	if !h.requireOrganizerReceiptAccess(w, ctx, userID) {
 		return
 	}
 
@@ -286,7 +387,50 @@ func (h *PaymentSubmissionHandler) GetPendingOrganizerInbox(w http.ResponseWrite
 		submissions = make([]*models.PaymentSubmission, 0)
 	}
 
+	h.decorateSubmissionReceipts(submissions)
+
 	writeJSON(w, http.StatusOK, map[string]interface{}{"data": submissions})
+}
+
+// GetReceipt handles GET /api/payment-submissions/{id}/receipt/{filename} (organizer-only access)
+func (h *PaymentSubmissionHandler) GetReceipt(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userID := middleware.GetUserID(ctx)
+	if !h.requireOrganizerReceiptAccess(w, ctx, userID) {
+		return
+	}
+
+	submissionID, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid submission ID")
+		return
+	}
+
+	ps, err := h.fetchSubmission(ctx, submissionID)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "Submission not found")
+		return
+	}
+
+	if ps.UserID != userID {
+		writeError(w, http.StatusForbidden, "You do not have permission to access this receipt")
+		return
+	}
+
+	if ps.ReceiptFileURL == nil {
+		writeError(w, http.StatusNotFound, "Receipt not found")
+		return
+	}
+
+	filePath, filename, ok := h.resolveReceiptFile(*ps.ReceiptFileURL)
+	if !ok {
+		writeError(w, http.StatusNotFound, "Receipt not found")
+		return
+	}
+
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", filename))
+	http.ServeFile(w, r, filePath)
 }
 
 // ReviewRequest for approving/rejecting a submission
@@ -372,6 +516,8 @@ func (h *PaymentSubmissionHandler) ReviewSubmission(w http.ResponseWriter, r *ht
 		writeError(w, http.StatusInternalServerError, "Failed to update submission")
 		return
 	}
+
+	h.decorateSubmissionReceipt(ps)
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{"data": ps})
 }
