@@ -206,7 +206,7 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 			writeError(w, http.StatusNotFound, "Invalid or expired link")
 			return
 		}
-		slog.Error("Failed to look up payment submission public link", "token", token, "error", err)
+		slog.Error("Failed to look up payment submission public link", "error", err)
 		writeError(w, http.StatusInternalServerError, "Failed to validate link")
 		return
 	}
@@ -337,7 +337,7 @@ func (h *PaymentSubmissionHandler) GetHistoryPublic(w http.ResponseWriter, r *ht
 			writeError(w, http.StatusNotFound, "Invalid or expired link")
 			return
 		}
-		slog.Error("Failed to look up payment submission history public link", "token", token, "error", err)
+		slog.Error("Failed to look up payment submission history public link", "error", err)
 		writeError(w, http.StatusInternalServerError, "Failed to validate link")
 		return
 	}
