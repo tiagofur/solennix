@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
@@ -201,7 +202,12 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 	// Validate event public link before touching any receipt file.
 	link, err := h.fetchPublicLink(ctx, token)
 	if err != nil {
-		writeError(w, http.StatusNotFound, "Invalid or expired link")
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "Invalid or expired link")
+			return
+		}
+		slog.Error("Failed to look up payment submission public link", "token", token, "error", err)
+		writeError(w, http.StatusInternalServerError, "Failed to validate link")
 		return
 	}
 
@@ -327,7 +333,12 @@ func (h *PaymentSubmissionHandler) GetHistoryPublic(w http.ResponseWriter, r *ht
 
 	link, err := h.fetchPublicLink(ctx, token)
 	if err != nil {
-		writeError(w, http.StatusNotFound, "Invalid or expired link")
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "Invalid or expired link")
+			return
+		}
+		slog.Error("Failed to look up payment submission history public link", "token", token, "error", err)
+		writeError(w, http.StatusInternalServerError, "Failed to validate link")
 		return
 	}
 

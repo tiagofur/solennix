@@ -33,6 +33,13 @@ status: active
 > - **Web/iOS organizer:** la descarga ahora usa flujo autenticado; Web reutiliza refresh 401 del API client e iOS descarga/presenta el archivo localmente.
 > - **Validación:** `go test ./internal/handlers ./internal/router`, `npx vitest run src/pages/Payments/PaymentInboxPage.test.tsx src/pages/ClientPortal/ClientPortalPage.test.tsx`.
 
+> [!success] 2026-05-23 — Payment submissions ya distinguen 404 real vs 500 backend (issue #411)
+> Se corrigió la semántica de lookup del public link en los endpoints públicos de `payment_submissions`.
+> - **CreatePublic / GetHistoryPublic:** `pgx.ErrNoRows` devuelve `404 Invalid or expired link`, mientras errores reales de DB/backend ahora loguean y responden `500 Failed to validate link`.
+> - **Semántica preservada:** links inactivos siguen en `410`; `event_id` mismatch sigue en `400`.
+> - **Cobertura:** regresiones nuevas cubren `ErrNoRows` wrapped con `%w`, fallos backend y el guard de no escribir receipts cuando el lookup falla temprano.
+> - **Validación:** `go test ./internal/handlers`.
+
 > [!success] 2026-05-21 — Backend: baseline inicial de benchmarks críticos (issue #385)
 > Se agregó cobertura de benchmark para rutas críticas y lineamientos de tracking de baseline.
 > - **Handlers:** benchmark de `SearchHandler.SearchAll` y `UploadHandler.UploadImage`.
