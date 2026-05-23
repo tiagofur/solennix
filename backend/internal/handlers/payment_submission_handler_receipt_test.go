@@ -132,6 +132,46 @@ func TestPaymentSubmissionCreatePublicStoresReceiptPrivatelyAndReturnsProtectedP
 	}
 }
 
+func TestPaymentSubmissionCreatePublicCreateFailureRemovesOrphanedReceipt(t *testing.T) {
+	uploadDir := t.TempDir()
+	handler := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir)
+	organizerID := uuid.New()
+	eventID := uuid.New()
+	clientID := uuid.New()
+	var storedReceipt string
+
+	handler.lookupPublicLink = func(context.Context, string) (*models.EventPublicLink, error) {
+		return &models.EventPublicLink{
+			EventID: eventID,
+			UserID:  organizerID,
+			Status:  "active",
+		}, nil
+	}
+	handler.createSubmission = func(_ context.Context, ps *models.PaymentSubmission) error {
+		if ps.ReceiptFileURL != nil {
+			storedReceipt = *ps.ReceiptFileURL
+		}
+		return errors.New("insert failed")
+	}
+
+	body, contentType := buildPaymentSubmissionMultipart(t, eventID, clientID, "1500", "receipt.png", pngFixtureBytes())
+	req := httptest.NewRequest(http.MethodPost, "/api/public/events/token-123/payment-submissions", body)
+	req.Header.Set("Content-Type", contentType)
+	req.SetPathValue("token", "token-123")
+	w := httptest.NewRecorder()
+
+	handler.CreatePublic(w, req)
+
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+	require.NotEmpty(t, storedReceipt)
+	_, err := os.Stat(filepath.Join(handler.privateReceiptsDir, storedReceipt))
+	require.Error(t, err)
+	assert.True(t, os.IsNotExist(err))
+	entries, err := os.ReadDir(handler.privateReceiptsDir)
+	require.NoError(t, err)
+	assert.Empty(t, entries)
+}
+
 func TestPaymentSubmissionGetReceiptAuthorizationAndMissingFile(t *testing.T) {
 	uploadDir := t.TempDir()
 	ownerID := uuid.New()

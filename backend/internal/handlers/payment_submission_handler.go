@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -43,8 +44,7 @@ type PaymentSubmissionHandler struct {
 func NewPaymentSubmissionHandler(repo *repository.PaymentSubmissionRepo, paymentRepo *repository.PaymentRepo, userRepo FullUserRepository, pool *pgxpool.Pool, uploadDir string) *PaymentSubmissionHandler {
 	privateReceiptsDir := paymentSubmissionPrivateReceiptsDir(uploadDir)
 	if err := os.MkdirAll(privateReceiptsDir, 0o755); err != nil {
-		// Non-fatal: log and continue; uploads will fail at runtime if dir missing.
-		_ = err
+		slog.Warn("Failed to prepare private payment receipts directory", "path", privateReceiptsDir, "error", err)
 	}
 	return &PaymentSubmissionHandler{
 		repo:               repo,
@@ -136,6 +136,15 @@ func (h *PaymentSubmissionHandler) resolveReceiptFile(locator string) (string, s
 	return "", filename, false
 }
 
+func removeReceiptFile(path string) {
+	if strings.TrimSpace(path) == "" {
+		return
+	}
+	if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
+		slog.Warn("Failed to remove orphaned payment receipt file", "path", path, "error", err)
+	}
+}
+
 // CreatePublicRequest for client submitting payment from portal
 type CreatePublicPaymentRequest struct {
 	EventID     uuid.UUID `json:"event_id"`
@@ -208,6 +217,7 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 
 	// Parse receipt file if provided (optional)
 	var receiptFileURL *string
+	var receiptFilePath string
 	file, fileHeader, fileErr := r.FormFile("receipt_file")
 	if fileErr == nil {
 		defer file.Close()
@@ -244,6 +254,7 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 		dstPath := filepath.Join(h.privateReceiptsDir, filename)
 
 		dst, err := os.Create(dstPath)
+		receiptFilePath = dstPath
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "Failed to save receipt file")
 			return
@@ -273,6 +284,7 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 	}
 
 	if err := h.createPaymentSubmission(ctx, ps); err != nil {
+		removeReceiptFile(receiptFilePath)
 		writeError(w, http.StatusInternalServerError, "Failed to create submission")
 		return
 	}
