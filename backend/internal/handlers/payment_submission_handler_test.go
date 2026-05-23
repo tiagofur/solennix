@@ -14,45 +14,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestPaymentSubmissionCreatePublicInvalidToken verifies 410 for expired/invalid tokens.
-func TestPaymentSubmissionCreatePublicInvalidToken(t *testing.T) {
-	handler := &PaymentSubmissionHandler{
-		repo:        nil, // Will be rejected at token validation layer
-		paymentRepo: nil,
-		pool:        nil,
-	}
+// TestPaymentSubmissionCreatePublicMissingToken verifies the handler rejects requests without the route token.
+func TestPaymentSubmissionCreatePublicMissingToken(t *testing.T) {
+	handler := &PaymentSubmissionHandler{}
+	req := httptest.NewRequest(http.MethodPost, "/api/public/events/payment-submissions", nil)
+	w := httptest.NewRecorder()
 
-	tests := []struct {
-		name           string
-		token          string
-		expectedStatus int
-		expectedError  string
-	}{
-		{
-			name:           "empty token",
-			token:          "",
-			expectedStatus: http.StatusBadRequest,
-			expectedError:  "Token is required",
-		},
-		{
-			name:           "invalid token format",
-			token:          "not-a-valid-token",
-			expectedStatus: http.StatusBadRequest,
-			expectedError:  "",
-		},
-	}
+	handler.CreatePublic(w, req)
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			url := fmt.Sprintf("/api/public/events/%s/payment-submissions", tc.token)
-			req := httptest.NewRequest(http.MethodPost, url, nil)
-			w := httptest.NewRecorder()
-
-			handler.CreatePublic(w, req)
-
-			assert.Equal(t, tc.expectedStatus, w.Code)
-		})
-	}
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
 // TestPaymentSubmissionCreatePublicMissingFields verifies 400 for missing required fields.
@@ -138,6 +108,7 @@ func TestPaymentSubmissionCreatePublicMissingFields(t *testing.T) {
 
 			req := httptest.NewRequest(http.MethodPost, "/api/public/events/token123/payment-submissions", body)
 			req.Header.Set("Content-Type", writer.FormDataContentType())
+			req.SetPathValue("token", "token123")
 			w := httptest.NewRecorder()
 
 			handler.CreatePublic(w, req)
@@ -189,6 +160,7 @@ func TestPaymentSubmissionPublicHistoryValidation(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			url := fmt.Sprintf("/api/public/events/token123/payment-submissions?event_id=%s&client_id=%s", tc.eventID, tc.clientID)
 			req := httptest.NewRequest(http.MethodGet, url, nil)
+			req.SetPathValue("token", "token123")
 			w := httptest.NewRecorder()
 
 			handler.GetHistoryPublic(w, req)

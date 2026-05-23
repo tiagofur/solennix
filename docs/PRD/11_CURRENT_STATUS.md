@@ -68,6 +68,13 @@ status: active
 > - **UX organizer:** Web/iOS/Android ya pueden caer naturalmente al estado “no active link” en vez de mostrar una URL vencida.
 > - **Validación:** `go test ./internal/repository`.
 
+> [!success] 2026-05-23 — Tests públicos de payment submissions ya usan path params reales (issue #415)
+> Se corrigió falsa cobertura en tests de `payment_submissions` para que las rutas públicas realmente ejerzan `PathValue("token")` y no la rama accidental de token vacío.
+> - **Handler tests corregidos:** validaciones de missing fields y history query ahora setean el token real antes de ejecutar el handler.
+> - **Cobertura nueva:** casos explícitos para links revocados/inactivos (`410`) y `event_id` mismatch (`400`) tanto en create como en history.
+> - **Seguridad de side effects:** los casos de create con link inválido siguen afirmando que no se escriben receipts cuando la validación corta antes.
+> - **Validación:** `go test ./internal/handlers -run 'TestPaymentSubmission(CreatePublic|GetHistoryPublic|PublicHistoryValidation)'`.
+
 > [!success] 2026-05-23 — Stripe legacy de client payments quedó bloqueado (issue #406)
 > Se apagó el flujo heredado de Stripe para pagos entre organizer y cliente, alineándolo con el contrato actual del producto.
 > - **Handlers legacy:** `POST /api/events/{id}/checkout-session` y `GET /api/events/{id}/payment-session` ahora responden `410 Gone` con mensaje explícito de no soportado.
