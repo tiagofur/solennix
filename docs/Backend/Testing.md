@@ -163,6 +163,7 @@ quadrantChart
 | **`event_form_handler.go`** | Sin archivo de test — `GenerateLink`, `ListLinks`, `DeleteLink`, `GetFormData`, `SubmitForm` sin cobertura |
 | **`event_public_link_handler.go`** | Sin archivo de test — `GetPublicEvent`, `CreatePublicLink` sin cobertura |
 | **`staff_team_handler.go`** | Sin archivo de test — CRUD de equipos sin cobertura |
+| **`payment_submission` organizer review route params** | Parcialmente cerrado en 2026-05-23 (issue #416): tests de review organizer ya usan `PathValue("id")` real y validan errores de negocio en vez de caer por accidente en la rama de ID inválido |
 | Repository unit tests | No hay unit tests con mocks — solo integration tests con DB real |
 | Benchmark tests | No hay tests de performance con `go test -bench` |
 | Fuzz testing | No hay fuzz testing para validación de inputs |
