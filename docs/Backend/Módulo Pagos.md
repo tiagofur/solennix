@@ -24,6 +24,13 @@ updated: 2025-04-05
 > - La validación de expiración ocurre antes de tocar receipts, así que requests vencidas no escriben archivos.
 > - Se preserva la distinción: token inexistente `404`, link inactivo/expirado `410`, mismatch `400`.
 
+> [!success] 2026-05-23 — Review organizer transaccional en payment submissions (issue #407)
+> La aprobación/rechazo organizer ya no deja writes parciales.
+> - La submission se relee con lock dentro de una transacción antes de revisar su estado.
+> - Approve crea `payments`, intenta auto-confirmar el evento y actualiza `linked_payment_id` en una sola unidad atómica.
+> - Si falla cualquiera de esos pasos, se hace rollback y la submission sigue `pending`.
+> - Reject mantiene el mismo endpoint/JSON, pero sin crear pago ni tocar el evento.
+
 ## Relaciones
 
 - **Padre**: [[Backend MOC]]

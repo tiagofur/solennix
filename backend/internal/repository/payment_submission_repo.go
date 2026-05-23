@@ -73,6 +73,18 @@ func (r *PaymentSubmissionRepo) GetByID(ctx context.Context, id uuid.UUID) (*mod
 	return scanPaymentSubmissionWithJoins(row)
 }
 
+func (r *PaymentSubmissionRepo) GetByIDForUpdateTx(ctx context.Context, tx pgx.Tx, id uuid.UUID) (*models.PaymentSubmission, error) {
+	query := fmt.Sprintf(`SELECT %s, c.name as client_name, e.service_type as event_label
+		FROM payment_submissions ps
+		LEFT JOIN clients c ON ps.client_id = c.id
+		LEFT JOIN events e ON ps.event_id = e.id
+		WHERE ps.id = $1
+		FOR UPDATE`, paymentSubmissionSelectFields)
+
+	row := tx.QueryRow(ctx, query, id)
+	return scanPaymentSubmissionWithJoins(row)
+}
+
 // GetByEventID retrieves all submissions for an event.
 func (r *PaymentSubmissionRepo) GetByEventID(ctx context.Context, eventID uuid.UUID) ([]*models.PaymentSubmission, error) {
 	query := fmt.Sprintf(`SELECT %s, c.name as client_name, e.service_type as event_label
@@ -137,6 +149,20 @@ func (r *PaymentSubmissionRepo) Update(ctx context.Context, ps *models.PaymentSu
 		RETURNING updated_at`
 
 	err := r.pool.QueryRow(ctx, query,
+		ps.Status, ps.ReviewedBy, ps.ReviewedAt, ps.RejectionReason, ps.LinkedPaymentID, ps.ID,
+	).Scan(&ps.UpdatedAt)
+
+	return err
+}
+
+func (r *PaymentSubmissionRepo) UpdateTx(ctx context.Context, tx pgx.Tx, ps *models.PaymentSubmission) error {
+	query := `UPDATE payment_submissions
+		SET status = $1, reviewed_by = $2, reviewed_at = $3,
+			rejection_reason = $4, linked_payment_id = $5, updated_at = NOW()
+		WHERE id = $6
+		RETURNING updated_at`
+
+	err := tx.QueryRow(ctx, query,
 		ps.Status, ps.ReviewedBy, ps.ReviewedAt, ps.RejectionReason, ps.LinkedPaymentID, ps.ID,
 	).Scan(&ps.UpdatedAt)
 

@@ -29,6 +29,46 @@ var allowedReceiptMIME = map[string]string{
 	"application/pdf": ".pdf",
 }
 
+type paymentSubmissionReviewStore interface {
+	GetSubmissionForUpdate(context.Context, uuid.UUID) (*models.PaymentSubmission, error)
+	CreatePayment(context.Context, *models.Payment) error
+	AutoConfirmQuotedEventIfDepositCovered(context.Context, uuid.UUID, uuid.UUID) (bool, error)
+	UpdateSubmission(context.Context, *models.PaymentSubmission) error
+	Commit(context.Context) error
+	Rollback(context.Context) error
+}
+
+type paymentSubmissionReviewStoreTx struct {
+	tx             pgx.Tx
+	submissionRepo *repository.PaymentSubmissionRepo
+	paymentRepo    *repository.PaymentRepo
+	eventRepo      *repository.EventRepo
+}
+
+func (s *paymentSubmissionReviewStoreTx) GetSubmissionForUpdate(ctx context.Context, id uuid.UUID) (*models.PaymentSubmission, error) {
+	return s.submissionRepo.GetByIDForUpdateTx(ctx, s.tx, id)
+}
+
+func (s *paymentSubmissionReviewStoreTx) CreatePayment(ctx context.Context, payment *models.Payment) error {
+	return s.paymentRepo.CreateTx(ctx, s.tx, payment)
+}
+
+func (s *paymentSubmissionReviewStoreTx) AutoConfirmQuotedEventIfDepositCovered(ctx context.Context, eventID, userID uuid.UUID) (bool, error) {
+	return autoConfirmQuotedEventIfDepositCovered(ctx, txEventStatusRepo{repo: s.eventRepo, tx: s.tx}, txPaymentStatusRepo{repo: s.paymentRepo, tx: s.tx}, eventID, userID)
+}
+
+func (s *paymentSubmissionReviewStoreTx) UpdateSubmission(ctx context.Context, ps *models.PaymentSubmission) error {
+	return s.submissionRepo.UpdateTx(ctx, s.tx, ps)
+}
+
+func (s *paymentSubmissionReviewStoreTx) Commit(ctx context.Context) error {
+	return s.tx.Commit(ctx)
+}
+
+func (s *paymentSubmissionReviewStoreTx) Rollback(ctx context.Context) error {
+	return s.tx.Rollback(ctx)
+}
+
 type PaymentSubmissionHandler struct {
 	repo               *repository.PaymentSubmissionRepo
 	paymentRepo        *repository.PaymentRepo
@@ -40,6 +80,7 @@ type PaymentSubmissionHandler struct {
 	lookupPublicLink func(context.Context, string) (*models.EventPublicLink, error)
 	createSubmission func(context.Context, *models.PaymentSubmission) error
 	getSubmission    func(context.Context, uuid.UUID) (*models.PaymentSubmission, error)
+	beginReviewTx    func(context.Context) (paymentSubmissionReviewStore, error)
 }
 
 func NewPaymentSubmissionHandler(repo *repository.PaymentSubmissionRepo, paymentRepo *repository.PaymentRepo, userRepo FullUserRepository, pool *pgxpool.Pool, uploadDir string) *PaymentSubmissionHandler {
@@ -47,7 +88,7 @@ func NewPaymentSubmissionHandler(repo *repository.PaymentSubmissionRepo, payment
 	if err := os.MkdirAll(privateReceiptsDir, 0o755); err != nil {
 		slog.Warn("Failed to prepare private payment receipts directory", "path", privateReceiptsDir, "error", err)
 	}
-	return &PaymentSubmissionHandler{
+	handler := &PaymentSubmissionHandler{
 		repo:               repo,
 		paymentRepo:        paymentRepo,
 		userRepo:           userRepo,
@@ -55,6 +96,19 @@ func NewPaymentSubmissionHandler(repo *repository.PaymentSubmissionRepo, payment
 		uploadDir:          uploadDir,
 		privateReceiptsDir: privateReceiptsDir,
 	}
+	handler.beginReviewTx = func(ctx context.Context) (paymentSubmissionReviewStore, error) {
+		tx, err := pool.Begin(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return &paymentSubmissionReviewStoreTx{
+			tx:             tx,
+			submissionRepo: repo,
+			paymentRepo:    paymentRepo,
+			eventRepo:      repository.NewEventRepo(pool),
+		}, nil
+	}
+	return handler
 }
 
 func paymentSubmissionPrivateReceiptsDir(uploadDir string) string {
@@ -483,8 +537,25 @@ func (h *PaymentSubmissionHandler) ReviewSubmission(w http.ResponseWriter, r *ht
 		writeError(w, http.StatusBadRequest, "status must be 'approved' or 'rejected'")
 		return
 	}
+	if req.Status == "rejected" && (req.RejectionReason == nil || strings.TrimSpace(*req.RejectionReason) == "") {
+		writeError(w, http.StatusBadRequest, "rejection_reason is required when rejecting a submission")
+		return
+	}
+	if h.beginReviewTx == nil {
+		writeError(w, http.StatusInternalServerError, "Failed to start review transaction")
+		return
+	}
 
-	ps, err := h.repo.GetByID(ctx, submissionID)
+	reviewStore, err := h.beginReviewTx(ctx)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to start review transaction")
+		return
+	}
+	defer func() {
+		_ = reviewStore.Rollback(ctx)
+	}()
+
+	ps, err := reviewStore.GetSubmissionForUpdate(ctx, submissionID)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "Submission not found")
 		return
@@ -507,8 +578,9 @@ func (h *PaymentSubmissionHandler) ReviewSubmission(w http.ResponseWriter, r *ht
 	now := time.Now()
 	ps.ReviewedAt = &now
 	ps.RejectionReason = req.RejectionReason
+	ps.LinkedPaymentID = nil
 
-	// If approved, create Payment row
+	// If approved, create Payment row and auto-confirm in the same transaction.
 	if req.Status == "approved" {
 		payment := &models.Payment{
 			EventID:       ps.EventID,
@@ -519,24 +591,29 @@ func (h *PaymentSubmissionHandler) ReviewSubmission(w http.ResponseWriter, r *ht
 			Notes:         ps.TransferRef,
 		}
 
-		if err := h.paymentRepo.Create(ctx, payment); err != nil {
+		if err := reviewStore.CreatePayment(ctx, payment); err != nil {
 			writeError(w, http.StatusInternalServerError, "Failed to create payment record")
 			return
 		}
 
 		ps.LinkedPaymentID = &payment.ID
 
-		eventRepo := repository.NewEventRepo(h.pool)
-		if _, err := autoConfirmQuotedEventIfDepositCovered(ctx, eventRepo, h.paymentRepo, ps.EventID, ps.UserID); err != nil {
-			slog.Warn("Failed to auto-confirm event after payment submission review", "event_id", ps.EventID, "submission_id", ps.ID, "error", err)
+		if _, err := reviewStore.AutoConfirmQuotedEventIfDepositCovered(ctx, ps.EventID, ps.UserID); err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to update event status")
+			return
 		}
 
 		// TODO: Emit notifications (client/organizer)
 		// TODO: Update AuditLog
 	}
 
-	if err := h.repo.Update(ctx, ps); err != nil {
+	if err := reviewStore.UpdateSubmission(ctx, ps); err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to update submission")
+		return
+	}
+
+	if err := reviewStore.Commit(ctx); err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to finalize submission review")
 		return
 	}
 

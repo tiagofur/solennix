@@ -191,6 +191,17 @@ func (r *EventRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.
 	return &e, nil
 }
 
+func (r *EventRepo) GetByIDTx(ctx context.Context, tx pgx.Tx, id, userID uuid.UUID) (*models.Event, error) {
+	query := fmt.Sprintf(`SELECT %s, c.name as client_name, c.phone as client_phone
+		FROM events e LEFT JOIN clients c ON e.client_id = c.id
+		WHERE e.id = $1 AND e.user_id = $2`, eventSelectFields)
+	e, err := scanEventWithClient(tx.QueryRow(ctx, query, id, userID))
+	if err != nil {
+		return nil, err
+	}
+	return &e, nil
+}
+
 func (r *EventRepo) GetUpcoming(ctx context.Context, userID uuid.UUID, limit int) ([]models.Event, error) {
 	query := fmt.Sprintf(`SELECT %s, c.name as client_name, c.phone as client_phone
 		FROM events e LEFT JOIN clients c ON e.client_id = c.id
@@ -281,6 +292,32 @@ func (r *EventRepo) Update(ctx context.Context, e *models.Event) error {
 		WHERE id=$1 AND user_id=$2
 		RETURNING created_at, updated_at`
 	return r.pool.QueryRow(ctx, query,
+		e.ID, e.UserID, e.ClientID, e.EventDate, startTime, endTime,
+		e.ServiceType, e.NumPeople, e.Status, e.Discount, e.DiscountType, e.RequiresInvoice,
+		e.TaxRate, e.TaxAmount, e.TotalAmount, e.Location, e.City,
+		e.DepositPercent, e.CancellationDays, e.RefundPercent, e.Notes, e.Photos,
+	).Scan(&e.CreatedAt, &e.UpdatedAt)
+}
+
+func (r *EventRepo) UpdateTx(ctx context.Context, tx pgx.Tx, e *models.Event) error {
+	var startTime, endTime *string
+	if e.StartTime != nil && *e.StartTime != "" {
+		startTime = e.StartTime
+	}
+	if e.EndTime != nil && *e.EndTime != "" {
+		endTime = e.EndTime
+	}
+
+	if e.DiscountType == "" {
+		e.DiscountType = "percent"
+	}
+	query := `UPDATE events SET client_id=$3, event_date=$4, start_time=$5, end_time=$6,
+		service_type=$7, num_people=$8, status=$9, discount=$10, discount_type=$11, requires_invoice=$12,
+		tax_rate=$13, tax_amount=$14, total_amount=$15, location=$16, city=$17,
+		deposit_percent=$18, cancellation_days=$19, refund_percent=$20, notes=$21, photos=$22, updated_at=NOW()
+		WHERE id=$1 AND user_id=$2
+		RETURNING created_at, updated_at`
+	return tx.QueryRow(ctx, query,
 		e.ID, e.UserID, e.ClientID, e.EventDate, startTime, endTime,
 		e.ServiceType, e.NumPeople, e.Status, e.Discount, e.DiscountType, e.RequiresInvoice,
 		e.TaxRate, e.TaxAmount, e.TotalAmount, e.Location, e.City,
