@@ -25,6 +25,14 @@ status: active
 **Fecha:** Mayo 2026
 **Version:** 1.7
 
+> [!success] 2026-05-23 — Receipts de payment submissions protegidos (issue #408)
+> Se endureció el flujo de comprobantes de transferencias para evitar exposición pública de archivos financieros.
+> - **Backend:** los receipts nuevos se guardan fuera de `/api/uploads/*`, el token público se valida antes de escribir archivo y existe una ruta protegida para descarga organizer-only.
+> - **Legacy hardening:** `/api/uploads/receipts/*` y `/api/v1/uploads/receipts/*` ya no exponen receipts legacy aunque los archivos sigan en disco temporalmente.
+> - **Portal cliente:** `can_download_receipt_files` queda en `false` para todos los tiers; el portal puede informar “comprobante recibido” pero ya no descargarlo públicamente.
+> - **Web/iOS organizer:** la descarga ahora usa flujo autenticado; Web reutiliza refresh 401 del API client e iOS descarga/presenta el archivo localmente.
+> - **Validación:** `go test ./internal/handlers ./internal/router`, `npx vitest run src/pages/Payments/PaymentInboxPage.test.tsx src/pages/ClientPortal/ClientPortalPage.test.tsx`.
+
 > [!success] 2026-05-20 — Contrato default backend para usuarios Free
 > Se corrigió la generación de PDF de contrato para usuarios nuevos Free cuando `contract_template` está vacío.
 > - **Backend PDF:** `DefaultContractTemplate` queda como fallback efectivo en servidor; ya no depende de que el usuario tenga una plantilla guardada en DB.

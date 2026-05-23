@@ -1,7 +1,6 @@
 import SwiftUI
 import SolennixCore
 import SolennixDesign
-import SolennixNetwork
 
 // MARK: - Payment Inbox Components
 
@@ -45,13 +44,10 @@ struct PaymentSubmissionCardView: View {
                         .font(.caption2)
                         .foregroundStyle(SolennixColors.textTertiary)
 
-                    if let urlString = submission.receiptFileUrl,
-                       let url = APIClient.resolveURL(urlString) {
-                        Link(destination: url) {
-                            Label("Ver pago", systemImage: "paperclip")
-                                .font(.caption)
-                                .foregroundStyle(SolennixColors.info)
-                        }
+                    if submission.receiptFileUrl != nil {
+                        Label("Comprobante adjunto", systemImage: "paperclip")
+                            .font(.caption)
+                            .foregroundStyle(SolennixColors.info)
                     }
 
                     if submission.status == .rejected,

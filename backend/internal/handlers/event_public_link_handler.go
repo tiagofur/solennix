@@ -409,7 +409,7 @@ func (h *EventPublicLinkHandler) buildPublicEventView(
 			CanViewSubmissionHistory: true,
 			CanViewRichEventDetails:  true,
 			CanViewMilestones:        true,
-			CanDownloadReceiptFiles:  true,
+			CanDownloadReceiptFiles:  false,
 		},
 		Event: PublicEventDetails{
 			ID:          event.ID,

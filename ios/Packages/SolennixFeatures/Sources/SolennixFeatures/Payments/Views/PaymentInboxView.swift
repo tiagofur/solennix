@@ -124,39 +124,30 @@ public struct PaymentInboxView: View {
                             .foregroundStyle(SolennixColors.textSecondary)
                     }
 
-                    if let urlString = submission.receiptFileUrl,
-                       let url = APIClient.resolveURL(urlString) {
+                    if submission.receiptFileUrl != nil {
                         VStack(alignment: .leading, spacing: Spacing.sm) {
                             Text("Comprobante")
                                 .font(.headline)
                                 .foregroundStyle(SolennixColors.text)
 
-                            if isImageURL(url) {
-                                AsyncImage(url: url) { phase in
-                                    switch phase {
-                                    case .success(let image):
-                                        image
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(maxWidth: .infinity)
-                                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-                                    case .failure:
-                                        receiptFallback
-                                    default:
-                                        ProgressView()
-                                            .frame(maxWidth: .infinity, minHeight: 180)
-                                    }
-                                }
-                            } else {
-                                receiptFallback
-                            }
+                            receiptFallback
 
-                            Link(destination: url) {
-                                Label("Abrir comprobante", systemImage: "paperclip")
-                                    .font(.subheadline)
-                                    .frame(maxWidth: .infinity)
+                            Button {
+                                Task {
+                                    await viewModel.downloadReceipt(for: submission)
+                                }
+                            } label: {
+                                if viewModel.downloadingReceiptId == submission.id {
+                                    ProgressView()
+                                        .frame(maxWidth: .infinity)
+                                } else {
+                                    Label("Abrir comprobante", systemImage: "paperclip")
+                                        .font(.subheadline)
+                                        .frame(maxWidth: .infinity)
+                                }
                             }
                             .buttonStyle(.bordered)
+                            .disabled(viewModel.downloadingReceiptId != nil)
                         }
                     }
 
@@ -221,11 +212,6 @@ public struct PaymentInboxView: View {
         .frame(maxWidth: .infinity, minHeight: 180)
         .background(SolennixColors.card)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-    }
-
-    private func isImageURL(_ url: URL) -> Bool {
-        let ext = url.pathExtension.lowercased()
-        return ["jpg", "jpeg", "png", "heic", "heif", "webp", "gif"].contains(ext)
     }
 
     // MARK: - Reject Sheet

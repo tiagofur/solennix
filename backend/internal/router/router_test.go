@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/stretchr/testify/require"
 	"github.com/tiagofur/solennix-backend/internal/handlers"
 	"github.com/tiagofur/solennix-backend/internal/models"
 	"github.com/tiagofur/solennix-backend/internal/repository"
@@ -75,6 +76,42 @@ func TestNewRouter(t *testing.T) {
 			t.Fatalf("Cache-Control = %q, want %q, status=%v", got, "public, max-age=31536000", rr.Code)
 		}
 	})
+
+	t.Run("GivenReceiptPaths_WhenPublicUploadsRequested_ThenReceiptsRemainInaccessible", func(t *testing.T) {
+		tempDir := t.TempDir()
+		privateDir := filepath.Join(filepath.Dir(tempDir), "private-payment-receipts")
+		legacyReceiptDir := filepath.Join(tempDir, "receipts")
+		require.NoError(t, os.MkdirAll(privateDir, 0o755))
+		require.NoError(t, os.MkdirAll(legacyReceiptDir, 0o755))
+		require.NoError(t, os.WriteFile(filepath.Join(privateDir, "proof.png"), []byte("private receipt"), 0o644))
+		require.NoError(t, os.WriteFile(filepath.Join(legacyReceiptDir, "legacy-proof.png"), []byte("legacy receipt"), 0o644))
+		require.NoError(t, os.WriteFile(filepath.Join(tempDir, "public-image.png"), []byte("public image"), 0o644))
+
+		h := New(&handlers.AuthHandler{}, &handlers.CRUDHandler{}, &handlers.SubscriptionHandler{}, &handlers.SearchHandler{}, &handlers.EventPaymentHandler{}, handlers.NewUploadHandler(tempDir, nil), &handlers.AdminHandler{}, &handlers.DashboardHandler{}, &handlers.AuditHandler{}, &handlers.UnavailableDateHandler{}, nil, nil, nil, nil, nil, nil, nil, nil, nil, authService, &repository.UserRepo{}, &noopAuditLogger{}, nil, []string{"http://allowed.com"}, tempDir, "development", false)
+
+		tests := []struct {
+			name           string
+			path           string
+			expectedStatus int
+		}{
+			{name: "legacy receipts blocked on unversioned route", path: "/api/uploads/receipts/legacy-proof.png", expectedStatus: http.StatusNotFound},
+			{name: "legacy receipts blocked on versioned route", path: "/api/v1/uploads/receipts/legacy-proof.png", expectedStatus: http.StatusNotFound},
+			{name: "non-receipt uploads remain public", path: "/api/uploads/public-image.png", expectedStatus: http.StatusOK},
+		}
+
+		for _, tc := range tests {
+			t.Run(tc.name, func(t *testing.T) {
+				req := httptest.NewRequest(http.MethodGet, tc.path, nil)
+				rr := httptest.NewRecorder()
+
+				h.ServeHTTP(rr, req)
+
+				if rr.Code != tc.expectedStatus {
+					t.Fatalf("status = %d, want %d", rr.Code, tc.expectedStatus)
+				}
+			})
+		}
+	})
 }
 func TestProtectedRoutesRequireValidBearerToken(t *testing.T) {
 	authService := services.NewAuthService("test-secret", 1)
@@ -96,6 +133,7 @@ func TestProtectedRoutesRequireValidBearerToken(t *testing.T) {
 		{"PaymentsList", http.MethodGet, "/api/payments"},
 		{"PaymentsCreate", http.MethodPost, "/api/payments"},
 		{"PaymentSubmissionsInboxLegacy", http.MethodGet, "/api/organizer/payment-submissions"},
+		{"PaymentSubmissionReceipt", http.MethodGet, "/api/payment-submissions/123/receipt/proof.png"},
 		{"PaymentSubmissionReviewLegacy", http.MethodPatch, "/api/organizer/payment-submissions/123"},
 		{"CurrentUser", http.MethodGet, "/api/auth/me"},
 		{"UpdateProfile", http.MethodPut, "/api/users/me"},
