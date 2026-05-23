@@ -179,12 +179,14 @@ func TestPaymentSubmissionOrganizerReviewValidation(t *testing.T) {
 		submissionID   string
 		body           map[string]interface{}
 		expectedStatus int
+		expectedError  string
 	}{
 		{
 			name:           "invalid submission_id",
 			submissionID:   "not-a-uuid",
 			body:           map[string]interface{}{"status": "approved"},
 			expectedStatus: http.StatusBadRequest,
+			expectedError:  "Invalid submission ID",
 		},
 		{
 			name:         "invalid status",
@@ -193,6 +195,7 @@ func TestPaymentSubmissionOrganizerReviewValidation(t *testing.T) {
 				"status": "invalid_status",
 			},
 			expectedStatus: http.StatusBadRequest,
+			expectedError:  "status must be 'approved' or 'rejected'",
 		},
 		{
 			name:         "rejection_reason required for rejected",
@@ -201,6 +204,7 @@ func TestPaymentSubmissionOrganizerReviewValidation(t *testing.T) {
 				"status": "rejected",
 			},
 			expectedStatus: http.StatusBadRequest,
+			expectedError:  "rejection_reason is required when rejecting a submission",
 		},
 	}
 
@@ -208,13 +212,15 @@ func TestPaymentSubmissionOrganizerReviewValidation(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			bodyJSON, _ := json.Marshal(tc.body)
 			url := fmt.Sprintf("/api/payment-submissions/%s", tc.submissionID)
-			req := httptest.NewRequest(http.MethodPut, url, bytes.NewReader(bodyJSON))
+			req := httptest.NewRequest(http.MethodPatch, url, bytes.NewReader(bodyJSON))
 			req.Header.Set("Content-Type", "application/json")
+			req.SetPathValue("id", tc.submissionID)
 			w := httptest.NewRecorder()
 
 			handler.ReviewSubmission(w, req)
 
 			assert.Equal(t, tc.expectedStatus, w.Code)
+			assert.Contains(t, w.Body.String(), tc.expectedError)
 		})
 	}
 }
