@@ -95,6 +95,8 @@ platform: Backend
 >
 > Compatibilidad: `UploadImageResponse` conserva `url`, `thumbnail_url`, `filename` y agrega metadata opcional `object_key`, `thumbnail_object_key`, `content_type`.
 >
+> Hardening 2026-05-23 (issue #410): la finalización presignada ya no confía solo en el `Content-Type` declarado. `POST /api/uploads/complete` valida que el objeto almacenado decodee como imagen real; si no, borra el objeto y responde error en lugar de exponerlo como media válida.
+>
 > [!warning] Stripe client payments legacy removed (2026-05-23)
 > El backend ya no expone ni documenta el flujo heredado de Stripe para pagos organizer-cliente. Los endpoints `/api/events/{id}/checkout-session` y `/api/events/{id}/payment-session` quedaron bloqueados a nivel runtime y se removieron del contrato OpenAPI porque Solennix no procesa pagos entre organizadores y sus clientes.
 

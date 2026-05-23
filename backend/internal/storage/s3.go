@@ -25,10 +25,13 @@ import (
 
 // S3Provider stores files in AWS S3 or S3-compatible storage (MinIO, DigitalOcean Spaces, etc.).
 type S3Provider struct {
-	client   *s3.Client
-	bucket   string
-	prefix   string // Key prefix (e.g. "uploads/")
-	cdnURL   string // CDN/public URL base (e.g. "https://cdn.solennix.com")
+	client       *s3.Client
+	bucket       string
+	prefix       string // Key prefix (e.g. "uploads/")
+	cdnURL       string // CDN/public URL base (e.g. "https://cdn.solennix.com")
+	getObjectFn  func(context.Context, *s3.GetObjectInput) (*s3.GetObjectOutput, error)
+	putObjectFn  func(context.Context, *s3.PutObjectInput) (*s3.PutObjectOutput, error)
+	deleteObjsFn func(context.Context, *s3.DeleteObjectsInput) (*s3.DeleteObjectsOutput, error)
 }
 
 // S3Config holds S3 provider configuration.
@@ -100,7 +103,7 @@ func (p *S3Provider) Save(userID, originalFilename string, data io.Reader) (*Fil
 
 	contentType := detectContentTypeFromExt(ext)
 
-	_, err = p.client.PutObject(context.Background(), &s3.PutObjectInput{
+	_, err = p.putObject(context.Background(), &s3.PutObjectInput{
 		Bucket:      aws.String(p.bucket),
 		Key:         aws.String(fullObjectKey),
 		Body:        bytes.NewReader(buf),
@@ -112,7 +115,7 @@ func (p *S3Provider) Save(userID, originalFilename string, data io.Reader) (*Fil
 
 	thumbnailUploaded := false
 	if thumbBuf, thumbErr := generateThumbnailBytes(buf); thumbErr == nil {
-		_, err = p.client.PutObject(context.Background(), &s3.PutObjectInput{
+		_, err = p.putObject(context.Background(), &s3.PutObjectInput{
 			Bucket:      aws.String(p.bucket),
 			Key:         aws.String(fullThumbnailObjectKey),
 			Body:        bytes.NewReader(thumbBuf),
@@ -193,7 +196,7 @@ func (p *S3Provider) CompletePresignedUpload(userID, objectKey string) (*FileRes
 	}
 
 	fullObjectKey := p.prefixed(objectKey)
-	obj, err := p.client.GetObject(context.Background(), &s3.GetObjectInput{
+	obj, err := p.getObject(context.Background(), &s3.GetObjectInput{
 		Bucket: aws.String(p.bucket),
 		Key:    aws.String(fullObjectKey),
 	})
@@ -207,6 +210,14 @@ func (p *S3Provider) CompletePresignedUpload(userID, objectKey string) (*FileRes
 		return nil, fmt.Errorf("read uploaded object: %w", err)
 	}
 
+	if _, _, decodeErr := image.Decode(bytes.NewReader(buf)); decodeErr != nil {
+		if deleteErr := p.Delete(objectKey); deleteErr != nil {
+			slog.Error("S3 invalid presigned upload cleanup failed", "object_key", objectKey, "error", deleteErr)
+			return nil, fmt.Errorf("uploaded object is not a valid image and cleanup failed: %w", deleteErr)
+		}
+		return nil, fmt.Errorf("uploaded object is not a valid image: %w", decodeErr)
+	}
+
 	filename := filepath.Base(objectKey)
 	ext := strings.ToLower(filepath.Ext(filename))
 	thumbFilename := fmt.Sprintf("thumb_%s.jpg", strings.TrimSuffix(filename, ext))
@@ -215,7 +226,7 @@ func (p *S3Provider) CompletePresignedUpload(userID, objectKey string) (*FileRes
 
 	thumbnailUploaded := false
 	if thumbBuf, thumbErr := generateThumbnailBytes(buf); thumbErr == nil {
-		_, putErr := p.client.PutObject(context.Background(), &s3.PutObjectInput{
+		_, putErr := p.putObject(context.Background(), &s3.PutObjectInput{
 			Bucket:      aws.String(p.bucket),
 			Key:         aws.String(fullThumbnailObjectKey),
 			Body:        bytes.NewReader(thumbBuf),
@@ -273,7 +284,7 @@ func (p *S3Provider) Delete(path string) error {
 		return nil
 	}
 
-	_, err := p.client.DeleteObjects(context.Background(), &s3.DeleteObjectsInput{
+	_, err := p.deleteObjects(context.Background(), &s3.DeleteObjectsInput{
 		Bucket: aws.String(p.bucket),
 		Delete: &types.Delete{Objects: objects, Quiet: aws.Bool(true)},
 	})
@@ -306,6 +317,27 @@ func (p *S3Provider) prefixed(path string) string {
 
 func (p *S3Provider) publicURL(fullKey string) string {
 	return fmt.Sprintf("%s/%s", strings.TrimRight(p.cdnURL, "/"), strings.TrimPrefix(fullKey, "/"))
+}
+
+func (p *S3Provider) getObject(ctx context.Context, input *s3.GetObjectInput) (*s3.GetObjectOutput, error) {
+	if p.getObjectFn != nil {
+		return p.getObjectFn(ctx, input)
+	}
+	return p.client.GetObject(ctx, input)
+}
+
+func (p *S3Provider) putObject(ctx context.Context, input *s3.PutObjectInput) (*s3.PutObjectOutput, error) {
+	if p.putObjectFn != nil {
+		return p.putObjectFn(ctx, input)
+	}
+	return p.client.PutObject(ctx, input)
+}
+
+func (p *S3Provider) deleteObjects(ctx context.Context, input *s3.DeleteObjectsInput) (*s3.DeleteObjectsOutput, error) {
+	if p.deleteObjsFn != nil {
+		return p.deleteObjsFn(ctx, input)
+	}
+	return p.client.DeleteObjects(ctx, input)
 }
 
 func deriveThumbnailKey(originalKey string) string {
