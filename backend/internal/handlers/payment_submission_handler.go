@@ -137,6 +137,10 @@ func (h *PaymentSubmissionHandler) resolveReceiptFile(locator string) (string, s
 	return "", filename, false
 }
 
+func isExpiredPublicLink(link *models.EventPublicLink) bool {
+	return link != nil && link.ExpiresAt != nil && time.Now().After(*link.ExpiresAt)
+}
+
 func removeReceiptFile(path string) {
 	if strings.TrimSpace(path) == "" {
 		return
@@ -213,6 +217,10 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 
 	if link.Status != "active" {
 		writeError(w, http.StatusGone, "Link is no longer active")
+		return
+	}
+	if isExpiredPublicLink(link) {
+		writeError(w, http.StatusGone, "This link has expired")
 		return
 	}
 
@@ -344,6 +352,10 @@ func (h *PaymentSubmissionHandler) GetHistoryPublic(w http.ResponseWriter, r *ht
 
 	if link.Status != "active" {
 		writeError(w, http.StatusGone, "Link is no longer active")
+		return
+	}
+	if isExpiredPublicLink(link) {
+		writeError(w, http.StatusGone, "This link has expired")
 		return
 	}
 

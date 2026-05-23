@@ -40,6 +40,13 @@ status: active
 > - **Cobertura:** regresiones nuevas cubren `ErrNoRows` wrapped con `%w`, fallos backend y el guard de no escribir receipts cuando el lookup falla temprano.
 > - **Validación:** `go test ./internal/handlers`.
 
+> [!success] 2026-05-23 — Payment submissions rechazan links activos pero expirados (issue #412)
+> Se alineó la expiración de links públicos en `payment_submissions` con la semántica canónica del portal cliente.
+> - **CreatePublic / GetHistoryPublic:** links `active` con `expires_at` en el pasado ahora responden `410 Gone`.
+> - **Semántica preservada:** token inexistente sigue en `404`, link inactivo sigue en `410` y `event_id` mismatch sigue en `400`.
+> - **Seguridad operativa:** `CreatePublic` valida expiración antes de tocar receipts, así que una request con link expirado no deja archivos privados en disco.
+> - **Validación:** `go test ./internal/handlers`.
+
 > [!success] 2026-05-21 — Backend: baseline inicial de benchmarks críticos (issue #385)
 > Se agregó cobertura de benchmark para rutas críticas y lineamientos de tracking de baseline.
 > - **Handlers:** benchmark de `SearchHandler.SearchAll` y `UploadHandler.UploadImage`.

@@ -18,6 +18,12 @@ updated: 2025-04-05
 > - Fallos reales de DB/backend ahora loguean y responden `500 Failed to validate link`.
 > - Links inactivos/revocados conservan `410`, y mismatch de evento conserva `400`.
 
+> [!success] 2026-05-23 — Links expirados ya no funcionan en payment submissions (issue #412)
+> Los endpoints públicos de `payment_submissions` ahora respetan `expires_at` además de `status`.
+> - Links `active` pero vencidos responden `410 Gone` tanto en create como en history.
+> - La validación de expiración ocurre antes de tocar receipts, así que requests vencidas no escriben archivos.
+> - Se preserva la distinción: token inexistente `404`, link inactivo/expirado `410`, mismatch `400`.
+
 ## Relaciones
 
 - **Padre**: [[Backend MOC]]

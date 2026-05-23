@@ -92,6 +92,37 @@ func TestPaymentSubmissionCreatePublicLookupFailureResponses(t *testing.T) {
 	}
 }
 
+func TestPaymentSubmissionCreatePublicExpiredLinkReturnsGoneAndDoesNotWriteReceipt(t *testing.T) {
+	uploadDir := t.TempDir()
+	handler := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir)
+	organizerID := uuid.New()
+	eventID := uuid.New()
+	clientID := uuid.New()
+	expiredAt := time.Now().Add(-time.Hour)
+
+	handler.lookupPublicLink = func(context.Context, string) (*models.EventPublicLink, error) {
+		return &models.EventPublicLink{
+			EventID:   eventID,
+			UserID:    organizerID,
+			Status:    "active",
+			ExpiresAt: &expiredAt,
+		}, nil
+	}
+
+	body, contentType := buildPaymentSubmissionMultipart(t, eventID, clientID, "1500", "receipt.png", pngFixtureBytes())
+	req := httptest.NewRequest(http.MethodPost, "/api/public/events/token-123/payment-submissions", body)
+	req.Header.Set("Content-Type", contentType)
+	req.SetPathValue("token", "token-123")
+	w := httptest.NewRecorder()
+
+	handler.CreatePublic(w, req)
+
+	require.Equal(t, http.StatusGone, w.Code)
+	entries, err := os.ReadDir(handler.privateReceiptsDir)
+	require.NoError(t, err)
+	assert.Empty(t, entries)
+}
+
 func TestPaymentSubmissionCreatePublicStoresReceiptPrivatelyAndReturnsProtectedPath(t *testing.T) {
 	uploadDir := t.TempDir()
 	handler := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir)
@@ -216,6 +247,32 @@ func TestPaymentSubmissionGetHistoryPublicLookupFailureResponses(t *testing.T) {
 			assert.Equal(t, tc.expectedStatus, w.Code)
 		})
 	}
+}
+
+func TestPaymentSubmissionGetHistoryPublicExpiredLinkReturnsGone(t *testing.T) {
+	uploadDir := t.TempDir()
+	handler := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir)
+	organizerID := uuid.New()
+	eventID := uuid.New()
+	clientID := uuid.New()
+	expiredAt := time.Now().Add(-time.Hour)
+
+	handler.lookupPublicLink = func(context.Context, string) (*models.EventPublicLink, error) {
+		return &models.EventPublicLink{
+			EventID:   eventID,
+			UserID:    organizerID,
+			Status:    "active",
+			ExpiresAt: &expiredAt,
+		}, nil
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/public/events/token-123/payment-submissions?event_id="+eventID.String()+"&client_id="+clientID.String(), nil)
+	req.SetPathValue("token", "token-123")
+	w := httptest.NewRecorder()
+
+	handler.GetHistoryPublic(w, req)
+
+	require.Equal(t, http.StatusGone, w.Code)
 }
 
 func TestPaymentSubmissionGetReceiptAuthorizationAndMissingFile(t *testing.T) {
