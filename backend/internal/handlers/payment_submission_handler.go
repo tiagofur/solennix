@@ -216,7 +216,7 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 	}
 
 	if link.Status != "active" {
-		writeError(w, http.StatusGone, "Link is no longer active")
+		writeError(w, http.StatusGone, "This link is no longer active")
 		return
 	}
 	if isExpiredPublicLink(link) {
@@ -351,7 +351,7 @@ func (h *PaymentSubmissionHandler) GetHistoryPublic(w http.ResponseWriter, r *ht
 	}
 
 	if link.Status != "active" {
-		writeError(w, http.StatusGone, "Link is no longer active")
+		writeError(w, http.StatusGone, "This link is no longer active")
 		return
 	}
 	if isExpiredPublicLink(link) {
