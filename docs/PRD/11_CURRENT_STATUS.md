@@ -54,6 +54,13 @@ status: active
 > - **Reject path:** sigue sin crear pago ni tocar el evento, pero ahora comparte el mismo boundary transaccional seguro.
 > - **Validación:** `go test ./internal/handlers ./internal/router`.
 
+> [!success] 2026-05-23 — Organizer ya no ve links expirados como activos (issue #413)
+> Se alineó el estado organizer del Client Portal con la expiración real de los links públicos.
+> - **Repo organizer:** `GetActiveByEventID` ahora exige `status = active` y `expires_at` nulo o futuro; links activos pero vencidos dejan de contarse como link activo.
+> - **Semántica pública intacta:** `GetByToken` no cambió, así que el portal y los endpoints públicos siguen distinguiendo `404` para token inexistente y `410` para links expirados/revocados.
+> - **UX organizer:** Web/iOS/Android ya pueden caer naturalmente al estado “no active link” en vez de mostrar una URL vencida.
+> - **Validación:** `go test ./internal/repository`.
+
 > [!success] 2026-05-21 — Backend: baseline inicial de benchmarks críticos (issue #385)
 > Se agregó cobertura de benchmark para rutas críticas y lineamientos de tracking de baseline.
 > - **Handlers:** benchmark de `SearchHandler.SearchAll` y `UploadHandler.UploadImage`.

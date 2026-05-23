@@ -81,6 +81,7 @@ func (r *EventPublicLinkRepo) GetActiveByEventID(ctx context.Context, eventID, u
 	query := fmt.Sprintf(`
 		SELECT %s FROM event_public_links
 		WHERE event_id = $1 AND user_id = $2 AND status = 'active'
+			AND (expires_at IS NULL OR expires_at > NOW())
 		LIMIT 1`, eventPublicLinkColumns)
 
 	row := r.pool.QueryRow(ctx, query, eventID, userID)
