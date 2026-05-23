@@ -75,6 +75,13 @@ status: active
 > - **Contrato/OpenAPI:** se removieron los endpoints y schemas legacy del spec y de los tipos generados web para no seguir anunciando una capacidad no soportada.
 > - **Validación:** `go test ./internal/handlers`, `go test ./internal/handlers ./internal/router`.
 
+> [!success] 2026-05-23 — Organizer review tests ya usan `{id}` real en payment submissions (issue #416)
+> Se corrigió falsa cobertura en los tests de review organizer para que realmente ejerzan `r.PathValue("id")` y validen la rama correcta del handler.
+> - **Ruta real:** `TestPaymentSubmissionOrganizerReviewValidation` ahora usa `PATCH /api/payment-submissions/{id}` y setea `req.SetPathValue("id", ...)`.
+> - **Cobertura real:** los casos de `invalid status` y `missing rejection_reason` ahora llegan a la validación de negocio en vez de caer por accidente en `Invalid submission ID`.
+> - **Aserciones fuertes:** además del status HTTP, el test ahora verifica el mensaje de error esperado en cada caso.
+> - **Validación:** `go test ./internal/handlers -run TestPaymentSubmissionOrganizerReviewValidation`.
+
 > [!success] 2026-05-21 — Backend: baseline inicial de benchmarks críticos (issue #385)
 > Se agregó cobertura de benchmark para rutas críticas y lineamientos de tracking de baseline.
 > - **Handlers:** benchmark de `SearchHandler.SearchAll` y `UploadHandler.UploadImage`.
