@@ -123,7 +123,7 @@ func TestPaymentSubmissionCreatePublicExpiredLinkReturnsGoneAndDoesNotWriteRecei
 	assert.Empty(t, entries)
 }
 
-func TestPaymentSubmissionCreatePublicInactiveLinkReturnsGoneAndDoesNotWriteReceipt(t *testing.T) {
+func TestPaymentSubmissionCreatePublicRevokedLinkReturnsGoneAndDoesNotWriteReceipt(t *testing.T) {
 	uploadDir := t.TempDir()
 	handler := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir)
 	eventID := uuid.New()
@@ -332,7 +332,7 @@ func TestPaymentSubmissionGetHistoryPublicExpiredLinkReturnsGone(t *testing.T) {
 	require.Equal(t, http.StatusGone, w.Code)
 }
 
-func TestPaymentSubmissionGetHistoryPublicInactiveLinkReturnsGone(t *testing.T) {
+func TestPaymentSubmissionGetHistoryPublicRevokedLinkReturnsGone(t *testing.T) {
 	uploadDir := t.TempDir()
 	handler := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir)
 	eventID := uuid.New()
