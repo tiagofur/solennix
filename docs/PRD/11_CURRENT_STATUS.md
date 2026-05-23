@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-05-20
+updated: 2026-05-23
 status: active
 ---
 
