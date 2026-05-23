@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
 )
@@ -92,6 +93,10 @@ func (f *fakePaymentSubmissionReviewStore) Rollback(context.Context) error {
 
 type paymentSubmissionEnvelope struct {
 	Data models.PaymentSubmission `json:"data"`
+}
+
+type errorEnvelope struct {
+	Error string `json:"error"`
 }
 
 func reviewSubmissionRequest(t *testing.T, submissionID uuid.UUID, userID uuid.UUID, body map[string]any) (*http.Request, *httptest.ResponseRecorder) {
@@ -199,6 +204,52 @@ func TestPaymentSubmissionReviewSubmissionRejectDoesNotCreatePayment(t *testing.
 	}
 }
 
+func TestPaymentSubmissionReviewSubmissionGetSubmissionFailureResponses(t *testing.T) {
+	organizerID := uuid.New()
+	submissionID := uuid.New()
+
+	tests := []struct {
+		name           string
+		getErr         error
+		expectedStatus int
+		expectedError  string
+	}{
+		{name: "not found returns 404", getErr: pgx.ErrNoRows, expectedStatus: http.StatusNotFound, expectedError: "Submission not found"},
+		{name: "backend failure returns 500", getErr: errors.New("lock timeout"), expectedStatus: http.StatusInternalServerError, expectedError: "Failed to load submission"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			store := &fakePaymentSubmissionReviewStore{getSubmissionErr: tt.getErr}
+			handler := &PaymentSubmissionHandler{
+				beginReviewTx: func(context.Context) (paymentSubmissionReviewStore, error) {
+					return store, nil
+				},
+			}
+
+			req, w := reviewSubmissionRequest(t, submissionID, organizerID, map[string]any{"status": "approved"})
+			handler.ReviewSubmission(w, req)
+
+			if w.Code != tt.expectedStatus {
+				t.Fatalf("expected %d, got %d body=%s", tt.expectedStatus, w.Code, w.Body.String())
+			}
+			var envelope errorEnvelope
+			if err := json.NewDecoder(w.Body).Decode(&envelope); err != nil {
+				t.Fatalf("decode error response: %v", err)
+			}
+			if envelope.Error != tt.expectedError {
+				t.Fatalf("expected error %q, got %q", tt.expectedError, envelope.Error)
+			}
+			if store.commitCalled {
+				t.Fatalf("commit should not happen when loading submission fails")
+			}
+			if !store.rollbackCalled {
+				t.Fatalf("rollback should happen when loading submission fails")
+			}
+		})
+	}
+}
+
 func TestPaymentSubmissionReviewSubmissionAlreadyReviewedConflictsInsideTransaction(t *testing.T) {
 	organizerID := uuid.New()
 	submissionID := uuid.New()
@@ -269,6 +320,13 @@ func TestPaymentSubmissionReviewSubmissionRollsBackOnApprovalFailures(t *testing
 
 			if w.Code != http.StatusInternalServerError {
 				t.Fatalf("expected 500, got %d body=%s", w.Code, w.Body.String())
+			}
+			var envelope errorEnvelope
+			if err := json.NewDecoder(w.Body).Decode(&envelope); err != nil {
+				t.Fatalf("decode error response: %v", err)
+			}
+			if envelope.Error != tt.expectedMessage {
+				t.Fatalf("expected error %q, got %q", tt.expectedMessage, envelope.Error)
 			}
 			if store.commitCalled {
 				t.Fatalf("commit should not happen on failure: %+v", store)

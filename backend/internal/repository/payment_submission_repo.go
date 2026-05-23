@@ -79,7 +79,7 @@ func (r *PaymentSubmissionRepo) GetByIDForUpdateTx(ctx context.Context, tx pgx.T
 		LEFT JOIN clients c ON ps.client_id = c.id
 		LEFT JOIN events e ON ps.event_id = e.id
 		WHERE ps.id = $1
-		FOR UPDATE`, paymentSubmissionSelectFields)
+		FOR UPDATE OF ps`, paymentSubmissionSelectFields)
 
 	row := tx.QueryRow(ctx, query, id)
 	return scanPaymentSubmissionWithJoins(row)

@@ -557,7 +557,12 @@ func (h *PaymentSubmissionHandler) ReviewSubmission(w http.ResponseWriter, r *ht
 
 	ps, err := reviewStore.GetSubmissionForUpdate(ctx, submissionID)
 	if err != nil {
-		writeError(w, http.StatusNotFound, "Submission not found")
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "Submission not found")
+			return
+		}
+		slog.Error("Failed to lock payment submission for review", "submission_id", submissionID, "error", err)
+		writeError(w, http.StatusInternalServerError, "Failed to load submission")
 		return
 	}
 
