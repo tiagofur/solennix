@@ -2,11 +2,15 @@ package storage
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"image"
 	"image/jpeg"
+	"io"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -131,20 +135,20 @@ func TestS3URLGeneration(t *testing.T) {
 	}
 
 	testCases := []struct {
-		fullKey       string
-		expectedURL   string
+		fullKey     string
+		expectedURL string
 	}{
 		{
-			fullKey:       "uploads/user123/photo.jpg",
-			expectedURL:   "https://cdn.solennix.com/uploads/user123/photo.jpg",
+			fullKey:     "uploads/user123/photo.jpg",
+			expectedURL: "https://cdn.solennix.com/uploads/user123/photo.jpg",
 		},
 		{
-			fullKey:       "uploads/user456/thumbnails/thumb_photo.jpg",
-			expectedURL:   "https://cdn.solennix.com/uploads/user456/thumbnails/thumb_photo.jpg",
+			fullKey:     "uploads/user456/thumbnails/thumb_photo.jpg",
+			expectedURL: "https://cdn.solennix.com/uploads/user456/thumbnails/thumb_photo.jpg",
 		},
 		{
-			fullKey:       "/uploads/user789/image.png",
-			expectedURL:   "https://cdn.solennix.com/uploads/user789/image.png",
+			fullKey:     "/uploads/user789/image.png",
+			expectedURL: "https://cdn.solennix.com/uploads/user789/image.png",
 		},
 	}
 
@@ -244,6 +248,68 @@ func TestThumbnailGeneration(t *testing.T) {
 			assert.LessOrEqual(t, bounds.Dy(), maxDim)
 		})
 	}
+}
+
+func TestS3CompletePresignedUploadRejectsInvalidImagesAndDeletesObject(t *testing.T) {
+	provider := &S3Provider{
+		bucket: "bucket",
+		prefix: "uploads/",
+		cdnURL: "https://cdn.solennix.com",
+		getObjectFn: func(_ context.Context, input *s3.GetObjectInput) (*s3.GetObjectOutput, error) {
+			return &s3.GetObjectOutput{
+				Body:        io.NopCloser(bytes.NewReader([]byte("definitely not an image"))),
+				ContentType: aws.String("image/jpeg"),
+			}, nil
+		},
+	}
+
+	var deletedKeys []string
+	provider.deleteObjsFn = func(_ context.Context, input *s3.DeleteObjectsInput) (*s3.DeleteObjectsOutput, error) {
+		for _, obj := range input.Delete.Objects {
+			deletedKeys = append(deletedKeys, aws.ToString(obj.Key))
+		}
+		return &s3.DeleteObjectsOutput{}, nil
+	}
+
+	result, err := provider.CompletePresignedUpload("user123", "user123/spoofed.jpg")
+	require.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "uploaded object is not a valid image")
+	assert.Contains(t, deletedKeys, "uploads/user123/spoofed.jpg")
+}
+
+func TestS3CompletePresignedUploadSucceedsForValidImages(t *testing.T) {
+	img := image.NewRGBA(image.Rect(0, 0, 32, 24))
+	var original bytes.Buffer
+	err := jpeg.Encode(&original, img, &jpeg.Options{Quality: 80})
+	require.NoError(t, err)
+
+	provider := &S3Provider{
+		bucket: "bucket",
+		prefix: "uploads/",
+		cdnURL: "https://cdn.solennix.com",
+		getObjectFn: func(_ context.Context, input *s3.GetObjectInput) (*s3.GetObjectOutput, error) {
+			return &s3.GetObjectOutput{
+				Body:        io.NopCloser(bytes.NewReader(original.Bytes())),
+				ContentType: aws.String("image/jpeg"),
+			}, nil
+		},
+		putObjectFn: func(_ context.Context, input *s3.PutObjectInput) (*s3.PutObjectOutput, error) {
+			return &s3.PutObjectOutput{}, nil
+		},
+		deleteObjsFn: func(_ context.Context, input *s3.DeleteObjectsInput) (*s3.DeleteObjectsOutput, error) {
+			return &s3.DeleteObjectsOutput{}, nil
+		},
+	}
+
+	result, err := provider.CompletePresignedUpload("user123", "user123/valid.jpg")
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	assert.Equal(t, "user123/valid.jpg", result.ObjectKey)
+	assert.Equal(t, "image/jpeg", result.ContentType)
+	assert.Equal(t, "https://cdn.solennix.com/uploads/user123/valid.jpg", result.URL)
+	assert.Equal(t, "https://cdn.solennix.com/uploads/user123/thumbnails/thumb_valid.jpg", result.ThumbnailURL)
+	assert.Equal(t, "user123/thumbnails/thumb_valid.jpg", result.ThumbnailObjectKey)
 }
 
 // TestS3DeleteCleanup verifies delete removes both original and thumbnail.
