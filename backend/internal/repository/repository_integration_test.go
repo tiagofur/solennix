@@ -2,11 +2,13 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tiagofur/solennix-backend/internal/database"
 	"github.com/tiagofur/solennix-backend/internal/models"
@@ -1340,5 +1342,58 @@ func TestSearchUserIsolation(t *testing.T) {
 	}
 	if len(items) != 1 {
 		t.Fatalf("InventoryRepo.Search(userA, 'Sugar') len = %d, want 1", len(items))
+	}
+}
+
+func TestEventPublicLinkRepoGetActiveByEventIDExcludesExpiredLinks(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	ctx := context.Background()
+	userID := seedUser(t, pool, "event-public-link.repo@test.dev")
+	clientID := seedClient(t, pool, userID, "Public Link Client")
+	repo := NewEventPublicLinkRepo(pool)
+
+	futureEventID := seedEvent(t, pool, userID, clientID, "2026-09-01")
+	nonExpiringEventID := seedEvent(t, pool, userID, clientID, "2026-09-02")
+	expiredEventID := seedEvent(t, pool, userID, clientID, "2026-09-03")
+
+	futureExpiresAt := time.Now().Add(24 * time.Hour).UTC()
+	futureLink := &models.EventPublicLink{EventID: futureEventID, UserID: userID, Token: uuid.NewString(), ExpiresAt: &futureExpiresAt}
+	if err := repo.Create(ctx, futureLink); err != nil {
+		t.Fatalf("Create(futureLink) error = %v", err)
+	}
+
+	nonExpiringLink := &models.EventPublicLink{EventID: nonExpiringEventID, UserID: userID, Token: uuid.NewString()}
+	if err := repo.Create(ctx, nonExpiringLink); err != nil {
+		t.Fatalf("Create(nonExpiringLink) error = %v", err)
+	}
+
+	expiredAt := time.Now().Add(-24 * time.Hour).UTC()
+	expiredLink := &models.EventPublicLink{EventID: expiredEventID, UserID: userID, Token: uuid.NewString(), ExpiresAt: &expiredAt}
+	if err := repo.Create(ctx, expiredLink); err != nil {
+		t.Fatalf("Create(expiredLink) error = %v", err)
+	}
+
+	gotFuture, err := repo.GetActiveByEventID(ctx, futureEventID, userID)
+	if err != nil {
+		t.Fatalf("GetActiveByEventID(future) error = %v", err)
+	}
+	if gotFuture.ID != futureLink.ID {
+		t.Fatalf("GetActiveByEventID(future) ID = %s, want %s", gotFuture.ID, futureLink.ID)
+	}
+
+	gotNonExpiring, err := repo.GetActiveByEventID(ctx, nonExpiringEventID, userID)
+	if err != nil {
+		t.Fatalf("GetActiveByEventID(no expiry) error = %v", err)
+	}
+	if gotNonExpiring.ID != nonExpiringLink.ID {
+		t.Fatalf("GetActiveByEventID(no expiry) ID = %s, want %s", gotNonExpiring.ID, nonExpiringLink.ID)
+	}
+
+	_, err = repo.GetActiveByEventID(ctx, expiredEventID, userID)
+	if !errors.Is(err, pgx.ErrNoRows) {
+		t.Fatalf("GetActiveByEventID(expired) error = %v, want pgx.ErrNoRows", err)
 	}
 }

@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-05-20
+updated: 2026-05-23
 status: active
 ---
 
@@ -60,6 +60,13 @@ status: active
 > - **Seguridad/contrato:** objetos arbitrarios con `Content-Type` mentido ya no completan como `200 OK` ni quedan expuestos como media pública.
 > - **Comportamiento preservado:** imágenes válidas siguen completando normal; fallos al subir thumbnail siguen siendo soft-fail con fallback al original.
 > - **Validación:** `go test ./internal/storage`, `go test ./internal/handlers -run TestCompletePresignedUpload`.
+
+> [!success] 2026-05-23 — Organizer ya no ve links expirados como activos (issue #413)
+> Se alineó el estado organizer del Client Portal con la expiración real de los links públicos.
+> - **Repo organizer:** `GetActiveByEventID` ahora exige `status = active` y `expires_at` nulo o futuro; links activos pero vencidos dejan de contarse como link activo.
+> - **Semántica pública intacta:** `GetByToken` no cambió, así que el portal y los endpoints públicos siguen distinguiendo `404` para token inexistente y `410` para links expirados/revocados.
+> - **UX organizer:** Web/iOS/Android ya pueden caer naturalmente al estado “no active link” en vez de mostrar una URL vencida.
+> - **Validación:** `go test ./internal/repository`.
 
 > [!success] 2026-05-21 — Backend: baseline inicial de benchmarks críticos (issue #385)
 > Se agregó cobertura de benchmark para rutas críticas y lineamientos de tracking de baseline.
