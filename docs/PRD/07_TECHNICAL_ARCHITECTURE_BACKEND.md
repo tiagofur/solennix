@@ -94,6 +94,9 @@ platform: Backend
 > - **Direct-to-storage** (S3): `POST /api/uploads/presign` (firma URL `PUT`) + `POST /api/uploads/complete` (finalización y thumbnail).
 >
 > Compatibilidad: `UploadImageResponse` conserva `url`, `thumbnail_url`, `filename` y agrega metadata opcional `object_key`, `thumbnail_object_key`, `content_type`.
+>
+> [!warning] Stripe client payments legacy removed (2026-05-23)
+> El backend ya no expone ni documenta el flujo heredado de Stripe para pagos organizer-cliente. Los endpoints `/api/events/{id}/checkout-session` y `/api/events/{id}/payment-session` quedaron bloqueados a nivel runtime y se removieron del contrato OpenAPI porque Solennix no procesa pagos entre organizadores y sus clientes.
 
 ---
 

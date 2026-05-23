@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -13,7 +12,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stripe/stripe-go/v81"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
 	"github.com/tiagofur/solennix-backend/internal/repository"
@@ -886,128 +884,16 @@ func TestUpdateEvent_UpdateFails(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// HandleEventPaymentSuccess — additional branches
-// ---------------------------------------------------------------------------
-
-func TestHandleEventPaymentSuccess_MismatchedEventID(t *testing.T) {
-	mockStripe := new(MockStripeService)
-	h := &EventPaymentHandler{stripe: mockStripe}
-
-	eventID := uuid.New()
-	userID := uuid.New()
-	otherEventID := uuid.New()
-
-	sess := &stripe.CheckoutSession{
-		ID: "cs_1",
-		Metadata: map[string]string{
-			"event_id": otherEventID.String(),
-			"user_id":  userID.String(),
-		},
-	}
-	mockStripe.On("GetCheckoutSession", "cs_1", mock.Anything).Return(sess, nil)
-
-	req := httptest.NewRequest(http.MethodGet,
-		"/api/events/"+eventID.String()+"/payment-session?session_id=cs_1", nil)
-	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
-	req = withURLParam(req, "id", eventID.String())
+// Legacy event-payment session path is intentionally blocked.
+func TestHandleEventPaymentSuccess_BlockedLegacyPath(t *testing.T) {
+	h := &EventPaymentHandler{}
+	req := httptest.NewRequest(http.MethodGet, "/api/events/123/payment-session?session_id=cs_legacy", nil)
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, uuid.New()))
+	req = withURLParam(req, "id", uuid.New().String())
 	rr := httptest.NewRecorder()
+
 	h.HandleEventPaymentSuccess(rr, req)
 
-	assert.Equal(t, http.StatusBadRequest, rr.Code)
-	assert.Contains(t, rr.Body.String(), "Session does not match event")
+	assert.Equal(t, http.StatusGone, rr.Code)
+	assert.Contains(t, rr.Body.String(), legacyEventPaymentBlockedMessage)
 }
-
-func TestHandleEventPaymentSuccess_MismatchedUserID(t *testing.T) {
-	mockStripe := new(MockStripeService)
-	h := &EventPaymentHandler{stripe: mockStripe}
-
-	eventID := uuid.New()
-	userID := uuid.New()
-	otherUserID := uuid.New()
-
-	sess := &stripe.CheckoutSession{
-		ID: "cs_2",
-		Metadata: map[string]string{
-			"event_id": eventID.String(),
-			"user_id":  otherUserID.String(),
-		},
-	}
-	mockStripe.On("GetCheckoutSession", "cs_2", mock.Anything).Return(sess, nil)
-
-	req := httptest.NewRequest(http.MethodGet,
-		"/api/events/"+eventID.String()+"/payment-session?session_id=cs_2", nil)
-	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
-	req = withURLParam(req, "id", eventID.String())
-	rr := httptest.NewRecorder()
-	h.HandleEventPaymentSuccess(rr, req)
-
-	assert.Equal(t, http.StatusForbidden, rr.Code)
-}
-
-func TestHandleEventPaymentSuccess_WithCustomerDetails(t *testing.T) {
-	mockStripe := new(MockStripeService)
-	h := &EventPaymentHandler{stripe: mockStripe}
-
-	eventID := uuid.New()
-	userID := uuid.New()
-
-	sess := &stripe.CheckoutSession{
-		ID:            "cs_3",
-		PaymentStatus: stripe.CheckoutSessionPaymentStatusPaid,
-		AmountTotal:   25000,
-		CustomerDetails: &stripe.CheckoutSessionCustomerDetails{
-			Email: "buyer@example.com",
-		},
-		Metadata: map[string]string{
-			"event_id": eventID.String(),
-			"user_id":  userID.String(),
-		},
-	}
-	mockStripe.On("GetCheckoutSession", "cs_3", mock.Anything).Return(sess, nil)
-
-	req := httptest.NewRequest(http.MethodGet,
-		"/api/events/"+eventID.String()+"/payment-session?session_id=cs_3", nil)
-	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
-	req = withURLParam(req, "id", eventID.String())
-	rr := httptest.NewRecorder()
-	h.HandleEventPaymentSuccess(rr, req)
-
-	assert.Equal(t, http.StatusOK, rr.Code)
-
-	var body map[string]interface{}
-	_ = json.Unmarshal(rr.Body.Bytes(), &body)
-	assert.Equal(t, "buyer@example.com", body["customer_email"])
-	assert.Equal(t, 250.0, body["amount_total"])
-}
-
-func TestHandleEventPaymentSuccess_NilCustomerDetails(t *testing.T) {
-	mockStripe := new(MockStripeService)
-	h := &EventPaymentHandler{stripe: mockStripe}
-
-	eventID := uuid.New()
-	userID := uuid.New()
-
-	sess := &stripe.CheckoutSession{
-		ID:            "cs_4",
-		PaymentStatus: stripe.CheckoutSessionPaymentStatusPaid,
-		AmountTotal:   10000,
-		Metadata: map[string]string{
-			"event_id": eventID.String(),
-			"user_id":  userID.String(),
-		},
-	}
-	mockStripe.On("GetCheckoutSession", "cs_4", mock.Anything).Return(sess, nil)
-
-	req := httptest.NewRequest(http.MethodGet,
-		"/api/events/"+eventID.String()+"/payment-session?session_id=cs_4", nil)
-	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
-	req = withURLParam(req, "id", eventID.String())
-	rr := httptest.NewRecorder()
-	h.HandleEventPaymentSuccess(rr, req)
-
-	assert.Equal(t, http.StatusOK, rr.Code)
-	var body map[string]interface{}
-	_ = json.Unmarshal(rr.Body.Bytes(), &body)
-	assert.Equal(t, "", body["customer_email"])
-}
-

@@ -15,9 +15,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/stripe/stripe-go/v81"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stripe/stripe-go/v81"
 	"github.com/tiagofur/solennix-backend/internal/config"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
@@ -906,219 +906,6 @@ func (m *MockPaymentRepoSmall) Create(ctx context.Context, p *models.Payment) er
 	return args.Error(0)
 }
 
-func TestSubscriptionHandler_HandleEventPayment(t *testing.T) {
-	t.Run("MissingMetadata_DoesNothing", func(t *testing.T) {
-		h := &SubscriptionHandler{}
-
-		// Missing event_id and user_id in metadata
-		session := &stripe.CheckoutSession{
-			ID:       "cs_test_123",
-			Metadata: map[string]string{},
-		}
-
-		// Should not panic, just log and return
-		h.handleEventPayment(context.Background(), session)
-	})
-
-	t.Run("InvalidEventID_DoesNothing", func(t *testing.T) {
-		h := &SubscriptionHandler{}
-
-		session := &stripe.CheckoutSession{
-			ID: "cs_test_123",
-			Metadata: map[string]string{
-				"event_id": "not-a-uuid",
-				"user_id":  uuid.New().String(),
-			},
-		}
-
-		h.handleEventPayment(context.Background(), session)
-	})
-
-	t.Run("InvalidUserID_DoesNothing", func(t *testing.T) {
-		h := &SubscriptionHandler{}
-
-		session := &stripe.CheckoutSession{
-			ID: "cs_test_123",
-			Metadata: map[string]string{
-				"event_id": uuid.New().String(),
-				"user_id":  "not-a-uuid",
-			},
-		}
-
-		h.handleEventPayment(context.Background(), session)
-	})
-
-	t.Run("EventNotFound_DoesNothing", func(t *testing.T) {
-		mockEventRepo := new(MockEventRepoSmall)
-		h := &SubscriptionHandler{
-			eventRepo: mockEventRepo,
-		}
-
-		eventID := uuid.New()
-		userID := uuid.New()
-		session := &stripe.CheckoutSession{
-			ID: "cs_test_123",
-			Metadata: map[string]string{
-				"event_id": eventID.String(),
-				"user_id":  userID.String(),
-			},
-		}
-
-		mockEventRepo.On("GetByID", mock.Anything, eventID, userID).Return(nil, assert.AnError)
-
-		h.handleEventPayment(context.Background(), session)
-		mockEventRepo.AssertExpectations(t)
-	})
-
-	t.Run("PaymentCreateError_DoesNothing", func(t *testing.T) {
-		mockEventRepo := new(MockEventRepoSmall)
-		mockPaymentRepo := new(MockPaymentRepoSmall)
-		h := &SubscriptionHandler{
-			eventRepo:   mockEventRepo,
-			paymentRepo: mockPaymentRepo,
-		}
-
-		eventID := uuid.New()
-		userID := uuid.New()
-		event := &models.Event{
-			ID:     eventID,
-			UserID: userID,
-			Status: "quoted",
-		}
-		session := &stripe.CheckoutSession{
-			ID:          "cs_test_123",
-			AmountTotal: 50000, // $500.00
-			Metadata: map[string]string{
-				"event_id": eventID.String(),
-				"user_id":  userID.String(),
-			},
-			CustomerDetails: &stripe.CheckoutSessionCustomerDetails{
-				Email: "test@test.dev",
-			},
-		}
-
-		mockEventRepo.On("GetByID", mock.Anything, eventID, userID).Return(event, nil)
-		mockPaymentRepo.On("Create", mock.Anything, mock.AnythingOfType("*models.Payment")).Return(assert.AnError)
-
-		h.handleEventPayment(context.Background(), session)
-		mockEventRepo.AssertExpectations(t)
-		mockPaymentRepo.AssertExpectations(t)
-	})
-
-	t.Run("SuccessQuotedEvent_StatusUpdatedToConfirmed", func(t *testing.T) {
-		mockEventRepo := new(MockEventRepoSmall)
-		mockPaymentRepo := new(MockPaymentRepoSmall)
-		h := &SubscriptionHandler{
-			eventRepo:   mockEventRepo,
-			paymentRepo: mockPaymentRepo,
-		}
-
-		eventID := uuid.New()
-		userID := uuid.New()
-		event := &models.Event{
-			ID:     eventID,
-			UserID: userID,
-			Status: "quoted",
-		}
-		session := &stripe.CheckoutSession{
-			ID:          "cs_test_123",
-			AmountTotal: 100000, // $1000.00
-			Metadata: map[string]string{
-				"event_id": eventID.String(),
-				"user_id":  userID.String(),
-			},
-			CustomerDetails: &stripe.CheckoutSessionCustomerDetails{
-				Email: "client@test.dev",
-			},
-		}
-
-		mockEventRepo.On("GetByID", mock.Anything, eventID, userID).Return(event, nil)
-		mockPaymentRepo.On("Create", mock.Anything, mock.AnythingOfType("*models.Payment")).Return(nil)
-		mockEventRepo.On("Update", mock.Anything, mock.AnythingOfType("*models.Event")).Return(nil)
-
-		h.handleEventPayment(context.Background(), session)
-		mockEventRepo.AssertExpectations(t)
-		mockPaymentRepo.AssertExpectations(t)
-
-		// Verify event status was updated
-		assert.Equal(t, "confirmed", event.Status)
-	})
-
-	t.Run("SuccessConfirmedEvent_StatusNotChanged", func(t *testing.T) {
-		mockEventRepo := new(MockEventRepoSmall)
-		mockPaymentRepo := new(MockPaymentRepoSmall)
-		h := &SubscriptionHandler{
-			eventRepo:   mockEventRepo,
-			paymentRepo: mockPaymentRepo,
-		}
-
-		eventID := uuid.New()
-		userID := uuid.New()
-		event := &models.Event{
-			ID:     eventID,
-			UserID: userID,
-			Status: "confirmed",
-		}
-		session := &stripe.CheckoutSession{
-			ID:          "cs_test_456",
-			AmountTotal: 50000,
-			Metadata: map[string]string{
-				"event_id": eventID.String(),
-				"user_id":  userID.String(),
-			},
-			CustomerDetails: &stripe.CheckoutSessionCustomerDetails{
-				Email: "client@test.dev",
-			},
-		}
-
-		mockEventRepo.On("GetByID", mock.Anything, eventID, userID).Return(event, nil)
-		mockPaymentRepo.On("Create", mock.Anything, mock.AnythingOfType("*models.Payment")).Return(nil)
-
-		h.handleEventPayment(context.Background(), session)
-		mockEventRepo.AssertExpectations(t)
-		mockPaymentRepo.AssertExpectations(t)
-
-		// Status should stay confirmed, Update should NOT have been called
-		assert.Equal(t, "confirmed", event.Status)
-	})
-
-	t.Run("QuotedEvent_UpdateFails_StillCompletes", func(t *testing.T) {
-		mockEventRepo := new(MockEventRepoSmall)
-		mockPaymentRepo := new(MockPaymentRepoSmall)
-		h := &SubscriptionHandler{
-			eventRepo:   mockEventRepo,
-			paymentRepo: mockPaymentRepo,
-		}
-
-		eventID := uuid.New()
-		userID := uuid.New()
-		event := &models.Event{
-			ID:     eventID,
-			UserID: userID,
-			Status: "quoted",
-		}
-		session := &stripe.CheckoutSession{
-			ID:          "cs_test_789",
-			AmountTotal: 25000,
-			Metadata: map[string]string{
-				"event_id": eventID.String(),
-				"user_id":  userID.String(),
-			},
-			CustomerDetails: &stripe.CheckoutSessionCustomerDetails{
-				Email: "client@test.dev",
-			},
-		}
-
-		mockEventRepo.On("GetByID", mock.Anything, eventID, userID).Return(event, nil)
-		mockPaymentRepo.On("Create", mock.Anything, mock.AnythingOfType("*models.Payment")).Return(nil)
-		mockEventRepo.On("Update", mock.Anything, mock.AnythingOfType("*models.Event")).Return(assert.AnError)
-
-		h.handleEventPayment(context.Background(), session)
-		mockEventRepo.AssertExpectations(t)
-		mockPaymentRepo.AssertExpectations(t)
-	})
-}
-
 func TestSubscriptionHandler_RevenueCatWebhookErrors(t *testing.T) {
 	cfg := &config.Config{
 		RevenueCatWebhookSecret: "rc_secret_123",
@@ -1653,11 +1440,11 @@ func TestSubscriptionHandler_GetSubscriptionStatusWithSubRepo(t *testing.T) {
 		providerSubID := "sub_test456"
 		periodEnd := time.Date(2026, 4, 4, 0, 0, 0, 0, time.UTC)
 		sub := &models.Subscription{
-			UserID:        userID,
-			Provider:      "stripe",
-			ProviderSubID: &providerSubID,
-			Status:        "active",
-			Plan:          "pro",
+			UserID:           userID,
+			Provider:         "stripe",
+			ProviderSubID:    &providerSubID,
+			Status:           "active",
+			Plan:             "pro",
 			CurrentPeriodEnd: &periodEnd,
 		}
 
@@ -3006,38 +2793,24 @@ func TestSubscriptionHandler_StripeWebhook_CheckoutSessionCompleted(t *testing.T
 		mockUserRepo.AssertExpectations(t)
 	})
 
-	t.Run("EventPaymentType_DelegatesToHandleEventPayment", func(t *testing.T) {
+	t.Run("EventPaymentType_IsIgnored", func(t *testing.T) {
 		mockUserRepo := new(MockUserRepo)
 		mockEventRepo := new(MockEventRepoSmall)
 		mockPaymentRepo := new(MockPaymentRepoSmall)
 		cfg := &config.Config{StripeWebhookSecret: webhookSecret}
 		handler := NewSubscriptionHandler(mockUserRepo, nil, mockEventRepo, mockPaymentRepo, new(MockStripeService), nil, cfg)
 
-		eventID := uuid.New()
-		userID := uuid.New()
 		dataObj, _ := json.Marshal(map[string]interface{}{
 			"id":     "cs_test_event_payment",
 			"object": "checkout.session",
 			"metadata": map[string]string{
 				"type":     "event_payment",
-				"event_id": eventID.String(),
-				"user_id":  userID.String(),
+				"event_id": uuid.New().String(),
+				"user_id":  uuid.New().String(),
 			},
-			"amount_total": 150000, // $1500.00 in cents
+			"amount_total": 150000,
 		})
 		payload := buildStripeEvent("checkout.session.completed", dataObj)
-
-		mockEventRepo.On("GetByID", mock.Anything, eventID, userID).Return(&models.Event{
-			ID:     eventID,
-			UserID: userID,
-			Status: "quoted",
-		}, nil)
-		mockPaymentRepo.On("Create", mock.Anything, mock.MatchedBy(func(p *models.Payment) bool {
-			return p.EventID == eventID && p.UserID == userID && p.Amount == 1500.00 && p.PaymentMethod == "stripe"
-		})).Return(nil)
-		mockEventRepo.On("Update", mock.Anything, mock.MatchedBy(func(e *models.Event) bool {
-			return e.ID == eventID && e.Status == "confirmed"
-		})).Return(nil)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/stripe", bytes.NewReader(payload))
 		req.Header.Set("Stripe-Signature", signStripePayload(t, payload, webhookSecret))
@@ -3046,8 +2819,8 @@ func TestSubscriptionHandler_StripeWebhook_CheckoutSessionCompleted(t *testing.T
 		handler.StripeWebhook(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
-		mockEventRepo.AssertExpectations(t)
-		mockPaymentRepo.AssertExpectations(t)
+		mockEventRepo.AssertNotCalled(t, "GetByID", mock.Anything, mock.Anything, mock.Anything)
+		mockPaymentRepo.AssertNotCalled(t, "Create", mock.Anything, mock.Anything)
 	})
 
 	t.Run("InvalidJSON_ReturnsBadRequest", func(t *testing.T) {
@@ -3087,4 +2860,3 @@ func TestSubscriptionHandler_StripeWebhook_UnknownEventType(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 }
-

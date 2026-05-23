@@ -544,40 +544,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/events/{id}/checkout-session": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Create a Stripe checkout session for an event */
-        post: operations["createEventCheckoutSession"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/events/{id}/payment-session": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Retrieve Stripe payment session details for an event payment */
-        get: operations["getEventPaymentSession"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/clients": {
         parameters: {
             query?: never;
@@ -1772,18 +1738,6 @@ export interface components {
             /** Format: date-time */
             created_at: string;
         };
-        EventCheckoutSession: {
-            session_id: string;
-            /** Format: uri */
-            url: string;
-        };
-        EventPaymentSession: {
-            session_id: string;
-            payment_status: string;
-            /** Format: double */
-            amount_total: number;
-            customer_email: string;
-        };
         PaginatedClientsResponse: {
             data: components["schemas"]["Client"][];
             total: number;
@@ -1932,6 +1886,7 @@ export interface components {
         };
         UploadCompleteRequest: {
             object_key: string;
+            upload_token: string;
         };
         SearchResponse: {
             clients: components["schemas"]["Client"][];
@@ -3772,102 +3727,6 @@ export interface operations {
                 };
             };
             /** @description Failed to fetch supply suggestions */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    createEventCheckoutSession: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Event checkout session created */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EventCheckoutSession"];
-                };
-            };
-            /** @description Invalid event ID or event cannot be paid */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Event not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Stripe payments are not configured */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getEventPaymentSession: {
-        parameters: {
-            query: {
-                session_id: string;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Event payment session details */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EventPaymentSession"];
-                };
-            };
-            /** @description Missing session_id parameter or session does not match event */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Failed to retrieve payment session */
             500: {
                 headers: {
                     [name: string]: unknown;

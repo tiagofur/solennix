@@ -1059,34 +1059,6 @@ components:
         created_at:
           type: string
           format: date-time
-    EventCheckoutSession:
-      type: object
-      required:
-        - session_id
-        - url
-      properties:
-        session_id:
-          type: string
-        url:
-          type: string
-          format: uri
-    EventPaymentSession:
-      type: object
-      required:
-        - session_id
-        - payment_status
-        - amount_total
-        - customer_email
-      properties:
-        session_id:
-          type: string
-        payment_status:
-          type: string
-        amount_total:
-          type: number
-          format: double
-        customer_email:
-          type: string
     PaginatedClientsResponse:
       type: object
       required:
@@ -3297,75 +3269,6 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "500":
           description: Failed to fetch supply suggestions
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-  /api/events/{id}/checkout-session:
-    post:
-      operationId: createEventCheckoutSession
-      summary: Create a Stripe checkout session for an event
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "200":
-          description: Event checkout session created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/EventCheckoutSession"
-        "400":
-          description: Invalid event ID or event cannot be paid
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Event not found
-        "503":
-          description: Stripe payments are not configured
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-  /api/events/{id}/payment-session:
-    get:
-      operationId: getEventPaymentSession
-      summary: Retrieve Stripe payment session details for an event payment
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: session_id
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Event payment session details
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/EventPaymentSession"
-        "400":
-          description: Missing session_id parameter or session does not match event
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "403":
-          description: Unauthorized
-        "500":
-          description: Failed to retrieve payment session
           content:
             application/json:
               schema:
