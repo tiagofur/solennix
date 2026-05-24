@@ -7,7 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/tiagofur/solennix-backend/internal/models"
 )
 
@@ -22,22 +23,234 @@ type EventFetcher interface {
 	GetUpcoming(ctx context.Context, userID uuid.UUID, limit int) ([]models.Event, error)
 }
 
+type NotificationStore interface {
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
+}
+
+type NotificationEmailSender interface {
+	SendEventReminder(email, userName, eventName, eventDate, eventLink string) error
+	SendWeeklySummary(email, userName, nextEventsHTML, paymentsHTML string) error
+	SendMarketingUpdate(email, userName, tipsHTML string) error
+}
+
+type weeklySummaryRecipient struct {
+	UserID uuid.UUID
+	Email  string
+	Name   string
+}
+
+type weeklySummaryEvent struct {
+	UserID      uuid.UUID
+	ServiceType string
+	EventDate   string
+}
+
+type weeklyPaymentSummary struct {
+	UserID       uuid.UUID
+	TotalAmount  float64
+	PaymentCount int
+}
+
+const notificationBatchSize = 200
+
 // NotificationService handles business-level push and email notification logic.
 type NotificationService struct {
 	pushService  *PushService
 	deviceRepo   DeviceTokenFetcher
-	emailService *EmailService
-	pool         *pgxpool.Pool
+	emailService NotificationEmailSender
+	pool         NotificationStore
 }
 
 // NewNotificationService creates a new NotificationService.
-func NewNotificationService(pushService *PushService, deviceRepo DeviceTokenFetcher, pool *pgxpool.Pool, emailService *EmailService) *NotificationService {
+func NewNotificationService(pushService *PushService, deviceRepo DeviceTokenFetcher, pool NotificationStore, emailService NotificationEmailSender) *NotificationService {
 	return &NotificationService{
 		pushService:  pushService,
 		deviceRepo:   deviceRepo,
 		pool:         pool,
 		emailService: emailService,
 	}
+}
+
+func chunkUUIDs(ids []uuid.UUID, chunkSize int) [][]uuid.UUID {
+	if len(ids) == 0 {
+		return nil
+	}
+	if chunkSize <= 0 {
+		chunkSize = notificationBatchSize
+	}
+
+	chunks := make([][]uuid.UUID, 0, (len(ids)+chunkSize-1)/chunkSize)
+	for start := 0; start < len(ids); start += chunkSize {
+		end := start + chunkSize
+		if end > len(ids) {
+			end = len(ids)
+		}
+		chunk := make([]uuid.UUID, end-start)
+		copy(chunk, ids[start:end])
+		chunks = append(chunks, chunk)
+	}
+	return chunks
+}
+
+func renderWeeklySummaryEventsHTML(events []weeklySummaryEvent) string {
+	if len(events) == 0 {
+		return `<p style="margin: 4px 0;">• Sin eventos próximos</p>`
+	}
+
+	html := ""
+	for _, event := range events {
+		html += fmt.Sprintf(`<p style="margin: 4px 0;">• %s - %s</p>`, event.ServiceType, event.EventDate)
+	}
+	return html
+}
+
+func renderWeeklySummaryPaymentsHTML(summary weeklyPaymentSummary, ok bool) string {
+	if !ok || summary.PaymentCount == 0 {
+		return `<p style="margin: 4px 0;">• Sin pagos registrados</p>`
+	}
+	return fmt.Sprintf(`<p style="margin: 4px 0;">• %d pagos por $%.2f MXN esta semana</p>`, summary.PaymentCount, summary.TotalAmount)
+}
+
+func (s *NotificationService) listWeeklySummaryRecipients(ctx context.Context) ([]weeklySummaryRecipient, error) {
+	if s.pool == nil {
+		return nil, nil
+	}
+
+	rows, err := s.pool.Query(ctx, `
+		SELECT id, email, name FROM users
+		WHERE email_weekly_summary = true
+		ORDER BY id
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	recipients := make([]weeklySummaryRecipient, 0)
+	for rows.Next() {
+		var recipient weeklySummaryRecipient
+		if err := rows.Scan(&recipient.UserID, &recipient.Email, &recipient.Name); err != nil {
+			continue
+		}
+		recipients = append(recipients, recipient)
+	}
+	return recipients, nil
+}
+
+func (s *NotificationService) listWeeklySummaryEventsForUsers(ctx context.Context, userIDs []uuid.UUID) ([]weeklySummaryEvent, error) {
+	if s.pool == nil || len(userIDs) == 0 {
+		return nil, nil
+	}
+
+	rows, err := s.pool.Query(ctx, `
+		SELECT user_id, service_type, to_char(event_date, 'YYYY-MM-DD') as event_date
+		FROM (
+			SELECT user_id, service_type, event_date,
+				ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY event_date ASC) AS rn
+			FROM events
+			WHERE user_id = ANY($1::uuid[]) AND status = 'confirmed'
+			AND event_date >= CURRENT_DATE AND event_date <= CURRENT_DATE + INTERVAL '7 days'
+		) upcoming
+		WHERE rn <= 5
+		ORDER BY user_id ASC, event_date ASC
+	`, userIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	events := make([]weeklySummaryEvent, 0)
+	for rows.Next() {
+		var event weeklySummaryEvent
+		if err := rows.Scan(&event.UserID, &event.ServiceType, &event.EventDate); err != nil {
+			continue
+		}
+		events = append(events, event)
+	}
+	return events, nil
+}
+
+func (s *NotificationService) listWeeklyPaymentSummariesForUsers(ctx context.Context, userIDs []uuid.UUID) ([]weeklyPaymentSummary, error) {
+	if s.pool == nil || len(userIDs) == 0 {
+		return nil, nil
+	}
+
+	rows, err := s.pool.Query(ctx, `
+		SELECT user_id, COALESCE(SUM(amount), 0), COUNT(*)
+		FROM payments
+		WHERE user_id = ANY($1::uuid[])
+		AND payment_date >= CURRENT_DATE - INTERVAL '7 days'
+		GROUP BY user_id
+		ORDER BY user_id ASC
+	`, userIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	summaries := make([]weeklyPaymentSummary, 0)
+	for rows.Next() {
+		var summary weeklyPaymentSummary
+		if err := rows.Scan(&summary.UserID, &summary.TotalAmount, &summary.PaymentCount); err != nil {
+			continue
+		}
+		summaries = append(summaries, summary)
+	}
+	return summaries, nil
+}
+
+func (s *NotificationService) listReminderUserIDs(ctx context.Context) ([]uuid.UUID, error) {
+	if s.pool == nil {
+		return nil, nil
+	}
+
+	rows, err := s.pool.Query(ctx, `SELECT DISTINCT user_id FROM device_tokens ORDER BY user_id`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	userIDs := make([]uuid.UUID, 0)
+	for rows.Next() {
+		var uid uuid.UUID
+		if err := rows.Scan(&uid); err != nil {
+			continue
+		}
+		userIDs = append(userIDs, uid)
+	}
+	return userIDs, nil
+}
+
+func (s *NotificationService) listEventsForUsers(ctx context.Context, userIDs []uuid.UUID, status string, horizon time.Duration) ([]models.Event, error) {
+	if s.pool == nil || len(userIDs) == 0 {
+		return nil, nil
+	}
+
+	rows, err := s.pool.Query(ctx, `
+		SELECT id, user_id, client_id, to_char(event_date, 'YYYY-MM-DD') as event_date,
+			to_char(start_time, 'HH24:MI:SS') as start_time,
+			service_type, status
+		FROM events
+		WHERE user_id = ANY($1::uuid[]) AND status = $2
+		AND event_date >= CURRENT_DATE AND event_date <= CURRENT_DATE + $3 * INTERVAL '1 second'
+		ORDER BY user_id ASC, event_date ASC
+	`, userIDs, status, int(horizon.Seconds()))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	events := make([]models.Event, 0)
+	for rows.Next() {
+		var event models.Event
+		if err := rows.Scan(&event.ID, &event.UserID, &event.ClientID, &event.EventDate, &event.StartTime, &event.ServiceType, &event.Status); err != nil {
+			continue
+		}
+		events = append(events, event)
+	}
+	return events, nil
 }
 
 // getUserPushPrefs returns the push notification preferences for a user.
@@ -247,69 +460,59 @@ func (s *NotificationService) SendWeeklySummaryEmails(ctx context.Context) {
 		return
 	}
 
-	// Get all users who want weekly summary emails
-	rows, err := s.pool.Query(ctx, `
-		SELECT id, email, name FROM users
-		WHERE email_weekly_summary = true
-	`)
+	recipients, err := s.listWeeklySummaryRecipients(ctx)
 	if err != nil {
 		slog.Error("Failed to query users for weekly summary", "error", err)
 		return
 	}
-	defer rows.Close()
+	if len(recipients) == 0 {
+		return
+	}
+
+	userIDs := make([]uuid.UUID, 0, len(recipients))
+	for _, recipient := range recipients {
+		userIDs = append(userIDs, recipient.UserID)
+	}
+
+	eventsByUser := make(map[uuid.UUID][]weeklySummaryEvent, len(recipients))
+	paymentsByUser := make(map[uuid.UUID]weeklyPaymentSummary, len(recipients))
+	skipRecipients := make(map[uuid.UUID]bool, len(recipients))
+
+	for _, chunk := range chunkUUIDs(userIDs, notificationBatchSize) {
+		events, err := s.listWeeklySummaryEventsForUsers(ctx, chunk)
+		if err != nil {
+			slog.Error("Failed to query events for weekly summary", "error", err)
+			for _, userID := range chunk {
+				skipRecipients[userID] = true
+			}
+			continue
+		}
+		for _, event := range events {
+			eventsByUser[event.UserID] = append(eventsByUser[event.UserID], event)
+		}
+
+		payments, err := s.listWeeklyPaymentSummariesForUsers(ctx, chunk)
+		if err != nil {
+			slog.Error("Failed to query payments for weekly summary", "error", err)
+			continue
+		}
+		for _, payment := range payments {
+			paymentsByUser[payment.UserID] = payment
+		}
+	}
 
 	sentCount := 0
-	for rows.Next() {
-		var userID uuid.UUID
-		var email, name string
-		if err := rows.Scan(&userID, &email, &name); err != nil {
+	for _, recipient := range recipients {
+		if skipRecipients[recipient.UserID] {
 			continue
 		}
 
-		// Get upcoming events (next 7 days)
-		eventsRows, err := s.pool.Query(ctx, `
-			SELECT service_type, to_char(event_date, 'YYYY-MM-DD') as event_date
-			FROM events
-			WHERE user_id = $1 AND status = 'confirmed'
-			AND event_date >= CURRENT_DATE AND event_date <= CURRENT_DATE + INTERVAL '7 days'
-			ORDER BY event_date ASC
-			LIMIT 5
-		`, userID)
-		if err != nil {
-			continue
-		}
+		nextEventsHTML := renderWeeklySummaryEventsHTML(eventsByUser[recipient.UserID])
+		paymentSummary, ok := paymentsByUser[recipient.UserID]
+		paymentsHTML := renderWeeklySummaryPaymentsHTML(paymentSummary, ok)
 
-		var nextEventsHTML string
-		for eventsRows.Next() {
-			var serviceType, eventDate string
-			if err := eventsRows.Scan(&serviceType, &eventDate); err != nil {
-				continue
-			}
-			nextEventsHTML += fmt.Sprintf(`<p style="margin: 4px 0;">• %s - %s</p>`, serviceType, eventDate)
-		}
-		eventsRows.Close()
-
-		// Get total payments this week
-		var paymentsHTML string
-		var totalAmount float64
-		var paymentCount int
-		err = s.pool.QueryRow(ctx, `
-			SELECT COALESCE(SUM(amount), 0), COUNT(*) FROM payments
-			WHERE user_id = $1
-			AND payment_date >= CURRENT_DATE - INTERVAL '7 days'
-		`, userID).Scan(&totalAmount, &paymentCount)
-		if err == nil && paymentCount > 0 {
-			paymentsHTML = fmt.Sprintf(`<p style="margin: 4px 0;">• %d pagos por $%.2f MXN esta semana</p>`, paymentCount, totalAmount)
-		} else {
-			paymentsHTML = `<p style="margin: 4px 0;">• Sin pagos registrados</p>`
-		}
-
-		if nextEventsHTML == "" {
-			nextEventsHTML = `<p style="margin: 4px 0;">• Sin eventos próximos</p>`
-		}
-
-		if err := s.emailService.SendWeeklySummary(email, name, nextEventsHTML, paymentsHTML); err != nil {
-			slog.Error("Failed to send weekly summary", "user_id", userID, "error", err)
+		if err := s.emailService.SendWeeklySummary(recipient.Email, recipient.Name, nextEventsHTML, paymentsHTML); err != nil {
+			slog.Error("Failed to send weekly summary", "user_id", recipient.UserID, "error", err)
 		} else {
 			sentCount++
 		}
@@ -373,60 +576,24 @@ func (s *NotificationService) ProcessPendingReminders(ctx context.Context) {
 		return
 	}
 
-	// Get all users with device tokens
-	rows, err := s.pool.Query(ctx, `SELECT DISTINCT user_id FROM device_tokens`)
+	userIDs, err := s.listReminderUserIDs(ctx)
 	if err != nil {
 		slog.Error("Failed to query users for reminders", "error", err)
 		return
 	}
-	defer rows.Close()
-
-	var userIDs []uuid.UUID
-	for rows.Next() {
-		var uid uuid.UUID
-		if err := rows.Scan(&uid); err != nil {
-			continue
-		}
-		userIDs = append(userIDs, uid)
+	if len(userIDs) == 0 {
+		return
 	}
 
 	now := time.Now()
 	sentCount := 0
 
-	for _, uid := range userIDs {
-		// Get upcoming confirmed events for this user (next 25 hours window)
-		eventsRows, err := s.pool.Query(ctx,
-			`SELECT id, user_id, client_id, to_char(event_date, 'YYYY-MM-DD') as event_date,
-				to_char(start_time, 'HH24:MI:SS') as start_time,
-				to_char(end_time, 'HH24:MI:SS') as end_time,
-				service_type, num_people, status, discount, discount_type, requires_invoice,
-				tax_rate, tax_amount, total_amount, location, city,
-				deposit_percent, cancellation_days, refund_percent,
-				notes, photos, created_at, updated_at
-			FROM events
-			WHERE user_id = $1 AND status = 'confirmed'
-			AND event_date >= CURRENT_DATE AND event_date <= CURRENT_DATE + INTERVAL '1 day'
-			ORDER BY event_date ASC`, uid)
+	for _, chunk := range chunkUUIDs(userIDs, notificationBatchSize) {
+		events, err := s.listEventsForUsers(ctx, chunk, "confirmed", 24*time.Hour)
 		if err != nil {
-			slog.Error("Failed to query events for reminders", "user_id", uid, "error", err)
+			slog.Error("Failed to query events for reminders", "error", err)
 			continue
 		}
-
-		var events []models.Event
-		for eventsRows.Next() {
-			var e models.Event
-			if err := eventsRows.Scan(
-				&e.ID, &e.UserID, &e.ClientID, &e.EventDate, &e.StartTime, &e.EndTime,
-				&e.ServiceType, &e.NumPeople, &e.Status, &e.Discount, &e.DiscountType, &e.RequiresInvoice,
-				&e.TaxRate, &e.TaxAmount, &e.TotalAmount, &e.Location, &e.City,
-				&e.DepositPercent, &e.CancellationDays, &e.RefundPercent,
-				&e.Notes, &e.Photos, &e.CreatedAt, &e.UpdatedAt,
-			); err != nil {
-				continue
-			}
-			events = append(events, e)
-		}
-		eventsRows.Close()
 
 		for _, event := range events {
 			eventDate, err := time.Parse("2006-01-02", event.EventDate)
@@ -434,33 +601,25 @@ func (s *NotificationService) ProcessPendingReminders(ctx context.Context) {
 				continue
 			}
 
-			// Parse event start time for 1h reminder
 			eventTime := eventDate
 			if event.StartTime != nil {
 				if parsed, err := time.Parse("15:04:05", *event.StartTime); err == nil {
-					eventTime = time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(),
-						parsed.Hour(), parsed.Minute(), 0, 0, now.Location())
+					eventTime = time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), parsed.Hour(), parsed.Minute(), 0, 0, now.Location())
 				}
 			}
 
 			hoursUntil := eventTime.Sub(now).Hours()
-
-			// 24h reminder: event is between 23-25 hours away
 			if hoursUntil >= 23 && hoursUntil <= 25 {
-				if err := s.SendEventReminder(ctx, uid, event, "24h"); err == nil {
+				if err := s.SendEventReminder(ctx, event.UserID, event, "24h"); err == nil {
 					sentCount++
 				}
-				// Also send email if preferred
-				_ = s.SendEventReminderEmail(ctx, uid, event, "24h")
+				_ = s.SendEventReminderEmail(ctx, event.UserID, event, "24h")
 			}
-
-			// 1h reminder: event is between 0.5-1.5 hours away
 			if hoursUntil >= 0.5 && hoursUntil <= 1.5 {
-				if err := s.SendEventReminder(ctx, uid, event, "1h"); err == nil {
+				if err := s.SendEventReminder(ctx, event.UserID, event, "1h"); err == nil {
 					sentCount++
 				}
-				// Also send email if preferred
-				_ = s.SendEventReminderEmail(ctx, uid, event, "1h")
+				_ = s.SendEventReminderEmail(ctx, event.UserID, event, "1h")
 			}
 		}
 	}
@@ -475,44 +634,20 @@ func (s *NotificationService) ProcessPendingReminders(ctx context.Context) {
 // processQuotationPending sends a one-time push for events still in 'quoted' status
 // with an event_date within the next 7 days.
 func (s *NotificationService) processQuotationPending(ctx context.Context, userIDs []uuid.UUID) {
-	if !s.pushService.IsEnabled() {
+	if !s.pushService.IsEnabled() || len(userIDs) == 0 {
 		return
 	}
+
 	sent := 0
-	for _, uid := range userIDs {
-		rows, err := s.pool.Query(ctx,
-			`SELECT id, user_id, client_id, to_char(event_date, 'YYYY-MM-DD') as event_date,
-				to_char(start_time, 'HH24:MI:SS') as start_time,
-				to_char(end_time, 'HH24:MI:SS') as end_time,
-				service_type, num_people, status, discount, discount_type, requires_invoice,
-				tax_rate, tax_amount, total_amount, location, city,
-				deposit_percent, cancellation_days, refund_percent,
-				notes, photos, created_at, updated_at
-			FROM events
-			WHERE user_id = $1 AND status = 'quoted'
-			AND event_date >= CURRENT_DATE AND event_date <= CURRENT_DATE + INTERVAL '7 days'`, uid)
+	for _, chunk := range chunkUUIDs(userIDs, notificationBatchSize) {
+		events, err := s.listEventsForUsers(ctx, chunk, "quoted", 7*24*time.Hour)
 		if err != nil {
-			slog.Error("Failed to query pending quotations", "user_id", uid, "error", err)
+			slog.Error("Failed to query pending quotations", "error", err)
 			continue
 		}
-		var events []models.Event
-		for rows.Next() {
-			var e models.Event
-			if err := rows.Scan(
-				&e.ID, &e.UserID, &e.ClientID, &e.EventDate, &e.StartTime, &e.EndTime,
-				&e.ServiceType, &e.NumPeople, &e.Status, &e.Discount, &e.DiscountType, &e.RequiresInvoice,
-				&e.TaxRate, &e.TaxAmount, &e.TotalAmount, &e.Location, &e.City,
-				&e.DepositPercent, &e.CancellationDays, &e.RefundPercent,
-				&e.Notes, &e.Photos, &e.CreatedAt, &e.UpdatedAt,
-			); err != nil {
-				continue
-			}
-			events = append(events, e)
-		}
-		rows.Close()
 
-		for _, ev := range events {
-			if err := s.SendQuotationPending(ctx, uid, ev); err == nil {
+		for _, event := range events {
+			if err := s.SendQuotationPending(ctx, event.UserID, event); err == nil {
 				sent++
 			}
 		}
