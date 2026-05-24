@@ -272,11 +272,12 @@ fun DashboardScreen(
                 if (uiState.statusDistribution.isNotEmpty()) {
                     item {
                         Spacer(modifier = Modifier.height(24.dp))
+                        val detailCardModifier = if (isWideScreen) Modifier.fillMaxHeight() else Modifier
                         AdaptiveDetailLayout(
                             left = {
                                 EventStatusDistributionCard(
                                     statusCounts = uiState.statusDistribution,
-                                    modifier = Modifier.fillMaxHeight()
+                                    modifier = detailCardModifier
                                 )
                             },
                             right = {
@@ -284,7 +285,7 @@ fun DashboardScreen(
                                     revenueThisMonth = uiState.revenueThisMonth,
                                     cashCollected = uiState.cashCollected,
                                     vatOutstanding = uiState.vatOutstanding,
-                                    modifier = Modifier.fillMaxHeight()
+                                    modifier = detailCardModifier
                                 )
                             }
                         )

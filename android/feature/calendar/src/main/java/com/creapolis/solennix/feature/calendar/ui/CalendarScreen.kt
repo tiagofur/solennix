@@ -170,19 +170,7 @@ fun CalendarScreen(
                 }
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { onCreateEventClick(uiState.selectedDate) },
-                containerColor = SolennixTheme.colors.primary,
-                contentColor = androidx.compose.ui.graphics.Color.White
-            ) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = stringResource(R.string.calendar_new_event)
-                )
-            }
-        }
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
             StatusFilterChips(
