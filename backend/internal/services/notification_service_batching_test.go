@@ -174,6 +174,40 @@ func TestSendWeeklySummaryEmails_GivenEventBatchFailure_WhenCalled_ThenSkipsAffe
 	assert.Empty(t, emails.weekly)
 }
 
+func TestSendWeeklySummaryEmails_GivenPaymentBatchFailure_WhenCalled_ThenSkipsAffectedRecipients(t *testing.T) {
+	store := newQueryGuardStore(t)
+	defer store.Close()
+
+	userID1 := uuid.New()
+	userID2 := uuid.New()
+	emails := &fakeEmailSender{}
+
+	store.inner.ExpectQuery(`(?s)SELECT id, email, name FROM users\s+WHERE email_weekly_summary = true`).
+		WillReturnRows(
+			pgxmock.NewRows([]string{"id", "email", "name"}).
+				AddRow(userID1, "ana@example.com", "Ana").
+				AddRow(userID2, "beto@example.com", "Beto"),
+		)
+
+	store.inner.ExpectQuery(`(?s)SELECT user_id, service_type, to_char\(event_date, 'YYYY-MM-DD'\) as event_date`).
+		WithArgs(pgxmock.AnyArg()).
+		WillReturnRows(
+			pgxmock.NewRows([]string{"user_id", "service_type", "event_date"}).
+				AddRow(userID1, "Boda", "2026-05-30"),
+		)
+
+	store.inner.ExpectQuery(`(?s)SELECT user_id, COALESCE\(SUM\(amount\), 0\), COUNT\(\*\)`).
+		WithArgs(pgxmock.AnyArg()).
+		WillReturnError(fmt.Errorf("payments unavailable"))
+
+	svc := NewNotificationService(&PushService{enabled: false}, &mockDeviceTokenFetcher{}, store, emails)
+
+	svc.SendWeeklySummaryEmails(context.Background())
+
+	require.NoError(t, store.ExpectationsWereMet())
+	assert.Empty(t, emails.weekly)
+}
+
 func TestProcessPendingReminders_GivenMultipleUsersWithoutEvents_WhenCalled_ThenAvoidsPerUserEventQueries(t *testing.T) {
 	store := newQueryGuardStore(t,
 		"WHERE user_id = $1 AND status = 'confirmed'",

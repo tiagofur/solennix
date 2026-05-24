@@ -132,9 +132,12 @@ func (s *NotificationService) listWeeklySummaryRecipients(ctx context.Context) (
 	for rows.Next() {
 		var recipient weeklySummaryRecipient
 		if err := rows.Scan(&recipient.UserID, &recipient.Email, &recipient.Name); err != nil {
-			continue
+			return nil, fmt.Errorf("scan weekly summary recipient: %w", err)
 		}
 		recipients = append(recipients, recipient)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate weekly summary recipients: %w", err)
 	}
 	return recipients, nil
 }
@@ -165,9 +168,12 @@ func (s *NotificationService) listWeeklySummaryEventsForUsers(ctx context.Contex
 	for rows.Next() {
 		var event weeklySummaryEvent
 		if err := rows.Scan(&event.UserID, &event.ServiceType, &event.EventDate); err != nil {
-			continue
+			return nil, fmt.Errorf("scan weekly summary event: %w", err)
 		}
 		events = append(events, event)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate weekly summary events: %w", err)
 	}
 	return events, nil
 }
@@ -194,9 +200,12 @@ func (s *NotificationService) listWeeklyPaymentSummariesForUsers(ctx context.Con
 	for rows.Next() {
 		var summary weeklyPaymentSummary
 		if err := rows.Scan(&summary.UserID, &summary.TotalAmount, &summary.PaymentCount); err != nil {
-			continue
+			return nil, fmt.Errorf("scan weekly payment summary: %w", err)
 		}
 		summaries = append(summaries, summary)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate weekly payment summaries: %w", err)
 	}
 	return summaries, nil
 }
@@ -216,9 +225,12 @@ func (s *NotificationService) listReminderUserIDs(ctx context.Context) ([]uuid.U
 	for rows.Next() {
 		var uid uuid.UUID
 		if err := rows.Scan(&uid); err != nil {
-			continue
+			return nil, fmt.Errorf("scan reminder user id: %w", err)
 		}
 		userIDs = append(userIDs, uid)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate reminder user ids: %w", err)
 	}
 	return userIDs, nil
 }
@@ -246,9 +258,12 @@ func (s *NotificationService) listEventsForUsers(ctx context.Context, userIDs []
 	for rows.Next() {
 		var event models.Event
 		if err := rows.Scan(&event.ID, &event.UserID, &event.ClientID, &event.EventDate, &event.StartTime, &event.ServiceType, &event.Status); err != nil {
-			continue
+			return nil, fmt.Errorf("scan reminder event: %w", err)
 		}
 		events = append(events, event)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate reminder events: %w", err)
 	}
 	return events, nil
 }
@@ -494,6 +509,9 @@ func (s *NotificationService) SendWeeklySummaryEmails(ctx context.Context) {
 		payments, err := s.listWeeklyPaymentSummariesForUsers(ctx, chunk)
 		if err != nil {
 			slog.Error("Failed to query payments for weekly summary", "error", err)
+			for _, userID := range chunk {
+				skipRecipients[userID] = true
+			}
 			continue
 		}
 		for _, payment := range payments {
