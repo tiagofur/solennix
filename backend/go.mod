@@ -14,6 +14,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.9.2
 	github.com/joho/godotenv v1.5.1
+	github.com/pashagolub/pgxmock/v5 v5.1.0
 	github.com/resend/resend-go/v3 v3.6.0
 	github.com/sideshow/apns2 v0.25.0
 	github.com/stretchr/testify v1.11.1

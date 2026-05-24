@@ -68,6 +68,13 @@ status: active
 > - **UX organizer:** Web/iOS/Android ya pueden caer naturalmente al estado “no active link” en vez de mostrar una URL vencida.
 > - **Validación:** `go test ./internal/repository`.
 
+> [!success] 2026-05-24 — Notification scheduler ya no hace fanout N+1 por usuario (issue #414)
+> Se batcharon los jobs de notificaciones periódicas para que weekly summaries y reminders escalen sin queries seriales por tenant.
+> - **Weekly summary:** `SendWeeklySummaryEmails` ahora carga recipients, próximos eventos y resumen de pagos en batches con `ANY($1::uuid[])` + chunking acotado en vez de `1 + 2*N` queries.
+> - **Reminders:** `ProcessPendingReminders` y `processQuotationPending` ahora resuelven `device_tokens` users y eventos confirmados/cotizados por lote en vez de consultar `events` por cada user.
+> - **Cobertura nueva:** tests con `pgxmock` verifican que los schedulers mantengan queries batch para summaries y reminders, además de helpers de chunking.
+> - **Validación:** `go test ./internal/services`.
+
 > [!success] 2026-05-24 — Payment submissions validan public link antes de parsear multipart (issue #421)
 > Se movió la validación temprana del public link en `CreatePublic` para cortar requests inválidas antes de consumir memoria o temp-files del multipart.
 > - **Orden del flujo:** `CreatePublic` ahora lookupea y valida `status`/`expires_at` del link antes de `ParseMultipartForm`.
