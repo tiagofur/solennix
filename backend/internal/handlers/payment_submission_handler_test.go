@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"mime/multipart"
@@ -12,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tiagofur/solennix-backend/internal/models"
 )
 
 type paymentSubmissionErrorEnvelope struct {
@@ -34,7 +36,15 @@ func TestPaymentSubmissionCreatePublicMissingToken(t *testing.T) {
 
 // TestPaymentSubmissionCreatePublicMissingFields verifies 400 for missing required fields.
 func TestPaymentSubmissionCreatePublicMissingFields(t *testing.T) {
-	handler := &PaymentSubmissionHandler{}
+	uploadDir := t.TempDir()
+	handler := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir)
+	handler.lookupPublicLink = func(context.Context, string) (*models.EventPublicLink, error) {
+		return &models.EventPublicLink{
+			EventID: uuid.New(),
+			UserID:  uuid.New(),
+			Status:  "active",
+		}, nil
+	}
 
 	tests := []struct {
 		name          string

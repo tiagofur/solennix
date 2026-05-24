@@ -55,6 +55,11 @@ func pngFixtureBytes() []byte {
 	}
 }
 
+func malformedMultipartRequest() (*bytes.Buffer, string) {
+	body := bytes.NewBufferString("--broken\r\nContent-Disposition: form-data; name=\"event_id\"\r\n\r\nnot-closed")
+	return body, "multipart/form-data; boundary=broken"
+}
+
 func TestPaymentSubmissionCreatePublicLookupFailureResponses(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -92,6 +97,31 @@ func TestPaymentSubmissionCreatePublicLookupFailureResponses(t *testing.T) {
 	}
 }
 
+func TestPaymentSubmissionCreatePublicNotFoundRejectsBeforeMultipartParsing(t *testing.T) {
+	uploadDir := t.TempDir()
+	handler := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir)
+	handler.lookupPublicLink = func(context.Context, string) (*models.EventPublicLink, error) {
+		return nil, fmt.Errorf("lookup failed: %w", pgx.ErrNoRows)
+	}
+
+	body, contentType := malformedMultipartRequest()
+	req := httptest.NewRequest(http.MethodPost, "/api/public/events/token-123/payment-submissions", body)
+	req.Header.Set("Content-Type", contentType)
+	req.SetPathValue("token", "token-123")
+	w := httptest.NewRecorder()
+
+	handler.CreatePublic(w, req)
+
+	require.Equal(t, http.StatusNotFound, w.Code)
+	var envelope paymentSubmissionErrorEnvelope
+	require.NoError(t, json.NewDecoder(w.Body).Decode(&envelope))
+	assert.Equal(t, "Invalid or expired link", envelope.Error)
+
+	entries, err := os.ReadDir(handler.privateReceiptsDir)
+	require.NoError(t, err)
+	assert.Empty(t, entries)
+}
+
 func TestPaymentSubmissionCreatePublicExpiredLinkReturnsGoneAndDoesNotWriteReceipt(t *testing.T) {
 	uploadDir := t.TempDir()
 	handler := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir)
@@ -123,6 +153,38 @@ func TestPaymentSubmissionCreatePublicExpiredLinkReturnsGoneAndDoesNotWriteRecei
 	assert.Empty(t, entries)
 }
 
+func TestPaymentSubmissionCreatePublicExpiredLinkRejectsBeforeMultipartParsing(t *testing.T) {
+	uploadDir := t.TempDir()
+	handler := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir)
+	expiredAt := time.Now().Add(-time.Hour)
+
+	handler.lookupPublicLink = func(context.Context, string) (*models.EventPublicLink, error) {
+		return &models.EventPublicLink{
+			EventID:   uuid.New(),
+			UserID:    uuid.New(),
+			Status:    "active",
+			ExpiresAt: &expiredAt,
+		}, nil
+	}
+
+	body, contentType := malformedMultipartRequest()
+	req := httptest.NewRequest(http.MethodPost, "/api/public/events/token-123/payment-submissions", body)
+	req.Header.Set("Content-Type", contentType)
+	req.SetPathValue("token", "token-123")
+	w := httptest.NewRecorder()
+
+	handler.CreatePublic(w, req)
+
+	require.Equal(t, http.StatusGone, w.Code)
+	var envelope paymentSubmissionErrorEnvelope
+	require.NoError(t, json.NewDecoder(w.Body).Decode(&envelope))
+	assert.Equal(t, "This link has expired", envelope.Error)
+
+	entries, err := os.ReadDir(handler.privateReceiptsDir)
+	require.NoError(t, err)
+	assert.Empty(t, entries)
+}
+
 func TestPaymentSubmissionCreatePublicRevokedLinkReturnsGoneAndDoesNotWriteReceipt(t *testing.T) {
 	uploadDir := t.TempDir()
 	handler := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir)
@@ -149,6 +211,62 @@ func TestPaymentSubmissionCreatePublicRevokedLinkReturnsGoneAndDoesNotWriteRecei
 	entries, err := os.ReadDir(handler.privateReceiptsDir)
 	require.NoError(t, err)
 	assert.Empty(t, entries)
+}
+
+func TestPaymentSubmissionCreatePublicRevokedLinkRejectsBeforeMultipartParsing(t *testing.T) {
+	uploadDir := t.TempDir()
+	handler := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir)
+
+	handler.lookupPublicLink = func(context.Context, string) (*models.EventPublicLink, error) {
+		return &models.EventPublicLink{
+			EventID: uuid.New(),
+			UserID:  uuid.New(),
+			Status:  "revoked",
+		}, nil
+	}
+
+	body, contentType := malformedMultipartRequest()
+	req := httptest.NewRequest(http.MethodPost, "/api/public/events/token-123/payment-submissions", body)
+	req.Header.Set("Content-Type", contentType)
+	req.SetPathValue("token", "token-123")
+	w := httptest.NewRecorder()
+
+	handler.CreatePublic(w, req)
+
+	require.Equal(t, http.StatusGone, w.Code)
+	var envelope paymentSubmissionErrorEnvelope
+	require.NoError(t, json.NewDecoder(w.Body).Decode(&envelope))
+	assert.Equal(t, "This link is no longer active", envelope.Error)
+
+	entries, err := os.ReadDir(handler.privateReceiptsDir)
+	require.NoError(t, err)
+	assert.Empty(t, entries)
+}
+
+func TestPaymentSubmissionCreatePublicMalformedMultipartOnValidLinkReturnsBadRequest(t *testing.T) {
+	uploadDir := t.TempDir()
+	handler := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir)
+
+	handler.lookupPublicLink = func(context.Context, string) (*models.EventPublicLink, error) {
+		return &models.EventPublicLink{
+			EventID: uuid.New(),
+			UserID:  uuid.New(),
+			Status:  "active",
+		}, nil
+	}
+
+	body, contentType := malformedMultipartRequest()
+	req := httptest.NewRequest(http.MethodPost, "/api/public/events/token-123/payment-submissions", body)
+	req.Header.Set("Content-Type", contentType)
+	req.SetPathValue("token", "token-123")
+	w := httptest.NewRecorder()
+
+	handler.CreatePublic(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+	var envelope paymentSubmissionErrorEnvelope
+	require.NoError(t, json.NewDecoder(w.Body).Decode(&envelope))
+	assert.Equal(t, "Failed to parse form data", envelope.Error)
 }
 
 func TestPaymentSubmissionCreatePublicEventMismatchReturnsBadRequest(t *testing.T) {

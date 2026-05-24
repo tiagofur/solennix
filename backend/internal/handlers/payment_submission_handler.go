@@ -222,7 +222,28 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// Parse request body (multipart form for file upload)
+	// Validate the public link before any multipart parsing or receipt temp-file work.
+	link, err := h.fetchPublicLink(ctx, token)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "Invalid or expired link")
+			return
+		}
+		slog.Error("Failed to look up payment submission public link", "error", err)
+		writeError(w, http.StatusInternalServerError, "Failed to validate link")
+		return
+	}
+
+	if link.Status != "active" {
+		writeError(w, http.StatusGone, "This link is no longer active")
+		return
+	}
+	if isExpiredPublicLink(link) {
+		writeError(w, http.StatusGone, "This link has expired")
+		return
+	}
+
+	// Parse request body (multipart form for file upload) only after link validation succeeds.
 	if err := r.ParseMultipartForm(10 << 20); err != nil { // 10MB limit
 		writeError(w, http.StatusBadRequest, "Failed to parse form data")
 		return
@@ -254,27 +275,6 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 	_, err = fmt.Sscanf(amount, "%f", &amountFloat)
 	if err != nil || amountFloat <= 0 {
 		writeError(w, http.StatusBadRequest, "amount must be a positive number")
-		return
-	}
-
-	// Validate event public link before touching any receipt file.
-	link, err := h.fetchPublicLink(ctx, token)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			writeError(w, http.StatusNotFound, "Invalid or expired link")
-			return
-		}
-		slog.Error("Failed to look up payment submission public link", "error", err)
-		writeError(w, http.StatusInternalServerError, "Failed to validate link")
-		return
-	}
-
-	if link.Status != "active" {
-		writeError(w, http.StatusGone, "This link is no longer active")
-		return
-	}
-	if isExpiredPublicLink(link) {
-		writeError(w, http.StatusGone, "This link has expired")
 		return
 	}
 
