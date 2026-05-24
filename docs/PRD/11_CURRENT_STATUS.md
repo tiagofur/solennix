@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-05-23
+updated: 2026-05-24
 status: active
 ---
 
@@ -67,6 +67,13 @@ status: active
 > - **Semántica pública intacta:** `GetByToken` no cambió, así que el portal y los endpoints públicos siguen distinguiendo `404` para token inexistente y `410` para links expirados/revocados.
 > - **UX organizer:** Web/iOS/Android ya pueden caer naturalmente al estado “no active link” en vez de mostrar una URL vencida.
 > - **Validación:** `go test ./internal/repository`.
+
+> [!success] 2026-05-24 — Payment submissions validan public link antes de parsear multipart (issue #421)
+> Se movió la validación temprana del public link en `CreatePublic` para cortar requests inválidas antes de consumir memoria o temp-files del multipart.
+> - **Orden del flujo:** `CreatePublic` ahora lookupea y valida `status`/`expires_at` del link antes de `ParseMultipartForm`.
+> - **Semántica preservada:** links expirados o revocados siguen devolviendo `410`, link inexistente sigue en `404`, multipart malformado con link válido sigue devolviendo `400 Failed to parse form data`.
+> - **Cobertura nueva:** regresiones prueban que links expirados/revocados rechazan incluso bodies multipart malformados sin tocar receipts.
+> - **Validación:** `go test ./internal/handlers -run 'TestPaymentSubmission(CreatePublic|PublicHistoryValidation|OrganizerReviewValidation)'`.
 
 > [!success] 2026-05-23 — Tests públicos de payment submissions ya usan path params reales (issue #415)
 > Se corrigió falsa cobertura en tests de `payment_submissions` para que las rutas públicas realmente ejerzan `PathValue("token")` y no la rama accidental de token vacío.
