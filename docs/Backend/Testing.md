@@ -166,6 +166,7 @@ quadrantChart
 | **`payment_submission_handler.go` token routes** | Parcialmente cerrado en 2026-05-23 (issue #415): tests públicos ya usan `PathValue("token")` real y cubren `404`/`410`/`400` sin caer por accidente en la rama de token vacío |
 | **`payment_submission` organizer review route params** | Parcialmente cerrado en 2026-05-23 (issue #416): tests de review organizer ya usan `PathValue("id")` real y validan errores de negocio en vez de caer por accidente en la rama de ID inválido |
 | **`payment_submission` public link validation order** | Cerrado en 2026-05-24 (issue #421): `CreatePublic` valida el public link antes de `ParseMultipartForm`, y tests nuevos prueban que links expirados/revocados devuelven `410` aun con multipart malformado |
+| **`payment_submission` approval concurrency** | Cerrado en 2026-05-24 (issue #429): test de integración con DB real corre dos approvals concurrentes y afirma un solo `payment`, una sola submission final aprobada y `409` para la request perdedora |
 | **`notification_service` scheduler N+1 fanout** | Cerrado en 2026-05-24 (issue #414): weekly summaries y reminder jobs ahora cargan users/events/payments en batches con chunking acotado, y tests con `pgxmock` verifican que el scheduler no vuelva a caer en queries por usuario |
 | Repository unit tests | No hay unit tests con mocks — solo integration tests con DB real |
 | Benchmark tests | No hay tests de performance con `go test -bench` |

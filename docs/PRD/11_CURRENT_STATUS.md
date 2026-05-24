@@ -68,6 +68,13 @@ status: active
 > - **UX organizer:** Web/iOS/Android ya pueden caer naturalmente al estado “no active link” en vez de mostrar una URL vencida.
 > - **Validación:** `go test ./internal/repository`.
 
+> [!success] 2026-05-24 — Approvals concurrentes de payment submissions ya tienen cobertura real (issue #429)
+> Se agregó una regresión de integración con DB real para blindar el flujo organizer approve frente a doble submit concurrente.
+> - **Carrera real:** dos approvals concurrentes sobre la misma submission terminan con exactamente un `200 OK` y un `409 Submission has already been reviewed`.
+> - **Side effects únicos:** el test afirma que sólo se crea un `payment`, que la submission queda con un único `linked_payment_id` y que el estado final queda consistente en `approved`.
+> - **Auto-confirm preservado:** el fixture usa evento `quoted` con `deposit_percent` suficiente y verifica que el evento termine en `confirmed` tras el approval ganador.
+> - **Validación:** `go test ./internal/handlers -run TestPaymentSubmissionReviewSubmissionConcurrentApprovalsCreateSinglePayment`.
+
 > [!success] 2026-05-24 — Notification scheduler ya no hace fanout N+1 por usuario (issue #414)
 > Se batcharon los jobs de notificaciones periódicas para que weekly summaries y reminders escalen sin queries seriales por tenant.
 > - **Weekly summary:** `SendWeeklySummaryEmails` ahora carga recipients, próximos eventos y resumen de pagos en batches con `ANY($1::uuid[])` + chunking acotado en vez de `1 + 2*N` queries.
