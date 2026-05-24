@@ -39,13 +39,17 @@ type paymentSubmissionReviewStore interface {
 }
 
 type paymentSubmissionReviewStoreTx struct {
-	tx             pgx.Tx
-	submissionRepo *repository.PaymentSubmissionRepo
-	paymentRepo    *repository.PaymentRepo
-	eventRepo      *repository.EventRepo
+	tx                           pgx.Tx
+	submissionRepo               *repository.PaymentSubmissionRepo
+	paymentRepo                  *repository.PaymentRepo
+	eventRepo                    *repository.EventRepo
+	beforeGetSubmissionForUpdate func()
 }
 
 func (s *paymentSubmissionReviewStoreTx) GetSubmissionForUpdate(ctx context.Context, id uuid.UUID) (*models.PaymentSubmission, error) {
+	if s.beforeGetSubmissionForUpdate != nil {
+		s.beforeGetSubmissionForUpdate()
+	}
 	return s.submissionRepo.GetByIDForUpdateTx(ctx, s.tx, id)
 }
 
@@ -77,10 +81,11 @@ type PaymentSubmissionHandler struct {
 	uploadDir          string
 	privateReceiptsDir string
 
-	lookupPublicLink func(context.Context, string) (*models.EventPublicLink, error)
-	createSubmission func(context.Context, *models.PaymentSubmission) error
-	getSubmission    func(context.Context, uuid.UUID) (*models.PaymentSubmission, error)
-	beginReviewTx    func(context.Context) (paymentSubmissionReviewStore, error)
+	lookupPublicLink            func(context.Context, string) (*models.EventPublicLink, error)
+	createSubmission            func(context.Context, *models.PaymentSubmission) error
+	getSubmission               func(context.Context, uuid.UUID) (*models.PaymentSubmission, error)
+	beginReviewTx               func(context.Context) (paymentSubmissionReviewStore, error)
+	beforeReviewSelectForUpdate func()
 }
 
 func NewPaymentSubmissionHandler(repo *repository.PaymentSubmissionRepo, paymentRepo *repository.PaymentRepo, userRepo FullUserRepository, pool *pgxpool.Pool, uploadDir string) *PaymentSubmissionHandler {
@@ -102,10 +107,11 @@ func NewPaymentSubmissionHandler(repo *repository.PaymentSubmissionRepo, payment
 			return nil, err
 		}
 		return &paymentSubmissionReviewStoreTx{
-			tx:             tx,
-			submissionRepo: repo,
-			paymentRepo:    paymentRepo,
-			eventRepo:      repository.NewEventRepo(pool),
+			tx:                           tx,
+			submissionRepo:               repo,
+			paymentRepo:                  paymentRepo,
+			eventRepo:                    repository.NewEventRepo(pool),
+			beforeGetSubmissionForUpdate: handler.beforeReviewSelectForUpdate,
 		}, nil
 	}
 	return handler
