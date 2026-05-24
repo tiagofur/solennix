@@ -173,12 +173,15 @@ func TestPaymentSubmissionReviewSubmissionConcurrentApprovalsCreateSinglePayment
 
 	ctx := context.Background()
 	var paymentCount int
-	var paymentID uuid.UUID
+	var paymentID *uuid.UUID
 	if err := pool.QueryRow(ctx, `SELECT COUNT(*), MIN(id) FROM payments WHERE event_id = $1 AND user_id = $2`, eventID, organizerID).Scan(&paymentCount, &paymentID); err != nil {
 		t.Fatalf("load payments: %v", err)
 	}
 	if paymentCount != 1 {
 		t.Fatalf("payment count = %d, want 1", paymentCount)
+	}
+	if paymentID == nil {
+		t.Fatal("expected payment id when one payment exists")
 	}
 
 	submission, err := repository.NewPaymentSubmissionRepo(pool).GetByID(ctx, submissionID)
@@ -191,7 +194,7 @@ func TestPaymentSubmissionReviewSubmissionConcurrentApprovalsCreateSinglePayment
 	if submission.LinkedPaymentID == nil {
 		t.Fatal("expected linked payment id after concurrent approval")
 	}
-	if *submission.LinkedPaymentID != paymentID {
+	if *submission.LinkedPaymentID != *paymentID {
 		t.Fatalf("linked payment id = %s, want %s", submission.LinkedPaymentID.String(), paymentID.String())
 	}
 	if submission.ReviewedBy == nil || *submission.ReviewedBy != organizerID {
