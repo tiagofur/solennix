@@ -14,6 +14,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type paymentSubmissionErrorEnvelope struct {
+	Error string `json:"error"`
+}
+
 // TestPaymentSubmissionCreatePublicMissingToken verifies the handler rejects requests without the route token.
 func TestPaymentSubmissionCreatePublicMissingToken(t *testing.T) {
 	handler := &PaymentSubmissionHandler{}
@@ -23,6 +27,9 @@ func TestPaymentSubmissionCreatePublicMissingToken(t *testing.T) {
 	handler.CreatePublic(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
+	var envelope paymentSubmissionErrorEnvelope
+	require.NoError(t, json.NewDecoder(w.Body).Decode(&envelope))
+	assert.Equal(t, "Token is required", envelope.Error)
 }
 
 // TestPaymentSubmissionCreatePublicMissingFields verifies 400 for missing required fields.
@@ -30,9 +37,9 @@ func TestPaymentSubmissionCreatePublicMissingFields(t *testing.T) {
 	handler := &PaymentSubmissionHandler{}
 
 	tests := []struct {
-		name      string
-		body      map[string]string
-		wantError bool
+		name          string
+		body          map[string]string
+		expectedError string
 	}{
 		{
 			name: "missing event_id",
@@ -40,7 +47,7 @@ func TestPaymentSubmissionCreatePublicMissingFields(t *testing.T) {
 				"client_id": uuid.New().String(),
 				"amount":    "1000",
 			},
-			wantError: true,
+			expectedError: "event_id, client_id, and amount are required",
 		},
 		{
 			name: "missing client_id",
@@ -48,7 +55,7 @@ func TestPaymentSubmissionCreatePublicMissingFields(t *testing.T) {
 				"event_id": uuid.New().String(),
 				"amount":   "1000",
 			},
-			wantError: true,
+			expectedError: "event_id, client_id, and amount are required",
 		},
 		{
 			name: "missing amount",
@@ -56,7 +63,7 @@ func TestPaymentSubmissionCreatePublicMissingFields(t *testing.T) {
 				"event_id":  uuid.New().String(),
 				"client_id": uuid.New().String(),
 			},
-			wantError: true,
+			expectedError: "event_id, client_id, and amount are required",
 		},
 		{
 			name: "invalid amount (negative)",
@@ -65,7 +72,7 @@ func TestPaymentSubmissionCreatePublicMissingFields(t *testing.T) {
 				"client_id": uuid.New().String(),
 				"amount":    "-1000",
 			},
-			wantError: true,
+			expectedError: "amount must be a positive number",
 		},
 		{
 			name: "invalid amount (zero)",
@@ -74,7 +81,7 @@ func TestPaymentSubmissionCreatePublicMissingFields(t *testing.T) {
 				"client_id": uuid.New().String(),
 				"amount":    "0",
 			},
-			wantError: true,
+			expectedError: "amount must be a positive number",
 		},
 		{
 			name: "invalid event_id format",
@@ -83,7 +90,7 @@ func TestPaymentSubmissionCreatePublicMissingFields(t *testing.T) {
 				"client_id": uuid.New().String(),
 				"amount":    "1000",
 			},
-			wantError: true,
+			expectedError: "Invalid event_id",
 		},
 		{
 			name: "invalid client_id format",
@@ -92,7 +99,7 @@ func TestPaymentSubmissionCreatePublicMissingFields(t *testing.T) {
 				"client_id": "not-a-uuid",
 				"amount":    "1000",
 			},
-			wantError: true,
+			expectedError: "Invalid client_id",
 		},
 	}
 
@@ -113,9 +120,10 @@ func TestPaymentSubmissionCreatePublicMissingFields(t *testing.T) {
 
 			handler.CreatePublic(w, req)
 
-			if tc.wantError {
-				assert.Equal(t, http.StatusBadRequest, w.Code)
-			}
+			assert.Equal(t, http.StatusBadRequest, w.Code)
+			var envelope paymentSubmissionErrorEnvelope
+			require.NoError(t, json.NewDecoder(w.Body).Decode(&envelope))
+			assert.Equal(t, tc.expectedError, envelope.Error)
 		})
 	}
 }
@@ -129,30 +137,35 @@ func TestPaymentSubmissionPublicHistoryValidation(t *testing.T) {
 		eventID        string
 		clientID       string
 		expectedStatus int
+		expectedError  string
 	}{
 		{
 			name:           "missing event_id",
 			eventID:        "",
 			clientID:       uuid.New().String(),
 			expectedStatus: http.StatusBadRequest,
+			expectedError:  "event_id and client_id query params required",
 		},
 		{
 			name:           "missing client_id",
 			eventID:        uuid.New().String(),
 			clientID:       "",
 			expectedStatus: http.StatusBadRequest,
+			expectedError:  "event_id and client_id query params required",
 		},
 		{
 			name:           "invalid event_id",
 			eventID:        "not-a-uuid",
 			clientID:       uuid.New().String(),
 			expectedStatus: http.StatusBadRequest,
+			expectedError:  "Invalid event_id",
 		},
 		{
 			name:           "invalid client_id",
 			eventID:        uuid.New().String(),
 			clientID:       "not-a-uuid",
 			expectedStatus: http.StatusBadRequest,
+			expectedError:  "Invalid client_id",
 		},
 	}
 
@@ -166,6 +179,9 @@ func TestPaymentSubmissionPublicHistoryValidation(t *testing.T) {
 			handler.GetHistoryPublic(w, req)
 
 			assert.Equal(t, tc.expectedStatus, w.Code)
+			var envelope paymentSubmissionErrorEnvelope
+			require.NoError(t, json.NewDecoder(w.Body).Decode(&envelope))
+			assert.Equal(t, tc.expectedError, envelope.Error)
 		})
 	}
 }
@@ -220,52 +236,9 @@ func TestPaymentSubmissionOrganizerReviewValidation(t *testing.T) {
 			handler.ReviewSubmission(w, req)
 
 			assert.Equal(t, tc.expectedStatus, w.Code)
-			assert.Contains(t, w.Body.String(), tc.expectedError)
-		})
-	}
-}
-
-// TestEventFormTokenInvalidVsExpiredSemantics verifies 404 vs 410 distinction.
-func TestEventFormTokenInvalidVsExpiredSemantics(t *testing.T) {
-	// Test validates that error semantics are documented and testable:
-	// - 404: token never existed
-	// - 410: token existed but is expired/used
-
-	tests := []struct {
-		name           string
-		tokenExists    bool
-		tokenExpired   bool
-		expectedStatus int
-		expectedError  string
-	}{
-		{
-			name:           "token never existed",
-			tokenExists:    false,
-			tokenExpired:   false,
-			expectedStatus: http.StatusNotFound,
-			expectedError:  "link_not_found",
-		},
-		{
-			name:           "token expired",
-			tokenExists:    true,
-			tokenExpired:   true,
-			expectedStatus: http.StatusGone,
-			expectedError:  "link_invalid",
-		},
-		{
-			name:           "token used (consumed)",
-			tokenExists:    true,
-			tokenExpired:   true,
-			expectedStatus: http.StatusGone,
-			expectedError:  "link_invalid",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			// Validates semantic contract without needing actual DB
-			assert.True(t, tc.expectedStatus == http.StatusNotFound || tc.expectedStatus == http.StatusGone)
-			assert.NotEmpty(t, tc.expectedError)
+			var envelope paymentSubmissionErrorEnvelope
+			require.NoError(t, json.NewDecoder(w.Body).Decode(&envelope))
+			assert.Equal(t, tc.expectedError, envelope.Error)
 		})
 	}
 }
@@ -349,95 +322,6 @@ func TestStaffTeamMemberReplacementBehavior(t *testing.T) {
 			// Validates documented behavior contracts
 			require.Greater(t, tc.initialMemberCount, 0)
 			assert.NotEmpty(t, tc.expectedBehavior)
-		})
-	}
-}
-
-// TestErrorEnvelopeConsistency verifies all handlers return consistent error format.
-func TestErrorEnvelopeConsistency(t *testing.T) {
-	// Error response format should be consistent across public handlers
-	// Expected: { "error": "error_code", "message": "human readable message" }
-
-	tests := []struct {
-		name            string
-		handlerEndpoint string
-		expectedFields  []string
-	}{
-		{
-			name:            "event_form_handler error envelope",
-			handlerEndpoint: "POST /api/events/{id}/forms",
-			expectedFields:  []string{"error", "message"},
-		},
-		{
-			name:            "event_public_link_handler error envelope",
-			handlerEndpoint: "GET /api/public/events/{token}",
-			expectedFields:  []string{"error", "message"},
-		},
-		{
-			name:            "payment_submission_handler error envelope",
-			handlerEndpoint: "POST /api/public/events/{token}/payment-submissions",
-			expectedFields:  []string{"error", "message"},
-		},
-		{
-			name:            "staff_team_handler error envelope",
-			handlerEndpoint: "GET /api/staff/teams/{id}",
-			expectedFields:  []string{"error", "message"},
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			// Validates envelope contract is documented
-			assert.Len(t, tc.expectedFields, 2) // error code + message
-		})
-	}
-}
-
-// TestPublicHandlerRateLimitingContractDocumented verifies rate limit contracts are explicit.
-func TestPublicHandlerRateLimitingContractDocumented(t *testing.T) {
-	tests := []struct {
-		name            string
-		endpoint        string
-		publicAccess    bool
-		rateLimitPerMin int
-		rateLimitScope  string
-	}{
-		{
-			name:            "event_form GetFormData rate limit",
-			endpoint:        "GET /api/public/events/{token}",
-			publicAccess:    true,
-			rateLimitPerMin: 10,
-			rateLimitScope:  "IP (unauthenticated)",
-		},
-		{
-			name:            "payment_submission CreatePublic rate limit",
-			endpoint:        "POST /api/public/events/{token}/payment-submissions",
-			publicAccess:    true,
-			rateLimitPerMin: 10,
-			rateLimitScope:  "IP (unauthenticated)",
-		},
-		{
-			name:            "payment_submission ListHistoryPublic rate limit",
-			endpoint:        "GET /api/public/events/{token}/payment-submissions",
-			publicAccess:    true,
-			rateLimitPerMin: 10,
-			rateLimitScope:  "IP (unauthenticated)",
-		},
-		{
-			name:            "payment_submission ReviewSubmission rate limit",
-			endpoint:        "PATCH /api/payment-submissions/{id}",
-			publicAccess:    false,
-			rateLimitPerMin: 30,
-			rateLimitScope:  "user_id (authenticated)",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			// Validates rate limiting contracts are documented
-			assert.True(t, tc.publicAccess || !tc.publicAccess)
-			assert.Greater(t, tc.rateLimitPerMin, 0)
-			assert.NotEmpty(t, tc.rateLimitScope)
 		})
 	}
 }
