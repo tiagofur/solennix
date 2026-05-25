@@ -1,7 +1,7 @@
 [versions]
 agp = "9.2.1"
 kotlin = "2.3.21"
-compose-bom = "2025.12.01"
+compose-bom = "2026.05.01"
 ktor = "3.5.0"
 # Hilt 2.59+ requires AGP 9. Keep on 2.58 while project stays on AGP 8.x.
 hilt = "2.59.2"
