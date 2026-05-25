@@ -18,7 +18,7 @@
          This is the project that owns the Android OAuth client registered for
          com.solennix.app + SHA-1 Play App Signing. Do not replace with a Web Client ID
          from a different GCP project or Credential Manager will fail. -->
-    <string name="google_web_client_id">606927500645-cq1jh4vk1jtqq3s461qdfjmqup7kv4nd.apps.googleusercontent.com</string>
+    <string name="google_web_client_id" translatable="false">606927500645-cq1jh4vk1jtqq3s461qdfjmqup7kv4nd.apps.googleusercontent.com</string>
 
     <!-- General -->
     <string name="ok">Aceptar</string>
@@ -30,12 +30,12 @@
     <string name="shortcut_new_event">Nuevo Evento</string>
     <string name="shortcut_new_event_long">Crear un nuevo evento</string>
     <string name="shortcut_calendar">Calendario</string>
-    <string name="shortcut_quick_quote">Nueva Cotizacion</string>
-    <string name="shortcut_quick_quote_long">Iniciar cotizacion rapida</string>
+    <string name="shortcut_quick_quote">Nueva Cotización</string>
+    <string name="shortcut_quick_quote_long">Iniciar cotización rápida</string>
     <string name="shortcut_inventory">Inventario</string>
     <string name="shortcut_inventory_long">Revisar inventario y stock</string>
-    <string name="shortcut_upcoming_events">Proximos eventos</string>
-    <string name="shortcut_upcoming_events_long">Ver tus proximos eventos confirmados</string>
+    <string name="shortcut_upcoming_events">Próximos eventos</string>
+    <string name="shortcut_upcoming_events_long">Ver tus próximos eventos confirmados</string>
     <string name="shortcut_monthly_revenue">Ingresos del mes</string>
     <string name="shortcut_monthly_revenue_long">Consultar ingresos del mes actual</string>
     <string name="shortcut_low_stock">Stock bajo</string>

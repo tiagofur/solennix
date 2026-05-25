@@ -55,13 +55,18 @@ class KtorClient @Inject constructor(
                         authManager.refreshAndGetTokens()
                     }
                 }
-                sendWithoutRequest { true }
+                sendWithoutRequest { request ->
+                    request.url.host == BuildConfig.API_HOST
+                }
             }
         }
 
-        install(Logging) {
-            level = LogLevel.HEADERS
-            logger = Logger.DEFAULT
+        if (BuildConfig.DEBUG) {
+            install(Logging) {
+                level = LogLevel.HEADERS
+                logger = Logger.DEFAULT
+                sanitizeHeader { header -> header == HttpHeaders.Authorization }
+            }
         }
 
         defaultRequest {
