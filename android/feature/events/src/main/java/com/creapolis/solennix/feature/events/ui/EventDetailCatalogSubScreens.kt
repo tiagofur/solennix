@@ -26,6 +26,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -33,6 +35,7 @@ import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.core.model.extensions.formatQuantity
+import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,10 +49,10 @@ fun EventProductsScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Productos") },
+                title = { Text(stringResource(R.string.events_catalog_products_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.events_common_back))
                     }
                 }
             )
@@ -68,18 +71,18 @@ fun EventProductsScreen(
         ) {
             if (products.isEmpty()) {
                 Box(Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
-                    Text("Sin productos asignados", style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText)
+                    Text(stringResource(R.string.events_catalog_products_empty), style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText)
                 }
             } else {
                 Surface(shape = MaterialTheme.shapes.medium, color = SolennixTheme.colors.primary.copy(alpha = 0.1f)) {
                     Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("${products.size} productos", style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText)
-                        Text("Subtotal: ${subtotal.asMXN()}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = SolennixTheme.colors.primary)
+                        Text(pluralStringResource(R.plurals.events_catalog_products_count, products.size, products.size), style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText)
+                        Text(stringResource(R.string.events_catalog_subtotal_value, subtotal.asMXN()), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = SolennixTheme.colors.primary)
                     }
                 }
 
                 products.forEach { product ->
-                    val name = product.productName ?: "Producto"
+                    val name = product.productName ?: stringResource(R.string.events_catalog_product_fallback)
                     val total = product.totalPrice ?: (product.quantity * product.unitPrice)
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -93,7 +96,7 @@ fun EventProductsScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                                Text("${product.quantity.formatQuantity()} x ${product.unitPrice.asMXN()}", style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
+                                Text(stringResource(R.string.events_catalog_quantity_price, product.quantity.formatQuantity(), product.unitPrice.asMXN()), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
                             }
                             Text(total.asMXN(), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                         }
@@ -115,10 +118,10 @@ fun EventExtrasScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Extras") },
+                title = { Text(stringResource(R.string.events_catalog_extras_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.events_common_back))
                     }
                 }
             )
@@ -137,13 +140,13 @@ fun EventExtrasScreen(
         ) {
             if (extras.isEmpty()) {
                 Box(Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
-                    Text("Sin extras asignados", style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText)
+                    Text(stringResource(R.string.events_catalog_extras_empty), style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText)
                 }
             } else {
                 Surface(shape = MaterialTheme.shapes.medium, color = SolennixTheme.colors.info.copy(alpha = 0.1f)) {
                     Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("${extras.size} extras", style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText)
-                        Text("Subtotal: ${subtotal.asMXN()}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = SolennixTheme.colors.info)
+                        Text(pluralStringResource(R.plurals.events_catalog_extras_count, extras.size, extras.size), style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText)
+                        Text(stringResource(R.string.events_catalog_subtotal_value, subtotal.asMXN()), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = SolennixTheme.colors.info)
                     }
                 }
 

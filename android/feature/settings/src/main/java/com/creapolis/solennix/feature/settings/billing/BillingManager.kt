@@ -1,6 +1,7 @@
 package com.creapolis.solennix.feature.settings.billing
 
 import android.app.Activity
+import android.content.Context
 import android.util.Log
 import com.revenuecat.purchases.CustomerInfo
 import com.revenuecat.purchases.Offerings
@@ -11,6 +12,8 @@ import com.revenuecat.purchases.getOfferingsWith
 import com.revenuecat.purchases.logInWith
 import com.revenuecat.purchases.logOutWith
 import com.revenuecat.purchases.purchaseWith
+import com.creapolis.solennix.feature.settings.R
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +24,9 @@ import javax.inject.Singleton
  * Manages in-app purchases and subscriptions using RevenueCat.
  */
 @Singleton
-class BillingManager @Inject constructor() {
+class BillingManager @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
 
     companion object {
         // RevenueCat entitlement identifier — must match the entitlement ID
@@ -60,7 +65,7 @@ class BillingManager @Inject constructor() {
     fun initialize() {
         if (!isRevenueCatAvailable()) {
             _billingState.value = BillingState.Error(
-                "Suscripciones no disponibles: RevenueCat no está configurado."
+                context.getString(R.string.settings_billing_error_not_configured)
             )
             return
         }
@@ -92,7 +97,7 @@ class BillingManager @Inject constructor() {
         Purchases.sharedInstance.getOfferingsWith(
             onError = { error ->
                 _billingState.value = BillingState.Error(
-                    "No se pudieron cargar los planes: ${error.message}"
+                    context.getString(R.string.settings_billing_error_load_plans, error.message)
                 )
             },
             onSuccess = { offerings ->
@@ -112,7 +117,7 @@ class BillingManager @Inject constructor() {
                 // Don't override billing state if offerings already loaded
                 if (_billingState.value is BillingState.NotReady) {
                     _billingState.value = BillingState.Error(
-                        "No se pudo verificar tu suscripción: ${error.message}"
+                        context.getString(R.string.settings_billing_error_verify_subscription, error.message)
                     )
                 }
             },
@@ -139,7 +144,7 @@ class BillingManager @Inject constructor() {
                 _purchaseInProgress.value = null
                 if (!userCancelled) {
                     _billingState.value = BillingState.Error(
-                        "No se pudo completar la compra: ${error.message}"
+                        context.getString(R.string.settings_billing_error_purchase, error.message)
                     )
                 }
             },
@@ -159,7 +164,7 @@ class BillingManager @Inject constructor() {
         Purchases.sharedInstance.restorePurchases(object : com.revenuecat.purchases.interfaces.ReceiveCustomerInfoCallback {
             override fun onError(error: com.revenuecat.purchases.PurchasesError) {
                 _billingState.value = BillingState.Error(
-                    "No se pudieron restaurar tus compras: ${error.message}"
+                    context.getString(R.string.settings_billing_error_restore, error.message)
                 )
             }
 

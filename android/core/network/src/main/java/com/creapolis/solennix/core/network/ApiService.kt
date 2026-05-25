@@ -1,5 +1,6 @@
 package com.creapolis.solennix.core.network
 
+import android.content.Context
 import com.creapolis.solennix.core.model.PaginatedResponse
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
@@ -9,6 +10,7 @@ import io.ktor.http.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.io.IOException
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -34,7 +36,7 @@ data class ApiLimitInfo(
 )
 
 sealed class SolennixException(message: String, cause: Throwable? = null) : Exception(message, cause) {
-    class Network(cause: Throwable) : SolennixException("Error de conexión. Verificá tu internet.", cause)
+    class Network(message: String, cause: Throwable) : SolennixException(message, cause)
     class Server(val code: Int, message: String) : SolennixException(message)
     class Auth(message: String) : SolennixException(message)
     class PlanLimitExceeded(
@@ -48,7 +50,8 @@ sealed class SolennixException(message: String, cause: Throwable? = null) : Exce
 
 @Singleton
 class ApiService @Inject constructor(
-    private val client: KtorClient
+    private val client: KtorClient,
+    @ApplicationContext private val context: Context
 ) {
     private suspend fun <T> wrapError(block: suspend () -> T): T {
         return try {
@@ -59,7 +62,8 @@ class ApiService @Inject constructor(
             } catch (_: Exception) {
                 null
             }
-            val message = errorBody?.message ?: "Error del servidor (${e.response.status.value})"
+            val message = errorBody?.message
+                ?: context.getString(R.string.core_network_error_server, e.response.status.value)
             if (e.response.status == HttpStatusCode.Unauthorized) {
                 throw SolennixException.Auth(message)
             }
@@ -76,11 +80,11 @@ class ApiService @Inject constructor(
             }
             throw SolennixException.Server(e.response.status.value, message)
         } catch (e: IOException) {
-            throw SolennixException.Network(e)
+            throw SolennixException.Network(context.getString(R.string.core_network_error_connection), e)
         } catch (e: SolennixException) {
             throw e
         } catch (e: Exception) {
-            throw SolennixException.Unknown(e.message ?: "Ocurrió un error inesperado", e)
+            throw SolennixException.Unknown(e.message ?: context.getString(R.string.core_network_error_unknown), e)
         }
     }
 

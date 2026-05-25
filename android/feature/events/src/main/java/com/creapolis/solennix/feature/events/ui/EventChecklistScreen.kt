@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -24,6 +25,7 @@ import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.ChecklistItem
 import com.creapolis.solennix.feature.events.viewmodel.ChecklistSection
 import com.creapolis.solennix.feature.events.viewmodel.EventChecklistUiState
@@ -42,16 +44,16 @@ fun EventChecklistScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Checklist") },
+                title = { Text(stringResource(R.string.events_checklist_title)) },
                 onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.events_common_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { showResetDialog = true }) {
-                        Icon(Icons.Default.RestartAlt, contentDescription = "Reiniciar")
+                        Icon(Icons.Default.RestartAlt, contentDescription = stringResource(R.string.events_checklist_reset_a11y))
                     }
                 }
             )
@@ -73,8 +75,8 @@ fun EventChecklistScreen(
             } else if (uiState.items.isEmpty()) {
                 EmptyState(
                     icon = Icons.Default.Checklist,
-                    title = "Sin elementos",
-                    message = "No hay elementos en el checklist para este evento."
+                    title = stringResource(R.string.events_checklist_empty_title),
+                    message = stringResource(R.string.events_checklist_empty_message)
                 )
             } else {
                 val isWideScreen = LocalIsWideScreen.current
@@ -129,19 +131,19 @@ fun EventChecklistScreen(
     if (showResetDialog) {
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
-            title = { Text("Reiniciar Checklist") },
-            text = { Text("¿Estás seguro de que quieres desmarcar todos los elementos?") },
+            title = { Text(stringResource(R.string.events_checklist_reset_title)) },
+            text = { Text(stringResource(R.string.events_checklist_reset_message)) },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.resetChecklist()
                     showResetDialog = false
                 }) {
-                    Text("Reiniciar")
+                    Text(stringResource(R.string.events_checklist_reset_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showResetDialog = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.events_common_cancel))
                 }
             }
         )
@@ -155,7 +157,7 @@ private fun LazyListScope.checklistEquipmentSection(
     if (uiState.equipmentItems.isNotEmpty()) {
         item {
             ChecklistSectionHeader(
-                title = "Equipamiento",
+                title = stringResource(R.string.events_checklist_section_equipment),
                 icon = Icons.Default.Construction,
                 color = SolennixTheme.colors.primary,
                 itemCount = uiState.equipmentItems.size,
@@ -182,7 +184,7 @@ private fun LazyListScope.checklistStockSection(
         item {
             Spacer(modifier = Modifier.height(8.dp))
             ChecklistSectionHeader(
-                title = "De Inventario",
+                title = stringResource(R.string.events_checklist_section_stock),
                 icon = Icons.Default.Inventory,
                 color = SolennixTheme.colors.success,
                 itemCount = uiState.stockItems.size,
@@ -208,7 +210,7 @@ private fun LazyListScope.checklistPurchaseSection(
     if (uiState.purchaseItems.isNotEmpty()) {
         item {
             ChecklistSectionHeader(
-                title = "Por Comprar",
+                title = stringResource(R.string.events_checklist_section_purchase),
                 icon = Icons.Default.ShoppingCart,
                 color = SolennixTheme.colors.warning,
                 itemCount = uiState.purchaseItems.size,
@@ -238,7 +240,7 @@ private fun LazyListScope.checklistPurchaseSection(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Total Estimado de Compras", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.events_checklist_purchase_total), style = MaterialTheme.typography.titleSmall)
                     Text(totalCost.asMXN(), style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.warning)
                 }
             }
@@ -281,7 +283,7 @@ fun ChecklistProgressHeader(uiState: EventChecklistUiState) {
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            "${uiState.checkedIds.size} de ${uiState.items.size} completados",
+            stringResource(R.string.events_checklist_progress_completed, uiState.checkedIds.size, uiState.items.size),
             style = MaterialTheme.typography.bodySmall,
             color = SolennixTheme.colors.secondaryText
         )
@@ -313,7 +315,7 @@ fun ChecklistSectionHeader(
                 color = color.copy(alpha = 0.1f)
             ) {
                 Text(
-                    "$checkedCount/$itemCount",
+                    stringResource(R.string.events_checklist_count, checkedCount, itemCount),
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.labelSmall,
                     color = color
@@ -371,7 +373,7 @@ fun ChecklistItemCard(
                     color = if (isChecked) SolennixTheme.colors.secondaryText else SolennixTheme.colors.primaryText
                 )
                 Text(
-                    "${item.quantity} ${item.unit}",
+                    stringResource(R.string.events_checklist_item_quantity, item.quantity, item.unit),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText
                 )

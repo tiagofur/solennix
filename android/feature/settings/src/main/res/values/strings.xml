@@ -30,6 +30,46 @@
     <string name="settings_action_about">Acerca de</string>
     <string name="settings_action_privacy_policy">Política de privacidad</string>
     <string name="settings_action_terms_conditions">Términos y condiciones</string>
+    <string name="settings_terms_title">Términos y condiciones</string>
+    <string name="settings_terms_back">Volver</string>
+    <string name="settings_terms_last_updated">Última actualización: Marzo 2026</string>
+    <string name="settings_terms_section_1_title">1. Aceptación de los términos</string>
+    <string name="settings_terms_section_1_content">Al acceder y utilizar Solennix, aceptas estar sujeto a estos términos y condiciones. Si no estás de acuerdo con alguna parte de estos términos, no podrás acceder al servicio.</string>
+    <string name="settings_terms_section_2_title">2. Descripción del servicio</string>
+    <string name="settings_terms_section_2_content">Solennix es una plataforma de gestión de eventos que permite a los usuarios organizar clientes, crear cotizaciones, manejar inventario y generar documentos profesionales como contratos y presupuestos.</string>
+    <string name="settings_terms_section_3_title">3. Registro y cuenta</string>
+    <string name="settings_terms_section_3_content">Para usar Solennix debes:
+• Proporcionar información precisa y actualizada
+• Mantener la confidencialidad de tu contraseña
+• Notificarnos inmediatamente sobre cualquier uso no autorizado
+• Ser responsable de toda actividad bajo tu cuenta</string>
+    <string name="settings_terms_section_4_title">4. Uso aceptable</string>
+    <string name="settings_terms_section_4_content">Te comprometes a no usar Solennix para:
+• Actividades ilegales o fraudulentas
+• Violar derechos de propiedad intelectual
+• Distribuir malware o contenido dañino
+• Interferir con la operación del servicio
+• Recolectar datos de otros usuarios sin autorización</string>
+    <string name="settings_terms_section_5_title">5. Suscripciones y pagos</string>
+    <string name="settings_terms_section_5_content">Algunos servicios requieren suscripción de pago:
+• Los precios se muestran en pesos mexicanos (MXN)
+• Las suscripciones se renuevan automáticamente
+• Puedes cancelar en cualquier momento desde Google Play Store
+• Los reembolsos se procesan según las políticas de Google Play</string>
+    <string name="settings_terms_section_6_title">6. Propiedad intelectual</string>
+    <string name="settings_terms_section_6_content">Solennix y su contenido original, características y funcionalidad son propiedad exclusiva de Creapolis. El servicio está protegido por leyes de derechos de autor, marcas registradas y otras leyes de propiedad intelectual.</string>
+    <string name="settings_terms_section_7_title">7. Contenido del usuario</string>
+    <string name="settings_terms_section_7_content">Conservas todos los derechos sobre el contenido que cargas a Solennix. Al cargar contenido, nos otorgas una licencia limitada para almacenar, procesar y mostrar dicho contenido únicamente para proporcionarte el servicio.</string>
+    <string name="settings_terms_section_8_title">8. Limitación de responsabilidad</string>
+    <string name="settings_terms_section_8_content">Solennix se proporciona &quot;tal cual&quot; sin garantías de ningún tipo. No seremos responsables por daños indirectos, incidentales, especiales o consecuentes derivados del uso o la imposibilidad de usar el servicio.</string>
+    <string name="settings_terms_section_9_title">9. Terminación</string>
+    <string name="settings_terms_section_9_content">Podemos suspender o terminar tu acceso al servicio inmediatamente, sin previo aviso, por cualquier motivo, incluyendo el incumplimiento de estos términos.</string>
+    <string name="settings_terms_section_10_title">10. Modificaciones</string>
+    <string name="settings_terms_section_10_content">Nos reservamos el derecho de modificar estos términos en cualquier momento. Los cambios entrarán en vigor inmediatamente después de su publicación. El uso continuado del servicio constituye la aceptación de los términos modificados.</string>
+    <string name="settings_terms_section_11_title">11. Ley aplicable</string>
+    <string name="settings_terms_section_11_content">Estos términos se regirán e interpretarán de acuerdo con las leyes de México, sin tener en cuenta sus disposiciones sobre conflictos de leyes.</string>
+    <string name="settings_terms_section_12_title">12. Contacto</string>
+    <string name="settings_terms_section_12_content">Para preguntas sobre estos términos, contáctanos en: legal@solennix.com</string>
     <string name="settings_action_delete_account">Eliminar cuenta</string>
     <string name="settings_action_logout">Cerrar sesión</string>
     <string name="settings_profile_personal_info">Información personal</string>
@@ -163,6 +203,11 @@ creapolis.dev/delete-account</string>
     <string name="settings_privacy_section_8_title">8. Contacto</string>
     <string name="settings_privacy_section_8_content">Si tienes preguntas sobre esta política de privacidad o sobre el tratamiento de tus datos, contáctanos en:
 hola@creapolis.dev</string>
+    <string name="settings_billing_error_not_configured">Suscripciones no disponibles: RevenueCat no está configurado.</string>
+    <string name="settings_billing_error_load_plans">No se pudieron cargar los planes: %1$s</string>
+    <string name="settings_billing_error_verify_subscription">No se pudo verificar tu suscripción: %1$s</string>
+    <string name="settings_billing_error_purchase">No se pudo completar la compra: %1$s</string>
+    <string name="settings_billing_error_restore">No se pudieron restaurar tus compras: %1$s</string>
     <string name="settings_subscription_title">Planes y suscripción</string>
     <string name="settings_subscription_restore">Restaurar</string>
     <string name="settings_subscription_retry">Reintentar</string>
@@ -218,4 +263,32 @@ hola@creapolis.dev</string>
     <string name="settings_subscription_cancel_web">Tu suscripción fue realizada desde la web. Para cancelarla, ingresá a solennix.com &gt; Configuración &gt; Suscripción.</string>
     <string name="settings_subscription_cancel_ios">Tu suscripción fue realizada desde iOS. Para cancelarla, abrí Configuración &gt; tu Apple ID &gt; Suscripciones en tu iPhone o iPad.</string>
     <string name="settings_subscription_cancel_android">Tu suscripción fue realizada desde Android. Para cancelarla, abrí Google Play Store &gt; Pagos y suscripciones.</string>
+    <string name="settings_form_links_title">Enlaces de formulario</string>
+    <string name="settings_form_links_back">Regresar</string>
+    <string name="settings_form_links_new_link">Nuevo enlace</string>
+    <string name="settings_form_links_retry">Reintentar</string>
+    <string name="settings_form_links_empty_title">Sin enlaces</string>
+    <string name="settings_form_links_empty_message">Crea un enlace para que tus clientes soliciten eventos</string>
+    <string name="settings_form_links_delete_title">Eliminar enlace</string>
+    <string name="settings_form_links_delete_message">¿Estás seguro de que querés eliminar este enlace? Esta acción no se puede deshacer.</string>
+    <string name="settings_form_links_delete_confirm">Eliminar</string>
+    <string name="settings_form_links_cancel">Cancelar</string>
+    <string name="settings_form_links_no_label">Sin etiqueta</string>
+    <string name="settings_form_links_created_on">Creado: %1$s</string>
+    <string name="settings_form_links_expires_on">Expira: %1$s</string>
+    <string name="settings_form_links_used_on">Usado: %1$s</string>
+    <string name="settings_form_links_share">Compartir enlace</string>
+    <string name="settings_form_links_copy">Copiar enlace</string>
+    <string name="settings_form_links_clip_label">Enlace de formulario</string>
+    <string name="settings_form_links_share_subject">Formulario de evento</string>
+    <string name="settings_form_links_share_subject_with_label">Formulario de evento - %1$s</string>
+    <string name="settings_form_links_status_active">Activo</string>
+    <string name="settings_form_links_status_used">Usado</string>
+    <string name="settings_form_links_status_expired">Expirado</string>
+    <string name="settings_form_links_status_revoked">Revocado</string>
+    <string name="settings_form_links_generate_title">Nuevo enlace de formulario</string>
+    <string name="settings_form_links_label_field">Etiqueta (opcional)</string>
+    <string name="settings_form_links_label_placeholder">Ej: Boda García</string>
+    <string name="settings_form_links_ttl_days">Días de vigencia</string>
+    <string name="settings_form_links_generate">Generar</string>
 </resources>

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.core.content.FileProvider
+import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -37,9 +38,9 @@ fun openPdfFile(context: Context, file: File) {
             setDataAndType(uri, "application/pdf")
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        context.startActivity(Intent.createChooser(intent, "Abrir PDF con..."))
+        context.startActivity(Intent.createChooser(intent, context.getString(R.string.events_pdf_open_chooser)))
     } catch (e: Exception) {
-        Toast.makeText(context, "No hay aplicación para abrir PDFs", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, context.getString(R.string.events_pdf_no_app), Toast.LENGTH_SHORT).show()
     }
 }
 

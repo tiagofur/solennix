@@ -8,11 +8,13 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
+import com.creapolis.solennix.feature.settings.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,10 +26,10 @@ fun TermsScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Términos y Condiciones") },
+                title = { Text(stringResource(R.string.settings_terms_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.settings_terms_back))
                     }
                 }
             )
@@ -42,70 +44,70 @@ fun TermsScreen(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Última actualización: Marzo 2026",
+                text = stringResource(R.string.settings_terms_last_updated),
                 style = MaterialTheme.typography.bodySmall,
                 color = SolennixTheme.colors.secondaryText,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
             TermsSection(
-                title = "1. Aceptación de los Términos",
-                content = "Al acceder y utilizar Solennix, aceptas estar sujeto a estos términos y condiciones. Si no estás de acuerdo con alguna parte de estos términos, no podrás acceder al servicio."
+                title = stringResource(R.string.settings_terms_section_1_title),
+                content = stringResource(R.string.settings_terms_section_1_content)
             )
 
             TermsSection(
-                title = "2. Descripción del Servicio",
-                content = "Solennix es una plataforma de gestión de eventos que permite a los usuarios organizar clientes, crear cotizaciones, manejar inventario y generar documentos profesionales como contratos y presupuestos."
+                title = stringResource(R.string.settings_terms_section_2_title),
+                content = stringResource(R.string.settings_terms_section_2_content)
             )
 
             TermsSection(
-                title = "3. Registro y Cuenta",
-                content = "Para usar Solennix debes:\n• Proporcionar información precisa y actualizada\n• Mantener la confidencialidad de tu contraseña\n• Notificarnos inmediatamente sobre cualquier uso no autorizado\n• Ser responsable de toda actividad bajo tu cuenta"
+                title = stringResource(R.string.settings_terms_section_3_title),
+                content = stringResource(R.string.settings_terms_section_3_content)
             )
 
             TermsSection(
-                title = "4. Uso Aceptable",
-                content = "Te comprometes a no usar Solennix para:\n• Actividades ilegales o fraudulentas\n• Violar derechos de propiedad intelectual\n• Distribuir malware o contenido dañino\n• Interferir con la operación del servicio\n• Recolectar datos de otros usuarios sin autorización"
+                title = stringResource(R.string.settings_terms_section_4_title),
+                content = stringResource(R.string.settings_terms_section_4_content)
             )
 
             TermsSection(
-                title = "5. Suscripciones y Pagos",
-                content = "Algunos servicios requieren suscripción de pago:\n• Los precios se muestran en pesos mexicanos (MXN)\n• Las suscripciones se renuevan automáticamente\n• Puedes cancelar en cualquier momento desde Google Play Store\n• Los reembolsos se procesan según las políticas de Google Play"
+                title = stringResource(R.string.settings_terms_section_5_title),
+                content = stringResource(R.string.settings_terms_section_5_content)
             )
 
             TermsSection(
-                title = "6. Propiedad Intelectual",
-                content = "Solennix y su contenido original, características y funcionalidad son propiedad exclusiva de Creapolis. El servicio está protegido por leyes de derechos de autor, marcas registradas y otras leyes de propiedad intelectual."
+                title = stringResource(R.string.settings_terms_section_6_title),
+                content = stringResource(R.string.settings_terms_section_6_content)
             )
 
             TermsSection(
-                title = "7. Contenido del Usuario",
-                content = "Conservas todos los derechos sobre el contenido que cargas a Solennix. Al cargar contenido, nos otorgas una licencia limitada para almacenar, procesar y mostrar dicho contenido únicamente para proporcionarte el servicio."
+                title = stringResource(R.string.settings_terms_section_7_title),
+                content = stringResource(R.string.settings_terms_section_7_content)
             )
 
             TermsSection(
-                title = "8. Limitación de Responsabilidad",
-                content = "Solennix se proporciona \"tal cual\" sin garantías de ningún tipo. No seremos responsables por daños indirectos, incidentales, especiales o consecuentes derivados del uso o la imposibilidad de usar el servicio."
+                title = stringResource(R.string.settings_terms_section_8_title),
+                content = stringResource(R.string.settings_terms_section_8_content)
             )
 
             TermsSection(
-                title = "9. Terminación",
-                content = "Podemos suspender o terminar tu acceso al servicio inmediatamente, sin previo aviso, por cualquier motivo, incluyendo el incumplimiento de estos términos."
+                title = stringResource(R.string.settings_terms_section_9_title),
+                content = stringResource(R.string.settings_terms_section_9_content)
             )
 
             TermsSection(
-                title = "10. Modificaciones",
-                content = "Nos reservamos el derecho de modificar estos términos en cualquier momento. Los cambios entrarán en vigor inmediatamente después de su publicación. El uso continuado del servicio constituye la aceptación de los términos modificados."
+                title = stringResource(R.string.settings_terms_section_10_title),
+                content = stringResource(R.string.settings_terms_section_10_content)
             )
 
             TermsSection(
-                title = "11. Ley Aplicable",
-                content = "Estos términos se regirán e interpretarán de acuerdo con las leyes de México, sin tener en cuenta sus disposiciones sobre conflictos de leyes."
+                title = stringResource(R.string.settings_terms_section_11_title),
+                content = stringResource(R.string.settings_terms_section_11_content)
             )
 
             TermsSection(
-                title = "12. Contacto",
-                content = "Para preguntas sobre estos términos, contáctanos en: legal@solennix.com"
+                title = stringResource(R.string.settings_terms_section_12_title),
+                content = stringResource(R.string.settings_terms_section_12_content)
             )
 
             Spacer(modifier = Modifier.height(32.dp))

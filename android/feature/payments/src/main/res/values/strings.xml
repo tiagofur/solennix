@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="payments_inbox_title">Comprobantes de pago</string>
+    <string name="payments_inbox_back">Volver</string>
+    <string name="payments_inbox_pro_only_title">Función exclusiva para usuarios Pro.</string>
+    <string name="payments_inbox_pro_only_hint">Actualiza tu plan para revisar y aprobar comprobantes enviados por clientes.</string>
+    <string name="payments_inbox_empty_title">Sin comprobantes pendientes</string>
+    <string name="payments_inbox_approve_title">Confirmar aprobación</string>
+    <string name="payments_inbox_approve_action">Aprobar</string>
+    <string name="payments_inbox_approve_message">¿Aprobás el comprobante de %1$s por %2$s?</string>
+    <string name="payments_inbox_reject_title">Rechazar comprobante</string>
+    <string name="payments_inbox_reject_description">Indica el motivo del rechazo (obligatorio):</string>
+    <string name="payments_inbox_reject_placeholder">Ej: Monto incorrecto, referencia inválida...</string>
+    <string name="payments_inbox_reject_action">Rechazar</string>
+    <string name="payments_inbox_cancel">Cancelar</string>
+    <string name="payments_inbox_this_client">este cliente</string>
+    <string name="payments_inbox_client_fallback">Cliente</string>
+    <string name="payments_inbox_reference_format">Ref: %1$s</string>
+    <string name="payments_inbox_reason_format">Motivo: %1$s</string>
+    <string name="payments_inbox_status_approved">Aprobado</string>
+    <string name="payments_inbox_status_rejected">Rechazado</string>
+    <string name="payments_inbox_status_pending">Pendiente</string>
+</resources>

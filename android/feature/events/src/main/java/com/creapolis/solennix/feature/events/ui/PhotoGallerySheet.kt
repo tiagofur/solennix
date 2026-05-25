@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -34,6 +35,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.network.UrlResolver
+import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.core.model.EventPhoto
 import java.io.File
 
@@ -83,7 +85,7 @@ fun PhotoGallerySheet(
             )
             photoUri?.let { cameraLauncher.launch(it) }
         } else {
-            Toast.makeText(context, "Permiso de cámara denegado", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.events_photos_camera_permission_denied), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -124,14 +126,14 @@ fun PhotoGallerySheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Fotos del Evento",
+                    text = stringResource(R.string.events_photos_title),
                     style = MaterialTheme.typography.titleLarge
                 )
                 if (isUploading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 } else {
                     IconButton(onClick = { showSourceDialog = true }) {
-                        Icon(Icons.Default.AddAPhoto, contentDescription = "Agregar foto")
+                        Icon(Icons.Default.AddAPhoto, contentDescription = stringResource(R.string.events_photos_add_photo_a11y))
                     }
                 }
             }
@@ -163,14 +165,14 @@ fun PhotoGallerySheet(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "No hay fotos aún",
+                            text = stringResource(R.string.events_photos_sheet_empty_title),
                             color = SolennixTheme.colors.secondaryText
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         TextButton(onClick = { showSourceDialog = true }) {
                             Icon(Icons.Default.Add, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Agregar primera foto")
+                            Text(stringResource(R.string.events_photos_add_first))
                         }
                     }
                 }
@@ -200,11 +202,11 @@ fun PhotoGallerySheet(
     if (showSourceDialog) {
         AlertDialog(
             onDismissRequest = { showSourceDialog = false },
-            title = { Text("Seleccionar fuente") },
+            title = { Text(stringResource(R.string.events_photos_source_title)) },
             text = {
                 Column {
                     ListItem(
-                        headlineContent = { Text("Cámara") },
+                        headlineContent = { Text(stringResource(R.string.events_photos_source_camera)) },
                         leadingContent = {
                             Icon(Icons.Default.CameraAlt, contentDescription = null)
                         },
@@ -214,7 +216,7 @@ fun PhotoGallerySheet(
                         }
                     )
                     ListItem(
-                        headlineContent = { Text("Galería") },
+                        headlineContent = { Text(stringResource(R.string.events_photos_source_gallery)) },
                         leadingContent = {
                             Icon(Icons.Default.PhotoLibrary, contentDescription = null)
                         },
@@ -228,7 +230,7 @@ fun PhotoGallerySheet(
             confirmButton = {},
             dismissButton = {
                 TextButton(onClick = { showSourceDialog = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.events_common_cancel))
                 }
             }
         )
@@ -313,7 +315,7 @@ fun PhotoViewerDialog(
                 ) {
                     Icon(
                         Icons.Default.Close,
-                        contentDescription = "Cerrar",
+                        contentDescription = stringResource(R.string.events_common_close),
                         tint = Color.White
                     )
                 }
@@ -325,7 +327,7 @@ fun PhotoViewerDialog(
                 ) {
                     Icon(
                         Icons.Default.Delete,
-                        contentDescription = "Eliminar",
+                        contentDescription = stringResource(R.string.events_common_delete),
                         tint = Color.White
                     )
                 }
@@ -349,8 +351,8 @@ fun PhotoViewerDialog(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Eliminar foto") },
-            text = { Text("¿Estás seguro de que deseas eliminar esta foto?") },
+            title = { Text(stringResource(R.string.events_photos_delete_title)) },
+            text = { Text(stringResource(R.string.events_photos_delete_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -358,12 +360,12 @@ fun PhotoViewerDialog(
                         onDelete()
                     }
                 ) {
-                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.events_common_delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.events_common_cancel))
                 }
             }
         )

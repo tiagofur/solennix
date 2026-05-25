@@ -13,12 +13,14 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.PaymentSubmission
+import com.creapolis.solennix.feature.payments.R
 import com.creapolis.solennix.feature.payments.viewmodel.PaymentInboxViewModel
 import java.text.NumberFormat
 import java.util.Locale
@@ -30,7 +32,7 @@ fun PaymentInboxScreen(
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val strings = remember { paymentInboxStrings() }
+    val strings = paymentInboxStrings()
     var showRejectDialog by remember { mutableStateOf<PaymentSubmission?>(null) }
     var showApproveDialog by remember { mutableStateOf<PaymentSubmission?>(null) }
     var rejectReason by remember { mutableStateOf("") }
@@ -235,10 +237,10 @@ private fun PaymentSubmissionCard(
                 )
             }
 
-            if (submission.transferRef != null) {
+            submission.transferRef?.let { transferRef ->
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "${strings.referenceShort}: ${submission.transferRef}",
+                    strings.referenceText(transferRef),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText
                 )
@@ -283,10 +285,10 @@ private fun PaymentSubmissionCard(
             } else {
                 Spacer(Modifier.height(8.dp))
                 PaymentStatusChip(status = submission.status, strings = strings)
-                if (submission.rejectionReason != null) {
+                submission.rejectionReason?.let { rejectionReason ->
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "${strings.reasonLabel}: ${submission.rejectionReason}",
+                        strings.reasonText(rejectionReason),
                         style = MaterialTheme.typography.bodySmall,
                         color = SolennixTheme.colors.error
                     )
@@ -335,7 +337,7 @@ private data class PaymentInboxStrings(
     val emptyTitle: String,
     val approveTitle: String,
     val approveAction: String,
-    val approveMessage: (String, String) -> String,
+    val approveMessageFormat: String,
     val rejectTitle: String,
     val rejectDescription: String,
     val rejectPlaceholder: String,
@@ -343,60 +345,42 @@ private data class PaymentInboxStrings(
     val cancel: String,
     val thisClient: String,
     val clientFallback: String,
-    val referenceShort: String,
-    val reasonLabel: String,
+    val referenceFormat: String,
+    val reasonFormat: String,
     val statusApproved: String,
     val statusRejected: String,
     val statusPending: String,
-)
+) {
+    fun approveMessage(client: String, amount: String): String =
+        String.format(Locale.getDefault(), approveMessageFormat, client, amount)
 
-private fun paymentInboxStrings(): PaymentInboxStrings {
-    val isEs = Locale.getDefault().language.startsWith("es")
-    return if (isEs) {
-        PaymentInboxStrings(
-            title = "Comprobantes de pago",
-            back = "Volver",
-            proOnlyTitle = "Funcion exclusiva para usuarios Pro.",
-            proOnlyHint = "Actualiza tu plan para revisar y aprobar comprobantes enviados por clientes.",
-            emptyTitle = "Sin comprobantes pendientes",
-            approveTitle = "Confirmar aprobacion",
-            approveAction = "Aprobar",
-            approveMessage = { client, amount -> "¿Aprobas el comprobante de $client por $amount?" },
-            rejectTitle = "Rechazar comprobante",
-            rejectDescription = "Indica el motivo del rechazo (obligatorio):",
-            rejectPlaceholder = "Ej: Monto incorrecto, referencia invalida...",
-            rejectAction = "Rechazar",
-            cancel = "Cancelar",
-            thisClient = "este cliente",
-            clientFallback = "Cliente",
-            referenceShort = "Ref",
-            reasonLabel = "Motivo",
-            statusApproved = "Aprobado",
-            statusRejected = "Rechazado",
-            statusPending = "Pendiente",
-        )
-    } else {
-        PaymentInboxStrings(
-            title = "Payment receipts",
-            back = "Back",
-            proOnlyTitle = "Pro-only feature.",
-            proOnlyHint = "Upgrade your plan to review and approve client payment receipts.",
-            emptyTitle = "No pending receipts",
-            approveTitle = "Confirm approval",
-            approveAction = "Approve",
-            approveMessage = { client, amount -> "Approve receipt from $client for $amount?" },
-            rejectTitle = "Reject receipt",
-            rejectDescription = "Provide the rejection reason (required):",
-            rejectPlaceholder = "Ex: Wrong amount, invalid reference...",
-            rejectAction = "Reject",
-            cancel = "Cancel",
-            thisClient = "this client",
-            clientFallback = "Client",
-            referenceShort = "Ref",
-            reasonLabel = "Reason",
-            statusApproved = "Approved",
-            statusRejected = "Rejected",
-            statusPending = "Pending",
-        )
-    }
+    fun referenceText(reference: String): String =
+        String.format(Locale.getDefault(), referenceFormat, reference)
+
+    fun reasonText(reason: String): String =
+        String.format(Locale.getDefault(), reasonFormat, reason)
 }
+
+@Composable
+private fun paymentInboxStrings(): PaymentInboxStrings = PaymentInboxStrings(
+    title = stringResource(R.string.payments_inbox_title),
+    back = stringResource(R.string.payments_inbox_back),
+    proOnlyTitle = stringResource(R.string.payments_inbox_pro_only_title),
+    proOnlyHint = stringResource(R.string.payments_inbox_pro_only_hint),
+    emptyTitle = stringResource(R.string.payments_inbox_empty_title),
+    approveTitle = stringResource(R.string.payments_inbox_approve_title),
+    approveAction = stringResource(R.string.payments_inbox_approve_action),
+    approveMessageFormat = stringResource(R.string.payments_inbox_approve_message),
+    rejectTitle = stringResource(R.string.payments_inbox_reject_title),
+    rejectDescription = stringResource(R.string.payments_inbox_reject_description),
+    rejectPlaceholder = stringResource(R.string.payments_inbox_reject_placeholder),
+    rejectAction = stringResource(R.string.payments_inbox_reject_action),
+    cancel = stringResource(R.string.payments_inbox_cancel),
+    thisClient = stringResource(R.string.payments_inbox_this_client),
+    clientFallback = stringResource(R.string.payments_inbox_client_fallback),
+    referenceFormat = stringResource(R.string.payments_inbox_reference_format),
+    reasonFormat = stringResource(R.string.payments_inbox_reason_format),
+    statusApproved = stringResource(R.string.payments_inbox_status_approved),
+    statusRejected = stringResource(R.string.payments_inbox_status_rejected),
+    statusPending = stringResource(R.string.payments_inbox_status_pending),
+)

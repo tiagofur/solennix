@@ -28,8 +28,6 @@ class EventDayNotificationManager @Inject constructor(
 
     companion object {
         private const val CHANNEL_ID = "event_day"
-        private const val CHANNEL_NAME = "Eventos del Dia"
-        private const val CHANNEL_DESCRIPTION = "Notificaciones persistentes para eventos programados hoy"
         private const val NOTIFICATION_TAG = "event_day_notification"
         private const val SOLENNIX_GOLD_ARGB = 0xFFC4A265.toInt()
     }
@@ -45,10 +43,10 @@ class EventDayNotificationManager @Inject constructor(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                CHANNEL_NAME,
+                context.getString(R.string.event_day_notification_channel_name),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = CHANNEL_DESCRIPTION
+                description = context.getString(R.string.event_day_notification_channel_description)
                 setShowBadge(true)
             }
             notificationManager.createNotificationChannel(channel)
@@ -85,9 +83,15 @@ class EventDayNotificationManager @Inject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val startTimeText = event.startTime?.let { "Hoy a las $it" } ?: "Hoy"
+        val startTimeText = event.startTime?.let { time ->
+            context.getString(R.string.event_day_notification_today_at, time)
+        } ?: context.getString(R.string.event_day_notification_today)
         val locationText = event.location ?: event.city ?: ""
-        val guestText = "${event.numPeople} invitados"
+        val guestText = context.resources.getQuantityString(
+            R.plurals.event_day_notification_guests,
+            event.numPeople,
+            event.numPeople
+        )
 
         val contentParts = listOfNotNull(
             startTimeText,
@@ -109,12 +113,12 @@ class EventDayNotificationManager @Inject constructor(
             .setContentIntent(viewPendingIntent)
             .addAction(
                 android.R.drawable.ic_menu_view,
-                "Ver Evento",
+                context.getString(R.string.event_day_notification_view_event),
                 viewPendingIntent
             )
             .addAction(
                 android.R.drawable.ic_menu_close_clear_cancel,
-                "Finalizar",
+                context.getString(R.string.event_day_notification_finish),
                 finishPendingIntent
             )
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -131,8 +135,8 @@ class EventDayNotificationManager @Inject constructor(
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_menu_my_calendar)
-            .setContentTitle("Evento en curso")
-            .setContentText("Estado: $status")
+            .setContentTitle(context.getString(R.string.event_day_notification_in_progress_title))
+            .setContentText(context.getString(R.string.event_day_notification_status, status))
             .setOngoing(true)
             .setAutoCancel(false)
             .setColor(SOLENNIX_GOLD_ARGB)

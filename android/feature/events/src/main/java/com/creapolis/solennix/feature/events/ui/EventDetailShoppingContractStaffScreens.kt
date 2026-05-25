@@ -122,7 +122,15 @@ fun EventShoppingListScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(supply.supplyName ?: stringResource(R.string.events_detail_supplies_fallback), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                                Text("${supply.quantity.formatQuantity()} ${supply.unit ?: stringResource(R.string.events_detail_unit_each)}", style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
+                                Text(
+                                    stringResource(
+                                        R.string.events_detail_quantity_unit,
+                                        supply.quantity.formatQuantity(),
+                                        supply.unit ?: stringResource(R.string.events_detail_unit_each)
+                                    ),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = SolennixTheme.colors.secondaryText
+                                )
                             }
                             Text(
                                 (supply.quantity * supply.unitCost).asMXN(),
@@ -148,7 +156,12 @@ fun EventShoppingListScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(supply.supplyName ?: stringResource(R.string.events_detail_supplies_fallback), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
-                            Text("x${supply.quantity.formatQuantity()}", style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.success, fontWeight = FontWeight.Medium)
+                            Text(
+                                stringResource(R.string.events_detail_quantity_multiplier, supply.quantity.formatQuantity()),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = SolennixTheme.colors.success,
+                                fontWeight = FontWeight.Medium
+                            )
                         }
                     }
                 }

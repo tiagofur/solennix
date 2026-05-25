@@ -16,6 +16,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
@@ -27,6 +28,7 @@ import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.Product
 import com.creapolis.solennix.feature.clients.ui.ClientListItem
+import com.creapolis.solennix.feature.search.R
 import com.creapolis.solennix.feature.search.viewmodel.SearchViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,10 +62,10 @@ fun SearchScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Buscar") },
+                title = { Text(stringResource(R.string.search_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.search_back))
                     }
                 }
             )
@@ -80,7 +82,7 @@ fun SearchScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                placeholder = { Text("Buscar eventos, clientes, productos...") },
+                placeholder = { Text(stringResource(R.string.search_placeholder)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 shape = MaterialTheme.shapes.medium,
                 singleLine = true
@@ -119,7 +121,7 @@ fun SearchScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             if (uiState.clients.isNotEmpty()) {
                                 Text(
-                                    text = "Clientes",
+                                    text = stringResource(R.string.search_section_clients),
                                     modifier = Modifier.padding(16.dp),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = SolennixTheme.colors.primary
@@ -130,7 +132,7 @@ fun SearchScreen(
                             }
                             if (uiState.products.isNotEmpty()) {
                                 Text(
-                                    text = "Productos",
+                                    text = stringResource(R.string.search_section_products),
                                     modifier = Modifier.padding(16.dp),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = SolennixTheme.colors.primary
@@ -147,7 +149,7 @@ fun SearchScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             if (uiState.events.isNotEmpty()) {
                                 Text(
-                                    text = "Eventos",
+                                    text = stringResource(R.string.search_section_events),
                                     modifier = Modifier.padding(16.dp),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = SolennixTheme.colors.primary
@@ -161,7 +163,7 @@ fun SearchScreen(
                             }
                             if (uiState.inventory.isNotEmpty()) {
                                 Text(
-                                    text = "Inventario",
+                                    text = stringResource(R.string.search_section_inventory),
                                     modifier = Modifier.padding(16.dp),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = SolennixTheme.colors.primary
@@ -182,7 +184,7 @@ fun SearchScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "No se encontraron resultados",
+                                text = stringResource(R.string.search_no_results),
                                 color = SolennixTheme.colors.secondaryText,
                                 modifier = Modifier.padding(32.dp)
                             )
@@ -196,7 +198,7 @@ fun SearchScreen(
                     if (uiState.clients.isNotEmpty()) {
                         item {
                             Text(
-                                text = "Clientes",
+                                text = stringResource(R.string.search_section_clients),
                                 modifier = Modifier.padding(16.dp),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = SolennixTheme.colors.primary
@@ -211,7 +213,7 @@ fun SearchScreen(
                     if (uiState.events.isNotEmpty()) {
                         item {
                             Text(
-                                text = "Eventos",
+                                text = stringResource(R.string.search_section_events),
                                 modifier = Modifier.padding(16.dp),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = SolennixTheme.colors.primary
@@ -229,7 +231,7 @@ fun SearchScreen(
                     if (uiState.products.isNotEmpty()) {
                         item {
                             Text(
-                                text = "Productos",
+                                text = stringResource(R.string.search_section_products),
                                 modifier = Modifier.padding(16.dp),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = SolennixTheme.colors.primary
@@ -247,7 +249,7 @@ fun SearchScreen(
                     if (uiState.inventory.isNotEmpty()) {
                         item {
                             Text(
-                                text = "Inventario",
+                                text = stringResource(R.string.search_section_inventory),
                                 modifier = Modifier.padding(16.dp),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = SolennixTheme.colors.primary
@@ -266,7 +268,7 @@ fun SearchScreen(
                         item {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 Text(
-                                    text = "No se encontraron resultados",
+                                    text = stringResource(R.string.search_no_results),
                                     color = SolennixTheme.colors.secondaryText,
                                     modifier = Modifier.padding(32.dp)
                                 )
@@ -369,7 +371,7 @@ fun SearchInventoryListItem(item: InventoryItem, onClick: () -> Unit) {
                     color = SolennixTheme.colors.primaryText
                 )
                 Text(
-                    text = "Stock: ${item.currentStock} ${item.unit}",
+                    text = stringResource(R.string.search_inventory_stock, item.currentStock, item.unit),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText
                 )
@@ -391,7 +393,7 @@ fun SearchInventoryListItem(item: InventoryItem, onClick: () -> Unit) {
                             tint = SolennixTheme.colors.warning
                         )
                         Text(
-                            text = "Bajo",
+                            text = stringResource(R.string.search_low_stock),
                             style = MaterialTheme.typography.labelSmall,
                             color = SolennixTheme.colors.warning
                         )

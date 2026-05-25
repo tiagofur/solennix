@@ -146,6 +146,8 @@
     <string name="events_detail_shopping_purchase">Supplies to buy</string>
     <string name="events_detail_shopping_stock">From stock</string>
     <string name="events_detail_shopping_empty">No purchases required</string>
+    <string name="events_detail_quantity_unit">%1$s %2$s</string>
+    <string name="events_detail_quantity_multiplier">x%1$s</string>
     <string name="events_detail_unit_each">ea</string>
     <string name="events_detail_staff_title">Assigned staff</string>
     <string name="events_detail_staff_empty">No staff assigned</string>
@@ -345,4 +347,103 @@
     <string name="events_form_staff_team_members_one">1 member</string>
     <string name="events_form_staff_team_members_many">%1$d members</string>
     <string name="events_form_staff_apply_a11y">Apply</string>
+
+    <string name="events_pdf_open_chooser">Open PDF with...</string>
+    <string name="events_pdf_no_app">No app available to open PDFs</string>
+    <string name="events_pdf_download_error">Error downloading PDF: %1$s</string>
+    <string name="events_document_budget">Quote</string>
+    <string name="events_document_contract">Contract</string>
+    <string name="events_document_checklist">Checklist</string>
+    <string name="events_document_payments">Payments</string>
+    <string name="events_document_shopping">Shopping</string>
+    <string name="events_document_equipment">Equipment</string>
+
+    <string name="events_common_back">Back</string>
+    <string name="events_common_close">Close</string>
+    <string name="events_common_delete">Delete</string>
+    <string name="events_common_cancel">Cancel</string>
+    <string name="events_photos_title">Event Photos</string>
+    <string name="events_photos_add_photo_a11y">Add photo</string>
+    <string name="events_photos_empty_title">No photos</string>
+    <string name="events_photos_empty_message">Add event photos to keep a visual record</string>
+    <plurals name="events_photos_count">
+        <item quantity="one">%1$d photo</item>
+        <item quantity="other">%1$d photos</item>
+    </plurals>
+    <string name="events_photos_add_title">Add Photo</string>
+    <string name="events_photos_take_photo">Take Photo</string>
+    <string name="events_photos_choose_gallery">Choose from Gallery</string>
+    <string name="events_photos_camera_permission_denied">Camera permission denied</string>
+    <string name="events_photos_sheet_empty_title">No photos yet</string>
+    <string name="events_photos_add_first">Add first photo</string>
+    <string name="events_photos_source_title">Select source</string>
+    <string name="events_photos_source_camera">Camera</string>
+    <string name="events_photos_source_gallery">Gallery</string>
+    <string name="events_photos_delete_title">Delete photo</string>
+    <string name="events_photos_delete_message">Are you sure you want to delete this photo?</string>
+
+    <string name="events_checklist_title">Checklist</string>
+    <string name="events_checklist_reset_a11y">Reset</string>
+    <string name="events_checklist_empty_title">No items</string>
+    <string name="events_checklist_empty_message">There are no checklist items for this event.</string>
+    <string name="events_checklist_reset_title">Reset Checklist</string>
+    <string name="events_checklist_reset_message">Are you sure you want to uncheck all items?</string>
+    <string name="events_checklist_reset_confirm">Reset</string>
+    <string name="events_checklist_section_equipment">Equipment</string>
+    <string name="events_checklist_section_stock">From Inventory</string>
+    <string name="events_checklist_section_purchase">To Buy</string>
+    <string name="events_checklist_purchase_total">Estimated Purchase Total</string>
+    <string name="events_checklist_progress_completed">%1$d of %2$d completed</string>
+    <string name="events_checklist_count">%1$d/%2$d</string>
+    <string name="events_checklist_item_quantity">%1$s %2$s</string>
+
+    <string name="events_financial_breakdown_title">Financial Breakdown</string>
+    <string name="events_financial_products_subtotal">Products Subtotal</string>
+    <string name="events_financial_extras_subtotal">Extras Subtotal</string>
+    <string name="events_financial_subtotal">Subtotal</string>
+    <string name="events_financial_discount_percent">Discount (%1$d%%)</string>
+    <string name="events_financial_discount">Discount</string>
+    <string name="events_financial_tax_percent">Tax (%1$d%%)</string>
+    <string name="events_financial_total">TOTAL</string>
+    <string name="events_financial_paid">Paid</string>
+    <string name="events_financial_remaining">Remaining</string>
+    <string name="events_financial_paid_percent">%1$d%% paid</string>
+    <string name="events_financial_deposit_percent">Deposit (%1$d%%)</string>
+    <plurals name="events_payments_history_title">
+        <item quantity="one">Payment History (%1$d)</item>
+        <item quantity="other">Payment History (%1$d)</item>
+    </plurals>
+    <string name="events_payments_delete_a11y">Delete payment</string>
+    <string name="events_payments_delete_title">Delete Payment</string>
+    <string name="events_payments_delete_message">Are you sure you want to delete this payment? The balance will update automatically.</string>
+
+    <string name="events_catalog_products_title">Products</string>
+    <string name="events_catalog_extras_title">Extras</string>
+    <string name="events_catalog_products_empty">No products assigned</string>
+    <string name="events_catalog_extras_empty">No extras assigned</string>
+    <plurals name="events_catalog_products_count">
+        <item quantity="one">%1$d product</item>
+        <item quantity="other">%1$d products</item>
+    </plurals>
+    <plurals name="events_catalog_extras_count">
+        <item quantity="one">%1$d extra</item>
+        <item quantity="other">%1$d extras</item>
+    </plurals>
+    <string name="events_catalog_subtotal_value">Subtotal: %1$s</string>
+    <string name="events_catalog_product_fallback">Product</string>
+    <string name="events_catalog_quantity_price">%1$s x %2$s</string>
+
+    <string name="events_contract_title">Contract</string>
+    <string name="events_contract_share_chooser">Share Contract</string>
+    <string name="events_contract_generate_error">Error generating contract</string>
+    <string name="events_contract_share_pdf_a11y">Share PDF</string>
+    <string name="events_contract_deposit_required_title">DEPOSIT REQUIRED</string>
+    <string name="events_contract_deposit_required_message">To view and generate the contract, the minimum deposit of %1$d%% must be covered</string>
+    <string name="events_contract_deposit_remaining">%1$s remains to be collected.</string>
+    <string name="events_contract_missing_data_title">Missing contract data</string>
+    <string name="events_contract_missing_data_message">Complete these fields in the event or client:</string>
+    <string name="events_contract_provider_fallback">THE PROVIDER</string>
+    <string name="events_contract_client_fallback">THE CLIENT</string>
+    <string name="events_contract_signature">Signature</string>
+    <string name="events_contract_client_signature">CLIENT SIGNATURE</string>
 </resources>

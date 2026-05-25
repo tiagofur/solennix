@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavType
@@ -46,6 +47,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.creapolis.solennix.R
 import com.creapolis.solennix.core.designsystem.component.QuickActionsFAB
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
@@ -537,7 +539,7 @@ fun MoreMenuScreen(
     onSettingsClick: () -> Unit,
     onPaymentInboxClick: () -> Unit = {}
 ) {
-    Scaffold(topBar = { SolennixTopAppBar(title = { Text("Más") }) }) { padding ->
+    Scaffold(topBar = { SolennixTopAppBar(title = { Text(stringResource(R.string.nav_more)) }) }) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -546,38 +548,38 @@ fun MoreMenuScreen(
         ) {
             Spacer(modifier = Modifier.height(12.dp))
             MenuOptionItem(
-                title = "Productos",
-                subtitle = "Catálogo y costos",
+                title = stringResource(R.string.nav_products),
+                subtitle = stringResource(R.string.nav_catalog_costs),
                 icon = Icons.Default.Inventory2,
                 onClick = onProductsClick
             )
             MenuOptionItem(
-                title = "Inventario",
-                subtitle = "Stock y abastecimiento",
+                title = stringResource(R.string.nav_inventory),
+                subtitle = stringResource(R.string.nav_stock_supply),
                 icon = Icons.Default.Inventory2,
                 onClick = onInventoryClick
             )
             MenuOptionItem(
-                title = "Personal",
-                subtitle = "Colaboradores y tarifas",
+                title = stringResource(R.string.nav_staff),
+                subtitle = stringResource(R.string.nav_staff_rates),
                 icon = Icons.Default.Group,
                 onClick = onStaffClick
             )
             MenuOptionItem(
-                title = "Enlaces de Formulario",
-                subtitle = "Compartir con clientes",
+                title = stringResource(R.string.nav_form_links),
+                subtitle = stringResource(R.string.nav_share_clients),
                 icon = Icons.Default.Link,
                 onClick = onEventFormLinksClick
             )
             MenuOptionItem(
-                title = "Comprobantes de pago",
-                subtitle = "Revisar envíos de clientes",
+                title = stringResource(R.string.nav_payment_receipts),
+                subtitle = stringResource(R.string.nav_review_client_submissions),
                 icon = Icons.Default.Wallet,
                 onClick = onPaymentInboxClick
             )
             MenuOptionItem(
-                title = "Configuración",
-                subtitle = "Perfil y negocio",
+                title = stringResource(R.string.nav_settings),
+                subtitle = stringResource(R.string.nav_profile),
                 icon = Icons.Default.Settings,
                 onClick = onSettingsClick
             )
@@ -618,7 +620,7 @@ private fun MenuOptionItem(
             }
             Icon(
                 Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = "Ir a $title",
+                contentDescription = stringResource(R.string.access_go_to, title),
                 tint = SolennixTheme.colors.secondaryText
             )
         }

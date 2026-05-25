@@ -69,10 +69,10 @@ fun EventContractPreviewScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Contrato") },
+                title = { Text(stringResource(R.string.events_contract_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.events_common_back))
                     }
                 },
                 actions = {
@@ -87,13 +87,13 @@ fun EventContractPreviewScreen(
                                         type = "contract",
                                         filename = "contrato_${event.id.take(8)}.pdf"
                                     )
-                                    sharePdfFile(context, file, "Compartir Contrato")
+                                    sharePdfFile(context, file, context.getString(R.string.events_contract_share_chooser))
                                 } catch (e: Exception) {
-                                    Toast.makeText(context, "Error al generar contrato", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.events_contract_generate_error), Toast.LENGTH_SHORT).show()
                                 }
                             }
                         }) {
-                            Icon(Icons.Default.Share, contentDescription = "Compartir PDF")
+                            Icon(Icons.Default.Share, contentDescription = stringResource(R.string.events_contract_share_pdf_a11y))
                         }
                     }
                 }
@@ -131,14 +131,14 @@ fun EventContractPreviewScreen(
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
-                    "ANTICIPO REQUERIDO",
+                    stringResource(R.string.events_contract_deposit_required_title),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Black,
                     color = SolennixTheme.colors.primaryText
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    "Para visualizar y generar el contrato, es necesario cubrir el anticipo mínimo del ${depositPercent.toInt()}%",
+                    stringResource(R.string.events_contract_deposit_required_message, depositPercent.toInt()),
                     style = MaterialTheme.typography.bodyMedium,
                     color = SolennixTheme.colors.secondaryText,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -146,7 +146,7 @@ fun EventContractPreviewScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 val remaining = maxOf(depositAmount - totalPaid, 0.0)
                 Text(
-                    "Faltan ${remaining.asMXN()} por cobrar.",
+                    stringResource(R.string.events_contract_deposit_remaining, remaining.asMXN()),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = SolennixTheme.colors.warning
@@ -172,14 +172,14 @@ fun EventContractPreviewScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        "Faltan datos para el contrato",
+                        stringResource(R.string.events_contract_missing_data_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = SolennixTheme.colors.primaryText
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        "Completa estos campos en el evento o cliente:",
+                        stringResource(R.string.events_contract_missing_data_message),
                         style = MaterialTheme.typography.bodyMedium,
                         color = SolennixTheme.colors.secondaryText,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -260,11 +260,11 @@ fun EventContractPreviewScreen(
                                     HorizontalDivider()
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        user?.businessName ?: user?.name ?: "EL PROVEEDOR",
+                                        user?.businessName ?: user?.name ?: stringResource(R.string.events_contract_provider_fallback),
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold
                                     )
-                                    Text("Firma", style = MaterialTheme.typography.labelSmall, color = SolennixTheme.colors.tertiaryText)
+                                    Text(stringResource(R.string.events_contract_signature), style = MaterialTheme.typography.labelSmall, color = SolennixTheme.colors.tertiaryText)
                                 }
                                 Spacer(modifier = Modifier.width(24.dp))
                                 Column(
@@ -275,11 +275,11 @@ fun EventContractPreviewScreen(
                                     HorizontalDivider()
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        uiState.client?.name ?: "EL CLIENTE",
+                                        uiState.client?.name ?: stringResource(R.string.events_contract_client_fallback),
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold
                                     )
-                                    Text("Firma de EL CLIENTE", style = MaterialTheme.typography.labelSmall, color = SolennixTheme.colors.tertiaryText)
+                                    Text(stringResource(R.string.events_contract_client_signature), style = MaterialTheme.typography.labelSmall, color = SolennixTheme.colors.tertiaryText)
                                 }
                             }
                             Spacer(modifier = Modifier.height(24.dp))

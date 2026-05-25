@@ -23,6 +23,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
@@ -32,6 +34,7 @@ import com.creapolis.solennix.core.model.EventExtra
 import com.creapolis.solennix.core.model.EventProduct
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.core.model.extensions.toPaymentMethodLabel
+import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailUiState
 
 @Composable
@@ -61,7 +64,7 @@ fun FinancialBreakdownCard(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Desglose Financiero",
+                    text = stringResource(R.string.events_financial_breakdown_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -69,22 +72,22 @@ fun FinancialBreakdownCard(
             Spacer(modifier = Modifier.height(16.dp))
 
             if (products.isNotEmpty()) {
-                FinancialRow("Subtotal Productos", productsTotal.asMXN())
+                FinancialRow(stringResource(R.string.events_financial_products_subtotal), productsTotal.asMXN())
             }
 
             if (extras.isNotEmpty()) {
-                FinancialRow("Subtotal Extras", extrasTotal.asMXN())
+                FinancialRow(stringResource(R.string.events_financial_extras_subtotal), extrasTotal.asMXN())
             }
 
             if (products.isNotEmpty() && extras.isNotEmpty()) {
-                FinancialRow("Subtotal", subtotal.asMXN())
+                FinancialRow(stringResource(R.string.events_financial_subtotal), subtotal.asMXN())
             }
 
             if (event.discount > 0) {
                 val discountLabel = if (event.discountType == DiscountType.PERCENT) {
-                    "Descuento (${event.discount.toInt()}%)"
+                    stringResource(R.string.events_financial_discount_percent, event.discount.toInt())
                 } else {
-                    "Descuento"
+                    stringResource(R.string.events_financial_discount)
                 }
                 val discountAmount = if (event.discountType == DiscountType.PERCENT) {
                     subtotal * event.discount / 100
@@ -100,7 +103,7 @@ fun FinancialBreakdownCard(
 
             if (event.requiresInvoice && event.taxRate > 0) {
                 FinancialRow(
-                    "IVA (${event.taxRate.toInt()}%)",
+                    stringResource(R.string.events_financial_tax_percent, event.taxRate.toInt()),
                     event.taxAmount.asMXN()
                 )
             }
@@ -115,7 +118,7 @@ fun FinancialBreakdownCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "TOTAL",
+                    text = stringResource(R.string.events_financial_total),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = SolennixTheme.colors.primaryText
@@ -129,13 +132,13 @@ fun FinancialBreakdownCard(
             }
 
             FinancialRow(
-                "Pagado",
+                stringResource(R.string.events_financial_paid),
                 totalPaid.asMXN(),
                 valueColor = SolennixTheme.colors.success
             )
 
             FinancialRow(
-                "Restante",
+                stringResource(R.string.events_financial_remaining),
                 remaining.asMXN(),
                 valueColor = if (remaining > 0) SolennixTheme.colors.error else SolennixTheme.colors.success
             )
@@ -143,7 +146,7 @@ fun FinancialBreakdownCard(
             if (event.totalAmount > 0) {
                 Spacer(modifier = Modifier.height(12.dp))
                 val paymentProgress = (totalPaid / event.totalAmount).coerceIn(0.0, 1.0)
-                val percentText = "${(paymentProgress * 100).toInt()}% pagado"
+                val percentText = stringResource(R.string.events_financial_paid_percent, (paymentProgress * 100).toInt())
                 Text(
                     text = percentText,
                     style = MaterialTheme.typography.labelMedium,
@@ -170,7 +173,7 @@ fun FinancialBreakdownCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 val depositAmount = event.totalAmount * depositPct / 100
                 FinancialRow(
-                    "Anticipo (${depositPct.toInt()}%)",
+                    stringResource(R.string.events_financial_deposit_percent, depositPct.toInt()),
                     depositAmount.asMXN(),
                     valueColor = SolennixTheme.colors.primary
                 )
@@ -211,7 +214,7 @@ fun PaymentsSection(
     var paymentToDelete by remember { mutableStateOf<String?>(null) }
 
     Text(
-        text = "Historial de Pagos (${uiState.payments.size})",
+        text = pluralStringResource(R.plurals.events_payments_history_title, uiState.payments.size, uiState.payments.size),
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.SemiBold
     )
@@ -254,7 +257,7 @@ fun PaymentsSection(
                 ) {
                     Icon(
                         Icons.Default.Delete,
-                        contentDescription = "Eliminar pago",
+                        contentDescription = stringResource(R.string.events_payments_delete_a11y),
                         tint = SolennixTheme.colors.secondaryText,
                         modifier = Modifier.size(18.dp)
                     )
@@ -266,8 +269,8 @@ fun PaymentsSection(
     if (paymentToDelete != null) {
         AlertDialog(
             onDismissRequest = { paymentToDelete = null },
-            title = { Text("Eliminar Pago") },
-            text = { Text("¿Estás seguro de que deseas eliminar este pago? El saldo se actualizará automáticamente.") },
+            title = { Text(stringResource(R.string.events_payments_delete_title)) },
+            text = { Text(stringResource(R.string.events_payments_delete_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -276,12 +279,12 @@ fun PaymentsSection(
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = SolennixTheme.colors.error)
                 ) {
-                    Text("Eliminar")
+                    Text(stringResource(R.string.events_common_delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { paymentToDelete = null }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.events_common_cancel))
                 }
             }
         )

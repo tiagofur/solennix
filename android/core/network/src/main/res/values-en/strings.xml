@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="core_network_error_connection">Connection error. Check your internet.</string>
+    <string name="core_network_error_server">Server error (%1$d)</string>
+    <string name="core_network_error_unknown">An unexpected error occurred</string>
+    <string name="event_day_notification_channel_name">Event day</string>
+    <string name="event_day_notification_channel_description">Persistent notifications for events scheduled today</string>
+    <string name="event_day_notification_today_at">Today at %1$s</string>
+    <string name="event_day_notification_today">Today</string>
+    <plurals name="event_day_notification_guests">
+        <item quantity="one">%1$d guest</item>
+        <item quantity="other">%1$d guests</item>
+    </plurals>
+    <string name="event_day_notification_view_event">View event</string>
+    <string name="event_day_notification_finish">Finish</string>
+    <string name="event_day_notification_in_progress_title">Event in progress</string>
+    <string name="event_day_notification_status">Status: %1$s</string>
+</resources>

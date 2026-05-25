@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="core_network_error_connection">Error de conexión. Verificá tu internet.</string>
+    <string name="core_network_error_server">Error del servidor (%1$d)</string>
+    <string name="core_network_error_unknown">Ocurrió un error inesperado</string>
+    <string name="event_day_notification_channel_name">Eventos del día</string>
+    <string name="event_day_notification_channel_description">Notificaciones persistentes para eventos programados hoy</string>
+    <string name="event_day_notification_today_at">Hoy a las %1$s</string>
+    <string name="event_day_notification_today">Hoy</string>
+    <plurals name="event_day_notification_guests">
+        <item quantity="one">%1$d invitado</item>
+        <item quantity="other">%1$d invitados</item>
+    </plurals>
+    <string name="event_day_notification_view_event">Ver evento</string>
+    <string name="event_day_notification_finish">Finalizar</string>
+    <string name="event_day_notification_in_progress_title">Evento en curso</string>
+    <string name="event_day_notification_status">Estado: %1$s</string>
+</resources>

@@ -74,6 +74,10 @@
     <string name="nav_form_links">Enlaces de Formulario</string>
     <string name="nav_share_clients">Compartir con clientes</string>
     <string name="nav_profile">Perfil y negocio</string>
+    <string name="nav_staff">Personal</string>
+    <string name="nav_staff_rates">Colaboradores y tarifas</string>
+    <string name="nav_payment_receipts">Comprobantes de pago</string>
+    <string name="nav_review_client_submissions">Revisar envíos de clientes</string>
 
     <!-- Notifications -->
     <string name="notif_channel_general">Notificaciones Generales</string>

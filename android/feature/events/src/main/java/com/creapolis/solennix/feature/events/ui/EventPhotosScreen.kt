@@ -24,6 +24,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -37,6 +39,7 @@ import coil3.request.crossfade
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.network.UrlResolver
+import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.core.model.EventPhoto
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
 import java.io.File
@@ -85,10 +88,10 @@ fun EventPhotosScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Fotos del Evento") },
+                title = { Text(stringResource(R.string.events_photos_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.events_common_back))
                     }
                 }
             )
@@ -107,7 +110,7 @@ fun EventPhotosScreen(
                 } else {
                     Icon(
                         Icons.Default.AddAPhoto,
-                        contentDescription = "Agregar foto",
+                        contentDescription = stringResource(R.string.events_photos_add_photo_a11y),
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
@@ -129,13 +132,13 @@ fun EventPhotosScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        "Sin fotos",
+                        stringResource(R.string.events_photos_empty_title),
                         style = MaterialTheme.typography.titleMedium,
                         color = SolennixTheme.colors.secondaryText
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        "Agrega fotos del evento para tener un registro visual",
+                        stringResource(R.string.events_photos_empty_message),
                         style = MaterialTheme.typography.bodySmall,
                         color = SolennixTheme.colors.secondaryText
                     )
@@ -144,7 +147,7 @@ fun EventPhotosScreen(
         } else {
             Column(modifier = Modifier.padding(padding).padding(16.dp)) {
                 Text(
-                    "${uiState.photos.size} fotos",
+                    pluralStringResource(R.plurals.events_photos_count, uiState.photos.size, uiState.photos.size),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -191,7 +194,7 @@ fun EventPhotosScreen(
                         onClick = { selectedPhoto = null },
                         modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
                     ) {
-                        Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = Color.White)
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.events_common_close), tint = Color.White)
                     }
                 }
             }
@@ -201,7 +204,7 @@ fun EventPhotosScreen(
         if (showSourceDialog) {
             AlertDialog(
                 onDismissRequest = { showSourceDialog = false },
-                title = { Text("Agregar Foto") },
+                title = { Text(stringResource(R.string.events_photos_add_title)) },
                 text = {
                     Column {
                         TextButton(
@@ -221,7 +224,7 @@ fun EventPhotosScreen(
                         ) {
                             Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Tomar Foto")
+                            Text(stringResource(R.string.events_photos_take_photo))
                         }
                         TextButton(
                             onClick = {
@@ -232,13 +235,13 @@ fun EventPhotosScreen(
                         ) {
                             Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Elegir de Galeria")
+                            Text(stringResource(R.string.events_photos_choose_gallery))
                         }
                     }
                 },
                 confirmButton = {},
                 dismissButton = {
-                    TextButton(onClick = { showSourceDialog = false }) { Text("Cancelar") }
+                    TextButton(onClick = { showSourceDialog = false }) { Text(stringResource(R.string.events_common_cancel)) }
                 }
             )
         }
@@ -279,7 +282,7 @@ private fun PhotoThumbnail(
         ) {
             Icon(
                 Icons.Default.Close,
-                contentDescription = "Eliminar",
+                contentDescription = stringResource(R.string.events_common_delete),
                 tint = Color.White,
                 modifier = Modifier.size(14.dp)
             )

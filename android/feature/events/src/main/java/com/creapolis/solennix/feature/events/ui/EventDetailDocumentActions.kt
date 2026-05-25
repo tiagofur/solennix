@@ -23,7 +23,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailUiState
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
 import java.io.File
@@ -47,7 +49,7 @@ fun DocumentActionsGrid(
                 val file = downloadEventPdfToCache(context, viewModel, type, filename)
                 onSharePdf(file)
             } catch (e: Exception) {
-                Toast.makeText(context, "Error descargando PDF: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.events_pdf_download_error, e.message.orEmpty()), Toast.LENGTH_SHORT).show()
             } finally {
                 isGenerating = false
             }
@@ -58,7 +60,7 @@ fun DocumentActionsGrid(
         Row(modifier = Modifier.fillMaxWidth()) {
             ActionButton(
                 icon = Icons.Default.Description,
-                label = "Cotización",
+                label = stringResource(R.string.events_document_budget),
                 modifier = Modifier.weight(1f),
                 onClick = {
                     downloadPdfAsync("budget", "cotizacion_${event.id}.pdf")
@@ -67,7 +69,7 @@ fun DocumentActionsGrid(
             Spacer(modifier = Modifier.width(8.dp))
             ActionButton(
                 icon = Icons.AutoMirrored.Filled.Article,
-                label = "Contrato",
+                label = stringResource(R.string.events_document_contract),
                 modifier = Modifier.weight(1f),
                 onClick = {
                     downloadPdfAsync("contract", "contrato_${event.id}.pdf")
@@ -76,7 +78,7 @@ fun DocumentActionsGrid(
             Spacer(modifier = Modifier.width(8.dp))
             ActionButton(
                 icon = Icons.Default.Checklist,
-                label = "Checklist",
+                label = stringResource(R.string.events_document_checklist),
                 modifier = Modifier.weight(1f),
                 onClick = {
                     downloadPdfAsync("checklist", "checklist_${event.id}.pdf")
@@ -87,7 +89,7 @@ fun DocumentActionsGrid(
         Row(modifier = Modifier.fillMaxWidth()) {
             ActionButton(
                 icon = Icons.Default.Payments,
-                label = "Pagos",
+                label = stringResource(R.string.events_document_payments),
                 modifier = Modifier.weight(1f),
                 onClick = {
                     downloadPdfAsync("payment-report", "pagos_${event.id}.pdf")
@@ -96,7 +98,7 @@ fun DocumentActionsGrid(
             Spacer(modifier = Modifier.width(8.dp))
             ActionButton(
                 icon = Icons.Default.ShoppingCart,
-                label = "Compras",
+                label = stringResource(R.string.events_document_shopping),
                 modifier = Modifier.weight(1f),
                 onClick = {
                     downloadPdfAsync("shopping-list", "compras_${event.id}.pdf")
@@ -107,7 +109,7 @@ fun DocumentActionsGrid(
         Row(modifier = Modifier.fillMaxWidth()) {
             ActionButton(
                 icon = Icons.Default.Inventory2,
-                label = "Equipo",
+                label = stringResource(R.string.events_document_equipment),
                 modifier = Modifier.weight(1f),
                 onClick = {
                     downloadPdfAsync("equipment-list", "equipo_${event.id}.pdf")

@@ -54,8 +54,10 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideApiService(client: KtorClient): ApiService =
-        ApiService(client)
+    fun provideApiService(
+        client: KtorClient,
+        @ApplicationContext context: Context
+    ): ApiService = ApiService(client, context)
 
     @Provides
     @Singleton

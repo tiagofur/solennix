@@ -146,6 +146,8 @@
     <string name="events_detail_shopping_purchase">Insumos por comprar</string>
     <string name="events_detail_shopping_stock">Del stock</string>
     <string name="events_detail_shopping_empty">Sin compras requeridas</string>
+    <string name="events_detail_quantity_unit">%1$s %2$s</string>
+    <string name="events_detail_quantity_multiplier">x%1$s</string>
     <string name="events_detail_unit_each">und</string>
     <string name="events_detail_staff_title">Personal asignado</string>
     <string name="events_detail_staff_empty">Sin personal asignado</string>
@@ -345,4 +347,103 @@
     <string name="events_form_staff_team_members_one">1 miembro</string>
     <string name="events_form_staff_team_members_many">%1$d miembros</string>
     <string name="events_form_staff_apply_a11y">Aplicar</string>
+
+    <string name="events_pdf_open_chooser">Abrir PDF con...</string>
+    <string name="events_pdf_no_app">No hay aplicación para abrir PDFs</string>
+    <string name="events_pdf_download_error">Error descargando PDF: %1$s</string>
+    <string name="events_document_budget">Cotización</string>
+    <string name="events_document_contract">Contrato</string>
+    <string name="events_document_checklist">Checklist</string>
+    <string name="events_document_payments">Pagos</string>
+    <string name="events_document_shopping">Compras</string>
+    <string name="events_document_equipment">Equipo</string>
+
+    <string name="events_common_back">Volver</string>
+    <string name="events_common_close">Cerrar</string>
+    <string name="events_common_delete">Eliminar</string>
+    <string name="events_common_cancel">Cancelar</string>
+    <string name="events_photos_title">Fotos del Evento</string>
+    <string name="events_photos_add_photo_a11y">Agregar foto</string>
+    <string name="events_photos_empty_title">Sin fotos</string>
+    <string name="events_photos_empty_message">Agrega fotos del evento para tener un registro visual</string>
+    <plurals name="events_photos_count">
+        <item quantity="one">%1$d foto</item>
+        <item quantity="other">%1$d fotos</item>
+    </plurals>
+    <string name="events_photos_add_title">Agregar Foto</string>
+    <string name="events_photos_take_photo">Tomar Foto</string>
+    <string name="events_photos_choose_gallery">Elegir de Galería</string>
+    <string name="events_photos_camera_permission_denied">Permiso de cámara denegado</string>
+    <string name="events_photos_sheet_empty_title">No hay fotos aún</string>
+    <string name="events_photos_add_first">Agregar primera foto</string>
+    <string name="events_photos_source_title">Seleccionar fuente</string>
+    <string name="events_photos_source_camera">Cámara</string>
+    <string name="events_photos_source_gallery">Galería</string>
+    <string name="events_photos_delete_title">Eliminar foto</string>
+    <string name="events_photos_delete_message">¿Estás seguro de que deseas eliminar esta foto?</string>
+
+    <string name="events_checklist_title">Checklist</string>
+    <string name="events_checklist_reset_a11y">Reiniciar</string>
+    <string name="events_checklist_empty_title">Sin elementos</string>
+    <string name="events_checklist_empty_message">No hay elementos en el checklist para este evento.</string>
+    <string name="events_checklist_reset_title">Reiniciar Checklist</string>
+    <string name="events_checklist_reset_message">¿Estás seguro de que quieres desmarcar todos los elementos?</string>
+    <string name="events_checklist_reset_confirm">Reiniciar</string>
+    <string name="events_checklist_section_equipment">Equipamiento</string>
+    <string name="events_checklist_section_stock">De Inventario</string>
+    <string name="events_checklist_section_purchase">Por Comprar</string>
+    <string name="events_checklist_purchase_total">Total Estimado de Compras</string>
+    <string name="events_checklist_progress_completed">%1$d de %2$d completados</string>
+    <string name="events_checklist_count">%1$d/%2$d</string>
+    <string name="events_checklist_item_quantity">%1$s %2$s</string>
+
+    <string name="events_financial_breakdown_title">Desglose Financiero</string>
+    <string name="events_financial_products_subtotal">Subtotal Productos</string>
+    <string name="events_financial_extras_subtotal">Subtotal Extras</string>
+    <string name="events_financial_subtotal">Subtotal</string>
+    <string name="events_financial_discount_percent">Descuento (%1$d%%)</string>
+    <string name="events_financial_discount">Descuento</string>
+    <string name="events_financial_tax_percent">IVA (%1$d%%)</string>
+    <string name="events_financial_total">TOTAL</string>
+    <string name="events_financial_paid">Pagado</string>
+    <string name="events_financial_remaining">Restante</string>
+    <string name="events_financial_paid_percent">%1$d%% pagado</string>
+    <string name="events_financial_deposit_percent">Anticipo (%1$d%%)</string>
+    <plurals name="events_payments_history_title">
+        <item quantity="one">Historial de Pagos (%1$d)</item>
+        <item quantity="other">Historial de Pagos (%1$d)</item>
+    </plurals>
+    <string name="events_payments_delete_a11y">Eliminar pago</string>
+    <string name="events_payments_delete_title">Eliminar Pago</string>
+    <string name="events_payments_delete_message">¿Estás seguro de que deseas eliminar este pago? El saldo se actualizará automáticamente.</string>
+
+    <string name="events_catalog_products_title">Productos</string>
+    <string name="events_catalog_extras_title">Extras</string>
+    <string name="events_catalog_products_empty">Sin productos asignados</string>
+    <string name="events_catalog_extras_empty">Sin extras asignados</string>
+    <plurals name="events_catalog_products_count">
+        <item quantity="one">%1$d producto</item>
+        <item quantity="other">%1$d productos</item>
+    </plurals>
+    <plurals name="events_catalog_extras_count">
+        <item quantity="one">%1$d extra</item>
+        <item quantity="other">%1$d extras</item>
+    </plurals>
+    <string name="events_catalog_subtotal_value">Subtotal: %1$s</string>
+    <string name="events_catalog_product_fallback">Producto</string>
+    <string name="events_catalog_quantity_price">%1$s x %2$s</string>
+
+    <string name="events_contract_title">Contrato</string>
+    <string name="events_contract_share_chooser">Compartir Contrato</string>
+    <string name="events_contract_generate_error">Error al generar contrato</string>
+    <string name="events_contract_share_pdf_a11y">Compartir PDF</string>
+    <string name="events_contract_deposit_required_title">ANTICIPO REQUERIDO</string>
+    <string name="events_contract_deposit_required_message">Para visualizar y generar el contrato, es necesario cubrir el anticipo mínimo del %1$d%%</string>
+    <string name="events_contract_deposit_remaining">Faltan %1$s por cobrar.</string>
+    <string name="events_contract_missing_data_title">Faltan datos para el contrato</string>
+    <string name="events_contract_missing_data_message">Completa estos campos en el evento o cliente:</string>
+    <string name="events_contract_provider_fallback">EL PROVEEDOR</string>
+    <string name="events_contract_client_fallback">EL CLIENTE</string>
+    <string name="events_contract_signature">Firma</string>
+    <string name="events_contract_client_signature">Firma de EL CLIENTE</string>
 </resources>

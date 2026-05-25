@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="payments_inbox_title">Payment receipts</string>
+    <string name="payments_inbox_back">Back</string>
+    <string name="payments_inbox_pro_only_title">Pro-only feature.</string>
+    <string name="payments_inbox_pro_only_hint">Upgrade your plan to review and approve client payment receipts.</string>
+    <string name="payments_inbox_empty_title">No pending receipts</string>
+    <string name="payments_inbox_approve_title">Confirm approval</string>
+    <string name="payments_inbox_approve_action">Approve</string>
+    <string name="payments_inbox_approve_message">Approve receipt from %1$s for %2$s?</string>
+    <string name="payments_inbox_reject_title">Reject receipt</string>
+    <string name="payments_inbox_reject_description">Provide the rejection reason (required):</string>
+    <string name="payments_inbox_reject_placeholder">Ex: Wrong amount, invalid reference...</string>
+    <string name="payments_inbox_reject_action">Reject</string>
+    <string name="payments_inbox_cancel">Cancel</string>
+    <string name="payments_inbox_this_client">this client</string>
+    <string name="payments_inbox_client_fallback">Client</string>
+    <string name="payments_inbox_reference_format">Ref: %1$s</string>
+    <string name="payments_inbox_reason_format">Reason: %1$s</string>
+    <string name="payments_inbox_status_approved">Approved</string>
+    <string name="payments_inbox_status_rejected">Rejected</string>
+    <string name="payments_inbox_status_pending">Pending</string>
+</resources>

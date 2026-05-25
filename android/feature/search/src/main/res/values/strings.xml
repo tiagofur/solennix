@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_title">Buscar</string>
+    <string name="search_back">Volver</string>
+    <string name="search_placeholder">Buscar eventos, clientes, productos...</string>
+    <string name="search_section_clients">Clientes</string>
+    <string name="search_section_events">Eventos</string>
+    <string name="search_section_products">Productos</string>
+    <string name="search_section_inventory">Inventario</string>
+    <string name="search_no_results">No se encontraron resultados</string>
+    <string name="search_inventory_stock">Stock: %1$s %2$s</string>
+    <string name="search_low_stock">Bajo</string>
+</resources>

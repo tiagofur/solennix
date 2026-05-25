@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -27,6 +28,7 @@ import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCente
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.EventFormLink
 import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
+import com.creapolis.solennix.feature.settings.R
 import com.creapolis.solennix.feature.settings.viewmodel.EventFormLinksUiState
 import com.creapolis.solennix.feature.settings.viewmodel.EventFormLinksViewModel
 import java.time.format.DateTimeFormatter
@@ -66,10 +68,10 @@ fun EventFormLinksScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Enlaces de Formulario") },
+                title = { Text(stringResource(R.string.settings_form_links_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.settings_form_links_back))
                     }
                 }
             )
@@ -80,7 +82,7 @@ fun EventFormLinksScreen(
             ExtendedFloatingActionButton(
                 onClick = { showGenerateDialog = true },
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text("Nuevo enlace") },
+                text = { Text(stringResource(R.string.settings_form_links_new_link)) },
                 containerColor = SolennixTheme.colors.primary,
                 contentColor = Color.White,
                 expanded = !isLoading && !isGenerating
@@ -124,7 +126,7 @@ fun EventFormLinksScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         OutlinedButton(onClick = { viewModel.loadLinks() }) {
-                            Text("Reintentar")
+                            Text(stringResource(R.string.settings_form_links_retry))
                         }
                     }
                 }
@@ -133,8 +135,8 @@ fun EventFormLinksScreen(
                     if (state.links.isEmpty()) {
                         EmptyState(
                             icon = Icons.Default.Link,
-                            title = "Sin enlaces",
-                            message = "Crea un enlace para que tus clientes soliciten eventos",
+                            title = stringResource(R.string.settings_form_links_empty_title),
+                            message = stringResource(R.string.settings_form_links_empty_message),
                             modifier = Modifier.padding(padding)
                         )
                     } else {
@@ -180,8 +182,8 @@ private fun EventFormLinkCard(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Eliminar enlace") },
-            text = { Text("¿Estás seguro de que querés eliminar este enlace? Esta acción no se puede deshacer.") },
+            title = { Text(stringResource(R.string.settings_form_links_delete_title)) },
+            text = { Text(stringResource(R.string.settings_form_links_delete_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -190,12 +192,12 @@ private fun EventFormLinkCard(
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = SolennixTheme.colors.error)
                 ) {
-                    Text("Eliminar")
+                    Text(stringResource(R.string.settings_form_links_delete_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.settings_form_links_cancel))
                 }
             }
         )
@@ -214,7 +216,7 @@ private fun EventFormLinkCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = link.label ?: "Sin etiqueta",
+                    text = link.label ?: stringResource(R.string.settings_form_links_no_label),
                     style = MaterialTheme.typography.titleMedium,
                     color = SolennixTheme.colors.primaryText,
                     maxLines = 1,
@@ -267,7 +269,7 @@ private fun EventFormLinkCard(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "Creado: $createdDate",
+                    text = stringResource(R.string.settings_form_links_created_on, createdDate),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText
                 )
@@ -284,7 +286,7 @@ private fun EventFormLinkCard(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "Expira: $expiresDate",
+                    text = stringResource(R.string.settings_form_links_expires_on, expiresDate),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText
                 )
@@ -305,7 +307,7 @@ private fun EventFormLinkCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Usado: $usedDate",
+                        text = stringResource(R.string.settings_form_links_used_on, usedDate),
                         style = MaterialTheme.typography.bodySmall,
                         color = SolennixTheme.colors.success
                     )
@@ -333,7 +335,7 @@ private fun EventFormLinkCard(
                     IconButton(onClick = onShare) {
                         Icon(
                             Icons.Default.Share,
-                            contentDescription = "Compartir enlace",
+                            contentDescription = stringResource(R.string.settings_form_links_share),
                             tint = SolennixTheme.colors.primary
                         )
                     }
@@ -341,7 +343,7 @@ private fun EventFormLinkCard(
                     IconButton(onClick = onCopy) {
                         Icon(
                             Icons.Default.ContentCopy,
-                            contentDescription = "Copiar enlace",
+                            contentDescription = stringResource(R.string.settings_form_links_copy),
                             tint = SolennixTheme.colors.secondaryText
                         )
                     }
@@ -349,7 +351,7 @@ private fun EventFormLinkCard(
                     IconButton(onClick = { showDeleteConfirm = true }) {
                         Icon(
                             Icons.Default.Delete,
-                            contentDescription = "Eliminar enlace",
+                            contentDescription = stringResource(R.string.settings_form_links_delete_title),
                             tint = SolennixTheme.colors.error
                         )
                     }
@@ -362,10 +364,10 @@ private fun EventFormLinkCard(
 @Composable
 private fun FormLinkStatusChip(status: String) {
     val (label, color) = when (status.lowercase()) {
-        "active" -> "Activo" to SolennixTheme.colors.success
-        "used" -> "Usado" to SolennixTheme.colors.primary
-        "expired" -> "Expirado" to SolennixTheme.colors.error
-        "revoked" -> "Revocado" to SolennixTheme.colors.secondaryText
+        "active" -> stringResource(R.string.settings_form_links_status_active) to SolennixTheme.colors.success
+        "used" -> stringResource(R.string.settings_form_links_status_used) to SolennixTheme.colors.primary
+        "expired" -> stringResource(R.string.settings_form_links_status_expired) to SolennixTheme.colors.error
+        "revoked" -> stringResource(R.string.settings_form_links_status_revoked) to SolennixTheme.colors.secondaryText
         else -> status.replaceFirstChar { it.uppercase() } to SolennixTheme.colors.secondaryText
     }
 
@@ -393,14 +395,14 @@ private fun GenerateLinkDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nuevo enlace de formulario") },
+        title = { Text(stringResource(R.string.settings_form_links_generate_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = label,
                     onValueChange = { label = it },
-                    label = { Text("Etiqueta (opcional)") },
-                    placeholder = { Text("Ej: Boda García") },
+                    label = { Text(stringResource(R.string.settings_form_links_label_field)) },
+                    placeholder = { Text(stringResource(R.string.settings_form_links_label_placeholder)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -412,7 +414,7 @@ private fun GenerateLinkDialog(
                 OutlinedTextField(
                     value = ttlDaysText,
                     onValueChange = { ttlDaysText = it.filter { c -> c.isDigit() } },
-                    label = { Text("Días de vigencia") },
+                    label = { Text(stringResource(R.string.settings_form_links_ttl_days)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -438,13 +440,13 @@ private fun GenerateLinkDialog(
                         color = SolennixTheme.colors.primary
                     )
                 } else {
-                    Text("Generar", color = SolennixTheme.colors.primary)
+                    Text(stringResource(R.string.settings_form_links_generate), color = SolennixTheme.colors.primary)
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+                Text(stringResource(R.string.settings_form_links_cancel))
             }
         }
     )
@@ -454,16 +456,16 @@ private fun shareLink(context: Context, link: EventFormLink) {
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
         putExtra(Intent.EXTRA_TEXT, link.url)
-        putExtra(
-            Intent.EXTRA_SUBJECT,
-            "Formulario de evento${link.label?.let { " - $it" } ?: ""}"
-        )
+        val subject = link.label?.let { label ->
+            context.getString(R.string.settings_form_links_share_subject_with_label, label)
+        } ?: context.getString(R.string.settings_form_links_share_subject)
+        putExtra(Intent.EXTRA_SUBJECT, subject)
     }
-    context.startActivity(Intent.createChooser(intent, "Compartir enlace"))
+    context.startActivity(Intent.createChooser(intent, context.getString(R.string.settings_form_links_share)))
 }
 
 private fun copyLink(context: Context, link: EventFormLink) {
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    val clip = ClipData.newPlainText("Enlace de formulario", link.url)
+    val clip = ClipData.newPlainText(context.getString(R.string.settings_form_links_clip_label), link.url)
     clipboard.setPrimaryClip(clip)
 }
