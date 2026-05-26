@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.EventStatus
@@ -69,7 +70,7 @@ fun NavLinkCard(
 fun ChecklistButton(onClick: () -> Unit) {
     NavLinkCard(
         icon = Icons.AutoMirrored.Filled.PlaylistAddCheck,
-        label = "Checklist de Carga",
+        label = stringResource(R.string.events_detail_checklist_load),
         tint = SolennixTheme.colors.primary,
         onClick = onClick
     )
@@ -79,7 +80,7 @@ fun ChecklistButton(onClick: () -> Unit) {
 fun ContractPreviewButton(onClick: () -> Unit) {
     NavLinkCard(
         icon = Icons.AutoMirrored.Filled.Article,
-        label = "Ver Contrato",
+        label = stringResource(R.string.events_detail_view_contract),
         tint = SolennixTheme.colors.info,
         onClick = onClick
     )
@@ -101,10 +102,10 @@ fun StatusChangePill(
     onStatusChange: (EventStatus) -> Unit
 ) {
     val statusOptions = listOf(
-        EventStatus.QUOTED to "Cotizado",
-        EventStatus.CONFIRMED to "Confirmado",
-        EventStatus.COMPLETED to "Completado",
-        EventStatus.CANCELLED to "Cancelado"
+        EventStatus.QUOTED to stringResource(R.string.events_list_status_quoted),
+        EventStatus.CONFIRMED to stringResource(R.string.events_list_status_confirmed),
+        EventStatus.COMPLETED to stringResource(R.string.events_list_status_completed),
+        EventStatus.CANCELLED to stringResource(R.string.events_list_status_cancelled)
     )
     val currentLabel = statusOptions.firstOrNull { it.first == currentStatus }?.second
         ?: currentStatus.name
@@ -130,7 +131,7 @@ fun StatusChangePill(
                 )
                 Icon(
                     Icons.Default.ArrowDropDown,
-                    contentDescription = "Cambiar estado",
+                    contentDescription = stringResource(R.string.events_detail_status_change_title),
                     modifier = Modifier.size(16.dp)
                 )
             }

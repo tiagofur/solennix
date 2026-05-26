@@ -17,7 +17,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.creapolis.solennix.core.designsystem.R
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 
 /**
@@ -97,7 +99,7 @@ fun UpgradeBanner(
                             contentColor = iconColor
                         )
                     ) {
-                        Text("Ver planes", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.upgrade_view_plans), fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.width(4.dp))
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowForward,
@@ -110,7 +112,7 @@ fun UpgradeBanner(
                     IconButton(onClick = it) {
                         Icon(
                             Icons.Default.Close,
-                            contentDescription = "Cerrar",
+                            contentDescription = stringResource(R.string.cd_close),
                             tint = SolennixTheme.colors.secondaryText
                         )
                     }
@@ -221,7 +223,7 @@ fun UsageLimitCard(
                     ),
                     contentPadding = PaddingValues(0.dp)
                 ) {
-                    Text("Ampliar límite", style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(R.string.upgrade_expand_limit), style = MaterialTheme.typography.labelSmall)
                 }
             }
         }

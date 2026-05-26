@@ -161,7 +161,7 @@ fun EventFinancesScreen(
 
                     FinancialMetricRow(stringResource(R.string.events_detail_finances_costs), supplyCost.asMXN(), SolennixTheme.colors.error)
                     FinancialMetricRow(stringResource(R.string.events_detail_finances_net_profit), profit.asMXN(), SolennixTheme.colors.success, true)
-                    FinancialMetricRow(stringResource(R.string.events_detail_finances_margin), "${margin.toInt()}%", SolennixTheme.colors.info, true)
+                    FinancialMetricRow(stringResource(R.string.events_detail_finances_margin), stringResource(R.string.events_detail_percent_value, margin.toInt()), SolennixTheme.colors.info, true)
 
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 8.dp),
@@ -190,7 +190,7 @@ fun EventFinancesScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(stringResource(R.string.events_detail_finances_progress), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                            Text("${(progress * 100).toInt()}%", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = SolennixTheme.colors.primary)
+                            Text(stringResource(R.string.events_detail_percent_value, (progress * 100).toInt()), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = SolennixTheme.colors.primary)
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         LinearProgressIndicator(

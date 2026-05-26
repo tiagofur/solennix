@@ -108,7 +108,7 @@ fun EventSuppliesScreen(
                             }
                             Column(horizontalAlignment = Alignment.End) {
                                 Text((supply.quantity * supply.unitCost).asMXN(), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                                Text("${supply.quantity.formatQuantity()} x ${supply.unitCost.asMXN()}", style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
+                                Text(stringResource(R.string.events_catalog_quantity_price, supply.quantity.formatQuantity(), supply.unitCost.asMXN()), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
                             }
                         }
                     }

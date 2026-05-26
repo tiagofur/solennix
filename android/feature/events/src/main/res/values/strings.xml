@@ -107,6 +107,7 @@
     <string name="events_detail_finances_discount">Descuento</string>
     <string name="events_detail_finances_costs">Costos</string>
     <string name="events_detail_finances_net_profit">Utilidad neta</string>
+    <string name="events_detail_percent_value">%1$d%%</string>
     <string name="events_detail_finances_margin">Margen</string>
     <string name="events_detail_finances_paid">Pagado</string>
     <string name="events_detail_finances_pending">Pendiente</string>
@@ -119,6 +120,14 @@
     <string name="events_detail_payments_record">Registrar pago</string>
     <string name="events_detail_payments_settle">Liquidar %1$s</string>
     <string name="events_detail_payments_deposit">Anticipo %1$s</string>
+    <string name="events_detail_checklist_load">Checklist de Carga</string>
+    <string name="events_detail_view_contract">Ver Contrato</string>
+    <string name="events_detail_view_detail_a11y">Ver detalle</string>
+    <string name="events_detail_summary_total">TOTAL</string>
+    <string name="events_detail_summary_profit">UTILIDAD</string>
+    <string name="events_detail_summary_discount_percent">Descuento %1$d%%</string>
+    <string name="events_detail_summary_tax_percent">IVA %1$d%%</string>
+    <string name="events_detail_summary_deposit_amount">Anticipo %1$d%%: %2$s</string>
     <string name="events_detail_payments_history">Historial de pagos</string>
     <string name="events_detail_payments_empty">No hay pagos registrados</string>
     <string name="events_detail_payments_delete_title">¿Eliminar pago?</string>
@@ -351,6 +360,7 @@
     <string name="events_pdf_open_chooser">Abrir PDF con...</string>
     <string name="events_pdf_no_app">No hay aplicación para abrir PDFs</string>
     <string name="events_pdf_download_error">Error descargando PDF: %1$s</string>
+    <string name="events_detail_generate_documents">Generar Documentos</string>
     <string name="events_document_budget">Cotización</string>
     <string name="events_document_contract">Contrato</string>
     <string name="events_document_checklist">Checklist</string>

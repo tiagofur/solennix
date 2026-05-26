@@ -12,7 +12,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.creapolis.solennix.core.designsystem.R
 
 /**
  * Compact TopAppBar wrapper (48dp height instead of Material3 default 64dp).
@@ -36,7 +38,7 @@ fun SolennixTopAppBar(
         actions = {
             if (onSearchClick != null) {
                 IconButton(onClick = onSearchClick) {
-                    Icon(Icons.Default.Search, contentDescription = "Buscar")
+                    Icon(Icons.Default.Search, contentDescription = stringResource(R.string.cd_search))
                 }
             }
             actions()

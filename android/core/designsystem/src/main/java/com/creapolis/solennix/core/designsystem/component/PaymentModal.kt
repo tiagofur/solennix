@@ -30,7 +30,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.creapolis.solennix.core.designsystem.R
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -40,11 +42,13 @@ import java.time.ZoneOffset
 fun PaymentModal(
     remaining: Double,
     initialAmount: Double? = null,
-    title: String = "Registrar Pago",
-    confirmLabel: String = "Guardar Pago",
+    title: String? = null,
+    confirmLabel: String? = null,
     onDismiss: () -> Unit,
     onConfirm: (Double, String, String, String) -> Unit
 ) {
+    val modalTitle = title ?: stringResource(R.string.payment_modal_title)
+    val modalConfirmLabel = confirmLabel ?: stringResource(R.string.payment_modal_confirm)
     val prefillAmount = initialAmount ?: if (remaining > 0) remaining else null
     var amount by remember { mutableStateOf(prefillAmount?.toString() ?: "") }
     var method by remember { mutableStateOf("cash") }
@@ -66,12 +70,12 @@ fun PaymentModal(
                     }
                     showDatePicker = false
                 }) {
-                    Text("Aceptar")
+                    Text(stringResource(R.string.common_accept))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         ) {
@@ -85,13 +89,13 @@ fun PaymentModal(
                 .padding(16.dp)
                 .fillMaxWidth()
         ) {
-            Text(title, style = MaterialTheme.typography.titleLarge)
+            Text(modalTitle, style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = amount,
                 onValueChange = { amount = it },
-                label = { Text("Monto") },
+                label = { Text(stringResource(R.string.payment_modal_amount)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -100,11 +104,11 @@ fun PaymentModal(
             OutlinedTextField(
                 value = paymentDate,
                 onValueChange = {},
-                label = { Text("Fecha de Pago") },
+                label = { Text(stringResource(R.string.payment_modal_date)) },
                 readOnly = true,
                 trailingIcon = {
                     IconButton(onClick = { showDatePicker = true }) {
-                        Icon(Icons.Default.CalendarToday, contentDescription = "Seleccionar fecha")
+                        Icon(Icons.Default.CalendarToday, contentDescription = stringResource(R.string.payment_modal_select_date_a11y))
                     }
                 },
                 modifier = Modifier
@@ -113,14 +117,18 @@ fun PaymentModal(
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text("Método de Pago", style = MaterialTheme.typography.labelMedium)
+            Text(stringResource(R.string.payment_modal_method), style = MaterialTheme.typography.labelMedium)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                listOf("cash" to "Efectivo", "transfer" to "Transferencia", "card" to "Tarjeta").forEach { (key, label) ->
+                listOf(
+                    "cash" to stringResource(R.string.payment_method_cash),
+                    "transfer" to stringResource(R.string.payment_method_transfer),
+                    "card" to stringResource(R.string.payment_method_card)
+                ).forEach { (key, label) ->
                     FilterChip(
                         selected = method == key,
                         onClick = { method = key },
@@ -134,7 +142,10 @@ fun PaymentModal(
                     .padding(bottom = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                listOf("check" to "Cheque", "other" to "Otro").forEach { (key, label) ->
+                listOf(
+                    "check" to stringResource(R.string.payment_method_check),
+                    "other" to stringResource(R.string.payment_method_other)
+                ).forEach { (key, label) ->
                     FilterChip(
                         selected = method == key,
                         onClick = { method = key },
@@ -146,13 +157,13 @@ fun PaymentModal(
             OutlinedTextField(
                 value = notes,
                 onValueChange = { notes = it },
-                label = { Text("Notas (Opcional)") },
+                label = { Text(stringResource(R.string.payment_modal_notes_optional)) },
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(24.dp))
 
             PremiumButton(
-                text = confirmLabel,
+                text = modalConfirmLabel,
                 onClick = {
                     val amt = amount.replace(",", ".").toDoubleOrNull()
                     if (amt != null && amt > 0) {

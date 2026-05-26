@@ -7,9 +7,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.creapolis.solennix.core.designsystem.R
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 
 /**
@@ -36,7 +38,7 @@ fun UpgradePlanDialog(
         },
         title = {
             Text(
-                text = "Límite alcanzado",
+                text = stringResource(R.string.upgrade_limit_reached_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = SolennixTheme.colors.primaryText,
@@ -60,13 +62,13 @@ fun UpgradePlanDialog(
                     containerColor = SolennixTheme.colors.primary
                 )
             ) {
-                Text("Ver planes")
+                Text(stringResource(R.string.upgrade_view_plans))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text(
-                    "Cerrar",
+                    stringResource(R.string.cd_close),
                     color = SolennixTheme.colors.secondaryText
                 )
             }

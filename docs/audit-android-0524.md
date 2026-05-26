@@ -78,7 +78,7 @@ Results:
 | P1 | Run release-like QA | Pending | Needs real release config |
 | P1 | Plan target SDK upgrade | Pending | `targetSdk = 35`, `compileSdk = 37` |
 | P2 | Split large ViewModels/screens | Pending | Needs tests first |
-| P2 | Move hardcoded UI strings to resources | In progress | `EventFormLinksScreen.kt`, `TermsScreen.kt`, `PaymentInboxScreen.kt`, `BillingManager.kt`, `EventDayNotificationManager.kt`, `ApiService.kt`, `CompactBottomNavLayout.kt`, `SearchScreen.kt`, `EventPdfFiles.kt`, `EventDetailDocumentActions.kt`, `EventPhotosScreen.kt`, `PhotoGallerySheet.kt`, `EventChecklistScreen.kt`, `EventDetailFinancialCards.kt`, `EventDetailCatalogSubScreens.kt`, `EventDetailContractPreviewScreen.kt`, and `EventDetailShoppingContractStaffScreens.kt` cleaned up; more screens remain |
+| P2 | Move hardcoded UI strings to resources | In progress | `EventFormLinksScreen.kt`, `TermsScreen.kt`, `PaymentInboxScreen.kt`, `BillingManager.kt`, `EventDayNotificationManager.kt`, `ApiService.kt`, `CompactBottomNavLayout.kt`, `SearchScreen.kt`, `EventPdfFiles.kt`, `EventDetailDocumentActions.kt`, `EventPhotosScreen.kt`, `PhotoGallerySheet.kt`, `EventChecklistScreen.kt`, `EventDetailFinancialCards.kt`, `EventDetailCatalogSubScreens.kt`, `EventDetailContractPreviewScreen.kt`, `EventDetailShoppingContractStaffScreens.kt`, `EventDetailActionComponents.kt`, `EventDetailHubSummaryCards.kt`, `EventDetailScreen.kt`, `EventDetailInventorySubScreens.kt`, `EventDetailFinancialSubScreens.kt`, `PaymentModal.kt`, `UpgradeBanner.kt`, `SwipeRevealActions.kt`, `SolennixTopAppBar.kt`, `StatusBadge.kt`, and `UpgradePlanDialog.kt` cleaned up; more screens remain |
 | P2 | Clean unused resources | Pending | Lint warnings remain |
 | P2 | Dependency/tooling cleanup | In progress | GitHub dependency sync done; AGP/Kotlin warnings remain |
 
@@ -565,6 +565,46 @@ Files:
 Fix:
 
 - Moved remaining shopping-list quantity/unit and quantity multiplier labels to Android resources.
+- Added Spanish default resources and English translations.
+
+Status: done.
+
+### P2 — Event detail action and summary hardcoded UI strings cleanup
+
+Files:
+
+- `android/feature/events/src/main/java/com/creapolis/solennix/feature/events/ui/EventDetailActionComponents.kt`
+- `android/feature/events/src/main/java/com/creapolis/solennix/feature/events/ui/EventDetailHubSummaryCards.kt`
+- `android/feature/events/src/main/java/com/creapolis/solennix/feature/events/ui/EventDetailScreen.kt`
+- `android/feature/events/src/main/java/com/creapolis/solennix/feature/events/ui/EventDetailInventorySubScreens.kt`
+- `android/feature/events/src/main/java/com/creapolis/solennix/feature/events/ui/EventDetailFinancialSubScreens.kt`
+- `android/feature/events/src/main/res/values/strings.xml`
+- `android/feature/events/src/main/res/values-en/strings.xml`
+
+Fix:
+
+- Moved event detail action labels, status menu labels, change-status accessibility text, summary card titles, KPI labels, settle/deposit CTAs, document heading, supply quantity-price format, finance percentage values, discount/tax/deposit formats, and detail navigation accessibility text to Android resources.
+- Added Spanish default resources and English translations.
+
+Status: done.
+
+### P2 — Design system shared component hardcoded UI strings cleanup
+
+Files:
+
+- `android/core/designsystem/src/main/java/com/creapolis/solennix/core/designsystem/component/PaymentModal.kt`
+- `android/core/designsystem/src/main/java/com/creapolis/solennix/core/designsystem/component/UpgradeBanner.kt`
+- `android/core/designsystem/src/main/java/com/creapolis/solennix/core/designsystem/component/SwipeRevealActions.kt`
+- `android/core/designsystem/src/main/java/com/creapolis/solennix/core/designsystem/component/SolennixTopAppBar.kt`
+- `android/core/designsystem/src/main/java/com/creapolis/solennix/core/designsystem/component/StatusBadge.kt`
+- `android/core/designsystem/src/main/java/com/creapolis/solennix/core/designsystem/component/UpgradePlanDialog.kt`
+- `android/core/designsystem/src/main/res/values/strings.xml`
+- `android/core/designsystem/src/main/res/values-en/strings.xml`
+
+Fix:
+
+- Moved shared payment modal labels, payment method chips, date picker actions, swipe action accessibility text, top bar search accessibility text, status labels, upgrade dialog copy, upgrade CTA labels, and close accessibility text to Android resources.
+- Kept caller-provided payment modal title/confirm labels supported while localizing default labels.
 - Added Spanish default resources and English translations.
 
 Status: done.

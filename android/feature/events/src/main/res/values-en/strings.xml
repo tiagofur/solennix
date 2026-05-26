@@ -107,6 +107,7 @@
     <string name="events_detail_finances_discount">Discount</string>
     <string name="events_detail_finances_costs">Costs</string>
     <string name="events_detail_finances_net_profit">Net profit</string>
+    <string name="events_detail_percent_value">%1$d%%</string>
     <string name="events_detail_finances_margin">Margin</string>
     <string name="events_detail_finances_paid">Paid</string>
     <string name="events_detail_finances_pending">Pending</string>
@@ -119,6 +120,14 @@
     <string name="events_detail_payments_record">Record payment</string>
     <string name="events_detail_payments_settle">Settle %1$s</string>
     <string name="events_detail_payments_deposit">Deposit %1$s</string>
+    <string name="events_detail_checklist_load">Load Checklist</string>
+    <string name="events_detail_view_contract">View Contract</string>
+    <string name="events_detail_view_detail_a11y">View detail</string>
+    <string name="events_detail_summary_total">TOTAL</string>
+    <string name="events_detail_summary_profit">PROFIT</string>
+    <string name="events_detail_summary_discount_percent">Discount %1$d%%</string>
+    <string name="events_detail_summary_tax_percent">Tax %1$d%%</string>
+    <string name="events_detail_summary_deposit_amount">Deposit %1$d%%: %2$s</string>
     <string name="events_detail_payments_history">Payment history</string>
     <string name="events_detail_payments_empty">No payments recorded</string>
     <string name="events_detail_payments_delete_title">Delete payment?</string>
@@ -351,6 +360,7 @@
     <string name="events_pdf_open_chooser">Open PDF with...</string>
     <string name="events_pdf_no_app">No app available to open PDFs</string>
     <string name="events_pdf_download_error">Error downloading PDF: %1$s</string>
+    <string name="events_detail_generate_documents">Generate Documents</string>
     <string name="events_document_budget">Quote</string>
     <string name="events_document_contract">Contract</string>
     <string name="events_document_checklist">Checklist</string>

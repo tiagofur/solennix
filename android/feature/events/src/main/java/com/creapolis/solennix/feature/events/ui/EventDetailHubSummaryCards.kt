@@ -30,11 +30,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.DiscountType
 import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.feature.events.R
 
 @Composable
 fun FinanceSummaryCard(
@@ -63,14 +65,14 @@ fun FinanceSummaryCard(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "Finanzas",
+                    stringResource(R.string.events_detail_finances_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Icon(
                     Icons.Default.ChevronRight,
-                    contentDescription = "Ver detalle",
+                    contentDescription = stringResource(R.string.events_detail_view_detail_a11y),
                     tint = SolennixTheme.colors.secondaryText,
                     modifier = Modifier.size(20.dp)
                 )
@@ -83,7 +85,7 @@ fun FinanceSummaryCard(
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "TOTAL",
+                        stringResource(R.string.events_detail_summary_total),
                         style = MaterialTheme.typography.labelSmall,
                         color = SolennixTheme.colors.secondaryText
                     )
@@ -96,7 +98,7 @@ fun FinanceSummaryCard(
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        "UTILIDAD",
+                        stringResource(R.string.events_detail_summary_profit),
                         style = MaterialTheme.typography.labelSmall,
                         color = SolennixTheme.colors.secondaryText
                     )
@@ -112,14 +114,14 @@ fun FinanceSummaryCard(
             if (event.discount > 0) {
                 Spacer(modifier = Modifier.height(4.dp))
                 val discountLabel = if (event.discountType == DiscountType.PERCENT) {
-                    "Descuento ${event.discount.toInt()}%"
-                } else "Descuento"
+                    stringResource(R.string.events_detail_summary_discount_percent, event.discount.toInt())
+                } else stringResource(R.string.events_detail_finances_discount)
                 Text(discountLabel, style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.error)
             }
 
             if (event.requiresInvoice) {
                 Text(
-                    "IVA ${event.taxRate.toInt()}%",
+                    stringResource(R.string.events_detail_summary_tax_percent, event.taxRate.toInt()),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText
                 )
@@ -155,7 +157,7 @@ fun PaymentSummaryCard(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "Pagos",
+                    stringResource(R.string.events_detail_payments_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -177,7 +179,7 @@ fun PaymentSummaryCard(
                 }
                 Icon(
                     Icons.Default.ChevronRight,
-                    contentDescription = "Ver detalle",
+                    contentDescription = stringResource(R.string.events_detail_view_detail_a11y),
                     tint = SolennixTheme.colors.secondaryText,
                     modifier = Modifier.size(20.dp)
                 )
@@ -189,13 +191,13 @@ fun PaymentSummaryCard(
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 MiniKpi(
-                    label = "Pagado",
+                    label = stringResource(R.string.events_detail_finances_paid),
                     value = totalPaid.asMXN(),
                     color = SolennixTheme.colors.success,
                     modifier = Modifier.weight(1f)
                 )
                 MiniKpi(
-                    label = "Saldo",
+                    label = stringResource(R.string.events_detail_payments_kpi_balance),
                     value = remaining.asMXN(),
                     color = if (remaining <= 0.01) SolennixTheme.colors.success else SolennixTheme.colors.error,
                     modifier = Modifier.weight(1f)
@@ -232,7 +234,7 @@ fun PaymentSummaryCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        "Anticipo ${depositPct.toInt()}%: ${depositAmount.asMXN()}",
+                        stringResource(R.string.events_detail_summary_deposit_amount, depositPct.toInt(), depositAmount.asMXN()),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (isDepositMet) SolennixTheme.colors.success else SolennixTheme.colors.warning
                     )

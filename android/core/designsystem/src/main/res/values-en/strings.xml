@@ -21,4 +21,28 @@
     <string name="quick_actions_new_event">New Event</string>
     <string name="quick_actions_open">Quick actions</string>
     <string name="quick_actions_close">Close menu</string>
+
+    <string name="common_accept">Accept</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="payment_modal_title">Register Payment</string>
+    <string name="payment_modal_confirm">Save Payment</string>
+    <string name="payment_modal_amount">Amount</string>
+    <string name="payment_modal_date">Payment Date</string>
+    <string name="payment_modal_select_date_a11y">Select date</string>
+    <string name="payment_modal_method">Payment Method</string>
+    <string name="payment_method_cash">Cash</string>
+    <string name="payment_method_transfer">Transfer</string>
+    <string name="payment_method_card">Card</string>
+    <string name="payment_method_check">Check</string>
+    <string name="payment_method_other">Other</string>
+    <string name="payment_modal_notes_optional">Notes (Optional)</string>
+    <string name="upgrade_view_plans">View plans</string>
+    <string name="upgrade_expand_limit">Expand limit</string>
+
+    <string name="status_badge_a11y">Status: %1$s</string>
+    <string name="status_quoted">Quoted</string>
+    <string name="status_confirmed">Confirmed</string>
+    <string name="status_completed">Completed</string>
+    <string name="status_cancelled">Cancelled</string>
+    <string name="upgrade_limit_reached_title">Limit reached</string>
 </resources>

@@ -28,8 +28,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.creapolis.solennix.core.designsystem.R
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -90,7 +92,7 @@ fun SwipeRevealActions(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Edit,
-                        contentDescription = "Editar",
+                        contentDescription = stringResource(R.string.cd_edit),
                         tint = SolennixTheme.colors.secondaryText,
                         modifier = Modifier.size(22.dp)
                     )
@@ -108,7 +110,7 @@ fun SwipeRevealActions(
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Delete,
-                    contentDescription = "Eliminar",
+                    contentDescription = stringResource(R.string.cd_delete),
                     tint = SolennixTheme.colors.error,
                     modifier = Modifier.size(22.dp)
                 )

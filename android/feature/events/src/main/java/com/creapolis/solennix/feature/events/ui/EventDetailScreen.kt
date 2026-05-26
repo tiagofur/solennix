@@ -250,7 +250,7 @@ fun EventDetailScreen(
                                         )
 
                                         PremiumButton(
-                                            text = "Liquidar ${remaining.asMXN()}",
+                                            text = stringResource(R.string.events_detail_payments_settle, remaining.asMXN()),
                                             onClick = {
                                                 paymentInitialAmount = remaining
                                                 showPaymentModal = true
@@ -279,7 +279,7 @@ fun EventDetailScreen(
                                                     modifier = Modifier.size(18.dp)
                                                 )
                                                 Spacer(modifier = Modifier.width(4.dp))
-                                                Text("Anticipo ${depositRemaining.asMXN()}")
+                                                Text(stringResource(R.string.events_detail_payments_deposit, depositRemaining.asMXN()))
                                             }
                                         }
                                     }
@@ -292,7 +292,7 @@ fun EventDetailScreen(
                             ClientPortalCard(onClick = { showClientPortalSheet = true })
 
                             // Documents/PDFs
-                            Text("Generar Documentos", style = MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.events_detail_generate_documents), style = MaterialTheme.typography.titleMedium)
                             DocumentActionsGrid(
                                 uiState = uiState,
                                 context = context,
