@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-05-24
+updated: 2026-05-28
 status: active
 ---
 
@@ -24,6 +24,11 @@ status: active
 
 **Fecha:** Mayo 2026
 **Version:** 1.7
+
+> [!success] 2026-05-28 — Android: Bump de Google Play Billing a 9.0.0
+> Se actualizó la dependencia de Google Play Billing Library a su versión más reciente.
+> - **Gradle Catalog:** `com.android.billingclient:billing-ktx` se actualizó de `8.3.0` a `9.0.0`.
+> - **Validación:** Compilación completa del proyecto Android ejecutada exitosamente (`./gradlew assembleDebug`).
 
 > [!success] 2026-05-23 — Receipts de payment submissions protegidos (issue #408)
 > Se endureció el flujo de comprobantes de transferencias para evitar exposición pública de archivos financieros.
