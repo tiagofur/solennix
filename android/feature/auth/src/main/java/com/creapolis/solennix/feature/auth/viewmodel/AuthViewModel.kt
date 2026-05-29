@@ -357,6 +357,7 @@ private fun ApiError.userMessage(appContext: Context, context: ErrorContext): St
         else -> appContext.getString(R.string.auth_error_conflict)
     }
     is ApiError.Forbidden -> appContext.getString(R.string.auth_error_forbidden)
+    is ApiError.PlanLimitExceeded -> appContext.getString(R.string.auth_error_forbidden)
     is ApiError.NotFound -> appContext.getString(R.string.auth_error_not_found)
     is ApiError.ValidationError -> appContext.getString(R.string.auth_error_validation)
     is ApiError.NetworkError -> appContext.getString(R.string.auth_error_network)
