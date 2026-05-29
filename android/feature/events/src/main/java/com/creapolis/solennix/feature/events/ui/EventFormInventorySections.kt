@@ -110,7 +110,15 @@ fun EquipmentSection(viewModel: EventFormViewModel) {
                             FilterChip(
                                 selected = alreadyAdded,
                                 onClick = { if (!alreadyAdded) viewModel.addEquipmentFromSuggestion(suggestion) },
-                                label = { Text("${suggestion.ingredientName} (${suggestion.suggestedQuantity.toInt()})") },
+                                label = {
+                                    Text(
+                                        stringResource(
+                                            R.string.events_form_inventory_suggestion_label,
+                                            suggestion.ingredientName,
+                                            suggestion.suggestedQuantity.toInt().toString()
+                                        )
+                                    )
+                                },
                                 leadingIcon = if (alreadyAdded) { { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) } } else null
                             )
                         }

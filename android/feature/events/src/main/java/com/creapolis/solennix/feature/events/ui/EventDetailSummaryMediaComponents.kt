@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -30,6 +31,7 @@ import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.EventPhoto
 import com.creapolis.solennix.core.network.UrlResolver
+import com.creapolis.solennix.feature.events.R
 
 @Composable
 fun ContentCardsGrid(
@@ -52,7 +54,7 @@ fun ContentCardsGrid(
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             SummaryNavCard(
                 icon = Icons.Default.ShoppingBag,
-                title = "Productos",
+                title = stringResource(R.string.events_summary_products_title),
                 count = productsCount,
                 color = SolennixTheme.colors.primary,
                 onClick = onProductsClick,
@@ -60,7 +62,7 @@ fun ContentCardsGrid(
             )
             SummaryNavCard(
                 icon = Icons.Default.AddCircleOutline,
-                title = "Extras",
+                title = stringResource(R.string.events_summary_extras_title),
                 count = extrasCount,
                 color = SolennixTheme.colors.info,
                 onClick = onExtrasClick,
@@ -70,7 +72,7 @@ fun ContentCardsGrid(
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             SummaryNavCard(
                 icon = Icons.Default.LocalGroceryStore,
-                title = "Insumos",
+                title = stringResource(R.string.events_summary_supplies_title),
                 count = suppliesCount,
                 color = SolennixTheme.colors.warning,
                 onClick = onSuppliesClick,
@@ -78,7 +80,7 @@ fun ContentCardsGrid(
             )
             SummaryNavCard(
                 icon = Icons.Default.Inventory2,
-                title = "Equipo",
+                title = stringResource(R.string.events_summary_equipment_title),
                 count = equipmentCount,
                 color = SolennixTheme.colors.success,
                 onClick = onEquipmentClick,
@@ -88,15 +90,17 @@ fun ContentCardsGrid(
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             SummaryNavCard(
                 icon = Icons.Default.ShoppingCart,
-                title = "Compras",
-                subtitle = if (purchaseSuppliesCount > 0) "$purchaseSuppliesCount por comprar" else null,
+                title = stringResource(R.string.events_summary_shopping_title),
+                subtitle = if (purchaseSuppliesCount > 0) {
+                    pluralStringResource(R.plurals.events_summary_to_buy_count, purchaseSuppliesCount, purchaseSuppliesCount)
+                } else null,
                 color = SolennixTheme.colors.error,
                 onClick = onShoppingListClick,
                 modifier = Modifier.weight(1f)
             )
             SummaryNavCard(
                 icon = Icons.Default.PhotoLibrary,
-                title = "Fotos",
+                title = stringResource(R.string.events_summary_photos_title),
                 count = photosCount,
                 color = SolennixTheme.colors.primary,
                 onClick = onPhotosClick,
@@ -106,7 +110,7 @@ fun ContentCardsGrid(
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             SummaryNavCard(
                 icon = Icons.Default.Group,
-                title = "Personal",
+                title = stringResource(R.string.events_summary_staff_title),
                 count = staffCount,
                 color = SolennixTheme.colors.info,
                 onClick = onStaffClick,
@@ -137,7 +141,7 @@ fun PhotosPreviewCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Fotos",
+                    stringResource(R.string.events_summary_photos_title),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = SolennixTheme.colors.primaryText

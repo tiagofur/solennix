@@ -78,7 +78,7 @@ Results:
 | P1 | Run release-like QA | Pending | Needs real release config |
 | P1 | Plan target SDK upgrade | Pending | `targetSdk = 35`, `compileSdk = 37` |
 | P2 | Split large ViewModels/screens | Pending | Needs tests first |
-| P2 | Move hardcoded UI strings to resources | In progress | `EventFormLinksScreen.kt`, `TermsScreen.kt`, `PaymentInboxScreen.kt`, `BillingManager.kt`, `EventDayNotificationManager.kt`, `ApiService.kt`, `CompactBottomNavLayout.kt`, `SearchScreen.kt`, `EventPdfFiles.kt`, `EventDetailDocumentActions.kt`, `EventPhotosScreen.kt`, `PhotoGallerySheet.kt`, `EventChecklistScreen.kt`, `EventDetailFinancialCards.kt`, `EventDetailCatalogSubScreens.kt`, `EventDetailContractPreviewScreen.kt`, `EventDetailShoppingContractStaffScreens.kt`, `EventDetailActionComponents.kt`, `EventDetailHubSummaryCards.kt`, `EventDetailScreen.kt`, `EventDetailInventorySubScreens.kt`, `EventDetailFinancialSubScreens.kt`, `PaymentModal.kt`, `UpgradeBanner.kt`, `SwipeRevealActions.kt`, `SolennixTopAppBar.kt`, `StatusBadge.kt`, and `UpgradePlanDialog.kt` cleaned up; more screens remain |
+| P2 | Move hardcoded UI strings to resources | In progress | `EventFormLinksScreen.kt`, `TermsScreen.kt`, `PaymentInboxScreen.kt`, `BillingManager.kt`, `EventDayNotificationManager.kt`, `ApiService.kt`, `CompactBottomNavLayout.kt`, `SearchScreen.kt`, `EventPdfFiles.kt`, `EventDetailDocumentActions.kt`, `EventPhotosScreen.kt`, `PhotoGallerySheet.kt`, `EventChecklistScreen.kt`, `EventDetailFinancialCards.kt`, `EventDetailCatalogSubScreens.kt`, `EventDetailContractPreviewScreen.kt`, `EventDetailShoppingContractStaffScreens.kt`, `EventDetailActionComponents.kt`, `EventDetailHubSummaryCards.kt`, `EventDetailScreen.kt`, `EventDetailInventorySubScreens.kt`, `EventDetailFinancialSubScreens.kt`, `PaymentModal.kt`, `UpgradeBanner.kt`, `SwipeRevealActions.kt`, `SolennixTopAppBar.kt`, `StatusBadge.kt`, `UpgradePlanDialog.kt`, `UiEventSnackbarHandler.kt`, `EventFormInventorySections.kt`, `EventFormSuppliesSection.kt`, `EventDetailSummaryMediaComponents.kt`, `EventDetailOverviewComponents.kt`, `EventDetailStaffScreen.kt`, `EventListFiltersSection.kt`, `StaffFormScreen.kt`, `StaffTeamDetailScreen.kt`, `StaffTeamFormScreen.kt`, `StaffTeamListScreen.kt`, `StaffDetailScreen.kt`, and `TeamMemberPortalScreen.kt` cleaned up, and `StaffListScreen.kt` cleaned up; more screens remain |
 | P2 | Clean unused resources | Pending | Lint warnings remain |
 | P2 | Dependency/tooling cleanup | In progress | GitHub dependency sync done; AGP/Kotlin warnings remain |
 
@@ -588,6 +588,37 @@ Fix:
 
 Status: done.
 
+### P2 — Event form suggestion chip hardcoded UI strings cleanup
+
+Files:
+
+- `android/feature/events/src/main/java/com/creapolis/solennix/feature/events/ui/EventFormInventorySections.kt`
+- `android/feature/events/src/main/java/com/creapolis/solennix/feature/events/ui/EventFormSuppliesSection.kt`
+- `android/feature/events/src/main/res/values/strings.xml`
+- `android/feature/events/src/main/res/values-en/strings.xml`
+
+Fix:
+
+- Moved inventory/equipment and supplies suggestion chip labels to Android resources.
+- Added Spanish default resources and English translations.
+
+Status: done.
+
+### P2 — Event detail summary media hardcoded UI strings cleanup
+
+Files:
+
+- `android/feature/events/src/main/java/com/creapolis/solennix/feature/events/ui/EventDetailSummaryMediaComponents.kt`
+- `android/feature/events/src/main/res/values/strings.xml`
+- `android/feature/events/src/main/res/values-en/strings.xml`
+
+Fix:
+
+- Moved event summary navigation card titles, photo preview title, and shopping-list count subtitle to Android resources.
+- Added Spanish default resources and English translations.
+
+Status: done.
+
 ### P2 — Design system shared component hardcoded UI strings cleanup
 
 Files:
@@ -608,6 +639,258 @@ Fix:
 - Added Spanish default resources and English translations.
 
 Status: done.
+
+### P2 — Staff form and team detail hardcoded UI strings cleanup
+
+Files:
+
+- `android/feature/staff/src/main/java/com/creapolis/solennix/feature/staff/ui/StaffFormScreen.kt`
+- `android/feature/staff/src/main/java/com/creapolis/solennix/feature/staff/ui/StaffTeamDetailScreen.kt`
+- `android/feature/staff/src/main/res/values/strings.xml`
+- `android/feature/staff/src/main/res/values-en/strings.xml`
+
+Fix:
+
+- Added Android resources for the staff module.
+- Moved staff collaborator form labels, actions, notification copy, team detail labels, delete dialog copy, member fallback, and accessibility labels to resources.
+- Added Spanish default resources and English translations.
+
+Status: done.
+
+### P2 — Staff team form hardcoded UI strings cleanup
+
+Files:
+
+- `android/feature/staff/src/main/java/com/creapolis/solennix/feature/staff/ui/StaffTeamFormScreen.kt`
+- `android/feature/staff/src/main/res/values/strings.xml`
+- `android/feature/staff/src/main/res/values-en/strings.xml`
+
+Fix:
+
+- Moved team form labels, empty states, member picker copy, button labels, and accessibility labels to Android resources.
+- Added Spanish default resources and English translations.
+
+Status: done.
+
+### P2 — Staff team list hardcoded UI strings cleanup
+
+Files:
+
+- `android/feature/staff/src/main/java/com/creapolis/solennix/feature/staff/ui/StaffTeamListScreen.kt`
+- `android/feature/staff/src/main/res/values/strings.xml`
+- `android/feature/staff/src/main/res/values-en/strings.xml`
+
+Fix:
+
+- Moved team list title, empty state, FAB accessibility label, delete dialog copy, and member count text to Android resources.
+- Added Spanish default resources and English translations.
+
+Status: done.
+
+### P2 — Staff detail hardcoded UI strings cleanup
+
+Files:
+
+- `android/feature/staff/src/main/java/com/creapolis/solennix/feature/staff/ui/StaffDetailScreen.kt`
+- `android/feature/staff/src/main/res/values/strings.xml`
+- `android/feature/staff/src/main/res/values-en/strings.xml`
+
+Fix:
+
+- Moved collaborator detail title, contact labels, fallback values, notification copy, invite access copy, delete/revoke dialogs, and accessibility labels to Android resources.
+- Added Spanish default resources and English translations.
+
+Status: done.
+
+### P2 — Team member portal main section hardcoded UI strings cleanup
+
+Files:
+
+- `android/feature/staff/src/main/java/com/creapolis/solennix/feature/staff/ui/TeamMemberPortalScreen.kt`
+- `android/feature/staff/src/main/res/values/strings.xml`
+- `android/feature/staff/src/main/res/values-en/strings.xml`
+
+Fix:
+
+- Moved top bar labels, empty assignment state, tabs, pending/recent changes headers, availability form labels, agenda headers, calendar mode labels, and empty-state messages to Android resources.
+- Added Spanish default resources and English translations.
+
+Status: done.
+
+Note:
+
+- Validation currently reports an existing Material3 warning in `TeamMemberPortalScreen.kt`: `TabRow` is deprecated and should eventually migrate to `PrimaryTabRow` or `SecondaryTabRow`.
+- This was intentionally left untouched while the current pass focuses on translations/hardcoded copy cleanup.
+
+### P2 — Team member portal timeline/calendar/card hardcoded UI strings cleanup
+
+Files:
+
+- `android/feature/staff/src/main/java/com/creapolis/solennix/feature/staff/ui/TeamMemberPortalScreen.kt`
+- `android/feature/staff/src/main/res/values/strings.xml`
+- `android/feature/staff/src/main/res/values-en/strings.xml`
+
+Fix:
+
+- Moved unavailable-date actions, timeline change labels, calendar navigation labels, empty week/day labels, assignment card field labels, accept/decline buttons, and assignment status labels to Android resources.
+- Added Spanish default resources and English translations.
+
+Status: done.
+
+Validation note:
+
+- First compile attempt caught a Kotlin smart-cast issue after moving `roleOverride` into `stringResource`; fixed with `assignment.roleOverride.orEmpty()`.
+
+### P2 — Staff list hardcoded UI strings cleanup
+
+Files:
+
+- `android/feature/staff/src/main/java/com/creapolis/solennix/feature/staff/ui/StaffListScreen.kt`
+- `android/feature/staff/src/main/res/values/strings.xml`
+- `android/feature/staff/src/main/res/values-en/strings.xml`
+
+Fix:
+
+- Moved staff list title, add-collaborator accessibility label, search placeholder, teams card copy, and empty state copy to Android resources.
+- Added Spanish default resources and English translations.
+
+Status: done.
+
+### P2 — Design system snackbar action hardcoded UI strings cleanup
+
+Files:
+
+- `android/core/designsystem/src/main/java/com/creapolis/solennix/core/designsystem/event/UiEventSnackbarHandler.kt`
+- `android/core/designsystem/src/main/res/values/strings.xml`
+- `android/core/designsystem/src/main/res/values-en/strings.xml`
+
+Fix:
+
+- Moved snackbar retry and undo action labels to Android resources.
+- Added Spanish default resources and English translations.
+
+Status: done.
+
+### P2 — Team member portal detail dialog hardcoded UI strings cleanup
+
+Files:
+
+- `android/feature/staff/src/main/java/com/creapolis/solennix/feature/staff/ui/TeamMemberPortalScreen.kt`
+- `android/feature/staff/src/main/res/values/strings.xml`
+- `android/feature/staff/src/main/res/values-en/strings.xml`
+
+Fix:
+
+- Moved assignment detail dialog field labels, map CTA, execution checklist labels, personal quick notes label, and close action to Android resources.
+- Added Spanish default resources and English translations.
+
+Status: done.
+
+### P2 — Event equipment quantity multiplier hardcoded UI strings cleanup
+
+Files:
+
+- `android/feature/events/src/main/java/com/creapolis/solennix/feature/events/ui/EventDetailInventorySubScreens.kt`
+- `android/feature/events/src/main/res/values/strings.xml`
+- `android/feature/events/src/main/res/values-en/strings.xml`
+
+Fix:
+
+- Reused the existing `events_detail_quantity_multiplier` resource for equipment quantity badges.
+- Removed the remaining inline `xN` visible format from the equipment list.
+
+Status: done.
+
+### P2 — Event overview info hardcoded UI strings cleanup
+
+Files:
+
+- `android/feature/events/src/main/java/com/creapolis/solennix/feature/events/ui/EventDetailOverviewComponents.kt`
+- `android/feature/events/src/main/res/values/strings.xml`
+- `android/feature/events/src/main/res/values-en/strings.xml`
+
+Fix:
+
+- Moved event overview labels for date, schedule, people, location, notes, and the PAX count format to Android resources.
+- Added Spanish default resources and English translations.
+
+Status: done.
+
+### P2 — Event staff shift hardcoded UI strings cleanup
+
+Files:
+
+- `android/feature/events/src/main/java/com/creapolis/solennix/feature/events/ui/EventDetailStaffScreen.kt`
+- `android/feature/events/src/main/res/values/strings.xml`
+- `android/feature/events/src/main/res/values-en/strings.xml`
+
+Fix:
+
+- Moved assigned-staff shift range, start-only, and end-only labels to Android resources.
+- Added Spanish default resources and English translations.
+
+Status: done.
+
+### P2 — Event list date range chip hardcoded UI strings cleanup
+
+Files:
+
+- `android/feature/events/src/main/java/com/creapolis/solennix/feature/events/ui/EventListFiltersSection.kt`
+- `android/feature/events/src/main/res/values/strings.xml`
+- `android/feature/events/src/main/res/values-en/strings.xml`
+
+Fix:
+
+- Moved the date range filter chip format and open-ended range marker to Android resources.
+- Added Spanish default resources and English translations.
+
+Status: done.
+
+## Continuation handoff — 2026-05-28
+
+Current branch:
+
+- `main`
+
+Current repository state:
+
+- Android localization changes are still uncommitted.
+- New staff resources are untracked under `android/feature/staff/src/main/res/`.
+- Do not lose this working tree before committing or continuing.
+
+Latest validated command:
+
+- `cd android && ./gradlew :feature:events:compileDebugKotlin :app:lintDebug`
+
+Latest validation result:
+
+- Passed.
+- `git diff --check` also passed.
+
+Work completed in this translation pass:
+
+- Event form inventory/equipment and supplies suggestion chips moved to resources.
+- Event detail summary media card titles, photo preview title, and shopping-list subtitle moved to resources.
+- Staff module Android resources created with Spanish defaults and English translations.
+- Staff form, staff detail, team form, team detail, team list, staff list, and team member portal visible copy moved to resources.
+- Design system snackbar retry/undo actions moved to resources.
+- Event equipment quantity multiplier moved to existing resource.
+- Event overview labels and PAX format moved to resources.
+- Event assigned-staff shift labels moved to resources.
+- Event list date range chip format and open-ended marker moved to resources.
+
+Known notes:
+
+- Existing `TeamMemberPortalScreen.kt` Material3 `TabRow` deprecation warning remains intentionally untouched until translation cleanup is finished.
+- Contract template rendering still contains many Spanish legal/template strings. Treat it as a separate, higher-risk pass because those strings may be business/legal content rather than simple UI labels.
+- Technical constants such as MIME types, URLs, shared-preference keys, route/status keys, file-provider authorities, regexes, and date/time patterns should generally stay hardcoded.
+
+Recommended next safe step:
+
+- Continue scanning for small visible UI text formats in Android.
+- Prefer one file or one tightly related slice at a time.
+- Validate each slice with `:feature:events:compileDebugKotlin :app:lintDebug` when event resources or UI code changes.
+- Consider checkpointing with a conventional commit soon because the current Android localization diff is broad.
 
 ## Recommended next order
 

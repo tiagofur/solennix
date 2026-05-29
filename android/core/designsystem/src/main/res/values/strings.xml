@@ -46,4 +46,7 @@
     <string name="status_completed">Completado</string>
     <string name="status_cancelled">Cancelado</string>
     <string name="upgrade_limit_reached_title">Límite alcanzado</string>
+    <string name="common_retry">Reintentar</string>
+    <string name="common_undo">Deshacer</string>
+
 </resources>

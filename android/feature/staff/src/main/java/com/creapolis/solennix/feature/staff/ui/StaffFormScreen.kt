@@ -37,6 +37,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
@@ -45,6 +46,7 @@ import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveFormRow
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
+import com.creapolis.solennix.feature.staff.R
 import com.creapolis.solennix.feature.staff.viewmodel.StaffFormViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,12 +69,12 @@ fun StaffFormScreen(
         topBar = {
             SolennixTopAppBar(
                 title = {
-                    Text(if (viewModel.isEditMode) "Editar colaborador" else "Nuevo colaborador")
+                    Text(if (viewModel.isEditMode) stringResource(R.string.staff_form_title_edit) else stringResource(R.string.staff_form_title_create))
                 },
                 onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.staff_cd_back))
                     }
                 }
             )
@@ -99,7 +101,7 @@ fun StaffFormScreen(
                             SolennixTextField(
                                 value = viewModel.name,
                                 onValueChange = { viewModel.name = it },
-                                label = "Nombre *",
+                                label = stringResource(R.string.staff_form_name_label),
                                 leadingIcon = Icons.Default.Person,
                                 errorMessage = viewModel.nameError
                             )
@@ -108,7 +110,7 @@ fun StaffFormScreen(
                             SolennixTextField(
                                 value = viewModel.roleLabel,
                                 onValueChange = { viewModel.roleLabel = it },
-                                label = "Rol (ej. Fotógrafa · DJ · Coordinador)",
+                                label = stringResource(R.string.staff_form_role_label),
                                 leadingIcon = Icons.Default.Badge
                             )
                         }
@@ -119,7 +121,7 @@ fun StaffFormScreen(
                             SolennixTextField(
                                 value = viewModel.phone,
                                 onValueChange = { viewModel.phone = it },
-                                label = "Teléfono",
+                                label = stringResource(R.string.staff_form_phone_label),
                                 leadingIcon = Icons.Default.Phone,
                                 keyboardType = KeyboardType.Phone
                             )
@@ -128,7 +130,7 @@ fun StaffFormScreen(
                             SolennixTextField(
                                 value = viewModel.email,
                                 onValueChange = { viewModel.email = it },
-                                label = "Email",
+                                label = stringResource(R.string.staff_form_email_label),
                                 leadingIcon = Icons.Default.Email,
                                 keyboardType = KeyboardType.Email,
                                 errorMessage = viewModel.emailError
@@ -139,7 +141,7 @@ fun StaffFormScreen(
                     SolennixTextField(
                         value = viewModel.notes,
                         onValueChange = { viewModel.notes = it },
-                        label = "Notas (tarifa habitual, especialidad, disponibilidad...)",
+                        label = stringResource(R.string.staff_form_notes_label),
                         leadingIcon = Icons.AutoMirrored.Filled.Notes
                     )
                     Spacer(modifier = Modifier.height(24.dp))
@@ -160,14 +162,13 @@ fun StaffFormScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    "Avisarle por email al asignarlo a un evento",
+                                    stringResource(R.string.staff_form_notification_title),
                                     style = MaterialTheme.typography.titleSmall,
                                     color = SolennixTheme.colors.primaryText
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    "Feature del plan Pro (próximamente). El toggle se guarda desde ahora " +
-                                        "para que esté listo cuando se active en Phase 2.",
+                                    stringResource(R.string.staff_form_notification_description),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = SolennixTheme.colors.secondaryText
                                 )
@@ -196,7 +197,7 @@ fun StaffFormScreen(
                     }
 
                     PremiumButton(
-                        text = if (viewModel.isEditMode) "Guardar cambios" else "Crear colaborador",
+                        text = if (viewModel.isEditMode) stringResource(R.string.staff_form_save_changes) else stringResource(R.string.staff_form_create),
                         onClick = { viewModel.saveStaff() },
                         isLoading = viewModel.isSaving,
                         enabled = !viewModel.isSaving
