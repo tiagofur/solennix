@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +29,7 @@ import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.network.UrlResolver
+import com.creapolis.solennix.feature.events.R
 
 @Composable
 fun ClientInfoHeader(
@@ -166,14 +168,14 @@ fun EventInfoCard(
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 QuickInfoItem(
                     icon = Icons.Default.CalendarToday,
-                    label = "Fecha",
+                    label = stringResource(R.string.events_overview_date_label),
                     value = event.eventDate,
                     modifier = Modifier.weight(1f)
                 )
                 if (timeText.isNotEmpty()) {
                     QuickInfoItem(
                         icon = Icons.Default.Schedule,
-                        label = "Horario",
+                        label = stringResource(R.string.events_overview_schedule_label),
                         value = timeText,
                         modifier = Modifier.weight(1f)
                     )
@@ -185,14 +187,14 @@ fun EventInfoCard(
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 QuickInfoItem(
                     icon = Icons.Default.People,
-                    label = "Personas",
-                    value = "${event.numPeople} PAX",
+                    label = stringResource(R.string.events_overview_people_label),
+                    value = stringResource(R.string.events_overview_people_value, event.numPeople),
                     modifier = Modifier.weight(1f)
                 )
                 if (locationText.isNotEmpty()) {
                     QuickInfoItem(
                         icon = Icons.Default.LocationOn,
-                        label = "Ubicación",
+                        label = stringResource(R.string.events_overview_location_label),
                         value = locationText,
                         modifier = Modifier.weight(1f)
                     )
@@ -206,7 +208,7 @@ fun EventInfoCard(
                 HorizontalDivider(color = SolennixTheme.colors.secondaryText.copy(alpha = 0.2f))
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = "Notas",
+                    text = stringResource(R.string.events_overview_notes_label),
                     style = MaterialTheme.typography.labelMedium,
                     color = SolennixTheme.colors.secondaryText
                 )

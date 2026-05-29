@@ -48,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -56,6 +57,7 @@ import com.creapolis.solennix.core.designsystem.component.Avatar
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
+import com.creapolis.solennix.feature.staff.R
 import com.creapolis.solennix.feature.staff.viewmodel.StaffDetailViewModel
 
 private fun isPendingInviteStatus(status: String?): Boolean {
@@ -89,22 +91,22 @@ fun StaffDetailScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Detalle del colaborador") },
+                title = { Text(stringResource(R.string.staff_detail_title)) },
                 onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.staff_cd_back))
                     }
                 },
                 actions = {
                     uiState.staff?.let { staff ->
                         IconButton(onClick = { onEditClick(staff.id) }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Editar")
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.staff_cd_edit))
                         }
                         IconButton(onClick = { showDeleteDialog = true }) {
                             Icon(
                                 Icons.Default.Delete,
-                                contentDescription = "Eliminar",
+                                contentDescription = stringResource(R.string.staff_cd_delete),
                                 tint = SolennixTheme.colors.error
                             )
                         }
@@ -194,27 +196,27 @@ fun StaffDetailScreen(
                     ) {
                         Column(modifier = Modifier.padding(20.dp)) {
                             Text(
-                                text = "Información de contacto",
+                                text = stringResource(R.string.staff_detail_contact_info_title),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = SolennixTheme.colors.primaryText
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             InfoRow(
                                 icon = Icons.Default.Phone,
-                                label = "Teléfono",
-                                value = staff.phone.takeUnless { it.isNullOrBlank() } ?: "No proporcionado"
+                                label = stringResource(R.string.staff_form_phone_label),
+                                value = staff.phone.takeUnless { it.isNullOrBlank() } ?: stringResource(R.string.staff_detail_not_provided)
                             )
                             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
                             InfoRow(
                                 icon = Icons.Default.Email,
-                                label = "Email",
-                                value = staff.email.takeUnless { it.isNullOrBlank() } ?: "No proporcionado"
+                                label = stringResource(R.string.staff_form_email_label),
+                                value = staff.email.takeUnless { it.isNullOrBlank() } ?: stringResource(R.string.staff_detail_not_provided)
                             )
                             if (!staff.roleLabel.isNullOrBlank()) {
                                 HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
                                 InfoRow(
                                     icon = Icons.Default.Badge,
-                                    label = "Rol",
+                                    label = stringResource(R.string.staff_detail_role_label),
                                     value = staff.roleLabel!!
                                 )
                             }
@@ -237,7 +239,7 @@ fun StaffDetailScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "Notas",
+                                        text = stringResource(R.string.staff_notes_title),
                                         style = MaterialTheme.typography.titleMedium,
                                         color = SolennixTheme.colors.primaryText
                                     )
@@ -276,16 +278,16 @@ fun StaffDetailScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Notificaciones por email",
+                                    text = stringResource(R.string.staff_detail_email_notifications_title),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.SemiBold,
                                     color = SolennixTheme.colors.primaryText
                                 )
                                 Text(
                                     text = if (staff.notificationEmailOptIn)
-                                        "Activadas — se activarán automáticamente en Phase 2 (Pro+)"
+                                        stringResource(R.string.staff_detail_email_notifications_enabled)
                                     else
-                                        "Desactivadas",
+                                        stringResource(R.string.staff_detail_email_notifications_disabled),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = SolennixTheme.colors.secondaryText
                                 )
@@ -303,7 +305,7 @@ fun StaffDetailScreen(
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
-                                    text = "Link de invitación",
+                                    text = stringResource(R.string.staff_detail_invite_link_title),
                                     style = MaterialTheme.typography.titleSmall,
                                     color = SolennixTheme.colors.primaryText
                                 )
@@ -324,7 +326,7 @@ fun StaffDetailScreen(
                                 ) {
                                     Icon(Icons.Default.ContentCopy, contentDescription = null)
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Copiar link")
+                                    Text(stringResource(R.string.staff_detail_copy_link))
                                 }
                             }
                         }
@@ -337,7 +339,7 @@ fun StaffDetailScreen(
                             ),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(if (uiState.isRevoking) "Revocando..." else "Revocar invitación")
+                            Text(if (uiState.isRevoking) stringResource(R.string.staff_detail_revoking) else stringResource(R.string.staff_detail_revoke_invite))
                         }
                     } else if (isPendingInviteStatus(uiState.staff?.inviteStatus)) {
                         Card(
@@ -347,13 +349,13 @@ fun StaffDetailScreen(
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
-                                    text = "Invitación activa pendiente",
+                                    text = stringResource(R.string.staff_detail_pending_invite_title),
                                     style = MaterialTheme.typography.titleSmall,
                                     color = SolennixTheme.colors.primaryText
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = "La invitación sigue activa. Puedes revocarla para invalidar el enlace.",
+                                    text = stringResource(R.string.staff_detail_pending_invite_description),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = SolennixTheme.colors.secondaryText
                                 )
@@ -368,7 +370,7 @@ fun StaffDetailScreen(
                             ),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(if (uiState.isRevoking) "Revocando..." else "Revocar invitación")
+                            Text(if (uiState.isRevoking) stringResource(R.string.staff_detail_revoking) else stringResource(R.string.staff_detail_revoke_invite))
                         }
                     }
 
@@ -383,13 +385,13 @@ fun StaffDetailScreen(
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
-                                    text = "Acceso activado",
+                                    text = stringResource(R.string.staff_detail_access_enabled_title),
                                     style = MaterialTheme.typography.titleSmall,
                                     color = SolennixTheme.colors.primaryText
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
-                                    text = "Este colaborador ya aceptó la invitación y tiene acceso al portal.",
+                                    text = stringResource(R.string.staff_detail_access_enabled_description),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = SolennixTheme.colors.secondaryText
                                 )
@@ -416,7 +418,7 @@ fun StaffDetailScreen(
                         ) {
                             Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(if (uiState.isInviting) "Invitando..." else "Invitar acceso")
+                            Text(if (uiState.isInviting) stringResource(R.string.staff_detail_inviting) else stringResource(R.string.staff_detail_invite_access))
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                     }
@@ -425,11 +427,10 @@ fun StaffDetailScreen(
                 if (showDeleteDialog) {
                     AlertDialog(
                         onDismissRequest = { showDeleteDialog = false },
-                        title = { Text("Eliminar colaborador") },
+                        title = { Text(stringResource(R.string.staff_detail_delete_title)) },
                         text = {
                             Text(
-                                "¿Eliminar este colaborador? Las asignaciones previas a eventos " +
-                                    "no se borran, pero ya no vas a poder asignarlo a eventos nuevos."
+                                stringResource(R.string.staff_detail_delete_message)
                             )
                         },
                         confirmButton = {
@@ -442,12 +443,12 @@ fun StaffDetailScreen(
                                     contentColor = SolennixTheme.colors.error
                                 )
                             ) {
-                                Text("Eliminar")
+                                Text(stringResource(R.string.staff_delete))
                             }
                         },
                         dismissButton = {
                             TextButton(onClick = { showDeleteDialog = false }) {
-                                Text("Cancelar")
+                                Text(stringResource(R.string.staff_cancel))
                             }
                         }
                     )
@@ -456,9 +457,9 @@ fun StaffDetailScreen(
                 if (showRevokeDialog) {
                     AlertDialog(
                         onDismissRequest = { showRevokeDialog = false },
-                        title = { Text("Revocar invitación") },
+                        title = { Text(stringResource(R.string.staff_detail_revoke_invite_title)) },
                         text = {
-                            Text("La invitación quedará desactivada y el enlace dejará de funcionar.")
+                            Text(stringResource(R.string.staff_detail_revoke_invite_message))
                         },
                         confirmButton = {
                             TextButton(
@@ -470,12 +471,12 @@ fun StaffDetailScreen(
                                     contentColor = SolennixTheme.colors.error
                                 )
                             ) {
-                                Text("Revocar")
+                                Text(stringResource(R.string.staff_detail_revoke))
                             }
                         },
                         dismissButton = {
                             TextButton(onClick = { showRevokeDialog = false }) {
-                                Text("Cancelar")
+                                Text(stringResource(R.string.staff_cancel))
                             }
                         }
                     )

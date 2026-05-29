@@ -40,7 +40,7 @@ import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.*
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.feature.events.R
-import com.creapolis.solennix.feature.events.viewmodel.EventFormViewModel
+import com.creapolis.solennix.feature.events.viewmodel.*
 import com.creapolis.solennix.feature.events.viewmodel.SelectedStaffAssignment
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter

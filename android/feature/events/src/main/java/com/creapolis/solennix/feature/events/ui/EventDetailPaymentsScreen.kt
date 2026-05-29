@@ -58,7 +58,7 @@ import com.creapolis.solennix.core.model.DiscountType
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.core.model.extensions.toPaymentMethodLabel
 import com.creapolis.solennix.feature.events.R
-import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
+import com.creapolis.solennix.feature.events.viewmodel.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

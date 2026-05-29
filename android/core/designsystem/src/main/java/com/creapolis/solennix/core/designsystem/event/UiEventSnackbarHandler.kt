@@ -5,6 +5,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -13,7 +14,7 @@ import kotlinx.coroutines.flow.Flow
  * that owns a `SnackbarHostState`).
  *
  * For [UiEvent.Error] events with a non-null `retryActionId`, the snackbar shows a
- * "Reintentar" action that calls [onRetry] with the id when tapped.
+ * retry action that calls [onRetry] with the id when tapped.
  *
  * ```
  * val snackbarHostState = remember { SnackbarHostState() }
@@ -34,13 +35,16 @@ fun UiEventSnackbarHandler(
     onRetry: (actionId: String) -> Unit = {},
     onUndo: (actionId: String) -> Unit = {},
 ) {
-    LaunchedEffect(events) {
+    val retryActionLabel = stringResource(com.creapolis.solennix.core.designsystem.R.string.common_retry)
+    val undoActionLabel = stringResource(com.creapolis.solennix.core.designsystem.R.string.common_undo)
+
+    LaunchedEffect(events, retryActionLabel, undoActionLabel) {
         events.collect { event ->
             when (event) {
                 is UiEvent.Error -> {
                     val result = snackbarHostState.showSnackbar(
                         message = event.message,
-                        actionLabel = event.retryActionId?.let { "Reintentar" },
+                        actionLabel = event.retryActionId?.let { retryActionLabel },
                         withDismissAction = true,
                         duration = SnackbarDuration.Long,
                     )
@@ -60,7 +64,7 @@ fun UiEventSnackbarHandler(
                 is UiEvent.PendingDelete -> {
                     val result = snackbarHostState.showSnackbar(
                         message = event.message,
-                        actionLabel = "Deshacer",
+                        actionLabel = undoActionLabel,
                         withDismissAction = true,
                         duration = SnackbarDuration.Long,
                     )

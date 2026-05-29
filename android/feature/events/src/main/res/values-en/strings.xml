@@ -15,6 +15,8 @@
     <string name="events_list_cancel">Cancel</string>
     <string name="events_list_select_range">Select range</string>
     <string name="events_list_date_filter_headline">Date filter</string>
+    <string name="events_list_date_range_open_end">…</string>
+    <string name="events_list_date_range_chip">%1$s - %2$s</string>
     <string name="events_list_clear_all">Clear all</string>
     <string name="events_list_empty_results">No results</string>
     <string name="events_list_empty_events">No events</string>
@@ -168,6 +170,9 @@
     <string name="events_detail_staff_status_confirmed">Confirmed</string>
     <string name="events_detail_staff_status_declined">Declined</string>
     <string name="events_detail_staff_status_cancelled">Cancelled</string>
+    <string name="events_detail_staff_shift_range">%1$s – %2$s</string>
+    <string name="events_detail_staff_shift_from">From %1$s</string>
+    <string name="events_detail_staff_shift_until">Until %1$s</string>
     <string name="events_detail_back">Back</string>
     <string name="events_form_title_new">New event</string>
     <string name="events_form_title_edit">Edit event</string>
@@ -265,6 +270,7 @@
     <string name="events_form_extras_include_checklist">Include in checklist</string>
     <string name="events_form_inventory_equipment">Equipment</string>
     <string name="events_form_inventory_conflicts">Availability conflicts</string>
+    <string name="events_form_inventory_suggestion_label">%1$s (%2$s)</string>
     <string name="events_form_inventory_suggestions">Suggestions based on products</string>
     <string name="events_form_inventory_add_equipment">Add equipment</string>
     <string name="events_form_inventory_empty_equipment_title">No equipment (optional)</string>
@@ -456,4 +462,22 @@
     <string name="events_contract_client_fallback">THE CLIENT</string>
     <string name="events_contract_signature">Signature</string>
     <string name="events_contract_client_signature">CLIENT SIGNATURE</string>
+    <string name="events_overview_date_label">Date</string>
+    <string name="events_overview_schedule_label">Schedule</string>
+    <string name="events_overview_people_label">People</string>
+    <string name="events_overview_people_value">%1$d PAX</string>
+    <string name="events_overview_location_label">Location</string>
+    <string name="events_overview_notes_label">Notes</string>
+    <string name="events_summary_products_title">Products</string>
+    <string name="events_summary_extras_title">Extras</string>
+    <string name="events_summary_supplies_title">Supplies</string>
+    <string name="events_summary_equipment_title">Equipment</string>
+    <string name="events_summary_shopping_title">Shopping</string>
+    <plurals name="events_summary_to_buy_count">
+        <item quantity="one">%1$d to buy</item>
+        <item quantity="other">%1$d to buy</item>
+    </plurals>
+    <string name="events_summary_photos_title">Photos</string>
+    <string name="events_summary_staff_title">Staff</string>
+
 </resources>

@@ -43,7 +43,7 @@ import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.EventEquipment
 import com.creapolis.solennix.feature.events.R
-import com.creapolis.solennix.feature.events.viewmodel.EventFormViewModel
+import com.creapolis.solennix.feature.events.viewmodel.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,7 +110,15 @@ fun EquipmentSection(viewModel: EventFormViewModel) {
                             FilterChip(
                                 selected = alreadyAdded,
                                 onClick = { if (!alreadyAdded) viewModel.addEquipmentFromSuggestion(suggestion) },
-                                label = { Text("${suggestion.ingredientName} (${suggestion.suggestedQuantity.toInt()})") },
+                                label = {
+                                    Text(
+                                        stringResource(
+                                            R.string.events_form_inventory_suggestion_label,
+                                            suggestion.ingredientName,
+                                            suggestion.suggestedQuantity.toInt().toString()
+                                        )
+                                    )
+                                },
                                 leadingIcon = if (alreadyAdded) { { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) } } else null
                             )
                         }

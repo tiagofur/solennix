@@ -66,6 +66,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -77,6 +78,7 @@ import com.creapolis.solennix.core.model.AssignmentStatus
 import com.creapolis.solennix.core.model.TeamMemberAssignment
 import com.creapolis.solennix.core.model.UnavailableDate
 import com.creapolis.solennix.core.network.AuthManager
+import com.creapolis.solennix.feature.staff.R
 import com.creapolis.solennix.feature.staff.viewmodel.TeamMemberPortalViewModel
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
@@ -156,10 +158,10 @@ fun TeamMemberPortalScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Mi jornada") },
+                title = { Text(stringResource(R.string.staff_portal_my_day)) },
                 actions = {
                     IconButton(onClick = { viewModel.refresh() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Recargar")
+                        Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.staff_portal_cd_refresh))
                     }
                 },
                 navigationIcon = {
@@ -168,7 +170,7 @@ fun TeamMemberPortalScreen(
                             authManager.logout()
                         }
                     }) {
-                        Icon(Icons.Default.Close, contentDescription = "Salir")
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.staff_portal_cd_logout))
                     }
                 }
             )
@@ -199,13 +201,13 @@ fun TeamMemberPortalScreen(
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                "Todavia no tenes asignaciones",
+                                stringResource(R.string.staff_portal_empty_assignments_title),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = SolennixTheme.colors.primaryText
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                "Cuando te asignen a un evento, va a aparecer aca.",
+                                stringResource(R.string.staff_portal_empty_assignments_description),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = SolennixTheme.colors.secondaryText
                             )
@@ -220,15 +222,15 @@ fun TeamMemberPortalScreen(
                     ) {
                         item {
                             TabRow(selectedTabIndex = selectedTab) {
-                                Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("Mi jornada") })
-                                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("Calendario") })
+                                Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text(stringResource(R.string.staff_portal_my_day)) })
+                                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text(stringResource(R.string.staff_portal_calendar)) })
                             }
                         }
 
                         if (selectedTab == 0) {
                             item {
                                 Text(
-                                    text = "Pendientes por responder",
+                                    text = stringResource(R.string.staff_portal_pending_title),
                                     style = MaterialTheme.typography.titleSmall,
                                     color = SolennixTheme.colors.secondaryText,
                                     fontWeight = FontWeight.SemiBold
@@ -237,7 +239,7 @@ fun TeamMemberPortalScreen(
 
                             if (pendingAssignments.isEmpty()) {
                                 item {
-                                    InfoCard("No tenes invitaciones pendientes.")
+                                    InfoCard(stringResource(R.string.staff_portal_no_pending_invites))
                                 }
                             } else {
                                 items(pendingAssignments, key = { it.eventStaffId }) { assignment ->
@@ -257,7 +259,7 @@ fun TeamMemberPortalScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "Cambios recientes",
+                                        text = stringResource(R.string.staff_portal_recent_changes),
                                         style = MaterialTheme.typography.titleSmall,
                                         color = SolennixTheme.colors.secondaryText,
                                         fontWeight = FontWeight.SemiBold
@@ -275,7 +277,7 @@ fun TeamMemberPortalScreen(
 
                             if (uiState.timeline.isEmpty()) {
                                 item {
-                                    InfoCard("Sin cambios recientes en tus asignaciones.")
+                                    InfoCard(stringResource(R.string.staff_portal_no_recent_changes))
                                 }
                             } else {
                                 items(uiState.timeline, key = { it.id }) { item ->
@@ -326,7 +328,7 @@ fun TeamMemberPortalScreen(
                                             if (item.readAt == null) {
                                                 AssistChip(
                                                     onClick = {},
-                                                    label = { Text("Nuevo") },
+                                                    label = { Text(stringResource(R.string.staff_portal_new_badge)) },
                                                     colors = AssistChipDefaults.assistChipColors(
                                                         containerColor = SolennixTheme.colors.warning.copy(alpha = 0.2f),
                                                         labelColor = SolennixTheme.colors.warning
@@ -340,7 +342,7 @@ fun TeamMemberPortalScreen(
 
                             item {
                                 Text(
-                                    text = "Mi disponibilidad",
+                                    text = stringResource(R.string.staff_portal_my_availability),
                                     style = MaterialTheme.typography.titleSmall,
                                     color = SolennixTheme.colors.secondaryText,
                                     fontWeight = FontWeight.SemiBold,
@@ -360,35 +362,35 @@ fun TeamMemberPortalScreen(
                                         OutlinedTextField(
                                             value = availabilityStartDate,
                                             onValueChange = { availabilityStartDate = it },
-                                            label = { Text("Desde (YYYY-MM-DD)") },
+                                            label = { Text(stringResource(R.string.staff_portal_start_date_label)) },
                                             modifier = Modifier.fillMaxWidth(),
                                             singleLine = true
                                         )
                                         OutlinedTextField(
                                             value = availabilityEndDate,
                                             onValueChange = { availabilityEndDate = it },
-                                            label = { Text("Hasta (YYYY-MM-DD)") },
+                                            label = { Text(stringResource(R.string.staff_portal_end_date_label)) },
                                             modifier = Modifier.fillMaxWidth(),
                                             singleLine = true
                                         )
                                         OutlinedTextField(
                                             value = availabilityStartTime,
                                             onValueChange = { availabilityStartTime = it },
-                                            label = { Text("Hora inicio (HH:MM)") },
+                                            label = { Text(stringResource(R.string.staff_portal_start_time_label)) },
                                             modifier = Modifier.fillMaxWidth(),
                                             singleLine = true
                                         )
                                         OutlinedTextField(
                                             value = availabilityEndTime,
                                             onValueChange = { availabilityEndTime = it },
-                                            label = { Text("Hora fin (HH:MM)") },
+                                            label = { Text(stringResource(R.string.staff_portal_end_time_label)) },
                                             modifier = Modifier.fillMaxWidth(),
                                             singleLine = true
                                         )
                                         OutlinedTextField(
                                             value = availabilityReason,
                                             onValueChange = { availabilityReason = it },
-                                            label = { Text("Motivo (opcional)") },
+                                            label = { Text(stringResource(R.string.staff_portal_reason_label)) },
                                             modifier = Modifier.fillMaxWidth(),
                                             singleLine = true
                                         )
@@ -426,7 +428,7 @@ fun TeamMemberPortalScreen(
                                                 },
                                                 enabled = !uiState.isSavingAvailability && availabilityStartDate.isNotBlank() && availabilityEndDate.isNotBlank()
                                             ) {
-                                                Text(if (editingUnavailableId != null) "Guardar cambios" else "Bloquear fechas")
+                                                Text(if (editingUnavailableId != null) stringResource(R.string.staff_form_save_changes) else stringResource(R.string.staff_portal_block_dates))
                                             }
 
                                             if (editingUnavailableId != null) {
@@ -441,7 +443,7 @@ fun TeamMemberPortalScreen(
                                                     },
                                                     enabled = !uiState.isSavingAvailability
                                                 ) {
-                                                    Text("Cancelar")
+                                                    Text(stringResource(R.string.staff_cancel))
                                                 }
                                             }
                                         }
@@ -451,7 +453,7 @@ fun TeamMemberPortalScreen(
 
                             if (uiState.unavailableDates.isEmpty()) {
                                 item {
-                                    InfoCard("No tenes bloqueos cargados.")
+                                    InfoCard(stringResource(R.string.staff_portal_no_unavailable_dates))
                                 }
                             } else {
                                 items(
@@ -476,7 +478,7 @@ fun TeamMemberPortalScreen(
 
                             item {
                                 Text(
-                                    text = "Mi agenda",
+                                    text = stringResource(R.string.staff_portal_my_agenda),
                                     style = MaterialTheme.typography.titleSmall,
                                     color = SolennixTheme.colors.secondaryText,
                                     fontWeight = FontWeight.SemiBold,
@@ -496,19 +498,19 @@ fun TeamMemberPortalScreen(
                             item {
                                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     CalendarModeButton(
-                                        label = "Mes",
+                                        label = stringResource(R.string.staff_portal_month),
                                         selected = calendarMode == TeamCalendarMode.MONTH,
                                         onClick = { calendarMode = TeamCalendarMode.MONTH },
                                         modifier = Modifier.weight(1f)
                                     )
                                     CalendarModeButton(
-                                        label = "Semana",
+                                        label = stringResource(R.string.staff_portal_week),
                                         selected = calendarMode == TeamCalendarMode.WEEK,
                                         onClick = { calendarMode = TeamCalendarMode.WEEK },
                                         modifier = Modifier.weight(1f)
                                     )
                                     CalendarModeButton(
-                                        label = "Dia",
+                                        label = stringResource(R.string.staff_portal_day),
                                         selected = calendarMode == TeamCalendarMode.DAY,
                                         onClick = { calendarMode = TeamCalendarMode.DAY },
                                         modifier = Modifier.weight(1f)
@@ -531,7 +533,7 @@ fun TeamMemberPortalScreen(
                                 TeamCalendarMode.DAY -> {
                                     item {
                                         Text(
-                                            text = if (calendarMode == TeamCalendarMode.DAY) "Agenda del dia" else "Eventos del dia",
+                                            text = if (calendarMode == TeamCalendarMode.DAY) stringResource(R.string.staff_portal_day_agenda) else stringResource(R.string.staff_portal_day_events),
                                             style = MaterialTheme.typography.titleSmall,
                                             color = SolennixTheme.colors.secondaryText,
                                             fontWeight = FontWeight.SemiBold
@@ -540,7 +542,7 @@ fun TeamMemberPortalScreen(
 
                                     if (selectedDayAssignments.isEmpty()) {
                                         item {
-                                            InfoCard("No hay asignaciones para esta fecha.")
+                                            InfoCard(stringResource(R.string.staff_portal_no_assignments_for_date))
                                         }
                                     } else {
                                         items(selectedDayAssignments, key = { it.eventStaffId }) { assignment ->
@@ -559,7 +561,7 @@ fun TeamMemberPortalScreen(
                                 TeamCalendarMode.WEEK -> {
                                     item {
                                         Text(
-                                            text = "Agenda semanal",
+                                            text = stringResource(R.string.staff_portal_week_agenda),
                                             style = MaterialTheme.typography.titleSmall,
                                             color = SolennixTheme.colors.secondaryText,
                                             fontWeight = FontWeight.SemiBold
@@ -636,10 +638,10 @@ private fun UnavailableDateRow(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = onEdit, enabled = !isBusy) {
-                    Text("Editar")
+                    Text(stringResource(R.string.staff_cd_edit))
                 }
                 OutlinedButton(onClick = onDelete, enabled = !isBusy) {
-                    Text("Eliminar")
+                    Text(stringResource(R.string.staff_delete))
                 }
             }
         }
@@ -703,15 +705,16 @@ private fun shiftRangeLabel(assignment: TeamMemberAssignment): String? {
     return if (startText != null && endText != null) "$startText - $endText" else null
 }
 
+@Composable
 private fun timelineLabel(changeType: String): String {
     return when (changeType) {
-        "location_changed" -> "Cambio de ubicación"
-        "role_changed" -> "Cambio de rol"
-        "shift_changed" -> "Cambio de turno"
-        "status_changed" -> "Cambio de estado"
-        "assignment_added" -> "Nueva asignación"
-        "assignment_removed" -> "Asignación removida"
-        else -> "Actualización de asignación"
+        "location_changed" -> stringResource(R.string.staff_portal_timeline_location_changed)
+        "role_changed" -> stringResource(R.string.staff_portal_timeline_role_changed)
+        "shift_changed" -> stringResource(R.string.staff_portal_timeline_shift_changed)
+        "status_changed" -> stringResource(R.string.staff_portal_timeline_status_changed)
+        "assignment_added" -> stringResource(R.string.staff_portal_timeline_assignment_added)
+        "assignment_removed" -> stringResource(R.string.staff_portal_timeline_assignment_removed)
+        else -> stringResource(R.string.staff_portal_timeline_assignment_updated)
     }
 }
 
@@ -748,19 +751,19 @@ private fun TeamMemberAssignmentDetailDialog(
         title = { Text(assignment.eventName) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Fecha: ${assignment.eventDate}")
-                shiftRangeLabel(assignment)?.let { Text("Turno: $it") }
-                assignment.roleOverride?.takeIf { it.isNotBlank() }?.let { Text("Rol: $it") }
-                assignment.feeAmount?.let { Text("Pago: ${moneyFormatter.format(it)}") }
-                assignment.notes?.takeIf { it.isNotBlank() }?.let { Text("Notas: $it") }
-                assignment.organizerNotes?.takeIf { it.isNotBlank() }?.let { Text("Notas del organizador: $it") }
+                Text(stringResource(R.string.staff_portal_date_value, assignment.eventDate))
+                shiftRangeLabel(assignment)?.let { Text(stringResource(R.string.staff_portal_shift_value, it)) }
+                assignment.roleOverride?.takeIf { it.isNotBlank() }?.let { Text(stringResource(R.string.staff_portal_role_value, it)) }
+                assignment.feeAmount?.let { Text(stringResource(R.string.staff_portal_payment_value, moneyFormatter.format(it))) }
+                assignment.notes?.takeIf { it.isNotBlank() }?.let { Text(stringResource(R.string.staff_portal_notes_value, it)) }
+                assignment.organizerNotes?.takeIf { it.isNotBlank() }?.let { Text(stringResource(R.string.staff_portal_organizer_notes_value, it)) }
                 listOfNotNull(assignment.contactName, assignment.contactPhone)
                     .map { it.trim() }
                     .filter { it.isNotBlank() }
                     .takeIf { it.isNotEmpty() }
                     ?.joinToString(" · ")
-                    ?.let { Text("Contacto operativo: $it") }
-                locationLabel?.let { Text("Ubicacion: $it") }
+                    ?.let { Text(stringResource(R.string.staff_portal_contact_value, it)) }
+                locationLabel?.let { Text(stringResource(R.string.staff_portal_location_value, it)) }
 
                 if (locationLabel != null) {
                     OutlinedButton(
@@ -769,36 +772,36 @@ private fun TeamMemberAssignmentDetailDialog(
                             context.startActivity(Intent(Intent.ACTION_VIEW, uri))
                         }
                     ) {
-                        Text("Abrir en mapas")
+                        Text(stringResource(R.string.staff_portal_open_maps))
                     }
                 }
 
-                Text("Checklist de ejecucion", fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.staff_portal_execution_checklist), fontWeight = FontWeight.SemiBold)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = checklistArrival, onCheckedChange = { checklistArrival = it })
-                    Text("Llegada y acceso confirmados")
+                    Text(stringResource(R.string.staff_portal_checklist_arrival))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = checklistMaterials, onCheckedChange = { checklistMaterials = it })
-                    Text("Material y montaje listos")
+                    Text(stringResource(R.string.staff_portal_checklist_materials))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = checklistClosing, onCheckedChange = { checklistClosing = it })
-                    Text("Cierre operativo completado")
+                    Text(stringResource(R.string.staff_portal_checklist_closing))
                 }
 
                 OutlinedTextField(
                     value = quickNote,
                     onValueChange = { quickNote = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Notas rapidas personales") },
+                    label = { Text(stringResource(R.string.staff_portal_quick_notes_label)) },
                     minLines = 2
                 )
             }
         },
         confirmButton = {
             Button(onClick = onDismiss) {
-                Text("Cerrar")
+                Text(stringResource(R.string.staff_close))
             }
         }
     )
@@ -829,7 +832,7 @@ private fun WeekDayAgendaCard(
 
             if (assignments.isEmpty()) {
                 Text(
-                    text = "Sin asignaciones",
+                    text = stringResource(R.string.staff_portal_no_assignments),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText
                 )
@@ -890,7 +893,7 @@ private fun TeamMemberPortalCalendar(
         Column(modifier = Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { onMonthChange(displayedMonth.minusMonths(1)) }) {
-                    Icon(Icons.Default.ChevronLeft, contentDescription = "Mes anterior")
+                    Icon(Icons.Default.ChevronLeft, contentDescription = stringResource(R.string.staff_portal_cd_previous_month))
                 }
 
                 Text(
@@ -906,7 +909,7 @@ private fun TeamMemberPortalCalendar(
                         onMonthChange(YearMonth.from(today))
                         onSelectDate(today)
                     },
-                    label = { Text("Hoy") },
+                    label = { Text(stringResource(R.string.staff_portal_today)) },
                     colors = AssistChipDefaults.assistChipColors(
                         containerColor = SolennixTheme.colors.surface,
                         labelColor = SolennixTheme.colors.secondaryText
@@ -914,7 +917,7 @@ private fun TeamMemberPortalCalendar(
                 )
 
                 IconButton(onClick = { onMonthChange(displayedMonth.plusMonths(1)) }) {
-                    Icon(Icons.Default.ChevronRight, contentDescription = "Mes siguiente")
+                    Icon(Icons.Default.ChevronRight, contentDescription = stringResource(R.string.staff_portal_cd_next_month))
                 }
             }
 
@@ -1078,7 +1081,7 @@ private fun TeamMemberAssignmentCard(
                 shiftRangeLabel(assignment)?.let { label ->
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Turno: $label",
+                        text = stringResource(R.string.staff_portal_shift_value, label),
                         style = MaterialTheme.typography.bodySmall,
                         color = SolennixTheme.colors.secondaryText
                     )
@@ -1088,7 +1091,7 @@ private fun TeamMemberAssignmentCard(
             if (!assignment.roleOverride.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Rol: ${assignment.roleOverride}",
+                    text = stringResource(R.string.staff_portal_role_value, assignment.roleOverride.orEmpty()),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText
                 )
@@ -1097,7 +1100,7 @@ private fun TeamMemberAssignmentCard(
             if (assignment.feeAmount != null) {
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Pago: ${moneyFormatter.format(assignment.feeAmount)}",
+                    text = stringResource(R.string.staff_portal_payment_value, moneyFormatter.format(assignment.feeAmount)),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.primary
                 )
@@ -1123,7 +1126,7 @@ private fun TeamMemberAssignmentCard(
                     ) {
                         Icon(Icons.Default.Close, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Rechazar")
+                        Text(stringResource(R.string.staff_portal_decline))
                     }
                     Button(
                         onClick = onAccept,
@@ -1132,16 +1135,16 @@ private fun TeamMemberAssignmentCard(
                     ) {
                         Icon(Icons.Default.Check, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Aceptar")
+                        Text(stringResource(R.string.staff_portal_accept))
                     }
                 }
             } else {
                 Text(
                     text = when (status) {
-                        AssignmentStatus.CONFIRMED -> "Confirmada"
-                        AssignmentStatus.DECLINED -> "Rechazada"
-                        AssignmentStatus.CANCELLED -> "Cancelada"
-                        AssignmentStatus.PENDING -> "Pendiente"
+                        AssignmentStatus.CONFIRMED -> stringResource(R.string.staff_portal_status_confirmed)
+                        AssignmentStatus.DECLINED -> stringResource(R.string.staff_portal_status_declined)
+                        AssignmentStatus.CANCELLED -> stringResource(R.string.staff_portal_status_cancelled)
+                        AssignmentStatus.PENDING -> stringResource(R.string.staff_portal_status_pending)
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText

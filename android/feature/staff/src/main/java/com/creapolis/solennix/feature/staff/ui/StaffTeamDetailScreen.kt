@@ -43,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -50,6 +51,7 @@ import com.creapolis.solennix.core.designsystem.component.Avatar
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.StaffTeamMember
+import com.creapolis.solennix.feature.staff.R
 import com.creapolis.solennix.feature.staff.viewmodel.StaffTeamDetailViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,21 +72,21 @@ fun StaffTeamDetailScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Detalle del equipo") },
+                title = { Text(stringResource(R.string.staff_team_detail_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.staff_cd_back))
                     }
                 },
                 actions = {
                     uiState.team?.let { team ->
                         IconButton(onClick = { onEditClick(team.id) }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Editar")
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.staff_cd_edit))
                         }
                         IconButton(onClick = { showDeleteDialog = true }) {
                             Icon(
                                 Icons.Default.Delete,
-                                contentDescription = "Eliminar",
+                                contentDescription = stringResource(R.string.staff_cd_delete),
                                 tint = SolennixTheme.colors.error
                             )
                         }
@@ -157,7 +159,7 @@ fun StaffTeamDetailScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        "Notas",
+                                        stringResource(R.string.staff_notes_title),
                                         style = MaterialTheme.typography.titleMedium,
                                         color = SolennixTheme.colors.primaryText
                                     )
@@ -174,7 +176,7 @@ fun StaffTeamDetailScreen(
                     }
 
                     Text(
-                        "Miembros",
+                        stringResource(R.string.staff_team_members_title),
                         style = MaterialTheme.typography.titleMedium,
                         color = SolennixTheme.colors.primaryText,
                         fontWeight = FontWeight.SemiBold
@@ -184,7 +186,7 @@ fun StaffTeamDetailScreen(
                     val sortedMembers = team.members.orEmpty().sortedBy { it.position }
                     if (sortedMembers.isEmpty()) {
                         Text(
-                            "Este equipo aún no tiene miembros. Editá el equipo para agregar colaboradores.",
+                            stringResource(R.string.staff_team_detail_empty_members),
                             style = MaterialTheme.typography.bodySmall,
                             color = SolennixTheme.colors.secondaryText
                         )
@@ -217,11 +219,10 @@ fun StaffTeamDetailScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Eliminar equipo") },
+            title = { Text(stringResource(R.string.staff_team_delete_title)) },
             text = {
                 Text(
-                    "¿Eliminar este equipo? Los colaboradores que lo integran no se borran — " +
-                        "sólo se deshace la agrupación."
+                    stringResource(R.string.staff_team_delete_message)
                 )
             },
             confirmButton = {
@@ -234,12 +235,12 @@ fun StaffTeamDetailScreen(
                         contentColor = SolennixTheme.colors.error
                     )
                 ) {
-                    Text("Eliminar")
+                    Text(stringResource(R.string.staff_delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.staff_cancel))
                 }
             }
         )
@@ -255,11 +256,11 @@ private fun TeamMemberRow(member: StaffTeamMember) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start
     ) {
-        Avatar(name = member.staffName ?: "Colaborador", photoUrl = null, size = 40.dp)
+        Avatar(name = member.staffName ?: stringResource(R.string.staff_collaborator_fallback), photoUrl = null, size = 40.dp)
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                member.staffName ?: "Colaborador",
+                member.staffName ?: stringResource(R.string.staff_collaborator_fallback),
                 style = MaterialTheme.typography.titleSmall,
                 color = SolennixTheme.colors.primaryText
             )
@@ -274,7 +275,7 @@ private fun TeamMemberRow(member: StaffTeamMember) {
         if (member.isLead) {
             AssistChip(
                 onClick = {},
-                label = { Text("Lidera") },
+                label = { Text(stringResource(R.string.staff_team_lead_label)) },
                 leadingIcon = {
                     Icon(
                         Icons.Default.Star,

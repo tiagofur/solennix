@@ -50,11 +50,7 @@ import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.extensions.asMXNCompact
 import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
 import com.creapolis.solennix.feature.dashboard.R
-import com.creapolis.solennix.feature.dashboard.viewmodel.DashboardViewModel
-import com.creapolis.solennix.feature.dashboard.viewmodel.MIN_PENDING_AMOUNT
-import com.creapolis.solennix.feature.dashboard.viewmodel.PendingEvent
-import com.creapolis.solennix.feature.dashboard.viewmodel.PendingEventReason
-import com.creapolis.solennix.feature.dashboard.viewmodel.StatusCount
+import com.creapolis.solennix.feature.dashboard.viewmodel.*
 import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.YearMonth

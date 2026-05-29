@@ -40,6 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -48,6 +49,7 @@ import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCardGrid
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.Staff
+import com.creapolis.solennix.feature.staff.R
 import com.creapolis.solennix.feature.staff.viewmodel.StaffListViewModel
 import com.creapolis.solennix.feature.staff.viewmodel.StaffSortOption
 
@@ -70,7 +72,7 @@ fun StaffListScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Personal") },
+                title = { Text(stringResource(R.string.staff_list_title)) },
                 onSearchClick = onSearchClick
             )
         },
@@ -80,7 +82,7 @@ fun StaffListScreen(
                 containerColor = SolennixTheme.colors.primary,
                 contentColor = Color.White
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Agregar colaborador")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.staff_list_cd_add_collaborator))
             }
         },
         contentWindowInsets = WindowInsets(0)
@@ -99,7 +101,7 @@ fun StaffListScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    placeholder = { Text("Filtrar por nombre, rol, email...") },
+                    placeholder = { Text(stringResource(R.string.staff_list_search_placeholder)) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     shape = MaterialTheme.shapes.medium,
                     singleLine = true
@@ -127,12 +129,12 @@ fun StaffListScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                "Equipos",
+                                stringResource(R.string.staff_team_list_title),
                                 style = MaterialTheme.typography.titleSmall,
                                 color = SolennixTheme.colors.primaryText
                             )
                             Text(
-                                "Agrupá colaboradores para asignar en bloque",
+                                stringResource(R.string.staff_list_teams_description),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = SolennixTheme.colors.secondaryText
                             )
@@ -179,13 +181,13 @@ fun StaffListScreen(
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                "Aún no agregaste colaboradores",
+                                stringResource(R.string.staff_list_empty_title),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = SolennixTheme.colors.primaryText
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                "Agregá fotógrafos, DJs, meseros o coordinadores que trabajan con vos.",
+                                stringResource(R.string.staff_list_empty_description),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = SolennixTheme.colors.secondaryText
                             )

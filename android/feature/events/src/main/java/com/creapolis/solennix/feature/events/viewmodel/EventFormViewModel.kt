@@ -22,10 +22,8 @@ import com.creapolis.solennix.core.model.*
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.SolennixException
 import com.creapolis.solennix.core.network.get
-import com.creapolis.solennix.core.network.post
-import com.creapolis.solennix.core.network.put
-import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
+import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.feature.events.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -41,22 +39,22 @@ import javax.inject.Inject
 @HiltViewModel
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 class EventFormViewModel @Inject constructor(
-    @ApplicationContext private val appContext: Context,
-    private val eventRepository: EventRepository,
-    private val clientRepository: ClientRepository,
-    private val productRepository: ProductRepository,
-    private val inventoryRepository: InventoryRepository,
-    private val staffRepository: StaffRepository,
-    private val staffTeamRepository: StaffTeamRepository,
-    private val apiService: ApiService,
+    @ApplicationContext internal val appContext: Context,
+    internal val eventRepository: EventRepository,
+    internal val clientRepository: ClientRepository,
+    internal val productRepository: ProductRepository,
+    internal val inventoryRepository: InventoryRepository,
+    internal val staffRepository: StaffRepository,
+    internal val staffTeamRepository: StaffTeamRepository,
+    internal val apiService: ApiService,
     private val planLimitsManager: PlanLimitsManager,
     private val authManager: AuthManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private fun tr(@StringRes id: Int, vararg args: Any): String = appContext.getString(id, *args)
+    internal fun tr(@StringRes id: Int, vararg args: Any): String = appContext.getString(id, *args)
 
-    private val eventId: String? = savedStateHandle.get<String>("eventId")?.takeIf { it.isNotBlank() }
+    internal val eventId: String? = savedStateHandle.get<String>("eventId")?.takeIf { it.isNotBlank() }
     val isEditMode: Boolean = eventId != null
 
     // Plan limit check
@@ -67,16 +65,15 @@ class EventFormViewModel @Inject constructor(
 
     var isLoadingEvent by mutableStateOf(false)
 
-    /**
-     * Non-null when the primary event load failed and the form is in an unusable state.
-     * The screen should render an error card with a "Reintentar" button instead of the
-     * form fields when this is set.
-     */
     var loadError by mutableStateOf<String?>(null)
         private set
 
     private val _uiEvents = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
     val uiEvents: SharedFlow<UiEvent> = _uiEvents.asSharedFlow()
+
+    internal fun triggerErrorEvent(message: String) {
+        _uiEvents.tryEmit(UiEvent.Error(message = message, retryActionId = null))
+    }
 
     // Step 1: General Info
     var selectedClient by mutableStateOf<Client?>(null)
@@ -155,54 +152,53 @@ class EventFormViewModel @Inject constructor(
 
     // Step 4: Equipment
     val selectedEquipment = mutableStateListOf<EventEquipment>()
-    private val _equipmentConflicts = MutableStateFlow<List<EquipmentConflict>>(emptyList())
-    val equipmentConflicts: StateFlow<List<EquipmentConflict>> = _equipmentConflicts.asStateFlow()
-    private val _equipmentSuggestions = MutableStateFlow<List<EquipmentSuggestion>>(emptyList())
-    val equipmentSuggestions: StateFlow<List<EquipmentSuggestion>> = _equipmentSuggestions.asStateFlow()
+    
+    internal val internalEquipmentConflicts = MutableStateFlow<List<EquipmentConflict>>(emptyList())
+    val equipmentConflicts: StateFlow<List<EquipmentConflict>> = internalEquipmentConflicts.asStateFlow()
+    
+    internal val internalEquipmentSuggestions = MutableStateFlow<List<EquipmentSuggestion>>(emptyList())
+    val equipmentSuggestions: StateFlow<List<EquipmentSuggestion>> = internalEquipmentSuggestions.asStateFlow()
+    
     private val _availableEquipment = MutableStateFlow<List<InventoryItem>>(emptyList())
     val availableEquipment: StateFlow<List<InventoryItem>> = _availableEquipment.asStateFlow()
     var isCheckingConflicts by mutableStateOf(false)
 
     // Step 5: Supplies
     val selectedSupplies = mutableStateListOf<EventSupply>()
-    private val _supplySuggestions = MutableStateFlow<List<SupplySuggestion>>(emptyList())
-    val supplySuggestions: StateFlow<List<SupplySuggestion>> = _supplySuggestions.asStateFlow()
+    
+    internal val internalSupplySuggestions = MutableStateFlow<List<SupplySuggestion>>(emptyList())
+    val supplySuggestions: StateFlow<List<SupplySuggestion>> = internalSupplySuggestions.asStateFlow()
+    
     private val _availableSupplies = MutableStateFlow<List<InventoryItem>>(emptyList())
     val availableSupplies: StateFlow<List<InventoryItem>> = _availableSupplies.asStateFlow()
 
-    // Step 5b: Staff (Personal asignado)
-    //
-    // Se renderiza dentro de la página de equipamiento/supplies. No es un
-    // step propio en el pager porque Phase 1 no quiere subirle fricción al
-    // formulario. El fee_amount vive por asignación (no en el Staff) porque
-    // un mismo colaborador puede cobrar distinto por evento.
+    // Step 5b: Staff
     val selectedStaff = mutableStateListOf<SelectedStaffAssignment>()
-    private val _availableStaff = MutableStateFlow<List<Staff>>(emptyList())
-    val availableStaff: StateFlow<List<Staff>> = _availableStaff.asStateFlow()
+    
+    internal val internalAvailableStaff = MutableStateFlow<List<Staff>>(emptyList())
+    val availableStaff: StateFlow<List<Staff>> = internalAvailableStaff.asStateFlow()
 
-    /**
-     * Mapa `staff_id → List<StaffAvailabilityAssignment>` para la fecha del evento.
-     * Permite O(1) lookup de ocupación en el picker. Se recarga cuando cambia
-     * [eventDate] o cuando el catálogo de staff se hidrata. Excluye el evento
-     * actual cuando se está editando (un colaborador ya asignado al mismo evento
-     * no está "ocupado" para esta vista).
-     */
-    private val _staffAvailability =
-        MutableStateFlow<Map<String, List<StaffAvailabilityAssignment>>>(emptyMap())
-    val staffAvailability: StateFlow<Map<String, List<StaffAvailabilityAssignment>>> =
-        _staffAvailability.asStateFlow()
+    internal val internalStaffAvailability = MutableStateFlow<Map<String, List<StaffAvailabilityAssignment>>>(emptyMap())
+    val staffAvailability: StateFlow<Map<String, List<StaffAvailabilityAssignment>>> = internalStaffAvailability.asStateFlow()
+    
     private var availabilityJob: Job? = null
+    
+    internal fun cancelAvailabilityJob() {
+        availabilityJob?.cancel()
+    }
+    
+    internal fun startAvailabilityJob(job: Job) {
+        availabilityJob = job
+    }
 
-    // Ola 2: equipos (staff teams). Se cargan bajo demanda cuando se abre el
-    // picker de "Agregar equipo completo". Network-only — no cacheamos en Room.
-    private val _availableTeams = MutableStateFlow<List<StaffTeam>>(emptyList())
-    val availableTeams: StateFlow<List<StaffTeam>> = _availableTeams.asStateFlow()
+    internal val internalAvailableTeams = MutableStateFlow<List<StaffTeam>>(emptyList())
+    val availableTeams: StateFlow<List<StaffTeam>> = internalAvailableTeams.asStateFlow()
     var isLoadingTeams by mutableStateOf(false)
-        private set
+        internal set
     var teamsErrorMessage by mutableStateOf<String?>(null)
-        private set
+        internal set
 
-    // Step 6: Location & Details (moved to GeneralInfo in UI)
+    // Step 6: Location & Details
     var location by mutableStateOf("")
     var city by mutableStateOf("")
     var notes by mutableStateOf("")
@@ -222,7 +218,6 @@ class EventFormViewModel @Inject constructor(
         selectedClient = client
         clientEventCount = client.totalEvents
         clientTotalSpent = client.totalSpent
-        // Auto-fill location/city from client if event fields are empty
         if (location.isBlank() && !client.address.isNullOrBlank()) {
             location = client.address!!
         }
@@ -232,7 +227,7 @@ class EventFormViewModel @Inject constructor(
     }
 
     // Product Unit Costs (for profitability)
-    private val _productUnitCosts = mutableMapOf<String, Double>()
+    internal val _productUnitCosts = mutableMapOf<String, Double>()
     val productUnitCosts: Map<String, Double> get() = _productUnitCosts.toMap()
     val hasPendingProductCosts: Boolean
         get() = selectedProducts
@@ -265,7 +260,7 @@ class EventFormViewModel @Inject constructor(
         }
     }
 
-    private fun fetchProductCosts() {
+    internal fun fetchProductCosts() {
         val missing = selectedProducts
             .filter { _productUnitCosts[it.productId] == null }
             .map { it.productId }
@@ -286,56 +281,13 @@ class EventFormViewModel @Inject constructor(
         }
     }
 
-    // Summary Logic
-    val subtotalProducts: Double get() = selectedProducts.sumOf { it.totalPrice ?: 0.0 }
-    val subtotalExtras: Double get() = eventExtras.sumOf { it.price }
-    val subtotalNormalExtras: Double get() = eventExtras.filter { !it.excludeUtility }.sumOf { it.price }
-    val subtotalPassThroughExtras: Double get() = eventExtras.filter { it.excludeUtility }.sumOf { it.price }
-    val discountableBase: Double get() = subtotalProducts + subtotalNormalExtras
-    val discountAmount: Double get() {
-        val d = discount.toDoubleOrNull() ?: 0.0
-        return if (discountType == DiscountType.PERCENT) {
-            discountableBase * (d / 100)
-        } else {
-            d.coerceAtMost(discountableBase)
-        }
-    }
-    val taxAmount: Double get() {
-        if (!requiresInvoice) return 0.0
-        val rate = taxRate.toDoubleOrNull() ?: 0.0
-        val baseTotal = discountableBase - discountAmount + subtotalPassThroughExtras
-        return baseTotal * (rate / 100)
-    }
-    val total: Double get() {
-        return (discountableBase - discountAmount + subtotalPassThroughExtras + taxAmount).coerceAtLeast(0.0)
-    }
-
-    // Profitability Metrics
-    val costProducts: Double get() = selectedProducts.sumOf { p ->
-        (_productUnitCosts[p.productId] ?: 0.0) * p.quantity
-    }
-    val costExtras: Double get() = eventExtras.sumOf { it.cost }
-    val costSupplies: Double get() = selectedSupplies.filter { !it.excludeCost }.sumOf { it.unitCost * it.quantity }
-    val totalCosts: Double get() = costProducts + costExtras + costSupplies
-    val netProfit: Double get() {
-        val revenue = total - (if (requiresInvoice) taxAmount else 0.0)
-        return revenue - totalCosts
-    }
-    val profitMargin: Double get() {
-        val revenue = total - (if (requiresInvoice) taxAmount else 0.0)
-        val passThroughRevenue = eventExtras.filter { it.excludeUtility }.sumOf { it.price }
-        val adjustedRevenue = revenue - passThroughRevenue
-        if (adjustedRevenue <= 0) return 0.0
-        return (netProfit / adjustedRevenue) * 100
-    }
-
     var isLoading by mutableStateOf(false)
     var saveSuccess by mutableStateOf(false)
     var saveError by mutableStateOf<String?>(null)
     var planLimitMessage by mutableStateOf<String?>(null)
     var dateUnavailableWarning by mutableStateOf<String?>(null)
 
-    private var _unavailableDates = mutableStateListOf<UnavailableDate>()
+    private val _unavailableDates = mutableStateListOf<UnavailableDate>()
 
     fun checkDateAvailability(date: LocalDate) {
         val dateStr = date.toString()
@@ -348,7 +300,6 @@ class EventFormViewModel @Inject constructor(
         } else {
             null
         }
-        // Refresca la señal de ocupación de colaboradores para la nueva fecha.
         fetchStaffAvailability()
     }
 
@@ -364,7 +315,6 @@ class EventFormViewModel @Inject constructor(
                 )
                 _unavailableDates.clear()
                 _unavailableDates.addAll(dates)
-                // Check current date on load
                 checkDateAvailability(eventDate)
             } catch (e: Exception) {
                 // Ignore - non-critical feature
@@ -386,14 +336,10 @@ class EventFormViewModel @Inject constructor(
         if (eventId != null) {
             loadExistingEvent(eventId)
         } else {
-            // Only check plan limits when creating a new event
             viewModelScope.launch {
                 val plan = authManager.currentUser.value?.plan ?: Plan.BASIC
                 limitCheckResult = planLimitsManager.canCreateEvent(plan)
             }
-            // Prefill from Duplicate source if available, otherwise from QuickQuote.
-            // Duplicate wins because it carries a full event; QuickQuote only has
-            // products/extras/discount.
             if (!loadFromDuplicate()) {
                 loadFromQuickQuote()
             }
@@ -406,7 +352,6 @@ class EventFormViewModel @Inject constructor(
         val data = QuickQuoteDataHolder.pendingData ?: return
         QuickQuoteDataHolder.pendingData = null
 
-        // Map products
         data.products.forEach { transferProduct ->
             val eventProduct = EventProduct(
                 id = UUID.randomUUID().toString(),
@@ -422,7 +367,6 @@ class EventFormViewModel @Inject constructor(
             selectedProducts.add(eventProduct)
         }
 
-        // Map extras
         data.extras.forEach { transferExtra ->
             val extra = EventExtra(
                 id = UUID.randomUUID().toString(),
@@ -437,37 +381,27 @@ class EventFormViewModel @Inject constructor(
             eventExtras.add(extra)
         }
 
-        // Set discount
         discountType = when (data.discountType) {
             "fixed" -> DiscountType.FIXED
             else -> DiscountType.PERCENT
         }
         discount = if (data.discountValue > 0) data.discountValue.toString() else "0"
 
-        // Set num people
         if (data.numPeople > 0) {
             numPeople = data.numPeople.toString()
         }
 
-        // Set invoice
         requiresInvoice = data.requiresInvoice
 
         fetchProductCosts()
     }
 
-    /**
-     * Prefill the form from a source event when duplicating. Generates fresh IDs
-     * for every child row so Room doesn't collide on insert, clears server-only
-     * fields (eventId), and resets the date to today so the user picks a new one.
-     * Returns true when data was found and applied.
-     */
     private fun loadFromDuplicate(): Boolean {
         val data = DuplicateEventDataHolder.pendingData ?: return false
         DuplicateEventDataHolder.pendingData = null
 
         val source = data.event
 
-        // Step 1: General info
         eventDate = LocalDate.now()
         startTime = source.startTime ?: ""
         endTime = source.endTime ?: ""
@@ -478,13 +412,11 @@ class EventFormViewModel @Inject constructor(
         city = source.city ?: ""
         notes = source.notes ?: ""
 
-        // Client (best-effort — may be null if the source event's client is stale)
         viewModelScope.launch {
             val client = clientRepository.getClient(source.clientId)
             if (client != null) onClientSelected(client)
         }
 
-        // Financials
         discount = source.discount.toString()
         discountType = source.discountType
         requiresInvoice = source.requiresInvoice
@@ -493,7 +425,6 @@ class EventFormViewModel @Inject constructor(
         cancellationDays = source.cancellationDays?.toString() ?: "7.0"
         refundPercent = source.refundPercent?.toString() ?: "50.0"
 
-        // Products — fresh IDs, clear server-side eventId
         selectedProducts.clear()
         data.products.forEach { product ->
             selectedProducts.add(
@@ -505,7 +436,6 @@ class EventFormViewModel @Inject constructor(
             )
         }
 
-        // Extras — fresh IDs
         eventExtras.clear()
         data.extras.forEach { extra ->
             eventExtras.add(
@@ -517,7 +447,6 @@ class EventFormViewModel @Inject constructor(
             )
         }
 
-        // Equipment — fresh IDs
         selectedEquipment.clear()
         data.equipment.forEach { eq ->
             selectedEquipment.add(
@@ -528,7 +457,6 @@ class EventFormViewModel @Inject constructor(
             )
         }
 
-        // Supplies — fresh IDs
         selectedSupplies.clear()
         data.supplies.forEach { sup ->
             selectedSupplies.add(
@@ -554,7 +482,6 @@ class EventFormViewModel @Inject constructor(
                             "desde el servidor."
                     )
 
-                // Populate general info
                 eventDate = try {
                     LocalDate.parse(event.eventDate)
                 } catch (e: Exception) {
@@ -576,13 +503,11 @@ class EventFormViewModel @Inject constructor(
                 cancellationDays = event.cancellationDays?.toString() ?: "7.0"
                 refundPercent = event.refundPercent?.toString() ?: "50.0"
 
-                // Load client — non-fatal if the client record is stale
                 val client = clientRepository.getClient(event.clientId)
                 selectedClient = client
                 clientEventCount = client?.totalEvents
                 clientTotalSpent = client?.totalSpent
 
-                // Sync event items from server — non-fatal, cache is authoritative for UI
                 try {
                     eventRepository.syncEventItems(id)
                 } catch (e: Exception) {
@@ -595,18 +520,15 @@ class EventFormViewModel @Inject constructor(
                     )
                 }
 
-                // Load products (primary)
                 val products = eventRepository.getEventProducts(id).first()
                 selectedProducts.clear()
                 selectedProducts.addAll(products)
                 fetchProductCosts()
 
-                // Load extras (primary)
                 val extras = eventRepository.getEventExtras(id).first()
                 eventExtras.clear()
                 eventExtras.addAll(extras)
 
-                // Load equipment — non-fatal, renders empty section with an advisory
                 try {
                     val equipment: List<EventEquipment> =
                         apiService.get(Endpoints.eventEquipment(id))
@@ -621,7 +543,6 @@ class EventFormViewModel @Inject constructor(
                     )
                 }
 
-                // Load supplies — non-fatal
                 try {
                     val supplies: List<EventSupply> =
                         apiService.get(Endpoints.eventSupplies(id))
@@ -636,7 +557,6 @@ class EventFormViewModel @Inject constructor(
                     )
                 }
 
-                // Load staff assignments — non-fatal
                 try {
                     val eventStaff = staffRepository.syncEventStaff(id)
                     selectedStaff.clear()
@@ -665,9 +585,6 @@ class EventFormViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                // Primary load failed — the form is unusable. Set error state so the UI
-                // can render a retry card instead of an empty form pretending everything
-                // is fine.
                 loadError = e.message
                     ?: "No se pudo cargar el evento. Verificá tu conexión y reintentá."
             } finally {
@@ -676,7 +593,6 @@ class EventFormViewModel @Inject constructor(
         }
     }
 
-    /** Retry loading the current event after a failure. */
     fun retryLoad() {
         eventId?.let { loadExistingEvent(it) }
     }
@@ -705,49 +621,8 @@ class EventFormViewModel @Inject constructor(
         }
         fetchProductCosts()
 
-        // Ola 3 — snapshot at add-time: si el producto tiene un equipo asociado,
-        // expandimos sus miembros como asignaciones de staff. Dedup via Ola 2.
         product.staffTeamId?.takeIf { it.isNotBlank() }?.let { teamId ->
             expandStaffTeamForProduct(teamId)
-        }
-    }
-
-    private fun expandStaffTeamForProduct(teamId: String) {
-        viewModelScope.launch {
-            try {
-                val team = staffTeamRepository.getTeam(teamId)
-                val catalog = _availableStaff.value.associateBy { it.id }
-                val currentIds = selectedStaff.map { it.staffId }.toMutableSet()
-                team.members.orEmpty().sortedBy { it.position }.forEach { member ->
-                    if (member.staffId in currentIds) return@forEach
-                    val resolvedName = catalog[member.staffId]?.name
-                        ?: member.staffName
-                        ?: "Colaborador"
-                    val resolvedRole = catalog[member.staffId]?.roleLabel
-                        ?: member.staffRoleLabel
-                    selectedStaff.add(
-                        SelectedStaffAssignment(
-                            staffId = member.staffId,
-                            feeAmount = null,
-                            roleOverride = "",
-                            notes = "",
-                            staffName = resolvedName,
-                            staffRoleLabel = resolvedRole,
-                            shiftStart = null,
-                            shiftEnd = null,
-                            status = AssignmentStatus.CONFIRMED.raw
-                        )
-                    )
-                    currentIds.add(member.staffId)
-                }
-            } catch (e: Exception) {
-                _uiEvents.tryEmit(
-                    UiEvent.Error(
-                        message = "No pudimos expandir el equipo del producto: ${e.message}",
-                        retryActionId = null,
-                    )
-                )
-            }
         }
     }
 
@@ -815,12 +690,6 @@ class EventFormViewModel @Inject constructor(
         )
     }
 
-    /**
-     * Agrega un extra en blanco para edición inline en el card — patrón iOS.
-     * No valida nada porque el usuario va a completar los campos en la UI.
-     * Si al guardar el evento la descripción está vacía, se descarta al
-     * mapear el payload.
-     */
     fun addBlankExtra() {
         eventExtras.add(
             EventExtra(
@@ -836,12 +705,6 @@ class EventFormViewModel @Inject constructor(
         )
     }
 
-    /**
-     * Update granular de un solo field. Mantiene invariante: si
-     * excludeUtility está on → price = cost. Si el usuario cambia cost con
-     * excludeUtility on, price se resync al nuevo cost (mirror del bug
-     * que vivía en iOS).
-     */
     fun updateExtraFields(
         id: String,
         description: String? = null,
@@ -884,434 +747,21 @@ class EventFormViewModel @Inject constructor(
         updateProductQuantity(productId, qty)
     }
 
-    // Equipment Methods
-    fun addEquipment(item: InventoryItem, quantity: Int) {
-        val existing = selectedEquipment.find { it.inventoryId == item.id }
-        if (existing != null) {
-            val index = selectedEquipment.indexOf(existing)
-            selectedEquipment[index] = existing.copy(quantity = existing.quantity + quantity)
-        } else {
-            val equipment = EventEquipment(
-                id = UUID.randomUUID().toString(),
-                eventId = "",
-                inventoryId = item.id,
-                quantity = quantity,
-                createdAt = "",
-                equipmentName = item.ingredientName,
-                unit = item.unit,
-                currentStock = item.currentStock
-            )
-            selectedEquipment.add(equipment)
-        }
-        checkEquipmentConflicts()
-    }
-
-    fun removeEquipment(inventoryId: String) {
-        selectedEquipment.removeAll { it.inventoryId == inventoryId }
-        checkEquipmentConflicts()
-    }
-
-    fun updateEquipmentQuantity(inventoryId: String, newQuantity: Int) {
-        // No auto-eliminamos cuando quantity=0: paridad con iOS. El usuario
-        // borra el item tocando el trash. 0 es un estado transitorio valido
-        // (el stepper hoy lo previene; defense in depth por si a futuro se
-        // agrega un text field como en supplies).
-        val existing = selectedEquipment.find { it.inventoryId == inventoryId }
-        if (existing != null) {
-            val index = selectedEquipment.indexOf(existing)
-            selectedEquipment[index] = existing.copy(quantity = newQuantity.coerceAtLeast(0))
-        }
-        checkEquipmentConflicts()
-    }
-
-    fun checkEquipmentConflicts() {
-        if (selectedEquipment.isEmpty()) {
-            _equipmentConflicts.value = emptyList()
-            return
-        }
-        viewModelScope.launch {
-            isCheckingConflicts = true
-            try {
-                val conflicts = eventRepository.getEquipmentConflicts(
-                    eventDate = eventDate.toString(),
-                    equipmentIds = selectedEquipment.map { it.inventoryId }
-                )
-                _equipmentConflicts.value = conflicts
-            } catch (e: Exception) {
-                _equipmentConflicts.value = emptyList()
-            } finally {
-                isCheckingConflicts = false
-            }
-        }
-    }
-
-    fun fetchEquipmentSuggestions() {
-        if (selectedProducts.isEmpty()) {
-            _equipmentSuggestions.value = emptyList()
-            return
-        }
-        viewModelScope.launch {
-            try {
-                val suggestions = eventRepository.getEquipmentSuggestions(
-                    productIds = selectedProducts.map { it.productId }
-                )
-                _equipmentSuggestions.value = suggestions
-            } catch (e: Exception) {
-                _equipmentSuggestions.value = emptyList()
-            }
-        }
-    }
-
-    fun addEquipmentFromSuggestion(suggestion: EquipmentSuggestion) {
-        val existing = selectedEquipment.find { it.inventoryId == suggestion.id }
-        if (existing == null) {
-            val equipment = EventEquipment(
-                id = UUID.randomUUID().toString(),
-                eventId = "",
-                inventoryId = suggestion.id,
-                quantity = suggestion.suggestedQuantity.toInt().coerceAtLeast(1),
-                createdAt = "",
-                equipmentName = suggestion.ingredientName,
-                unit = suggestion.unit,
-                currentStock = suggestion.currentStock
-            )
-            selectedEquipment.add(equipment)
-            checkEquipmentConflicts()
-        }
-    }
-
-    // Supplies Methods
-    fun addSupply(item: InventoryItem, quantity: Double, source: SupplySource = SupplySource.STOCK) {
-        val existing = selectedSupplies.find { it.inventoryId == item.id }
-        if (existing != null) {
-            val index = selectedSupplies.indexOf(existing)
-            selectedSupplies[index] = existing.copy(quantity = existing.quantity + quantity)
-        } else {
-            val supply = EventSupply(
-                id = UUID.randomUUID().toString(),
-                eventId = "",
-                inventoryId = item.id,
-                quantity = quantity,
-                unitCost = item.unitCost ?: 0.0,
-                source = source,
-                createdAt = "",
-                supplyName = item.ingredientName,
-                unit = item.unit,
-                currentStock = item.currentStock
-            )
-            selectedSupplies.add(supply)
-        }
-    }
-
-    fun removeSupply(inventoryId: String) {
-        selectedSupplies.removeAll { it.inventoryId == inventoryId }
-    }
-
-    fun updateSupplyQuantity(inventoryId: String, newQuantity: Double) {
-        // No auto-eliminamos cuando quantity=0: paridad con iOS. Borrar el
-        // text field para re-tipear otro valor es un estado transitorio
-        // valido — no debe borrar el insumo. El usuario borra con el trash.
-        val existing = selectedSupplies.find { it.inventoryId == inventoryId }
-        if (existing != null) {
-            val index = selectedSupplies.indexOf(existing)
-            selectedSupplies[index] = existing.copy(quantity = newQuantity.coerceAtLeast(0.0))
-        }
-    }
-
-    fun updateSupplySource(inventoryId: String, source: SupplySource) {
-        val existing = selectedSupplies.find { it.inventoryId == inventoryId }
-        if (existing != null) {
-            val index = selectedSupplies.indexOf(existing)
-            selectedSupplies[index] = existing.copy(source = source)
-        }
-    }
-
-    fun updateSupplyExcludeCost(inventoryId: String, excludeCost: Boolean) {
-        val existing = selectedSupplies.find { it.inventoryId == inventoryId }
-        if (existing != null) {
-            val index = selectedSupplies.indexOf(existing)
-            selectedSupplies[index] = existing.copy(excludeCost = excludeCost)
-        }
-    }
-
-    fun fetchSupplySuggestions() {
-        if (selectedProducts.isEmpty()) {
-            _supplySuggestions.value = emptyList()
-            return
-        }
-        viewModelScope.launch {
-            try {
-                val suggestions = eventRepository.getSupplySuggestions(
-                    productIds = selectedProducts.map { it.productId },
-                    numPeople = numPeople.toIntOrNull() ?: 0
-                )
-                _supplySuggestions.value = suggestions
-            } catch (e: Exception) {
-                _supplySuggestions.value = emptyList()
-            }
-        }
-    }
-
-    // ===== Staff helpers =====
-
-    private fun loadStaffCatalog() {
-        viewModelScope.launch {
-            staffRepository.getStaff().collect { list ->
-                _availableStaff.value = list
-            }
-        }
-        // Refresh remoto — non-fatal
-        viewModelScope.launch {
-            try {
-                staffRepository.syncStaff()
-            } catch (_: Exception) {
-                // Staff may fail to sync — UI cae al cache
-            }
-        }
-    }
-
-    fun addStaffAssignment(staff: Staff) {
-        if (selectedStaff.any { it.staffId == staff.id }) return
-        selectedStaff.add(
-            SelectedStaffAssignment(
-                staffId = staff.id,
-                feeAmount = null,
-                roleOverride = "",
-                notes = "",
-                staffName = staff.name,
-                staffRoleLabel = staff.roleLabel,
-                // Defaulting a null: el backend aplica `confirmed` si no viene status.
-                shiftStart = null,
-                shiftEnd = null,
-                status = AssignmentStatus.CONFIRMED.raw
-            )
-        )
-    }
-
-    /**
-     * Setea el turno del colaborador para la fecha actual del evento. [startLocal]
-     * y [endLocal] son `LocalTime`; se combinan con [eventDate] y se convierten
-     * a ISO8601 UTC. Si [endLocal] es menor a [startLocal], se asume que el turno
-     * cruza medianoche y se corre un día.
-     */
-    fun updateStaffShift(
-        staffId: String,
-        startLocal: java.time.LocalTime?,
-        endLocal: java.time.LocalTime?
-    ) {
-        val index = selectedStaff.indexOfFirst { it.staffId == staffId }
-        if (index < 0) return
-        val zone = java.time.ZoneId.systemDefault()
-        val startIso = startLocal?.let { t ->
-            eventDate.atTime(t).atZone(zone).toInstant().toString()
-        }
-        val endIso = endLocal?.let { t ->
-            val baseDate =
-                if (startLocal != null && t.isBefore(startLocal)) eventDate.plusDays(1)
-                else eventDate
-            baseDate.atTime(t).atZone(zone).toInstant().toString()
-        }
-        selectedStaff[index] = selectedStaff[index].copy(
-            shiftStart = startIso,
-            shiftEnd = endIso
-        )
-    }
-
-    /** Limpia el turno registrado para la asignación. */
-    fun clearStaffShift(staffId: String) {
-        val index = selectedStaff.indexOfFirst { it.staffId == staffId }
-        if (index < 0) return
-        selectedStaff[index] = selectedStaff[index].copy(shiftStart = null, shiftEnd = null)
-    }
-
-    fun updateStaffStatus(staffId: String, status: AssignmentStatus) {
-        val index = selectedStaff.indexOfFirst { it.staffId == staffId }
-        if (index < 0) return
-        selectedStaff[index] = selectedStaff[index].copy(status = status.raw)
-    }
-
-    /**
-     * Dispara `GET /api/staff/availability?date=X` para [eventDate]. El resultado
-     * se publica en [staffAvailability]. No-op si el fetch falla — la UI no
-     * debe bloquear la asignación por no tener la señal de ocupación.
-     */
-    fun fetchStaffAvailability() {
-        availabilityJob?.cancel()
-        availabilityJob = viewModelScope.launch {
-            try {
-                val list = staffRepository.getStaffAvailability(date = eventDate.toString())
-                // Al editar, filtrar asignaciones del evento actual para no
-                // marcar como "ocupado" a alguien que ya está en este mismo
-                // evento.
-                val currentId = eventId
-                val map = list.associate { avail ->
-                    avail.staffId to avail.assignments.filter { it.eventId != currentId }
-                }.filterValues { it.isNotEmpty() }
-                _staffAvailability.value = map
-            } catch (_: Exception) {
-                // Silencioso: la UI puede vivir sin la señal.
-            }
-        }
-    }
-
-    fun removeStaffAssignment(staffId: String) {
-        selectedStaff.removeAll { it.staffId == staffId }
-    }
-
-    fun updateStaffFee(staffId: String, fee: Double?) {
-        val index = selectedStaff.indexOfFirst { it.staffId == staffId }
-        if (index < 0) return
-        selectedStaff[index] = selectedStaff[index].copy(feeAmount = fee)
-    }
-
-    fun updateStaffRoleOverride(staffId: String, role: String) {
-        val index = selectedStaff.indexOfFirst { it.staffId == staffId }
-        if (index < 0) return
-        selectedStaff[index] = selectedStaff[index].copy(roleOverride = role)
-    }
-
-    fun updateStaffNotes(staffId: String, notes: String) {
-        val index = selectedStaff.indexOfFirst { it.staffId == staffId }
-        if (index < 0) return
-        selectedStaff[index] = selectedStaff[index].copy(notes = notes)
-    }
-
-    // ===== Staff Teams (Ola 2) =====
-
-    /** Lista equipos del usuario para el picker. Refresca on-demand. */
-    fun loadTeams() {
-        viewModelScope.launch {
-            isLoadingTeams = true
-            teamsErrorMessage = null
-            try {
-                _availableTeams.value = staffTeamRepository.listTeams()
-                    .sortedBy { it.name.lowercase() }
-            } catch (e: Exception) {
-                teamsErrorMessage = "No pudimos cargar los equipos: ${e.message}"
-            } finally {
-                isLoadingTeams = false
-            }
-        }
-    }
-
-    /**
-     * Expande un equipo: trae su detalle (con miembros) y agrega los staff que
-     * no estén ya asignados al evento. Preserva la lógica Ola 1 — cada miembro
-     * queda como asignación independiente y el usuario puede ajustar fee /
-     * turno / estado después.
-     */
-    fun addTeamAssignment(teamId: String, onDone: (added: Int, skipped: Int) -> Unit = { _, _ -> }) {
-        viewModelScope.launch {
-            try {
-                val team = staffTeamRepository.getTeam(teamId)
-                val catalog = _availableStaff.value.associateBy { it.id }
-                val currentIds = selectedStaff.map { it.staffId }.toSet()
-                var added = 0
-                var skipped = 0
-                team.members.orEmpty().sortedBy { it.position }.forEach { member ->
-                    if (member.staffId in currentIds) {
-                        skipped++
-                        return@forEach
-                    }
-                    // Prefer the fresh staff from catalog; fall back to the snapshot
-                    // that came inside the team payload.
-                    val resolvedName = catalog[member.staffId]?.name
-                        ?: member.staffName
-                        ?: "Colaborador"
-                    val resolvedRole = catalog[member.staffId]?.roleLabel
-                        ?: member.staffRoleLabel
-                    selectedStaff.add(
-                        SelectedStaffAssignment(
-                            staffId = member.staffId,
-                            feeAmount = null,
-                            roleOverride = "",
-                            notes = "",
-                            staffName = resolvedName,
-                            staffRoleLabel = resolvedRole,
-                            shiftStart = null,
-                            shiftEnd = null,
-                            status = AssignmentStatus.CONFIRMED.raw
-                        )
-                    )
-                    added++
-                }
-                onDone(added, skipped)
-            } catch (e: Exception) {
-                teamsErrorMessage = tr(R.string.events_form_error_add_team, e.message.orEmpty())
-                onDone(0, 0)
-            }
-        }
-    }
-
-    /** Costo total del personal — suma de `feeAmount` (null cuenta como 0). */
-    val costStaff: Double get() = selectedStaff.sumOf { it.feeAmount ?: 0.0 }
-
-    fun addSupplyFromSuggestion(suggestion: SupplySuggestion) {
-        val existing = selectedSupplies.find { it.inventoryId == suggestion.id }
-        if (existing == null) {
-            val source = if (suggestion.currentStock >= suggestion.suggestedQuantity) {
-                SupplySource.STOCK
-            } else {
-                SupplySource.PURCHASE
-            }
-            val supply = EventSupply(
-                id = UUID.randomUUID().toString(),
-                eventId = "",
-                inventoryId = suggestion.id,
-                quantity = suggestion.suggestedQuantity,
-                unitCost = suggestion.unitCost,
-                source = source,
-                createdAt = "",
-                supplyName = suggestion.ingredientName,
-                unit = suggestion.unit,
-                currentStock = suggestion.currentStock
-            )
-            selectedSupplies.add(supply)
-        }
-    }
-
     fun validateStep(step: Int): String? = when (step) {
         0 -> when {
             selectedClient == null -> tr(R.string.events_form_validation_client_required)
             serviceType.isBlank() -> tr(R.string.events_form_validation_service_required)
             (numPeople.toIntOrNull() ?: 0) < 1 -> tr(R.string.events_form_validation_people_required)
-            !isValidTime24h(startTime) ->
+            !EventFormTimeHelper.isValidTime24h(startTime) ->
                 tr(R.string.events_form_validation_start_time_invalid)
-            !isValidTime24h(endTime) ->
+            !EventFormTimeHelper.isValidTime24h(endTime) ->
                 tr(R.string.events_form_validation_end_time_invalid)
             startTime.isNotBlank() && endTime.isNotBlank() &&
-                normalizeTime(startTime) == normalizeTime(endTime) ->
+                EventFormTimeHelper.normalizeTime(startTime) == EventFormTimeHelper.normalizeTime(endTime) ->
                 tr(R.string.events_form_validation_same_time)
             else -> null
         }
         else -> null
-    }
-
-    /**
-     * Accepts a blank string (maps to null in the backend) or a 24h time in HH:mm /
-     * HH:mm:ss format. Uses [java.time.LocalTime.parse] which rejects out-of-range
-     * values like "25:00" or "12:61".
-     *
-     * Domain note: we intentionally DO NOT enforce `endTime > startTime` because LATAM
-     * events (weddings, quinceañeras) regularly run past midnight — a start of 20:00 and
-     * an end of 02:00 is valid and means "next day". Only equality is rejected (that's
-     * a zero-duration bug).
-     */
-    private fun isValidTime24h(s: String): Boolean {
-        if (s.isBlank()) return true
-        return try {
-            java.time.LocalTime.parse(s)
-            true
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    /** Normalizes "14:30" and "14:30:00" to the same canonical form for comparison. */
-    private fun normalizeTime(s: String): String? = try {
-        java.time.LocalTime.parse(s).toString()
-    } catch (e: Exception) {
-        null
     }
 
     private fun normalizeStaffForSave(): Result<List<EventStaffAssignmentPayload>> {
@@ -1363,18 +813,17 @@ class EventFormViewModel @Inject constructor(
             saveError = tr(R.string.events_form_validation_service_add)
             return
         }
-        // Final time validation — defensive, in case the user skipped step 0 validation.
-        if (!isValidTime24h(startTime)) {
+        if (!EventFormTimeHelper.isValidTime24h(startTime)) {
             saveError = tr(R.string.events_form_validation_start_time_invalid)
             return
         }
-        if (!isValidTime24h(endTime)) {
+        if (!EventFormTimeHelper.isValidTime24h(endTime)) {
             saveError = tr(R.string.events_form_validation_end_time_invalid)
             return
         }
         if (
             startTime.isNotBlank() && endTime.isNotBlank() &&
-            normalizeTime(startTime) == normalizeTime(endTime)
+            EventFormTimeHelper.normalizeTime(startTime) == EventFormTimeHelper.normalizeTime(endTime)
         ) {
             saveError = tr(R.string.events_form_validation_same_time)
             return
@@ -1417,9 +866,6 @@ class EventFormViewModel @Inject constructor(
                     throw err
                 }
 
-                // Save all items (products, extras, equipment, supplies, staff) in one request
-                // Filtramos extras sin descripción — son cards que el usuario
-                // creó pero no llenó (edición inline estilo iOS).
                 eventRepository.updateItems(
                     eventId = savedEvent.id,
                     products = selectedProducts.toList(),
@@ -1458,3 +904,4 @@ data class SelectedStaffAssignment(
     val shiftEnd: String? = null,
     val status: String? = null
 )
+

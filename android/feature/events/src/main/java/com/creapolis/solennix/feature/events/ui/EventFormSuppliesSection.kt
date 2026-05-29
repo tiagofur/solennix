@@ -47,7 +47,7 @@ import com.creapolis.solennix.core.model.EventSupply
 import com.creapolis.solennix.core.model.SupplySource
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.feature.events.R
-import com.creapolis.solennix.feature.events.viewmodel.EventFormViewModel
+import com.creapolis.solennix.feature.events.viewmodel.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,7 +87,15 @@ fun SuppliesSection(viewModel: EventFormViewModel) {
                             FilterChip(
                                 selected = alreadyAdded,
                                 onClick = { if (!alreadyAdded) viewModel.addSupplyFromSuggestion(suggestion) },
-                                label = { Text("${suggestion.ingredientName} (${String.format("%.1f", suggestion.suggestedQuantity)})") },
+                                label = {
+                                    Text(
+                                        stringResource(
+                                            R.string.events_form_inventory_suggestion_label,
+                                            suggestion.ingredientName,
+                                            String.format("%.1f", suggestion.suggestedQuantity)
+                                        )
+                                    )
+                                },
                                 leadingIcon = if (alreadyAdded) { { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) } } else null
                             )
                         }

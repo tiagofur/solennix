@@ -41,7 +41,7 @@ import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.network.UrlResolver
 import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.core.model.EventPhoto
-import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
+import com.creapolis.solennix.feature.events.viewmodel.*
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)

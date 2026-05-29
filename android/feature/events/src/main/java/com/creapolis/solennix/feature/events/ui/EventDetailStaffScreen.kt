@@ -176,7 +176,7 @@ fun EventStaffScreen(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 AssignmentStatusBadge(assignment.status)
-                                val window = formatShiftWindow(assignment.shiftStart, assignment.shiftEnd)
+                                val window = formatShiftWindowLabel(assignment.shiftStart, assignment.shiftEnd)
                                 if (window != null) {
                                     Text(
                                         window,
@@ -238,7 +238,8 @@ private fun AssignmentStatusBadge(rawStatus: String?) {
     }
 }
 
-private fun formatShiftWindow(shiftStartIso: String?, shiftEndIso: String?): String? {
+@Composable
+private fun formatShiftWindowLabel(shiftStartIso: String?, shiftEndIso: String?): String? {
     if (shiftStartIso.isNullOrBlank() && shiftEndIso.isNullOrBlank()) return null
     val zone = java.time.ZoneId.systemDefault()
     val fmt = java.time.format.DateTimeFormatter.ofPattern("HH:mm")
@@ -249,9 +250,9 @@ private fun formatShiftWindow(shiftStartIso: String?, shiftEndIso: String?): Str
         runCatching { java.time.Instant.parse(it).atZone(zone).toLocalTime().format(fmt) }.getOrNull()
     }
     return when {
-        start != null && end != null -> "$start – $end"
-        start != null -> "Desde $start"
-        end != null -> "Hasta $end"
+        start != null && end != null -> stringResource(R.string.events_detail_staff_shift_range, start, end)
+        start != null -> stringResource(R.string.events_detail_staff_shift_from, start)
+        end != null -> stringResource(R.string.events_detail_staff_shift_until, end)
         else -> null
     }
 }

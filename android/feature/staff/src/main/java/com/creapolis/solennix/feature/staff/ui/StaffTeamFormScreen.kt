@@ -51,6 +51,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,6 +59,7 @@ import com.creapolis.solennix.core.designsystem.component.PremiumButton
 import com.creapolis.solennix.core.designsystem.component.SolennixTextField
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
+import com.creapolis.solennix.feature.staff.R
 import com.creapolis.solennix.feature.staff.viewmodel.SelectedTeamMember
 import com.creapolis.solennix.feature.staff.viewmodel.StaffTeamFormViewModel
 
@@ -79,11 +81,11 @@ fun StaffTeamFormScreen(
         topBar = {
             SolennixTopAppBar(
                 title = {
-                    Text(if (viewModel.isEditMode) "Editar equipo" else "Crear equipo")
+                    Text(if (viewModel.isEditMode) stringResource(R.string.staff_team_form_title_edit) else stringResource(R.string.staff_team_form_title_create))
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.staff_cd_back))
                     }
                 }
             )
@@ -106,7 +108,7 @@ fun StaffTeamFormScreen(
                 SolennixTextField(
                     value = viewModel.name,
                     onValueChange = { viewModel.name = it },
-                    label = "Nombre *",
+                    label = stringResource(R.string.staff_form_name_label),
                     leadingIcon = Icons.Default.Group,
                     errorMessage = viewModel.nameError
                 )
@@ -114,14 +116,14 @@ fun StaffTeamFormScreen(
                 SolennixTextField(
                     value = viewModel.roleLabel,
                     onValueChange = { viewModel.roleLabel = it },
-                    label = "Rol del equipo (ej. Banquetes, Producción)",
+                    label = stringResource(R.string.staff_team_form_role_label),
                     leadingIcon = Icons.Default.Badge
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 SolennixTextField(
                     value = viewModel.notes,
                     onValueChange = { viewModel.notes = it },
-                    label = "Notas",
+                    label = stringResource(R.string.staff_notes_title),
                     leadingIcon = Icons.AutoMirrored.Filled.Notes
                 )
 
@@ -129,7 +131,7 @@ fun StaffTeamFormScreen(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        "Miembros",
+                        stringResource(R.string.staff_team_members_title),
                         style = MaterialTheme.typography.titleMedium,
                         color = SolennixTheme.colors.primaryText,
                         modifier = Modifier.weight(1f)
@@ -152,13 +154,13 @@ fun StaffTeamFormScreen(
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                "Aún no agregaste miembros.",
+                                stringResource(R.string.staff_team_form_empty_members_title),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = SolennixTheme.colors.primaryText
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                "Seleccioná colaboradores de tu catálogo para armar el equipo.",
+                                stringResource(R.string.staff_team_form_empty_members_description),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = SolennixTheme.colors.secondaryText
                             )
@@ -195,7 +197,7 @@ fun StaffTeamFormScreen(
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Agregar miembro")
+                    Text(stringResource(R.string.staff_team_add_member))
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -210,7 +212,7 @@ fun StaffTeamFormScreen(
                 }
 
                 PremiumButton(
-                    text = if (viewModel.isEditMode) "Guardar cambios" else "Crear equipo",
+                    text = if (viewModel.isEditMode) stringResource(R.string.staff_form_save_changes) else stringResource(R.string.staff_team_form_create),
                     onClick = { viewModel.saveTeam() },
                     isLoading = viewModel.isSaving,
                     enabled = !viewModel.isSaving
@@ -266,14 +268,14 @@ private fun MemberFormRow(
         IconButton(onClick = onToggleLead) {
             Icon(
                 if (member.isLead) Icons.Default.Star else Icons.Default.StarBorder,
-                contentDescription = if (member.isLead) "Quitar como líder" else "Marcar como líder",
+                contentDescription = if (member.isLead) stringResource(R.string.staff_team_cd_remove_lead) else stringResource(R.string.staff_team_cd_mark_lead),
                 tint = if (member.isLead) SolennixTheme.colors.primary else SolennixTheme.colors.secondaryText
             )
         }
         IconButton(onClick = onRemove) {
             Icon(
                 Icons.Default.Close,
-                contentDescription = "Quitar del equipo",
+                contentDescription = stringResource(R.string.staff_team_cd_remove_member),
                 tint = SolennixTheme.colors.error
             )
         }
@@ -306,7 +308,7 @@ private fun MemberPickerSheet(
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                "Agregar miembro",
+                stringResource(R.string.staff_team_add_member),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold
             )
@@ -315,7 +317,7 @@ private fun MemberPickerSheet(
                 value = query,
                 onValueChange = { query = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Buscar por nombre o rol...") },
+                placeholder = { Text(stringResource(R.string.staff_team_search_member_placeholder)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 singleLine = true,
                 shape = MaterialTheme.shapes.medium
@@ -331,9 +333,9 @@ private fun MemberPickerSheet(
                 ) {
                     Text(
                         if (available.isEmpty())
-                            "Aún no tenés colaboradores. Agregalos desde Más → Personal."
+                            stringResource(R.string.staff_team_no_available_staff)
                         else
-                            "Sin resultados",
+                            stringResource(R.string.staff_no_results),
                         style = MaterialTheme.typography.bodyMedium,
                         color = SolennixTheme.colors.secondaryText
                     )
@@ -380,7 +382,7 @@ private fun MemberPickerSheet(
                                 }
                                 Icon(
                                     Icons.Default.Add,
-                                    contentDescription = "Agregar",
+                                    contentDescription = stringResource(R.string.staff_cd_add),
                                     tint = SolennixTheme.colors.primary
                                 )
                             }

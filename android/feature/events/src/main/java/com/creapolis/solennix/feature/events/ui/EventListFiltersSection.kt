@@ -153,7 +153,8 @@ fun EventListFiltersSection(
         ) {
             if (startDate != null) {
                 val formatter = DateTimeFormatter.ofPattern("dd/MM", Locale.getDefault())
-                val label = "${startDate.format(formatter)} - ${endDate?.format(formatter) ?: "…"}"
+                val endDateLabel = endDate?.format(formatter) ?: stringResource(R.string.events_list_date_range_open_end)
+                val label = stringResource(R.string.events_list_date_range_chip, startDate.format(formatter), endDateLabel)
                 FilterChip(
                     selected = true,
                     onClick = { onDateRangeChange(null, null) },

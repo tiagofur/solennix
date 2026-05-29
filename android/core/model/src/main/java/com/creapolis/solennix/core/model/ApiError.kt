@@ -18,5 +18,7 @@ sealed class ApiError : Exception() {
      */
     data class SecurityError(override val cause: Throwable) : ApiError()
 
+    data class PlanLimitExceeded(val limitType: String, val current: Int, val max: Int) : ApiError()
+
     data class Unknown(override val cause: Throwable) : ApiError()
 }

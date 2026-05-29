@@ -183,7 +183,7 @@ fun EventEquipmentScreen(
                             }
                             Surface(shape = MaterialTheme.shapes.small, color = SolennixTheme.colors.success.copy(alpha = 0.1f)) {
                                 Text(
-                                    "x${item.quantity}",
+                                    stringResource(R.string.events_detail_quantity_multiplier, item.quantity.toString()),
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,

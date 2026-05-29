@@ -1,97 +1,134 @@
 package com.creapolis.solennix.feature.inventory
 
+import android.content.Context
 import java.util.Locale
 
-internal object InventoryStrings {
-    private val isEnglish: Boolean
-        get() = Locale.getDefault().language.startsWith("en")
+object InventoryStrings {
+    private var context: Context? = null
 
-    val title: String get() = if (isEnglish) "Inventory" else "Inventario"
-    val detailTitle: String get() = if (isEnglish) "Inventory Detail" else "Detalle de Inventario"
-    val formTitle: String get() = if (isEnglish) "Inventory Item" else "Item de Inventario"
-    val adjustStock: String get() = if (isEnglish) "Adjust Stock" else "Ajustar Stock"
-    fun currentStockWithUnit(name: String, stock: Double, unit: String): String = "$name — ${formatNumber(stock)} $unit"
-    val quantityAdjustHint: String get() = if (isEnglish) "Quantity (+ adds, − subtracts)" else "Cantidad (+ suma, − resta)"
-    val confirm: String get() = if (isEnglish) "Confirm" else "Confirmar"
-    val lowStock: String get() = if (isEnglish) "Low stock" else "Stock bajo"
-    val searchPlaceholder: String get() = if (isEnglish) "Filter inventory by name..." else "Filtrar inventario por nombre..."
-    val sortName: String get() = if (isEnglish) "Name" else "Nombre"
-    val sortStock: String get() = if (isEnglish) "Stock" else "Stock"
-    val sortMinimum: String get() = if (isEnglish) "Minimum" else "Mínimo"
-    val sortCost: String get() = if (isEnglish) "Cost" else "Costo"
-    val emptyFiltered: String get() = if (isEnglish) "No results for current filter" else "Sin resultados para el filtro"
-    val emptyInventory: String get() = if (isEnglish) "No inventory" else "Sin inventario"
-    val ingredients: String get() = if (isEnglish) "Consumables" else "Consumibles"
-    val supplies: String get() = if (isEnglish) "Per-event supplies" else "Insumos por Evento"
-    val equipment: String get() = if (isEnglish) "Equipment" else "Equipos"
-    fun stockLabel(stock: Double, unit: String): String = if (isEnglish) "Stock: ${formatNumber(stock)} $unit" else "Stock: ${formatNumber(stock)} $unit"
-    val lowBadge: String get() = if (isEnglish) "Low" else "Bajo"
-    val viewDetails: String get() = if (isEnglish) "View details" else "Ver Detalles"
-    val menuEdit: String get() = if (isEnglish) "Edit" else "Editar"
-    val menuDelete: String get() = if (isEnglish) "Delete" else "Eliminar"
-    val menuAdjustStock: String get() = if (isEnglish) "Adjust stock" else "Ajustar Stock"
-    val deleteItemTitle: String get() = if (isEnglish) "Delete item" else "Eliminar Item"
-    val deleteItemMessage: String get() = if (isEnglish) "Are you sure you want to delete this inventory item? This action cannot be undone." else "¿Estás seguro de que deseas eliminar este item del inventario? Esta acción no se puede deshacer."
-    val detailTypeEquipment: String get() = if (isEnglish) "Asset / Equipment" else "Activo / Equipo"
-    val detailTypeSupply: String get() = if (isEnglish) "Per-event Supply" else "Insumo por Evento"
-    val detailTypeIngredient: String get() = if (isEnglish) "Consumable Supply" else "Insumo Consumible"
-    val currentStock: String get() = if (isEnglish) "Current Stock" else "Stock Actual"
-    val belowMinimum: String get() = if (isEnglish) "Below minimum" else "Bajo mínimo"
-    val minimumStock: String get() = if (isEnglish) "Minimum Stock" else "Stock Mínimo"
-    val unitCost: String get() = if (isEnglish) "Unit Cost" else "Costo Unitario"
-    fun perUnit(unit: String): String = if (isEnglish) "per $unit" else "por $unit"
-    val stockValue: String get() = if (isEnglish) "Stock Value" else "Valor en Stock"
-    val totalValue: String get() = if (isEnglish) "total value" else "valor total"
-    val critical7Days: String get() = if (isEnglish) "Insufficient stock for the next 7 days!" else "¡Stock insuficiente para los próximos 7 días!"
-    val belowMinAfterEvents: String get() = if (isEnglish) "Stock will fall below minimum after upcoming events" else "Stock quedará bajo el mínimo tras eventos próximos"
-    val belowMinRecommended: String get() = if (isEnglish) "Stock is below the recommended minimum" else "Stock por debajo del mínimo recomendado"
-    val enough7Days: String get() = if (isEnglish) "Enough stock for the next 7 days" else "Stock suficiente para los próximos 7 días"
-    val noDemand7Days: String get() = if (isEnglish) "No demand in the next 7 days" else "Sin demanda en los próximos 7 días"
-    val noUpcomingEvents: String get() = if (isEnglish) "No upcoming events" else "Sin eventos próximos"
-    fun shortageMessage(demand: Double, stock: Double, shortage: Double, unit: String): String = if (isEnglish) "You need ${formatNumber(demand)} $unit in the next 7 days. You have ${formatNumber(stock)} $unit. Missing ${formatNumber(shortage)} $unit." else "Necesitas ${formatNumber(demand)} $unit en los próximos 7 días. Tienes ${formatNumber(stock)} $unit. Faltan ${formatNumber(shortage)} $unit."
-    fun lowStockMessage(stock: Double, minimum: Double, unit: String): String = if (isEnglish) "Your current stock (${formatNumber(stock)} $unit) is below the recommended minimum (${formatNumber(minimum)} $unit)." else "Tu stock actual (${formatNumber(stock)} $unit) está por debajo del mínimo recomendado (${formatNumber(minimum)} $unit)."
-    fun currentStockMessage(stock: Double, unit: String): String = if (isEnglish) "Current stock: ${formatNumber(stock)} $unit" else "Stock actual: ${formatNumber(stock)} $unit"
-    val recommendedMinimum: String get() = if (isEnglish) "Recommended minimum" else "Mínimo Recomendado"
-    val demandNext7Days: String get() = if (isEnglish) "Demand next 7 days" else "Demanda próximos 7 días"
-    val demandByDate: String get() = if (isEnglish) "Demand by Date" else "Demanda por Fecha"
-    val confirmedEvents: String get() = if (isEnglish) "Confirmed events" else "Eventos confirmados"
-    val noConfirmedEventsUsingItem: String get() = if (isEnglish) "No confirmed events use this item." else "Sin eventos confirmados que usen este ítem."
-    val today: String get() = if (isEnglish) "Today" else "Hoy"
-    val tomorrow: String get() = if (isEnglish) "Tomorrow" else "Mañana"
-    fun inDays(days: Int): String = if (isEnglish) "in $days days" else "en $days días"
-    val totalDemand: String get() = if (isEnglish) "Total demand" else "Total demanda"
-    val newStock: String get() = if (isEnglish) "New stock:" else "Nuevo stock:"
-    val cancel: String get() = if (isEnglish) "Cancel" else "Cancelar"
-    val save: String get() = if (isEnglish) "Save" else "Guardar"
-    fun nearLimitMessage(remaining: Int): String = if (isEnglish) "You have $remaining inventory item(s) left in your plan." else "Te quedan $remaining ítem(s) de inventario disponibles en tu plan."
-    fun limitReached(total: Int): String = if (isEnglish) "You have reached the limit of $total inventory items in your plan." else "Has alcanzado el límite de $total ítems de inventario en tu plan."
-    fun loadItemError(message: String?): String = if (isEnglish) "Error loading item: ${message.orEmpty()}" else "Error al cargar item: ${message.orEmpty()}"
-    fun saveItemError(message: String?): String = if (isEnglish) "Error saving item: ${message.orEmpty()}" else "Error al guardar item: ${message.orEmpty()}"
-    val itemDeleted: String get() = if (isEnglish) "Item deleted" else "Item eliminado"
-    val deleteItemFailed: String get() = if (isEnglish) "Could not delete the item" else "No se pudo borrar el item"
-    val syncInventoryFailed: String get() = if (isEnglish) "Could not sync inventory. Showing cached data." else "No se pudo sincronizar el inventario. Mostrando datos en caché."
-    fun adjustStockFailed(name: String): String = if (isEnglish) "Could not adjust stock for $name" else "No se pudo ajustar el stock de $name"
-    val fallbackEvent: String get() = if (isEnglish) "Event" else "Evento"
-    fun adjustStockError(message: String?): String = if (isEnglish) "Error adjusting stock: ${message.orEmpty()}" else "Error al ajustar stock: ${message.orEmpty()}"
-    fun deleteError(message: String?): String = if (isEnglish) "Error deleting item: ${message.orEmpty()}" else "Error al eliminar item: ${message.orEmpty()}"
-    val itemNameRequired: String get() = if (isEnglish) "Item Name *" else "Nombre del Item *"
-    val typeRequired: String get() = if (isEnglish) "Type *" else "Tipo *"
-    val ingredientType: String get() = if (isEnglish) "Ingredient" else "Ingrediente"
-    val equipmentType: String get() = if (isEnglish) "Equipment" else "Equipo"
-    val supplyType: String get() = if (isEnglish) "Supply" else "Insumo"
-    val stockCurrentRequired: String get() = if (isEnglish) "Current Stock *" else "Stock Actual *"
-    val stockMinimumRequired: String get() = if (isEnglish) "Minimum Stock *" else "Stock Mínimo *"
-    val unitRequired: String get() = if (isEnglish) "Unit *" else "Unidad *"
-    val unitCostOptional: String get() = if (isEnglish) "Unit Cost" else "Costo Unitario"
-    val validationNameMin: String get() = if (isEnglish) "Name must be at least 2 characters" else "El nombre debe tener al menos 2 caracteres"
-    val validationStockNegative: String get() = if (isEnglish) "Stock cannot be negative" else "El stock no puede ser negativo"
-    val validationMinimumNegative: String get() = if (isEnglish) "Minimum stock cannot be negative" else "El stock mínimo no puede ser negativo"
-    val validationUnitCostNegative: String get() = if (isEnglish) "Unit cost cannot be negative" else "El costo unitario no puede ser negativo"
-    fun commonUnits(): List<String> = if (isEnglish) {
-        listOf("piece", "kg", "g", "l", "ml", "box", "package")
-    } else {
-        listOf("pieza", "kg", "g", "l", "ml", "caja", "paquete")
+    fun init(context: Context) {
+        this.context = context.applicationContext
     }
+
+    private fun getString(resId: Int): String {
+        return context?.getString(resId) ?: ""
+    }
+
+    private fun getString(resId: Int, vararg formatArgs: Any): String {
+        return context?.getString(resId, *formatArgs) ?: ""
+    }
+
+    private fun getStringArray(resId: Int): List<String> {
+        return context?.resources?.getStringArray(resId)?.toList() ?: emptyList()
+    }
+
+    val title: String get() = getString(R.string.inventory_title)
+    val detailTitle: String get() = getString(R.string.inventory_detail_title)
+    val formTitle: String get() = getString(R.string.inventory_form_title)
+    val adjustStock: String get() = getString(R.string.inventory_adjust_stock)
+    
+    fun currentStockWithUnit(name: String, stock: Double, unit: String): String = 
+        getString(R.string.inventory_current_stock_with_unit, name, formatNumber(stock), unit)
+        
+    val quantityAdjustHint: String get() = getString(R.string.inventory_quantity_adjust_hint)
+    val confirm: String get() = getString(R.string.inventory_confirm)
+    val lowStock: String get() = getString(R.string.inventory_low_stock)
+    val searchPlaceholder: String get() = getString(R.string.inventory_search_placeholder)
+    val sortName: String get() = getString(R.string.inventory_sort_name)
+    val sortStock: String get() = getString(R.string.inventory_sort_stock)
+    val sortMinimum: String get() = getString(R.string.inventory_sort_minimum)
+    val sortCost: String get() = getString(R.string.inventory_sort_cost)
+    val emptyFiltered: String get() = getString(R.string.inventory_empty_filtered)
+    val emptyInventory: String get() = getString(R.string.inventory_empty_inventory)
+    val ingredients: String get() = getString(R.string.inventory_ingredients)
+    val supplies: String get() = getString(R.string.inventory_supplies)
+    val equipment: String get() = getString(R.string.inventory_equipment)
+    
+    fun stockLabel(stock: Double, unit: String): String = 
+        getString(R.string.inventory_stock_label, formatNumber(stock), unit)
+        
+    val lowBadge: String get() = getString(R.string.inventory_low_badge)
+    val viewDetails: String get() = getString(R.string.inventory_view_details)
+    val menuEdit: String get() = getString(R.string.inventory_menu_edit)
+    val menuDelete: String get() = getString(R.string.inventory_menu_delete)
+    val menuAdjustStock: String get() = getString(R.string.inventory_menu_adjust_stock)
+    val deleteItemTitle: String get() = getString(R.string.inventory_delete_item_title)
+    val deleteItemMessage: String get() = getString(R.string.inventory_delete_item_message)
+    val detailTypeEquipment: String get() = getString(R.string.inventory_detail_type_equipment)
+    val detailTypeSupply: String get() = getString(R.string.inventory_detail_type_supply)
+    val detailTypeIngredient: String get() = getString(R.string.inventory_detail_type_ingredient)
+    val currentStock: String get() = getString(R.string.inventory_current_stock)
+    val belowMinimum: String get() = getString(R.string.inventory_below_minimum)
+    val minimumStock: String get() = getString(R.string.inventory_minimum_stock)
+    val unitCost: String get() = getString(R.string.inventory_unit_cost)
+    
+    fun perUnit(unit: String): String = getString(R.string.inventory_per_unit, unit)
+    
+    val stockValue: String get() = getString(R.string.inventory_stock_value)
+    val totalValue: String get() = getString(R.string.inventory_total_value)
+    val critical7Days: String get() = getString(R.string.inventory_critical_7days)
+    val belowMinAfterEvents: String get() = getString(R.string.inventory_below_min_after_events)
+    val belowMinRecommended: String get() = getString(R.string.inventory_below_min_recommended)
+    val enough7Days: String get() = getString(R.string.inventory_enough_7days)
+    val noDemand7Days: String get() = getString(R.string.inventory_no_demand_7days)
+    val noUpcomingEvents: String get() = getString(R.string.inventory_no_upcoming_events)
+    
+    fun shortageMessage(demand: Double, stock: Double, shortage: Double, unit: String): String = 
+        getString(R.string.inventory_shortage_message, formatNumber(demand), formatNumber(stock), formatNumber(shortage), unit)
+        
+    fun lowStockMessage(stock: Double, minimum: Double, unit: String): String = 
+        getString(R.string.inventory_low_stock_message, formatNumber(stock), formatNumber(minimum), unit)
+        
+    fun currentStockMessage(stock: Double, unit: String): String = 
+        getString(R.string.inventory_current_stock_message, formatNumber(stock), unit)
+        
+    val recommendedMinimum: String get() = getString(R.string.inventory_recommended_minimum)
+    val demandNext7Days: String get() = getString(R.string.inventory_demand_next_7_days)
+    val demandByDate: String get() = getString(R.string.inventory_demand_by_date)
+    val confirmedEvents: String get() = getString(R.string.inventory_confirmed_events)
+    val noConfirmedEventsUsingItem: String get() = getString(R.string.inventory_no_confirmed_events_using_item)
+    val today: String get() = getString(R.string.inventory_today)
+    val tomorrow: String get() = getString(R.string.inventory_tomorrow)
+    
+    fun inDays(days: Int): String = getString(R.string.inventory_in_days, days)
+    
+    val totalDemand: String get() = getString(R.string.inventory_total_demand)
+    val newStock: String get() = getString(R.string.inventory_new_stock)
+    val cancel: String get() = getString(R.string.inventory_cancel)
+    val save: String get() = getString(R.string.inventory_save)
+    
+    fun nearLimitMessage(remaining: Int): String = getString(R.string.inventory_near_limit_message, remaining)
+    fun limitReached(total: Int): String = getString(R.string.inventory_limit_reached, total)
+    
+    fun loadItemError(message: String?): String = getString(R.string.inventory_load_item_error, message.orEmpty())
+    fun saveItemError(message: String?): String = getString(R.string.inventory_save_item_error, message.orEmpty())
+    
+    val itemDeleted: String get() = getString(R.string.inventory_item_deleted)
+    val deleteItemFailed: String get() = getString(R.string.inventory_delete_item_failed)
+    val syncInventoryFailed: String get() = getString(R.string.inventory_sync_inventory_failed)
+    
+    fun adjustStockFailed(name: String): String = getString(R.string.inventory_adjust_stock_failed, name)
+    
+    val fallbackEvent: String get() = getString(R.string.inventory_fallback_event)
+    
+    fun adjustStockError(message: String?): String = getString(R.string.inventory_adjust_stock_error, message.orEmpty())
+    fun deleteError(message: String?): String = getString(R.string.inventory_delete_error, message.orEmpty())
+    
+    val itemNameRequired: String get() = getString(R.string.inventory_item_name_required)
+    val typeRequired: String get() = getString(R.string.inventory_type_required)
+    val ingredientType: String get() = getString(R.string.inventory_ingredient_type)
+    val equipmentType: String get() = getString(R.string.inventory_equipment_type)
+    val supplyType: String get() = getString(R.string.inventory_supply_type)
+    val stockCurrentRequired: String get() = getString(R.string.inventory_stock_current_required)
+    val stockMinimumRequired: String get() = getString(R.string.inventory_stock_minimum_required)
+    val unitRequired: String get() = getString(R.string.inventory_unit_required)
+    val unitCostOptional: String get() = getString(R.string.inventory_unit_cost_optional)
+    val validationNameMin: String get() = getString(R.string.inventory_validation_name_min)
+    val validationStockNegative: String get() = getString(R.string.inventory_validation_stock_negative)
+    val validationMinimumNegative: String get() = getString(R.string.inventory_validation_minimum_negative)
+    val validationUnitCostNegative: String get() = getString(R.string.inventory_validation_unit_cost_negative)
+    
+    fun commonUnits(): List<String> = getStringArray(R.array.inventory_common_units)
 
     private fun formatNumber(value: Double): String =
         if (value == value.toLong().toDouble()) value.toLong().toString() else String.format(Locale.US, "%.1f", value)

@@ -40,6 +40,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -47,6 +49,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.StaffTeam
+import com.creapolis.solennix.feature.staff.R
 import com.creapolis.solennix.feature.staff.viewmodel.StaffTeamListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,12 +71,12 @@ fun StaffTeamListScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Equipos") },
+                title = { Text(stringResource(R.string.staff_team_list_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver"
+                            contentDescription = stringResource(R.string.staff_cd_back)
                         )
                     }
                 }
@@ -85,7 +88,7 @@ fun StaffTeamListScreen(
                 containerColor = SolennixTheme.colors.primary,
                 contentColor = Color.White
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Crear equipo")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.staff_team_form_title_create))
             }
         },
         contentWindowInsets = WindowInsets(0)
@@ -122,14 +125,13 @@ fun StaffTeamListScreen(
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                "Sin equipos todavía",
+                                stringResource(R.string.staff_team_list_empty_title),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = SolennixTheme.colors.primaryText
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                "Agrupá a tus colaboradores recurrentes en equipos para " +
-                                    "asignarlos en bloque a un evento.",
+                                stringResource(R.string.staff_team_list_empty_description),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = SolennixTheme.colors.secondaryText
                             )
@@ -168,11 +170,10 @@ fun StaffTeamListScreen(
     if (toDelete != null) {
         AlertDialog(
             onDismissRequest = { pendingDelete = null },
-            title = { Text("Eliminar equipo") },
+            title = { Text(stringResource(R.string.staff_team_delete_title)) },
             text = {
                 Text(
-                    "¿Eliminar \"${toDelete.name}\"? Los colaboradores no se borran — " +
-                        "sólo se deshace la agrupación."
+                    stringResource(R.string.staff_team_list_delete_message, toDelete.name)
                 )
             },
             confirmButton = {
@@ -185,12 +186,12 @@ fun StaffTeamListScreen(
                         contentColor = SolennixTheme.colors.error
                     )
                 ) {
-                    Text("Eliminar")
+                    Text(stringResource(R.string.staff_delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { pendingDelete = null }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.staff_cancel))
                 }
             }
         )
@@ -238,11 +239,7 @@ private fun StaffTeamRow(
                 }
                 val count = team.memberCount ?: team.members?.size ?: 0
                 Text(
-                    when (count) {
-                        0 -> "Sin miembros"
-                        1 -> "1 miembro"
-                        else -> "$count miembros"
-                    },
+                    pluralStringResource(R.plurals.staff_team_member_count, count, count),
                     style = MaterialTheme.typography.labelSmall,
                     color = SolennixTheme.colors.secondaryText
                 )
@@ -250,7 +247,7 @@ private fun StaffTeamRow(
             IconButton(onClick = onDeleteClick) {
                 Icon(
                     Icons.Default.Delete,
-                    contentDescription = "Eliminar",
+                    contentDescription = stringResource(R.string.staff_cd_delete),
                     tint = SolennixTheme.colors.error
                 )
             }
