@@ -54,8 +54,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import com.creapolis.solennix.feature.events.viewmodel.EventDetailUiState
-import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
+import com.creapolis.solennix.feature.events.viewmodel.*
 import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
 import java.io.File
