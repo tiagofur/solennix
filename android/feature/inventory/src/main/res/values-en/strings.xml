@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="inventory_title">Inventory</string>
+    <string name="inventory_detail_title">Inventory Detail</string>
+    <string name="inventory_form_title">Inventory Item</string>
+    <string name="inventory_adjust_stock">Adjust Stock</string>
+    <string name="inventory_current_stock_with_unit">%1$s — %2$s %3$s</string>
+    <string name="inventory_quantity_adjust_hint">Quantity (+ adds, − subtracts)</string>
+    <string name="inventory_confirm">Confirm</string>
+    <string name="inventory_low_stock">Low stock</string>
+    <string name="inventory_search_placeholder">Filter inventory by name…</string>
+    <string name="inventory_sort_name">Name</string>
+    <string name="inventory_sort_stock">Stock</string>
+    <string name="inventory_sort_minimum">Minimum</string>
+    <string name="inventory_sort_cost">Cost</string>
+    <string name="inventory_empty_filtered">No results for current filter</string>
+    <string name="inventory_empty_inventory">No inventory</string>
+    <string name="inventory_ingredients">Consumables</string>
+    <string name="inventory_supplies">Per-event supplies</string>
+    <string name="inventory_equipment">Equipment</string>
+    <string name="inventory_stock_label">Stock: %1$s %2$s</string>
+    <string name="inventory_low_badge">Low</string>
+    <string name="inventory_view_details">View details</string>
+    <string name="inventory_menu_edit">Edit</string>
+    <string name="inventory_menu_delete">Delete</string>
+    <string name="inventory_menu_adjust_stock">Adjust stock</string>
+    <string name="inventory_delete_item_title">Delete item</string>
+    <string name="inventory_delete_item_message">Are you sure you want to delete this inventory item? This action cannot be undone.</string>
+    <string name="inventory_detail_type_equipment">Asset / Equipment</string>
+    <string name="inventory_detail_type_supply">Per-event Supply</string>
+    <string name="inventory_detail_type_ingredient">Consumable Supply</string>
+    <string name="inventory_current_stock">Current Stock</string>
+    <string name="inventory_below_minimum">Below minimum</string>
+    <string name="inventory_minimum_stock">Minimum Stock</string>
+    <string name="inventory_unit_cost">Unit Cost</string>
+    <string name="inventory_per_unit">per %1$s</string>
+    <string name="inventory_stock_value">Stock Value</string>
+    <string name="inventory_total_value">total value</string>
+    <string name="inventory_critical_7days">Insufficient stock for the next 7 days!</string>
+    <string name="inventory_below_min_after_events">Stock will fall below minimum after upcoming events</string>
+    <string name="inventory_below_min_recommended">Stock is below the recommended minimum</string>
+    <string name="inventory_enough_7days">Enough stock for the next 7 days</string>
+    <string name="inventory_no_demand_7days">No demand in the next 7 days</string>
+    <string name="inventory_no_upcoming_events">No upcoming events</string>
+    <string name="inventory_shortage_message">You need %1$s %4$s in the next 7 days. You have %2$s %4$s. Missing %3$s %4$s.</string>
+    <string name="inventory_low_stock_message">Your current stock (%1$s %3$s) is below the recommended minimum (%2$s %3$s).</string>
+    <string name="inventory_current_stock_message">Current stock: %1$s %2$s</string>
+    <string name="inventory_recommended_minimum">Recommended minimum</string>
+    <string name="inventory_demand_next_7_days">Demand next 7 days</string>
+    <string name="inventory_demand_by_date">Demand by Date</string>
+    <string name="inventory_confirmed_events">Confirmed events</string>
+    <string name="inventory_no_confirmed_events_using_item">No confirmed events use this item.</string>
+    <string name="inventory_today">Today</string>
+    <string name="inventory_tomorrow">Tomorrow</string>
+    <string name="inventory_in_days">in %1$d days</string>
+    <string name="inventory_total_demand">Total demand</string>
+    <string name="inventory_new_stock">New stock:</string>
+    <string name="inventory_cancel">Cancel</string>
+    <string name="inventory_save">Save</string>
+    <string name="inventory_near_limit_message">You have %1$d inventory item(s) left in your plan.</string>
+    <string name="inventory_limit_reached">You have reached the limit of %1$d inventory items in your plan.</string>
+    <string name="inventory_load_item_error">Error loading item: %1$s</string>
+    <string name="inventory_save_item_error">Error saving item: %1$s</string>
+    <string name="inventory_item_deleted">Item deleted</string>
+    <string name="inventory_delete_item_failed">Could not delete the item</string>
+    <string name="inventory_sync_inventory_failed">Could not sync inventory. Showing cached data.</string>
+    <string name="inventory_adjust_stock_failed">Could not adjust stock for %1$s</string>
+    <string name="inventory_fallback_event">Event</string>
+    <string name="inventory_adjust_stock_error">Error adjusting stock: %1$s</string>
+    <string name="inventory_delete_error">Error deleting item: %1$s</string>
+    <string name="inventory_item_name_required">Item Name *</string>
+    <string name="inventory_type_required">Type *</string>
+    <string name="inventory_ingredient_type">Ingredient</string>
+    <string name="inventory_equipment_type">Equipment</string>
+    <string name="inventory_supply_type">Supply</string>
+    <string name="inventory_stock_current_required">Current Stock *</string>
+    <string name="inventory_stock_minimum_required">Minimum Stock *</string>
+    <string name="inventory_unit_required">Unit *</string>
+    <string name="inventory_unit_cost_optional">Unit Cost</string>
+    <string name="inventory_validation_name_min">Name must be at least 2 characters</string>
+    <string name="inventory_validation_stock_negative">Stock cannot be negative</string>
+    <string name="inventory_validation_minimum_negative">Minimum stock cannot be negative</string>
+    <string name="inventory_validation_unit_cost_negative">Unit cost cannot be negative</string>
+    <string-array name="inventory_common_units">
+        <item>piece</item>
+        <item>kg</item>
+        <item>g</item>
+        <item>l</item>
+        <item>ml</item>
+        <item>box</item>
+        <item>package</item>
+    </string-array>
+</resources>
