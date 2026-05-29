@@ -1,115 +1,158 @@
 package com.creapolis.solennix.feature.products
 
+import android.content.Context
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-internal object ProductStrings {
+object ProductStrings {
+    private var context: Context? = null
+
+    fun init(context: Context) {
+        this.context = context.applicationContext
+    }
+
     private val isEnglish: Boolean
         get() = Locale.getDefault().language.startsWith("en")
 
-    val title: String get() = if (isEnglish) "Products" else "Productos"
-    val detailTitle: String get() = if (isEnglish) "Product Details" else "Detalle del Producto"
-    val formTitle: String get() = if (isEnglish) "Product" else "Producto"
-    val searchPlaceholder: String get() = if (isEnglish) "Filter products by name or category..." else "Filtrar productos por nombre o categoría..."
-    val sortName: String get() = if (isEnglish) "Name" else "Nombre"
-    val sortPrice: String get() = if (isEnglish) "Price" else "Precio"
-    val sortCategory: String get() = if (isEnglish) "Category" else "Categoría"
-    val filterAll: String get() = if (isEnglish) "All" else "Todos"
-    val menuEdit: String get() = if (isEnglish) "Edit" else "Editar"
-    val menuDelete: String get() = if (isEnglish) "Delete" else "Eliminar"
-    val menuDetails: String get() = if (isEnglish) "Details" else "Detalles"
-    val inactive: String get() = if (isEnglish) "Inactive" else "Inactivo"
-    val deleteTitle: String get() = if (isEnglish) "Delete product" else "Eliminar producto"
-    val deleteMessage: String get() = if (isEnglish) "Are you sure you want to delete this product? This action cannot be undone." else "¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer."
-    val cancel: String get() = if (isEnglish) "Cancel" else "Cancelar"
-    val confirmDelete: String get() = if (isEnglish) "Delete" else "Eliminar"
-    val basePrice: String get() = if (isEnglish) "Base Price" else "Precio Base"
-    val perUnit: String get() = if (isEnglish) "per unit" else "por unidad"
-    val unitCost: String get() = if (isEnglish) "Cost / Unit" else "Costo / Unidad"
-    val inSupplies: String get() = if (isEnglish) "in supplies" else "en insumos"
-    val marginEstimated: String get() = if (isEnglish) "Estimated Margin" else "Margen Est."
-    val marginSubtitle: String get() = if (isEnglish) "estimated profit" else "utilidad estimada"
-    val upcomingEvents: String get() = if (isEnglish) "Upcoming Events" else "Próx. Eventos"
-    val confirmed: String get() = if (isEnglish) "confirmed" else "confirmados"
-    val generalInfo: String get() = if (isEnglish) "GENERAL INFORMATION" else "INFORMACIÓN GENERAL"
-    val category: String get() = if (isEnglish) "Category" else "Categoría"
-    val composition: String get() = if (isEnglish) "Composition" else "Composición"
-    val compositionTitle: String get() = if (isEnglish) "Composition / Ingredients" else "Composición / Insumos"
-    val equipmentTitle: String get() = if (isEnglish) "Required Equipment" else "Equipo Necesario"
-    val suppliesTitle: String get() = if (isEnglish) "Supplies per Event" else "Insumos por Evento"
-    val compositionDescription: String get() = if (isEnglish) "Only ingredients add product cost." else "Solo insumos generan costo al producto."
-    val equipmentDescription: String get() = if (isEnglish) "Reusable assets. They are not included in cost." else "Activos reutilizables. No se incluyen en el costo."
-    val suppliesDescription: String get() = if (isEnglish) "Fixed cost per event (e.g. oil, gas)." else "Costo fijo por evento (ej. aceite, gas)."
-    val fixedCostPerEvent: String get() = if (isEnglish) "Fixed cost per event" else "Costo fijo por evento"
-    val reusableNoCost: String get() = if (isEnglish) "No cost - Reusable" else "Sin costo - Reutilizable"
-    val totalUnitCost: String get() = if (isEnglish) "Total Unit Cost" else "Costo Total por Unidad"
-    val totalEventCost: String get() = if (isEnglish) "Cost per Event" else "Costo por Evento"
-    val ingredientHeader: String get() = if (isEnglish) "ITEM" else "INSUMO"
-    val quantityHeader: String get() = if (isEnglish) "QUANTITY" else "CANTIDAD"
-    val estimatedCostHeader: String get() = if (isEnglish) "EST. COST" else "COSTO EST."
-    val unknownIngredient: String get() = if (isEnglish) "Item" else "Insumo"
-    val demandByDate: String get() = if (isEnglish) "Demand by Date" else "Demanda por Fecha"
-    val confirmedEvents: String get() = if (isEnglish) "Confirmed events" else "Eventos confirmados"
-    fun upcomingEventsCount(count: Int): String = if (isEnglish) "Upcoming $count events" else "Próximos $count eventos"
-    fun totalSummary(quantity: Int, people: Int): String = if (isEnglish) "Total: $quantity units for $people people" else "Total: $quantity unidades para $people personas"
-    val totalDemand: String get() = if (isEnglish) "TOTAL DEMAND" else "TOTAL DEMANDA"
-    fun eventCount(count: Int): String = if (isEnglish) "$count event${if (count != 1) "s" else ""}" else "$count evento${if (count != 1) "s" else ""}"
-    fun quantityUnits(count: Int): String = if (isEnglish) "$count units" else "$count unidades"
-    fun estimatedRevenueShort(value: String): String = if (isEnglish) "$value est." else "$value est."
-    val noUpcomingEvents: String get() = if (isEnglish) "No upcoming events" else "Sin eventos próximos"
-    val noUpcomingEventsDescription: String get() = if (isEnglish) "This product is not included in any upcoming event" else "Este producto no está incluido en ningún evento próximo"
-    val noImmediateDemand: String get() = if (isEnglish) "No immediate demand" else "Sin demanda inmediata"
-    val highDemandThisWeek: String get() = if (isEnglish) "High demand this week." else "Alta demanda esta semana."
-    fun unitsNext7Days(count: Int): String = if (isEnglish) "$count units in the next 7 days" else "$count unidades en los próximos 7 días"
-    fun totalRevenueMessage(value: String): String = if (isEnglish) "High demand this week. Estimated total revenue: $value" else "Alta demanda esta semana. Ingreso estimado total: $value"
-    fun upcomingEventsSummary(units: Int, events: Int): String = if (isEnglish) "$units units across $events upcoming ${if (events == 1) "event" else "events"}." else "$units unidades en $events evento${if (events != 1) "s" else ""} próximos."
-    val noConfirmedEventsIncludingProduct: String get() = if (isEnglish) "There are no confirmed events including this product." else "No hay eventos confirmados que incluyan este producto."
-    val today: String get() = if (isEnglish) "Today" else "Hoy"
-    val tomorrow: String get() = if (isEnglish) "Tomorrow" else "Mañana"
-    fun inDays(days: Int): String = if (isEnglish) "in $days days" else "en $days días"
-    val imageTitle: String get() = if (isEnglish) "Product Image" else "Imagen del Producto"
-    val tapToSelectImage: String get() = if (isEnglish) "Tap to select image" else "Toca para seleccionar imagen"
-    val uploading: String get() = if (isEnglish) "Uploading..." else "Subiendo..."
-    val changeImage: String get() = if (isEnglish) "Change Image" else "Cambiar Imagen"
-    val selectImage: String get() = if (isEnglish) "Select Image" else "Seleccionar Imagen"
-    val nameRequired: String get() = if (isEnglish) "Name *" else "Nombre *"
-    val categoryRequired: String get() = if (isEnglish) "Category *" else "Categoría *"
-    val priceRequired: String get() = if (isEnglish) "Base Price *" else "Precio Base *"
-    val activeProduct: String get() = if (isEnglish) "Active product" else "Producto activo"
-    val visibleInQuotes: String get() = if (isEnglish) "Visible in quotes" else "Visible en cotizaciones"
-    val save: String get() = if (isEnglish) "Save" else "Guardar"
-    val add: String get() = if (isEnglish) "Add" else "Agregar"
-    val noAddedItems: String get() = if (isEnglish) "No items added" else "No hay elementos agregados"
-    val selectItem: String get() = if (isEnglish) "Select item..." else "Seleccionar item..."
-    fun itemCost(cost: String, unit: String): String = if (isEnglish) "Cost: $cost / $unit" else "Costo: $cost / $unit"
-    val quantity: String get() = if (isEnglish) "Quantity" else "Cantidad"
-    val estimatedCost: String get() = if (isEnglish) "Est. cost" else "Costo est."
-    val associatedTeam: String get() = if (isEnglish) "Associated team" else "Equipo asociado"
-    val associatedTeamDescription: String get() = if (isEnglish) "Add a team to sell waiter service with this product." else "Agregá un equipo para vender el servicio de meseros con este producto."
-    val team: String get() = if (isEnglish) "Team" else "Equipo"
-    val noTeam: String get() = if (isEnglish) "No team" else "Sin equipo"
-    fun members(count: Int): String = if (isEnglish) "$count members" else "$count integrantes"
-    val autoAssignTeamMembers: String get() = if (isEnglish) "When you add this product to an event, team members are automatically assigned as staff." else "Cuando agregues este producto a un evento, se asignan automáticamente los miembros del equipo como personal."
-    val pickerTitle: String get() = if (isEnglish) "Select Item" else "Seleccionar Item"
-    val pickerSearchPlaceholder: String get() = if (isEnglish) "Search item..." else "Buscar item..."
-    fun stockLabel(stock: Int, unit: String): String = if (isEnglish) "Stock: $stock $unit" else "Stock: $stock $unit"
-    fun nearLimitMessage(remaining: Int): String = if (isEnglish) "You have $remaining products available in your current plan." else "Te quedan $remaining productos disponibles en tu plan actual."
-    val productDeleted: String get() = if (isEnglish) "Product deleted" else "Producto eliminado"
-    val deleteFailed: String get() = if (isEnglish) "Could not delete the product" else "No se pudo borrar el producto"
-    val syncFailed: String get() = if (isEnglish) "Could not sync products. Showing cached data." else "No se pudieron sincronizar los productos. Mostrando datos en caché."
-    val fallbackClient: String get() = if (isEnglish) "Client" else "Cliente"
-    fun deleteError(message: String?): String = if (isEnglish) "Error deleting product: ${message.orEmpty()}" else "Error al eliminar producto: ${message.orEmpty()}"
-    fun loadDataError(message: String?): String = if (isEnglish) "Error loading data: ${message.orEmpty()}" else "Error al cargar datos: ${message.orEmpty()}"
-    fun loadProductError(message: String?): String = if (isEnglish) "Error loading product: ${message.orEmpty()}" else "Error al cargar producto: ${message.orEmpty()}"
-    fun saveProductError(message: String?): String = if (isEnglish) "Error saving product: ${message.orEmpty()}" else "Error al guardar producto: ${message.orEmpty()}"
-    val imageReadError: String get() = if (isEnglish) "Could not read the selected image" else "No se pudo leer la imagen seleccionada"
-    fun imageUploadError(message: String?): String = if (isEnglish) "Error uploading image: ${message.orEmpty()}" else "Error al subir imagen: ${message.orEmpty()}"
-    val validationNameMin: String get() = if (isEnglish) "Name must be at least 2 characters" else "El nombre debe tener al menos 2 caracteres"
-    val validationCategoryRequired: String get() = if (isEnglish) "Category is required" else "La categoría es requerida"
-    val defaultUnit: String get() = if (isEnglish) "unit" else "und"
+    private fun getString(resId: Int): String {
+        return context?.getString(resId) ?: ""
+    }
+
+    private fun getString(resId: Int, vararg formatArgs: Any): String {
+        return context?.getString(resId, *formatArgs) ?: ""
+    }
+
+    val title: String get() = getString(R.string.products_title)
+    val detailTitle: String get() = getString(R.string.products_detail_title)
+    val formTitle: String get() = getString(R.string.products_form_title)
+    val searchPlaceholder: String get() = getString(R.string.products_search_placeholder)
+    val sortName: String get() = getString(R.string.products_sort_name)
+    val sortPrice: String get() = getString(R.string.products_sort_price)
+    val sortCategory: String get() = getString(R.string.products_sort_category)
+    val filterAll: String get() = getString(R.string.products_filter_all)
+    val menuEdit: String get() = getString(R.string.products_menu_edit)
+    val menuDelete: String get() = getString(R.string.products_menu_delete)
+    val menuDetails: String get() = getString(R.string.products_menu_details)
+    val inactive: String get() = getString(R.string.products_inactive)
+    val deleteTitle: String get() = getString(R.string.products_delete_title)
+    val deleteMessage: String get() = getString(R.string.products_delete_message)
+    val cancel: String get() = getString(R.string.products_cancel)
+    val confirmDelete: String get() = getString(R.string.products_confirm_delete)
+    val basePrice: String get() = getString(R.string.products_base_price)
+    val perUnit: String get() = getString(R.string.products_per_unit)
+    val unitCost: String get() = getString(R.string.products_unit_cost)
+    val inSupplies: String get() = getString(R.string.products_in_supplies)
+    val marginEstimated: String get() = getString(R.string.products_margin_estimated)
+    val marginSubtitle: String get() = getString(R.string.products_margin_subtitle)
+    val upcomingEvents: String get() = getString(R.string.products_upcoming_events)
+    val confirmed: String get() = getString(R.string.products_confirmed)
+    val generalInfo: String get() = getString(R.string.products_general_info)
+    val category: String get() = getString(R.string.products_category)
+    val composition: String get() = getString(R.string.products_composition)
+    val compositionTitle: String get() = getString(R.string.products_composition_title)
+    val equipmentTitle: String get() = getString(R.string.products_equipment_title)
+    val suppliesTitle: String get() = getString(R.string.products_supplies_title)
+    val compositionDescription: String get() = getString(R.string.products_composition_description)
+    val equipmentDescription: String get() = getString(R.string.products_equipment_description)
+    val suppliesDescription: String get() = getString(R.string.products_supplies_description)
+    val fixedCostPerEvent: String get() = getString(R.string.products_fixed_cost_per_event)
+    val reusableNoCost: String get() = getString(R.string.products_reusable_no_cost)
+    val totalUnitCost: String get() = getString(R.string.products_total_unit_cost)
+    val totalEventCost: String get() = getString(R.string.products_total_event_cost)
+    val ingredientHeader: String get() = getString(R.string.products_ingredient_header)
+    val quantityHeader: String get() = getString(R.string.products_quantity_header)
+    val estimatedCostHeader: String get() = getString(R.string.products_estimated_cost_header)
+    val unknownIngredient: String get() = getString(R.string.products_unknown_ingredient)
+    val demandByDate: String get() = getString(R.string.products_demand_by_date)
+    val confirmedEvents: String get() = getString(R.string.products_confirmed_events)
+    
+    fun upcomingEventsCount(count: Int): String = getString(R.string.products_upcoming_events_count, count)
+    fun totalSummary(quantity: Int, people: Int): String = getString(R.string.products_total_summary, quantity, people)
+    
+    val totalDemand: String get() = getString(R.string.products_total_demand)
+    
+    fun eventCount(count: Int): String {
+        val suffix = if (count != 1) "s" else ""
+        return getString(R.string.products_event_count, count, suffix)
+    }
+    
+    fun quantityUnits(count: Int): String = getString(R.string.products_quantity_units, count)
+    fun estimatedRevenueShort(value: String): String = getString(R.string.products_estimated_revenue_short, value)
+    
+    val noUpcomingEvents: String get() = getString(R.string.products_no_upcoming_events)
+    val noUpcomingEventsDescription: String get() = getString(R.string.products_no_upcoming_events_description)
+    val noImmediateDemand: String get() = getString(R.string.products_no_immediate_demand)
+    val highDemandThisWeek: String get() = getString(R.string.products_high_demand_this_week)
+    
+    fun unitsNext7Days(count: Int): String = getString(R.string.products_units_next_7_days, count)
+    fun totalRevenueMessage(value: String): String = getString(R.string.products_total_revenue_message, value)
+    
+    fun upcomingEventsSummary(units: Int, events: Int): String {
+        val suffix = if (events != 1) "s" else ""
+        return getString(R.string.products_upcoming_events_summary, units, events, suffix)
+    }
+    
+    val noConfirmedEventsIncludingProduct: String get() = getString(R.string.products_no_confirmed_events_including_product)
+    val today: String get() = getString(R.string.products_today)
+    val tomorrow: String get() = getString(R.string.products_tomorrow)
+    
+    fun inDays(days: Int): String = getString(R.string.products_in_days, days)
+    
+    val imageTitle: String get() = getString(R.string.products_image_title)
+    val tapToSelectImage: String get() = getString(R.string.products_tap_to_select_image)
+    val uploading: String get() = getString(R.string.products_uploading)
+    val changeImage: String get() = getString(R.string.products_change_image)
+    val selectImage: String get() = getString(R.string.products_select_image)
+    val nameRequired: String get() = getString(R.string.products_name_required)
+    val categoryRequired: String get() = getString(R.string.products_category_required)
+    val priceRequired: String get() = getString(R.string.products_price_required)
+    val activeProduct: String get() = getString(R.string.products_active_product)
+    val visibleInQuotes: String get() = getString(R.string.products_visible_in_quotes)
+    val save: String get() = getString(R.string.products_save)
+    val add: String get() = getString(R.string.products_add)
+    val noAddedItems: String get() = getString(R.string.products_no_added_items)
+    val selectItem: String get() = getString(R.string.products_select_item)
+    
+    fun itemCost(cost: String, unit: String): String = getString(R.string.products_item_cost, cost, unit)
+    
+    val quantity: String get() = getString(R.string.products_quantity)
+    val estimatedCost: String get() = getString(R.string.products_estimated_cost)
+    val associatedTeam: String get() = getString(R.string.products_associated_team)
+    val associatedTeamDescription: String get() = getString(R.string.products_associated_team_description)
+    val team: String get() = getString(R.string.products_team)
+    val noTeam: String get() = getString(R.string.products_no_team)
+    
+    fun members(count: Int): String = getString(R.string.products_members, count)
+    
+    val autoAssignTeamMembers: String get() = getString(R.string.products_auto_assign_team_members)
+    val pickerTitle: String get() = getString(R.string.products_picker_title)
+    val pickerSearchPlaceholder: String get() = getString(R.string.products_picker_search_placeholder)
+    
+    fun stockLabel(stock: Int, unit: String): String = getString(R.string.products_stock_label, stock, unit)
+    fun nearLimitMessage(remaining: Int): String = getString(R.string.products_near_limit_message, remaining)
+    
+    val productDeleted: String get() = getString(R.string.products_product_deleted)
+    val deleteFailed: String get() = getString(R.string.products_delete_failed)
+    val syncFailed: String get() = getString(R.string.products_sync_failed)
+    val fallbackClient: String get() = getString(R.string.products_fallback_client)
+    
+    fun deleteError(message: String?): String = getString(R.string.products_delete_error, message.orEmpty())
+    fun loadDataError(message: String?): String = getString(R.string.products_load_data_error, message.orEmpty())
+    fun loadProductError(message: String?): String = getString(R.string.products_load_product_error, message.orEmpty())
+    fun saveProductError(message: String?): String = getString(R.string.products_save_product_error, message.orEmpty())
+    
+    val imageReadError: String get() = getString(R.string.products_image_read_error)
+    
+    fun imageUploadError(message: String?): String = getString(R.string.products_image_upload_error, message.orEmpty())
+    
+    val validationNameMin: String get() = getString(R.string.products_validation_name_min)
+    val validationCategoryRequired: String get() = getString(R.string.products_validation_category_required)
+    val defaultUnit: String get() = getString(R.string.products_default_unit)
+    
     fun shortDateFormatter(): DateTimeFormatter =
         if (isEnglish) DateTimeFormatter.ofPattern("MMM d", Locale.ENGLISH)
         else DateTimeFormatter.ofPattern("d MMM", Locale.forLanguageTag("es"))
+        
     fun longDateFormatter(): DateTimeFormatter =
         if (isEnglish) DateTimeFormatter.ofPattern("MMMM d", Locale.ENGLISH)
         else DateTimeFormatter.ofPattern("d 'de' MMMM", Locale.forLanguageTag("es"))

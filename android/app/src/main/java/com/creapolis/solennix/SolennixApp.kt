@@ -9,6 +9,7 @@ import coil3.request.crossfade
 import com.revenuecat.purchases.Purchases
 import com.revenuecat.purchases.PurchasesConfiguration
 import com.creapolis.solennix.feature.inventory.InventoryStrings
+import com.creapolis.solennix.feature.products.ProductStrings
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
@@ -18,6 +19,7 @@ class SolennixApp : Application(), SingletonImageLoader.Factory {
         super.onCreate()
 
         InventoryStrings.init(this)
+        ProductStrings.init(this)
 
         val revenueCatKey = BuildConfig.REVENUECAT_API_KEY.takeIf { it.isNotBlank() }
         if (revenueCatKey != null) {
