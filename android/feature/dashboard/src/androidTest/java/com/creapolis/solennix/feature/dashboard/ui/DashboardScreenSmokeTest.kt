@@ -12,6 +12,8 @@ import com.creapolis.solennix.feature.dashboard.R
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.feature.dashboard.viewmodel.DashboardUiState
 import com.creapolis.solennix.feature.dashboard.viewmodel.DashboardViewModel
+import com.creapolis.solennix.feature.dashboard.viewmodel.refresh
+import com.creapolis.solennix.feature.dashboard.viewmodel.consumeTransientMessage
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
