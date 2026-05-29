@@ -307,16 +307,11 @@ val releaseTaskRequested = gradle.startParameter.taskNames.any { name ->
 }
 
 if (releaseTaskRequested) {
-    tasks.matching { it.name.startsWith("assembleRelease") || it.name.startsWith("bundleRelease") }
-        .configureEach {
-            doFirst {
-                if (missingReleaseSecrets.isNotEmpty()) {
-                    throw GradleException(
-                        "Cannot build release: missing required config:\n" +
-                            missingReleaseSecrets.joinToString("\n") { "  - $it" } +
-                            "\n\nSee obsidian/Solennix/Android/Firma y Secretos de Release.md"
-                    )
-                }
-            }
-        }
+    if (missingReleaseSecrets.isNotEmpty()) {
+        throw GradleException(
+            "Cannot build release: missing required config:\n" +
+                missingReleaseSecrets.joinToString("\n") { "  - $it" } +
+                "\n\nSee obsidian/Solennix/Android/Firma y Secretos de Release.md"
+        )
+    }
 }
