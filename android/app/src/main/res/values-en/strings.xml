@@ -11,6 +11,7 @@
     <!-- Navigation -->
     <string name="nav_home">Home</string>
     <string name="nav_calendar">Calendar</string>
+    <string name="nav_events">Events</string>
     <string name="nav_clients">Clients</string>
     <string name="nav_more">More</string>
     <string name="nav_products">Products</string>

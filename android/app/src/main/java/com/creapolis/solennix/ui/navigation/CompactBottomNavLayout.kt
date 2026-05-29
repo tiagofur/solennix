@@ -130,10 +130,10 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                         icon = {
                             Icon(
                                 if (selectedDestination == destination) destination.selectedIcon else destination.unselectedIcon,
-                                contentDescription = destination.label
+                                contentDescription = stringResource(destination.labelRes)
                             )
                         },
-                        label = { Text(destination.label) },
+                        label = { Text(stringResource(destination.labelRes)) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = SolennixTheme.colors.tabBarActive,
                             unselectedIconColor = SolennixTheme.colors.tabBarInactive,

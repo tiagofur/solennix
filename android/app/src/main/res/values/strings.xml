@@ -11,6 +11,7 @@
     <!-- Navigation Placeholders -->
     <string name="nav_home">Inicio</string>
     <string name="nav_calendar">Calendario</string>
+    <string name="nav_events">Eventos</string>
     <string name="nav_clients">Clientes</string>
     <string name="nav_more">Más</string>
     
