@@ -27,6 +27,10 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	pdfHandler *handlers.PDFHandler,
 	authService *services.AuthService, userRepo *repository.UserRepo, auditRepo mw.AuditLogger, pool *pgxpool.Pool, corsOrigins []string, uploadDir string, environment string, trustProxy bool) http.Handler {
 
+	deprecationPolicy := "https://github.com/tiagofur/solennix/wiki/API-Deprecation-Policy"
+	sunsetDate := time.Date(2026, time.September, 30, 0, 0, 0, 0, time.UTC)
+	deprecateMid := mw.Deprecate(sunsetDate, deprecationPolicy)
+
 	r := chi.NewRouter()
 
 	// Global middleware
@@ -342,6 +346,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 
 		// Backward-compatible alias for older organizer clients still calling the prefixed path.
 		r.Route("/organizer/payment-submissions", func(r chi.Router) {
+			r.Use(deprecateMid)
 			r.Get("/", paymentSubmissionHandler.GetPendingOrganizerInbox)
 			r.Get("/{id}/receipt/{filename}", paymentSubmissionHandler.GetReceipt)
 			r.Patch("/{id}", paymentSubmissionHandler.ReviewSubmission)
@@ -411,7 +416,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 
 	// Mount API subrouter under versioned prefix (canonical) and legacy prefix (backward compatible)
 	r.Mount("/api/v1", apiRouter)
-	r.Mount("/api", apiRouter)
+	r.Mount("/api", deprecateMid(apiRouter))
 
 	return r
 }
