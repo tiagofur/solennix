@@ -30,7 +30,10 @@
       "success": "Contraseña actualizada correctamente",
       "error_incorrect": "La contraseña actual es incorrecta",
       "error_generic": "Error al cambiar la contraseña"
-    }
+    },
+    "name_required": "Ingresá tu nombre.",
+    "name_success": "Nombre actualizado correctamente",
+    "name_error": "Error al actualizar el nombre"
   },
   "business": {
     "title": "Identidad de Negocio",
