@@ -174,7 +174,7 @@ func GenerateInvoice(data InvoiceData) ([]byte, error) {
 	y += 10
 
 	// ── Financial Summary ──
-	fs := ComputeFinancialSummary(data.Event, 0)
+	fs := ComputeFinancialSummaryFromItems(data.Event, data.Products, data.Extras, 0)
 	y = doc.DrawFinancialSummary(y, fs)
 
 	// Payment method note

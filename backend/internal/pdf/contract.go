@@ -51,6 +51,7 @@ type ContractData struct {
 	Client    *models.Client
 	Profile   *models.User
 	Products  []models.EventProduct
+	Extras    []models.EventExtra
 	Payments  []models.Payment
 	LogoBytes []byte
 }
@@ -130,11 +131,17 @@ func GenerateContract(data ContractData) ([]byte, error) {
 	doc.AddPage()
 	y := doc.DrawHeader("Contrato de Servicios")
 
-	// Resolve template tokens
+	// Resolve template tokens with the same item-based total used by quote PDFs.
 	templateText := effectiveContractTemplate(data.Profile)
+	financialEvent := data.Event
+	if len(data.Products) > 0 || len(data.Extras) > 0 {
+		fs := ComputeFinancialSummaryFromItems(data.Event, data.Products, data.Extras, 0)
+		financialEvent.TotalAmount = fs.TotalAmount
+		financialEvent.TaxAmount = fs.TaxAmount
+	}
 
 	tokenData := TokenData{
-		Event:    data.Event,
+		Event:    financialEvent,
 		Client:   data.Client,
 		Profile:  data.Profile,
 		Products: data.Products,

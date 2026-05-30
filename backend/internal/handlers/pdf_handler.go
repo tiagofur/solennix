@@ -241,6 +241,12 @@ func (h *PDFHandler) GetContractPDF(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "Failed to load event products")
 		return
 	}
+	extras, err := h.eventRepo.GetExtras(r.Context(), ctx.eventID)
+	if err != nil {
+		slog.Error("pdf: get extras", "event_id", ctx.eventID, "error", err)
+		writeError(w, http.StatusInternalServerError, "Failed to load event extras")
+		return
+	}
 	payments, err := h.paymentRepo.GetByEventID(r.Context(), ctx.userID, ctx.eventID)
 	if err != nil {
 		slog.Error("pdf: get payments", "event_id", ctx.eventID, "error", err)
@@ -253,6 +259,7 @@ func (h *PDFHandler) GetContractPDF(w http.ResponseWriter, r *http.Request) {
 		Client:    ctx.client,
 		Profile:   ctx.profile,
 		Products:  products,
+		Extras:    extras,
 		Payments:  payments,
 		LogoBytes: h.logoURLToBytes(ctx.profile),
 	})
