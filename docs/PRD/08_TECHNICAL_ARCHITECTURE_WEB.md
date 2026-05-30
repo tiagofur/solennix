@@ -10,7 +10,7 @@ aliases:
   - Arquitectura Web
   - Web Architecture
 date: 2026-03-20
-updated: 2026-05-18
+updated: 2026-05-30
 status: active
 platform: Web
 ---
@@ -20,7 +20,7 @@ platform: Web
 > [!tip] Para documentacion detallada de cada modulo web, ver [[Web MOC]]
 
 **Version:** 1.0.1
-**Fecha:** 2026-03-20 · **Última actualización:** 2026-05-06
+**Fecha:** 2026-03-20 · **Última actualización:** 2026-05-30
 **Plataforma:** Web (navegadores modernos: Chrome, Firefox, Safari, Edge)
 
 > [!success] 2026-05-06 — Web 1.0.1 release prep
@@ -30,6 +30,12 @@ platform: Web
 > - **Calendario:** se documenta paridad funcional ya mergeada para filtros, retry, iCal y navegación
 > - **Marketing/help:** landing y help acompañan el changelog público como capa visible del release
 > - **Navegación:** `Help` sale del sidebar principal y queda accesible desde `Settings`; el switch de tema ya no compite con logout
+
+> [!success] 2026-05-30 — Perfil: edición del nombre personal
+> `Settings` permite editar el `name` del usuario autenticado desde la pestaña `Mi Cuenta`.
+> - Persiste con `AuthContext.updateProfile({ name })` contra `PUT /api/users/me`.
+> - Mantiene el correo como dato solo lectura.
+> - Sin cambio de contrato backend: `UpdateProfile` ya soportaba `name`.
 
 > [!success] 2026-05-18 — Productos: normalizacion de imagen_url en lista/detalle (issue #362)
 > Se estabiliza el render de imagenes de productos para rutas relativas y absolutas.

@@ -82,6 +82,9 @@ export const Settings: React.FC = () => {
 
   type PasswordFormData = z.infer<typeof passwordSchema>;
 
+  const [isEditingProfileName, setIsEditingProfileName] = useState(false);
+  const [profileName, setProfileName] = useState(profile?.name || "");
+  const [isUpdatingProfileName, setIsUpdatingProfileName] = useState(false);
   const [isEditingBusiness, setIsEditingBusiness] = useState(false);
   const [businessName, setBusinessName] = useState(
     profile?.business_name || "",
@@ -127,6 +130,7 @@ export const Settings: React.FC = () => {
 
   useEffect(() => {
     if (profile) {
+      setProfileName(profile.name || "");
       setBusinessName(profile.business_name || "");
       setContractSettings({
         deposit: profile.default_deposit_percent ?? 50,
@@ -179,6 +183,26 @@ export const Settings: React.FC = () => {
   }), [t]);
 
 
+  const handleUpdateProfileName = async () => {
+    const trimmedName = profileName.trim();
+    if (!trimmedName) {
+      addToast(t("settings:profile.name_required"), "error");
+      return;
+    }
+
+    setIsUpdatingProfileName(true);
+    try {
+      await updateProfile({ name: trimmedName });
+      setProfileName(trimmedName);
+      setIsEditingProfileName(false);
+      addToast(t("settings:profile.name_success"), "success");
+    } catch (error) {
+      logError("Error updating profile name", error);
+      addToast(t("settings:profile.name_error"), "error");
+    } finally {
+      setIsUpdatingProfileName(false);
+    }
+  };
 
   const handleUpdateBusinessName = async () => {
     try {
@@ -383,13 +407,57 @@ export const Settings: React.FC = () => {
               </div>
 
               <div className="grid sm:grid-cols-2 gap-8">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-text-secondary">{t("settings:profile.name")}</label>
-                  <p className="text-lg font-bold text-text">{profile?.name}</p>
+                <div className="space-y-2">
+                  <label htmlFor="profile-name" className="text-xs font-medium text-text-secondary">
+                    {t("settings:profile.name")}
+                  </label>
+                  {isEditingProfileName ? (
+                    <div className="space-y-3">
+                      <input
+                        id="profile-name"
+                        type="text"
+                        value={profileName}
+                        onChange={(e) => setProfileName(e.target.value)}
+                        className="w-full bg-surface border border-border rounded-xl px-4 py-3 font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                        aria-label={t("settings:profile.name")}
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={handleUpdateProfileName}
+                          disabled={isUpdatingProfileName || profileName.trim() === profile.name}
+                          className="bg-primary text-white font-medium px-4 py-2 rounded-md hover:bg-primary-dark transition-colors shadow-sm disabled:opacity-50"
+                        >
+                          {isUpdatingProfileName ? t("common:action.saving") : t("common:action.save")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProfileName(profile.name || "");
+                            setIsEditingProfileName(false);
+                          }}
+                          className="bg-surface-alt text-text font-bold px-4 py-2 rounded-xl border border-border hover:bg-border transition-all"
+                        >
+                          {t("common:action.cancel")}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between gap-4 p-4 bg-surface-alt/50 rounded-2xl border border-border group hover:border-primary/30 transition-all">
+                      <p className="text-lg font-bold text-text">{profile.name}</p>
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingProfileName(true)}
+                        className="text-primary font-bold text-sm bg-primary/10 px-4 py-2 rounded-lg transition-all"
+                      >
+                        {t("common:action.edit")}
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-text-secondary">{t("settings:profile.email")}</label>
-                  <p className="text-lg font-bold text-text">{profile?.email}</p>
+                  <p className="text-lg font-bold text-text">{profile.email}</p>
                 </div>
               </div>
 

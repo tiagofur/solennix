@@ -30,7 +30,10 @@
       "success": "Password updated successfully",
       "error_incorrect": "Current password is incorrect",
       "error_generic": "Error changing password"
-    }
+    },
+    "name_required": "Enter your name.",
+    "name_success": "Name updated successfully",
+    "name_error": "Error updating name"
   },
   "business": {
     "title": "Business Identity",

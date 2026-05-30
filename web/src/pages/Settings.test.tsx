@@ -103,6 +103,33 @@ describe('Settings', () => {
     expect(screen.getByText('ana@example.com')).toBeInTheDocument();
   });
 
+
+  it('updates profile name', async () => {
+    renderSettings();
+
+    fireEvent.click(screen.getByRole('button', { name: /Editar|action\.edit/i }));
+    const input = screen.getByLabelText(/Nombre/i);
+    fireEvent.change(input, { target: { value: '  Ana Nueva  ' } });
+    fireEvent.click(screen.getByRole('button', { name: /guardar|save|action\.save/i }));
+
+    await waitFor(() => {
+      expect(mockUpdateProfile).toHaveBeenCalledWith({ name: 'Ana Nueva' });
+    });
+    expect(mockAddToast).toHaveBeenCalledWith('Nombre actualizado correctamente', 'success');
+  });
+
+  it('rejects empty profile name before saving', async () => {
+    renderSettings();
+
+    fireEvent.click(screen.getByRole('button', { name: /Editar|action\.edit/i }));
+    const input = screen.getByLabelText(/Nombre/i);
+    fireEvent.change(input, { target: { value: '   ' } });
+    fireEvent.click(screen.getByRole('button', { name: /guardar|save|action\.save/i }));
+
+    expect(mockUpdateProfile).not.toHaveBeenCalled();
+    expect(mockAddToast).toHaveBeenCalledWith('Ingresá tu nombre.', 'error');
+  });
+
   it('keeps help access inside settings', () => {
     renderSettings();
     const helpLink = screen.getByRole('link', { name: /Centro de ayuda/i });

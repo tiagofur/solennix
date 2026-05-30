@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-05-28
+updated: 2026-05-30
 status: active
 ---
 
@@ -24,6 +24,13 @@ status: active
 
 **Fecha:** Mayo 2026
 **Version:** 1.7
+
+> [!success] 2026-05-30 — Web: edición del nombre personal en perfil
+> La pantalla de Configuración permite editar el nombre del usuario junto al correo.
+> - **Web:** `Settings` agrega modo edición para `profile.name`, validación de vacío y persistencia vía `PUT /api/users/me`.
+> - **Backend:** se reutiliza el contrato existente de actualización de perfil; no requiere cambio de API.
+> - **Paridad:** iOS/Android ya exponen edición del nombre según verificación funcional previa.
+> - **Validación:** `npx vitest run src/pages/Settings.test.tsx`.
 
 > [!success] 2026-05-28 — Android: Bump de Google Play Billing a 9.0.0
 > Se actualizó la dependencia de Google Play Billing Library a su versión más reciente.
