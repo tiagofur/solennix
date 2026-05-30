@@ -270,3 +270,39 @@ func TestRouterErrorContractMatrix(t *testing.T) {
 		})
 	}
 }
+
+func TestRouterDeprecateHeaders(t *testing.T) {
+	authService := services.NewAuthService("test-secret", 1)
+	h := New(&handlers.AuthHandler{}, &handlers.CRUDHandler{}, &handlers.SubscriptionHandler{}, &handlers.SearchHandler{}, &handlers.EventPaymentHandler{}, handlers.NewUploadHandler(t.TempDir(), nil), &handlers.AdminHandler{}, &handlers.DashboardHandler{}, &handlers.AuditHandler{}, &handlers.UnavailableDateHandler{}, nil, nil, nil, nil, nil, nil, nil, nil, nil, authService, &repository.UserRepo{}, &noopAuditLogger{}, nil, []string{"http://allowed.com"}, t.TempDir(), "development", false)
+
+	t.Run("GivenLegacyApiRoute_WhenRequest_ThenContainsDeprecationHeaders", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/login", nil)
+		rr := httptest.NewRecorder()
+
+		h.ServeHTTP(rr, req)
+
+		if got := rr.Header().Get("Deprecation"); got != "true" {
+			t.Errorf("expected Deprecation header 'true', got %q", got)
+		}
+		if got := rr.Header().Get("Sunset"); got == "" {
+			t.Errorf("expected Sunset header, got empty")
+		}
+		if got := rr.Header().Get("Link"); !strings.Contains(got, "rel=\"deprecation\"") {
+			t.Errorf("expected Link header to contain rel=\"deprecation\", got %q", got)
+		}
+	})
+
+	t.Run("GivenCanonicalApiRoute_WhenRequest_ThenDoesNotContainDeprecationHeaders", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", nil)
+		rr := httptest.NewRecorder()
+
+		h.ServeHTTP(rr, req)
+
+		if got := rr.Header().Get("Deprecation"); got != "" {
+			t.Errorf("expected empty Deprecation header, got %q", got)
+		}
+		if got := rr.Header().Get("Sunset"); got != "" {
+			t.Errorf("expected empty Sunset header, got %q", got)
+		}
+	})
+}

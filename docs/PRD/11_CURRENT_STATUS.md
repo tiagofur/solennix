@@ -25,6 +25,12 @@ status: active
 **Fecha:** Mayo 2026
 **Version:** 1.7
 
+> [!success] 2026-05-30 — Backend: API Deprecation Lifecycle
+> Se implementó un ciclo de vida de depreciación estándar para rutas y versiones obsoletas de la API.
+> - **Middleware:** nuevo middleware `Deprecate` en `backend/internal/middleware/version.go` que inyecta cabeceras HTTP `Deprecation: true`, `Sunset` y `Link` (con rel="deprecation").
+> - **Rutas:** se aplicó a la versión legacy `/api` y a la ruta obsoleta `/organizer/payment-submissions`.
+> - **Validación:** tests unitarios y de integración agregados en `version_test.go` y `router_test.go` (`go test ./...`).
+
 > [!success] 2026-05-30 — Web: edición del nombre personal en perfil
 > La pantalla de Configuración permite editar el nombre del usuario junto al correo.
 > - **Web:** `Settings` agrega modo edición para `profile.name`, validación de vacío y persistencia vía `PUT /api/users/me`.
