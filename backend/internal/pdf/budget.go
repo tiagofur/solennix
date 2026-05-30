@@ -133,7 +133,7 @@ func GenerateBudget(data BudgetData) ([]byte, error) {
 	y += 10
 
 	// ── Financial Summary ──
-	fs := ComputeFinancialSummary(data.Event, 0)
+	fs := ComputeFinancialSummaryFromItems(data.Event, data.Products, data.Extras, 0)
 	summaryHeight := doc.EstimateFinancialSummaryHeight(fs) + 12
 	if y+summaryHeight > PageHeight-12 {
 		doc.AddPage()

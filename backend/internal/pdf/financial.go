@@ -23,7 +23,7 @@ type FinancialSummary struct {
 
 // ComputeFinancialSummary calculates all financial values from an event,
 // honoring discount_type (percent vs fixed) and tax settings.
-// This logic MUST match the web's generateBudgetPDF and generateInvoicePDF.
+// This is the legacy fallback for documents that do not have item rows loaded.
 func ComputeFinancialSummary(event models.Event, totalPaid float64) FinancialSummary {
 	rawDiscount := event.Discount
 	taxAmount := event.TaxAmount
@@ -44,7 +44,62 @@ func ComputeFinancialSummary(event models.Event, totalPaid float64) FinancialSum
 
 	preDiscountSubtotal := (event.TotalAmount - taxAmount) + discountAmount
 
-	// Deposit
+	return financialSummaryFromAmounts(event, preDiscountSubtotal, discountAmount, discountLabel, taxAmount, event.TotalAmount)
+}
+
+// ComputeFinancialSummaryFromItems recalculates the customer-facing document
+// totals from the exact product and extra rows rendered in the PDF.
+//
+// Products and normal extras are discountable. Pass-through extras
+// (exclude_utility=true) are still charged to the client, but are not discounted.
+// This MUST match the event and quick quote frontend calculations.
+func ComputeFinancialSummaryFromItems(event models.Event, products []models.EventProduct, extras []models.EventExtra, totalPaid float64) FinancialSummary {
+	if len(products) == 0 && len(extras) == 0 {
+		return ComputeFinancialSummary(event, totalPaid)
+	}
+
+	productsSubtotal := 0.0
+	for _, product := range products {
+		qty := product.Quantity
+		if qty == 0 {
+			qty = 1
+		}
+		productsSubtotal += (product.UnitPrice - product.Discount) * qty
+	}
+
+	normalExtrasTotal := 0.0
+	passThroughExtrasTotal := 0.0
+	for _, extra := range extras {
+		if extra.ExcludeUtility {
+			passThroughExtrasTotal += extra.Price
+		} else {
+			normalExtrasTotal += extra.Price
+		}
+	}
+
+	rawDiscount := event.Discount
+	discountableBase := productsSubtotal + normalExtrasTotal
+	discountAmount := rawDiscount
+	discountLabel := "Descuento"
+	if event.DiscountType == "percent" {
+		discountAmount = discountableBase * rawDiscount / 100
+		discountLabel = fmt.Sprintf("Descuento (%.0f%%)", rawDiscount)
+	} else if discountAmount > discountableBase {
+		discountAmount = discountableBase
+	}
+
+	baseTotal := (discountableBase - discountAmount) + passThroughExtrasTotal
+	taxAmount := 0.0
+	if event.RequiresInvoice {
+		taxAmount = baseTotal * event.TaxRate / 100
+	}
+	totalAmount := baseTotal + taxAmount
+	preDiscountSubtotal := discountableBase + passThroughExtrasTotal
+
+	return financialSummaryFromAmounts(event, preDiscountSubtotal, discountAmount, discountLabel, taxAmount, totalAmount)
+}
+
+func financialSummaryFromAmounts(event models.Event, preDiscountSubtotal, discountAmount float64, discountLabel string, taxAmount, totalAmount float64) FinancialSummary {
 	var depositPercent float64
 	if event.DepositPercent != nil {
 		depositPercent = *event.DepositPercent
@@ -54,13 +109,13 @@ func ComputeFinancialSummary(event models.Event, totalPaid float64) FinancialSum
 		PreDiscountSubtotal: preDiscountSubtotal,
 		DiscountAmount:      discountAmount,
 		DiscountLabel:       discountLabel,
-		HasDiscount:         rawDiscount > 0,
+		HasDiscount:         event.Discount > 0,
 		TaxAmount:           taxAmount,
 		TaxRate:             event.TaxRate,
 		ShowTax:             event.RequiresInvoice || taxAmount > 0,
-		TotalAmount:         event.TotalAmount,
+		TotalAmount:         totalAmount,
 		DepositPercent:      depositPercent,
-		DepositAmount:       event.TotalAmount * depositPercent / 100,
+		DepositAmount:       totalAmount * depositPercent / 100,
 		HasDeposit:          depositPercent > 0,
 	}
 }

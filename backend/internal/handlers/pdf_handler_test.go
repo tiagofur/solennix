@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/tiagofur/solennix-backend/internal/pdf"
 )
 
 func TestQuickQuotePDFRequestToPDFData_PercentDiscountAndTax(t *testing.T) {
@@ -65,6 +66,27 @@ func TestQuickQuotePDFRequestToPDFData_PercentDiscountAndTax(t *testing.T) {
 	assert.Equal(t, 595.2, event.TaxAmount)
 	assert.Equal(t, 4315.2, event.TotalAmount)
 	assert.Equal(t, client, event.Client)
+}
+
+func TestQuickQuotePDFRequestToPDFData_MatchesBudgetItemRecalculation(t *testing.T) {
+	userID := uuid.MustParse("a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+	req := quickQuotePDFRequest{
+		Products: []quickQuotePDFProduct{{Name: "Servicio base", Quantity: 2, UnitPrice: 1500, Discount: 100}},
+		Extras: []quickQuotePDFExtra{
+			{Description: "Decoración", Cost: 500, Price: 1000, ExcludeUtility: false},
+			{Description: "Permiso", Cost: 300, Price: 300, ExcludeUtility: true},
+		},
+		Discount:        10,
+		DiscountType:    "percent",
+		RequiresInvoice: true,
+		TaxRate:         16,
+	}
+
+	event, products, extras, _ := req.toPDFData(userID)
+	fs := pdf.ComputeFinancialSummaryFromItems(event, products, extras, 0)
+
+	assert.Equal(t, event.TaxAmount, fs.TaxAmount)
+	assert.Equal(t, event.TotalAmount, fs.TotalAmount)
 }
 
 func TestQuickQuotePDFRequestToPDFData_SkipsInvalidItemsAndClampsFixedDiscount(t *testing.T) {
