@@ -67,6 +67,7 @@ const mockUsers = [
     plan: 'premium',
     role: 'user',
     has_paid_subscription: true,
+    account_status: 'active',
     created_at: '2023-01-01',
     updated_at: '2023-01-01'
   },
@@ -80,6 +81,7 @@ const mockUsers = [
     plan: 'pro',
     role: 'user',
     has_paid_subscription: true,
+    account_status: 'active',
     created_at: '2023-01-01',
     updated_at: '2023-01-01'
   },
