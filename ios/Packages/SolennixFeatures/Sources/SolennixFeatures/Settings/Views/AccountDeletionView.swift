@@ -227,7 +227,7 @@ public struct AccountDeletionView: View {
                     ? SolennixColors.error
                     : SolennixColors.error.opacity(0.4)
             )
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.button))
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
             .animation(.easeInOut(duration: 0.2), value: viewModel.confirmDeletionConsent)
         }
         .disabled(!viewModel.confirmDeletionConsent || viewModel.isDeletingOwnAccount)
