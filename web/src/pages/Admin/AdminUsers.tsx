@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAdminUsers, useUpgradeUser } from '@/hooks/queries/useAdminQueries';
+import { useAdminUsers, useUpgradeUser, useAdminInactiveUsers, useAdminZeroResourceUsers, useDeleteAdminUser } from '@/hooks/queries/useAdminQueries';
 import type { AdminAccountType } from '@/services/adminService';
 import { queryKeys } from '@/hooks/queries/queryKeys';
 import { useToast } from '@/hooks/useToast';
@@ -47,6 +47,8 @@ interface AdminUser {
   role: string;
   plan_expires_at?: string;
   has_paid_subscription: boolean;
+  account_status: string;
+  deletion_eligible_at?: string;
   events_count: number;
   clients_count: number;
   products_count: number;
@@ -76,7 +78,23 @@ export const AdminUsers: React.FC = () => {
   const dateLocale = i18n.language === 'es' ? es : enUS;
   const qc = useQueryClient();
   const [accountType, setAccountType] = useState<AccountTypeFilter>('users');
-  const { data: users = [], isLoading: loading, error: usersError } = useAdminUsers(accountType);
+  const [auditFilter, setAuditFilter] = useState<'none' | 'inactive' | 'zero_resources' | 'eligible_for_deletion'>('none');
+  const [inactiveDays] = useState(30);
+
+  const { data: standardUsers = [], isLoading: loadingStandard, error: usersError } = useAdminUsers(accountType);
+  const { data: inactiveUsers = [], isLoading: loadingInactive } = useAdminInactiveUsers(inactiveDays);
+  const { data: zeroResourceUsers = [], isLoading: loadingZero } = useAdminZeroResourceUsers();
+  const { data: eligibleUsers = [], isLoading: loadingEligible } = useAdminUsers(accountType, 'eligible_for_deletion');
+
+  const users = auditFilter === 'inactive'
+    ? inactiveUsers
+    : auditFilter === 'zero_resources'
+      ? zeroResourceUsers
+      : auditFilter === 'eligible_for_deletion'
+        ? eligibleUsers
+        : standardUsers;
+
+  const loading = loadingStandard || loadingInactive || loadingZero || loadingEligible;
   const { data: allAccounts = [] } = useAdminUsers('all');
   const upgradeUser = useUpgradeUser();
   const error = usersError ? t('admin:users.errors.loading') : null;
@@ -86,6 +104,7 @@ export const AdminUsers: React.FC = () => {
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [gift, setGift] = useState<GiftState | null>(null);
   const [downgradeTarget, setDowngradeTarget] = useState<AdminUser | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
   const { addToast } = useToast();
 
   const accountTypeOptions: Array<{ value: AccountTypeFilter; label: string }> = [
@@ -124,7 +143,21 @@ export const AdminUsers: React.FC = () => {
     };
   };
 
-  const saving = upgradeUser.isPending ? (upgradeUser.variables?.id ?? null) : null;
+  const deleteUser = useDeleteAdminUser();
+  const saving = upgradeUser.isPending
+    ? (upgradeUser.variables?.id ?? null)
+    : deleteUser.isPending
+      ? (deleteUser.variables ?? null)
+      : null;
+
+  const handleDeleteConfirm = () => {
+    if (!deleteTarget) return;
+    const user = deleteTarget;
+    setDeleteTarget(null);
+    deleteUser.mutate(user.id, {
+      onSuccess: () => addToast(`Usuario ${user.name} eliminado permanentemente`, 'success'),
+    });
+  };
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -339,6 +372,16 @@ export const AdminUsers: React.FC = () => {
         cancelText={t('admin:users.downgrade_dialog.cancel')}
         onConfirm={handleDowngradeConfirm}
         onCancel={() => setDowngradeTarget(null)}
+      />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Eliminar usuario permanentemente"
+        description={deleteTarget ? `¿Estás seguro de que deseas eliminar permanentemente a ${deleteTarget.name} (${deleteTarget.email})? Esta acción no se puede deshacer y borrará todos sus datos.` : ''}
+        confirmText="Eliminar permanentemente"
+        cancelText="Cancelar"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteTarget(null)}
       />
 
       {/* Gift Plan Dialog */}
@@ -590,6 +633,32 @@ export const AdminUsers: React.FC = () => {
             ))}
           </div>
         </div>
+          {/* Audit Views */}
+          <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-border/50">
+            <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider mr-2">
+              Auditoría y Moderación:
+            </span>
+            {[
+              { id: 'none', label: 'Todos' },
+              { id: 'inactive', label: 'Inactivos (> 30 días)' },
+              { id: 'zero_resources', label: 'Sin Recursos' },
+              { id: 'eligible_for_deletion', label: 'Elegibles para Eliminación' },
+            ].map((btn) => (
+              <button
+                key={btn.id}
+                type="button"
+                onClick={() => setAuditFilter(btn.id as any)}
+                className={clsx(
+                  'px-3 py-1.5 rounded-xl text-xs font-bold transition-all border',
+                  auditFilter === btn.id
+                    ? 'bg-primary/10 border-primary/40 text-primary'
+                    : 'bg-card border-border hover:bg-surface-alt text-text-secondary hover:text-text'
+                )}
+              >
+                {btn.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -667,9 +736,22 @@ export const AdminUsers: React.FC = () => {
                               )}
                             </div>
                             <div className="text-xs text-text-secondary truncate">{user.email}</div>
-                            <div>{getRoleBadge(user.role)}</div>
+                            <div className="flex flex-wrap items-center gap-1 mt-1">
+                              {getRoleBadge(user.role)}
+                              {user.account_status === 'blocked' && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-error/10 text-error border border-error/20">
+                                  Bloqueado (Baja Pendiente)
+                                </span>
+                              )}
+                            </div>
+                            {user.account_status === 'blocked' && user.deletion_eligible_at && (
+                              <div className="text-[10px] text-error font-medium mt-1 flex items-center gap-1">
+                                <AlertTriangle className="h-3 w-3 shrink-0" />
+                                Elegible: {format(parseISO(user.deletion_eligible_at), "d MMM ''yy", { locale: dateLocale })}
+                              </div>
+                            )}
                             {user.business_name && (
-                              <div className="text-xs text-text-tertiary truncate">{user.business_name}</div>
+                              <div className="text-xs text-text-tertiary truncate mt-1">{user.business_name}</div>
                             )}
                           </div>
                         </div>
@@ -725,52 +807,66 @@ export const AdminUsers: React.FC = () => {
                       {/* Actions */}
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {/* Gift button: for basic users, or gifted users without paid sub */}
-                          {user.role === 'user' && !user.has_paid_subscription && user.plan === 'basic' && (
+                          {user.account_status === 'blocked' ? (
                             <button
                               type="button"
-                              onClick={() => openGiftDialog(user)}
+                              onClick={() => setDeleteTarget(user)}
                               disabled={saving === user.id}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                              title="Regalar plan Pro o Premium con fecha de vencimiento"
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-error/10 text-error hover:bg-error hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              {saving === user.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Gift className="h-3 w-3" />}
-                              {t('admin:users.actions.gift')}
+                              {saving === user.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
+                              Eliminar permanente
                             </button>
-                          )}
+                          ) : (
+                            <>
+                              {/* Gift button: for basic users, or gifted users without paid sub */}
+                              {user.role === 'user' && !user.has_paid_subscription && user.plan === 'basic' && (
+                                <button
+                                  type="button"
+                                  onClick={() => openGiftDialog(user)}
+                                  disabled={saving === user.id}
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                  title="Regalar plan Pro o Premium con fecha de vencimiento"
+                                >
+                                  {saving === user.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Gift className="h-3 w-3" />}
+                                  {t('admin:users.actions.gift')}
+                                </button>
+                              )}
 
-                          {/* Extend/change gift for users already on a gifted plan */}
-                          {user.role === 'user' && !user.has_paid_subscription && (user.plan === 'pro' || user.plan === 'premium') && isGifted && (
-                            <button
-                              type="button"
-                              onClick={() => openGiftDialog(user)}
-                              disabled={saving === user.id}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-warning/10 text-warning hover:bg-warning hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                              title="Extender o cambiar el regalo"
-                            >
-                              {saving === user.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Gift className="h-3 w-3" />}
-                              {t('admin:users.actions.edit_gift')}
-                            </button>
-                          )}
+                              {/* Extend/change gift for users already on a gifted plan */}
+                              {user.role === 'user' && !user.has_paid_subscription && (user.plan === 'pro' || user.plan === 'premium') && isGifted && (
+                                <button
+                                  type="button"
+                                  onClick={() => openGiftDialog(user)}
+                                  disabled={saving === user.id}
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-warning/10 text-warning hover:bg-warning hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                  title="Extender o cambiar el regalo"
+                                >
+                                  {saving === user.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Gift className="h-3 w-3" />}
+                                  {t('admin:users.actions.edit_gift')}
+                                </button>
+                              )}
 
-                          {/* Downgrade: only for gifted or permanent manual upgrades without paid sub */}
-                          {user.role === 'user' && !user.has_paid_subscription && (user.plan === 'pro' || user.plan === 'premium') && (
-                            <button
-                              type="button"
-                              onClick={() => handleDowngrade(user)}
-                              disabled={saving === user.id}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-surface-alt text-text-secondary hover:bg-border transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {saving === user.id && <RefreshCw className="h-3 w-3 animate-spin" />}
-                              {t('admin:users.actions.downgrade')}
-                            </button>
-                          )}
+                              {/* Downgrade: only for gifted or permanent manual upgrades without paid sub */}
+                              {user.role === 'user' && !user.has_paid_subscription && (user.plan === 'pro' || user.plan === 'premium') && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDowngrade(user)}
+                                  disabled={saving === user.id}
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-surface-alt text-text-secondary hover:bg-border transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {saving === user.id && <RefreshCw className="h-3 w-3 animate-spin" />}
+                                  {t('admin:users.actions.downgrade')}
+                                </button>
+                              )}
 
-                          {/* Paid subscription: no manual action allowed */}
-                          {user.role === 'user' && user.has_paid_subscription && (
-                            <span className="text-xs text-text-tertiary italic" title={t('admin:users.actions.active_sub_help')}>
-                              {t('admin:users.actions.active_sub')}
-                            </span>
+                              {/* Paid subscription: no manual action allowed */}
+                              {user.role === 'user' && user.has_paid_subscription && (
+                                <span className="text-xs text-text-tertiary italic" title={t('admin:users.actions.active_sub_help')}>
+                                  {t('admin:users.actions.active_sub')}
+                                </span>
+                              )}
+                            </>
                           )}
                         </div>
                       </td>

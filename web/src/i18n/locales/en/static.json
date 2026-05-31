@@ -371,7 +371,15 @@
     "email_subject": "Account deletion request - Solennix",
     "footer_note": "* Our team will process your request within 48 to 72 business hours. You will receive a confirmation email once the process is complete.",
     "other_queries_title": "Other queries about your data",
-    "other_queries_desc": "If you only wish to correct information or have doubts about how we treat your data, we invite you to review our <link>Privacy Policy</link>."
+    "other_queries_desc": "If you only wish to correct information or have doubts about how we treat your data, we invite you to review our <link>Privacy Policy</link>.",
+    "interactive_title": "Account Deletion Self-Service",
+    "interactive_subtitle": "Confirm your account deletion",
+    "grace_period_warning": "Your account will be blocked and scheduled for permanent deletion in 90 days. You can cancel this request at any time by logging in again before the grace period ends.",
+    "confirm_checkbox": "I understand the consequences and wish to proceed with account deletion.",
+    "delete_button": "Confirm and Delete My Account",
+    "deleting": "Deleting...",
+    "success_title": "Deletion scheduled!",
+    "success_message": "Your account has been blocked and scheduled for deletion. You will be logged out shortly."
   },
   "setup_required": {
     "title": "Setup Required",
