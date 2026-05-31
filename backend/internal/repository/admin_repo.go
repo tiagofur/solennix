@@ -500,3 +500,98 @@ func (r *AdminRepo) GetSubscriptionOverview(ctx context.Context) (*SubscriptionO
 
 	return overview, nil
 }
+
+// GetInactiveUsers returns users whose last_active_at is older than the specified days.
+func (r *AdminRepo) GetInactiveUsers(ctx context.Context, days int) ([]AdminUser, error) {
+	query := `
+		SELECT
+			u.id, u.email, u.name, u.business_name, u.plan, u.role,
+			COALESCE(u.account_status, 'active') AS account_status,
+			u.blocked_at, u.blocked_reason, u.blocked_by, u.deletion_eligible_at, u.deleted_at,
+			u.stripe_customer_id,
+			(u.stripe_customer_id IS NOT NULL OR EXISTS(
+				SELECT 1 FROM subscriptions s WHERE s.user_id = u.id AND s.status = 'active'
+			)) AS has_paid_sub,
+			u.plan_expires_at,
+			COALESCE((SELECT COUNT(*) FROM events e WHERE e.user_id = u.id), 0) AS events_count,
+			COALESCE((SELECT COUNT(*) FROM clients c WHERE c.user_id = u.id), 0) AS clients_count,
+			COALESCE((SELECT COUNT(*) FROM products p WHERE p.user_id = u.id), 0) AS products_count,
+			u.created_at, u.updated_at
+		FROM users u
+		WHERE u.role = 'user'
+		  AND u.last_active_at IS NOT NULL
+		  AND u.last_active_at < NOW() - $1 * INTERVAL '1 day'
+		ORDER BY u.last_active_at ASC`
+
+	rows, err := r.pool.Query(ctx, query, days)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list inactive users: %w", err)
+	}
+	defer rows.Close()
+
+	var users []AdminUser
+	for rows.Next() {
+		var u AdminUser
+		err := rows.Scan(
+			&u.ID, &u.Email, &u.Name, &u.BusinessName, &u.Plan, &u.Role,
+			&u.AccountStatus, &u.BlockedAt, &u.BlockedReason, &u.BlockedBy, &u.DeletionEligibleAt, &u.DeletedAt,
+			&u.StripeCustomerID,
+			&u.HasPaidSub, &u.PlanExpiresAt,
+			&u.EventsCount, &u.ClientsCount, &u.ProductsCount,
+			&u.CreatedAt, &u.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan inactive user: %w", err)
+		}
+		users = append(users, u)
+	}
+	return users, nil
+}
+
+// GetUsersWithZeroResources returns users who have created 0 events, 0 products, and 0 clients.
+func (r *AdminRepo) GetUsersWithZeroResources(ctx context.Context) ([]AdminUser, error) {
+	query := `
+		SELECT
+			u.id, u.email, u.name, u.business_name, u.plan, u.role,
+			COALESCE(u.account_status, 'active') AS account_status,
+			u.blocked_at, u.blocked_reason, u.blocked_by, u.deletion_eligible_at, u.deleted_at,
+			u.stripe_customer_id,
+			(u.stripe_customer_id IS NOT NULL OR EXISTS(
+				SELECT 1 FROM subscriptions s WHERE s.user_id = u.id AND s.status = 'active'
+			)) AS has_paid_sub,
+			u.plan_expires_at,
+			0 AS events_count,
+			0 AS clients_count,
+			0 AS products_count,
+			u.created_at, u.updated_at
+		FROM users u
+		WHERE u.role = 'user'
+		  AND NOT EXISTS (SELECT 1 FROM events e WHERE e.user_id = u.id)
+		  AND NOT EXISTS (SELECT 1 FROM clients c WHERE c.user_id = u.id)
+		  AND NOT EXISTS (SELECT 1 FROM products p WHERE p.user_id = u.id)
+		ORDER BY u.created_at DESC`
+
+	rows, err := r.pool.Query(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list users with zero resources: %w", err)
+	}
+	defer rows.Close()
+
+	var users []AdminUser
+	for rows.Next() {
+		var u AdminUser
+		err := rows.Scan(
+			&u.ID, &u.Email, &u.Name, &u.BusinessName, &u.Plan, &u.Role,
+			&u.AccountStatus, &u.BlockedAt, &u.BlockedReason, &u.BlockedBy, &u.DeletionEligibleAt, &u.DeletedAt,
+			&u.StripeCustomerID,
+			&u.HasPaidSub, &u.PlanExpiresAt,
+			&u.EventsCount, &u.ClientsCount, &u.ProductsCount,
+			&u.CreatedAt, &u.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan zero resource user: %w", err)
+		}
+		users = append(users, u)
+	}
+	return users, nil
+}

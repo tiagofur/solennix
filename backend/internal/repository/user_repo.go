@@ -65,7 +65,7 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, 
 		plan, role,
 		COALESCE(account_status, 'active') AS account_status,
 		blocked_at, blocked_reason, blocked_by, deletion_eligible_at, deleted_at,
-		stripe_customer_id, created_at, updated_at
+		stripe_customer_id, last_active_at, created_at, updated_at
 		FROM users WHERE email = $1`
 	err := r.pool.QueryRow(ctx, query, email).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
@@ -77,7 +77,7 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, 
 		&user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
 		&user.Plan, &user.Role,
 		&user.AccountStatus, &user.BlockedAt, &user.BlockedReason, &user.BlockedBy, &user.DeletionEligibleAt, &user.DeletedAt,
-		&user.StripeCustomerID, &user.CreatedAt, &user.UpdatedAt,
+		&user.StripeCustomerID, &user.LastActiveAt, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("user not found: %w", err)
@@ -97,7 +97,7 @@ func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, err
 		plan, role,
 		COALESCE(account_status, 'active') AS account_status,
 		blocked_at, blocked_reason, blocked_by, deletion_eligible_at, deleted_at,
-		stripe_customer_id, created_at, updated_at
+		stripe_customer_id, last_active_at, created_at, updated_at
 		FROM users WHERE id = $1`
 	err := r.pool.QueryRow(ctx, query, id).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
@@ -109,7 +109,7 @@ func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, err
 		&user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
 		&user.Plan, &user.Role,
 		&user.AccountStatus, &user.BlockedAt, &user.BlockedReason, &user.BlockedBy, &user.DeletionEligibleAt, &user.DeletedAt,
-		&user.StripeCustomerID, &user.CreatedAt, &user.UpdatedAt,
+		&user.StripeCustomerID, &user.LastActiveAt, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("user not found: %w", err)
@@ -530,6 +530,58 @@ func (r *UserRepo) LinkAppleAccount(ctx context.Context, userID uuid.UUID, apple
 	tag, err := r.pool.Exec(ctx, query, userID, appleUserID)
 	if err != nil {
 		return fmt.Errorf("failed to link Apple account: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("user not found")
+	}
+	return nil
+}
+
+// UpdateLastActiveAt updates the user's last activity timestamp in a throttled way (once per hour max).
+func (r *UserRepo) UpdateLastActiveAt(ctx context.Context, id uuid.UUID) error {
+	query := `
+		UPDATE users
+		SET last_active_at = NOW()
+		WHERE id = $1
+		  AND (last_active_at IS NULL OR last_active_at < NOW() - INTERVAL '1 hour')`
+	_, err := r.pool.Exec(ctx, query, id)
+	return err
+}
+
+// DeleteOwnAccount flags a user account for self-deletion under a 90-day grace period.
+func (r *UserRepo) DeleteOwnAccount(ctx context.Context, id uuid.UUID) error {
+	query := `
+		UPDATE users
+		SET account_status = 'blocked',
+			deletion_eligible_at = NOW() + INTERVAL '90 days',
+			blocked_at = NOW(),
+			blocked_reason = 'Self-requested account deletion (90-day grace period)',
+			updated_at = NOW()
+		WHERE id = $1`
+	tag, err := r.pool.Exec(ctx, query, id)
+	if err != nil {
+		return fmt.Errorf("failed to initiate self-deletion: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("user not found")
+	}
+	return nil
+}
+
+// CancelPendingDeletion restores a user account from pending deletion state.
+func (r *UserRepo) CancelPendingDeletion(ctx context.Context, id uuid.UUID) error {
+	query := `
+		UPDATE users
+		SET account_status = 'active',
+			deletion_eligible_at = NULL,
+			blocked_at = NULL,
+			blocked_reason = NULL,
+			blocked_by = NULL,
+			updated_at = NOW()
+		WHERE id = $1`
+	tag, err := r.pool.Exec(ctx, query, id)
+	if err != nil {
+		return fmt.Errorf("failed to cancel pending deletion: %w", err)
 	}
 	if tag.RowsAffected() == 0 {
 		return fmt.Errorf("user not found")

@@ -26,6 +26,9 @@ type FullUserRepository interface {
 	CreateWithOAuth(ctx context.Context, user *models.User) error
 	LinkGoogleAccount(ctx context.Context, userID uuid.UUID, googleUserID string) error
 	LinkAppleAccount(ctx context.Context, userID uuid.UUID, appleUserID string) error
+	UpdateLastActiveAt(ctx context.Context, id uuid.UUID) error
+	DeleteOwnAccount(ctx context.Context, id uuid.UUID) error
+	CancelPendingDeletion(ctx context.Context, id uuid.UUID) error
 }
 
 // RefreshTokenRepository defines refresh token family operations for token rotation.
@@ -184,6 +187,8 @@ type AdminRepository interface {
 	HasActiveSubscription(ctx context.Context, userID uuid.UUID) (bool, error)
 	GetSubscriptionOverview(ctx context.Context) (*repository.SubscriptionOverview, error)
 	ExpireGiftedPlans(ctx context.Context) (int, error)
+	GetInactiveUsers(ctx context.Context, days int) ([]repository.AdminUser, error)
+	GetUsersWithZeroResources(ctx context.Context) ([]repository.AdminUser, error)
 }
 
 // StripeService defines the subset of Stripe operations used by handlers.
