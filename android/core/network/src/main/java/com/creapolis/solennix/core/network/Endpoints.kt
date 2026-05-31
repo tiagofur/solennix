@@ -86,6 +86,7 @@ object Endpoints {
 
     // Profile
     const val UPDATE_PROFILE = "users/me"
+    const val DELETE_ACCOUNT = "users/me"
 
     // Subscriptions
     const val SUBSCRIPTION_STATUS = "subscriptions/status"

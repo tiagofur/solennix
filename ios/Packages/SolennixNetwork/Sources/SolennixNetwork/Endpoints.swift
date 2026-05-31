@@ -213,6 +213,7 @@ public enum Endpoint {
     // MARK: - Profile
 
     public static let updateProfile = "/users/me"
+    public static let deleteAccount = "/users/me"
 
     // MARK: - Subscriptions
 
