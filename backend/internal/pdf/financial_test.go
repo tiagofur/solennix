@@ -578,3 +578,83 @@ func TestEnsureBudgetTableSpace_RedrawsHeaderAfterPageBreak(t *testing.T) {
 	assert.Greater(t, nextY, MarginTop+10)
 	assert.Less(t, nextY, PageHeight/2)
 }
+
+func TestComputeFinancialSummaryFromItems_RecalculatesBudgetTotals(t *testing.T) {
+	tests := []struct {
+		name                    string
+		event                   models.Event
+		products                []models.EventProduct
+		extras                  []models.EventExtra
+		wantPreDiscountSubtotal float64
+		wantDiscountAmount      float64
+		wantTaxAmount           float64
+		wantTotalAmount         float64
+	}{
+		{
+			name: "normal extras are discounted and included in total",
+			event: models.Event{
+				Discount:        10,
+				DiscountType:    "percent",
+				RequiresInvoice: false,
+				TotalAmount:     1,
+			},
+			products:                []models.EventProduct{{Quantity: 2, UnitPrice: 1000, Discount: 100}},
+			extras:                  []models.EventExtra{{Description: "Decoración", Cost: 200, Price: 500, ExcludeUtility: false}},
+			wantPreDiscountSubtotal: 2300,
+			wantDiscountAmount:      230,
+			wantTaxAmount:           0,
+			wantTotalAmount:         2070,
+		},
+		{
+			name: "pass-through extras are charged but not discounted",
+			event: models.Event{
+				Discount:        10,
+				DiscountType:    "percent",
+				RequiresInvoice: false,
+				TotalAmount:     1,
+			},
+			products:                []models.EventProduct{{Quantity: 1, UnitPrice: 1000}},
+			extras:                  []models.EventExtra{{Description: "Permiso", Cost: 300, Price: 300, ExcludeUtility: true}},
+			wantPreDiscountSubtotal: 1300,
+			wantDiscountAmount:      100,
+			wantTaxAmount:           0,
+			wantTotalAmount:         1200,
+		},
+		{
+			name: "tax is computed after discount and includes extras",
+			event: models.Event{
+				Discount:        100,
+				DiscountType:    "fixed",
+				RequiresInvoice: true,
+				TaxRate:         16,
+				TotalAmount:     1,
+			},
+			products:                []models.EventProduct{{Quantity: 1, UnitPrice: 1000}},
+			extras:                  []models.EventExtra{{Description: "Decoración", Cost: 100, Price: 500}},
+			wantPreDiscountSubtotal: 1500,
+			wantDiscountAmount:      100,
+			wantTaxAmount:           224,
+			wantTotalAmount:         1624,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fs := ComputeFinancialSummaryFromItems(tt.event, tt.products, tt.extras, 0)
+
+			assert.Equal(t, tt.wantPreDiscountSubtotal, fs.PreDiscountSubtotal)
+			assert.Equal(t, tt.wantDiscountAmount, fs.DiscountAmount)
+			assert.Equal(t, tt.wantTaxAmount, fs.TaxAmount)
+			assert.Equal(t, tt.wantTotalAmount, fs.TotalAmount)
+		})
+	}
+}
+
+func TestComputeFinancialSummaryFromItems_FallsBackToEventTotalWithoutRows(t *testing.T) {
+	event := models.Event{TotalAmount: 2500, Discount: 0, DiscountType: "fixed"}
+
+	fs := ComputeFinancialSummaryFromItems(event, nil, nil, 0)
+
+	assert.Equal(t, 2500.0, fs.TotalAmount)
+	assert.Equal(t, 2500.0, fs.PreDiscountSubtotal)
+}
