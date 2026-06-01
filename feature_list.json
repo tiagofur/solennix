@@ -1,0 +1,16 @@
+{
+  "features": [
+    {
+      "id": 1,
+      "name": "harness-setup",
+      "description": "Verificar la correcta integración y funcionamiento del arnés de subagentes en Solennix",
+      "status": "pending",
+      "acceptance_criteria": [
+        "init.sh se ejecuta sin errores",
+        "AGENTS.md y CHECKPOINTS.md están presentes y completos",
+        "Los agentes líder, implementador y revisor están definidos",
+        "Los tests de backend y web corren y están en verde"
+      ]
+    }
+  ]
+}
