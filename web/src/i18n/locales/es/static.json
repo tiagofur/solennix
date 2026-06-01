@@ -371,7 +371,15 @@
     "email_subject": "Solicitud de eliminación de cuenta - Solennix",
     "footer_note": "* Nuestro equipo procesará tu solicitud en un plazo máximo de 48 a 72 horas hábiles. Recibirás un correo de confirmación una vez que el proceso haya finalizado.",
     "other_queries_title": "Otras consultas sobre tus datos",
-    "other_queries_desc": "Si solo deseas corregir información o tienes dudas sobre cómo tratamos tus datos, te invitamos a revisar nuestra <link>Política de Privacidad</link>."
+    "other_queries_desc": "Si solo deseas corregir información o tienes dudas sobre cómo tratamos tus datos, te invitamos a revisar nuestra <link>Política de Privacidad</link>.",
+    "interactive_title": "Portal de Auto-servicio de Eliminación",
+    "interactive_subtitle": "Confirmá la eliminación de tu cuenta",
+    "grace_period_warning": "Tu cuenta será bloqueada y programada para borrado definitivo en 90 días. Podés deshacer esta solicitud simplemente iniciando sesión nuevamente antes de que venza el plazo.",
+    "confirm_checkbox": "Entiendo las consecuencias y deseo proceder con la eliminación.",
+    "delete_button": "Confirmar y Eliminar mi Cuenta",
+    "deleting": "Eliminando...",
+    "success_title": "¡Eliminación programada!",
+    "success_message": "Tu cuenta ha sido bloqueada y programada para eliminación. Tu sesión se cerrará en breve."
   },
   "setup_required": {
     "title": "Configuración Requerida",

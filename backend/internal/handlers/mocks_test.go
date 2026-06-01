@@ -136,6 +136,21 @@ func (m *MockFullUserRepo) LinkAppleAccount(ctx context.Context, userID uuid.UUI
 	return args.Error(0)
 }
 
+func (m *MockFullUserRepo) UpdateLastActiveAt(ctx context.Context, id uuid.UUID) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockFullUserRepo) DeleteOwnAccount(ctx context.Context, id uuid.UUID) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockFullUserRepo) CancelPendingDeletion(ctx context.Context, id uuid.UUID) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
 // ---------------------------------------------------------------------------
 // MockFullEventRepo — implements FullEventRepository
 // ---------------------------------------------------------------------------
@@ -775,6 +790,22 @@ func (m *MockAdminRepo) GetSubscriptionOverview(ctx context.Context) (*repositor
 func (m *MockAdminRepo) ExpireGiftedPlans(ctx context.Context) (int, error) {
 	args := m.Called(ctx)
 	return args.Int(0), args.Error(1)
+}
+
+func (m *MockAdminRepo) GetInactiveUsers(ctx context.Context, days int) ([]repository.AdminUser, error) {
+	args := m.Called(ctx, days)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]repository.AdminUser), args.Error(1)
+}
+
+func (m *MockAdminRepo) GetUsersWithZeroResources(ctx context.Context) ([]repository.AdminUser, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]repository.AdminUser), args.Error(1)
 }
 
 // ---------------------------------------------------------------------------

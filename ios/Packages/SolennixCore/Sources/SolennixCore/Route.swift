@@ -70,4 +70,5 @@ public enum Route: Hashable {
     case subscription
     case notificationPreferences
     case about
+    case deleteAccount
 }

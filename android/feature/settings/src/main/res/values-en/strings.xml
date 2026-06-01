@@ -291,4 +291,19 @@ hola@creapolis.dev</string>
     <string name="settings_form_links_label_placeholder">Example: García wedding</string>
     <string name="settings_form_links_ttl_days">Validity days</string>
     <string name="settings_form_links_generate">Generate</string>
+    <string name="settings_account_deletion_title">Account deletion request</string>
+    <string name="settings_account_deletion_subtitle">Permanently delete your account</string>
+    <string name="settings_account_deletion_intro">We understand you want to delete your account. Please read carefully what will happen next.</string>
+    <string name="settings_account_deletion_what_happens_title">What will happen to your information?</string>
+    <string name="settings_account_deletion_item_events">Your events, clients, and products will be scheduled for permanent deletion.</string>
+    <string name="settings_account_deletion_item_sub">Your subscription will be cancelled immediately and you will not receive new charges.</string>
+    <string name="settings_account_deletion_item_logs">We will retain certain anonymized audit records for legal compliance.</string>
+    <string name="settings_account_deletion_grace_warning">Your account will enter a 90-day grace period. During this time, your information will be securely kept and you can revoke this request by contacting support if you change your mind.</string>
+    <string name="settings_account_deletion_confirm_checkbox">I understand the consequences and confirm that I wish to schedule the deletion of my account.</string>
+    <string name="settings_account_deletion_button">Schedule deletion</string>
+    <string name="settings_account_deletion_deleting">Scheduling…</string>
+    <string name="settings_account_deletion_success_title">Deletion scheduled</string>
+    <string name="settings_account_deletion_success_message">Your account has been successfully scheduled for deletion. A 90-day grace period will apply. You will be logged out shortly.</string>
+    <string name="settings_account_deletion_logging_out">Signing out…</string>
+    <string name="settings_account_deletion_consent_required">You must accept the conditions to continue.</string>
 </resources>

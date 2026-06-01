@@ -790,3 +790,83 @@ func TestAdminHandler_DeleteUser(t *testing.T) {
 		repo.AssertExpectations(t)
 	})
 }
+
+func TestAdminHandler_GetInactiveUsers(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		users := []repository.AdminUser{
+			{ID: uuid.New(), Email: "inactive1@example.com", Name: "Inactive 1", Plan: "pro"},
+		}
+		repo.On("GetInactiveUsers", mock.Anything, 30).Return(users, nil)
+
+		req := httptest.NewRequest("GET", "/api/admin/users/inactive?days=30", nil)
+		w := httptest.NewRecorder()
+
+		handler.GetInactiveUsers(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		var resp []repository.AdminUser
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+		assert.Len(t, resp, 1)
+		assert.Equal(t, "inactive1@example.com", resp[0].Email)
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("repo error", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		repo.On("GetInactiveUsers", mock.Anything, 30).Return(nil, assert.AnError)
+
+		req := httptest.NewRequest("GET", "/api/admin/users/inactive?days=30", nil)
+		w := httptest.NewRecorder()
+
+		handler.GetInactiveUsers(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		repo.AssertExpectations(t)
+	})
+}
+
+func TestAdminHandler_GetUsersWithZeroResources(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		users := []repository.AdminUser{
+			{ID: uuid.New(), Email: "empty@example.com", Name: "Empty User", Plan: "basic"},
+		}
+		repo.On("GetUsersWithZeroResources", mock.Anything).Return(users, nil)
+
+		req := httptest.NewRequest("GET", "/api/admin/users/zero-resources", nil)
+		w := httptest.NewRecorder()
+
+		handler.GetUsersWithZeroResources(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		var resp []repository.AdminUser
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+		assert.Len(t, resp, 1)
+		assert.Equal(t, "empty@example.com", resp[0].Email)
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("repo error", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		repo.On("GetUsersWithZeroResources", mock.Anything).Return(nil, assert.AnError)
+
+		req := httptest.NewRequest("GET", "/api/admin/users/zero-resources", nil)
+		w := httptest.NewRecorder()
+
+		handler.GetUsersWithZeroResources(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		repo.AssertExpectations(t)
+	})
+}

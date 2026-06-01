@@ -129,3 +129,23 @@ func GetUserEmail(ctx context.Context) string {
 	email, _ := ctx.Value(UserEmailKey).(string)
 	return email
 }
+
+// ActivityTrackerRepo defines the interface needed for updating last active timestamp.
+type ActivityTrackerRepo interface {
+	UpdateLastActiveAt(ctx context.Context, id uuid.UUID) error
+}
+
+// ActivityTracker creates a middleware that asynchronously updates user's last active timestamp (throttled).
+func ActivityTracker(repo ActivityTrackerRepo) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			userID := GetUserID(r.Context())
+			if userID != uuid.Nil {
+				go func() {
+					_ = repo.UpdateLastActiveAt(context.Background(), userID)
+				}()
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}

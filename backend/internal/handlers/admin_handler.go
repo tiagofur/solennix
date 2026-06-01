@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -321,4 +322,36 @@ func (h *AdminHandler) GetSubscriptions(w http.ResponseWriter, r *http.Request) 
 	}
 
 	writeJSON(w, http.StatusOK, overview)
+}
+
+// GetInactiveUsers handles GET /api/admin/users/inactive — returns users inactive for X days (default 30).
+func (h *AdminHandler) GetInactiveUsers(w http.ResponseWriter, r *http.Request) {
+	daysStr := r.URL.Query().Get("days")
+	days := 30
+	if daysStr != "" {
+		if d, err := strconv.Atoi(daysStr); err == nil && d > 0 {
+			days = d
+		}
+	}
+
+	users, err := h.adminRepo.GetInactiveUsers(r.Context(), days)
+	if err != nil {
+		slog.Error("admin: failed to get inactive users", "error", err, "days", days)
+		writeError(w, http.StatusInternalServerError, "Failed to get inactive users")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, users)
+}
+
+// GetUsersWithZeroResources handles GET /api/admin/users/empty-resources — returns users with 0 events, products, and clients.
+func (h *AdminHandler) GetUsersWithZeroResources(w http.ResponseWriter, r *http.Request) {
+	users, err := h.adminRepo.GetUsersWithZeroResources(r.Context())
+	if err != nil {
+		slog.Error("admin: failed to get zero-resource users", "error", err)
+		writeError(w, http.StatusInternalServerError, "Failed to get empty resource users")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, users)
 }

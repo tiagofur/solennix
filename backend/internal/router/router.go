@@ -193,6 +193,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	// Protected routes
 	apiRouter.Group(func(r chi.Router) {
 		r.Use(mw.Auth(authService))
+		r.Use(mw.ActivityTracker(userRepo))
 		r.Use(mw.AccountStatusActive(userRepo))
 		r.Use(mw.ValidateUUID("id", "photoId"))
 		planResolver := mw.NewCachedPlanResolver(userRepo, 5*time.Minute)
@@ -209,6 +210,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 
 		// Users
 		r.Put("/users/me", authHandler.UpdateProfile)
+		r.Delete("/users/me", authHandler.DeleteOwnAccount)
 
 		// Staff (Personal — collaborators catalog)
 		r.Route("/staff", func(r chi.Router) {
@@ -405,6 +407,8 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Use(mw.RateLimit(30, 1*time.Minute))
 
 		r.Get("/stats", adminHandler.GetStats)
+		r.Get("/users/inactive", adminHandler.GetInactiveUsers)
+		r.Get("/users/empty-resources", adminHandler.GetUsersWithZeroResources)
 		r.Get("/users", adminHandler.ListUsers)
 		r.Get("/users/{id}", adminHandler.GetUser)
 		r.Put("/users/{id}/block", adminHandler.BlockUser)

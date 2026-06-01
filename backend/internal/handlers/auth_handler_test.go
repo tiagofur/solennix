@@ -2750,3 +2750,57 @@ func TestAuthHandler_AppleSignIn(t *testing.T) {
 		assert.Contains(t, rr.Body.String(), "Invalid Apple identity token")
 	})
 }
+
+func TestAuthHandler_DeleteOwnAccount(t *testing.T) {
+	authService := services.NewAuthService("test-secret-key-32bytes-minimum!!", 1)
+	mockRepo := new(MockFullUserRepo)
+	h := &AuthHandler{userRepo: mockRepo, authService: authService}
+
+	userID := uuid.New()
+	mockRepo.On("DeleteOwnAccount", mock.Anything, userID).Return(nil)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/users/me", nil)
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+	rr := httptest.NewRecorder()
+
+	h.DeleteOwnAccount(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), "self_deletion_initiated")
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAuthHandler_Login_CancelPendingDeletion(t *testing.T) {
+	authService := services.NewAuthService("test-secret-key-32bytes-minimum!!", 1)
+	mockRepo := new(MockFullUserRepo)
+	h := &AuthHandler{userRepo: mockRepo, authService: authService}
+
+	userID := uuid.New()
+	hash, _ := authService.HashPassword("StrongPass123!")
+	verifiedAt := time.Now()
+	deletionEligible := time.Now().Add(90 * 24 * time.Hour)
+
+	user := &models.User{
+		ID:                 userID,
+		Email:              "grace@test.dev",
+		PasswordHash:       hash,
+		EmailVerifiedAt:    &verifiedAt,
+		Name:               "Grace User",
+		Plan:               "basic",
+		AccountStatus:      repository.AccountStatusBlocked,
+		DeletionEligibleAt: &deletionEligible,
+	}
+
+	mockRepo.On("GetByEmail", mock.Anything, "grace@test.dev").Return(user, nil)
+	mockRepo.On("CancelPendingDeletion", mock.Anything, userID).Return(nil)
+
+	body := `{"email":"grace@test.dev","password":"StrongPass123!"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(body))
+	rr := httptest.NewRecorder()
+
+	h.Login(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), "access_token")
+	mockRepo.AssertExpectations(t)
+}

@@ -123,6 +123,8 @@ struct RouteDestination: View {
             NotificationPreferencesView(apiClient: apiClient, authManager: authManager)
         case .about:
             AboutView()
+        case .deleteAccount:
+            AccountDeletionView(apiClient: apiClient, authManager: authManager)
         }
     }
 }

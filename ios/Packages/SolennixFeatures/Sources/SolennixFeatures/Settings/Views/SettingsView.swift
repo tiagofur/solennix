@@ -328,17 +328,16 @@ public struct SettingsView: View {
 
             Divider()
 
-            Button {
-                HapticsHelper.play(.selection)
-                if let url = URL(string: "https://creapolis.dev/delete-account") {
-                    legalSheetURL = IdentifiableURL(url)
+            NavigationLink(value: Route.deleteAccount) {
+                HStack {
+                    Label(tr("settings.action.delete_account", "Eliminar cuenta"), systemImage: "trash")
+                        .foregroundStyle(SolennixColors.error)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textTertiary)
                 }
-            } label: {
-                SettingsExternalRow(
-                    title: tr("settings.action.delete_account", "Eliminar cuenta"),
-                    systemImage: "trash",
-                    color: SolennixColors.error
-                )
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         }
@@ -503,24 +502,18 @@ public struct SettingsView: View {
         .listRowSeparator(.hidden)
         .accessibilityHint(tr("settings.legal.terms_hint", "Abre los términos de servicio en Safari"))
 
-        Button {
-            HapticsHelper.play(.selection)
-            if let url = URL(string: "https://creapolis.dev/delete-account") {
-                legalSheetURL = IdentifiableURL(url)
-            }
-        } label: {
+        NavigationLink(value: Route.deleteAccount) {
             HStack {
                 Label(tr("settings.action.delete_account", "Eliminar cuenta"), systemImage: "trash")
                     .foregroundStyle(SolennixColors.error)
                 Spacer()
-                Image(systemName: "arrow.up.right.square")
+                Image(systemName: "chevron.right")
                     .font(.caption)
                     .foregroundStyle(SolennixColors.textTertiary)
             }
             .contentShape(Rectangle())
         }
         .listRowSeparator(.hidden)
-        .accessibilityHint(tr("settings.legal.delete_hint", "Abre la página de solicitud de eliminación de cuenta en Safari"))
     }
 
     // MARK: - User Header Section

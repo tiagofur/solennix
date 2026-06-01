@@ -291,4 +291,19 @@ hola@creapolis.dev</string>
     <string name="settings_form_links_label_placeholder">Ej: Boda García</string>
     <string name="settings_form_links_ttl_days">Días de vigencia</string>
     <string name="settings_form_links_generate">Generar</string>
+    <string name="settings_account_deletion_title">Solicitud de eliminación de cuenta</string>
+    <string name="settings_account_deletion_subtitle">Eliminar tu cuenta permanentemente</string>
+    <string name="settings_account_deletion_intro">Entendemos que quieras eliminar tu cuenta. Por favor lee atentamente lo que sucederá a continuación.</string>
+    <string name="settings_account_deletion_what_happens_title">¿Qué sucederá con tu información?</string>
+    <string name="settings_account_deletion_item_events">Tus eventos, clientes y productos serán programados para eliminación permanente.</string>
+    <string name="settings_account_deletion_item_sub">Tu suscripción se cancelará de manera inmediata y no recibirás nuevos cobros.</string>
+    <string name="settings_account_deletion_item_logs">Conservaremos ciertos registros de auditoría anonimizados por cumplimiento legal.</string>
+    <string name="settings_account_deletion_grace_warning">Tu cuenta entrará en un período de gracia de 90 días. Durante este tiempo, tu información estará resguardada de forma segura y podrás revocar esta solicitud contactándote con soporte en caso de que cambies de opinión.</string>
+    <string name="settings_account_deletion_confirm_checkbox">Entiendo las consecuencias y confirmo que deseo programar la eliminación de mi cuenta.</string>
+    <string name="settings_account_deletion_button">Programar eliminación</string>
+    <string name="settings_account_deletion_deleting">Programando…</string>
+    <string name="settings_account_deletion_success_title">Eliminación programada</string>
+    <string name="settings_account_deletion_success_message">Tu cuenta ha sido programada para eliminación de forma exitosa. Se aplicará un período de gracia de 90 días. En instantes cerraremos tu sesión.</string>
+    <string name="settings_account_deletion_logging_out">Cerrando sesión…</string>
+    <string name="settings_account_deletion_consent_required">Debes aceptar las condiciones para continuar.</string>
 </resources>

@@ -33,6 +33,12 @@ public final class SettingsViewModel {
     public var passwordError: String?
     public var passwordSuccess: Bool = false
 
+    // Account Deletion State
+    public var isDeletingOwnAccount: Bool = false
+    public var deleteOwnAccountError: String? = nil
+    public var deleteOwnAccountSuccess: Bool = false
+    public var confirmDeletionConsent: Bool = false
+
     // MARK: - Dependencies
 
     private let apiClient: APIClient
@@ -167,6 +173,33 @@ public final class SettingsViewModel {
     public func logout() async {
         await authManager.signOut()
         user = nil
+    }
+
+    // MARK: - Delete Own Account
+
+    @MainActor
+    public func deleteOwnAccount() async -> Bool {
+        guard confirmDeletionConsent else {
+            deleteOwnAccountError = FeatureL10n.text("settings.delete_account.consent_required", "Debes aceptar las condiciones para continuar.")
+            return false
+        }
+
+        isDeletingOwnAccount = true
+        deleteOwnAccountError = nil
+
+        do {
+            try await apiClient.delete(Endpoint.deleteAccount)
+            deleteOwnAccountSuccess = true
+            isDeletingOwnAccount = false
+            // Give UI time to show success state, then log out
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            await logout()
+            return true
+        } catch {
+            deleteOwnAccountError = mapError(error)
+            isDeletingOwnAccount = false
+            return false
+        }
     }
 
     @MainActor

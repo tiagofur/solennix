@@ -25,6 +25,13 @@ status: active
 **Fecha:** Mayo 2026
 **Version:** 1.7
 
+> [!success] 2026-05-31 — Auto-servicio de eliminación y moderación (Web y Backend)
+> Se implementó la auto-eliminación de cuentas de usuario con período de gracia de 90 días, tracking de inactividad con throttle, paneles de auditoría administrativa y portal de auto-servicio en el frontend Web.
+> - **Eliminación y Gracia:** endpoints para auto-programar eliminación (`DELETE /api/users/me`) que bloquean acceso, y portal interactivo en Web con checkbox de confirmación, toast y deslogueo automático.
+> - **Inactividad:** middleware para registrar y actualizar `last_active_at` en usuarios con control de throttle de 1 hora.
+> - **Paneles Administrativos:** queries optimizadas y endpoints para detectar usuarios inactivos y cuentas sin recursos, e interfaz administrativa en Web con filtros y borrado permanente.
+> - **Validación:** tests unitarios y de integración cubriendo todo el flujo en backend (`go test ./...`) y frontend (`npx vitest run AccountDeletion.test.tsx AdminUsers.test.tsx` pasando completo con 11/11 tests).
+
 > [!success] 2026-05-30 — Backend: API Deprecation Lifecycle
 > Se implementó un ciclo de vida de depreciación estándar para rutas y versiones obsoletas de la API.
 > - **Middleware:** nuevo middleware `Deprecate` en `backend/internal/middleware/version.go` que inyecta cabeceras HTTP `Deprecation: true`, `Sunset` y `Link` (con rel="deprecation").

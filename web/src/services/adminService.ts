@@ -29,6 +29,8 @@ export interface AdminUser {
   stripe_customer_id?: string;
   has_paid_subscription: boolean;
   plan_expires_at?: string | null;
+  account_status: string;
+  deletion_eligible_at?: string | null;
   events_count: number;
   clients_count: number;
   products_count: number;
@@ -51,8 +53,20 @@ export const adminService = {
     return api.get<PlatformStats>("/admin/stats");
   },
 
-  async getUsers(accountType: AdminAccountType = 'users') {
-    return api.get<AdminUser[]>("/admin/users", { account_type: accountType });
+  async getUsers(accountType: AdminAccountType = 'users', moderationStatus?: string) {
+    const params: Record<string, string> = { account_type: accountType };
+    if (moderationStatus) {
+      params.moderation_status = moderationStatus;
+    }
+    return api.get<AdminUser[]>("/admin/users", params);
+  },
+
+  async getInactiveUsers(days = 30) {
+    return api.get<AdminUser[]>("/admin/users/inactive", { days: String(days) });
+  },
+
+  async getUsersWithZeroResources() {
+    return api.get<AdminUser[]>("/admin/users/zero-resources");
   },
 
   async getUserById(id: string) {
@@ -68,5 +82,9 @@ export const adminService = {
 
   async getSubscriptions() {
     return api.get<SubscriptionOverview>("/admin/subscriptions");
+  },
+
+  async deleteUser(id: string) {
+    return api.delete(`/admin/users/${id}`);
   },
 };

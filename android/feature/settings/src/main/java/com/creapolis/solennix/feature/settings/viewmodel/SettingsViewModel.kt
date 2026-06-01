@@ -13,8 +13,11 @@ import com.creapolis.solennix.core.network.Endpoints
 import com.creapolis.solennix.core.network.put
 import com.creapolis.solennix.feature.settings.billing.BillingManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
@@ -52,6 +55,18 @@ class SettingsViewModel @Inject constructor(
             initialValue = ""
         )
 
+    // Account deletion state
+    private val _isDeletingOwnAccount = MutableStateFlow(false)
+    val isDeletingOwnAccount: StateFlow<Boolean> = _isDeletingOwnAccount.asStateFlow()
+
+    private val _deleteOwnAccountError = MutableStateFlow<String?>(null)
+    val deleteOwnAccountError: StateFlow<String?> = _deleteOwnAccountError.asStateFlow()
+
+    private val _deleteOwnAccountSuccess = MutableStateFlow(false)
+    val deleteOwnAccountSuccess: StateFlow<Boolean> = _deleteOwnAccountSuccess.asStateFlow()
+
+    val confirmDeletionConsent = MutableStateFlow(false)
+
     fun updateLanguage(language: String, onSuccess: (() -> Unit)? = null, onError: ((String) -> Unit)? = null) {
         viewModelScope.launch {
             try {
@@ -73,6 +88,30 @@ class SettingsViewModel @Inject constructor(
     fun updateTheme(config: ThemeConfig) {
         viewModelScope.launch {
             settingsRepository.setThemeConfig(config)
+        }
+    }
+
+    fun deleteOwnAccount(onSuccess: () -> Unit = {}) {
+        if (!confirmDeletionConsent.value) {
+            _deleteOwnAccountError.value = context.getString(
+                com.creapolis.solennix.feature.settings.R.string.settings_account_deletion_consent_required
+            )
+            return
+        }
+        viewModelScope.launch {
+            _isDeletingOwnAccount.value = true
+            _deleteOwnAccountError.value = null
+            try {
+                apiService.delete(Endpoints.DELETE_ACCOUNT)
+                _deleteOwnAccountSuccess.value = true
+                _isDeletingOwnAccount.value = false
+                onSuccess()
+                delay(3_000)
+                logout()
+            } catch (e: Exception) {
+                _deleteOwnAccountError.value = e.message ?: "Error al eliminar la cuenta"
+                _isDeletingOwnAccount.value = false
+            }
         }
     }
 

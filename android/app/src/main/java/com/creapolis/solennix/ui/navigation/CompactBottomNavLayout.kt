@@ -79,6 +79,7 @@ import com.creapolis.solennix.feature.products.ui.ProductFormScreen
 import com.creapolis.solennix.feature.products.ui.ProductListScreen
 import com.creapolis.solennix.feature.search.ui.SearchScreen
 import com.creapolis.solennix.feature.settings.ui.AboutScreen
+import com.creapolis.solennix.feature.settings.ui.AccountDeletionScreen
 import com.creapolis.solennix.feature.settings.ui.BusinessSettingsScreen
 import com.creapolis.solennix.feature.settings.ui.ChangePasswordScreen
 import com.creapolis.solennix.feature.settings.ui.ContractDefaultsScreen
@@ -308,7 +309,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onAbout = { navController.navigate("about") },
                     onPrivacy = { uriHandler.openUri("https://creapolis.dev/privacy-policy") },
                     onTerms = { navController.navigate("terms") },
-                    onDeleteAccount = { uriHandler.openUri("https://creapolis.dev/delete-account") },
+                    onDeleteAccount = { navController.navigate("delete_account") },
                     onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() }
                 )
@@ -352,6 +353,12 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
             }
             composable("terms") {
                 TermsScreen(onNavigateBack = { navController.popBackStack() })
+            }
+            composable("delete_account") {
+                AccountDeletionScreen(
+                    viewModel = hiltViewModel(),
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
 
             composable("client_detail/{clientId}") {

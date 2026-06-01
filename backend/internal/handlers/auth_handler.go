@@ -437,12 +437,23 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		accountStatus = repository.AccountStatusActive
 	}
 	if accountStatus == repository.AccountStatusBlocked {
-		slog.Warn("auth.event", "action", "login_failed", "email", req.Email, "reason", "account_blocked", "ip", clientIP(r))
-		middleware.LogSecurityAuditEvent(user.ID, "auth_failed", "session", map[string]any{
-			"reason": "account_blocked",
-		}, clientIP(r), r.UserAgent())
-		writeAuthI18nError(w, r, http.StatusForbidden, "auth.account_blocked")
-		return
+		if user.DeletionEligibleAt != nil && user.DeletionEligibleAt.After(time.Now()) {
+			if err := h.userRepo.CancelPendingDeletion(r.Context(), user.ID); err != nil {
+				slog.Error("Failed to cancel pending self-deletion on login", "error", err, "user_id", user.ID)
+				writeAuthI18nError(w, r, http.StatusInternalServerError, "auth.internal_server_error")
+				return
+			}
+			user.AccountStatus = repository.AccountStatusActive
+			accountStatus = repository.AccountStatusActive
+			slog.Info("auth.event", "action", "self_deletion_cancelled_on_login", "user_id", user.ID, "email", user.Email, "ip", clientIP(r))
+		} else {
+			slog.Warn("auth.event", "action", "login_failed", "email", req.Email, "reason", "account_blocked", "ip", clientIP(r))
+			middleware.LogSecurityAuditEvent(user.ID, "auth_failed", "session", map[string]any{
+				"reason": "account_blocked",
+			}, clientIP(r), r.UserAgent())
+			writeAuthI18nError(w, r, http.StatusForbidden, "auth.account_blocked")
+			return
+		}
 	}
 	if accountStatus == repository.AccountStatusDeleted {
 		slog.Warn("auth.event", "action", "login_failed", "email", req.Email, "reason", "account_deleted", "ip", clientIP(r))
@@ -1992,4 +2003,38 @@ func validateAppleIDToken(identityToken string, appleClientIDs []string) (*Apple
 		Subject: appleClaims.Subject,
 		Email:   appleClaims.Email,
 	}, nil
+}
+
+// DeleteOwnAccount handles DELETE /api/users/me — triggers 90-day grace period for self-deletion.
+func (h *AuthHandler) DeleteOwnAccount(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+
+	// Revoke all refresh tokens family for this user
+	if h.refreshTokenRepo != nil {
+		h.refreshTokenRepo.RevokeAllForUser(r.Context(), userID)
+	}
+
+	// Trigger 90-day grace soft-deletion
+	if err := h.userRepo.DeleteOwnAccount(r.Context(), userID); err != nil {
+		slog.Error("Failed to initiate self-deletion", "error", err, "user_id", userID)
+		writeAuthI18nError(w, r, http.StatusInternalServerError, "auth.internal_server_error")
+		return
+	}
+
+	// Clear the auth cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https",
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1,
+	})
+
+	slog.Info("auth.event", "action", "self_deletion_initiated", "user_id", userID, "ip", clientIP(r))
+
+	writeJSON(w, http.StatusOK, map[string]string{
+		"message": i18n.Message(r.Context(), "auth.self_deletion_initiated"),
+	})
 }
