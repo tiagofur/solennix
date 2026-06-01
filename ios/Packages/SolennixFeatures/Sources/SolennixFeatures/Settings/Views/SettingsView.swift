@@ -329,11 +329,15 @@ public struct SettingsView: View {
             Divider()
 
             NavigationLink(value: Route.deleteAccount) {
-                SettingsNavRow(
-                    title: tr("settings.action.delete_account", "Eliminar cuenta"),
-                    systemImage: "trash",
-                    color: SolennixColors.error
-                )
+                HStack {
+                    Label(tr("settings.action.delete_account", "Eliminar cuenta"), systemImage: "trash")
+                        .foregroundStyle(SolennixColors.error)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         }
