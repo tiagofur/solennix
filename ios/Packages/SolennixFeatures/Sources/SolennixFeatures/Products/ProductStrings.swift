@@ -1,166 +1,196 @@
 import Foundation
 
 enum ProductStrings {
-    private static var isEnglish: Bool { Locale.current.language.languageCode?.identifier == "en" }
+    private static var isEnglish: Bool { FeatureL10n.languageCode == "en" }
 
-    static let title = isEnglish ? "Products" : "Productos"
-    static let searchPrompt = isEnglish ? "Search products" : "Buscar productos"
-    static let addProductAccessibility = isEnglish ? "Add product" : "Agregar producto"
-    static let deleteTitle = isEnglish ? "Delete product" : "Eliminar producto"
-    static let deleteAction = isEnglish ? "Delete" : "Eliminar"
-    static let cancel = isEnglish ? "Cancel" : "Cancelar"
-    static let retry = isEnglish ? "Retry" : "Reintentar"
-    static let edit = isEnglish ? "Edit" : "Editar"
-    static let viewDetail = isEnglish ? "View Detail" : "Ver Detalle"
-    static let inactive = isEnglish ? "Inactive" : "Inactivo"
-    static let errorLoadingTitle = isEnglish ? "Loading error" : "Error al cargar"
-    static let emptyTitle = isEnglish ? "No products" : "Sin productos"
-    static let emptyMessage = isEnglish ? "Add your first product to the catalog" : "Agrega tu primer producto al catálogo"
-    static let emptyAction = isEnglish ? "New Product" : "Nuevo Producto"
-    static let filteredEmptyTitle = isEnglish ? "No results" : "Sin resultados"
-    static let filteredEmptyMessage = isEnglish ? "No products match the active filters" : "No se encontraron productos que coincidan con los filtros aplicados"
-    static let sortTitle = isEnglish ? "Sort by" : "Ordenar por"
-    static let sortAscending = isEnglish ? "Ascending" : "Ascendente"
-    static let sortDescending = isEnglish ? "Descending" : "Descendente"
-    static let sortAccessibility = isEnglish ? "Sort products" : "Ordenar productos"
-    static let sortName = isEnglish ? "Name" : "Nombre"
-    static let sortPrice = isEnglish ? "Price" : "Precio"
-    static let sortCategory = isEnglish ? "Category" : "Categoría"
-    static let loading = isEnglish ? "Loading..." : "Cargando..."
-    static let errorTitle = isEnglish ? "Error" : "Error"
-    static let notFoundTitle = isEnglish ? "Product not found" : "Producto no encontrado"
-    static let notFoundMessage = isEnglish ? "Could not load product information." : "No se pudo cargar la información del producto."
-    static let compositionTitle = isEnglish ? "Composition / Ingredients" : "Composición / Insumos"
-    static let suppliesTitle = isEnglish ? "Supplies per Event" : "Insumos por Evento"
-    static let equipmentTitle = isEnglish ? "Required Equipment" : "Equipo Necesario"
-    static let totalUnitCost = isEnglish ? "Total Unit Cost" : "Costo Total por Unidad"
-    static let costPerEvent = isEnglish ? "Cost per Event" : "Costo por Evento"
-    static let fixedCostPerEvent = isEnglish ? "Fixed cost per event" : "Costo fijo por evento"
-    static let reusableNoCost = isEnglish ? "No cost - Reusable" : "Sin costo - Reutilizable"
-    static let basePrice = isEnglish ? "Base Price" : "Precio Base"
-    static let perUnit = isEnglish ? "per unit" : "por unidad"
-    static let unitCost = isEnglish ? "Cost / Unit" : "Costo / Unidad"
-    static let inSupplies = isEnglish ? "in supplies" : "en insumos"
-    static let marginEstimated = isEnglish ? "Estimated Margin" : "Margen Est."
-    static let profitEstimated = isEnglish ? "estimated profit" : "utilidad estimada"
-    static let upcomingEvents = isEnglish ? "Upcoming Events" : "Próx. Eventos"
-    static let confirmed = isEnglish ? "confirmed" : "confirmados"
-    static let noUpcomingEvents = isEnglish ? "No upcoming events" : "Sin eventos próximos"
-    static let noImmediateDemand = isEnglish ? "No immediate demand" : "Sin demanda inmediata"
-    static let highDemandWeek = isEnglish ? "High demand this week." : "Alta demanda esta semana."
-    static let noConfirmedEvents = isEnglish ? "There are no confirmed events including this product." : "No hay eventos confirmados que incluyan este producto."
-    static let generalInfo = isEnglish ? "GENERAL INFORMATION" : "INFORMACIÓN GENERAL"
-    static let category = isEnglish ? "Category" : "Categoría"
-    static let composition = isEnglish ? "Composition" : "Composición"
-    static let ingredientHeader = isEnglish ? "ITEM" : "INSUMO"
-    static let quantityHeader = isEnglish ? "QUANTITY" : "CANTIDAD"
-    static let estimatedCostHeader = isEnglish ? "EST. COST" : "COSTO EST."
-    static let unknownItem = isEnglish ? "Item" : "Insumo"
-    static let editProductTitle = isEnglish ? "Edit Product" : "Editar Producto"
-    static let newProductTitle = isEnglish ? "New Product" : "Nuevo Producto"
-    static let alertErrorTitle = isEnglish ? "Error" : "Error"
-    static let ok = "OK"
-    static let compositionDescription = isEnglish ? "Only ingredients add cost to the product." : "Solo insumos generan costo al producto."
-    static let equipmentDescription = isEnglish ? "Reusable assets. They are not included in cost." : "Activos reutilizables. No se incluyen en el costo."
-    static let suppliesDescription = isEnglish ? "Fixed cost per event (e.g. oil, gas)." : "Costo fijo por evento (ej. aceite, gas)."
-    static let associatedTeam = isEnglish ? "Associated team" : "Equipo asociado"
-    static let associatedTeamDescription = isEnglish ? "When you add this product to an event, team members are automatically assigned as staff." : "Cuando agregues este producto a un evento, se asignan automáticamente los miembros del equipo como personal."
-    static let noTeam = isEnglish ? "No team" : "Sin equipo"
-    static let addTeamsHint = isEnglish ? "Add teams from Staff to sell them as a service." : "Agrega equipos desde Personal para venderlos como servicio."
-    static let addPhoto = isEnglish ? "Add photo" : "Agregar foto"
-    static let productInfo = isEnglish ? "Product Information" : "Información del Producto"
-    static let name = isEnglish ? "Name" : "Nombre"
-    static let namePlaceholder = isEnglish ? "Ex: Premium Package" : "Ej: Paquete Premium"
-    static let selectCategory = isEnglish ? "Select category..." : "Seleccionar categoría..."
-    static let activeProduct = isEnglish ? "Active Product" : "Producto Activo"
-    static let visibleInQuotes = isEnglish ? "Visible in quotes" : "Visible en cotizaciones"
-    static let existingCategories = isEnglish ? "Existing Categories" : "Categorías Existentes"
-    static let newCategory = isEnglish ? "New Category" : "Nueva Categoría"
-    static let newCategoryPlaceholder = isEnglish ? "New category..." : "Nueva categoría..."
-    static let selectCategoryTitle = isEnglish ? "Select Category" : "Seleccionar Categoría"
-    static let close = isEnglish ? "Close" : "Cerrar"
-    static let save = isEnglish ? "Save" : "Guardar"
-    static let add = isEnglish ? "Add" : "Agregar"
-    static let noItemsAdded = isEnglish ? "No items added" : "No hay elementos agregados"
-    static let selectItem = isEnglish ? "Select item..." : "Seleccionar item..."
-    static let stock = isEnglish ? "Stock" : "Stock"
-    static let quantity = isEnglish ? "Quantity" : "Cantidad"
-    static let estimatedCostShort = isEnglish ? "Est. cost" : "Costo est."
-    static let searchItemPrompt = isEnglish ? "Search item..." : "Buscar item..."
-    static let selectItemTitle = isEnglish ? "Select Item" : "Seleccionar Item"
-    static let unitFallback = isEnglish ? "unit" : "und"
-    static let demandByDate = isEnglish ? "Demand by Date" : "Demanda por Fecha"
-    static let confirmedEvents = isEnglish ? "Confirmed events" : "Eventos confirmados"
-    static let today = isEnglish ? "Today" : "Hoy"
-    static let tomorrow = isEnglish ? "Tomorrow" : "Mañana"
-    static let totalDemandUpper = isEnglish ? "TOTAL DEMAND" : "TOTAL DEMANDA"
-    static let noUpcomingEventsDescription = isEnglish ? "This product is not included in any upcoming event" : "Este producto no está incluido en ningún evento próximo"
-    static let imageLoadError = isEnglish ? "Error loading image" : "Error al cargar la imagen"
-    static let validationNameMin = isEnglish ? "Name must be at least 2 characters" : "El nombre debe tener al menos 2 caracteres"
-    static let validationCategoryRequired = isEnglish ? "Category is required" : "La categoría es requerida"
-    static let unexpectedError = isEnglish ? "An unexpected error occurred." : "Ocurrió un error inesperado."
-    static let unexpectedRetryError = isEnglish ? "An unexpected error occurred. Please try again." : "Ocurrió un error inesperado. Intenta de nuevo."
+    static var title: String { FeatureL10n.text("products.title", "Productos") }
+    static var searchPrompt: String { FeatureL10n.text("products.search_prompt", "Buscar productos") }
+    static var addProductAccessibility: String { FeatureL10n.text("products.add_product_accessibility", "Agregar producto") }
+    static var deleteTitle: String { FeatureL10n.text("products.delete_title", "Eliminar producto") }
+    static var deleteAction: String { FeatureL10n.text("products.delete_action", "Eliminar") }
+    static var cancel: String { FeatureL10n.text("products.cancel", "Cancelar") }
+    static var retry: String { FeatureL10n.text("products.retry", "Reintentar") }
+    static var edit: String { FeatureL10n.text("products.edit", "Editar") }
+    static var viewDetail: String { FeatureL10n.text("products.view_detail", "Ver Detalle") }
+    static var inactive: String { FeatureL10n.text("products.inactive", "Inactivo") }
+    static var errorLoadingTitle: String { FeatureL10n.text("products.error_loading_title", "Error al cargar") }
+    static var emptyTitle: String { FeatureL10n.text("products.empty_title", "Sin productos") }
+    static var emptyMessage: String { FeatureL10n.text("products.empty_message", "Agrega tu primer producto al catálogo") }
+    static var emptyAction: String { FeatureL10n.text("products.empty_action", "Nuevo Producto") }
+    static var filteredEmptyTitle: String { FeatureL10n.text("products.filtered_empty_title", "Sin resultados") }
+    static var filteredEmptyMessage: String { FeatureL10n.text("products.filtered_empty_message", "No se encontraron productos que coincidan con los filtros aplicados") }
+    static var sortTitle: String { FeatureL10n.text("products.sort_title", "Ordenar por") }
+    static var sortAscending: String { FeatureL10n.text("products.sort_ascending", "Ascendente") }
+    static var sortDescending: String { FeatureL10n.text("products.sort_descending", "Descendente") }
+    static var sortAccessibility: String { FeatureL10n.text("products.sort_accessibility", "Ordenar productos") }
+    static var sortName: String { FeatureL10n.text("products.sort_name", "Nombre") }
+    static var sortPrice: String { FeatureL10n.text("products.sort_price", "Precio") }
+    static var sortCategory: String { FeatureL10n.text("products.sort_category", "Categoría") }
+    static var loading: String { FeatureL10n.text("products.loading", "Cargando...") }
+    static var errorTitle: String { FeatureL10n.text("products.error_title", "Error") }
+    static var notFoundTitle: String { FeatureL10n.text("products.not_found_title", "Producto no encontrado") }
+    static var notFoundMessage: String { FeatureL10n.text("products.not_found_message", "No se pudo cargar la información del producto.") }
+    static var compositionTitle: String { FeatureL10n.text("products.composition_title", "Composición / Insumos") }
+    static var suppliesTitle: String { FeatureL10n.text("products.supplies_title", "Insumos por Evento") }
+    static var equipmentTitle: String { FeatureL10n.text("products.equipment_title", "Equipo Necesario") }
+    static var totalUnitCost: String { FeatureL10n.text("products.total_unit_cost", "Costo Total por Unidad") }
+    static var costPerEvent: String { FeatureL10n.text("products.cost_per_event", "Costo por Evento") }
+    static var fixedCostPerEvent: String { FeatureL10n.text("products.fixed_cost_per_event", "Costo fijo por evento") }
+    static var reusableNoCost: String { FeatureL10n.text("products.reusable_no_cost", "Sin costo - Reutilizable") }
+    static var basePrice: String { FeatureL10n.text("products.base_price", "Precio Base") }
+    static var perUnit: String { FeatureL10n.text("products.per_unit", "por unidad") }
+    static var unitCost: String { FeatureL10n.text("products.unit_cost", "Costo / Unidad") }
+    static var inSupplies: String { FeatureL10n.text("products.in_supplies", "en insumos") }
+    static var marginEstimated: String { FeatureL10n.text("products.margin_estimated", "Margen Est.") }
+    static var profitEstimated: String { FeatureL10n.text("products.profit_estimated", "utilidad estimada") }
+    static var upcomingEvents: String { FeatureL10n.text("products.upcoming_events", "Próx. Eventos") }
+    static var confirmed: String { FeatureL10n.text("products.confirmed", "confirmados") }
+    static var noUpcomingEvents: String { FeatureL10n.text("products.no_upcoming_events", "Sin eventos próximos") }
+    static var noImmediateDemand: String { FeatureL10n.text("products.no_immediate_demand", "Sin demanda inmediata") }
+    static var highDemandWeek: String { FeatureL10n.text("products.high_demand_week", "Alta demanda esta semana.") }
+    static var noConfirmedEvents: String { FeatureL10n.text("products.no_confirmed_events", "No hay eventos confirmados que incluyan este producto.") }
+    static var generalInfo: String { FeatureL10n.text("products.general_info", "INFORMACIÓN GENERAL") }
+    static var category: String { FeatureL10n.text("products.category", "Categoría") }
+    static var composition: String { FeatureL10n.text("products.composition", "Composición") }
+    static var ingredientHeader: String { FeatureL10n.text("products.ingredient_header", "INSUMO") }
+    static var quantityHeader: String { FeatureL10n.text("products.quantity_header", "CANTIDAD") }
+    static var estimatedCostHeader: String { FeatureL10n.text("products.estimated_cost_header", "COSTO EST.") }
+    static var unknownItem: String { FeatureL10n.text("products.unknown_item", "Insumo") }
+    static var editProductTitle: String { FeatureL10n.text("products.edit_product_title", "Editar Producto") }
+    static var newProductTitle: String { FeatureL10n.text("products.new_product_title", "Nuevo Producto") }
+    static var alertErrorTitle: String { FeatureL10n.text("products.alert_error_title", "Error") }
+    static var ok: String { "OK" }
+    static var compositionDescription: String { FeatureL10n.text("products.composition_description", "Solo insumos generan costo al producto.") }
+    static var equipmentDescription: String { FeatureL10n.text("products.equipment_description", "Activos reutilizables. No se incluyen en el costo.") }
+    static var suppliesDescription: String { FeatureL10n.text("products.supplies_description", "Costo fijo por evento (ej. aceite, gas).") }
+    static var associatedTeam: String { FeatureL10n.text("products.associated_team", "Equipo asociado") }
+    static var associatedTeamDescription: String { FeatureL10n.text("products.associated_team_description", "Cuando agregues este producto a un evento, se asignan automáticamente los miembros del equipo como personal.") }
+    static var noTeam: String { FeatureL10n.text("products.no_team", "Sin equipo") }
+    static var addTeamsHint: String { FeatureL10n.text("products.add_teams_hint", "Agrega equipos desde Personal para venderlos como servicio.") }
+    static var addPhoto: String { FeatureL10n.text("products.add_photo", "Agregar foto") }
+    static var productInfo: String { FeatureL10n.text("products.product_info", "Información del Producto") }
+    static var name: String { FeatureL10n.text("products.name", "Nombre") }
+    static var namePlaceholder: String { FeatureL10n.text("products.name_placeholder", "Ej: Paquete Premium") }
+    static var selectCategory: String { FeatureL10n.text("products.select_category", "Seleccionar categoría...") }
+    static var activeProduct: String { FeatureL10n.text("products.active_product", "Producto Activo") }
+    static var visibleInQuotes: String { FeatureL10n.text("products.visible_in_quotes", "Visible en cotizaciones") }
+    static var existingCategories: String { FeatureL10n.text("products.existing_categories", "Categorías Existentes") }
+    static var newCategory: String { FeatureL10n.text("products.new_category", "Nueva Categoría") }
+    static var newCategoryPlaceholder: String { FeatureL10n.text("products.new_category_placeholder", "Nueva categoría...") }
+    static var selectCategoryTitle: String { FeatureL10n.text("products.select_category_title", "Seleccionar Categoría") }
+    static var close: String { FeatureL10n.text("products.close", "Cerrar") }
+    static var save: String { FeatureL10n.text("products.save", "Guardar") }
+    static var add: String { FeatureL10n.text("products.add", "Agregar") }
+    static var noItemsAdded: String { FeatureL10n.text("products.no_items_added", "No hay elementos agregados") }
+    static var selectItem: String { FeatureL10n.text("products.select_item", "Seleccionar item...") }
+    static var stock: String { FeatureL10n.text("products.stock", "Stock") }
+    static var quantity: String { FeatureL10n.text("products.quantity", "Cantidad") }
+    static var estimatedCostShort: String { FeatureL10n.text("products.estimated_cost_short", "Costo est.") }
+    static var searchItemPrompt: String { FeatureL10n.text("products.search_item_prompt", "Buscar item...") }
+    static var selectItemTitle: String { FeatureL10n.text("products.select_item_title", "Seleccionar Item") }
+    static var unitFallback: String { FeatureL10n.text("products.unit_fallback", "und") }
+    static var demandByDate: String { FeatureL10n.text("products.demand_by_date", "Demanda por Fecha") }
+    static var confirmedEvents: String { FeatureL10n.text("products.confirmed_events", "Eventos confirmados") }
+    static var today: String { FeatureL10n.text("products.today", "Hoy") }
+    static var tomorrow: String { FeatureL10n.text("products.tomorrow", "Mañana") }
+    static var totalDemandUpper: String { FeatureL10n.text("products.total_demand_upper", "TOTAL DEMANDA") }
+    static var noUpcomingEventsDescription: String { FeatureL10n.text("products.no_upcoming_events_description", "Este producto no está incluido en ningún evento próximo") }
+    static var imageLoadError: String { FeatureL10n.text("products.image_load_error", "Error al cargar la imagen") }
+    static var validationNameMin: String { FeatureL10n.text("products.validation_name_min", "El nombre debe tener al menos 2 caracteres") }
+    static var validationCategoryRequired: String { FeatureL10n.text("products.validation_category_required", "La categoría es requerida") }
+    static var unexpectedError: String { FeatureL10n.text("products.unexpected_error", "Ocurrió un error inesperado.") }
+    static var unexpectedRetryError: String { FeatureL10n.text("products.unexpected_retry_error", "Ocurrió un error inesperado. Intenta de nuevo.") }
 
     static func deletedMessage(_ name: String) -> String {
-        isEnglish ? "\(name) deleted" : "\(name) eliminado"
+        FeatureL10n.format("products.deleted_message", "%@ eliminado", name)
     }
 
     static func deletePrompt(_ name: String) -> String {
-        isEnglish
-            ? "Are you sure you want to delete \"\(name)\"? You can undo for a few seconds."
-            : "Se eliminará \"\(name)\". Podrás deshacer durante unos segundos."
+        FeatureL10n.format("products.delete_prompt", "Se eliminará \"%@\". Podrás deshacer durante unos segundos.", name)
     }
 
     static func unitsNext7Days(_ count: Int) -> String {
-        isEnglish ? "\(count) units in the next 7 days" : "\(count) unidades en los próximos 7 días"
+        FeatureL10n.format("products.units_next_7_days", "%lld unidades en los próximos 7 días", count)
     }
 
     static func revenueMessage(_ amount: String) -> String {
-        isEnglish ? "High demand this week. Estimated total revenue: \(amount)" : "Alta demanda esta semana. Ingreso estimado total: \(amount)"
+        FeatureL10n.format("products.revenue_message", "Alta demanda esta semana. Ingreso estimado total: %@", amount)
     }
 
     static func demandSummary(units: Int, events: Int) -> String {
-        isEnglish
-            ? "\(units) units across \(events) upcoming event\(events == 1 ? "" : "s")."
-            : "\(units) unidades en \(events) evento\(events == 1 ? "" : "s") próximos."
+        let key: String
+        let fallback: String
+        if units == 1 && events == 1 {
+            key = "products.demand_summary.one_one"
+            fallback = "%lld unidad en %lld evento próximo"
+        } else if units == 1 {
+            key = "products.demand_summary.one_other"
+            fallback = "%lld unidad en %lld eventos próximos"
+        } else if events == 1 {
+            key = "products.demand_summary.other_one"
+            fallback = "%lld unidades en %lld evento próximo"
+        } else {
+            key = "products.demand_summary.other_other"
+            fallback = "%lld unidades en %lld eventos próximos"
+        }
+        
+        let template = FeatureL10n.text(key, fallback)
+        return String(format: template, locale: FeatureL10n.locale, units, events)
     }
 
     static func stockWithUnit(_ stock: Int, unit: String) -> String {
-        isEnglish ? "Stock: \(stock) \(unit)" : "Stock: \(stock) \(unit)"
+        FeatureL10n.format("products.stock_with_unit", "Stock: %lld %@", stock, unit)
     }
 
     static func costPerUnit(_ amount: String, unit: String) -> String {
-        isEnglish ? "· \(amount)/\(unit)" : "· \(amount)/\(unit)"
+        FeatureL10n.format("products.cost_per_unit", "· %@/%@", amount, unit)
     }
 
     static func upcomingEventsCount(_ count: Int) -> String {
-        isEnglish ? "Upcoming \(count) events" : "Próximos \(count) eventos"
+        FeatureL10n.format("products.upcoming_events_count", "Próximos %lld eventos", count)
     }
 
     static func quantityForPeople(quantity: Int, people: Int) -> String {
-        isEnglish ? "Total: \(quantity) units for \(people) people" : "Total: \(quantity) unidades para \(people) personas"
+        FeatureL10n.format("products.quantity_for_people", "Total: %lld unidades para %lld personas", quantity, people)
     }
 
     static func inDays(_ days: Int) -> String {
-        isEnglish ? "in \(days) days" : "en \(days) días"
+        FeatureL10n.format("products.in_days", "en %lld días", days)
     }
 
     static func quantityUnits(_ quantity: Int) -> String {
-        isEnglish ? "\(quantity) units" : "\(quantity) uds"
+        FeatureL10n.format("products.quantity_units", "%lld uds", quantity)
     }
 
     static func eventCount(_ count: Int) -> String {
-        isEnglish ? "\(count) event\(count == 1 ? "" : "s")" : "\(count) evento\(count == 1 ? "" : "s")"
+        let key = count == 1 ? "products.event_count_one" : "products.event_count_other"
+        let fallback = count == 1 ? "%lld evento" : "%lld eventos"
+        return FeatureL10n.format(key, fallback, count)
     }
 
     static func estimatedAmount(_ amount: String) -> String {
-        isEnglish ? "\(amount) est." : "\(amount) est."
+        FeatureL10n.format("products.estimated_amount", "%@ est.", amount)
     }
 
     static func compositionSummary(ingredients: Int, supplies: Int, equipment: Int) -> String {
-        var parts = [isEnglish ? "\(ingredients) ingredients" : "\(ingredients) insumos"]
-        if supplies > 0 { parts.append(isEnglish ? "\(supplies) supplies per event" : "\(supplies) insumos por evento") }
-        if equipment > 0 { parts.append(isEnglish ? "\(equipment) equipment" : "\(equipment) equipo(s)") }
+        var parts: [String] = []
+        
+        let ingKey = ingredients == 1 ? "products.composition_summary.ingredients_one" : "products.composition_summary.ingredients_other"
+        let ingDefault = ingredients == 1 ? "%lld insumo" : "%lld insumos"
+        parts.append(FeatureL10n.format(ingKey, ingDefault, ingredients))
+        
+        if supplies > 0 {
+            let supKey = supplies == 1 ? "products.composition_summary.supplies_one" : "products.composition_summary.supplies_other"
+            let supDefault = supplies == 1 ? "%lld insumo por evento" : "%lld insumos por evento"
+            parts.append(FeatureL10n.format(supKey, supDefault, supplies))
+        }
+        
+        if equipment > 0 {
+            let eqKey = equipment == 1 ? "products.composition_summary.equipment_one" : "products.composition_summary.equipment_other"
+            let eqDefault = equipment == 1 ? "%lld equipo" : "%lld equipo(s)"
+            parts.append(FeatureL10n.format(eqKey, eqDefault, equipment))
+        }
+        
         return parts.joined(separator: ", ")
     }
 }

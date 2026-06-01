@@ -14,11 +14,11 @@ struct PaymentSubmissionCardView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(submission.clientName ?? "Cliente")
+                            Text(submission.clientName ?? PaymentsStrings.clientPlaceholder)
                                 .font(.headline)
                                 .foregroundStyle(SolennixColors.text)
 
-                            Text(submission.eventLabel ?? "Evento")
+                            Text(submission.eventLabel ?? PaymentsStrings.eventPlaceholder)
                                 .font(.caption)
                                 .foregroundStyle(SolennixColors.textSecondary)
                         }
@@ -45,14 +45,14 @@ struct PaymentSubmissionCardView: View {
                         .foregroundStyle(SolennixColors.textTertiary)
 
                     if submission.receiptFileUrl != nil {
-                        Label("Comprobante adjunto", systemImage: "paperclip")
+                        Label(PaymentsStrings.cardReceiptAttached, systemImage: "paperclip")
                             .font(.caption)
                             .foregroundStyle(SolennixColors.info)
                     }
 
                     if submission.status == .rejected,
                        let reason = submission.rejectionReason {
-                        Text("Motivo: \(reason)")
+                        Text(PaymentsStrings.cardRejectionReason(reason))
                             .font(.caption)
                             .foregroundStyle(SolennixColors.error)
                             .padding(.top, 2)
@@ -62,7 +62,7 @@ struct PaymentSubmissionCardView: View {
                         .padding(.vertical, 2)
 
                     HStack(spacing: Spacing.xs) {
-                        Text("Toca para revisar")
+                        Text(PaymentsStrings.cardReviewPrompt)
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textSecondary)
                         Spacer()
@@ -91,7 +91,7 @@ struct PaymentSubmissionActionBar: View {
                     ProgressView()
                         .frame(maxWidth: .infinity)
                 } else {
-                    Label("Aprobar", systemImage: "checkmark.circle.fill")
+                    Label(PaymentsStrings.actionApprove, systemImage: "checkmark.circle.fill")
                         .frame(maxWidth: .infinity)
                 }
             }
@@ -100,7 +100,7 @@ struct PaymentSubmissionActionBar: View {
             .disabled(approvingId != nil || rejectingId != nil)
 
             Button(action: onReject) {
-                Label("Rechazar", systemImage: "xmark.circle.fill")
+                Label(PaymentsStrings.actionReject, systemImage: "xmark.circle.fill")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
@@ -116,9 +116,9 @@ struct PaymentSubmissionStatusBadge: View {
     var body: some View {
         let (label, color): (String, Color) = {
             switch status {
-            case .pending: return ("Pendiente", SolennixColors.warning)
-            case .approved: return ("Aprobado", SolennixColors.success)
-            case .rejected: return ("Rechazado", SolennixColors.error)
+            case .pending: return (PaymentsStrings.statusPending, SolennixColors.warning)
+            case .approved: return (PaymentsStrings.statusApproved, SolennixColors.success)
+            case .rejected: return (PaymentsStrings.statusRejected, SolennixColors.error)
             }
         }()
 

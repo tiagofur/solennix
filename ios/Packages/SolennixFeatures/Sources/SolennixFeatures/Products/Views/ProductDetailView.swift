@@ -99,7 +99,7 @@ final class ProductDetailViewModel {
                 let eventProducts: [EventProduct] = try await apiClient.get(Endpoint.eventProducts(event.id))
                 if let ep = eventProducts.first(where: { $0.productId == productId }) {
                     // Fetch client name
-                    var clientName = String(localized: "clients.title", defaultValue: "Cliente", bundle: .module)
+                    var clientName = FeatureL10n.text("clients.title_singular", "Cliente")
                     if !event.clientId.isEmpty {
                         do {
                             let client: Client = try await apiClient.get(Endpoint.client(event.clientId))

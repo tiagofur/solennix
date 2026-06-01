@@ -85,7 +85,7 @@ public struct OnboardingView: View {
             Button {
                 completeOnboarding()
             } label: {
-                Text("Omitir")
+                Text(OnboardingStrings.actionSkip)
                     .font(.subheadline)
                     .foregroundStyle(SolennixColors.textSecondary)
             }
@@ -137,7 +137,7 @@ public struct OnboardingView: View {
                     }
                 } label: {
                     HStack(spacing: Spacing.sm) {
-                        Text("Siguiente")
+                        Text(OnboardingStrings.actionNext)
                             .font(.headline)
                         Image(systemName: "arrow.right")
                             .font(.headline)
@@ -147,7 +147,7 @@ public struct OnboardingView: View {
                     .frame(maxWidth: sizeClass == .regular ? 440 : .infinity)
                 }
             } else {
-                PremiumButton(title: "Comenzar") {
+                PremiumButton(title: OnboardingStrings.actionStart) {
                     completeOnboarding()
                 }
                 .frame(maxWidth: sizeClass == .regular ? 440 : .infinity)
@@ -189,34 +189,34 @@ public struct OnboardingView: View {
             switch currentPage {
             case 0:
                 iPadTextContent(
-                    title: "Bienvenido a Solennix",
-                    description: "La herramienta definitiva para organizar tus eventos de manera profesional"
+                    title: OnboardingStrings.welcomeTitle,
+                    description: OnboardingStrings.welcomeDescription
                 )
             case 1:
                 iPadTextContent(
-                    title: "Todo en un Solo Lugar",
+                    title: OnboardingStrings.coreFeaturesTitle,
                     features: [
-                        "Gestiona clientes y contactos",
-                        "Crea cotizaciones y contratos",
-                        "Controla tu inventario",
-                        "Programa eventos en calendario"
+                        OnboardingStrings.coreFeaturesItem1,
+                        OnboardingStrings.coreFeaturesItem2,
+                        OnboardingStrings.coreFeaturesItem3,
+                        OnboardingStrings.coreFeaturesItem4
                     ]
                 )
             case 2:
                 iPadTextContent(
-                    title: "Diseñado para Apple",
+                    title: OnboardingStrings.appleFeaturesTitle,
                     features: [
-                        "Widgets en tu pantalla de inicio",
-                        "Comandos de Siri",
-                        "Busqueda desde Spotlight",
-                        "Actividades en Vivo el dia del evento",
-                        "Face ID y Touch ID"
+                        OnboardingStrings.appleFeaturesItem1,
+                        OnboardingStrings.appleFeaturesItem2,
+                        OnboardingStrings.appleFeaturesItem3,
+                        OnboardingStrings.appleFeaturesItem4,
+                        OnboardingStrings.appleFeaturesItem5
                     ]
                 )
             case 3:
                 iPadTextContent(
-                    title: "Comienza Ahora",
-                    description: "Crea tu cuenta o inicia sesion para empezar"
+                    title: OnboardingStrings.getStartedTitle,
+                    description: OnboardingStrings.getStartedDescription
                 )
             default:
                 EmptyView()
@@ -267,20 +267,20 @@ public struct OnboardingView: View {
     private var welcomePage: some View {
         OnboardingPageView(
             iconName: "sparkles.rectangle.stack",
-            title: "Bienvenido a Solennix",
-            description: "La herramienta definitiva para organizar tus eventos de manera profesional"
+            title: OnboardingStrings.welcomeTitle,
+            description: OnboardingStrings.welcomeDescription
         )
     }
 
     private var coreFeaturesPage: some View {
         OnboardingPageView(
             iconName: "rectangle.stack.fill",
-            title: "Todo en un Solo Lugar",
+            title: OnboardingStrings.coreFeaturesTitle,
             features: [
-                "Gestiona clientes y contactos",
-                "Crea cotizaciones y contratos",
-                "Controla tu inventario",
-                "Programa eventos en calendario"
+                OnboardingStrings.coreFeaturesItem1,
+                OnboardingStrings.coreFeaturesItem2,
+                OnboardingStrings.coreFeaturesItem3,
+                OnboardingStrings.coreFeaturesItem4
             ]
         )
     }
@@ -288,13 +288,13 @@ public struct OnboardingView: View {
     private var appleFeaturesPage: some View {
         OnboardingPageView(
             iconName: "iphone",
-            title: "Diseñado para Apple",
+            title: OnboardingStrings.appleFeaturesTitle,
             features: [
-                "Widgets en tu pantalla de inicio",
-                "Comandos de Siri",
-                "Búsqueda desde Spotlight",
-                "Actividades en Vivo el día del evento",
-                "Face ID y Touch ID"
+                OnboardingStrings.appleFeaturesItem1,
+                OnboardingStrings.appleFeaturesItem2,
+                OnboardingStrings.appleFeaturesItem3,
+                OnboardingStrings.appleFeaturesItem4,
+                OnboardingStrings.appleFeaturesItem5
             ]
         )
     }
@@ -302,8 +302,8 @@ public struct OnboardingView: View {
     private var getStartedPage: some View {
         OnboardingPageView(
             iconName: "arrow.right.circle.fill",
-            title: "Comienza Ahora",
-            description: "Crea tu cuenta o inicia sesión para empezar"
+            title: OnboardingStrings.getStartedTitle,
+            description: OnboardingStrings.getStartedDescription
         )
     }
 

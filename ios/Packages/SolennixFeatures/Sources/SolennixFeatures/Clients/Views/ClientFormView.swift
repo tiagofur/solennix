@@ -30,8 +30,8 @@ public struct ClientFormView: View {
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
         .navigationTitle(clientId != nil
-            ? String(localized: "clients.form.edit_title", defaultValue: "Editar cliente", bundle: .module)
-            : String(localized: "clients.form.new_title", defaultValue: "Nuevo cliente", bundle: .module))
+            ? tr("clients.form.edit_title", "Editar cliente")
+            : tr("clients.form.new_title", "Nuevo cliente"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -45,7 +45,7 @@ public struct ClientFormView: View {
                     if viewModel.isSaving {
                         ProgressView()
                     } else {
-                        Text(String(localized: "clients.action.save", defaultValue: "Guardar", bundle: .module))
+                        Text(tr("clients.action.save", "Guardar"))
                             .fontWeight(.semibold)
                             .foregroundStyle(viewModel.isFormValid ? SolennixColors.primary : SolennixColors.textTertiary)
                     }
@@ -55,16 +55,16 @@ public struct ClientFormView: View {
         }
         .overlay {
             if viewModel.isLoading {
-                ProgressView(String(localized: "clients.loading", defaultValue: "Cargando...", bundle: .module))
+                ProgressView(tr("clients.loading", "Cargando..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(SolennixColors.background.opacity(0.6))
             }
         }
-        .alert(String(localized: "clients.error.title", defaultValue: "Error", bundle: .module), isPresented: .init(
+        .alert(tr("clients.error.title", "Error"), isPresented: .init(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
-            Button(String(localized: "clients.action.ok", defaultValue: "OK", bundle: .module), role: .cancel) {}
+            Button(tr("clients.action.ok", "OK"), role: .cancel) {}
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
@@ -140,26 +140,26 @@ public struct ClientFormView: View {
     // MARK: - Info Section
 
     private var infoSection: some View {
-        Section(String(localized: "clients.form.info_section", defaultValue: "Información", bundle: .module)) {
+        Section(tr("clients.form.info_section", "Información")) {
             AdaptiveFormRow {
                 SolennixTextField(
-                    label: String(localized: "clients.form.name", defaultValue: "Nombre", bundle: .module),
+                    label: tr("clients.form.name", "Nombre"),
                     text: $viewModel.name,
-                    placeholder: String(localized: "clients.form.name_placeholder", defaultValue: "Nombre del cliente", bundle: .module),
+                    placeholder: tr("clients.form.name_placeholder", "Nombre del cliente"),
                     leftIcon: "person",
                     errorMessage: !viewModel.name.isEmpty && !viewModel.isNameValid
-                        ? String(localized: "clients.form.validation.name_min", defaultValue: "Mínimo 2 caracteres", bundle: .module) : nil,
+                        ? tr("clients.form.validation.name_min", "Mínimo 2 caracteres") : nil,
                     textContentType: .name,
                     autocapitalization: .words
                 )
             } right: {
                 SolennixTextField(
-                    label: String(localized: "clients.form.phone", defaultValue: "Teléfono", bundle: .module),
+                    label: tr("clients.form.phone", "Teléfono"),
                     text: $viewModel.phone,
-                    placeholder: String(localized: "clients.form.phone_placeholder", defaultValue: "10 dígitos", bundle: .module),
+                    placeholder: tr("clients.form.phone_placeholder", "10 dígitos"),
                     leftIcon: "phone",
                     errorMessage: !viewModel.phone.isEmpty && !viewModel.isPhoneValid
-                        ? String(localized: "clients.form.validation.phone_min", defaultValue: "Mínimo 10 dígitos", bundle: .module) : nil,
+                        ? tr("clients.form.validation.phone_min", "Mínimo 10 dígitos") : nil,
                     textContentType: .telephoneNumber,
                     keyboardType: .phonePad
                 )
@@ -168,9 +168,9 @@ public struct ClientFormView: View {
 
             AdaptiveFormRow {
                 SolennixTextField(
-                    label: String(localized: "clients.form.email", defaultValue: "Email", bundle: .module),
+                    label: tr("clients.form.email", "Email"),
                     text: $viewModel.email,
-                    placeholder: String(localized: "clients.form.email_placeholder", defaultValue: "correo@ejemplo.com", bundle: .module),
+                    placeholder: tr("clients.form.email_placeholder", "correo@ejemplo.com"),
                     leftIcon: "envelope",
                     textContentType: .emailAddress,
                     keyboardType: .emailAddress,
@@ -178,9 +178,9 @@ public struct ClientFormView: View {
                 )
             } right: {
                 SolennixTextField(
-                    label: String(localized: "clients.form.city", defaultValue: "Ciudad", bundle: .module),
+                    label: tr("clients.form.city", "Ciudad"),
                     text: $viewModel.city,
-                    placeholder: String(localized: "clients.form.city", defaultValue: "Ciudad", bundle: .module),
+                    placeholder: tr("clients.form.city", "Ciudad"),
                     leftIcon: "building.2",
                     textContentType: .addressCity
                 )
@@ -192,11 +192,11 @@ public struct ClientFormView: View {
     // MARK: - Address Section
 
     private var addressSection: some View {
-        Section(String(localized: "clients.form.address_section", defaultValue: "Dirección", bundle: .module)) {
+        Section(tr("clients.form.address_section", "Dirección")) {
             SolennixTextField(
-                label: String(localized: "clients.form.address", defaultValue: "Dirección", bundle: .module),
+                label: tr("clients.form.address", "Dirección"),
                 text: $viewModel.address,
-                placeholder: String(localized: "clients.form.address_placeholder", defaultValue: "Calle y número", bundle: .module),
+                placeholder: tr("clients.form.address_placeholder", "Calle y número"),
                 leftIcon: "mappin.and.ellipse",
                 textContentType: .fullStreetAddress
             )
@@ -207,9 +207,9 @@ public struct ClientFormView: View {
     // MARK: - Notes Section
 
     private var notesSection: some View {
-        Section(String(localized: "clients.form.notes_section", defaultValue: "Notas", bundle: .module)) {
+        Section(tr("clients.form.notes_section", "Notas")) {
             VStack(alignment: .leading, spacing: Spacing.xs) {
-                Text(String(localized: "clients.form.notes", defaultValue: "Notas", bundle: .module))
+                Text(tr("clients.form.notes", "Notas"))
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundStyle(SolennixColors.text)
@@ -230,6 +230,11 @@ public struct ClientFormView: View {
             .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
         }
     }
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
 }
 
 // MARK: - Preview

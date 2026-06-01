@@ -232,8 +232,7 @@ public final class CalendarViewModel {
     /// Resolve client name from the client map. Falls back to the
     /// localized "Cliente"/"Client" label when the client is unknown.
     public func clientName(for clientId: String) -> String {
-        clientMap[clientId]?.name
-            ?? String(localized: "calendar.unknown_client", defaultValue: "Cliente", bundle: .module)
+        clientMap[clientId]?.name ?? CalendarStrings.unknownClient
     }
 
     public func setStatusFilter(_ filter: EventStatus?) {

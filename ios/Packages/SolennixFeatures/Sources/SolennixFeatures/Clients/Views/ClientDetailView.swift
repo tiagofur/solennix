@@ -30,38 +30,38 @@ public struct ClientDetailView: View {
     public var body: some View {
         Group {
             if isLoading && client == nil {
-                ProgressView(String(localized: "clients.loading.detail", defaultValue: "Cargando cliente...", bundle: .module))
+                ProgressView(tr("clients.loading.detail", "Cargando cliente..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let client {
                 scrollContent(client)
             } else {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
-                    title: String(localized: "clients.error.title", defaultValue: "Error", bundle: .module),
-                    message: errorMessage ?? String(localized: "clients.error.load", defaultValue: "No se pudo cargar el cliente", bundle: .module)
+                    title: tr("clients.error.title", "Error"),
+                    message: errorMessage ?? tr("clients.error.load", "No se pudo cargar el cliente")
                 )
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle(client?.name ?? String(localized: "clients.title_singular", defaultValue: "Cliente", bundle: .module))
+        .navigationTitle(client?.name ?? tr("clients.title_singular", "Cliente"))
         .navigationBarTitleDisplayMode(.inline)
         .confirmationDialog(
-            String(localized: "clients.delete.title", defaultValue: "Eliminar cliente", bundle: .module),
+            tr("clients.delete.title", "Eliminar cliente"),
             isPresented: $showDeleteConfirm
         ) {
-            Button(String(localized: "clients.delete.confirm", defaultValue: "Eliminar", bundle: .module), role: .destructive) {
+            Button(tr("clients.delete.confirm", "Eliminar"), role: .destructive) {
                 Task {
                     do {
                         try await apiClient.delete(Endpoint.client(clientId))
                         dismiss()
                     } catch {
-                        errorMessage = String(localized: "clients.error.delete", defaultValue: "Error al eliminar el cliente", bundle: .module)
+                        errorMessage = tr("clients.error.delete", "Error al eliminar el cliente")
                     }
                 }
             }
-            Button(String(localized: "clients.delete.cancel", defaultValue: "Cancelar", bundle: .module), role: .cancel) {}
+            Button(tr("clients.delete.cancel", "Cancelar"), role: .cancel) {}
         } message: {
-            Text(String(localized: "clients.delete.message_full", defaultValue: "¿Estás seguro de que quieres eliminar a \(client?.name ?? "este cliente")? Esta acción no se puede deshacer.", bundle: .module))
+            Text(trf("clients.delete.message_full", "¿Estás seguro de que quieres eliminar a %@? Esta acción no se puede deshacer.", client?.name ?? tr("clients.title_singular", "este cliente")))
         }
         .task { await loadData() }
     }
@@ -108,13 +108,13 @@ public struct ClientDetailView: View {
                 statBox(
                     icon: "calendar",
                     value: "\(client.totalEvents ?? 0)",
-                    label: String(localized: "clients.stats.events", defaultValue: "Eventos", bundle: .module)
+                    label: tr("clients.stats.events", "Eventos")
                 )
 
                 statBox(
                     icon: "dollarsign.circle",
                     value: (client.totalSpent ?? 0).asMXN,
-                    label: String(localized: "clients.stats.total", defaultValue: "Total", bundle: .module)
+                    label: tr("clients.stats.total", "Total")
                 )
 
                 if let totalEvents = client.totalEvents, totalEvents > 0,
@@ -122,7 +122,7 @@ public struct ClientDetailView: View {
                     statBox(
                         icon: "chart.bar",
                         value: (totalSpent / Double(totalEvents)).asMXN,
-                        label: String(localized: "clients.stats.average", defaultValue: "Promedio", bundle: .module)
+                        label: tr("clients.stats.average", "Promedio")
                     )
                 }
             }
@@ -265,7 +265,7 @@ public struct ClientDetailView: View {
             NavigationLink(value: Route.eventForm(clientId: clientId)) {
                 actionButton(
                     icon: "calendar.badge.plus",
-                    label: String(localized: "clients.action.create_event", defaultValue: "Crear evento", bundle: .module),
+                    label: tr("clients.action.create_event", "Crear evento"),
                     fg: SolennixColors.primary
                 )
             }
@@ -273,7 +273,7 @@ public struct ClientDetailView: View {
             NavigationLink(value: Route.clientForm(id: clientId)) {
                 actionButton(
                     icon: "pencil",
-                    label: String(localized: "clients.action.edit", defaultValue: "Editar", bundle: .module),
+                    label: tr("clients.action.edit", "Editar"),
                     fg: SolennixColors.info
                 )
             }
@@ -283,7 +283,7 @@ public struct ClientDetailView: View {
             } label: {
                 actionButton(
                     icon: "trash",
-                    label: String(localized: "clients.delete.confirm", defaultValue: "Eliminar", bundle: .module),
+                    label: tr("clients.delete.confirm", "Eliminar"),
                     fg: SolennixColors.error
                 )
             }
@@ -311,7 +311,7 @@ public struct ClientDetailView: View {
 
     private var eventHistorySection: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text(String(localized: "clients.events.history_count", defaultValue: "Historial de eventos (\(events.count))", bundle: .module))
+            Text(trf("clients.events.history_count", "Historial de eventos (\(events.count))", events.count))
                 .font(.headline)
                 .foregroundStyle(SolennixColors.text)
                 .padding(.horizontal, Spacing.xs)
@@ -323,7 +323,7 @@ public struct ClientDetailView: View {
                         Image(systemName: "calendar")
                             .font(.title)
                             .foregroundStyle(SolennixColors.textTertiary)
-                        Text(String(localized: "clients.events.empty", defaultValue: "Este cliente aún no tiene eventos", bundle: .module))
+                        Text(tr("clients.events.empty", "Este cliente aún no tiene eventos"))
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.textSecondary)
                     }
@@ -409,7 +409,7 @@ public struct ClientDetailView: View {
     private func parseDateComponents(_ dateString: String) -> (month: String, day: String) {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
-        formatter.locale = Locale(identifier: "es_MX")
+        formatter.locale = FeatureL10n.locale
 
         guard let date = formatter.date(from: String(dateString.prefix(10))) else {
             return ("---", "--")
@@ -417,7 +417,7 @@ public struct ClientDetailView: View {
 
         let monthFormatter = DateFormatter()
         monthFormatter.dateFormat = "MMM"
-        monthFormatter.locale = Locale(identifier: "es_MX")
+        monthFormatter.locale = FeatureL10n.locale
 
         let dayFormatter = DateFormatter()
         dayFormatter.dateFormat = "d"
@@ -445,10 +445,10 @@ public struct ClientDetailView: View {
             let points: [EventRevenuePoint] = completedEvents.suffix(6).map { event in
                 let formatter = DateFormatter()
                 formatter.dateFormat = "yyyy-MM-dd"
-                formatter.locale = Locale(identifier: "es_MX")
+                formatter.locale = FeatureL10n.locale
                 let displayFmt = DateFormatter()
                 displayFmt.dateFormat = "d MMM"
-                displayFmt.locale = Locale(identifier: "es_MX")
+                displayFmt.locale = FeatureL10n.locale
                 let label = formatter.date(from: String(event.eventDate.prefix(10)))
                     .map { displayFmt.string(from: $0) } ?? event.eventDate
                 return EventRevenuePoint(id: event.id, label: label, revenue: event.totalAmount)
@@ -461,12 +461,12 @@ public struct ClientDetailView: View {
                 HStack {
                     Image(systemName: "chart.line.uptrend.xyaxis")
                         .foregroundStyle(SolennixColors.primary)
-                    Text(String(localized: "clients.insights.title", defaultValue: "Análisis del cliente", bundle: .module))
+                    Text(tr("clients.insights.title", "Análisis del cliente"))
                         .font(.headline)
                         .foregroundStyle(SolennixColors.text)
                     Spacer()
                     if !isPremium {
-                        Label(String(localized: "clients.insights.pro", defaultValue: "Pro", bundle: .module), systemImage: "bolt.fill")
+                        Label(tr("clients.insights.pro", "Pro"), systemImage: "bolt.fill")
                             .font(.caption2)
                             .fontWeight(.bold)
                             .foregroundStyle(SolennixColors.primary)
@@ -479,8 +479,8 @@ public struct ClientDetailView: View {
 
                 Chart(points) { point in
                     BarMark(
-                        x: .value(String(localized: "clients.stats.events", defaultValue: "Eventos", bundle: .module), point.label),
-                        y: .value(String(localized: "clients.insights.revenue", defaultValue: "Ingresos", bundle: .module), point.revenue)
+                        x: .value(tr("clients.stats.events", "Eventos"), point.label),
+                        y: .value(tr("clients.insights.revenue", "Ingresos"), point.revenue)
                     )
                     .foregroundStyle(SolennixGradient.premium)
                     .cornerRadius(4)
@@ -511,14 +511,14 @@ public struct ClientDetailView: View {
                     HStack(spacing: Spacing.md) {
                         insightBadge(
                             icon: "star.fill",
-                            label: String(localized: "clients.insights.top_service", defaultValue: "Servicio más solicitado", bundle: .module),
+                            label: tr("clients.insights.top_service", "Servicio más solicitado"),
                             value: topServiceType
                         )
                         if completedEvents.count > 1 {
                             let avg = completedEvents.reduce(0.0) { $0 + $1.totalAmount } / Double(completedEvents.count)
                             insightBadge(
                                 icon: "arrow.up.right",
-                                label: String(localized: "clients.insights.average_ticket", defaultValue: "Ticket promedio", bundle: .module),
+                                label: tr("clients.insights.average_ticket", "Ticket promedio"),
                                 value: avg.asMXN
                             )
                         }
@@ -582,12 +582,21 @@ public struct ClientDetailView: View {
             if let apiError = error as? APIError {
                 errorMessage = apiError.errorDescription
             } else {
-                errorMessage = String(localized: "clients.error.unexpected", defaultValue: "Ocurrió un error inesperado.", bundle: .module)
+                errorMessage = tr("clients.error.unexpected", "Ocurrió un error inesperado.")
             }
         }
 
         isLoading = false
     }
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
+    private func trf(_ key: String, _ value: String, _ arg: CVarArg) -> String {
+        FeatureL10n.format(key, value, arg)
+    }
+
 }
 
 // MARK: - Preview

@@ -25,11 +25,12 @@ public struct CalendarGridView: View {
     /// also respects the locale's `firstWeekday` so Monday-first locales
     /// get the right layout.
     private var weekdaySymbols: [String] {
-        let cal = Calendar.autoupdatingCurrent
+        var cal = Calendar.current
+        cal.locale = FeatureL10n.locale
         // DateFormatter.shortWeekdaySymbols is Sunday-first; rotate to the
         // locale's first weekday (1=Sun, 2=Mon) minus one for zero-index.
         let formatter = DateFormatter()
-        formatter.locale = Locale.autoupdatingCurrent
+        formatter.locale = FeatureL10n.locale
         let symbols = formatter.shortWeekdaySymbols ?? ["S", "M", "T", "W", "T", "F", "S"]
         let shift = cal.firstWeekday - 1
         return Array(symbols[shift...]) + Array(symbols[..<shift])
@@ -159,17 +160,13 @@ private struct DayCellView: View {
             // rendered dots. Keeps the overflow signal visible without
             // expanding the grid cell height.
             if overflow > 0 {
-                Text(String(
-                    format: String(localized: "calendar.overflow_more", bundle: .module),
-                    overflow
-                ))
-                .font(.system(size: 8))
-                .foregroundStyle(SolennixColors.textSecondary)
-                .lineLimit(1)
+                Text(CalendarStrings.overflowMore(overflow))
+                    .font(.system(size: 8))
+                    .foregroundStyle(SolennixColors.textSecondary)
+                    .lineLimit(1)
             }
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 52)
+        .frame(width: 32, height: 52)
         .contentShape(Rectangle())
         // G10 — accessibility label describing the day's full state:
         // e.g. "15 de marzo, 2 eventos, confirmado y cotizado"
@@ -203,24 +200,21 @@ private struct DayCellView: View {
     // or "15 de marzo, bloqueado" for blocked days.
     private var accessibilityLabelForDay: String {
         if isBlocked {
-            return String(localized: "calendar.a11y.day_blocked", bundle: .module)
+            return CalendarStrings.a11yDayBlocked
         }
         if dots.isEmpty {
-            return String(localized: "calendar.a11y.day_no_events", bundle: .module)
+            return CalendarStrings.a11yDayNoEvents
         }
         let statusDescriptions = dots.map { statusName(for: $0) }.joined(separator: " y ")
-        return String(
-            format: String(localized: "calendar.a11y.day_with_events", bundle: .module),
-            statusDescriptions
-        )
+        return CalendarStrings.a11yDayWithEvents(dots.count) + ", " + statusDescriptions
     }
 
     private func statusName(for status: EventStatus) -> String {
         switch status {
-        case .quoted: return String(localized: "calendar.status.quoted", bundle: .module)
-        case .confirmed: return String(localized: "calendar.status.confirmed", bundle: .module)
-        case .completed: return String(localized: "calendar.status.completed", bundle: .module)
-        case .cancelled: return String(localized: "calendar.status.cancelled", bundle: .module)
+        case .quoted: return CalendarStrings.statusQuoted
+        case .confirmed: return CalendarStrings.statusConfirmed
+        case .completed: return CalendarStrings.statusCompleted
+        case .cancelled: return CalendarStrings.statusCancelled
         }
     }
 }

@@ -144,38 +144,14 @@ private func isProOnlyError(_ message: String) -> Bool {
 // MARK: - Error mapping (mirrors pattern from other ViewModels)
 
 private func mapError(_ error: Error) -> String {
-    let strings = paymentInboxL10n()
     if let apiError = error as? APIError {
         switch apiError {
         case .networkError(let msg): return msg
         case .serverError(_, let msg): return msg
-        case .decodingError: return strings.decodingError
-        case .unauthorized: return strings.unauthorized
-        default: return apiError.errorDescription ?? strings.unknownError
+        case .decodingError: return PaymentsStrings.decodingError
+        case .unauthorized: return PaymentsStrings.unauthorizedError
+        default: return apiError.errorDescription ?? PaymentsStrings.unknownError
         }
     }
     return error.localizedDescription
-}
-
-private struct PaymentInboxL10n {
-    let decodingError: String
-    let unauthorized: String
-    let unknownError: String
-}
-
-private func paymentInboxL10n() -> PaymentInboxL10n {
-    let lang = Locale.current.language.languageCode?.identifier ?? "es"
-    if lang.hasPrefix("es") {
-        return PaymentInboxL10n(
-            decodingError: "Error procesando respuesta",
-            unauthorized: "Sesion expirada",
-            unknownError: "Error desconocido"
-        )
-    }
-
-    return PaymentInboxL10n(
-        decodingError: "Error processing response",
-        unauthorized: "Session expired",
-        unknownError: "Unknown error"
-    )
 }

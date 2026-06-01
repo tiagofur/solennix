@@ -1,20 +1,21 @@
 # Sesión Activa — Solennix Agent Progress
 
 ## Feature en curso
-- **ID:** 1
-- **Nombre:** harness-setup
+- **ID:** 8
+- **Nombre:** i18n-slice-onboarding
 - **Estado:** in_progress
 
 ## Plan de trabajo
-- [x] Crear mapa de navegación global (AGENTS.md)
-- [x] Crear criterios objetivos de calidad (CHECKPOINTS.md)
-- [x] Crear ejecutor de validación automatizada (init.sh)
-- [/] Crear documentación de dominio (architecture, conventions, verification)
-- [ ] Crear definiciones de subagentes orquestadores
-- [ ] Crear estructura de logs de progreso
+- [ ] Crear `OnboardingStrings.swift` con todas las cadenas del flujo.
+- [ ] Inyectar claves `onboarding.*` en `Localizable.xcstrings`.
+- [ ] Refactorizar `OnboardingView.swift` para usar `OnboardingStrings`.
+- [ ] Limpiar `String(localized:)` residual en `ProductDetailView.swift` y `CalendarViewModel.swift`.
+- [ ] Crear `OnboardingLocalizationTests.swift` con suite ES/EN completa.
+- [ ] Verificar con `xcodebuild` (todos los tests en verde).
 
 ## Notas de Desarrollo
-- Iniciando configuración de la arquitectura y convenciones de agentes para el ecosistema multiplataforma.
+- `OnboardingView` y `OnboardingPageView` usan strings hardcodeados en español. No tienen `tr()` ni `FeatureL10n`.
+- 2 residuos de `String(localized:bundle:)` en módulos ya migrados: `ProductDetailView:102` y `CalendarViewModel:236`.
 
 ## Bloqueos
 - Ninguno.

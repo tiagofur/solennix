@@ -1,154 +1,157 @@
 import Foundation
 
 enum InventoryStrings {
-    private static var isEnglish: Bool { Locale.current.language.languageCode?.identifier == "en" }
+    private static var isEnglish: Bool { FeatureL10n.languageCode == "en" }
 
-    static let title = isEnglish ? "Inventory" : "Inventario"
-    static let searchPrompt = isEnglish ? "Search inventory" : "Buscar inventario"
-    static let addAccessibility = isEnglish ? "Add inventory item" : "Agregar item de inventario"
-    static let deleteTitle = isEnglish ? "Delete item" : "Eliminar item"
-    static let deleteAction = isEnglish ? "Delete" : "Eliminar"
-    static let cancel = isEnglish ? "Cancel" : "Cancelar"
-    static let retry = isEnglish ? "Retry" : "Reintentar"
-    static let edit = isEnglish ? "Edit" : "Editar"
-    static let adjustStock = isEnglish ? "Adjust Stock" : "Ajustar Stock"
-    static let adjust = isEnglish ? "Adjust" : "Ajustar"
-    static let viewDetail = isEnglish ? "View Detail" : "Ver Detalle"
-    static let errorLoadingTitle = isEnglish ? "Loading error" : "Error al cargar"
-    static let emptyTitle = isEnglish ? "No inventory" : "Sin inventario"
-    static let emptyMessage = isEnglish ? "Add your first inventory item" : "Agrega tu primer item al inventario"
-    static let emptyAction = isEnglish ? "New Item" : "Nuevo Item"
-    static let filteredEmptyTitle = isEnglish ? "No results" : "Sin resultados"
-    static let lowStockEmptyMessage = isEnglish ? "No low-stock items" : "No hay items con stock bajo"
-    static let filteredEmptyMessage = isEnglish ? "No inventory items match the search" : "No se encontraron items que coincidan con la búsqueda"
-    static let ingredients = isEnglish ? "Ingredients" : "Ingredientes"
-    static let equipment = isEnglish ? "Equipment" : "Equipo"
-    static let supplies = isEnglish ? "Supplies" : "Insumos"
-    static let sortTitle = isEnglish ? "Sort by" : "Ordenar por"
-    static let sortAscending = isEnglish ? "Ascending" : "Ascendente"
-    static let sortDescending = isEnglish ? "Descending" : "Descendente"
-    static let sortAccessibility = isEnglish ? "Sort inventory" : "Ordenar inventario"
-    static let sortName = isEnglish ? "Name" : "Nombre"
-    static let sortCurrentStock = isEnglish ? "Current stock" : "Stock actual"
-    static let sortMinimumStock = isEnglish ? "Minimum stock" : "Stock mínimo"
-    static let sortUnitCost = isEnglish ? "Unit cost" : "Costo unitario"
-    static let hideLowStock = isEnglish ? "Hide low stock" : "Ocultar stock bajo"
-    static let showLowStock = isEnglish ? "Show low stock" : "Mostrar stock bajo"
-    static let loading = isEnglish ? "Loading..." : "Cargando..."
-    static let errorTitle = isEnglish ? "Error" : "Error"
-    static let itemFallback = isEnglish ? "Item" : "Item"
-    static let stockLow = isEnglish ? "Low Stock" : "Stock Bajo"
-    static let stockOk = isEnglish ? "Stock OK" : "Stock OK"
-    static let minimumShort = isEnglish ? "Minimum" : "Mínimo"
-    static let unitCost = isEnglish ? "Unit Cost" : "Costo Unitario"
-    static let stockValue = isEnglish ? "Stock Value" : "Valor en Stock"
-    static let totalValue = isEnglish ? "total value" : "valor total"
-    static let critical7Days = isEnglish ? "Insufficient stock for the next 7 days!" : "¡Stock insuficiente para los próximos 7 días!"
-    static let belowMinAfterEvents = isEnglish ? "Stock will fall below the minimum after upcoming events" : "Stock quedará bajo el mínimo tras eventos próximos"
-    static let belowMinRecommended = isEnglish ? "Stock is below the recommended minimum" : "Stock por debajo del mínimo recomendado"
-    static let enough7Days = isEnglish ? "Enough stock for the next 7 days" : "Stock suficiente para los próximos 7 días"
-    static let noDemand7Days = isEnglish ? "No demand in the next 7 days" : "Sin demanda en los próximos 7 días"
-    static let noUpcomingEvents = isEnglish ? "No upcoming events" : "Sin eventos próximos"
-    static let currentStock = isEnglish ? "Current Stock" : "Stock Actual"
-    static let recommendedMinimum = isEnglish ? "Recommended Minimum" : "Mínimo Recomendado"
-    static let demandNext7Days = isEnglish ? "Demand next 7 days" : "Demanda próximos 7 días"
-    static let demandByDate = isEnglish ? "Demand by Date" : "Demanda por Fecha"
-    static let confirmedEvents = isEnglish ? "Confirmed events" : "Eventos confirmados"
-    static let noConfirmedEvents = isEnglish ? "No confirmed events use this item." : "Sin eventos confirmados que usen este item."
-    static let today = isEnglish ? "Today" : "Hoy"
-    static let tomorrow = isEnglish ? "Tomorrow" : "Mañana"
-    static let totalDemand = isEnglish ? "Total demand" : "Total demanda"
-    static let information = isEnglish ? "Information" : "Información"
-    static let costPerUnit = isEnglish ? "Cost per unit" : "Costo por unidad"
-    static let totalStockValue = isEnglish ? "Total stock value" : "Valor total en stock"
-    static let noUnitCost = isEnglish ? "Unit cost is not defined" : "No se ha definido un costo por unidad"
-    static let lastUpdated = isEnglish ? "Last updated" : "Última actualización"
-    static let newStock = isEnglish ? "New stock:" : "Nuevo stock:"
-    static let save = isEnglish ? "Save" : "Guardar"
-    static let ok = "OK"
-    static let inventoryResource = isEnglish ? "Inventory" : "Inventario"
-    static let editItemTitle = isEnglish ? "Edit Item" : "Editar Item"
-    static let newItemTitle = isEnglish ? "New Item" : "Nuevo Item"
-    static let informationTitle = isEnglish ? "Information" : "Información"
-    static let name = isEnglish ? "Name" : "Nombre"
-    static let namePlaceholder = isEnglish ? "Name" : "Nombre"
-    static let type = isEnglish ? "Type" : "Tipo"
-    static let ingredientType = isEnglish ? "Ingredient" : "Ingrediente"
-    static let equipmentType = isEnglish ? "Equipment" : "Equipo"
-    static let supplyType = isEnglish ? "Supply" : "Insumo"
-    static let stockTitle = isEnglish ? "Stock" : "Stock"
-    static let currentStockTitle = isEnglish ? "Current stock" : "Stock actual"
-    static let minimumStockTitle = isEnglish ? "Minimum stock" : "Stock mínimo"
-    static let unitTitle = isEnglish ? "Unit of Measure" : "Unidad de Medida"
-    static let costOptionalTitle = isEnglish ? "Cost (Optional)" : "Costo (Opcional)"
-    static let costPlaceholder = isEnglish ? "Cost per unit" : "Costo por unidad"
-    static let weightGroup = isEnglish ? "Weight" : "Peso"
-    static let volumeGroup = isEnglish ? "Volume" : "Volumen"
-    static let countGroup = isEnglish ? "Count" : "Conteo"
-    static let validationNameMin = isEnglish ? "Name must be at least 2 characters" : "El nombre debe tener al menos 2 caracteres"
-    static let validationStockNegative = isEnglish ? "Stock cannot be negative" : "El stock no puede ser negativo"
-    static let validationMinimumNegative = isEnglish ? "Minimum stock cannot be negative" : "El stock mínimo no puede ser negativo"
-    static let validationCostNegative = isEnglish ? "Unit cost cannot be negative" : "El costo unitario no puede ser negativo"
-    static let unexpectedError = isEnglish ? "An unexpected error occurred." : "Ocurrió un error inesperado."
-    static let unexpectedRetryError = isEnglish ? "An unexpected error occurred. Please try again." : "Ocurrió un error inesperado. Intenta de nuevo."
+    static var title: String { FeatureL10n.text("inventory.title", "Inventario") }
+    static var searchPrompt: String { FeatureL10n.text("inventory.search_prompt", "Buscar inventario") }
+    static var addAccessibility: String { FeatureL10n.text("inventory.add_accessibility", "Agregar item de inventario") }
+    static var deleteTitle: String { FeatureL10n.text("inventory.delete_title", "Eliminar item") }
+    static var deleteAction: String { FeatureL10n.text("inventory.delete_action", "Eliminar") }
+    static var cancel: String { FeatureL10n.text("inventory.cancel", "Cancelar") }
+    static var retry: String { FeatureL10n.text("inventory.retry", "Reintentar") }
+    static var edit: String { FeatureL10n.text("inventory.edit", "Editar") }
+    static var adjustStock: String { FeatureL10n.text("inventory.adjust_stock", "Ajustar Stock") }
+    static var adjust: String { FeatureL10n.text("inventory.adjust", "Ajustar") }
+    static var viewDetail: String { FeatureL10n.text("inventory.view_detail", "Ver Detalle") }
+    static var errorLoadingTitle: String { FeatureL10n.text("inventory.error_loading_title", "Error al cargar") }
+    static var emptyTitle: String { FeatureL10n.text("inventory.empty_title", "Sin inventario") }
+    static var emptyMessage: String { FeatureL10n.text("inventory.empty_message", "Agrega tu primer item al inventario") }
+    static var emptyAction: String { FeatureL10n.text("inventory.empty_action", "Nuevo Item") }
+    static var filteredEmptyTitle: String { FeatureL10n.text("inventory.filtered_empty_title", "Sin resultados") }
+    static var lowStockEmptyMessage: String { FeatureL10n.text("inventory.low_stock_empty_message", "No hay items con stock bajo") }
+    static var filteredEmptyMessage: String { FeatureL10n.text("inventory.filtered_empty_message", "No se encontraron items que coincidan con la búsqueda") }
+    static var ingredients: String { FeatureL10n.text("inventory.ingredients", "Ingredientes") }
+    static var equipment: String { FeatureL10n.text("inventory.equipment", "Equipo") }
+    static var supplies: String { FeatureL10n.text("inventory.supplies", "Insumos") }
+    static var sortTitle: String { FeatureL10n.text("inventory.sort_title", "Ordenar por") }
+    static var sortAscending: String { FeatureL10n.text("inventory.sort_ascending", "Ascendente") }
+    static var sortDescending: String { FeatureL10n.text("inventory.sort_descending", "Descendente") }
+    static var sortAccessibility: String { FeatureL10n.text("inventory.sort_accessibility", "Ordenar inventario") }
+    static var sortName: String { FeatureL10n.text("inventory.sort_name", "Nombre") }
+    static var sortCurrentStock: String { FeatureL10n.text("inventory.sort_current_stock", "Stock actual") }
+    static var sortMinimumStock: String { FeatureL10n.text("inventory.sort_minimum_stock", "Stock mínimo") }
+    static var sortUnitCost: String { FeatureL10n.text("inventory.sort_unit_cost", "Costo unitario") }
+    static var hideLowStock: String { FeatureL10n.text("inventory.hide_low_stock", "Ocultar stock bajo") }
+    static var showLowStock: String { FeatureL10n.text("inventory.show_low_stock", "Mostrar stock bajo") }
+    static var loading: String { FeatureL10n.text("inventory.loading", "Cargando...") }
+    static var errorTitle: String { FeatureL10n.text("inventory.error_title", "Error") }
+    static var itemFallback: String { FeatureL10n.text("inventory.item_fallback", "Item") }
+    static var stockLow: String { FeatureL10n.text("inventory.stock_low", "Stock Bajo") }
+    static var stockOk: String { FeatureL10n.text("inventory.stock_ok", "Stock OK") }
+    static var minimumShort: String { FeatureL10n.text("inventory.minimum_short", "Mínimo") }
+    static var unitCost: String { FeatureL10n.text("inventory.unit_cost", "Costo Unitario") }
+    static var stockValue: String { FeatureL10n.text("inventory.stock_value", "Valor en Stock") }
+    static var totalValue: String { FeatureL10n.text("inventory.total_value", "valor total") }
+    static var critical7Days: String { FeatureL10n.text("inventory.critical_7_days", "¡Stock insuficiente para los próximos 7 días!") }
+    static var belowMinAfterEvents: String { FeatureL10n.text("inventory.below_min_after_events", "Stock quedará bajo el mínimo tras eventos próximos") }
+    static var belowMinRecommended: String { FeatureL10n.text("inventory.below_min_recommended", "Stock por debajo del mínimo recomendado") }
+    static var enough7Days: String { FeatureL10n.text("inventory.enough_7_days", "Stock suficiente para los próximos 7 días") }
+    static var noDemand7Days: String { FeatureL10n.text("inventory.no_demand_7_days", "Sin demanda en los próximos 7 días") }
+    static var noUpcomingEvents: String { FeatureL10n.text("inventory.no_upcoming_events", "Sin eventos próximos") }
+    static var currentStock: String { FeatureL10n.text("inventory.current_stock", "Stock Actual") }
+    static var recommendedMinimum: String { FeatureL10n.text("inventory.recommended_minimum", "Mínimo Recomendado") }
+    static var demandNext7Days: String { FeatureL10n.text("inventory.demand_next_7_days", "Demanda próximos 7 días") }
+    static var demandByDate: String { FeatureL10n.text("inventory.demand_by_date", "Demanda por Fecha") }
+    static var confirmedEvents: String { FeatureL10n.text("inventory.confirmed_events", "Eventos confirmados") }
+    static var noConfirmedEvents: String { FeatureL10n.text("inventory.no_confirmed_events", "Sin eventos confirmados que usen este item.") }
+    static var today: String { FeatureL10n.text("inventory.today", "Hoy") }
+    static var tomorrow: String { FeatureL10n.text("inventory.tomorrow", "Mañana") }
+    static var totalDemand: String { FeatureL10n.text("inventory.total_demand", "Total demanda") }
+    static var information: String { FeatureL10n.text("inventory.information", "Información") }
+    static var costPerUnit: String { FeatureL10n.text("inventory.cost_per_unit", "Costo por unidad") }
+    static var totalStockValue: String { FeatureL10n.text("inventory.total_stock_value", "Valor total en stock") }
+    static var noUnitCost: String { FeatureL10n.text("inventory.no_unit_cost", "No se ha definido un costo por unidad") }
+    static var lastUpdated: String { FeatureL10n.text("inventory.last_updated", "Última actualización") }
+    static var newStock: String { FeatureL10n.text("inventory.new_stock", "Nuevo stock:") }
+    static var save: String { FeatureL10n.text("inventory.save", "Guardar") }
+    static var ok: String { "OK" }
+    static var inventoryResource: String { FeatureL10n.text("inventory.inventory_resource", "Inventario") }
+    static var editItemTitle: String { FeatureL10n.text("inventory.edit_item_title", "Editar Item") }
+    static var newItemTitle: String { FeatureL10n.text("inventory.new_item_title", "Nuevo Item") }
+    static var informationTitle: String { FeatureL10n.text("inventory.information_title", "Información") }
+    static var name: String { FeatureL10n.text("inventory.name", "Nombre") }
+    static var namePlaceholder: String { FeatureL10n.text("inventory.name_placeholder", "Nombre") }
+    static var type: String { FeatureL10n.text("inventory.type", "Tipo") }
+    static var ingredientType: String { FeatureL10n.text("inventory.ingredient_type", "Ingrediente") }
+    static var equipmentType: String { FeatureL10n.text("inventory.equipment_type", "Equipo") }
+    static var supplyType: String { FeatureL10n.text("inventory.supply_type", "Insumo") }
+    static var stockTitle: String { FeatureL10n.text("inventory.stock_title", "Stock") }
+    static var currentStockTitle: String { FeatureL10n.text("inventory.current_stock_title", "Stock actual") }
+    static var minimumStockTitle: String { FeatureL10n.text("inventory.minimum_stock_title", "Stock mínimo") }
+    static var unitTitle: String { FeatureL10n.text("inventory.unit_title", "Unidad de Medida") }
+    static var costOptionalTitle: String { FeatureL10n.text("inventory.cost_optional_title", "Costo (Opcional)") }
+    static var costPlaceholder: String { FeatureL10n.text("inventory.cost_placeholder", "Costo por unidad") }
+    static var weightGroup: String { FeatureL10n.text("inventory.weight_group", "Peso") }
+    static var volumeGroup: String { FeatureL10n.text("inventory.volume_group", "Volumen") }
+    static var countGroup: String { FeatureL10n.text("inventory.count_group", "Conteo") }
+    static var validationNameMin: String { FeatureL10n.text("inventory.validation_name_min", "El nombre debe tener al menos 2 caracteres") }
+    static var validationStockNegative: String { FeatureL10n.text("inventory.validation_stock_negative", "El stock no puede ser negativo") }
+    static var validationMinimumNegative: String { FeatureL10n.text("inventory.validation_minimum_negative", "El stock mínimo no puede ser negativo") }
+    static var validationCostNegative: String { FeatureL10n.text("inventory.validation_cost_negative", "El costo unitario no puede ser negativo") }
+    static var unexpectedError: String { FeatureL10n.text("inventory.unexpected_error", "Ocurrió un error inesperado.") }
+    static var unexpectedRetryError: String { FeatureL10n.text("inventory.unexpected_retry_error", "Ocurrió un error inesperado. Intenta de nuevo.") }
 
     static func deletedMessage(_ name: String) -> String {
-        isEnglish ? "\(name) deleted" : "\(name) eliminado"
+        FeatureL10n.format("inventory.deleted_message", "%@ eliminado", name)
     }
 
     static func deletePrompt(_ name: String) -> String {
-        isEnglish
-            ? "Are you sure you want to delete \"\(name)\"? You can undo for a few seconds."
-            : "Se eliminará \"\(name)\". Podrás deshacer durante unos segundos."
+        FeatureL10n.format("inventory.delete_prompt", "Se eliminará \"%@\". Podrás deshacer durante unos segundos.", name)
     }
 
     static func permanentDeletePrompt(_ name: String) -> String {
-        isEnglish
-            ? "Are you sure you want to delete \"\(name)\"? This action cannot be undone."
-            : "¿Estás seguro de que querés eliminar \"\(name)\"? Esta acción no se puede deshacer."
+        FeatureL10n.format("inventory.permanent_delete_prompt", "¿Estás seguro de que querés eliminar \"%@\"? Esta acción no se puede deshacer.", name)
     }
 
     static func minLabel(_ value: Int) -> String {
-        isEnglish ? "(min: \(value))" : "(min: \(value))"
+        FeatureL10n.format("inventory.min_label", "(min: %lld)", value)
     }
 
     static func stockActual(_ stock: Int, unit: String) -> String {
-        isEnglish ? "Current stock: \(stock) \(unit)" : "Stock actual: \(stock) \(unit)"
+        FeatureL10n.format("inventory.stock_actual", "Stock actual: %lld %@", stock, unit)
     }
 
     static func minimumValue(_ value: Int, unit: String) -> String {
-        isEnglish ? "\(value) \(unit)" : "\(value) \(unit)"
+        FeatureL10n.format("inventory.minimum_value", "%lld %@", value, unit)
     }
 
     static func perUnit(_ unit: String) -> String {
-        isEnglish ? "per \(unit)" : "por \(unit)"
+        FeatureL10n.format("inventory.per_unit", "por %@", unit)
     }
 
     static func quantityWithUnit(_ value: Int, unit: String) -> String {
-        isEnglish ? "\(value) \(unit)" : "\(value) \(unit)"
+        FeatureL10n.format("inventory.quantity_with_unit", "%lld %@", value, unit)
     }
 
     static func defaultEventName(serviceType: String?) -> String {
-        serviceType ?? (isEnglish ? "Event" : "Evento")
+        if let type = serviceType {
+            return FeatureL10n.format("inventory.default_event_name", "%@", type)
+        }
+        return isEnglish ? "Event" : "Evento"
     }
 
     static func eventWithClient(_ clientName: String) -> String {
-        isEnglish ? "Event - \(clientName)" : "Evento - \(clientName)"
+        FeatureL10n.format("inventory.event_with_client", "Evento - %@", clientName)
     }
 
     static func shortageMessage(demand: Int, stock: Int, missing: Int, unit: String) -> String {
-        isEnglish
-            ? "You need \(demand) \(unit) in the next 7 days. You have \(stock) \(unit). Missing \(missing) \(unit)."
-            : "Necesitas \(demand) \(unit) en los próximos 7 días. Tienes \(stock) \(unit). Faltan \(missing) \(unit)."
+        FeatureL10n.format(
+            "inventory.shortage_message",
+            "Necesitas %lld %@ en los próximos 7 días. Tienes %lld %@. Faltan %lld %@.",
+            demand, unit, stock, unit, missing, unit
+        )
     }
 
     static func lowStockMessage(stock: Int, unit: String, minimum: Int) -> String {
-        isEnglish
-            ? "Your current stock (\(stock) \(unit)) is below the recommended minimum (\(minimum) \(unit))."
-            : "Tu stock actual (\(stock) \(unit)) está por debajo del mínimo recomendado (\(minimum) \(unit))."
+        FeatureL10n.format(
+            "inventory.low_stock_message",
+            "Tu stock actual (%lld %@) está por debajo del mínimo recomendado (%lld %@).",
+            stock, unit, minimum, unit
+        )
     }
 
     static func inDays(_ days: Int) -> String {
-        isEnglish ? "in \(days) days" : "en \(days) días"
+        FeatureL10n.format("inventory.in_days", "en %lld días", days)
     }
 }

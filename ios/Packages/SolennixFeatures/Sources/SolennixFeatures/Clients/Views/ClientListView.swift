@@ -23,9 +23,9 @@ public struct ClientListView: View {
     public var body: some View {
         mainList
             .background(SolennixColors.surfaceGrouped)
-            .navigationTitle(String(localized: "clients.title", defaultValue: "Clientes", bundle: .module))
+            .navigationTitle(tr("clients.title", "Clientes"))
             .navigationBarTitleDisplayMode(.large)
-            .searchable(text: $viewModel.searchText, prompt: String(localized: "clients.search_placeholder", defaultValue: "Buscar clientes", bundle: .module))
+            .searchable(text: $viewModel.searchText, prompt: tr("clients.search_placeholder", "Buscar clientes"))
             .safeAreaInset(edge: .top, spacing: 0) {
                 VStack(spacing: 0) {
                     if viewModel.isShowingCachedData {
@@ -34,7 +34,7 @@ public struct ClientListView: View {
                     if !planLimitsManager.canCreateClient {
                         UpgradeBannerView(
                             type: .limitReached,
-                            resource: String(localized: "clients.title", defaultValue: "Clientes", bundle: .module),
+                            resource: tr("clients.title", "Clientes"),
                             currentUsage: planLimitsManager.clientsCount,
                             limit: PlanLimitsManager.clientLimit
                         ) {
@@ -54,7 +54,7 @@ public struct ClientListView: View {
                             Image(systemName: "plus")
                                 .font(.body)
                                 .foregroundStyle(planLimitsManager.canCreateClient ? SolennixColors.primary : SolennixColors.textTertiary)
-                                .accessibilityLabel(String(localized: "clients.action.add", defaultValue: "Agregar cliente", bundle: .module))
+                                .accessibilityLabel(tr("clients.action.add", "Agregar cliente"))
                         }
                         .disabled(!planLimitsManager.canCreateClient)
 
@@ -63,15 +63,15 @@ public struct ClientListView: View {
                 }
             }
             .confirmationDialog(
-                String(localized: "clients.delete.title", defaultValue: "Eliminar cliente", bundle: .module),
+                tr("clients.delete.title", "Eliminar cliente"),
                 isPresented: $viewModel.showDeleteConfirm,
                 presenting: viewModel.deleteTarget
             ) { client in
-                Button(String(localized: "clients.delete.confirm", defaultValue: "Eliminar", bundle: .module), role: .destructive) {
+                Button(tr("clients.delete.confirm", "Eliminar"), role: .destructive) {
                     HapticsHelper.play(.success)
                     guard let removed = viewModel.softDeleteClient(client) else { return }
                     toastManager.showUndo(
-                        message: String(localized: "clients.delete.undo_message", defaultValue: "\(client.name) eliminado", bundle: .module),
+                        message: trf("clients.delete.undo_message", "\(client.name) eliminado", client.name),
                         onUndo: {
                             viewModel.restoreClient(removed.client, at: removed.index)
                             HapticsHelper.play(.success)
@@ -81,9 +81,9 @@ public struct ClientListView: View {
                         }
                     )
                 }
-                Button(String(localized: "clients.delete.cancel", defaultValue: "Cancelar", bundle: .module), role: .cancel) {}
+                Button(tr("clients.delete.cancel", "Cancelar"), role: .cancel) {}
             } message: { client in
-                Text(String(localized: "clients.delete.message", defaultValue: "Se eliminará a \(client.name). Podrás deshacer durante unos segundos.", bundle: .module))
+                Text(trf("clients.delete.message", "Se eliminará a \(client.name). Podrás deshacer durante unos segundos.", client.name))
             }
             .task {
                 viewModel.setCacheManager(cacheManager)
@@ -110,9 +110,9 @@ public struct ClientListView: View {
         if let error = viewModel.errorMessage, viewModel.clients.isEmpty, !viewModel.isLoading {
             EmptyStateView(
                 icon: "wifi.exclamationmark",
-                title: String(localized: "clients.error.load_title", defaultValue: "Error al cargar", bundle: .module),
+                title: tr("clients.error.load_title", "Error al cargar"),
                 message: error,
-                actionTitle: String(localized: "clients.action.retry", defaultValue: "Reintentar", bundle: .module)
+                actionTitle: tr("clients.action.retry", "Reintentar")
             ) {
                 Task { await viewModel.loadClients() }
             }
@@ -125,9 +125,9 @@ public struct ClientListView: View {
             if viewModel.searchText.isEmpty {
                 EmptyStateView(
                     icon: "person.2",
-                    title: String(localized: "clients.empty.title", defaultValue: "Sin clientes", bundle: .module),
-                    message: String(localized: "clients.empty.message", defaultValue: "Agregá tu primer cliente para empezar", bundle: .module),
-                    actionTitle: String(localized: "clients.action.add", defaultValue: "Agregar cliente", bundle: .module)
+                    title: tr("clients.empty.title", "Sin clientes"),
+                    message: tr("clients.empty.message", "Agregá tu primer cliente para empezar"),
+                    actionTitle: tr("clients.action.add", "Agregar cliente")
                 ) {
                     // FAB handles navigation
                 }
@@ -135,8 +135,8 @@ public struct ClientListView: View {
             } else {
                 EmptyStateView(
                     icon: "magnifyingglass",
-                    title: String(localized: "clients.search.empty_title", defaultValue: "Sin resultados", bundle: .module),
-                    message: String(localized: "clients.search.empty_message", defaultValue: "No se encontraron clientes que coincidan con tu búsqueda", bundle: .module)
+                    title: tr("clients.search.empty_title", "Sin resultados"),
+                    message: tr("clients.search.empty_message", "No se encontraron clientes que coincidan con tu búsqueda")
                 )
                 .background(SolennixColors.surfaceGrouped)
             }
@@ -157,7 +157,7 @@ public struct ClientListView: View {
                     .buttonStyle(.plain)
                     .contextMenu {
                         NavigationLink(value: Route.clientForm(id: client.id)) {
-                            Label(String(localized: "clients.action.edit", defaultValue: "Editar", bundle: .module), systemImage: "pencil")
+                            Label(tr("clients.action.edit", "Editar"), systemImage: "pencil")
                         }
                         if !client.phone.isEmpty {
                             Button {
@@ -166,7 +166,7 @@ public struct ClientListView: View {
                                 }
                                 HapticsHelper.play(.success)
                             } label: {
-                                Label(String(localized: "clients.action.call", defaultValue: "Llamar", bundle: .module), systemImage: "phone")
+                                Label(tr("clients.action.call", "Llamar"), systemImage: "phone")
                             }
                         }
                         if let email = client.email, !email.isEmpty {
@@ -176,7 +176,7 @@ public struct ClientListView: View {
                                 }
                                 HapticsHelper.play(.success)
                             } label: {
-                                Label(String(localized: "clients.form.email", defaultValue: "Email", bundle: .module), systemImage: "envelope")
+                                Label(tr("clients.form.email", "Email"), systemImage: "envelope")
                             }
                         }
                         Divider()
@@ -185,7 +185,7 @@ public struct ClientListView: View {
                             viewModel.deleteTarget = client
                             viewModel.showDeleteConfirm = true
                         } label: {
-                            Label(String(localized: "clients.delete.confirm", defaultValue: "Eliminar", bundle: .module), systemImage: "trash")
+                            Label(tr("clients.delete.confirm", "Eliminar"), systemImage: "trash")
                         }
                     }
                     .task {
@@ -216,9 +216,9 @@ public struct ClientListView: View {
             if let error = viewModel.errorMessage, viewModel.clients.isEmpty, !viewModel.isLoading {
                 fullPageEmptyRow(
                     icon: "wifi.exclamationmark",
-                    title: String(localized: "clients.error.load_title", defaultValue: "Error al cargar", bundle: .module),
+                    title: tr("clients.error.load_title", "Error al cargar"),
                     message: error,
-                    actionTitle: String(localized: "clients.action.retry", defaultValue: "Reintentar", bundle: .module)
+                    actionTitle: tr("clients.action.retry", "Reintentar")
                 ) {
                     Task { await viewModel.loadClients() }
                 }
@@ -228,17 +228,17 @@ public struct ClientListView: View {
                 if viewModel.searchText.isEmpty {
                     fullPageEmptyRow(
                         icon: "person.2",
-                        title: String(localized: "clients.empty.title", defaultValue: "Sin clientes", bundle: .module),
-                        message: String(localized: "clients.empty.message", defaultValue: "Agregá tu primer cliente para empezar", bundle: .module),
-                        actionTitle: String(localized: "clients.action.add", defaultValue: "Agregar cliente", bundle: .module)
+                        title: tr("clients.empty.title", "Sin clientes"),
+                        message: tr("clients.empty.message", "Agregá tu primer cliente para empezar"),
+                        actionTitle: tr("clients.action.add", "Agregar cliente")
                     ) {
                         // FAB handles navigation
                     }
                 } else {
                     fullPageEmptyRow(
                         icon: "magnifyingglass",
-                        title: String(localized: "clients.search.empty_title", defaultValue: "Sin resultados", bundle: .module),
-                        message: String(localized: "clients.search.empty_message", defaultValue: "No se encontraron clientes que coincidan con tu búsqueda", bundle: .module),
+                        title: tr("clients.search.empty_title", "Sin resultados"),
+                        message: tr("clients.search.empty_message", "No se encontraron clientes que coincidan con tu búsqueda"),
                         actionTitle: nil,
                         action: nil
                     )
@@ -254,11 +254,11 @@ public struct ClientListView: View {
                             viewModel.deleteTarget = client
                             viewModel.showDeleteConfirm = true
                         } label: {
-                            Label(String(localized: "clients.delete.confirm", defaultValue: "Eliminar", bundle: .module), systemImage: "trash")
+                            Label(tr("clients.delete.confirm", "Eliminar"), systemImage: "trash")
                         }
 
                         NavigationLink(value: Route.clientForm(id: client.id)) {
-                            Label(String(localized: "clients.action.edit", defaultValue: "Editar", bundle: .module), systemImage: "pencil")
+                            Label(tr("clients.action.edit", "Editar"), systemImage: "pencil")
                         }
                         .tint(.blue)
                     }
@@ -269,7 +269,7 @@ public struct ClientListView: View {
                                 HapticsHelper.play(.success)
                                 openURL(url)
                             } label: {
-                                Label(String(localized: "clients.form.email", defaultValue: "Email", bundle: .module), systemImage: "envelope.fill")
+                                Label(tr("clients.form.email", "Email"), systemImage: "envelope.fill")
                             }
                             .tint(.blue)
                         }
@@ -280,14 +280,14 @@ public struct ClientListView: View {
                                 HapticsHelper.play(.success)
                                 openURL(url)
                             } label: {
-                                Label(String(localized: "clients.action.call", defaultValue: "Llamar", bundle: .module), systemImage: "phone.fill")
+                                Label(tr("clients.action.call", "Llamar"), systemImage: "phone.fill")
                             }
                             .tint(.green)
                         }
                     }
                     .contextMenu {
                         NavigationLink(value: Route.clientForm(id: client.id)) {
-                            Label(String(localized: "clients.action.edit", defaultValue: "Editar", bundle: .module), systemImage: "pencil")
+                            Label(tr("clients.action.edit", "Editar"), systemImage: "pencil")
                         }
                         if !client.phone.isEmpty {
                             Button {
@@ -296,7 +296,7 @@ public struct ClientListView: View {
                                 }
                                 HapticsHelper.play(.success)
                             } label: {
-                                Label(String(localized: "clients.action.call", defaultValue: "Llamar", bundle: .module), systemImage: "phone")
+                                Label(tr("clients.action.call", "Llamar"), systemImage: "phone")
                             }
                         }
                         if let email = client.email, !email.isEmpty {
@@ -306,7 +306,7 @@ public struct ClientListView: View {
                                 }
                                 HapticsHelper.play(.success)
                             } label: {
-                                Label(String(localized: "clients.form.email", defaultValue: "Email", bundle: .module), systemImage: "envelope")
+                                Label(tr("clients.form.email", "Email"), systemImage: "envelope")
                             }
                         }
                         Divider()
@@ -315,7 +315,7 @@ public struct ClientListView: View {
                             viewModel.deleteTarget = client
                             viewModel.showDeleteConfirm = true
                         } label: {
-                            Label(String(localized: "clients.delete.confirm", defaultValue: "Eliminar", bundle: .module), systemImage: "trash")
+                            Label(tr("clients.delete.confirm", "Eliminar"), systemImage: "trash")
                         }
                     }
                     .task {
@@ -436,7 +436,7 @@ public struct ClientListView: View {
 
     private var sortMenu: some View {
         Menu {
-            Picker(String(localized: "clients.sort.title", defaultValue: "Ordenar por", bundle: .module), selection: $viewModel.sortKey) {
+            Picker(tr("clients.sort.title", "Ordenar por"), selection: $viewModel.sortKey) {
                 ForEach(ClientSortKey.allCases, id: \.self) { key in
                     Text(key.label).tag(key)
                 }
@@ -449,8 +449,8 @@ public struct ClientListView: View {
             } label: {
                 Label(
                     viewModel.sortAscending
-                        ? String(localized: "clients.sort.ascending", defaultValue: "Ascendente", bundle: .module)
-                        : String(localized: "clients.sort.descending", defaultValue: "Descendente", bundle: .module),
+                        ? tr("clients.sort.ascending", "Ascendente")
+                        : tr("clients.sort.descending", "Descendente"),
                     systemImage: viewModel.sortAscending ? "arrow.up" : "arrow.down"
                 )
             }
@@ -458,8 +458,16 @@ public struct ClientListView: View {
             Image(systemName: "arrow.up.arrow.down")
                 .font(.body)
                 .foregroundStyle(SolennixColors.primary)
-                .accessibilityLabel(String(localized: "clients.sort.accessibility", defaultValue: "Ordenar clientes", bundle: .module))
+                .accessibilityLabel(tr("clients.sort.accessibility", "Ordenar clientes"))
         }
+    }
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
+    private func trf(_ key: String, _ value: String, _ arg: CVarArg) -> String {
+        FeatureL10n.format(key, value, arg)
     }
 
 }
