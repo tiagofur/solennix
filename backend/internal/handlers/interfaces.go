@@ -189,6 +189,7 @@ type AdminRepository interface {
 	ExpireGiftedPlans(ctx context.Context) (int, error)
 	GetInactiveUsers(ctx context.Context, days int) ([]repository.AdminUser, error)
 	GetUsersWithZeroResources(ctx context.Context) ([]repository.AdminUser, error)
+	VerifyUserEmail(ctx context.Context, id uuid.UUID) error
 }
 
 // StripeService defines the subset of Stripe operations used by handlers.

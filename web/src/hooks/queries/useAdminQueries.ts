@@ -84,3 +84,23 @@ export function useDeleteAdminUser() {
     },
   });
 }
+
+export function useVerifyUserEmail() {
+  const queryClient = useQueryClient();
+  const { addToast } = useToast();
+
+  return useMutation({
+    mutationKey: ['admin', 'verifyEmail'],
+    mutationFn: (id: string) => adminService.verifyUserEmail(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.users, exact: false });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.stats });
+      addToast('Email verificado exitosamente', 'success');
+    },
+    onError: (error) => {
+      logError('Error verifying user email', error);
+      addToast(getErrorMessage(error, 'No se pudo verificar el email del usuario'), 'error');
+    },
+  });
+}
+

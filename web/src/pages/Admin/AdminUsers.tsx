@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAdminUsers, useUpgradeUser, useAdminInactiveUsers, useAdminZeroResourceUsers, useDeleteAdminUser } from '@/hooks/queries/useAdminQueries';
+import { useAdminUsers, useUpgradeUser, useAdminInactiveUsers, useAdminZeroResourceUsers, useDeleteAdminUser, useVerifyUserEmail } from '@/hooks/queries/useAdminQueries';
 import type { AdminAccountType } from '@/services/adminService';
 import { queryKeys } from '@/hooks/queries/queryKeys';
 import { useToast } from '@/hooks/useToast';
@@ -49,6 +49,7 @@ interface AdminUser {
   has_paid_subscription: boolean;
   account_status: string;
   deletion_eligible_at?: string;
+  email_verified_at?: string;
   events_count: number;
   clients_count: number;
   products_count: number;
@@ -144,11 +145,18 @@ export const AdminUsers: React.FC = () => {
   };
 
   const deleteUser = useDeleteAdminUser();
+  const verifyEmail = useVerifyUserEmail();
   const saving = upgradeUser.isPending
     ? (upgradeUser.variables?.id ?? null)
     : deleteUser.isPending
       ? (deleteUser.variables ?? null)
-      : null;
+      : verifyEmail.isPending
+        ? (verifyEmail.variables ?? null)
+        : null;
+
+  const handleVerifyEmail = (user: AdminUser) => {
+    verifyEmail.mutate(user.id);
+  };
 
   const handleDeleteConfirm = () => {
     if (!deleteTarget) return;
@@ -678,6 +686,7 @@ export const AdminUsers: React.FC = () => {
                     {t('admin:users.table.plan')} <SortIcon field="plan" sortField={sortField} sortDir={sortDir} />
                   </button>
                 </th>
+                <th className="px-6 py-4 text-center text-xs font-medium text-text-secondary uppercase tracking-wider">Verificado</th>
                 <th className="px-6 py-4 text-center text-xs font-medium text-text-secondary uppercase tracking-wider hidden md:table-cell">{t('admin:users.table.events')}</th>
                 <th className="px-6 py-4 text-center text-xs font-medium text-text-secondary uppercase tracking-wider hidden md:table-cell">{t('admin:users.table.clients')}</th>
                 <th className="px-6 py-4 text-center text-xs font-medium text-text-secondary uppercase tracking-wider hidden lg:table-cell">{t('admin:users.table.products')}</th>
@@ -697,14 +706,14 @@ export const AdminUsers: React.FC = () => {
             <tbody className="bg-card divide-y divide-border">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center">
+                  <td colSpan={9} className="px-6 py-12 text-center">
                     <RefreshCw className="h-8 w-8 animate-spin text-text-tertiary mx-auto" />
                     <p className="text-sm text-text-secondary mt-2">{t('admin:users.table.loading')}</p>
                   </td>
                 </tr>
               ) : sortedUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center">
+                  <td colSpan={9} className="px-6 py-12 text-center">
                     <Users className="h-12 w-12 text-text-tertiary mx-auto mb-3" />
                     <p className="text-sm text-text-secondary">
                       {searchQuery || planFilter !== 'all'
@@ -783,6 +792,22 @@ export const AdminUsers: React.FC = () => {
                         </div>
                       </td>
 
+                      {/* Verificado */}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-center">
+                          {user.email_verified_at ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-success/10 text-success border border-success/20">
+                              <CheckCircle className="h-3 w-3" />
+                              Verificado
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-warning/10 text-warning border border-warning/20">
+                              Pendiente
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
                       {/* Counts */}
                       <td className="px-6 py-4 text-center text-sm font-medium text-text hidden md:table-cell">{user.events_count}</td>
                       <td className="px-6 py-4 text-center text-sm font-medium text-text hidden md:table-cell">{user.clients_count}</td>
@@ -819,6 +844,19 @@ export const AdminUsers: React.FC = () => {
                             </button>
                           ) : (
                             <>
+                              {/* Manual verification action */}
+                              {!user.email_verified_at && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleVerifyEmail(user)}
+                                  disabled={saving === user.id}
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-success/10 text-success hover:bg-success hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                  title="Verificar email de forma manual (útil para usuarios de prueba/demo)"
+                                >
+                                  {saving === user.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <CheckCircle className="h-3 w-3" />}
+                                  Verificar
+                                </button>
+                              )}
                               {/* Gift button: for basic users, or gifted users without paid sub */}
                               {user.role === 'user' && !user.has_paid_subscription && user.plan === 'basic' && (
                                 <button

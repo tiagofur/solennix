@@ -31,6 +31,7 @@ export interface AdminUser {
   plan_expires_at?: string | null;
   account_status: string;
   deletion_eligible_at?: string | null;
+  email_verified_at?: string | null;
   events_count: number;
   clients_count: number;
   products_count: number;
@@ -86,5 +87,9 @@ export const adminService = {
 
   async deleteUser(id: string) {
     return api.delete(`/admin/users/${id}`);
+  },
+
+  async verifyUserEmail(id: string) {
+    return api.post<AdminUser>(`/admin/users/${id}/verify-email`);
   },
 };

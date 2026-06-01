@@ -14,6 +14,7 @@ vi.mock('@/services/adminService', () => ({
     getInactiveUsers: vi.fn(),
     getUsersWithZeroResources: vi.fn(),
     deleteUser: vi.fn(),
+    verifyUserEmail: vi.fn(),
   },
 }));
 
@@ -37,7 +38,8 @@ const getMockData = (): AdminUser[] => [
     id: 'u1', name: 'Premium User', email: 'u1@test.com', plan: 'premium', plan_expires_at: '2030-12-31T00:00:00Z',
     business_name: 'My Business',
     role: 'user', has_paid_subscription: false, created_at: '2023-01-01T00:00:00Z', updated_at: '2023-01-01T00:00:00Z',
-    events_count: 10, clients_count: 10, products_count: 10, account_status: 'active'
+    events_count: 10, clients_count: 10, products_count: 10, account_status: 'active',
+    email_verified_at: '2023-01-01T00:00:00Z'
   },
   {
     id: 'u2', name: 'Basic User', email: 'u2@test.com', plan: 'basic',
@@ -109,6 +111,10 @@ describe('AdminUsers', () => {
     vi.mocked(adminService.upgradeUser).mockImplementation(async (id, plan, expiresAt) => {
       const u = getMockData().find(t => t.id === id)!;
       return { ...u, plan, plan_expires_at: expiresAt || null };
+    });
+    vi.mocked(adminService.verifyUserEmail).mockImplementation(async (id) => {
+      const u = getMockData().find(t => t.id === id)!;
+      return { ...u, email_verified_at: new Date().toISOString() };
     });
     window.URL.createObjectURL = vi.fn(() => 'blob:url');
   });
@@ -273,5 +279,28 @@ describe('AdminUsers', () => {
     const successDialog = screen.getByRole('dialog');
     fireEvent.click(within(successDialog).getByText('Rebajar').closest('button')!);
     await waitFor(() => expect(mockAddToast).toHaveBeenCalledWith(expect.stringContaining('plan Basic'), 'success'));
+  });
+
+  it('displays email verification status and allows manual verification', async () => {
+    render(<MemoryRouter><AdminUsers /></MemoryRouter>);
+    await waitFor(() => expect(screen.queryByText('Cargando usuarios...')).not.toBeInTheDocument());
+
+    // Premium User has email_verified_at, so should display "Verificado"
+    const premRow = screen.getByText('Premium User').closest('tr')!;
+    expect(within(premRow).getByText('Verificado')).toBeInTheDocument();
+    expect(within(premRow).queryByRole('button', { name: /Verificar/i })).not.toBeInTheDocument();
+
+    // Basic User doesn't have email_verified_at, so should display "Pendiente" and "Verificar" button
+    const basicRow = screen.getByText('Basic User').closest('tr')!;
+    expect(within(basicRow).getByText('Pendiente')).toBeInTheDocument();
+    const verifyBtn = within(basicRow).getByRole('button', { name: /Verificar/i });
+    expect(verifyBtn).toBeInTheDocument();
+
+    // Perform manual verification
+    fireEvent.click(verifyBtn);
+    await waitFor(() => {
+      expect(adminService.verifyUserEmail).toHaveBeenCalledWith('u2');
+      expect(mockAddToast).toHaveBeenCalledWith('Email verificado exitosamente', 'success');
+    });
   });
 });
