@@ -355,3 +355,33 @@ func (h *AdminHandler) GetUsersWithZeroResources(w http.ResponseWriter, r *http.
 
 	writeJSON(w, http.StatusOK, users)
 }
+
+// VerifyUserEmail manually verifies a user's email address.
+// POST /api/admin/users/{id}/verify-email
+func (h *AdminHandler) VerifyUserEmail(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	adminID := middleware.GetUserID(r.Context())
+	slog.Info("admin: manually verifying user email", "admin_id", adminID, "target_user_id", id)
+
+	if err := h.adminRepo.VerifyUserEmail(r.Context(), id); err != nil {
+		slog.Error("admin: failed to manually verify user email", "error", err, "target_user_id", id)
+		writeError(w, http.StatusInternalServerError, "Failed to verify email")
+		return
+	}
+
+	// Refetch the updated user stats to return to frontend
+	updated, err := h.adminRepo.GetUserByID(r.Context(), id)
+	if err != nil {
+		writeJSON(w, http.StatusOK, map[string]string{"message": "Email verified successfully"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, updated)
+}
+

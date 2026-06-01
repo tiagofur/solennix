@@ -905,7 +905,7 @@ func TestEventRepoCountCurrentMonthIntegration(t *testing.T) {
 	}
 
 	// Create an event in the current month
-	now := time.Now()
+	now := time.Now().UTC()
 	currentDate := now.Format("2006-01-02")
 	event := &models.Event{
 		UserID:      userID,

@@ -414,6 +414,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Put("/users/{id}/block", adminHandler.BlockUser)
 		r.Delete("/users/{id}", adminHandler.DeleteUser)
 		r.Put("/users/{id}/upgrade", adminHandler.UpgradeUser)
+		r.Post("/users/{id}/verify-email", adminHandler.VerifyUserEmail)
 		r.Get("/subscriptions", adminHandler.GetSubscriptions)
 		r.Get("/audit-logs", auditHandler.GetAllAuditLogs)
 	})

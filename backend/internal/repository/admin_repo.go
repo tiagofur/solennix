@@ -98,6 +98,7 @@ type AdminUser struct {
 	BlockedBy          *uuid.UUID `json:"blocked_by,omitempty"`
 	DeletionEligibleAt *time.Time `json:"deletion_eligible_at,omitempty"`
 	DeletedAt          *time.Time `json:"deleted_at,omitempty"`
+	EmailVerifiedAt    *time.Time `json:"email_verified_at,omitempty"`
 	StripeCustomerID   *string    `json:"stripe_customer_id,omitempty"`
 	HasPaidSub         bool       `json:"has_paid_subscription"`
 	PlanExpiresAt      *time.Time `json:"plan_expires_at,omitempty"`
@@ -226,6 +227,7 @@ func (r *AdminRepo) GetAllUsers(ctx context.Context, accountType string) ([]Admi
 			u.id, u.email, u.name, u.business_name, u.plan, u.role,
 			COALESCE(u.account_status, 'active') AS account_status,
 			u.blocked_at, u.blocked_reason, u.blocked_by, u.deletion_eligible_at, u.deleted_at,
+			u.email_verified_at,
 			u.stripe_customer_id,
 			(u.stripe_customer_id IS NOT NULL OR EXISTS(
 				SELECT 1 FROM subscriptions s WHERE s.user_id = u.id AND s.status = 'active'
@@ -250,6 +252,7 @@ func (r *AdminRepo) GetAllUsers(ctx context.Context, accountType string) ([]Admi
 		err := rows.Scan(
 			&u.ID, &u.Email, &u.Name, &u.BusinessName, &u.Plan, &u.Role,
 			&u.AccountStatus, &u.BlockedAt, &u.BlockedReason, &u.BlockedBy, &u.DeletionEligibleAt, &u.DeletedAt,
+			&u.EmailVerifiedAt,
 			&u.StripeCustomerID,
 			&u.HasPaidSub, &u.PlanExpiresAt,
 			&u.EventsCount, &u.ClientsCount, &u.ProductsCount,
@@ -274,6 +277,7 @@ func (r *AdminRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*AdminUser, 
 			u.id, u.email, u.name, u.business_name, u.plan, u.role,
 			COALESCE(u.account_status, 'active') AS account_status,
 			u.blocked_at, u.blocked_reason, u.blocked_by, u.deletion_eligible_at, u.deleted_at,
+			u.email_verified_at,
 			u.stripe_customer_id,
 			(u.stripe_customer_id IS NOT NULL OR EXISTS(
 				SELECT 1 FROM subscriptions s WHERE s.user_id = u.id AND s.status = 'active'
@@ -290,6 +294,7 @@ func (r *AdminRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*AdminUser, 
 	err := r.pool.QueryRow(ctx, query, id).Scan(
 		&u.ID, &u.Email, &u.Name, &u.BusinessName, &u.Plan, &u.Role,
 		&u.AccountStatus, &u.BlockedAt, &u.BlockedReason, &u.BlockedBy, &u.DeletionEligibleAt, &u.DeletedAt,
+		&u.EmailVerifiedAt,
 		&u.StripeCustomerID,
 		&u.HasPaidSub, &u.PlanExpiresAt,
 		&u.EventsCount, &u.ClientsCount, &u.ProductsCount,
@@ -508,6 +513,7 @@ func (r *AdminRepo) GetInactiveUsers(ctx context.Context, days int) ([]AdminUser
 			u.id, u.email, u.name, u.business_name, u.plan, u.role,
 			COALESCE(u.account_status, 'active') AS account_status,
 			u.blocked_at, u.blocked_reason, u.blocked_by, u.deletion_eligible_at, u.deleted_at,
+			u.email_verified_at,
 			u.stripe_customer_id,
 			(u.stripe_customer_id IS NOT NULL OR EXISTS(
 				SELECT 1 FROM subscriptions s WHERE s.user_id = u.id AND s.status = 'active'
@@ -535,6 +541,7 @@ func (r *AdminRepo) GetInactiveUsers(ctx context.Context, days int) ([]AdminUser
 		err := rows.Scan(
 			&u.ID, &u.Email, &u.Name, &u.BusinessName, &u.Plan, &u.Role,
 			&u.AccountStatus, &u.BlockedAt, &u.BlockedReason, &u.BlockedBy, &u.DeletionEligibleAt, &u.DeletedAt,
+			&u.EmailVerifiedAt,
 			&u.StripeCustomerID,
 			&u.HasPaidSub, &u.PlanExpiresAt,
 			&u.EventsCount, &u.ClientsCount, &u.ProductsCount,
@@ -555,6 +562,7 @@ func (r *AdminRepo) GetUsersWithZeroResources(ctx context.Context) ([]AdminUser,
 			u.id, u.email, u.name, u.business_name, u.plan, u.role,
 			COALESCE(u.account_status, 'active') AS account_status,
 			u.blocked_at, u.blocked_reason, u.blocked_by, u.deletion_eligible_at, u.deleted_at,
+			u.email_verified_at,
 			u.stripe_customer_id,
 			(u.stripe_customer_id IS NOT NULL OR EXISTS(
 				SELECT 1 FROM subscriptions s WHERE s.user_id = u.id AND s.status = 'active'
@@ -583,6 +591,7 @@ func (r *AdminRepo) GetUsersWithZeroResources(ctx context.Context) ([]AdminUser,
 		err := rows.Scan(
 			&u.ID, &u.Email, &u.Name, &u.BusinessName, &u.Plan, &u.Role,
 			&u.AccountStatus, &u.BlockedAt, &u.BlockedReason, &u.BlockedBy, &u.DeletionEligibleAt, &u.DeletedAt,
+			&u.EmailVerifiedAt,
 			&u.StripeCustomerID,
 			&u.HasPaidSub, &u.PlanExpiresAt,
 			&u.EventsCount, &u.ClientsCount, &u.ProductsCount,
@@ -594,4 +603,17 @@ func (r *AdminRepo) GetUsersWithZeroResources(ctx context.Context) ([]AdminUser,
 		users = append(users, u)
 	}
 	return users, nil
+}
+
+// VerifyUserEmail marks a user's email as verified by setting email_verified_at to NOW().
+func (r *AdminRepo) VerifyUserEmail(ctx context.Context, id uuid.UUID) error {
+	query := `UPDATE users SET email_verified_at = NOW(), updated_at = NOW() WHERE id = $1`
+	tag, err := r.pool.Exec(ctx, query, id)
+	if err != nil {
+		return fmt.Errorf("failed to verify user email: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("user not found")
+	}
+	return nil
 }

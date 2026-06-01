@@ -870,3 +870,68 @@ func TestAdminHandler_GetUsersWithZeroResources(t *testing.T) {
 		repo.AssertExpectations(t)
 	})
 }
+
+func TestAdminHandler_VerifyUserEmail(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+		id := uuid.New()
+
+		repo.On("VerifyUserEmail", mock.Anything, id).Return(nil)
+		repo.On("GetUserByID", mock.Anything, id).Return(&repository.AdminUser{
+			ID:    id,
+			Email: "demo@solennix.com",
+			Name:  "Demo User",
+		}, nil)
+
+		req := httptest.NewRequest("POST", "/api/admin/users/"+id.String()+"/verify-email", nil)
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", id.String())
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+		w := httptest.NewRecorder()
+		handler.VerifyUserEmail(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		var resp repository.AdminUser
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+		assert.Equal(t, "demo@solennix.com", resp.Email)
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("invalid UUID", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		req := httptest.NewRequest("POST", "/api/admin/users/invalid/verify-email", nil)
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", "invalid")
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+		w := httptest.NewRecorder()
+		handler.VerifyUserEmail(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("repo error", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+		id := uuid.New()
+
+		repo.On("VerifyUserEmail", mock.Anything, id).Return(assert.AnError)
+
+		req := httptest.NewRequest("POST", "/api/admin/users/"+id.String()+"/verify-email", nil)
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", id.String())
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+		w := httptest.NewRecorder()
+		handler.VerifyUserEmail(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		repo.AssertExpectations(t)
+	})
+}

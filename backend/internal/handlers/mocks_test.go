@@ -808,6 +808,11 @@ func (m *MockAdminRepo) GetUsersWithZeroResources(ctx context.Context) ([]reposi
 	return args.Get(0).([]repository.AdminUser), args.Error(1)
 }
 
+func (m *MockAdminRepo) VerifyUserEmail(ctx context.Context, id uuid.UUID) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
 // ---------------------------------------------------------------------------
 // MockUnavailableDateRepo — implements UnavailableDateRepository
 // ---------------------------------------------------------------------------
