@@ -90,6 +90,6 @@ export const adminService = {
   },
 
   async verifyUserEmail(id: string) {
-    return api.post<AdminUser>(`/admin/users/${id}/verify-email`);
+    return api.post<AdminUser>(`/admin/users/${id}/verify-email`, {});
   },
 };
