@@ -178,6 +178,17 @@
         "Sanitized local absolute filepath exposures in payment submission handler using filepath.Base",
         "Global init.sh validation suite runs and passes successfully"
       ]
+    },
+    {
+      "id": 17,
+      "name": "backend-openapi-contract-hardening",
+      "description": "Harden OpenAPI contract validation coverage for critical public routes (Issue #432)",
+      "status": "done",
+      "acceptance_criteria": [
+        "Create TestOpenAPISpec_PublicRoutesContract in contract_test.go",
+        "Assert matching body schemas and operationIds for public routes",
+        "Global init.sh validation suite runs and passes successfully"
+      ]
     }
   ]
 }
