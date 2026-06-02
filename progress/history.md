@@ -19,7 +19,7 @@
 - **Feature ID:** i18n-slice-dashboard (SDD en memoria)
 - **Resultado:** COMPLETO y Validado con tests de localización.
 - **Entregables:**
-  - `Localizable.xcstrings` (76 claves `dashboard.*` inyectadas en inglés y español)
+  - `Localizable.xcstrings` (76 claves `dashboard.*` inyectadas in inglés y español)
   - `DashboardLocalizationTests.swift` (Pruebas unitarias de resolución dinámica)
 
 ## Sesión 2026-06-01: Internacionalización de Productos e Inventario en iOS
