@@ -5,11 +5,11 @@ import TipKit
 
 public struct NewEventTip: Tip {
     public var title: Text {
-        Text("Crear un Evento")
+        Text(CommonStrings.newEventTipTitle)
     }
     
     public var message: Text? {
-        Text("Toca aquí para iniciar la creación de un nuevo evento, cotización o contrato.")
+        Text(CommonStrings.newEventTipMessage)
     }
     
     public var image: Image? {
@@ -25,9 +25,7 @@ public struct QuickQuoteTip: Tip {
     }
     
     public var message: Text? {
-        Text(FeatureL10n.languageCode == "en"
-            ? "Use this tool to create a quote instantly without creating the client first."
-            : "Usa esta herramienta para generar un presupuesto en el momento sin necesidad de crear el cliente primero.")
+        Text(CommonStrings.quickQuoteTipMessage)
     }
     
     public var image: Image? {
@@ -39,11 +37,11 @@ public struct QuickQuoteTip: Tip {
 
 public struct SwipeActionTip: Tip {
     public var title: Text {
-        Text("Acciones Rápidas")
+        Text(CommonStrings.swipeActionTipTitle)
     }
     
     public var message: Text? {
-        Text("Desliza los elementos de la lista hacia la izquierda o derecha para ver más opciones como editar, eliminar o llamar.")
+        Text(CommonStrings.swipeActionTipMessage)
     }
     
     public var image: Image? {

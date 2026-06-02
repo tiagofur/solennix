@@ -26,7 +26,7 @@ public struct SearchView: View {
                     .tint(SolennixColors.primary)
             }
         }
-        .navigationTitle("Buscar")
+        .navigationTitle(SearchStrings.title)
         .navigationBarTitleDisplayMode(.inline)
         .background(SolennixColors.surfaceGrouped.ignoresSafeArea())
         .onAppear {
@@ -80,7 +80,7 @@ public struct SearchView: View {
                 .foregroundStyle(SolennixColors.textTertiary)
 
             TextField(
-                "Clientes, eventos, productos...",
+                SearchStrings.placeholder,
                 text: Binding(
                     get: { vm.query },
                     set: { newValue in
@@ -120,7 +120,7 @@ public struct SearchView: View {
             HStack(spacing: Spacing.md) {
                 ProgressView()
                     .tint(SolennixColors.primary)
-                Text("Buscando...")
+                Text(SearchStrings.loading)
                     .font(.subheadline)
                     .foregroundStyle(SolennixColors.textSecondary)
             }
@@ -138,11 +138,11 @@ public struct SearchView: View {
                     .font(.system(size: 40))
                     .foregroundStyle(SolennixColors.textTertiary)
 
-                Text("Sin resultados")
+                Text(SearchStrings.noResultsTitle)
                     .font(.headline)
                     .foregroundStyle(SolennixColors.text)
 
-                Text("Intenta con otro termino de busqueda")
+                Text(SearchStrings.noResultsSubtitle)
                     .font(.subheadline)
                     .foregroundStyle(SolennixColors.textSecondary)
             }
@@ -161,7 +161,7 @@ public struct SearchView: View {
                     .font(.system(size: 40))
                     .foregroundStyle(SolennixColors.textTertiary)
 
-                Text("Busca clientes, eventos, productos o inventario")
+                Text(SearchStrings.initialStateHint)
                     .font(.subheadline)
                     .foregroundStyle(SolennixColors.textSecondary)
                     .multilineTextAlignment(.center)
@@ -193,10 +193,10 @@ public struct SearchView: View {
             }
         } header: {
             HStack {
-                Text("Sugerencias")
+                Text(SearchStrings.suggestionsTitle)
                 Spacer()
                 if !vm.recentQueries.isEmpty {
-                    Button("Limpiar") {
+                    Button(SearchStrings.suggestionsClear) {
                         vm.clearRecentQueries()
                     }
                     .font(.caption)
@@ -230,7 +230,7 @@ public struct SearchView: View {
             ) {
                 if !results.clients.isEmpty {
                     resultGridCard(
-                        title: "Clientes",
+                        title: SearchStrings.resultsClients,
                         icon: "person.2.fill",
                         count: results.clients.count,
                         items: results.clients
@@ -239,7 +239,7 @@ public struct SearchView: View {
 
                 if !results.events.isEmpty {
                     resultGridCard(
-                        title: "Eventos",
+                        title: SearchStrings.resultsEvents,
                         icon: "calendar",
                         count: results.events.count,
                         items: results.events
@@ -248,7 +248,7 @@ public struct SearchView: View {
 
                 if !results.products.isEmpty {
                     resultGridCard(
-                        title: "Productos",
+                        title: SearchStrings.resultsProducts,
                         icon: "shippingbox.fill",
                         count: results.products.count,
                         items: results.products
@@ -257,7 +257,7 @@ public struct SearchView: View {
 
                 if !results.inventory.isEmpty {
                     resultGridCard(
-                        title: "Inventario",
+                        title: SearchStrings.resultsInventory,
                         icon: "archivebox.fill",
                         count: results.inventory.count,
                         items: results.inventory
@@ -310,7 +310,7 @@ public struct SearchView: View {
             }
 
             if items.count > 5 {
-                Text("+ \(items.count - 5) mas")
+                Text(SearchStrings.more(items.count - 5))
                     .font(.caption)
                     .foregroundStyle(SolennixColors.primary)
                     .padding(.top, Spacing.xxs)
@@ -327,7 +327,7 @@ public struct SearchView: View {
     private func iPhoneResultsList(results: SearchResults) -> some View {
         if !results.clients.isEmpty {
             resultSection(
-                title: "Clientes",
+                title: SearchStrings.resultsClients,
                 icon: "person.2.fill",
                 count: results.clients.count,
                 items: results.clients
@@ -338,7 +338,7 @@ public struct SearchView: View {
 
         if !results.events.isEmpty {
             resultSection(
-                title: "Eventos",
+                title: SearchStrings.resultsEvents,
                 icon: "calendar",
                 count: results.events.count,
                 items: results.events
@@ -349,7 +349,7 @@ public struct SearchView: View {
 
         if !results.products.isEmpty {
             resultSection(
-                title: "Productos",
+                title: SearchStrings.resultsProducts,
                 icon: "shippingbox.fill",
                 count: results.products.count,
                 items: results.products
@@ -360,7 +360,7 @@ public struct SearchView: View {
 
         if !results.inventory.isEmpty {
             resultSection(
-                title: "Inventario",
+                title: SearchStrings.resultsInventory,
                 icon: "archivebox.fill",
                 count: results.inventory.count,
                 items: results.inventory

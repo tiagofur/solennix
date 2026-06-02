@@ -90,4 +90,52 @@
   - `OnboardingLocalizationTests.swift` (16/16 tests ES/EN)
 - **Nota:** Ningún `String(localized:bundle:)` residual queda en el codebase.
 
+## Sesión 2026-06-02: Internacionalización de Auth y Settings en iOS
+- **Feature ID:** 9 (i18n-slice-auth-settings)
+- **Resultado:** COMPLETO y Validado con `./init.sh` y `xcodebuild` (32 tests de localización en verde, 1229 tests globales en verde).
+- **Entregables:**
+  - `AuthStrings.swift` (Constantes centralizadas dinámicas computadas vía FeatureL10n)
+  - `SettingsStrings.swift` (Constantes centralizadas dinámicas computadas vía FeatureL10n)
+  - `LoginView.swift`, `ForgotPasswordView.swift`, `ResetPasswordView.swift`, `RegisterView.swift`, `TeamInviteAcceptView.swift`, `AuthViewModel.swift` refactorizados para usar `AuthStrings`
+  - `BiometricGateView.swift` internacionalizado
+  - `SettingsView.swift`, `AccountDeletionView.swift` y `ChangePasswordView.swift` refactorizados para usar `SettingsStrings`
+  - `Localizable.xcstrings` actualizado con claves de biometría y de eliminación de cuenta mediante scripts inyectores
+  - `AuthLocalizationTests.swift` (Suite completa de tests unitarios de verificación dinámica ES/EN)
+  - `SettingsLocalizationTests.swift` (Suite completa de tests unitarios de verificación dinámica ES/EN)
 
+## Sesión 2026-06-02: Internacionalización de Búsqueda (Search) en iOS
+- **Feature ID:** 10 (i18n-slice-search)
+- **Resultado:** COMPLETO y Validado con `./init.sh` y `xcodebuild` (19 tests de localización en verde, 1229 tests globales en verde).
+- **Entregables:**
+  - `SearchStrings.swift` (Constantes centralizadas dinámicas computadas y formateadas vía FeatureL10n)
+  - `SearchView.swift` refactorizado por completo para usar `SearchStrings`
+  - `SearchLocalizationTests.swift` (Suite completa de 19 tests unitarios de verificación dinámica ES/EN)
+
+## Sesión 2026-06-02: Internacionalización de Links de Formulario (EventFormLinks) en iOS
+- **Feature ID:** 11 (i18n-slice-event-form-links)
+- **Resultado:** COMPLETO y Validado con `./init.sh` y `xcodebuild` (71 tests de localización en verde, 1229 tests globales en verde).
+- **Entregables:**
+  - `EventFormLinksStrings.swift` (Constantes centralizadas dinámicas computadas y formateadas vía FeatureL10n)
+  - `EventFormLinksView.swift` refactorizado por completo para usar `EventFormLinksStrings`
+  - `EventFormLinksViewModel.swift` refactorizado para usar `EventFormLinksStrings` para estados y errores
+  - `Localizable.xcstrings` actualizado con las 36 claves del módulo mediante script inyector
+  - `EventFormLinksLocalizationTests.swift` (Suite completa de 71 tests unitarios de verificación dinámica ES/EN)
+
+## Sesión 2026-06-02: Internacionalización del Módulo Común (Common) en iOS
+- **Feature ID:** 12 (i18n-slice-common)
+- **Resultado:** COMPLETO y Validado con `./init.sh` y `xcodebuild` (41 tests de localización en verde, 1229 tests globales en verde).
+- **Entregables:**
+  - `CommonStrings.swift` (Constantes centralizadas dinámicas computadas vía FeatureL10n)
+  - `OnboardingTips.swift` refactorizado para usar `CommonStrings` y simplificar idioma manual
+  - `QuickActionsFAB.swift` refactorizado para usar `CommonStrings`
+  - `PaywallSheet.swift` refactorizado para usar `CommonStrings`
+  - `PaymentEntrySheet.swift` refactorizado para usar `CommonStrings` en inicializadores y labels
+  - `Localizable.xcstrings` actualizado con las 20 claves del módulo mediante script inyector
+  - `CommonLocalizationTests.swift` (Suite completa de 41 tests unitarios de verificación dinámica ES/EN)
+
+## Sesión 2026-06-02: Paridad y Auditoría de Internacionalización en Android
+- **Feature ID:** i18n-android-parity
+- **Resultado:** COMPLETO y Validado (100% de paridad clave por clave en todos los módulos de Android).
+- **Entregables:**
+  - 14 traducciones al inglés inyectadas en `feature/auth/src/main/res/values-en/strings.xml` correspondientes a las llaves base en español.
+  - Script de validación automatizada (`audit_android_strings.py`) para evitar regresiones de llaves en Android.
