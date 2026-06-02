@@ -29,7 +29,7 @@ struct MoreMenuView: View {
                     }
                 }
             } header: {
-                Text("Catálogo")
+                Text(CommonStrings.navHeaderCatalogo)
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.textSecondary)
@@ -48,7 +48,7 @@ struct MoreMenuView: View {
                     }
                 }
             } header: {
-                Text("Configuración")
+                Text(CommonStrings.navHeaderConfiguracion)
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.textSecondary)
@@ -57,7 +57,7 @@ struct MoreMenuView: View {
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Más")
+        .navigationTitle(CommonStrings.tabMore)
         .navigationBarTitleDisplayMode(.large)
     }
 

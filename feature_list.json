@@ -143,6 +143,41 @@
         "iOS Swift unit tests verifying ES/EN localization dynamic switching pass for Common module",
         "Global init.sh validation suite runs and stays 100% green"
       ]
+    },
+    {
+      "id": 13,
+      "name": "i18n-ios-more-navigation",
+      "description": "Dynamic localization parity and refactoring for More Tab and navigation layout headers in iOS",
+      "status": "done",
+      "acceptance_criteria": [
+        "CommonStrings refactored to public and extended with 23 new tab/header properties",
+        "Route, CompactTabLayout, SidebarSplitLayout, and MoreMenuView migrated to dynamic localization resolution",
+        "Localizable.xcstrings populated with all missing navigation keys",
+        "Global init.sh validation suite runs and stays 100% green"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "i18n-ios-calendar-dynamic-months",
+      "description": "Dynamic dynamic-month dynamic translation refactoring for Calendar module in iOS",
+      "status": "done",
+      "acceptance_criteria": [
+        "CalendarViewModel monthFormatter and selectedDateFormatter refactored to reactively bind to FeatureL10n.locale",
+        "monthTitle property refactored to capitalize only first letter dynamically producing correct ES/EN casings",
+        "iOS Swift unit tests updated to validate dynamic months dynamic resolutions",
+        "Global init.sh validation suite runs and stays 100% green"
+      ]
+    },
+    {
+      "id": 15,
+      "name": "backend-pii-log-protection",
+      "description": "Audit and mask raw user emails in auth handler logs and sanitize absolute filepath logs in backend (Issue #431)",
+      "status": "done",
+      "acceptance_criteria": [
+        "Unmasked email addresses in auth handler structured logs wrapped with maskEmail helper",
+        "Sanitized local absolute filepath exposures in payment submission handler using filepath.Base",
+        "Global init.sh validation suite runs and passes successfully"
+      ]
     }
   ]
 }

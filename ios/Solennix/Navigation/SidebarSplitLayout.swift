@@ -44,9 +44,9 @@ struct SidebarSplitLayout: View {
                         sectionListView(for: section)
                     } else {
                         ContentUnavailableView(
-                            "Selecciona una seccion",
+                            CommonStrings.sidebarSelectSectionTitle,
                             systemImage: "sidebar.left",
-                            description: Text("Elige una seccion del menu lateral.")
+                            description: Text(CommonStrings.sidebarSelectSectionDesc)
                         )
                     }
                 }
@@ -98,13 +98,13 @@ struct SidebarSplitLayout: View {
                         sidebarRow(for: section)
                     }
                 } header: {
-                    sidebarSectionHeader("Principal")
+                    sidebarSectionHeader(CommonStrings.navHeaderPrincipal)
                 }
 
                 Section {
                     sidebarRow(for: .settings)
                 } header: {
-                    sidebarSectionHeader("Configuracion")
+                    sidebarSectionHeader(CommonStrings.navHeaderConfiguracion)
                 }
             }
             .listStyle(.sidebar)
@@ -247,7 +247,7 @@ struct SidebarSplitLayout: View {
     }
 
     private var globalSearchPrompt: String {
-        "Buscar clientes, eventos, productos o inventario..."
+        CommonStrings.globalSearchPrompt
     }
 
     // MARK: - Section List Views

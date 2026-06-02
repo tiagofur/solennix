@@ -88,3 +88,27 @@ func TestDecodeJSON(t *testing.T) {
 		}
 	})
 }
+
+func TestMaskEmail(t *testing.T) {
+	tests := []struct {
+		name  string
+		email string
+		want  string
+	}{
+		{"Standard email", "tiago@solennix.com", "t***o@solennix.com"},
+		{"Standard email 2", "test@example.com", "t***t@example.com"},
+		{"Short mailbox (1 char)", "a@b.com", "a@b.com"},
+		{"Two char mailbox", "ab@c.com", "a***b@c.com"},
+		{"Unicode email", "ñandú@pampa.com", "ñ***ú@pampa.com"},
+		{"Invalid email (no @)", "notanemail", "notanemail"},
+		{"Empty string", "", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := maskEmail(tt.email); got != tt.want {
+				t.Errorf("maskEmail(%q) = %q, want %q", tt.email, got, tt.want)
+			}
+		})
+	}
+}

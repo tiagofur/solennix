@@ -1,5 +1,6 @@
 import XCTest
 import Foundation
+import SolennixNetwork
 @testable import SolennixFeatures
 
 final class CalendarLocalizationTests: XCTestCase {
@@ -151,5 +152,57 @@ final class CalendarLocalizationTests: XCTestCase {
         XCTAssertEqual(CalendarStrings.a11yDayBlocked, "Day blocked")
         XCTAssertEqual(CalendarStrings.a11yDayNoEvents, "No events")
         XCTAssertEqual(CalendarStrings.a11yDayWithEvents(3), "3 events")
+    }
+
+    // MARK: - Month and Selected Date Dynamic Formatters Tests
+
+    func testMonthAndSelectedDateFormatter_Spanish() {
+        UserDefaults.standard.set("es-MX", forKey: "preferredLocale")
+
+        let client = APIClient(baseURL: URL(string: "https://example.com")!)
+        let vm = CalendarViewModel(apiClient: client)
+
+        // Define a specific date to test: March 15, 2026
+        var components = DateComponents()
+        components.year = 2026
+        components.month = 3
+        components.day = 15
+        let date = Calendar.current.date(from: components)!
+
+        // Set current month of viewModel
+        vm.currentMonth = date
+        vm.selectedDate = date
+
+        // Under es-MX: Month title should capitalize only the first letter "Marzo de 2026"
+        XCTAssertEqual(vm.monthTitle, "Marzo de 2026")
+
+        // Formatted selected date
+        let formattedSelected = vm.formattedSelectedDate()
+        XCTAssertTrue(formattedSelected.contains("marzo") || formattedSelected.contains("Marzo"))
+    }
+
+    func testMonthAndSelectedDateFormatter_English() {
+        UserDefaults.standard.set("en-US", forKey: "preferredLocale")
+
+        let client = APIClient(baseURL: URL(string: "https://example.com")!)
+        let vm = CalendarViewModel(apiClient: client)
+
+        // Define a specific date to test: March 15, 2026
+        var components = DateComponents()
+        components.year = 2026
+        components.month = 3
+        components.day = 15
+        let date = Calendar.current.date(from: components)!
+
+        // Set current month of viewModel
+        vm.currentMonth = date
+        vm.selectedDate = date
+
+        // Under en-US: Month title should capitalize month name "March 2026"
+        XCTAssertEqual(vm.monthTitle, "March 2026")
+
+        // Formatted selected date
+        let formattedSelected = vm.formattedSelectedDate()
+        XCTAssertTrue(formattedSelected.contains("March") || formattedSelected.contains("march"))
     }
 }
