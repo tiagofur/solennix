@@ -251,16 +251,27 @@ func (h *EventPublicLinkHandler) GetPortalData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	var safeToken string
+	if len(token) > 6 {
+		safeToken = token[:6] + "..."
+	} else {
+		safeToken = token
+	}
+	slog.Info("Public portal request received", "token_preview", safeToken)
+
 	link, err := h.linkRepo.GetByToken(r.Context(), token)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			writeError(w, http.StatusNotFound, "Link not found")
 			return
 		}
-		slog.Error("Failed to look up public link", "error", err)
+		slog.Error("Failed to look up public link", "error", err, "token_preview", safeToken)
 		writeError(w, http.StatusInternalServerError, "Failed to load portal")
 		return
 	}
+
+	slog.Info("Public portal token verified", "event_id", link.EventID, "user_id", link.UserID, "status", link.Status)
+
 
 	// Distinguish revoked/expired from active so the client UI can render
 	// a "this link was disabled" message instead of a generic 404.
