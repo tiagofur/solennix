@@ -139,3 +139,13 @@
 - **Entregables:**
   - 14 traducciones al inglés inyectadas en `feature/auth/src/main/res/values-en/strings.xml` correspondientes a las llaves base en español.
   - Script de validación automatizada (`audit_android_strings.py`) para evitar regresiones de llaves en Android.
+
+## Sesión 2026-06-02: Internacionalización de la Pestaña Más y Navegación en iOS
+- **Feature ID:** i18n-ios-more-navigation
+- **Resultado:** COMPLETO y Validado con `xcodebuild` (43 tests de localización en verde, 100% de la suite compila y pasa).
+- **Entregables:**
+  - `CommonStrings.swift` refactorizado a `public` y ampliado con 23 propiedades de traducción para tabs, headers y menús.
+  - `Route.swift` (Tab y SidebarSection), `CompactTabLayout.swift`, `SidebarSplitLayout.swift` y `MoreMenuView.swift` migrados a resolución dinámica.
+  - `Localizable.xcstrings` actualizado con las nuevas claves correspondientes.
+  - `CommonLocalizationTests.swift` extendido con pruebas dinámicas completas de cambio de idioma.
+
