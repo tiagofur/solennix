@@ -180,6 +180,17 @@
       ]
     },
     {
+      "id": 16,
+      "name": "backend-public-payments-observability",
+      "description": "Add structured slog logging for critical public payment flows (lookup, submission, review, S3 uploads, and Stripe webhooks) with absolute path sanitization and token preview protection (Issue #430)",
+      "status": "done",
+      "acceptance_criteria": [
+        "Structured logs added to event public link, payment submission, upload, and subscription handlers",
+        "Zero PII/internal absolute path leakage verified via filepath.Base and token truncation",
+        "Global init.sh validation suite runs and stays 100% green"
+      ]
+    },
+    {
       "id": 17,
       "name": "backend-openapi-contract-hardening",
       "description": "Harden OpenAPI contract validation coverage for critical public routes (Issue #432)",

@@ -228,6 +228,14 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	var safeToken string
+	if len(token) > 6 {
+		safeToken = token[:6] + "..."
+	} else {
+		safeToken = token
+	}
+	slog.Info("Payment submission receipt initiated", "token_preview", safeToken)
+
 	// Validate the public link before any multipart parsing or receipt temp-file work.
 	link, err := h.fetchPublicLink(ctx, token)
 	if err != nil {
@@ -364,6 +372,12 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 	}
 
 	h.decorateSubmissionReceipt(ps)
+
+	var receiptName string
+	if ps.ReceiptFileURL != nil {
+		receiptName = filepath.Base(*ps.ReceiptFileURL)
+	}
+	slog.Info("Payment submission processed successfully", "event_id", ps.EventID, "submission_id", ps.ID, "receipt_file", receiptName, "amount", ps.Amount)
 
 	writeJSON(w, http.StatusCreated, map[string]interface{}{
 		"data": ps,
@@ -527,7 +541,10 @@ func (h *PaymentSubmissionHandler) ReviewSubmission(w http.ResponseWriter, r *ht
 	ctx := r.Context()
 	userID := middleware.GetUserID(ctx)
 
-	submissionID, err := uuid.Parse(r.PathValue("id"))
+	submissionIDStr := r.PathValue("id")
+	slog.Info("Payment submission review initiated", "submission_id", submissionIDStr, "reviewer_id", userID)
+
+	submissionID, err := uuid.Parse(submissionIDStr)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "Invalid submission ID")
 		return
@@ -629,6 +646,8 @@ func (h *PaymentSubmissionHandler) ReviewSubmission(w http.ResponseWriter, r *ht
 	}
 
 	h.decorateSubmissionReceipt(ps)
+
+	slog.Info("Payment submission review finalized successfully", "submission_id", ps.ID, "status", ps.Status, "reviewer_id", userID, "event_id", ps.EventID)
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{"data": ps})
 }

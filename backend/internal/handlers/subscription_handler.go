@@ -218,6 +218,7 @@ func (h *SubscriptionHandler) CreatePortalSession(w http.ResponseWriter, r *http
 // ─────────────────────────────────────────────
 
 func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Request) {
+	slog.Info("Stripe webhook request received")
 	const MaxBodyBytes = int64(65536)
 	r.Body = http.MaxBytesReader(w, r.Body, MaxBodyBytes)
 	payload, err := io.ReadAll(r.Body)
@@ -239,6 +240,8 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 		writeError(w, http.StatusBadRequest, "Invalid signature")
 		return
 	}
+
+	slog.Info("Stripe webhook signature verified", "event_id", event.ID, "event_type", event.Type)
 
 	switch event.Type {
 	case "checkout.session.completed":

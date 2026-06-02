@@ -310,6 +310,8 @@ func (h *UploadHandler) CompletePresignedUpload(w http.ResponseWriter, r *http.R
 	}
 	token := strings.TrimSpace(req.UploadToken)
 
+	slog.Info("Presigned upload complete request received", "object_key", req.ObjectKey, "user_id", userID)
+
 	presignProvider, ok := h.storage.(storage.PresignCapableProvider)
 	if !ok {
 		writeError(w, http.StatusBadRequest, "Presigned uploads are available only with S3 storage provider")
@@ -332,6 +334,8 @@ func (h *UploadHandler) CompletePresignedUpload(w http.ResponseWriter, r *http.R
 		writeError(w, http.StatusBadRequest, "Failed to finalize upload")
 		return
 	}
+
+	slog.Info("Presigned upload finalized successfully", "object_key", result.ObjectKey, "user_id", userID, "filename", filepath.Base(result.Filename))
 
 	writeJSON(w, http.StatusOK, map[string]string{
 		"url":                  result.URL,
