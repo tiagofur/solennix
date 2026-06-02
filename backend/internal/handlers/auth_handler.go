@@ -297,7 +297,7 @@ func (h *AuthHandler) sendEmailVerification(user *models.User, token string) {
 	locale := i18n.NormalizeLocale(user.PreferredLanguage)
 	go func() {
 		if err := h.emailService.SendEmailVerificationLocalized(user.Email, token, user.Name, locale); err != nil {
-			slog.Warn("Failed to send verification email", "email", user.Email, "error", err)
+			slog.Warn("Failed to send verification email", "email", maskEmail(user.Email), "error", err)
 		}
 	}()
 }
@@ -339,7 +339,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	// normalization) and /forgot-password. Rate limiting + captcha cover abuse here.
 	existing, _ := h.userRepo.GetByEmail(r.Context(), req.Email)
 	if existing != nil {
-		slog.Warn("auth.event", "action", "register_duplicate", "email", req.Email, "ip", clientIP(r))
+		slog.Warn("auth.event", "action", "register_duplicate", "email", maskEmail(req.Email), "ip", clientIP(r))
 		writeAuthI18nError(w, r, http.StatusConflict, "auth.email_registered")
 		return
 	}
@@ -387,7 +387,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 	h.sendEmailVerification(user, verificationToken)
 
-	slog.Info("auth.event", "action", "register", "user_id", user.ID, "email", user.Email, "ip", clientIP(r))
+	slog.Info("auth.event", "action", "register", "user_id", user.ID, "email", maskEmail(user.Email), "ip", clientIP(r))
 
 	writeJSON(w, http.StatusCreated, map[string]interface{}{
 		"user":                        user,
@@ -417,14 +417,14 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		// Perform dummy bcrypt comparison to normalize response timing,
 		// preventing user enumeration via timing side-channels.
 		_ = bcrypt.CompareHashAndPassword(dummyHash, []byte(req.Password))
-		slog.Warn("auth.event", "action", "login_failed", "email", req.Email, "reason", "user_not_found", "ip", clientIP(r))
+		slog.Warn("auth.event", "action", "login_failed", "email", maskEmail(req.Email), "reason", "user_not_found", "ip", clientIP(r))
 		writeAuthI18nError(w, r, http.StatusUnauthorized, "auth.invalid_credentials")
 		return
 	}
 
 	// Check password
 	if !h.authService.CheckPassword(req.Password, user.PasswordHash) {
-		slog.Warn("auth.event", "action", "login_failed", "email", req.Email, "reason", "invalid_password", "ip", clientIP(r))
+		slog.Warn("auth.event", "action", "login_failed", "email", maskEmail(req.Email), "reason", "invalid_password", "ip", clientIP(r))
 		middleware.LogSecurityAuditEvent(user.ID, "auth_failed", "session", map[string]any{
 			"reason": "invalid_password",
 		}, clientIP(r), r.UserAgent())
@@ -445,9 +445,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 			}
 			user.AccountStatus = repository.AccountStatusActive
 			accountStatus = repository.AccountStatusActive
-			slog.Info("auth.event", "action", "self_deletion_cancelled_on_login", "user_id", user.ID, "email", user.Email, "ip", clientIP(r))
+			slog.Info("auth.event", "action", "self_deletion_cancelled_on_login", "user_id", user.ID, "email", maskEmail(user.Email), "ip", clientIP(r))
 		} else {
-			slog.Warn("auth.event", "action", "login_failed", "email", req.Email, "reason", "account_blocked", "ip", clientIP(r))
+			slog.Warn("auth.event", "action", "login_failed", "email", maskEmail(req.Email), "reason", "account_blocked", "ip", clientIP(r))
 			middleware.LogSecurityAuditEvent(user.ID, "auth_failed", "session", map[string]any{
 				"reason": "account_blocked",
 			}, clientIP(r), r.UserAgent())
@@ -456,7 +456,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if accountStatus == repository.AccountStatusDeleted {
-		slog.Warn("auth.event", "action", "login_failed", "email", req.Email, "reason", "account_deleted", "ip", clientIP(r))
+		slog.Warn("auth.event", "action", "login_failed", "email", maskEmail(req.Email), "reason", "account_deleted", "ip", clientIP(r))
 		middleware.LogSecurityAuditEvent(user.ID, "auth_failed", "session", map[string]any{
 			"reason": "account_deleted",
 		}, clientIP(r), r.UserAgent())
@@ -465,7 +465,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if user.EmailVerifiedAt == nil {
-		slog.Warn("auth.event", "action", "login_failed", "email", req.Email, "reason", "email_not_verified", "ip", clientIP(r))
+		slog.Warn("auth.event", "action", "login_failed", "email", maskEmail(req.Email), "reason", "email_not_verified", "ip", clientIP(r))
 		middleware.LogSecurityAuditEvent(user.ID, "auth_failed", "session", map[string]any{
 			"reason": "email_not_verified",
 		}, clientIP(r), r.UserAgent())
@@ -487,7 +487,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Set httpOnly cookie for auth token (SECURE)
 	setAuthCookie(w, r, tokens.AccessToken)
 
-	slog.Info("auth.event", "action", "login_success", "user_id", user.ID, "email", user.Email, "method", "email", "ip", clientIP(r))
+	slog.Info("auth.event", "action", "login_success", "user_id", user.ID, "email", maskEmail(user.Email), "method", "email", "ip", clientIP(r))
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"user":   user,
@@ -513,12 +513,12 @@ func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 		locale := i18n.NormalizeLocale(user.PreferredLanguage)
 		go func() {
 			if err := h.emailService.SendWelcomeLocalized(user.Email, user.Name, locale); err != nil {
-				slog.Warn("Failed to send welcome email", "email", user.Email, "error", err)
+				slog.Warn("Failed to send welcome email", "email", maskEmail(user.Email), "error", err)
 			}
 		}()
 	}
 
-	slog.Info("auth.event", "action", "email_verified", "user_id", user.ID, "email", user.Email, "ip", clientIP(r))
+	slog.Info("auth.event", "action", "email_verified", "user_id", user.ID, "email", maskEmail(user.Email), "ip", clientIP(r))
 	writeJSON(w, http.StatusOK, map[string]any{
 		"message": i18n.Message(r.Context(), "auth.email_verified_success"),
 	})
@@ -561,7 +561,7 @@ func (h *AuthHandler) ResendEmailVerification(w http.ResponseWriter, r *http.Req
 			}
 		}
 		if err != nil {
-			slog.Error("Failed to resend verification email", "error", err, "email", req.Email)
+			slog.Error("Failed to resend verification email", "error", err, "email", maskEmail(req.Email))
 			writeAuthI18nError(w, r, http.StatusInternalServerError, "auth.internal_server_error")
 			return
 		}
@@ -766,7 +766,7 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	slog.Info("auth.event", "action", "password_reset_request", "email", req.Email, "ip", clientIP(r))
+	slog.Info("auth.event", "action", "password_reset_request", "email", maskEmail(req.Email), "ip", clientIP(r))
 
 	// Always respond success (don't reveal if email exists)
 	user, err := h.userRepo.GetByEmail(r.Context(), req.Email)
@@ -787,16 +787,16 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 		for attempt := 1; attempt <= maxRetries; attempt++ {
 			sendErr = h.emailService.SendPasswordResetLocalized(user.Email, token, user.Name, i18n.NormalizeLocale(user.PreferredLanguage))
 			if sendErr == nil {
-				slog.Info("Password reset email sent", "email", user.Email, "attempt", attempt)
+				slog.Info("Password reset email sent", "email", maskEmail(user.Email), "attempt", attempt)
 				break
 			}
-			slog.Warn("Failed to send password reset email", "error", sendErr, "email", user.Email, "attempt", attempt)
+			slog.Warn("Failed to send password reset email", "error", sendErr, "email", maskEmail(user.Email), "attempt", attempt)
 			if attempt < maxRetries {
 				time.Sleep(1 * time.Second)
 			}
 		}
 		if sendErr != nil {
-			slog.Error("All attempts to send password reset email failed", "error", sendErr, "email", user.Email, "attempts", maxRetries)
+			slog.Error("All attempts to send password reset email failed", "error", sendErr, "email", maskEmail(user.Email), "attempts", maxRetries)
 		}
 	}
 
@@ -869,7 +869,7 @@ func (h *AuthHandler) AcceptTeamInvite(w http.ResponseWriter, r *http.Request) {
 	h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
 	setAuthCookie(w, r, tokens.AccessToken)
 
-	slog.Info("auth.event", "action", "team_invite_accepted", "user_id", user.ID, "email", user.Email, "ip", clientIP(r))
+	slog.Info("auth.event", "action", "team_invite_accepted", "user_id", user.ID, "email", maskEmail(user.Email), "ip", clientIP(r))
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"user":   user,

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strings"
 )
 
 // JSON helper to write JSON responses
@@ -40,4 +41,22 @@ func decodeJSON(r *http.Request, dst interface{}) error {
 	r.Body = http.MaxBytesReader(nil, r.Body, maxBodySize)
 	defer r.Body.Close()
 	return json.NewDecoder(r.Body).Decode(dst)
+}
+
+// maskEmail enmasks user email PII to protect privacy.
+// e.g. tiago@solennix.com -> t***o@solennix.com
+func maskEmail(email string) string {
+	parts := strings.SplitN(email, "@", 2)
+	if len(parts) != 2 {
+		return email
+	}
+	mailbox := parts[0]
+	domain := parts[1]
+	runes := []rune(mailbox)
+	if len(runes) <= 1 {
+		return email
+	}
+	first := string(runes[0])
+	last := string(runes[len(runes)-1])
+	return first + "***" + last + "@" + domain
 }

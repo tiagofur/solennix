@@ -91,7 +91,7 @@ type PaymentSubmissionHandler struct {
 func NewPaymentSubmissionHandler(repo *repository.PaymentSubmissionRepo, paymentRepo *repository.PaymentRepo, userRepo FullUserRepository, pool *pgxpool.Pool, uploadDir string) *PaymentSubmissionHandler {
 	privateReceiptsDir := paymentSubmissionPrivateReceiptsDir(uploadDir)
 	if err := os.MkdirAll(privateReceiptsDir, 0o755); err != nil {
-		slog.Warn("Failed to prepare private payment receipts directory", "path", privateReceiptsDir, "error", err)
+		slog.Warn("Failed to prepare private payment receipts directory", "path", filepath.Base(privateReceiptsDir), "error", err)
 	}
 	handler := &PaymentSubmissionHandler{
 		repo:               repo,
@@ -206,7 +206,7 @@ func removeReceiptFile(path string) {
 		return
 	}
 	if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
-		slog.Warn("Failed to remove orphaned payment receipt file", "path", path, "error", err)
+		slog.Warn("Failed to remove orphaned payment receipt file", "path", filepath.Base(path), "error", err)
 	}
 }
 
