@@ -234,4 +234,38 @@ final class CommonLocalizationTests: XCTestCase {
         setLocale("en")
         XCTAssertEqual(CommonStrings.newEventTipTitle, "Create an Event")
     }
+    
+    // MARK: - Navigation, Tabs & Menu Tests
+    
+    func testNavigationTabs_Spanish() {
+        setLocale("es")
+        XCTAssertEqual(CommonStrings.tabHome, "Inicio")
+        XCTAssertEqual(CommonStrings.tabCalendar, "Calendario")
+        XCTAssertEqual(CommonStrings.tabEvents, "Eventos")
+        XCTAssertEqual(CommonStrings.tabClients, "Clientes")
+        XCTAssertEqual(CommonStrings.tabMore, "Más")
+        
+        XCTAssertEqual(CommonStrings.navPersonnel, "Personal")
+        XCTAssertEqual(CommonStrings.navProducts, "Productos")
+        XCTAssertEqual(CommonStrings.navInventory, "Inventario")
+        
+        XCTAssertEqual(CommonStrings.moreMenuProductsSubtitle, "Catálogo y recetas")
+        XCTAssertEqual(CommonStrings.navHeaderConfiguracion, "Configuración")
+    }
+    
+    func testNavigationTabs_English() {
+        setLocale("en")
+        XCTAssertEqual(CommonStrings.tabHome, "Home")
+        XCTAssertEqual(CommonStrings.tabCalendar, "Calendar")
+        XCTAssertEqual(CommonStrings.tabEvents, "Events")
+        XCTAssertEqual(CommonStrings.tabClients, "Clients")
+        XCTAssertEqual(CommonStrings.tabMore, "More")
+        
+        XCTAssertEqual(CommonStrings.navPersonnel, "Staff")
+        XCTAssertEqual(CommonStrings.navProducts, "Products")
+        XCTAssertEqual(CommonStrings.navInventory, "Inventory")
+        
+        XCTAssertEqual(CommonStrings.moreMenuProductsSubtitle, "Catalog and recipes")
+        XCTAssertEqual(CommonStrings.navHeaderConfiguracion, "Settings")
+    }
 }

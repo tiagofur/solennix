@@ -129,7 +129,7 @@ struct CompactTabLayout: View {
     }
 
     private var globalSearchPrompt: String {
-        "Buscar clientes, eventos, productos o inventario..."
+        CommonStrings.globalSearchPrompt
     }
 
     /// Pushes a route onto the currently selected tab's NavigationPath.

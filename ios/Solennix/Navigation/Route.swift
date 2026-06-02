@@ -1,5 +1,6 @@
 import Foundation
 import SolennixCore
+import SolennixFeatures
 
 // Route is now defined in SolennixCore so it can be shared across packages.
 
@@ -27,11 +28,11 @@ public enum Tab: Int, Hashable, CaseIterable {
     /// The localized title for this tab.
     public var title: String {
         switch self {
-        case .home:     return "Inicio"
-        case .calendar: return "Calendario"
-        case .events:   return "Eventos"
-        case .clients:  return "Clientes"
-        case .more:     return "Más"
+        case .home:     return CommonStrings.tabHome
+        case .calendar: return CommonStrings.tabCalendar
+        case .events:   return CommonStrings.tabEvents
+        case .clients:  return CommonStrings.tabClients
+        case .more:     return CommonStrings.tabMore
         }
     }
 }
@@ -70,16 +71,16 @@ public enum SidebarSection: String, Hashable, CaseIterable {
     /// The localized title for this sidebar section.
     public var title: String {
         switch self {
-        case .dashboard:       return "Inicio"
-        case .calendar:        return "Calendario"
-        case .events:          return "Eventos"
-        case .clients:         return "Clientes"
-        case .personnel:       return "Personal"
-        case .products:        return "Productos"
-        case .inventory:       return "Inventario"
-        case .paymentInbox:    return "Pagos"
-        case .eventFormLinks:  return "Formularios"
-        case .settings:        return "Ajustes"
+        case .dashboard:       return CommonStrings.tabHome
+        case .calendar:        return CommonStrings.tabCalendar
+        case .events:          return CommonStrings.tabEvents
+        case .clients:         return CommonStrings.tabClients
+        case .personnel:       return CommonStrings.navPersonnel
+        case .products:        return CommonStrings.navProducts
+        case .inventory:       return CommonStrings.navInventory
+        case .paymentInbox:    return CommonStrings.navPaymentInbox
+        case .eventFormLinks:  return CommonStrings.navEventFormLinks
+        case .settings:        return CommonStrings.navSettings
         }
     }
 }
@@ -129,17 +130,17 @@ extension SidebarSection {
     var moreMenuSubtitle: String {
         switch self {
         case .products:
-            return "Catalogo y recetas"
+            return CommonStrings.moreMenuProductsSubtitle
         case .inventory:
-            return "Stock de ingredientes"
+            return CommonStrings.moreMenuInventorySubtitle
         case .paymentInbox:
-            return "Revision de pagos de clientes"
+            return CommonStrings.moreMenuPaymentInboxSubtitle
         case .eventFormLinks:
-            return "Formularios para clientes nuevos"
+            return CommonStrings.moreMenuEventFormLinksSubtitle
         case .personnel:
-            return "Colaboradores y equipo"
+            return CommonStrings.moreMenuPersonnelSubtitle
         case .settings:
-            return "Perfil, negocio, cuenta"
+            return CommonStrings.moreMenuSettingsSubtitle
         case .dashboard, .calendar, .events, .clients:
             return ""
         }
