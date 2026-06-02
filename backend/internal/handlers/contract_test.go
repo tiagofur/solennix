@@ -469,3 +469,61 @@ func TestOpenAPISpec_AdminContract(t *testing.T) {
 		})
 	}
 }
+
+func TestOpenAPISpec_PublicRoutesContract(t *testing.T) {
+	spec := readOpenAPISpec(t)
+
+	tests := []struct {
+		name     string
+		fragment string
+	}{
+		{name: "public event forms endpoint", fragment: "/api/public/event-forms/{token}:"},
+		{name: "public events portal endpoint", fragment: "/api/public/events/{token}:"},
+		{name: "get public event form data operation", fragment: "operationId: getEventFormData"},
+		{name: "submit public event form operation", fragment: "operationId: submitEventForm"},
+		{name: "get public event portal operation", fragment: "operationId: getEventPortalData"},
+		{name: "public event form data schema", fragment: "EventFormDataResponse:"},
+		{name: "public event form submit response schema", fragment: "EventFormSubmitResponse:"},
+		{name: "public event view schema", fragment: "PublicEventView:"},
+		{name: "link invalid example", fragment: "example: link_invalid"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if !strings.Contains(spec, tt.fragment) {
+				t.Fatalf("openapi spec missing fragment %q", tt.fragment)
+			}
+		})
+	}
+
+	t.Run("public event form submit body schema and response payload flow", func(t *testing.T) {
+		assertContainsInOrder(t, spec,
+			"/api/public/event-forms/{token}:",
+			"operationId: submitEventForm",
+			"requestBody:",
+			"content:",
+			"application/json:",
+			"$ref: \"#/components/schemas/EventFormSubmission\"",
+			"responses:",
+			"\"201\":",
+			"description: Form submitted successfully",
+			"content:",
+			"application/json:",
+			"$ref: \"#/components/schemas/EventFormSubmitResponse\"",
+		)
+	})
+
+	t.Run("public event portal data response shape", func(t *testing.T) {
+		assertContainsInOrder(t, spec,
+			"/api/public/events/{token}:",
+			"operationId: getEventPortalData",
+			"responses:",
+			"\"200\":",
+			"description: Client portal data",
+			"content:",
+			"application/json:",
+			"$ref: \"#/components/schemas/PublicEventView\"",
+		)
+	})
+}
+
