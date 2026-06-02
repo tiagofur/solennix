@@ -156,3 +156,12 @@
   - `CalendarViewModel.swift`: Refactorizado `monthFormatter` y `selectedDateFormatter` a variables estáticas dinámicas computadas que consumen `FeatureL10n.locale` en tiempo de ejecución.
   - `CalendarViewModel.swift`: Refactorizada la propiedad computada `monthTitle` para capitalizar únicamente el primer carácter del string formateado (`prefix(1).uppercased() + dropFirst()`), produciendo `"Marzo de 2026"` en español y `"March 2026"` en inglés de manera natural y estéticamente correcta.
   - `CalendarLocalizationTests.swift`: Corregidas firmas de propiedades y adaptadas las aserciones para validar la traducción dinámica y la capitalización de nombres de meses en español e inglés.
+
+## Sesión 2026-06-02: Robustecimiento de Contrato OpenAPI en Backend
+- **Feature ID:** 15 (backend-pii-log-protection) / 432 (openapi-harden)
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1229 tests en verde, 100% de la suite de contrato en verde).
+- **Entregables:**
+  - `contract_test.go` actualizado con la suite `TestOpenAPISpec_PublicRoutesContract` que valida rutas públicas, schemas, body shapes y operationIds.
+  - `feature_list.json` actualizado documentando la feature como `done`.
+  - Proceso de SDD formalmente ejecutado y archivado en Engram.
+
