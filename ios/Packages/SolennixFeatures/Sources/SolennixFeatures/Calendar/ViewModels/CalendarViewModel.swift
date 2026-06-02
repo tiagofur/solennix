@@ -62,19 +62,19 @@ public final class CalendarViewModel {
     // them follow the device language (es → "marzo 2026", en → "March
     // 2026"). Previously hardcoded `es_MX`, which prevented EN users from
     // ever seeing English month names.
-    private static let monthFormatter: DateFormatter = {
+    private static var monthFormatter: DateFormatter {
         let f = DateFormatter()
-        f.locale = Locale.autoupdatingCurrent
+        f.locale = FeatureL10n.locale
         f.setLocalizedDateFormatFromTemplate("MMMM yyyy")
         return f
-    }()
+    }
 
-    private static let selectedDateFormatter: DateFormatter = {
+    private static var selectedDateFormatter: DateFormatter {
         let f = DateFormatter()
-        f.locale = Locale.autoupdatingCurrent
+        f.locale = FeatureL10n.locale
         f.setLocalizedDateFormatFromTemplate("EEEEdMMMM")
         return f
-    }()
+    }
 
     private static let apiDateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -224,9 +224,11 @@ public final class CalendarViewModel {
         return max(0, dayEvents.count - Swift.min(uniqueStatusCount, 3))
     }
 
-    /// Formatted month title, e.g. "Marzo 2026".
+    /// Formatted month title, e.g. "Marzo de 2026" or "March 2026".
     public var monthTitle: String {
-        Self.monthFormatter.string(from: currentMonth).capitalized
+        let original = Self.monthFormatter.string(from: currentMonth)
+        guard !original.isEmpty else { return "" }
+        return original.prefix(1).uppercased() + original.dropFirst()
     }
 
     /// Resolve client name from the client map. Falls back to the
