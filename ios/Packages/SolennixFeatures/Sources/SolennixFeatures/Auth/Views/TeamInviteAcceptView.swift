@@ -18,10 +18,6 @@ public struct TeamInviteAcceptView: View {
         self.token = token
     }
 
-    private func tr(_ key: String, _ value: String) -> String {
-        FeatureL10n.text(key, value)
-    }
-
     public var body: some View {
         ScrollView {
             VStack(spacing: Spacing.xl) {
@@ -36,7 +32,7 @@ public struct TeamInviteAcceptView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .background(SolennixColors.surfaceGrouped.ignoresSafeArea())
-        .navigationTitle(tr("auth.team_invite.title", "Activar acceso"))
+        .navigationTitle(AuthStrings.teamInviteTitle)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             if viewModel == nil {
@@ -54,7 +50,7 @@ public struct TeamInviteAcceptView: View {
                     .font(.system(size: 48))
                     .foregroundStyle(SolennixColors.primary)
 
-                Text(tr("auth.team_invite.subtitle", "Crea tu contraseña para ingresar al portal del equipo."))
+                Text(AuthStrings.teamInviteSubtitle)
                     .font(.body)
                     .foregroundStyle(SolennixColors.textSecondary)
                     .multilineTextAlignment(.center)
@@ -66,31 +62,31 @@ public struct TeamInviteAcceptView: View {
             }
 
             SolennixTextField(
-                label: tr("auth.team_invite.password_label", "Contraseña"),
+                label: AuthStrings.teamInvitePasswordLabel,
                 text: Binding(
                     get: { viewModel?.password ?? "" },
                     set: { viewModel?.password = $0 }
                 ),
-                placeholder: tr("auth.team_invite.password_placeholder", "Mínimo 8 caracteres"),
+                placeholder: AuthStrings.teamInvitePasswordPlaceholder,
                 leftIcon: "lock",
                 isSecure: true,
                 textContentType: .newPassword
             )
 
             SolennixTextField(
-                label: tr("auth.team_invite.confirm_label", "Confirmar contraseña"),
+                label: AuthStrings.teamInviteConfirmLabel,
                 text: Binding(
                     get: { viewModel?.confirmPassword ?? "" },
                     set: { viewModel?.confirmPassword = $0 }
                 ),
-                placeholder: tr("auth.team_invite.confirm_placeholder", "Repite tu contraseña"),
+                placeholder: AuthStrings.teamInviteConfirmPlaceholder,
                 leftIcon: "lock",
                 isSecure: true,
                 textContentType: .newPassword
             )
 
             PremiumButton(
-                title: tr("auth.team_invite.submit", "Aceptar invitación"),
+                title: AuthStrings.teamInviteSubmit,
                 isLoading: viewModel?.isLoading ?? false,
                 isDisabled: !(viewModel?.isResetValid ?? false)
             ) {
@@ -100,7 +96,7 @@ public struct TeamInviteAcceptView: View {
             Button {
                 dismiss()
             } label: {
-                Text(tr("auth.team_invite.back_to_login", "Volver al inicio de sesión"))
+                Text(AuthStrings.teamInviteBackToLogin)
                     .font(.body)
                     .foregroundStyle(SolennixColors.primary)
             }
@@ -118,12 +114,12 @@ public struct TeamInviteAcceptView: View {
                 .foregroundStyle(SolennixColors.success)
 
             VStack(spacing: Spacing.sm) {
-                Text(tr("auth.team_invite.success_title", "Invitación aceptada"))
+                Text(AuthStrings.teamInviteSuccessTitle)
                     .font(.title2)
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.text)
 
-                Text(tr("auth.team_invite.success_message", "Tu cuenta del equipo fue activada correctamente."))
+                Text(AuthStrings.teamInviteSuccessMessage)
                     .font(.body)
                     .foregroundStyle(SolennixColors.textSecondary)
                     .multilineTextAlignment(.center)
@@ -132,7 +128,7 @@ public struct TeamInviteAcceptView: View {
             Button {
                 dismiss()
             } label: {
-                Text(tr("auth.team_invite.go_to_app", "Continuar"))
+                Text(AuthStrings.teamInviteGoToApp)
                     .font(.headline)
                     .foregroundStyle(SolennixColors.primary)
                     .frame(maxWidth: .infinity)

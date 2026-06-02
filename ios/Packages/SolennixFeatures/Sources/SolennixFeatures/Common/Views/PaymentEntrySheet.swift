@@ -19,25 +19,25 @@ public struct PaymentEntrySheet: View {
         amount: Binding<String>,
         method: Binding<String>,
         notes: Binding<String>,
-        title: String = "Registrar Pago",
-        confirmLabel: String = "Guardar Pago",
+        title: String? = nil,
+        confirmLabel: String? = nil,
         isSaving: Bool = false,
-        methods: [PaymentMethodOption] = [
-            (key: "cash", label: "Efectivo"),
-            (key: "transfer", label: "Transferencia"),
-            (key: "card", label: "Tarjeta"),
-            (key: "check", label: "Cheque")
-        ],
+        methods: [PaymentMethodOption]? = nil,
         onCancel: @escaping () -> Void,
         onConfirm: @escaping () -> Void
     ) {
         self._amount = amount
         self._method = method
         self._notes = notes
-        self.title = title
-        self.confirmLabel = confirmLabel
+        self.title = title ?? CommonStrings.paymentEntryDefaultTitle
+        self.confirmLabel = confirmLabel ?? CommonStrings.paymentEntryDefaultConfirm
         self.isSaving = isSaving
-        self.methods = methods
+        self.methods = methods ?? [
+            (key: "cash", label: CommonStrings.paymentMethodCash),
+            (key: "transfer", label: CommonStrings.paymentMethodTransfer),
+            (key: "card", label: CommonStrings.paymentMethodCard),
+            (key: "check", label: CommonStrings.paymentMethodCheck)
+        ]
         self.onCancel = onCancel
         self.onConfirm = onConfirm
     }
@@ -51,7 +51,7 @@ public struct PaymentEntrySheet: View {
                     .foregroundStyle(SolennixColors.text)
 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Monto")
+                    Text(CommonStrings.paymentEntryAmountLabel)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
 
@@ -66,7 +66,7 @@ public struct PaymentEntrySheet: View {
                 }
 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Método de pago")
+                    Text(CommonStrings.paymentEntryMethodLabel)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
 
@@ -89,11 +89,11 @@ public struct PaymentEntrySheet: View {
                 }
 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Notas (opcional)")
+                    Text(CommonStrings.paymentEntryNotesLabel)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
 
-                    TextField("Notas del pago", text: $notes)
+                    TextField(CommonStrings.paymentEntryNotesPlaceholder, text: $notes)
                         .font(.body)
                         .foregroundStyle(SolennixColors.text)
                         .padding(Spacing.md)
@@ -115,7 +115,7 @@ public struct PaymentEntrySheet: View {
             .background(SolennixColors.background)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { onCancel() }
+                    Button(CommonStrings.paymentEntryCancelButton) { onCancel() }
                         .foregroundStyle(SolennixColors.primary)
                 }
             }

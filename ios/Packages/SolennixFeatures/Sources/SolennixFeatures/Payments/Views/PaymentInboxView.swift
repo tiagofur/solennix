@@ -43,7 +43,7 @@ public struct PaymentInboxView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Pagos recibidos")
+        .navigationTitle(PaymentsStrings.title)
         .navigationBarTitleDisplayMode(.large)
         .task { await viewModel.fetchSubmissions() }
         .refreshable { await viewModel.fetchSubmissions() }
@@ -53,8 +53,8 @@ public struct PaymentInboxView: View {
         .sheet(isPresented: $showRejectSheet) {
             rejectSheet
         }
-        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
-            Button("OK") { viewModel.errorMessage = nil }
+        .alert(PaymentsStrings.errorTitle, isPresented: .constant(viewModel.errorMessage != nil)) {
+            Button(PaymentsStrings.errorOk) { viewModel.errorMessage = nil }
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
@@ -96,12 +96,12 @@ public struct PaymentInboxView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: Spacing.md) {
                     VStack(alignment: .leading, spacing: Spacing.xs) {
-                        Text(submission.clientName ?? "Cliente")
+                        Text(submission.clientName ?? PaymentsStrings.clientPlaceholder)
                             .font(.title3)
                             .fontWeight(.bold)
                             .foregroundStyle(SolennixColors.text)
 
-                        Text(submission.eventLabel ?? "Evento")
+                        Text(submission.eventLabel ?? PaymentsStrings.eventPlaceholder)
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.textSecondary)
 
@@ -126,7 +126,7 @@ public struct PaymentInboxView: View {
 
                     if submission.receiptFileUrl != nil {
                         VStack(alignment: .leading, spacing: Spacing.sm) {
-                            Text("Comprobante")
+                            Text(PaymentsStrings.receiptHeader)
                                 .font(.headline)
                                 .foregroundStyle(SolennixColors.text)
 
@@ -141,7 +141,7 @@ public struct PaymentInboxView: View {
                                     ProgressView()
                                         .frame(maxWidth: .infinity)
                                 } else {
-                                    Label("Abrir comprobante", systemImage: "paperclip")
+                                    Label(PaymentsStrings.openReceipt, systemImage: "paperclip")
                                         .font(.subheadline)
                                         .frame(maxWidth: .infinity)
                                 }
@@ -155,7 +155,7 @@ public struct PaymentInboxView: View {
                        let reason = submission.rejectionReason,
                        !reason.isEmpty {
                         VStack(alignment: .leading, spacing: Spacing.xs) {
-                            Text("Motivo del rechazo")
+                            Text(PaymentsStrings.rejectionReasonHeader)
                                 .font(.subheadline)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(SolennixColors.text)
@@ -190,11 +190,11 @@ public struct PaymentInboxView: View {
                 .padding(Spacing.lg)
             }
             .background(SolennixColors.surfaceGrouped)
-            .navigationTitle("Detalle de pago")
+            .navigationTitle(PaymentsStrings.detailTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cerrar") { selectedSubmission = nil }
+                    Button(PaymentsStrings.actionClose) { selectedSubmission = nil }
                 }
             }
         }
@@ -205,7 +205,7 @@ public struct PaymentInboxView: View {
             Image(systemName: "doc.text.image")
                 .font(.largeTitle)
                 .foregroundStyle(SolennixColors.textTertiary)
-            Text("No se pudo previsualizar el archivo")
+            Text(PaymentsStrings.receiptFallback)
                 .font(.caption)
                 .foregroundStyle(SolennixColors.textSecondary)
         }
@@ -221,7 +221,7 @@ public struct PaymentInboxView: View {
             VStack(alignment: .leading, spacing: 20) {
                 if let target = rejectTarget {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(target.clientName ?? "Cliente")
+                        Text(target.clientName ?? PaymentsStrings.clientPlaceholder)
                             .font(.headline)
                         Text(CommonFormatting.currencyMXN(target.amount))
                             .font(.subheadline)
@@ -230,7 +230,7 @@ public struct PaymentInboxView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Motivo del rechazo")
+                    Text(PaymentsStrings.rejectReasonLabel)
                         .font(.subheadline)
                         .fontWeight(.semibold)
                     TextEditor(text: $rejectionReason)
@@ -245,14 +245,14 @@ public struct PaymentInboxView: View {
                 Spacer()
             }
             .padding()
-            .navigationTitle("Rechazar pago")
+            .navigationTitle(PaymentsStrings.rejectTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { showRejectSheet = false }
+                    Button(PaymentsStrings.actionCancel) { showRejectSheet = false }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Rechazar") {
+                    Button(PaymentsStrings.actionReject) {
                         guard let target = rejectTarget,
                               rejectionReason.count >= 10 else { return }
                         Task {
@@ -273,10 +273,8 @@ public struct PaymentInboxView: View {
     private var planLockedState: some View {
         EmptyStateView(
             icon: "lock.fill",
-            title: String(localized: "payment_inbox.pro_only_title",
-                          defaultValue: "Función exclusiva para usuarios Pro."),
-            message: String(localized: "payment_inbox.pro_only_hint",
-                            defaultValue: "Actualiza tu plan para revisar y aprobar pagos recibidos de clientes.")
+            title: PaymentsStrings.proOnlyTitle,
+            message: PaymentsStrings.proOnlyMessage
         )
     }
 
@@ -285,9 +283,9 @@ public struct PaymentInboxView: View {
     private var emptyState: some View {
         EmptyStateView(
             icon: "checkmark.seal",
-            title: "Sin pagos pendientes",
-            message: "Cuando tus clientes suban comprobantes de transferencia, los verás aquí para aprobar o rechazar.",
-            actionTitle: "Actualizar"
+            title: PaymentsStrings.emptyTitle,
+            message: PaymentsStrings.emptyMessage,
+            actionTitle: PaymentsStrings.actionRefresh
         ) {
             Task { await viewModel.fetchSubmissions() }
         }

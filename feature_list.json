@@ -4,12 +4,144 @@
       "id": 1,
       "name": "harness-setup",
       "description": "Verificar la correcta integración y funcionamiento del arnés de subagentes en Solennix",
-      "status": "pending",
+      "status": "done",
       "acceptance_criteria": [
         "init.sh se ejecuta sin errores",
         "AGENTS.md y CHECKPOINTS.md están presentes y completos",
         "Los agentes líder, implementador y revisor están definidos",
         "Los tests de backend y web corren y están en verde"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "i18n-slice-products-inventory",
+      "description": "Dynamic localization parity and refactoring for Products and Inventory iOS modules",
+      "status": "done",
+      "acceptance_criteria": [
+        "ProductStrings and InventoryStrings refactored to dynamic computed properties",
+        "Localizable.xcstrings populated with all missing products.* and inventory.* keys",
+        "iOS Swift unit tests verifying ES/EN localization dynamic switching pass",
+        "Global init.sh validation suite runs and stays 100% green"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "i18n-slice-clients",
+      "description": "Dynamic localization parity and refactoring for Clients and Quick Quote iOS modules",
+      "status": "done",
+      "acceptance_criteria": [
+        "QuickQuoteStrings constants refactored to dynamic computed properties",
+        "All SwiftUI view lookups migrated to dynamic local tr/trf helper resolution",
+        "iOS Swift unit tests verifying ES/EN localization dynamic switching pass",
+        "Global init.sh validation suite runs and stays 100% green"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "i18n-slice-events",
+      "description": "Dynamic localization parity and refactoring for Events client portal sharing strings",
+      "status": "done",
+      "acceptance_criteria": [
+        "ClientPortalShareStrings constants refactored to dynamic computed properties using FeatureL10n",
+        "Localizable.xcstrings populated with all 25 new events.share.* keys",
+        "iOS Swift unit tests verifying ES/EN localization dynamic switching pass",
+        "Global init.sh validation suite runs and stays 100% green"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "i18n-slice-staff",
+      "description": "Dynamic localization parity and refactoring for Staff & Teams iOS modules",
+      "status": "done",
+      "acceptance_criteria": [
+        "StaffStrings constants refactored to dynamic computed properties using FeatureL10n",
+        "Localizable.xcstrings populated with all 70+ new staff.* keys",
+        "iOS Swift unit tests verifying ES/EN localization dynamic switching pass",
+        "Global init.sh validation suite runs and stays 100% green"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "i18n-slice-calendar",
+      "description": "Dynamic localization parity and refactoring for Calendar iOS module views",
+      "status": "done",
+      "acceptance_criteria": [
+        "All SwiftUI Calendar views refactored to resolve keys dynamically using CalendarStrings via FeatureL10n",
+        "DateFormatter instances localized dynamically using FeatureL10n.locale",
+        "iOS Swift unit tests verifying ES/EN localization dynamic switching pass",
+        "Global init.sh validation suite runs and stays 100% green"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "i18n-slice-payments",
+      "description": "Dynamic localization parity and refactoring for Payments iOS module views",
+      "status": "done",
+      "acceptance_criteria": [
+        "All SwiftUI Payments views refactored to resolve keys dynamically using PaymentsStrings via FeatureL10n",
+        "Rejection message and validation inputs localized dynamically using FeatureL10n",
+        "iOS Swift unit tests verifying ES/EN localization dynamic switching pass",
+        "Global init.sh validation suite runs and stays 100% green"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "i18n-slice-onboarding",
+      "description": "Dynamic localization parity for Onboarding iOS module and cleanup of residual String(localized:) calls",
+      "status": "done",
+      "acceptance_criteria": [
+        "All SwiftUI Onboarding views refactored to resolve keys dynamically using OnboardingStrings via FeatureL10n",
+        "Residual String(localized:) calls in ProductDetailView and CalendarViewModel replaced with FeatureL10n.text",
+        "iOS Swift unit tests verifying ES/EN localization dynamic switching pass",
+        "Global init.sh validation suite runs and stays 100% green"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "i18n-slice-auth-settings",
+      "description": "Dynamic localization parity and refactoring for Auth and Settings iOS modules",
+      "status": "done",
+      "acceptance_criteria": [
+        "All SwiftUI Auth and Settings views refactored to resolve keys dynamically using AuthStrings and SettingsStrings via FeatureL10n",
+        "BiometricGateView and Localizable.xcstrings fully updated with biometric and account deletion keys",
+        "iOS Swift unit tests verifying ES/EN localization dynamic switching pass for both modules",
+        "Global init.sh validation suite runs and stays 100% green"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "i18n-slice-search",
+      "description": "Dynamic localization parity and refactoring for Search iOS module views",
+      "status": "done",
+      "acceptance_criteria": [
+        "All SwiftUI Search views refactored to resolve keys dynamically using SearchStrings via FeatureL10n",
+        "Localizable.xcstrings populated with all 13 new search.* keys",
+        "iOS Swift unit tests verifying ES/EN localization dynamic switching pass for Search",
+        "Global init.sh validation suite runs and stays 100% green"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "i18n-slice-event-form-links",
+      "description": "Dynamic localization parity and refactoring for Event Form Links iOS module views",
+      "status": "done",
+      "acceptance_criteria": [
+        "All SwiftUI Event Form Links views and ViewModels refactored to resolve keys dynamically using EventFormLinksStrings via FeatureL10n",
+        "Localizable.xcstrings populated with all 36 new event_form_links.* keys",
+        "iOS Swift unit tests verifying ES/EN localization dynamic switching pass for Event Form Links",
+        "Global init.sh validation suite runs and stays 100% green"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "i18n-slice-common",
+      "description": "Dynamic localization parity and refactoring for Common views and onboarding tips in iOS module",
+      "status": "done",
+      "acceptance_criteria": [
+        "All SwiftUI Common views and onboarding tips refactored to resolve keys dynamically using CommonStrings via FeatureL10n",
+        "Localizable.xcstrings populated with all 20 new common.* keys",
+        "iOS Swift unit tests verifying ES/EN localization dynamic switching pass for Common module",
+        "Global init.sh validation suite runs and stays 100% green"
       ]
     }
   ]

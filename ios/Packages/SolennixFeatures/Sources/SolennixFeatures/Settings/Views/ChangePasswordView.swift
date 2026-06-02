@@ -15,30 +15,26 @@ public struct ChangePasswordView: View {
         _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient, authManager: authManager))
     }
 
-    private func tr(_ key: String, _ value: String) -> String {
-        FeatureL10n.text(key, value)
-    }
-
     public var body: some View {
         AdaptiveCenteredContent(maxWidth: 500) {
             Form {
                 Section {
-                    SecureField(tr("settings.password.current_label", "Contraseña actual"), text: $viewModel.currentPassword)
+                    SecureField(SettingsStrings.passwordCurrentLabel, text: $viewModel.currentPassword)
                         .textContentType(.password)
                 } header: {
-                    Text(tr("settings.password.current_section", "Contraseña actual"))
+                    Text(SettingsStrings.passwordCurrentSection)
                 }
 
                 Section {
-                    SecureField(tr("settings.password.new_label", "Nueva contraseña"), text: $viewModel.newPassword)
+                    SecureField(SettingsStrings.passwordNewLabel, text: $viewModel.newPassword)
                         .textContentType(.newPassword)
 
-                    SecureField(tr("settings.password.confirm_label", "Confirmar contraseña"), text: $viewModel.confirmPassword)
+                    SecureField(SettingsStrings.passwordConfirmLabel, text: $viewModel.confirmPassword)
                         .textContentType(.newPassword)
                 } header: {
-                    Text(tr("settings.password.new_section", "Nueva contraseña"))
+                    Text(SettingsStrings.passwordNewSection)
                 } footer: {
-                    Text(tr("settings.password.hint", "La contraseña debe tener al menos 8 caracteres."))
+                    Text(SettingsStrings.passwordHint)
                 }
 
                 // Error message
@@ -64,7 +60,7 @@ public struct ChangePasswordView: View {
                         HStack {
                             Image(systemName: "checkmark.circle.fill")
                                 .foregroundStyle(SolennixColors.success)
-                            Text(tr("settings.password.success", "Contraseña actualizada correctamente"))
+                            Text(SettingsStrings.passwordSuccess)
                                 .foregroundStyle(SolennixColors.success)
                         }
                     }
@@ -73,7 +69,7 @@ public struct ChangePasswordView: View {
             .scrollContentBackground(.hidden)
             .background(SolennixColors.surfaceGrouped)
         }
-        .navigationTitle(tr("settings.action.change_password", "Cambiar contraseña"))
+        .navigationTitle(SettingsStrings.actionChangePassword)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -98,7 +94,7 @@ public struct ChangePasswordView: View {
             if viewModel.isSavingPassword {
                 ProgressView()
             } else {
-                Text(tr("common.save", "Guardar"))
+                Text(SettingsStrings.commonSave)
                     .fontWeight(.semibold)
             }
         }

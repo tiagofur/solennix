@@ -23,6 +23,7 @@
     <string name="auth_register_feature_free">Free</string>
     <string name="auth_register_feature_secure">Secure</string>
     <string name="auth_register_feature_scalable">Scalable</string>
+    <string name="auth_register_go_to_login">Go to sign in</string>
     <string name="auth_forgot_title">Recover password</string>
     <string name="auth_forgot_email_label">Email</string>
     <string name="auth_forgot_email_placeholder">you@email.com</string>
@@ -39,6 +40,15 @@
     <string name="auth_reset_new_password_label">New password</string>
     <string name="auth_reset_confirm_password_label">Confirm new password</string>
     <string name="auth_reset_submit">Reset password</string>
+    <string name="auth_team_invite_title">Activate your access</string>
+    <string name="auth_team_invite_subtitle">Create a password of at least 8 characters with an uppercase letter, lowercase letter, number, and symbol.</string>
+    <string name="auth_team_invite_invalid_link">The invitation link is invalid or incomplete.</string>
+    <string name="auth_team_invite_password_label">Password</string>
+    <string name="auth_team_invite_confirm_password_label">Confirm password</string>
+    <string name="auth_team_invite_submit">Accept invitation</string>
+    <string name="auth_team_invite_back_to_login">Back to home</string>
+    <string name="auth_team_invite_success_title">Invitation accepted</string>
+    <string name="auth_team_invite_success_message">Your team account has been activated successfully.</string>
     <string name="auth_biometric_prompt_title">Unlock Solennix</string>
     <string name="auth_biometric_prompt_subtitle">Use your fingerprint or face to continue</string>
     <string name="auth_biometric_prompt_cancel">Sign out</string>
@@ -77,4 +87,8 @@
     <string name="auth_error_decoding">Unexpected error. Try again.</string>
     <string name="auth_error_security">We could not verify the secure connection to the server. Possible compromised network. Try another network.</string>
     <string name="auth_error_unknown">Unexpected error. Try again.</string>
+    <string name="auth_verification_required_notice">We sent you a link to verify your email. Please check your inbox before signing in.</string>
+    <string name="auth_verification_resend">Resend verification link</string>
+    <string name="auth_verification_resent">We sent you a new verification link.</string>
+    <string name="auth_verification_resend_requires_email">Enter a valid email to resend the link.</string>
 </resources>

@@ -15,15 +15,15 @@ public enum ClientSortKey: String, CaseIterable {
     public var label: String {
         switch self {
         case .updatedAt:
-            return String(localized: "clients.sort.updated_at", defaultValue: "Última actualización", bundle: .module)
+            return FeatureL10n.text("clients.sort.updated_at", "Última actualización")
         case .name:
-            return String(localized: "clients.sort.name", defaultValue: "Nombre", bundle: .module)
+            return FeatureL10n.text("clients.sort.name", "Nombre")
         case .totalEvents:
-            return String(localized: "clients.sort.total_events", defaultValue: "Total eventos", bundle: .module)
+            return FeatureL10n.text("clients.sort.total_events", "Total eventos")
         case .totalSpent:
-            return String(localized: "clients.sort.total_spent", defaultValue: "Total gastado", bundle: .module)
+            return FeatureL10n.text("clients.sort.total_spent", "Total gastado")
         case .createdAt:
-            return String(localized: "clients.sort.created_at", defaultValue: "Fecha de creación", bundle: .module)
+            return FeatureL10n.text("clients.sort.created_at", "Fecha de creación")
         }
     }
 }
@@ -297,8 +297,8 @@ public final class ClientListViewModel {
     private func mapError(_ error: Error) -> String {
         if let apiError = error as? APIError {
             return apiError.errorDescription
-                ?? String(localized: "clients.error.unexpected", defaultValue: "Ocurrió un error inesperado.", bundle: .module)
+                ?? FeatureL10n.text("clients.error.unexpected", "Ocurrió un error inesperado.")
         }
-        return String(localized: "clients.error.unexpected_retry", defaultValue: "Ocurrió un error inesperado. Intenta de nuevo.", bundle: .module)
+        return FeatureL10n.text("clients.error.unexpected_retry", "Ocurrió un error inesperado. Intenta de nuevo.")
     }
 }

@@ -15,10 +15,6 @@ public struct AccountDeletionView: View {
         _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient, authManager: authManager))
     }
 
-    private func tr(_ key: String, _ fallback: String) -> String {
-        FeatureL10n.text(key, fallback)
-    }
-
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.lg) {
@@ -42,7 +38,7 @@ public struct AccountDeletionView: View {
             .padding(.vertical, Spacing.lg)
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle(tr("settings.delete_account.title", "Eliminar cuenta"))
+        .navigationTitle(SettingsStrings.deleteAccountTitle)
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(viewModel.isDeletingOwnAccount || viewModel.deleteOwnAccountSuccess)
         .overlay {
@@ -60,18 +56,15 @@ public struct AccountDeletionView: View {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.title2)
                     .foregroundStyle(SolennixColors.error)
-                Text(tr("settings.delete_account.subtitle", "Eliminar tu cuenta permanentemente"))
+                Text(SettingsStrings.deleteAccountSubtitle)
                     .font(.headline)
                     .foregroundStyle(SolennixColors.text)
             }
 
-            Text(tr(
-                "settings.delete_account.intro",
-                "Entendemos que quieras eliminar tu cuenta. Por favor lee atentamente lo que sucederá a continuación."
-            ))
-            .font(.subheadline)
-            .foregroundStyle(SolennixColors.textSecondary)
-            .fixedSize(horizontal: false, vertical: true)
+            Text(SettingsStrings.deleteAccountIntro)
+                .font(.subheadline)
+                .foregroundStyle(SolennixColors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -88,7 +81,7 @@ public struct AccountDeletionView: View {
 
     private var whatHappensSection: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text(tr("settings.delete_account.what_happens_title", "¿Qué sucederá con tu información?"))
+            Text(SettingsStrings.deleteAccountWhatHappensTitle)
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .foregroundStyle(SolennixColors.text)
@@ -96,24 +89,15 @@ public struct AccountDeletionView: View {
 
             deletionItem(
                 icon: "calendar.badge.minus",
-                text: tr(
-                    "settings.delete_account.item_events",
-                    "Tus eventos, clientes y productos serán programados para eliminación permanente."
-                )
+                text: SettingsStrings.deleteAccountItemEvents
             )
             deletionItem(
                 icon: "creditcard.slash",
-                text: tr(
-                    "settings.delete_account.item_sub",
-                    "Tu suscripción se cancelará de manera inmediata y no recibirás nuevos cobros."
-                )
+                text: SettingsStrings.deleteAccountItemSub
             )
             deletionItem(
                 icon: "lock.shield",
-                text: tr(
-                    "settings.delete_account.item_logs",
-                    "Conservaremos ciertos registros de auditoría anonimizados por cumplimiento legal."
-                )
+                text: SettingsStrings.deleteAccountItemLogs
             )
         }
         .padding(Spacing.md)
@@ -144,13 +128,10 @@ public struct AccountDeletionView: View {
                 .font(.title3)
                 .foregroundStyle(SolennixColors.warning)
                 .padding(.top, 2)
-            Text(tr(
-                "settings.delete_account.grace_warning",
-                "Tu cuenta entrará en un período de gracia de 90 días. Durante este tiempo, tu información estará resguardada de forma segura y podrás revocar esta solicitud contactándote con soporte en caso de que cambies de opinión."
-            ))
-            .font(.subheadline)
-            .foregroundStyle(SolennixColors.text)
-            .fixedSize(horizontal: false, vertical: true)
+            Text(SettingsStrings.deleteAccountGraceWarning)
+                .font(.subheadline)
+                .foregroundStyle(SolennixColors.text)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(Spacing.md)
         .background(SolennixColors.warning.opacity(0.08))
@@ -175,14 +156,11 @@ public struct AccountDeletionView: View {
                     .foregroundStyle(viewModel.confirmDeletionConsent ? SolennixColors.error : SolennixColors.textTertiary)
                     .animation(.easeInOut(duration: 0.15), value: viewModel.confirmDeletionConsent)
 
-                Text(tr(
-                    "settings.delete_account.confirm_checkbox",
-                    "Entiendo las consecuencias y confirmo que deseo programar la eliminación de mi cuenta."
-                ))
-                .font(.subheadline)
-                .foregroundStyle(SolennixColors.text)
-                .fixedSize(horizontal: false, vertical: true)
-                .multilineTextAlignment(.leading)
+                Text(SettingsStrings.deleteAccountConfirmCheckbox)
+                    .font(.subheadline)
+                    .foregroundStyle(SolennixColors.text)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.leading)
             }
             .padding(Spacing.md)
             .background(SolennixColors.card)
@@ -212,10 +190,10 @@ public struct AccountDeletionView: View {
                         .tint(.white)
                         .scaleEffect(0.85)
                         .padding(.trailing, 4)
-                    Text(tr("settings.delete_account.deleting", "Programando..."))
+                    Text(SettingsStrings.deleteAccountDeleting)
                 } else {
                     Image(systemName: "trash")
-                    Text(tr("settings.delete_account.button", "Programar eliminación"))
+                    Text(SettingsStrings.deleteAccountButton)
                 }
             }
             .font(.headline)
@@ -246,26 +224,23 @@ public struct AccountDeletionView: View {
                     .foregroundStyle(SolennixColors.success)
 
                 VStack(spacing: Spacing.sm) {
-                    Text(tr("settings.delete_account.success_title", "Eliminación programada"))
+                    Text(SettingsStrings.deleteAccountSuccessTitle)
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundStyle(SolennixColors.text)
 
-                    Text(tr(
-                        "settings.delete_account.success_message",
-                        "Tu cuenta ha sido programada para eliminación de forma exitosa. Se aplicará un período de gracia de 90 días. En instantes cerraremos tu sesión."
-                    ))
-                    .font(.subheadline)
-                    .foregroundStyle(SolennixColors.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, Spacing.lg)
-                    .fixedSize(horizontal: false, vertical: true)
+                    Text(SettingsStrings.deleteAccountSuccessMessage)
+                        .font(.subheadline)
+                        .foregroundStyle(SolennixColors.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, Spacing.lg)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 HStack(spacing: Spacing.xs) {
                     ProgressView()
                         .scaleEffect(0.8)
-                    Text(tr("settings.delete_account.logging_out", "Cerrando sesión..."))
+                    Text(SettingsStrings.deleteAccountLoggingOut)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                 }

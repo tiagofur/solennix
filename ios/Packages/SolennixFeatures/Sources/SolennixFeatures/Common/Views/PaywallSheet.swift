@@ -18,7 +18,7 @@ struct PaywallSheet: View {
                 .padding(.top, 8)
 
             // Title
-            Text("Límite alcanzado")
+            Text(CommonStrings.paywallTitle)
                 .font(.title2.bold())
                 .foregroundStyle(SolennixColors.text)
 
@@ -30,12 +30,12 @@ struct PaywallSheet: View {
                 .padding(.horizontal, 8)
 
             // Upgrade CTA
-            PremiumButton(title: "Ver planes") {
+            PremiumButton(title: CommonStrings.paywallUpgradeButton) {
                 onUpgrade()
             }
 
             // Dismiss
-            Button("Cerrar") {
+            Button(CommonStrings.paywallDismissButton) {
                 onDismiss()
             }
             .foregroundStyle(SolennixColors.textSecondary)

@@ -56,7 +56,7 @@ public struct QuickActionsFAB: View {
                 // New Event action
                 fabAction(
                     icon: "calendar.badge.plus",
-                    label: "Nuevo Evento",
+                    label: CommonStrings.newEventLabel,
                     action: {
                         withAnimation(reduceMotion ? nil : .spring(response: 0.3)) { isExpanded = false }
                         onNewEvent()

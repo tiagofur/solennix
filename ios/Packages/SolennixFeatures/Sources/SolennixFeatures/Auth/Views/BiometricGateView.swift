@@ -44,7 +44,7 @@ public struct BiometricGateView: View {
                     .font(.solennixTitle)
                     .foregroundStyle(SolennixColors.primary)
 
-                Text("CADA DETALLE IMPORTA")
+                Text(AuthStrings.biometricBrandTagline)
                     .font(.caption)
                     .fontWeight(.light)
                     .tracking(5.5)
@@ -59,7 +59,7 @@ public struct BiometricGateView: View {
                     .font(.system(size: 64))
                     .foregroundStyle(SolennixColors.primary)
 
-                Text("Desbloquea Solennix")
+                Text(AuthStrings.biometricUnlockTitle)
                     .font(.title3)
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.text)
@@ -88,7 +88,7 @@ public struct BiometricGateView: View {
                         showLogin = true
                     }
                 } label: {
-                    Text("Usar contrasena")
+                    Text(AuthStrings.biometricButtonPassword)
                         .font(.body)
                         .foregroundStyle(SolennixColors.primary)
                 }
@@ -137,11 +137,11 @@ public struct BiometricGateView: View {
     private var biometricButtonTitle: String {
         switch biometricType {
         case .faceID:
-            return "Usar Face ID"
+            return AuthStrings.biometricButtonFaceID
         case .touchID:
-            return "Usar Touch ID"
+            return AuthStrings.biometricButtonTouchID
         case .none:
-            return "Desbloquear"
+            return AuthStrings.biometricButtonUnlock
         }
     }
 
@@ -162,7 +162,7 @@ public struct BiometricGateView: View {
                 // User cancelled — no error message needed
                 return
             }
-            errorMessage = "No se pudo verificar tu identidad. Intenta de nuevo."
+            errorMessage = AuthStrings.biometricErrorAuthFailed
         }
     }
 }

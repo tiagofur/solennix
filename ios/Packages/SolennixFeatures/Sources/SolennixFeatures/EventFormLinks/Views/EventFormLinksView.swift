@@ -23,7 +23,7 @@ public struct EventFormLinksView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Links de Formulario")
+        .navigationTitle(EventFormLinksStrings.title)
         .navigationBarTitleDisplayMode(.large)
         .refreshable { await viewModel.loadLinks() }
         .toolbar {
@@ -34,7 +34,7 @@ public struct EventFormLinksView: View {
                     Image(systemName: "plus.circle")
                         .font(.body)
                         .foregroundStyle(SolennixColors.primary)
-                        .accessibilityLabel("Generar link")
+                        .accessibilityLabel(EventFormLinksStrings.generateLinkAccessibility)
                 }
             }
         }
@@ -42,18 +42,18 @@ public struct EventFormLinksView: View {
             GenerateLinkSheet(viewModel: viewModel, isPresented: $showGenerateSheet)
         }
         .confirmationDialog(
-            "Eliminar link",
+            EventFormLinksStrings.deleteConfirmTitle,
             isPresented: $showDeleteConfirm,
             presenting: deleteTarget
         ) { link in
-            Button("Eliminar", role: .destructive) {
+            Button(EventFormLinksStrings.deleteConfirmButton, role: .destructive) {
                 HapticsHelper.play(.success)
                 Task { await viewModel.deleteLink(id: link.id) }
-                toastManager.show(message: "Link eliminado", type: .success)
+                toastManager.show(message: EventFormLinksStrings.linkDeletedToast, type: .success)
             }
-            Button("Cancelar", role: .cancel) {}
+            Button(EventFormLinksStrings.cancel, role: .cancel) {}
         } message: { link in
-            Text("Se eliminara el link \"\(link.label ?? "sin etiqueta")\". Esta accion no se puede deshacer.")
+            Text(EventFormLinksStrings.deleteConfirmMessage(label: link.label ?? EventFormLinksStrings.labelPlaceholder))
         }
         .task {
             await viewModel.loadLinks()
@@ -67,9 +67,9 @@ public struct EventFormLinksView: View {
         if let error = viewModel.errorMessage, viewModel.links.isEmpty, !viewModel.isLoading {
             EmptyStateView(
                 icon: "wifi.exclamationmark",
-                title: "Error al cargar",
+                title: EventFormLinksStrings.errorLoading,
                 message: error,
-                actionTitle: "Reintentar"
+                actionTitle: EventFormLinksStrings.retry
             ) {
                 Task { await viewModel.loadLinks() }
             }
@@ -78,9 +78,9 @@ public struct EventFormLinksView: View {
         } else if viewModel.links.isEmpty && !viewModel.isLoading {
             EmptyStateView(
                 icon: "link.badge.plus",
-                title: "Sin formularios",
-                message: "Genera un formulario para que tus clientes compartan la información del evento.",
-                actionTitle: "Generar formulario"
+                title: EventFormLinksStrings.emptyTitle,
+                message: EventFormLinksStrings.emptyMessage,
+                actionTitle: EventFormLinksStrings.emptyAction
             ) {
                 showGenerateSheet = true
             }
@@ -101,19 +101,19 @@ public struct EventFormLinksView: View {
                             deleteTarget = link
                             showDeleteConfirm = true
                         } label: {
-                            Label("Eliminar", systemImage: "trash")
+                            Label(EventFormLinksStrings.swipeDelete, systemImage: "trash")
                         }
                     }
                     .swipeActions(edge: .leading, allowsFullSwipe: true) {
                         Button {
                             copyLink(link)
                         } label: {
-                            Label("Copiar", systemImage: "doc.on.doc")
+                            Label(EventFormLinksStrings.swipeCopy, systemImage: "doc.on.doc")
                         }
                         .tint(SolennixColors.info)
 
                         ShareLink(item: link.url) {
-                            Label("Compartir", systemImage: "square.and.arrow.up")
+                            Label(EventFormLinksStrings.swipeShare, systemImage: "square.and.arrow.up")
                         }
                         .tint(SolennixColors.primary)
                     }
@@ -121,17 +121,17 @@ public struct EventFormLinksView: View {
                         Button {
                             copyLink(link)
                         } label: {
-                            Label("Copiar Link", systemImage: "doc.on.doc")
+                            Label(EventFormLinksStrings.contextMenuCopy, systemImage: "doc.on.doc")
                         }
 
                         ShareLink(item: link.url) {
-                            Label("Compartir", systemImage: "square.and.arrow.up")
+                            Label(EventFormLinksStrings.swipeShare, systemImage: "square.and.arrow.up")
                         }
 
                         if viewModel.effectiveStatus(for: link) == "used",
                            let eventId = link.submittedEventId {
                             NavigationLink(value: Route.eventDetail(id: eventId)) {
-                                Label("Ver Evento", systemImage: "calendar")
+                                Label(EventFormLinksStrings.contextMenuViewEvent, systemImage: "calendar")
                             }
                         }
 
@@ -142,7 +142,7 @@ public struct EventFormLinksView: View {
                             deleteTarget = link
                             showDeleteConfirm = true
                         } label: {
-                            Label("Eliminar", systemImage: "trash")
+                            Label(EventFormLinksStrings.swipeDelete, systemImage: "trash")
                         }
                     }
             }
@@ -160,7 +160,7 @@ public struct EventFormLinksView: View {
 
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 HStack(spacing: Spacing.sm) {
-                    Text(link.label ?? "Sin etiqueta")
+                    Text(link.label ?? EventFormLinksStrings.labelPlaceholder)
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundStyle(SolennixColors.text)
@@ -174,7 +174,7 @@ public struct EventFormLinksView: View {
                     .foregroundStyle(SolennixColors.textSecondary)
 
                 if viewModel.effectiveStatus(for: link) == "active" {
-                    Text("Expira: \(formattedDate(link.expiresAt))")
+                    Text(EventFormLinksStrings.expiresLabel(date: formattedDate(link.expiresAt)))
                         .font(.caption2)
                         .foregroundStyle(SolennixColors.textTertiary)
                 }
@@ -184,7 +184,7 @@ public struct EventFormLinksView: View {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.caption2)
                             .foregroundStyle(SolennixColors.success)
-                        Text("Formulario completado")
+                        Text(EventFormLinksStrings.completedForm)
                             .font(.caption2)
                             .foregroundStyle(SolennixColors.success)
                     }
@@ -278,7 +278,7 @@ public struct EventFormLinksView: View {
     private func copyLink(_ link: EventFormLink) {
         UIPasteboard.general.string = link.url
         HapticsHelper.play(.success)
-        toastManager.show(message: "Link copiado", type: .success)
+        toastManager.show(message: EventFormLinksStrings.linkCopiedToast, type: .success)
     }
 
     private func formattedDate(_ isoString: String) -> String {
@@ -338,37 +338,37 @@ private struct GenerateLinkSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Etiqueta (opcional)") {
-                    TextField("Ej: Boda Rodriguez, Evento Mayo", text: $label)
+                Section(EventFormLinksStrings.sheetLabelSection) {
+                    TextField(EventFormLinksStrings.sheetLabelPlaceholder, text: $label)
                 }
 
-                Section("Vigencia del link") {
-                    Picker("Dias de vigencia", selection: $ttlDays) {
+                Section(EventFormLinksStrings.sheetTtlSection) {
+                    Picker(EventFormLinksStrings.sheetTtlLabel, selection: $ttlDays) {
                         ForEach(ttlOptions, id: \.self) { days in
-                            Text(days == 1 ? "1 dia" : "\(days) dias").tag(days)
+                            Text(EventFormLinksStrings.ttlDaysLabel(days)).tag(days)
                         }
                     }
                     .pickerStyle(.segmented)
                 }
 
                 Section {
-                    Text("El cliente podra llenar sus datos de evento a traves de este link. Una vez usado, no podra volver a utilizarse.")
+                    Text(EventFormLinksStrings.sheetHint)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
             }
             .scrollContentBackground(.hidden)
             .background(SolennixColors.surfaceGrouped)
-            .navigationTitle("Generar Link")
+            .navigationTitle(EventFormLinksStrings.sheetTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") {
+                    Button(EventFormLinksStrings.cancel) {
                         isPresented = false
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Generar") {
+                    Button(EventFormLinksStrings.sheetGenerateButton) {
                         Task {
                             await viewModel.generateLink(
                                 label: label.isEmpty ? nil : label,

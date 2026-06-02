@@ -29,11 +29,11 @@ public struct BlockedDatesSheet: View {
                     .listStyle(.insetGrouped)
                 }
             }
-            .navigationTitle(String(localized: "calendar.blocked_dates_title", bundle: .module))
+            .navigationTitle(CalendarStrings.blockedDatesTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(String(localized: "calendar.action.cancel", bundle: .module)) {
+                    Button(CalendarStrings.actionCancel) {
                         dismiss()
                     }
                 }
@@ -81,7 +81,7 @@ public struct BlockedDatesSheet: View {
                     .foregroundStyle(SolennixColors.statusCancelled)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(String(localized: "calendar.action.delete", bundle: .module))
+            .accessibilityLabel(CalendarStrings.actionDelete)
         }
         .padding(.vertical, Spacing.xs)
     }
@@ -94,11 +94,11 @@ public struct BlockedDatesSheet: View {
                 .font(.system(size: 48))
                 .foregroundStyle(SolennixColors.textTertiary)
 
-            Text(String(localized: "calendar.blocked_dates_empty", bundle: .module))
+            Text(CalendarStrings.blockedDatesEmpty)
                 .font(.headline)
                 .foregroundStyle(SolennixColors.text)
 
-            Text(String(localized: "calendar.blocked_dates_empty_subtitle", bundle: .module))
+            Text(CalendarStrings.blockedDatesEmptySubtitle)
                 .font(.subheadline)
                 .foregroundStyle(SolennixColors.textSecondary)
                 .multilineTextAlignment(.center)
@@ -108,7 +108,7 @@ public struct BlockedDatesSheet: View {
                 showAddForm = true
             } label: {
                 Label(
-                    String(localized: "calendar.block.add_range", bundle: .module),
+                    CalendarStrings.blockAddRange,
                     systemImage: "plus"
                 )
                 .font(.subheadline)
@@ -127,12 +127,12 @@ public struct BlockedDatesSheet: View {
 
     // MARK: - Helpers
 
-    private static let displayFormatter: DateFormatter = {
+    private static var displayFormatter: DateFormatter {
         let f = DateFormatter()
-        f.locale = Locale.autoupdatingCurrent
+        f.locale = FeatureL10n.locale
         f.setLocalizedDateFormatFromTemplate("dMMMMyyyy")
         return f
-    }()
+    }
 
     private static let apiFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -170,9 +170,9 @@ struct AddBlockSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(String(localized: "calendar.block.range_title", bundle: .module)) {
+                Section(CalendarStrings.blockRangeTitle) {
                     DatePicker(
-                        String(localized: "calendar.block.start_date", bundle: .module),
+                        CalendarStrings.blockStartDate,
                         selection: $startDate,
                         displayedComponents: .date
                     )
@@ -181,31 +181,31 @@ struct AddBlockSheet: View {
                     }
 
                     DatePicker(
-                        String(localized: "calendar.block.end_date", bundle: .module),
+                        CalendarStrings.blockEndDate,
                         selection: $endDate,
                         in: startDate...,
                         displayedComponents: .date
                     )
                 }
 
-                Section(String(localized: "calendar.block.reason_label", bundle: .module)) {
+                Section(CalendarStrings.blockReasonLabel) {
                     TextField(
-                        String(localized: "calendar.block.reason_placeholder_range", bundle: .module),
+                        CalendarStrings.blockReasonPlaceholderRange,
                         text: $reason
                     )
                     .textInputAutocapitalization(.sentences)
                 }
             }
-            .navigationTitle(String(localized: "calendar.block.add_range", bundle: .module))
+            .navigationTitle(CalendarStrings.blockAddRange)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(String(localized: "calendar.action.cancel", bundle: .module)) {
+                    Button(CalendarStrings.actionCancel) {
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(String(localized: "calendar.block.save", bundle: .module)) {
+                    Button(CalendarStrings.blockSave) {
                         Task {
                             isSubmitting = true
                             let trimmed = reason.trimmingCharacters(in: .whitespacesAndNewlines)

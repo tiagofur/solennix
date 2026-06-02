@@ -14,9 +14,9 @@ public enum AppearanceTheme: String, CaseIterable, Identifiable {
     
     public var displayName: String {
         switch self {
-        case .system: return FeatureL10n.text("settings.theme.system_default", "Predeterminado del sistema")
-        case .light: return FeatureL10n.text("settings.theme.light", "Claro")
-        case .dark: return FeatureL10n.text("settings.theme.dark", "Oscuro")
+        case .system: return SettingsStrings.themeSystemDefault
+        case .light: return SettingsStrings.themeLight
+        case .dark: return SettingsStrings.themeDark
         }
     }
 }
@@ -45,18 +45,18 @@ public struct SettingsView: View {
         settingsContent
             .tint(SolennixColors.primary)
             .background(SolennixColors.surfaceGrouped)
-            .navigationTitle(tr("settings.title", "Ajustes"))
+            .navigationTitle(SettingsStrings.title)
             .navigationBarTitleDisplayMode(.large)
             .confirmationDialog(
-                tr("settings.action.logout", "Cerrar sesión"),
+                SettingsStrings.actionLogout,
                 isPresented: $showLogoutConfirm
             ) {
-                Button(tr("settings.action.logout", "Cerrar sesión"), role: .destructive) {
+                Button(SettingsStrings.actionLogout, role: .destructive) {
                     Task { await viewModel.logout() }
                 }
-                Button(tr("common.cancel", "Cancelar"), role: .cancel) {}
+                Button(SettingsStrings.commonCancel, role: .cancel) {}
             } message: {
-                Text(tr("settings.logout.confirmation", "¿Estás seguro de que quieres cerrar sesión?"))
+                Text(SettingsStrings.logoutConfirmation)
             }
             .refreshable {
                 await viewModel.loadUser()
@@ -134,27 +134,27 @@ public struct SettingsView: View {
                 userHeaderSection(user)
             }
 
-            Section(header: Text(tr("settings.section.appearance", "Apariencia")).foregroundStyle(SolennixColors.text)) {
+            Section(header: Text(SettingsStrings.sectionAppearance).foregroundStyle(SolennixColors.text)) {
                 appearanceContent
             }
             .listRowBackground(SolennixColors.card)
 
-            Section(header: Text(tr("settings.section.account", "Cuenta")).foregroundStyle(SolennixColors.text)) {
+            Section(header: Text(SettingsStrings.sectionAccount).foregroundStyle(SolennixColors.text)) {
                 accountContent
             }
             .listRowBackground(SolennixColors.card)
 
-            Section(header: Text(tr("settings.section.subscription", "Suscripción")).foregroundStyle(SolennixColors.text)) {
+            Section(header: Text(SettingsStrings.sectionSubscription).foregroundStyle(SolennixColors.text)) {
                 subscriptionContent
             }
             .listRowBackground(SolennixColors.card)
 
-            Section(header: Text(tr("settings.section.business", "Negocio")).foregroundStyle(SolennixColors.text)) {
+            Section(header: Text(SettingsStrings.sectionBusiness).foregroundStyle(SolennixColors.text)) {
                 businessContent
             }
             .listRowBackground(SolennixColors.card)
 
-            Section(header: Text(tr("settings.section.legal", "Legal")).foregroundStyle(SolennixColors.text)) {
+            Section(header: Text(SettingsStrings.sectionLegal).foregroundStyle(SolennixColors.text)) {
                 legalContent
             }
             .listRowBackground(SolennixColors.card)
@@ -166,7 +166,7 @@ public struct SettingsView: View {
                 } label: {
                     HStack {
                         Image(systemName: "rectangle.portrait.and.arrow.right")
-                        Text(tr("settings.action.logout", "Cerrar sesión"))
+                        Text(SettingsStrings.actionLogout)
                     }
                 }
             }
@@ -175,7 +175,7 @@ public struct SettingsView: View {
             // App version
             Section {
                 HStack {
-                    Text(tr("settings.version", "Versión"))
+                    Text(SettingsStrings.version)
                     Spacer()
                     Text(Bundle.main.appVersion)
                         .foregroundStyle(SolennixColors.textSecondary)
@@ -188,9 +188,9 @@ public struct SettingsView: View {
     // MARK: - Regular Width Cards
 
     private var appearanceCard: some View {
-        SettingsCardContainer(title: tr("settings.section.appearance", "Apariencia")) {
+        SettingsCardContainer(title: SettingsStrings.sectionAppearance) {
             HStack(spacing: Spacing.sm) {
-                Label(tr("settings.theme.label", "Tema"), systemImage: "paintbrush")
+                Label(SettingsStrings.themeLabel, systemImage: "paintbrush")
                 Spacer()
                 Picker("", selection: $appearance) {
                     ForEach(AppearanceTheme.allCases) { theme in
@@ -204,11 +204,11 @@ public struct SettingsView: View {
             Divider()
 
             HStack(spacing: Spacing.sm) {
-                Label(tr("settings.profile.language", "Idioma"), systemImage: "globe")
+                Label(SettingsStrings.profileLanguage, systemImage: "globe")
                 Spacer()
                 Picker("", selection: $selectedLanguage) {
-                    Text(tr("settings.language.option.es", "Español")).tag("es")
-                    Text(tr("settings.language.option.en", "English")).tag("en")
+                    Text(SettingsStrings.languageOptionEs).tag("es")
+                    Text(SettingsStrings.languageOptionEn).tag("en")
                 }
                 .pickerStyle(.menu)
                 .labelsHidden()
@@ -217,33 +217,33 @@ public struct SettingsView: View {
     }
 
     private var accountCard: some View {
-        SettingsCardContainer(title: tr("settings.section.account", "Cuenta")) {
+        SettingsCardContainer(title: SettingsStrings.sectionAccount) {
             NavigationLink(value: Route.editProfile) {
-                SettingsNavRow(title: tr("settings.action.edit_profile", "Editar perfil"), systemImage: "person.circle")
+                SettingsNavRow(title: SettingsStrings.actionEditProfile, systemImage: "person.circle")
             }
             .buttonStyle(.plain)
 
             Divider()
 
             NavigationLink(value: Route.changePassword) {
-                SettingsNavRow(title: tr("settings.action.change_password", "Cambiar contraseña"), systemImage: "lock.rotation")
+                SettingsNavRow(title: SettingsStrings.actionChangePassword, systemImage: "lock.rotation")
             }
             .buttonStyle(.plain)
 
             Divider()
 
             NavigationLink(value: Route.notificationPreferences) {
-                SettingsNavRow(title: tr("settings.tab.notifications", "Notificaciones"), systemImage: "bell.badge")
+                SettingsNavRow(title: SettingsStrings.tabNotifications, systemImage: "bell.badge")
             }
             .buttonStyle(.plain)
         }
     }
 
     private var subscriptionCard: some View {
-        SettingsCardContainer(title: tr("settings.section.subscription", "Suscripción")) {
+        SettingsCardContainer(title: SettingsStrings.sectionSubscription) {
             NavigationLink(value: Route.subscription) {
                 HStack {
-                    Label(tr("settings.action.manage_plan", "Gestionar plan"), systemImage: "star")
+                    Label(SettingsStrings.actionManagePlan, systemImage: "star")
                         .foregroundStyle(SolennixColors.text)
 
                     Spacer()
@@ -263,44 +263,44 @@ public struct SettingsView: View {
     }
 
     private var businessCard: some View {
-        SettingsCardContainer(title: tr("settings.section.business", "Negocio")) {
+        SettingsCardContainer(title: SettingsStrings.sectionBusiness) {
             NavigationLink(value: Route.businessSettings) {
-                SettingsNavRow(title: tr("settings.action.business_settings", "Ajustes del negocio"), systemImage: "building.2")
+                SettingsNavRow(title: SettingsStrings.actionBusinessSettings, systemImage: "building.2")
             }
             .buttonStyle(.plain)
 
             Divider()
 
             NavigationLink(value: Route.contractDefaults) {
-                SettingsNavRow(title: tr("settings.action.contract_defaults", "Valores del contrato"), systemImage: "doc.text")
+                SettingsNavRow(title: SettingsStrings.actionContractDefaults, systemImage: "doc.text")
             }
             .buttonStyle(.plain)
 
             Divider()
 
             NavigationLink(value: Route.reviews) {
-                SettingsNavRow(title: tr("settings.action.reviews", "Reseñas de clientes"), systemImage: "star.bubble")
+                SettingsNavRow(title: SettingsStrings.actionReviews, systemImage: "star.bubble")
             }
             .buttonStyle(.plain)
         }
     }
 
     private var legalCard: some View {
-        SettingsCardContainer(title: tr("settings.section.legal", "Legal")) {
+        SettingsCardContainer(title: SettingsStrings.sectionLegal) {
             Button {
                 HapticsHelper.play(.selection)
                 if let url = URL(string: "https://solennix.com/help") {
                     legalSheetURL = IdentifiableURL(url)
                 }
             } label: {
-                SettingsExternalRow(title: tr("settings.action.help", "Centro de ayuda"), systemImage: "questionmark.circle")
+                SettingsExternalRow(title: SettingsStrings.actionHelp, systemImage: "questionmark.circle")
             }
             .buttonStyle(.plain)
 
             Divider()
 
             NavigationLink(value: Route.about) {
-                SettingsNavRow(title: tr("settings.action.about", "Acerca de"), systemImage: "info.circle")
+                SettingsNavRow(title: SettingsStrings.actionAbout, systemImage: "info.circle")
             }
             .buttonStyle(.plain)
 
@@ -312,7 +312,7 @@ public struct SettingsView: View {
                     legalSheetURL = IdentifiableURL(url)
                 }
             } label: {
-                SettingsExternalRow(title: tr("settings.action.privacy_policy", "Política de privacidad"), systemImage: "hand.raised")
+                SettingsExternalRow(title: SettingsStrings.actionPrivacyPolicy, systemImage: "hand.raised")
             }
             .buttonStyle(.plain)
 
@@ -322,7 +322,7 @@ public struct SettingsView: View {
                 HapticsHelper.play(.selection)
                 legalSheetURL = IdentifiableURL(LegalURL.terms)
             } label: {
-                SettingsExternalRow(title: tr("settings.action.terms_conditions", "Términos y condiciones"), systemImage: "doc.plaintext")
+                SettingsExternalRow(title: SettingsStrings.actionTermsConditions, systemImage: "doc.plaintext")
             }
             .buttonStyle(.plain)
 
@@ -330,7 +330,7 @@ public struct SettingsView: View {
 
             NavigationLink(value: Route.deleteAccount) {
                 HStack {
-                    Label(tr("settings.action.delete_account", "Eliminar cuenta"), systemImage: "trash")
+                    Label(SettingsStrings.actionDeleteAccount, systemImage: "trash")
                         .foregroundStyle(SolennixColors.error)
                     Spacer()
                     Image(systemName: "chevron.right")
@@ -344,12 +344,12 @@ public struct SettingsView: View {
     }
 
     private var sessionCard: some View {
-        SettingsCardContainer(title: tr("settings.action.logout", "Cerrar sesión")) {
+        SettingsCardContainer(title: SettingsStrings.actionLogout) {
             Button(role: .destructive) {
                 showLogoutConfirm = true
             } label: {
                 HStack {
-                    Label(tr("settings.action.logout", "Cerrar sesión"), systemImage: "rectangle.portrait.and.arrow.right")
+                    Label(SettingsStrings.actionLogout, systemImage: "rectangle.portrait.and.arrow.right")
                     Spacer()
                 }
                 .contentShape(Rectangle())
@@ -360,7 +360,7 @@ public struct SettingsView: View {
 
     private var versionCard: some View {
         HStack {
-            Text(tr("settings.version", "Versión"))
+            Text(SettingsStrings.version)
                 .foregroundStyle(SolennixColors.text)
             Spacer()
             Text(Bundle.main.appVersion)
@@ -384,32 +384,32 @@ public struct SettingsView: View {
 
     @ViewBuilder
     private var appearanceContent: some View {
-        Picker(selection: $appearance, label: Label(tr("settings.theme.label", "Tema"), systemImage: "paintbrush")) {
+        Picker(selection: $appearance, label: Label(SettingsStrings.themeLabel, systemImage: "paintbrush")) {
             ForEach(AppearanceTheme.allCases) { theme in
                 Text(theme.displayName).tag(theme.rawValue)
             }
         }
 
-        Picker(selection: $selectedLanguage, label: Label(tr("settings.profile.language", "Idioma"), systemImage: "globe")) {
-            Text(tr("settings.language.option.es", "Español")).tag("es")
-            Text(tr("settings.language.option.en", "English")).tag("en")
+        Picker(selection: $selectedLanguage, label: Label(SettingsStrings.profileLanguage, systemImage: "globe")) {
+            Text(SettingsStrings.languageOptionEs).tag("es")
+            Text(SettingsStrings.languageOptionEn).tag("en")
         }
     }
 
     @ViewBuilder
     private var accountContent: some View {
         NavigationLink(value: Route.editProfile) {
-            Label(tr("settings.action.edit_profile", "Editar perfil"), systemImage: "person.circle")
+            Label(SettingsStrings.actionEditProfile, systemImage: "person.circle")
         }
         .listRowSeparator(.hidden)
 
         NavigationLink(value: Route.changePassword) {
-            Label(tr("settings.action.change_password", "Cambiar contraseña"), systemImage: "lock.rotation")
+            Label(SettingsStrings.actionChangePassword, systemImage: "lock.rotation")
         }
         .listRowSeparator(.hidden)
 
         NavigationLink(value: Route.notificationPreferences) {
-            Label(tr("settings.tab.notifications", "Notificaciones"), systemImage: "bell.badge")
+            Label(SettingsStrings.tabNotifications, systemImage: "bell.badge")
         }
         .listRowSeparator(.hidden)
     }
@@ -425,17 +425,17 @@ public struct SettingsView: View {
     @ViewBuilder
     private var businessContent: some View {
         NavigationLink(value: Route.businessSettings) {
-            Label(tr("settings.action.business_settings", "Ajustes del negocio"), systemImage: "building.2")
+            Label(SettingsStrings.actionBusinessSettings, systemImage: "building.2")
         }
         .listRowSeparator(.hidden)
 
         NavigationLink(value: Route.contractDefaults) {
-            Label(tr("settings.action.contract_defaults", "Valores del contrato"), systemImage: "doc.text")
+            Label(SettingsStrings.actionContractDefaults, systemImage: "doc.text")
         }
         .listRowSeparator(.hidden)
 
         NavigationLink(value: Route.reviews) {
-            Label(tr("settings.action.reviews", "Reseñas de clientes"), systemImage: "star.bubble")
+            Label(SettingsStrings.actionReviews, systemImage: "star.bubble")
         }
         .listRowSeparator(.hidden)
     }
@@ -449,7 +449,7 @@ public struct SettingsView: View {
             }
         } label: {
             HStack {
-                Label(tr("settings.action.help", "Centro de ayuda"), systemImage: "questionmark.circle")
+                Label(SettingsStrings.actionHelp, systemImage: "questionmark.circle")
                     .foregroundStyle(SolennixColors.text)
                 Spacer()
                 Image(systemName: "arrow.up.right.square")
@@ -459,10 +459,10 @@ public struct SettingsView: View {
             .contentShape(Rectangle())
         }
         .listRowSeparator(.hidden)
-        .accessibilityHint(tr("settings.legal.help_hint", "Abre el centro de ayuda en Safari"))
+        .accessibilityHint(SettingsStrings.legalHelpHint)
 
         NavigationLink(value: Route.about) {
-            Label(tr("settings.action.about", "Acerca de"), systemImage: "info.circle")
+            Label(SettingsStrings.actionAbout, systemImage: "info.circle")
         }
         .listRowSeparator(.hidden)
 
@@ -473,7 +473,7 @@ public struct SettingsView: View {
             }
         } label: {
             HStack {
-                Label(tr("settings.action.privacy_policy", "Política de privacidad"), systemImage: "hand.raised")
+                Label(SettingsStrings.actionPrivacyPolicy, systemImage: "hand.raised")
                     .foregroundStyle(SolennixColors.text)
                 Spacer()
                 Image(systemName: "arrow.up.right.square")
@@ -483,14 +483,14 @@ public struct SettingsView: View {
             .contentShape(Rectangle())
         }
         .listRowSeparator(.hidden)
-        .accessibilityHint(tr("settings.legal.privacy_hint", "Abre la política de privacidad en Safari"))
+        .accessibilityHint(SettingsStrings.legalPrivacyHint)
 
         Button {
             HapticsHelper.play(.selection)
             legalSheetURL = IdentifiableURL(LegalURL.terms)
         } label: {
             HStack {
-                Label(tr("settings.action.terms_conditions", "Términos y condiciones"), systemImage: "doc.plaintext")
+                Label(SettingsStrings.actionTermsConditions, systemImage: "doc.plaintext")
                     .foregroundStyle(SolennixColors.text)
                 Spacer()
                 Image(systemName: "arrow.up.right.square")
@@ -500,11 +500,11 @@ public struct SettingsView: View {
             .contentShape(Rectangle())
         }
         .listRowSeparator(.hidden)
-        .accessibilityHint(tr("settings.legal.terms_hint", "Abre los términos de servicio en Safari"))
+        .accessibilityHint(SettingsStrings.legalTermsHint)
 
         NavigationLink(value: Route.deleteAccount) {
             HStack {
-                Label(tr("settings.action.delete_account", "Eliminar cuenta"), systemImage: "trash")
+                Label(SettingsStrings.actionDeleteAccount, systemImage: "trash")
                     .foregroundStyle(SolennixColors.error)
                 Spacer()
                 Image(systemName: "chevron.right")
@@ -531,7 +531,7 @@ public struct SettingsView: View {
 
     private var planRow: some View {
         HStack {
-            Label(tr("settings.action.manage_plan", "Gestionar plan"), systemImage: "star")
+            Label(SettingsStrings.actionManagePlan, systemImage: "star")
 
             Spacer()
 
@@ -560,16 +560,12 @@ public struct SettingsView: View {
         preferredLocale = newValue
         let success = await viewModel.updatePreferredLanguage(newValue)
         if success {
-            toastManager.show(message: tr("settings.profile.language_updated", "Idioma actualizado"), type: .success)
+            toastManager.show(message: SettingsStrings.profileLanguageUpdated, type: .success)
         } else {
             preferredLocale = oldValue
             selectedLanguage = oldValue
-            toastManager.show(message: viewModel.errorMessage ?? tr("common.error.retry", "Ocurrió un error inesperado. Intenta de nuevo."), type: .error)
+            toastManager.show(message: viewModel.errorMessage ?? SettingsStrings.commonErrorRetry, type: .error)
         }
-    }
-
-    private func tr(_ key: String, _ value: String) -> String {
-        FeatureL10n.text(key, value)
     }
 }
 
@@ -585,9 +581,9 @@ public struct PlanBadge: View {
 
     private var planLabel: String {
         switch plan {
-        case .basic: return FeatureL10n.text("settings.plan.basic", "Básico")
-        case .pro, .premium: return FeatureL10n.text("settings.plan.pro", "Pro")
-        case .business: return FeatureL10n.text("settings.plan.business", "Business")
+        case .basic: return SettingsStrings.planBasic
+        case .pro, .premium: return SettingsStrings.planPro
+        case .business: return SettingsStrings.planBusiness
         }
     }
 

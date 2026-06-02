@@ -36,7 +36,7 @@ public struct CalendarView: View {
     public var body: some View {
         calendarBody
             .background(SolennixColors.surfaceGrouped)
-            .navigationTitle(String(localized: "calendar.title", bundle: .module))
+            .navigationTitle(CalendarStrings.title)
             .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -45,26 +45,26 @@ public struct CalendarView: View {
                     // button, checkmark on the active item. Feels native vs.
                     // a chips row (which belongs to Android's M3 vocabulary).
                     Menu {
-                        filterMenuButton(label: "calendar.filter.all", status: nil)
+                        filterMenuButton(label: CalendarStrings.filterAll, status: nil)
                         Divider()
-                        filterMenuButton(label: "calendar.filter.quoted", status: .quoted)
-                        filterMenuButton(label: "calendar.filter.confirmed", status: .confirmed)
-                        filterMenuButton(label: "calendar.filter.completed", status: .completed)
-                        filterMenuButton(label: "calendar.filter.cancelled", status: .cancelled)
+                        filterMenuButton(label: CalendarStrings.filterQuoted, status: .quoted)
+                        filterMenuButton(label: CalendarStrings.filterConfirmed, status: .confirmed)
+                        filterMenuButton(label: CalendarStrings.filterCompleted, status: .completed)
+                        filterMenuButton(label: CalendarStrings.filterCancelled, status: .cancelled)
                     } label: {
                         Image(systemName: viewModel.statusFilter == nil
                               ? "line.3.horizontal.decrease.circle"
                               : "line.3.horizontal.decrease.circle.fill")
                             .font(.body)
                             .foregroundStyle(SolennixColors.primary)
-                            .accessibilityLabel(String(localized: "calendar.filter.all", bundle: .module))
+                            .accessibilityLabel(CalendarStrings.filterAll)
                     }
 
                     // New event / quick quote menu
                     Menu {
                         NavigationLink(value: Route.eventForm(date: viewModel.selectedDate)) {
                             Label(
-                                String(localized: "calendar.new_event", bundle: .module),
+                                CalendarStrings.newEvent,
                                 systemImage: "calendar.badge.plus"
                             )
                         }
@@ -74,7 +74,7 @@ public struct CalendarView: View {
                             showQuickQuote = true
                         } label: {
                             Label(
-                                String(localized: "calendar.quick_quote", bundle: .module),
+                                CalendarStrings.quickQuote,
                                 systemImage: "doc.text.magnifyingglass"
                             )
                         }
@@ -82,7 +82,7 @@ public struct CalendarView: View {
                         Image(systemName: "plus")
                             .font(.body)
                             .foregroundStyle(SolennixColors.primary)
-                            .accessibilityLabel(String(localized: "calendar.create_event_action", bundle: .module))
+                            .accessibilityLabel(CalendarStrings.createEventAction)
                     }
 
                     Button {
@@ -91,7 +91,7 @@ public struct CalendarView: View {
                         Image(systemName: "calendar.badge.minus")
                             .font(.body)
                             .foregroundStyle(SolennixColors.primary)
-                            .accessibilityLabel(String(localized: "calendar.manage_blocks", bundle: .module))
+                            .accessibilityLabel(CalendarStrings.manageBlocks)
                     }
 
                     Button {
@@ -99,7 +99,7 @@ public struct CalendarView: View {
                             viewModel.goToToday()
                         }
                     } label: {
-                        Text(String(localized: "calendar.today", bundle: .module))
+                        Text(CalendarStrings.today)
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundStyle(SolennixColors.primary)
@@ -126,7 +126,7 @@ public struct CalendarView: View {
                         }
                     }
                     .disabled(viewModel.isExportingCalendar)
-                    .accessibilityLabel(String(localized: "calendar.export_ical", bundle: .module))
+                    .accessibilityLabel(CalendarStrings.exportICal)
                 }
             }
         }
@@ -155,13 +155,13 @@ public struct CalendarView: View {
             )
         }
         .alert(
-            String(localized: "calendar.unblock.title", bundle: .module),
+            CalendarStrings.unblockTitle,
             isPresented: $showUnblockAlert
         ) {
-            Button(String(localized: "calendar.action.cancel", bundle: .module), role: .cancel) {
+            Button(CalendarStrings.actionCancel, role: .cancel) {
                 longPressedDate = nil
             }
-            Button(String(localized: "calendar.unblock.confirm", bundle: .module), role: .destructive) {
+            Button(CalendarStrings.unblockConfirm, role: .destructive) {
                 guard let date = longPressedDate else { return }
                 Task {
                     await viewModel.toggleDateBlock(startDate: date, endDate: date, reason: nil)
@@ -172,12 +172,9 @@ public struct CalendarView: View {
             if let date = longPressedDate,
                let unavailable = viewModel.unavailableDateFor(date),
                let reason = unavailable.reason, !reason.isEmpty {
-                Text(String(
-                    format: String(localized: "calendar.unblock_message_reason", bundle: .module),
-                    reason
-                ))
+                Text(CalendarStrings.unblockMessageReason(reason))
             } else {
-                Text(String(localized: "calendar.unblock_message", bundle: .module))
+                Text(CalendarStrings.unblockMessage)
             }
         }
         // Generic error alert — the ViewModel emits a typed `CalendarError`,
@@ -187,7 +184,7 @@ public struct CalendarView: View {
             errorAlertTitle,
             isPresented: $showErrorAlert
         ) {
-            Button(String(localized: "calendar.action.retry", bundle: .module)) {
+            Button(CalendarStrings.actionRetry) {
                 let failedError = viewModel.error
                 viewModel.clearError()
                 Task {
@@ -201,7 +198,7 @@ public struct CalendarView: View {
                     }
                 }
             }
-            Button(String(localized: "calendar.action.cancel", bundle: .module), role: .cancel) {
+            Button(CalendarStrings.actionCancel, role: .cancel) {
                 viewModel.clearError()
             }
         }
@@ -230,14 +227,14 @@ public struct CalendarView: View {
     // MARK: - Helpers
 
     @ViewBuilder
-    private func filterMenuButton(label: String.LocalizationValue, status: EventStatus?) -> some View {
+    private func filterMenuButton(label: String, status: EventStatus?) -> some View {
         Button {
             viewModel.setStatusFilter(status)
         } label: {
             if viewModel.statusFilter == status {
-                Label(String(localized: label, bundle: .module), systemImage: "checkmark")
+                Label(label, systemImage: "checkmark")
             } else {
-                Text(String(localized: label, bundle: .module))
+                Text(label)
             }
         }
     }
@@ -245,11 +242,11 @@ public struct CalendarView: View {
     private var errorAlertTitle: String {
         switch viewModel.error {
         case .loadFailed:
-            return String(localized: "calendar.error.load_failed", bundle: .module)
+            return CalendarStrings.errorLoadFailed
         case .blockFailed:
-            return String(localized: "calendar.error.block_failed", bundle: .module)
+            return CalendarStrings.errorBlockFailed
         case .unblockFailed:
-            return String(localized: "calendar.error.unblock_failed", bundle: .module)
+            return CalendarStrings.errorUnblockFailed
         case .none:
             return ""
         }
@@ -360,7 +357,7 @@ public struct CalendarView: View {
                             .font(.system(size: 40))
                             .foregroundStyle(SolennixColors.textTertiary)
 
-                        Text(String(localized: "calendar.select_day_prompt", bundle: .module))
+                        Text(CalendarStrings.selectDayPrompt)
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.textSecondary)
                             .multilineTextAlignment(.center)
@@ -408,7 +405,7 @@ public struct CalendarView: View {
                     .font(.body.weight(.semibold))
                     .foregroundStyle(SolennixColors.text)
                     .frame(width: 36, height: 36)
-                    .accessibilityLabel(String(localized: "calendar.previous_month", bundle: .module))
+                    .accessibilityLabel(CalendarStrings.previousMonth)
             }
 
             Spacer()
@@ -429,7 +426,7 @@ public struct CalendarView: View {
                     .font(.body.weight(.semibold))
                     .foregroundStyle(SolennixColors.text)
                     .frame(width: 36, height: 36)
-                    .accessibilityLabel(String(localized: "calendar.next_month", bundle: .module))
+                    .accessibilityLabel(CalendarStrings.nextMonth)
             }
         }
         .padding(.horizontal, Spacing.md)
@@ -468,7 +465,7 @@ public struct CalendarView: View {
                 .font(.system(size: 40))
                 .foregroundStyle(SolennixColors.textTertiary)
 
-            Text(String(localized: "calendar.no_events_for_day", bundle: .module))
+            Text(CalendarStrings.noEventsForDay)
                 .font(.subheadline)
                 .foregroundStyle(SolennixColors.textSecondary)
         }
@@ -507,7 +504,7 @@ public struct CalendarView: View {
 
                 HStack(spacing: Spacing.sm) {
                     let timeLabel = viewModel.timeRange(for: event)
-                        ?? String(localized: "calendar.all_day", bundle: .module)
+                        ?? CalendarStrings.allDay
                     Label(timeLabel, systemImage: "clock")
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)

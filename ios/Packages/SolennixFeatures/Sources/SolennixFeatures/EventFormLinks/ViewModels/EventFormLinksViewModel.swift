@@ -90,13 +90,13 @@ public final class EventFormLinksViewModel {
         case "active":
             // Check if expired by date
             if isExpired(link) {
-                return "Expirado"
+                return EventFormLinksStrings.statusExpired
             }
-            return "Activo"
+            return EventFormLinksStrings.statusActive
         case "used":
-            return "Usado"
+            return EventFormLinksStrings.statusUsed
         case "expired":
-            return "Expirado"
+            return EventFormLinksStrings.statusExpired
         default:
             return link.status.capitalized
         }
@@ -129,8 +129,8 @@ public final class EventFormLinksViewModel {
 
     private func mapError(_ error: Error) -> String {
         if let apiError = error as? APIError {
-            return apiError.errorDescription ?? "Ocurrió un error inesperado."
+            return apiError.errorDescription ?? EventFormLinksStrings.errorUnexpected
         }
-        return "Ocurrió un error inesperado. Intenta de nuevo."
+        return EventFormLinksStrings.errorUnexpectedRetry
     }
 }
