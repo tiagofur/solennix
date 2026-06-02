@@ -165,3 +165,15 @@
   - `feature_list.json` actualizado documentando la feature como `done`.
   - Proceso de SDD formalmente ejecutado y archivado en Engram.
 
+## Sesión 2026-06-02: Observabilidad de Flujos de Pagos Públicos en Backend
+- **Feature ID:** 16 (backend-public-payments-observability) / 430 (public-payments-observability)
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1229 tests globales en verde, 100% de la suite de handlers en verde).
+- **Entregables:**
+  - `event_public_link_handler.go`: Logs estructurados de solicitud y verificación de portal público con truncado seguro de tokens públicos.
+  - `payment_submission_handler.go`: Logs de submissions de pagos (sanitizando filepaths con `filepath.Base`) y de inicio/finalización de reviews.
+  - `upload_handler.go`: Logs de finalización de uploads presignados protegiendo rutas S3 relativas.
+  - `subscription_handler.go`: Logs de recepción y validación de firma en webhooks de Stripe.
+  - `feature_list.json` actualizado registrando la feature como `done`.
+  - SDD formalmente ejecutado, validado y archivado en Engram.
+
+
