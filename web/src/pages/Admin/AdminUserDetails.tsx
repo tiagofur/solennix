@@ -42,6 +42,36 @@ export const AdminUserDetails: React.FC = () => {
     ? user.events_count + user.clients_count + user.products_count
     : 0;
 
+  const formatLogAction = (action: string): string => {
+    const key = `admin:users.details.actions.${action}`;
+    const translated = t(key);
+    return translated !== key ? translated : action;
+  };
+
+  const formatLogDetails = (details: string | null, action: string, resourceType: string): string => {
+    if (!details) {
+      return `${formatLogAction(action)} ${resourceType}`;
+    }
+
+    if (details.trim().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(details);
+        if (parsed.reason) {
+          const reasonKey = `admin:users.details.reasons.${parsed.reason}`;
+          const translatedReason = t(reasonKey);
+          const reasonStr = translatedReason !== reasonKey ? translatedReason : parsed.reason.replace(/_/g, ' ');
+          
+          return `${formatLogAction(action)}: ${reasonStr}`;
+        }
+        return JSON.stringify(parsed);
+      } catch {
+        // Fallback to raw string
+      }
+    }
+
+    return details;
+  };
+
   const getRoleBadge = (role: string) => {
     const styles: Record<string, string> = {
       user: 'bg-info/10 text-info border-info/20',
@@ -248,14 +278,14 @@ export const AdminUserDetails: React.FC = () => {
                                 </div>
                                 <div className="flex-1 min-w-0 pt-1.5">
                                   <div className="text-sm font-semibold text-text">
-                                    {log.details || `${log.action} ${log.resource_type}`}
+                                    {formatLogDetails(log.details, log.action, log.resource_type)}
                                   </div>
                                   <div className="text-xs text-text-secondary mt-1 flex items-center gap-1.5 flex-wrap">
                                     <span className="font-medium bg-surface-alt px-2 py-0.5 rounded-md border border-border/60">
                                       {t('admin:users.details.resource_type', { type: log.resource_type })}
                                     </span>
                                     <span>·</span>
-                                    <span>{t('admin:users.details.action_type', { action: log.action })}</span>
+                                    <span>{t('admin:users.details.action_type', { action: formatLogAction(log.action) })}</span>
                                     <span>·</span>
                                     <span>
                                       {format(parseISO(log.created_at), 'd MMM yyyy, HH:mm', { locale: dateLocale })}
