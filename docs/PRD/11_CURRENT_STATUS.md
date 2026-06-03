@@ -742,6 +742,7 @@ status: active
 - ✅ Detalle de usuario (`GET /api/admin/users/{id}`)
 - ✅ Upgrade de usuario (`PUT /api/admin/users/{id}/upgrade`)
 - ✅ Lista de suscripciones (`GET /api/admin/subscriptions`)
+- ✅ Bloqueo de usuario (`PUT /api/admin/users/{id}/block`)
 - ✅ Contrato OpenAPI y contract tests cubren ahora las rutas admin consumidas por Web
 
 ### Device Tokens
@@ -1030,6 +1031,7 @@ Primera pantalla de paridad post-Dashboard:
 
 - ✅ Admin Dashboard (estadisticas, metricas)
 - ✅ Admin Users (gestion de usuarios)
+- ✅ Acción de bloquear usuario con motivo
 
 ### Navegacion Web
 

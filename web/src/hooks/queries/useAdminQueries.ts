@@ -104,3 +104,23 @@ export function useVerifyUserEmail() {
   });
 }
 
+export function useBlockUser() {
+  const queryClient = useQueryClient();
+  const { addToast } = useToast();
+
+  return useMutation({
+    mutationKey: ['admin', 'blockUser'],
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      adminService.blockUser(id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.users, exact: false });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.stats });
+      addToast('Usuario bloqueado exitosamente', 'success');
+    },
+    onError: (error) => {
+      logError('Error blocking user', error);
+      addToast(getErrorMessage(error, 'No se pudo bloquear al usuario'), 'error');
+    },
+  });
+}
+

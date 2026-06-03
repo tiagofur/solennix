@@ -15,6 +15,7 @@ vi.mock('@/services/adminService', () => ({
     getUsersWithZeroResources: vi.fn(),
     deleteUser: vi.fn(),
     verifyUserEmail: vi.fn(),
+    blockUser: vi.fn(),
   },
 }));
 
@@ -115,6 +116,10 @@ describe('AdminUsers', () => {
     vi.mocked(adminService.verifyUserEmail).mockImplementation(async (id) => {
       const u = getMockData().find(t => t.id === id)!;
       return { ...u, email_verified_at: new Date().toISOString() };
+    });
+    vi.mocked(adminService.blockUser).mockImplementation(async (id) => {
+      const u = getMockData().find(t => t.id === id)!;
+      return { ...u, account_status: 'blocked', deletion_eligible_at: '2026-12-01T00:00:00Z' };
     });
     window.URL.createObjectURL = vi.fn(() => 'blob:url');
   });
@@ -326,6 +331,50 @@ describe('AdminUsers', () => {
     await waitFor(() => {
       expect(adminService.verifyUserEmail).toHaveBeenCalledWith('u2');
       expect(mockAddToast).toHaveBeenCalledWith('Email verificado exitosamente', 'success');
+    });
+  });
+
+  it('handles block user flow (cancellation, validation error, confirm success)', async () => {
+    render(<MemoryRouter><AdminUsers /></MemoryRouter>);
+    await waitFor(() => expect(screen.queryByText('Cargando usuarios...')).not.toBeInTheDocument());
+
+    const userRow = screen.getByText('Premium User').closest('tr')!;
+
+    // 1. Open menu and click Bloquear
+    fireEvent.click(within(userRow).getByRole('button', { name: /Acciones/i }));
+    const blockBtn = screen.getByRole('menuitem', { name: /Bloquear/i });
+    fireEvent.click(blockBtn);
+
+    // Verify modal is open
+    expect(screen.getByText('Bloquear Usuario')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Motivo del bloqueo/i)).toBeInTheDocument();
+
+    // 2. Submit empty reason (should show validation error)
+    const confirmBlockBtn = screen.getByRole('button', { name: /^Bloquear$/ });
+    fireEvent.click(confirmBlockBtn);
+    expect(screen.getByText('El motivo es obligatorio')).toBeInTheDocument();
+    expect(adminService.blockUser).not.toHaveBeenCalled();
+
+    // 3. Cancel block modal
+    const cancelBlockBtn = screen.getByRole('button', { name: /Cancelar/i });
+    fireEvent.click(cancelBlockBtn);
+    expect(screen.queryByText('Bloquear Usuario')).not.toBeInTheDocument();
+
+    // 4. Open modal again, write reason and confirm success
+    fireEvent.click(within(userRow).getByRole('button', { name: /Acciones/i }));
+    const blockBtn2 = screen.getByRole('menuitem', { name: /Bloquear/i });
+    fireEvent.click(blockBtn2);
+
+    const textarea = screen.getByLabelText(/Motivo del bloqueo/i);
+    fireEvent.change(textarea, { target: { value: 'Comportamiento inadecuado' } });
+    
+    const confirmBlockBtn2 = screen.getByRole('button', { name: /^Bloquear$/ });
+    fireEvent.click(confirmBlockBtn2);
+
+    await waitFor(() => {
+      expect(adminService.blockUser).toHaveBeenCalledWith('u1', 'Comportamiento inadecuado');
+      expect(mockAddToast).toHaveBeenCalledWith('Usuario bloqueado exitosamente', 'success');
+      expect(screen.queryByText('Bloquear Usuario')).not.toBeInTheDocument();
     });
   });
 });
