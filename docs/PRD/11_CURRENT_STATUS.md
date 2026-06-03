@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-05-30
+updated: 2026-06-03
 status: active
 ---
 
@@ -22,8 +22,13 @@ status: active
 > - **Stripe se usa EXCLUSIVAMENTE** para la suscripción Pro del organizador a Solennix (cobro B2B).
 > - El flujo de `payment_submissions` (Sprint 7.E) es un formulario de reporte de transferencias bancarias externas — Solennix NO procesa ni mueve dinero.
 
-**Fecha:** Mayo 2026
-**Version:** 1.7
+**Fecha:** Junio 2026
+**Version:** 1.8
+
+> [!success] 2026-06-03 — Release train móvil 1.3.0: Eliminación de cuenta, localización y QA en verde
+> Se preparó el release train móvil 1.3.0 para iOS y Android (Build 8 para ambos).
+> - **Paridad y QA en Verde:** Se corrigió un bug de decodificación en `UnavailableDate.swift` (CodingKeys en snake_case que chocaban con la estrategia global) y se arreglaron placeholders de string interpolation (`\(name)` corregido a `%@`) en `Localizable.xcstrings`, logrando que el 100% de la suite de pruebas unitarias de iOS (406 tests) y Android pasen exitosamente.
+> - **Auto-servicio de eliminación:** Paridad nativa completa en iOS y Android para pantallas de Ajustes, permitiendo al usuario solicitar su eliminación de cuenta con el correspondiente período de gracia de 90 días.
 
 > [!success] 2026-05-31 — Auto-servicio de eliminación y moderación (Web y Backend)
 > Se implementó la auto-eliminación de cuentas de usuario con período de gracia de 90 días, tracking de inactividad con throttle, paneles de auditoría administrativa y portal de auto-servicio en el frontend Web.
