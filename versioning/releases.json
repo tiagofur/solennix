@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-05-14",
+  "updatedAt": "2026-06-03",
   "currentVersions": {
     "web": {
       "version": "1.0.1",
       "source": "web/package.json"
     },
     "ios": {
-      "version": "1.2.0",
-      "build": "7",
+      "version": "1.3.0",
+      "build": "8",
       "source": "ios/project.yml"
     },
     "android": {
-      "version": "1.2.0",
-      "build": "6",
+      "version": "1.3.0",
+      "build": "7",
       "source": "android/app/build.gradle.kts"
     },
     "backend": {
@@ -22,6 +22,34 @@
     }
   },
   "releases": [
+    {
+      "id": "2026-06-03-self-service-account-deletion-and-localization",
+      "date": "2026-06-03",
+      "title": "Release train móvil 1.3.0: Eliminación de cuenta y localización",
+      "summary": "Se introduce la eliminación de cuenta autogestionada para cumplir con normativas de tiendas y la paridad total de localización dinámica en mobile y web.",
+      "platforms": {
+        "web": [
+          "Se implementa la opción de eliminación de cuenta autogestionada en Ajustes.",
+          "Admin: Pantalla de detalle de usuario con métricas de adopción y timeline de actividad sin PII.",
+          "Admin: Menú contextual de acciones y función de bloquear usuario con motivo obligatorio."
+        ],
+        "ios": [
+          "Se implementa la eliminación de cuenta autogestionada en Ajustes.",
+          "Paridad total y traducción dinámica para toda la interfaz (Auth, Configuración, Calendario)."
+        ],
+        "android": [
+          "Se implementa la eliminación de cuenta autogestionada en Ajustes.",
+          "Paridad total y traducción dinámica para toda la interfaz (Auth, Configuración, Calendario).",
+          "Actualizaciones en las dependencias Gradle y Gradle Wrapper para mayor estabilidad."
+        ],
+        "backend": [
+          "Se añade el endpoint POST /api/user/delete para eliminación de cuenta.",
+          "Se añade columna de verificación de email y flujo de verificación administrativa.",
+          "Seguridad: Enmascaramiento de emails en logs de auth y sanitización de rutas absolutas de archivos.",
+          "Observabilidad: Logs estructurados para flujos de pago públicos y validación de OpenAPI."
+        ]
+      }
+    },
     {
       "id": "2026-05-14-android-prelaunch-hardening",
       "date": "2026-05-14",
