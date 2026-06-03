@@ -7089,13 +7089,13 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "¿Estás seguro de que querés eliminar \"\\(name)\"? Esta acción no se puede deshacer."
+            "value": "¿Estás seguro de que querés eliminar \"%@\"? Esta acción no se puede deshacer."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Are you sure you want to delete \"\\(name)\"? This action cannot be undone."
+            "value": "Are you sure you want to delete \"%@\"? This action cannot be undone."
           }
         }
       }
@@ -9420,13 +9420,13 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Se eliminará \"\\(name)\". Podrás deshacer durante unos segundos."
+            "value": "Se eliminará \"%@\". Podrás deshacer durante unos segundos."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Are you sure you want to delete \"\\(name)\"? You can undo for a few seconds."
+            "value": "Are you sure you want to delete \"%@\"? You can undo for a few seconds."
           }
         }
       }
@@ -15531,13 +15531,13 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Se eliminará \"\\(name)\". Podrás deshacer durante unos segundos."
+            "value": "Se eliminará \"%@\". Podrás deshacer durante unos segundos."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Are you sure you want to delete \"\\(name)\"? You can undo for a few seconds."
+            "value": "Are you sure you want to delete \"%@\"? You can undo for a few seconds."
           }
         }
       }

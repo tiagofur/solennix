@@ -2,16 +2,40 @@
 
 Historial oficial de cambios de Solennix para Web, iOS, Android y Backend.
 
-Última actualización: 2026-05-14
+Última actualización: 2026-06-03
 
 ## Versiones actuales
 
 | Plataforma | Versión | Build | Source |
 | --- | --- | --- | --- |
 | Web | 1.0.1 | - | web/package.json |
-| iOS | 1.2.0 | 7 | ios/project.yml |
-| Android | 1.2.0 | 6 | android/app/build.gradle.kts |
+| iOS | 1.3.0 | 8 | ios/project.yml |
+| Android | 1.3.0 | 8 | android/app/build.gradle.kts |
 | Backend | 1.0.0 | - | backend/VERSION |
+
+## 2026-06-03 - Release train móvil 1.3.0: Eliminación de cuenta y localización
+
+Se introduce la eliminación de cuenta autogestionada para cumplir con normativas de tiendas y la paridad total de localización dinámica en mobile y web.
+
+### WEB
+- Se implementa la opción de eliminación de cuenta autogestionada en Ajustes.
+- Admin: Pantalla de detalle de usuario con métricas de adopción y timeline de actividad sin PII.
+- Admin: Menú contextual de acciones y función de bloquear usuario con motivo obligatorio.
+
+### IOS
+- Se implementa la eliminación de cuenta autogestionada en Ajustes.
+- Paridad total y traducción dinámica para toda la interfaz (Auth, Configuración, Calendario).
+
+### ANDROID
+- Se implementa la eliminación de cuenta autogestionada en Ajustes.
+- Paridad total y traducción dinámica para toda la interfaz (Auth, Configuración, Calendario).
+- Actualizaciones en las dependencias Gradle y Gradle Wrapper para mayor estabilidad.
+
+### BACKEND
+- Se añade el endpoint POST /api/user/delete para eliminación de cuenta.
+- Se añade columna de verificación de email y flujo de verificación administrativa.
+- Seguridad: Enmascaramiento de emails en logs de auth y sanitización de rutas absolutas de archivos.
+- Observabilidad: Logs estructurados para flujos de pago públicos y validación de OpenAPI.
 
 ## 2026-05-14 - Android 1.2.0 pre-publicación: hardening y paridad final
 

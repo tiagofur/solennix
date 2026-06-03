@@ -79,13 +79,14 @@ val sslPinsList: List<String> = sslPinsProperty
 android {
     namespace = "com.creapolis.solennix"
     compileSdk = 37
+    ndkVersion = "26.1.10909125"
 
     defaultConfig {
         applicationId = "com.solennix.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 6
-        versionName = "1.2.0"
+        versionCode = 8
+        versionName = "1.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

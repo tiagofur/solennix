@@ -138,9 +138,6 @@ dependencies {
     // Coil
     implementation(libs.coil.compose)
 
-    // Play Billing (kept — RevenueCat wraps it internally)
-    implementation(libs.billing)
-
     // RevenueCat
     implementation(libs.revenuecat)
 
