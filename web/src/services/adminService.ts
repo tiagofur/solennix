@@ -92,4 +92,8 @@ export const adminService = {
   async verifyUserEmail(id: string) {
     return api.post<AdminUser>(`/admin/users/${id}/verify-email`, {});
   },
+
+  async blockUser(id: string, reason: string) {
+    return api.put<AdminUser>(`/admin/users/${id}/block`, { reason });
+  },
 };

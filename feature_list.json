@@ -200,6 +200,19 @@
         "Assert matching body schemas and operationIds for public routes",
         "Global init.sh validation suite runs and passes successfully"
       ]
+    },
+    {
+      "id": 18,
+      "name": "admin-block-user",
+      "description": "feat(admin): acción de bloquear usuario con motivo desde la interfaz de administración (Issue #467)",
+      "status": "done",
+      "acceptance_criteria": [
+        "La acción 'Bloquear' está visible en RowActionMenu para usuarios activos de rol 'user'",
+        "Al hacer clic en 'Bloquear', se abre un modal interactivo que requiere ingresar un motivo obligatorio",
+        "Confirmar con un motivo válido llama a blockUser(id, reason), cierra el modal, muestra un toast de éxito y actualiza el estado en la tabla",
+        "Los tests unitarios en AdminUsers.test.tsx cubren el flujo de bloqueo y pasan exitosamente en Vitest",
+        "El linter y la suite de validación ./init.sh terminan al 100% en verde"
+      ]
     }
   ]
 }

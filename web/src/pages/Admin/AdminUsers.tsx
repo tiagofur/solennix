@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAdminUsers, useUpgradeUser, useAdminInactiveUsers, useAdminZeroResourceUsers, useDeleteAdminUser, useVerifyUserEmail } from '@/hooks/queries/useAdminQueries';
+import { useAdminUsers, useUpgradeUser, useAdminInactiveUsers, useAdminZeroResourceUsers, useDeleteAdminUser, useVerifyUserEmail, useBlockUser } from '@/hooks/queries/useAdminQueries';
 import type { AdminAccountType } from '@/services/adminService';
 import { queryKeys } from '@/hooks/queries/queryKeys';
 import { useToast } from '@/hooks/useToast';
@@ -107,6 +107,10 @@ export const AdminUsers: React.FC = () => {
   const [gift, setGift] = useState<GiftState | null>(null);
   const [downgradeTarget, setDowngradeTarget] = useState<AdminUser | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
+  const [blockTarget, setBlockTarget] = useState<AdminUser | null>(null);
+  const [blockReason, setBlockReason] = useState('');
+  const [blockReasonError, setBlockReasonError] = useState('');
+  const blockUser = useBlockUser();
   const { addToast } = useToast();
 
   const accountTypeOptions: Array<{ value: AccountTypeFilter; label: string }> = [
@@ -153,7 +157,9 @@ export const AdminUsers: React.FC = () => {
       ? (deleteUser.variables ?? null)
       : verifyEmail.isPending
         ? (verifyEmail.variables ?? null)
-        : null;
+        : blockUser.isPending
+          ? (blockUser.variables?.id ?? null)
+          : null;
 
   const handleVerifyEmail = (user: AdminUser) => {
     verifyEmail.mutate(user.id);
@@ -166,6 +172,31 @@ export const AdminUsers: React.FC = () => {
     deleteUser.mutate(user.id, {
       onSuccess: () => addToast(`Usuario ${user.name} eliminado permanentemente`, 'success'),
     });
+  };
+
+  const handleBlockConfirm = () => {
+    if (!blockTarget) return;
+    if (!blockReason.trim()) {
+      setBlockReasonError('El motivo es obligatorio');
+      return;
+    }
+    setBlockReasonError('');
+    const user = blockTarget;
+    blockUser.mutate(
+      { id: user.id, reason: blockReason },
+      {
+        onSuccess: () => {
+          setBlockTarget(null);
+          setBlockReason('');
+        },
+      }
+    );
+  };
+
+  const handleBlockCancel = () => {
+    setBlockTarget(null);
+    setBlockReason('');
+    setBlockReasonError('');
   };
 
   const handleSort = (field: SortField) => {
@@ -392,6 +423,85 @@ export const AdminUsers: React.FC = () => {
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteTarget(null)}
       />
+
+      {/* Block User Dialog */}
+      {blockTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="block-dialog-title">
+          <div className="bg-card rounded-2xl border border-border shadow-2xl w-full max-w-md p-6 space-y-5">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 bg-error/10 rounded-xl flex items-center justify-center">
+                  <AlertTriangle className="h-5 w-5 text-error" />
+                </div>
+                <div>
+                  <h2 id="block-dialog-title" className="text-lg font-bold text-text">Bloquear Usuario</h2>
+                  <p className="text-sm text-text-secondary">{blockTarget.name}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleBlockCancel}
+                className="p-2 rounded-xl hover:bg-surface-alt text-text-secondary transition-colors"
+                aria-label="Cerrar modal"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Content / Textarea */}
+            <div className="space-y-2">
+              <label htmlFor="block-reason" className="text-xs font-semibold text-text-secondary uppercase tracking-wider block">
+                Motivo del bloqueo (obligatorio)
+              </label>
+              <textarea
+                id="block-reason"
+                value={blockReason}
+                onChange={(e) => {
+                  setBlockReason(e.target.value);
+                  if (e.target.value.trim()) setBlockReasonError('');
+                }}
+                placeholder="Ej. Violación de los términos de servicio, comportamiento inadecuado..."
+                rows={4}
+                className={clsx(
+                  "w-full px-4 py-3 rounded-2xl border bg-surface-alt text-sm text-text focus:ring-2 focus:ring-primary focus:bg-card transition-all resize-none",
+                  blockReasonError ? "border-error focus:ring-error" : "border-border"
+                )}
+              />
+              {blockReasonError && (
+                <p className="text-xs text-error font-medium flex items-center gap-1" role="alert">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  {blockReasonError}
+                </p>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-1">
+              <button
+                type="button"
+                onClick={handleBlockCancel}
+                className="flex-1 px-4 py-3 rounded-2xl border border-border text-sm font-medium text-text-secondary hover:bg-surface-alt transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleBlockConfirm}
+                disabled={saving === blockTarget.id}
+                className="flex-1 px-4 py-3 rounded-2xl bg-error text-white text-sm font-semibold hover:bg-error-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {saving === blockTarget.id ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <AlertTriangle className="h-4 w-4" />
+                )}
+                Bloquear
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Gift Plan Dialog */}
       {gift && (
@@ -850,6 +960,16 @@ export const AdminUsers: React.FC = () => {
                                   label: 'Verificar Email',
                                   icon: CheckCircle,
                                   onClick: () => handleVerifyEmail(user),
+                                });
+                              }
+
+                              // Block action
+                              if (user.role === 'user') {
+                                menuItems.push({
+                                  label: 'Bloquear',
+                                  icon: AlertTriangle,
+                                  onClick: () => setBlockTarget(user),
+                                  variant: 'destructive' as const,
                                 });
                               }
 
