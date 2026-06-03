@@ -56,9 +56,20 @@ const mockAuditLogsResponse = {
       ip_address: '192.168.1.102',
       user_agent: 'Mozilla/5.0 Safari/605.1',
       created_at: '2026-06-02T15:30:00Z',
+    },
+    {
+      id: 'log3',
+      user_id: 'u1',
+      action: 'login_failed',
+      resource_type: 'user',
+      resource_id: 'u1',
+      details: '{"reason":"email_not_verified"}',
+      ip_address: '192.168.1.103',
+      user_agent: 'Mozilla/5.0 Chrome/120.0',
+      created_at: '2026-06-03T11:00:00Z',
     }
   ],
-  total: 2,
+  total: 3,
   page: 1,
   limit: 20,
   total_pages: 1,
@@ -122,12 +133,16 @@ describe('AdminUserDetails', () => {
     // Verify timeline entries are visible
     expect(screen.getByText('Created event "Boda de Ana"')).toBeInTheDocument();
     expect(screen.getByText('Updated product price for "Pastel"')).toBeInTheDocument();
+    expect(screen.getByText('Intento de inicio de sesión fallido: Correo no verificado')).toBeInTheDocument();
     expect(screen.getByText('Recurso: event')).toBeInTheDocument();
     expect(screen.getByText('Recurso: product')).toBeInTheDocument();
+    expect(screen.getByText('Recurso: user')).toBeInTheDocument();
+    expect(screen.getByText('Acción: Intento de inicio de sesión fallido')).toBeInTheDocument();
 
     // CRITICAL SECURITY CHECKS: Ensure PII data from logs is NOT rendered in the UI
     expect(screen.queryByText('192.168.1.100')).not.toBeInTheDocument();
     expect(screen.queryByText('192.168.1.102')).not.toBeInTheDocument();
+    expect(screen.queryByText('192.168.1.103')).not.toBeInTheDocument();
     expect(screen.queryByText(/Mozilla\/5\.0/)).not.toBeInTheDocument();
   });
 

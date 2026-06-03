@@ -207,7 +207,23 @@
       "updating_timeline": "Updating activity history...",
       "no_activity": "No recent activity registered for this user.",
       "resource_type": "Resource: {{type}}",
-      "action_type": "Action: {{action}}"
+      "action_type": "Action: {{action}}",
+      "actions": {
+        "create": "Create",
+        "update": "Update",
+        "delete": "Delete",
+        "login": "Login",
+        "login_failed": "Failed login attempt",
+        "block": "Block",
+        "unblock": "Unblock"
+      },
+      "reasons": {
+        "email_not_verified": "Email not verified",
+        "invalid_credentials": "Invalid credentials",
+        "wrong_password": "Wrong password",
+        "user_not_found": "User not found",
+        "blocked": "Account blocked"
+      }
     }
   },
   "audit": {

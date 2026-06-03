@@ -207,7 +207,23 @@
       "updating_timeline": "Actualizando historial de actividades...",
       "no_activity": "No se registran actividades recientes para este usuario.",
       "resource_type": "Recurso: {{type}}",
-      "action_type": "Acción: {{action}}"
+      "action_type": "Acción: {{action}}",
+      "actions": {
+        "create": "Crear",
+        "update": "Actualizar",
+        "delete": "Eliminar",
+        "login": "Iniciar sesión",
+        "login_failed": "Intento de inicio de sesión fallido",
+        "block": "Bloquear",
+        "unblock": "Desbloquear"
+      },
+      "reasons": {
+        "email_not_verified": "Correo no verificado",
+        "invalid_credentials": "Credenciales inválidas",
+        "wrong_password": "Contraseña incorrecta",
+        "user_not_found": "Usuario no encontrado",
+        "blocked": "Cuenta bloqueada"
+      }
     }
   },
   "audit": {
