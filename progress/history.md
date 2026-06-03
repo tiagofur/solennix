@@ -177,3 +177,11 @@
   - SDD formalmente ejecutado, validado y archivado en Engram.
 
 
+
+## Sesión 2026-06-02: Menú Contextual de Acciones en Administración de Usuarios
+- **Feature ID:** admin-users-actions-dropdown (SDD hybrid)
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1229 tests en verde).
+- **Entregables:**
+  - `AdminUsers.tsx` (Migración de botones de acción inline a componente reutilizable de dropdown contextual `RowActionMenu`)
+  - `AdminUsers.test.tsx` (Actualización y adaptación de suite de tests unitarios de interacciones del panel de admin)
+  - `openspec/specs/admin-ui/spec.md` (Inauguración de especificación central de UI de Administración)

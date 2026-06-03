@@ -187,7 +187,10 @@ describe('AdminUsers', () => {
     await waitFor(() => expect(screen.queryByText('Cargando usuarios...')).not.toBeInTheDocument());
 
     const blockedRow = screen.getByText('Blocked Pending').closest('tr')!;
-    const deleteBtn = within(blockedRow).getByRole('button', { name: /Eliminar permanente/i });
+    
+    // Open dropdown
+    fireEvent.click(within(blockedRow).getByRole('button', { name: /Acciones/i }));
+    const deleteBtn = screen.getByRole('menuitem', { name: /Eliminar permanente/i });
 
     // Click permanent deletion
     fireEvent.click(deleteBtn);
@@ -202,7 +205,9 @@ describe('AdminUsers', () => {
     expect(adminService.deleteUser).not.toHaveBeenCalled();
 
     // 2. Confirm deletion
-    fireEvent.click(deleteBtn);
+    fireEvent.click(within(blockedRow).getByRole('button', { name: /Acciones/i }));
+    const deleteBtnConfirm = screen.getByRole('menuitem', { name: /Eliminar permanente/i });
+    fireEvent.click(deleteBtnConfirm);
     const confirmBtn = screen.getByRole('button', { name: 'Eliminar permanentemente' });
     fireEvent.click(confirmBtn);
 
@@ -247,16 +252,23 @@ describe('AdminUsers', () => {
 
     // 2. Gift Workflow
     const basicRow = screen.getByText('Basic User').closest('tr')!;
-    fireEvent.click(within(basicRow).getByText('Regalar').closest('button')!);
+    
+    // Attempt 1: Open menu and click Regalar, then Cancel
+    fireEvent.click(within(basicRow).getByRole('button', { name: /Acciones/i }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /Regalar/i }));
     await screen.findByText('Regalar plan');
-
     fireEvent.click(screen.getByText('Cancelar').closest('button')!);
-    fireEvent.click(within(basicRow).getByText('Regalar').closest('button')!);
+
+    // Attempt 2: Open menu and click Regalar, then Close X
+    fireEvent.click(within(basicRow).getByRole('button', { name: /Acciones/i }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /Regalar/i }));
     await screen.findByText('Regalar plan');
     const closeXBtn = container.querySelector('button .lucide-x')!.closest('button')!;
     fireEvent.click(closeXBtn);
 
-    fireEvent.click(within(basicRow).getByText('Regalar').closest('button')!);
+    // Attempt 3: Open menu and click Regalar, then submit error
+    fireEvent.click(within(basicRow).getByRole('button', { name: /Acciones/i }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /Regalar/i }));
     await screen.findByText('Regalar plan');
 
     const dateInput = container.querySelector('input[type="date"]')!;
@@ -266,6 +278,7 @@ describe('AdminUsers', () => {
     fireEvent.click(confirmBtn);
     await waitFor(() => expect(mockAddToast).toHaveBeenCalledWith(expect.stringContaining('Selecciona una fecha'), 'error'));
 
+    // Attempt 4: Fill date and confirm success
     const dateInputStr = '2030-10-10';
     fireEvent.change(dateInput, { target: { value: dateInputStr } });
     fireEvent.click(confirmBtn);
@@ -274,7 +287,10 @@ describe('AdminUsers', () => {
     // 3. Downgrade with ConfirmDialog
     const premRow = screen.getByText('Premium User').closest('tr')!;
     vi.mocked(adminService.upgradeUser).mockResolvedValueOnce({ ...getMockData()[0], plan: 'basic' });
-    fireEvent.click(within(premRow).getByText('Rebajar').closest('button')!);
+    
+    fireEvent.click(within(premRow).getByRole('button', { name: /Acciones/i }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /Rebajar/i }));
+    
     await screen.findByText('Rebajar plan');
     const successDialog = screen.getByRole('dialog');
     fireEvent.click(within(successDialog).getByText('Rebajar').closest('button')!);
@@ -288,12 +304,21 @@ describe('AdminUsers', () => {
     // Premium User has email_verified_at, so should display "Verificado"
     const premRow = screen.getByText('Premium User').closest('tr')!;
     expect(within(premRow).getByText('Verificado')).toBeInTheDocument();
-    expect(within(premRow).queryByRole('button', { name: /Verificar/i })).not.toBeInTheDocument();
+    
+    // There shouldn't be a verification action in dropdown for verified users (it wouldn't be added)
+    fireEvent.click(within(premRow).getByRole('button', { name: /Acciones/i }));
+    expect(screen.queryByRole('menuitem', { name: /Verificar/i })).not.toBeInTheDocument();
+    
+    // Close the dropdown by clicking outside or escape (let's re-render or click to close it)
+    fireEvent.click(within(premRow).getByRole('button', { name: /Acciones/i })); // toggle close
 
-    // Basic User doesn't have email_verified_at, so should display "Pendiente" and "Verificar" button
+    // Basic User doesn't have email_verified_at, so should display "Pendiente"
     const basicRow = screen.getByText('Basic User').closest('tr')!;
     expect(within(basicRow).getByText('Pendiente')).toBeInTheDocument();
-    const verifyBtn = within(basicRow).getByRole('button', { name: /Verificar/i });
+    
+    // Open actions and click Verificar
+    fireEvent.click(within(basicRow).getByRole('button', { name: /Acciones/i }));
+    const verifyBtn = screen.getByRole('menuitem', { name: /Verificar/i });
     expect(verifyBtn).toBeInTheDocument();
 
     // Perform manual verification
