@@ -185,3 +185,13 @@
   - `AdminUsers.tsx` (Migración de botones de acción inline a componente reutilizable de dropdown contextual `RowActionMenu`)
   - `AdminUsers.test.tsx` (Actualización y adaptación de suite de tests unitarios de interacciones del panel de admin)
   - `openspec/specs/admin-ui/spec.md` (Inauguración de especificación central de UI de Administración)
+
+## Sesión 2026-06-02: Bloqueo de Usuario con Motivo en Administración de Usuarios
+- **Feature ID:** 18 (admin-block-user)
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1230 tests en verde).
+- **Entregables:**
+  - `adminService.ts` (Implementación de método blockUser para llamar al endpoint PUT del backend)
+  - `useAdminQueries.ts` (Implementación de hook mutation useBlockUser)
+  - `AdminUsers.tsx` (Acción Bloquear en RowActionMenu y modal interactivo de bloqueo con textarea obligatorio)
+  - `AdminUsers.test.tsx` (Tests de flujo de bloqueo: validación, cancelación y éxito)
+  - `docs/PRD/11_CURRENT_STATUS.md` (Documentación actualizada del estado del feature y del endpoint de bloqueo)

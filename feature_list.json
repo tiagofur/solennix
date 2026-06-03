@@ -205,7 +205,7 @@
       "id": 18,
       "name": "admin-block-user",
       "description": "feat(admin): acción de bloquear usuario con motivo desde la interfaz de administración (Issue #467)",
-      "status": "in_progress",
+      "status": "done",
       "acceptance_criteria": [
         "La acción 'Bloquear' está visible en RowActionMenu para usuarios activos de rol 'user'",
         "Al hacer clic en 'Bloquear', se abre un modal interactivo que requiere ingresar un motivo obligatorio",
