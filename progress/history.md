@@ -195,3 +195,11 @@
   - `AdminUsers.tsx` (Acción Bloquear en RowActionMenu y modal interactivo de bloqueo con textarea obligatorio)
   - `AdminUsers.test.tsx` (Tests de flujo de bloqueo: validación, cancelación y éxito)
   - `docs/PRD/11_CURRENT_STATUS.md` (Documentación actualizada del estado del feature y del endpoint de bloqueo)
+
+## Sesión 2026-06-03: Pantalla de Detalle de Usuario con Métricas y Timeline
+- **Feature ID:** 19 (admin-user-details)
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1233 tests en verde).
+- **Entregables:**
+  - `AdminUserDetails.tsx` (Componente de vista de detalles de usuario con métricas de adopción e i18n completo)
+  - `AdminUserDetails.test.tsx` (Pruebas unitarias de carga de información de usuario, métricas y timeline sin PII en verde)
+  - `es/admin.json` y `en/admin.json` (Claves de traducción agregadas para el módulo de detalles)

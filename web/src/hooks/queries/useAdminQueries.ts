@@ -22,6 +22,14 @@ export function useAdminUsers(accountType: AdminAccountType = 'users', moderatio
   });
 }
 
+export function useAdminUser(id: string) {
+  return useQuery({
+    queryKey: [...queryKeys.admin.users, 'detail', id] as const,
+    queryFn: () => adminService.getUserById(id),
+    enabled: !!id,
+  });
+}
+
 export function useAdminInactiveUsers(days = 30) {
   return useQuery({
     queryKey: [...queryKeys.admin.users, 'inactive', days] as const,

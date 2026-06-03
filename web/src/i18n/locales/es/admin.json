@@ -187,6 +187,27 @@
         "registration": "Registro"
       },
       "success": "{{count}} usuarios exportados"
+    },
+    "details": {
+      "title": "Detalle de Usuario",
+      "loading": "Cargando...",
+      "loading_user": "Cargando información del usuario...",
+      "error_loading": "No se pudieron cargar los detalles del usuario.",
+      "blocked": "Bloqueado",
+      "business": "Negocio: {{business}}",
+      "plan_label": "Plan:",
+      "gift": "Regalo",
+      "created_at": "Creado el: {{date}}",
+      "adoption_metrics": "Métricas de Adopción",
+      "metric_events": "Eventos creados",
+      "metric_clients": "Clientes registrados",
+      "metric_products": "Productos en catálogo",
+      "metric_activity": "Puntaje de actividad",
+      "timeline_title": "Timeline de Actividad (Auditoría sin PII)",
+      "updating_timeline": "Actualizando historial de actividades...",
+      "no_activity": "No se registran actividades recientes para este usuario.",
+      "resource_type": "Recurso: {{type}}",
+      "action_type": "Acción: {{action}}"
     }
   },
   "audit": {

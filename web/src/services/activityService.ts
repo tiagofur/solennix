@@ -24,6 +24,8 @@ interface ActivityQueryParams {
   /** Max rows per page when paginated. Defaults server-side to 20 for
    *  the user scope, 50 for the admin scope. */
   limit?: number;
+  /** Optional user ID filter for admin scope. */
+  user_id?: string;
 }
 
 /**
@@ -34,6 +36,7 @@ const buildParams = (params: ActivityQueryParams = {}): Record<string, string> =
   const query: Record<string, string> = {};
   if (params.page !== undefined) query.page = String(params.page);
   if (params.limit !== undefined) query.limit = String(params.limit);
+  if (params.user_id !== undefined) query.user_id = params.user_id;
   return query;
 };
 

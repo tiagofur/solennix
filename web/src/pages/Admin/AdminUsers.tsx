@@ -850,7 +850,9 @@ export const AdminUsers: React.FC = () => {
                           </div>
                           <div className="min-w-0">
                             <div className="text-sm font-semibold text-text truncate flex items-center gap-1.5">
-                              {user.name}
+                              <Link to={`/admin/users/${user.id}`} className="hover:underline hover:text-primary transition-colors">
+                                {user.name}
+                              </Link>
                               {user.role === 'admin' && (
                                 <Shield className="h-3.5 w-3.5 text-error shrink-0" aria-label="Admin" />
                               )}
