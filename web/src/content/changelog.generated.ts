@@ -15,7 +15,7 @@ export const changelogData = {
     },
     "android": {
       "version": "1.3.0",
-      "build": "7",
+      "build": "8",
       "source": "android/app/build.gradle.kts"
     },
     "backend": {

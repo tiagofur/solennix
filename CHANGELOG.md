@@ -10,7 +10,7 @@ Historial oficial de cambios de Solennix para Web, iOS, Android y Backend.
 | --- | --- | --- | --- |
 | Web | 1.0.1 | - | web/package.json |
 | iOS | 1.3.0 | 8 | ios/project.yml |
-| Android | 1.3.0 | 7 | android/app/build.gradle.kts |
+| Android | 1.3.0 | 8 | android/app/build.gradle.kts |
 | Backend | 1.0.0 | - | backend/VERSION |
 
 ## 2026-06-03 - Release train móvil 1.3.0: Eliminación de cuenta y localización
