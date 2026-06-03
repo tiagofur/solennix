@@ -11,11 +11,11 @@ public struct UnavailableDate: Codable, Identifiable, Sendable, Hashable {
 
     enum CodingKeys: String, CodingKey {
         case id
-        case userId = "user_id"
-        case startDate = "start_date"
-        case endDate = "end_date"
-        case startTime = "start_time"
-        case endTime = "end_time"
+        case userId
+        case startDate
+        case endDate
+        case startTime
+        case endTime
         case reason
     }
 
