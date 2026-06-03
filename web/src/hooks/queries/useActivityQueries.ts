@@ -9,7 +9,7 @@ import type { AuditLog } from '@/services/activityService';
  */
 const activityKeys = {
   dashboard: (limit: number) => ['activity', 'dashboard', limit] as const,
-  admin: (page: number, limit: number) => ['activity', 'admin', page, limit] as const,
+  admin: (page: number, limit: number, userId?: string) => ['activity', 'admin', page, limit, userId || ''] as const,
 };
 
 /**
@@ -37,11 +37,11 @@ export function useDashboardActivity(limit = 10) {
  * Uses `GET /api/admin/audit-logs?page=...&limit=...` which enforces
  * admin role server-side. Non-admin callers get 403.
  */
-export function useAdminAuditLogs(page = 1, limit = 20) {
+export function useAdminAuditLogs(page = 1, limit = 20, userId?: string) {
   return useQuery({
-    queryKey: activityKeys.admin(page, limit),
+    queryKey: activityKeys.admin(page, limit, userId),
     queryFn: async () => {
-      const response = await activityService.getAdminAuditLogs({ page, limit });
+      const response = await activityService.getAdminAuditLogs({ page, limit, user_id: userId });
       // The admin endpoint is always called with a `page` param here, so
       // the backend returns the paginated envelope. We keep the envelope
       // as-is so the UI can render total, total_pages, etc.

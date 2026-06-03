@@ -213,6 +213,19 @@
         "Los tests unitarios en AdminUsers.test.tsx cubren el flujo de bloqueo y pasan exitosamente en Vitest",
         "El linter y la suite de validación ./init.sh terminan al 100% en verde"
       ]
+    },
+    {
+      "id": 19,
+      "name": "admin-user-details",
+      "description": "feat(admin): pantalla de detalle de usuario con métricas de adopción y timeline sin PII (Issue #468)",
+      "status": "done",
+      "acceptance_criteria": [
+        "El administrador puede abrir la pantalla de detalle de cualquier usuario desde el panel de administración",
+        "La pantalla de detalle de usuario muestra métricas de adopción (eventos, clientes, productos, volumen de actividad)",
+        "Se presenta un timeline de actividad reciente (historial de auditoría de sus recursos) sin exponer PII",
+        "Los tests unitarios en AdminUserDetails.test.tsx validan la vista y la carga de datos del usuario",
+        "El linter y la suite de validación ./init.sh terminan al 100% en verde"
+      ]
     }
   ]
 }

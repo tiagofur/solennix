@@ -172,6 +172,40 @@ func TestGetAllAuditLogs(t *testing.T) {
 		assert.Contains(t, rr.Body.String(), `"total_pages":4`)
 		repo.AssertExpectations(t)
 	})
+
+	t.Run("GivenUserIDQueryParam_WhenValid_ThenReturnUserFilteredLogs", func(t *testing.T) {
+		repo := new(MockAuditRepo)
+		handler := NewAuditHandler(repo)
+
+		userID := uuid.New()
+		logs := []models.AuditLog{
+			{ID: uuid.New(), UserID: userID, Action: "create", ResourceType: "event"},
+		}
+		repo.On("GetByUser", mock.Anything, userID, 0, 50).Return(logs, 1, nil)
+
+		req := httptest.NewRequest(http.MethodGet, "/admin/audit-logs?user_id="+userID.String(), nil)
+		rr := httptest.NewRecorder()
+
+		handler.GetAllAuditLogs(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		assert.Contains(t, rr.Body.String(), `"total":1`)
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("GivenUserIDQueryParam_WhenInvalid_ThenReturnBadRequest", func(t *testing.T) {
+		repo := new(MockAuditRepo)
+		handler := NewAuditHandler(repo)
+
+		req := httptest.NewRequest(http.MethodGet, "/admin/audit-logs?user_id=invalid-uuid", nil)
+		rr := httptest.NewRecorder()
+
+		handler.GetAllAuditLogs(rr, req)
+
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Invalid user_id format")
+		repo.AssertExpectations(t)
+	})
 }
 
 // ---------------------------------------------------------------------------

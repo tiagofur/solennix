@@ -4,7 +4,9 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
+	"github.com/tiagofur/solennix-backend/internal/models"
 )
 
 // auditSortAllowlist maps query param values to actual SQL column names for audit logs.
@@ -47,7 +49,7 @@ func (h *AuditHandler) GetActivity(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllAuditLogs returns paginated audit logs across all users (admin only).
-// GET /api/admin/audit-logs?page=1&limit=50
+// GET /api/admin/audit-logs?page=1&limit=50&user_id=...
 func (h *AuditHandler) GetAllAuditLogs(w http.ResponseWriter, r *http.Request) {
 	params := parsePaginationParams(r, auditSortAllowlist, "created_at")
 	if params == nil {
@@ -55,9 +57,25 @@ func (h *AuditHandler) GetAllAuditLogs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	offset := (params.Page - 1) * params.Limit
-	logs, total, err := h.auditRepo.GetAll(r.Context(), offset, params.Limit)
+	userIDStr := r.URL.Query().Get("user_id")
+
+	var logs []models.AuditLog
+	var total int
+	var err error
+
+	if userIDStr != "" {
+		userID, parseErr := uuid.Parse(userIDStr)
+		if parseErr != nil {
+			writeError(w, http.StatusBadRequest, "Invalid user_id format")
+			return
+		}
+		logs, total, err = h.auditRepo.GetByUser(r.Context(), userID, offset, params.Limit)
+	} else {
+		logs, total, err = h.auditRepo.GetAll(r.Context(), offset, params.Limit)
+	}
+
 	if err != nil {
-		slog.Error("audit: failed to get all audit logs", "error", err)
+		slog.Error("audit: failed to get all audit logs", "error", err, "user_id", userIDStr)
 		writeError(w, http.StatusInternalServerError, "Failed to get audit logs")
 		return
 	}
