@@ -25,6 +25,7 @@ import type { AdminAccountType } from '@/services/adminService';
 import { queryKeys } from '@/hooks/queries/queryKeys';
 import { useToast } from '@/hooks/useToast';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { RowActionMenu } from '@/components/RowActionMenu';
 import { format, parseISO, isPast, differenceInDays } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import clsx from 'clsx';
@@ -832,80 +833,70 @@ export const AdminUsers: React.FC = () => {
                       {/* Actions */}
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {user.account_status === 'blocked' ? (
-                            <button
-                              type="button"
-                              onClick={() => setDeleteTarget(user)}
-                              disabled={saving === user.id}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-error/10 text-error hover:bg-error hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {saving === user.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
-                              Eliminar permanente
-                            </button>
-                          ) : (
-                            <>
-                              {/* Manual verification action */}
-                              {!user.email_verified_at && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleVerifyEmail(user)}
-                                  disabled={saving === user.id}
-                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-success/10 text-success hover:bg-success hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                  title="Verificar email de forma manual (útil para usuarios de prueba/demo)"
-                                >
-                                  {saving === user.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <CheckCircle className="h-3 w-3" />}
-                                  Verificar
-                                </button>
-                              )}
-                              {/* Gift button: for basic users, or gifted users without paid sub */}
-                              {user.role === 'user' && !user.has_paid_subscription && user.plan === 'basic' && (
-                                <button
-                                  type="button"
-                                  onClick={() => openGiftDialog(user)}
-                                  disabled={saving === user.id}
-                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                  title="Regalar plan Pro o Premium con fecha de vencimiento"
-                                >
-                                  {saving === user.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Gift className="h-3 w-3" />}
-                                  {t('admin:users.actions.gift')}
-                                </button>
-                              )}
+                          {(() => {
+                            const menuItems = [];
 
-                              {/* Extend/change gift for users already on a gifted plan */}
-                              {user.role === 'user' && !user.has_paid_subscription && (user.plan === 'pro' || user.plan === 'premium') && isGifted && (
-                                <button
-                                  type="button"
-                                  onClick={() => openGiftDialog(user)}
-                                  disabled={saving === user.id}
-                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-warning/10 text-warning hover:bg-warning hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                  title="Extender o cambiar el regalo"
-                                >
-                                  {saving === user.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Gift className="h-3 w-3" />}
-                                  {t('admin:users.actions.edit_gift')}
-                                </button>
-                              )}
+                            if (user.account_status === 'blocked') {
+                              menuItems.push({
+                                label: 'Eliminar permanente',
+                                icon: X,
+                                onClick: () => setDeleteTarget(user),
+                                variant: 'destructive' as const,
+                              });
+                            } else {
+                              // Manual verification action
+                              if (!user.email_verified_at) {
+                                menuItems.push({
+                                  label: 'Verificar Email',
+                                  icon: CheckCircle,
+                                  onClick: () => handleVerifyEmail(user),
+                                });
+                              }
 
-                              {/* Downgrade: only for gifted or permanent manual upgrades without paid sub */}
-                              {user.role === 'user' && !user.has_paid_subscription && (user.plan === 'pro' || user.plan === 'premium') && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleDowngrade(user)}
-                                  disabled={saving === user.id}
-                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-surface-alt text-text-secondary hover:bg-border transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  {saving === user.id && <RefreshCw className="h-3 w-3 animate-spin" />}
-                                  {t('admin:users.actions.downgrade')}
-                                </button>
-                              )}
+                              // Gift button: for basic users, or gifted users without paid sub
+                              if (user.role === 'user' && !user.has_paid_subscription) {
+                                if (user.plan === 'basic') {
+                                  menuItems.push({
+                                    label: t('admin:users.actions.gift'),
+                                    icon: Gift,
+                                    onClick: () => openGiftDialog(user),
+                                  });
+                                } else if (user.plan === 'pro' || user.plan === 'premium') {
+                                  if (isGifted) {
+                                    menuItems.push({
+                                      label: t('admin:users.actions.edit_gift'),
+                                      icon: Gift,
+                                      onClick: () => openGiftDialog(user),
+                                    });
+                                  }
+                                  menuItems.push({
+                                    label: t('admin:users.actions.downgrade'),
+                                    icon: RefreshCw,
+                                    onClick: () => handleDowngrade(user),
+                                  });
+                                }
+                              }
+                            }
 
-                              {/* Paid subscription: no manual action allowed */}
-                              {user.role === 'user' && user.has_paid_subscription && (
-                                <span className="text-xs text-text-tertiary italic" title={t('admin:users.actions.active_sub_help')}>
-                                  {t('admin:users.actions.active_sub')}
-                                </span>
-                              )}
-                            </>
-                          )}
+                            if (saving === user.id) {
+                              return (
+                                <div className="p-1.5 text-text-secondary rounded-lg inline-block">
+                                  <RefreshCw className="h-4 w-4 animate-spin text-primary" />
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <>
+                                {menuItems.length > 0 && <RowActionMenu items={menuItems} />}
+                                {user.role === 'user' && user.has_paid_subscription && (
+                                  <span className="text-xs text-text-tertiary italic" title={t('admin:users.actions.active_sub_help')}>
+                                    {t('admin:users.actions.active_sub')}
+                                  </span>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                       </td>
                     </tr>
