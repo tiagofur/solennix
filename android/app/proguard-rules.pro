@@ -27,7 +27,3 @@
 -dontwarn kotlin.reflect.**
 
 -keepclassmembers class com.creapolis.solennix.core.model.** { *; }
-
-# Suppress BillingClient 9.0.0 missing classes warnings from RevenueCat reference
--dontwarn com.android.billingclient.api.QueryPurchaseHistoryParams$Builder
--dontwarn com.android.billingclient.api.QueryPurchaseHistoryParams

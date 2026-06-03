@@ -20,7 +20,6 @@ firebase-bom = "34.14.0"
 google-services = "4.4.4"
 window = "1.5.1"
 vico = "2.5.1"
-billing = "9.0.0"
 revenuecat = "10.7.0"
 workmanager = "2.11.2"
 paging = "3.5.0"
@@ -126,7 +125,6 @@ room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 
 # Billing
-billing = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "billing" }
 revenuecat = { group = "com.revenuecat.purchases", name = "purchases", version.ref = "revenuecat" }
 
 # WorkManager
