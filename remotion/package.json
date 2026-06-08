@@ -17,17 +17,17 @@
     "render:v07": "remotion render V07-Inventory-Reel out/v07-inventory-reel.mp4"
   },
   "dependencies": {
-    "remotion": "^4.0.471",
-    "@remotion/cli": "^4.0.471",
-    "@remotion/transitions": "^4.0.471",
-    "@remotion/google-fonts": "^4.0.471",
-    "@remotion/zod-types": "^4.0.471",
+    "remotion": "^4.0.473",
+    "@remotion/cli": "^4.0.473",
+    "@remotion/transitions": "^4.0.473",
+    "@remotion/google-fonts": "^4.0.473",
+    "@remotion/zod-types": "^4.0.473",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/react": "^19.2.16",
+    "@types/react": "^19.2.17",
     "typescript": "^5.9.0"
   }
 }
