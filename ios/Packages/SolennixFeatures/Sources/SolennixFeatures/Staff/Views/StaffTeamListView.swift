@@ -106,6 +106,19 @@ public struct StaffTeamListView: View {
                     }
                     .tint(.blue)
                 }
+                .contextMenu {
+                    NavigationLink(value: Route.staffTeamForm(id: team.id)) {
+                        Label(StaffStrings.edit, systemImage: "pencil")
+                    }
+                    Divider()
+                    Button(role: .destructive) {
+                        HapticsHelper.play(.warning)
+                        viewModel.deleteTarget = team
+                        viewModel.showDeleteConfirm = true
+                    } label: {
+                        Label(StaffStrings.deleteAction, systemImage: "trash")
+                    }
+                }
             }
         }
         .listStyle(.insetGrouped)
