@@ -374,11 +374,23 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 		// Map Stripe status to action
 		switch sub.Status {
 		case stripe.SubscriptionStatusActive:
-			// Keep user on pro, update subscription record
+			// Plan comes from subscription metadata (set on subscription_data at
+			// checkout). Only sync users.plan when metadata carries an explicit,
+			// valid tier — this covers C3 (past_due→active keeps the tier) and C4
+			// (portal plan change is reflected). Legacy subscriptions without the
+			// metadata keep their current plan; we only refresh status to avoid a
+			// wrongful downgrade to "pro".
 			if h.subRepo != nil {
 				start := time.Unix(sub.CurrentPeriodStart, 0)
 				end := time.Unix(sub.CurrentPeriodEnd, 0)
-				if err := h.subRepo.UpdateStatusByProviderSubID(r.Context(), sub.ID, "active", &start, &end); err != nil {
+				metaPlan := sub.Metadata["plan"]
+				if metaPlan == "pro" || metaPlan == "business" {
+					if err := h.subRepo.SyncPlanAndStatusByStripeCustomer(r.Context(), sub.Customer.ID, sub.ID, metaPlan, "active", &start, &end); err != nil {
+						slog.Error("Failed to sync plan and subscription status to active", "error", err, "customer", sub.Customer.ID, "plan", metaPlan)
+					} else {
+						slog.Info("Synced plan and subscription to active", "customer", sub.Customer.ID, "plan", metaPlan)
+					}
+				} else if err := h.subRepo.UpdateStatusByProviderSubID(r.Context(), sub.ID, "active", &start, &end); err != nil {
 					slog.Error("Failed to update subscription status to active", "error", err)
 				}
 			}
@@ -558,8 +570,9 @@ func (h *SubscriptionHandler) RevenueCatWebhook(w http.ResponseWriter, r *http.R
 	provider := rcStoreToProvider(evt.Store)
 
 	switch evt.Type {
-	case "INITIAL_PURCHASE", "RENEWAL", "UNCANCELLATION":
-		// User has an active subscription — upgrade to pro
+	case "INITIAL_PURCHASE", "RENEWAL", "UNCANCELLATION", "PRODUCT_CHANGE":
+		// Active subscription (incl. product/plan change within the mobile
+		// pro_access entitlement) — keep the user on pro and refresh the record.
 		if err := h.userRepo.UpdatePlanAndStripeID(r.Context(), userID, "pro", nil); err != nil {
 			slog.Error("Failed to upgrade user plan via RevenueCat", "user_id", userID, "error", err)
 		} else {
@@ -593,20 +606,24 @@ func (h *SubscriptionHandler) RevenueCatWebhook(w http.ResponseWriter, r *http.R
 			slog.Info("User downgraded to basic via RevenueCat", "user_id", userID, "event", evt.Type)
 		}
 
-		// Update subscription record status
+		// Update subscription record status — filter by provider to avoid touching
+		// subscriptions from a different store (e.g. don't cancel a Stripe sub on an Apple event).
 		if h.subRepo != nil {
 			status := "canceled"
 			if evt.Type == "BILLING_ISSUE" {
 				status = "past_due"
 			}
-			if err := h.subRepo.UpdateStatusByUserID(r.Context(), userID, status); err != nil {
-				slog.Error("Failed to update subscription status via RevenueCat", "user_id", userID, "error", err)
+			rcProvider := rcStoreToProvider(evt.Store)
+			if rcProvider == "" {
+				slog.Warn("RevenueCat event has empty/unknown store, skipping subscription status update to avoid cross-provider contamination",
+					"user_id", userID, "store", evt.Store, "type", evt.Type)
+			} else {
+				if err := h.subRepo.UpdateStatusByUserIDAndProvider(r.Context(), userID, rcProvider, status); err != nil {
+					slog.Error("Failed to update subscription status via RevenueCat", "user_id", userID, "provider", rcProvider, "error", err)
+				}
 			}
 		}
 
-	case "PRODUCT_CHANGE":
-		// Product change — still pro, just a different product
-		slog.Info("RevenueCat product change event received", "user_id", userID, "product_id", evt.ProductID)
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -678,6 +695,37 @@ var stripeSubCache = struct {
 }{entries: make(map[string]*stripeSubCacheEntry)}
 
 const stripeSubCacheTTL = 5 * time.Minute
+
+// sweepStripeSubCache evicts cache entries older than the TTL. Split out from
+// the sweeper goroutine so it can be unit-tested deterministically.
+func sweepStripeSubCache(now time.Time) {
+	stripeSubCache.mu.Lock()
+	defer stripeSubCache.mu.Unlock()
+	for k, v := range stripeSubCache.entries {
+		if now.Sub(v.fetchedAt) >= stripeSubCacheTTL {
+			delete(stripeSubCache.entries, k)
+		}
+	}
+}
+
+// StartStripeSubCacheSweeper launches a background goroutine that periodically
+// evicts expired entries from stripeSubCache, preventing unbounded growth
+// (audit finding M10). It returns when ctx is cancelled, so callers control its
+// lifecycle (started once from main with the server context; not in tests).
+func StartStripeSubCacheSweeper(ctx context.Context) {
+	go func() {
+		ticker := time.NewTicker(stripeSubCacheTTL)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				sweepStripeSubCache(time.Now())
+			}
+		}
+	}()
+}
 
 // subscriptionProviderCopy returns the user-facing badge and cancel
 // instructions for a given provider value. Server-authored so that the
