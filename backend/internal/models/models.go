@@ -1,10 +1,35 @@
 package models
 
 import (
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+// NormalizePlan maps historical and cross-platform plan aliases to stable tier keys.
+//
+// Mapping:
+//   "gratis" | "free" | "basic" | "plan_basic" → "basic"
+//   "pro"    | "plan_pro" | "premium"           → "pro"
+//   "business" | "plan_business" | "enterprise" → "business"
+//
+// Default: the input value lowercased and trimmed (pass-through for already-stable
+// keys and unknown values). The handlers package previously defaulted unknown values
+// to "pro"; that was dropped in favor of pass-through so repository queries can
+// distinguish truly unknown plan strings from well-known ones.
+func NormalizePlan(plan string) string {
+	switch strings.ToLower(strings.TrimSpace(plan)) {
+	case "gratis", "free", "basic", "plan_basic":
+		return "basic"
+	case "pro", "plan_pro", "premium":
+		return "pro"
+	case "business", "plan_business", "enterprise":
+		return "business"
+	default:
+		return strings.ToLower(strings.TrimSpace(plan))
+	}
+}
 
 type User struct {
 	ID                      uuid.UUID  `json:"id"`

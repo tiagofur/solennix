@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/tiagofur/solennix-backend/internal/models"
@@ -15,21 +14,10 @@ type PlanError struct {
 	Plan    string `json:"required_plan"`
 }
 
-// normalizePlan maps historical and cross-platform aliases into stable tiers.
-// free/basic/gratis -> basic, premium -> pro.
+// normalizePlan delegates to models.NormalizePlan so the entire codebase uses
+// a single canonical mapping. See models.NormalizePlan for the full alias table.
 func normalizePlan(plan string) string {
-	switch strings.ToLower(strings.TrimSpace(plan)) {
-	case "gratis", "free", "basic", "plan_basic":
-		return "basic"
-	case "pro", "plan_pro":
-		return "pro"
-	case "business", "plan_business":
-		return "business"
-	case "premium":
-		return "pro"
-	default:
-		return strings.ToLower(strings.TrimSpace(plan))
-	}
+	return models.NormalizePlan(plan)
 }
 
 // IsPlanActive checks if the organizer's subscription plan is currently active.

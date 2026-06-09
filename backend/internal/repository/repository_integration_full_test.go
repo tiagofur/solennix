@@ -930,3 +930,144 @@ func TestProductRepoVerifyOwnershipFailure(t *testing.T) {
 		t.Fatal("VerifyOwnership() expected error for non-existent product")
 	}
 }
+
+// =============================================================================
+// M11 — StaffTeamRepo: GetAll JOIN, upsertTeamMembers batch ownership
+// =============================================================================
+
+// TestStaffTeamGetAllMemberCount verifies that GetAll returns the correct
+// member_count for each team after the correlated-subquery → LEFT JOIN rewrite.
+func TestStaffTeamGetAllMemberCount(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	ctx := context.Background()
+	userID := seedUser(t, pool, "staffteam.count@test.dev")
+
+	// Seed two staff members.
+	var staff1ID, staff2ID, staff3ID uuid.UUID
+	if err := pool.QueryRow(ctx,
+		`INSERT INTO staff (user_id, name) VALUES ($1, $2) RETURNING id`,
+		userID, "Alice").Scan(&staff1ID); err != nil {
+		t.Fatalf("seed staff1: %v", err)
+	}
+	if err := pool.QueryRow(ctx,
+		`INSERT INTO staff (user_id, name) VALUES ($1, $2) RETURNING id`,
+		userID, "Bob").Scan(&staff2ID); err != nil {
+		t.Fatalf("seed staff2: %v", err)
+	}
+	if err := pool.QueryRow(ctx,
+		`INSERT INTO staff (user_id, name) VALUES ($1, $2) RETURNING id`,
+		userID, "Carol").Scan(&staff3ID); err != nil {
+		t.Fatalf("seed staff3: %v", err)
+	}
+
+	repo := NewStaffTeamRepo(pool)
+
+	// Team A — 2 members.
+	teamA := &models.StaffTeam{
+		UserID: userID,
+		Name:   "Team Alpha",
+		Members: []models.StaffTeamMember{
+			{StaffID: staff1ID},
+			{StaffID: staff2ID},
+		},
+	}
+	if err := repo.Create(ctx, teamA); err != nil {
+		t.Fatalf("Create teamA: %v", err)
+	}
+
+	// Team B — 1 member.
+	teamB := &models.StaffTeam{
+		UserID: userID,
+		Name:   "Team Beta",
+		Members: []models.StaffTeamMember{
+			{StaffID: staff3ID},
+		},
+	}
+	if err := repo.Create(ctx, teamB); err != nil {
+		t.Fatalf("Create teamB: %v", err)
+	}
+
+	// Team C — 0 members.
+	teamC := &models.StaffTeam{
+		UserID:  userID,
+		Name:    "Team Gamma",
+		Members: nil,
+	}
+	if err := repo.Create(ctx, teamC); err != nil {
+		t.Fatalf("Create teamC: %v", err)
+	}
+
+	teams, err := repo.GetAll(ctx, userID)
+	if err != nil {
+		t.Fatalf("GetAll: %v", err)
+	}
+	if len(teams) != 3 {
+		t.Fatalf("GetAll returned %d teams, want 3", len(teams))
+	}
+
+	byName := make(map[string]*models.StaffTeam, len(teams))
+	for i := range teams {
+		byName[teams[i].Name] = &teams[i]
+	}
+
+	assertCount := func(name string, want int) {
+		t.Helper()
+		tm, ok := byName[name]
+		if !ok {
+			t.Errorf("team %q not found in GetAll result", name)
+			return
+		}
+		if tm.MemberCount == nil {
+			t.Errorf("team %q: MemberCount is nil, want %d", name, want)
+			return
+		}
+		if *tm.MemberCount != want {
+			t.Errorf("team %q: MemberCount = %d, want %d", name, *tm.MemberCount, want)
+		}
+	}
+
+	assertCount("Team Alpha", 2)
+	assertCount("Team Beta", 1)
+	assertCount("Team Gamma", 0)
+}
+
+// TestStaffTeamUpsertMembersRejectsCrossTenant verifies that upsertTeamMembers
+// (invoked via Create) rejects staff rows owned by a different user.
+func TestStaffTeamUpsertMembersRejectsCrossTenant(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	ctx := context.Background()
+	userA := seedUser(t, pool, "staffteam.tenanta@test.dev")
+	userB := seedUser(t, pool, "staffteam.tenantb@test.dev")
+
+	// Seed a staff member owned by userB.
+	var staffB uuid.UUID
+	if err := pool.QueryRow(ctx,
+		`INSERT INTO staff (user_id, name) VALUES ($1, $2) RETURNING id`,
+		userB, "Bob (B)").Scan(&staffB); err != nil {
+		t.Fatalf("seed staffB: %v", err)
+	}
+
+	repo := NewStaffTeamRepo(pool)
+
+	// userA tries to create a team with userB's staff — must fail.
+	team := &models.StaffTeam{
+		UserID: userA,
+		Name:   "Cross-tenant Team",
+		Members: []models.StaffTeamMember{
+			{StaffID: staffB},
+		},
+	}
+	err := repo.Create(ctx, team)
+	if err == nil {
+		t.Fatal("Create() expected error for cross-tenant staff member")
+	}
+	if !strings.Contains(err.Error(), "invalid team member") {
+		t.Fatalf("Create() error = %v, want to contain 'invalid team member'", err)
+	}
+}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -29,15 +28,10 @@ func NewUserRepo(pool *pgxpool.Pool) *UserRepo {
 	return &UserRepo{pool: pool}
 }
 
+// normalizePlan delegates to models.NormalizePlan so the entire codebase uses
+// a single canonical mapping. See models.NormalizePlan for the full alias table.
 func normalizePlan(plan string) string {
-	switch strings.ToLower(strings.TrimSpace(plan)) {
-	case "premium":
-		return "pro"
-	case "enterprise":
-		return "business"
-	default:
-		return strings.ToLower(strings.TrimSpace(plan))
-	}
+	return models.NormalizePlan(plan)
 }
 
 func (r *UserRepo) Create(ctx context.Context, user *models.User) error {
