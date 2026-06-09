@@ -916,26 +916,27 @@ func (r *EventRepo) GetEquipmentAvailability(ctx context.Context, userID uuid.UU
 		return nil, nil
 	}
 
-	// Get current stock and subtract reserved qty from confirmed events on the same date
-	query := `SELECT i.id, COALESCE(i.current_stock, 0) - COALESCE(SUM(ee.quantity)::int, 0) as available
+	// available = current_stock - reserved qty from quoted/confirmed events on the
+	// same date, excluding the event being edited ($4, optional). The reserved sum
+	// is a correlated subquery so the date/status/exclude filters actually restrict
+	// which reservations are counted (a LEFT JOIN does not filter the aggregate).
+	query := `SELECT i.id,
+			COALESCE(i.current_stock, 0) - COALESCE((
+				SELECT SUM(ee.quantity)::int
+				FROM event_equipment ee
+				JOIN events e ON e.id = ee.event_id
+				WHERE ee.inventory_id = i.id
+					AND e.event_date = $2::date
+					AND e.status IN ('quoted', 'confirmed')
+					AND ($4::uuid IS NULL OR e.id <> $4::uuid)
+			), 0) AS available
 		FROM inventory i
-		LEFT JOIN event_equipment ee ON ee.inventory_id = i.id
-		LEFT JOIN events e ON ee.event_id = e.id AND e.event_date = $2::date AND e.status IN ('quoted', 'confirmed')
-		LEFT JOIN events exclude_e ON exclude_e.id = $4
 		WHERE i.id = ANY($1)
-		AND i.user_id = $3`
+			AND i.user_id = $3`
 
-	args := []interface{}{inventoryIDs, date, userID}
-	argIdx := 4
-
-	if excludeEventID != nil {
-		query += fmt.Sprintf(" AND (exclude_e.id IS NULL OR ee.event_id != $%d)", argIdx)
-		args = append(args, *excludeEventID)
-	} else {
-		query += " AND $4 IS NULL"
-	}
-
-	query += " GROUP BY i.id, i.current_stock"
+	// excludeEventID is *uuid.UUID; a nil pointer binds as SQL NULL, so $4 is always
+	// supplied and the "no event to exclude" case is handled by the IS NULL branch.
+	args := []interface{}{inventoryIDs, date, userID, excludeEventID}
 
 	rows, err := r.pool.Query(ctx, query, args...)
 	if err != nil {
