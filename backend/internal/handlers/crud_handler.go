@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"math"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -1505,6 +1506,18 @@ func (h *CRUDHandler) AddEventPhoto(w http.ResponseWriter, r *http.Request) {
 	if req.URL == "" {
 		writeError(w, http.StatusBadRequest, "url is required")
 		return
+	}
+
+	if u, err := url.Parse(req.URL); err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+		writeError(w, http.StatusBadRequest, "invalid photo URL")
+		return
+	}
+
+	if req.ThumbnailURL != nil && *req.ThumbnailURL != "" {
+		if u, err := url.Parse(*req.ThumbnailURL); err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+			writeError(w, http.StatusBadRequest, "invalid thumbnail URL")
+			return
+		}
 	}
 
 	photos := parseEventPhotos(event.Photos)

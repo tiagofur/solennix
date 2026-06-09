@@ -19,6 +19,9 @@ func CORS(allowedOrigins []string) func(http.Handler) http.Handler {
 			if originsSet[origin] {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
 				w.Header().Set("Access-Control-Allow-Credentials", "true")
+				// Vary: Origin tells caches that the response differs by origin,
+				// preventing a cached credentialed response from leaking to other origins.
+				w.Header().Add("Vary", "Origin")
 			}
 
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")

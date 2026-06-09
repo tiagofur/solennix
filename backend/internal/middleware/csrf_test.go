@@ -203,15 +203,51 @@ func TestIsWebhookPath(t *testing.T) {
 		path string
 		want bool
 	}{
+		// Exempt: exact webhook prefixes (versioned and legacy)
 		{"/api/v1/subscriptions/webhook/stripe", true},
 		{"/api/v1/subscriptions/webhook/revenuecat", true},
+		{"/api/subscriptions/webhook/stripe", true},
+		{"/api/subscriptions/webhook/revenuecat", true},
+		// Not exempt: unrelated paths
 		{"/api/v1/events", false},
 		{"/api/v1/clients", false},
+		// Not exempt: path that CONTAINS "webhook" but is not under the exempted prefix.
+		// This is the key regression guard for the substring → prefix change.
+		{"/api/v1/events/my-webhook-event", false},
+		{"/api/v1/anything/webhook/foo", false},
 	}
 
 	for _, tc := range tests {
 		if got := isWebhookPath(tc.path); got != tc.want {
 			t.Errorf("isWebhookPath(%q) = %v, want %v", tc.path, got, tc.want)
+		}
+	}
+}
+
+func TestIsAuthPath(t *testing.T) {
+	tests := []struct {
+		path string
+		want bool
+	}{
+		// Exempt: exact auth prefixes (versioned and legacy)
+		{"/api/auth/login", true},
+		{"/api/auth/register", true},
+		{"/api/auth/refresh", true},
+		{"/api/v1/auth/login", true},
+		{"/api/v1/auth/register", true},
+		{"/api/v1/auth/refresh", true},
+		// Not exempt: unrelated paths
+		{"/api/v1/events", false},
+		{"/api/v1/clients", false},
+		// Not exempt: path that CONTAINS "/auth/" but is not under the exempted prefix.
+		// e.g. a hypothetical /api/events/auth-something must NOT be exempt.
+		{"/api/v1/events/auth-review", false},
+		{"/api/v1/anything/auth/foo", false},
+	}
+
+	for _, tc := range tests {
+		if got := isAuthPath(tc.path); got != tc.want {
+			t.Errorf("isAuthPath(%q) = %v, want %v", tc.path, got, tc.want)
 		}
 	}
 }

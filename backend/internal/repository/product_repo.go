@@ -47,7 +47,12 @@ func (r *ProductRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Pr
 	return products, nil
 }
 
+var productAllowedSortCols = []string{"name", "category", "base_price", "is_active", "created_at", "updated_at"}
+
 func (r *ProductRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Product, int, error) {
+	sortCol = safeSortColumn(sortCol, productAllowedSortCols, "name")
+	order = safeSortOrder(order)
+
 	var total int
 	countQuery := `SELECT COUNT(*) FROM products WHERE user_id = $1`
 	if err := r.pool.QueryRow(ctx, countQuery, userID).Scan(&total); err != nil {

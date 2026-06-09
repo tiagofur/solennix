@@ -14,6 +14,7 @@ func TestCORS(t *testing.T) {
 		wantStatus      int
 		wantAllowOrigin string
 		wantNextCalled  bool
+		wantVaryOrigin  bool // expect Vary: Origin when a dynamic origin is echoed
 	}{
 		{
 			name:            "GivenAllowedOrigin_WhenGet_ThenSetAllowOrigin",
@@ -22,6 +23,7 @@ func TestCORS(t *testing.T) {
 			wantStatus:      http.StatusAccepted,
 			wantAllowOrigin: "http://allowed.com",
 			wantNextCalled:  true,
+			wantVaryOrigin:  true,
 		},
 		{
 			name:            "GivenDisallowedOrigin_WhenGet_ThenDoNotSetAllowOrigin",
@@ -30,6 +32,7 @@ func TestCORS(t *testing.T) {
 			wantStatus:      http.StatusAccepted,
 			wantAllowOrigin: "",
 			wantNextCalled:  true,
+			wantVaryOrigin:  false,
 		},
 		{
 			name:            "GivenOptionsRequest_WhenRequest_ThenReturnNoContent",
@@ -38,6 +41,7 @@ func TestCORS(t *testing.T) {
 			wantStatus:      http.StatusNoContent,
 			wantAllowOrigin: "http://allowed.com",
 			wantNextCalled:  false,
+			wantVaryOrigin:  true,
 		},
 	}
 
@@ -67,6 +71,57 @@ func TestCORS(t *testing.T) {
 			if nextCalled != tc.wantNextCalled {
 				t.Fatalf("nextCalled = %v, want %v", nextCalled, tc.wantNextCalled)
 			}
+
+			// M6: Vary: Origin must be present whenever a dynamic origin is echoed.
+			vary := rr.Header().Get("Vary")
+			hasVaryOrigin := vary == "Origin" || len(vary) > 0 && containsVaryOrigin(vary)
+			if hasVaryOrigin != tc.wantVaryOrigin {
+				t.Fatalf("Vary: Origin present = %v, want %v (Vary header: %q)", hasVaryOrigin, tc.wantVaryOrigin, vary)
+			}
 		})
 	}
+}
+
+// containsVaryOrigin reports whether a Vary header value includes "Origin".
+func containsVaryOrigin(vary string) bool {
+	for _, v := range splitVary(vary) {
+		if v == "Origin" {
+			return true
+		}
+	}
+	return false
+}
+
+func splitVary(vary string) []string {
+	var parts []string
+	for _, p := range splitComma(vary) {
+		if t := trimSpace(p); t != "" {
+			parts = append(parts, t)
+		}
+	}
+	return parts
+}
+
+func splitComma(s string) []string {
+	var parts []string
+	start := 0
+	for i := 0; i < len(s); i++ {
+		if s[i] == ',' {
+			parts = append(parts, s[start:i])
+			start = i + 1
+		}
+	}
+	parts = append(parts, s[start:])
+	return parts
+}
+
+func trimSpace(s string) string {
+	start, end := 0, len(s)
+	for start < end && (s[start] == ' ' || s[start] == '\t') {
+		start++
+	}
+	for end > start && (s[end-1] == ' ' || s[end-1] == '\t') {
+		end--
+	}
+	return s[start:end]
 }
