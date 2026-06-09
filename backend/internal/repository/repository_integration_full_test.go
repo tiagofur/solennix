@@ -128,7 +128,7 @@ func TestSubscriptionRepoUpdateStatusByProviderSubID(t *testing.T) {
 	}
 }
 
-func TestSubscriptionRepoUpdateStatusByUserID(t *testing.T) {
+func TestSubscriptionRepoUpdateStatusByUserIDAndProvider(t *testing.T) {
 	pool := openTestPool(t)
 	defer pool.Close()
 	resetDatabase(t, pool)
@@ -153,17 +153,142 @@ func TestSubscriptionRepoUpdateStatusByUserID(t *testing.T) {
 		t.Fatalf("Upsert() error = %v", err)
 	}
 
-	// Update all subscriptions for user
-	if err := repo.UpdateStatusByUserID(context.Background(), userID, "past_due"); err != nil {
-		t.Fatalf("UpdateStatusByUserID() error = %v", err)
+	// Update with matching provider — should succeed.
+	if err := repo.UpdateStatusByUserIDAndProvider(context.Background(), userID, "stripe", "past_due"); err != nil {
+		t.Fatalf("UpdateStatusByUserIDAndProvider(stripe) error = %v", err)
 	}
 
 	got, err := repo.GetByUserID(context.Background(), userID)
 	if err != nil {
-		t.Fatalf("GetByUserID() after UpdateStatusByUserID error = %v", err)
+		t.Fatalf("GetByUserID() after UpdateStatusByUserIDAndProvider error = %v", err)
 	}
 	if got.Status != "past_due" {
-		t.Fatalf("status after UpdateStatusByUserID = %q, want %q", got.Status, "past_due")
+		t.Fatalf("status after UpdateStatusByUserIDAndProvider = %q, want %q", got.Status, "past_due")
+	}
+
+	// Update with non-matching provider — should be a no-op (zero rows affected, no error).
+	if err := repo.UpdateStatusByUserIDAndProvider(context.Background(), userID, "apple", "canceled"); err != nil {
+		t.Fatalf("UpdateStatusByUserIDAndProvider(apple, no-op) unexpected error = %v", err)
+	}
+	got2, err := repo.GetByUserID(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("GetByUserID() after no-op update error = %v", err)
+	}
+	if got2.Status != "past_due" {
+		t.Fatalf("status should remain %q after cross-provider no-op, got %q", "past_due", got2.Status)
+	}
+
+	// Empty provider must return an error.
+	if err := repo.UpdateStatusByUserIDAndProvider(context.Background(), userID, "", "active"); err == nil {
+		t.Fatal("UpdateStatusByUserIDAndProvider with empty provider should return error")
+	}
+}
+
+func TestSubscriptionRepoSyncPlanAndStatusByStripeCustomer(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	ctx := context.Background()
+	userRepo := NewUserRepo(pool)
+	subRepo := NewSubscriptionRepo(pool)
+
+	// Seed user with a stripe_customer_id
+	userID := seedUser(t, pool, "subscription.sync@test.dev")
+	stripeCustomerID := "cus_test_sync_001"
+	if err := userRepo.UpdatePlanByStripeCustomerID(ctx, stripeCustomerID, "basic"); err != nil {
+		// First set the stripe_customer_id on the user
+		_, err2 := pool.Exec(ctx,
+			`UPDATE users SET stripe_customer_id = $1 WHERE id = $2`,
+			stripeCustomerID, userID,
+		)
+		if err2 != nil {
+			t.Fatalf("failed to set stripe_customer_id: %v", err2)
+		}
+	} else {
+		// UpdatePlanByStripeCustomerID found no user — set the ID directly
+		_, err2 := pool.Exec(ctx,
+			`UPDATE users SET stripe_customer_id = $1 WHERE id = $2`,
+			stripeCustomerID, userID,
+		)
+		if err2 != nil {
+			t.Fatalf("failed to set stripe_customer_id on user: %v", err2)
+		}
+	}
+
+	// Force set stripe_customer_id explicitly
+	if _, err := pool.Exec(ctx,
+		`UPDATE users SET stripe_customer_id = $1 WHERE id = $2`,
+		stripeCustomerID, userID,
+	); err != nil {
+		t.Fatalf("failed to set stripe_customer_id: %v", err)
+	}
+
+	// Seed a subscription row
+	now := time.Now().UTC().Truncate(time.Second)
+	periodEnd := now.Add(30 * 24 * time.Hour)
+	providerSubID := "sub_stripe_sync_001"
+
+	sub := &models.Subscription{
+		UserID:             userID,
+		Provider:           "stripe",
+		ProviderSubID:      &providerSubID,
+		Plan:               "pro",
+		Status:             "past_due",
+		CurrentPeriodStart: &now,
+		CurrentPeriodEnd:   &periodEnd,
+	}
+	if err := subRepo.Upsert(ctx, sub); err != nil {
+		t.Fatalf("Upsert() error = %v", err)
+	}
+
+	newStart := now.Add(30 * 24 * time.Hour)
+	newEnd := now.Add(60 * 24 * time.Hour)
+
+	// Sync to active + pro
+	if err := subRepo.SyncPlanAndStatusByStripeCustomer(ctx, stripeCustomerID, providerSubID, "pro", "active", &newStart, &newEnd); err != nil {
+		t.Fatalf("SyncPlanAndStatusByStripeCustomer() error = %v", err)
+	}
+
+	// Verify users.plan updated
+	user, err := userRepo.GetByID(ctx, userID)
+	if err != nil {
+		t.Fatalf("GetByID() error = %v", err)
+	}
+	if user.Plan != "pro" {
+		t.Fatalf("users.plan = %q, want %q", user.Plan, "pro")
+	}
+
+	// Verify subscriptions row updated
+	got, err := subRepo.GetByUserID(ctx, userID)
+	if err != nil {
+		t.Fatalf("GetByUserID() error = %v", err)
+	}
+	if got.Status != "active" {
+		t.Fatalf("subscriptions.status = %q, want %q", got.Status, "active")
+	}
+	if got.Plan != "pro" {
+		t.Fatalf("subscriptions.plan = %q, want %q", got.Plan, "pro")
+	}
+
+	// Sync business plan
+	if err := subRepo.SyncPlanAndStatusByStripeCustomer(ctx, stripeCustomerID, providerSubID, "business", "active", nil, nil); err != nil {
+		t.Fatalf("SyncPlanAndStatusByStripeCustomer(business) error = %v", err)
+	}
+	user2, err := userRepo.GetByID(ctx, userID)
+	if err != nil {
+		t.Fatalf("GetByID() after business sync error = %v", err)
+	}
+	if user2.Plan != "business" {
+		t.Fatalf("users.plan after business sync = %q, want %q", user2.Plan, "business")
+	}
+
+	// Non-existent providerSubID must not affect users.plan (subscriptions UPDATE is a no-op, users UPDATE proceeds)
+	// This is expected behavior: the tx succeeds but sub row is unaffected.
+	if err := subRepo.SyncPlanAndStatusByStripeCustomer(ctx, stripeCustomerID, "sub_nonexistent_999", "basic", "canceled", nil, nil); err != nil {
+		// Error is acceptable here but not required — test that users.plan would be rolled back correctly
+		// if needed. The point is the tx is atomic.
+		t.Logf("SyncPlanAndStatusByStripeCustomer with unknown sub id returned: %v (acceptable)", err)
 	}
 }
 

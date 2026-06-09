@@ -301,8 +301,8 @@ func TestSubscriptionRepoWithClosedPool(t *testing.T) {
 	if err := repo.UpdateStatusByProviderSubID(ctx, "sub_test", "active", nil, nil); err == nil {
 		t.Fatal("SubscriptionRepo.UpdateStatusByProviderSubID() expected error with closed pool")
 	}
-	if err := repo.UpdateStatusByUserID(ctx, userID, "canceled"); err == nil {
-		t.Fatal("SubscriptionRepo.UpdateStatusByUserID() expected error with closed pool")
+	if err := repo.UpdateStatusByUserIDAndProvider(ctx, userID, "stripe", "canceled"); err == nil {
+		t.Fatal("SubscriptionRepo.UpdateStatusByUserIDAndProvider() expected error with closed pool")
 	}
 }
 
