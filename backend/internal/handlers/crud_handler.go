@@ -15,6 +15,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tiagofur/solennix-backend/internal/i18n"
@@ -180,23 +181,51 @@ func (h *CRUDHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user.Plan == "basic" {
-		count, err := h.clientRepo.CountByUserID(r.Context(), userID)
-		if err != nil {
-			writeCRUDI18nError(w, r, http.StatusInternalServerError, "crud.verify_client_limits_failed")
+	client.UserID = userID
+
+	if normalizePlan(user.Plan) == "basic" {
+		const limit = 20
+		const countSQL = `SELECT COUNT(*) FROM clients WHERE user_id = $1`
+		err := withPlanLimit(r.Context(), h.pool, userID, "clients", limit, countSQL,
+			func(ctx context.Context, tx pgx.Tx) error {
+				return tx.QueryRow(ctx,
+					`INSERT INTO clients (user_id, name, phone, email, address, city, notes, photo_url)
+					VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+					RETURNING id, total_events, total_spent, created_at, updated_at`,
+					client.UserID, client.Name, client.Phone, client.Email,
+					client.Address, client.City, client.Notes, client.PhotoURL,
+				).Scan(&client.ID, &client.TotalEvents, &client.TotalSpent, &client.CreatedAt, &client.UpdatedAt)
+			},
+		)
+		if err == errPoolNil {
+			// Fallback: pool not available (unit tests with mocks).
+			count, cErr := h.clientRepo.CountByUserID(r.Context(), userID)
+			if cErr != nil {
+				writeCRUDI18nError(w, r, http.StatusInternalServerError, "crud.verify_client_limits_failed")
+				return
+			}
+			if count >= limit {
+				writePlanLimitError(w, "clients", count, limit)
+				return
+			}
+			if cErr := h.clientRepo.Create(r.Context(), &client); cErr != nil {
+				writeCRUDI18nError(w, r, http.StatusInternalServerError, "crud.create_client_failed")
+				return
+			}
+		} else if errors.Is(err, ErrPlanLimitReached) {
+			writePlanLimitError(w, "clients", limit, limit)
+			return
+		} else if err != nil {
+			writeCRUDI18nError(w, r, http.StatusInternalServerError, "crud.create_client_failed")
 			return
 		}
-		if count >= 20 {
-			writePlanLimitError(w, "clients", count, 20)
+	} else {
+		if err := h.clientRepo.Create(r.Context(), &client); err != nil {
+			writeCRUDI18nError(w, r, http.StatusInternalServerError, "crud.create_client_failed")
 			return
 		}
 	}
 
-	client.UserID = userID
-	if err := h.clientRepo.Create(r.Context(), &client); err != nil {
-		writeCRUDI18nError(w, r, http.StatusInternalServerError, "crud.create_client_failed")
-		return
-	}
 	writeJSON(w, http.StatusCreated, client)
 }
 
@@ -622,23 +651,70 @@ func (h *CRUDHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user.Plan == "basic" {
-		count, err := h.eventRepo.CountCurrentMonth(r.Context(), userID)
-		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Failed to verify event limits")
+	event.UserID = userID
+
+	// Prepare time fields the same way EventRepo.Create does.
+	var evStartTime, evEndTime *string
+	if event.StartTime != nil && *event.StartTime != "" {
+		evStartTime = event.StartTime
+	}
+	if event.EndTime != nil && *event.EndTime != "" {
+		evEndTime = event.EndTime
+	}
+	if event.DiscountType == "" {
+		event.DiscountType = "percent"
+	}
+
+	if normalizePlan(user.Plan) == "basic" {
+		const limit = 4
+		const countSQL = `SELECT count(*) FROM events
+			WHERE user_id = $1
+			AND date_trunc('month', event_date) = date_trunc('month', CURRENT_DATE)`
+		err := withPlanLimit(r.Context(), h.pool, userID, "events", limit, countSQL,
+			func(ctx context.Context, tx pgx.Tx) error {
+				return tx.QueryRow(ctx,
+					`INSERT INTO events (user_id, client_id, event_date, start_time, end_time,
+					service_type, num_people, status, discount, discount_type, requires_invoice,
+					tax_rate, tax_amount, total_amount, location, city,
+					deposit_percent, cancellation_days, refund_percent, notes, photos)
+					VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
+					RETURNING id, created_at, updated_at`,
+					event.UserID, event.ClientID, event.EventDate, evStartTime, evEndTime,
+					event.ServiceType, event.NumPeople, event.Status, event.Discount, event.DiscountType, event.RequiresInvoice,
+					event.TaxRate, event.TaxAmount, event.TotalAmount, event.Location, event.City,
+					event.DepositPercent, event.CancellationDays, event.RefundPercent, event.Notes, event.Photos,
+				).Scan(&event.ID, &event.CreatedAt, &event.UpdatedAt)
+			},
+		)
+		if err == errPoolNil {
+			// Fallback: pool not available (unit tests with mocks).
+			count, cErr := h.eventRepo.CountCurrentMonth(r.Context(), userID)
+			if cErr != nil {
+				writeError(w, http.StatusInternalServerError, "Failed to verify event limits")
+				return
+			}
+			if count >= limit {
+				writePlanLimitError(w, "events", count, limit)
+				return
+			}
+			if cErr := h.eventRepo.Create(r.Context(), &event); cErr != nil {
+				writeError(w, http.StatusInternalServerError, "Failed to create event")
+				return
+			}
+		} else if errors.Is(err, ErrPlanLimitReached) {
+			writePlanLimitError(w, "events", limit, limit)
+			return
+		} else if err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to create event")
 			return
 		}
-		if count >= 4 {
-			writePlanLimitError(w, "events", count, 4)
+	} else {
+		if err := h.eventRepo.Create(r.Context(), &event); err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to create event")
 			return
 		}
 	}
 
-	event.UserID = userID
-	if err := h.eventRepo.Create(r.Context(), &event); err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to create event")
-		return
-	}
 	// Update client stats
 	if err := h.eventRepo.UpdateClientStats(r.Context(), event.ClientID); err != nil {
 		slog.Warn("Failed to update client stats", "client_id", event.ClientID, "error", err)
@@ -1599,27 +1675,6 @@ func (h *CRUDHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user.Plan == "basic" {
-		productCount, err := h.productRepo.CountByUserID(r.Context(), userID)
-		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Failed to verify product limits")
-			return
-		}
-		if productCount >= 15 {
-			writePlanLimitError(w, "products", productCount, 15)
-			return
-		}
-		inventoryCount, err := h.inventoryRepo.CountByUserID(r.Context(), userID)
-		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Failed to verify inventory limits")
-			return
-		}
-		if productCount+inventoryCount >= 20 {
-			writePlanLimitError(w, "catalog", productCount+inventoryCount, 20)
-			return
-		}
-	}
-
 	product.UserID = userID
 
 	// Tenant check on staff_team_id — prevent a client from attaching another
@@ -1637,10 +1692,81 @@ func (h *CRUDHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := h.productRepo.Create(r.Context(), &product); err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to create product")
-		return
+	if normalizePlan(user.Plan) == "basic" {
+		// Compound limit: products ≤ 15 AND products+inventory ≤ 20.
+		// A single "catalog" advisory lock covers both counts atomically.
+		const productLimit = 15
+		const catalogLimit = 20
+		// countSQL is for the products-only check (limit = productLimit); the
+		// compound catalog check is done inline inside insertFn.
+		const countSQL = `SELECT COUNT(*) FROM products WHERE user_id = $1`
+		err := withPlanLimit(r.Context(), h.pool, userID, "catalog", productLimit, countSQL,
+			func(ctx context.Context, tx pgx.Tx) error {
+				// Re-check compound limit inside the locked transaction.
+				var invCount int
+				if err := tx.QueryRow(ctx,
+					`SELECT COUNT(*) FROM inventory WHERE user_id = $1`, userID,
+				).Scan(&invCount); err != nil {
+					return err
+				}
+				// productCount was already verified as < productLimit by withPlanLimit
+				// but we need the exact value for the compound check. Re-query under lock.
+				var pCount int
+				if err := tx.QueryRow(ctx,
+					`SELECT COUNT(*) FROM products WHERE user_id = $1`, userID,
+				).Scan(&pCount); err != nil {
+					return err
+				}
+				if pCount+invCount >= catalogLimit {
+					return ErrPlanLimitReached
+				}
+				return tx.QueryRow(ctx,
+					`INSERT INTO products (user_id, name, category, base_price, recipe, image_url, is_active, staff_team_id)
+					VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+					RETURNING id, created_at, updated_at`,
+					product.UserID, product.Name, product.Category, product.BasePrice,
+					product.Recipe, product.ImageURL, product.IsActive, product.StaffTeamID,
+				).Scan(&product.ID, &product.CreatedAt, &product.UpdatedAt)
+			},
+		)
+		if err == errPoolNil {
+			// Fallback: pool not available (unit tests with mocks).
+			productCount, cErr := h.productRepo.CountByUserID(r.Context(), userID)
+			if cErr != nil {
+				writeError(w, http.StatusInternalServerError, "Failed to verify product limits")
+				return
+			}
+			if productCount >= productLimit {
+				writePlanLimitError(w, "products", productCount, productLimit)
+				return
+			}
+			inventoryCount, cErr := h.inventoryRepo.CountByUserID(r.Context(), userID)
+			if cErr != nil {
+				writeError(w, http.StatusInternalServerError, "Failed to verify inventory limits")
+				return
+			}
+			if productCount+inventoryCount >= catalogLimit {
+				writePlanLimitError(w, "catalog", productCount+inventoryCount, catalogLimit)
+				return
+			}
+			if cErr := h.productRepo.Create(r.Context(), &product); cErr != nil {
+				writeError(w, http.StatusInternalServerError, "Failed to create product")
+				return
+			}
+		} else if errors.Is(err, ErrPlanLimitReached) {
+			writePlanLimitError(w, "catalog", catalogLimit, catalogLimit)
+			return
+		} else if err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to create product")
+			return
+		}
+	} else {
+		if err := h.productRepo.Create(r.Context(), &product); err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to create product")
+			return
+		}
 	}
+
 	writeJSON(w, http.StatusCreated, product)
 }
 
@@ -1877,23 +2003,51 @@ func (h *CRUDHandler) CreateInventoryItem(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if user.Plan == "basic" {
-		inventoryCount, err := h.inventoryRepo.CountByUserID(r.Context(), userID)
-		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Failed to verify inventory limits")
+	item.UserID = userID
+
+	if normalizePlan(user.Plan) == "basic" {
+		const limit = 30
+		const countSQL = `SELECT COUNT(*) FROM inventory WHERE user_id = $1`
+		err := withPlanLimit(r.Context(), h.pool, userID, "inventory", limit, countSQL,
+			func(ctx context.Context, tx pgx.Tx) error {
+				return tx.QueryRow(ctx,
+					`INSERT INTO inventory (user_id, ingredient_name, current_stock, minimum_stock, unit, unit_cost, type)
+					VALUES ($1, $2, $3, $4, $5, $6, $7)
+					RETURNING id, last_updated`,
+					item.UserID, item.IngredientName, item.CurrentStock,
+					item.MinimumStock, item.Unit, item.UnitCost, item.Type,
+				).Scan(&item.ID, &item.LastUpdated)
+			},
+		)
+		if err == errPoolNil {
+			// Fallback: pool not available (unit tests with mocks).
+			count, cErr := h.inventoryRepo.CountByUserID(r.Context(), userID)
+			if cErr != nil {
+				writeError(w, http.StatusInternalServerError, "Failed to verify inventory limits")
+				return
+			}
+			if count >= limit {
+				writePlanLimitError(w, "inventory", count, limit)
+				return
+			}
+			if cErr := h.inventoryRepo.Create(r.Context(), &item); cErr != nil {
+				writeError(w, http.StatusInternalServerError, "Failed to create inventory item")
+				return
+			}
+		} else if errors.Is(err, ErrPlanLimitReached) {
+			writePlanLimitError(w, "inventory", limit, limit)
+			return
+		} else if err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to create inventory item")
 			return
 		}
-		if inventoryCount >= 30 {
-			writePlanLimitError(w, "inventory", inventoryCount, 30)
+	} else {
+		if err := h.inventoryRepo.Create(r.Context(), &item); err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to create inventory item")
 			return
 		}
 	}
 
-	item.UserID = userID
-	if err := h.inventoryRepo.Create(r.Context(), &item); err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to create inventory item")
-		return
-	}
 	writeJSON(w, http.StatusCreated, item)
 }
 

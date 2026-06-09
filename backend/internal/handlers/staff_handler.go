@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"context"
 	"crypto/sha256"
-	"fmt"
 	"encoding/hex"
+	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -12,6 +14,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
 	"github.com/tiagofur/solennix-backend/internal/repository"
@@ -22,6 +26,7 @@ import (
 type StaffHandler struct {
 	staffRepo StaffRepository
 	userRepo  UserRepository
+	pool      *pgxpool.Pool // optional; when nil, falls back to non-transactional path (tests)
 	authSvc   *services.AuthService
 	emailSvc  *services.EmailService
 	frontend  string
@@ -53,6 +58,13 @@ func (h *StaffHandler) SetInviteSupport(authSvc *services.AuthService, emailSvc 
 	h.authSvc = authSvc
 	h.emailSvc = emailSvc
 	h.frontend = strings.TrimRight(frontendURL, "/")
+}
+
+// SetPool configures the pgxpool needed for atomic plan-limit enforcement on
+// CreateStaff. When nil (e.g. unit tests using mocks), CreateStaff falls back
+// to the non-transactional count + create path.
+func (h *StaffHandler) SetPool(p *pgxpool.Pool) {
+	h.pool = p
 }
 
 var staffSortAllowlist = map[string]string{
@@ -133,29 +145,6 @@ func (h *StaffHandler) CreateStaff(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user.Plan == "basic" {
-		count, err := h.staffRepo.CountByUserID(r.Context(), userID)
-		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Failed to verify staff limits")
-			return
-		}
-		if count >= 1 {
-			writePlanLimitError(w, "staff_seats", count, 1)
-			return
-		}
-	} else if user.Plan == "pro" || user.Plan == "premium" {
-		count, err := h.staffRepo.CountByUserID(r.Context(), userID)
-		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Failed to verify staff limits")
-			return
-		}
-		if count >= 2 {
-			writePlanLimitError(w, "staff_seats", count, 2)
-			return
-		}
-	}
-	// Business: unlimited — no check needed
-
 	var s models.Staff
 	if err := decodeJSON(r, &s); err != nil {
 		writeError(w, http.StatusBadRequest, "Invalid request body")
@@ -166,11 +155,65 @@ func (h *StaffHandler) CreateStaff(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.UserID = userID
-	if err := h.staffRepo.Create(r.Context(), &s); err != nil {
-		slog.Error("failed to create staff", "error", err, "user_id", userID)
-		writeError(w, http.StatusInternalServerError, "Failed to create staff")
-		return
+
+	plan := normalizePlan(user.Plan)
+
+	// Determine per-plan seat limit; 0 means unlimited.
+	var seatLimit int
+	switch plan {
+	case "basic":
+		seatLimit = 1
+	case "pro":
+		seatLimit = 2
+	default:
+		// business and any unknown paid plans: unlimited — skip atomic path.
+		seatLimit = 0
 	}
+
+	if seatLimit > 0 {
+		countSQL := `SELECT COUNT(*) FROM staff WHERE user_id = $1`
+		err := withPlanLimit(r.Context(), h.pool, userID, "staff_seats", seatLimit, countSQL,
+			func(ctx context.Context, tx pgx.Tx) error {
+				return tx.QueryRow(ctx,
+					`INSERT INTO staff (user_id, name, role_label, phone, email, notes, notification_email_opt_in)
+					VALUES ($1, $2, $3, $4, $5, $6, $7)
+					RETURNING id, created_at, updated_at`,
+					s.UserID, s.Name, s.RoleLabel, s.Phone, s.Email, s.Notes, s.NotificationEmailOptIn,
+				).Scan(&s.ID, &s.CreatedAt, &s.UpdatedAt)
+			},
+		)
+		if err == errPoolNil {
+			// Fallback: pool not available (unit tests with mocks).
+			count, cErr := h.staffRepo.CountByUserID(r.Context(), userID)
+			if cErr != nil {
+				writeError(w, http.StatusInternalServerError, "Failed to verify staff limits")
+				return
+			}
+			if count >= seatLimit {
+				writePlanLimitError(w, "staff_seats", count, seatLimit)
+				return
+			}
+			if cErr := h.staffRepo.Create(r.Context(), &s); cErr != nil {
+				slog.Error("failed to create staff", "error", cErr, "user_id", userID)
+				writeError(w, http.StatusInternalServerError, "Failed to create staff")
+				return
+			}
+		} else if errors.Is(err, ErrPlanLimitReached) {
+			writePlanLimitError(w, "staff_seats", seatLimit, seatLimit)
+			return
+		} else if err != nil {
+			slog.Error("failed to create staff", "error", err, "user_id", userID)
+			writeError(w, http.StatusInternalServerError, "Failed to create staff")
+			return
+		}
+	} else {
+		if err := h.staffRepo.Create(r.Context(), &s); err != nil {
+			slog.Error("failed to create staff", "error", err, "user_id", userID)
+			writeError(w, http.StatusInternalServerError, "Failed to create staff")
+			return
+		}
+	}
+
 	writeJSON(w, http.StatusCreated, s)
 }
 
