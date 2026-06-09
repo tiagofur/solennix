@@ -177,6 +177,7 @@ func main() {
 	paymentSubmissionHandler := handlers.NewPaymentSubmissionHandler(paymentSubmissionRepo, paymentRepo, userRepo, pool, cfg.UploadDir)
 	reviewHandler := handlers.NewEventReviewHandler(reviewRepo, userRepo, emailService, cfg.FrontendURL)
 	staffHandler := handlers.NewStaffHandler(staffRepo, userRepo)
+	staffHandler.SetPool(pool)
 	staffHandler.SetInviteSupport(authService, emailService, cfg.FrontendURL)
 	staffTeamHandler := handlers.NewStaffTeamHandler(staffTeamRepo)
 	pdfHandler := handlers.NewPDFHandler(eventRepo, clientRepo, paymentRepo, userRepo, cfg.UploadDir)
