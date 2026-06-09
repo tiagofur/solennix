@@ -2804,3 +2804,123 @@ func TestAuthHandler_Login_CancelPendingDeletion(t *testing.T) {
 	assert.Contains(t, rr.Body.String(), "access_token")
 	mockRepo.AssertExpectations(t)
 }
+
+// ---------------------------------------------------------------------------
+// C5 — checkAccountAccess gate tests
+// ---------------------------------------------------------------------------
+
+func TestAuthHandler_CheckAccountAccess_BlockedNoGrace(t *testing.T) {
+	authService := services.NewAuthService("test-secret-key-32bytes-minimum!!", 1)
+	mockRepo := new(MockFullUserRepo)
+	h := &AuthHandler{userRepo: mockRepo, authService: authService}
+
+	userID := uuid.New()
+	user := &models.User{
+		ID:            userID,
+		Email:         "blocked@test.dev",
+		AccountStatus: repository.AccountStatusBlocked,
+		// DeletionEligibleAt is nil — hard block, no grace window
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	rr := httptest.NewRecorder()
+
+	result := h.checkAccountAccess(rr, req, user)
+
+	assert.False(t, result)
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	assert.Contains(t, rr.Body.String(), "blocked")
+	mockRepo.AssertExpectations(t) // CancelPendingDeletion must NOT be called
+}
+
+func TestAuthHandler_CheckAccountAccess_Deleted(t *testing.T) {
+	authService := services.NewAuthService("test-secret-key-32bytes-minimum!!", 1)
+	mockRepo := new(MockFullUserRepo)
+	h := &AuthHandler{userRepo: mockRepo, authService: authService}
+
+	userID := uuid.New()
+	user := &models.User{
+		ID:            userID,
+		Email:         "deleted@test.dev",
+		AccountStatus: repository.AccountStatusDeleted,
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	rr := httptest.NewRecorder()
+
+	result := h.checkAccountAccess(rr, req, user)
+
+	assert.False(t, result)
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	assert.Contains(t, rr.Body.String(), "deleted")
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAuthHandler_CheckAccountAccess_DeletionGrace_CancelsAndAllows(t *testing.T) {
+	authService := services.NewAuthService("test-secret-key-32bytes-minimum!!", 1)
+	mockRepo := new(MockFullUserRepo)
+	h := &AuthHandler{userRepo: mockRepo, authService: authService}
+
+	userID := uuid.New()
+	gracePeriod := time.Now().Add(30 * 24 * time.Hour)
+	user := &models.User{
+		ID:                 userID,
+		Email:              "grace@test.dev",
+		AccountStatus:      repository.AccountStatusBlocked,
+		DeletionEligibleAt: &gracePeriod,
+	}
+
+	mockRepo.On("CancelPendingDeletion", mock.Anything, userID).Return(nil)
+
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	rr := httptest.NewRecorder()
+
+	result := h.checkAccountAccess(rr, req, user)
+
+	assert.True(t, result)
+	assert.Equal(t, http.StatusOK, rr.Code) // no error written
+	assert.Equal(t, repository.AccountStatusActive, user.AccountStatus)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAuthHandler_CheckAccountAccess_Active(t *testing.T) {
+	authService := services.NewAuthService("test-secret-key-32bytes-minimum!!", 1)
+	mockRepo := new(MockFullUserRepo)
+	h := &AuthHandler{userRepo: mockRepo, authService: authService}
+
+	user := &models.User{
+		ID:            uuid.New(),
+		Email:         "active@test.dev",
+		AccountStatus: repository.AccountStatusActive,
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	rr := httptest.NewRecorder()
+
+	result := h.checkAccountAccess(rr, req, user)
+
+	assert.True(t, result)
+	assert.Equal(t, http.StatusOK, rr.Code)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAuthHandler_CheckAccountAccess_EmptyStatus_TreatedAsActive(t *testing.T) {
+	authService := services.NewAuthService("test-secret-key-32bytes-minimum!!", 1)
+	mockRepo := new(MockFullUserRepo)
+	h := &AuthHandler{userRepo: mockRepo, authService: authService}
+
+	user := &models.User{
+		ID:            uuid.New(),
+		Email:         "notstatus@test.dev",
+		AccountStatus: "", // empty → treated as active
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	rr := httptest.NewRecorder()
+
+	result := h.checkAccountAccess(rr, req, user)
+
+	assert.True(t, result)
+	assert.Equal(t, http.StatusOK, rr.Code)
+	mockRepo.AssertExpectations(t)
+}

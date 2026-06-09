@@ -166,7 +166,7 @@ func (h *EventReviewHandler) SubmitPublicReview(w http.ResponseWriter, r *http.R
 	}
 
 	now := time.Now().UTC()
-	if err := h.repo.MarkRequestSubmitted(ctx, requestRow.ID, now); err != nil {
+	if err := h.repo.MarkRequestSubmitted(ctx, requestRow.ID, now, requestRow.UserID); err != nil {
 		slog.Warn("Failed to mark review request as submitted", "request_id", requestRow.ID.String(), "error", err)
 	}
 
@@ -229,7 +229,7 @@ func (h *EventReviewHandler) UpdateOrganizerResponse(w http.ResponseWriter, r *h
 		return
 	}
 
-	updated, err := h.repo.UpdateOrganizerReply(ctx, reviewID, body.Response)
+	updated, err := h.repo.UpdateOrganizerReply(ctx, reviewID, body.Response, userID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to update review response")
 		return
@@ -283,7 +283,7 @@ func (h *EventReviewHandler) UpdateReviewVisibility(w http.ResponseWriter, r *ht
 		}
 	}
 
-	updated, err := h.repo.UpdateVisibility(ctx, reviewID, visibility)
+	updated, err := h.repo.UpdateVisibility(ctx, reviewID, visibility, userID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to update review visibility")
 		return

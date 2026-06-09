@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -157,7 +160,9 @@ func main() {
 
 	uploadHandler := handlers.NewUploadHandler(cfg.UploadDir, userRepo)
 	uploadHandler.SetStorageProvider(storageProvider)
-	uploadHandler.SetPresignSigningKey(cfg.JWTSecret)
+	presignMac := hmac.New(sha256.New, []byte(cfg.JWTSecret))
+	presignMac.Write([]byte("solennix-presign-v1"))
+	uploadHandler.SetPresignSigningKey(hex.EncodeToString(presignMac.Sum(nil)))
 	adminHandler := handlers.NewAdminHandler(adminRepo)
 	auditHandler := handlers.NewAuditHandler(auditRepo)
 	dashboardHandler := handlers.NewDashboardHandler(dashboardRepo)

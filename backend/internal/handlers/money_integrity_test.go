@@ -229,7 +229,7 @@ func TestCreatePublic_A8_AmountExceedsBalance_Returns400(t *testing.T) {
 		}, nil
 	}
 	handler.lookupEvent = func(_ context.Context, id uuid.UUID) (*models.Event, error) {
-		return &models.Event{ID: id, TotalAmount: 3000.00}, nil
+		return &models.Event{ID: id, ClientID: clientID, TotalAmount: 3000.00}, nil
 	}
 	handler.sumPaymentsByEventID = func(_ context.Context, _ uuid.UUID) (float64, error) {
 		return 1000.00, nil // already paid 1000; remaining=2000
@@ -259,7 +259,7 @@ func TestCreatePublic_A8_AmountWithinBalance_Proceeds(t *testing.T) {
 		}, nil
 	}
 	handler.lookupEvent = func(_ context.Context, id uuid.UUID) (*models.Event, error) {
-		return &models.Event{ID: id, TotalAmount: 3000.00}, nil
+		return &models.Event{ID: id, ClientID: clientID, TotalAmount: 3000.00}, nil
 	}
 	handler.sumPaymentsByEventID = func(_ context.Context, _ uuid.UUID) (float64, error) {
 		return 1000.00, nil // remaining=2000
@@ -296,7 +296,7 @@ func TestCreatePublic_A8_ExactBalance_Proceeds(t *testing.T) {
 		}, nil
 	}
 	handler.lookupEvent = func(_ context.Context, id uuid.UUID) (*models.Event, error) {
-		return &models.Event{ID: id, TotalAmount: 3000.00}, nil
+		return &models.Event{ID: id, ClientID: clientID, TotalAmount: 3000.00}, nil
 	}
 	handler.sumPaymentsByEventID = func(_ context.Context, _ uuid.UUID) (float64, error) {
 		return 1000.00, nil // remaining=2000

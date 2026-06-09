@@ -230,13 +230,16 @@ func (r *EventReviewRepo) CreateReview(ctx context.Context, review *models.Event
 	return nil
 }
 
-func (r *EventReviewRepo) MarkRequestSubmitted(ctx context.Context, requestID uuid.UUID, submittedAt time.Time) error {
-	_, err := r.pool.Exec(ctx, `
+func (r *EventReviewRepo) MarkRequestSubmitted(ctx context.Context, requestID uuid.UUID, submittedAt time.Time, userID uuid.UUID) error {
+	tag, err := r.pool.Exec(ctx, `
 		UPDATE event_review_requests
 		SET submitted_at = $2, updated_at = NOW()
-		WHERE id = $1`, requestID, submittedAt)
+		WHERE id = $1 AND user_id = $3`, requestID, submittedAt, userID)
 	if err != nil {
 		return fmt.Errorf("mark review request submitted: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("mark review request submitted: %w", pgx.ErrNoRows)
 	}
 	return nil
 }
@@ -286,16 +289,19 @@ func (r *EventReviewRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.Ev
 	return review, nil
 }
 
-func (r *EventReviewRepo) UpdateOrganizerReply(ctx context.Context, reviewID uuid.UUID, response *string) (*models.EventReview, error) {
+func (r *EventReviewRepo) UpdateOrganizerReply(ctx context.Context, reviewID uuid.UUID, response *string, userID uuid.UUID) (*models.EventReview, error) {
 	now := time.Now().UTC()
-	_, err := r.pool.Exec(ctx, `
+	tag, err := r.pool.Exec(ctx, `
 		UPDATE event_reviews
 		SET organizer_response = $2,
 			responded_at = CASE WHEN $2 IS NULL OR $2 = '' THEN NULL ELSE $3 END,
 			updated_at = NOW()
-		WHERE id = $1`, reviewID, response, now)
+		WHERE id = $1 AND user_id = $4`, reviewID, response, now, userID)
 	if err != nil {
 		return nil, fmt.Errorf("update organizer review response: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return nil, fmt.Errorf("update organizer review response: %w", pgx.ErrNoRows)
 	}
 
 	review, err := r.GetByID(ctx, reviewID)
@@ -306,13 +312,16 @@ func (r *EventReviewRepo) UpdateOrganizerReply(ctx context.Context, reviewID uui
 	return review, nil
 }
 
-func (r *EventReviewRepo) UpdateVisibility(ctx context.Context, reviewID uuid.UUID, visibility string) (*models.EventReview, error) {
-	_, err := r.pool.Exec(ctx, `
+func (r *EventReviewRepo) UpdateVisibility(ctx context.Context, reviewID uuid.UUID, visibility string, userID uuid.UUID) (*models.EventReview, error) {
+	tag, err := r.pool.Exec(ctx, `
 		UPDATE event_reviews
 		SET visibility = $2, updated_at = NOW()
-		WHERE id = $1`, reviewID, visibility)
+		WHERE id = $1 AND user_id = $3`, reviewID, visibility, userID)
 	if err != nil {
 		return nil, fmt.Errorf("update review visibility: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return nil, fmt.Errorf("update review visibility: %w", pgx.ErrNoRows)
 	}
 
 	review, err := r.GetByID(ctx, reviewID)
