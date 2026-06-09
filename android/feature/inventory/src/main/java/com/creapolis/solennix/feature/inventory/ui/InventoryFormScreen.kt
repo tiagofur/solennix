@@ -70,8 +70,7 @@ fun InventoryFormScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(padding)
-                        .navigationBarsPadding()
-                        .imePadding()
+                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
                         .verticalScroll(scrollState)
                 ) {
                     // Plan limit banner (only shown when creating a new item)

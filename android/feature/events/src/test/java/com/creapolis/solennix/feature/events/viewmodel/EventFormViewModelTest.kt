@@ -117,6 +117,28 @@ class EventFormViewModelTest {
     }
 
     @Test
+    fun `prepopulates eventDate from SavedStateHandle date parameter`() = runTest {
+        val dateStr = "2026-07-25"
+        val vm = EventFormViewModel(
+            appContext,
+            eventRepository,
+            clientRepository,
+            productRepository,
+            inventoryRepository,
+            staffRepository,
+            staffTeamRepository,
+            apiService,
+            planLimitsManager,
+            authManager,
+            SavedStateHandle(mapOf("date" to dateStr))
+        )
+
+        advanceUntilIdle()
+
+        assertEquals(java.time.LocalDate.parse(dateStr), vm.eventDate)
+    }
+
+    @Test
     fun `addProduct merges quantity for same product`() = runTest {
         val vm = EventFormViewModel(
             appContext,

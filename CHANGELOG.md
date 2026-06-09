@@ -2,7 +2,7 @@
 
 Historial oficial de cambios de Solennix para Web, iOS, Android y Backend.
 
-Última actualización: 2026-06-03
+Última actualización: 2026-06-08
 
 ## Versiones actuales
 
@@ -10,8 +10,23 @@ Historial oficial de cambios de Solennix para Web, iOS, Android y Backend.
 | --- | --- | --- | --- |
 | Web | 1.0.1 | - | web/package.json |
 | iOS | 1.3.0 | 8 | ios/project.yml |
-| Android | 1.3.0 | 8 | android/app/build.gradle.kts |
+| Android | 1.3.1 | 9 | android/app/build.gradle.kts |
 | Backend | 1.0.0 | - | backend/VERSION |
+
+## 2026-06-08 - Android 1.3.1: Menús contextuales y correcciones de UI
+
+Se unifican los menús de acciones rápidas (bottom sheets) para todas las listas principales en Android y se corrige el espaciado del teclado en formularios.
+
+### WEB
+
+### IOS
+
+### ANDROID
+- Se implementa menú contextual (bottom sheet) de acciones rápidas para las listas de Clientes, Productos, Inventario, Colaboradores y Equipos.
+- Se corrige el bug de espaciado vacío que aparecía arriba del teclado al abrirlo en cualquier formulario.
+- Se corrigen bugs de navegación y edición en el flujo del formulario de eventos.
+
+### BACKEND
 
 ## 2026-06-03 - Release train móvil 1.3.0: Eliminación de cuenta y localización
 

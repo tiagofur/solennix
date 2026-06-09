@@ -94,8 +94,7 @@ fun ProductFormScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .navigationBarsPadding()
-                    .imePadding()
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
                     .verticalScroll(scrollState)
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)

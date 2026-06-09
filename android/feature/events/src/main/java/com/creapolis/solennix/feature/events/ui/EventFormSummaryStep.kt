@@ -50,7 +50,6 @@ fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean) {
             modifier = Modifier
                 .padding(24.dp)
                 .verticalScroll(rememberScrollState())
-                .imePadding()
         ) {
             Spacer(modifier = Modifier.height(20.dp))
 

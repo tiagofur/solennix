@@ -135,4 +135,9 @@
     <string name="clients_quick_quote_pdf_disclaimer_1">This quote is informative and does not constitute a commitment.</string>
     <string name="clients_quick_quote_pdf_disclaimer_2">Prices may be subject to change. To confirm, request a formal quote.</string>
     <string name="clients_quick_quote_pdf_footer">Solennix - Every detail matters • www.solennix.com</string>
+    <string name="clients_list_action_edit">Edit</string>
+    <string name="clients_list_action_delete">Delete</string>
+    <string name="clients_list_action_call">Call phone</string>
+    <string name="clients_list_action_email">Send email</string>
+    <string name="clients_ok">OK</string>
 </resources>

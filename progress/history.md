@@ -203,3 +203,53 @@
   - `AdminUserDetails.tsx` (Componente de vista de detalles de usuario con métricas de adopción e i18n completo)
   - `AdminUserDetails.test.tsx` (Pruebas unitarias de carga de información de usuario, métricas y timeline sin PII en verde)
   - `es/admin.json` y `en/admin.json` (Claves de traducción agregadas para el módulo de detalles)
+
+## Sesión 2026-06-08: Corrección de Crash en Navegación de Eventos en Android
+- **Feature ID:** android-event-form-crash-fix
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1233 tests en verde) y tests unitarios de Android.
+- **Entregables:**
+  - `CompactBottomNavLayout.kt` (Ruta `event_form` ampliada para soportar los parámetros query opcionales `eventId` y `date`)
+  - `EventFormViewModel.kt` (Pre-poblado de fecha si no viene un `eventId` pero sí un parámetro `date`)
+  - `EventFormViewModelTest.kt` (Prueba unitaria que valida el comportamiento del `SavedStateHandle`)
+
+## Sesión 2026-06-08: Corrección de Acción de Edición en Menú Contextual de Eventos en Android
+- **Feature ID:** android-event-list-edit-fix
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1233 tests en verde) y tests de Android.
+- **Entregables:**
+  - `CompactBottomNavLayout.kt` (Se pasa la callback `onEventEdit = { id -> navController.navigate("event_form?eventId=$id") }` a `EventListScreen` en el NavHost para evitar que use el fallback de detalles por defecto)
+
+## Sesión 2026-06-08: Menú Contextual de Clientes en Android
+- **Feature ID:** android-client-contextual-menu
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1233 tests en verde), compilación de Kotlin y tests de Android unitarios al 100% en verde.
+- **Entregables:**
+  - `ClientListScreen.kt` (Soporte para long-press en los items, integración de la bottom sheet, y parámetro `onLongClick` opcional/anulable en `ClientListItem`)
+  - `ClientListActionSheets.kt` (Menú contextual de opciones rápidas: Editar, Llamar, Correo y Eliminar con su diálogo de confirmación y flujo de borrado)
+  - `ClientListViewModel.kt` (Acciones de borrado lógico y manejo de mensajes de error de límites de plan)
+  - `CompactBottomNavLayout.kt` (Callback `onClientEdit` enrutado al formulario del cliente)
+  - `strings.xml` y `values-en/strings.xml` (Textos traducidos en ES y EN para las acciones del menú contextual)
+
+## Sesión 2026-06-08: Menú Contextual de Personal y Equipos en Android
+- **Feature ID:** android-staff-team-contextual-menu
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1233 tests en verde), compilación de Kotlin y tests de Android unitarios al 100% en verde.
+- **Entregables:**
+  - `StaffListScreen.kt` (Soporte para long-press en colaboradores, integración de bottom sheet y diálogo de eliminación)
+  - `StaffTeamListScreen.kt` (Soporte para long-press en equipos, eliminación del botón directo de borrado del card y enlace con la confirmación de eliminación)
+  - `StaffListActionSheets.kt` (Bottom sheets de acciones contextuales para colaboradores y equipos)
+  - `StaffListViewModel.kt` (Implementación de `deleteStaff` y control de error de eliminación)
+  - `CompactBottomNavLayout.kt` (Callbacks `onStaffEdit` y `onTeamEdit` enrutados a sus correspondientes formularios)
+  - `strings.xml` y `values-en/strings.xml` (Textos traducidos en ES y EN para las acciones rápidas del menú)
+ 
+## Sesión 2026-06-08: Corrección de Padding de Teclado en Formularios de Android
+- **Feature ID:** android-keyboard-padding-fix
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1233 tests en verde), compilación de Kotlin y tests de Android unitarios en verde.
+- **Entregables:**
+  - `CompactBottomNavLayout.kt` (Se condicionó el render de `NavigationBar` a `isAtTopLevel` en la navegación compacta, eliminando el padding inferior fantasma en pantallas secundarias)
+  - `ProductFormScreen.kt`, `InventoryFormScreen.kt`, `StaffFormScreen.kt`, `StaffTeamFormScreen.kt`, `ClientFormScreen.kt` (Migrados de insets anidados `.navigationBarsPadding().imePadding()` a la directiva dinámica `.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))`)
+ 
+## Sesión 2026-06-08: Versión y Changelog para Play Store (Android 1.3.1)
+- **Feature ID:** android-version-bump-1-3-1
+- **Resultado:** COMPLETO y Validado con `npm run version:ci` y `./init.sh`.
+- **Entregables:**
+  - `build.gradle.kts` (Versión de Android actualizada a versionName 1.3.1 y versionCode 9)
+  - `releases.json` (Registro oficial de la versión 1.3.1 con los menús contextuales y fixes en el manifest de releases)
+  - `CHANGELOG.md` y `changelog.generated.ts` (Archivos autogenerados y sincronizados correctamente)

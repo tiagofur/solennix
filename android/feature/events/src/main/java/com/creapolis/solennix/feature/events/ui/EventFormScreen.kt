@@ -102,8 +102,7 @@ fun EventFormScreen(
                 Column(modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .navigationBarsPadding()
-                    .imePadding()
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
                 ) {
                     EventFormStepIndicator(
                         currentPage = pagerState.currentPage,
