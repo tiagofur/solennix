@@ -374,11 +374,23 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 		// Map Stripe status to action
 		switch sub.Status {
 		case stripe.SubscriptionStatusActive:
-			// Keep user on pro, update subscription record
+			// Plan comes from subscription metadata (set on subscription_data at
+			// checkout). Only sync users.plan when metadata carries an explicit,
+			// valid tier — this covers C3 (past_due→active keeps the tier) and C4
+			// (portal plan change is reflected). Legacy subscriptions without the
+			// metadata keep their current plan; we only refresh status to avoid a
+			// wrongful downgrade to "pro".
 			if h.subRepo != nil {
 				start := time.Unix(sub.CurrentPeriodStart, 0)
 				end := time.Unix(sub.CurrentPeriodEnd, 0)
-				if err := h.subRepo.UpdateStatusByProviderSubID(r.Context(), sub.ID, "active", &start, &end); err != nil {
+				metaPlan := sub.Metadata["plan"]
+				if metaPlan == "pro" || metaPlan == "business" {
+					if err := h.subRepo.SyncPlanAndStatusByStripeCustomer(r.Context(), sub.Customer.ID, sub.ID, metaPlan, "active", &start, &end); err != nil {
+						slog.Error("Failed to sync plan and subscription status to active", "error", err, "customer", sub.Customer.ID, "plan", metaPlan)
+					} else {
+						slog.Info("Synced plan and subscription to active", "customer", sub.Customer.ID, "plan", metaPlan)
+					}
+				} else if err := h.subRepo.UpdateStatusByProviderSubID(r.Context(), sub.ID, "active", &start, &end); err != nil {
 					slog.Error("Failed to update subscription status to active", "error", err)
 				}
 			}
@@ -593,14 +605,21 @@ func (h *SubscriptionHandler) RevenueCatWebhook(w http.ResponseWriter, r *http.R
 			slog.Info("User downgraded to basic via RevenueCat", "user_id", userID, "event", evt.Type)
 		}
 
-		// Update subscription record status
+		// Update subscription record status — filter by provider to avoid touching
+		// subscriptions from a different store (e.g. don't cancel a Stripe sub on an Apple event).
 		if h.subRepo != nil {
 			status := "canceled"
 			if evt.Type == "BILLING_ISSUE" {
 				status = "past_due"
 			}
-			if err := h.subRepo.UpdateStatusByUserID(r.Context(), userID, status); err != nil {
-				slog.Error("Failed to update subscription status via RevenueCat", "user_id", userID, "error", err)
+			rcProvider := rcStoreToProvider(evt.Store)
+			if rcProvider == "" {
+				slog.Warn("RevenueCat event has empty/unknown store, skipping subscription status update to avoid cross-provider contamination",
+					"user_id", userID, "store", evt.Store, "type", evt.Type)
+			} else {
+				if err := h.subRepo.UpdateStatusByUserIDAndProvider(r.Context(), userID, rcProvider, status); err != nil {
+					slog.Error("Failed to update subscription status via RevenueCat", "user_id", userID, "provider", rcProvider, "error", err)
+				}
 			}
 		}
 

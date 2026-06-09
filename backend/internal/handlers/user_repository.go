@@ -22,7 +22,11 @@ type SubscriptionRepository interface {
 	Upsert(ctx context.Context, sub *models.Subscription) error
 	GetByUserID(ctx context.Context, userID uuid.UUID) (*models.Subscription, error)
 	UpdateStatusByProviderSubID(ctx context.Context, providerSubID string, status string, periodStart, periodEnd *time.Time) error
-	UpdateStatusByUserID(ctx context.Context, userID uuid.UUID, status string) error
+	// UpdateStatusByUserIDAndProvider updates status for a single provider's subscription row.
+	// provider must not be empty — an empty provider returns an error to prevent cross-provider contamination.
+	UpdateStatusByUserIDAndProvider(ctx context.Context, userID uuid.UUID, provider, status string) error
+	// SyncPlanAndStatusByStripeCustomer atomically updates users.plan and the subscriptions row in one tx.
+	SyncPlanAndStatusByStripeCustomer(ctx context.Context, stripeCustomerID, providerSubID, plan, status string, periodStart, periodEnd *time.Time) error
 }
 
 // EventRepository defines methods for event data access (used by SubscriptionHandler).

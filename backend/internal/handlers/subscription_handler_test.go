@@ -719,8 +719,13 @@ func (m *MockSubscriptionRepo) UpdateStatusByProviderSubID(ctx context.Context, 
 	return args.Error(0)
 }
 
-func (m *MockSubscriptionRepo) UpdateStatusByUserID(ctx context.Context, userID uuid.UUID, status string) error {
-	args := m.Called(ctx, userID, status)
+func (m *MockSubscriptionRepo) UpdateStatusByUserIDAndProvider(ctx context.Context, userID uuid.UUID, provider, status string) error {
+	args := m.Called(ctx, userID, provider, status)
+	return args.Error(0)
+}
+
+func (m *MockSubscriptionRepo) SyncPlanAndStatusByStripeCustomer(ctx context.Context, stripeCustomerID, providerSubID, plan, status string, periodStart, periodEnd *time.Time) error {
+	args := m.Called(ctx, stripeCustomerID, providerSubID, plan, status, periodStart, periodEnd)
 	return args.Error(0)
 }
 
@@ -1722,7 +1727,7 @@ func TestSubscriptionHandler_RevenueCatWebhook_WithSubRepo(t *testing.T) {
 		}`, userID.String())
 
 		mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "basic", (*string)(nil)).Return(nil)
-		mockSubRepo.On("UpdateStatusByUserID", mock.Anything, userID, "canceled").Return(nil)
+		mockSubRepo.On("UpdateStatusByUserIDAndProvider", mock.Anything, userID, "apple", "canceled").Return(nil)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/revenuecat", bytes.NewReader([]byte(payload)))
 		req.Header.Set("Authorization", "rc_secret_123")
@@ -1752,7 +1757,7 @@ func TestSubscriptionHandler_RevenueCatWebhook_WithSubRepo(t *testing.T) {
 		}`, userID.String())
 
 		mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "basic", (*string)(nil)).Return(nil)
-		mockSubRepo.On("UpdateStatusByUserID", mock.Anything, userID, "canceled").Return(nil)
+		mockSubRepo.On("UpdateStatusByUserIDAndProvider", mock.Anything, userID, "apple", "canceled").Return(nil)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/revenuecat", bytes.NewReader([]byte(payload)))
 		req.Header.Set("Authorization", "rc_secret_123")
@@ -1783,7 +1788,7 @@ func TestSubscriptionHandler_RevenueCatWebhook_WithSubRepo(t *testing.T) {
 
 		mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "basic", (*string)(nil)).Return(nil)
 		// BILLING_ISSUE should use "past_due" instead of "canceled"
-		mockSubRepo.On("UpdateStatusByUserID", mock.Anything, userID, "past_due").Return(nil)
+		mockSubRepo.On("UpdateStatusByUserIDAndProvider", mock.Anything, userID, "google", "past_due").Return(nil)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/revenuecat", bytes.NewReader([]byte(payload)))
 		req.Header.Set("Authorization", "rc_secret_123")
@@ -1822,7 +1827,7 @@ func TestSubscriptionHandler_RevenueCatWebhook_WithSubRepo(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 		mockRepo.AssertNotCalled(t, "UpdatePlanAndStripeID")
 		mockSubRepo.AssertNotCalled(t, "Upsert")
-		mockSubRepo.AssertNotCalled(t, "UpdateStatusByUserID")
+		mockSubRepo.AssertNotCalled(t, "UpdateStatusByUserIDAndProvider")
 	})
 
 	t.Run("SubRepoUpsertError_StillReturns200", func(t *testing.T) {
@@ -1873,7 +1878,7 @@ func TestSubscriptionHandler_RevenueCatWebhook_WithSubRepo(t *testing.T) {
 		}`, userID.String())
 
 		mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "basic", (*string)(nil)).Return(nil)
-		mockSubRepo.On("UpdateStatusByUserID", mock.Anything, userID, "canceled").Return(assert.AnError)
+		mockSubRepo.On("UpdateStatusByUserIDAndProvider", mock.Anything, userID, "apple", "canceled").Return(assert.AnError)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/revenuecat", bytes.NewReader([]byte(payload)))
 		req.Header.Set("Authorization", "rc_secret_123")
@@ -2177,32 +2182,92 @@ func buildStripeEvent(eventType string, dataRaw json.RawMessage) []byte {
 func TestSubscriptionHandler_StripeWebhook_SubscriptionUpdated(t *testing.T) {
 	const webhookSecret = "whsec_test_sub_updated"
 
-	makePayload := func(subID, customerID string, status stripe.SubscriptionStatus, periodStart, periodEnd int64) []byte {
-		dataObj, _ := json.Marshal(map[string]interface{}{
+	makePayload := func(subID, customerID string, status stripe.SubscriptionStatus, periodStart, periodEnd int64, metadata map[string]string) []byte {
+		obj := map[string]interface{}{
 			"id":                   subID,
 			"object":               "subscription",
 			"status":               string(status),
 			"current_period_start": periodStart,
 			"current_period_end":   periodEnd,
 			"customer":             customerID,
-		})
+		}
+		if metadata != nil {
+			obj["metadata"] = metadata
+		}
+		dataObj, _ := json.Marshal(obj)
 		return buildStripeEvent("customer.subscription.updated", dataObj)
 	}
 
-	t.Run("Active_UpdatesSubRepoToActive", func(t *testing.T) {
+	// C3 + C4: Active branch syncs users.plan + subscriptions atomically.
+
+	t.Run("Active_ProMetadata_SyncsProPlan", func(t *testing.T) {
 		mockUserRepo := new(MockUserRepo)
 		mockSubRepo := new(MockSubscriptionRepo)
 		cfg := &config.Config{StripeWebhookSecret: webhookSecret}
 		handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, nil, nil, new(MockStripeService), nil, nil, cfg)
 
-		subID := "sub_active_123"
-		customerID := "cus_abc"
+		subID := "sub_active_pro"
+		customerID := "cus_pro"
 		start := time.Now().Unix()
 		end := time.Now().Add(30 * 24 * time.Hour).Unix()
-		payload := makePayload(subID, customerID, stripe.SubscriptionStatusActive, start, end)
+		payload := makePayload(subID, customerID, stripe.SubscriptionStatusActive, start, end, map[string]string{"plan": "pro"})
 
 		startTime := time.Unix(start, 0)
 		endTime := time.Unix(end, 0)
+		mockSubRepo.On("SyncPlanAndStatusByStripeCustomer", mock.Anything, customerID, subID, "pro", "active", &startTime, &endTime).Return(nil)
+
+		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/stripe", bytes.NewReader(payload))
+		req.Header.Set("Stripe-Signature", signStripePayload(t, payload, webhookSecret))
+		w := httptest.NewRecorder()
+
+		handler.StripeWebhook(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockSubRepo.AssertExpectations(t)
+	})
+
+	t.Run("Active_BusinessMetadata_SyncsBusinessPlan", func(t *testing.T) {
+		mockUserRepo := new(MockUserRepo)
+		mockSubRepo := new(MockSubscriptionRepo)
+		cfg := &config.Config{StripeWebhookSecret: webhookSecret}
+		handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, nil, nil, new(MockStripeService), nil, nil, cfg)
+
+		subID := "sub_active_business"
+		customerID := "cus_business"
+		start := time.Now().Unix()
+		end := time.Now().Add(30 * 24 * time.Hour).Unix()
+		payload := makePayload(subID, customerID, stripe.SubscriptionStatusActive, start, end, map[string]string{"plan": "business"})
+
+		startTime := time.Unix(start, 0)
+		endTime := time.Unix(end, 0)
+		mockSubRepo.On("SyncPlanAndStatusByStripeCustomer", mock.Anything, customerID, subID, "business", "active", &startTime, &endTime).Return(nil)
+
+		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/stripe", bytes.NewReader(payload))
+		req.Header.Set("Stripe-Signature", signStripePayload(t, payload, webhookSecret))
+		w := httptest.NewRecorder()
+
+		handler.StripeWebhook(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockSubRepo.AssertExpectations(t)
+	})
+
+	t.Run("Active_NoMetadata_StatusOnly_NoPlanDowngrade", func(t *testing.T) {
+		mockUserRepo := new(MockUserRepo)
+		mockSubRepo := new(MockSubscriptionRepo)
+		cfg := &config.Config{StripeWebhookSecret: webhookSecret}
+		handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, nil, nil, new(MockStripeService), nil, nil, cfg)
+
+		subID := "sub_active_noplan"
+		customerID := "cus_noplan"
+		start := time.Now().Unix()
+		end := time.Now().Add(30 * 24 * time.Hour).Unix()
+		payload := makePayload(subID, customerID, stripe.SubscriptionStatusActive, start, end, nil)
+
+		startTime := time.Unix(start, 0)
+		endTime := time.Unix(end, 0)
+		// No valid plan metadata → only refresh status; users.plan is left
+		// untouched to avoid downgrading a legacy Business subscriber to "pro".
 		mockSubRepo.On("UpdateStatusByProviderSubID", mock.Anything, subID, "active", &startTime, &endTime).Return(nil)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/stripe", bytes.NewReader(payload))
@@ -2223,7 +2288,7 @@ func TestSubscriptionHandler_StripeWebhook_SubscriptionUpdated(t *testing.T) {
 
 		subID := "sub_pastdue_123"
 		customerID := "cus_def"
-		payload := makePayload(subID, customerID, stripe.SubscriptionStatusPastDue, 0, 0)
+		payload := makePayload(subID, customerID, stripe.SubscriptionStatusPastDue, 0, 0, nil)
 
 		mockSubRepo.On("UpdateStatusByProviderSubID", mock.Anything, subID, "past_due", (*time.Time)(nil), (*time.Time)(nil)).Return(nil)
 
@@ -2245,7 +2310,7 @@ func TestSubscriptionHandler_StripeWebhook_SubscriptionUpdated(t *testing.T) {
 
 		subID := "sub_canceled_123"
 		customerID := "cus_ghi"
-		payload := makePayload(subID, customerID, stripe.SubscriptionStatusCanceled, 0, 0)
+		payload := makePayload(subID, customerID, stripe.SubscriptionStatusCanceled, 0, 0, nil)
 
 		mockSubRepo.On("UpdateStatusByProviderSubID", mock.Anything, subID, "canceled", (*time.Time)(nil), (*time.Time)(nil)).Return(nil)
 
@@ -2267,7 +2332,7 @@ func TestSubscriptionHandler_StripeWebhook_SubscriptionUpdated(t *testing.T) {
 
 		subID := "sub_unpaid_123"
 		customerID := "cus_jkl"
-		payload := makePayload(subID, customerID, stripe.SubscriptionStatusUnpaid, 0, 0)
+		payload := makePayload(subID, customerID, stripe.SubscriptionStatusUnpaid, 0, 0, nil)
 
 		// rcService is nil, so the else-if block with GetByStripeCustomerID won't execute
 		mockUserRepo.On("UpdatePlanByStripeCustomerID", mock.Anything, customerID, "basic").Return(nil)
@@ -2292,7 +2357,7 @@ func TestSubscriptionHandler_StripeWebhook_SubscriptionUpdated(t *testing.T) {
 
 		subID := "sub_unpaid_fail"
 		customerID := "cus_mno"
-		payload := makePayload(subID, customerID, stripe.SubscriptionStatusUnpaid, 0, 0)
+		payload := makePayload(subID, customerID, stripe.SubscriptionStatusUnpaid, 0, 0, nil)
 
 		mockUserRepo.On("UpdatePlanByStripeCustomerID", mock.Anything, customerID, "basic").Return(fmt.Errorf("db error"))
 		mockSubRepo.On("UpdateStatusByProviderSubID", mock.Anything, subID, "canceled", (*time.Time)(nil), (*time.Time)(nil)).Return(nil)
@@ -2315,7 +2380,7 @@ func TestSubscriptionHandler_StripeWebhook_SubscriptionUpdated(t *testing.T) {
 
 		subID := "sub_nil_repo"
 		customerID := "cus_pqr"
-		payload := makePayload(subID, customerID, stripe.SubscriptionStatusActive, 0, 0)
+		payload := makePayload(subID, customerID, stripe.SubscriptionStatusActive, 0, 0, nil)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/stripe", bytes.NewReader(payload))
 		req.Header.Set("Stripe-Signature", signStripePayload(t, payload, webhookSecret))
@@ -2336,11 +2401,11 @@ func TestSubscriptionHandler_StripeWebhook_SubscriptionUpdated(t *testing.T) {
 		customerID := "cus_stu"
 		start := time.Now().Unix()
 		end := time.Now().Add(30 * 24 * time.Hour).Unix()
-		payload := makePayload(subID, customerID, stripe.SubscriptionStatusActive, start, end)
+		payload := makePayload(subID, customerID, stripe.SubscriptionStatusActive, start, end, map[string]string{"plan": "pro"})
 
 		startTime := time.Unix(start, 0)
 		endTime := time.Unix(end, 0)
-		mockSubRepo.On("UpdateStatusByProviderSubID", mock.Anything, subID, "active", &startTime, &endTime).Return(fmt.Errorf("db error"))
+		mockSubRepo.On("SyncPlanAndStatusByStripeCustomer", mock.Anything, customerID, subID, "pro", "active", &startTime, &endTime).Return(fmt.Errorf("db error"))
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/stripe", bytes.NewReader(payload))
 		req.Header.Set("Stripe-Signature", signStripePayload(t, payload, webhookSecret))

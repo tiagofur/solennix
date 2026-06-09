@@ -79,13 +79,57 @@ func (r *SubscriptionRepo) UpdateStatusByProviderSubID(ctx context.Context, prov
 	return nil
 }
 
-// UpdateStatusByUserID updates subscription status for a user (all providers).
-func (r *SubscriptionRepo) UpdateStatusByUserID(ctx context.Context, userID uuid.UUID, status string) error {
+// UpdateStatusByUserIDAndProvider updates subscription status for a user filtered by provider.
+// This prevents cross-provider contamination (e.g. a RevenueCat Apple event cancelling a Stripe sub).
+// If provider is empty, the call is a no-op and returns an error.
+func (r *SubscriptionRepo) UpdateStatusByUserIDAndProvider(ctx context.Context, userID uuid.UUID, provider, status string) error {
+	if provider == "" {
+		return fmt.Errorf("UpdateStatusByUserIDAndProvider: provider must not be empty")
+	}
 	query := `
 		UPDATE subscriptions SET
-			status = $2,
+			status = $3,
 			updated_at = NOW()
-		WHERE user_id = $1`
-	_, err := r.pool.Exec(ctx, query, userID, status)
+		WHERE user_id = $1 AND provider = $2`
+	_, err := r.pool.Exec(ctx, query, userID, provider, status)
 	return err
+}
+
+// SyncPlanAndStatusByStripeCustomer atomically updates users.plan (by stripe
+// customer id) and the subscription row (by provider subscription id).
+func (r *SubscriptionRepo) SyncPlanAndStatusByStripeCustomer(ctx context.Context, stripeCustomerID, providerSubID, plan, status string, periodStart, periodEnd *time.Time) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin SyncPlanAndStatusByStripeCustomer tx: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback(ctx)
+		}
+	}()
+
+	if _, err = tx.Exec(ctx,
+		`UPDATE users SET plan = $1, updated_at = NOW() WHERE stripe_customer_id = $2`,
+		plan, stripeCustomerID,
+	); err != nil {
+		return fmt.Errorf("update users.plan: %w", err)
+	}
+
+	if _, err = tx.Exec(ctx, `
+		UPDATE subscriptions SET
+			status = $2,
+			plan = $3,
+			current_period_start = COALESCE($4, current_period_start),
+			current_period_end = COALESCE($5, current_period_end),
+			updated_at = NOW()
+		WHERE provider_subscription_id = $1`,
+		providerSubID, status, plan, periodStart, periodEnd,
+	); err != nil {
+		return fmt.Errorf("update subscriptions: %w", err)
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit SyncPlanAndStatusByStripeCustomer: %w", err)
+	}
+	return nil
 }
