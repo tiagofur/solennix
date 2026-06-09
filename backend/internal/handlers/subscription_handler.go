@@ -570,8 +570,9 @@ func (h *SubscriptionHandler) RevenueCatWebhook(w http.ResponseWriter, r *http.R
 	provider := rcStoreToProvider(evt.Store)
 
 	switch evt.Type {
-	case "INITIAL_PURCHASE", "RENEWAL", "UNCANCELLATION":
-		// User has an active subscription — upgrade to pro
+	case "INITIAL_PURCHASE", "RENEWAL", "UNCANCELLATION", "PRODUCT_CHANGE":
+		// Active subscription (incl. product/plan change within the mobile
+		// pro_access entitlement) — keep the user on pro and refresh the record.
 		if err := h.userRepo.UpdatePlanAndStripeID(r.Context(), userID, "pro", nil); err != nil {
 			slog.Error("Failed to upgrade user plan via RevenueCat", "user_id", userID, "error", err)
 		} else {
@@ -623,9 +624,6 @@ func (h *SubscriptionHandler) RevenueCatWebhook(w http.ResponseWriter, r *http.R
 			}
 		}
 
-	case "PRODUCT_CHANGE":
-		// Product change — still pro, just a different product
-		slog.Info("RevenueCat product change event received", "user_id", userID, "product_id", evt.ProductID)
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -697,6 +695,37 @@ var stripeSubCache = struct {
 }{entries: make(map[string]*stripeSubCacheEntry)}
 
 const stripeSubCacheTTL = 5 * time.Minute
+
+// sweepStripeSubCache evicts cache entries older than the TTL. Split out from
+// the sweeper goroutine so it can be unit-tested deterministically.
+func sweepStripeSubCache(now time.Time) {
+	stripeSubCache.mu.Lock()
+	defer stripeSubCache.mu.Unlock()
+	for k, v := range stripeSubCache.entries {
+		if now.Sub(v.fetchedAt) >= stripeSubCacheTTL {
+			delete(stripeSubCache.entries, k)
+		}
+	}
+}
+
+// StartStripeSubCacheSweeper launches a background goroutine that periodically
+// evicts expired entries from stripeSubCache, preventing unbounded growth
+// (audit finding M10). It returns when ctx is cancelled, so callers control its
+// lifecycle (started once from main with the server context; not in tests).
+func StartStripeSubCacheSweeper(ctx context.Context) {
+	go func() {
+		ticker := time.NewTicker(stripeSubCacheTTL)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				sweepStripeSubCache(time.Now())
+			}
+		}
+	}()
+}
 
 // subscriptionProviderCopy returns the user-facing badge and cancel
 // instructions for a given provider value. Server-authored so that the

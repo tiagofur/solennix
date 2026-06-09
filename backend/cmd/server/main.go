@@ -132,6 +132,8 @@ func main() {
 	crudHandler.SetStaffTeamRepo(staffTeamRepo)
 	subHandler := handlers.NewSubscriptionHandler(userRepo, subscriptionRepo, eventRepo, paymentRepo, stripeService, rcService, processedWebhookRepo, cfg)
 	subHandler.SetEmailService(emailService)
+	// Evict expired Stripe subscription cache entries to bound memory (M10).
+	handlers.StartStripeSubCacheSweeper(context.Background())
 	searchHandler := handlers.NewSearchHandler(clientRepo, productRepo, inventoryRepo, eventRepo)
 	eventPaymentHandler := handlers.NewEventPaymentHandler(eventRepo, paymentRepo, stripeService, cfg)
 	// Initialize storage provider
