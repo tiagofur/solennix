@@ -35,3 +35,8 @@ type EventRepository interface {
 type PaymentRepository interface {
 	Create(ctx context.Context, p *models.Payment) error
 }
+
+// ProcessedWebhookRepository provides idempotency for inbound webhook events.
+type ProcessedWebhookRepository interface {
+	TryInsert(ctx context.Context, eventID, provider, eventType string) (bool, error)
+}
