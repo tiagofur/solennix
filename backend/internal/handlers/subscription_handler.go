@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/subtle"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -24,14 +25,15 @@ import (
 // web (Stripe) and mobile (Apple/Google via RevenueCat).
 // Also handles event payment webhooks.
 type SubscriptionHandler struct {
-	userRepo     UserRepository
-	subRepo      SubscriptionRepository
-	eventRepo    EventRepository
-	paymentRepo  PaymentRepository
-	stripe       StripeService
-	rcService    *services.RevenueCatService
-	emailService *services.EmailService // optional
-	cfg          *config.Config
+	userRepo              UserRepository
+	subRepo               SubscriptionRepository
+	eventRepo             EventRepository
+	paymentRepo           PaymentRepository
+	processedWebhookRepo  ProcessedWebhookRepository
+	stripe                StripeService
+	rcService             *services.RevenueCatService
+	emailService          *services.EmailService // optional
+	cfg                   *config.Config
 }
 
 // SetEmailService configures an optional email service for subscription notifications.
@@ -46,17 +48,19 @@ func NewSubscriptionHandler(
 	paymentRepo PaymentRepository,
 	stripeService StripeService,
 	rcService *services.RevenueCatService,
+	processedWebhookRepo ProcessedWebhookRepository,
 	cfg *config.Config,
 ) *SubscriptionHandler {
 	stripe.Key = cfg.StripeSecretKey
 	return &SubscriptionHandler{
-		userRepo:    userRepo,
-		subRepo:     subRepo,
-		eventRepo:   eventRepo,
-		paymentRepo: paymentRepo,
-		stripe:      stripeService,
-		rcService:   rcService,
-		cfg:         cfg,
+		userRepo:             userRepo,
+		subRepo:              subRepo,
+		eventRepo:            eventRepo,
+		paymentRepo:          paymentRepo,
+		processedWebhookRepo: processedWebhookRepo,
+		stripe:               stripeService,
+		rcService:            rcService,
+		cfg:                  cfg,
 	}
 }
 
@@ -242,6 +246,20 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 	}
 
 	slog.Info("Stripe webhook signature verified", "event_id", event.ID, "event_type", event.Type)
+
+	if h.processedWebhookRepo != nil {
+		firstTime, err := h.processedWebhookRepo.TryInsert(r.Context(), event.ID, "stripe", string(event.Type))
+		if err != nil {
+			slog.Error("Failed to check Stripe webhook idempotency", "event_id", event.ID, "error", err)
+			writeError(w, http.StatusInternalServerError, "Internal error")
+			return
+		}
+		if !firstTime {
+			slog.Info("Stripe webhook duplicate ignored", "event_id", event.ID)
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+	}
 
 	switch event.Type {
 	case "checkout.session.completed":
@@ -450,6 +468,7 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 // See: https://www.revenuecat.com/docs/webhooks
 type revenueCatEvent struct {
 	Event struct {
+		ID             string `json:"id"` // unique per event; stable across delivery retries
 		Type           string `json:"type"`
 		AppUserID      string `json:"app_user_id"`
 		ProductID      string `json:"product_id"`
@@ -504,6 +523,28 @@ func (h *SubscriptionHandler) RevenueCatWebhook(w http.ResponseWriter, r *http.R
 
 	evt := rcEvent.Event
 	slog.Info("RevenueCat webhook received", "type", evt.Type, "app_user_id", evt.AppUserID, "store", evt.Store)
+
+	if h.processedWebhookRepo != nil {
+		// Prefer RevenueCat's unique event id (stable across retries, distinct per
+		// delivery so legitimate recurring events like RENEWAL are not collapsed).
+		// Fall back to a composite key only if the payload omits it.
+		rcKey := evt.ID
+		if rcKey == "" {
+			rcKey = fmt.Sprintf("%s:%s:%s:%s", evt.AppUserID, evt.Type, evt.ProductID, evt.Store)
+		}
+		rcKey = "revenuecat:" + rcKey
+		firstTime, err := h.processedWebhookRepo.TryInsert(r.Context(), rcKey, "revenuecat", evt.Type)
+		if err != nil {
+			slog.Error("Failed to check RevenueCat webhook idempotency", "app_user_id", evt.AppUserID, "error", err)
+			writeError(w, http.StatusInternalServerError, "Internal error")
+			return
+		}
+		if !firstTime {
+			slog.Info("RevenueCat webhook duplicate ignored", "app_user_id", evt.AppUserID, "type", evt.Type)
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+	}
 
 	// The RevenueCat app_user_id is set to the user's UUID from our backend
 	userID, err := uuid.Parse(evt.AppUserID)
