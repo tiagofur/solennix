@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"math"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -9,7 +10,8 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/repository"
 )
 
-const depositCoverageTolerance = 0.1
+// roundCents rounds a float64 value to 2 decimal places (cent precision).
+func roundCents(v float64) float64 { return math.Round(v*100) / 100 }
 
 type eventStatusEventRepo interface {
 	GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Event, error)
@@ -42,6 +44,60 @@ func (r txPaymentStatusRepo) GetByEventID(ctx context.Context, userID, eventID u
 	return r.repo.GetByEventIDTx(ctx, r.tx, userID, eventID)
 }
 
+// reEvaluateEventStatus re-computes whether the event should be confirmed or
+// demoted to quoted based on total payments vs. required deposit.
+// Returns (true, nil) when the status was changed, (false, nil) when no
+// change was needed, and (false, err) on any repository error.
+func reEvaluateEventStatus(
+	ctx context.Context,
+	eventRepo eventStatusEventRepo,
+	paymentRepo eventStatusPaymentRepo,
+	eventID uuid.UUID,
+	userID uuid.UUID,
+) (bool, error) {
+	event, err := eventRepo.GetByID(ctx, eventID, userID)
+	if err != nil {
+		return false, err
+	}
+
+	if event.DepositPercent == nil || *event.DepositPercent <= 0 {
+		return false, nil
+	}
+
+	requiredDeposit := roundCents(event.TotalAmount * (*event.DepositPercent / 100))
+	if requiredDeposit <= 0 {
+		return false, nil
+	}
+
+	payments, err := paymentRepo.GetByEventID(ctx, userID, eventID)
+	if err != nil {
+		return false, err
+	}
+
+	sum := 0.0
+	for _, p := range payments {
+		sum += p.Amount
+	}
+	totalPaid := roundCents(sum)
+
+	switch {
+	case event.Status == "confirmed" && totalPaid < requiredDeposit:
+		event.Status = "quoted"
+		if err := eventRepo.Update(ctx, event); err != nil {
+			return false, err
+		}
+		return true, nil
+	case event.Status == "quoted" && totalPaid >= requiredDeposit:
+		event.Status = "confirmed"
+		if err := eventRepo.Update(ctx, event); err != nil {
+			return false, err
+		}
+		return true, nil
+	default:
+		return false, nil
+	}
+}
+
 // autoConfirmQuotedEventIfDepositCovered promotes quoted -> confirmed when
 // the accumulated payments cover the event's required deposit.
 func autoConfirmQuotedEventIfDepositCovered(
@@ -64,7 +120,7 @@ func autoConfirmQuotedEventIfDepositCovered(
 		return false, nil
 	}
 
-	requiredDeposit := event.TotalAmount * (*event.DepositPercent / 100)
+	requiredDeposit := roundCents(event.TotalAmount * (*event.DepositPercent / 100))
 	if requiredDeposit <= 0 {
 		return false, nil
 	}
@@ -74,12 +130,13 @@ func autoConfirmQuotedEventIfDepositCovered(
 		return false, err
 	}
 
-	totalPaid := 0.0
+	sum := 0.0
 	for _, payment := range payments {
-		totalPaid += payment.Amount
+		sum += payment.Amount
 	}
+	totalPaid := roundCents(sum)
 
-	if totalPaid+depositCoverageTolerance < requiredDeposit {
+	if totalPaid < requiredDeposit {
 		return false, nil
 	}
 

@@ -82,6 +82,8 @@ type PaymentSubmissionHandler struct {
 	privateReceiptsDir string
 
 	lookupPublicLink            func(context.Context, string) (*models.EventPublicLink, error)
+	lookupEvent                 func(context.Context, uuid.UUID) (*models.Event, error)
+	sumPaymentsByEventID        func(context.Context, uuid.UUID) (float64, error)
 	createSubmission            func(context.Context, *models.PaymentSubmission) error
 	getSubmission               func(context.Context, uuid.UUID) (*models.PaymentSubmission, error)
 	beginReviewTx               func(context.Context) (paymentSubmissionReviewStore, error)
@@ -100,6 +102,19 @@ func NewPaymentSubmissionHandler(repo *repository.PaymentSubmissionRepo, payment
 		pool:               pool,
 		uploadDir:          uploadDir,
 		privateReceiptsDir: privateReceiptsDir,
+	}
+	// A8: wire event lookup and payment sum only when a real pool is available.
+	if pool != nil {
+		eventRepo := repository.NewEventRepo(pool)
+		handler.lookupEvent = func(ctx context.Context, eventID uuid.UUID) (*models.Event, error) {
+			// Public endpoint — no user scoping; ownership already validated via link.EventID.
+			return eventRepo.GetByIDPublic(ctx, eventID)
+		}
+		if paymentRepo != nil {
+			handler.sumPaymentsByEventID = func(ctx context.Context, eventID uuid.UUID) (float64, error) {
+				return paymentRepo.SumByEventID(ctx, eventID)
+			}
+		}
 	}
 	handler.beginReviewTx = func(ctx context.Context) (paymentSubmissionReviewStore, error) {
 		tx, err := pool.Begin(ctx)
@@ -295,6 +310,27 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 	if link.EventID != eventID {
 		writeError(w, http.StatusBadRequest, "Event ID mismatch")
 		return
+	}
+
+	// A8: cap submission at remaining balance (total_amount - already_paid + 0.01 tolerance).
+	if h.lookupEvent != nil && h.sumPaymentsByEventID != nil {
+		event, evErr := h.lookupEvent(ctx, eventID)
+		alreadyPaid := 0.0
+		if h.sumPaymentsByEventID != nil {
+			if s, sErr := h.sumPaymentsByEventID(ctx, eventID); sErr == nil {
+				alreadyPaid = s
+			}
+		}
+		if evErr == nil {
+			maxAllowed := roundCents(event.TotalAmount-alreadyPaid) + 0.01
+			if amountFloat > maxAllowed {
+				writeError(w, http.StatusBadRequest, fmt.Sprintf(
+					"amount exceeds remaining balance: remaining=%.2f",
+					roundCents(event.TotalAmount-alreadyPaid),
+				))
+				return
+			}
+		}
 	}
 
 	// Parse receipt file if provided (optional)

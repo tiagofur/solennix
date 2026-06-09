@@ -126,6 +126,7 @@ func main() {
 	authHandler := handlers.NewAuthHandler(userRepo, authService, emailService, cfg)
 	authHandler.SetRefreshTokenRepo(refreshTokenRepo)
 	crudHandler := handlers.NewCRUDHandler(clientRepo, eventRepo, productRepo, inventoryRepo, paymentRepo, userRepo, unavailRepo)
+	crudHandler.SetPool(pool)
 	crudHandler.SetNotifier(notificationService)
 	crudHandler.SetEmailService(emailService)
 	crudHandler.SetLiveActivityNotifier(liveActivityService)

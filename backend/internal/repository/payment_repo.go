@@ -143,6 +143,37 @@ func (r *PaymentRepo) Update(ctx context.Context, userID uuid.UUID, p *models.Pa
 	).Scan(&p.EventID, &p.UserID, &p.CreatedAt)
 }
 
+func (r *PaymentRepo) UpdateTx(ctx context.Context, tx pgx.Tx, userID uuid.UUID, p *models.Payment) error {
+	query := `UPDATE payments SET amount=$2, payment_date=$3, payment_method=$4, notes=$5
+		WHERE id=$1 AND user_id=$6
+		RETURNING event_id, user_id, created_at`
+	return tx.QueryRow(ctx, query,
+		p.ID, p.Amount, p.PaymentDate, p.PaymentMethod, p.Notes, userID,
+	).Scan(&p.EventID, &p.UserID, &p.CreatedAt)
+}
+
+// DeleteAndReturnEventIDTx deletes the payment inside a transaction and returns
+// the event_id of the deleted row. Returns pgx.ErrNoRows when not found.
+func (r *PaymentRepo) DeleteAndReturnEventIDTx(ctx context.Context, tx pgx.Tx, id, userID uuid.UUID) (uuid.UUID, error) {
+	var eventID uuid.UUID
+	err := tx.QueryRow(ctx,
+		"DELETE FROM payments WHERE id=$1 AND user_id=$2 RETURNING event_id",
+		id, userID,
+	).Scan(&eventID)
+	return eventID, err
+}
+
+// SumByEventID returns the sum of all payments for the given event_id
+// (regardless of user_id — the event already belongs to the user).
+func (r *PaymentRepo) SumByEventID(ctx context.Context, eventID uuid.UUID) (float64, error) {
+	var total float64
+	err := r.pool.QueryRow(ctx,
+		"SELECT COALESCE(SUM(amount),0) FROM payments WHERE event_id=$1",
+		eventID,
+	).Scan(&total)
+	return total, err
+}
+
 func (r *PaymentRepo) Delete(ctx context.Context, id, userID uuid.UUID) error {
 	tag, err := r.pool.Exec(ctx, "DELETE FROM payments WHERE id=$1 AND user_id=$2", id, userID)
 	if err != nil {

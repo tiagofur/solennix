@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,9 +16,11 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tiagofur/solennix-backend/internal/i18n"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
+	"github.com/tiagofur/solennix-backend/internal/pdf"
 	"github.com/tiagofur/solennix-backend/internal/repository"
 	"github.com/tiagofur/solennix-backend/internal/services"
 )
@@ -36,6 +40,7 @@ type CRUDHandler struct {
 	paymentRepo     FullPaymentRepository
 	userRepo        FullUserRepository
 	unavailRepo     UnavailableDateRepository
+	pool            *pgxpool.Pool          // optional; required for transactional payment ops
 	staffTeamRepo   StaffTeamRepository    // optional, may be nil (Ola 3)
 	notifier        NotificationSender     // optional, may be nil
 	emailService    *services.EmailService // optional, may be nil
@@ -66,6 +71,13 @@ func NewCRUDHandler(
 		userRepo:      userRepo,
 		unavailRepo:   unavailRepo,
 	}
+}
+
+// SetPool configures the pgxpool needed for transactional payment operations
+// (CreatePayment, UpdatePayment, DeletePayment). When nil, those handlers fall
+// back to non-transactional behaviour (backward-compatible with tests).
+func (h *CRUDHandler) SetPool(p *pgxpool.Pool) {
+	h.pool = p
 }
 
 // SetNotifier configures an optional push notification sender.
@@ -653,8 +665,23 @@ func (h *CRUDHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	oldStatus := existing.Status
 	oldEventDate := existing.EventDate
 
-	// Decode into existing event to handle partial updates
-	if err := decodeJSON(r, existing); err != nil {
+	// Decode into existing event to handle partial updates. Buffer the body so
+	// we can also detect whether total_amount was explicitly provided (A7 only
+	// validates the total when the client actually sends it — otherwise an
+	// unrelated partial update, e.g. a date change, must not be blocked by a
+	// pre-existing total/line-item discrepancy).
+	bodyBytes, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 1<<20))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	var providedFields map[string]json.RawMessage
+	if err := json.Unmarshal(bodyBytes, &providedFields); err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	_, totalAmountProvided := providedFields["total_amount"]
+	if err := json.Unmarshal(bodyBytes, existing); err != nil {
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -686,6 +713,23 @@ func (h *CRUDHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		}
 		if len(unavailableDates) > 0 {
 			writeError(w, http.StatusBadRequest, "Date range overlaps with unavailable dates")
+			return
+		}
+	}
+
+	// A7: when the client explicitly sends total_amount and the event already
+	// has line items, validate it against the server-side computation to prevent
+	// total manipulation (e.g. total_amount=1 to auto-confirm with a tiny deposit).
+	products, prodErr := h.eventRepo.GetProducts(r.Context(), id)
+	extras, extErr := h.eventRepo.GetExtras(r.Context(), id)
+	if totalAmountProvided && prodErr == nil && extErr == nil && (len(products) > 0 || len(extras) > 0) {
+		fs := pdf.ComputeFinancialSummaryFromItems(*existing, products, extras, 0)
+		serverTotal := fs.TotalAmount
+		if math.Abs(existing.TotalAmount-serverTotal) > 0.01 {
+			writeError(w, http.StatusBadRequest, fmt.Sprintf(
+				"total_amount mismatch: client sent %.2f but server computed %.2f from line items",
+				existing.TotalAmount, serverTotal,
+			))
 			return
 		}
 	}
@@ -2004,7 +2048,8 @@ func (h *CRUDHandler) ListPayments(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *CRUDHandler) CreatePayment(w http.ResponseWriter, r *http.Request) {
-	userID := middleware.GetUserID(r.Context())
+	ctx := r.Context()
+	userID := middleware.GetUserID(ctx)
 	var payment models.Payment
 	if err := decodeJSON(r, &payment); err != nil {
 		writeError(w, http.StatusBadRequest, "Invalid request body")
@@ -2013,19 +2058,49 @@ func (h *CRUDHandler) CreatePayment(w http.ResponseWriter, r *http.Request) {
 
 	// Validate business rules
 	if err := ValidatePayment(&payment); err != nil {
-		writeError(w, http.StatusBadRequest, validationErrorMessage(r.Context(), err))
+		writeError(w, http.StatusBadRequest, validationErrorMessage(ctx, err))
 		return
 	}
 
 	payment.UserID = userID
-	if err := h.paymentRepo.Create(r.Context(), &payment); err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to create payment")
-		return
-	}
 
-	if h.eventRepo != nil {
-		if _, err := autoConfirmQuotedEventIfDepositCovered(r.Context(), h.eventRepo, h.paymentRepo, payment.EventID, userID); err != nil {
+	// A10: wrap insert + autoConfirm in a single transaction when pool is available.
+	if h.pool != nil && h.eventRepo != nil {
+		tx, err := h.pool.Begin(ctx)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to start transaction")
+			return
+		}
+		defer func() { _ = tx.Rollback(ctx) }()
+
+		paymentRepoImpl := repository.NewPaymentRepo(h.pool)
+		if err := paymentRepoImpl.CreateTx(ctx, tx, &payment); err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to create payment")
+			return
+		}
+
+		if _, err := autoConfirmQuotedEventIfDepositCovered(ctx,
+			txEventStatusRepo{repo: repository.NewEventRepo(h.pool), tx: tx},
+			txPaymentStatusRepo{repo: paymentRepoImpl, tx: tx},
+			payment.EventID, userID,
+		); err != nil {
 			slog.Warn("Failed to auto-confirm event after payment", "event_id", payment.EventID, "error", err)
+		}
+
+		if err := tx.Commit(ctx); err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to commit payment")
+			return
+		}
+	} else {
+		// Fallback (no pool wired — tests / legacy callers).
+		if err := h.paymentRepo.Create(ctx, &payment); err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to create payment")
+			return
+		}
+		if h.eventRepo != nil {
+			if _, err := autoConfirmQuotedEventIfDepositCovered(ctx, h.eventRepo, h.paymentRepo, payment.EventID, userID); err != nil {
+				slog.Warn("Failed to auto-confirm event after payment", "event_id", payment.EventID, "error", err)
+			}
 		}
 	}
 
@@ -2063,7 +2138,8 @@ func (h *CRUDHandler) CreatePayment(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *CRUDHandler) UpdatePayment(w http.ResponseWriter, r *http.Request) {
-	userID := middleware.GetUserID(r.Context())
+	ctx := r.Context()
+	userID := middleware.GetUserID(ctx)
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "Invalid payment ID")
@@ -2077,29 +2153,93 @@ func (h *CRUDHandler) UpdatePayment(w http.ResponseWriter, r *http.Request) {
 
 	// Validate business rules
 	if err := ValidatePayment(&payment); err != nil {
-		writeError(w, http.StatusBadRequest, validationErrorMessage(r.Context(), err))
+		writeError(w, http.StatusBadRequest, validationErrorMessage(ctx, err))
 		return
 	}
 
 	payment.ID = id
-	if err := h.paymentRepo.Update(r.Context(), userID, &payment); err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to update payment")
-		return
+
+	// M14: update + re-evaluate status in a single transaction when pool is available.
+	if h.pool != nil && h.eventRepo != nil {
+		tx, err := h.pool.Begin(ctx)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to start transaction")
+			return
+		}
+		defer func() { _ = tx.Rollback(ctx) }()
+
+		paymentRepoImpl := repository.NewPaymentRepo(h.pool)
+		if err := paymentRepoImpl.UpdateTx(ctx, tx, userID, &payment); err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to update payment")
+			return
+		}
+
+		if _, err := reEvaluateEventStatus(ctx,
+			txEventStatusRepo{repo: repository.NewEventRepo(h.pool), tx: tx},
+			txPaymentStatusRepo{repo: paymentRepoImpl, tx: tx},
+			payment.EventID, userID,
+		); err != nil {
+			slog.Warn("Failed to re-evaluate event status after payment update", "event_id", payment.EventID, "error", err)
+		}
+
+		if err := tx.Commit(ctx); err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to commit payment update")
+			return
+		}
+	} else {
+		if err := h.paymentRepo.Update(ctx, userID, &payment); err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to update payment")
+			return
+		}
 	}
+
 	writeJSON(w, http.StatusOK, payment)
 }
 
 func (h *CRUDHandler) DeletePayment(w http.ResponseWriter, r *http.Request) {
-	userID := middleware.GetUserID(r.Context())
+	ctx := r.Context()
+	userID := middleware.GetUserID(ctx)
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "Invalid payment ID")
 		return
 	}
-	if err := h.paymentRepo.Delete(r.Context(), id, userID); err != nil {
-		writeError(w, http.StatusNotFound, "Payment not found")
-		return
+
+	// M14: delete + re-evaluate event status in a single transaction when pool is available.
+	if h.pool != nil && h.eventRepo != nil {
+		tx, err := h.pool.Begin(ctx)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to start transaction")
+			return
+		}
+		defer func() { _ = tx.Rollback(ctx) }()
+
+		paymentRepoImpl := repository.NewPaymentRepo(h.pool)
+		eventID, err := paymentRepoImpl.DeleteAndReturnEventIDTx(ctx, tx, id, userID)
+		if err != nil {
+			writeError(w, http.StatusNotFound, "Payment not found")
+			return
+		}
+
+		if _, err := reEvaluateEventStatus(ctx,
+			txEventStatusRepo{repo: repository.NewEventRepo(h.pool), tx: tx},
+			txPaymentStatusRepo{repo: paymentRepoImpl, tx: tx},
+			eventID, userID,
+		); err != nil {
+			slog.Warn("Failed to re-evaluate event status after payment delete", "event_id", eventID, "error", err)
+		}
+
+		if err := tx.Commit(ctx); err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to commit payment deletion")
+			return
+		}
+	} else {
+		if err := h.paymentRepo.Delete(ctx, id, userID); err != nil {
+			writeError(w, http.StatusNotFound, "Payment not found")
+			return
+		}
 	}
+
 	w.WriteHeader(http.StatusNoContent)
 }
 
