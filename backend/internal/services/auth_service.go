@@ -27,6 +27,10 @@ type TokenPair struct {
 	ExpiresAt    int64  `json:"expires_at"`
 }
 
+// bcryptCost is the work factor used when hashing passwords.
+// Cost 12 provides ~300ms on modern hardware, balancing security and UX.
+const bcryptCost = 12
+
 func NewAuthService(jwtSecret string, jwtExpiryHours int) *AuthService {
 	return &AuthService{
 		jwtSecret:      []byte(jwtSecret),
@@ -36,7 +40,7 @@ func NewAuthService(jwtSecret string, jwtExpiryHours int) *AuthService {
 
 // HashPassword creates a bcrypt hash of the password.
 func (s *AuthService) HashPassword(password string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcryptCost)
 	if err != nil {
 		return "", fmt.Errorf("failed to hash password: %w", err)
 	}

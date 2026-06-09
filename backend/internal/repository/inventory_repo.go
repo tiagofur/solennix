@@ -47,7 +47,12 @@ func (r *InventoryRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.
 	return items, nil
 }
 
+var inventoryAllowedSortCols = []string{"ingredient_name", "current_stock", "minimum_stock", "unit_cost", "type", "last_updated"}
+
 func (r *InventoryRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.InventoryItem, int, error) {
+	sortCol = safeSortColumn(sortCol, inventoryAllowedSortCols, "ingredient_name")
+	order = safeSortOrder(order)
+
 	var total int
 	countQuery := `SELECT COUNT(*) FROM inventory WHERE user_id = $1`
 	if err := r.pool.QueryRow(ctx, countQuery, userID).Scan(&total); err != nil {

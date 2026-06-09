@@ -89,14 +89,18 @@ func generateCSRFToken() string {
 	return hex.EncodeToString(b)
 }
 
-// isWebhookPath returns true for paths that contain "/webhook/" —
+// isWebhookPath returns true for paths under the webhook prefix —
 // these endpoints verify authenticity via request signatures, not CSRF.
+// Matches /api/subscriptions/webhook/ and /api/v1/subscriptions/webhook/.
 func isWebhookPath(path string) bool {
-	return strings.Contains(path, "/webhook/")
+	return strings.HasPrefix(path, "/api/subscriptions/webhook/") ||
+		strings.HasPrefix(path, "/api/v1/subscriptions/webhook/")
 }
 
 // isAuthPath returns true for public authentication endpoints that
 // don't have an existing session (register, login, refresh, etc.).
+// Matches /api/auth/ and /api/v1/auth/.
 func isAuthPath(path string) bool {
-	return strings.Contains(path, "/auth/")
+	return strings.HasPrefix(path, "/api/auth/") ||
+		strings.HasPrefix(path, "/api/v1/auth/")
 }

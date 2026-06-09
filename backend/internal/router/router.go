@@ -90,10 +90,13 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			})
 		})
 
-		// Session management — no aggressive rate limit
-		// /me is called on every page load, /refresh on token expiry, /logout to clear session
-		r.Post("/logout", authHandler.Logout)
-		r.Post("/refresh", authHandler.RefreshToken)
+		// Session management — modest rate limit (10/min allows normal refresh-on-expiry
+		// patterns while protecting against credential-stuffing on these endpoints).
+		r.Group(func(r chi.Router) {
+			r.Use(mw.RateLimit(10, 1*time.Minute))
+			r.Post("/logout", authHandler.Logout)
+			r.Post("/refresh", authHandler.RefreshToken)
+		})
 
 		// Protected auth routes (requires valid token)
 		r.Group(func(r chi.Router) {

@@ -64,7 +64,8 @@ func clientIP(r *http.Request) string {
 
 // dummyHash is a pre-computed bcrypt hash used to normalize timing on login attempts
 // with non-existent emails, preventing user enumeration via timing side-channels.
-var dummyHash, _ = bcrypt.GenerateFromPassword([]byte("dummy-timing-normalization"), bcrypt.DefaultCost)
+// Cost 12 matches the production bcryptCost in AuthService.
+var dummyHash, _ = bcrypt.GenerateFromPassword([]byte("dummy-timing-normalization"), 12)
 
 // Note: Token blacklist cleanup is now handled by the persistent RevokedTokenRepo
 // via a background job in main.go. The in-memory init() goroutine is no longer needed.

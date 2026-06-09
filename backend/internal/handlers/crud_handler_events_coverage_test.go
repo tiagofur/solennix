@@ -900,3 +900,75 @@ func TestHandleEventPaymentSuccess_BlockedLegacyPath(t *testing.T) {
 	assert.Equal(t, http.StatusGone, rr.Code)
 	assert.Contains(t, rr.Body.String(), legacyEventPaymentBlockedMessage)
 }
+
+// ---------------------------------------------------------------------------
+// M12 — AddEventPhoto URL validation
+// ---------------------------------------------------------------------------
+
+func TestAddEventPhoto_InvalidScheme_Javascript(t *testing.T) {
+	eventRepo := new(MockFullEventRepo)
+	userID := uuid.New()
+	eventID := uuid.New()
+	eventRepo.On("GetByID", mock.Anything, eventID, userID).
+		Return(&models.Event{ID: eventID, UserID: userID}, nil)
+
+	h := eventCoverageHandler(eventRepo)
+	req := makeReqWithIDParam(http.MethodPost, "/api/events/"+eventID.String()+"/photos",
+		`{"url":"javascript:alert(1)"}`, eventID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.AddEventPhoto(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "invalid photo URL")
+}
+
+func TestAddEventPhoto_RelativeURL_Rejected(t *testing.T) {
+	eventRepo := new(MockFullEventRepo)
+	userID := uuid.New()
+	eventID := uuid.New()
+	eventRepo.On("GetByID", mock.Anything, eventID, userID).
+		Return(&models.Event{ID: eventID, UserID: userID}, nil)
+
+	h := eventCoverageHandler(eventRepo)
+	req := makeReqWithIDParam(http.MethodPost, "/api/events/"+eventID.String()+"/photos",
+		`{"url":"/relative/path"}`, eventID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.AddEventPhoto(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "invalid photo URL")
+}
+
+func TestAddEventPhoto_ValidHTTPS_Accepted(t *testing.T) {
+	eventRepo := new(MockFullEventRepo)
+	userID := uuid.New()
+	eventID := uuid.New()
+	eventRepo.On("GetByID", mock.Anything, eventID, userID).
+		Return(&models.Event{ID: eventID, UserID: userID}, nil)
+	eventRepo.On("Update", mock.Anything, mock.Anything).Return(nil)
+
+	h := eventCoverageHandler(eventRepo)
+	req := makeReqWithIDParam(http.MethodPost, "/api/events/"+eventID.String()+"/photos",
+		`{"url":"https://cdn.example.com/photo.jpg"}`, eventID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.AddEventPhoto(rr, req)
+
+	assert.Equal(t, http.StatusCreated, rr.Code)
+}
+
+func TestAddEventPhoto_InvalidThumbnailURL_Rejected(t *testing.T) {
+	eventRepo := new(MockFullEventRepo)
+	userID := uuid.New()
+	eventID := uuid.New()
+	eventRepo.On("GetByID", mock.Anything, eventID, userID).
+		Return(&models.Event{ID: eventID, UserID: userID}, nil)
+
+	h := eventCoverageHandler(eventRepo)
+	req := makeReqWithIDParam(http.MethodPost, "/api/events/"+eventID.String()+"/photos",
+		`{"url":"https://cdn.example.com/photo.jpg","thumbnail_url":"javascript:evil()"}`, eventID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.AddEventPhoto(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "invalid thumbnail URL")
+}
