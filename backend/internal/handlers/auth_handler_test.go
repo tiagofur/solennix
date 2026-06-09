@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"sync"
 	"testing"
@@ -2938,6 +2939,177 @@ func (e *errTokenBlacklist) IsRevoked(_ context.Context, _ string) (bool, error)
 
 func (e *errTokenBlacklist) Revoke(_ context.Context, _ string, _ time.Time) error {
 	return nil
+}
+
+// ---------------------------------------------------------------------------
+// M7 — AppleInit / AppleCallback OAuth state tests
+// ---------------------------------------------------------------------------
+
+func TestAppleInit_SetsCookieAndStateInRedirectURL(t *testing.T) {
+	cfg := &config.Config{
+		AppleTeamID:     "TEAM1",
+		AppleKeyID:      "KEY1",
+		AppleRedirectURI: "https://example.com/callback",
+		AppleClientIDs:  []string{"com.solennix.web"},
+	}
+	h := &AuthHandler{cfg: cfg}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/auth/apple/init", nil)
+	rr := httptest.NewRecorder()
+	h.AppleInit(rr, req)
+
+	assert.Equal(t, http.StatusFound, rr.Code)
+
+	// Cookie must be set.
+	cookies := rr.Result().Cookies()
+	var stateCookie *http.Cookie
+	for _, c := range cookies {
+		if c.Name == "apple_oauth_state" {
+			stateCookie = c
+			break
+		}
+	}
+	if assert.NotNil(t, stateCookie, "apple_oauth_state cookie must be set") {
+		assert.True(t, stateCookie.HttpOnly)
+		assert.Equal(t, 600, stateCookie.MaxAge)
+		assert.Equal(t, "/", stateCookie.Path)
+	}
+
+	// Redirect URL must include state query param with the same value.
+	loc := rr.Header().Get("Location")
+	assert.NotEmpty(t, loc)
+	parsed, err := url.Parse(loc)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, parsed.Query().Get("state"), "redirect URL must contain state param")
+	if stateCookie != nil {
+		assert.Equal(t, stateCookie.Value, parsed.Query().Get("state"))
+	}
+}
+
+func TestAppleCallback_MissingCookieAndState_Returns400(t *testing.T) {
+	cfg := &config.Config{
+		AppleTeamID:     "TEAM1",
+		AppleKeyID:      "KEY1",
+		AppleRedirectURI: "https://example.com/callback",
+		AppleClientIDs:  []string{"com.solennix.web"},
+	}
+	h := &AuthHandler{cfg: cfg}
+
+	// No cookie, no state in form.
+	body := strings.NewReader("code=authcode123")
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/apple/callback", body)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
+	h.AppleCallback(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "invalid oauth state")
+}
+
+func TestAppleCallback_MismatchedState_Returns400(t *testing.T) {
+	cfg := &config.Config{
+		AppleTeamID:     "TEAM1",
+		AppleKeyID:      "KEY1",
+		AppleRedirectURI: "https://example.com/callback",
+		AppleClientIDs:  []string{"com.solennix.web"},
+	}
+	h := &AuthHandler{cfg: cfg}
+
+	body := strings.NewReader("code=authcode123&state=wrongstate")
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/apple/callback", body)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "apple_oauth_state", Value: "correctstate"})
+	rr := httptest.NewRecorder()
+	h.AppleCallback(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "invalid oauth state")
+}
+
+func TestAppleCallback_ValidState_ClearsStateCookieAndContinues(t *testing.T) {
+	// With a valid state the handler will try to exchange the code with Apple;
+	// that HTTP call will fail in tests (no real Apple server). We verify:
+	//   1. The state validation passes (no 400 for state mismatch).
+	//   2. The state cookie is cleared (MaxAge == -1).
+	//   3. The handler proceeds past state validation (we expect a 5xx from the
+	//      failed Apple token exchange, NOT a 400 for state).
+	cfg := &config.Config{
+		AppleTeamID:     "TEAM1",
+		AppleKeyID:      "KEY1",
+		AppleRedirectURI: "https://example.com/callback",
+		AppleClientIDs:  []string{"com.solennix.web"},
+	}
+	h := &AuthHandler{cfg: cfg}
+
+	const state = "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+	body := strings.NewReader("code=authcode123&state=" + state)
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/apple/callback", body)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "apple_oauth_state", Value: state})
+	rr := httptest.NewRecorder()
+	h.AppleCallback(rr, req)
+
+	// State was valid — must NOT be a 400 about oauth state.
+	assert.NotEqual(t, http.StatusBadRequest, rr.Code, "valid state should not return 400")
+	body2 := rr.Body.String()
+	assert.NotContains(t, body2, "invalid oauth state")
+
+	// State cookie must be cleared.
+	var cleared *http.Cookie
+	for _, c := range rr.Result().Cookies() {
+		if c.Name == "apple_oauth_state" {
+			cleared = c
+			break
+		}
+	}
+	if assert.NotNil(t, cleared, "state cookie should be cleared after validation") {
+		assert.Equal(t, -1, cleared.MaxAge, "cleared cookie must have MaxAge=-1")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// M9 — models.NormalizePlan unit tests
+// ---------------------------------------------------------------------------
+
+func TestNormalizePlan_AllAliases(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		// basic aliases
+		{"gratis", "basic"},
+		{"free", "basic"},
+		{"basic", "basic"},
+		{"plan_basic", "basic"},
+		{"GRATIS", "basic"},
+		{"FREE", "basic"},
+		{"BASIC", "basic"},
+		// pro aliases
+		{"pro", "pro"},
+		{"plan_pro", "pro"},
+		{"premium", "pro"},
+		{"PRO", "pro"},
+		{"PREMIUM", "pro"},
+		// business aliases
+		{"business", "business"},
+		{"plan_business", "business"},
+		{"enterprise", "business"},
+		{"BUSINESS", "business"},
+		{"ENTERPRISE", "business"},
+		// whitespace tolerance
+		{"  pro  ", "pro"},
+		{" basic ", "basic"},
+		// default: pass-through lowercased
+		{"unknown_tier", "unknown_tier"},
+		{"", ""},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.input, func(t *testing.T) {
+			got := models.NormalizePlan(tc.input)
+			assert.Equal(t, tc.want, got, "NormalizePlan(%q) = %q, want %q", tc.input, got, tc.want)
+		})
+	}
 }
 
 func TestAuthHandler_ResetPassword_BlacklistError_Returns503(t *testing.T) {

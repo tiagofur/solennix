@@ -7,6 +7,7 @@ import (
 	"crypto/rsa"
 	"crypto/sha1"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -1704,12 +1705,36 @@ func (h *AuthHandler) AppleInit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Generate a cryptographically random state to prevent CSRF.
+	stateBytes := make([]byte, 32)
+	if _, err := rand.Read(stateBytes); err != nil {
+		slog.Error("Failed to generate Apple OAuth state", "error", err)
+		writeError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+	state := hex.EncodeToString(stateBytes)
+
+	// Apple uses form_post (cross-site POST), so the cookie must be SameSite=None
+	// or the browser will block it on the callback. Secure must be true when
+	// SameSite=None is set; for local dev this is relaxed to match setAuthCookie.
+	secure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+	http.SetCookie(w, &http.Cookie{
+		Name:     "apple_oauth_state",
+		Value:    state,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteNoneMode,
+		MaxAge:   600, // 10 minutes — long enough for the user to complete the flow
+	})
+
 	v := url.Values{}
 	v.Set("client_id", clientID)
 	v.Set("redirect_uri", h.cfg.AppleRedirectURI)
 	v.Set("response_type", "code")
 	v.Set("scope", "name email")
 	v.Set("response_mode", "form_post")
+	v.Set("state", state)
 
 	authURL := "https://appleid.apple.com/auth/authorize?" + v.Encode()
 	http.Redirect(w, r, authURL, http.StatusFound)
@@ -1721,6 +1746,25 @@ func (h *AuthHandler) AppleCallback(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "Failed to parse form")
 		return
 	}
+
+	// Validate OAuth state to prevent CSRF.
+	// Apple sends the state back as a form field (form_post mode).
+	formState := r.FormValue("state")
+	cookie, cookieErr := r.Cookie("apple_oauth_state")
+	if formState == "" || cookieErr != nil || subtle.ConstantTimeCompare([]byte(formState), []byte(cookie.Value)) != 1 {
+		writeError(w, http.StatusBadRequest, "invalid oauth state")
+		return
+	}
+	// Consume the state cookie — it must not be reused.
+	http.SetCookie(w, &http.Cookie{
+		Name:     "apple_oauth_state",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https",
+		SameSite: http.SameSiteNoneMode,
+		MaxAge:   -1,
+	})
 
 	code := r.FormValue("code")
 	if code == "" {

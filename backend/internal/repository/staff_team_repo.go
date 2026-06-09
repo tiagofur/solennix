@@ -32,12 +32,15 @@ const staffTeamColumns = `id, user_id, name, role_label, notes, created_at, upda
 
 // GetAll returns all teams for the user, each with a cheap member_count but
 // NO member rows — the list view only needs the count.
+// Uses a LEFT JOIN + GROUP BY instead of a correlated subquery to avoid N+1.
 func (r *StaffTeamRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.StaffTeam, error) {
 	query := fmt.Sprintf(`SELECT t.id, t.user_id, t.name, t.role_label, t.notes,
 			t.created_at, t.updated_at,
-			(SELECT COUNT(*) FROM staff_team_members m WHERE m.team_id = t.id) AS member_count
+			COUNT(m.staff_id) AS member_count
 		FROM staff_teams t
+		LEFT JOIN staff_team_members m ON m.team_id = t.id
 		WHERE t.user_id = $1
+		GROUP BY t.id
 		ORDER BY t.name
 		LIMIT %d`, GetAllSafetyLimit)
 	rows, err := r.pool.Query(ctx, query, userID)
@@ -166,12 +169,38 @@ func (r *StaffTeamRepo) Update(ctx context.Context, t *models.StaffTeam) error {
 }
 
 func upsertTeamMembers(ctx context.Context, tx pgx.Tx, teamID, userID uuid.UUID, members []models.StaffTeamMember) error {
+	if len(members) == 0 {
+		return nil
+	}
+
+	// Batch-fetch staff ownership in a single query to avoid N+1 (one SELECT per
+	// member). Build a map of staff_id → user_id for O(1) ownership validation.
+	staffIDs := make([]uuid.UUID, len(members))
+	for i, m := range members {
+		staffIDs[i] = m.StaffID
+	}
+
+	rows, err := tx.Query(ctx, `SELECT id, user_id FROM staff WHERE id = ANY($1)`, staffIDs)
+	if err != nil {
+		return fmt.Errorf("batch fetch staff ownership: %w", err)
+	}
+	ownerByStaffID := make(map[uuid.UUID]uuid.UUID, len(staffIDs))
+	for rows.Next() {
+		var sid, uid uuid.UUID
+		if err := rows.Scan(&sid, &uid); err != nil {
+			rows.Close()
+			return fmt.Errorf("scan staff ownership: %w", err)
+		}
+		ownerByStaffID[sid] = uid
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterate staff ownership: %w", err)
+	}
+
 	for _, m := range members {
-		// Safety: verify the staff row belongs to the same user (tenant isolation).
-		// A malicious or buggy client could otherwise attach another org's staff.
-		var ownerID uuid.UUID
-		err := tx.QueryRow(ctx, `SELECT user_id FROM staff WHERE id = $1`, m.StaffID).Scan(&ownerID)
-		if err != nil {
+		ownerID, found := ownerByStaffID[m.StaffID]
+		if !found {
 			// Bad client input (unknown staff_id) — callers map to 400.
 			return fmt.Errorf("%w: staff_id %s not found", ErrInvalidTeamMember, m.StaffID)
 		}
