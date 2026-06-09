@@ -25,6 +25,9 @@ func eventCoverageHandler(eventRepo *MockFullEventRepo) *CRUDHandler {
 	udr := new(MockUnavailableDateRepo)
 	udr.On("GetByDateRange", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return([]models.UnavailableDate{}, nil).Maybe()
+	// A7 stub: existing tests have no line items, so GetProducts/GetExtras return empty.
+	eventRepo.On("GetProducts", mock.Anything, mock.Anything).Return([]models.EventProduct{}, nil).Maybe()
+	eventRepo.On("GetExtras", mock.Anything, mock.Anything).Return([]models.EventExtra{}, nil).Maybe()
 	return NewCRUDHandler(
 		new(MockClientRepo),
 		eventRepo,

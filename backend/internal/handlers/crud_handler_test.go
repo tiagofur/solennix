@@ -30,6 +30,9 @@ func newTestHandler(
 ) *CRUDHandler {
 	udr := new(MockUnavailableDateRepo)
 	udr.On("GetByDateRange", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]models.UnavailableDate{}, nil).Maybe()
+	// A7 stub: default to no line items so existing tests are unaffected.
+	eventRepo.On("GetProducts", mock.Anything, mock.Anything).Return([]models.EventProduct{}, nil).Maybe()
+	eventRepo.On("GetExtras", mock.Anything, mock.Anything).Return([]models.EventExtra{}, nil).Maybe()
 	return NewCRUDHandler(clientRepo, eventRepo, productRepo, inventoryRepo, paymentRepo, userRepo, udr)
 }
 
@@ -43,6 +46,9 @@ func setupCRUDTest(t *testing.T) (*CRUDHandler, *MockClientRepo, *MockFullEventR
 	userRepo := new(MockFullUserRepo)
 	unavailRepo := new(MockUnavailableDateRepo)
 	unavailRepo.On("GetByDateRange", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]models.UnavailableDate{}, nil).Maybe()
+	// A7 stub: default to no line items; individual tests override as needed.
+	eventRepo.On("GetProducts", mock.Anything, mock.Anything).Return([]models.EventProduct{}, nil).Maybe()
+	eventRepo.On("GetExtras", mock.Anything, mock.Anything).Return([]models.EventExtra{}, nil).Maybe()
 
 	return NewCRUDHandler(clientRepo, eventRepo, productRepo, inventoryRepo, paymentRepo, userRepo, unavailRepo), clientRepo, eventRepo, productRepo, inventoryRepo, paymentRepo, userRepo, unavailRepo
 }

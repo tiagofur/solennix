@@ -191,6 +191,20 @@ func (r *EventRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.
 	return &e, nil
 }
 
+// GetByIDPublic fetches an event by ID without a user_id constraint.
+// Use only in contexts where the caller has already validated ownership via a
+// public link token (A8 submission cap). Never expose this directly to users.
+func (r *EventRepo) GetByIDPublic(ctx context.Context, id uuid.UUID) (*models.Event, error) {
+	query := fmt.Sprintf(`SELECT %s, c.name as client_name, c.phone as client_phone
+		FROM events e LEFT JOIN clients c ON e.client_id = c.id
+		WHERE e.id = $1`, eventSelectFields)
+	e, err := scanEventWithClient(r.pool.QueryRow(ctx, query, id))
+	if err != nil {
+		return nil, err
+	}
+	return &e, nil
+}
+
 func (r *EventRepo) GetByIDTx(ctx context.Context, tx pgx.Tx, id, userID uuid.UUID) (*models.Event, error) {
 	query := fmt.Sprintf(`SELECT %s, c.name as client_name, c.phone as client_phone
 		FROM events e LEFT JOIN clients c ON e.client_id = c.id
