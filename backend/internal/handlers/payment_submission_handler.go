@@ -312,6 +312,15 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	// M15: validate client_id belongs to this event.
+	if h.lookupEvent != nil {
+		event, evErr := h.lookupEvent(ctx, eventID)
+		if evErr == nil && event != nil && event.ClientID != clientID {
+			writeError(w, http.StatusForbidden, "Client ID mismatch")
+			return
+		}
+	}
+
 	// A8: cap submission at remaining balance (total_amount - already_paid + 0.01 tolerance).
 	if h.lookupEvent != nil && h.sumPaymentsByEventID != nil {
 		event, evErr := h.lookupEvent(ctx, eventID)
@@ -472,6 +481,15 @@ func (h *PaymentSubmissionHandler) GetHistoryPublic(w http.ResponseWriter, r *ht
 	if link.EventID != eventID {
 		writeError(w, http.StatusBadRequest, "Event ID mismatch")
 		return
+	}
+
+	// M15: validate client_id belongs to this event.
+	if h.lookupEvent != nil {
+		event, evErr := h.lookupEvent(ctx, eventID)
+		if evErr == nil && event != nil && event.ClientID != clientID {
+			writeError(w, http.StatusForbidden, "Client ID mismatch")
+			return
+		}
 	}
 
 	submissions, err := h.repo.GetHistoryByClientEventID(ctx, clientID, eventID)

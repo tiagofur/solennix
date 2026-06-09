@@ -76,7 +76,8 @@ func hashToken(token string) string {
 }
 
 // isResetTokenBlacklisted checks if a reset token has already been used.
-func isResetTokenBlacklisted(token string) bool {
+// Returns (revoked, err); callers must treat err as a 503.
+func isResetTokenBlacklisted(token string) (bool, error) {
 	return middleware.GetTokenBlacklist().IsRevoked(context.Background(), hashToken(token))
 }
 
@@ -902,7 +903,13 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if token has already been used
-	if isResetTokenBlacklisted(req.Token) {
+	blacklisted, blErr := isResetTokenBlacklisted(req.Token)
+	if blErr != nil {
+		slog.Error("reset token blacklist check failed", "error", blErr)
+		writeAuthI18nError(w, r, http.StatusServiceUnavailable, "auth.service_unavailable")
+		return
+	}
+	if blacklisted {
 		writeAuthI18nError(w, r, http.StatusUnauthorized, "auth.reset_token_already_used")
 		return
 	}
@@ -1086,6 +1093,43 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, user)
 }
 
+// checkAccountAccess enforces the same account_status gate as Login(): it
+// cancels an in-grace pending deletion, blocks "blocked"/"deleted", and writes
+// the i18n error response. Returns true if the request may proceed.
+func (h *AuthHandler) checkAccountAccess(w http.ResponseWriter, r *http.Request, user *models.User) bool {
+	accountStatus := user.AccountStatus
+	if accountStatus == "" {
+		accountStatus = repository.AccountStatusActive
+	}
+	if accountStatus == repository.AccountStatusBlocked {
+		if user.DeletionEligibleAt != nil && user.DeletionEligibleAt.After(time.Now()) {
+			if err := h.userRepo.CancelPendingDeletion(r.Context(), user.ID); err != nil {
+				slog.Error("Failed to cancel pending self-deletion on oauth login", "error", err, "user_id", user.ID)
+				writeAuthI18nError(w, r, http.StatusInternalServerError, "auth.internal_server_error")
+				return false
+			}
+			user.AccountStatus = repository.AccountStatusActive
+			slog.Info("auth.event", "action", "self_deletion_cancelled_on_oauth", "user_id", user.ID, "email", maskEmail(user.Email), "ip", clientIP(r))
+			return true
+		}
+		slog.Warn("auth.event", "action", "oauth_login_failed", "email", maskEmail(user.Email), "reason", "account_blocked", "ip", clientIP(r))
+		middleware.LogSecurityAuditEvent(user.ID, "auth_failed", "session", map[string]any{
+			"reason": "account_blocked",
+		}, clientIP(r), r.UserAgent())
+		writeAuthI18nError(w, r, http.StatusForbidden, "auth.account_blocked")
+		return false
+	}
+	if accountStatus == repository.AccountStatusDeleted {
+		slog.Warn("auth.event", "action", "oauth_login_failed", "email", maskEmail(user.Email), "reason", "account_deleted", "ip", clientIP(r))
+		middleware.LogSecurityAuditEvent(user.ID, "auth_failed", "session", map[string]any{
+			"reason": "account_deleted",
+		}, clientIP(r), r.UserAgent())
+		writeAuthI18nError(w, r, http.StatusForbidden, "auth.account_deleted")
+		return false
+	}
+	return true
+}
+
 // GoogleSignIn handles POST /api/auth/google
 // Validates a Google ID token and returns user + JWT tokens
 func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
@@ -1125,6 +1169,9 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 	user, err := h.userRepo.GetByGoogleUserID(r.Context(), googleUserID)
 	if err == nil && user != nil {
 		// User exists with this Google ID - login
+		if !h.checkAccountAccess(w, r, user) {
+			return
+		}
 		tokens, err := h.authService.GenerateTokenPair(user.ID, user.Email)
 		if err != nil {
 			slog.Error("Failed to generate tokens", "error", err)
@@ -1147,6 +1194,9 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 		// User exists with this email — check if Google is already linked
 		if user.GoogleUserID != nil && *user.GoogleUserID == googleUserID {
 			// Same Google account already linked (shouldn't reach here, but handle gracefully)
+			if !h.checkAccountAccess(w, r, user) {
+				return
+			}
 			tokens, err := h.authService.GenerateTokenPair(user.ID, user.Email)
 			if err != nil {
 				slog.Error("Failed to generate tokens", "error", err)
@@ -1163,6 +1213,9 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// Account exists but Google is NOT linked — auto-link since Google verified the email
+		if !h.checkAccountAccess(w, r, user) {
+			return
+		}
 		if err := h.userRepo.LinkGoogleAccount(r.Context(), user.ID, googleUserID); err != nil {
 			slog.Error("Failed to link Google account", "error", err, "user_id", user.ID)
 			writeAuthI18nError(w, r, http.StatusInternalServerError, "auth.google_link_failed")
@@ -1203,6 +1256,9 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 			}
 			// Check if the existing user has this Google account linked
 			if existingUser.GoogleUserID != nil && *existingUser.GoogleUserID == googleUserID {
+				if !h.checkAccountAccess(w, r, existingUser) {
+					return
+				}
 				tokens, tokenErr := h.authService.GenerateTokenPair(existingUser.ID, existingUser.Email)
 				if tokenErr != nil {
 					slog.Error("Failed to generate tokens", "error", tokenErr)
@@ -1218,6 +1274,9 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			// Existing user doesn't have Google linked — auto-link
+			if !h.checkAccountAccess(w, r, existingUser) {
+				return
+			}
 			if linkErr := h.userRepo.LinkGoogleAccount(r.Context(), existingUser.ID, googleUserID); linkErr != nil {
 				slog.Error("Failed to link Google account on race recovery", "error", linkErr)
 				writeError(w, http.StatusInternalServerError, "Failed to link Google account")
@@ -1509,6 +1568,9 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 	user, err := h.userRepo.GetByAppleUserID(r.Context(), appleUserID)
 	if err == nil && user != nil {
 		// User exists with this Apple ID - login
+		if !h.checkAccountAccess(w, r, user) {
+			return
+		}
 		tokens, err := h.authService.GenerateTokenPair(user.ID, user.Email)
 		if err != nil {
 			slog.Error("Failed to generate tokens", "error", err)
@@ -1533,6 +1595,9 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 			// User exists with this email — check if Apple is already linked
 			if user.AppleUserID != nil && *user.AppleUserID == appleUserID {
 				// Same Apple account already linked (shouldn't reach here, but handle gracefully)
+				if !h.checkAccountAccess(w, r, user) {
+					return
+				}
 				tokens, err := h.authService.GenerateTokenPair(user.ID, user.Email)
 				if err != nil {
 					slog.Error("Failed to generate tokens", "error", err)
@@ -1550,6 +1615,9 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			// Account exists but Apple is NOT linked — auto-link since Apple verified the email
+			if !h.checkAccountAccess(w, r, user) {
+				return
+			}
 			if err := h.userRepo.LinkAppleAccount(r.Context(), user.ID, appleUserID); err != nil {
 				slog.Error("Failed to link Apple account", "error", err, "user_id", user.ID)
 				writeError(w, http.StatusInternalServerError, "Failed to link Apple account")
@@ -1743,6 +1811,9 @@ func (h *AuthHandler) AppleCallback(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.userRepo.GetByAppleUserID(r.Context(), appleUserID)
 	if err == nil && user != nil {
+		if !h.checkAccountAccess(w, r, user) {
+			return
+		}
 		tokens, tokenErr := h.authService.GenerateTokenPair(user.ID, user.Email)
 		if tokenErr != nil {
 			slog.Error("Failed to generate tokens", "error", tokenErr)
@@ -1758,6 +1829,9 @@ func (h *AuthHandler) AppleCallback(w http.ResponseWriter, r *http.Request) {
 	if email != "" {
 		user, err = h.userRepo.GetByEmail(r.Context(), email)
 		if err == nil && user != nil {
+			if !h.checkAccountAccess(w, r, user) {
+				return
+			}
 			_ = h.userRepo.LinkAppleAccount(r.Context(), user.ID, appleUserID)
 			tokens, tokenErr := h.authService.GenerateTokenPair(user.ID, user.Email)
 			if tokenErr != nil {

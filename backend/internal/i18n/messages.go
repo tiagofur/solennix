@@ -19,6 +19,7 @@ var catalogs = map[string]map[string]string{
 	"es": {
 		"common.invalid_request_body":                "Cuerpo de solicitud invalido",
 		"auth.required":                              "Autenticacion requerida",
+		"auth.service_unavailable":                   "Servicio no disponible temporalmente",
 		"auth.token_revoked":                         "El token fue revocado",
 		"auth.token_invalid_or_expired":              "Token invalido o expirado",
 		"auth.user_not_found":                        "Usuario no encontrado",
@@ -123,6 +124,7 @@ var catalogs = map[string]map[string]string{
 	"en": {
 		"common.invalid_request_body":                "Invalid request body",
 		"auth.required":                              "Authentication required",
+		"auth.service_unavailable":                   "Service temporarily unavailable",
 		"auth.token_revoked":                         "Token has been revoked",
 		"auth.token_invalid_or_expired":              "Invalid or expired token",
 		"auth.user_not_found":                        "User not found",

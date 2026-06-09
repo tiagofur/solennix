@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"strings"
 	"sync"
@@ -17,7 +18,7 @@ import (
 
 // TokenBlacklist checks whether a token hash has been revoked.
 type TokenBlacklist interface {
-	IsRevoked(ctx context.Context, tokenHash string) bool
+	IsRevoked(ctx context.Context, tokenHash string) (bool, error)
 	Revoke(ctx context.Context, tokenHash string, expiresAt time.Time) error
 }
 
@@ -40,9 +41,9 @@ type inMemoryBlacklist struct {
 	m sync.Map
 }
 
-func (b *inMemoryBlacklist) IsRevoked(_ context.Context, tokenHash string) bool {
+func (b *inMemoryBlacklist) IsRevoked(_ context.Context, tokenHash string) (bool, error) {
 	_, found := b.m.Load(tokenHash)
-	return found
+	return found, nil
 }
 
 func (b *inMemoryBlacklist) Revoke(_ context.Context, tokenHash string, expiresAt time.Time) error {
@@ -86,7 +87,13 @@ func Auth(authService *services.AuthService) func(http.Handler) http.Handler {
 
 			// Check if token has been revoked (e.g., by logout)
 			tokenHash := sha256Hex(token)
-			if tokenBlacklistInstance.IsRevoked(r.Context(), tokenHash) {
+			revoked, err := tokenBlacklistInstance.IsRevoked(r.Context(), tokenHash)
+			if err != nil {
+				slog.Error("token blacklist check failed", "error", err)
+				writeAuthError(w, http.StatusServiceUnavailable, i18n.Message(r.Context(), "auth.service_unavailable"))
+				return
+			}
+			if revoked {
 				writeAuthError(w, http.StatusUnauthorized, i18n.Message(r.Context(), "auth.token_revoked"))
 				return
 			}

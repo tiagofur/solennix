@@ -335,3 +335,141 @@ func TestStaffTeamMemberReplacementBehavior(t *testing.T) {
 		})
 	}
 }
+
+// ---------------------------------------------------------------------------
+// M15 — client_id belongs to the event validation
+// ---------------------------------------------------------------------------
+
+func buildMultipartBody(t *testing.T, fields map[string]string) (*bytes.Buffer, string) {
+	t.Helper()
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	for k, v := range fields {
+		_ = writer.WriteField(k, v)
+	}
+	writer.Close()
+	return body, writer.FormDataContentType()
+}
+
+// TestPaymentSubmissionCreatePublic_ClientIDMismatch verifies 403 when client_id
+// does not match the event's client.
+func TestPaymentSubmissionCreatePublic_ClientIDMismatch(t *testing.T) {
+	uploadDir := t.TempDir()
+	eventID := uuid.New()
+	correctClientID := uuid.New()
+	wrongClientID := uuid.New()
+
+	handler := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir)
+	handler.lookupPublicLink = func(_ context.Context, _ string) (*models.EventPublicLink, error) {
+		return &models.EventPublicLink{
+			EventID: eventID,
+			UserID:  uuid.New(),
+			Status:  "active",
+		}, nil
+	}
+	handler.lookupEvent = func(_ context.Context, _ uuid.UUID) (*models.Event, error) {
+		return &models.Event{
+			ID:       eventID,
+			ClientID: correctClientID,
+		}, nil
+	}
+
+	body, contentType := buildMultipartBody(t, map[string]string{
+		"event_id":  eventID.String(),
+		"client_id": wrongClientID.String(),
+		"amount":    "500",
+	})
+	req := httptest.NewRequest(http.MethodPost, "/api/public/events/tok/payment-submissions", body)
+	req.Header.Set("Content-Type", contentType)
+	req.SetPathValue("token", "tok")
+	w := httptest.NewRecorder()
+
+	handler.CreatePublic(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+	var envelope paymentSubmissionErrorEnvelope
+	require.NoError(t, json.NewDecoder(w.Body).Decode(&envelope))
+	assert.Equal(t, "Client ID mismatch", envelope.Error)
+}
+
+// TestPaymentSubmissionCreatePublic_ClientIDCorrect verifies no 403 when client_id matches.
+func TestPaymentSubmissionCreatePublic_ClientIDCorrect(t *testing.T) {
+	uploadDir := t.TempDir()
+	eventID := uuid.New()
+	correctClientID := uuid.New()
+
+	handler := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir)
+	handler.lookupPublicLink = func(_ context.Context, _ string) (*models.EventPublicLink, error) {
+		return &models.EventPublicLink{
+			EventID: eventID,
+			UserID:  uuid.New(),
+			Status:  "active",
+		}, nil
+	}
+	handler.lookupEvent = func(_ context.Context, _ uuid.UUID) (*models.Event, error) {
+		return &models.Event{
+			ID:       eventID,
+			ClientID: correctClientID,
+		}, nil
+	}
+	handler.createSubmission = func(_ context.Context, ps *models.PaymentSubmission) error {
+		ps.ID = uuid.New()
+		return nil
+	}
+
+	body, contentType := buildMultipartBody(t, map[string]string{
+		"event_id":  eventID.String(),
+		"client_id": correctClientID.String(),
+		"amount":    "500",
+	})
+	req := httptest.NewRequest(http.MethodPost, "/api/public/events/tok/payment-submissions", body)
+	req.Header.Set("Content-Type", contentType)
+	req.SetPathValue("token", "tok")
+	w := httptest.NewRecorder()
+
+	handler.CreatePublic(w, req)
+
+	// Must NOT be a "Client ID mismatch" 403.
+	assert.NotEqual(t, http.StatusForbidden, w.Code)
+	if w.Code == http.StatusForbidden {
+		var envelope paymentSubmissionErrorEnvelope
+		_ = json.NewDecoder(w.Body).Decode(&envelope)
+		assert.NotEqual(t, "Client ID mismatch", envelope.Error)
+	}
+}
+
+// TestPaymentSubmissionGetHistoryPublic_ClientIDMismatch verifies 403 on history endpoint.
+func TestPaymentSubmissionGetHistoryPublic_ClientIDMismatch(t *testing.T) {
+	uploadDir := t.TempDir()
+	eventID := uuid.New()
+	correctClientID := uuid.New()
+	wrongClientID := uuid.New()
+
+	handler := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir)
+	handler.lookupPublicLink = func(_ context.Context, _ string) (*models.EventPublicLink, error) {
+		return &models.EventPublicLink{
+			EventID: eventID,
+			UserID:  uuid.New(),
+			Status:  "active",
+		}, nil
+	}
+	handler.lookupEvent = func(_ context.Context, _ uuid.UUID) (*models.Event, error) {
+		return &models.Event{
+			ID:       eventID,
+			ClientID: correctClientID,
+		}, nil
+	}
+
+	url := fmt.Sprintf("/api/public/events/tok/payment-submissions?event_id=%s&client_id=%s",
+		eventID.String(), wrongClientID.String())
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	req.SetPathValue("token", "tok")
+	w := httptest.NewRecorder()
+
+	handler.GetHistoryPublic(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+	var envelope paymentSubmissionErrorEnvelope
+	require.NoError(t, json.NewDecoder(w.Body).Decode(&envelope))
+	assert.Equal(t, "Client ID mismatch", envelope.Error)
+}
