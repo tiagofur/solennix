@@ -1397,3 +1397,62 @@ func TestEventPublicLinkRepoGetActiveByEventIDExcludesExpiredLinks(t *testing.T)
 		t.Fatalf("GetActiveByEventID(expired) error = %v, want pgx.ErrNoRows", err)
 	}
 }
+
+func seedEventEquipment(t *testing.T, pool *pgxpool.Pool, eventID, inventoryID uuid.UUID, quantity int) {
+	t.Helper()
+	_, err := pool.Exec(context.Background(),
+		`INSERT INTO event_equipment (event_id, inventory_id, quantity, notes) VALUES ($1, $2, $3, $4)`,
+		eventID, inventoryID, quantity, "")
+	if err != nil {
+		t.Fatalf("failed to seed event_equipment: %v", err)
+	}
+}
+
+// TestEventRepoGetEquipmentAvailabilityIntegration covers the two bugs found in
+// the audit (audit-backend-0609 C1):
+//  1. a nil excludeEventID used to leave $4 unbound and crash the query;
+//  2. the date/status filter was ineffective, so reservations from events on
+//     other dates were subtracted from availability.
+func TestEventRepoGetEquipmentAvailabilityIntegration(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	ctx := context.Background()
+	userID := seedUser(t, pool, "equip.availability@test.dev")
+	clientID := seedClient(t, pool, userID, "Availability Client")
+	itemID := seedInventory(t, pool, userID, "Folding Chair") // current_stock = 10
+
+	const targetDate = "2026-07-01"
+	const otherDate = "2026-08-01"
+
+	onDateEvent := seedEvent(t, pool, userID, clientID, targetDate)  // quoted, counts
+	offDateEvent := seedEvent(t, pool, userID, clientID, otherDate) // different date, must NOT count
+
+	seedEventEquipment(t, pool, onDateEvent, itemID, 3)
+	seedEventEquipment(t, pool, offDateEvent, itemID, 4)
+
+	repo := NewEventRepo(pool)
+
+	// Bug 1 + Bug 2: nil exclude must not crash, and only the on-date reservation
+	// (3) is subtracted from stock (10) → 7. The off-date reservation (4) is ignored.
+	got, err := repo.GetEquipmentAvailability(ctx, userID, targetDate, []uuid.UUID{itemID}, nil)
+	if err != nil {
+		t.Fatalf("GetEquipmentAvailability(nil exclude) error = %v", err)
+	}
+	if len(got) != 1 {
+		t.Fatalf("GetEquipmentAvailability len = %d, want 1", len(got))
+	}
+	if got[0].Available != 7 {
+		t.Fatalf("Available = %d, want 7 (10 stock - 3 reserved on date)", got[0].Available)
+	}
+
+	// Exclude the on-date event: its reservation is removed → full stock (10).
+	got, err = repo.GetEquipmentAvailability(ctx, userID, targetDate, []uuid.UUID{itemID}, &onDateEvent)
+	if err != nil {
+		t.Fatalf("GetEquipmentAvailability(exclude) error = %v", err)
+	}
+	if got[0].Available != 10 {
+		t.Fatalf("Available(exclude on-date) = %d, want 10", got[0].Available)
+	}
+}

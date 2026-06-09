@@ -2,7 +2,7 @@
 
 Historial oficial de cambios de Solennix para Web, iOS, Android y Backend.
 
-Última actualización: 2026-06-08
+Última actualización: 2026-06-09
 
 ## Versiones actuales
 
@@ -11,7 +11,21 @@ Historial oficial de cambios de Solennix para Web, iOS, Android y Backend.
 | Web | 1.0.1 | - | web/package.json |
 | iOS | 1.3.0 | 8 | ios/project.yml |
 | Android | 1.3.1 | 9 | android/app/build.gradle.kts |
-| Backend | 1.0.0 | - | backend/VERSION |
+| Backend | 1.0.1 | - | backend/VERSION |
+
+## 2026-06-09 - Backend 1.0.1: Corrección de disponibilidad de equipo
+
+Se corrige el cálculo de disponibilidad de equipo de inventario, que fallaba al crear eventos nuevos y descontaba reservas de eventos de otras fechas.
+
+### WEB
+
+### IOS
+
+### ANDROID
+
+### BACKEND
+- Se corrige el crash de la consulta de disponibilidad de equipo al crear un evento nuevo (parámetro sin enlazar).
+- Se corrige el filtro de fecha/estado: ahora solo se descuenta el equipo reservado por eventos cotizados o confirmados de la misma fecha.
 
 ## 2026-06-08 - Android 1.3.1: Menús contextuales y correcciones de UI
 

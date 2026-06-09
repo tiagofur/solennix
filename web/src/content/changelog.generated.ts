@@ -2,7 +2,7 @@
 // Source: versioning/releases.json
 export const changelogData = {
   "schemaVersion": 1,
-  "updatedAt": "2026-06-08",
+  "updatedAt": "2026-06-09",
   "currentVersions": {
     "web": {
       "version": "1.0.1",
@@ -19,11 +19,26 @@ export const changelogData = {
       "source": "android/app/build.gradle.kts"
     },
     "backend": {
-      "version": "1.0.0",
+      "version": "1.0.1",
       "source": "backend/VERSION"
     }
   },
   "releases": [
+    {
+      "id": "2026-06-09-backend-equipment-availability-fix",
+      "date": "2026-06-09",
+      "title": "Backend 1.0.1: Corrección de disponibilidad de equipo",
+      "summary": "Se corrige el cálculo de disponibilidad de equipo de inventario, que fallaba al crear eventos nuevos y descontaba reservas de eventos de otras fechas.",
+      "platforms": {
+        "web": [],
+        "ios": [],
+        "android": [],
+        "backend": [
+          "Se corrige el crash de la consulta de disponibilidad de equipo al crear un evento nuevo (parámetro sin enlazar).",
+          "Se corrige el filtro de fecha/estado: ahora solo se descuenta el equipo reservado por eventos cotizados o confirmados de la misma fecha."
+        ]
+      }
+    },
     {
       "id": "2026-06-08-android-contextual-menus-and-fixes",
       "date": "2026-06-08",
