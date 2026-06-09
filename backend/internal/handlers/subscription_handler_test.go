@@ -559,14 +559,19 @@ func TestSubscriptionHandler_RevenueCatWebhookProductChange(t *testing.T) {
 		}
 	}`, userID.String())
 
+	// PRODUCT_CHANGE is handled like RENEWAL: the user stays on pro and the
+	// subscription record is refreshed (subRepo is nil here, so only the plan
+	// update runs).
+	mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "pro", (*string)(nil)).Return(nil)
+
 	req := httptest.NewRequest("POST", "/api/subscriptions/webhook/revenuecat", bytes.NewReader([]byte(payload)))
 	req.Header.Set("Authorization", "rc_secret_123")
 	w := httptest.NewRecorder()
 
 	handler.RevenueCatWebhook(w, req)
 
-	// PRODUCT_CHANGE just logs, no repo calls expected
 	assert.Equal(t, http.StatusOK, w.Code)
+	mockRepo.AssertExpectations(t)
 }
 
 func TestSubscriptionHandler_DebugDowngradeInProduction(t *testing.T) {
@@ -2924,4 +2929,29 @@ func TestSubscriptionHandler_StripeWebhook_UnknownEventType(t *testing.T) {
 	handler.StripeWebhook(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestSweepStripeSubCache(t *testing.T) {
+	staleKey := "sub_sweep_stale_" + t.Name()
+	freshKey := "sub_sweep_fresh_" + t.Name()
+
+	stripeSubCache.mu.Lock()
+	stripeSubCache.entries[staleKey] = &stripeSubCacheEntry{fetchedAt: time.Now().Add(-2 * stripeSubCacheTTL)}
+	stripeSubCache.entries[freshKey] = &stripeSubCacheEntry{fetchedAt: time.Now()}
+	stripeSubCache.mu.Unlock()
+
+	sweepStripeSubCache(time.Now())
+
+	stripeSubCache.mu.RLock()
+	_, stalePresent := stripeSubCache.entries[staleKey]
+	_, freshPresent := stripeSubCache.entries[freshKey]
+	stripeSubCache.mu.RUnlock()
+
+	assert.False(t, stalePresent, "stale entry should be evicted")
+	assert.True(t, freshPresent, "fresh entry should be retained")
+
+	// Cleanup so the shared global cache does not leak into other tests.
+	stripeSubCache.mu.Lock()
+	delete(stripeSubCache.entries, freshKey)
+	stripeSubCache.mu.Unlock()
 }
