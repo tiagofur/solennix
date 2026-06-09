@@ -11,7 +11,27 @@ Historial oficial de cambios de Solennix para Web, iOS, Android y Backend.
 | Web | 1.0.1 | - | web/package.json |
 | iOS | 1.3.0 | 8 | ios/project.yml |
 | Android | 1.3.1 | 9 | android/app/build.gradle.kts |
-| Backend | 1.0.1 | - | backend/VERSION |
+| Backend | 1.0.2 | - | backend/VERSION |
+
+## 2026-06-09 - Backend 1.0.2: Endurecimiento de seguridad e integridad
+
+Remediación de una auditoría de backend: pagos y suscripciones más confiables, integridad de montos, control de acceso reforzado y seguridad de sesión.
+
+### WEB
+
+### IOS
+
+### ANDROID
+
+### BACKEND
+- Pagos: los webhooks de Stripe y RevenueCat ahora son idempotentes, evitando dobles cobros de beneficios y correos duplicados ante reintentos.
+- Suscripciones: el plan del usuario se sincroniza correctamente al reactivarse un pago y al cambiar de tier; se corrige el downgrade de Business que no se aplicaba.
+- Integridad de montos: el cálculo de cobertura de depósito se hace con precisión de centavos; se valida el total del evento contra sus ítems y se limita cada comprobante de pago al saldo pendiente.
+- Estado del evento: editar o eliminar un pago reevalúa automáticamente si el evento sigue confirmado.
+- Control de acceso: el inicio de sesión con Google/Apple respeta el bloqueo de cuenta; se valida el cliente en el portal público de pagos; las reseñas se actualizan solo por su dueño.
+- Seguridad de sesión: la revocación de tokens falla de forma segura ante errores de base de datos y la rotación de tokens de refresco es atómica.
+- Límites de plan: la creación de clientes, eventos, productos, inventario y colaboradores aplica los límites de forma atómica, evitando superarlos por condiciones de carrera.
+- Llaves de firma de subida de archivos separadas del secreto de sesión.
 
 ## 2026-06-09 - Backend 1.0.1: Corrección de disponibilidad de equipo
 

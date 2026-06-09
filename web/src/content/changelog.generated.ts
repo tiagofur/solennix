@@ -19,11 +19,32 @@ export const changelogData = {
       "source": "android/app/build.gradle.kts"
     },
     "backend": {
-      "version": "1.0.1",
+      "version": "1.0.2",
       "source": "backend/VERSION"
     }
   },
   "releases": [
+    {
+      "id": "2026-06-09-backend-security-and-integrity-hardening",
+      "date": "2026-06-09",
+      "title": "Backend 1.0.2: Endurecimiento de seguridad e integridad",
+      "summary": "Remediación de una auditoría de backend: pagos y suscripciones más confiables, integridad de montos, control de acceso reforzado y seguridad de sesión.",
+      "platforms": {
+        "web": [],
+        "ios": [],
+        "android": [],
+        "backend": [
+          "Pagos: los webhooks de Stripe y RevenueCat ahora son idempotentes, evitando dobles cobros de beneficios y correos duplicados ante reintentos.",
+          "Suscripciones: el plan del usuario se sincroniza correctamente al reactivarse un pago y al cambiar de tier; se corrige el downgrade de Business que no se aplicaba.",
+          "Integridad de montos: el cálculo de cobertura de depósito se hace con precisión de centavos; se valida el total del evento contra sus ítems y se limita cada comprobante de pago al saldo pendiente.",
+          "Estado del evento: editar o eliminar un pago reevalúa automáticamente si el evento sigue confirmado.",
+          "Control de acceso: el inicio de sesión con Google/Apple respeta el bloqueo de cuenta; se valida el cliente en el portal público de pagos; las reseñas se actualizan solo por su dueño.",
+          "Seguridad de sesión: la revocación de tokens falla de forma segura ante errores de base de datos y la rotación de tokens de refresco es atómica.",
+          "Límites de plan: la creación de clientes, eventos, productos, inventario y colaboradores aplica los límites de forma atómica, evitando superarlos por condiciones de carrera.",
+          "Llaves de firma de subida de archivos separadas del secreto de sesión."
+        ]
+      }
+    },
     {
       "id": "2026-06-09-backend-equipment-availability-fix",
       "date": "2026-06-09",
