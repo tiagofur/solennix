@@ -69,7 +69,6 @@ fun StepProducts(viewModel: EventFormViewModel) {
             modifier = Modifier
                 .padding(24.dp)
                 .verticalScroll(rememberScrollState())
-                .imePadding()
         ) {
             Card(
                 modifier = Modifier

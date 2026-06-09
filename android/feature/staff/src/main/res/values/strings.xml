@@ -140,5 +140,10 @@
     <string name="staff_portal_checklist_materials">Material y montaje listos</string>
     <string name="staff_portal_checklist_closing">Cierre operativo completado</string>
     <string name="staff_portal_quick_notes_label">Notas rápidas personales</string>
+    <string name="staff_list_action_edit">Editar</string>
+    <string name="staff_list_action_delete">Eliminar</string>
+    <string name="staff_list_action_call">Llamar por teléfono</string>
+    <string name="staff_list_action_email">Enviar correo electrónico</string>
+    <string name="staff_ok">Aceptar</string>
 
 </resources>

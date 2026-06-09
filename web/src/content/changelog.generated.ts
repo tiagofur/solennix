@@ -2,7 +2,7 @@
 // Source: versioning/releases.json
 export const changelogData = {
   "schemaVersion": 1,
-  "updatedAt": "2026-06-03",
+  "updatedAt": "2026-06-08",
   "currentVersions": {
     "web": {
       "version": "1.0.1",
@@ -14,8 +14,8 @@ export const changelogData = {
       "source": "ios/project.yml"
     },
     "android": {
-      "version": "1.3.0",
-      "build": "8",
+      "version": "1.3.1",
+      "build": "9",
       "source": "android/app/build.gradle.kts"
     },
     "backend": {
@@ -24,6 +24,22 @@ export const changelogData = {
     }
   },
   "releases": [
+    {
+      "id": "2026-06-08-android-contextual-menus-and-fixes",
+      "date": "2026-06-08",
+      "title": "Android 1.3.1: Menús contextuales y correcciones de UI",
+      "summary": "Se unifican los menús de acciones rápidas (bottom sheets) para todas las listas principales en Android y se corrige el espaciado del teclado en formularios.",
+      "platforms": {
+        "web": [],
+        "ios": [],
+        "android": [
+          "Se implementa menú contextual (bottom sheet) de acciones rápidas para las listas de Clientes, Productos, Inventario, Colaboradores y Equipos.",
+          "Se corrige el bug de espaciado vacío que aparecía arriba del teclado al abrirlo en cualquier formulario.",
+          "Se corrigen bugs de navegación y edición en el flujo del formulario de eventos."
+        ],
+        "backend": []
+      }
+    },
     {
       "id": "2026-06-03-self-service-account-deletion-and-localization",
       "date": "2026-06-03",

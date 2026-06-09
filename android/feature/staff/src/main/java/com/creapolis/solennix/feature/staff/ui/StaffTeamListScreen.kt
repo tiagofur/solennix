@@ -1,6 +1,8 @@
 package com.creapolis.solennix.feature.staff.ui
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,6 +45,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,11 +61,14 @@ import com.creapolis.solennix.feature.staff.viewmodel.StaffTeamListViewModel
 fun StaffTeamListScreen(
     viewModel: StaffTeamListViewModel,
     onTeamClick: (String) -> Unit,
+    onTeamEdit: (String) -> Unit,
     onAddTeamClick: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var pendingDelete by remember { mutableStateOf<StaffTeam?>(null) }
+    var rowActionsTeam by remember { mutableStateOf<StaffTeam?>(null) }
+    val haptic = LocalHapticFeedback.current
 
     LifecycleResumeEffect(viewModel) {
         viewModel.refresh()
@@ -156,7 +163,10 @@ fun StaffTeamListScreen(
                             StaffTeamRow(
                                 team = team,
                                 onClick = { onTeamClick(team.id) },
-                                onDeleteClick = { pendingDelete = team }
+                                onLongClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    rowActionsTeam = team
+                                }
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                         }
@@ -164,6 +174,21 @@ fun StaffTeamListScreen(
                 }
             }
         }
+    }
+
+    rowActionsTeam?.let { team ->
+        TeamRowActionsBottomSheet(
+            team = team,
+            onEdit = {
+                rowActionsTeam = null
+                onTeamEdit(team.id)
+            },
+            onDelete = {
+                rowActionsTeam = null
+                pendingDelete = team
+            },
+            onDismiss = { rowActionsTeam = null }
+        )
     }
 
     val toDelete = pendingDelete
@@ -198,22 +223,26 @@ fun StaffTeamListScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun StaffTeamRow(
     team: StaffTeam,
     onClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onLongClick: () -> Unit
 ) {
     Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            ),
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
         shape = MaterialTheme.shapes.medium
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onClick)
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -242,13 +271,6 @@ private fun StaffTeamRow(
                     pluralStringResource(R.plurals.staff_team_member_count, count, count),
                     style = MaterialTheme.typography.labelSmall,
                     color = SolennixTheme.colors.secondaryText
-                )
-            }
-            IconButton(onClick = onDeleteClick) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = stringResource(R.string.staff_cd_delete),
-                    tint = SolennixTheme.colors.error
                 )
             }
         }

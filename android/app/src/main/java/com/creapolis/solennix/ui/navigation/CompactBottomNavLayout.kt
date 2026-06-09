@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -116,31 +117,34 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
     val isAtTopLevel = TopLevelDestination.entries.any { it.route == currentRoute }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         bottomBar = {
-            NavigationBar(containerColor = SolennixTheme.colors.tabBarBg) {
-                TopLevelDestination.entries.forEach { destination ->
-                    NavigationBarItem(
-                        selected = selectedDestination == destination,
-                        onClick = {
-                            selectedDestination = destination
-                            navController.navigate(destination.route) {
-                                popUpTo(navController.graph.startDestinationId) { inclusive = false }
-                                launchSingleTop = true
-                            }
-                        },
-                        icon = {
-                            Icon(
-                                if (selectedDestination == destination) destination.selectedIcon else destination.unselectedIcon,
-                                contentDescription = stringResource(destination.labelRes)
+            if (isAtTopLevel) {
+                NavigationBar(containerColor = SolennixTheme.colors.tabBarBg) {
+                    TopLevelDestination.entries.forEach { destination ->
+                        NavigationBarItem(
+                            selected = selectedDestination == destination,
+                            onClick = {
+                                selectedDestination = destination
+                                navController.navigate(destination.route) {
+                                    popUpTo(navController.graph.startDestinationId) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                            },
+                            icon = {
+                                Icon(
+                                    if (selectedDestination == destination) destination.selectedIcon else destination.unselectedIcon,
+                                    contentDescription = stringResource(destination.labelRes)
+                                )
+                            },
+                            label = { Text(stringResource(destination.labelRes)) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = SolennixTheme.colors.tabBarActive,
+                                unselectedIconColor = SolennixTheme.colors.tabBarInactive,
+                                indicatorColor = SolennixTheme.colors.primaryLight
                             )
-                        },
-                        label = { Text(stringResource(destination.labelRes)) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = SolennixTheme.colors.tabBarActive,
-                            unselectedIconColor = SolennixTheme.colors.tabBarInactive,
-                            indicatorColor = SolennixTheme.colors.primaryLight
                         )
-                    )
+                    }
                 }
             }
         },
@@ -194,6 +198,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 EventListScreen(
                     viewModel = hiltViewModel(),
                     onEventClick = { id -> navController.navigate("event_detail/$id") },
+                    onEventEdit = { id -> navController.navigate("event_form?eventId=$id") },
                     onNavigateBack = { navController.popBackStack() },
                     onSearchClick = { navController.navigate(buildSearchRoute()) },
                     showBackButton = false
@@ -204,6 +209,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 ClientListScreen(
                     viewModel = hiltViewModel(),
                     onClientClick = { id -> navController.navigate("client_detail/$id") },
+                    onClientEdit = { id -> navController.navigate("client_form?clientId=$id") },
                     onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onAddClientClick = { navController.navigate("client_form") }
                 )
@@ -383,6 +389,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 StaffListScreen(
                     viewModel = hiltViewModel(),
                     onStaffClick = { id -> navController.navigate("staff_detail/$id") },
+                    onStaffEdit = { id -> navController.navigate("staff_form?staffId=$id") },
                     onAddStaffClick = { navController.navigate("staff_form") },
                     onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onTeamsClick = { navController.navigate("staff_teams") }
@@ -392,6 +399,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 StaffTeamListScreen(
                     viewModel = hiltViewModel(),
                     onTeamClick = { id -> navController.navigate("staff_team_detail/$id") },
+                    onTeamEdit = { id -> navController.navigate("staff_team_form?teamId=$id") },
                     onAddTeamClick = { navController.navigate("staff_team_form") },
                     onNavigateBack = { navController.popBackStack() }
                 )
@@ -521,11 +529,21 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
-            composable("event_form?eventId={eventId}", arguments = listOf(navArgument("eventId") {
-                type = NavType.StringType
-                nullable = true
-                defaultValue = null
-            })) {
+            composable(
+                route = "event_form?eventId={eventId}&date={date}",
+                arguments = listOf(
+                    navArgument("eventId") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                    navArgument("date") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    }
+                )
+            ) {
                 EventFormScreen(
                     viewModel = hiltViewModel(),
                     onSearchClick = { navController.navigate(buildSearchRoute()) },

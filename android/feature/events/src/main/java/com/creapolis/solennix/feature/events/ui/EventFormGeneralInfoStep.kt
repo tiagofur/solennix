@@ -50,7 +50,6 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
     LazyColumn(
         modifier = Modifier
             .padding(24.dp)
-            .imePadding()
     ) {
         item {
             AdaptiveCenteredContent(maxWidth = 800.dp) {

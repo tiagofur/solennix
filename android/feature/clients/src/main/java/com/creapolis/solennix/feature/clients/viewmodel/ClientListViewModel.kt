@@ -151,6 +151,24 @@ class ClientListViewModel @Inject constructor(
             }
         }
     }
+
+    var deleteErrorMessage by mutableStateOf<String?>(null)
+        private set
+
+    fun clearDeleteError() {
+        deleteErrorMessage = null
+    }
+
+    fun deleteClient(clientId: String) {
+        viewModelScope.launch {
+            try {
+                clientRepository.deleteClient(clientId)
+                checkPlanLimits()
+            } catch (e: Exception) {
+                deleteErrorMessage = context.getString(R.string.clients_delete_error, e.message ?: "")
+            }
+        }
+    }
 }
 
 private fun String.escapeCsv(): String {

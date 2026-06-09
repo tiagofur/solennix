@@ -226,6 +226,22 @@
         "Los tests unitarios en AdminUserDetails.test.tsx validan la vista y la carga de datos del usuario",
         "El linter y la suite de validación ./init.sh terminan al 100% en verde"
       ]
+    },
+    {
+      "id": 20,
+      "name": "android-client-contextual-menu",
+      "description": "feat(clients): menú contextual de acciones rápidas (bottom sheet) al mantener presionado un cliente en Android",
+      "status": "done",
+      "acceptance_criteria": [
+        "El gesto de mantener presionado un cliente de la lista dispara un haptic feedback",
+        "Se despliega un menú contextual con opciones para Editar, Llamar, Enviar correo y Eliminar",
+        "Editar navega correctamente a la pantalla de formulario del cliente",
+        "Llamar y Correo ejecutan los intents correspondientes del sistema",
+        "Eliminar solicita confirmación y ejecuta el borrado lógico",
+        "No rompe la pantalla de búsqueda ni otras llamadas a ClientListItem",
+        "Los tests unitarios del módulo de clientes compilan y pasan en verde",
+        "La suite `./init.sh` completa pasa correctamente"
+      ]
     }
   ]
 }

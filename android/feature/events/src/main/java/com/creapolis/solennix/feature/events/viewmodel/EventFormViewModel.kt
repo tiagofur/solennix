@@ -340,6 +340,14 @@ class EventFormViewModel @Inject constructor(
                 val plan = authManager.currentUser.value?.plan ?: Plan.BASIC
                 limitCheckResult = planLimitsManager.canCreateEvent(plan)
             }
+            val dateParam = savedStateHandle.get<String>("date")
+            if (dateParam != null && dateParam.isNotBlank()) {
+                try {
+                    eventDate = LocalDate.parse(dateParam)
+                } catch (_: Exception) {
+                    // Fall back to default LocalDate.now()
+                }
+            }
             if (!loadFromDuplicate()) {
                 loadFromQuickQuote()
             }

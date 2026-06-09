@@ -38,6 +38,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -73,6 +75,8 @@ fun ProductListScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showLimitDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val haptic = LocalHapticFeedback.current
+    var rowActionsProduct by remember { mutableStateOf<Product?>(null) }
 
     LifecycleResumeEffect(viewModel) {
         viewModel.refresh()
@@ -247,8 +251,10 @@ fun ProductListScreen(
                                 ProductGridItem(
                                     product = product,
                                     onClick = { onProductClick(product.id) },
-                                    onEdit = { onEditProduct(product.id) },
-                                    onDelete = { viewModel.deleteProduct(product.id) }
+                                    onLongClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        rowActionsProduct = product
+                                    }
                                 )
                             }
                         },
@@ -262,8 +268,10 @@ fun ProductListScreen(
                                         ProductListItem(
                                             product = product,
                                             onClick = { onProductClick(product.id) },
-                                            onEdit = { onEditProduct(product.id) },
-                                            onDelete = { viewModel.deleteProduct(product.id) }
+                                            onLongClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                rowActionsProduct = product
+                                            }
                                         )
                                     }
                                 }
@@ -277,6 +285,25 @@ fun ProductListScreen(
                 }
             }
         }
+    }
+
+    rowActionsProduct?.let { product ->
+        ProductRowActionsBottomSheet(
+            product = product,
+            onDetails = {
+                rowActionsProduct = null
+                onProductClick(product.id)
+            },
+            onEdit = {
+                rowActionsProduct = null
+                onEditProduct(product.id)
+            },
+            onDelete = {
+                rowActionsProduct = null
+                viewModel.deleteProduct(product.id)
+            },
+            onDismiss = { rowActionsProduct = null }
+        )
     }
 }
 
@@ -344,120 +371,24 @@ private fun ProductSkeletonList() {
 fun ProductGridItem(
     product: Product,
     onClick: () -> Unit,
-    onEdit: () -> Unit = {},
-    onDelete: () -> Unit = {}
+    onLongClick: () -> Unit
 ) {
-    var menuExpanded by remember { mutableStateOf(false) }
-
-    Box {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .combinedClickable(
-                    onClick = onClick,
-                    onLongClick = { menuExpanded = true }
-                ),
-            colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
-            shape = MaterialTheme.shapes.medium
-        ) {
-            Column {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(140.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (product.imageUrl != null) {
-                        AsyncImage(
-                            model = UrlResolver.resolve(product.imageUrl),
-                            contentDescription = product.name,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Text(
-                            text = product.name.take(1).uppercase(),
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = SolennixTheme.colors.secondaryText
-                        )
-                    }
-                }
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text(
-                        text = product.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = SolennixTheme.colors.primaryText,
-                        maxLines = 1
-                    )
-                    Text(
-                        text = product.category,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = SolennixTheme.colors.secondaryText
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = product.basePrice.asMXN(),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = SolennixTheme.colors.primary,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-                    )
-                }
-            }
-        }
-
-        DropdownMenu(
-            expanded = menuExpanded,
-            onDismissRequest = { menuExpanded = false }
-        ) {
-            DropdownMenuItem(
-                text = { Text(ProductStrings.menuEdit) },
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Edit,
-                        contentDescription = stringResource(DesignSystemR.string.cd_edit)
-                    )
-                },
-                onClick = { menuExpanded = false; onEdit() }
-            )
-            DropdownMenuItem(
-                text = { Text(ProductStrings.menuDelete, color = MaterialTheme.colorScheme.error) },
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = stringResource(DesignSystemR.string.cd_delete),
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                },
-                onClick = { menuExpanded = false; onDelete() }
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun ProductListItem(
-    product: Product,
-    onClick: () -> Unit,
-    onEdit: () -> Unit = {},
-    onDelete: () -> Unit = {}
-) {
-    var menuExpanded by remember { mutableStateOf(false) }
-
-    Box {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .combinedClickable(
-                    onClick = onClick,
-                    onLongClick = { menuExpanded = true }
-                )
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Card(
-                modifier = Modifier.size(60.dp),
-                shape = MaterialTheme.shapes.medium
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            ),
+        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp),
+                contentAlignment = Alignment.Center
             ) {
                 if (product.imageUrl != null) {
                     AsyncImage(
@@ -467,70 +398,92 @@ fun ProductListItem(
                         contentScale = ContentScale.Crop
                     )
                 } else {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(product.name.take(1).uppercase(), style = MaterialTheme.typography.titleLarge)
-                    }
+                    Text(
+                        text = product.name.take(1).uppercase(),
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = SolennixTheme.colors.secondaryText
+                    )
                 }
             }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.padding(12.dp)) {
                 Text(
                     text = product.name,
                     style = MaterialTheme.typography.titleMedium,
-                    color = SolennixTheme.colors.primaryText
+                    color = SolennixTheme.colors.primaryText,
+                    maxLines = 1
                 )
                 Text(
                     text = product.category,
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText
                 )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = product.basePrice.asMXN(),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = SolennixTheme.colors.primary,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                )
             }
-
-            Text(
-                text = product.basePrice.asMXN(),
-                style = MaterialTheme.typography.titleMedium,
-                color = SolennixTheme.colors.primary,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-            )
         }
+    }
+}
 
-        DropdownMenu(
-            expanded = menuExpanded,
-            onDismissRequest = { menuExpanded = false }
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun ProductListItem(
+    product: Product,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Card(
+            modifier = Modifier.size(60.dp),
+            shape = MaterialTheme.shapes.medium
         ) {
-            DropdownMenuItem(
-                text = { Text(ProductStrings.menuDetails) },
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Info,
-                        contentDescription = stringResource(DesignSystemR.string.cd_visibility)
-                    )
-                },
-                onClick = { menuExpanded = false; onClick() }
+            if (product.imageUrl != null) {
+                AsyncImage(
+                    model = UrlResolver.resolve(product.imageUrl),
+                    contentDescription = product.name,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(product.name.take(1).uppercase(), style = MaterialTheme.typography.titleLarge)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = product.name,
+                style = MaterialTheme.typography.titleMedium,
+                color = SolennixTheme.colors.primaryText
             )
-            DropdownMenuItem(
-                text = { Text(ProductStrings.menuEdit) },
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Edit,
-                        contentDescription = stringResource(DesignSystemR.string.cd_edit)
-                    )
-                },
-                onClick = { menuExpanded = false; onEdit() }
-            )
-            DropdownMenuItem(
-                text = { Text(ProductStrings.menuDelete, color = MaterialTheme.colorScheme.error) },
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = stringResource(DesignSystemR.string.cd_delete),
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                },
-                onClick = { menuExpanded = false; onDelete() }
+            Text(
+                text = product.category,
+                style = MaterialTheme.typography.bodySmall,
+                color = SolennixTheme.colors.secondaryText
             )
         }
+
+        Text(
+            text = product.basePrice.asMXN(),
+            style = MaterialTheme.typography.titleMedium,
+            color = SolennixTheme.colors.primary,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+        )
     }
 }

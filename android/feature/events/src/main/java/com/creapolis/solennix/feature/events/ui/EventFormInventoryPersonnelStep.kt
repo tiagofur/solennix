@@ -24,7 +24,6 @@ fun StepInventoryAndPersonnel(viewModel: EventFormViewModel) {
             modifier = Modifier
                 .padding(24.dp)
                 .verticalScroll(rememberScrollState())
-                .imePadding()
         ) {
             Spacer(modifier = Modifier.height(32.dp))
             HorizontalDivider(color = SolennixTheme.colors.divider)

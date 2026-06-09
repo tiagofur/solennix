@@ -140,5 +140,10 @@
     <string name="staff_portal_checklist_materials">Materials and setup ready</string>
     <string name="staff_portal_checklist_closing">Operations wrap-up completed</string>
     <string name="staff_portal_quick_notes_label">Personal quick notes</string>
+    <string name="staff_list_action_edit">Edit</string>
+    <string name="staff_list_action_delete">Delete</string>
+    <string name="staff_list_action_call">Call phone</string>
+    <string name="staff_list_action_email">Send email</string>
+    <string name="staff_ok">OK</string>
 
 </resources>

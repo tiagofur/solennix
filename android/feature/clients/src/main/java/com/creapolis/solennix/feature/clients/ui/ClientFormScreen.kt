@@ -95,8 +95,7 @@ fun ClientFormScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(padding)
-                        .navigationBarsPadding()
-                        .imePadding()
+                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
                         .verticalScroll(scrollState)
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally

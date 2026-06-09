@@ -1,5 +1,8 @@
 package com.creapolis.solennix.feature.staff.viewmodel
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.core.data.repository.StaffRepository
@@ -93,6 +96,23 @@ class StaffListViewModel @Inject constructor(
                 // Non-fatal, UI cae al cache
             } finally {
                 _isRefreshing.value = false
+            }
+        }
+    }
+
+    var deleteErrorMessage by mutableStateOf<String?>(null)
+        private set
+
+    fun clearDeleteError() {
+        deleteErrorMessage = null
+    }
+
+    fun deleteStaff(staffId: String) {
+        viewModelScope.launch {
+            try {
+                staffRepository.deleteStaff(staffId)
+            } catch (e: Exception) {
+                deleteErrorMessage = e.message ?: "Error al eliminar"
             }
         }
     }

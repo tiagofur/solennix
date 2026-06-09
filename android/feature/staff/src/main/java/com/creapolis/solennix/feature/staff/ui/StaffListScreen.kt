@@ -1,6 +1,11 @@
 package com.creapolis.solennix.feature.staff.ui
 
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -34,12 +40,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -58,11 +71,16 @@ import com.creapolis.solennix.feature.staff.viewmodel.StaffSortOption
 fun StaffListScreen(
     viewModel: StaffListViewModel,
     onStaffClick: (String) -> Unit,
+    onStaffEdit: (String) -> Unit,
     onAddStaffClick: () -> Unit,
     onSearchClick: () -> Unit = {},
     onTeamsClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
+    var rowActionsStaff by remember { mutableStateOf<Staff?>(null) }
+    var deleteConfirmStaff by remember { mutableStateOf<Staff?>(null) }
 
     LifecycleResumeEffect(viewModel) {
         viewModel.refresh()
@@ -207,7 +225,11 @@ fun StaffListScreen(
                                 ) {
                                     StaffListItem(
                                         staff = staff,
-                                        onClick = { onStaffClick(staff.id) }
+                                        onClick = { onStaffClick(staff.id) },
+                                        onLongClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            rowActionsStaff = staff
+                                        }
                                     )
                                 }
                             }
@@ -216,7 +238,11 @@ fun StaffListScreen(
                             items(uiState.staff, key = { it.id }) { staff ->
                                 StaffListItem(
                                     staff = staff,
-                                    onClick = { onStaffClick(staff.id) }
+                                    onClick = { onStaffClick(staff.id) },
+                                    onLongClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        rowActionsStaff = staff
+                                    }
                                 )
                                 HorizontalDivider(
                                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -229,17 +255,89 @@ fun StaffListScreen(
             }
         }
     }
+
+    rowActionsStaff?.let { staff ->
+        StaffRowActionsBottomSheet(
+            staff = staff,
+            onEdit = {
+                rowActionsStaff = null
+                onStaffEdit(staff.id)
+            },
+            onCall = {
+                rowActionsStaff = null
+                try {
+                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${staff.phone}"))
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    Toast.makeText(context, "No se pudo realizar la llamada", Toast.LENGTH_SHORT).show()
+                }
+            },
+            onEmail = {
+                rowActionsStaff = null
+                try {
+                    val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:${staff.email}"))
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    Toast.makeText(context, "No se pudo enviar el correo", Toast.LENGTH_SHORT).show()
+                }
+            },
+            onDelete = {
+                rowActionsStaff = null
+                deleteConfirmStaff = staff
+            },
+            onDismiss = { rowActionsStaff = null }
+        )
+    }
+
+    deleteConfirmStaff?.let { staff ->
+        AlertDialog(
+            onDismissRequest = { deleteConfirmStaff = null },
+            title = { Text(stringResource(R.string.staff_detail_delete_title)) },
+            text = { Text(stringResource(R.string.staff_detail_delete_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteStaff(staff.id)
+                    deleteConfirmStaff = null
+                }) {
+                    Text(stringResource(R.string.staff_delete), color = SolennixTheme.colors.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteConfirmStaff = null }) {
+                    Text(stringResource(R.string.staff_cancel))
+                }
+            }
+        )
+    }
+
+    viewModel.deleteErrorMessage?.let { errorMsg ->
+        AlertDialog(
+            onDismissRequest = { viewModel.clearDeleteError() },
+            title = { Text(stringResource(R.string.staff_detail_delete_title)) },
+            text = { Text(errorMsg) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.clearDeleteError() }) {
+                    Text(stringResource(R.string.staff_ok))
+                }
+            }
+        )
+    }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun StaffListItem(
     staff: Staff,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

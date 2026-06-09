@@ -2,8 +2,11 @@ package com.creapolis.solennix.feature.clients.ui
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.items
@@ -23,6 +26,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
@@ -76,6 +81,7 @@ private fun exportClientsCsv(context: Context, csvContent: String) {
 fun ClientListScreen(
     viewModel: ClientListViewModel,
     onClientClick: (String) -> Unit,
+    onClientEdit: (String) -> Unit,
     onAddClientClick: () -> Unit,
     onSearchClick: () -> Unit = {},
     onUpgradeClick: () -> Unit = {}
@@ -83,6 +89,9 @@ fun ClientListScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showLimitDialog by remember { mutableStateOf(false) }
+    var rowActionsClient by remember { mutableStateOf<Client?>(null) }
+    var deleteConfirmClient by remember { mutableStateOf<Client?>(null) }
+    val haptic = LocalHapticFeedback.current
 
     LifecycleResumeEffect(viewModel) {
         viewModel.refresh()
@@ -188,14 +197,17 @@ fun ClientListScreen(
                         gridContent = {
                             items(uiState.clients, key = { it.id }) { client ->
                                 Card(
-                                    onClick = { onClientClick(client.id) },
                                     modifier = Modifier.fillMaxWidth(),
                                     colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
                                     shape = MaterialTheme.shapes.medium
                                 ) {
                                     ClientListItem(
                                         client = client,
-                                        onClick = { onClientClick(client.id) }
+                                        onClick = { onClientClick(client.id) },
+                                        onLongClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            rowActionsClient = client
+                                        }
                                     )
                                 }
                             }
@@ -204,7 +216,11 @@ fun ClientListScreen(
                             items(uiState.clients, key = { it.id }) { client ->
                                 ClientListItem(
                                     client = client,
-                                    onClick = { onClientClick(client.id) }
+                                    onClick = { onClientClick(client.id) },
+                                    onLongClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        rowActionsClient = client
+                                    }
                                 )
                                 HorizontalDivider(
                                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -217,17 +233,89 @@ fun ClientListScreen(
             }
         }
     }
+
+    rowActionsClient?.let { client ->
+        ClientRowActionsBottomSheet(
+            client = client,
+            onEdit = {
+                rowActionsClient = null
+                onClientEdit(client.id)
+            },
+            onCall = {
+                rowActionsClient = null
+                try {
+                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${client.phone}"))
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    Toast.makeText(context, "No se pudo realizar la llamada", Toast.LENGTH_SHORT).show()
+                }
+            },
+            onEmail = {
+                rowActionsClient = null
+                try {
+                    val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:${client.email}"))
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    Toast.makeText(context, "No se pudo enviar el correo", Toast.LENGTH_SHORT).show()
+                }
+            },
+            onDelete = {
+                rowActionsClient = null
+                deleteConfirmClient = client
+            },
+            onDismiss = { rowActionsClient = null }
+        )
+    }
+
+    deleteConfirmClient?.let { client ->
+        AlertDialog(
+            onDismissRequest = { deleteConfirmClient = null },
+            title = { Text(stringResource(R.string.clients_delete_title)) },
+            text = { Text(stringResource(R.string.clients_delete_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteClient(client.id)
+                    deleteConfirmClient = null
+                }) {
+                    Text(stringResource(R.string.clients_delete_confirm), color = SolennixTheme.colors.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteConfirmClient = null }) {
+                    Text(stringResource(R.string.clients_delete_cancel))
+                }
+            }
+        )
+    }
+
+    viewModel.deleteErrorMessage?.let { errorMsg ->
+        AlertDialog(
+            onDismissRequest = { viewModel.clearDeleteError() },
+            title = { Text(stringResource(R.string.clients_delete_title)) },
+            text = { Text(errorMsg) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.clearDeleteError() }) {
+                    Text(stringResource(R.string.clients_ok))
+                }
+            }
+        )
+    }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ClientListItem(
     client: Client,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
