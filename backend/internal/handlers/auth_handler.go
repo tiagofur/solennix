@@ -76,7 +76,8 @@ func hashToken(token string) string {
 }
 
 // isResetTokenBlacklisted checks if a reset token has already been used.
-func isResetTokenBlacklisted(token string) bool {
+// Returns (revoked, err); callers must treat err as a 503.
+func isResetTokenBlacklisted(token string) (bool, error) {
 	return middleware.GetTokenBlacklist().IsRevoked(context.Background(), hashToken(token))
 }
 
@@ -902,7 +903,13 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if token has already been used
-	if isResetTokenBlacklisted(req.Token) {
+	blacklisted, blErr := isResetTokenBlacklisted(req.Token)
+	if blErr != nil {
+		slog.Error("reset token blacklist check failed", "error", blErr)
+		writeAuthI18nError(w, r, http.StatusServiceUnavailable, "auth.service_unavailable")
+		return
+	}
+	if blacklisted {
 		writeAuthI18nError(w, r, http.StatusUnauthorized, "auth.reset_token_already_used")
 		return
 	}

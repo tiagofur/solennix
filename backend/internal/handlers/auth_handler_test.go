@@ -2924,3 +2924,40 @@ func TestAuthHandler_CheckAccountAccess_EmptyStatus_TreatedAsActive(t *testing.T
 	assert.Equal(t, http.StatusOK, rr.Code)
 	mockRepo.AssertExpectations(t)
 }
+
+// ---------------------------------------------------------------------------
+// A3: ResetPassword with blacklist error → 503 (fail-closed)
+// ---------------------------------------------------------------------------
+
+// errTokenBlacklist is a middleware.TokenBlacklist whose IsRevoked always returns an error.
+type errTokenBlacklist struct{}
+
+func (e *errTokenBlacklist) IsRevoked(_ context.Context, _ string) (bool, error) {
+	return false, errors.New("db error")
+}
+
+func (e *errTokenBlacklist) Revoke(_ context.Context, _ string, _ time.Time) error {
+	return nil
+}
+
+func TestAuthHandler_ResetPassword_BlacklistError_Returns503(t *testing.T) {
+	authService := services.NewAuthService("test-secret", 1)
+
+	original := middleware.GetTokenBlacklist()
+	middleware.SetTokenBlacklist(&errTokenBlacklist{})
+	defer middleware.SetTokenBlacklist(original)
+
+	h := &AuthHandler{authService: authService}
+
+	userID := uuid.New()
+	token, err := authService.GenerateResetToken(userID, "bl-err@test.dev")
+	assert.NoError(t, err)
+
+	body := fmt.Sprintf(`{"token":"%s","new_password":"Test1234!"}`, token)
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/reset-password", strings.NewReader(body))
+	rr := httptest.NewRecorder()
+	h.ResetPassword(rr, req)
+
+	assert.Equal(t, http.StatusServiceUnavailable, rr.Code)
+	assert.Contains(t, rr.Body.String(), "unavailable")
+}
