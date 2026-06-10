@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -76,11 +77,22 @@ func NewDashboardRepo(pool *pgxpool.Pool) *DashboardRepo {
 }
 
 // GetKPIs returns user-scoped key performance indicators.
+// All queries run inside a single repeatable-read read-only transaction for a
+// consistent snapshot across the ~9 aggregated counts/sums.
 func (r *DashboardRepo) GetKPIs(ctx context.Context, userID uuid.UUID) (*DashboardKPIs, error) {
+	tx, err := r.pool.BeginTx(ctx, pgx.TxOptions{
+		AccessMode: pgx.ReadOnly,
+		IsoLevel:   pgx.RepeatableRead,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to begin KPI transaction: %w", err)
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck // rollback on read-only tx is always safe
+
 	kpis := &DashboardKPIs{}
 
 	// Total revenue (sum of all payments for this user's events)
-	err := r.pool.QueryRow(ctx, `
+	err = tx.QueryRow(ctx, `
 		SELECT COALESCE(SUM(p.amount), 0)
 		FROM payments p
 		JOIN events e ON p.event_id = e.id
@@ -90,7 +102,7 @@ func (r *DashboardRepo) GetKPIs(ctx context.Context, userID uuid.UUID) (*Dashboa
 	}
 
 	// Events this month
-	err = r.pool.QueryRow(ctx, `
+	err = tx.QueryRow(ctx, `
 		SELECT COUNT(*)
 		FROM events
 		WHERE user_id = $1
@@ -100,7 +112,7 @@ func (r *DashboardRepo) GetKPIs(ctx context.Context, userID uuid.UUID) (*Dashboa
 	}
 
 	// Pending quotes (events with status = 'quoted')
-	err = r.pool.QueryRow(ctx, `
+	err = tx.QueryRow(ctx, `
 		SELECT COUNT(*)
 		FROM events
 		WHERE user_id = $1 AND status = 'quoted'`, userID).Scan(&kpis.PendingQuotes)
@@ -114,7 +126,7 @@ func (r *DashboardRepo) GetKPIs(ctx context.Context, userID uuid.UUID) (*Dashboa
 	// /api/dashboard/kpis return 500 (SQLSTATE 42P01). No client was
 	// consuming the endpoint so it stayed silent until the cross-platform
 	// dashboard parity work routed iOS/Android/Web through it.
-	err = r.pool.QueryRow(ctx, `
+	err = tx.QueryRow(ctx, `
 		SELECT COUNT(*)
 		FROM inventory
 		WHERE user_id = $1 AND current_stock <= minimum_stock`, userID).Scan(&kpis.LowStockItems)
@@ -123,7 +135,7 @@ func (r *DashboardRepo) GetKPIs(ctx context.Context, userID uuid.UUID) (*Dashboa
 	}
 
 	// Upcoming events (next 7 days)
-	err = r.pool.QueryRow(ctx, `
+	err = tx.QueryRow(ctx, `
 		SELECT COUNT(*)
 		FROM events
 		WHERE user_id = $1
@@ -134,7 +146,7 @@ func (r *DashboardRepo) GetKPIs(ctx context.Context, userID uuid.UUID) (*Dashboa
 	}
 
 	// Total clients
-	err = r.pool.QueryRow(ctx, `
+	err = tx.QueryRow(ctx, `
 		SELECT COUNT(*)
 		FROM clients
 		WHERE user_id = $1`, userID).Scan(&kpis.TotalClients)
@@ -143,7 +155,7 @@ func (r *DashboardRepo) GetKPIs(ctx context.Context, userID uuid.UUID) (*Dashboa
 	}
 
 	// Average event value
-	err = r.pool.QueryRow(ctx, `
+	err = tx.QueryRow(ctx, `
 		SELECT COALESCE(AVG(total_amount), 0)
 		FROM events
 		WHERE user_id = $1 AND total_amount > 0`, userID).Scan(&kpis.AverageEventValue)
@@ -154,7 +166,7 @@ func (r *DashboardRepo) GetKPIs(ctx context.Context, userID uuid.UUID) (*Dashboa
 	// Net sales / VAT collected / VAT outstanding for the current month.
 	// Scope: events with event_date in current month AND status IN ('confirmed','completed').
 	// VAT is prorated per event by paid ratio (capped at 1.0 if overpaid).
-	err = r.pool.QueryRow(ctx, `
+	err = tx.QueryRow(ctx, `
 		WITH month_events AS (
 			SELECT
 				e.total_amount,
@@ -190,7 +202,7 @@ func (r *DashboardRepo) GetKPIs(ctx context.Context, userID uuid.UUID) (*Dashboa
 
 	// Cash collected this month: sum of payments with payment_date in current month
 	// belonging to the user's events.
-	err = r.pool.QueryRow(ctx, `
+	err = tx.QueryRow(ctx, `
 		SELECT COALESCE(SUM(p.amount), 0)
 		FROM payments p
 		JOIN events e ON p.event_id = e.id
@@ -200,6 +212,9 @@ func (r *DashboardRepo) GetKPIs(ctx context.Context, userID uuid.UUID) (*Dashboa
 		return nil, fmt.Errorf("failed to get cash collected this month: %w", err)
 	}
 
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("failed to commit KPI transaction: %w", err)
+	}
 	return kpis, nil
 }
 

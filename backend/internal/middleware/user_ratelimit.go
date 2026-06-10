@@ -2,7 +2,9 @@ package middleware
 
 import (
 	"fmt"
+	"math"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -103,7 +105,12 @@ func UserRateLimit(resolver PlanResolver, window time.Duration) func(http.Handle
 						"path":   r.URL.Path,
 					}, extractIP(r), r.UserAgent())
 				}
-				w.Header().Set("Retry-After", time.Until(v.windowStart.Add(window)).String())
+				remaining := time.Until(v.windowStart.Add(window))
+				secs := int(math.Ceil(remaining.Seconds()))
+				if secs < 1 {
+					secs = 1
+				}
+				w.Header().Set("Retry-After", strconv.Itoa(secs))
 				w.Header().Set("X-RateLimit-Limit", fmt.Sprintf("%d", maxRequests))
 				w.Header().Set("X-RateLimit-Remaining", "0")
 				writeAuthError(w, http.StatusTooManyRequests, "Rate limit exceeded for your plan. Upgrade for higher limits.")

@@ -109,7 +109,10 @@ func (r *PaymentSubmissionRepo) GetByEventID(ctx context.Context, eventID uuid.U
 		submissions = append(submissions, ps)
 	}
 
-	return submissions, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return submissions, nil
 }
 
 // GetPendingByOrganizerID retrieves all pending submissions for an organizer (ordered by date).
@@ -137,7 +140,10 @@ func (r *PaymentSubmissionRepo) GetPendingByOrganizerID(ctx context.Context, use
 		submissions = append(submissions, ps)
 	}
 
-	return submissions, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return submissions, nil
 }
 
 // Update modifies a payment submission (used for approval/rejection).
@@ -193,5 +199,8 @@ func (r *PaymentSubmissionRepo) GetHistoryByClientEventID(ctx context.Context, c
 		submissions = append(submissions, ps)
 	}
 
-	return submissions, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return submissions, nil
 }

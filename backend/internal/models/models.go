@@ -67,9 +67,9 @@ type User struct {
 	PreferredLanguage string     `json:"preferred_language"`
 	Plan              string     `json:"plan"`
 	Role              string     `json:"role"`
-	StripeCustomerID  *string    `json:"stripe_customer_id,omitempty"`
-	GoogleUserID      *string    `json:"google_user_id,omitempty"`
-	AppleUserID       *string    `json:"apple_user_id,omitempty"`
+	StripeCustomerID  *string    `json:"-"` // Never expose provider IDs in JSON
+	GoogleUserID      *string    `json:"-"`
+	AppleUserID       *string    `json:"-"`
 	PlanExpiresAt     *time.Time `json:"plan_expires_at,omitempty"`
 	LastActiveAt      *time.Time `json:"last_active_at,omitempty"`
 	CreatedAt         time.Time  `json:"created_at"`

@@ -1,8 +1,10 @@
 package middleware
 
 import (
+	"math"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -92,7 +94,12 @@ func RateLimit(maxRequests int, window time.Duration) func(http.Handler) http.Ha
 			v.count++
 			if v.count > maxRequests {
 				mu.Unlock()
-				w.Header().Set("Retry-After", time.Until(v.windowStart.Add(window)).String())
+				remaining := time.Until(v.windowStart.Add(window))
+				secs := int(math.Ceil(remaining.Seconds()))
+				if secs < 1 {
+					secs = 1
+				}
+				w.Header().Set("Retry-After", strconv.Itoa(secs))
 				writeAuthError(w, http.StatusTooManyRequests, "Too many requests. Please try again later.")
 				return
 			}

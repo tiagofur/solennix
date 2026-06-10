@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -338,6 +339,48 @@ func TestUserRateLimit_ConcurrentInitializationRegistersAllStopFuncs(t *testing.
 	stopFuncsMu.Unlock()
 	if got != workers {
 		t.Fatalf("registered stop funcs = %d, want %d", got, workers)
+	}
+
+	if RateLimitStopFunc != nil {
+		RateLimitStopFunc()
+	}
+}
+
+// B3: UserRateLimit Retry-After must be a parseable integer (seconds) per RFC 7231.
+func TestUserRateLimit_RetryAfterIsInteger(t *testing.T) {
+	originalInterval := RateLimitCleanupInterval
+	RateLimitCleanupInterval = 10 * time.Millisecond
+	defer func() { RateLimitCleanupInterval = originalInterval }()
+
+	resolver := &mockPlanResolver{plan: "basic"}
+	handler := UserRateLimit(resolver, time.Second)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	userID := uuid.New()
+	// Exhaust the basic limit (60 requests).
+	for i := 0; i < 60; i++ {
+		rr := httptest.NewRecorder()
+		handler.ServeHTTP(rr, authenticatedRequest(userID))
+	}
+
+	// This one should be rate-limited.
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, authenticatedRequest(userID))
+	if rr.Code != http.StatusTooManyRequests {
+		t.Fatalf("expected 429, got %d", rr.Code)
+	}
+
+	header := rr.Header().Get("Retry-After")
+	if header == "" {
+		t.Fatal("Retry-After header missing")
+	}
+	secs, err := strconv.Atoi(header)
+	if err != nil {
+		t.Fatalf("Retry-After %q is not an integer: %v", header, err)
+	}
+	if secs < 1 {
+		t.Fatalf("Retry-After must be >= 1, got %d", secs)
 	}
 
 	if RateLimitStopFunc != nil {

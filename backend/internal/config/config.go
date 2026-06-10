@@ -71,6 +71,9 @@ type Config struct {
 	// Observability
 	SentryDSN              string  // If empty, Sentry is disabled
 	SentryTracesSampleRate float64 // 0.0–1.0; default 0.1 in prod, 1.0 in dev
+
+	// Locale
+	DefaultTimezone string // IANA timezone for date formatting (default: America/Mexico_City)
 }
 
 func Load() (*Config, error) {
@@ -113,6 +116,7 @@ func Load() (*Config, error) {
 		APNsBundleID:               getEnv("APNS_BUNDLE_ID", "com.creapolis.solennix"),
 		APNsProduction:             getEnv("APNS_PRODUCTION", "false") == "true",
 		SentryDSN:                  os.Getenv("SENTRY_DSN"),
+		DefaultTimezone:            getEnv("APP_TIMEZONE", "America/Mexico_City"),
 	}
 
 	sentryRate, err := strconv.ParseFloat(getEnv("SENTRY_TRACES_SAMPLE_RATE", defaultSentryRate(cfg.Environment)), 64)

@@ -80,6 +80,7 @@ type PaymentSubmissionHandler struct {
 	pool               *pgxpool.Pool
 	uploadDir          string
 	privateReceiptsDir string
+	defaultTZ          *time.Location // timezone for payment date formatting
 
 	lookupPublicLink            func(context.Context, string) (*models.EventPublicLink, error)
 	lookupEvent                 func(context.Context, uuid.UUID) (*models.Event, error)
@@ -90,11 +91,23 @@ type PaymentSubmissionHandler struct {
 	beforeReviewSelectForUpdate func()
 }
 
-func NewPaymentSubmissionHandler(repo *repository.PaymentSubmissionRepo, paymentRepo *repository.PaymentRepo, userRepo FullUserRepository, pool *pgxpool.Pool, uploadDir string) *PaymentSubmissionHandler {
+func NewPaymentSubmissionHandler(repo *repository.PaymentSubmissionRepo, paymentRepo *repository.PaymentRepo, userRepo FullUserRepository, pool *pgxpool.Pool, uploadDir string, tzName ...string) *PaymentSubmissionHandler {
 	privateReceiptsDir := paymentSubmissionPrivateReceiptsDir(uploadDir)
 	if err := os.MkdirAll(privateReceiptsDir, 0o755); err != nil {
 		slog.Warn("Failed to prepare private payment receipts directory", "path", filepath.Base(privateReceiptsDir), "error", err)
 	}
+
+	// Resolve timezone for payment date formatting. Falls back to UTC on error.
+	tz := "America/Mexico_City"
+	if len(tzName) > 0 && tzName[0] != "" {
+		tz = tzName[0]
+	}
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		slog.Warn("Invalid APP_TIMEZONE; falling back to UTC", "configured", tz, "error", err)
+		loc = time.UTC
+	}
+
 	handler := &PaymentSubmissionHandler{
 		repo:               repo,
 		paymentRepo:        paymentRepo,
@@ -102,6 +115,7 @@ func NewPaymentSubmissionHandler(repo *repository.PaymentSubmissionRepo, payment
 		pool:               pool,
 		uploadDir:          uploadDir,
 		privateReceiptsDir: privateReceiptsDir,
+		defaultTZ:          loc,
 	}
 	// A8: wire event lookup and payment sum only when a real pool is available.
 	if pool != nil {
@@ -130,6 +144,15 @@ func NewPaymentSubmissionHandler(repo *repository.PaymentSubmissionRepo, payment
 		}, nil
 	}
 	return handler
+}
+
+// paymentDateLoc returns the timezone to use for payment date formatting.
+// Handlers constructed without a timezone (e.g. in tests) use UTC.
+func (h *PaymentSubmissionHandler) paymentDateLoc() *time.Location {
+	if h.defaultTZ != nil {
+		return h.defaultTZ
+	}
+	return time.UTC
 }
 
 func paymentSubmissionPrivateReceiptsDir(uploadDir string) string {
@@ -668,7 +691,7 @@ func (h *PaymentSubmissionHandler) ReviewSubmission(w http.ResponseWriter, r *ht
 			EventID:       ps.EventID,
 			UserID:        ps.UserID,
 			Amount:        ps.Amount,
-			PaymentDate:   time.Now().Format("2006-01-02"),
+			PaymentDate:   time.Now().In(h.paymentDateLoc()).Format("2006-01-02"),
 			PaymentMethod: "transfer", // Always "transfer" for submissions
 			Notes:         ps.TransferRef,
 		}
