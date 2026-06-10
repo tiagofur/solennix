@@ -11,7 +11,25 @@ Historial oficial de cambios de Solennix para Web, iOS, Android y Backend.
 | Web | 1.0.1 | - | web/package.json |
 | iOS | 1.3.0 | 8 | ios/project.yml |
 | Android | 1.3.1 | 9 | android/app/build.gradle.kts |
-| Backend | 1.0.2 | - | backend/VERSION |
+| Backend | 1.0.3 | - | backend/VERSION |
+
+## 2026-06-09 - Backend 1.0.3: Endurecimiento adicional
+
+Segunda tanda de remediación de la auditoría: refuerzos de seguridad de severidad media en CSRF, contraseñas, CORS, inicio de sesión con Apple, validación de datos y rendimiento.
+
+### WEB
+
+### IOS
+
+### ANDROID
+
+### BACKEND
+- Seguridad: las exenciones de CSRF se evalúan por ruta exacta y no por coincidencia parcial; el inicio de sesión con Apple valida un parámetro de estado contra CSRF.
+- Contraseñas: se aumenta el costo de hashing (bcrypt) para mayor resistencia ante ataques de fuerza bruta.
+- CORS: se agrega la cabecera Vary: Origin para evitar contaminación de caché entre orígenes.
+- Validación: se rechazan URLs de fotos con esquemas no permitidos; las listas paginadas sanean el ordenamiento.
+- Límites: los endpoints de refresco y cierre de sesión ahora tienen límite de tasa.
+- Rendimiento: se eliminan consultas N+1 en la carga de equipos de colaboradores y se unifica la normalización de planes.
 
 ## 2026-06-09 - Backend 1.0.2: Endurecimiento de seguridad e integridad
 
