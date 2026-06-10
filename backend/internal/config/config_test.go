@@ -309,3 +309,33 @@ func TestGetEnv(t *testing.T) {
 		t.Errorf("expected value, got %v", val)
 	}
 }
+
+// B1: DefaultTimezone loaded from APP_TIMEZONE with default America/Mexico_City.
+func TestLoad_DefaultTimezone(t *testing.T) {
+	os.Clearenv()
+	os.Setenv("DATABASE_URL", "postgres://test")
+	os.Setenv("JWT_SECRET", "supersecret-test-key-at-least-32bytes!")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if cfg.DefaultTimezone != "America/Mexico_City" {
+		t.Errorf("expected default timezone America/Mexico_City, got %s", cfg.DefaultTimezone)
+	}
+}
+
+func TestLoad_DefaultTimezone_Custom(t *testing.T) {
+	os.Clearenv()
+	os.Setenv("DATABASE_URL", "postgres://test")
+	os.Setenv("JWT_SECRET", "supersecret-test-key-at-least-32bytes!")
+	os.Setenv("APP_TIMEZONE", "America/New_York")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if cfg.DefaultTimezone != "America/New_York" {
+		t.Errorf("expected America/New_York, got %s", cfg.DefaultTimezone)
+	}
+}

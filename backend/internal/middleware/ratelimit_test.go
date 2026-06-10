@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -136,6 +137,39 @@ func TestRateLimit_ResetWindowWithoutCleanup(t *testing.T) {
 		RateLimitStopFunc()
 		// Sleep lightly to allow goroutine to hit the done select case
 		time.Sleep(2 * time.Millisecond)
+	}
+}
+
+// B3: Retry-After must be a parseable integer (seconds) per RFC 7231.
+func TestRateLimit_RetryAfterIsInteger(t *testing.T) {
+	handler := RateLimit(1, time.Second)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest("GET", "/", nil)
+	req.RemoteAddr = "10.1.1.1:1234"
+
+	// First request — within limit.
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	// Second request — exceeds limit.
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusTooManyRequests {
+		t.Fatalf("expected 429, got %d", rr.Code)
+	}
+
+	header := rr.Header().Get("Retry-After")
+	if header == "" {
+		t.Fatal("Retry-After header missing")
+	}
+	secs, err := strconv.Atoi(header)
+	if err != nil {
+		t.Fatalf("Retry-After %q is not an integer: %v", header, err)
+	}
+	if secs < 1 {
+		t.Fatalf("Retry-After must be >= 1, got %d", secs)
 	}
 }
 

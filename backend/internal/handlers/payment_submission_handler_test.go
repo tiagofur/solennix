@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -435,6 +436,44 @@ func TestPaymentSubmissionCreatePublic_ClientIDCorrect(t *testing.T) {
 		var envelope paymentSubmissionErrorEnvelope
 		_ = json.NewDecoder(w.Body).Decode(&envelope)
 		assert.NotEqual(t, "Client ID mismatch", envelope.Error)
+	}
+}
+
+// B1: PaymentDate formatted in configured timezone.
+func TestPaymentSubmissionHandler_PaymentDateTimezone(t *testing.T) {
+	// Use a timezone where the date may differ from UTC (e.g. UTC-6 right after UTC midnight).
+	loc, err := time.LoadLocation("America/Mexico_City")
+	if err != nil {
+		t.Fatalf("cannot load timezone: %v", err)
+	}
+
+	handler := &PaymentSubmissionHandler{defaultTZ: loc}
+	got := time.Now().In(handler.paymentDateLoc()).Format("2006-01-02")
+	want := time.Now().In(loc).Format("2006-01-02")
+	if got != want {
+		t.Errorf("paymentDateLoc() date = %q, want %q", got, want)
+	}
+}
+
+func TestPaymentSubmissionHandler_PaymentDateUTCFallback(t *testing.T) {
+	// Handler with no TZ configured → UTC.
+	handler := &PaymentSubmissionHandler{}
+	got := time.Now().In(handler.paymentDateLoc()).Format("2006-01-02")
+	want := time.Now().UTC().Format("2006-01-02")
+	if got != want {
+		t.Errorf("nil defaultTZ should fall back to UTC: got %q, want %q", got, want)
+	}
+}
+
+func TestNewPaymentSubmissionHandler_TimezoneFallbackOnInvalid(t *testing.T) {
+	// Invalid IANA name must not panic — falls back to UTC.
+	uploadDir := t.TempDir()
+	h := NewPaymentSubmissionHandler(nil, nil, nil, nil, uploadDir, "Not/A/Valid/Zone")
+	if h.defaultTZ == nil {
+		t.Fatal("expected defaultTZ to be set (UTC fallback), got nil")
+	}
+	if h.defaultTZ != time.UTC {
+		t.Errorf("expected UTC fallback, got %v", h.defaultTZ)
 	}
 }
 
