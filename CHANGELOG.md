@@ -11,7 +11,23 @@ Historial oficial de cambios de Solennix para Web, iOS, Android y Backend.
 | Web | 1.0.1 | - | web/package.json |
 | iOS | 1.3.0 | 8 | ios/project.yml |
 | Android | 1.3.1 | 9 | android/app/build.gradle.kts |
-| Backend | 1.0.3 | - | backend/VERSION |
+| Backend | 1.0.4 | - | backend/VERSION |
+
+## 2026-06-09 - Backend 1.0.4: Ajustes finales de la auditoría
+
+Cierre de los ajustes de baja severidad de la auditoría: zona horaria de fechas de pago, privacidad de datos, encabezados HTTP y consistencia del panel.
+
+### WEB
+
+### IOS
+
+### ANDROID
+
+### BACKEND
+- Fechas de pago: se registran en la zona horaria configurada (por defecto America/Mexico_City) en lugar de UTC, evitando desfases de día.
+- Privacidad: los identificadores de proveedores de pago/identidad dejan de exponerse en las respuestas de la API.
+- Compatibilidad HTTP: el encabezado Retry-After de los límites de tasa usa segundos enteros.
+- Consistencia: los indicadores del panel se calculan en una transacción de solo lectura para una foto coherente.
 
 ## 2026-06-09 - Backend 1.0.3: Endurecimiento adicional
 

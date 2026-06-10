@@ -19,11 +19,28 @@ export const changelogData = {
       "source": "android/app/build.gradle.kts"
     },
     "backend": {
-      "version": "1.0.3",
+      "version": "1.0.4",
       "source": "backend/VERSION"
     }
   },
   "releases": [
+    {
+      "id": "2026-06-09-backend-low-severity-cleanups",
+      "date": "2026-06-09",
+      "title": "Backend 1.0.4: Ajustes finales de la auditoría",
+      "summary": "Cierre de los ajustes de baja severidad de la auditoría: zona horaria de fechas de pago, privacidad de datos, encabezados HTTP y consistencia del panel.",
+      "platforms": {
+        "web": [],
+        "ios": [],
+        "android": [],
+        "backend": [
+          "Fechas de pago: se registran en la zona horaria configurada (por defecto America/Mexico_City) en lugar de UTC, evitando desfases de día.",
+          "Privacidad: los identificadores de proveedores de pago/identidad dejan de exponerse en las respuestas de la API.",
+          "Compatibilidad HTTP: el encabezado Retry-After de los límites de tasa usa segundos enteros.",
+          "Consistencia: los indicadores del panel se calculan en una transacción de solo lectura para una foto coherente."
+        ]
+      }
+    },
     {
       "id": "2026-06-09-backend-hardening-medium",
       "date": "2026-06-09",
