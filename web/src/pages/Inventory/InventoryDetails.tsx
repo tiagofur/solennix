@@ -14,7 +14,7 @@ import {
   Calendar,
   TrendingDown,
   CheckCircle,
-  Settings2,
+  ArrowUpDown,
 } from "lucide-react";
 import { logError } from "../../lib/errorHandler";
 import { Breadcrumb } from "../../components/Breadcrumb";
@@ -362,8 +362,8 @@ export const InventoryDetails: React.FC = () => {
             onClick={openAdjustModal}
             className="inline-flex items-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
           >
-            <Settings2 className="h-4 w-4 mr-2" />
-            {t("common:action.edit")}
+            <ArrowUpDown className="h-4 w-4 mr-2" />
+            {t("inventory:list.adjust_stock")}
           </button>
           <Link
             to={`/inventory/${id}/edit`}
