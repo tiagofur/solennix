@@ -5,6 +5,7 @@ import { User } from '@/types/auth';
 import { AuthContext } from './AuthContextInstance';
 import { useAuth } from '@/hooks/useAuth';
 import i18n from '@/i18n/config';
+import { queryClient } from '@/lib/queryClient';
 
 // eslint-disable-next-line react-refresh/only-export-components
 export { AuthContext, useAuth };
@@ -52,6 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Listen for 401 logout events from api.ts
     const handleLogout = () => {
       setUser(null);
+      queryClient.clear();
     };
     
     window.addEventListener('auth:logout', handleLogout);
@@ -73,6 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logError('Logout error', error);
     } finally {
       setUser(null);
+      queryClient.clear();
       window.location.href = '/login';
     }
   };

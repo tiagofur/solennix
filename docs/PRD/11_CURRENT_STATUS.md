@@ -25,6 +25,14 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.8
 
+> [!success] 2026-06-10 — Integridad de Sesión y Caché (Issue #516)
+> Se implementó la limpieza del caché de React Query al cerrar sesión y la invalidación dinámica de las queries para asegurar la sincronía de la UI y los límites de plan.
+> - **Caché limpiado en Logout:** Modificación en `AuthContext.tsx` para llamar a `queryClient.clear()` en `signOut` y ante el evento global de logout.
+> - **Límites de Plan Dinámicos:** Eliminación de memoizaciones estáticas con fechas congeladas en `usePlanLimits.ts` y `Dashboard.tsx`, logrando recalcular los límites en cada render de forma transparente.
+> - **Invalidación de Timeline y Disponibilidad:** Invalidación automática del caché de disponibilidad del staff y timeline del colaborador ante la mutación exitosa de respuesta de asignación en `useRespondAssignment`.
+> - **Invalidación en Eventos:** Invalidadación manual de queries de eventos y límites de plan en `EventForm.tsx` al actualizar items de evento exitosamente.
+> - **Validación:** Cobertura de tests unitarios actualizada en `AuthContext.test.tsx` y `useStaffQueries.test.tsx`, logrando que toda la suite de pruebas frontend pase en verde.
+
 > [!success] 2026-06-03 — Release train móvil 1.3.0: Eliminación de cuenta, localización y QA en verde
 > Se preparó el release train móvil 1.3.0 para iOS y Android (Build 8 para ambos).
 > - **Paridad y QA en Verde:** Se corrigió un bug de decodificación en `UnavailableDate.swift` (CodingKeys en snake_case que chocaban con la estrategia global) y se arreglaron placeholders de string interpolation (`\(name)` corregido a `%@`) en `Localizable.xcstrings`, logrando que el 100% de la suite de pruebas unitarias de iOS (406 tests) y Android pasen exitosamente.

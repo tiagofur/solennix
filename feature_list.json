@@ -242,6 +242,20 @@
         "Los tests unitarios del módulo de clientes compilan y pasan en verde",
         "La suite `./init.sh` completa pasa correctamente"
       ]
+    },
+    {
+      "id": 21,
+      "name": "session-cache-integrity",
+      "description": "fix(web): integridad de sesión y caché en React Query, límites de plan y refresco de timeline (Issue #516)",
+      "status": "done",
+      "acceptance_criteria": [
+        "El caché de React Query se limpia por completo en signOut y al escuchar el evento global auth:logout",
+        "Los límites de plan se recalculan de forma dinámica en cada render en usePlanLimits y Dashboard",
+        "El timeline del colaborador y la disponibilidad del staff se invalidan al responder asignaciones",
+        "Los eventos y límites de plan se invalidan tras actualizar items en el formulario de eventos",
+        "La suite completa de tests de frontend (incluyendo AuthContext y useStaffQueries) pasa al 100% en verde",
+        "La suite ./init.sh se ejecuta y pasa correctamente sin errores"
+      ]
     }
   ]
 }

@@ -15,9 +15,9 @@ export function usePlanLimits() {
   const { user } = useAuth();
   const isBasicPlan = user?.plan === 'basic' || !user?.plan;
 
-  const now = useMemo(() => new Date(), []);
-  const start = useMemo(() => format(startOfMonth(now), 'yyyy-MM-dd'), [now]);
-  const end = useMemo(() => format(endOfMonth(now), 'yyyy-MM-dd'), [now]);
+  const now = new Date();
+  const start = format(startOfMonth(now), 'yyyy-MM-dd');
+  const end = format(endOfMonth(now), 'yyyy-MM-dd');
 
   // NOTE: ?? [] instead of = [] — destructuring defaults only catch undefined, not null
   const { data: _monthEvents, isLoading: eventsLoading } = useEventsByDateRange(start, end);

@@ -162,7 +162,8 @@ describe('useStaffQueries', () => {
     expect(mockGetMyAssignments).toHaveBeenCalledTimes(1);
   });
 
-  it('respond assignment mutation shows accepted toast on success', async () => {
+  it('respond assignment mutation shows accepted toast on success and invalidates queries', async () => {
+    const invalidateSpy = vi.spyOn(QueryClient.prototype, 'invalidateQueries');
     mockRespondAssignment.mockResolvedValue({ final_status: 'confirmed' });
 
     const { result } = renderHook(() => useRespondAssignment(), { wrapper: createWrapper() });
@@ -174,6 +175,10 @@ describe('useStaffQueries', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockRespondAssignment).toHaveBeenCalledWith('assign-1', 'accept');
     expect(mockAddToast).toHaveBeenCalledWith('Asignación aceptada.', 'success');
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['staff', 'my-assignments'] });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['staff', 'my-timeline'] });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['staff', 'availability'] });
+    invalidateSpy.mockRestore();
   });
 
   it('respond assignment mutation logs and toasts on error', async () => {

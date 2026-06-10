@@ -112,6 +112,8 @@ export function useRespondAssignment() {
       staffService.respondAssignment(id, response),
     onSuccess: (_result, { response }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.staff.myAssignments });
+      queryClient.invalidateQueries({ queryKey: ['staff', 'my-timeline'] });
+      queryClient.invalidateQueries({ queryKey: ['staff', 'availability'] });
       addToast(response === 'accept' ? t('form.messages.accepted', { defaultValue: 'Asignación aceptada.' }) : t('form.messages.declined', { defaultValue: 'Asignación rechazada.' }), 'success');
     },
     onError: (error) => {

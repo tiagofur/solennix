@@ -1028,6 +1028,10 @@ export const EventForm: React.FC = () => {
         );
       }
 
+      const { queryClient } = await import("@/lib/queryClient");
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ["planLimits"] });
+
       navigate(`/events/${eventId}/summary`);
     } catch (err: unknown) {
       logError("Error saving event", err);
