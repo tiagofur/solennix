@@ -582,9 +582,9 @@ export const Dashboard: React.FC = () => {
   const fmt = useCallback((n: number) => `$${n.toLocaleString(moneyLocale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, [moneyLocale]);
 
   // ── Date range for current month ──
-  const today = useMemo(() => new Date(), []);
-  const monthStart = useMemo(() => format(startOfMonth(today), "yyyy-MM-dd"), [today]);
-  const monthEnd = useMemo(() => format(endOfMonth(today), "yyyy-MM-dd"), [today]);
+  const today = new Date();
+  const monthStart = format(startOfMonth(today), "yyyy-MM-dd");
+  const monthEnd = format(endOfMonth(today), "yyyy-MM-dd");
 
   const { isLoading: loadingMonth } = useEventsByDateRange(monthStart, monthEnd);
   const { data: _upcoming, isLoading: loadingUpcoming } = useUpcomingEvents(5);

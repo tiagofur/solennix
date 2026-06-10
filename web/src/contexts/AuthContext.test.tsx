@@ -4,6 +4,13 @@ import { render, screen, waitFor, act } from '@testing-library/react';
 import { AuthProvider, useAuth } from './AuthContext';
 import { api } from '../lib/api';
 import { logError } from '../lib/errorHandler';
+import { queryClient } from '@/lib/queryClient';
+
+vi.mock('@/lib/queryClient', () => ({
+  queryClient: {
+    clear: vi.fn(),
+  },
+}));
 
 vi.mock('../lib/api', () => ({
   ApiHttpError: class ApiHttpError extends Error {
@@ -127,6 +134,7 @@ describe('AuthProvider', () => {
     await waitFor(() => {
       expect(screen.getByText(/^user:/i)).toHaveTextContent('user:none');
     });
+    expect(queryClient.clear).toHaveBeenCalled();
   });
 
   it('signOut calls logout endpoint and redirects', async () => {
@@ -150,6 +158,7 @@ describe('AuthProvider', () => {
 
     expect(api.post).toHaveBeenCalledWith('/auth/logout', {});
     expect(window.location.href).toBe('/login');
+    expect(queryClient.clear).toHaveBeenCalled();
   });
 
   it('signOut redirects even when logout API call fails', async () => {
@@ -174,6 +183,7 @@ describe('AuthProvider', () => {
     // Even on failure, it should still redirect
     expect(window.location.href).toBe('/login');
     expect(logError).toHaveBeenCalledWith('Logout error', expect.any(Error));
+    expect(queryClient.clear).toHaveBeenCalled();
   });
 
   it('updateProfile updates user on success', async () => {
