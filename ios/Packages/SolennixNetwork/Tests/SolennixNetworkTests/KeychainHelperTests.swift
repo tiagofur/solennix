@@ -58,6 +58,56 @@ final class KeychainHelperTests: XCTestCase {
         XCTAssertEqual(helper.readString(for: testKey), "scoped")
     }
 
+    // MARK: - Migration then re-save
+
+    /// Simulates the upgrade race: legacy item is migrated on first read, then the
+    /// caller immediately saves a new value. The re-save must not wipe the written item.
+    func testMigrationThenResaveReadsCorrectValue() {
+        // Seed legacy item.
+        writeLegacyItem("legacy-token", for: testKey)
+
+        // First read triggers migration.
+        let migrated = helper.readString(for: testKey)
+        XCTAssertEqual(migrated, "legacy-token")
+
+        // Immediately re-save a refreshed value (simulates token refresh on upgrade).
+        XCTAssertTrue(helper.saveString("refreshed-token", for: testKey))
+
+        // Must read back the refreshed value, not nil.
+        XCTAssertEqual(helper.readString(for: testKey), "refreshed-token")
+
+        // Legacy item must be gone after migration.
+        XCTAssertNil(readLegacyItem(for: testKey))
+    }
+
+    // MARK: - Concurrent read/save safety
+
+    /// Concurrently saves and reads the same key across multiple threads.
+    /// No read should return nil once a value has been successfully written.
+    func testConcurrentSaveAndReadNeverReturnsNilAfterWrite() {
+        // Establish a baseline value.
+        helper.saveString("base", for: testKey)
+
+        let iterations = 200
+        var nilReadCount = 0
+        let lock = NSLock()
+
+        DispatchQueue.concurrentPerform(iterations: iterations) { i in
+            if i % 2 == 0 {
+                helper.saveString("value-\(i)", for: testKey)
+            } else {
+                let value = helper.readString(for: testKey)
+                if value == nil {
+                    lock.lock()
+                    nilReadCount += 1
+                    lock.unlock()
+                }
+            }
+        }
+
+        XCTAssertEqual(nilReadCount, 0, "No read should return nil while concurrent saves are in flight")
+    }
+
     // MARK: - Helpers
 
     private func writeLegacyItem(_ value: String, for key: String) {

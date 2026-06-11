@@ -137,6 +137,11 @@ struct SolennixApp: App {
                 .environment(cacheManager)
                 .environment(\.locale, preferredLocale.isEmpty ? .autoupdatingCurrent : Locale(identifier: preferredLocale))
                 .task {
+                    // Wire NotificationManager's auth gate early so cold-start
+                    // notification taps resolve against AuthManager.isAuthenticated.
+                    NotificationManager.shared.isAuthorizedForNavigation = { [authManager] in
+                        authManager.isAuthenticated
+                    }
                     // Ensure auth manager is set on the actor before checking auth
                     await apiClient.setAuthManager(authManager)
                     await authManager.checkAuth()

@@ -22,7 +22,8 @@ public struct EventProduct: Codable, Identifiable, Sendable, Hashable {
     }
 
     /// Formatted quantity: shows as integer string when value is whole ("2"), decimal otherwise ("2.5").
+    /// Uses %g to strip trailing zeros (e.g. "1.0" → "1") for UI consistency.
     public var formattedQuantity: String {
-        quantity == floor(quantity) ? String(Int(quantity)) : String(quantity)
+        String(format: "%g", quantity)
     }
 }

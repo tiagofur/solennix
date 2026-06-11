@@ -29,6 +29,12 @@ public final class KeychainHelper: Sendable {
 
     private static let service = "com.solennix.app"
 
+    // Serializes all keychain operations so that concurrent read-migrate-write
+    // sequences (e.g. two callers racing through migrateIfNeeded) cannot
+    // interleave and produce a lost write or a nil read after migration.
+    // NSLock is Sendable-safe; KeychainHelper remains Sendable.
+    private let lock = NSLock()
+
     // MARK: - Init
 
     public init() {}
@@ -38,21 +44,9 @@ public final class KeychainHelper: Sendable {
     /// Save raw data to the Keychain for the given key.
     @discardableResult
     public func save(_ data: Data, for key: String) -> Bool {
-        // Delete any existing item first to avoid duplicates (covers both legacy
-        // items without a service attribute and current items with one).
-        deleteLegacy(for: key)
-        delete(for: key)
-
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: Self.service,
-            kSecAttrAccount as String: key,
-            kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
-        ]
-
-        let status = SecItemAdd(query as CFDictionary, nil)
-        return status == errSecSuccess
+        lock.lock()
+        defer { lock.unlock() }
+        return _save(data, for: key)
     }
 
     /// Read raw data from the Keychain for the given key.
@@ -60,6 +54,9 @@ public final class KeychainHelper: Sendable {
     /// On a cache miss with the service-scoped query, attempts a legacy
     /// (no-service) read and migrates the value to the scoped item on success.
     public func read(for key: String) -> Data? {
+        lock.lock()
+        defer { lock.unlock() }
+
         // Primary lookup: scoped query.
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -77,12 +74,47 @@ public final class KeychainHelper: Sendable {
         }
 
         // Fallback: legacy item without service attribute (pre-migration installs).
-        return migrateIfNeeded(for: key)
+        return _migrateIfNeeded(for: key)
     }
 
     /// Delete an item from the Keychain for the given key (service-scoped).
     @discardableResult
     public func delete(for key: String) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return _delete(for: key)
+    }
+
+    // MARK: - Locked Internals (call only while holding `lock`)
+
+    /// Performs the actual save — MUST be called with `lock` held.
+    /// Delete ordering: scoped item first, then legacy, so that `deleteLegacy`
+    /// (which matches on account only) cannot accidentally remove the freshly
+    /// written service-scoped item that SecItemAdd is about to create.
+    @discardableResult
+    private func _save(_ data: Data, for key: String) -> Bool {
+        // 1. Remove any existing service-scoped item to avoid errSecDuplicateItem.
+        _delete(for: key)
+        // 2. Remove any legacy item (no service attribute) AFTER the scoped delete
+        //    so it cannot match and wipe a scoped item written by another concurrent
+        //    save that completed between step 1 and SecItemAdd below.
+        _deleteLegacy(for: key)
+
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: Self.service,
+            kSecAttrAccount as String: key,
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+        ]
+
+        let status = SecItemAdd(query as CFDictionary, nil)
+        return status == errSecSuccess
+    }
+
+    /// Scoped delete — MUST be called with `lock` held.
+    @discardableResult
+    private func _delete(for key: String) -> Bool {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: Self.service,
@@ -112,7 +144,8 @@ public final class KeychainHelper: Sendable {
 
     /// Read a legacy item (stored without `kSecAttrService`) and migrate it
     /// to a service-scoped item. Returns the migrated data on success.
-    private func migrateIfNeeded(for key: String) -> Data? {
+    /// MUST be called with `lock` held.
+    private func _migrateIfNeeded(for key: String) -> Data? {
         let legacyQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: key,
@@ -126,15 +159,16 @@ public final class KeychainHelper: Sendable {
         guard status == errSecSuccess, let data = result as? Data else { return nil }
 
         // Write under the service-scoped key and remove the legacy item.
-        if save(data, for: key) {
-            deleteLegacy(for: key)
+        if _save(data, for: key) {
+            _deleteLegacy(for: key)
         }
         return data
     }
 
     /// Delete an item that has NO service attribute (legacy items).
+    /// MUST be called with `lock` held.
     @discardableResult
-    private func deleteLegacy(for key: String) -> Bool {
+    private func _deleteLegacy(for key: String) -> Bool {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: key

@@ -17,6 +17,11 @@ final class NotificationManager: NSObject, ObservableObject {
     @Published var isAuthorized: Bool = false
     @Published var deviceToken: String?
 
+    /// Injectable auth check used in `didReceive` to decide whether deep navigation
+    /// is safe. Set from SolennixApp via `{ authManager.isAuthenticated }`.
+    /// Falls back to a Keychain token presence check when unset (extensions/tests).
+    var isAuthorizedForNavigation: (() -> Bool)?
+
     private override init() {
         super.init()
         observePaymentRegistrations()
@@ -401,9 +406,19 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
     ) async {
         let userInfo = response.notification.request.content.userInfo
         let action = response.actionIdentifier
-        // Only navigate if the user is authenticated (access token present in Keychain).
-        // Tapping a notification while logged out should not attempt deep navigation.
-        let isAuthenticated = KeychainHelper.standard.readString(for: KeychainHelper.Keys.accessToken) != nil
+        // Only navigate if the user is authenticated. Prefer the injected closure
+        // (set from SolennixApp) which reads AuthManager.isAuthenticated; fall back
+        // to a Keychain token presence check when the closure is unset (e.g. in
+        // Notification Service Extension or unit tests).
+        let authCheck = await MainActor.run { self.isAuthorizedForNavigation }
+        let isAuthenticated: Bool
+        if let authCheck {
+            isAuthenticated = authCheck()
+        } else {
+            // Fallback: keychain token presence (extensions and tests)
+            let keychainHelper = KeychainHelper()
+            isAuthenticated = keychainHelper.readString(for: KeychainHelper.Keys.accessToken) != nil
+        }
         guard isAuthenticated else { return }
 
         if let route = routeFromNotification(userInfo: userInfo, actionIdentifier: action) {
