@@ -133,6 +133,8 @@ export const ClientPortalPage: React.FC = () => {
   const handleTabChange = (tab: TabId) => {
     if (tab === "enviar" && !capabilities.can_submit_payment) return;
     if (tab === "historial" && !capabilities.can_view_submission_history) return;
+    setSubmitSuccess(false);
+    setSubmitError(null);
     setActiveTab(tab);
     if (tab === "historial" && data && token) {
       fetchHistory(token, data.event.id, data.client.id);
