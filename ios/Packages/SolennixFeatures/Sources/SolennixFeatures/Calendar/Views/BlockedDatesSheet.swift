@@ -127,16 +127,12 @@ public struct BlockedDatesSheet: View {
 
     // MARK: - Helpers
 
-    private static var displayFormatter: DateFormatter {
-        let f = DateFormatter()
-        f.locale = FeatureL10n.locale
-        f.setLocalizedDateFormatFromTemplate("dMMMMyyyy")
-        return f
-    }
-
     private static let apiFormatter: DateFormatter = {
         let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
         f.dateFormat = "yyyy-MM-dd"
+        // UTC — matches fromServerDay parse timezone.
+        f.timeZone = TimeZone(secondsFromGMT: 0)
         return f
     }()
 
@@ -145,11 +141,12 @@ public struct BlockedDatesSheet: View {
               let e = Self.apiFormatter.date(from: end) else {
             return start == end ? start : "\(start) – \(end)"
         }
-        let startStr = Self.displayFormatter.string(from: s)
+        // UTC display — parse/display timezone must match to avoid day shift.
+        let startStr = s.formattedServerDayTemplate("dMMMMyyyy", locale: FeatureL10n.locale)
         if start == end {
             return startStr
         }
-        let endStr = Self.displayFormatter.string(from: e)
+        let endStr = e.formattedServerDayTemplate("dMMMMyyyy", locale: FeatureL10n.locale)
         return "\(startStr) – \(endStr)"
     }
 }

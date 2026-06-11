@@ -48,17 +48,11 @@ enum DashboardFormatting {
             return ("---", "--")
         }
 
-        let monthFormatter = DateFormatter()
-        monthFormatter.locale = locale
-        monthFormatter.setLocalizedDateFormatFromTemplate("MMM")
-
-        let dayFormatter = DateFormatter()
-        dayFormatter.locale = locale
-        dayFormatter.setLocalizedDateFormatFromTemplate("d")
-
+        // Use UTC formatters — parse/display timezone must match fromServerDay (UTC)
+        // to avoid a one-day shift for users in negative-offset zones.
         return (
-            monthFormatter.string(from: date).uppercased(),
-            dayFormatter.string(from: date)
+            date.formattedServerDayTemplate("MMM", locale: locale).uppercased(),
+            date.formattedServerDayTemplate("d", locale: locale)
         )
     }
 
@@ -67,10 +61,8 @@ enum DashboardFormatting {
             return String(serverDay.prefix(10))
         }
 
-        let formatter = DateFormatter()
-        formatter.locale = locale
-        formatter.setLocalizedDateFormatFromTemplate("dMMM")
-        return formatter.string(from: date)
+        // Use UTC formatter — parse/display timezone must match fromServerDay (UTC).
+        return date.formattedServerDayTemplate("dMMM", locale: locale)
     }
 
     static func monthYear(from yearMonth: String, locale: Locale = FeatureL10n.locale) -> String {

@@ -63,13 +63,20 @@ public final class PendingEventsViewModel {
             let allEvents: [Event] = try await apiClient.getAll(Endpoint.events)
             let allPayments: [Payment] = try await apiClient.getAll(Endpoint.payments)
 
-            let calendar = Calendar.current
-            let startOfToday = calendar.startOfDay(for: Date())
-            let sevenDaysFromNow = calendar.date(byAdding: .day, value: 7, to: startOfToday)!
-            let fourteenDaysFromNow = calendar.date(byAdding: .day, value: 14, to: startOfToday)!
+            // All date comparisons use UTC to stay consistent with fromServerDay.
+            // A server date "2026-06-15" parses to 2026-06-15T00:00:00Z (midnight UTC).
+            // Computing today's anchor in UTC means "today" == same midnight-UTC
+            // boundary, so >= / <= comparisons are stable regardless of device timezone.
+            var utcCalendar = Calendar(identifier: .gregorian)
+            utcCalendar.timeZone = TimeZone(secondsFromGMT: 0)!
+            let startOfToday = utcCalendar.startOfDay(for: Date())
+            let sevenDaysFromNow = utcCalendar.date(byAdding: .day, value: 7, to: startOfToday)!
+            let fourteenDaysFromNow = utcCalendar.date(byAdding: .day, value: 14, to: startOfToday)!
 
             let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US_POSIX")
             formatter.dateFormat = "yyyy-MM-dd"
+            formatter.timeZone = TimeZone(secondsFromGMT: 0)
 
             var pending: [PendingEventWithReason] = []
 
