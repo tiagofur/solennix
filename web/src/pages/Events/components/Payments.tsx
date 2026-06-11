@@ -9,6 +9,7 @@ import { PaymentFormFields, PaymentFormData } from "../../../components/PaymentF
 import { useToast } from "../../../hooks/useToast";
 import clsx from "clsx";
 import { useTranslation } from "react-i18next";
+import { parseEventDate } from "../../../lib/dateUtils";
 
 interface PaymentsProps {
   eventId: string;
@@ -20,6 +21,7 @@ interface PaymentsProps {
   initialAmount?: number;
   autoOpenAdd?: boolean;
   onPaymentAdded?: () => void;
+  onAutoOpenConsumed?: () => void;
 }
 
 export const Payments: React.FC<PaymentsProps> = ({
@@ -31,6 +33,7 @@ export const Payments: React.FC<PaymentsProps> = ({
   initialAmount,
   autoOpenAdd,
   onPaymentAdded,
+  onAutoOpenConsumed,
 }) => {
   const { t, i18n } = useTranslation(["events"]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -52,7 +55,7 @@ export const Payments: React.FC<PaymentsProps> = ({
   });
 
   const formatCurrency = (amount: number) => currencyFormatter.format(amount);
-  const formatDate = (value: string) => new Date(value).toLocaleDateString(i18n.language === "en" ? "en-US" : "es-MX");
+  const formatDate = (value: string) => parseEventDate(value).toLocaleDateString(i18n.language === "en" ? "en-US" : "es-MX");
 
   const getMethodLabel = (method: string) => {
     switch (method) {
@@ -77,8 +80,11 @@ export const Payments: React.FC<PaymentsProps> = ({
       setFormInitialAmount(initialAmount !== undefined ? initialAmount : 0);
       setFormInitialNotes("");
       setIsAdding(true);
+      if (onAutoOpenConsumed) {
+        onAutoOpenConsumed();
+      }
     }
-  }, [autoOpenAdd, initialAmount, t]);
+  }, [autoOpenAdd, initialAmount, t, onAutoOpenConsumed]);
 
   const openAddPayment = () => {
     setModalTitle(t("events:summary.payments.form.register_payment"));

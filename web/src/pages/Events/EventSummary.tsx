@@ -694,6 +694,7 @@ export const EventSummary: React.FC = () => {
           eventData={{ deposit_percent: event.deposit_percent }}
           initialAmount={paymentInitialAmount}
           autoOpenAdd={autoOpenPayment}
+          onAutoOpenConsumed={() => setAutoOpenPayment(false)}
           onPaymentAdded={() => {
             import("@/lib/queryClient").then(({ queryClient: qc }) => {
               qc.invalidateQueries({ queryKey: queryKeys.payments.byEvent(id!) });
