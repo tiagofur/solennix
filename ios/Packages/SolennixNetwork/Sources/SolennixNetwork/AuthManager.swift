@@ -52,19 +52,6 @@ extension AuthResponse: Decodable {
     }
 }
 
-// MARK: - Refresh Response
-
-/// Response from the token refresh endpoint.
-private struct RefreshResponse: Decodable {
-    let accessToken: String
-    let refreshToken: String
-
-    enum CodingKeys: String, CodingKey {
-        case accessToken
-        case refreshToken
-    }
-}
-
 // MARK: - User Tracking Delegate
 
 /// Protocol allowing the auth layer to report user identity changes
@@ -181,7 +168,12 @@ public final class AuthManager {
                 return
             }
 
-            // Auth error (401, 403, etc.): token is truly invalid, try refresh
+            // Auth error (401, 403, etc.): token is truly invalid, try refresh.
+            // `refreshToken()` owns the token-clear decision:
+            //   - definitive failure (401/403 from refresh) → clears tokens, returns false
+            //   - transient failure (429/5xx/network) → keeps tokens, returns false
+            // We must NOT call clearTokens() here — doing so would kill the session on a
+            // transient failure such as a 429 rate-limit on the refresh endpoint.
             let refreshed = try? await refreshToken()
             if refreshed == true {
                 // Retry fetching user after refresh
@@ -195,8 +187,21 @@ public final class AuthManager {
                     authState = .unauthenticated
                 }
             } else {
-                clearTokens()
-                authState = .unauthenticated
+                // Refresh failed.
+                // - Definitive failure (401/403): tokens were cleared → go unauthenticated.
+                // - Transient failure (429/5xx/network): tokens are still intact.
+                //   Mirror the network-error path above: keep session alive so the app
+                //   works offline and retries on the next launch / reconnect.
+                let tokensIntact = keychain.readString(for: KeychainHelper.Keys.refreshToken) != nil
+                if tokensIntact {
+                    // Tokens survived — behave as if we couldn't reach the server.
+                    if let cachedUser = currentUser {
+                        authState = .authenticated(cachedUser)
+                    }
+                    // else: authState stays .unknown until next attempt (tokens exist, no user yet)
+                } else {
+                    authState = .unauthenticated
+                }
             }
         }
     }
@@ -215,6 +220,28 @@ public final class AuthManager {
             return true
         }
         return false
+    }
+
+    /// Returns `true` when a refresh error is definitive — the session cannot be recovered
+    /// and tokens must be cleared immediately.
+    ///
+    /// - `APIError.unauthorized` (401): refresh token rejected (expired / revoked / family-revoked).
+    /// - `APIError.serverError(403, _)`: access definitively denied.
+    ///
+    /// Any other error (429, 5xx, network) is **transient** — the session should survive
+    /// and retry when conditions improve.
+    ///
+    /// Used by both `refreshToken()` and the test suite so they share a single source of truth.
+    public static func isDefinitiveAuthFailure(_ error: Error) -> Bool {
+        guard let apiError = error as? APIError else { return false }
+        switch apiError {
+        case .unauthorized:
+            return true
+        case .serverError(let statusCode, _) where statusCode == 403:
+            return true
+        default:
+            return false
+        }
     }
 
     // MARK: - Sign In
@@ -381,23 +408,44 @@ public final class AuthManager {
     // MARK: - Token Refresh
 
     /// Attempt to refresh the access token using the stored refresh token.
-    /// - Returns: `true` if the refresh succeeded, `false` otherwise.
+    ///
+    /// Routes through `APIClient.attemptRefreshThrowing()` so this call shares the
+    /// same `refreshTask` coalescing guard as APIClient's internal 401-retry path.
+    /// Concurrent callers (e.g., `checkAuth` racing with a 401 retry) produce only
+    /// one HTTP round-trip to the single-use refresh endpoint.
+    ///
+    /// Token storage is handled entirely by `APIClient.executeRefresh()`, so this
+    /// method does NOT call `storeTokens` — doing so would double-write to the
+    /// keychain and race with the already-stored new refresh token.
+    ///
+    /// Session-clear policy:
+    /// - `APIError.unauthorized` (401) or `serverError(403, _)` from `/auth/refresh`
+    ///   → definitive auth failure → clear tokens and end the session.
+    /// - `serverError(429, _)`, `serverError(5xx, _)`, `networkError`, or any other
+    ///   transient error → keep tokens intact; return `false` so the caller knows
+    ///   the refresh didn't succeed but can retry when conditions improve.
+    ///
+    /// - Returns: `true` if the refresh succeeded (new tokens are in the keychain),
+    ///   `false` for transient failures. Clears tokens and returns `false` on
+    ///   definitive auth failure.
     @discardableResult
     public func refreshToken() async throws -> Bool {
-        guard let refreshTokenValue = keychain.readString(for: KeychainHelper.Keys.refreshToken),
-              !refreshTokenValue.isEmpty else {
+        guard keychain.readString(for: KeychainHelper.Keys.refreshToken) != nil else {
+            // No refresh token stored — end the session immediately.
+            clearTokens()
             return false
         }
 
         guard let client = apiClient else { return false }
 
-        let body = ["refresh_token": refreshTokenValue]
         do {
-            let response: RefreshResponse = try await client.post(Endpoint.refresh, body: body)
-            storeTokens(access: response.accessToken, refresh: response.refreshToken)
-            return true
+            return try await client.attemptRefreshThrowing()
         } catch {
-            clearTokens()
+            if AuthManager.isDefinitiveAuthFailure(error) {
+                // 401 / 403 from /auth/refresh — session is dead, clear tokens.
+                clearTokens()
+            }
+            // Transient errors (429, 5xx, network, unknown) keep tokens intact.
             return false
         }
     }
@@ -473,9 +521,27 @@ public final class AuthManager {
 
     /// Clear all stored tokens and reset auth state.
     public func clearTokens() {
+        // Cancel any in-flight refresh so it does not store a just-revoked token.
+        Task { await apiClient?.cancelInFlightRefresh() }
         keychain.delete(for: KeychainHelper.Keys.accessToken)
         keychain.delete(for: KeychainHelper.Keys.refreshToken)
         userTrackingDelegate?.clearUser()
+    }
+
+    /// Transition to the unauthenticated state after a definitive session expiry.
+    ///
+    /// Called by `APIClient` when a token refresh fails with a definitive error
+    /// (401/403) and the UI must be brought back to the login screen.
+    /// Safe to call multiple times — idempotent.
+    ///
+    /// - Note: Do NOT call this for transient refresh failures (429, 5xx, network).
+    ///   Those should leave the session intact so the user can retry later.
+    @MainActor
+    public func handleSessionExpired() {
+        guard isAuthenticated else { return }
+        clearTokens()
+        currentUser = nil
+        authState = .unauthenticated
     }
 
     // MARK: - Private Helpers
