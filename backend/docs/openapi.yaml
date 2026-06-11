@@ -94,15 +94,6 @@ components:
         role:
           type: string
           enum: [user, admin]
-        stripe_customer_id:
-          type: string
-          nullable: true
-        google_user_id:
-          type: string
-          nullable: true
-        apple_user_id:
-          type: string
-          nullable: true
         plan_expires_at:
           type: string
           format: date-time
@@ -181,11 +172,11 @@ components:
       type: object
       required:
         - token
-        - password
+        - new_password
       properties:
         token:
           type: string
-        password:
+        new_password:
           type: string
           minLength: 8
           maxLength: 128
@@ -197,6 +188,10 @@ components:
       properties:
         current_password:
           type: string
+        new_password:
+          type: string
+          minLength: 8
+          maxLength: 128
     GoogleSignInRequest:
       type: object
       required:
@@ -1003,6 +998,73 @@ components:
         suggested_quantity:
           type: number
           format: double
+    EventStaff:
+      type: object
+      required:
+        - id
+        - event_id
+        - staff_id
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        staff_id:
+          type: string
+          format: uuid
+        offer_group_id:
+          type: string
+          format: uuid
+          nullable: true
+        offer_slots:
+          type: integer
+          nullable: true
+        fee_amount:
+          type: number
+          format: double
+          nullable: true
+        role_override:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        shift_start:
+          type: string
+          format: date-time
+          nullable: true
+        shift_end:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          nullable: true
+        notification_sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        notification_last_result:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        staff_name:
+          type: string
+          nullable: true
+        staff_role_label:
+          type: string
+          nullable: true
+        staff_phone:
+          type: string
+          nullable: true
+        staff_email:
+          type: string
+          nullable: true
     EventItemsUpdateRequest:
       type: object
       required:
@@ -1025,6 +1087,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/EventSupply"
+        staff:
+          type: array
+          items:
+            $ref: "#/components/schemas/EventStaff"
     Payment:
       type: object
       required:
@@ -1261,6 +1327,14 @@ components:
           type: string
         end_date:
           type: string
+        start_time:
+          type: string
+          nullable: true
+          description: Optional time in HH:mm format. If provided together with end_time, the blocked period is scoped to a specific window within the day(s).
+        end_time:
+          type: string
+          nullable: true
+          description: Optional time in HH:mm format. Must be provided together with start_time.
         reason:
           type: string
     DeviceToken:
@@ -1456,6 +1530,10 @@ components:
         - upcoming_events
         - total_clients
         - average_event_value
+        - net_sales_this_month
+        - cash_collected_this_month
+        - vat_collected_this_month
+        - vat_outstanding_this_month
       properties:
         total_revenue:
           type: number
@@ -1473,6 +1551,22 @@ components:
         average_event_value:
           type: number
           format: double
+        net_sales_this_month:
+          type: number
+          format: double
+          description: Sum of event total_amount for confirmed/completed events with event_date in the current calendar month.
+        cash_collected_this_month:
+          type: number
+          format: double
+          description: Sum of payments with payment_date in the current calendar month.
+        vat_collected_this_month:
+          type: number
+          format: double
+          description: VAT prorated by paid ratio for confirmed/completed events this month.
+        vat_outstanding_this_month:
+          type: number
+          format: double
+          description: Remaining VAT not yet collected for confirmed/completed events this month.
     RevenueDataPoint:
       type: object
       required:
