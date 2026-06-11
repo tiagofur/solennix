@@ -20,5 +20,18 @@ sealed class ApiError : Exception() {
 
     data class PlanLimitExceeded(val limitType: String, val current: Int, val max: Int) : ApiError()
 
+    /**
+     * Server returned 429 Too Many Requests.
+     * [retryAfterSeconds] is the value of the `Retry-After` header (integer seconds), or null
+     * if the header was absent.
+     */
+    data class RateLimited(val retryAfterSeconds: Int?) : ApiError()
+
+    /** The account was suspended by an administrator (`auth.account_blocked`). */
+    data object AccountBlocked : ApiError()
+
+    /** The account was deleted (`auth.account_deleted`). */
+    data object AccountDeleted : ApiError()
+
     data class Unknown(override val cause: Throwable) : ApiError()
 }
