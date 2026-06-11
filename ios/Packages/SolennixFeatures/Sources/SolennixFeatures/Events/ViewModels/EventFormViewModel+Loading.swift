@@ -85,9 +85,9 @@ extension EventFormViewModel {
                 clientName = client.name
             }
 
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            if let date = dateFormatter.date(from: event.eventDate) {
+            // Parse in UTC via fromServerDay — keeps the calendar day stable
+            // across device timezones when pre-populating the date picker.
+            if let date = Date.fromServerDay(event.eventDate) {
                 eventDate = date
             }
 

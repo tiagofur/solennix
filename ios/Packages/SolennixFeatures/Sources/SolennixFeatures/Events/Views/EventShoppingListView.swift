@@ -347,7 +347,8 @@ public struct EventShoppingListView: View {
 
     private func formatDate(_ dateString: String) -> String {
         guard let date = Date.fromServerDay(dateString) else { return dateString }
-        return date.formatted(style: "EEEE d 'de' MMMM, yyyy").capitalized
+        // UTC display formatter — parse/display timezone must match to avoid day shift.
+        return date.formattedServerDay(style: "EEEE d 'de' MMMM, yyyy").capitalized
     }
 
     private func formatQuantity(_ value: Double) -> String {

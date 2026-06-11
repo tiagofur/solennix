@@ -223,15 +223,9 @@ public final class SearchViewModel {
     // MARK: - Helpers
 
     private func formatEventDate(_ dateString: String) -> String {
-        let inputFormatter = DateFormatter()
-        inputFormatter.dateFormat = "yyyy-MM-dd"
-        guard let date = inputFormatter.date(from: String(dateString.prefix(10))) else {
-            return dateString
-        }
-        let outputFormatter = DateFormatter()
-        outputFormatter.locale = Locale(identifier: "es_MX")
-        outputFormatter.dateFormat = "d MMM yyyy"
-        return outputFormatter.string(from: date)
+        // Parse in UTC (fromServerDay), display in UTC — avoids day shift west of UTC.
+        guard let date = Date.fromServerDay(dateString) else { return dateString }
+        return date.formattedServerDay(style: "d MMM yyyy", locale: Locale(identifier: "es_MX"))
     }
 
     private func formatCurrency(_ value: Double) -> String {
