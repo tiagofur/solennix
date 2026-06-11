@@ -74,6 +74,18 @@ public protocol UserTrackingDelegate: AnyObject, Sendable {
     func clearUser()
 }
 
+// MARK: - Sign Out Delegate
+
+/// Protocol for best-effort work that must run BEFORE tokens are cleared on sign-out.
+/// The app layer implements this to unregister the push device token while the auth
+/// token is still valid. Errors are swallowed by the caller — keep implementations
+/// lightweight and non-throwing.
+public protocol SignOutDelegate: AnyObject, Sendable {
+    /// Called inside `signOut()` after the server logout POST but before `clearTokens()`.
+    /// Use `apiClient` to call authenticated endpoints; do NOT retain it past this call.
+    func willClearTokens(apiClient: APIClient) async
+}
+
 // MARK: - Auth Manager
 
 /// Manages authentication state, token storage, and user session lifecycle.
@@ -112,6 +124,10 @@ public final class AuthManager {
     /// Delegate for reporting user identity changes (e.g., to Sentry).
     /// Set by the app layer after initialization.
     public weak var userTrackingDelegate: UserTrackingDelegate?
+
+    /// Delegate for best-effort work that must run before tokens are cleared on sign-out
+    /// (e.g., unregistering the push device token). Set by the app layer after initialization.
+    public weak var signOutDelegate: SignOutDelegate?
 
     /// Tracks whether biometric authentication has already been passed in this app session.
     /// Reset on sign-out or app relaunch (since `@Observable` state is re-created).
@@ -347,6 +363,12 @@ public final class AuthManager {
         // Best-effort server logout — ignore errors
         if let client = apiClient {
             _ = try? await client.post(Endpoint.logout, body: EmptyBody()) as EmptyResponse
+        }
+
+        // Best-effort pre-token-clear work (e.g., device token unregistration).
+        // Must run while the auth token is still valid.
+        if let client = apiClient {
+            await signOutDelegate?.willClearTokens(apiClient: client)
         }
 
         clearTokens()

@@ -30,4 +30,6 @@ enum WidgetDataKey {
     static let upcomingEvents = "widget_upcoming_events"
     static let kpis = "widget_kpis"
     static let lastUpdated = "widget_last_updated"
+    static let userPlan = "widget_user_plan"
+    static let completedEvents = "completed_events"
 }
