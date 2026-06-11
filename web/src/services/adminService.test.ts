@@ -82,4 +82,14 @@ describe('adminService', () => {
     expect(api.get).toHaveBeenCalledWith('/admin/subscriptions');
     expect(result).toEqual(mockSubs);
   });
+
+  it('getUsersWithZeroResources calls the correct endpoint', async () => {
+    const mockUsers = [{ id: '1', email: 'test@admin.com' }];
+    vi.mocked(api.get).mockResolvedValue(mockUsers);
+
+    const result = await adminService.getUsersWithZeroResources();
+
+    expect(api.get).toHaveBeenCalledWith('/admin/users/empty-resources');
+    expect(result).toEqual(mockUsers);
+  });
 });

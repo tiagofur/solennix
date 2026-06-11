@@ -67,7 +67,7 @@ export const adminService = {
   },
 
   async getUsersWithZeroResources() {
-    return api.get<AdminUser[]>("/admin/users/zero-resources");
+    return api.get<AdminUser[]>("/admin/users/empty-resources");
   },
 
   async getUserById(id: string) {
