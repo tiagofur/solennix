@@ -65,8 +65,12 @@ struct SolennixApp: App {
         // Wire APIClient into LiveActivityManager for push token registration.
         LiveActivityManager.shared.configure(apiClient: client)
 
-        // Configure Google Sign-In
-        GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: "43149798972-0nn6jdl55fau93m4knb6pts1k2eikan8.apps.googleusercontent.com")
+        // Configure Google Sign-In — client ID read from Info.plist (set via GOOGLE_CLIENT_ID in xcconfig).
+        let googleClientID = (info?["GOOGLE_CLIENT_ID"] as? String) ?? ""
+        if googleClientID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            SentryHelper.capture(message: "Google client ID missing: set GOOGLE_CLIENT_ID in Secrets.xcconfig.")
+        }
+        GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: googleClientID)
 
         // Configure Tab Bar appearance globally
         let tabBarAppearance = UITabBarAppearance()
