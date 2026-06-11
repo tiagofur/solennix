@@ -202,7 +202,9 @@ struct BiometricGateView: View {
 
             if failureCount >= maxAttempts {
                 Button("Iniciar sesion de nuevo") {
-                    authManager.clearTokens()
+                    // Use signOut() so authState transitions to .unauthenticated
+                    // and the full session cleanup path in SolennixApp fires.
+                    Task { await authManager.signOut() }
                 }
                 .font(.footnote)
                 .foregroundStyle(SolennixColors.textSecondary)
@@ -232,7 +234,9 @@ struct BiometricGateView: View {
             failureCount += 1
             showError = true
             if failureCount >= maxAttempts {
-                authManager.clearTokens()
+                // Use signOut() so authState transitions to .unauthenticated
+                // and the full session cleanup path in SolennixApp fires.
+                Task { await authManager.signOut() }
             }
         }
     }

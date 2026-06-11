@@ -275,7 +275,10 @@ struct SolennixApp: App {
         do {
             let body = ["token": token, "platform": "ios"]
             let _: EmptyResponse = try await apiClient.post(Endpoint.registerDevice, body: body)
+            // Clear the pending-retry key and record the successfully registered token
+            // so AppSignOutDelegate can unregister it even after the pending key is gone.
             UserDefaults.standard.removeObject(forKey: "pendingDeviceToken")
+            UserDefaults.standard.set(token, forKey: "registeredDeviceToken")
         } catch {
             SentryHelper.capture(error: error, context: "push_register_device")
         }
@@ -326,11 +329,17 @@ struct SolennixApp: App {
         //    - hasSeenOnboarding: next user should see onboarding flow.
         //    - hasRequestedPushAuthorization: next user should be prompted for push.
         //    - pendingDeviceToken: stale token must not be registered for the next user.
+        //    - registeredDeviceToken: cleared after unregistration in willClearTokens.
         //    NOT reset: "appearance" (device-wide preference, not user-specific),
         //               "preferredLocale" (will be overwritten on next login).
         UserDefaults.standard.removeObject(forKey: "hasSeenOnboarding")
         UserDefaults.standard.removeObject(forKey: "hasRequestedPushAuthorization")
         UserDefaults.standard.removeObject(forKey: "pendingDeviceToken")
+        UserDefaults.standard.removeObject(forKey: "registeredDeviceToken")
+
+        // 5. Clear Core Spotlight index so the next user cannot search previous
+        //    user's events, clients, or products from the system search.
+        SpotlightIndexer.removeAll()
 
         // Mirror the @AppStorage-backed properties so they take effect immediately
         // (UserDefaults.standard and @AppStorage share the same store, but the
@@ -363,10 +372,27 @@ private final class AppSignOutDelegate: SignOutDelegate, @unchecked Sendable {
     private init() {}
 
     func willClearTokens(apiClient: APIClient) async {
-        guard let token = UserDefaults.standard.string(forKey: "pendingDeviceToken"),
-              !token.isEmpty else { return }
+        // Prefer the in-memory token (always set while the app is live).
+        // NotificationManager is @MainActor, so read deviceToken on the main actor
+        // first, then fall back to the UserDefaults key written on successful registration.
+        // This covers the case where "pendingDeviceToken" was already removed
+        // after a successful register call.
+        let liveToken = await MainActor.run { NotificationManager.shared.deviceToken }
+        let token: String?
+        if let live = liveToken, !live.isEmpty {
+            token = live
+        } else {
+            token = UserDefaults.standard.string(forKey: "registeredDeviceToken")
+        }
+
+        guard let token, !token.isEmpty else { return }
+
         let body = ["token": token, "platform": "ios"]
         _ = try? await apiClient.post(Endpoint.unregisterDevice, body: body) as EmptyResponse
+
+        // Clear the persisted keys so a subsequent user does not inherit them.
+        UserDefaults.standard.removeObject(forKey: "registeredDeviceToken")
+        UserDefaults.standard.removeObject(forKey: "pendingDeviceToken")
     }
 }
 
