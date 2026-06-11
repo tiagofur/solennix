@@ -319,11 +319,14 @@ public final class EventFormViewModel {
     }
 
     public var discountAmount: Double {
+        // Clamp to prevent negative totals. Percent ∈ [0, 100]; fixed ∈ [0, base].
+        // Mirrors EventFinancials.compute() and backend financial.go:84-89.
         switch discountType {
         case .percent:
-            return discountableBase * discount / 100
+            let clampedPercent = max(0, min(100, discount))
+            return discountableBase * clampedPercent / 100
         case .fixed:
-            return min(discount, discountableBase)
+            return min(max(0, discount), discountableBase)
         }
     }
 
@@ -333,11 +336,11 @@ public final class EventFormViewModel {
 
     public var taxAmount: Double {
         let baseTotal = afterDiscount + passThroughExtrasSubtotal
-        return requiresInvoice ? baseTotal * taxRate / 100 : 0
+        return requiresInvoice ? EventFinancials.round2(baseTotal * taxRate / 100) : 0
     }
 
     public var total: Double {
-        afterDiscount + passThroughExtrasSubtotal + taxAmount
+        EventFinancials.round2(afterDiscount + passThroughExtrasSubtotal + taxAmount)
     }
 
     public var depositAmount: Double {

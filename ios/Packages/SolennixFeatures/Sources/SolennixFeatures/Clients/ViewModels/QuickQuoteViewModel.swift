@@ -125,8 +125,13 @@ public final class QuickQuoteViewModel {
         if productUnitCosts[productId] != nil { return }
         do {
             let ingredients: [ProductIngredient] = try await apiClient.get(Endpoint.productIngredients(productId))
+            // Filter: ingredient OR supply — matches EventFormViewModel+Profitability and
+            // EventFinancials cost aggregation. Previously only filtered .ingredient.
             let cost = ingredients
-                .filter { $0.type == .ingredient }
+                .filter { ing in
+                    guard let type = ing.type else { return true }
+                    return type == .ingredient || type == .supply
+                }
                 .reduce(0.0) { sum, ing in
                     sum + (ing.quantityRequired * (ing.unitCost ?? 0.0))
                 }
@@ -144,56 +149,47 @@ public final class QuickQuoteViewModel {
         }
     }
 
-    // Financial calculations
+    // MARK: - Financial calculations
+    //
+    // Delegates to EventFinancials — the single source of truth for all
+    // financial computations across the app. This replaces the former inline
+    // calculation which had a stale ingredient-only cost filter.
+
     public var financials: FinancialSummary {
-        let productsSubtotal = selectedProducts.reduce(0.0) { sum, item in
-            sum + ((item.unitPrice - item.discount) * Double(item.quantity))
-        }
-
-        let normalExtrasTotal = extras.filter { !$0.excludeUtility }.reduce(0.0) { $0 + $1.price }
-        let passThroughExtrasTotal = extras.filter { $0.excludeUtility }.reduce(0.0) { $0 + $1.price }
-        let extrasTotal = extras.reduce(0.0) { $0 + $1.price }
-
-        let discountableBase = productsSubtotal + normalExtrasTotal
-
-        let discountAmount: Double
-        if discountType == .percent {
-            discountAmount = discountableBase * (discountValue / 100)
-        } else {
-            discountAmount = min(discountValue, discountableBase)
-        }
-
-        let discountedBase = discountableBase - discountAmount
-        let baseTotal = discountedBase + passThroughExtrasTotal
-
-        let taxAmount = requiresInvoice ? baseTotal * (taxRate / 100) : 0
-        let total = baseTotal + taxAmount
-
-        // Costs
-        let productCost = selectedProducts.reduce(0.0) { sum, p in
-            sum + ((productUnitCosts[p.productId] ?? 0) * Double(p.quantity))
-        }
-        let extrasCost = extras.reduce(0.0) { $0 + $1.cost }
-        let totalCost = productCost + extrasCost
-
-        let revenue = total - (requiresInvoice ? taxAmount : 0)
-        let profit = revenue - totalCost
-
-        let passThroughRevenue = passThroughExtrasTotal
-        let adjustedRevenue = revenue - passThroughRevenue
-        let margin = adjustedRevenue > 0 ? (profit / adjustedRevenue) * 100 : 0
+        let result = EventFinancials.compute(
+            products: selectedProducts.map { p in
+                EventFinancials.ProductRow(
+                    quantity: Double(p.quantity),
+                    unitPrice: p.unitPrice,
+                    lineDiscount: p.discount,
+                    unitCost: productUnitCosts[p.productId]
+                )
+            },
+            extras: extras.map { e in
+                EventFinancials.ExtraRow(
+                    price: e.price,
+                    cost: e.cost,
+                    excludeUtility: e.excludeUtility
+                )
+            },
+            globalDiscountType: discountType,
+            // Percent discount clamped to [0, 100] inside EventFinancials.compute().
+            globalDiscount: discountValue,
+            requiresInvoice: requiresInvoice,
+            taxRate: taxRate
+        )
 
         return FinancialSummary(
-            productsSubtotal: productsSubtotal,
-            extrasTotal: extrasTotal,
-            discountAmount: discountAmount,
-            taxAmount: taxAmount,
-            total: total,
-            productCost: productCost,
-            extrasCost: extrasCost,
-            totalCost: totalCost,
-            profit: profit,
-            margin: margin
+            productsSubtotal: result.productsSubtotal,
+            extrasTotal: result.normalExtrasSubtotal + result.passThroughExtrasSubtotal,
+            discountAmount: result.discountAmount,
+            taxAmount: result.taxAmount,
+            total: result.total,
+            productCost: result.productCost,
+            extrasCost: result.extrasCost,
+            totalCost: result.totalCost,
+            profit: result.netProfit,
+            margin: result.profitMargin
         )
     }
 
@@ -207,6 +203,13 @@ public final class QuickQuoteViewModel {
 
         guard !validProducts.isEmpty || !validExtras.isEmpty else {
             return
+        }
+
+        // Clamp percent discount before sending to backend PDF endpoint.
+        let clampedDiscount: Double
+        switch discountType {
+        case .percent: clampedDiscount = max(0, min(100, discountValue))
+        case .fixed:   clampedDiscount = max(0, discountValue)
         }
 
         let payload = QuickQuotePDFRequestPayload(
@@ -233,7 +236,7 @@ public final class QuickQuoteViewModel {
                 )
             },
             numPeople: numPeople,
-            discount: discountValue,
+            discount: clampedDiscount,
             discountType: discountType == .percent ? "percent" : "fixed",
             requiresInvoice: requiresInvoice,
             taxRate: taxRate
