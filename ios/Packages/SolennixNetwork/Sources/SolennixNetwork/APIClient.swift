@@ -9,6 +9,15 @@ public struct UploadResponse: Codable, Sendable {
     public let thumbnailUrl: String?
 }
 
+// MARK: - Refresh Token Payload
+
+/// Decoded response from `POST /auth/refresh`.
+/// Internal to the network package; consumers receive `Bool` from `performCoalescedRefresh()`.
+private struct RefreshTokenPayload: Decodable {
+    let accessToken: String
+    let refreshToken: String
+}
+
 // MARK: - API Client
 
 /// An actor-based HTTP client for communicating with the Solennix API.
@@ -34,6 +43,10 @@ public actor APIClient {
 
     /// Task that guards concurrent refresh attempts — only one refresh runs at a time.
     private var refreshTask: Task<Bool, Error>?
+
+    /// Earliest point in time at which the offline mutation flush may run again.
+    /// Set when a queued replay receives a 429; enforces the `Retry-After` delay.
+    private var nextFlushAllowedAt: Date?
 
     /// Maximum number of automatic retries for transient errors (5xx, timeouts).
     private let maxRetries = 2
@@ -101,6 +114,21 @@ public actor APIClient {
     /// Attempts to replay pending offline mutations in FIFO order.
     public func flushQueuedMutations() async {
         await flushOfflineQueue()
+    }
+
+    /// Public entry point for a coalesced token refresh, used by `AuthManager.refreshToken()`.
+    ///
+    /// Routes through the same `refreshTask` guard used by the internal 401-retry path,
+    /// so concurrent callers — whether triggered by `AuthManager` at startup/manual
+    /// refresh or by an in-flight 401 retry — share a single network round-trip.
+    /// Single-use refresh token semantics are upheld: only one HTTP call reaches the
+    /// backend even if multiple callers race.
+    ///
+    /// - Returns: `true` if the refresh succeeded and new tokens are stored in the keychain.
+    ///   `false` for any failure — the caller is responsible for deciding whether to
+    ///   clear tokens or treat the failure as transient.
+    public func performCoalescedRefresh() async -> Bool {
+        return await attemptRefresh()
     }
 
     // MARK: - Public HTTP Methods
@@ -515,6 +543,11 @@ public actor APIClient {
     }
 
     private func flushOfflineQueue() async {
+        // Honour any active Retry-After backoff from a previous 429 during flush.
+        if let notBefore = nextFlushAllowedAt, Date() < notBefore {
+            return
+        }
+
         let pendingMutations = await offlineMutationQueue.dequeueAll()
         guard !pendingMutations.isEmpty else { return }
 
@@ -530,8 +563,20 @@ public actor APIClient {
                     request.httpBody = Data(base64Encoded: bodyBase64)
                 }
 
-                _ = try await perform(request, isRetry: false)
+                let (_, httpResponse) = try await performReturningResponse(request)
+                _ = httpResponse // success — move to next item
                 index += 1
+            } catch let flushError as FlushError {
+                switch flushError {
+                case .rateLimited(let retryAfter):
+                    // Backend asked us to back off. Stop the current flush, keep all
+                    // remaining mutations (including the rate-limited one), and record
+                    // the earliest time the next flush attempt is allowed.
+                    let delay = TimeInterval(retryAfter)
+                    nextFlushAllowedAt = Date().addingTimeInterval(delay)
+                    await offlineMutationQueue.replace(with: Array(pendingMutations[index...]))
+                    return
+                }
             } catch let apiError as APIError {
                 switch apiError {
                 case .serverError(let statusCode, _) where Self.shouldDropReplay(statusCode: statusCode):
@@ -546,6 +591,41 @@ public actor APIClient {
                 return
             }
         }
+    }
+
+    /// Executes a URLRequest and returns the decoded data alongside the raw HTTP response.
+    /// Used by the offline flush path to inspect response headers (e.g., `Retry-After`)
+    /// before the response data is decoded or discarded.
+    ///
+    /// Throws `FlushError.rateLimited` when the server responds with 429,
+    /// `APIError` for other HTTP errors, or rethrows network-level errors.
+    private func performReturningResponse(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.unknown
+        }
+
+        if httpResponse.statusCode == 429 {
+            // Read the integer Retry-After header; fall back to a 30-second default.
+            let retryAfterSeconds: Int
+            if let headerValue = httpResponse.value(forHTTPHeaderField: "Retry-After"),
+               let seconds = Int(headerValue) {
+                retryAfterSeconds = seconds
+            } else {
+                retryAfterSeconds = 30
+            }
+            throw FlushError.rateLimited(retryAfterSeconds: retryAfterSeconds)
+        }
+
+        try validateResponse(httpResponse, data: data)
+        return (data, httpResponse)
+    }
+
+    /// Errors specific to the offline mutation flush path.
+    private enum FlushError: Error {
+        /// The server responded with 429. `retryAfterSeconds` is taken from the
+        /// integer `Retry-After` header, or defaults to 30 if the header is absent.
+        case rateLimited(retryAfterSeconds: Int)
     }
 
     static func shouldDropReplay(statusCode: Int) -> Bool {
@@ -603,32 +683,70 @@ public actor APIClient {
 
     // MARK: - Token Refresh
 
-    /// Attempt to refresh the access token. Uses `refreshTask` to coalesce
-    /// concurrent refresh attempts into a single network call.
+    /// Coalescing guard for all concurrent refresh callers.
     ///
-    /// Because `APIClient` is an `actor`, synchronous code between suspension
-    /// points is mutually exclusive. This guarantees that only one caller can
-    /// see `refreshTask == nil` and create a new `Task`; all subsequent callers
-    /// that enter while the refresh is in-flight will observe the existing task
-    /// and await its result. `defer` ensures `refreshTask` is cleared even if
-    /// the task is cancelled or throws.
+    /// Because `APIClient` is an `actor`, the check-and-set of `refreshTask` is
+    /// atomic — no suspension point separates them. Any caller that arrives while
+    /// a refresh `Task` is already running awaits the same `Task.value` instead of
+    /// starting a second HTTP round-trip. This enforces single-use token semantics:
+    /// at most one `/auth/refresh` call reaches the backend at any instant.
+    ///
+    /// Used by:
+    /// - `perform(_:isRetry:)` — internal 401-retry path.
+    /// - `performCoalescedRefresh()` — public entry point for `AuthManager`.
+    ///
+    /// Swallows errors to `Bool` so the 401-retry path can continue unconditionally.
+    /// `AuthManager.refreshToken()` uses `attemptRefreshThrowing()` to
+    /// receive typed errors for session-clear discrimination.
     private func attemptRefresh() async -> Bool {
-        // If a refresh is already in progress, coalesce by waiting for it
+        return (try? await attemptRefreshThrowing()) ?? false
+    }
+
+    /// Throwing variant of the coalescing guard. Surfaces the underlying `APIError`
+    /// so callers that need to distinguish 401/403 (definitive auth failure) from
+    /// 429/5xx/network errors (transient) can do so without a second request.
+    ///
+    /// `Task<Bool, Error>` stores the result/error so any number of concurrent
+    /// waiters receive the exact same outcome from a single HTTP round-trip.
+    func attemptRefreshThrowing() async throws -> Bool {
         if let existingTask = refreshTask {
-            return (try? await existingTask.value) ?? false
+            return try await existingTask.value
         }
 
-        // No suspension point between the nil-check above and the assignment
-        // below, so the actor guarantees exclusive access here.
-        let task = Task<Bool, Error> { [weak _authManager] in
-            guard let authManager = _authManager else { return false }
-            return (try? await authManager.refreshToken()) ?? false
+        let task = Task<Bool, Error> {
+            return try await self.executeRefresh()
         }
 
         refreshTask = task
         defer { refreshTask = nil }
 
-        return (try? await task.value) ?? false
+        return try await task.value
+    }
+
+    /// Performs the actual HTTP refresh request and stores the new tokens in the keychain.
+    ///
+    /// Intentionally separate from the coalescing wrapper so business logic lives here
+    /// and the guard stays thin. Only one concurrent call to this method will ever run
+    /// (enforced by `refreshTask` in `attemptRefreshThrowing`).
+    ///
+    /// Throws `APIError` on any failure, preserving the full error type so callers
+    /// can discriminate `.unauthorized` / `.serverError(403,_)` (definitive) from
+    /// `.serverError(429,_)` / `.serverError(5xx,_)` / `.networkError` (transient).
+    private func executeRefresh() async throws -> Bool {
+        guard let refreshTokenValue = keychainHelper.readString(for: KeychainHelper.Keys.refreshToken),
+              !refreshTokenValue.isEmpty else {
+            // No refresh token in keychain — treat as definitive auth failure.
+            throw APIError.unauthorized
+        }
+
+        var request = try buildRequest(Endpoint.refresh, method: "POST")
+        request.httpBody = try encoder.encode(["refresh_token": refreshTokenValue])
+        // Pass isRetry: true so `perform` does not recurse into another refresh loop.
+        let data = try await perform(request, isRetry: true)
+        let decoded = try decoder.decode(RefreshTokenPayload.self, from: data)
+        keychainHelper.saveString(decoded.accessToken, for: KeychainHelper.Keys.accessToken)
+        keychainHelper.saveString(decoded.refreshToken, for: KeychainHelper.Keys.refreshToken)
+        return true
     }
 
     // MARK: - Response Validation
