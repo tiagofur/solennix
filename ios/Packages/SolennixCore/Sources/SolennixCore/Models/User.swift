@@ -50,7 +50,6 @@ public struct User: Codable, Identifiable, Sendable, Hashable {
     public var pushEventReminder: Bool?
     public var pushPaymentReceived: Bool?
     public let plan: Plan
-    public var stripeCustomerId: String?
     public var planExpiresAt: String?
     public let createdAt: String
     public let updatedAt: String

@@ -63,7 +63,6 @@ final class UserPlanTests: XCTestCase {
           "push_event_reminder": true,
           "push_payment_received": false,
           "plan": "pro",
-          "stripe_customer_id": "cus_123",
           "plan_expires_at": "2026-12-31T00:00:00Z",
           "created_at": "2026-01-01T00:00:00Z",
           "updated_at": "2026-01-02T00:00:00Z"
@@ -96,7 +95,6 @@ final class UserPlanTests: XCTestCase {
         XCTAssertEqual(user.pushEventReminder, true)
         XCTAssertEqual(user.pushPaymentReceived, false)
         XCTAssertEqual(user.plan, .pro)
-        XCTAssertEqual(user.stripeCustomerId, "cus_123")
         XCTAssertEqual(user.planExpiresAt, "2026-12-31T00:00:00Z")
         XCTAssertEqual(user.createdAt, "2026-01-01T00:00:00Z")
         XCTAssertEqual(user.updatedAt, "2026-01-02T00:00:00Z")
@@ -121,7 +119,6 @@ final class UserPlanTests: XCTestCase {
 
         XCTAssertEqual(user.plan, .basic)
         XCTAssertNil(user.businessName)
-        XCTAssertNil(user.stripeCustomerId)
         XCTAssertNil(user.planExpiresAt)
     }
 
