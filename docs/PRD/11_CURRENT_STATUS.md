@@ -25,6 +25,14 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.8
 
+> [!success] 2026-06-11 — Integridad de Dinero / Money Integrity (Issue #515)
+> Se corrigieron cuatro inconsistencias y errores financieros en el frontend web para garantizar la exactitud de los montos y los márgenes mostrados a los organizadores y enviados a los clientes.
+> - **Margen Ajustado en Resumen:** Corrección en `EventSummary.tsx` para restar el revenue de extras con passthrough (`exclude_utility = true`) del denominador, unificando el cálculo de margen con la pantalla de finanzas y cotizaciones.
+> - **Descuento de Cotización Clampado:** Clampeo en `QuickQuotePage.tsx` para evitar que el porcentaje de descuento salga del rango de `0-100` tanto en el onChange como al alternar entre tipo de descuento fijo y porcentaje.
+> - **Validación de Monto Positivo en Pagos:** Implementación de validación para requerir montos de pagos mayores a cero (`min: 0.01`) con mensaje de error localizado (`payment.amount_min_error`) en `PaymentFormFields.tsx`.
+> - **Redondeo Aritmético en PDF:** Ajustes en `pdfGenerator.ts` para redondear a 2 decimales todos los totales de líneas de productos, subtotales, montos de descuentos y el cálculo de saldo pendiente/a favor en reportes.
+> - **Validación:** Cobertura de tests unitarios actualizada en `PaymentFormFields.test.tsx`, logrando que toda la suite de pruebas frontend pase en verde.
+
 > [!success] 2026-06-10 — Integridad de Sesión y Caché (Issue #516)
 > Se implementó la limpieza del caché de React Query al cerrar sesión y la invalidación dinámica de las queries para asegurar la sincronía de la UI y los límites de plan.
 > - **Caché limpiado en Logout:** Modificación en `AuthContext.tsx` para llamar a `queryClient.clear()` en `signOut` y ante el evento global de logout.

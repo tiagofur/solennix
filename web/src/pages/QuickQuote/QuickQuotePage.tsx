@@ -495,14 +495,20 @@ export const QuickQuotePage: React.FC = () => {
                   <div className="flex rounded-lg border border-border overflow-hidden text-xs">
                     <button
                       type="button"
-                      onClick={() => setDiscountType("percent")}
+                      onClick={() => {
+                        setDiscountType("percent");
+                        setDiscountValue((prev) => Math.max(0, Math.min(100, prev)));
+                      }}
                       className={`px-2.5 py-1 transition-colors ${discountType === "percent" ? "bg-primary text-white" : "bg-card text-text-secondary hover:bg-surface-alt"}`}
                     >
                       %
                     </button>
                     <button
                       type="button"
-                      onClick={() => setDiscountType("fixed")}
+                      onClick={() => {
+                        setDiscountType("fixed");
+                        setDiscountValue((prev) => Math.max(0, prev));
+                      }}
                       className={`px-2.5 py-1 transition-colors ${discountType === "fixed" ? "bg-primary text-white" : "bg-card text-text-secondary hover:bg-surface-alt"}`}
                     >
                       $
@@ -516,7 +522,14 @@ export const QuickQuotePage: React.FC = () => {
                   max={discountType === "percent" ? 100 : undefined}
                   step="0.01"
                   value={discountValue}
-                  onChange={(e) => setDiscountValue(Number(e.target.value))}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    if (discountType === "percent") {
+                      setDiscountValue(Math.max(0, Math.min(100, val)));
+                    } else {
+                      setDiscountValue(Math.max(0, val));
+                    }
+                  }}
                   className="block w-full sm:w-48 text-sm border-border rounded-xl shadow-xs transition-shadow focus:ring-2 focus:ring-primary/20 p-2 bg-card text-text border"
                 />
               </div>

@@ -299,7 +299,7 @@ export const generateBudgetPDF = (
     p.product_name || pdfT('product', lang),
     p.quantity.toString(),
     formatCurrency(p.unit_price, lang),
-    formatCurrency((p.unit_price - (p.discount || 0)) * p.quantity, lang)
+    formatCurrency(Math.round(((p.unit_price - (p.discount || 0)) * p.quantity) * 100) / 100, lang)
   ]);
 
   // Tabla de Extras
@@ -352,12 +352,12 @@ export const generateBudgetPDF = (
   // firmaba/recibia un numero que no coincidia con la pantalla de Finanzas.
   const rawDiscount = event.discount || 0;
   const taxAmount = event.tax_amount || 0;
-  const subtotalForDiscount = event.total_amount - taxAmount
-    + (event.discount_type === 'fixed' ? rawDiscount : 0);
-  const discountAmount = event.discount_type === 'percent'
+  const subtotalForDiscount = Math.round((event.total_amount - taxAmount
+    + (event.discount_type === 'fixed' ? rawDiscount : 0)) * 100) / 100;
+  const discountAmount = Math.round((event.discount_type === 'percent'
     ? subtotalForDiscount * rawDiscount / 100
-    : rawDiscount;
-  const preDiscountSubtotal = (event.total_amount - taxAmount) + discountAmount;
+    : rawDiscount) * 100) / 100;
+  const preDiscountSubtotal = Math.round(((event.total_amount - taxAmount) + discountAmount) * 100) / 100;
 
   doc.setFont('helvetica', 'normal');
   doc.text(pdfT('subtotal', lang), summaryX, currentY);
@@ -589,8 +589,8 @@ export const generatePaymentReportPDF = (
   }
 
   // Summary
-  const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
-  const balance = event.total_amount - totalPaid;
+  const totalPaid = Math.round(payments.reduce((sum, p) => sum + p.amount, 0) * 100) / 100;
+  const balance = Math.round((event.total_amount - totalPaid) * 100) / 100;
 
   const rightMargin = doc.internal.pageSize.width - 20;
   doc.setFontSize(11);

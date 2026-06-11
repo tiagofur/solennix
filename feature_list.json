@@ -256,6 +256,20 @@
         "La suite completa de tests de frontend (incluyendo AuthContext y useStaffQueries) pasa al 100% en verde",
         "La suite ./init.sh se ejecuta y pasa correctamente sin errores"
       ]
+    },
+    {
+      "id": 22,
+      "name": "money-integrity",
+      "description": "fix(web): integridad de dinero, márgenes correctos con passthrough, descuentos limitados, pagos mayores a cero y redondeo en PDF (Issue #515)",
+      "status": "done",
+      "acceptance_criteria": [
+        "El margen del evento en el resumen descuenta correctamente el revenue de extras passthrough",
+        "El porcentaje de descuento en cotizaciones rápidas está limitado estrictamente al rango de 0-100",
+        "Los montos de pagos manuales se validan para ser positivos (> 0) con un mensaje de error localizado",
+        "Los totales de líneas, subtotales, descuentos y balances en los PDFs generados se redondean a 2 decimales",
+        "La suite completa de tests de frontend (incluyendo PaymentFormFields) pasa al 100% en verde",
+        "La suite ./init.sh se ejecuta y pasa correctamente sin errores"
+      ]
     }
   ]
 }
