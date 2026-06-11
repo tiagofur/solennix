@@ -20,20 +20,20 @@ public struct EventFinancesDetailView: View {
     public var body: some View {
         Group {
             if viewModel.isLoading && viewModel.event == nil {
-                ProgressView("Cargando...")
+                ProgressView(EventFinancesDetailStrings.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let event = viewModel.event {
                 content(event)
             } else {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
-                    title: "Error",
-                    message: viewModel.errorMessage ?? "No se pudo cargar"
+                    title: EventFinancesDetailStrings.errorTitle,
+                    message: viewModel.errorMessage ?? EventFinancesDetailStrings.errorMessage
                 )
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Finanzas")
+        .navigationTitle(EventFinancesDetailStrings.navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .task { await viewModel.loadData(eventId: eventId) }
     }
@@ -43,7 +43,7 @@ public struct EventFinancesDetailView: View {
             VStack(spacing: Spacing.lg) {
                 // Total prominente
                 VStack(spacing: Spacing.xs) {
-                    Text("TOTAL COBRADO")
+                    Text(EventFinancesDetailStrings.totalCharged)
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundStyle(SolennixColors.textTertiary)
@@ -70,21 +70,21 @@ public struct EventFinancesDetailView: View {
 
                 VStack(spacing: 0) {
                     financialMetricRow(
-                        label: "Venta Bruta",
+                        label: EventFinancesDetailStrings.grossSale,
                         value: financials.revenue.asMXN,
                         color: SolennixColors.text
                     )
 
                     if event.taxAmount > 0 {
                         financialMetricRow(
-                            label: "IVA (\(Int(event.taxRate))%)",
+                            label: EventFinancesDetailStrings.iva(Int(event.taxRate)),
                             value: event.taxAmount.asMXN,
                             color: SolennixColors.text
                         )
                     }
 
                     financialMetricRow(
-                        label: "Total Cobrado",
+                        label: EventFinancesDetailStrings.totalChargedRow,
                         value: event.totalAmount.asMXN,
                         color: SolennixColors.primary,
                         isBold: true
@@ -92,7 +92,7 @@ public struct EventFinancesDetailView: View {
 
                     if let depositPercent = event.depositPercent, depositPercent > 0 {
                         financialMetricRow(
-                            label: "Anticipo (\(Int(depositPercent))%)",
+                            label: EventFinancesDetailStrings.deposit(Int(depositPercent)),
                             value: depositAmount.asMXN,
                             color: isDepositMet ? SolennixColors.success : SolennixColors.warning,
                             icon: isDepositMet ? "checkmark.circle.fill" : "exclamationmark.circle.fill"
@@ -101,8 +101,8 @@ public struct EventFinancesDetailView: View {
 
                     if event.discount > 0 {
                         let discountLabel = event.discountType == .percent
-                            ? "Descuento (\(Int(min(100, event.discount)))%)"
-                            : "Descuento"
+                            ? EventFinancesDetailStrings.discount(Int(min(100, event.discount)))
+                            : EventFinancesDetailStrings.discountFixed
                         financialMetricRow(
                             label: discountLabel,
                             value: "-\(discountAmount.asMXN)",
@@ -113,20 +113,20 @@ public struct EventFinancesDetailView: View {
                     Divider().padding(.horizontal, Spacing.lg)
 
                     financialMetricRow(
-                        label: "Costos",
+                        label: EventFinancesDetailStrings.costs,
                         value: financials.totalCost.asMXN,
                         color: SolennixColors.error
                     )
 
                     financialMetricRow(
-                        label: "Utilidad Neta",
+                        label: EventFinancesDetailStrings.netProfit,
                         value: financials.netProfit.asMXN,
                         color: SolennixColors.success,
                         isBold: true
                     )
 
                     financialMetricRow(
-                        label: "Margen",
+                        label: EventFinancesDetailStrings.margin,
                         value: "\(String(format: "%.1f", financials.profitMargin))%",
                         color: SolennixColors.info,
                         isBold: true
@@ -135,13 +135,13 @@ public struct EventFinancesDetailView: View {
                     Divider().padding(.horizontal, Spacing.lg)
 
                     financialMetricRow(
-                        label: "Pagado",
+                        label: EventFinancesDetailStrings.paid,
                         value: viewModel.totalPaid.asMXN,
                         color: SolennixColors.success
                     )
 
                     financialMetricRow(
-                        label: "Pendiente",
+                        label: EventFinancesDetailStrings.pending,
                         value: viewModel.remaining.asMXN,
                         color: viewModel.remaining > 0 ? SolennixColors.error : SolennixColors.success,
                         isBold: true
@@ -155,7 +155,7 @@ public struct EventFinancesDetailView: View {
                 if event.totalAmount > 0 {
                     VStack(spacing: Spacing.sm) {
                         HStack {
-                            Text("Progreso de Cobro")
+                            Text(EventFinancesDetailStrings.collectionProgress)
                                 .font(.subheadline)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(SolennixColors.text)
@@ -212,7 +212,7 @@ public struct EventFinancesDetailView: View {
         // Rebuild product rows from viewModel data (prices only; no ingredient costs here).
         let productRows = viewModel.products.map { p in
             EventFinancials.ProductRow(
-                quantity: Double(p.quantity),
+                quantity: p.quantity,
                 unitPrice: p.unitPrice,
                 lineDiscount: p.discount,
                 unitCost: nil // ingredient costs not loaded in detail view

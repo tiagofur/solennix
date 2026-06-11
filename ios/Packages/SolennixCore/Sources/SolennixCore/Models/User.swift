@@ -51,6 +51,8 @@ public struct User: Codable, Identifiable, Sendable, Hashable {
     public var pushPaymentReceived: Bool?
     public let plan: Plan
     public var planExpiresAt: String?
+    /// Backend `account_status` field. Known values: "active", "suspended", "pending_verification".
+    public var accountStatus: String?
     public let createdAt: String
     public let updatedAt: String
 }
