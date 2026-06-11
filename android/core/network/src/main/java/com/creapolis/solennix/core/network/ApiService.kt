@@ -45,6 +45,12 @@ sealed class SolennixException(message: String, cause: Throwable? = null) : Exce
         val max: Int,
         message: String
     ) : SolennixException(message)
+    /** Server returned 429 Too Many Requests. [retryAfterSeconds] from the `Retry-After` header. */
+    class RateLimited(val retryAfterSeconds: Int?, message: String) : SolennixException(message)
+    /** The account was suspended by an administrator (`auth.account_blocked`). */
+    class AccountBlocked(message: String) : SolennixException(message)
+    /** The account was deleted (`auth.account_deleted`). */
+    class AccountDeleted(message: String) : SolennixException(message)
     class Unknown(message: String, cause: Throwable? = null) : SolennixException(message, cause)
 }
 
@@ -64,21 +70,33 @@ class ApiService @Inject constructor(
             }
             val message = errorBody?.message
                 ?: context.getString(R.string.core_network_error_server, e.response.status.value)
-            if (e.response.status == HttpStatusCode.Unauthorized) {
-                throw SolennixException.Auth(message)
+            when {
+                e.response.status == HttpStatusCode.Unauthorized -> {
+                    throw SolennixException.Auth(message)
+                }
+                e.response.status == HttpStatusCode.TooManyRequests -> {
+                    val retryAfter = e.response.headers["Retry-After"]?.toIntOrNull()
+                    throw SolennixException.RateLimited(retryAfter, message)
+                }
+                e.response.status == HttpStatusCode.Forbidden -> when (errorBody?.code) {
+                    "auth.account_blocked" -> throw SolennixException.AccountBlocked(message)
+                    "auth.account_deleted" -> throw SolennixException.AccountDeleted(message)
+                    "plan_limit_exceeded", null -> {
+                        // Detect structured plan_limit_exceeded response from backend
+                        if (errorBody?.error == "plan_limit_exceeded") {
+                            throw SolennixException.PlanLimitExceeded(
+                                limitType = errorBody.limit?.type ?: "unknown",
+                                current = errorBody.limit?.current ?: 0,
+                                max = errorBody.limit?.max ?: 0,
+                                message = message
+                            )
+                        }
+                        throw SolennixException.Server(e.response.status.value, message)
+                    }
+                    else -> throw SolennixException.Server(e.response.status.value, message)
+                }
+                else -> throw SolennixException.Server(e.response.status.value, message)
             }
-            // Detect structured plan_limit_exceeded response from backend
-            if (e.response.status == HttpStatusCode.Forbidden &&
-                errorBody?.error == "plan_limit_exceeded"
-            ) {
-                throw SolennixException.PlanLimitExceeded(
-                    limitType = errorBody.limit?.type ?: "unknown",
-                    current = errorBody.limit?.current ?: 0,
-                    max = errorBody.limit?.max ?: 0,
-                    message = message
-                )
-            }
-            throw SolennixException.Server(e.response.status.value, message)
         } catch (e: IOException) {
             throw SolennixException.Network(context.getString(R.string.core_network_error_connection), e)
         } catch (e: SolennixException) {
