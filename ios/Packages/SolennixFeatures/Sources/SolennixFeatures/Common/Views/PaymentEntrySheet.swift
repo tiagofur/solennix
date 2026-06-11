@@ -42,6 +42,12 @@ public struct PaymentEntrySheet: View {
         self.onConfirm = onConfirm
     }
 
+    /// Parsed amount from the text field, handling comma decimal separators.
+    /// Returns 0 when the field is empty or cannot be parsed.
+    private var parsedAmount: Double {
+        Double(amount.replacingOccurrences(of: ",", with: ".")) ?? 0
+    }
+
     public var body: some View {
         NavigationStack {
             VStack(spacing: Spacing.lg) {
@@ -106,7 +112,7 @@ public struct PaymentEntrySheet: View {
                 PremiumButton(
                     title: confirmLabel,
                     isLoading: isSaving,
-                    isDisabled: amount.isEmpty
+                    isDisabled: parsedAmount <= 0
                 ) {
                     onConfirm()
                 }
