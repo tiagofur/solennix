@@ -31,6 +31,12 @@ actor OfflineMutationQueue {
         return current
     }
 
+    /// Returns all pending mutations without removing them from storage.
+    /// Use this in the flush path to allow crash-safe incremental removal.
+    func peekAll() -> [QueuedMutation] {
+        load()
+    }
+
     func replace(with items: [QueuedMutation]) {
         save(items)
     }

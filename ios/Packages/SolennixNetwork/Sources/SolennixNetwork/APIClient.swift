@@ -103,6 +103,17 @@ public actor APIClient {
     public func setAuthManager(_ manager: AuthManager) {
         self._authManager = manager
     }
+
+    /// Cancel any in-flight token refresh and nil out the task handle.
+    ///
+    /// Call this at the start of `AuthManager.clearTokens()` / `signOut()` so a
+    /// concurrent refresh that already read a valid refresh token cannot race ahead
+    /// and send it to the backend after it has been revoked — which would trigger
+    /// backend reuse-detection and family-revoke all tokens.
+    public func cancelInFlightRefresh() {
+        refreshTask?.cancel()
+        refreshTask = nil
+    }
     
     /// Set a callback to be invoked when a user-facing error occurs.
     /// This allows the UI layer to display toasts without the network layer
@@ -548,7 +559,11 @@ public actor APIClient {
             return
         }
 
-        let pendingMutations = await offlineMutationQueue.dequeueAll()
+        // Peek without clearing — items are removed from persistent storage only after
+        // each one is successfully sent (or permanently dropped). This makes the flush
+        // crash-safe: if the app is killed mid-flush, surviving mutations are replayed
+        // on the next launch rather than silently lost.
+        let pendingMutations = await offlineMutationQueue.peekAll()
         guard !pendingMutations.isEmpty else { return }
 
         var index = 0
@@ -564,8 +579,11 @@ public actor APIClient {
                 }
 
                 let (_, httpResponse) = try await performReturningResponse(request)
-                _ = httpResponse // success — move to next item
+                _ = httpResponse // success — remove this item from persistent storage
                 index += 1
+                // Persist the remaining queue (items not yet sent) after each success.
+                // If the app is killed here, only the just-sent item is gone; the rest survive.
+                await offlineMutationQueue.replace(with: Array(pendingMutations[index...]))
             } catch let flushError as FlushError {
                 switch flushError {
                 case .rateLimited(let retryAfter):
@@ -574,6 +592,8 @@ public actor APIClient {
                     // the earliest time the next flush attempt is allowed.
                     let delay = TimeInterval(retryAfter)
                     nextFlushAllowedAt = Date().addingTimeInterval(delay)
+                    // Queue already contains these items (we peeked, not dequeued).
+                    // Replace with the remaining slice to truncate any already-sent ones.
                     await offlineMutationQueue.replace(with: Array(pendingMutations[index...]))
                     return
                 }
@@ -582,7 +602,9 @@ public actor APIClient {
                 case .serverError(let statusCode, _) where Self.shouldDropReplay(statusCode: statusCode):
                     // Permanent client-side error: drop this mutation and continue.
                     index += 1
+                    await offlineMutationQueue.replace(with: Array(pendingMutations[index...]))
                 default:
+                    // Transient error — leave remaining items in the queue and stop.
                     await offlineMutationQueue.replace(with: Array(pendingMutations[index...]))
                     return
                 }
@@ -617,7 +639,8 @@ public actor APIClient {
             throw FlushError.rateLimited(retryAfterSeconds: retryAfterSeconds)
         }
 
-        try validateResponse(httpResponse, data: data)
+        // Offline flush is never the auth/refresh endpoint, so toast suppression is off.
+        try validateResponse(httpResponse, data: data, suppressToastFor429: false)
         return (data, httpResponse)
     }
 
@@ -642,6 +665,10 @@ public actor APIClient {
             throw APIError.unknown
         }
 
+        // Suppress user-facing 429 toast for the refresh endpoint — the user did not
+        // trigger this request and showing a toast would be confusing noise.
+        let suppressToastFor429 = isAuthEndpoint(request.url)
+
         // On 401 and not already a retry, attempt token refresh then retry once.
         // CRITICAL: skip this for the auth endpoints themselves — those are the routes
         // that ISSUE tokens, not consume them. A 401 there means "bad credentials" or
@@ -649,18 +676,34 @@ public actor APIClient {
         // first login attempt triggers an infinite refresh loop and the request hangs
         // until the URLSession timeout fires.
         if httpResponse.statusCode == 401, !isRetry, !isAuthEndpoint(request.url) {
-            let refreshed = await attemptRefresh()
-            if refreshed {
-                // Rebuild request with new token
-                var retryRequest = request
-                if let token = keychainHelper.readString(for: KeychainHelper.Keys.accessToken) {
-                    retryRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            do {
+                let refreshed = try await attemptRefreshThrowing()
+                if refreshed {
+                    // Rebuild request with new token
+                    var retryRequest = request
+                    if let token = keychainHelper.readString(for: KeychainHelper.Keys.accessToken) {
+                        retryRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                    }
+                    return try await perform(retryRequest, isRetry: true)
                 }
-                return try await perform(retryRequest, isRetry: true)
+                // Refresh returned false without throwing — transient; fall through to
+                // validateResponse which will throw .unauthorized to the caller.
+            } catch {
+                // Definitive failure (401/403 from /auth/refresh): notify AuthManager so
+                // the UI transitions to .unauthenticated. Transient errors are swallowed by
+                // attemptRefresh() at the call site — this branch only fires for definitive ones.
+                if AuthManager.isDefinitiveAuthFailure(error) {
+                    let manager = _authManager
+                    Task { @MainActor in
+                        await manager?.handleSessionExpired()
+                    }
+                }
+                // Re-throw so the original caller knows the request failed.
+                throw error
             }
         }
 
-        try validateResponse(httpResponse, data: data)
+        try validateResponse(httpResponse, data: data, suppressToastFor429: suppressToastFor429)
         return data
     }
 
@@ -708,6 +751,11 @@ public actor APIClient {
     ///
     /// `Task<Bool, Error>` stores the result/error so any number of concurrent
     /// waiters receive the exact same outcome from a single HTTP round-trip.
+    ///
+    /// - Warning: `AuthManager.refreshToken()` is the **policy entry point** for token refresh.
+    ///   Callers that invoke `attemptRefreshThrowing()` directly bypass the definitive-failure
+    ///   state machine (token clearing + `handleSessionExpired`). Only call this directly if
+    ///   you take full responsibility for handling both transient and definitive failures.
     func attemptRefreshThrowing() async throws -> Bool {
         if let existingTask = refreshTask {
             return try await existingTask.value
@@ -739,10 +787,21 @@ public actor APIClient {
             throw APIError.unauthorized
         }
 
+        // Guard: if signOut/clearTokens cancelled us between reading the refresh token
+        // above and actually sending the HTTP request, bail out now so we do not send a
+        // just-revoked token to the backend (which would trigger family-revocation).
+        try Task.checkCancellation()
+
         var request = try buildRequest(Endpoint.refresh, method: "POST")
         request.httpBody = try encoder.encode(["refresh_token": refreshTokenValue])
         // Pass isRetry: true so `perform` does not recurse into another refresh loop.
         let data = try await perform(request, isRetry: true)
+
+        // Second cancellation check: the HTTP round-trip suspended us. If the task was
+        // cancelled while the request was in-flight, do not persist the returned tokens —
+        // the keychain may already be clean after signOut.
+        try Task.checkCancellation()
+
         let decoded = try decoder.decode(RefreshTokenPayload.self, from: data)
         keychainHelper.saveString(decoded.accessToken, for: KeychainHelper.Keys.accessToken)
         keychainHelper.saveString(decoded.refreshToken, for: KeychainHelper.Keys.refreshToken)
@@ -751,7 +810,14 @@ public actor APIClient {
 
     // MARK: - Response Validation
 
-    private func validateResponse(_ response: HTTPURLResponse, data: Data) throws {
+    /// - Parameter suppressToastFor429: When `true`, a 429 response does not show a
+    ///   user-facing toast. Use for background-triggered requests (e.g., `/auth/refresh`)
+    ///   where the user did not initiate the call.
+    private func validateResponse(
+        _ response: HTTPURLResponse,
+        data: Data,
+        suppressToastFor429: Bool = false
+    ) throws {
         switch response.statusCode {
         case 200...299:
             return // Success
@@ -786,7 +852,11 @@ public actor APIClient {
                 statusCode: response.statusCode,
                 message: message ?? "Request failed with status \(response.statusCode)"
             )
-            showErrorToast(for: err)
+            // Suppress the toast when this is a background refresh-endpoint 429 — the user
+            // did not trigger the request and the error is transient noise to them.
+            if !(suppressToastFor429 && response.statusCode == 429) {
+                showErrorToast(for: err)
+            }
             throw err
         case 500...599:
             let message = extractErrorMessage(from: data)
