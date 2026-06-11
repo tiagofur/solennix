@@ -52,19 +52,6 @@ extension AuthResponse: Decodable {
     }
 }
 
-// MARK: - Refresh Response
-
-/// Response from the token refresh endpoint.
-private struct RefreshResponse: Decodable {
-    let accessToken: String
-    let refreshToken: String
-
-    enum CodingKeys: String, CodingKey {
-        case accessToken
-        case refreshToken
-    }
-}
-
 // MARK: - User Tracking Delegate
 
 /// Protocol allowing the auth layer to report user identity changes
@@ -165,7 +152,12 @@ public final class AuthManager {
                 return
             }
 
-            // Auth error (401, 403, etc.): token is truly invalid, try refresh
+            // Auth error (401, 403, etc.): token is truly invalid, try refresh.
+            // `refreshToken()` owns the token-clear decision:
+            //   - definitive failure (401/403 from refresh) → clears tokens, returns false
+            //   - transient failure (429/5xx/network) → keeps tokens, returns false
+            // We must NOT call clearTokens() here — doing so would kill the session on a
+            // transient failure such as a 429 rate-limit on the refresh endpoint.
             let refreshed = try? await refreshToken()
             if refreshed == true {
                 // Retry fetching user after refresh
@@ -179,7 +171,9 @@ public final class AuthManager {
                     authState = .unauthenticated
                 }
             } else {
-                clearTokens()
+                // Refresh failed. If tokens were cleared (definitive failure), authState
+                // becomes unauthenticated. If tokens are intact (transient failure), leave
+                // them in the keychain — the next cold launch or reconnect will retry.
                 authState = .unauthenticated
             }
         }
@@ -359,23 +353,56 @@ public final class AuthManager {
     // MARK: - Token Refresh
 
     /// Attempt to refresh the access token using the stored refresh token.
-    /// - Returns: `true` if the refresh succeeded, `false` otherwise.
+    ///
+    /// Routes through `APIClient.attemptRefreshThrowing()` so this call shares the
+    /// same `refreshTask` coalescing guard as APIClient's internal 401-retry path.
+    /// Concurrent callers (e.g., `checkAuth` racing with a 401 retry) produce only
+    /// one HTTP round-trip to the single-use refresh endpoint.
+    ///
+    /// Token storage is handled entirely by `APIClient.executeRefresh()`, so this
+    /// method does NOT call `storeTokens` — doing so would double-write to the
+    /// keychain and race with the already-stored new refresh token.
+    ///
+    /// Session-clear policy:
+    /// - `APIError.unauthorized` (401) or `serverError(403, _)` from `/auth/refresh`
+    ///   → definitive auth failure → clear tokens and end the session.
+    /// - `serverError(429, _)`, `serverError(5xx, _)`, `networkError`, or any other
+    ///   transient error → keep tokens intact; return `false` so the caller knows
+    ///   the refresh didn't succeed but can retry when conditions improve.
+    ///
+    /// - Returns: `true` if the refresh succeeded (new tokens are in the keychain),
+    ///   `false` for transient failures. Clears tokens and returns `false` on
+    ///   definitive auth failure.
     @discardableResult
     public func refreshToken() async throws -> Bool {
-        guard let refreshTokenValue = keychain.readString(for: KeychainHelper.Keys.refreshToken),
-              !refreshTokenValue.isEmpty else {
+        guard keychain.readString(for: KeychainHelper.Keys.refreshToken) != nil else {
+            // No refresh token stored — end the session immediately.
+            clearTokens()
             return false
         }
 
         guard let client = apiClient else { return false }
 
-        let body = ["refresh_token": refreshTokenValue]
         do {
-            let response: RefreshResponse = try await client.post(Endpoint.refresh, body: body)
-            storeTokens(access: response.accessToken, refresh: response.refreshToken)
-            return true
+            return try await client.attemptRefreshThrowing()
+        } catch let apiError as APIError {
+            switch apiError {
+            case .unauthorized:
+                // 401 from /auth/refresh → the refresh token was rejected (expired,
+                // revoked, or family-revoked by a reuse attempt). Session is dead.
+                clearTokens()
+                return false
+            case .serverError(let statusCode, _) where statusCode == 403:
+                // 403 from /auth/refresh → access definitively denied.
+                clearTokens()
+                return false
+            default:
+                // 429, 5xx, network error, etc. — transient. Keep tokens alive
+                // so the user is not signed out by a momentary server hiccup.
+                return false
+            }
         } catch {
-            clearTokens()
+            // Unknown non-APIError (e.g., encoding failure) — treat as transient.
             return false
         }
     }
