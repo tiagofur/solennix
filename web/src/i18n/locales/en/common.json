@@ -240,6 +240,7 @@
     "note": "Note",
     "balance": "Balance",
     "amount_required": "Amount required",
+    "amount_min_error": "Amount must be greater than 0.",
     "reference_placeholder": "Payment ref...",
     "methods": {
       "cash": "Cash 💵",
