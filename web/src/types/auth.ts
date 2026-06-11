@@ -8,7 +8,6 @@ export interface User {
   show_business_name_in_pdf?: boolean;
   plan: string;
   role?: string;
-  stripe_customer_id?: string;
   default_deposit_percent?: number;
   default_cancellation_days?: number;
   default_refund_percent?: number;

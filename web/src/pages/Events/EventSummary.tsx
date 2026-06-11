@@ -67,9 +67,8 @@ import { aggregateIngredients } from "./lib/aggregateIngredients";
 // API response types — backend returns `client` (singular)
 type EventWithClient = Event & { client?: Client | null };
 
-// Matches UserProfile in pdfGenerator (User + optional billing/template fields)
+// Matches UserProfile in pdfGenerator (User + optional template fields)
 type UserProfile = User & {
-  stripe_customer_id?: string | null;
   contract_template?: string | null;
 };
 

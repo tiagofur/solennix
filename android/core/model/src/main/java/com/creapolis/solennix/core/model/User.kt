@@ -28,7 +28,6 @@ data class User(
     @SerialName("push_event_reminder") val pushEventReminder: Boolean? = null,
     @SerialName("push_payment_received") val pushPaymentReceived: Boolean? = null,
     val plan: Plan = Plan.BASIC,
-    @SerialName("stripe_customer_id") val stripeCustomerId: String? = null,
     @SerialName("created_at") val createdAt: String = "",
     @SerialName("updated_at") val updatedAt: String = ""
 )
