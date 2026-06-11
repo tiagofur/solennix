@@ -1315,9 +1315,6 @@ export interface components {
             plan: "basic" | "pro" | "business" | "premium";
             /** @enum {string} */
             role: "user" | "admin";
-            stripe_customer_id?: string | null;
-            google_user_id?: string | null;
-            apple_user_id?: string | null;
             /** Format: date-time */
             plan_expires_at?: string | null;
             /** Format: date-time */
@@ -1353,10 +1350,11 @@ export interface components {
         };
         ResetPasswordRequest: {
             token: string;
-            password: string;
+            new_password: string;
         };
         ChangePasswordRequest: {
             current_password: string;
+            new_password: string;
         };
         GoogleSignInRequest: {
             id_token: string;
@@ -1716,11 +1714,41 @@ export interface components {
             /** Format: double */
             suggested_quantity: number;
         };
+        EventStaff: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            event_id: string;
+            /** Format: uuid */
+            staff_id: string;
+            /** Format: uuid */
+            offer_group_id?: string | null;
+            offer_slots?: number | null;
+            /** Format: double */
+            fee_amount?: number | null;
+            role_override?: string | null;
+            notes?: string | null;
+            /** Format: date-time */
+            shift_start?: string | null;
+            /** Format: date-time */
+            shift_end?: string | null;
+            status?: string | null;
+            /** Format: date-time */
+            notification_sent_at?: string | null;
+            notification_last_result?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            staff_name?: string | null;
+            staff_role_label?: string | null;
+            staff_phone?: string | null;
+            staff_email?: string | null;
+        };
         EventItemsUpdateRequest: {
             products: components["schemas"]["EventProduct"][];
             extras: components["schemas"]["EventExtra"][];
             equipment?: components["schemas"]["EventEquipment"][];
             supplies?: components["schemas"]["EventSupply"][];
+            staff?: components["schemas"]["EventStaff"][];
         };
         Payment: {
             /** Format: uuid */
@@ -1813,6 +1841,10 @@ export interface components {
         UnavailableDateCreateRequest: {
             start_date: string;
             end_date: string;
+            /** @description Optional time in HH:mm format. If provided together with end_time, the blocked period is scoped to a specific window within the day(s). */
+            start_time?: string | null;
+            /** @description Optional time in HH:mm format. Must be provided together with start_time. */
+            end_time?: string | null;
             reason?: string;
         };
         DeviceToken: {
@@ -1904,6 +1936,26 @@ export interface components {
             total_clients: number;
             /** Format: double */
             average_event_value: number;
+            /**
+             * Format: double
+             * @description Sum of event total_amount for confirmed/completed events with event_date in the current calendar month.
+             */
+            net_sales_this_month: number;
+            /**
+             * Format: double
+             * @description Sum of payments with payment_date in the current calendar month.
+             */
+            cash_collected_this_month: number;
+            /**
+             * Format: double
+             * @description VAT prorated by paid ratio for confirmed/completed events this month.
+             */
+            vat_collected_this_month: number;
+            /**
+             * Format: double
+             * @description Remaining VAT not yet collected for confirmed/completed events this month.
+             */
+            vat_outstanding_this_month: number;
         };
         RevenueDataPoint: {
             month: string;

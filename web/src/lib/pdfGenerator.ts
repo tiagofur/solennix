@@ -13,7 +13,6 @@ type EventWithClient = Event & {
   client?: Client | null;
 };
 type UserProfile = User & {
-  stripe_customer_id?: string | null;
   created_at?: string;
   updated_at?: string;
   contract_template?: string | null;
