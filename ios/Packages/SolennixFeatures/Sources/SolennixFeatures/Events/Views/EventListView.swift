@@ -372,6 +372,8 @@ public struct EventListView: View {
 
         List {
             // Filters + result count scroll inline with the list rows.
+            // insetGrouped adds horizontal insets automatically; negate them so
+            // the chip ScrollView runs full-width as it did in the old plain list.
             Section {
                 VStack(spacing: 0) {
                     filterChips
@@ -383,11 +385,8 @@ public struct EventListView: View {
             }
 
             if viewModel.isLoading && viewModel.events.isEmpty {
-                // Skeleton loading state
-                skeletonCards
-                    .listRowInsets(EdgeInsets())
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
+                // Skeleton loading state — native grouped surface, no manual insets.
+                skeletonRows
             } else if let error = viewModel.errorMessage, filtered.isEmpty, !viewModel.isLoading {
                 EmptyStateView(
                     icon: "wifi.exclamationmark",
@@ -408,80 +407,101 @@ public struct EventListView: View {
                     .listRowBackground(Color.clear)
             } else {
                 ForEach(filtered) { event in
-                    // ListCardRow owns card chrome, insets, separator, background,
-                    // the opacity-0 NavigationLink (chevron-free), and the a11y label.
-                    // Swipe actions and context menu attach outside the card wrapper
-                    // exactly as before.
-                    ListCardRow(
-                        navigationValue: Route.eventDetail(id: event.id),
-                        accessibilityLabel: cardAccessibilityLabel(event)
-                    ) {
+                    // Inline ZStack: row content behind an opacity-0 NavigationLink
+                    // so taps navigate without showing the disclosure chevron.
+                    // All list chrome (background, separator) lives on the row modifier
+                    // — no card shadow/clip/manual insets (matches ClientListView).
+                    ZStack {
                         eventCard(event)
+                        NavigationLink(value: Route.eventDetail(id: event.id)) {
+                            EmptyView()
+                        }
+                        .opacity(0)
                     }
-                        // Edit and Checklist are exposed through the context-menu rotor automatically.
-                        // Only the delete action needs an explicit wired entry here.
-                        .accessibilityAction(named: tr("events.list.actions.delete", "Eliminar")) {
+                    .listRowBackground(SolennixColors.card)
+                    .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+                    .alignmentGuide(.listRowSeparatorLeading) { d in d[.leading] }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(cardAccessibilityLabel(event))
+                    .accessibilityAddTraits(.isButton)
+                    // Edit and Checklist are exposed through the context-menu rotor automatically.
+                    // Only the delete action needs an explicit wired entry here.
+                    .accessibilityAction(named: tr("events.list.actions.delete", "Eliminar")) {
+                        viewModel.deleteTarget = event
+                        viewModel.showDeleteConfirm = true
+                    }
+                    .contextMenu {
+                        NavigationLink(value: Route.eventForm(id: event.id)) {
+                            Label(tr("events.list.actions.edit", "Editar"), systemImage: "pencil")
+                        }
+                        NavigationLink(value: Route.eventChecklist(id: event.id)) {
+                            Label(tr("events.list.actions.checklist", "Checklist"), systemImage: "checklist")
+                        }
+                        Menu {
+                            statusChangeButton(event: event, status: .quoted,    label: tr("events.list.status.quoted", "Cotizado"))
+                            statusChangeButton(event: event, status: .confirmed, label: tr("events.list.status.confirmed", "Confirmado"))
+                            statusChangeButton(event: event, status: .completed, label: tr("events.list.status.completed", "Completado"))
+                            statusChangeButton(event: event, status: .cancelled, label: tr("events.list.status.cancelled", "Cancelado"))
+                        } label: {
+                            Label(tr("events.list.actions.change_status", "Cambiar estado"), systemImage: "arrow.triangle.2.circlepath")
+                        }
+                        Divider()
+                        Button(role: .destructive) {
                             viewModel.deleteTarget = event
                             viewModel.showDeleteConfirm = true
+                        } label: {
+                            Label(tr("events.list.actions.delete", "Eliminar"), systemImage: "trash")
                         }
-                        .contextMenu {
-                            NavigationLink(value: Route.eventForm(id: event.id)) {
-                                Label(tr("events.list.actions.edit", "Editar"), systemImage: "pencil")
-                            }
-                            NavigationLink(value: Route.eventChecklist(id: event.id)) {
-                                Label(tr("events.list.actions.checklist", "Checklist"), systemImage: "checklist")
-                            }
-                            Menu {
-                                statusChangeButton(event: event, status: .quoted,    label: tr("events.list.status.quoted", "Cotizado"))
-                                statusChangeButton(event: event, status: .confirmed, label: tr("events.list.status.confirmed", "Confirmado"))
-                                statusChangeButton(event: event, status: .completed, label: tr("events.list.status.completed", "Completado"))
-                                statusChangeButton(event: event, status: .cancelled, label: tr("events.list.status.cancelled", "Cancelado"))
-                            } label: {
-                                Label(tr("events.list.actions.change_status", "Cambiar estado"), systemImage: "arrow.triangle.2.circlepath")
-                            }
-                            Divider()
-                            Button(role: .destructive) {
-                                viewModel.deleteTarget = event
-                                viewModel.showDeleteConfirm = true
-                            } label: {
-                                Label(tr("events.list.actions.delete", "Eliminar"), systemImage: "trash")
-                            }
+                    }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button(role: .destructive) {
+                            viewModel.deleteTarget = event
+                            viewModel.showDeleteConfirm = true
+                        } label: {
+                            Label(tr("events.list.actions.delete", "Eliminar"), systemImage: "trash")
                         }
-                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                            Button(role: .destructive) {
-                                viewModel.deleteTarget = event
-                                viewModel.showDeleteConfirm = true
-                            } label: {
-                                Label(tr("events.list.actions.delete", "Eliminar"), systemImage: "trash")
-                            }
-                            NavigationLink(value: Route.eventForm(id: event.id)) {
-                                Label(tr("events.list.actions.edit", "Editar"), systemImage: "pencil")
-                            }
-                            .tint(.blue)
+                        NavigationLink(value: Route.eventForm(id: event.id)) {
+                            Label(tr("events.list.actions.edit", "Editar"), systemImage: "pencil")
                         }
-                        .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                            NavigationLink(value: Route.eventChecklist(id: event.id)) {
-                                Label(tr("events.list.actions.checklist", "Checklist"), systemImage: "checklist")
-                            }
-                            .tint(SolennixColors.primary)
+                        .tint(.blue)
+                    }
+                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                        NavigationLink(value: Route.eventChecklist(id: event.id)) {
+                            Label(tr("events.list.actions.checklist", "Checklist"), systemImage: "checklist")
                         }
+                        .tint(SolennixColors.primary)
+                    }
                 }
             }
         }
-        .listStyle(.plain)
+        .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
     }
 
     // MARK: - Skeleton Placeholder
 
+    /// Skeleton rows using insetGrouped surface: listRowBackground card, separator tint,
+    /// no manual insets or shadows — matches ClientSkeletonCard treatment in ClientListView.
+    @ViewBuilder
+    private var skeletonRows: some View {
+        ForEach(0..<5, id: \.self) { _ in
+            EventSkeletonCard()
+                .listRowBackground(SolennixColors.card)
+                .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+        }
+        .accessibilityHidden(true)
+    }
+
+    /// iPad-only skeleton used inside the ScrollView+LazyVGrid path.
+    /// Wraps cards in a vertical stack with manual insets (same as before migration).
     private var skeletonCards: some View {
         LazyVStack(spacing: Spacing.sm) {
             ForEach(0..<5, id: \.self) { _ in
                 EventSkeletonCard()
+                    .padding(.horizontal, Spacing.md)
             }
         }
-        .padding(.horizontal, Spacing.md)
         .padding(.vertical, Spacing.lg)
         .accessibilityHidden(true)
     }
@@ -687,9 +707,6 @@ public struct EventListView: View {
             }
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadowSm()
     }
 
     /// One metadata row: location (if available) + people count, same `.caption` style.
@@ -986,9 +1003,6 @@ struct EventSkeletonCard: View {
             }
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadowSm()
     }
 }
 
