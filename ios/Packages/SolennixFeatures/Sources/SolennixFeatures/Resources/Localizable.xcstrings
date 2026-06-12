@@ -3074,6 +3074,22 @@
         }
       }
     },
+    "clients.empty.cta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add client"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agregar cliente"
+          }
+        }
+      }
+    },
     "clients.empty.message" : {
       "localizations" : {
         "en" : {

@@ -20,6 +20,8 @@ public struct ClientListView: View {
     // TipKit tip
     private let swipeActionTip = SwipeActionTip()
 
+    @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 40
+
     public init(apiClient: APIClient) {
         _viewModel = State(initialValue: ClientListViewModel(apiClient: apiClient))
     }
@@ -130,13 +132,24 @@ public struct ClientListView: View {
                 .tint(SolennixColors.primary)
         } else if viewModel.filteredClients.isEmpty && !viewModel.isLoading {
             if viewModel.searchText.isEmpty {
-                EmptyStateView(
-                    icon: "person.2",
-                    title: tr("clients.empty.title", "Sin clientes"),
-                    message: tr("clients.empty.message", "Agregá tu primer cliente para empezar"),
-                    actionTitle: tr("clients.action.add", "Agregar cliente")
-                ) {
-                    // FAB handles navigation
+                // First-run: real NavigationLink CTA styled like EventListView first-run.
+                VStack(spacing: 0) {
+                    EmptyStateView(
+                        icon: "person.2",
+                        title: tr("clients.empty.title", "Sin clientes"),
+                        message: tr("clients.empty.message", "Agregá tu primer cliente para empezar")
+                    )
+                    NavigationLink(value: Route.clientForm()) {
+                        Text(tr("clients.empty.cta", "Agregar cliente"))
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, Spacing.xl)
+                            .padding(.vertical, 16)
+                            .background(SolennixGradient.premium)
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                            .shadowFab()
+                    }
+                    .padding(.bottom, Spacing.xxl)
                 }
                 .background(SolennixColors.surfaceGrouped)
             } else {
@@ -150,15 +163,31 @@ public struct ClientListView: View {
         }
     }
 
-    /// First-run empty state for the iPhone list — placeholder until WU4 replaces with NavigationLink CTA.
+    /// First-run empty state for the iPhone list with a working NavigationLink CTA.
+    /// Mirrors EventListView's first-run empty state pattern (line 596-619).
     private var clientFirstRunEmptyRow: some View {
-        fullPageEmptyRow(
-            icon: "person.2",
-            title: tr("clients.empty.title", "Sin clientes"),
-            message: tr("clients.empty.message", "Agregá tu primer cliente para empezar"),
-            actionTitle: nil,
-            action: nil
-        )
+        VStack(spacing: 0) {
+            EmptyStateView(
+                icon: "person.2",
+                title: tr("clients.empty.title", "Sin clientes"),
+                message: tr("clients.empty.message", "Agregá tu primer cliente para empezar")
+            )
+            NavigationLink(value: Route.clientForm()) {
+                Text(tr("clients.empty.cta", "Agregar cliente"))
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, Spacing.xl)
+                    .padding(.vertical, 16)
+                    .background(SolennixGradient.premium)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    .shadowFab()
+            }
+            .padding(.bottom, Spacing.xxl)
+        }
+        .frame(maxWidth: .infinity)
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets())
+        .listRowSeparator(.hidden)
     }
 
     private var clientGrid: some View {
@@ -353,29 +382,21 @@ public struct ClientListView: View {
     }
 
     /// Skeleton placeholder rows shown while clients are loading for the first time.
+    /// Mirrors the new clientRow card shape: avatar circle + name bar + caption bars + trailing money bar.
     @ViewBuilder
     private var skeletonRows: some View {
         ForEach(0..<5, id: \.self) { _ in
-            HStack(spacing: Spacing.md) {
-                Circle()
-                    .fill(SolennixColors.surfaceAlt)
-                    .frame(width: 40, height: 40)
-
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    RoundedRectangle(cornerRadius: CornerRadius.sm)
-                        .fill(SolennixColors.surfaceAlt)
-                        .frame(width: 140, height: 14)
-
-                    RoundedRectangle(cornerRadius: CornerRadius.sm)
-                        .fill(SolennixColors.surfaceAlt)
-                        .frame(width: 100, height: 10)
-                }
-
-                Spacer()
-            }
-            .padding(.vertical, Spacing.xs)
+            ClientSkeletonCard()
+                .listRowInsets(EdgeInsets(
+                    top: Spacing.xs,
+                    leading: Spacing.md,
+                    bottom: Spacing.xs,
+                    trailing: Spacing.md
+                ))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
         }
-        .redacted(reason: .placeholder)
+        .accessibilityHidden(true)
     }
 
     /// Renders an `EmptyStateView` as a List row that fills the available space
@@ -549,6 +570,42 @@ public struct ClientListView: View {
         FeatureL10n.format(key, value, arg)
     }
 
+}
+
+// MARK: - Client Skeleton Card
+
+/// Skeleton placeholder matching the new clientRow card shape:
+/// avatar circle + name bar + 2 caption bars + trailing money bar.
+struct ClientSkeletonCard: View {
+    public init() {}
+
+    public var body: some View {
+        HStack(alignment: .top, spacing: Spacing.md) {
+            // Avatar stub
+            Circle()
+                .fill(SolennixColors.surfaceAlt)
+                .frame(width: 40, height: 40)
+
+            // Text column stubs
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                SkeletonLine(width: 160, height: 14) // name — subheadline
+                SkeletonLine(width: 110, height: 12) // city — caption
+                SkeletonLine(width: 90,  height: 12) // phone — caption
+            }
+
+            Spacer(minLength: Spacing.sm)
+
+            // Trailing money stub
+            VStack(alignment: .trailing, spacing: Spacing.xxs) {
+                SkeletonLine(width: 64, height: 14) // totalSpent — subheadline.bold
+                SkeletonLine(width: 48, height: 10) // totalEvents — caption2
+            }
+        }
+        .padding(Spacing.md)
+        .background(SolennixColors.card)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        .shadowSm()
+    }
 }
 
 // MARK: - Preview
