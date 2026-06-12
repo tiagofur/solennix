@@ -80,6 +80,15 @@ platform: Android
 > - Cada cambio abre el detalle Team del evento asignado y marca leído vía backend (`/staff/my-timeline/read`).
 > - El feed se consume desde `/staff/my-timeline` y se mantiene scoped al usuario `team_member`.
 
+> [!success] 2026-06-11 — Android UX parity: correcciones de revisión (branch `feat/android-ux-parity`)
+>
+> - **`HapticFeedback.kt`**: `performHapticFeedback` guarda compatibilidad con min SDK 26 — `HapticFeedbackConstants.CONFIRM`/`REJECT` (API 30+) tienen fallback a `VIRTUAL_KEY`/`LONG_PRESS` en API 26–29.
+> - **`SwipeRevealActions`**: `LaunchedEffect(Unit)` resetea `offsetX` al entrar en composición, evitando que slots reutilizados hereden estado abierto.
+> - **`FeatureDiscoveryTooltip`**: prefs flag se persiste antes de llamar `tooltipState.show()` (no solo en el botón "Got it") — garantiza exactamente un show aunque el usuario toque el anchor en lugar del dismiss.
+> - **`ProductListScreen`**: swipe-delete redirige a `deleteConfirmProduct` state + `AlertDialog` (paridad con Events/Clients). Haptic al iniciar gesto cambiado de `SUCCESS` a `WARNING`.
+> - **`ClientFormScreen` / `InventoryFormScreen`**: se elimina `windowInsetsPadding(safeDrawing.only(Bottom))` redundante junto a `imePadding()` — con `enableEdgeToEdge()` el IME inset ya está en `safeDrawing` en API 30+.
+> - **`EventListScreen`**: `sortedEvents.indexOf(event)` O(n²) reemplazado por `itemsIndexed` / `gridItemsIndexed` (alias para `LazyGridScope`) en ambos branches de `AdaptiveCardGrid`.
+
 > [!success] 2026-05-17 — Team Member Portal Android: H6 disponibilidad del miembro (issue #341)
 >
 > - `TeamMemberPortalScreen` incorpora sección `Mi disponibilidad` con alta/edición/baja de bloqueos.
@@ -446,8 +455,8 @@ Implementa el tema visual de Solennix basado en Material 3:
 - **`SolennixColorScheme`**: Esquema de colores personalizado con soporte para light/dark
 - **Contraste dinámico**: componentes interactivos (FAB, badges seleccionados) usan `MaterialTheme.colorScheme.onPrimary` para evitar hardcodes de blanco en dark mode
 - **Tokens**: `Color.kt`, `Typography.kt`, `Shape.kt`, `Spacing.kt`, `Elevation.kt`, `Gradient.kt`
-- **Componentes reutilizables**: `SolennixTextField`, `Avatar`, `StatusBadge`, `KPICard`, `ConfirmDialog`, `EmptyState`, `PremiumButton`, `SkeletonLoading`, `ToastOverlay`, `UpgradeBanner`, `PaymentModal` (`ModalBottomSheet` reusable de registro de pago, consumido por dashboard y detalle de evento — params `title` y `confirmLabel`)
-- **Utilidades**: `HapticFeedback` para feedback táctil
+- **Componentes reutilizables**: `SolennixTextField`, `Avatar`, `StatusBadge`, `KPICard`, `ConfirmDialog`, `EmptyState`, `PremiumButton`, `SkeletonLoading`, `ToastOverlay`, `UpgradeBanner`, `PaymentModal` (`ModalBottomSheet` reusable de registro de pago, consumido por dashboard y detalle de evento — params `title` y `confirmLabel`), `SwipeRevealActions` (swipe-to-reveal editar/borrar con spring physics), `FeatureDiscoveryTooltip` (M3 `TooltipBox` one-shot via SharedPreferences), `AdaptiveCardGrid` (`LazyVerticalGrid` en tablet, `LazyColumn` en teléfono con lambdas de contenido separadas para `LazyGridScope` / `LazyListScope`)
+- **Utilidades**: `HapticFeedback` para feedback táctil con compatibilidad API 26–35 (`CONFIRM`/`REJECT` guardados detrás de `Build.VERSION_CODES.R`)
 
 **Calibración de contraste (Fase 3 A11y):** `Color.kt` endurece `secondaryText`, `tertiaryText` y `tabBarInactive` en light/dark para mantener legibilidad AA sobre `background`, `surface` y `card`. `EmptyState` también elevó el contraste del ícono base para evitar estados vacíos visualmente lavados.
 
