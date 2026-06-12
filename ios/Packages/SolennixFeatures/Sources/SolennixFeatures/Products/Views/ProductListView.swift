@@ -22,7 +22,8 @@ public struct ProductListView: View {
             .background(SolennixColors.surfaceGrouped)
             .navigationTitle(ProductStrings.title)
             .navigationBarTitleDisplayMode(.large)
-            .searchable(text: $viewModel.searchText, prompt: ProductStrings.searchPrompt)
+            .searchable(text: $viewModel.searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: ProductStrings.searchPrompt)
+            .searchMinimizedIfAvailable()
             .safeAreaInset(edge: .top, spacing: 0) {
                 // Only static banners live in safeAreaInset. The CategoryChips
                 // (a horizontal ScrollView) is placed inside the main list so

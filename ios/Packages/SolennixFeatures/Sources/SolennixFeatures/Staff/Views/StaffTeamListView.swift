@@ -18,7 +18,8 @@ public struct StaffTeamListView: View {
             .background(SolennixColors.surfaceGrouped)
             .navigationTitle(StaffStrings.teamsTitle)
             .navigationBarTitleDisplayMode(.large)
-            .searchable(text: $viewModel.searchText, prompt: StaffStrings.teamsSearchPrompt)
+            .searchable(text: $viewModel.searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: StaffStrings.teamsSearchPrompt)
+            .searchMinimizedIfAvailable()
             .refreshable { await viewModel.load() }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
