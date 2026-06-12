@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -37,6 +38,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.Avatar
+import com.creapolis.solennix.core.designsystem.component.SkeletonLoading
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.UpgradeBanner
 import com.creapolis.solennix.core.designsystem.component.UpgradeBannerStyle
@@ -189,9 +191,7 @@ fun ClientListScreen(
                 }
 
                 if (uiState.isLoading && uiState.clients.isEmpty()) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+                    ClientListSkeleton()
                 } else {
                     AdaptiveCardGrid(
                         gridContent = {
@@ -299,6 +299,60 @@ fun ClientListScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun ClientListSkeleton() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Surface(
+            shape = MaterialTheme.shapes.medium,
+            color = SolennixTheme.colors.card
+        ) {
+            Column {
+                repeat(6) { index ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Avatar placeholder
+                        SkeletonLoading(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(MaterialTheme.shapes.medium)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            SkeletonLoading(
+                                modifier = Modifier
+                                    .height(16.dp)
+                                    .fillMaxWidth(0.5f)
+                                    .clip(MaterialTheme.shapes.small)
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            SkeletonLoading(
+                                modifier = Modifier
+                                    .height(12.dp)
+                                    .fillMaxWidth(0.35f)
+                                    .clip(MaterialTheme.shapes.small)
+                            )
+                        }
+                    }
+                    if (index < 5) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = SolennixTheme.colors.divider.copy(alpha = 0.3f)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
