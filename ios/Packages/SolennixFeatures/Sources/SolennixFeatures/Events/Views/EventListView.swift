@@ -115,6 +115,7 @@ public struct EventListView: View {
                         Image(systemName: "ellipsis.circle")
                             .font(.body)
                             .foregroundStyle(SolennixColors.primary)
+                            .symbolEffect(.bounce, value: viewModel.sortField)
                             .accessibilityLabel(tr("events.list.toolbar.more_actions", "Más acciones"))
                     }
                 }
@@ -227,10 +228,12 @@ public struct EventListView: View {
                     }
                     .accessibilityLabel(
                         isSelected
-                            ? String(format: tr("events.list.chip.selected_label", "%@, %lld eventos, seleccionado"),
-                                     filter.label, filter.count)
-                            : String(format: tr("events.list.chip.label", "%@, %lld eventos"),
-                                     filter.label, filter.count)
+                            ? String.localizedStringWithFormat(
+                                tr("events.list.chip.selected_label", "%@, %lld events, selected"),
+                                filter.label, filter.count)
+                            : String.localizedStringWithFormat(
+                                tr("events.list.chip.label", "%@, %lld events"),
+                                filter.label, filter.count)
                     )
                     .accessibilityAddTraits(isSelected ? [.isSelected] : [])
                 }
@@ -325,9 +328,8 @@ public struct EventListView: View {
     private var resultCount: some View {
         HStack {
             Text(
-                String(
-                    format: tr("events.list.result_count", "%lld eventos"),
-                    locale: FeatureL10n.locale,
+                String.localizedStringWithFormat(
+                    tr("events.list.result_count", "%lld events"),
                     viewModel.filteredEvents.count
                 )
             )
@@ -521,6 +523,12 @@ public struct EventListView: View {
                         eventCard(event)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(cardAccessibilityLabel(event))
+                    .accessibilityAction(named: tr("events.list.actions.delete", "Eliminar")) {
+                        viewModel.deleteTarget = event
+                        viewModel.showDeleteConfirm = true
+                    }
                     .contextMenu {
                         NavigationLink(value: Route.eventForm(id: event.id)) {
                             Label(tr("events.list.actions.edit", "Editar"), systemImage: "pencil")
@@ -709,9 +717,8 @@ public struct EventListView: View {
             }
 
             Label(
-                String(
-                    format: tr("events.list.people_count", "%lld personas"),
-                    locale: FeatureL10n.locale,
+                String.localizedStringWithFormat(
+                    tr("events.list.people_count", "%lld people"),
                     event.numPeople
                 ),
                 systemImage: "person.2"
@@ -725,7 +732,10 @@ public struct EventListView: View {
 
     private func cardAccessibilityLabel(_ event: Event) -> String {
         let parsedDate = Self.parseEventDate(event.eventDate)
+        // relativeDateLabel uses "·" as a visual separator (VoiceOver reads it as "dot").
+        // Replace with ", " so the spoken phrase flows naturally.
         let datePhrase = relativeDateLabel(for: event, parsed: parsedDate)
+            .replacingOccurrences(of: " · ", with: ", ")
         let status = localizedStatus(event.status)
         let client = viewModel.clientName(for: event.clientId)
         let service = event.serviceType
@@ -789,11 +799,19 @@ public struct EventListView: View {
         guard let date = parsed else { return event.eventDate }
 
         let timeStr = formattedTimeComponent(event)
-        let cal = Calendar.current
-        let today = cal.startOfDay(for: Date())
-        let eventDay = cal.startOfDay(for: date)
+        // The parsed date is UTC midnight (apiDateFormatter is UTC-fixed). Extract
+        // year/month/day using a UTC calendar so the day value matches the API string.
+        // Compare against today's local year/month/day so "today"/"tomorrow" resolves
+        // correctly in every timezone. See apiDateFormatter for the full convention.
+        var utcCal = Calendar.current
+        utcCal.timeZone = TimeZone(identifier: "UTC")!
+        let localCal = Calendar.current
+        let eventComponents = utcCal.dateComponents([.year, .month, .day], from: date)
+        let todayComponents = localCal.dateComponents([.year, .month, .day], from: Date())
+        guard let eventDay = utcCal.date(from: eventComponents),
+              let todayDay = utcCal.date(from: todayComponents) else { return event.eventDate }
 
-        let dayDiff = cal.dateComponents([.day], from: today, to: eventDay).day ?? 0
+        let dayDiff = utcCal.dateComponents([.day], from: todayDay, to: eventDay).day ?? 0
 
         switch dayDiff {
         case 0:
@@ -807,11 +825,12 @@ public struct EventListView: View {
                 ? tr("events.list.date.tomorrow", "Mañana")
                 : "\(tr("events.list.date.tomorrow", "Mañana")) · \(timeStr)"
         case 2...7:
-            // In N days — show day count + short date
+            // In N days — show day count + short date.
+            // dayDiff==1 (Mañana) is handled in the case above, so the minimum
+            // here is 2 — "En 1 día" (singular) will never render here.
             let shortDate = formattedShortDate(date)
-            let inDays = String(
-                format: tr("events.list.date.in_days", "En %lld días"),
-                locale: FeatureL10n.locale,
+            let inDays = String.localizedStringWithFormat(
+                tr("events.list.date.in_days", "In %lld days"),
                 dayDiff
             )
             return "\(inDays) · \(shortDate)"
@@ -822,15 +841,22 @@ public struct EventListView: View {
         }
     }
 
-    /// True when event is within 48h, in the future or today, and status is
+    /// True when event is today or tomorrow (dayDiff 0 or 1), and status is
     /// neither completed nor cancelled.
+    /// Uses the same UTC-event / local-today day convention as relativeDateLabel.
     private func isEventUrgent(_ event: Event, parsed: Date?) -> Bool {
         guard let date = parsed,
               event.status != .completed,
               event.status != .cancelled else { return false }
-        let now = Date()
-        let hoursUntil = date.timeIntervalSince(now) / 3600
-        return hoursUntil >= 0 && hoursUntil <= 48
+        var utcCal = Calendar.current
+        utcCal.timeZone = TimeZone(identifier: "UTC")!
+        let localCal = Calendar.current
+        let eventComponents = utcCal.dateComponents([.year, .month, .day], from: date)
+        let todayComponents = localCal.dateComponents([.year, .month, .day], from: Date())
+        guard let eventDay = utcCal.date(from: eventComponents),
+              let todayDay = utcCal.date(from: todayComponents) else { return false }
+        let dayDiff = utcCal.dateComponents([.day], from: todayDay, to: eventDay).day ?? Int.min
+        return dayDiff == 0 || dayDiff == 1
     }
 
     // MARK: - Helpers
@@ -881,9 +907,17 @@ public struct EventListView: View {
         return dateStr
     }
 
+    // Convention: date-only strings from the API ("yyyy-MM-dd") represent wall-clock
+    // dates with no time component. Parsing them without an explicit timezone lets
+    // Foundation default to the local timezone, which shifts the date by one day for
+    // users west of UTC (e.g. CDT/CST). We fix the formatter to UTC so the parsed
+    // Date always lands at midnight UTC, then compare day components using a UTC
+    // Calendar for the event side and the local Calendar for today — this correctly
+    // resolves "today"/"tomorrow" regardless of the device's timezone.
     static let apiDateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
+        f.timeZone = TimeZone(identifier: "UTC")
         return f
     }()
 
