@@ -75,7 +75,6 @@ fun InventoryFormScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(padding)
-                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
                         .imePadding()
                         .verticalScroll(scrollState)
                 ) {

@@ -109,6 +109,8 @@ fun DashboardScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            // isLoading is only true for the cold-start emission (initialValue); the combine
+            // block always emits isLoading=false, so this guard fires at most once per process.
             if (uiState.isLoading && uiState.upcomingEvents.isEmpty() && uiState.pendingEvents.isEmpty()) {
                 DashboardSkeleton()
             } else {

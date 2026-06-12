@@ -18,7 +18,9 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed as gridItemsIndexed
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -223,12 +225,12 @@ fun EventListScreen(
                         else -> AdaptiveCardGrid(
                             contentPadding = PaddingValues(vertical = 8.dp),
                             gridContent = {
-                                items(
+                                gridItemsIndexed(
                                     items = sortedEvents,
-                                    key = { it.id }
-                                ) { event ->
+                                    key = { _, e -> e.id }
+                                ) { index, event ->
                                     AnimatedEventListItem(
-                                        index = sortedEvents.indexOf(event),
+                                        index = index,
                                         event = event,
                                         clientName = uiState.clientMap[event.clientId]?.name,
                                         isUpdatingStatus = uiState.updatingStatusEventId == event.id,
@@ -238,10 +240,10 @@ fun EventListScreen(
                                 }
                             },
                             listContent = {
-                                items(
+                                itemsIndexed(
                                     items = sortedEvents,
-                                    key = { it.id }
-                                ) { event ->
+                                    key = { _, e -> e.id }
+                                ) { index, event ->
                                     SwipeRevealActions(
                                         onEdit = { onEventEdit(event.id) },
                                         onDelete = {
@@ -251,7 +253,7 @@ fun EventListScreen(
                                     ) {
                                         Surface(color = SolennixTheme.colors.background) {
                                             AnimatedEventListItem(
-                                                index = sortedEvents.indexOf(event),
+                                                index = index,
                                                 event = event,
                                                 clientName = uiState.clientMap[event.clientId]?.name,
                                                 isUpdatingStatus = uiState.updatingStatusEventId == event.id,

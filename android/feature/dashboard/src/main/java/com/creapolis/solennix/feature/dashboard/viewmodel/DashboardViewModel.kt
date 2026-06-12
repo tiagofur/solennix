@@ -293,6 +293,9 @@ class DashboardViewModel @Inject constructor(
             // local low-stock list size while it's still in flight so the
             // card isn't empty at first paint.
             lowStockCount = kpis?.lowStockItems ?: data.lowStock.size,
+            // isLoading is hardcoded false here; the skeleton guard in DashboardScreen
+            // relies on the cold-start initialValue (isLoading=true) emitted before
+            // the first combine result arrives. It is a one-shot signal only.
             isLoading = false,
             isRefreshing = isRefreshing,
             // Monetary + count KPIs: single source of truth is the backend.

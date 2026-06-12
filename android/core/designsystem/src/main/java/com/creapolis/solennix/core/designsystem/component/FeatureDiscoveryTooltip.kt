@@ -21,17 +21,15 @@ import com.creapolis.solennix.core.designsystem.R
 private const val TOOLTIP_PREFS = "solennix_tooltips"
 
 /**
- * Wraps [content] with an M3 RichTooltip shown once per [tooltipKey].
+ * Wraps [content] with an M3 RichTooltip shown exactly once per [tooltipKey].
  *
- * The "shown" flag is persisted in SharedPreferences using the same
- * mechanism as OnboardingScreen. After the user dismisses the tooltip
- * (or performs the anchored action) call [onUsed] to mark it as used —
- * the tooltip will not reappear.
+ * The "shown" flag is written to SharedPreferences as soon as the tooltip
+ * is displayed, so it will not re-appear even if the user dismisses it by
+ * tapping the anchored action (e.g. the FAB) instead of the "Got it" button.
  *
  * @param tooltipKey  Stable SharedPreferences key, e.g. "tip_new_event".
  * @param title       Tooltip title string.
  * @param body        Tooltip body string.
- * @param onUsed      Called when the user taps the dismiss action button.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,6 +46,10 @@ fun FeatureDiscoveryTooltip(
 
     LaunchedEffect(alreadyShown) {
         if (!alreadyShown) {
+            // Persist before showing — any dismissal path (button tap or
+            // anchor tap) now guarantees the tooltip won't reappear.
+            prefs.edit().putBoolean(tooltipKey, true).apply()
+            alreadyShown = true
             tooltipState.show()
         }
     }
@@ -59,11 +61,7 @@ fun FeatureDiscoveryTooltip(
                 title = { Text(title) },
                 action = {
                     TextButton(
-                        onClick = {
-                            prefs.edit().putBoolean(tooltipKey, true).apply()
-                            alreadyShown = true
-                            tooltipState.dismiss()
-                        }
+                        onClick = { tooltipState.dismiss() }
                     ) {
                         Text(stringResource(R.string.tooltip_dismiss))
                     }

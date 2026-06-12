@@ -79,6 +79,7 @@ fun ProductListScreen(
     val haptic = LocalHapticFeedback.current
     val hapticFeedback = com.creapolis.solennix.core.designsystem.util.rememberHapticFeedback()
     var rowActionsProduct by remember { mutableStateOf<Product?>(null) }
+    var deleteConfirmProduct by remember { mutableStateOf<Product?>(null) }
 
     LifecycleResumeEffect(viewModel) {
         viewModel.refresh()
@@ -277,8 +278,8 @@ fun ProductListScreen(
                                 SwipeRevealActions(
                                     onEdit = { onEditProduct(product.id) },
                                     onDelete = {
-                                        hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.SUCCESS)
-                                        viewModel.deleteProduct(product.id)
+                                        hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.WARNING)
+                                        deleteConfirmProduct = product
                                     }
                                 ) {
                                     Surface(color = SolennixTheme.colors.card) {
@@ -317,10 +318,32 @@ fun ProductListScreen(
             },
             onDelete = {
                 hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.WARNING)
+                deleteConfirmProduct = product
                 rowActionsProduct = null
-                viewModel.deleteProduct(product.id)
             },
             onDismiss = { rowActionsProduct = null }
+        )
+    }
+
+    deleteConfirmProduct?.let { product ->
+        AlertDialog(
+            onDismissRequest = { deleteConfirmProduct = null },
+            title = { Text(ProductStrings.deleteTitle) },
+            text = { Text(ProductStrings.deleteDescription(product.name)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.SUCCESS)
+                    viewModel.deleteProduct(product.id)
+                    deleteConfirmProduct = null
+                }) {
+                    Text(ProductStrings.deleteConfirm, color = SolennixTheme.colors.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteConfirmProduct = null }) {
+                    Text(ProductStrings.deleteCancel)
+                }
+            }
         )
     }
 }
