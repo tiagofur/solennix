@@ -212,6 +212,7 @@ public struct EventChecklistView: View {
                             .font(.caption2)
                             .fontWeight(.bold)
                             .foregroundStyle(.white)
+                            .symbolEffect(.bounce, value: isChecked)
                     }
                 }
 

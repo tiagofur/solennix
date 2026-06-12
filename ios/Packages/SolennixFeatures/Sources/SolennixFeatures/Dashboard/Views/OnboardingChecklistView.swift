@@ -150,6 +150,7 @@ private struct OnboardingStepRow: View {
                 Image(systemName: "checkmark")
                     .font(.caption.weight(.bold))
                     .foregroundStyle(.white)
+                    .symbolEffect(.bounce, value: step.isCompleted)
             }
 
             VStack(alignment: .leading, spacing: Spacing.xxs) {

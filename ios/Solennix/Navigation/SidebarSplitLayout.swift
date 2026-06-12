@@ -216,6 +216,7 @@ struct SidebarSplitLayout: View {
             HStack(spacing: Spacing.sm) {
                 Image(systemName: section.iconName)
                     .font(.body.weight(isActive ? .semibold : .regular))
+                    .symbolVariant(isActive ? .fill : .none)
                     .frame(width: 20, alignment: .center)
 
                 Text(section.title)

@@ -141,6 +141,7 @@ public struct EventPurchaseChecklistView: View {
                             .font(.caption2)
                             .fontWeight(.bold)
                             .foregroundStyle(.white)
+                            .symbolEffect(.bounce, value: isChecked)
                     }
                 }
 
