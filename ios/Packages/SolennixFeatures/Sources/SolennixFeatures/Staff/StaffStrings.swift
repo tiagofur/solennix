@@ -20,6 +20,7 @@ enum StaffStrings {
     static var membersTitle: String { FeatureL10n.text("staff.shared.members_title", "Miembros") }
     static var deleteAction: String { FeatureL10n.text("staff.shared.delete_action", "Eliminar") }
     static var callAction: String { FeatureL10n.text("staff.shared.call_action", "Llamar") }
+    static var emailAction: String { FeatureL10n.text("staff.shared.email_action", "Email") }
 
     // MARK: - Sort
 
@@ -120,6 +121,10 @@ enum StaffStrings {
 
     static func teamDeleteMessage(_ name: String) -> String {
         FeatureL10n.format("staff.teams.team_delete_message", "Se eliminará el equipo %@. Los colaboradores individuales no se borran.", name)
+    }
+
+    static func teamDeletedToast(_ name: String) -> String {
+        FeatureL10n.format("staff.teams.team_deleted_toast", "Equipo %@ eliminado", name)
     }
 
     // MARK: - Teams Detail

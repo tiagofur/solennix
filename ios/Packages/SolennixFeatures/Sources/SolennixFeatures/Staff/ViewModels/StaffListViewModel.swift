@@ -33,10 +33,20 @@ public final class StaffListViewModel {
     }
     public var isLoading: Bool = false
     public var sortKey: StaffSortKey = .name {
-        didSet { applyFilters() }
+        didSet {
+            // Cancel any in-flight sort reload before spawning a new one to prevent races
+            sortReloadTask?.cancel()
+            currentPage = 1
+            sortReloadTask = Task { await loadStaff() }
+        }
     }
     public var sortAscending: Bool = true {
-        didSet { applyFilters() }
+        didSet {
+            // Cancel any in-flight sort reload before spawning a new one to prevent races
+            sortReloadTask?.cancel()
+            currentPage = 1
+            sortReloadTask = Task { await loadStaff() }
+        }
     }
     public var deleteTarget: Staff?
     public var showDeleteConfirm: Bool = false
@@ -64,6 +74,8 @@ public final class StaffListViewModel {
     // MARK: - Dependencies
 
     private let apiClient: APIClient
+    /// Tracks the most recent sort-triggered reload task so rapid sort changes cancel the previous one.
+    private var sortReloadTask: Task<Void, Never>?
 
     // MARK: - Init
 
@@ -84,6 +96,9 @@ public final class StaffListViewModel {
     public func loadStaff() async {
         isLoading = true
         errorMessage = nil
+        // Full reload always restarts pagination — without this, pull-to-refresh
+        // after paginating re-fetches the CURRENT page and appends duplicates.
+        currentPage = 1
 
         do {
             if isFiltering {
