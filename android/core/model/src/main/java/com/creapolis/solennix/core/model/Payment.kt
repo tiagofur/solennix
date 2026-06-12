@@ -19,6 +19,11 @@ data class Payment(
 data class CreatePaymentRequest(
     @SerialName("event_id") val eventId: String,
     @SerialName("user_id") val userId: String,
+    /**
+     * Payment amount rounded to 2 decimal places (cents precision).
+     * The backend validates that amounts have no sub-cent noise; callers
+     * should use [roundedAmount] or round before constructing this request.
+     */
     val amount: Double,
     @SerialName("payment_date") val paymentDate: String,
     @SerialName("payment_method") val paymentMethod: String,

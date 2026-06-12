@@ -3,6 +3,7 @@ package com.creapolis.solennix.core.data.repository
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import kotlin.math.roundToInt
 import com.creapolis.solennix.core.data.paging.RemotePagingSource
 import com.creapolis.solennix.core.database.dao.PaymentDao
 import com.creapolis.solennix.core.database.entity.asEntity
@@ -77,10 +78,13 @@ class OfflineFirstPaymentRepository @Inject constructor(
     }
 
     override suspend fun createPayment(payment: Payment): Payment {
+        // Round to 2 decimal places to avoid sub-cent floating-point noise that
+        // causes the backend to reject the request with 400.
+        val roundedAmount = (payment.amount * 100).roundToInt() / 100.0
         val request = CreatePaymentRequest(
             eventId = payment.eventId,
             userId = payment.userId,
-            amount = payment.amount,
+            amount = roundedAmount,
             paymentDate = payment.paymentDate,
             paymentMethod = payment.paymentMethod,
             notes = payment.notes
