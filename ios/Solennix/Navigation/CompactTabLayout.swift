@@ -48,13 +48,6 @@ struct CompactTabLayout: View {
         // (WWDC25 pattern). We bind `ios26TabSelection` so same-tab re-tap pops to
         // root and Spotlight deep links can set selectedTab before pushing onto
         // homePath — matching the legacy branch's behavior.
-        //
-        // IMPORTANT: The search tab MUST be declared with `Tab(role: .search)`
-        // WITHOUT a `value:` parameter. Combining `value:` with `role: .search`
-        // suppresses the role silently and causes UIKit to count it as a regular
-        // tab — triggering overflow ("Más" system tab) with 6 tabs. The search tab
-        // declared with role only floats outside the bar and does not count toward
-        // the tab limit. It must also be declared LAST per Apple's Tab builder spec.
         TabView(selection: ios26TabSelection) {
             SwiftUI.Tab(AppTab.home.title, systemImage: AppTab.home.iconName, value: AppTab.home) {
                 homeTabContent
