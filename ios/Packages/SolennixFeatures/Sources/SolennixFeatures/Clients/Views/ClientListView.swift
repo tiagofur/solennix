@@ -402,45 +402,89 @@ public struct ClientListView: View {
 
     // MARK: - Client Row
 
+    /// Card-vocabulary row: Avatar + name (line 1) / pin+city (line 2) / phone (line 3)
+    /// with a trailing anchor showing totalSpent (gold) + totalEvents (caption).
+    /// Email is intentionally removed from the row — it lives in the detail screen.
+    @ViewBuilder
     private func clientRow(_ client: Client) -> some View {
-        HStack(spacing: Spacing.md) {
-            Avatar(name: client.name, photoURL: client.photoUrl, size: 40)
+        let hasSpend = (client.totalSpent ?? 0) > 0
+        let hasEvents = (client.totalEvents ?? 0) > 0
+        let showAnchor = hasSpend || hasEvents
 
-            VStack(alignment: .leading, spacing: Spacing.xs) {
-                Text(client.name)
-                    .font(.body)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(SolennixColors.text)
+        let textColumn = Group {
+            // Line 1: name
+            Text(client.name)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(SolennixColors.text)
+                .lineLimit(2)
 
-                if let city = client.city, !city.isEmpty {
-                    HStack(spacing: Spacing.xs) {
-                        Image(systemName: "mappin")
-                            .font(.caption2)
-                            .foregroundStyle(SolennixColors.textTertiary)
-                        Text(city)
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.textSecondary)
-                    }
-                }
-
-                HStack(spacing: Spacing.sm) {
-                    if !client.phone.isEmpty {
-                        Text(client.phone)
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.textTertiary)
-                    }
-                    if let email = client.email, !email.isEmpty {
-                        Text(email)
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.textTertiary)
-                            .lineLimit(1)
-                    }
-                }
+            // Line 2: pin + city
+            if let city = client.city, !city.isEmpty {
+                Label(city, systemImage: "mappin")
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textSecondary)
+                    .lineLimit(1)
             }
 
-            Spacer()
+            // Line 3: phone only (email intentionally omitted — lives in detail)
+            if !client.phone.isEmpty {
+                Text(client.phone)
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textSecondary)
+                    .lineLimit(1)
+            }
         }
-        .padding(.vertical, Spacing.xs)
+
+        let anchorColumn = VStack(alignment: .trailing, spacing: Spacing.xxs) {
+            if hasSpend {
+                Text(formattedAmount(client.totalSpent ?? 0))
+                    .font(.subheadline)
+                    .fontWeight(.bold)
+                    .foregroundStyle(SolennixColors.primary)
+            }
+            if hasEvents {
+                Text(String.localizedStringWithFormat(
+                    tr("clients.list.events_count", "%lld eventos"),
+                    client.totalEvents ?? 0
+                ))
+                .font(.caption2)
+                .foregroundStyle(SolennixColors.textSecondary)
+            }
+        }
+
+        if dynamicTypeSize >= .accessibility1 {
+            // Large accessibility sizes: stack spend anchor below text column
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                HStack(alignment: .top, spacing: Spacing.md) {
+                    Avatar(name: client.name, photoURL: client.photoUrl, size: 40)
+                    VStack(alignment: .leading, spacing: Spacing.xs) { textColumn }
+                }
+                if showAnchor {
+                    HStack { Spacer(); anchorColumn }
+                }
+            }
+            .padding(Spacing.md)
+            .background(SolennixColors.card)
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+            .shadowSm()
+        } else {
+            // Standard layout: trailing anchor aligned top-right
+            HStack(alignment: .top, spacing: Spacing.md) {
+                Avatar(name: client.name, photoURL: client.photoUrl, size: 40)
+                VStack(alignment: .leading, spacing: Spacing.xs) { textColumn }
+                if showAnchor {
+                    Spacer(minLength: Spacing.sm)
+                    anchorColumn
+                } else {
+                    Spacer()
+                }
+            }
+            .padding(Spacing.md)
+            .background(SolennixColors.card)
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+            .shadowSm()
+        }
     }
 
     // MARK: - Accessibility
