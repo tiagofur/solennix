@@ -397,54 +397,66 @@ public struct EventListView: View {
                     .listRowBackground(Color.clear)
             } else {
                 ForEach(filtered) { event in
-                    NavigationLink(value: Route.eventDetail(id: event.id)) {
-                        eventCard(event)
-                    }
-                    .buttonStyle(.plain)
-                    .listRowInsets(EdgeInsets(top: Spacing.xs, leading: Spacing.md, bottom: Spacing.xs, trailing: Spacing.md))
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
-                    .contextMenu {
-                        NavigationLink(value: Route.eventForm(id: event.id)) {
-                            Label(tr("events.list.actions.edit", "Editar"), systemImage: "pencil")
+                    // The visible NavigationLink renders a trailing disclosure
+                    // chevron inside a List and steals trailing space. Instead
+                    // we layer an opacity-0 link over the fully tappable card so
+                    // navigation works without the chevron. The card itself
+                    // carries the accessible label/value, so the hidden link is
+                    // marked .accessibilityHidden to avoid a duplicate element.
+                    eventCard(event)
+                        .overlay {
+                            NavigationLink(value: Route.eventDetail(id: event.id)) {
+                                EmptyView()
+                            }
+                            .opacity(0)
+                            .accessibilityHidden(true)
                         }
-                        NavigationLink(value: Route.eventChecklist(id: event.id)) {
-                            Label(tr("events.list.actions.checklist", "Checklist"), systemImage: "checklist")
+                        .accessibilityElement(children: .combine)
+                        .accessibilityAddTraits(.isButton)
+                        .listRowInsets(EdgeInsets(top: Spacing.xs, leading: Spacing.md, bottom: Spacing.xs, trailing: Spacing.md))
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                        .contextMenu {
+                            NavigationLink(value: Route.eventForm(id: event.id)) {
+                                Label(tr("events.list.actions.edit", "Editar"), systemImage: "pencil")
+                            }
+                            NavigationLink(value: Route.eventChecklist(id: event.id)) {
+                                Label(tr("events.list.actions.checklist", "Checklist"), systemImage: "checklist")
+                            }
+                            Menu {
+                                statusChangeButton(event: event, status: .quoted,    label: tr("events.list.status.quoted", "Cotizado"))
+                                statusChangeButton(event: event, status: .confirmed, label: tr("events.list.status.confirmed", "Confirmado"))
+                                statusChangeButton(event: event, status: .completed, label: tr("events.list.status.completed", "Completado"))
+                                statusChangeButton(event: event, status: .cancelled, label: tr("events.list.status.cancelled", "Cancelado"))
+                            } label: {
+                                Label(tr("events.list.actions.change_status", "Cambiar estado"), systemImage: "arrow.triangle.2.circlepath")
+                            }
+                            Divider()
+                            Button(role: .destructive) {
+                                viewModel.deleteTarget = event
+                                viewModel.showDeleteConfirm = true
+                            } label: {
+                                Label(tr("events.list.actions.delete", "Eliminar"), systemImage: "trash")
+                            }
                         }
-                        Menu {
-                            statusChangeButton(event: event, status: .quoted,    label: tr("events.list.status.quoted", "Cotizado"))
-                            statusChangeButton(event: event, status: .confirmed, label: tr("events.list.status.confirmed", "Confirmado"))
-                            statusChangeButton(event: event, status: .completed, label: tr("events.list.status.completed", "Completado"))
-                            statusChangeButton(event: event, status: .cancelled, label: tr("events.list.status.cancelled", "Cancelado"))
-                        } label: {
-                            Label(tr("events.list.actions.change_status", "Cambiar estado"), systemImage: "arrow.triangle.2.circlepath")
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                viewModel.deleteTarget = event
+                                viewModel.showDeleteConfirm = true
+                            } label: {
+                                Label(tr("events.list.actions.delete", "Eliminar"), systemImage: "trash")
+                            }
+                            NavigationLink(value: Route.eventForm(id: event.id)) {
+                                Label(tr("events.list.actions.edit", "Editar"), systemImage: "pencil")
+                            }
+                            .tint(.blue)
                         }
-                        Divider()
-                        Button(role: .destructive) {
-                            viewModel.deleteTarget = event
-                            viewModel.showDeleteConfirm = true
-                        } label: {
-                            Label(tr("events.list.actions.delete", "Eliminar"), systemImage: "trash")
+                        .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                            NavigationLink(value: Route.eventChecklist(id: event.id)) {
+                                Label(tr("events.list.actions.checklist", "Checklist"), systemImage: "checklist")
+                            }
+                            .tint(SolennixColors.primary)
                         }
-                    }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) {
-                            viewModel.deleteTarget = event
-                            viewModel.showDeleteConfirm = true
-                        } label: {
-                            Label(tr("events.list.actions.delete", "Eliminar"), systemImage: "trash")
-                        }
-                        NavigationLink(value: Route.eventForm(id: event.id)) {
-                            Label(tr("events.list.actions.edit", "Editar"), systemImage: "pencil")
-                        }
-                        .tint(.blue)
-                    }
-                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                        NavigationLink(value: Route.eventChecklist(id: event.id)) {
-                            Label(tr("events.list.actions.checklist", "Checklist"), systemImage: "checklist")
-                        }
-                        .tint(SolennixColors.primary)
-                    }
                 }
             }
         }
