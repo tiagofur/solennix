@@ -1,6 +1,10 @@
 import SwiftUI
 
-/// User/client avatar with photo or colored initials fallback.
+/// User/client avatar with photo or brand-tonal initials fallback.
+///
+/// The initials treatment is consistent app-wide:
+/// - Background: `SolennixColors.avatarBackground` (navy chip in dark, warm neutral in light)
+/// - Initials: `SolennixColors.avatarInitials` (gold, ≥4.5:1 contrast on both backgrounds)
 public struct Avatar: View {
     let name: String
     var photoURL: String? = nil
@@ -40,12 +44,12 @@ public struct Avatar: View {
 
     private var initialsView: some View {
         Circle()
-            .fill(avatarColor)
+            .fill(SolennixColors.avatarBackground)
             .frame(width: size, height: size)
             .overlay(
                 Text(initials)
                     .font(.system(size: size * 0.38, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(SolennixColors.avatarInitials)
             )
     }
 
@@ -70,12 +74,6 @@ public struct Avatar: View {
             return URL(string: path)
         }
         return URL(string: path, relativeTo: apiBaseURL)
-    }
-
-    private var avatarColor: Color {
-        let hash = abs(name.hashValue)
-        let index = hash % SolennixColors.avatarColors.count
-        return SolennixColors.avatarColors[index]
     }
 }
 

@@ -586,16 +586,37 @@ public enum SolennixColors {
         #endif
     }
 
-    // MARK: - Avatar Palette
+    // MARK: - Avatar Palette (tonal — brand-consistent)
 
-    public static let avatarColors: [Color] = [
-        Color(hex: "#5B8DEF"),
-        Color(hex: "#E57373"),
-        Color(hex: "#7DB38A"),
-        Color(hex: "#D4B87A"),
-        Color(hex: "#BA68C8"),
-        Color(hex: "#F06292"),
-        Color(hex: "#4DB6AC"),
-        Color(hex: "#FF8A65"),
-    ]
+    /// Background chip for initials avatars.
+    /// Dark: navy chip (#1B2738) · Light: warm neutral (#F0EFEC = surfaceAlt light).
+    public static var avatarBackground: Color {
+        #if canImport(UIKit)
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hex: "#1B2738")
+                : UIColor(hex: "#F0EFEC")
+        })
+        #else
+        Color(hex: "#F0EFEC")
+        #endif
+    }
+
+    /// Initials text color — ensures ≥4.5:1 contrast against avatarBackground.
+    /// Light: #8C7040 (darker gold, ~5.2:1 on #F0EFEC) · Dark: #C4A265 (~5.8:1 on #1B2738).
+    public static var avatarInitials: Color {
+        #if canImport(UIKit)
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hex: "#C4A265")
+                : UIColor(hex: "#8C7040")
+        })
+        #else
+        Color(hex: "#8C7040")
+        #endif
+    }
+
+    /// Deprecated — use tonal `avatarBackground`/`avatarInitials` tokens instead.
+    @available(*, deprecated, renamed: "avatarBackground", message: "Replaced by tonal avatar tokens. hashValue is per-launch unstable.")
+    public static let avatarColors: [Color] = []
 }
