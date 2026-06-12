@@ -94,6 +94,7 @@ fun ClientListScreen(
     var rowActionsClient by remember { mutableStateOf<Client?>(null) }
     var deleteConfirmClient by remember { mutableStateOf<Client?>(null) }
     val haptic = LocalHapticFeedback.current
+    val hapticFeedback = com.creapolis.solennix.core.designsystem.util.rememberHapticFeedback()
 
     LifecycleResumeEffect(viewModel) {
         viewModel.refresh()
@@ -180,7 +181,10 @@ fun ClientListScreen(
                     ClientSortOption.entries.forEach { option ->
                         FilterChip(
                             selected = uiState.sortOption == option,
-                            onClick = { viewModel.onSortOptionChange(option) },
+                            onClick = {
+                                hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.SELECTION_CHANGED)
+                                viewModel.onSortOptionChange(option)
+                            },
                             label = { Text(stringResource(option.labelRes)) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = SolennixTheme.colors.primaryLight,
@@ -260,6 +264,7 @@ fun ClientListScreen(
                 }
             },
             onDelete = {
+                hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.WARNING)
                 rowActionsClient = null
                 deleteConfirmClient = client
             },
@@ -274,6 +279,7 @@ fun ClientListScreen(
             text = { Text(stringResource(R.string.clients_delete_message)) },
             confirmButton = {
                 TextButton(onClick = {
+                    hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.SUCCESS)
                     viewModel.deleteClient(client.id)
                     deleteConfirmClient = null
                 }) {

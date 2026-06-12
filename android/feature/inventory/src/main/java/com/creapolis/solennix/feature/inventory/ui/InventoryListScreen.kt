@@ -64,6 +64,7 @@ fun InventoryListScreen(
     var adjustmentInput by remember { mutableStateOf("") }
     val snackbarHostState = remember { SnackbarHostState() }
     val haptic = LocalHapticFeedback.current
+    val hapticFeedback = com.creapolis.solennix.core.designsystem.util.rememberHapticFeedback()
     var rowActionsInventoryItem by remember { mutableStateOf<InventoryItem?>(null) }
 
     LifecycleResumeEffect(viewModel) {
@@ -238,7 +239,10 @@ fun InventoryListScreen(
                         val isSelected = uiState.sortKey == key
                         FilterChip(
                             selected = isSelected,
-                            onClick = { viewModel.onSortChange(key) },
+                            onClick = {
+                                hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.SELECTION_CHANGED)
+                                viewModel.onSortChange(key)
+                            },
                             label = { Text(label) },
                             trailingIcon = if (isSelected) {
                                 {
@@ -388,6 +392,7 @@ fun InventoryListScreen(
                 onEditItem(item.id)
             },
             onDelete = {
+                hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.WARNING)
                 rowActionsInventoryItem = null
                 viewModel.deleteItem(item.id)
             },

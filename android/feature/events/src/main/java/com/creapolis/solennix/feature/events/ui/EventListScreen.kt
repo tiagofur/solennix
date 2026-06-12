@@ -108,6 +108,7 @@ fun EventListScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val hapticFeedback = com.creapolis.solennix.core.designsystem.util.rememberHapticFeedback()
     val retryLabel = stringResource(R.string.events_list_retry)
     val exportCsvSubject = stringResource(R.string.events_list_export_csv_subject)
     val exportCsvChooser = stringResource(R.string.events_list_export_csv_chooser)
@@ -263,6 +264,7 @@ fun EventListScreen(
             activeField = uiState.sortField,
             ascending = uiState.sortAscending,
             onPick = { field ->
+                hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.SELECTION_CHANGED)
                 viewModel.applySort(field)
                 showSortSheet = false
             },
@@ -284,6 +286,7 @@ fun EventListScreen(
                 rowActionsEvent = null
             },
             onDelete = {
+                hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.WARNING)
                 deleteConfirmEvent = event
                 rowActionsEvent = null
             },
@@ -315,6 +318,7 @@ fun EventListScreen(
             },
             confirmButton = {
                 TextButton(onClick = {
+                    hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.SUCCESS)
                     val removed = viewModel.softDeleteEvent(event)
                     deleteConfirmEvent = null
                     if (removed != null) {

@@ -76,6 +76,7 @@ fun ProductListScreen(
     var showLimitDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val haptic = LocalHapticFeedback.current
+    val hapticFeedback = com.creapolis.solennix.core.designsystem.util.rememberHapticFeedback()
     var rowActionsProduct by remember { mutableStateOf<Product?>(null) }
 
     LifecycleResumeEffect(viewModel) {
@@ -190,7 +191,10 @@ fun ProductListScreen(
                         val isSelected = uiState.sortKey == key
                         FilterChip(
                             selected = isSelected,
-                            onClick = { viewModel.onSortChange(key) },
+                            onClick = {
+                                hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.SELECTION_CHANGED)
+                                viewModel.onSortChange(key)
+                            },
                             label = { Text(label) },
                             trailingIcon = if (isSelected) {
                                 {
@@ -262,7 +266,10 @@ fun ProductListScreen(
                             items(uiState.products, key = { it.id }) { product ->
                                 SwipeRevealActions(
                                     onEdit = { onEditProduct(product.id) },
-                                    onDelete = { viewModel.deleteProduct(product.id) }
+                                    onDelete = {
+                                        hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.SUCCESS)
+                                        viewModel.deleteProduct(product.id)
+                                    }
                                 ) {
                                     Surface(color = SolennixTheme.colors.card) {
                                         ProductListItem(
@@ -299,6 +306,7 @@ fun ProductListScreen(
                 onEditProduct(product.id)
             },
             onDelete = {
+                hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.WARNING)
                 rowActionsProduct = null
                 viewModel.deleteProduct(product.id)
             },
