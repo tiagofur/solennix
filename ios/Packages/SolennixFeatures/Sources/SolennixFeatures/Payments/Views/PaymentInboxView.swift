@@ -178,7 +178,8 @@ public struct PaymentInboxView: View {
                             },
                             onReject: {
                                 selectedSubmission = nil
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                Task { @MainActor in
+                                    try? await Task.sleep(for: .milliseconds(200))
                                     rejectTarget = submission
                                     rejectionReason = ""
                                     showRejectSheet = true

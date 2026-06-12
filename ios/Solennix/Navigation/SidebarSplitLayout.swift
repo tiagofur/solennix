@@ -75,7 +75,8 @@ struct SidebarSplitLayout: View {
         .onChange(of: pendingSpotlightRoute) { _, newRoute in
             guard let route = newRoute else { return }
             contentPath = NavigationPath()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(100))
                 contentPath.append(route)
             }
             pendingSpotlightRoute = nil

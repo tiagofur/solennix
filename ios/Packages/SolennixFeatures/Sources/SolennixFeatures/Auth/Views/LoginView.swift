@@ -57,11 +57,11 @@ public struct LoginView: View {
     // MARK: - iPad Layout
 
     private var iPadLayout: some View {
+        GeometryReader { proxy in
         HStack(spacing: 0) {
             // Left brand panel (40%)
             brandPanel
-                .frame(maxWidth: .infinity)
-                .frame(width: UIScreen.main.bounds.width * 0.4)
+                .frame(width: proxy.size.width * 0.4)
 
             // Right form panel (60%)
             ScrollView {
@@ -91,6 +91,7 @@ public struct LoginView: View {
                 .frame(maxWidth: .infinity)
             }
             .scrollDismissesKeyboard(.interactively)
+        }
         }
     }
 
