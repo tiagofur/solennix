@@ -164,8 +164,7 @@ public struct ReviewsView: View {
                 visibilityButton(
                     title: tr("reviews.organizer.visibility.private", "Privada"),
                     selected: review.visibility == .private,
-                    disabled: viewModel.updatingVisibilityId == review.id,
-                    review: review
+                    disabled: viewModel.updatingVisibilityId == review.id
                 ) {
                     Task {
                         await viewModel.updateVisibility(reviewId: review.id, visibility: .private)
@@ -177,8 +176,7 @@ public struct ReviewsView: View {
                 visibilityButton(
                     title: tr("reviews.organizer.visibility.public", "Pública"),
                     selected: review.visibility == .public,
-                    disabled: viewModel.updatingVisibilityId == review.id,
-                    review: review
+                    disabled: viewModel.updatingVisibilityId == review.id
                 ) {
                     Task {
                         await viewModel.updateVisibility(reviewId: review.id, visibility: .public)
@@ -261,7 +259,6 @@ public struct ReviewsView: View {
         title: String,
         selected: Bool,
         disabled: Bool,
-        review: EventReview,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
