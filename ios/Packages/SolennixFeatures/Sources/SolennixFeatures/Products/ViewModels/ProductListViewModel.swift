@@ -66,20 +66,6 @@ public final class ProductListViewModel {
         return Array(cats).sorted()
     }
 
-    /// Check if basic plan limit reached (20 products)
-    public var isAtLimit: Bool {
-        products.count >= 20
-    }
-
-    /// Check if approaching limit (15+ products)
-    public var isApproachingLimit: Bool {
-        products.count >= 15 && products.count < 20
-    }
-
-    public var remainingProducts: Int {
-        max(0, 20 - products.count)
-    }
-
     /// Whether the current data was loaded from cache (not fresh from API).
     public var isShowingCachedData: Bool = false
 

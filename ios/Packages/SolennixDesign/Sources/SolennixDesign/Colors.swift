@@ -108,6 +108,20 @@ public enum SolennixColors {
         #endif
     }
 
+    /// Navy anchor — `#1B2A4A`. Use for swipe-edit actions and other brand-navy UI
+    /// that must be visually distinct from the destructive red and the gold primary.
+    public static var accent: Color {
+        #if canImport(UIKit)
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hex: "#2D4A7A")
+                : UIColor(hex: "#1B2A4A")
+        })
+        #else
+        Color(hex: "#1B2A4A")
+        #endif
+    }
+
     public static var secondary: Color {
         #if canImport(UIKit)
         Color(uiColor: UIColor { traits in

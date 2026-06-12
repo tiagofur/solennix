@@ -311,7 +311,8 @@ public struct ClientListView: View {
                         NavigationLink(value: Route.clientForm(id: client.id)) {
                             Label(tr("clients.action.edit", "Editar"), systemImage: "pencil")
                         }
-                        .tint(.blue)
+                        // Fix 13: navy accent instead of blue — differentiates edit from destructive red
+                        .tint(SolennixColors.accent)
                     }
                     .swipeActions(edge: .leading, allowsFullSwipe: true) {
                         if let email = client.email, !email.isEmpty,

@@ -1,8 +1,6 @@
 import Foundation
 
 enum ProductStrings {
-    private static var isEnglish: Bool { FeatureL10n.languageCode == "en" }
-
     static var title: String { FeatureL10n.text("products.title", "Productos") }
     static var searchPrompt: String { FeatureL10n.text("products.search_prompt", "Buscar productos") }
     static var addProductAccessibility: String { FeatureL10n.text("products.add_product_accessibility", "Agregar producto") }

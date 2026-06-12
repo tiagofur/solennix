@@ -463,7 +463,8 @@ public struct EventListView: View {
                         NavigationLink(value: Route.eventForm(id: event.id)) {
                             Label(tr("events.list.actions.edit", "Editar"), systemImage: "pencil")
                         }
-                        .tint(.blue)
+                        // Fix 13: navy accent instead of blue — differentiates edit from destructive red
+                        .tint(SolennixColors.accent)
                     }
                     .swipeActions(edge: .leading, allowsFullSwipe: false) {
                         NavigationLink(value: Route.eventChecklist(id: event.id)) {
