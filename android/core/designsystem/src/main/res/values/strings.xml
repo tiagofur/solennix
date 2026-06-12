@@ -49,4 +49,11 @@
     <string name="common_retry">Reintentar</string>
     <string name="common_undo">Deshacer</string>
 
+    <!-- Feature discovery tooltips -->
+    <string name="tooltip_new_event_title">Crea tu primer evento</string>
+    <string name="tooltip_new_event_body">Organizá bodas, quinceañeras y más desde aquí.</string>
+    <string name="tooltip_quick_quote_title">Cotización rápida</string>
+    <string name="tooltip_quick_quote_body">Generá un presupuesto al instante, sin crear un evento.</string>
+    <string name="tooltip_dismiss">Entendido</string>
+
 </resources>
