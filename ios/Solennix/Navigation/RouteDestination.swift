@@ -11,6 +11,7 @@ struct RouteDestination: View {
     let route: Route
     @Environment(\.apiClient) private var apiClient
     @Environment(AuthManager.self) private var authManager
+    @Environment(SubscriptionManager.self) private var subscriptionManager
 
     var body: some View {
         switch route {
@@ -104,7 +105,7 @@ struct RouteDestination: View {
         case .search(let query):
             SearchView(initialQuery: query)
         case .settings:
-            SettingsView(apiClient: apiClient, authManager: authManager)
+            SettingsView(apiClient: apiClient, authManager: authManager, subscriptionManager: subscriptionManager)
 
         // Settings
         case .editProfile:

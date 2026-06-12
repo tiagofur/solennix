@@ -81,15 +81,21 @@ fun QuickActionsFAB(
                             color = SolennixTheme.colors.primaryText
                         )
                     }
-                    SmallFloatingActionButton(
-                        onClick = {
-                            expanded = false
-                            onQuickQuoteClick()
-                        },
-                        containerColor = SolennixTheme.colors.primary,
-                        contentColor = Color.White
+                    FeatureDiscoveryTooltip(
+                        tooltipKey = "tip_quick_quote",
+                        title = stringResource(R.string.tooltip_quick_quote_title),
+                        body = stringResource(R.string.tooltip_quick_quote_body)
                     ) {
-                        Icon(Icons.Default.Bolt, contentDescription = stringResource(R.string.quick_actions_quote))
+                        SmallFloatingActionButton(
+                            onClick = {
+                                expanded = false
+                                onQuickQuoteClick()
+                            },
+                            containerColor = SolennixTheme.colors.primary,
+                            contentColor = Color.White
+                        ) {
+                            Icon(Icons.Default.Bolt, contentDescription = stringResource(R.string.quick_actions_quote))
+                        }
                     }
                 }
 
@@ -110,15 +116,21 @@ fun QuickActionsFAB(
                             color = SolennixTheme.colors.primaryText
                         )
                     }
-                    SmallFloatingActionButton(
-                        onClick = {
-                            expanded = false
-                            onNewEventClick()
-                        },
-                        containerColor = SolennixTheme.colors.primary,
-                        contentColor = Color.White
+                    FeatureDiscoveryTooltip(
+                        tooltipKey = "tip_new_event",
+                        title = stringResource(R.string.tooltip_new_event_title),
+                        body = stringResource(R.string.tooltip_new_event_body)
                     ) {
-                        Icon(Icons.Default.Celebration, contentDescription = null)
+                        SmallFloatingActionButton(
+                            onClick = {
+                                expanded = false
+                                onNewEventClick()
+                            },
+                            containerColor = SolennixTheme.colors.primary,
+                            contentColor = Color.White
+                        ) {
+                            Icon(Icons.Default.Celebration, contentDescription = null)
+                        }
                     }
                 }
             }

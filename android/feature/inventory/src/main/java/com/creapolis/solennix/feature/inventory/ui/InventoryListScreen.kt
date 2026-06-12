@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.R as DesignSystemR
+import com.creapolis.solennix.core.designsystem.component.EmptyState
 import com.creapolis.solennix.core.designsystem.component.SkeletonLoading
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.SwipeRevealActions
@@ -64,6 +65,7 @@ fun InventoryListScreen(
     var adjustmentInput by remember { mutableStateOf("") }
     val snackbarHostState = remember { SnackbarHostState() }
     val haptic = LocalHapticFeedback.current
+    val hapticFeedback = com.creapolis.solennix.core.designsystem.util.rememberHapticFeedback()
     var rowActionsInventoryItem by remember { mutableStateOf<InventoryItem?>(null) }
 
     LifecycleResumeEffect(viewModel) {
@@ -238,7 +240,10 @@ fun InventoryListScreen(
                         val isSelected = uiState.sortKey == key
                         FilterChip(
                             selected = isSelected,
-                            onClick = { viewModel.onSortChange(key) },
+                            onClick = {
+                                hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.SELECTION_CHANGED)
+                                viewModel.onSortChange(key)
+                            },
                             label = { Text(label) },
                             trailingIcon = if (isSelected) {
                                 {
@@ -264,14 +269,12 @@ fun InventoryListScreen(
                 if (uiState.isLoading && !hasItems) {
                     InventorySkeletonList()
                 } else if (!hasItems) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = if (uiState.searchQuery.isNotBlank() || uiState.lowStockOnly)
-                                InventoryStrings.emptyFiltered else InventoryStrings.emptyInventory,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = SolennixTheme.colors.secondaryText
-                        )
-                    }
+                    val hasActiveFilter = uiState.searchQuery.isNotBlank() || uiState.lowStockOnly
+                    EmptyState(
+                        icon = Icons.Default.Inventory2,
+                        title = if (hasActiveFilter) InventoryStrings.emptyFiltered else InventoryStrings.emptyInventory,
+                        message = ""
+                    )
                 } else {
                     val allSections = buildList {
                         if (uiState.ingredientItems.isNotEmpty())
@@ -388,6 +391,7 @@ fun InventoryListScreen(
                 onEditItem(item.id)
             },
             onDelete = {
+                hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.WARNING)
                 rowActionsInventoryItem = null
                 viewModel.deleteItem(item.id)
             },

@@ -30,6 +30,7 @@ struct SidebarSplitLayout: View {
     @State private var searchText = ""
     @Environment(\.apiClient) private var apiClient
     @Environment(AuthManager.self) private var authManager
+    @Environment(SubscriptionManager.self) private var subscriptionManager
 
     var body: some View {
         NavigationSplitView {
@@ -282,7 +283,7 @@ struct SidebarSplitLayout: View {
         case .reviews:
             ReviewsView(apiClient: apiClient)
         case .settings:
-            SettingsView(apiClient: apiClient, authManager: authManager)
+            SettingsView(apiClient: apiClient, authManager: authManager, subscriptionManager: subscriptionManager)
         }
     }
 

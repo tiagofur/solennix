@@ -40,12 +40,13 @@ describe("PaymentFormFields", () => {
     expect(screen.queryByRole("button", { name: /Saldo/i })).not.toBeInTheDocument();
   });
 
-  it("does not submit when amount is below the min", async () => {
+  it("does not submit when amount is below the min and shows validation error", async () => {
     const onSubmit = vi.fn();
     render(<PaymentFormFields initialAmount={0} onSubmit={onSubmit} />);
     fireEvent.click(screen.getByRole("button", { name: /Confirmar Pago/i }));
     await waitFor(() => expect(onSubmit).not.toHaveBeenCalled());
     expect(onSubmit).not.toHaveBeenCalled();
+    expect(await screen.findByText(/monto debe ser mayor a 0/i)).toBeInTheDocument();
   });
 
   it("uses custom submitLabel and triggers onCancel", () => {

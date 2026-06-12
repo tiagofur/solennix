@@ -37,8 +37,8 @@ public struct SettingsView: View {
     private var isRegularWidth: Bool { sizeClass == .regular }
     private var sectionHorizontalPadding: CGFloat { isRegularWidth ? Spacing.xl : Spacing.md }
 
-    public init(apiClient: APIClient, authManager: AuthManager) {
-        _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient, authManager: authManager))
+    public init(apiClient: APIClient, authManager: AuthManager, subscriptionManager: SubscriptionManager? = nil) {
+        _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient, authManager: authManager, subscriptionManager: subscriptionManager))
     }
 
     public var body: some View {

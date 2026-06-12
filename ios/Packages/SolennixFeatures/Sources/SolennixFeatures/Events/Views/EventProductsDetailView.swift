@@ -42,7 +42,7 @@ public struct EventProductsDetailView: View {
                     )
                 } else {
                     // Summary
-                    let subtotal = viewModel.products.reduce(0.0) { $0 + (Double($1.quantity) * $1.unitPrice) }
+                    let subtotal = viewModel.products.reduce(0.0) { $0 + ($1.quantity * $1.unitPrice) }
                     HStack {
                         Text("\(viewModel.products.count) productos")
                             .font(.subheadline)
@@ -75,14 +75,14 @@ public struct EventProductsDetailView: View {
                     .fontWeight(.medium)
                     .foregroundStyle(SolennixColors.text)
 
-                Text("\(product.quantity) x \(product.unitPrice.asMXN)")
+                Text("\(product.formattedQuantity) x \(product.unitPrice.asMXN)")
                     .font(.caption)
                     .foregroundStyle(SolennixColors.textSecondary)
             }
 
             Spacer()
 
-            Text((Double(product.quantity) * product.unitPrice).asMXN)
+            Text((product.quantity * product.unitPrice).asMXN)
                 .font(.body)
                 .fontWeight(.bold)
                 .foregroundStyle(SolennixColors.text)

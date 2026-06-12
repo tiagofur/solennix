@@ -113,7 +113,7 @@ final class ProductDetailViewModel {
                         id: event.id,
                         eventDate: ISO8601DateFormatter().date(from: event.eventDate) ?? Date(),
                         clientName: clientName,
-                        quantity: ep.quantity,
+                        quantity: Int(ep.quantity),  // chart display only — truncation intentional
                         numPeople: event.numPeople,
                         unitPrice: ep.unitPrice
                     )

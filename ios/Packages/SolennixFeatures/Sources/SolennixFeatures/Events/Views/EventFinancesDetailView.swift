@@ -20,20 +20,20 @@ public struct EventFinancesDetailView: View {
     public var body: some View {
         Group {
             if viewModel.isLoading && viewModel.event == nil {
-                ProgressView("Cargando...")
+                ProgressView(EventFinancesDetailStrings.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let event = viewModel.event {
                 content(event)
             } else {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
-                    title: "Error",
-                    message: viewModel.errorMessage ?? "No se pudo cargar"
+                    title: EventFinancesDetailStrings.errorTitle,
+                    message: viewModel.errorMessage ?? EventFinancesDetailStrings.errorMessage
                 )
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Finanzas")
+        .navigationTitle(EventFinancesDetailStrings.navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .task { await viewModel.loadData(eventId: eventId) }
     }
@@ -43,7 +43,7 @@ public struct EventFinancesDetailView: View {
             VStack(spacing: Spacing.lg) {
                 // Total prominente
                 VStack(spacing: Spacing.xs) {
-                    Text("TOTAL COBRADO")
+                    Text(EventFinancesDetailStrings.totalCharged)
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundStyle(SolennixColors.textTertiary)
@@ -60,33 +60,31 @@ public struct EventFinancesDetailView: View {
                 .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
                 .shadowSm()
 
-                // Financial breakdown
-                let subtotal = computeSubtotal(event)
-                let discountAmount = computeDiscountAmount(event, subtotal: subtotal)
-                let netSales = event.totalAmount - event.taxAmount
-                let supplyCost = viewModel.supplies.reduce(0.0) { $0 + ($1.quantity * $1.unitCost) }
-                let profit = netSales - supplyCost
-                let margin = netSales > 0 ? (profit / netSales) * 100 : 0
+                // Financial breakdown using the shared EventFinancials calculator.
+                // This mirrors EventFormViewModel+Profitability and QuickQuoteViewModel
+                // via EventFinancials.compute() — single source of truth.
+                let financials = computeFinancials(event)
+                let discountAmount = financials.discountAmount
                 let depositAmount = event.totalAmount * ((event.depositPercent ?? 0) / 100)
                 let isDepositMet = viewModel.totalPaid >= (depositAmount - 0.1)
 
                 VStack(spacing: 0) {
                     financialMetricRow(
-                        label: "Venta Bruta",
-                        value: netSales.asMXN,
+                        label: EventFinancesDetailStrings.grossSale,
+                        value: financials.revenue.asMXN,
                         color: SolennixColors.text
                     )
 
                     if event.taxAmount > 0 {
                         financialMetricRow(
-                            label: "IVA (\(Int(event.taxRate))%)",
+                            label: EventFinancesDetailStrings.iva(Int(event.taxRate)),
                             value: event.taxAmount.asMXN,
                             color: SolennixColors.text
                         )
                     }
 
                     financialMetricRow(
-                        label: "Total Cobrado",
+                        label: EventFinancesDetailStrings.totalChargedRow,
                         value: event.totalAmount.asMXN,
                         color: SolennixColors.primary,
                         isBold: true
@@ -94,7 +92,7 @@ public struct EventFinancesDetailView: View {
 
                     if let depositPercent = event.depositPercent, depositPercent > 0 {
                         financialMetricRow(
-                            label: "Anticipo (\(Int(depositPercent))%)",
+                            label: EventFinancesDetailStrings.deposit(Int(depositPercent)),
                             value: depositAmount.asMXN,
                             color: isDepositMet ? SolennixColors.success : SolennixColors.warning,
                             icon: isDepositMet ? "checkmark.circle.fill" : "exclamationmark.circle.fill"
@@ -103,8 +101,8 @@ public struct EventFinancesDetailView: View {
 
                     if event.discount > 0 {
                         let discountLabel = event.discountType == .percent
-                            ? "Descuento (\(Int(event.discount))%)"
-                            : "Descuento"
+                            ? EventFinancesDetailStrings.discount(Int(min(100, event.discount)))
+                            : EventFinancesDetailStrings.discountFixed
                         financialMetricRow(
                             label: discountLabel,
                             value: "-\(discountAmount.asMXN)",
@@ -115,21 +113,21 @@ public struct EventFinancesDetailView: View {
                     Divider().padding(.horizontal, Spacing.lg)
 
                     financialMetricRow(
-                        label: "Costos",
-                        value: supplyCost.asMXN,
+                        label: EventFinancesDetailStrings.costs,
+                        value: financials.totalCost.asMXN,
                         color: SolennixColors.error
                     )
 
                     financialMetricRow(
-                        label: "Utilidad Neta",
-                        value: profit.asMXN,
+                        label: EventFinancesDetailStrings.netProfit,
+                        value: financials.netProfit.asMXN,
                         color: SolennixColors.success,
                         isBold: true
                     )
 
                     financialMetricRow(
-                        label: "Margen",
-                        value: "\(String(format: "%.1f", margin))%",
+                        label: EventFinancesDetailStrings.margin,
+                        value: "\(String(format: "%.1f", financials.profitMargin))%",
                         color: SolennixColors.info,
                         isBold: true
                     )
@@ -137,13 +135,13 @@ public struct EventFinancesDetailView: View {
                     Divider().padding(.horizontal, Spacing.lg)
 
                     financialMetricRow(
-                        label: "Pagado",
+                        label: EventFinancesDetailStrings.paid,
                         value: viewModel.totalPaid.asMXN,
                         color: SolennixColors.success
                     )
 
                     financialMetricRow(
-                        label: "Pendiente",
+                        label: EventFinancesDetailStrings.pending,
                         value: viewModel.remaining.asMXN,
                         color: viewModel.remaining > 0 ? SolennixColors.error : SolennixColors.success,
                         isBold: true
@@ -157,7 +155,7 @@ public struct EventFinancesDetailView: View {
                 if event.totalAmount > 0 {
                     VStack(spacing: Spacing.sm) {
                         HStack {
-                            Text("Progreso de Cobro")
+                            Text(EventFinancesDetailStrings.collectionProgress)
                                 .font(.subheadline)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(SolennixColors.text)
@@ -202,6 +200,52 @@ public struct EventFinancesDetailView: View {
         }
     }
 
+    /// Computes the full financial result for a loaded event.
+    ///
+    /// Cost side: supply rows are loaded from viewModel.supplies.
+    /// Product costs are NOT available on this screen (would require loading
+    /// all product ingredients) — productCost is therefore 0 here.
+    /// DIVERGENCE: EventFormViewModel has productUnitCosts from the form flow;
+    /// this view only shows events already persisted (cost precision ≠ form),
+    /// so totalCost reflects supplies + extras costs only.
+    private func computeFinancials(_ event: Event) -> EventFinancials.Result {
+        // Rebuild product rows from viewModel data (prices only; no ingredient costs here).
+        let productRows = viewModel.products.map { p in
+            EventFinancials.ProductRow(
+                quantity: p.quantity,
+                unitPrice: p.unitPrice,
+                lineDiscount: p.discount,
+                unitCost: nil // ingredient costs not loaded in detail view
+            )
+        }
+
+        let extraRows = viewModel.extras.map { e in
+            EventFinancials.ExtraRow(
+                price: e.price,
+                cost: e.cost,
+                excludeUtility: e.excludeUtility
+            )
+        }
+
+        let supplyRows = viewModel.supplies.map { s in
+            EventFinancials.SupplyRow(
+                quantity: s.quantity,
+                unitCost: s.unitCost,
+                excludeCost: s.excludeCost
+            )
+        }
+
+        return EventFinancials.compute(
+            products: productRows,
+            extras: extraRows,
+            supplies: supplyRows,
+            globalDiscountType: event.discountType,
+            globalDiscount: event.discount,
+            requiresInvoice: event.requiresInvoice,
+            taxRate: event.taxRate
+        )
+    }
+
     private func financialMetricRow(label: String, value: String, color: Color, isBold: Bool = false, icon: String? = nil) -> some View {
         HStack {
             if let icon {
@@ -224,15 +268,5 @@ public struct EventFinancesDetailView: View {
         }
         .padding(.horizontal, Spacing.lg)
         .padding(.vertical, Spacing.sm)
-    }
-
-    private func computeSubtotal(_ event: Event) -> Double {
-        event.totalAmount - event.taxAmount + (event.discountType == .fixed ? event.discount : 0)
-    }
-
-    private func computeDiscountAmount(_ event: Event, subtotal: Double) -> Double {
-        event.discountType == .percent
-            ? subtotal * event.discount / 100
-            : event.discount
     }
 }

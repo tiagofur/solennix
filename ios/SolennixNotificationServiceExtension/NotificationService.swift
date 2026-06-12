@@ -39,7 +39,8 @@ final class NotificationService: UNNotificationServiceExtension {
             ?? (bestAttempt.userInfo["imageURL"] as? String)
 
         guard let urlString,
-              let imageURL = URL(string: urlString)
+              let imageURL = URL(string: urlString),
+              imageURL.scheme == "https"
         else {
             contentHandler(bestAttempt)
             return
@@ -74,7 +75,10 @@ final class NotificationService: UNNotificationServiceExtension {
             }
 
             // Mover el archivo a una ubicación con la extensión correcta.
-            let fileExtension = url.pathExtension.isEmpty ? "jpg" : url.pathExtension
+            // Allow-list extensions to prevent directory traversal via crafted URLs.
+            let allowedExtensions: Set<String> = ["jpg", "jpeg", "png", "gif"]
+            let rawExtension = url.pathExtension.lowercased()
+            let fileExtension = allowedExtensions.contains(rawExtension) ? rawExtension : "jpg"
             let filename = "\(UUID().uuidString).\(fileExtension)"
             let targetURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(filename)
 

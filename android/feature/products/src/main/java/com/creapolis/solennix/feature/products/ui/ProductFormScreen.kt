@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -20,10 +21,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -54,6 +58,7 @@ fun ProductFormScreen(
 ) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
 
     LaunchedEffect(viewModel.saveSuccess) {
         if (viewModel.saveSuccess) {
@@ -207,7 +212,9 @@ fun ProductFormScreen(
                             value = viewModel.name,
                             onValueChange = { viewModel.name = it },
                             label = ProductStrings.nameRequired,
-                            leadingIcon = Icons.Default.ShoppingCart
+                            leadingIcon = Icons.Default.ShoppingCart,
+                            imeAction = ImeAction.Next,
+                            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                         )
                     },
                     right = {
@@ -267,7 +274,9 @@ fun ProductFormScreen(
                             onValueChange = { viewModel.basePrice = it },
                             label = ProductStrings.priceRequired,
                             leadingIcon = Icons.Default.AttachMoney,
-                            keyboardType = KeyboardType.Decimal
+                            keyboardType = KeyboardType.Decimal,
+                            imeAction = ImeAction.Done,
+                            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
                         )
                     },
                     right = {

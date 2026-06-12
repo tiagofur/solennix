@@ -89,7 +89,10 @@ export const PaymentFormFields: React.FC<PaymentFormFieldsProps> = ({
                 id="payment-amount"
                 type="number"
                 step="0.01"
-                {...register("amount", { required: t('payment.amount_required'), min: 0.01 })}
+                {...register("amount", {
+                  required: t('payment.amount_required'),
+                  min: { value: 0.01, message: t('payment.amount_min_error') }
+                })}
                 className="block w-full bg-card border border-border rounded-xl pl-8 pr-4 py-3 text-sm font-bold text-text focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
                 placeholder="0.00"
               />

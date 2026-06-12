@@ -165,7 +165,7 @@ public struct InventoryDetailView: View {
                             if item.type == .supply {
                                 eventDemand += matching.quantityRequired
                             } else {
-                                eventDemand += matching.quantityRequired * Double(ep.quantity)
+                                eventDemand += matching.quantityRequired * ep.quantity
                             }
                         }
                     } catch {

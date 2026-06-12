@@ -2,7 +2,7 @@ import Foundation
 import Observation
 
 public struct QuickQuoteTransferData {
-    public let products: [(productId: String, productName: String, quantity: Int, unitPrice: Double)]
+    public let products: [(productId: String, productName: String, quantity: Double, unitPrice: Double)]
     public let extras: [(description: String, cost: Double, price: Double, excludeUtility: Bool)]
     public let discountType: DiscountType
     public let discountValue: Double
@@ -10,7 +10,7 @@ public struct QuickQuoteTransferData {
     public let numPeople: Int
 
     public init(
-        products: [(productId: String, productName: String, quantity: Int, unitPrice: Double)],
+        products: [(productId: String, productName: String, quantity: Double, unitPrice: Double)],
         extras: [(description: String, cost: Double, price: Double, excludeUtility: Bool)],
         discountType: DiscountType,
         discountValue: Double,

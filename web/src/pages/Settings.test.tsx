@@ -431,7 +431,7 @@ describe('Settings', () => {
   // --- Manage subscription (portal) tests ---
 
   it('opens billing portal on manage subscription click', async () => {
-    mockUser = { ...mockUser, plan: 'pro', stripe_customer_id: 'cus_123' };
+    mockUser = { ...mockUser, plan: 'pro' };
     mockSubscriptionStatus = { plan: 'pro', has_stripe_account: true };
     const mockCreatePortal = vi.mocked(subscriptionService.createPortalSession);
     mockCreatePortal.mockResolvedValueOnce({ url: 'https://billing.stripe.com/portal/123' });
@@ -448,7 +448,7 @@ describe('Settings', () => {
   });
 
   it('shows portal error on manage subscription failure', async () => {
-    mockUser = { ...mockUser, plan: 'pro', stripe_customer_id: 'cus_123' };
+    mockUser = { ...mockUser, plan: 'pro' };
     mockSubscriptionStatus = { plan: 'pro', has_stripe_account: true };
     const mockCreatePortal = vi.mocked(subscriptionService.createPortalSession);
     mockCreatePortal.mockRejectedValueOnce(new Error('no subscription'));
@@ -465,7 +465,7 @@ describe('Settings', () => {
   });
 
   it('shows loading state for manage subscription button', async () => {
-    mockUser = { ...mockUser, plan: 'pro', stripe_customer_id: 'cus_123' };
+    mockUser = { ...mockUser, plan: 'pro' };
     mockSubscriptionStatus = { plan: 'pro', has_stripe_account: true };
     let resolvePortal: (value: { url: string }) => void;
     const portalPromise = new Promise<{ url: string }>((resolve) => {
@@ -492,7 +492,7 @@ describe('Settings', () => {
   // --- Subscription status display tests ---
 
   it('shows subscription status badge and renewal date', async () => {
-    mockUser = { ...mockUser, plan: 'pro', stripe_customer_id: 'cus_123' };
+    mockUser = { ...mockUser, plan: 'pro' };
     mockSubscriptionStatus = {
       plan: 'pro',
       has_stripe_account: true,
@@ -516,7 +516,7 @@ describe('Settings', () => {
   });
 
   it('shows past_due status badge', async () => {
-    mockUser = { ...mockUser, plan: 'pro', stripe_customer_id: 'cus_123' };
+    mockUser = { ...mockUser, plan: 'pro' };
     mockSubscriptionStatus = {
       plan: 'pro',
       has_stripe_account: true,
@@ -538,7 +538,7 @@ describe('Settings', () => {
   });
 
   it('shows cancellation warning when cancel_at_period_end is true', async () => {
-    mockUser = { ...mockUser, plan: 'pro', stripe_customer_id: 'cus_123' };
+    mockUser = { ...mockUser, plan: 'pro' };
     mockSubscriptionStatus = {
       plan: 'pro',
       has_stripe_account: true,

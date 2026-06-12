@@ -25,6 +25,7 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.8
 
+<<<<<<< HEAD
 > [!success] 2026-06-12 — Judgment Day — ciclo completo del menú Más (branch `feat/ios-liquid-glass`)
 > Aplicación de revisión dual ciego pantalla por pantalla sobre el menú Más. Todos los screens ahora cumplen estándar nativo de Apple.
 > - **Pantallas auditadas:** Más (b0179c37), Productos (eba22d25/4f49a005/6c81b1fc), Inventario (b2acf758/fcb5b9e8), Pagos (ccade9b9/29e7ce97 — conversión a List nativa + swipe aprobar/rechazar + feedback), Personal y Equipos (93a4abb5/a1d4fe67 — soft-delete con undo en Equipos), Formularios y Reseñas (8bd5f062/f079b055 — Reseñas convertida a List nativa).
@@ -45,19 +46,60 @@ status: active
 > - **Validación:** `xcodebuild ... build` → BUILD SUCCEEDED.
 
 > [!success] 2026-06-11 — iOS HIG Quick Wins (branch `feat/ios-hig-quick-wins`)
+=======
+> [!success] 2026-06-11 — iOS HIG Quick Wins (branch `feat/ios-hig-quick-wins`, PR #544)
+>>>>>>> feat/ios-hig-quick-wins
 > Se aplicaron mejoras de calidad HIG en iOS siguiendo las guías oficiales de Apple (iOS 17+).
-> - **TipKit:** Se activaron tips contextuales reales (`NewEventTip`, `QuickQuoteTip`, `SwipeActionTip`) en lugar de los placeholders anteriores. `quickQuoteTip` se ancló al botón "+" del toolbar (el Quick Quote vive dentro de un `Menu` — no puede anclarse a ítems internos).
-> - **Skeleton loading:** `DashboardView` y `EventListView` muestran tarjetas skeleton animadas en la primera carga. Se corrigió un bug donde el skeleton reaparecía en pull-to-refresh para usuarios sin eventos: se agregó `hasLoadedOnce` al `DashboardViewModel` (se activa tras la primera carga exitosa o fallida) y se usó esa flag como condición de visibilidad.
-> - **Dynamic Type (`@ScaledMetric`):** Se reemplazaron tamaños de ícono hardcodeados por `@ScaledMetric(relativeTo:)` en las vistas de empty state de `EventListView` y en los íconos de formulario de `ForgotPasswordView` y `ResetPasswordView`, garantizando escala correcta con tamaños de fuente accesibles.
-> - **`sensoryFeedback` condicional:** Se corrigió el doble haptic en la confirmación de borrado en `EventListView` y `ClientListView`. La variante con closure `{ _, newValue in newValue }` garantiza que el haptic solo dispara cuando el diálogo aparece (transición `false → true`), no al cerrarse.
-> - **`SwiftUI.List` nativo para swipe actions:** `EventListView` usa `List` nativo en iPhone para exponer acciones de swipe (eliminar por trailing, checklist por leading) y pull-to-refresh nativo, alineado con el patrón de `ClientListView`.
-> - **Teclado y dismissal en formularios:** Se agregó toolbar con botón "Listo" sobre el teclado numérico y `.interactiveDismissDisabled(false)` en formularios clave para cumplir el contrato HIG de dismissal interactivo.
-> - **Limpieza de APIs deprecadas:** Se reemplazó `UIScreen.main` por `GeometryReader`/`UIWindowScene` y se eliminaron hacks de `asyncAfter` por `Task { @MainActor in }` en toda la codebase iOS.
-> - **Drag indicators en sheets:** Se agregó `.presentationDragIndicator(.visible)` en todos los sheets resizables.
-> - **Correcciones de revisión de código:** `h1Premium` corregido de `.largeTitle` (34pt) a `.title` (28pt); `GeometryReader` en layouts iPad de Auth recibe `.frame(maxWidth: .infinity, maxHeight: .infinity)` para evitar colapso de layout; haptic doble en diálogos de borrado corregido.
-> - **Próxima fase planeada:** adopción de Liquid Glass (iOS 26 SDK) — superficies con material nativo, integración con el nuevo tab bar translúcido y reestructuración del shell visual.
-> - **Archivos clave:** `Typography.swift`, `EventListView.swift`, `ClientListView.swift`, `DashboardViewModel.swift`, `DashboardView.swift`, `LoginView.swift`, `RegisterView.swift`, `ForgotPasswordView.swift`, `ResetPasswordView.swift`.
-> - **Validación:** `xcodebuild ... build` → BUILD SUCCEEDED.
+> - **TipKit:** Se activaron tips contextuales reales (`NewEventTip`, `QuickQuoteTip`, `SwipeActionTip`) en lugar de los placeholders anteriores.
+> - **Skeleton loading:** `DashboardView` y `EventListView` muestran tarjetas skeleton animadas en la primera carga. `hasLoadedOnce` en `DashboardViewModel` evita re-aparición en pull-to-refresh.
+> - **Dynamic Type (`@ScaledMetric`):** Tamaños de ícono hardcodeados reemplazados por `@ScaledMetric(relativeTo:)` en empty states y vistas de auth.
+> - **`sensoryFeedback` condicional:** Doble haptic corregido en `EventListView` y `ClientListView` usando la variante closure `{ _, newValue in newValue }`.
+> - **`SwiftUI.List` nativo para swipe actions:** `EventListView` usa `List` nativo en iPhone (eliminar trailing, checklist leading, pull-to-refresh nativo).
+> - **Teclado y dismissal:** Toolbar "Listo" sobre teclado numérico + `.scrollDismissesKeyboard(.interactively)` en formularios clave.
+> - **Limpieza de APIs deprecadas:** `UIScreen.main` reemplazado; hacks `asyncAfter` → `Task { @MainActor in }`. `h1Premium` corregido de 34pt → 28pt.
+> - **Drag indicators:** `.presentationDragIndicator(.visible)` en todos los sheets resizables.
+
+> [!success] 2026-06-11 — Android UX Parity: quick wins en branch `feat/android-ux-parity`
+> Se aplicaron mejoras de calidad UX en Android (Material 3 + Compose) espejando los patrones del iOS HIG quick wins (PR #544). Todos los cambios sobre el branch `feat/android-ux-parity`.
+> - **Skeletons en Clients y Dashboard:** `ClientListScreen` y `DashboardScreen` ya cuentan con skeleton screens durante la carga inicial. El skeleton del Dashboard está acotado al cold-start (señal one-shot `isLoading=true`).
+> - **Haptics de acciones:** `HapticFeedback.kt` guarda compatibilidad con API 26–29: `CONFIRM`/`REJECT` (requieren API 30) tienen fallback a `VIRTUAL_KEY`/`LONG_PRESS`. Haptic de inicio del gesto de swipe-delete corregido de `SUCCESS` a `WARNING` en `ProductListScreen`.
+> - **Swipe actions en Events y Clients:** `SwipeRevealActions` resetea `offsetX` con `LaunchedEffect(Unit)` en la entrada de cada composición, evitando que slots reutilizados aparezcan abiertos.
+> - **Confirmación antes de borrar en Products:** `ProductListScreen` muestra `AlertDialog` antes de ejecutar `viewModel.deleteProduct()`, tanto desde swipe como desde el bottom-sheet (paridad con Events y Clients).
+> - **IME / double-padding:** `ClientFormScreen` e `InventoryFormScreen` eliminan el `windowInsetsPadding(safeDrawing.only(Bottom))` redundante junto a `imePadding()` — con `enableEdgeToEdge()` (API 30+) el inset IME ya está incluido en `safeDrawing`.
+> - **Tooltips de descubrimiento (`FeatureDiscoveryTooltip`):** el flag "ya mostrado" se persiste en `SharedPreferences` al momento de mostrar el tooltip, no solo en el botón "Got it", garantizando que tocar el anchor (FAB) no cause reapearición en el siguiente arranque.
+> - **Performance `EventListScreen`:** `O(n²)` `sortedEvents.indexOf(event)` reemplazado por `itemsIndexed` en ambos branches de `AdaptiveCardGrid`.
+
+> [!success] 2026-06-11 — Auditoría iOS + integración: remediación I1–I8 (Issues #524–#531)
+> Auditoría completa de la app iOS, su integración con el backend y el contrato cross-platform (4 agentes en paralelo + verificación manual). Hallazgos remediados en 8 PRs (#532–#539):
+> - **Seguridad (I1, #532):** llaves privadas Apple `.p8` removidas del tracking + `ios/apple-keys/` en `.gitignore`. Pendiente manual: revocación/rotación en Apple Developer Portal y purge de historia git.
+> - **Sesión iOS (I2, #533):** logout ahora limpia cache SwiftData, datos de widgets (app group), notificaciones locales, índice Spotlight y UserDefaults por usuario; desregistra el push token ANTES de borrar tokens (`SignOutDelegate`); `BiometricGateView` dejó de bypassear el cleanup.
+> - **Resiliencia auth iOS (I3, #534):** todo refresh pasa por el coalescing del `APIClient` (tokens single-use del backend); solo 401/403 borra sesión (429/5xx/red = transitorio); `handleSessionExpired()` elimina el estado zombie; la cola offline respeta `Retry-After` y persiste tras cada item.
+> - **Integridad monetaria iOS (I4, #535):** nuevo `EventFinancials` en SolennixCore como única fuente de la fórmula financiera (espeja `ComputeFinancialSummaryFromItems` del backend, drift máx verificado 0.0048 < tolerancia 0.01); descuentos % clampeados a 100; `EventFinancesDetailView` ahora incluye costos de ingredientes y coincide con el formulario; montos redondeados a centavos antes de enviar.
+> - **Timezones iOS (I5, #536):** política única para fechas `yyyy-MM-dd`: parse/display en UTC (`fromServerDay`/`toServerDay`/`formattedServerDay`), checks de "es hoy" en hora local explícita; 16 archivos barridos; round-trip editar→guardar ya no corre la fecha un día.
+> - **Contrato OpenAPI (I6, #537):** `openapi.yaml` sincronizado con los handlers (6 schemas + `preferred_language`/`account_status`/`last_active_at` en User); types web regenerados; campo muerto `stripe_customer_id` removido de Web/iOS/Android.
+> - **Android auth (I7, #538):** 429 en refresh ya no cierra sesión (backoff con `Retry-After` + single-flight real); backend ahora emite `code` estable (`auth.account_blocked`/`auth.account_deleted`) y Android muestra mensajes específicos.
+> - **Cleanups iOS (I8, #539):** entitlements de extensiones con app group declarado, Keychain con `kSecAttrService` + migración lazy serializada, validación HTTPS en NSE, `os.Logger`, l10n de EventFinancesDetailView, `EventProduct.quantity` Int→Double, `User.accountStatus`.
+> - **Falsos positivos descartados** (no re-reportar): paths de endpoints iOS todos correctos; `Secrets.xcconfig` nunca estuvo en git; `EventExtra` decodifica bien.
+
+> [!success] 2026-06-11 — Integridad de Dinero / Money Integrity (Issue #515)
+> Se corrigieron cuatro inconsistencias y errores financieros en el frontend web para garantizar la exactitud de los montos y los márgenes mostrados a los organizadores y enviados a los clientes.
+> - **Margen Ajustado en Resumen:** Corrección en `EventSummary.tsx` para restar el revenue de extras con passthrough (`exclude_utility = true`) del denominador, unificando el cálculo de margen con la pantalla de finanzas y cotizaciones.
+> - **Descuento de Cotización Clampado:** Clampeo en `QuickQuotePage.tsx` para evitar que el porcentaje de descuento salga del rango de `0-100` tanto en el onChange como al alternar entre tipo de descuento fijo y porcentaje.
+> - **Validación de Monto Positivo en Pagos:** Implementación de validación para requerir montos de pagos mayores a cero (`min: 0.01`) con mensaje de error localizado (`payment.amount_min_error`) en `PaymentFormFields.tsx`.
+> - **Redondeo Aritmético en PDF:** Ajustes en `pdfGenerator.ts` para redondear a 2 decimales todos los totales de líneas de productos, subtotales, montos de descuentos y el cálculo de saldo pendiente/a favor en reportes.
+> - **Validación:** Cobertura de tests unitarios actualizada en `PaymentFormFields.test.tsx`, logrando que toda la suite de pruebas frontend pase en verde.
+
+> [!success] 2026-06-11 — Auditoría iOS + integración: remediación I1–I8 (Issues #524–#531)
+> Auditoría completa de la app iOS, su integración con el backend y el contrato cross-platform (4 agentes en paralelo + verificación manual). Hallazgos remediados en 8 PRs (#532–#539):
+> - **Seguridad (I1, #532):** llaves privadas Apple `.p8` removidas del tracking + `ios/apple-keys/` en `.gitignore`. Pendiente manual: revocación/rotación en Apple Developer Portal y purge de historia git.
+> - **Sesión iOS (I2, #533):** logout ahora limpia cache SwiftData, datos de widgets (app group), notificaciones locales, índice Spotlight y UserDefaults por usuario; desregistra el push token ANTES de borrar tokens (`SignOutDelegate`); `BiometricGateView` dejó de bypassear el cleanup.
+> - **Resiliencia auth iOS (I3, #534):** todo refresh pasa por el coalescing del `APIClient` (tokens single-use del backend); solo 401/403 borra sesión (429/5xx/red = transitorio); `handleSessionExpired()` elimina el estado zombie; la cola offline respeta `Retry-After` y persiste tras cada item.
+> - **Integridad monetaria iOS (I4, #535):** nuevo `EventFinancials` en SolennixCore como única fuente de la fórmula financiera (espeja `ComputeFinancialSummaryFromItems` del backend, drift máx verificado 0.0048 < tolerancia 0.01); descuentos % clampeados a 100; `EventFinancesDetailView` ahora incluye costos de ingredientes y coincide con el formulario; montos redondeados a centavos antes de enviar.
+> - **Timezones iOS (I5, #536):** política única para fechas `yyyy-MM-dd`: parse/display en UTC (`fromServerDay`/`toServerDay`/`formattedServerDay`), checks de "es hoy" en hora local explícita; 16 archivos barridos; round-trip editar→guardar ya no corre la fecha un día.
+> - **Contrato OpenAPI (I6, #537):** `openapi.yaml` sincronizado con los handlers (6 schemas + `preferred_language`/`account_status`/`last_active_at` en User); types web regenerados; campo muerto `stripe_customer_id` removido de Web/iOS/Android.
+> - **Android auth (I7, #538):** 429 en refresh ya no cierra sesión (backoff con `Retry-After` + single-flight real); backend ahora emite `code` estable (`auth.account_blocked`/`auth.account_deleted`) y Android muestra mensajes específicos.
+> - **Cleanups iOS (I8, #539):** entitlements de extensiones con app group declarado, Keychain con `kSecAttrService` + migración lazy serializada, validación HTTPS en NSE, `os.Logger`, l10n de EventFinancesDetailView, `EventProduct.quantity` Int→Double, `User.accountStatus`.
+> - **Falsos positivos descartados** (no re-reportar): paths de endpoints iOS todos correctos; `Secrets.xcconfig` nunca estuvo en git; `EventExtra` decodifica bien.
 
 > [!success] 2026-06-10 — Integridad de Sesión y Caché (Issue #516)
 > Se implementó la limpieza del caché de React Query al cerrar sesión y la invalidación dinámica de las queries para asegurar la sincronía de la UI y los límites de plan.

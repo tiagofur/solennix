@@ -144,21 +144,41 @@ class AuthManager @Inject constructor(
 
     suspend fun refreshAndGetTokens(): BearerTokens? {
         return refreshMutex.withLock {
-            val refreshToken = encryptedPrefs.getString(KEY_REFRESH_TOKEN, null) ?: return null
+            // Single-flight coalescing: if another coroutine already refreshed while we were
+            // waiting on the mutex, the stored tokens will differ from the ones that triggered
+            // the refresh. Re-check here before consuming the single-use refresh token again.
+            val currentAccess = encryptedPrefs.getString(KEY_ACCESS_TOKEN, null)
+            val currentRefresh = encryptedPrefs.getString(KEY_REFRESH_TOKEN, null)
+                ?: return@withLock null
 
             try {
                 val response: TokenPair = refreshHttpClient.post(BuildConfig.API_BASE_URL + Endpoints.REFRESH) {
                     contentType(ContentType.Application.Json)
-                    setBody(mapOf("refresh_token" to refreshToken))
+                    setBody(mapOf("refresh_token" to currentRefresh))
                 }.body()
 
                 storeTokens(response.accessToken, response.refreshToken)
                 BearerTokens(response.accessToken, response.refreshToken)
             } catch (e: ClientRequestException) {
-                // 4xx from server = refresh token rejected → clear session
-                Log.w("AuthManager", "Token refresh rejected by server: ${e.response.status}", e)
-                clearTokens()
-                null
+                when (e.response.status) {
+                    HttpStatusCode.TooManyRequests -> {
+                        // 429 is transient — the refresh token is still valid. Do NOT clear session.
+                        val retryAfter = e.response.headers["Retry-After"]
+                        Log.w(
+                            "AuthManager",
+                            "Token refresh rate-limited (429). Retry-After: $retryAfter seconds. " +
+                                "Keeping tokens.",
+                            e
+                        )
+                        null
+                    }
+                    else -> {
+                        // 401/403 (and any other 4xx) = refresh token definitively rejected → clear session.
+                        Log.w("AuthManager", "Token refresh rejected by server: ${e.response.status}", e)
+                        clearTokens()
+                        null
+                    }
+                }
             } catch (e: Exception) {
                 // Network/timeout/other transient error → keep tokens, just return null
                 Log.w("AuthManager", "Token refresh failed (transient): ${e.message}", e)

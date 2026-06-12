@@ -5,7 +5,11 @@ import Foundation
 extension Date {
 
     public static let mexicanLocale = Locale(identifier: "es_MX")
-    public static let mexicanTimeZone = TimeZone(identifier: "America/Mexico_City")!
+    /// Mexico City timezone used for formatting timestamps that carry business-time
+    /// semantics (e.g. payment timestamps recorded in MX local time). Do NOT use
+    /// this for parsing `yyyy-MM-dd` server dates — those are wall-clock calendar
+    /// dates and must be parsed in UTC. See `fromServerDay`.
+    public static let mexicanTimeZone = TimeZone(secondsFromGMT: -21600) ?? TimeZone(identifier: "America/Mexico_City")!
 
     // MARK: - ISO 8601 Parsing
 
@@ -114,19 +118,115 @@ extension Date {
 
     // MARK: - Server date parsing (yyyy-MM-dd)
 
+    // MARK: - Server day parse formatter (UTC)
+
+    /// Parses `yyyy-MM-dd` server strings. Pinned to UTC so that date math
+    /// (sorting, comparisons, range bucketing between server dates) is stable
+    /// regardless of the device's local timezone. DISPLAY formatters that
+    /// consume the resulting `Date` must also use UTC to avoid a day shift —
+    /// see `formatted(style:)` note below and `DashboardFormatting`.
     private static let serverDayFormatter: DateFormatter = {
         let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
         f.dateFormat = "yyyy-MM-dd"
-        // Server dates are wall-clock dates (no time component). Parse them
-        // in Mexican timezone to keep them stable.
-        f.timeZone = mexicanTimeZone
+        // POLICY: yyyy-MM-dd strings are wall-clock calendar dates with no
+        // timezone component. We pin to UTC so internal Date arithmetic is
+        // stable. Any formatter that displays these Dates for the user must
+        // ALSO use UTC to preserve the calendar day. The sole exception is
+        // `isServerDayToday`, which intentionally uses device-local time —
+        // see its doc comment.
+        f.timeZone = TimeZone(secondsFromGMT: 0)
         return f
     }()
 
-    /// Parses a `yyyy-MM-dd` string (optionally with trailing time) into a
-    /// `Date`. Server dates are treated as UTC so they do not shift by a day
-    /// on devices in negative-offset timezones.
+    /// Parses a `yyyy-MM-dd` string (optionally with a trailing time component)
+    /// into a `Date` anchored at midnight UTC on that calendar day.
+    ///
+    /// **Parse/display contract**: because parsing is UTC, every formatter that
+    /// turns the resulting `Date` back into a visible day string must also use
+    /// UTC. Mismatching (parsing UTC, displaying in local/MX time) causes a
+    /// one-day shift for users west of UTC. `DashboardFormatting` helpers and
+    /// `EventDetailView.formatDateShort` already follow this contract.
     public static func fromServerDay(_ dateString: String) -> Date? {
         serverDayFormatter.date(from: String(dateString.prefix(10)))
+    }
+
+    // MARK: - Server day display formatter (UTC — must match parse timezone)
+
+    /// UTC formatter for rendering a `Date` that was produced by `fromServerDay`
+    /// back into a `yyyy-MM-dd` string or any date-only display. Using UTC here
+    /// keeps the round-trip `parse → format` lossless regardless of device timezone.
+    public static let utcDayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        f.timeZone = TimeZone(secondsFromGMT: 0)
+        return f
+    }()
+
+    // MARK: - UTC display helper for server-day Dates
+
+    /// NSCache of UTC DateFormatter instances keyed by "<format>|<locale>".
+    private static let utcFormatterCache: NSCache<NSString, DateFormatter> = {
+        let cache = NSCache<NSString, DateFormatter>()
+        cache.countLimit = 32
+        return cache
+    }()
+
+    /// Formats a `Date` produced by `fromServerDay` using UTC so the displayed
+    /// calendar day matches the original `yyyy-MM-dd` server string.
+    ///
+    /// Use this (not `formatted(style:)`) for all date-only display of server
+    /// dates. `formatted(style:)` uses `mexicanTimeZone`, which would shift the
+    /// displayed day by the UTC offset for users in negative-offset zones.
+    public func formattedServerDay(style: String, locale: Locale = Date.mexicanLocale) -> String {
+        let cacheKey = "\(style)|\(locale.identifier)" as NSString
+        if let cached = Self.utcFormatterCache.object(forKey: cacheKey) {
+            return cached.string(from: self)
+        }
+        let f = DateFormatter()
+        f.locale = locale
+        f.timeZone = TimeZone(secondsFromGMT: 0)
+        f.dateFormat = style
+        Self.utcFormatterCache.setObject(f, forKey: cacheKey)
+        return f.string(from: self)
+    }
+
+    /// Formats a `Date` produced by `fromServerDay` using a localized template
+    /// (e.g. `"dMMMyyyy"`) in UTC. Safe replacement for `setLocalizedDateFormatFromTemplate`
+    /// calls that follow `fromServerDay` parsing.
+    public func formattedServerDayTemplate(_ template: String, locale: Locale = Date.mexicanLocale) -> String {
+        let f = DateFormatter()
+        f.locale = locale
+        f.timeZone = TimeZone(secondsFromGMT: 0)
+        f.setLocalizedDateFormatFromTemplate(template)
+        return f.string(from: self)
+    }
+
+    // MARK: - "Is today?" helper (device-local — intentional)
+
+    /// Returns today's date string in the device's local timezone.
+    ///
+    /// **Why local?** An event dated `2026-06-15` is "today" when the USER's
+    /// calendar (device timezone) reads June 15. We intentionally do NOT use UTC
+    /// here. String-compare against the raw `yyyy-MM-dd` server value — no
+    /// `Date` round-trip needed.
+    public static func localTodayString() -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        // No explicit timeZone assignment → uses device local timezone (intentional).
+        return f.string(from: Date())
+    }
+
+    /// Returns `true` when `serverDay` (a `yyyy-MM-dd` string from the backend)
+    /// falls on today in the user's local timezone.
+    ///
+    /// Correct semantics: an event dated `2026-06-15` is "today" whenever the
+    /// device's local calendar says June 15, regardless of UTC offset. We compare
+    /// the raw server string against today's local date string — no `Date`
+    /// round-trip, no timezone conversion.
+    public static func isServerDayToday(_ serverDay: String) -> Bool {
+        String(serverDay.prefix(10)) == localTodayString()
     }
 }

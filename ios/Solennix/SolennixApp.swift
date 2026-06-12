@@ -55,6 +55,8 @@ struct SolennixApp: App {
         let revenueCatAPIKey = (info?["REVENUECAT_PUBLIC_API_KEY"] as? String) ?? ""
         subManager.configure(apiKey: revenueCatAPIKey)
 
+        auth.signOutDelegate = AppSignOutDelegate.shared
+
         _authManager = State(initialValue: auth)
         _planLimitsManager = State(initialValue: limits)
         _subscriptionManager = State(initialValue: subManager)
@@ -63,8 +65,12 @@ struct SolennixApp: App {
         // Wire APIClient into LiveActivityManager for push token registration.
         LiveActivityManager.shared.configure(apiClient: client)
 
-        // Configure Google Sign-In
-        GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: "43149798972-0nn6jdl55fau93m4knb6pts1k2eikan8.apps.googleusercontent.com")
+        // Configure Google Sign-In — client ID read from Info.plist (set via GOOGLE_CLIENT_ID in xcconfig).
+        let googleClientID = (info?["GOOGLE_CLIENT_ID"] as? String) ?? ""
+        if googleClientID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            SentryHelper.capture(message: "Google client ID missing: set GOOGLE_CLIENT_ID in Secrets.xcconfig.")
+        }
+        GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: googleClientID)
 
         // Configure Tab Bar appearance globally
         let tabBarAppearance = UITabBarAppearance()
@@ -131,6 +137,11 @@ struct SolennixApp: App {
                 .environment(cacheManager)
                 .environment(\.locale, preferredLocale.isEmpty ? .autoupdatingCurrent : Locale(identifier: preferredLocale))
                 .task {
+                    // Wire NotificationManager's auth gate early so cold-start
+                    // notification taps resolve against AuthManager.isAuthenticated.
+                    NotificationManager.shared.isAuthorizedForNavigation = { [authManager] in
+                        authManager.isAuthenticated
+                    }
                     // Ensure auth manager is set on the actor before checking auth
                     await apiClient.setAuthManager(authManager)
                     await authManager.checkAuth()
@@ -156,7 +167,7 @@ struct SolennixApp: App {
                     await processPendingDeviceTokenRegistration()
                     await syncUpcomingEventNotifications()
                 }
-                .onChange(of: authManager.authState) { _, newState in
+                .onChange(of: authManager.authState) { oldState, newState in
                     // Sync RevenueCat when user signs in (fresh login/register/social auth).
                     // The .task above handles session restore at app launch; this covers
                     // transitions that happen AFTER launch — matching Android parity.
@@ -171,6 +182,16 @@ struct SolennixApp: App {
                             await processPendingDeviceTokenRegistration()
                             await apiClient.flushQueuedMutations()
                             await syncUpcomingEventNotifications()
+                        }
+                    }
+
+                    // Session cleanup on logout / account deletion.
+                    // Guard: only run when transitioning FROM authenticated — not on cold
+                    // launch where the initial state is .unknown → .unauthenticated.
+                    if case .unauthenticated = newState,
+                       case .authenticated = oldState {
+                        Task {
+                            await performSessionCleanup()
                         }
                     }
                 }
@@ -196,6 +217,17 @@ struct SolennixApp: App {
                         Task {
                             await syncUpcomingEventNotifications()
                         }
+                        // Refresh month-bound data (dashboard KPIs, plan limits) so an app
+                        // that was backgrounded across a month boundary doesn't show stale data.
+                        // PlanLimitsManager.checkLimits() re-derives the current-month date
+                        // range on each call, so this is cheap and safe to call on every
+                        // foreground event.
+                        if authManager.isAuthenticated {
+                            Task {
+                                await planLimitsManager.checkLimits()
+                            }
+                            NotificationCenter.default.post(name: .solennixSceneActivated, object: nil)
+                        }
                     }
                 }
                 .task {
@@ -204,7 +236,11 @@ struct SolennixApp: App {
                     // the manager that resolves dependencies for that handler and
                     // schedules the next refresh.
                     if backgroundTaskManager == nil {
-                        let manager = BackgroundTaskManager(apiClient: apiClient, cacheManager: cacheManager)
+                        let manager = BackgroundTaskManager(
+                            apiClient: apiClient,
+                            cacheManager: cacheManager,
+                            authManager: authManager
+                        )
                         BackgroundTaskManager.shared = manager
                         manager.scheduleAppRefresh()
                         backgroundTaskManager = manager
@@ -259,7 +295,10 @@ struct SolennixApp: App {
         do {
             let body = ["token": token, "platform": "ios"]
             let _: EmptyResponse = try await apiClient.post(Endpoint.registerDevice, body: body)
+            // Clear the pending-retry key and record the successfully registered token
+            // so AppSignOutDelegate can unregister it even after the pending key is gone.
             UserDefaults.standard.removeObject(forKey: "pendingDeviceToken")
+            UserDefaults.standard.set(token, forKey: "registeredDeviceToken")
         } catch {
             SentryHelper.capture(error: error, context: "push_register_device")
         }
@@ -287,6 +326,47 @@ struct SolennixApp: App {
             SentryHelper.capture(error: error, context: "sync_upcoming_event_notifications")
         }
     }
+
+    // MARK: - Session Cleanup
+
+    /// Clears all per-user local state after logout or account deletion.
+    /// Must only be called when transitioning FROM authenticated → unauthenticated
+    /// (guarded by the onChange observer) so it does not fire on cold launch.
+    private func performSessionCleanup() async {
+        // 1. Clear SwiftData cache
+        try? cacheManager?.clearAll()
+
+        // 2. Clear widget shared container and reload widget timelines so widgets
+        //    show a logged-out / empty state immediately.
+        await WidgetDataSync.shared.clearWidgetData()
+
+        // 3. Cancel all pending local event reminders. Payment receipts that already
+        //    fired are in Notification Center (delivered) and cannot be removed here
+        //    without also removing the legitimate history — leave them as-is.
+        NotificationManager.shared.cancelAllPendingNotifications()
+
+        // 4. Reset per-user UserDefaults keys.
+        //    - hasSeenOnboarding: next user should see onboarding flow.
+        //    - hasRequestedPushAuthorization: next user should be prompted for push.
+        //    - pendingDeviceToken: stale token must not be registered for the next user.
+        //    - registeredDeviceToken: cleared after unregistration in willClearTokens.
+        //    NOT reset: "appearance" (device-wide preference, not user-specific),
+        //               "preferredLocale" (will be overwritten on next login).
+        UserDefaults.standard.removeObject(forKey: "hasSeenOnboarding")
+        UserDefaults.standard.removeObject(forKey: "hasRequestedPushAuthorization")
+        UserDefaults.standard.removeObject(forKey: "pendingDeviceToken")
+        UserDefaults.standard.removeObject(forKey: "registeredDeviceToken")
+
+        // 5. Clear Core Spotlight index so the next user cannot search previous
+        //    user's events, clients, or products from the system search.
+        SpotlightIndexer.removeAll()
+
+        // Mirror the @AppStorage-backed properties so they take effect immediately
+        // (UserDefaults.standard and @AppStorage share the same store, but the
+        // @AppStorage wrapper caches the value; resetting via UserDefaults is enough
+        // for newly launched views — in-flight views will re-read on next render).
+        hasRequestedPushAuthorization = false
+    }
 }
 
 private final class SentryUserTrackingDelegate: UserTrackingDelegate, @unchecked Sendable {
@@ -299,6 +379,40 @@ private final class SentryUserTrackingDelegate: UserTrackingDelegate, @unchecked
 
     func clearUser() {
         SentryHelper.clearUser()
+    }
+}
+
+// MARK: - App Sign-Out Delegate
+
+/// Implements `SignOutDelegate` to unregister the push device token from the backend
+/// while the auth token is still valid (called inside `AuthManager.signOut()` before
+/// `clearTokens()`). Errors are swallowed — unregistration is best-effort.
+private final class AppSignOutDelegate: SignOutDelegate, @unchecked Sendable {
+    static let shared = AppSignOutDelegate()
+    private init() {}
+
+    func willClearTokens(apiClient: APIClient) async {
+        // Prefer the in-memory token (always set while the app is live).
+        // NotificationManager is @MainActor, so read deviceToken on the main actor
+        // first, then fall back to the UserDefaults key written on successful registration.
+        // This covers the case where "pendingDeviceToken" was already removed
+        // after a successful register call.
+        let liveToken = await MainActor.run { NotificationManager.shared.deviceToken }
+        let token: String?
+        if let live = liveToken, !live.isEmpty {
+            token = live
+        } else {
+            token = UserDefaults.standard.string(forKey: "registeredDeviceToken")
+        }
+
+        guard let token, !token.isEmpty else { return }
+
+        let body = ["token": token, "platform": "ios"]
+        _ = try? await apiClient.post(Endpoint.unregisterDevice, body: body) as EmptyResponse
+
+        // Clear the persisted keys so a subsequent user does not inherit them.
+        UserDefaults.standard.removeObject(forKey: "registeredDeviceToken")
+        UserDefaults.standard.removeObject(forKey: "pendingDeviceToken")
     }
 }
 

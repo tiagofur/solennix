@@ -249,7 +249,8 @@ public struct EventPaymentsDetailView: View {
 
     private func formatDate(_ dateString: String) -> String {
         guard let date = Date.fromServerDay(dateString) else { return dateString }
-        return date.formatted(style: "d MMM yyyy")
+        // UTC display formatter — parse/display timezone must match to avoid day shift.
+        return date.formattedServerDay(style: "d MMM yyyy")
     }
 
     private func paymentMethodLabel(_ method: String) -> String {

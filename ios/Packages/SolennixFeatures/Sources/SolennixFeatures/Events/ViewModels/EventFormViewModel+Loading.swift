@@ -54,7 +54,7 @@ extension EventFormViewModel {
             SelectedProduct(
                 productId: item.productId,
                 product: products.first(where: { $0.id == item.productId }),
-                quantity: Double(item.quantity),
+                quantity: item.quantity,
                 unitPrice: item.unitPrice,
                 discount: 0
             )
@@ -85,9 +85,9 @@ extension EventFormViewModel {
                 clientName = client.name
             }
 
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            if let date = dateFormatter.date(from: event.eventDate) {
+            // Parse in UTC via fromServerDay — keeps the calendar day stable
+            // across device timezones when pre-populating the date picker.
+            if let date = Date.fromServerDay(event.eventDate) {
                 eventDate = date
             }
 
@@ -119,7 +119,7 @@ extension EventFormViewModel {
                 SelectedProduct(
                     productId: ep.productId,
                     product: products.first(where: { $0.id == ep.productId }),
-                    quantity: Double(ep.quantity),
+                    quantity: ep.quantity,
                     unitPrice: ep.unitPrice,
                     discount: ep.discount
                 )

@@ -91,4 +91,7 @@
     <string name="auth_verification_resend">Reenviar enlace de verificación</string>
     <string name="auth_verification_resent">Te enviamos un nuevo enlace de verificación.</string>
     <string name="auth_verification_resend_requires_email">Ingresá un correo válido para reenviar el enlace.</string>
+    <string name="auth_error_account_blocked">Tu cuenta está suspendida. Contactá al soporte para más información.</string>
+    <string name="auth_error_account_deleted">Esta cuenta fue eliminada. Si creés que es un error, contactá al soporte.</string>
+    <string name="auth_error_rate_limited">Demasiados intentos. Esperá un momento e intentá de nuevo.</string>
 </resources>

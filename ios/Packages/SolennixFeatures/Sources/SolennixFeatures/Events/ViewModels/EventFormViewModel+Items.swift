@@ -21,7 +21,8 @@ extension EventFormViewModel {
         }
 
         if let teamId = product.staffTeamId, !teamId.isEmpty {
-            Task { await expandStaffTeam(teamId: teamId) }
+            let task = Task { await expandStaffTeam(teamId: teamId) }
+            pendingTasks.append(task)
         }
     }
 

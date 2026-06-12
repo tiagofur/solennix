@@ -16,6 +16,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Modal } from "@/components/Modal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/useToast";
+import { ApiHttpError } from "@/lib/api";
 
 const QUERY_KEY = ["payment-submissions", "pending"];
 
@@ -131,12 +132,11 @@ export const PaymentInboxPage: React.FC = () => {
 		normalizedPlan,
 	);
 
-	const errorMessage = error instanceof Error ? error.message : null;
 	const shouldShowPlanLocked =
 		isFreePlan ||
-		Boolean(
-			errorMessage && /pro-exclusive|paid plan|upgrade/i.test(errorMessage),
-		);
+		(error instanceof ApiHttpError && (error.statusCode === 402 || error.statusCode === 403));
+
+	const errorMessage = error instanceof Error ? error.message : null;
 
 	if (error && !shouldShowPlanLocked) {
 		return (

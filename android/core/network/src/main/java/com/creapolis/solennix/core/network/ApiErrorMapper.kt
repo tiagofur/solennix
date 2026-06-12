@@ -31,6 +31,9 @@ fun Throwable.toApiError(): ApiError = when (this) {
     // Map SolennixException hierarchy to ApiError so both systems are unified
     is SolennixException.Auth -> ApiError.Unauthorized
     is SolennixException.PlanLimitExceeded -> ApiError.PlanLimitExceeded(limitType, current, max)
+    is SolennixException.RateLimited -> ApiError.RateLimited(retryAfterSeconds)
+    is SolennixException.AccountBlocked -> ApiError.AccountBlocked
+    is SolennixException.AccountDeleted -> ApiError.AccountDeleted
     is SolennixException.Server -> when (code) {
         HttpStatusCode.Unauthorized.value -> ApiError.Unauthorized
         HttpStatusCode.Forbidden.value -> ApiError.Forbidden
@@ -44,6 +47,9 @@ fun Throwable.toApiError(): ApiError = when (this) {
     is ClientRequestException -> when (response.status) {
         HttpStatusCode.Unauthorized -> ApiError.Unauthorized
         HttpStatusCode.Forbidden -> ApiError.Forbidden
+        HttpStatusCode.TooManyRequests -> ApiError.RateLimited(
+            response.headers["Retry-After"]?.toIntOrNull()
+        )
         HttpStatusCode.NotFound -> ApiError.NotFound
         HttpStatusCode.Conflict -> ApiError.Conflict
         HttpStatusCode.UnprocessableEntity -> ApiError.ValidationError(emptyMap())

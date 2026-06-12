@@ -240,6 +240,7 @@
     "note": "Nota",
     "balance": "Saldo",
     "amount_required": "Monto requerido",
+    "amount_min_error": "El monto debe ser mayor a 0.",
     "reference_placeholder": "Ref. de pago...",
     "methods": {
       "cash": "Efectivo 💵",
