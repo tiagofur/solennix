@@ -25,6 +25,21 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.8
 
+> [!success] 2026-06-11 — iOS HIG Quick Wins (branch `feat/ios-hig-quick-wins`)
+> Se aplicaron mejoras de calidad HIG en iOS siguiendo las guías oficiales de Apple (iOS 17+).
+> - **TipKit:** Se activaron tips contextuales reales (`NewEventTip`, `QuickQuoteTip`, `SwipeActionTip`) en lugar de los placeholders anteriores. `quickQuoteTip` se ancló al botón "+" del toolbar (el Quick Quote vive dentro de un `Menu` — no puede anclarse a ítems internos).
+> - **Skeleton loading:** `DashboardView` y `EventListView` muestran tarjetas skeleton animadas en la primera carga. Se corrigió un bug donde el skeleton reaparecía en pull-to-refresh para usuarios sin eventos: se agregó `hasLoadedOnce` al `DashboardViewModel` (se activa tras la primera carga exitosa o fallida) y se usó esa flag como condición de visibilidad.
+> - **Dynamic Type (`@ScaledMetric`):** Se reemplazaron tamaños de ícono hardcodeados por `@ScaledMetric(relativeTo:)` en las vistas de empty state de `EventListView` y en los íconos de formulario de `ForgotPasswordView` y `ResetPasswordView`, garantizando escala correcta con tamaños de fuente accesibles.
+> - **`sensoryFeedback` condicional:** Se corrigió el doble haptic en la confirmación de borrado en `EventListView` y `ClientListView`. La variante con closure `{ _, newValue in newValue }` garantiza que el haptic solo dispara cuando el diálogo aparece (transición `false → true`), no al cerrarse.
+> - **`SwiftUI.List` nativo para swipe actions:** `EventListView` usa `List` nativo en iPhone para exponer acciones de swipe (eliminar por trailing, checklist por leading) y pull-to-refresh nativo, alineado con el patrón de `ClientListView`.
+> - **Teclado y dismissal en formularios:** Se agregó toolbar con botón "Listo" sobre el teclado numérico y `.interactiveDismissDisabled(false)` en formularios clave para cumplir el contrato HIG de dismissal interactivo.
+> - **Limpieza de APIs deprecadas:** Se reemplazó `UIScreen.main` por `GeometryReader`/`UIWindowScene` y se eliminaron hacks de `asyncAfter` por `Task { @MainActor in }` en toda la codebase iOS.
+> - **Drag indicators en sheets:** Se agregó `.presentationDragIndicator(.visible)` en todos los sheets resizables.
+> - **Correcciones de revisión de código:** `h1Premium` corregido de `.largeTitle` (34pt) a `.title` (28pt); `GeometryReader` en layouts iPad de Auth recibe `.frame(maxWidth: .infinity, maxHeight: .infinity)` para evitar colapso de layout; haptic doble en diálogos de borrado corregido.
+> - **Próxima fase planeada:** adopción de Liquid Glass (iOS 26 SDK) — superficies con material nativo, integración con el nuevo tab bar translúcido y reestructuración del shell visual.
+> - **Archivos clave:** `Typography.swift`, `EventListView.swift`, `ClientListView.swift`, `DashboardViewModel.swift`, `DashboardView.swift`, `LoginView.swift`, `RegisterView.swift`, `ForgotPasswordView.swift`, `ResetPasswordView.swift`.
+> - **Validación:** `xcodebuild ... build` → BUILD SUCCEEDED.
+
 > [!success] 2026-06-10 — Integridad de Sesión y Caché (Issue #516)
 > Se implementó la limpieza del caché de React Query al cerrar sesión y la invalidación dinámica de las queries para asegurar la sincronía de la UI y los límites de plan.
 > - **Caché limpiado en Logout:** Modificación en `AuthContext.tsx` para llamar a `queryClient.clear()` en `signOut` y ante el evento global de logout.
