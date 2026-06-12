@@ -31,7 +31,6 @@ public final class EventDetailViewModel {
     public var paymentNotes: String = ""
     public var isSavingPayment: Bool = false
     public var isUploadingPhoto: Bool = false
-    public var deletePaymentId: String?
 
     public var errorMessage: String?
     public var isLiveActivityActive: Bool = false
@@ -74,9 +73,14 @@ public final class EventDetailViewModel {
     }
 
     /// Bumped by 1 each time a payment is registered AND the event becomes fully paid
-    /// as a result. Views can trigger `.sensoryFeedback(.success, trigger: fullyPaidCounter)`
-    /// to play the success haptic only when full payment is reached, not on initial load.
+    /// as a result. Used by PaymentCollectionRing's `.sensoryFeedback(.success, trigger:)`.
     public var fullyPaidCounter: Int = 0
+
+    /// Bumped by 1 each time a payment is saved but does NOT tip the event to fully paid.
+    /// EventDetailView observes this for its `.sensoryFeedback(.success, trigger:)` so
+    /// that exactly one success haptic fires per payment — never a double haptic on the
+    /// fully-paid crossing (where fullyPaidCounter fires instead).
+    public var paymentSavedCounter: Int = 0
 
     /// Monto total del anticipo basado en `depositPercent` y `totalAmount`.
     /// Devuelve 0 si el evento no tiene porcentaje de anticipo.
@@ -203,6 +207,34 @@ public final class EventDetailViewModel {
         }
     }
 
+    /// Fetches only the extras list for an event.
+    /// Use this from EventExtrasDetailView to avoid firing 8 parallel requests.
+    @MainActor
+    public func loadExtrasOnly(eventId: String) async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let result: [EventExtra] = try await apiClient.get(Endpoint.eventExtras(eventId))
+            extras = result
+        } catch {
+            // Extras list is non-critical — silently absorb; view shows empty state.
+        }
+    }
+
+    /// Fetches only the supplies list for an event.
+    /// Use this from EventSuppliesDetailView to avoid firing 8 parallel requests.
+    @MainActor
+    public func loadSuppliesOnly(eventId: String) async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let result: [EventSupply] = try await apiClient.get(Endpoint.eventSupplies(eventId))
+            supplies = result
+        } catch {
+            // Supplies list is non-critical — silently absorb; view shows empty state.
+        }
+    }
+
     /// Fetches only the products list and the product catalog (for name resolution).
     /// Use this from EventProductsDetailView to avoid firing 8 parallel requests.
     @MainActor
@@ -269,12 +301,14 @@ public final class EventDetailViewModel {
             let payment: Payment = try await apiClient.post(Endpoint.payments, body: AnyCodable(body))
 
             payments.append(payment)
-            HapticsHelper.play(.success)
 
-            // Bump fullyPaidCounter when this payment tips the event to fully-paid.
-            // Views observe this to trigger success haptic/animation only on the crossing.
+            // Route to the correct counter so exactly one haptic fires:
+            // - fully-paid crossing → fullyPaidCounter (ring's .sensoryFeedback fires)
+            // - any other payment   → paymentSavedCounter (EventDetailView's .sensoryFeedback fires)
             if isFullyPaid {
                 fullyPaidCounter &+= 1
+            } else {
+                paymentSavedCounter &+= 1
             }
 
             // Notificar a la app target para que programe el recibo en Notification Center.

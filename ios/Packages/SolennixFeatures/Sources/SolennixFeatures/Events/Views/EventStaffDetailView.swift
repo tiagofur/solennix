@@ -76,11 +76,11 @@ public struct EventStaffDetailView: View {
                     }
                 } else {
                     HStack {
-                        Text("\(assignments.count) colaboradores asignados")
+                        Text(String(format: tr("events.detail.staff.assigned_count", "%d colaboradores asignados"), assignments.count))
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.textSecondary)
                         Spacer()
-                        Text("Total: \(totalFee.asMXN)")
+                        Text(String(format: tr("events.detail.staff.total_fee", "Total: %@"), totalFee.asMXN))
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundStyle(SolennixColors.primary)
@@ -111,7 +111,7 @@ public struct EventStaffDetailView: View {
                 Avatar(name: assignment.staffName ?? "?", photoURL: nil, size: 40)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(assignment.staffName ?? "Colaborador")
+                    Text(assignment.staffName ?? tr("events.detail.staff.name_fallback", "Colaborador"))
                         .font(.body)
                         .fontWeight(.semibold)
                         .foregroundStyle(SolennixColors.text)

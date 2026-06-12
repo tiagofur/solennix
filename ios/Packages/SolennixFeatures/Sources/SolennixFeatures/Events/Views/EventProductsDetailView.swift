@@ -62,11 +62,11 @@ public struct EventProductsDetailView: View {
                     // Summary
                     let subtotal = viewModel.products.reduce(0.0) { $0 + ($1.quantity * $1.unitPrice) }
                     HStack {
-                        Text("\(viewModel.products.count) productos")
+                        Text(String(format: tr("events.detail.products.count", "%d productos"), viewModel.products.count))
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.textSecondary)
                         Spacer()
-                        Text("Subtotal: \(subtotal.asMXN)")
+                        Text(String(format: tr("events.detail.products.subtotal", "Subtotal: %@"), subtotal.asMXN))
                             .font(.subheadline)
                             .fontWeight(.bold)
                             .foregroundStyle(SolennixColors.primary)

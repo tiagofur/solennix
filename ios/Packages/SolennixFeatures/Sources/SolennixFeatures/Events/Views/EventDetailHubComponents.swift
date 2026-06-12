@@ -21,16 +21,22 @@ struct EventCountdownChip: View {
 
     private var proximity: Proximity? {
         guard status != .cancelled else { return nil }
-        guard let eventDay = Date.fromServerDay(eventDate) else { return nil }
 
-        // Use UTC-pinned dates (matching fromServerDay contract) for calendar-day math.
-        let cal = Calendar.current
-        let nowUTC = Date()
-        // Start of today in UTC — aligns with the midnight-UTC anchor of fromServerDay.
-        let startOfToday = cal.startOfDay(for: nowUTC)
-        let startOfEvent = cal.startOfDay(for: eventDay)
+        // Compare CALENDAR DAY strings, not Date values.
+        // eventDate is a raw "yyyy-MM-dd" server string; today is the device's
+        // local calendar day (via localTodayString). We parse both with
+        // fromServerDay (midnight UTC) and diff with a UTC calendar so that
+        // the day-difference is in pure 24-hour units, independent of the
+        // device's timezone offset.
+        let todayString = Date.localTodayString()                  // e.g. "2026-06-15" in device TZ
+        let eventDayString = String(eventDate.prefix(10))          // first 10 chars of server date
 
-        let comps = cal.dateComponents([.day], from: startOfToday, to: startOfEvent)
+        guard let todayUTC = Date.fromServerDay(todayString),
+              let eventUTC = Date.fromServerDay(eventDayString) else { return nil }
+
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "UTC")!
+        let comps = cal.dateComponents([.day], from: todayUTC, to: eventUTC)
         let days = comps.day ?? 0
 
         if days == 0 { return .today }
@@ -71,10 +77,14 @@ struct EventCountdownChip: View {
 
     private func label(_ p: Proximity) -> String {
         switch p {
-        case .today:        return "HOY"
-        case .tomorrow:     return "MAÑANA"
-        case .future(let n): return "FALTAN \(n) DÍAS"
-        case .past:         return "FINALIZADO"
+        case .today:
+            return FeatureL10n.text("events.detail.countdown.today", "HOY")
+        case .tomorrow:
+            return FeatureL10n.text("events.detail.countdown.tomorrow", "MAÑANA")
+        case .future(let n):
+            return String(format: FeatureL10n.text("events.detail.countdown.future", "FALTAN %d DÍAS"), n)
+        case .past:
+            return FeatureL10n.text("events.detail.countdown.past", "FINALIZADO")
         }
     }
 
@@ -161,7 +171,7 @@ struct PaymentCollectionRing: View {
                         .minimumScaleFactor(0.6)
                         .lineLimit(1)
 
-                    Text("cobrado")
+                    Text(FeatureL10n.text("events.detail.payment_ring.collected", "cobrado"))
                         .font(.system(size: size * 0.12))
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
@@ -361,15 +371,15 @@ struct EventDetailClientInfoCard: View {
                     if !client.phone.isEmpty {
                         actionChip(
                             icon: "phone.fill",
-                            label: "Llamar",
-                            url: URL(string: "tel:\(client.phone.filter { !$0.isWhitespace })")
+                            label: FeatureL10n.text("events.detail.client.action.call", "Llamar"),
+                            url: URL(string: "tel:\(client.phone.filter { $0.isNumber || $0 == "+" })")
                         )
                     }
 
                     if let digits = whatsappDigits {
                         actionChip(
                             icon: "message.fill",
-                            label: "WhatsApp",
+                            label: FeatureL10n.text("events.detail.client.action.whatsapp", "WhatsApp"),
                             url: URL(string: "https://wa.me/\(digits)")
                         )
                     }
@@ -377,7 +387,7 @@ struct EventDetailClientInfoCard: View {
                     if let email = client.email, !email.isEmpty {
                         actionChip(
                             icon: "envelope.fill",
-                            label: "Email",
+                            label: FeatureL10n.text("events.detail.client.action.email", "Email"),
                             url: URL(string: "mailto:\(email)")
                         )
                     }
@@ -408,7 +418,11 @@ struct EventDetailClientInfoCard: View {
         }
         .buttonStyle(.plain)
         .frame(minHeight: 44)
-        .accessibilityLabel("\(label): \(client.name)")
+        .accessibilityLabel(
+            label == FeatureL10n.text("events.detail.client.action.call", "Llamar")
+                ? "\(label) a \(client.phone)"
+                : "\(label): \(client.name)"
+        )
     }
 }
 
@@ -567,7 +581,10 @@ struct EventDetailPaymentSummaryCard: View {
         self.fullyPaidCounter = fullyPaidCounter
     }
 
-    @ScaledMetric(relativeTo: .body) private var ringSize: CGFloat = 64
+    @ScaledMetric(relativeTo: .body) private var scaledRingSize: CGFloat = 64
+
+    /// Cap the ring at 96 pt to prevent ballooning at AX text sizes.
+    private var ringSize: CGFloat { min(scaledRingSize, 96) }
 
     var body: some View {
         NavigationLink(value: route) {
@@ -821,14 +838,10 @@ struct EventDetailPrimaryLinkCard: View {
                 Text(title)
                     .font(.body.weight(.medium))
                 Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(SolennixColors.textTertiary)
             }
             .foregroundStyle(tint)
             .frame(minHeight: 44)
         }
-        .buttonStyle(.plain)
         .listRowBackground(background)
         .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
     }
@@ -931,8 +944,12 @@ struct EventDetailLiveActivityCard: View {
 // MARK: - Hub Skeleton (in-List placeholder rows)
 
 struct EventDetailHubSkeleton: View {
+    // Mirror the same base size the real PaymentCollectionRing uses so skeleton
+    // and real ring are the same diameter at default Dynamic Type.
+    @ScaledMetric(relativeTo: .body) private var skeletonRingSize: CGFloat = 64
+
     var body: some View {
-        // Header skeleton
+        // Header skeleton — mirrors EventDetailHeaderCard
         Section {
             VStack(alignment: .leading, spacing: Spacing.md) {
                 HStack(spacing: Spacing.md) {
@@ -956,21 +973,56 @@ struct EventDetailHubSkeleton: View {
             .listRowSeparator(.hidden)
         }
 
-        // Finance skeleton
+        // Client card skeleton — mirrors EventDetailClientInfoCard
         Section {
-            HStack(spacing: Spacing.lg) {
+            HStack(spacing: Spacing.sm) {
                 Circle()
                     .fill(SolennixColors.surfaceAlt)
-                    .frame(width: 64, height: 64)
-                VStack(alignment: .leading, spacing: Spacing.sm) {
-                    SkeletonLine(width: 120, height: 14)
-                    SkeletonLine(width: 80, height: 28)
+                    .frame(width: 32, height: 32)
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    SkeletonLine(width: 140, height: 14)
+                    SkeletonLine(width: 80, height: 12)
                 }
                 Spacer()
-                VStack(alignment: .trailing, spacing: Spacing.sm) {
-                    SkeletonLine(width: 80, height: 14)
-                    SkeletonLine(width: 60, height: 28)
+            }
+            .padding(Spacing.md)
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+        }
+
+        // Finance summary skeleton — mirrors EventDetailFinanceSummaryCard
+        Section {
+            HStack(spacing: Spacing.md) {
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    SkeletonLine(width: 60, height: 12)
+                    SkeletonLine(width: 100, height: 24)
                 }
+                Spacer()
+                VStack(alignment: .trailing, spacing: Spacing.xs) {
+                    SkeletonLine(width: 60, height: 12)
+                    SkeletonLine(width: 80, height: 24)
+                }
+            }
+            .padding(Spacing.lg)
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+        }
+
+        // Payment ring skeleton — mirrors EventDetailPaymentSummaryCard
+        Section {
+            HStack(alignment: .center, spacing: Spacing.lg) {
+                // Ring placeholder — sized to match the real ring at this Dynamic Type size
+                Circle()
+                    .fill(SolennixColors.surfaceAlt)
+                    .frame(
+                        width: min(skeletonRingSize, 96),
+                        height: min(skeletonRingSize, 96)
+                    )
+                VStack(spacing: Spacing.sm) {
+                    SkeletonLine(height: 36)
+                    SkeletonLine(height: 36)
+                }
+                .frame(maxWidth: .infinity)
             }
             .padding(Spacing.lg)
             .listRowBackground(SolennixColors.card)

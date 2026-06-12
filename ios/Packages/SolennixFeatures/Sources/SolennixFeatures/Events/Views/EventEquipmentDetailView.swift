@@ -61,7 +61,7 @@ public struct EventEquipmentDetailView: View {
                     }
                 } else {
                     HStack {
-                        Text("\(viewModel.equipment.count) equipos asignados")
+                        Text(String(format: tr("events.detail.equipment.assigned_count", "%d equipos asignados"), viewModel.equipment.count))
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.textSecondary)
                         Spacer()

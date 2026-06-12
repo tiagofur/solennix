@@ -18,8 +18,8 @@ public struct EventExtrasDetailView: View {
 
     public var body: some View {
         Group {
-            if viewModel.isLoading && viewModel.event == nil {
-                ProgressView("Cargando...")
+            if viewModel.isLoading && viewModel.extras.isEmpty {
+                ProgressView(tr("events.detail.extras.loading", "Cargando..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 content
@@ -37,7 +37,7 @@ public struct EventExtrasDetailView: View {
                 }
             }
         }
-        .task { await viewModel.loadData(eventId: eventId) }
+        .task { await viewModel.loadExtrasOnly(eventId: eventId) }
     }
 
     private var content: some View {
@@ -61,11 +61,11 @@ public struct EventExtrasDetailView: View {
                 } else {
                     let subtotal = viewModel.extras.reduce(0.0) { $0 + $1.price }
                     HStack {
-                        Text("\(viewModel.extras.count) extras")
+                        Text(String(format: tr("events.detail.extras.count", "%d extras"), viewModel.extras.count))
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.textSecondary)
                         Spacer()
-                        Text("Subtotal: \(subtotal.asMXN)")
+                        Text(String(format: tr("events.detail.extras.subtotal", "Subtotal: %@"), subtotal.asMXN))
                             .font(.subheadline)
                             .fontWeight(.bold)
                             .foregroundStyle(SolennixColors.info)

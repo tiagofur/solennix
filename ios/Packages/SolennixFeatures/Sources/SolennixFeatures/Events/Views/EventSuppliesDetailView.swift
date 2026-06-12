@@ -18,8 +18,8 @@ public struct EventSuppliesDetailView: View {
 
     public var body: some View {
         Group {
-            if viewModel.isLoading && viewModel.event == nil {
-                ProgressView("Cargando...")
+            if viewModel.isLoading && viewModel.supplies.isEmpty {
+                ProgressView(tr("events.detail.supplies.loading", "Cargando..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 content
@@ -37,7 +37,7 @@ public struct EventSuppliesDetailView: View {
                 }
             }
         }
-        .task { await viewModel.loadData(eventId: eventId) }
+        .task { await viewModel.loadSuppliesOnly(eventId: eventId) }
     }
 
     private var content: some View {
@@ -70,7 +70,7 @@ public struct EventSuppliesDetailView: View {
                                 .font(.title3)
                                 .fontWeight(.bold)
                                 .foregroundStyle(SolennixColors.warning)
-                            Text("Total")
+                            Text(tr("events.detail.supplies.stat.total", "Total"))
                                 .font(.caption2)
                                 .foregroundStyle(SolennixColors.textSecondary)
                         }
@@ -81,7 +81,7 @@ public struct EventSuppliesDetailView: View {
                                 .font(.title3)
                                 .fontWeight(.bold)
                                 .foregroundStyle(SolennixColors.success)
-                            Text("Del Stock")
+                            Text(tr("events.detail.supplies.stat.stock", "Del Stock"))
                                 .font(.caption2)
                                 .foregroundStyle(SolennixColors.textSecondary)
                         }
@@ -92,7 +92,7 @@ public struct EventSuppliesDetailView: View {
                                 .font(.title3)
                                 .fontWeight(.bold)
                                 .foregroundStyle(SolennixColors.error)
-                            Text("Compra")
+                            Text(tr("events.detail.supplies.stat.purchase", "Compra"))
                                 .font(.caption2)
                                 .foregroundStyle(SolennixColors.textSecondary)
                         }
@@ -105,7 +105,7 @@ public struct EventSuppliesDetailView: View {
                                 .foregroundStyle(SolennixColors.warning)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.7)
-                            Text("Costo")
+                            Text(tr("events.detail.supplies.stat.cost", "Costo"))
                                 .font(.caption2)
                                 .foregroundStyle(SolennixColors.textSecondary)
                         }
@@ -128,7 +128,7 @@ public struct EventSuppliesDetailView: View {
     private func supplyRow(_ supply: EventSupply) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: Spacing.xxs) {
-                Text(supply.supplyName ?? "Insumo")
+                Text(supply.supplyName ?? tr("events.detail.supplies.row.fallback", "Insumo"))
                     .font(.body)
                     .fontWeight(.medium)
                     .foregroundStyle(SolennixColors.text)
@@ -156,7 +156,9 @@ public struct EventSuppliesDetailView: View {
     }
 
     private func sourceBadge(_ source: SupplySource) -> some View {
-        let label = source == .stock ? "Almacen" : "Compra"
+        let label = source == .stock
+            ? tr("events.detail.supplies.source.stock", "Almacén")
+            : tr("events.detail.supplies.source.purchase", "Compra")
         let color = source == .stock ? SolennixColors.success : SolennixColors.warning
         return Text(label)
             .font(.caption2)

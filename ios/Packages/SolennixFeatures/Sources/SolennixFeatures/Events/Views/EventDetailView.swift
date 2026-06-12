@@ -49,6 +49,7 @@ public struct EventDetailView: View {
             }
         }
         .background(SolennixColors.surfaceGrouped)
+        .sensoryFeedback(.success, trigger: viewModel.paymentSavedCounter)
         .sensoryFeedback(.impact(weight: .medium), trigger: duplicateHapticTrigger)
         .navigationTitle(tr("events.detail.title", "Detalle del evento"))
         .navigationBarTitleDisplayMode(.inline)
@@ -102,7 +103,7 @@ public struct EventDetailView: View {
             }
             Button(tr("events.form.cancel", "Cancelar"), role: .cancel) {}
         } message: {
-            Text(tr("events.detail.delete.message", "Estas seguro de que quieres eliminar este evento? Esta accion no se puede deshacer."))
+            Text(tr("events.detail.delete.message", "¿Estás seguro de que quieres eliminar este evento? Esta acción no se puede deshacer."))
         }
         .sheet(isPresented: $viewModel.showPaymentSheet) {
             paymentSheet
