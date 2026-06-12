@@ -29,6 +29,8 @@ public struct ClientFormView: View {
         }
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
+        .scrollDismissesKeyboard(.interactively)
+        .keyboardDoneToolbar()
         .navigationTitle(clientId != nil
             ? tr("clients.form.edit_title", "Editar cliente")
             : tr("clients.form.new_title", "Nuevo cliente"))

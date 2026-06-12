@@ -27,6 +27,8 @@ public struct ProductFormView: View {
         }
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
+        .scrollDismissesKeyboard(.interactively)
+        .keyboardDoneToolbar()
         .navigationTitle(viewModel.isEditing ? ProductStrings.editProductTitle : ProductStrings.newProductTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
