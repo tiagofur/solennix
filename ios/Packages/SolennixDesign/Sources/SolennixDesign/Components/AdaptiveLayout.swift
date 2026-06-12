@@ -158,6 +158,8 @@ public struct AdaptiveAuthLayout<Form: View>: View {
         self.form = form()
     }
 
+    @ScaledMetric(relativeTo: .largeTitle) private var brandIconSize: CGFloat = 60
+
     public var body: some View {
         if sizeClass == .regular {
             HStack(spacing: 0) {
@@ -165,7 +167,7 @@ public struct AdaptiveAuthLayout<Form: View>: View {
                 VStack(spacing: Spacing.xl) {
                     Spacer()
                     Image(systemName: "sparkles")
-                        .font(.system(size: 60))
+                        .font(.system(size: brandIconSize))
                         .foregroundStyle(SolennixColors.primary)
                     Text("SOLENNIX")
                         .font(.largeTitle)

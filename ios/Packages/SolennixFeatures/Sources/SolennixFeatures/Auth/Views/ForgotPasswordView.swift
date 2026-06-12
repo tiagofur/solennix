@@ -11,6 +11,8 @@ public struct ForgotPasswordView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var viewModel: AuthViewModel?
+    @ScaledMetric(relativeTo: .largeTitle) private var formIconSize: CGFloat = 48
+    @ScaledMetric(relativeTo: .largeTitle) private var successIconSize: CGFloat = 64
 
     public init() {}
 
@@ -136,7 +138,7 @@ public struct ForgotPasswordView: View {
             // Instruction
             VStack(spacing: Spacing.sm) {
                 Image(systemName: "envelope.open.fill")
-                    .font(.system(size: 48))
+                    .font(.system(size: formIconSize))
                     .foregroundStyle(SolennixColors.primary)
 
                 Text(AuthStrings.forgotPasswordSubtitle)
@@ -189,7 +191,7 @@ public struct ForgotPasswordView: View {
             Spacer(minLength: Spacing.xxxl)
 
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 64))
+                .font(.system(size: successIconSize))
                 .foregroundStyle(SolennixColors.success)
 
             VStack(spacing: Spacing.sm) {

@@ -36,7 +36,7 @@ public struct KPICardView: View {
         VStack(spacing: Spacing.sm) {
             // Icon circle
             Image(systemName: icon)
-                .font(.system(size: 18, weight: .semibold))
+                .font(.body.weight(.semibold))
                 .foregroundStyle(iconColor)
                 .frame(width: 40, height: 40)
                 .background(iconBgColor)

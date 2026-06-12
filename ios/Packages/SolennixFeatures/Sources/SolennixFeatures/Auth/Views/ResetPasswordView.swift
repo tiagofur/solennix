@@ -11,6 +11,8 @@ public struct ResetPasswordView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var viewModel: AuthViewModel?
+    @ScaledMetric(relativeTo: .largeTitle) private var formIconSize: CGFloat = 48
+    @ScaledMetric(relativeTo: .largeTitle) private var successIconSize: CGFloat = 64
 
     let token: String
 
@@ -140,7 +142,7 @@ public struct ResetPasswordView: View {
             // Instruction
             VStack(spacing: Spacing.sm) {
                 Image(systemName: "key.fill")
-                    .font(.system(size: 48))
+                    .font(.system(size: formIconSize))
                     .foregroundStyle(SolennixColors.primary)
 
                 Text(AuthStrings.resetPasswordSubtitle)
@@ -196,7 +198,7 @@ public struct ResetPasswordView: View {
             Spacer(minLength: Spacing.xxxl)
 
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 64))
+                .font(.system(size: successIconSize))
                 .foregroundStyle(SolennixColors.success)
 
             VStack(spacing: Spacing.sm) {

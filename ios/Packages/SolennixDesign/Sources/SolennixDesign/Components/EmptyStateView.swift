@@ -8,6 +8,8 @@ public struct EmptyStateView: View {
     var actionTitle: String? = nil
     var action: (() -> Void)? = nil
 
+    @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 56
+
     public init(
         icon: String,
         title: String,
@@ -25,7 +27,7 @@ public struct EmptyStateView: View {
     public var body: some View {
         VStack(spacing: Spacing.md) {
             Image(systemName: icon)
-                .font(.system(size: 56))
+                .font(.system(size: iconSize))
                 .foregroundStyle(SolennixColors.textTertiary)
 
             Text(title)
