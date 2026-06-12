@@ -12,6 +12,7 @@ public struct EventListView: View {
     // MARK: - Properties
 
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.apiClient) private var apiClient
     @Environment(CacheManager.self) private var cacheManager: CacheManager?
     @Environment(ToastManager.self) private var toastManager
@@ -64,10 +65,7 @@ public struct EventListView: View {
             .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: Spacing.sm) {
-                    // Sort menu — Apple HIG: Menu in toolbar with checkmark
-                    // on the active field; tapping the same field flips the
-                    // ASC/DESC direction (mirrors Web's sortable columns).
-                    // Date filter calendar icon
+                    // Date filter
                     Button {
                         showDateFilter = true
                     } label: {
@@ -78,18 +76,7 @@ public struct EventListView: View {
                             .accessibilityLabel(tr("events.list.filters.title", "Filtrar por fecha"))
                     }
 
-                    Menu {
-                        sortMenuButton(field: .eventDate, label: tr("events.list.sort.date", "Fecha"))
-                        sortMenuButton(field: .serviceType, label: tr("events.list.sort.service", "Servicio"))
-                        sortMenuButton(field: .clientName, label: tr("events.list.sort.client", "Cliente"))
-                        sortMenuButton(field: .totalAmount, label: tr("events.list.sort.total", "Total"))
-                    } label: {
-                        Image(systemName: "arrow.up.arrow.down")
-                            .font(.body)
-                            .foregroundStyle(SolennixColors.primary)
-                            .accessibilityLabel(tr("events.list.sort.menu", "Ordenar eventos"))
-                    }
-
+                    // Add + overflow menu (sort + export consolidated per WU5)
                     Menu {
                         NavigationLink(value: Route.eventForm()) {
                             Label(tr("events.list.new_event", "Nuevo evento"), systemImage: "calendar.badge.plus")
@@ -107,18 +94,28 @@ public struct EventListView: View {
                             .foregroundStyle(SolennixColors.primary)
                             .accessibilityLabel(tr("events.list.create_event_or_quote", "Crear evento o cotización"))
                             .popoverTip(newEventTip)
-                            // quickQuoteTip anchors here because popoverTip cannot attach
-                            // to items inside a Menu's content (they have no stable frame).
                             .popoverTip(quickQuoteTip)
                     }
 
-                    Button {
-                        exportCsv()
+                    // Overflow: sort options + CSV export
+                    Menu {
+                        Section {
+                            sortMenuButton(field: .eventDate,    label: tr("events.list.sort.date",    "Fecha"))
+                            sortMenuButton(field: .serviceType,  label: tr("events.list.sort.service", "Servicio"))
+                            sortMenuButton(field: .clientName,   label: tr("events.list.sort.client",  "Cliente"))
+                            sortMenuButton(field: .totalAmount,  label: tr("events.list.sort.total",   "Total"))
+                        }
+                        Divider()
+                        Button {
+                            exportCsv()
+                        } label: {
+                            Label(tr("events.list.export_csv_aria", "Exportar eventos a CSV"), systemImage: "square.and.arrow.up")
+                        }
                     } label: {
-                        Image(systemName: "square.and.arrow.up")
+                        Image(systemName: "ellipsis.circle")
                             .font(.body)
                             .foregroundStyle(SolennixColors.primary)
-                            .accessibilityLabel(tr("events.list.export_csv_aria", "Exportar eventos a CSV"))
+                            .accessibilityLabel(tr("events.list.toolbar.more_actions", "Más acciones"))
                     }
                 }
             }
@@ -189,6 +186,7 @@ public struct EventListView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: Spacing.sm) {
                 ForEach(viewModel.statusFilters, id: \.label) { filter in
+                    let isSelected = viewModel.selectedStatus == filter.status
                     Button {
                         withAnimation(.easeInOut(duration: 0.2)) {
                             viewModel.selectedStatus = filter.status
@@ -205,26 +203,36 @@ public struct EventListView: View {
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(
-                                    viewModel.selectedStatus == filter.status
+                                    isSelected
                                         ? Color.white.opacity(0.3)
                                         : SolennixColors.textTertiary.opacity(0.2)
                                 )
                                 .clipShape(Capsule())
                         }
                         .foregroundStyle(
-                            viewModel.selectedStatus == filter.status
+                            isSelected
                                 ? .white
                                 : SolennixColors.textSecondary
                         )
                         .padding(.horizontal, Spacing.sm)
                         .padding(.vertical, Spacing.xs)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
                         .background(
-                            viewModel.selectedStatus == filter.status
+                            isSelected
                                 ? SolennixColors.primary
                                 : SolennixColors.surfaceAlt
                         )
                         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.full))
                     }
+                    .accessibilityLabel(
+                        isSelected
+                            ? String(format: tr("events.list.chip.selected_label", "%@, %lld eventos, seleccionado"),
+                                     filter.label, filter.count)
+                            : String(format: tr("events.list.chip.label", "%@, %lld eventos"),
+                                     filter.label, filter.count)
+                    )
+                    .accessibilityAddTraits(isSelected ? [.isSelected] : [])
                 }
             }
             .padding(.horizontal, Spacing.md)
@@ -411,8 +419,15 @@ public struct EventListView: View {
                             .opacity(0)
                             .accessibilityHidden(true)
                         }
-                        .accessibilityElement(children: .combine)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(cardAccessibilityLabel(event))
                         .accessibilityAddTraits(.isButton)
+                        // Edit and Checklist are exposed through the context-menu rotor automatically.
+                        // Only the delete action needs an explicit wired entry here.
+                        .accessibilityAction(named: tr("events.list.actions.delete", "Eliminar")) {
+                            viewModel.deleteTarget = event
+                            viewModel.showDeleteConfirm = true
+                        }
                         .listRowInsets(EdgeInsets(top: Spacing.xs, leading: Spacing.md, bottom: Spacing.xs, trailing: Spacing.md))
                         .listRowSeparator(.hidden)
                         .listRowBackground(Color.clear)
@@ -470,7 +485,7 @@ public struct EventListView: View {
     private var skeletonCards: some View {
         LazyVStack(spacing: Spacing.sm) {
             ForEach(0..<5, id: \.self) { _ in
-                SkeletonCard()
+                EventSkeletonCard()
             }
         }
         .padding(.horizontal, Spacing.md)
@@ -538,17 +553,23 @@ public struct EventListView: View {
 
     // MARK: - Empty State
 
+    @ViewBuilder
     private var emptyState: some View {
-        VStack(spacing: Spacing.md) {
-            Image(systemName: "doc.text.magnifyingglass")
-                .font(.system(size: emptyIconSize))
-                .foregroundStyle(SolennixColors.textTertiary)
+        let hasActiveFilters = viewModel.selectedStatus != nil
+            || !viewModel.searchQuery.isEmpty
+            || viewModel.activeFilterCount > 0
 
-            Text(tr("events.list.empty.no_results_title", "No se encontraron eventos"))
-                .font(.subheadline)
-                .foregroundStyle(SolennixColors.textSecondary)
+        if hasActiveFilters {
+            // Filtered/search empty — keep lean "no results" treatment
+            VStack(spacing: Spacing.md) {
+                Image(systemName: "doc.text.magnifyingglass")
+                    .font(.system(size: emptyIconSize))
+                    .foregroundStyle(SolennixColors.textTertiary)
 
-            if viewModel.selectedStatus != nil || !viewModel.searchQuery.isEmpty || viewModel.activeFilterCount > 0 {
+                Text(tr("events.list.empty.no_results_title", "No se encontraron eventos"))
+                    .font(.subheadline)
+                    .foregroundStyle(SolennixColors.textSecondary)
+
                 Button {
                     viewModel.selectedStatus = nil
                     viewModel.searchQuery = ""
@@ -560,61 +581,122 @@ public struct EventListView: View {
                         .foregroundStyle(SolennixColors.primary)
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.vertical, Spacing.xxxl)
+        } else {
+            // Truly empty — first-run teaching state.
+            // EmptyStateView renders icon/title/message; the NavigationLink
+            // below it drives the same Route.eventForm() push used by the
+            // toolbar "+" menu, styled identically to PremiumButton.
+            VStack(spacing: 0) {
+                EmptyStateView(
+                    icon: "calendar.badge.plus",
+                    title: tr("events.list.empty.first_run_title", "Crea tu primer evento"),
+                    message: tr("events.list.empty.first_run_message", "Registra tus eventos para llevar el control de fechas, clientes y pagos en un solo lugar.")
+                )
+
+                NavigationLink(value: Route.eventForm()) {
+                    Text(tr("events.list.empty.first_run_cta", "Crear evento"))
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, Spacing.xl)
+                        .padding(.vertical, 16)
+                        .background(SolennixGradient.premium)
+                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                        .shadowFab()
+                }
+                .padding(.bottom, Spacing.xxl)
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.vertical, Spacing.xxxl)
     }
 
     // MARK: - Event Card
 
-    /// Row layout matched across iOS / Android / Web:
-    ///   Row 1: Client name (bold) + Status badge (right)
-    ///   Row 2: Service type (caption)
-    ///   Row 3: 📅 Date  ·  🕐 Time range (or "Todo el día")
-    ///   Row 4 (conditional): 📍 Location, city
-    ///   Divider
-    ///   Row 5: 👥 N personas   (spacer)   $Total (bold primary)
+    /// Redesigned card with date-proximity anchor at top-left, status badge
+    /// top-right, client name + service + metadata + money bottom-right.
+    /// Layout adapts to accessibility type sizes via `dynamicTypeSize`.
     private func eventCard(_ event: Event) -> some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            // Title row: client (bold) + status badge
-            HStack(alignment: .top) {
-                Text(viewModel.clientName(for: event.clientId))
-                    .font(.subheadline)
-                    .fontWeight(.bold)
-                    .foregroundStyle(SolennixColors.text)
-                    .lineLimit(1)
+        let parsedDate = Self.parseEventDate(event.eventDate)
+        let dateLabel = relativeDateLabel(for: event, parsed: parsedDate)
+        let isUrgent = isEventUrgent(event, parsed: parsedDate)
 
-                Spacer(minLength: Spacing.sm)
+        return VStack(alignment: .leading, spacing: Spacing.xs) {
+            // Row 1: date lockup (top-left) + status badge (top-right)
+            if dynamicTypeSize >= .accessibility1 {
+                // Stacked layout for large accessibility sizes
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text(dateLabel)
+                        .font(.headline)
+                        .fontWeight(.bold)
+                        .foregroundStyle(isUrgent ? SolennixColors.warning : SolennixColors.text)
 
-                if viewModel.updatingStatusEventId == event.id {
-                    ProgressView()
-                        .controlSize(.mini)
-                        .tint(SolennixColors.primary)
-                } else {
-                    StatusBadge(status: event.status.rawValue)
+                    if viewModel.updatingStatusEventId == event.id {
+                        ProgressView()
+                            .controlSize(.mini)
+                            .tint(SolennixColors.primary)
+                    } else {
+                        StatusBadge(status: event.status.rawValue)
+                    }
+                }
+            } else {
+                HStack(alignment: .top) {
+                    Text(dateLabel)
+                        .font(.headline)
+                        .fontWeight(.bold)
+                        .foregroundStyle(isUrgent ? SolennixColors.warning : SolennixColors.text)
+
+                    Spacer(minLength: Spacing.sm)
+
+                    if viewModel.updatingStatusEventId == event.id {
+                        ProgressView()
+                            .controlSize(.mini)
+                            .tint(SolennixColors.primary)
+                    } else {
+                        StatusBadge(status: event.status.rawValue)
+                    }
                 }
             }
 
-            // Service type
+            // Row 2: client name
+            Text(viewModel.clientName(for: event.clientId))
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(SolennixColors.text)
+                .lineLimit(2)
+
+            // Row 3: service type
             Text(event.serviceType)
                 .font(.caption)
                 .foregroundStyle(SolennixColors.textSecondary)
-                .lineLimit(1)
 
-            // Date + time row
-            HStack(spacing: Spacing.sm) {
-                Label(formattedEventDate(event.eventDate), systemImage: "calendar")
-                    .font(.caption)
-                    .foregroundStyle(SolennixColors.textSecondary)
-                    .lineLimit(1)
+            // Row 4: location + people count in one metadata row
+            metadataRow(event)
 
-                let timeLabel = formattedTimeRange(event)
-                Label(timeLabel, systemImage: "clock")
-                    .font(.caption)
-                    .foregroundStyle(SolennixColors.textSecondary)
+            // Inset separator — calmer than full-width Divider
+            Rectangle()
+                .fill(SolennixColors.separator)
+                .frame(height: 0.5)
+                .padding(.leading, Spacing.xs)
+
+            // Row 5: total amount (bottom-right only gold usage on card)
+            HStack {
+                Spacer()
+                Text(formattedAmount(event.totalAmount))
+                    .font(.subheadline)
+                    .fontWeight(.bold)
+                    .foregroundStyle(SolennixColors.primary)
             }
+        }
+        .padding(Spacing.md)
+        .background(SolennixColors.card)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        .shadowSm()
+    }
 
-            // Location (if available)
+    /// One metadata row: location (if available) + people count, same `.caption` style.
+    @ViewBuilder
+    private func metadataRow(_ event: Event) -> some View {
+        HStack(spacing: Spacing.sm) {
             if let location = event.location, !location.isEmpty {
                 let displayLocation = [location, event.city]
                     .compactMap { $0 }
@@ -626,34 +708,38 @@ public struct EventListView: View {
                     .lineLimit(1)
             }
 
-            Divider()
-                .padding(.vertical, 2)
-
-            // Bottom row: people count + total amount
-            HStack {
-                Label(
-                    String(
-                        format: tr("events.list.people_count", "%lld personas"),
-                        locale: FeatureL10n.locale,
-                        event.numPeople
-                    ),
-                    systemImage: "person.2"
-                )
-                    .font(.caption)
-                    .foregroundStyle(SolennixColors.textSecondary)
-
-                Spacer()
-
-                Text(formattedAmount(event.totalAmount))
-                    .font(.subheadline)
-                    .fontWeight(.bold)
-                    .foregroundStyle(SolennixColors.primary)
-            }
+            Label(
+                String(
+                    format: tr("events.list.people_count", "%lld personas"),
+                    locale: FeatureL10n.locale,
+                    event.numPeople
+                ),
+                systemImage: "person.2"
+            )
+            .font(.caption)
+            .foregroundStyle(SolennixColors.textSecondary)
         }
-        .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadowSm()
+    }
+
+    // MARK: - Accessibility Label
+
+    private func cardAccessibilityLabel(_ event: Event) -> String {
+        let parsedDate = Self.parseEventDate(event.eventDate)
+        let datePhrase = relativeDateLabel(for: event, parsed: parsedDate)
+        let status = localizedStatus(event.status)
+        let client = viewModel.clientName(for: event.clientId)
+        let service = event.serviceType
+        let total = formattedAmount(event.totalAmount)
+        return "\(datePhrase). \(status). \(client). \(service). \(total)."
+    }
+
+    private func localizedStatus(_ status: EventStatus) -> String {
+        switch status {
+        case .quoted:    return tr("events.list.status.quoted",    "Cotizado")
+        case .confirmed: return tr("events.list.status.confirmed", "Confirmado")
+        case .completed: return tr("events.list.status.completed", "Completado")
+        case .cancelled: return tr("events.list.status.cancelled", "Cancelado")
+        }
     }
 
     // MARK: - Sort Menu
@@ -693,6 +779,60 @@ public struct EventListView: View {
         }
     }
 
+    // MARK: - Relative Date Logic
+
+    /// Returns a human-readable date label with proximity context.
+    /// - Within 7 days and future: "Hoy · 18:00", "Mañana · 18:00", "En 3 días · 15 mar"
+    /// - Beyond 7 days or past: "15 mar 2026 · 18:00"
+    /// - Past events: absolute date (textSecondary handled at call site via `isUrgent`)
+    private func relativeDateLabel(for event: Event, parsed: Date?) -> String {
+        guard let date = parsed else { return event.eventDate }
+
+        let timeStr = formattedTimeComponent(event)
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let eventDay = cal.startOfDay(for: date)
+
+        let dayDiff = cal.dateComponents([.day], from: today, to: eventDay).day ?? 0
+
+        switch dayDiff {
+        case 0:
+            // Today
+            return timeStr.isEmpty
+                ? tr("events.list.date.today", "Hoy")
+                : "\(tr("events.list.date.today", "Hoy")) · \(timeStr)"
+        case 1:
+            // Tomorrow
+            return timeStr.isEmpty
+                ? tr("events.list.date.tomorrow", "Mañana")
+                : "\(tr("events.list.date.tomorrow", "Mañana")) · \(timeStr)"
+        case 2...7:
+            // In N days — show day count + short date
+            let shortDate = formattedShortDate(date)
+            let inDays = String(
+                format: tr("events.list.date.in_days", "En %lld días"),
+                locale: FeatureL10n.locale,
+                dayDiff
+            )
+            return "\(inDays) · \(shortDate)"
+        default:
+            // Absolute date + time
+            let absDate = formattedDisplayDate(date)
+            return timeStr.isEmpty ? absDate : "\(absDate) · \(timeStr)"
+        }
+    }
+
+    /// True when event is within 48h, in the future or today, and status is
+    /// neither completed nor cancelled.
+    private func isEventUrgent(_ event: Event, parsed: Date?) -> Bool {
+        guard let date = parsed,
+              event.status != .completed,
+              event.status != .cancelled else { return false }
+        let now = Date()
+        let hoursUntil = date.timeIntervalSince(now) / 3600
+        return hoursUntil >= 0 && hoursUntil <= 48
+    }
+
     // MARK: - Helpers
 
     /// Zero-decimal MXN for list cards — same convention as dashboard +
@@ -706,9 +846,7 @@ public struct EventListView: View {
         return f.string(from: NSNumber(value: value)) ?? "$0"
     }
 
-    /// Shorter date format for list rows — the card carries so much info
-    /// now that the long "Viernes 15 de Marzo, 2025" crowds the row. Users
-    /// get "15 mar 2025" which is enough to scan quickly.
+    /// "15 mar 2026" — compact absolute date for beyond-7-days case.
     private func formattedDisplayDate(_ date: Date) -> String {
         let f = DateFormatter()
         f.locale = FeatureL10n.locale
@@ -716,33 +854,24 @@ public struct EventListView: View {
         return f.string(from: date).capitalized(with: FeatureL10n.locale)
     }
 
-    /// Build the "18:00 - 20:00" time label (or "Todo el día" when the
-    /// event has no start_time).
-    private func formattedTimeRange(_ event: Event) -> String {
-        guard let start = event.startTime, !start.isEmpty else {
-            return tr("events.list.all_day", "Todo el día")
-        }
-        let startTrim = String(start.prefix(5))
-        if let end = event.endTime, !end.isEmpty {
-            return "\(startTrim) - \(String(end.prefix(5)))"
-        }
-        return startTrim
+    /// "15 mar" — short date without year, used for in-N-days proximity label.
+    private func formattedShortDate(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.locale = FeatureL10n.locale
+        f.setLocalizedDateFormatFromTemplate("dMMM")
+        return f.string(from: date).capitalized(with: FeatureL10n.locale)
     }
 
-    private static let apiDateFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        return f
-    }()
+    /// "18:00" start time component for the date lockup, or empty string when
+    /// no start_time is set (all-day events omit time from the anchor).
+    private func formattedTimeComponent(_ event: Event) -> String {
+        guard let start = event.startTime, !start.isEmpty else { return "" }
+        return String(start.prefix(5))
+    }
 
-    private static let apiDateTimeFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-        return f
-    }()
-
-    private func formattedEventDate(_ dateStr: String) -> String {
-        // Try date-only format first, then ISO datetime
+    /// Legacy helper kept for CSV and any future callers that need the old
+    /// display-date-only string.
+    private func formattedDisplayDateFromString(_ dateStr: String) -> String {
         if let date = Self.apiDateFormatter.date(from: dateStr) {
             return formattedDisplayDate(date)
         }
@@ -750,6 +879,26 @@ public struct EventListView: View {
             return formattedDisplayDate(date)
         }
         return dateStr
+    }
+
+    static let apiDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
+    static let apiDateTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+        return f
+    }()
+
+    /// Parse an API date string (date-only or ISO datetime) into a Date value.
+    /// Centralises parsing so the relative-date logic has a clean `Date?`.
+    static func parseEventDate(_ dateStr: String) -> Date? {
+        if let d = apiDateFormatter.date(from: dateStr) { return d }
+        if let d = apiDateTimeFormatter.date(from: dateStr) { return d }
+        return nil
     }
 
     private func tr(_ key: String, _ value: String) -> String {
@@ -767,6 +916,54 @@ public struct EventListView: View {
         } catch {
             // Silently fail — CSV export is not critical
         }
+    }
+}
+
+// MARK: - Event Skeleton Card
+
+/// Skeleton placeholder that mirrors the new WU1 card shape:
+/// date line (bold-ish bar) + badge stub top-right, client bar,
+/// caption bars, bottom row. Shares the same listRowInsets as real rows.
+struct EventSkeletonCard: View {
+    public init() {}
+
+    public var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            // Row 1: date lockup stub + badge stub
+            HStack(alignment: .top) {
+                SkeletonLine(width: 140, height: 17) // headline weight
+                Spacer()
+                SkeletonLine(width: 72, height: 22)  // badge stub
+            }
+
+            // Row 2: client name stub
+            SkeletonLine(width: 180, height: 14)
+
+            // Row 3: service type stub
+            SkeletonLine(width: 120, height: 12)
+
+            // Row 4: metadata — location + people
+            HStack(spacing: Spacing.sm) {
+                SkeletonLine(width: 100, height: 12)
+                SkeletonLine(width: 70, height: 12)
+            }
+
+            // Separator stub
+            Rectangle()
+                .fill(SolennixColors.separator)
+                .frame(height: 0.5)
+                .padding(.leading, Spacing.xs)
+
+            // Row 5: total amount stub (right-aligned)
+            HStack {
+                Spacer()
+                SkeletonLine(width: 80, height: 14)
+            }
+        }
+        .padding(Spacing.md)
+        .background(SolennixColors.card)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        .shadowSm()
     }
 }
 

@@ -3958,6 +3958,7 @@
       }
     },
     "common.fab.new_event" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10827,6 +10828,7 @@
       }
     },
     "events.list.all_day" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10838,6 +10840,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Todo el día"
+          }
+        }
+      }
+    },
+    "events.list.chip.label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, %lld events"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, %lld eventos"
+          }
+        }
+      }
+    },
+    "events.list.chip.selected_label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, %lld events, selected"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, %lld eventos, seleccionado"
           }
         }
       }
@@ -11002,6 +11036,54 @@
         }
       }
     },
+    "events.list.date.in_days" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In %lld days"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En %lld días"
+          }
+        }
+      }
+    },
+    "events.list.date.today" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoy"
+          }
+        }
+      }
+    },
+    "events.list.date.tomorrow" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tomorrow"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mañana"
+          }
+        }
+      }
+    },
     "events.list.delete_confirm.cancel" : {
       "localizations" : {
         "en" : {
@@ -11062,6 +11144,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ eliminado"
+          }
+        }
+      }
+    },
+    "events.list.empty.first_run_cta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create event"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crear evento"
+          }
+        }
+      }
+    },
+    "events.list.empty.first_run_message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Track your events to manage dates, clients, and payments in one place."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registra tus eventos para llevar el control de fechas, clientes y pagos en un solo lugar."
+          }
+        }
+      }
+    },
+    "events.list.empty.first_run_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create your first event"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea tu primer evento"
           }
         }
       }
@@ -11388,6 +11518,7 @@
       }
     },
     "events.list.sort.menu" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -11527,6 +11658,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Eventos"
+          }
+        }
+      }
+    },
+    "events.list.toolbar.more_actions" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More actions"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Más acciones"
           }
         }
       }
@@ -14260,9 +14407,6 @@
           }
         }
       }
-    },
-    "Ordenar eventos" : {
-
     },
     "Ordenar inventario" : {
 
