@@ -26,8 +26,17 @@ public struct EventSuppliesDetailView: View {
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Insumos del Evento")
+        .navigationTitle(tr("events.detail.supplies.title", "Insumos del Evento"))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink(value: Route.eventForm(id: eventId, step: 4)) {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(SolennixColors.primary)
+                        .accessibilityLabel(tr("events.detail.supplies.edit_a11y", "Editar insumos"))
+                }
+            }
+        }
         .task { await viewModel.loadData(eventId: eventId) }
     }
 
@@ -37,9 +46,18 @@ public struct EventSuppliesDetailView: View {
                 if viewModel.supplies.isEmpty {
                     EmptyStateView(
                         icon: "drop",
-                        title: "Sin Insumos",
-                        message: "Este evento no tiene insumos asignados"
+                        title: tr("events.detail.supplies.empty.title", "Sin Insumos"),
+                        message: tr("events.detail.supplies.empty.message", "Este evento no tiene insumos asignados.")
                     )
+                    NavigationLink(value: Route.eventForm(id: eventId, step: 4)) {
+                        Text(tr("events.detail.supplies.empty.cta", "Agregar insumos"))
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, Spacing.xl)
+                            .padding(.vertical, 16)
+                            .background(SolennixColors.primary)
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    }
                 } else {
                     // Cost summary
                     let totalCost = viewModel.supplies.reduce(0.0) { $0 + ($1.quantity * $1.unitCost) }
@@ -154,5 +172,11 @@ public struct EventSuppliesDetailView: View {
         value.truncatingRemainder(dividingBy: 1) == 0
             ? String(format: "%.0f", value)
             : String(format: "%.2f", value)
+    }
+
+    // MARK: - Localization
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
     }
 }

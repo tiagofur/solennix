@@ -35,6 +35,15 @@ public struct EventStaffDetailView: View {
         .background(SolennixColors.surfaceGrouped)
         .navigationTitle(tr("events.detail.staff.title", "Personal Asignado"))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink(value: Route.eventForm(id: eventId, step: 4)) {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(SolennixColors.primary)
+                        .accessibilityLabel(tr("events.detail.staff.edit_a11y", "Editar personal"))
+                }
+            }
+        }
         .task { await loadData() }
     }
 
@@ -54,8 +63,17 @@ public struct EventStaffDetailView: View {
                     EmptyStateView(
                         icon: "person.3",
                         title: tr("events.detail.staff.empty.title", "Sin personal"),
-                        message: tr("events.detail.staff.empty.message", "Este evento no tiene colaboradores asignados. Editalo para agregar personal.")
+                        message: tr("events.detail.staff.empty.message", "Este evento no tiene colaboradores asignados.")
                     )
+                    NavigationLink(value: Route.eventForm(id: eventId, step: 4)) {
+                        Text(tr("events.detail.staff.empty.cta", "Agregar personal"))
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, Spacing.xl)
+                            .padding(.vertical, 16)
+                            .background(SolennixColors.primary)
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    }
                 } else {
                     HStack {
                         Text("\(assignments.count) colaboradores asignados")

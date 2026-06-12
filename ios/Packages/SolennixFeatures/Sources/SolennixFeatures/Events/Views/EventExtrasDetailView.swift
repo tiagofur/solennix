@@ -26,8 +26,17 @@ public struct EventExtrasDetailView: View {
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Extras")
+        .navigationTitle(tr("events.detail.extras.title", "Extras"))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink(value: Route.eventForm(id: eventId, step: 3)) {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(SolennixColors.primary)
+                        .accessibilityLabel(tr("events.detail.extras.edit_a11y", "Editar extras"))
+                }
+            }
+        }
         .task { await viewModel.loadData(eventId: eventId) }
     }
 
@@ -37,9 +46,18 @@ public struct EventExtrasDetailView: View {
                 if viewModel.extras.isEmpty {
                     EmptyStateView(
                         icon: "sparkles",
-                        title: "Sin Extras",
-                        message: "Este evento no tiene extras asignados"
+                        title: tr("events.detail.extras.empty.title", "Sin Extras"),
+                        message: tr("events.detail.extras.empty.message", "Este evento no tiene extras asignados.")
                     )
+                    NavigationLink(value: Route.eventForm(id: eventId, step: 3)) {
+                        Text(tr("events.detail.extras.empty.cta", "Agregar extras"))
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, Spacing.xl)
+                            .padding(.vertical, 16)
+                            .background(SolennixColors.primary)
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    }
                 } else {
                     let subtotal = viewModel.extras.reduce(0.0) { $0 + $1.price }
                     HStack {
@@ -80,5 +98,11 @@ public struct EventExtrasDetailView: View {
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.lg)
         }
+    }
+
+    // MARK: - Localization
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
     }
 }

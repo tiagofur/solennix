@@ -28,4 +28,5 @@ enum EventFinancesDetailStrings {
     }
 
     static var discountFixed: String { FeatureL10n.text("event_finances.discount_fixed", "Descuento") }
+    static var editAccessibility: String { FeatureL10n.text("event_finances.edit_a11y", "Editar finanzas") }
 }

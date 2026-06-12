@@ -35,6 +35,15 @@ public struct EventFinancesDetailView: View {
         .background(SolennixColors.surfaceGrouped)
         .navigationTitle(EventFinancesDetailStrings.navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink(value: Route.eventForm(id: eventId, step: 5)) {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(SolennixColors.primary)
+                        .accessibilityLabel(EventFinancesDetailStrings.editAccessibility)
+                }
+            }
+        }
         .task { await viewModel.loadData(eventId: eventId) }
     }
 

@@ -29,6 +29,15 @@ public struct EventEquipmentDetailView: View {
         .background(SolennixColors.surfaceGrouped)
         .navigationTitle(tr("events.detail.equipment.title", "Equipo Asignado"))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink(value: Route.eventForm(id: eventId, step: 4)) {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(SolennixColors.primary)
+                        .accessibilityLabel(tr("events.detail.equipment.edit_a11y", "Editar equipo"))
+                }
+            }
+        }
         .task { await viewModel.loadEquipmentOnly(eventId: eventId) }
     }
 
@@ -39,8 +48,17 @@ public struct EventEquipmentDetailView: View {
                     EmptyStateView(
                         icon: "wrench.and.screwdriver",
                         title: tr("events.detail.equipment.empty.title", "Sin Equipo"),
-                        message: tr("events.detail.equipment.empty.message", "Este evento no tiene equipo asignado")
+                        message: tr("events.detail.equipment.empty.message", "Este evento no tiene equipo asignado.")
                     )
+                    NavigationLink(value: Route.eventForm(id: eventId, step: 4)) {
+                        Text(tr("events.detail.equipment.empty.cta", "Agregar equipo"))
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, Spacing.xl)
+                            .padding(.vertical, 16)
+                            .background(SolennixColors.primary)
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    }
                 } else {
                     HStack {
                         Text("\(viewModel.equipment.count) equipos asignados")

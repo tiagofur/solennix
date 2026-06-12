@@ -192,7 +192,8 @@ public struct EventDetailView: View {
             peopleValue: trf("events.detail.info.people_value", "%@ PAX", String(event.numPeople)),
             locationLabel: locationLabel,
             locationValue: locationValue,
-            onStatusTap: { viewModel.showStatusSheet = true }
+            onStatusTap: { viewModel.showStatusSheet = true },
+            editRoute: Route.eventForm(id: eventId, step: 1)
         )
     }
 
@@ -253,7 +254,8 @@ public struct EventDetailView: View {
             profitValue: "\(String(format: "%.0f", margin))%",
             discountText: discountText,
             taxText: taxText,
-            route: Route.eventFinances(id: eventId)
+            route: Route.eventFinances(id: eventId),
+            editRoute: Route.eventForm(id: eventId, step: 5)
         )
     }
 

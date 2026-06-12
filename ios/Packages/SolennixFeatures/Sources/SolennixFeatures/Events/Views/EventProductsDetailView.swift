@@ -28,6 +28,15 @@ public struct EventProductsDetailView: View {
         .background(SolennixColors.surfaceGrouped)
         .navigationTitle(tr("events.detail.products.title", "Productos"))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink(value: Route.eventForm(id: eventId, step: 2)) {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(SolennixColors.primary)
+                        .accessibilityLabel(tr("events.detail.products.edit_a11y", "Editar productos"))
+                }
+            }
+        }
         .task { await viewModel.loadProductsOnly(eventId: eventId) }
     }
 
@@ -38,8 +47,17 @@ public struct EventProductsDetailView: View {
                     EmptyStateView(
                         icon: "bag",
                         title: tr("events.detail.products.empty.title", "Sin Productos"),
-                        message: tr("events.detail.products.empty.message", "Este evento no tiene productos asignados")
+                        message: tr("events.detail.products.empty.message", "Este evento no tiene productos asignados.")
                     )
+                    NavigationLink(value: Route.eventForm(id: eventId, step: 2)) {
+                        Text(tr("events.detail.products.empty.cta", "Agregar productos"))
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, Spacing.xl)
+                            .padding(.vertical, 16)
+                            .background(SolennixColors.primary)
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    }
                 } else {
                     // Summary
                     let subtotal = viewModel.products.reduce(0.0) { $0 + ($1.quantity * $1.unitPrice) }

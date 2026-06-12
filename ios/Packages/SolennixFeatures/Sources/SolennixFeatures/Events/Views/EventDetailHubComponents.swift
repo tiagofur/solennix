@@ -16,6 +16,39 @@ struct EventDetailHeaderCard: View {
     let locationLabel: String?
     let locationValue: String?
     let onStatusTap: () -> Void
+    let editRoute: Route?
+
+    init(
+        event: Event,
+        clientName: String?,
+        month: String,
+        day: String,
+        dateLabel: String,
+        dateValue: String,
+        scheduleLabel: String,
+        scheduleValue: String?,
+        peopleLabel: String,
+        peopleValue: String,
+        locationLabel: String?,
+        locationValue: String?,
+        onStatusTap: @escaping () -> Void,
+        editRoute: Route? = nil
+    ) {
+        self.event = event
+        self.clientName = clientName
+        self.month = month
+        self.day = day
+        self.dateLabel = dateLabel
+        self.dateValue = dateValue
+        self.scheduleLabel = scheduleLabel
+        self.scheduleValue = scheduleValue
+        self.peopleLabel = peopleLabel
+        self.peopleValue = peopleValue
+        self.locationLabel = locationLabel
+        self.locationValue = locationValue
+        self.onStatusTap = onStatusTap
+        self.editRoute = editRoute
+    }
 
     var body: some View {
         VStack(spacing: Spacing.md) {
@@ -60,6 +93,16 @@ struct EventDetailHeaderCard: View {
         .background(SolennixColors.card)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
         .shadowSm()
+        .contextMenu {
+            if let editRoute {
+                NavigationLink(value: editRoute) {
+                    Label(
+                        FeatureL10n.text("events.detail.context_menu.edit_general", "Editar datos generales"),
+                        systemImage: "pencil"
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -120,6 +163,29 @@ struct EventDetailFinanceSummaryCard: View {
     let discountText: String?
     let taxText: String?
     let route: Route
+    let editRoute: Route?
+
+    init(
+        title: String,
+        totalLabel: String,
+        totalValue: String,
+        profitLabel: String,
+        profitValue: String,
+        discountText: String?,
+        taxText: String?,
+        route: Route,
+        editRoute: Route? = nil
+    ) {
+        self.title = title
+        self.totalLabel = totalLabel
+        self.totalValue = totalValue
+        self.profitLabel = profitLabel
+        self.profitValue = profitValue
+        self.discountText = discountText
+        self.taxText = taxText
+        self.route = route
+        self.editRoute = editRoute
+    }
 
     var body: some View {
         NavigationLink(value: route) {
@@ -187,6 +253,16 @@ struct EventDetailFinanceSummaryCard: View {
             .shadowSm()
         }
         .buttonStyle(.plain)
+        .contextMenu {
+            if let editRoute {
+                NavigationLink(value: editRoute) {
+                    Label(
+                        FeatureL10n.text("events.detail.context_menu.edit_finances", "Editar finanzas"),
+                        systemImage: "pencil"
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -340,7 +416,9 @@ struct EventDetailContentGridSection: View {
                 count: productsCount,
                 subtitle: nil,
                 color: SolennixColors.primary,
-                route: Route.eventProducts(id: eventId)
+                route: Route.eventProducts(id: eventId),
+                editRoute: Route.eventForm(id: eventId, step: 2),
+                editLabel: FeatureL10n.text("events.detail.context_menu.edit_products", "Editar productos")
             )
 
             EventDetailSummaryNavCard(
@@ -349,7 +427,9 @@ struct EventDetailContentGridSection: View {
                 count: extrasCount,
                 subtitle: nil,
                 color: SolennixColors.info,
-                route: Route.eventExtras(id: eventId)
+                route: Route.eventExtras(id: eventId),
+                editRoute: Route.eventForm(id: eventId, step: 3),
+                editLabel: FeatureL10n.text("events.detail.context_menu.edit_extras", "Editar extras")
             )
 
             EventDetailSummaryNavCard(
@@ -358,7 +438,9 @@ struct EventDetailContentGridSection: View {
                 count: suppliesCount,
                 subtitle: nil,
                 color: SolennixColors.warning,
-                route: Route.eventSupplies(id: eventId)
+                route: Route.eventSupplies(id: eventId),
+                editRoute: Route.eventForm(id: eventId, step: 4),
+                editLabel: FeatureL10n.text("events.detail.context_menu.edit_supplies", "Editar insumos")
             )
 
             EventDetailSummaryNavCard(
@@ -367,9 +449,12 @@ struct EventDetailContentGridSection: View {
                 count: equipmentCount,
                 subtitle: nil,
                 color: SolennixColors.success,
-                route: Route.eventEquipment(id: eventId)
+                route: Route.eventEquipment(id: eventId),
+                editRoute: Route.eventForm(id: eventId, step: 4),
+                editLabel: FeatureL10n.text("events.detail.context_menu.edit_equipment", "Editar equipo")
             )
 
+            // Shopping/checklist cards — no edit deep-link (dedicated screens)
             EventDetailSummaryNavCard(
                 icon: "cart.fill",
                 title: shoppingTitle,
@@ -384,7 +469,9 @@ struct EventDetailContentGridSection: View {
                 count: staffCount,
                 subtitle: nil,
                 color: SolennixColors.info,
-                route: Route.eventStaff(id: eventId)
+                route: Route.eventStaff(id: eventId),
+                editRoute: Route.eventForm(id: eventId, step: 4),
+                editLabel: FeatureL10n.text("events.detail.context_menu.edit_staff", "Editar personal")
             )
 
             EventDetailPhotosSummaryCard(

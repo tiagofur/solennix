@@ -25,6 +25,15 @@ final class RouteCoreTests: XCTestCase {
         XCTAssertNotEqual(Route.eventForm(date: date), Route.eventForm(date: date.addingTimeInterval(60)))
     }
 
+    func testEventFormDefaultStepIsNil() {
+        XCTAssertEqual(Route.eventForm(id: "evt-1"), Route.eventForm(id: "evt-1", step: nil))
+    }
+
+    func testEventFormStepDifferentValuesAreNotEqual() {
+        XCTAssertNotEqual(Route.eventForm(id: "evt-1", step: 1), Route.eventForm(id: "evt-1", step: 2))
+        XCTAssertNotEqual(Route.eventForm(id: "evt-1", step: nil), Route.eventForm(id: "evt-1", step: 1))
+    }
+
     func testHashableAllowsDistinctRoutesInSet() {
         let routes: Set<Route> = [
             .eventList,

@@ -88,6 +88,8 @@ struct EventDetailSummaryNavCard: View {
     let subtitle: String?
     let color: Color
     let route: Route
+    let editRoute: Route?
+    let editLabel: String?
 
     init(
         icon: String,
@@ -95,7 +97,9 @@ struct EventDetailSummaryNavCard: View {
         count: Int? = nil,
         subtitle: String? = nil,
         color: Color,
-        route: Route
+        route: Route,
+        editRoute: Route? = nil,
+        editLabel: String? = nil
     ) {
         self.icon = icon
         self.title = title
@@ -103,6 +107,8 @@ struct EventDetailSummaryNavCard: View {
         self.subtitle = subtitle
         self.color = color
         self.route = route
+        self.editRoute = editRoute
+        self.editLabel = editLabel
     }
 
     var body: some View {
@@ -150,5 +156,12 @@ struct EventDetailSummaryNavCard: View {
             .shadowSm()
         }
         .buttonStyle(.plain)
+        .contextMenu {
+            if let editRoute, let editLabel {
+                NavigationLink(value: editRoute) {
+                    Label(editLabel, systemImage: "pencil")
+                }
+            }
+        }
     }
 }
