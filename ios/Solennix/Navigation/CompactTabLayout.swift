@@ -13,8 +13,8 @@ private typealias AppTab = Tab
 /// The main tab-based layout for compact (iPhone) horizontal size class.
 ///
 /// On iOS 26+ uses the `Tab` builder syntax to unlock `tabBarMinimizeBehavior`
-/// and adds a native `Tab(role: .search)` for a floating search entry point.
-/// On iOS 17–25 falls back to the standard `.tabItem {}` syntax.
+/// and minimized search toolbar behavior (no search-role tab — see note in
+/// `ios26TabView`). On iOS 17–25 falls back to the standard `.tabItem {}` syntax.
 struct CompactTabLayout: View {
 
     @Binding var pendingSpotlightRoute: Route?
