@@ -3,6 +3,11 @@ import Foundation
 // MARK: - Payments Strings
 
 enum PaymentsStrings {
+    // MARK: - Search
+    static var searchPrompt: String { FeatureL10n.text("payments.search_prompt", "Buscar por cliente...") }
+    static var searchEmptyTitle: String { FeatureL10n.text("payments.search.empty_title", "Sin resultados") }
+    static var searchEmptyMessage: String { FeatureL10n.text("payments.search.empty_message", "No se encontraron pagos que coincidan con tu búsqueda") }
+
     // MARK: - Navigation & Alerts
     static var title: String { FeatureL10n.text("payments.title", "Pagos recibidos") }
     static var errorTitle: String { FeatureL10n.text("payments.error_title", "Error") }

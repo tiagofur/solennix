@@ -22,9 +22,21 @@ public final class PaymentInboxViewModel {
     // MARK: - State
 
     public var submissions: [PaymentSubmission] = []
+    public var searchText: String = ""
     public var isLoading: Bool = false
     public var isPlanLocked: Bool = false
     public var errorMessage: String?
+
+    // MARK: - Filtered
+
+    /// Submissions filtered by the current `searchText` (client name, case- and diacritic-insensitive).
+    public var filteredSubmissions: [PaymentSubmission] {
+        guard !searchText.trimmingCharacters(in: .whitespaces).isEmpty else { return submissions }
+        return submissions.filter { submission in
+            (submission.clientName ?? "").localizedStandardContains(searchText)
+                || (submission.eventLabel ?? "").localizedStandardContains(searchText)
+        }
+    }
 
     /// ID currently being approved — drives row loading indicator
     public var approvingId: String? = nil

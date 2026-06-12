@@ -37,6 +37,8 @@ public struct PaymentInboxView: View {
                 planLockedState
             } else if viewModel.submissions.isEmpty {
                 emptyState
+            } else if viewModel.filteredSubmissions.isEmpty {
+                searchEmptyState
             } else {
                 submissionContent
             }
@@ -45,6 +47,8 @@ public struct PaymentInboxView: View {
         .background(SolennixColors.surfaceGrouped)
         .navigationTitle(PaymentsStrings.title)
         .navigationBarTitleDisplayMode(.large)
+        .searchable(text: $viewModel.searchText, prompt: PaymentsStrings.searchPrompt)
+        .searchMinimizedIfAvailable()
         .task { await viewModel.fetchSubmissions() }
         .refreshable { await viewModel.fetchSubmissions() }
         .sheet(item: $selectedSubmission) { submission in
@@ -66,7 +70,7 @@ public struct PaymentInboxView: View {
         ScrollView {
             if isRegularWidth {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 300))], spacing: Spacing.sm) {
-                    ForEach(viewModel.submissions) { submission in
+                    ForEach(viewModel.filteredSubmissions) { submission in
                         PaymentSubmissionCardView(submission: submission) {
                             selectedSubmission = submission
                         }
@@ -76,7 +80,7 @@ public struct PaymentInboxView: View {
                 .padding(.vertical, Spacing.lg)
             } else {
                 LazyVStack(spacing: Spacing.sm) {
-                    ForEach(viewModel.submissions) { submission in
+                    ForEach(viewModel.filteredSubmissions) { submission in
                         PaymentSubmissionCardView(submission: submission) {
                             selectedSubmission = submission
                         }
@@ -87,6 +91,16 @@ public struct PaymentInboxView: View {
             }
         }
         .background(SolennixColors.surfaceGrouped)
+    }
+
+    // MARK: - Search Empty State
+
+    private var searchEmptyState: some View {
+        EmptyStateView(
+            icon: "magnifyingglass",
+            title: PaymentsStrings.searchEmptyTitle,
+            message: PaymentsStrings.searchEmptyMessage
+        )
     }
 
     // MARK: - Submission Detail Sheet

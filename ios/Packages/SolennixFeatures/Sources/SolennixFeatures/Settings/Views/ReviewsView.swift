@@ -27,10 +27,16 @@ public struct ReviewsView: View {
                     title: tr("reviews.organizer.empty_title", "Sin reseñas todavía"),
                     message: tr("reviews.organizer.empty_hint", "Cuando tus clientes califiquen sus eventos, aparecerán aquí.")
                 )
+            } else if viewModel.filteredReviews.isEmpty {
+                EmptyStateView(
+                    icon: "magnifyingglass",
+                    title: tr("reviews.organizer.search.empty_title", "Sin resultados"),
+                    message: tr("reviews.organizer.search.empty_message", "No se encontraron reseñas que coincidan con tu búsqueda")
+                )
             } else {
                 ScrollView {
                     LazyVStack(spacing: Spacing.md) {
-                        ForEach(viewModel.reviews) { review in
+                        ForEach(viewModel.filteredReviews) { review in
                             reviewCard(review)
                         }
                     }
@@ -41,6 +47,8 @@ public struct ReviewsView: View {
         }
         .navigationTitle(tr("reviews.organizer.title", "Reseñas"))
         .navigationBarTitleDisplayMode(.large)
+        .searchable(text: $viewModel.searchText, prompt: tr("reviews.organizer.search_prompt", "Buscar reseñas..."))
+        .searchMinimizedIfAvailable()
         .task {
             await viewModel.fetchReviews()
             hydrateDrafts()
