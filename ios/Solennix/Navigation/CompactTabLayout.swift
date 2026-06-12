@@ -93,7 +93,6 @@ struct CompactTabLayout: View {
 
     /// Custom binding for the iOS 26 TabView that pops to root on same-tab re-tap.
     /// Mirrors `legacyTabSelection` so both branches share the same UX contract.
-    /// The search tab has no value binding so it never fires this setter.
     @available(iOS 26.0, *)
     private var ios26TabSelection: Binding<AppTab> {
         Binding(
@@ -249,7 +248,6 @@ struct CompactTabLayout: View {
         case .events:   eventsPath = NavigationPath()
         case .clients:  clientsPath = NavigationPath()
         case .more:     morePath = NavigationPath()
-        case .search:   break // search tab has no NavigationPath to reset
         }
     }
 
