@@ -246,7 +246,7 @@ public struct ClientDetailView: View {
                     icon: "calendar",
                     value: "\(client.totalEvents ?? 0)",
                     label: tr("clients.stats.events", "Eventos"),
-                    a11yLabel: trf("clients.detail.a11y.stat_events", "Eventos: %d", client.totalEvents ?? 0)
+                    a11yLabel: trf("clients.detail.a11y.stat_events", "Eventos: %lld", client.totalEvents ?? 0)
                 )
 
                 statBox(

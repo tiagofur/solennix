@@ -23302,13 +23302,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Events: %d"
+            "value": "Events: %lld"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eventos: %d"
+            "value": "Eventos: %lld"
           }
         }
       }
