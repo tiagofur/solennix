@@ -147,7 +147,9 @@ struct SidebarSplitLayout: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .adaptiveGlass(in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        // .brightChip: ultraThinMaterial is nearly invisible on the navy dark sidebar;
+        // white-opacity chip recreates the original GlassSurface appearance pre-iOS 26.
+        .adaptiveGlass(in: RoundedRectangle(cornerRadius: 10, style: .continuous), fallback: .brightChip)
         .listRowBackground(Color.clear)
         .listRowSeparator(.hidden)
         .listRowInsets(EdgeInsets(top: 4, leading: SidebarMetrics.rowInsetLeading, bottom: 6, trailing: SidebarMetrics.rowInsetTrailing))
@@ -193,7 +195,8 @@ struct SidebarSplitLayout: View {
             .buttonStyle(.plain)
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .adaptiveGlass(in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            // .brightChip: same rationale as the logo chip above — navy sidebar pre-iOS 26.
+            .adaptiveGlass(in: RoundedRectangle(cornerRadius: 12, style: .continuous), fallback: .brightChip)
         }
     }
 

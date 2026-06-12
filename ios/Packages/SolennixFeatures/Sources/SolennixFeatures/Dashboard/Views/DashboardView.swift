@@ -16,6 +16,7 @@ public struct DashboardView: View {
     @State private var viewModel: DashboardViewModel?
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var showQuickQuote = false
+    @State private var showNewEventForm = false
 
     private var isIPad: Bool { sizeClass == .regular }
     private var sectionHorizontalPadding: CGFloat { isIPad ? Spacing.xl : Spacing.md }
@@ -154,6 +155,20 @@ public struct DashboardView: View {
         .sheet(isPresented: $showQuickQuote) {
             QuickQuoteView(apiClient: apiClient)
         }
+        .sheet(isPresented: $showNewEventForm) {
+            NavigationStack {
+                EventFormView(apiClient: apiClient)
+            }
+        }
+        // FAB — compact (iPhone) only; the component guards internally via sizeClass.
+        // On iPad the toolbar + Menu covers both actions already.
+        .quickActionsFAB(
+            onNewEvent: {
+                guard planLimitsManager.canCreateEvent else { return }
+                showNewEventForm = true
+            },
+            onQuickQuote: { showQuickQuote = true }
+        )
         .overlay {
             // Non-empty refresh spinner — shown only when dashboard has data
             if viewModel?.isLoading == true && viewModel?.eventsThisMonth.isEmpty == false && viewModel?.errorMessage == nil {

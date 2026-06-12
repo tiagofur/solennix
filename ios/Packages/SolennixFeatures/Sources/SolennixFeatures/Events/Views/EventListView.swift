@@ -74,7 +74,7 @@ public struct EventListView: View {
                         Image(systemName: viewModel.activeFilterCount > 0 ? "calendar.badge.clock" : "calendar")
                             .font(.body)
                             .foregroundStyle(viewModel.activeFilterCount > 0 ? SolennixColors.primary : SolennixColors.primary)
-                            .symbolEffect(.bounce, value: viewModel.activeFilterCount > 0)
+                            .symbolEffect(.bounce, value: viewModel.activeFilterCount)
                             .accessibilityLabel(tr("events.list.filters.title", "Filtrar por fecha"))
                     }
 

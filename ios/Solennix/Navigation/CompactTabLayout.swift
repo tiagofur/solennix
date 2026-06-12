@@ -44,13 +44,12 @@ struct CompactTabLayout: View {
     @available(iOS 26.0, *)
     @ViewBuilder
     private var ios26TabView: some View {
-        // Note: the app-local `Tab` enum shadows SwiftUI.Tab, so we use
-        // the fully-qualified SwiftUI.Tab for all tab declarations.
-        // We cannot mix value-based and role-based Tab in a selection-bound
-        // TabView, so we use an unbound TabView and rely on the Tab builder's
-        // built-in selection management for iOS 26.
-        TabView {
-            SwiftUI.Tab(AppTab.home.title, systemImage: AppTab.home.iconName) {
+        // SwiftUI supports `Tab(_:systemImage:value:role:)` in a selection-bound
+        // TabView (WWDC25 pattern). We bind `ios26TabSelection` so same-tab
+        // re-tap pops to root and Spotlight deep links can set selectedTab before
+        // pushing onto homePath — matching the legacy branch's behavior.
+        TabView(selection: ios26TabSelection) {
+            SwiftUI.Tab(AppTab.home.title, systemImage: AppTab.home.iconName, value: AppTab.home) {
                 NavigationStack(path: $homePath) {
                     HomeRootView()
                         .navigationDestination(for: Route.self) { route in
@@ -63,7 +62,7 @@ struct CompactTabLayout: View {
                 }
             }
 
-            SwiftUI.Tab(AppTab.calendar.title, systemImage: AppTab.calendar.iconName) {
+            SwiftUI.Tab(AppTab.calendar.title, systemImage: AppTab.calendar.iconName, value: AppTab.calendar) {
                 NavigationStack(path: $calendarPath) {
                     CalendarRootView()
                         .navigationDestination(for: Route.self) { route in
@@ -76,7 +75,7 @@ struct CompactTabLayout: View {
                 }
             }
 
-            SwiftUI.Tab(AppTab.events.title, systemImage: AppTab.events.iconName) {
+            SwiftUI.Tab(AppTab.events.title, systemImage: AppTab.events.iconName, value: AppTab.events) {
                 NavigationStack(path: $eventsPath) {
                     EventsRootView()
                         .navigationDestination(for: Route.self) { route in
@@ -85,7 +84,7 @@ struct CompactTabLayout: View {
                 }
             }
 
-            SwiftUI.Tab(AppTab.clients.title, systemImage: AppTab.clients.iconName) {
+            SwiftUI.Tab(AppTab.clients.title, systemImage: AppTab.clients.iconName, value: AppTab.clients) {
                 NavigationStack(path: $clientsPath) {
                     ClientsRootView()
                         .navigationDestination(for: Route.self) { route in
@@ -94,8 +93,9 @@ struct CompactTabLayout: View {
                 }
             }
 
-            // Native floating search tab — iOS 26 Liquid Glass behavior
-            SwiftUI.Tab(CommonStrings.tabSearch, systemImage: "magnifyingglass", role: .search) {
+            // Native floating search tab — iOS 26 Liquid Glass behavior.
+            // role: .search renders the tab as a floating search entry point.
+            SwiftUI.Tab(AppTab.search.title, systemImage: AppTab.search.iconName, value: AppTab.search, role: .search) {
                 NavigationStack {
                     SearchView()
                         .searchToolbarBehavior(.minimize)
@@ -105,7 +105,7 @@ struct CompactTabLayout: View {
                 }
             }
 
-            SwiftUI.Tab(AppTab.more.title, systemImage: AppTab.more.iconName) {
+            SwiftUI.Tab(AppTab.more.title, systemImage: AppTab.more.iconName, value: AppTab.more) {
                 NavigationStack(path: $morePath) {
                     MoreMenuView()
                         .navigationDestination(for: Route.self) { route in
@@ -122,7 +122,10 @@ struct CompactTabLayout: View {
         .tabBarMinimizeBehavior(.onScrollDown)
         .onChange(of: pendingSpotlightRoute) { _, newRoute in
             guard let route = newRoute else { return }
-            // Spotlight routes always land on the home path
+            // Spotlight routes always land on the home tab+path — set selectedTab
+            // first so the tab switches before the navigation push, matching
+            // the legacy branch behavior.
+            selectedTab = .home
             homePath = NavigationPath()
             Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(100))
@@ -130,6 +133,23 @@ struct CompactTabLayout: View {
             }
             pendingSpotlightRoute = nil
         }
+    }
+
+    /// Custom binding for the iOS 26 TabView that pops to root on same-tab re-tap.
+    /// Mirrors `legacyTabSelection` so both branches share the same UX contract.
+    @available(iOS 26.0, *)
+    private var ios26TabSelection: Binding<AppTab> {
+        Binding(
+            get: { selectedTab },
+            set: { newTab in
+                if newTab == selectedTab {
+                    resetPath(for: newTab)
+                } else {
+                    resetPath(for: selectedTab)
+                }
+                selectedTab = newTab
+            }
+        )
     }
 
     // MARK: - Legacy Tab View (iOS 17–25)
@@ -253,6 +273,7 @@ struct CompactTabLayout: View {
         case .events:   eventsPath = NavigationPath()
         case .clients:  clientsPath = NavigationPath()
         case .more:     morePath = NavigationPath()
+        case .search:   break // search tab has no NavigationPath to reset
         }
     }
 

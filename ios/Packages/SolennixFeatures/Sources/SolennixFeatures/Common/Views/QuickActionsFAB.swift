@@ -56,7 +56,9 @@ public struct QuickActionsFAB: View {
     @available(iOS 26.0, *)
     @ViewBuilder
     private var ios26FABContent: some View {
-        GlassEffectContainer(spacing: 40) {
+        // spacing is the morphing threshold (pt), not layout spacing — keep it
+        // smaller than the actual gap between actions so elements render separately.
+        GlassEffectContainer(spacing: 16) {
             VStack(spacing: Spacing.sm) {
                 if isExpanded {
                     // Quick Quote action

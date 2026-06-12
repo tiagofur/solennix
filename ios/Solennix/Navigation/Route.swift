@@ -6,13 +6,22 @@ import SolennixFeatures
 
 // MARK: - Tab
 
-/// The five tabs shown in the compact (iPhone) tab bar.
+/// The tabs shown in the compact (iPhone) tab bar.
+///
+/// `.search` is iOS 26-only (native floating search tab via `Tab(role: .search)`).
+/// Use `Tab.barTabs` when iterating the pre-26 legacy bar — it excludes `.search`.
 public enum Tab: Int, Hashable, CaseIterable {
     case home
     case calendar
     case events
     case clients
     case more
+    /// iOS 26 native search tab. Not rendered in the legacy tab bar.
+    case search
+
+    /// Tabs rendered in the legacy (pre-iOS 26) tab bar.
+    /// Excludes `.search`, which has no equivalent on iOS 17–25.
+    public static var barTabs: [Tab] { [.home, .calendar, .events, .clients, .more] }
 
     /// The SF Symbol icon name for this tab.
     public var iconName: String {
@@ -22,6 +31,7 @@ public enum Tab: Int, Hashable, CaseIterable {
         case .events:   return "party.popper.fill"
         case .clients:  return "person.2.fill"
         case .more:     return "ellipsis"
+        case .search:   return "magnifyingglass"
         }
     }
 
@@ -33,6 +43,7 @@ public enum Tab: Int, Hashable, CaseIterable {
         case .events:   return CommonStrings.tabEvents
         case .clients:  return CommonStrings.tabClients
         case .more:     return CommonStrings.tabMore
+        case .search:   return CommonStrings.tabSearch
         }
     }
 }
