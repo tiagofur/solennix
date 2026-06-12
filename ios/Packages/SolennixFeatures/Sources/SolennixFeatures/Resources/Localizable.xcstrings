@@ -35,6 +35,16 @@
         }
       }
     },
+    "%@ a %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ a %2$@"
+          }
+        }
+      }
+    },
     "%@ c/u": {},
     "%@ est.": {},
     "%@ unidades": {},
@@ -59,6 +69,16 @@
       }
     },
     "%@, estado actual": {},
+    "%@: %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@: %2$@"
+          }
+        }
+      }
+    },
     "%@/u": {},
     "%@%%": {},
     "%lld": {},
@@ -72,7 +92,6 @@
         }
       }
     },
-    "%lld colaboradores asignados": {},
     "%lld de %lld": {
       "localizations": {
         "es": {
@@ -84,13 +103,10 @@
       }
     },
     "%lld dias": {},
-    "%lld equipos asignados": {},
     "%lld eventos": {},
-    "%lld extras": {},
     "%lld fotos": {},
     "%lld miembros": {},
     "%lld personas": {},
-    "%lld productos": {},
     "%lld uds": {},
     "%lld unidades": {},
     "%lld x %@": {
@@ -134,7 +150,6 @@
     "0": {},
     "0.00": {},
     "1": {},
-    "1 dia": {},
     "1 miembro": {},
     "3": {},
     "16": {},
@@ -2580,7 +2595,6 @@
     "Cargando checklist...": {},
     "Cargando equipo...": {},
     "Cargando equipos...": {},
-    "Cargando evento...": {},
     "Cargando lista de compras...": {},
     "Cargando personal...": {},
     "Cargando...": {},
@@ -3676,6 +3690,17 @@
         }
       }
     },
+    "Cobrado: %lld por ciento, faltan %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Cobrado: %1$lld por ciento, faltan %2$@"
+          }
+        }
+      }
+    },
+    "Cobrado: 100 por ciento. Evento completamente pagado.": {},
     "Color de marca": {},
     "common.cancel": {
       "localizations": {
@@ -5743,7 +5768,6 @@
     "Detalle de pago": {},
     "Detalle del evento": {},
     "Día": {},
-    "Dias de vigencia": {},
     "Disponible: %@ %@": {
       "localizations": {
         "es": {
@@ -5761,7 +5785,6 @@
     "Editar Producto": {},
     "Ej: Boda Rodriguez, Evento Mayo": {},
     "Ej: Paquete Premium": {},
-    "El cliente podra llenar sus datos de evento a traves de este link. Una vez usado, no podra volver a utilizarse.": {},
     "El pago se cargara a tu cuenta de Apple ID al confirmar la compra. La suscripcion se renovara automaticamente a menos que sea cancelada al menos 24 horas antes del final del periodo actual. Se cobrara a tu cuenta la renovacion dentro de las 24 horas anteriores al final del periodo actual, al precio del plan seleccionado. Las suscripciones pueden ser administradas por el usuario y la renovacion automatica puede desactivarse yendo a los Ajustes de la cuenta del App Store despues de la compra. No se permite la cancelacion de la suscripcion actual durante el periodo activo.": {},
     "Elige el plan que mejor se adapte a tu negocio": {},
     "Eliminar": {},
@@ -5781,7 +5804,6 @@
     "Error": {},
     "Estado": {},
     "Estado de eventos del mes": {},
-    "Estas seguro de que quieres eliminar este evento? Esta accion no se puede deshacer.": {},
     "Este enlace no tiene vencimiento. Podés deshabilitarlo cuando quieras.": {},
     "Este equipo todavía no tiene miembros. Editalo para agregarlos.": {},
     "Este mes": {},
@@ -6399,6 +6421,7 @@
       }
     },
     "events.detail.action.edit_event": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -6618,6 +6641,118 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cliente"
+          }
+        }
+      }
+    },
+    "events.detail.client.action.call": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Llamar"
+          }
+        }
+      }
+    },
+    "events.detail.client.action.email": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email"
+          }
+        }
+      }
+    },
+    "events.detail.client.action.whatsapp": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WhatsApp"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WhatsApp"
+          }
+        }
+      }
+    },
+    "events.detail.countdown.future": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d DAYS LEFT"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FALTAN %d DÍAS"
+          }
+        }
+      }
+    },
+    "events.detail.countdown.past": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FINISHED"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FINALIZADO"
+          }
+        }
+      }
+    },
+    "events.detail.countdown.today": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TODAY"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HOY"
+          }
+        }
+      }
+    },
+    "events.detail.countdown.tomorrow": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TOMORROW"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MAÑANA"
           }
         }
       }
@@ -6928,6 +7063,102 @@
         }
       }
     },
+    "events.detail.equipment.assigned_count": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d equipment assigned"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d equipos asignados"
+          }
+        }
+      }
+    },
+    "events.detail.equipment.empty.message": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This event has no equipment assigned"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este evento no tiene equipo asignado"
+          }
+        }
+      }
+    },
+    "events.detail.equipment.empty.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Equipment"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin Equipo"
+          }
+        }
+      }
+    },
+    "events.detail.equipment.fallback": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Equipment"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Equipo"
+          }
+        }
+      }
+    },
+    "events.detail.equipment.loading": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading..."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargando..."
+          }
+        }
+      }
+    },
+    "events.detail.equipment.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigned Equipment"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Equipo Asignado"
+          }
+        }
+      }
+    },
     "events.detail.error.add_payment": {
       "localizations": {
         "en": {
@@ -7118,6 +7349,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Error al subir las fotos"
+          }
+        }
+      }
+    },
+    "events.detail.extras.count": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d extras"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d extras"
+          }
+        }
+      }
+    },
+    "events.detail.extras.loading": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading..."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargando..."
+          }
+        }
+      }
+    },
+    "events.detail.extras.subtotal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtotal: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtotal: %@"
           }
         }
       }
@@ -7315,6 +7594,7 @@
       }
     },
     "events.detail.loading": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -7342,6 +7622,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notas"
+          }
+        }
+      }
+    },
+    "events.detail.payment_ring.collected": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "collected"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cobrado"
           }
         }
       }
@@ -7390,6 +7686,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Liquidar %@"
+          }
+        }
+      }
+    },
+    "events.detail.payments.delete.confirm": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar"
+          }
+        }
+      }
+    },
+    "events.detail.payments.delete.message": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete the payment of %@?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar el pago de %@?"
+          }
+        }
+      }
+    },
+    "events.detail.payments.delete.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete payment"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar pago"
           }
         }
       }
@@ -7746,54 +8090,6 @@
         }
       }
     },
-    "events.detail.payments.delete.confirm": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Delete"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eliminar"
-          }
-        }
-      }
-    },
-    "events.detail.payments.delete.message": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Delete the payment of %@?"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "¿Eliminar el pago de %@?"
-          }
-        }
-      }
-    },
-    "events.detail.payments.delete.title": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Delete payment"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eliminar pago"
-          }
-        }
-      }
-    },
     "events.detail.payments.title": {
       "localizations": {
         "en": {
@@ -7826,82 +8122,18 @@
         }
       }
     },
-    "events.detail.equipment.empty.message": {
+    "events.detail.products.count": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This event has no equipment assigned"
+            "value": "%d products"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este evento no tiene equipo asignado"
-          }
-        }
-      }
-    },
-    "events.detail.equipment.empty.title": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No Equipment"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sin Equipo"
-          }
-        }
-      }
-    },
-    "events.detail.equipment.fallback": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Equipment"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Equipo"
-          }
-        }
-      }
-    },
-    "events.detail.equipment.loading": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Loading..."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cargando..."
-          }
-        }
-      }
-    },
-    "events.detail.equipment.title": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Assigned Equipment"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Equipo Asignado"
+            "value": "%d productos"
           }
         }
       }
@@ -7954,6 +8186,22 @@
         }
       }
     },
+    "events.detail.products.subtotal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtotal: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtotal: %@"
+          }
+        }
+      }
+    },
     "events.detail.products.title": {
       "localizations": {
         "en": {
@@ -7966,198 +8214,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Productos"
-          }
-        }
-      }
-    },
-    "events.detail.staff.error.title": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Error loading"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Error al cargar"
-          }
-        }
-      }
-    },
-    "events.detail.staff.error.unexpected": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "An unexpected error occurred."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ocurrió un error inesperado."
-          }
-        }
-      }
-    },
-    "events.detail.staff.empty.message": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This event has no staff assigned. Edit it to add staff."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Este evento no tiene colaboradores asignados. Editalo para agregar personal."
-          }
-        }
-      }
-    },
-    "events.detail.staff.empty.title": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No staff"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sin personal"
-          }
-        }
-      }
-    },
-    "events.detail.staff.loading": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Loading..."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cargando..."
-          }
-        }
-      }
-    },
-    "events.detail.staff.notification_sent": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notice sent"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aviso enviado"
-          }
-        }
-      }
-    },
-    "events.detail.staff.retry": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Retry"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reintentar"
-          }
-        }
-      }
-    },
-    "events.detail.staff.status.cancelled": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancelled"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancelado"
-          }
-        }
-      }
-    },
-    "events.detail.staff.status.confirmed": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Confirmed"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Confirmado"
-          }
-        }
-      }
-    },
-    "events.detail.staff.status.declined": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Declined"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rechazó"
-          }
-        }
-      }
-    },
-    "events.detail.staff.status.pending": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unconfirmed"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sin confirmar"
-          }
-        }
-      }
-    },
-    "events.detail.staff.title": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Assigned Staff"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Personal Asignado"
           }
         }
       }
@@ -8550,6 +8606,246 @@
         }
       }
     },
+    "events.detail.staff.assigned_count": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d collaborators assigned"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d colaboradores asignados"
+          }
+        }
+      }
+    },
+    "events.detail.staff.empty.message": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This event has no staff assigned. Edit it to add staff."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este evento no tiene colaboradores asignados. Editalo para agregar personal."
+          }
+        }
+      }
+    },
+    "events.detail.staff.empty.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No staff"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin personal"
+          }
+        }
+      }
+    },
+    "events.detail.staff.error.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error loading"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error al cargar"
+          }
+        }
+      }
+    },
+    "events.detail.staff.error.unexpected": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An unexpected error occurred."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocurrió un error inesperado."
+          }
+        }
+      }
+    },
+    "events.detail.staff.loading": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading..."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargando..."
+          }
+        }
+      }
+    },
+    "events.detail.staff.name_fallback": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collaborator"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colaborador"
+          }
+        }
+      }
+    },
+    "events.detail.staff.notification_sent": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notice sent"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aviso enviado"
+          }
+        }
+      }
+    },
+    "events.detail.staff.retry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar"
+          }
+        }
+      }
+    },
+    "events.detail.staff.status.cancelled": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelado"
+          }
+        }
+      }
+    },
+    "events.detail.staff.status.confirmed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmado"
+          }
+        }
+      }
+    },
+    "events.detail.staff.status.declined": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Declined"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechazó"
+          }
+        }
+      }
+    },
+    "events.detail.staff.status.pending": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unconfirmed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin confirmar"
+          }
+        }
+      }
+    },
+    "events.detail.staff.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigned Staff"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal Asignado"
+          }
+        }
+      }
+    },
+    "events.detail.staff.total_fee": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total: %@"
+          }
+        }
+      }
+    },
     "events.detail.status.cancelled": {
       "localizations": {
         "en": {
@@ -8659,6 +8955,134 @@
           "stringUnit": {
             "state": "translated",
             "value": "Insumo"
+          }
+        }
+      }
+    },
+    "events.detail.supplies.loading": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading..."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargando..."
+          }
+        }
+      }
+    },
+    "events.detail.supplies.row.fallback": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supply"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insumo"
+          }
+        }
+      }
+    },
+    "events.detail.supplies.source.purchase": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchase"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra"
+          }
+        }
+      }
+    },
+    "events.detail.supplies.source.stock": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Almacén"
+          }
+        }
+      }
+    },
+    "events.detail.supplies.stat.cost": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cost"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo"
+          }
+        }
+      }
+    },
+    "events.detail.supplies.stat.purchase": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchase"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra"
+          }
+        }
+      }
+    },
+    "events.detail.supplies.stat.stock": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Del Stock"
+          }
+        }
+      }
+    },
+    "events.detail.supplies.stat.total": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total"
           }
         }
       }
@@ -17797,6 +18221,102 @@
     "Responder asignaciones": {},
     "Restaurar compras": {},
     "Resumen": {},
+    "reviews.ok": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "reviews.organizer.empty_hint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When your clients rate their events, they will appear here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando tus clientes califiquen sus eventos, aparecerán aquí."
+          }
+        }
+      }
+    },
+    "reviews.organizer.empty_title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No reviews yet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin reseñas todavía"
+          }
+        }
+      }
+    },
+    "reviews.organizer.error.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error"
+          }
+        }
+      }
+    },
+    "reviews.organizer.response.placeholder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organizer response"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Respuesta del organizador"
+          }
+        }
+      }
+    },
+    "reviews.organizer.response.saved_toast": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Response saved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Respuesta guardada"
+          }
+        }
+      }
+    },
     "reviews.organizer.search_prompt": {
       "localizations": {
         "en": {
@@ -17845,13 +18365,108 @@
         }
       }
     },
+    "reviews.organizer.stars_label": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld out of 5 stars"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld de 5 estrellas"
+          }
+        }
+      }
+    },
+    "reviews.organizer.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviews"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reseñas"
+          }
+        }
+      }
+    },
+    "reviews.organizer.unknown_client": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cliente"
+          }
+        }
+      }
+    },
+    "reviews.organizer.unknown_event": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Event"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evento"
+          }
+        }
+      }
+    },
+    "reviews.organizer.visibility.private": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privada"
+          }
+        }
+      }
+    },
+    "reviews.organizer.visibility.public": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Public"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pública"
+          }
+        }
+      }
+    },
     "Rol en este evento (opcional)": {},
     "Rol: %@": {},
     "Rotar enlace": {},
     "Sale": {},
     "Se eliminará a %@. Podrás deshacer durante unos segundos.": {},
     "Se eliminará el equipo %@. Los colaboradores individuales no se borran.": {},
-    "Se eliminara el link \"%@\". Esta accion no se puede deshacer.": {},
     "Se va a deshabilitar el enlace para el cliente. ¿Estás seguro?": {},
     "search.initial_state.hint": {
       "localizations": {
@@ -21634,22 +22249,6 @@
         }
       }
     },
-    "staff.shared.email_action": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Email"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Email"
-          }
-        }
-      }
-    },
     "staff.shared.cancel": {
       "localizations": {
         "en": {
@@ -21710,6 +22309,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Editar"
+          }
+        }
+      }
+    },
+    "staff.shared.email_action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email"
           }
         }
       }
@@ -22354,22 +22969,6 @@
         }
       }
     },
-    "staff.teams.team_deleted_toast": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Team %@ deleted"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Equipo %@ eliminado"
-          }
-        }
-      }
-    },
     "staff.teams.team_delete_title": {
       "localizations": {
         "en": {
@@ -22382,6 +22981,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eliminar equipo"
+          }
+        }
+      }
+    },
+    "staff.teams.team_deleted_toast": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Team %@ deleted"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Equipo %@ eliminado"
           }
         }
       }
@@ -22564,6 +23179,7 @@
     "Tipo": {},
     "Tipo de Descuento": {},
     "Toca aquí para iniciar la creación de un nuevo evento, cotización o contrato.": {},
+    "Toca para cambiar el estado": {},
     "Toca para revisar": {},
     "Todavía no generaste un enlace para este evento.": {},
     "Todos": {},
@@ -22601,199 +23217,7 @@
     "x%@": {},
     "x%lld": {},
     "y": {},
-    "reviews.ok": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OK"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OK"
-          }
-        }
-      }
-    },
-    "reviews.organizer.stars_label": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld de 5 estrellas"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld out of 5 stars"
-          }
-        }
-      }
-    },
-    "reviews.organizer.response.saved_toast": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Respuesta guardada"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Response saved"
-          }
-        }
-      }
-    },
-    "reviews.organizer.title": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reseñas"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reviews"
-          }
-        }
-      }
-    },
-    "reviews.organizer.empty_title": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sin reseñas todavía"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No reviews yet"
-          }
-        }
-      }
-    },
-    "reviews.organizer.empty_hint": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cuando tus clientes califiquen sus eventos, aparecerán aquí."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "When your clients rate their events, they will appear here."
-          }
-        }
-      }
-    },
-    "reviews.organizer.unknown_client": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cliente"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Client"
-          }
-        }
-      }
-    },
-    "reviews.organizer.unknown_event": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Evento"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Event"
-          }
-        }
-      }
-    },
-    "reviews.organizer.visibility.private": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Privada"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Private"
-          }
-        }
-      }
-    },
-    "reviews.organizer.visibility.public": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pública"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Public"
-          }
-        }
-      }
-    },
-    "reviews.organizer.response.placeholder": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Respuesta del organizador"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Organizer response"
-          }
-        }
-      }
-    },
-    "reviews.organizer.error.title": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Error"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Error"
-          }
-        }
-      }
-    },
-    "events.detail.client.action.call": {
+    "clients.detail.action.call": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -22809,23 +23233,7 @@
         }
       }
     },
-    "events.detail.client.action.email": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Email"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Email"
-          }
-        }
-      }
-    },
-    "events.detail.client.action.whatsapp": {
+    "clients.detail.action.whatsapp": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -22841,354 +23249,66 @@
         }
       }
     },
-    "events.detail.countdown.future": {
+    "clients.detail.action.email": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d DAYS LEFT"
+            "value": "Email"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "FALTAN %d DÍAS"
+            "value": "Email"
           }
         }
       }
     },
-    "events.detail.countdown.past": {
+    "clients.detail.action.more": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "FINISHED"
+            "value": "Client actions"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "FINALIZADO"
+            "value": "Acciones del cliente"
           }
         }
       }
     },
-    "events.detail.countdown.today": {
+    "clients.detail.notes": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "TODAY"
+            "value": "Notes"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "HOY"
+            "value": "Notas"
           }
         }
       }
     },
-    "events.detail.countdown.tomorrow": {
+    "clients.detail.a11y.stat_events": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "TOMORROW"
+            "value": "Events: %d"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "MAÑANA"
-          }
-        }
-      }
-    },
-    "events.detail.equipment.assigned_count": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d equipment assigned"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d equipos asignados"
-          }
-        }
-      }
-    },
-    "events.detail.extras.count": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d extras"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d extras"
-          }
-        }
-      }
-    },
-    "events.detail.extras.loading": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Loading..."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cargando..."
-          }
-        }
-      }
-    },
-    "events.detail.extras.subtotal": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Subtotal: %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Subtotal: %@"
-          }
-        }
-      }
-    },
-    "events.detail.payment_ring.collected": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "collected"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "cobrado"
-          }
-        }
-      }
-    },
-    "events.detail.products.count": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d products"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d productos"
-          }
-        }
-      }
-    },
-    "events.detail.products.subtotal": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Subtotal: %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Subtotal: %@"
-          }
-        }
-      }
-    },
-    "events.detail.staff.assigned_count": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d collaborators assigned"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d colaboradores asignados"
-          }
-        }
-      }
-    },
-    "events.detail.staff.name_fallback": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Collaborator"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Colaborador"
-          }
-        }
-      }
-    },
-    "events.detail.staff.total_fee": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Total: %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Total: %@"
-          }
-        }
-      }
-    },
-    "events.detail.supplies.loading": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Loading..."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cargando..."
-          }
-        }
-      }
-    },
-    "events.detail.supplies.row.fallback": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Supply"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Insumo"
-          }
-        }
-      }
-    },
-    "events.detail.supplies.source.purchase": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Purchase"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compra"
-          }
-        }
-      }
-    },
-    "events.detail.supplies.source.stock": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stock"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Almacén"
-          }
-        }
-      }
-    },
-    "events.detail.supplies.stat.cost": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cost"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Costo"
-          }
-        }
-      }
-    },
-    "events.detail.supplies.stat.purchase": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Purchase"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compra"
-          }
-        }
-      }
-    },
-    "events.detail.supplies.stat.stock": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stock"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Del Stock"
-          }
-        }
-      }
-    },
-    "events.detail.supplies.stat.total": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Total"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Total"
+            "value": "Eventos: %d"
           }
         }
       }
