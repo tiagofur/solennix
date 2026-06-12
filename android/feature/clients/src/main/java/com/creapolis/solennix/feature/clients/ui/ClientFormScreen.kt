@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -22,11 +23,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -53,6 +57,7 @@ fun ClientFormScreen(
 ) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
 
     LaunchedEffect(viewModel.saveSuccess) {
         if (viewModel.saveSuccess) {
@@ -96,6 +101,7 @@ fun ClientFormScreen(
                         .fillMaxSize()
                         .padding(padding)
                         .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
+                        .imePadding()
                         .verticalScroll(scrollState)
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -172,25 +178,72 @@ fun ClientFormScreen(
                     // Form fields — side-by-side on tablet via AdaptiveFormRow
                     AdaptiveFormRow(
                         left = {
-                            SolennixTextField(value = viewModel.name, onValueChange = { viewModel.name = it }, label = stringResource(R.string.clients_field_name), leadingIcon = Icons.Default.Person, errorMessage = viewModel.nameError)
+                            SolennixTextField(
+                                value = viewModel.name,
+                                onValueChange = { viewModel.name = it },
+                                label = stringResource(R.string.clients_field_name),
+                                leadingIcon = Icons.Default.Person,
+                                imeAction = ImeAction.Next,
+                                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                                errorMessage = viewModel.nameError
+                            )
                         },
                         right = {
-                            SolennixTextField(value = viewModel.phone, onValueChange = { viewModel.phone = it }, label = stringResource(R.string.clients_field_phone), leadingIcon = Icons.Default.Phone, keyboardType = KeyboardType.Phone, errorMessage = viewModel.phoneError)
+                            SolennixTextField(
+                                value = viewModel.phone,
+                                onValueChange = { viewModel.phone = it },
+                                label = stringResource(R.string.clients_field_phone),
+                                leadingIcon = Icons.Default.Phone,
+                                keyboardType = KeyboardType.Phone,
+                                imeAction = ImeAction.Next,
+                                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                                errorMessage = viewModel.phoneError
+                            )
                         }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     AdaptiveFormRow(
                         left = {
-                            SolennixTextField(value = viewModel.email, onValueChange = { viewModel.email = it }, label = stringResource(R.string.clients_field_email), leadingIcon = Icons.Default.Email, keyboardType = KeyboardType.Email, errorMessage = viewModel.emailError)
+                            SolennixTextField(
+                                value = viewModel.email,
+                                onValueChange = { viewModel.email = it },
+                                label = stringResource(R.string.clients_field_email),
+                                leadingIcon = Icons.Default.Email,
+                                keyboardType = KeyboardType.Email,
+                                imeAction = ImeAction.Next,
+                                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                                errorMessage = viewModel.emailError
+                            )
                         },
                         right = {
-                            SolennixTextField(value = viewModel.city, onValueChange = { viewModel.city = it }, label = stringResource(R.string.clients_field_city), leadingIcon = Icons.Default.LocationCity)
+                            SolennixTextField(
+                                value = viewModel.city,
+                                onValueChange = { viewModel.city = it },
+                                label = stringResource(R.string.clients_field_city),
+                                leadingIcon = Icons.Default.LocationCity,
+                                imeAction = ImeAction.Next,
+                                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
+                            )
                         }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    SolennixTextField(value = viewModel.address, onValueChange = { viewModel.address = it }, label = stringResource(R.string.clients_field_address), leadingIcon = Icons.Default.LocationOn)
+                    SolennixTextField(
+                        value = viewModel.address,
+                        onValueChange = { viewModel.address = it },
+                        label = stringResource(R.string.clients_field_address),
+                        leadingIcon = Icons.Default.LocationOn,
+                        imeAction = ImeAction.Next,
+                        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
-                    SolennixTextField(value = viewModel.notes, onValueChange = { viewModel.notes = it }, label = stringResource(R.string.clients_field_notes), leadingIcon = Icons.AutoMirrored.Filled.Notes)
+                    SolennixTextField(
+                        value = viewModel.notes,
+                        onValueChange = { viewModel.notes = it },
+                        label = stringResource(R.string.clients_field_notes),
+                        leadingIcon = Icons.AutoMirrored.Filled.Notes,
+                        imeAction = ImeAction.Done,
+                        keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
+                    )
                     Spacer(modifier = Modifier.height(32.dp))
 
                     if (viewModel.errorMessage != null) {

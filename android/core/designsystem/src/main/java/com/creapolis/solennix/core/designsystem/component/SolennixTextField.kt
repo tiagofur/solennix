@@ -3,6 +3,7 @@ package com.creapolis.solennix.core.designsystem.component
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
@@ -34,6 +35,7 @@ fun SolennixTextField(
     isPassword: Boolean = false,
     keyboardType: KeyboardType = KeyboardType.Text,
     imeAction: ImeAction = ImeAction.Next,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
     errorMessage: String? = null,
     enabled: Boolean = true
 ) {
@@ -68,6 +70,7 @@ fun SolennixTextField(
                 keyboardType = keyboardType,
                 imeAction = imeAction
             ),
+            keyboardActions = keyboardActions,
             enabled = enabled,
             shape = MaterialTheme.shapes.small,
             colors = OutlinedTextFieldDefaults.colors(

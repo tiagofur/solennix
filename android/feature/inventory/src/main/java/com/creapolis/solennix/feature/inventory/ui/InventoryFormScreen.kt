@@ -2,6 +2,7 @@ package com.creapolis.solennix.feature.inventory.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -11,6 +12,9 @@ import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
@@ -36,6 +40,7 @@ fun InventoryFormScreen(
     onNavigateBack: () -> Unit
 ) {
     val scrollState = rememberScrollState()
+    val focusManager = LocalFocusManager.current
 
     LaunchedEffect(viewModel.saveSuccess) {
         if (viewModel.saveSuccess) {
@@ -71,6 +76,7 @@ fun InventoryFormScreen(
                         .fillMaxSize()
                         .padding(padding)
                         .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
+                        .imePadding()
                         .verticalScroll(scrollState)
                 ) {
                     // Plan limit banner (only shown when creating a new item)
@@ -103,7 +109,9 @@ fun InventoryFormScreen(
                                     value = viewModel.ingredientName,
                                     onValueChange = { viewModel.ingredientName = it },
                                     label = InventoryStrings.itemNameRequired,
-                                    leadingIcon = Icons.Default.Archive
+                                    leadingIcon = Icons.Default.Archive,
+                                    imeAction = ImeAction.Next,
+                                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                                 )
                             },
                             right = {
@@ -142,7 +150,9 @@ fun InventoryFormScreen(
                                     value = viewModel.currentStock,
                                     onValueChange = { viewModel.currentStock = it },
                                     label = InventoryStrings.stockCurrentRequired,
-                                    keyboardType = KeyboardType.Decimal
+                                    keyboardType = KeyboardType.Decimal,
+                                    imeAction = ImeAction.Next,
+                                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                                 )
                             },
                             right = {
@@ -150,7 +160,9 @@ fun InventoryFormScreen(
                                     value = viewModel.minimumStock,
                                     onValueChange = { viewModel.minimumStock = it },
                                     label = InventoryStrings.stockMinimumRequired,
-                                    keyboardType = KeyboardType.Decimal
+                                    keyboardType = KeyboardType.Decimal,
+                                    imeAction = ImeAction.Next,
+                                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                                 )
                             }
                         )
@@ -212,7 +224,9 @@ fun InventoryFormScreen(
                                     onValueChange = { viewModel.unitCost = it },
                                     label = InventoryStrings.unitCostOptional,
                                     leadingIcon = Icons.Default.AttachMoney,
-                                    keyboardType = KeyboardType.Decimal
+                                    keyboardType = KeyboardType.Decimal,
+                                    imeAction = ImeAction.Done,
+                                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
                                 )
                             }
                         )
