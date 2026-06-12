@@ -97,6 +97,9 @@ public final class ProductListViewModel {
     public func loadProducts() async {
         isLoading = true
         errorMessage = nil
+        // Full reload always restarts pagination — without this, pull-to-refresh
+        // after paginating re-fetches the CURRENT page and appends duplicates.
+        currentPage = 1
 
         // Show cached data immediately while fetching
         if products.isEmpty, let cached = try? cacheManager?.getCachedProducts(maxAge: cacheMaxAge), !cached.isEmpty {
