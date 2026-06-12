@@ -39,14 +39,15 @@ public struct ClientListView: View {
                         CachedDataBanner()
                     }
                     if !planLimitsManager.canCreateClient {
-                        UpgradeBannerView(
-                            type: .limitReached,
-                            resource: tr("clients.title", "Clientes"),
-                            currentUsage: planLimitsManager.clientsCount,
-                            limit: PlanLimitsManager.clientLimit
-                        ) {
-                            // Action to go to Pricing
+                        NavigationLink(value: Route.pricing) {
+                            UpgradeBannerView(
+                                type: .limitReached,
+                                resource: tr("clients.title", "Clientes"),
+                                currentUsage: planLimitsManager.clientsCount,
+                                limit: PlanLimitsManager.clientLimit
+                            )
                         }
+                        .buttonStyle(.plain)
                         .padding(.horizontal, Spacing.md)
                         .padding(.top, Spacing.sm)
                     }

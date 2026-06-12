@@ -40,8 +40,7 @@ public struct InventoryListView: View {
                                 resource: InventoryStrings.inventoryResource,
                                 currentUsage: planLimitsManager.inventoryCount,
                                 limit: PlanLimitsManager.inventoryLimit,
-                                ctaLabel: InventoryStrings.upgradeCta,
-                                onUpgrade: {}
+                                ctaLabel: InventoryStrings.upgradeCta
                             )
                         }
                         .buttonStyle(.plain)
@@ -203,9 +202,9 @@ public struct InventoryListView: View {
                             Label(InventoryStrings.deleteAction, systemImage: "trash")
                         }
                     }
-                    // Fix 5c: pagination trigger on iPad grid last item
+                    // Fix 5c / R2: pagination trigger on the global last item regardless of section
                     .task {
-                        if item == items.last && items == viewModel.filteredItems {
+                        if item == viewModel.filteredItems.last {
                             await viewModel.loadNextPage()
                         }
                     }
@@ -704,6 +703,11 @@ struct InventoryRowContent: View {
                 HStack {
                     stockAndCostInfo(item: item, isLow: isLow)
                     Spacer()
+                }
+                if let cost = item.unitCost, cost > 0 {
+                    Text(cost.formatted(.currency(code: "MXN")))
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textSecondary)
                 }
             }
             .padding(.vertical, Spacing.xs)

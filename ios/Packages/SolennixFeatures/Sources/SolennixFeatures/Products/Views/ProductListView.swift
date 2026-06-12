@@ -44,8 +44,7 @@ public struct ProductListView: View {
                                 resource: ProductStrings.title,
                                 currentUsage: planLimitsManager.productsCount,
                                 limit: PlanLimitsManager.productLimit,
-                                ctaLabel: ProductStrings.upgradeCta,
-                                onUpgrade: {}
+                                ctaLabel: ProductStrings.upgradeCta
                             )
                         }
                         .buttonStyle(.plain)

@@ -180,21 +180,21 @@ public struct DashboardView: View {
     @ViewBuilder
     private var planLimitsBanner: some View {
         if !planLimitsManager.canCreateEvent {
-            UpgradeBannerView(
-                type: .limitReached,
-                resource: tr("dashboard.plan_limit_resource", "Eventos"),
-                currentUsage: planLimitsManager.eventsThisMonth,
-                limit: PlanLimitsManager.freePlanEventLimit
-            ) {
-                // Action to go to Pricing — will be implemented via navigation
+            NavigationLink(value: Route.pricing) {
+                UpgradeBannerView(
+                    type: .limitReached,
+                    resource: tr("dashboard.plan_limit_resource", "Eventos"),
+                    currentUsage: planLimitsManager.eventsThisMonth,
+                    limit: PlanLimitsManager.freePlanEventLimit
+                )
             }
+            .buttonStyle(.plain)
             .padding(.horizontal, Spacing.md)
         } else if planLimitsManager.isBasicPlan {
-            UpgradeBannerView(
-                type: .upsell
-            ) {
-                // Action to go to Pricing
+            NavigationLink(value: Route.pricing) {
+                UpgradeBannerView(type: .upsell)
             }
+            .buttonStyle(.plain)
             .padding(.horizontal, Spacing.md)
         }
     }

@@ -527,7 +527,7 @@ public struct ClientDetailView: View {
 
                 if !isPremium {
                     NavigationLink(value: Route.pricing) {
-                        UpgradeBannerView(type: .upsell, onUpgrade: {})
+                        UpgradeBannerView(type: .upsell)
                     }
                     .buttonStyle(.plain)
                 }

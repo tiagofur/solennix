@@ -39,16 +39,18 @@ public final class InventoryListViewModel {
     public var isLoading: Bool = false
     public var sortKey: InventorySortKey = .name {
         didSet {
-            // Fix 5d: sort change resets pagination and reloads from server
+            // R2: cancel any in-flight sort reload before spawning a new one to prevent races
+            sortReloadTask?.cancel()
             currentPage = 1
-            Task { await loadItems() }
+            sortReloadTask = Task { await loadItems() }
         }
     }
     public var sortAscending: Bool = true {
         didSet {
-            // Fix 5d: sort direction change resets pagination and reloads from server
+            // R2: cancel any in-flight sort reload before spawning a new one to prevent races
+            sortReloadTask?.cancel()
             currentPage = 1
-            Task { await loadItems() }
+            sortReloadTask = Task { await loadItems() }
         }
     }
     public var deleteTarget: InventoryItem?
@@ -101,6 +103,8 @@ public final class InventoryListViewModel {
     private let apiClient: APIClient
     private var cacheManager: CacheManager?
     private let cacheMaxAge: TimeInterval = 30 * 60
+    /// Tracks the most recent sort-triggered reload task so rapid sort changes cancel the previous one.
+    private var sortReloadTask: Task<Void, Never>?
 
     // MARK: - Init
 
@@ -138,6 +142,7 @@ public final class InventoryListViewModel {
         do {
             if isFiltering {
                 let result: [InventoryItem] = try await apiClient.getAll(Endpoint.inventory)
+                guard !Task.isCancelled else { isLoading = false; return }
                 items = result
                 currentPage = 1
                 totalPages = 1
@@ -157,6 +162,7 @@ public final class InventoryListViewModel {
                     "order": sortAscending ? "asc" : "desc"
                 ]
                 let paginated: PaginatedResponse<InventoryItem> = try await apiClient.getPaginated(Endpoint.inventory, params: params)
+                guard !Task.isCancelled else { isLoading = false; return }
                 if currentPage == 1 {
                     items = paginated.data
                 } else {
