@@ -44,76 +44,51 @@ struct CompactTabLayout: View {
     @available(iOS 26.0, *)
     @ViewBuilder
     private var ios26TabView: some View {
-        // SwiftUI supports `Tab(_:systemImage:value:role:)` in a selection-bound
-        // TabView (WWDC25 pattern). We bind `ios26TabSelection` so same-tab
-        // re-tap pops to root and Spotlight deep links can set selectedTab before
-        // pushing onto homePath — matching the legacy branch's behavior.
+        // SwiftUI supports `Tab(_:systemImage:value:)` in a selection-bound TabView
+        // (WWDC25 pattern). We bind `ios26TabSelection` so same-tab re-tap pops to
+        // root and Spotlight deep links can set selectedTab before pushing onto
+        // homePath — matching the legacy branch's behavior.
+        //
+        // IMPORTANT: The search tab MUST be declared with `Tab(role: .search)`
+        // WITHOUT a `value:` parameter. Combining `value:` with `role: .search`
+        // suppresses the role silently and causes UIKit to count it as a regular
+        // tab — triggering overflow ("Más" system tab) with 6 tabs. The search tab
+        // declared with role only floats outside the bar and does not count toward
+        // the tab limit. It must also be declared LAST per Apple's Tab builder spec.
         TabView(selection: ios26TabSelection) {
             SwiftUI.Tab(AppTab.home.title, systemImage: AppTab.home.iconName, value: AppTab.home) {
-                NavigationStack(path: $homePath) {
-                    HomeRootView()
-                        .navigationDestination(for: Route.self) { route in
-                            RouteDestination(route: route)
-                        }
-                        .searchable(text: $homeSearchText, prompt: globalSearchPrompt)
-                        .onSubmit(of: .search) {
-                            appendSearchRoute(query: &homeSearchText, to: &homePath)
-                        }
-                }
+                homeTabContent
             }
 
             SwiftUI.Tab(AppTab.calendar.title, systemImage: AppTab.calendar.iconName, value: AppTab.calendar) {
-                NavigationStack(path: $calendarPath) {
-                    CalendarRootView()
-                        .navigationDestination(for: Route.self) { route in
-                            RouteDestination(route: route)
-                        }
-                        .searchable(text: $calendarSearchText, prompt: globalSearchPrompt)
-                        .onSubmit(of: .search) {
-                            appendSearchRoute(query: &calendarSearchText, to: &calendarPath)
-                        }
-                }
+                calendarTabContent
             }
 
             SwiftUI.Tab(AppTab.events.title, systemImage: AppTab.events.iconName, value: AppTab.events) {
-                NavigationStack(path: $eventsPath) {
-                    EventsRootView()
-                        .navigationDestination(for: Route.self) { route in
-                            RouteDestination(route: route)
-                        }
-                }
+                eventsTabContent
             }
 
             SwiftUI.Tab(AppTab.clients.title, systemImage: AppTab.clients.iconName, value: AppTab.clients) {
-                NavigationStack(path: $clientsPath) {
-                    ClientsRootView()
-                        .navigationDestination(for: Route.self) { route in
-                            RouteDestination(route: route)
-                        }
-                }
+                clientsTabContent
+            }
+
+            SwiftUI.Tab(AppTab.more.title, systemImage: AppTab.more.iconName, value: AppTab.more) {
+                moreTabContent
             }
 
             // Native floating search tab — iOS 26 Liquid Glass behavior.
-            // role: .search renders the tab as a floating search entry point.
+            // MUST be declared LAST in the Tab builder so that role: .search is
+            // fully honored by SwiftUI/UIKit. When this tab appears before regular
+            // tabs, UIKit counts it as a regular slot and triggers overflow.
+            // `value: AppTab.search` is required so all Tab declarations share the
+            // same Value type (AppTab); the role still causes it to float outside
+            // the bar and not count toward the 5-tab limit.
             SwiftUI.Tab(AppTab.search.title, systemImage: AppTab.search.iconName, value: AppTab.search, role: .search) {
                 NavigationStack {
                     SearchView()
                         .searchToolbarBehavior(.minimize)
                         .navigationDestination(for: Route.self) { route in
                             RouteDestination(route: route)
-                        }
-                }
-            }
-
-            SwiftUI.Tab(AppTab.more.title, systemImage: AppTab.more.iconName, value: AppTab.more) {
-                NavigationStack(path: $morePath) {
-                    MoreMenuView()
-                        .navigationDestination(for: Route.self) { route in
-                            RouteDestination(route: route)
-                        }
-                        .searchable(text: $moreSearchText, prompt: globalSearchPrompt)
-                        .onSubmit(of: .search) {
-                            appendSearchRoute(query: &moreSearchText, to: &morePath)
                         }
                 }
             }
@@ -137,6 +112,7 @@ struct CompactTabLayout: View {
 
     /// Custom binding for the iOS 26 TabView that pops to root on same-tab re-tap.
     /// Mirrors `legacyTabSelection` so both branches share the same UX contract.
+    /// The search tab has no value binding so it never fires this setter.
     @available(iOS 26.0, *)
     private var ios26TabSelection: Binding<AppTab> {
         Binding(
@@ -158,78 +134,31 @@ struct CompactTabLayout: View {
     private var legacyTabView: some View {
         TabView(selection: legacyTabSelection) {
             // Home Tab
-            NavigationStack(path: $homePath) {
-                HomeRootView()
-                    .navigationDestination(for: Route.self) { route in
-                        RouteDestination(route: route)
-                    }
-                    .searchable(text: $homeSearchText, prompt: globalSearchPrompt)
-                    .onSubmit(of: .search) {
-                        appendSearchRoute(query: &homeSearchText, to: &homePath)
-                    }
-            }
-            .tabItem {
-                Label(Tab.home.title, systemImage: Tab.home.iconName)
-            }
-            .tag(AppTab.home)
+            homeTabContent
+                .tabItem { Label(Tab.home.title, systemImage: Tab.home.iconName) }
+                .tag(AppTab.home)
 
             // Calendar Tab
-            NavigationStack(path: $calendarPath) {
-                CalendarRootView()
-                    .navigationDestination(for: Route.self) { route in
-                        RouteDestination(route: route)
-                    }
-                    .searchable(text: $calendarSearchText, prompt: globalSearchPrompt)
-                    .onSubmit(of: .search) {
-                        appendSearchRoute(query: &calendarSearchText, to: &calendarPath)
-                    }
-            }
-            .tabItem {
-                Label(Tab.calendar.title, systemImage: Tab.calendar.iconName)
-            }
-            .tag(AppTab.calendar)
+            calendarTabContent
+                .tabItem { Label(Tab.calendar.title, systemImage: Tab.calendar.iconName) }
+                .tag(AppTab.calendar)
 
             // Events Tab — EventListView provides its own .searchable for
             // local filtering of the events list.
-            NavigationStack(path: $eventsPath) {
-                EventsRootView()
-                    .navigationDestination(for: Route.self) { route in
-                        RouteDestination(route: route)
-                    }
-            }
-            .tabItem {
-                Label(Tab.events.title, systemImage: Tab.events.iconName)
-            }
-            .tag(AppTab.events)
+            eventsTabContent
+                .tabItem { Label(Tab.events.title, systemImage: Tab.events.iconName) }
+                .tag(AppTab.events)
 
             // Clients Tab — ClientListView provides its own .searchable for
             // local filtering of the clients list.
-            NavigationStack(path: $clientsPath) {
-                ClientsRootView()
-                    .navigationDestination(for: Route.self) { route in
-                        RouteDestination(route: route)
-                    }
-            }
-            .tabItem {
-                Label(Tab.clients.title, systemImage: Tab.clients.iconName)
-            }
-            .tag(AppTab.clients)
+            clientsTabContent
+                .tabItem { Label(Tab.clients.title, systemImage: Tab.clients.iconName) }
+                .tag(AppTab.clients)
 
             // More Tab
-            NavigationStack(path: $morePath) {
-                MoreMenuView()
-                    .navigationDestination(for: Route.self) { route in
-                        RouteDestination(route: route)
-                    }
-                    .searchable(text: $moreSearchText, prompt: globalSearchPrompt)
-                    .onSubmit(of: .search) {
-                        appendSearchRoute(query: &moreSearchText, to: &morePath)
-                    }
-            }
-            .tabItem {
-                Label(Tab.more.title, systemImage: Tab.more.iconName)
-            }
-            .tag(AppTab.more)
+            moreTabContent
+                .tabItem { Label(Tab.more.title, systemImage: Tab.more.iconName) }
+                .tag(AppTab.more)
         }
         .tint(SolennixColors.tabBarActive)
         .onChange(of: pendingSpotlightRoute) { _, newRoute in
@@ -242,6 +171,74 @@ struct CompactTabLayout: View {
                 homePath.append(route)
             }
             pendingSpotlightRoute = nil
+        }
+    }
+
+    // MARK: - Shared Per-Tab Content
+    //
+    // Each @ViewBuilder property builds the NavigationStack + root view for one tab.
+    // Both ios26TabView and legacyTabView reference these so per-tab structure
+    // can never drift between branches.
+
+    @ViewBuilder
+    private var homeTabContent: some View {
+        NavigationStack(path: $homePath) {
+            HomeRootView()
+                .navigationDestination(for: Route.self) { route in
+                    RouteDestination(route: route)
+                }
+                .searchable(text: $homeSearchText, prompt: globalSearchPrompt)
+                .onSubmit(of: .search) {
+                    appendSearchRoute(query: &homeSearchText, to: &homePath)
+                }
+        }
+    }
+
+    @ViewBuilder
+    private var calendarTabContent: some View {
+        NavigationStack(path: $calendarPath) {
+            CalendarRootView()
+                .navigationDestination(for: Route.self) { route in
+                    RouteDestination(route: route)
+                }
+                .searchable(text: $calendarSearchText, prompt: globalSearchPrompt)
+                .onSubmit(of: .search) {
+                    appendSearchRoute(query: &calendarSearchText, to: &calendarPath)
+                }
+        }
+    }
+
+    @ViewBuilder
+    private var eventsTabContent: some View {
+        NavigationStack(path: $eventsPath) {
+            EventsRootView()
+                .navigationDestination(for: Route.self) { route in
+                    RouteDestination(route: route)
+                }
+        }
+    }
+
+    @ViewBuilder
+    private var clientsTabContent: some View {
+        NavigationStack(path: $clientsPath) {
+            ClientsRootView()
+                .navigationDestination(for: Route.self) { route in
+                    RouteDestination(route: route)
+                }
+        }
+    }
+
+    @ViewBuilder
+    private var moreTabContent: some View {
+        NavigationStack(path: $morePath) {
+            MoreMenuView()
+                .navigationDestination(for: Route.self) { route in
+                    RouteDestination(route: route)
+                }
+                .searchable(text: $moreSearchText, prompt: globalSearchPrompt)
+                .onSubmit(of: .search) {
+                    appendSearchRoute(query: &moreSearchText, to: &morePath)
+                }
         }
     }
 
