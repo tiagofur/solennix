@@ -31,10 +31,15 @@ public struct EventDetailView: View {
     public var body: some View {
         Group {
             if viewModel.isLoading && viewModel.event == nil {
-                ProgressView(tr("events.detail.loading", "Cargando evento..."))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                // In-List skeleton so the layout doesn't flash from ProgressView → content
+                List {
+                    EventDetailHubSkeleton()
+                }
+                .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+                .background(SolennixColors.surfaceGrouped)
             } else if let event = viewModel.event {
-                scrollContent(event)
+                hubList(event)
             } else {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
@@ -44,7 +49,6 @@ public struct EventDetailView: View {
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        // Haptic when the user duplicates an event — .impact signals a significant action.
         .sensoryFeedback(.impact(weight: .medium), trigger: duplicateHapticTrigger)
         .navigationTitle(tr("events.detail.title", "Detalle del evento"))
         .navigationBarTitleDisplayMode(.inline)
@@ -118,108 +122,238 @@ public struct EventDetailView: View {
         }
     }
 
-    // MARK: - Scroll Content (Hub Layout)
+    // MARK: - Hub List
 
-    private func scrollContent(_ event: Event) -> some View {
-        let isRegularWidth = sizeClass == .regular
-
-        return ScrollView {
-            VStack(spacing: Spacing.lg) {
-                AdaptiveDetailLayout {
-                    // Left column: Header + Event Info + Content Cards
-                    headerCard(event)
-                    clientInfoCard(event)
-                    if let notes = event.notes, !notes.isEmpty {
-                        notesSection(notes)
-                    }
-                    contentCardsGrid(event)
-                } right: {
-                    // Right column: Finances + Payments + Actions
-                    financeSummaryCard(event)
-                    paymentSummaryCard(event)
-                    actionButtonsRow1(event)
-                    checklistCard
-                    contractPreviewCard
-                    clientPortalCard
-                    documentsCard(event)
-                }
-
-                // Full-width: Photos preview + Live Activity
-                photosPreviewCard
-
-                liveActivityButton
+    private func hubList(_ event: Event) -> some View {
+        List {
+            // MARK: Header section — hero card
+            Section {
+                EventDetailHeaderCard(
+                    event: event,
+                    clientName: viewModel.client?.name,
+                    month: parseDateComponents(event.eventDate).month,
+                    day: parseDateComponents(event.eventDate).day,
+                    dateLabel: tr("events.detail.info.date", "Fecha"),
+                    dateValue: formatDateShort(event.eventDate),
+                    scheduleLabel: tr("events.detail.info.schedule", "Horario"),
+                    scheduleValue: scheduleText(event),
+                    peopleLabel: tr("events.detail.info.people", "Personas"),
+                    peopleValue: trf("events.detail.info.people_value", "%@ PAX", String(event.numPeople)),
+                    locationLabel: locationLabel(event),
+                    locationValue: locationValue(event),
+                    onStatusTap: { viewModel.showStatusSheet = true },
+                    editRoute: Route.eventForm(id: eventId, step: 1)
+                )
             }
-            .padding(.horizontal, isRegularWidth ? Spacing.xxl : Spacing.md)
-            .padding(.vertical, isRegularWidth ? Spacing.xxl : Spacing.lg)
+            .listRowSeparator(.hidden)
+
+            // MARK: Client section
+            if let client = viewModel.client {
+                Section {
+                    EventDetailClientInfoCard(client: client)
+                }
+                .listRowSeparator(.hidden)
+            }
+
+            // MARK: Notes section
+            if let notes = event.notes, !notes.isEmpty {
+                Section {
+                    EventDetailNotesCard(
+                        title: tr("events.detail.notes", "Notas"),
+                        notes: notes
+                    )
+                }
+                .listRowSeparator(.hidden)
+            }
+
+            // MARK: Finances section
+            Section {
+                EventDetailFinanceSummaryCard(
+                    title: tr("events.detail.card.finances", "Finanzas"),
+                    totalLabel: tr("events.detail.finances.total", "Total"),
+                    totalValue: event.totalAmount.asMXN,
+                    profitLabel: tr("events.detail.finances.profit", "Utilidad"),
+                    profitValue: "\(String(format: "%.0f", financialsMargin(event)))%",
+                    discountText: discountText(event),
+                    taxText: taxText(event),
+                    route: Route.eventFinances(id: eventId),
+                    editRoute: Route.eventForm(id: eventId, step: 5)
+                )
+            }
+            .listRowSeparator(.hidden)
+
+            // MARK: Payments section
+            Section {
+                EventDetailPaymentSummaryCard(
+                    title: tr("events.detail.card.payments", "Pagos"),
+                    paymentsCount: viewModel.payments.count,
+                    paidLabel: tr("events.detail.payments.kpi.paid", "Pagado"),
+                    paidValue: viewModel.totalPaid.asMXN,
+                    balanceLabel: tr("events.detail.payments.kpi.balance", "Saldo"),
+                    balanceValue: viewModel.remaining.asMXN,
+                    isFullyPaid: viewModel.isFullyPaid,
+                    progress: viewModel.progress,
+                    depositText: depositText(event),
+                    isDepositMet: isDepositMet(event),
+                    route: Route.eventPayments(id: eventId),
+                    fullyPaidCounter: viewModel.fullyPaidCounter
+                )
+            }
+            .listRowSeparator(.hidden)
+
+            // MARK: Payment actions
+            if viewModel.remaining > 0.01 {
+                Section {
+                    EventDetailPaymentActionsCard(
+                        recordTitle: tr("events.detail.payments.action.record", "Registrar pago"),
+                        settleTitle: trf("events.detail.payments.action.settle", "Liquidar %@", viewModel.remaining.asMXN),
+                        depositTitle: (event.depositPercent ?? 0) > 0 && viewModel.depositBalance > 0.01
+                            ? trf("events.detail.payments.action.deposit", "Anticipo %@", viewModel.depositBalance.asMXN)
+                            : nil,
+                        onRecord: { viewModel.showRecordPaymentSheet() },
+                        onSettle: { viewModel.payRemaining() },
+                        onDeposit: { viewModel.payDeposit() }
+                    )
+                }
+                .listRowSeparator(.hidden)
+            }
+
+            // MARK: Content navigation section (products, extras, supplies, equipment, staff, photos)
+            Section(header: Text(tr("events.detail.section.content", "Contenido")).font(.caption).foregroundStyle(SolennixColors.textSecondary)) {
+                EventDetailContentGridSection(
+                    productsTitle: tr("events.detail.card.products", "Productos"),
+                    productsCount: viewModel.products.count,
+                    extrasTitle: tr("events.detail.card.extras", "Extras"),
+                    extrasCount: viewModel.extras.count,
+                    suppliesTitle: tr("events.detail.card.supplies", "Insumos"),
+                    suppliesCount: viewModel.supplies.count,
+                    equipmentTitle: tr("events.detail.card.equipment", "Equipo"),
+                    equipmentCount: viewModel.equipment.count,
+                    shoppingTitle: tr("events.detail.card.shopping", "Compras"),
+                    shoppingSubtitle: shoppingListSubtitle,
+                    staffTitle: tr("events.detail.card.staff", "Personal"),
+                    staffCount: viewModel.eventStaff.count,
+                    photosTitle: tr("events.detail.card.photos", "Fotos"),
+                    photosCount: viewModel.eventPhotos.count,
+                    eventId: eventId
+                )
+            }
+
+            // MARK: Tools section (checklist, contract, portal)
+            Section(header: Text(tr("events.detail.section.tools", "Herramientas")).font(.caption).foregroundStyle(SolennixColors.textSecondary)) {
+                EventDetailPrimaryLinkCard(
+                    icon: "checklist",
+                    title: tr("events.detail.card.checklist", "Checklist de carga"),
+                    tint: SolennixColors.primary,
+                    background: SolennixColors.primaryLight,
+                    route: Route.eventChecklist(id: eventId)
+                )
+
+                EventDetailPrimaryLinkCard(
+                    icon: "cart",
+                    title: tr("events.detail.card.shopping_checklist", "Checklist de compras"),
+                    tint: SolennixColors.warning,
+                    background: SolennixColors.warningBg,
+                    route: Route.eventPurchaseChecklist(id: eventId)
+                )
+
+                EventDetailPrimaryLinkCard(
+                    icon: "doc.richtext",
+                    title: tr("events.detail.card.contract", "Ver contrato"),
+                    tint: SolennixColors.info,
+                    background: SolennixColors.info.opacity(0.1),
+                    route: Route.eventContractPreview(id: eventId)
+                )
+
+                EventDetailPrimaryButtonCard(
+                    icon: "person.2.circle",
+                    title: tr("events.detail.share.title", "Portal del cliente"),
+                    tint: SolennixColors.primary,
+                    background: SolennixColors.primaryLight,
+                    action: { showClientPortalSheet = true }
+                )
+            }
+
+            // MARK: Documents section
+            Section {
+                EventDetailDocumentsCard(
+                    title: tr("events.detail.documents.title", "Generar documentos"),
+                    options: pdfOptions,
+                    onTap: { key in
+                        Task { await generateAndSharePDF(key: key, event: event) }
+                    }
+                )
+            }
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+
+            // MARK: Photos preview (only when photos exist)
+            if !viewModel.eventPhotos.isEmpty {
+                Section {
+                    EventDetailPhotosPreviewCard(
+                        title: tr("events.detail.card.photos", "Fotos"),
+                        photos: viewModel.eventPhotos,
+                        route: Route.eventPhotos(id: eventId)
+                    )
+                }
+                .listRowBackground(SolennixColors.card)
+                .listRowSeparator(.hidden)
+            }
+
+            // MARK: Live activity
+            if viewModel.canStartLiveActivity || viewModel.isLiveActivityActive {
+                Section {
+                    EventDetailLiveActivityCard(
+                        isActive: viewModel.isLiveActivityActive,
+                        startTitle: tr("events.detail.live_activity.start", "Iniciar actividad en vivo"),
+                        stopTitle: tr("events.detail.live_activity.stop", "Detener actividad en vivo"),
+                        action: {
+                            if viewModel.isLiveActivityActive {
+                                Task { await viewModel.stopLiveActivity() }
+                            } else {
+                                viewModel.startLiveActivity()
+                            }
+                        }
+                    )
+                }
+            }
         }
+        .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
-        .refreshable { await viewModel.loadData(eventId: eventId) }
+        .softScrollEdgeEffectIfAvailable()
+        .refreshable {
+            // Does NOT clear arrays — avoids skeleton flash on pull-to-refresh.
+            await viewModel.loadData(eventId: eventId)
+        }
     }
 
-    // MARK: - Header Card
+    // MARK: - Computed helpers (extracted from long `hubList` body)
 
-    private func headerCard(_ event: Event) -> some View {
-        let components = parseDateComponents(event.eventDate)
-        let scheduleText = event.startTime.map { [ $0, event.endTime ].compactMap { $0 }.joined(separator: " - ") }
-        let locationLabel: String?
-        let locationValue: String?
+    private func scheduleText(_ event: Event) -> String? {
+        event.startTime.map { [$0, event.endTime].compactMap { $0 }.joined(separator: " - ") }
+    }
 
+    private func locationLabel(_ event: Event) -> String? {
+        if let location = event.location, !location.isEmpty { return tr("events.detail.info.location", "Ubicación") }
+        if let city = event.city, !city.isEmpty { return tr("events.detail.info.city", "Ciudad") }
+        return nil
+    }
+
+    private func locationValue(_ event: Event) -> String? {
         if let location = event.location, !location.isEmpty {
-            locationLabel = tr("events.detail.info.location", "Ubicación")
-            locationValue = [location, event.city].compactMap { value in
-                guard let value, !value.isEmpty else { return nil }
-                return value
+            return [location, event.city].compactMap { v in
+                guard let v, !v.isEmpty else { return nil }
+                return v
             }.joined(separator: ", ")
-        } else if let city = event.city, !city.isEmpty {
-            locationLabel = tr("events.detail.info.city", "Ciudad")
-            locationValue = city
-        } else {
-            locationLabel = nil
-            locationValue = nil
         }
-
-        return EventDetailHeaderCard(
-            event: event,
-            clientName: viewModel.client?.name,
-            month: components.month,
-            day: components.day,
-            dateLabel: tr("events.detail.info.date", "Fecha"),
-            dateValue: formatDateShort(event.eventDate),
-            scheduleLabel: tr("events.detail.info.schedule", "Horario"),
-            scheduleValue: scheduleText,
-            peopleLabel: tr("events.detail.info.people", "Personas"),
-            peopleValue: trf("events.detail.info.people_value", "%@ PAX", String(event.numPeople)),
-            locationLabel: locationLabel,
-            locationValue: locationValue,
-            onStatusTap: { viewModel.showStatusSheet = true },
-            editRoute: Route.eventForm(id: eventId, step: 1)
-        )
+        if let city = event.city, !city.isEmpty { return city }
+        return nil
     }
 
-    // MARK: - Client Info Card
-
-    private func clientInfoCard(_ event: Event) -> some View {
-        Group {
-            if let client = viewModel.client {
-                EventDetailClientInfoCard(client: client)
-            }
-        }
-    }
-
-    // MARK: - Finance Summary Card (navigable)
-
-    private func financeSummaryCard(_ event: Event) -> some View {
-        // Use EventFinancials.compute() — the canonical formula that mirrors the backend.
-        // This replaces the previous supply-only approximation which ignored extras costs,
-        // pass-through extras exclusion from the margin denominator, and supply.excludeCost.
+    private func financialsMargin(_ event: Event) -> Double {
         let productRows = viewModel.products.map { p in
-            EventFinancials.ProductRow(
-                quantity: p.quantity,
-                unitPrice: p.unitPrice,
-                lineDiscount: p.discount,
-                unitCost: nil
-            )
+            EventFinancials.ProductRow(quantity: p.quantity, unitPrice: p.unitPrice, lineDiscount: p.discount, unitCost: nil)
         }
         let extraRows = viewModel.extras.map { e in
             EventFinancials.ExtraRow(price: e.price, cost: e.cost, excludeUtility: e.excludeUtility)
@@ -227,206 +361,42 @@ public struct EventDetailView: View {
         let supplyRows = viewModel.supplies.map { s in
             EventFinancials.SupplyRow(quantity: s.quantity, unitCost: s.unitCost, excludeCost: s.excludeCost)
         }
-        let financials = EventFinancials.compute(
-            products: productRows,
-            extras: extraRows,
-            supplies: supplyRows,
-            globalDiscountType: event.discountType,
-            globalDiscount: event.discount,
-            requiresInvoice: event.requiresInvoice,
-            taxRate: event.taxRate
-        )
-        let margin = financials.profitMargin
-        let discountText = event.discount > 0
-            ? (event.discountType == .percent
-                ? trf("events.detail.finances.discount_percent", "Descuento %@%%", String(Int(event.discount)))
-                : tr("events.detail.finances.discount", "Descuento"))
-            : nil
-        let taxText = event.requiresInvoice
+        return EventFinancials.compute(
+            products: productRows, extras: extraRows, supplies: supplyRows,
+            globalDiscountType: event.discountType, globalDiscount: event.discount,
+            requiresInvoice: event.requiresInvoice, taxRate: event.taxRate
+        ).profitMargin
+    }
+
+    private func discountText(_ event: Event) -> String? {
+        guard event.discount > 0 else { return nil }
+        return event.discountType == .percent
+            ? trf("events.detail.finances.discount_percent", "Descuento %@%%", String(Int(event.discount)))
+            : tr("events.detail.finances.discount", "Descuento")
+    }
+
+    private func taxText(_ event: Event) -> String? {
+        event.requiresInvoice
             ? trf("events.detail.finances.tax", "IVA %@%%", String(Int(event.taxRate)))
             : nil
-
-        return EventDetailFinanceSummaryCard(
-            title: tr("events.detail.card.finances", "Finanzas"),
-            totalLabel: tr("events.detail.finances.total", "Total"),
-            totalValue: event.totalAmount.asMXN,
-            profitLabel: tr("events.detail.finances.profit", "Utilidad"),
-            profitValue: "\(String(format: "%.0f", margin))%",
-            discountText: discountText,
-            taxText: taxText,
-            route: Route.eventFinances(id: eventId),
-            editRoute: Route.eventForm(id: eventId, step: 5)
-        )
     }
 
-    // MARK: - Payment Summary Card (navigable)
-
-    private func paymentSummaryCard(_ event: Event) -> some View {
-        let depositText: String?
-        let isDepositMet: Bool
-
-        if let depositPercent = event.depositPercent, depositPercent > 0 {
-            let depositAmount = event.totalAmount * (depositPercent / 100)
-            isDepositMet = viewModel.totalPaid >= (depositAmount - 0.1)
-            depositText = trf2("events.detail.payments.deposit_card", "Anticipo %@%%: %@", String(Int(depositPercent)), depositAmount.asMXN)
-        } else {
-            depositText = nil
-            isDepositMet = false
-        }
-
-        return EventDetailPaymentSummaryCard(
-            title: tr("events.detail.card.payments", "Pagos"),
-            paymentsCount: viewModel.payments.count,
-            paidLabel: tr("events.detail.payments.kpi.paid", "Pagado"),
-            paidValue: viewModel.totalPaid.asMXN,
-            balanceLabel: tr("events.detail.payments.kpi.balance", "Saldo"),
-            balanceValue: viewModel.remaining.asMXN,
-            isFullyPaid: viewModel.isFullyPaid,
-            progress: viewModel.progress,
-            depositText: depositText,
-            isDepositMet: isDepositMet,
-            route: Route.eventPayments(id: eventId)
-        )
+    private func depositText(_ event: Event) -> String? {
+        guard let pct = event.depositPercent, pct > 0 else { return nil }
+        let amount = event.totalAmount * (pct / 100)
+        return trf2("events.detail.payments.deposit_card", "Anticipo %@%%: %@", String(Int(pct)), amount.asMXN)
     }
 
-    // MARK: - Content Cards Grid
-
-    private func contentCardsGrid(_ event: Event) -> some View {
-        EventDetailContentGridSection(
-            productsTitle: tr("events.detail.card.products", "Productos"),
-            productsCount: viewModel.products.count,
-            extrasTitle: tr("events.detail.card.extras", "Extras"),
-            extrasCount: viewModel.extras.count,
-            suppliesTitle: tr("events.detail.card.supplies", "Insumos"),
-            suppliesCount: viewModel.supplies.count,
-            equipmentTitle: tr("events.detail.card.equipment", "Equipo"),
-            equipmentCount: viewModel.equipment.count,
-            shoppingTitle: tr("events.detail.card.shopping", "Compras"),
-            shoppingSubtitle: shoppingListSubtitle,
-            staffTitle: tr("events.detail.card.staff", "Personal"),
-            staffCount: viewModel.eventStaff.count,
-            photosTitle: tr("events.detail.card.photos", "Fotos"),
-            photosCount: viewModel.eventPhotos.count,
-            eventId: eventId
-        )
+    private func isDepositMet(_ event: Event) -> Bool {
+        guard let pct = event.depositPercent, pct > 0 else { return false }
+        return viewModel.totalPaid >= (event.totalAmount * pct / 100 - 0.1)
     }
 
     private var shoppingListSubtitle: String? {
         let purchaseCount = viewModel.supplies.filter { $0.source == .purchase }.count
-        if purchaseCount > 0 {
-            return trf("events.detail.shopping.pending_count", "%@ por comprar", String(purchaseCount))
-        }
-        return nil
+        guard purchaseCount > 0 else { return nil }
+        return trf("events.detail.shopping.pending_count", "%@ por comprar", String(purchaseCount))
     }
-
-    // MARK: - Photos Preview Card
-
-    @ViewBuilder
-    private var photosPreviewCard: some View {
-        if !viewModel.eventPhotos.isEmpty {
-            EventDetailPhotosPreviewCard(
-                title: tr("events.detail.card.photos", "Fotos"),
-                photos: viewModel.eventPhotos,
-                route: Route.eventPhotos(id: eventId)
-            )
-        }
-    }
-
-    // MARK: - Checklist Card
-
-    private var checklistCard: some View {
-        VStack(spacing: Spacing.sm) {
-            EventDetailPrimaryLinkCard(
-                icon: "checklist",
-                title: tr("events.detail.card.checklist", "Checklist de carga"),
-                tint: SolennixColors.primary,
-                background: SolennixColors.primaryLight,
-                route: Route.eventChecklist(id: eventId)
-            )
-
-            EventDetailPrimaryLinkCard(
-                icon: "cart",
-                title: "Checklist de compras",
-                tint: SolennixColors.warning,
-                background: SolennixColors.warningBg,
-                route: Route.eventPurchaseChecklist(id: eventId)
-            )
-        }
-    }
-
-    private var contractPreviewCard: some View {
-        EventDetailPrimaryLinkCard(
-            icon: "doc.richtext",
-            title: tr("events.detail.card.contract", "Ver contrato"),
-            tint: SolennixColors.info,
-            background: SolennixColors.info.opacity(0.1),
-            route: Route.eventContractPreview(id: eventId)
-        )
-    }
-
-    // MARK: - Client Portal Card (PRD/12 feature A)
-
-    /// Opens a sheet that lets the organizer generate, copy, share, rotate
-    /// or revoke the client-portal share link for this event.
-    private var clientPortalCard: some View {
-        EventDetailPrimaryButtonCard(
-            icon: "person.2.circle",
-            title: tr("events.detail.share.title", "Portal del cliente"),
-            tint: SolennixColors.primary,
-            background: SolennixColors.primaryLight,
-            action: { showClientPortalSheet = true }
-        )
-    }
-
-    // MARK: - Action Buttons Row 1 (Payments)
-
-    private func actionButtonsRow1(_ event: Event) -> some View {
-        Group {
-            if viewModel.remaining > 0.01 {
-                EventDetailPaymentActionsCard(
-                    recordTitle: tr("events.detail.payments.action.record", "Registrar pago"),
-                    settleTitle: trf("events.detail.payments.action.settle", "Liquidar %@", viewModel.remaining.asMXN),
-                    depositTitle: (event.depositPercent ?? 0) > 0 && viewModel.depositBalance > 0.01
-                        ? trf("events.detail.payments.action.deposit", "Anticipo %@", viewModel.depositBalance.asMXN)
-                        : nil,
-                    onRecord: { viewModel.showRecordPaymentSheet() },
-                    onSettle: { viewModel.payRemaining() },
-                    onDeposit: { viewModel.payDeposit() }
-                )
-            }
-        }
-    }
-
-    // MARK: - Live Activity Button
-
-    @ViewBuilder
-    private var liveActivityButton: some View {
-        if viewModel.canStartLiveActivity || viewModel.isLiveActivityActive {
-            EventDetailLiveActivityCard(
-                isActive: viewModel.isLiveActivityActive,
-                startTitle: tr("events.detail.live_activity.start", "Iniciar actividad en vivo"),
-                stopTitle: tr("events.detail.live_activity.stop", "Detener actividad en vivo"),
-                action: {
-                    if viewModel.isLiveActivityActive {
-                        Task { await viewModel.stopLiveActivity() }
-                    } else {
-                        viewModel.startLiveActivity()
-                    }
-                }
-            )
-        }
-    }
-
-    // MARK: - Notes Section
-
-    private func notesSection(_ notes: String) -> some View {
-        EventDetailNotesCard(
-            title: tr("events.detail.notes", "Notas"),
-            notes: notes
-        )
-    }
-
-    // MARK: - Mini KPI
 
     // MARK: - Payment Sheet
 
@@ -454,32 +424,15 @@ public struct EventDetailView: View {
         )
     }
 
-    // MARK: - Documents Grid Card
-
-    private func documentsCard(_ event: Event) -> some View {
-        EventDetailDocumentsCard(
-            title: tr("events.detail.documents.title", "Generar documentos"),
-            options: pdfOptions,
-            onTap: { key in
-                Task { await generateAndSharePDF(key: key, event: event) }
-            }
-        )
-    }
-
     // MARK: - Helpers
 
     private func formatDateShort(_ dateString: String) -> String {
         guard let date = Date.fromServerDay(dateString) else { return dateString }
-        // Use UTC display formatter — parse/display must share the same timezone
-        // to avoid a one-day shift for users in negative-offset zones.
         return date.formattedServerDay(style: "d MMM yyyy")
     }
 
     private func parseDateComponents(_ dateString: String) -> (month: String, day: String) {
-        guard let date = Date.fromServerDay(dateString) else {
-            return ("---", "--")
-        }
-        // Use UTC display formatter — matches the UTC parse in fromServerDay.
+        guard let date = Date.fromServerDay(dateString) else { return ("---", "--") }
         return (date.formattedServerDay(style: "MMM"), date.formattedServerDay(style: "d"))
     }
 

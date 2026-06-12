@@ -73,6 +73,11 @@ public final class EventDetailViewModel {
         remaining <= 0.01
     }
 
+    /// Bumped by 1 each time a payment is registered AND the event becomes fully paid
+    /// as a result. Views can trigger `.sensoryFeedback(.success, trigger: fullyPaidCounter)`
+    /// to play the success haptic only when full payment is reached, not on initial load.
+    public var fullyPaidCounter: Int = 0
+
     /// Monto total del anticipo basado en `depositPercent` y `totalAmount`.
     /// Devuelve 0 si el evento no tiene porcentaje de anticipo.
     public var depositAmount: Double {
@@ -265,6 +270,12 @@ public final class EventDetailViewModel {
 
             payments.append(payment)
             HapticsHelper.play(.success)
+
+            // Bump fullyPaidCounter when this payment tips the event to fully-paid.
+            // Views observe this to trigger success haptic/animation only on the crossing.
+            if isFullyPaid {
+                fullyPaidCounter &+= 1
+            }
 
             // Notificar a la app target para que programe el recibo en Notification Center.
             NotificationCenter.default.post(

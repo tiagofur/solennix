@@ -44,9 +44,6 @@ struct EventDetailDocumentsCard: View {
             }
         }
         .padding(Spacing.lg)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadowSm()
     }
 }
 

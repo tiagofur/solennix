@@ -153,7 +153,6 @@ struct EventDetailSummaryNavCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(SolennixColors.card)
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-            .shadowSm()
         }
         .buttonStyle(.plain)
         .contextMenu {
