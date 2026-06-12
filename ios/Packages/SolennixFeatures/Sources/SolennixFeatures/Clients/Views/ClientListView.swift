@@ -26,6 +26,8 @@ public struct ClientListView: View {
     public var body: some View {
         mainList
             .background(SolennixColors.surfaceGrouped)
+            // Haptic feedback for destructive action confirmation dialog trigger.
+            .sensoryFeedback(.warning, trigger: viewModel.showDeleteConfirm)
             .navigationTitle(tr("clients.title", "Clientes"))
             .navigationBarTitleDisplayMode(.large)
             .searchable(text: $viewModel.searchText, prompt: tr("clients.search_placeholder", "Buscar clientes"))
@@ -184,7 +186,6 @@ public struct ClientListView: View {
                         }
                         Divider()
                         Button(role: .destructive) {
-                            HapticsHelper.play(.warning)
                             viewModel.deleteTarget = client
                             viewModel.showDeleteConfirm = true
                         } label: {
@@ -253,7 +254,6 @@ public struct ClientListView: View {
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button(role: .destructive) {
-                            HapticsHelper.play(.warning)
                             viewModel.deleteTarget = client
                             viewModel.showDeleteConfirm = true
                         } label: {
@@ -314,7 +314,6 @@ public struct ClientListView: View {
                         }
                         Divider()
                         Button(role: .destructive) {
-                            HapticsHelper.play(.warning)
                             viewModel.deleteTarget = client
                             viewModel.showDeleteConfirm = true
                         } label: {

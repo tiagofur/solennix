@@ -36,6 +36,8 @@ public struct EventListView: View {
     public var body: some View {
         eventList
             .background(SolennixColors.surfaceGrouped)
+            // Haptic feedback when the destructive delete confirmation is triggered.
+            .sensoryFeedback(.warning, trigger: viewModel.showDeleteConfirm)
             .navigationTitle(tr("events.list.title", "Eventos"))
             .navigationBarTitleDisplayMode(.large)
             .searchable(text: $viewModel.searchQuery, prompt: tr("events.list.search_placeholder", "Buscar eventos..."))
@@ -396,7 +398,6 @@ public struct EventListView: View {
                         }
                         Divider()
                         Button(role: .destructive) {
-                            HapticsHelper.play(.warning)
                             viewModel.deleteTarget = event
                             viewModel.showDeleteConfirm = true
                         } label: {
@@ -434,7 +435,6 @@ public struct EventListView: View {
                         }
                         Divider()
                         Button(role: .destructive) {
-                            HapticsHelper.play(.warning)
                             viewModel.deleteTarget = event
                             viewModel.showDeleteConfirm = true
                         } label: {

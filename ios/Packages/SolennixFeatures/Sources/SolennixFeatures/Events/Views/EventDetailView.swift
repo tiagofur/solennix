@@ -16,6 +16,7 @@ public struct EventDetailView: View {
     @State private var showDuplicateSheet = false
     @State private var duplicateViewModel: EventFormViewModel?
     @State private var showClientPortalSheet = false
+    @State private var duplicateHapticTrigger: Int = 0
     @Environment(AuthManager.self) private var authManager
     @Environment(ToastManager.self) private var toastManager
     @Environment(\.dismiss) private var dismiss
@@ -43,6 +44,8 @@ public struct EventDetailView: View {
             }
         }
         .background(SolennixColors.surfaceGrouped)
+        // Haptic when the user duplicates an event — .impact signals a significant action.
+        .sensoryFeedback(.impact(weight: .medium), trigger: duplicateHapticTrigger)
         .navigationTitle(tr("events.detail.title", "Detalle del evento"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -522,7 +525,7 @@ public struct EventDetailView: View {
 
     private func duplicateEvent() {
         guard let event = viewModel.event else { return }
-        HapticsHelper.play(.selection)
+        duplicateHapticTrigger &+= 1
         let vm = EventFormViewModel(apiClient: apiClient)
         vm.prefill(
             from: event,
