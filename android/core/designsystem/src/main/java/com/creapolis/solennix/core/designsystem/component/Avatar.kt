@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -19,6 +18,13 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 
+/**
+ * User/client avatar with photo or brand-tonal initials fallback.
+ *
+ * The initials treatment is consistent app-wide (matching iOS brand tonal):
+ * - Background: `avatarBackground` (warm neutral in light, navy chip in dark)
+ * - Initials: `avatarInitials` (gold tones, ≥4.5:1 contrast on both backgrounds)
+ */
 @Composable
 fun Avatar(
     name: String,
@@ -30,7 +36,7 @@ fun Avatar(
         modifier = modifier
             .size(size)
             .clip(CircleShape)
-            .background(getAvatarColor(name)),
+            .background(SolennixTheme.colors.avatarBackground),
         contentAlignment = Alignment.Center
     ) {
         if (photoUrl != null) {
@@ -43,7 +49,7 @@ fun Avatar(
         } else {
             Text(
                 text = getInitials(name),
-                color = Color.White,
+                color = SolennixTheme.colors.avatarInitials,
                 fontSize = (size.value * 0.4).sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -52,16 +58,10 @@ fun Avatar(
 }
 
 private fun getInitials(name: String): String {
-    return name.split(" ")
-        .filter { it.isNotBlank() }
-        .take(2)
-        .map { it.first().uppercase() }
-        .joinToString("")
-}
-
-@Composable
-private fun getAvatarColor(name: String): Color {
-    val palette = SolennixTheme.colors.avatarPalette
-    val index = name.hashCode().let { if (it < 0) -it else it } % palette.size
-    return palette[index]
+    val parts = name.split(" ").filter { it.isNotBlank() }
+    return when {
+        parts.isEmpty() -> "?"
+        parts.size == 1 -> parts[0].first().uppercase()
+        else -> parts[0].first().uppercase() + parts.last().first().uppercase()
+    }
 }

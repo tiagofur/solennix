@@ -37,7 +37,8 @@ data class SolennixColorScheme(
     val tabBarBg: Color,
     val tabBarActive: Color,
     val tabBarInactive: Color,
-    val avatarPalette: List<Color>
+    val avatarBackground: Color,
+    val avatarInitials: Color
 ) {
     fun toMaterialColorScheme(isDarkTheme: Boolean): ColorScheme {
         return if (isDarkTheme) {

@@ -23,17 +23,13 @@ val KPIGreen = Color(0xFF34C759)
 val KPIOrange = Color(0xFFD97706)
 val KPIRed = Color(0xFFFF3B30)
 
-// Avatar Palette
-val AvatarPalette = listOf(
-    Color(0xFFC4A265),
-    Color(0xFF6B7B8D),
-    Color(0xFF1976D2),
-    Color(0xFF388E3C),
-    Color(0xFFF57C00),
-    Color(0xFF7B1FA2),
-    Color(0xFFD32F2F),
-    Color(0xFF455A64)
-)
+// Avatar brand-tonal tokens (replaces candy palette).
+// Light: warm neutral background (#F0EFEC) + dark gold initials (#7A6133, ~5.3:1 AA).
+// Dark: navy chip (#1B2738) + gold initials (#C4A265, ~5.8:1 AA).
+val AvatarBackgroundLight = Color(0xFFF0EFEC)
+val AvatarInitialsLight = Color(0xFF7A6133)
+val AvatarBackgroundDark = Color(0xFF1B2738)
+val AvatarInitialsDark = Color(0xFFC4A265)
 
 val LightSolennixColors = SolennixColorScheme(
     primary = SolennixGold,
@@ -67,7 +63,8 @@ val LightSolennixColors = SolennixColorScheme(
     tabBarBg = Color(0xFFFFFFFF),
     tabBarActive = SolennixGold,
     tabBarInactive = Color(0xFF5F5852),
-    avatarPalette = AvatarPalette
+    avatarBackground = AvatarBackgroundLight,
+    avatarInitials = AvatarInitialsLight
 )
 
 val DarkSolennixColors = SolennixColorScheme(
@@ -102,5 +99,6 @@ val DarkSolennixColors = SolennixColorScheme(
     tabBarBg = Color(0xFF111722),
     tabBarActive = SolennixGold,
     tabBarInactive = Color(0xFFC7C0B8),
-    avatarPalette = AvatarPalette
+    avatarBackground = AvatarBackgroundDark,
+    avatarInitials = AvatarInitialsDark
 )
