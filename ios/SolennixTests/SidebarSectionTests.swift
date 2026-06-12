@@ -6,14 +6,14 @@ final class SidebarSectionTests: XCTestCase {
     func testMainSectionsContainExpectedOrder() {
         XCTAssertEqual(
             SidebarSection.mainSections,
-            [.dashboard, .calendar, .events, .clients, .personnel, .products, .inventory, .paymentInbox, .eventFormLinks]
+            [.dashboard, .calendar, .events, .clients, .personnel, .products, .inventory, .paymentInbox, .eventFormLinks, .reviews]
         )
     }
 
     func testMoreMenuCatalogSectionsContainExpectedOrder() {
         XCTAssertEqual(
             SidebarSection.moreMenuCatalogSections,
-            [.products, .inventory, .paymentInbox, .eventFormLinks, .personnel]
+            [.products, .inventory, .paymentInbox, .personnel, .eventFormLinks, .reviews]
         )
     }
 
@@ -30,6 +30,7 @@ final class SidebarSectionTests: XCTestCase {
         XCTAssertEqual(SidebarSection.inventory.route, .inventoryList)
         XCTAssertEqual(SidebarSection.paymentInbox.route, .paymentInbox)
         XCTAssertEqual(SidebarSection.eventFormLinks.route, .eventFormLinks)
+        XCTAssertEqual(SidebarSection.reviews.route, .reviews)
         XCTAssertEqual(SidebarSection.settings.route, .settings)
     }
 

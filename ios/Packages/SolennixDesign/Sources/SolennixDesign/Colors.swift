@@ -683,4 +683,18 @@ public enum SolennixColors {
         Color(hex: "#5C6B7A")
         #endif
     }
+
+    /// Muted graphite-plum — Reviews icon square.
+    /// Contrast (white glyph): light #6B5B7B = 5.93:1 / dark #9A82B0 = 3.47:1 (both ≥ 3:1).
+    public static var iconPlum: Color {
+        #if canImport(UIKit)
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hex: "#9A82B0")
+                : UIColor(hex: "#6B5B7B")
+        })
+        #else
+        Color(hex: "#6B5B7B")
+        #endif
+    }
 }

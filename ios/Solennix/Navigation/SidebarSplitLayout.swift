@@ -279,6 +279,8 @@ struct SidebarSplitLayout: View {
             PaymentInboxView(apiClient: apiClient)
         case .eventFormLinks:
             EventFormLinksView(apiClient: apiClient)
+        case .reviews:
+            ReviewsView(apiClient: apiClient)
         case .settings:
             SettingsView(apiClient: apiClient, authManager: authManager)
         }

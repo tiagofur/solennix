@@ -107,6 +107,8 @@ struct MoreMenuView: View {
             return SolennixColors.iconSage
         case .personnel:
             return SolennixColors.iconSteel
+        case .reviews:
+            return SolennixColors.iconPlum
         case .settings:
             return SolennixColors.secondary      // slate gray, Apple gear-style
         case .dashboard, .calendar, .events, .clients:
