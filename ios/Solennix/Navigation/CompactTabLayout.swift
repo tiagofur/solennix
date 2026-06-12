@@ -69,22 +69,11 @@ struct CompactTabLayout: View {
                 moreTabContent
             }
 
-            // Native floating search tab — iOS 26 Liquid Glass behavior.
-            // MUST be declared LAST in the Tab builder so that role: .search is
-            // fully honored by SwiftUI/UIKit. When this tab appears before regular
-            // tabs, UIKit counts it as a regular slot and triggers overflow.
-            // `value: AppTab.search` is required so all Tab declarations share the
-            // same Value type (AppTab); the role still causes it to float outside
-            // the bar and not count toward the 5-tab limit.
-            SwiftUI.Tab(AppTab.search.title, systemImage: AppTab.search.iconName, value: AppTab.search, role: .search) {
-                NavigationStack {
-                    SearchView()
-                        .searchToolbarBehavior(.minimize)
-                        .navigationDestination(for: Route.self) { route in
-                            RouteDestination(route: route)
-                        }
-                }
-            }
+            // NOTE: no Tab(role: .search) here. With 5 regular tabs, adding a
+            // search tab makes the system spawn a "Más" overflow tab on iPhone
+            // (observed on iOS 26.5 even with the search tab declared last —
+            // the role did not exempt it from the 5-slot limit). Search remains
+            // available via .searchable inside each tab's screens.
         }
         .tint(SolennixColors.tabBarActive)
         .tabBarMinimizeBehavior(.onScrollDown)
