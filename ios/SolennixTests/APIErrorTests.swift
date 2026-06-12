@@ -10,6 +10,8 @@ final class APIErrorTests: XCTestCase {
         XCTAssertEqual(APIError.serverError(statusCode: 500, message: "boom").errorDescription, "Error del servidor (500): boom")
         XCTAssertEqual(APIError.decodingError.errorDescription, "Error al procesar la respuesta del servidor.")
         XCTAssertEqual(APIError.unknown.errorDescription, "Ocurrio un error desconocido.")
+        XCTAssertEqual(APIError.accountBlocked.errorDescription, "Tu cuenta fue suspendida. Contactá a soporte para más información.")
+        XCTAssertEqual(APIError.accountDeleted.errorDescription, "Esta cuenta fue eliminada y ya no está disponible.")
     }
 
     func testPlanLimitExceededUsesBackendMessage() {
@@ -29,6 +31,8 @@ final class APIErrorTests: XCTestCase {
         XCTAssertEqual(APIError.networkError("x").userFacingMessage, "Ocurrió un error de conexión. Intentá de nuevo.")
         XCTAssertEqual(APIError.decodingError.userFacingMessage, "Error al procesar la respuesta del servidor.")
         XCTAssertEqual(APIError.unknown.userFacingMessage, "Ocurrió un error inesperado. Intentá de nuevo.")
+        XCTAssertEqual(APIError.accountBlocked.userFacingMessage, "Tu cuenta fue suspendida. Contactá a soporte para más información.")
+        XCTAssertEqual(APIError.accountDeleted.userFacingMessage, "Esta cuenta fue eliminada y ya no está disponible.")
     }
 
     func testUserFacingMessageForStatusCodeUsesExpectedMappings() {
