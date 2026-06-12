@@ -16,6 +16,9 @@ public struct ClientListView: View {
     @Environment(CacheManager.self) private var cacheManager: CacheManager?
     @Environment(ToastManager.self) private var toastManager
 
+    // TipKit tip
+    private let swipeActionTip = SwipeActionTip()
+
     public init(apiClient: APIClient) {
         _viewModel = State(initialValue: ClientListViewModel(apiClient: apiClient))
     }
@@ -339,6 +342,7 @@ public struct ClientListView: View {
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
+        .popoverTip(swipeActionTip)
     }
 
     /// Skeleton placeholder rows shown while clients are loading for the first time.

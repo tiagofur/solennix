@@ -2,6 +2,7 @@ import SwiftUI
 import SolennixCore
 import SolennixDesign
 import SolennixNetwork
+import TipKit
 
 // MARK: - Event List View
 
@@ -19,6 +20,10 @@ public struct EventListView: View {
     @State private var csvFileURL: URL?
     @State private var showQuickQuote = false
     @State private var showDateFilter = false
+
+    // TipKit tips
+    private let newEventTip = NewEventTip()
+    private let quickQuoteTip = QuickQuoteTip()
 
     // MARK: - Init
 
@@ -86,6 +91,7 @@ public struct EventListView: View {
 
                         Button {
                             showQuickQuote = true
+                            quickQuoteTip.invalidate(reason: .actionPerformed)
                         } label: {
                             Label(tr("events.list.quick_quote", "Cotización rápida"), systemImage: "doc.text.magnifyingglass")
                         }
@@ -94,6 +100,7 @@ public struct EventListView: View {
                             .font(.body)
                             .foregroundStyle(SolennixColors.primary)
                             .accessibilityLabel(tr("events.list.create_event_or_quote", "Crear evento o cotización"))
+                            .popoverTip(newEventTip)
                     }
 
                     Button {
@@ -115,6 +122,7 @@ public struct EventListView: View {
             .sheet(isPresented: $showQuickQuote) {
                 QuickQuoteView(apiClient: apiClient)
             }
+            .popoverTip(quickQuoteTip)
             .sheet(isPresented: $showDateFilter) {
                 DateFilterSheet(
                     startDate: $viewModel.dateRangeStart,
