@@ -25,7 +25,13 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.8
 
-<<<<<<< HEAD
+> [!success] 2026-06-12 — Event Detail: Judgment Day + edición seccional + wow pass (branch `feat/ios-liquid-glass`)
+> Ciclo completo de revisión dual ciego (3 rondas → APPROVED) sobre la pantalla más importante de la app, con rediseño del flujo de edición.
+> - **Edición seccional:** `Route.eventForm(id:step:)` permite saltar directo a cualquier paso del wizard. Context menu "Editar sección" en cada card del hub (general→1, productos→2, extras→3, personal/equipo/insumos→4, finanzas→5). Sub-pantallas read-only ganaron lápiz en toolbar + CTAs reales en empty states. Stepper con navegación libre en modo edición.
+> - **Wow pass:** chip countdown HOY (oro) / MAÑANA / FALTAN N DÍAS (navy) / FINALIZADO con cálculo timezone-safe (día calendario local vs server-day); anillo de cobro dorado (Circle trim) con sello al 100% y haptic solo en cruce in-session; hub convertido a `List` insetGrouped con skeleton fiel; cliente accionable (tel:/WhatsApp/mailto, 44pt, a11y).
+> - **Bugs corregidos:** margen del hub ahora usa `EventFinancials.compute` canónico (antes solo restaba insumos — margen inflado); fecha de pago timezone-safe; confirmación antes de borrar pagos; `.white`→`textInverse`; sheet de pago resetea campos; entrada de edición duplicada eliminada; ~49 strings localizados vía `tr()`; sub-vistas con loads scoped (1-2 requests en vez de 8); dead code removido.
+> - **Commits:** f3e4036b, 3e89601c, 03306679, d97a9351. Build verde en cada ronda.
+
 > [!success] 2026-06-12 — Judgment Day — ciclo completo del menú Más (branch `feat/ios-liquid-glass`)
 > Aplicación de revisión dual ciego pantalla por pantalla sobre el menú Más. Todos los screens ahora cumplen estándar nativo de Apple.
 > - **Pantallas auditadas:** Más (b0179c37), Productos (eba22d25/4f49a005/6c81b1fc), Inventario (b2acf758/fcb5b9e8), Pagos (ccade9b9/29e7ce97 — conversión a List nativa + swipe aprobar/rechazar + feedback), Personal y Equipos (93a4abb5/a1d4fe67 — soft-delete con undo en Equipos), Formularios y Reseñas (8bd5f062/f079b055 — Reseñas convertida a List nativa).
@@ -45,10 +51,7 @@ status: active
 > - **Archivos clave:** `GlassSurface.swift`, `CompactTabLayout.swift`, `Route.swift` (Tab enum), `SidebarSplitLayout.swift`, `DashboardView.swift`, `EventChecklistView.swift`, `EventPurchaseChecklistView.swift`, `EventListView.swift`, `ViewModifiers.swift`.
 > - **Validación:** `xcodebuild ... build` → BUILD SUCCEEDED.
 
-> [!success] 2026-06-11 — iOS HIG Quick Wins (branch `feat/ios-hig-quick-wins`)
-=======
 > [!success] 2026-06-11 — iOS HIG Quick Wins (branch `feat/ios-hig-quick-wins`, PR #544)
->>>>>>> feat/ios-hig-quick-wins
 > Se aplicaron mejoras de calidad HIG en iOS siguiendo las guías oficiales de Apple (iOS 17+).
 > - **TipKit:** Se activaron tips contextuales reales (`NewEventTip`, `QuickQuoteTip`, `SwipeActionTip`) en lugar de los placeholders anteriores.
 > - **Skeleton loading:** `DashboardView` y `EventListView` muestran tarjetas skeleton animadas en la primera carga. `hasLoadedOnce` en `DashboardViewModel` evita re-aparición en pull-to-refresh.

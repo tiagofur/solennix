@@ -806,7 +806,7 @@ public enum Route: Hashable {
     // Events
     case eventList
     case eventDetail(id: String)
-    case eventForm(id: String? = nil, clientId: String? = nil, date: Date? = nil)
+    case eventForm(id: String? = nil, clientId: String? = nil, date: Date? = nil, step: Int? = nil)
     case eventChecklist(id: String)
 
     // Clients
@@ -825,6 +825,20 @@ public enum Route: Hashable {
 ```
 
 `RouteDestination` resuelve cada `Route` a su `View` correspondiente via `.navigationDestination(for: Route.self)`.
+
+### Edición seccional de eventos (2026-06-12)
+
+`Route.eventForm` acepta `step: Int?` (1–5, clampeado) para abrir el wizard directo en una sección:
+
+| Sección | Paso | Entradas |
+| --- | --- | --- |
+| General (fecha/hora/lugar/cliente) | 1 | Context menu del header card |
+| Productos | 2 | Context menu + lápiz/CTA en sub-vista |
+| Extras | 3 | Context menu + lápiz/CTA en sub-vista |
+| Personal / Insumos / Equipo | 4 | Context menu + lápiz/CTA en sub-vistas |
+| Finanzas | 5 | Context menu + lápiz en finanzas detail |
+
+Reglas: `initialStep` se aplica una sola vez tras `loadEventForEditing` (solo en edición, nunca en alta); el step indicator permite navegación libre entre pasos en modo edición (backward-only en alta porque los datos posteriores aún no son válidos).
 
 ### Navigation Bar y Búsqueda (Apple Default)
 
