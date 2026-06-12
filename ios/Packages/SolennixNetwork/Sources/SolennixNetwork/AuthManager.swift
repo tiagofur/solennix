@@ -239,6 +239,9 @@ public final class AuthManager {
             return true
         case .serverError(let statusCode, _) where statusCode == 403:
             return true
+        case .accountBlocked, .accountDeleted:
+            // Typed 403s from the auth code parser — the session is dead.
+            return true
         default:
             return false
         }

@@ -217,6 +217,17 @@ struct SolennixApp: App {
                         Task {
                             await syncUpcomingEventNotifications()
                         }
+                        // Refresh month-bound data (dashboard KPIs, plan limits) so an app
+                        // that was backgrounded across a month boundary doesn't show stale data.
+                        // PlanLimitsManager.checkLimits() re-derives the current-month date
+                        // range on each call, so this is cheap and safe to call on every
+                        // foreground event.
+                        if authManager.isAuthenticated {
+                            Task {
+                                await planLimitsManager.checkLimits()
+                            }
+                            NotificationCenter.default.post(name: .solennixSceneActivated, object: nil)
+                        }
                     }
                 }
                 .task {

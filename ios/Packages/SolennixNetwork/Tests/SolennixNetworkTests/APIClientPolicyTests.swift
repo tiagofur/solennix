@@ -67,4 +67,13 @@ final class APIClientPolicyTests: XCTestCase {
         let error = APIError.networkError("no connection")
         XCTAssertFalse(AuthManager.isDefinitiveAuthFailure(error), "Network error should be transient — keep session alive")
     }
+
+    /// Typed account-status 403s are definitive — the session is dead.
+    func testRefreshErrorDiscrimination_accountBlocked_isDefinitive() {
+        XCTAssertTrue(AuthManager.isDefinitiveAuthFailure(APIError.accountBlocked), "accountBlocked should be a definitive auth failure")
+    }
+
+    func testRefreshErrorDiscrimination_accountDeleted_isDefinitive() {
+        XCTAssertTrue(AuthManager.isDefinitiveAuthFailure(APIError.accountDeleted), "accountDeleted should be a definitive auth failure")
+    }
 }

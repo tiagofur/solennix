@@ -830,6 +830,12 @@ public actor APIClient {
                 // Don't show generic toast — let the ViewModel handle it with a paywall
                 throw planError
             }
+            // Check for auth account-status codes emitted by backend since PR #538.
+            // The `code` field is absent on older backend versions — handled defensively.
+            if let authError = extractAuthCodeError(from: data) {
+                showErrorToast(for: authError)
+                throw authError
+            }
             // Regular 403 — fall through to generic handling
             let message = extractErrorMessage(from: data)
             let err = APIError.serverError(
@@ -886,6 +892,25 @@ public actor APIClient {
         let current = limitObj?["current"] as? Int ?? 0
         let max = limitObj?["max"] as? Int ?? 0
         return .planLimitExceeded(message: message, limitType: limitType, current: current, max: max)
+    }
+
+    /// Parse a 403 response body for `auth.account_blocked` / `auth.account_deleted` codes.
+    /// Backend emits `{ "error": "<translated>", "code": "auth.account_blocked"|"auth.account_deleted" }`
+    /// since the backend auth i18n error helpers (PR #538). The `code` field is optional
+    /// and absent on older backend versions — returns nil when the field is missing.
+    private func extractAuthCodeError(from data: Data) -> APIError? {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let code = json["code"] as? String else {
+            return nil
+        }
+        switch code {
+        case "auth.account_blocked":
+            return .accountBlocked
+        case "auth.account_deleted":
+            return .accountDeleted
+        default:
+            return nil
+        }
     }
 
     private func showErrorToast(for error: APIError) {

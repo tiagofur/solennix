@@ -24,4 +24,10 @@ public extension Notification.Name {
     
     /// Posted por los ViewModels cuando un evento cambia de estado o se edita.
     static let solennixEventUpdated = Notification.Name("solennix.event.updated")
+
+    /// Posted cuando la app vuelve al frente (scenePhase → .active) para que las
+    /// vistas que muestran datos agrupados por mes (dashboard, límites del plan)
+    /// refresquen sus rangos de fecha. Se publica a nivel de la app target para
+    /// mantener la lógica de scenePhase centralizada.
+    static let solennixSceneActivated = Notification.Name("solennix.scene.activated")
 }
