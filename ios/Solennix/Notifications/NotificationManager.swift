@@ -1,9 +1,13 @@
 import Foundation
 import UserNotifications
 import UIKit
+import os.log
 import SolennixCore
+import SolennixNetwork
 
 // MARK: - Notification Manager
+
+private let logger = Logger(subsystem: "com.solennix.app", category: "NotificationManager")
 
 @MainActor
 final class NotificationManager: NSObject, ObservableObject {
@@ -12,6 +16,11 @@ final class NotificationManager: NSObject, ObservableObject {
 
     @Published var isAuthorized: Bool = false
     @Published var deviceToken: String?
+
+    /// Injectable auth check used in `didReceive` to decide whether deep navigation
+    /// is safe. Set from SolennixApp via `{ authManager.isAuthenticated }`.
+    /// Falls back to a Keychain token presence check when unset (extensions/tests).
+    var isAuthorizedForNavigation: (() -> Bool)?
 
     private override init() {
         super.init()
@@ -117,7 +126,7 @@ final class NotificationManager: NSObject, ObservableObject {
     func registerDeviceToken(_ token: Data) {
         let tokenString = token.map { String(format: "%02.2hhx", $0) }.joined()
         deviceToken = tokenString
-        print("Device token: \(tokenString)")
+        logger.info("Device token received: \(tokenString, privacy: .private)")
 
         // Send to backend
         Task {
@@ -183,9 +192,9 @@ final class NotificationManager: NSObject, ObservableObject {
 
         do {
             try await UNUserNotificationCenter.current().add(request)
-            print("Scheduled \(reminderType.rawValue) reminder for event \(eventId)")
+            logger.debug("Scheduled \(reminderType.rawValue) reminder for event \(eventId)")
         } catch {
-            print("Error scheduling notification: \(error)")
+            logger.error("Error scheduling notification: \(error)")
         }
     }
 
@@ -242,7 +251,7 @@ final class NotificationManager: NSObject, ObservableObject {
         do {
             try await UNUserNotificationCenter.current().add(request)
         } catch {
-            print("Error scheduling payment receipt: \(error)")
+            logger.error("Error scheduling payment receipt: \(error)")
         }
     }
 
@@ -397,6 +406,21 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
     ) async {
         let userInfo = response.notification.request.content.userInfo
         let action = response.actionIdentifier
+        // Only navigate if the user is authenticated. Prefer the injected closure
+        // (set from SolennixApp) which reads AuthManager.isAuthenticated; fall back
+        // to a Keychain token presence check when the closure is unset (e.g. in
+        // Notification Service Extension or unit tests).
+        let authCheck = await MainActor.run { self.isAuthorizedForNavigation }
+        let isAuthenticated: Bool
+        if let authCheck {
+            isAuthenticated = authCheck()
+        } else {
+            // Fallback: keychain token presence (extensions and tests)
+            let keychainHelper = KeychainHelper()
+            isAuthenticated = keychainHelper.readString(for: KeychainHelper.Keys.accessToken) != nil
+        }
+        guard isAuthenticated else { return }
+
         if let route = routeFromNotification(userInfo: userInfo, actionIdentifier: action) {
             await MainActor.run {
                 NotificationCenter.default.post(

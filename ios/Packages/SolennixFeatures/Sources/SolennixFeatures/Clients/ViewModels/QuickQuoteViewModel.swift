@@ -66,8 +66,15 @@ public final class QuickQuoteViewModel {
     public var pdfData: Data?
     public var showShareSheet: Bool = false
 
+    // Pending background tasks — cancelled on deinit to avoid dangling async work.
+    private var pendingTasks: [Task<Void, Never>] = []
+
     public init(apiClient: APIClient) {
         self.apiClient = apiClient
+    }
+
+    deinit {
+        pendingTasks.forEach { $0.cancel() }
     }
 
     @MainActor
@@ -94,9 +101,8 @@ public final class QuickQuoteViewModel {
                 discount: 0,
                 createdAt: ""
             ))
-            Task {
-                await fetchIngredientCost(for: first.id)
-            }
+            let task = Task { await fetchIngredientCost(for: first.id) }
+            pendingTasks.append(task)
         }
     }
 
@@ -143,9 +149,8 @@ public final class QuickQuoteViewModel {
 
     public func updateCostsForCurrentProducts() {
         for product in selectedProducts {
-            Task {
-                await fetchIngredientCost(for: product.productId)
-            }
+            let task = Task { await fetchIngredientCost(for: product.productId) }
+            pendingTasks.append(task)
         }
     }
 
@@ -159,7 +164,7 @@ public final class QuickQuoteViewModel {
         let result = EventFinancials.compute(
             products: selectedProducts.map { p in
                 EventFinancials.ProductRow(
-                    quantity: Double(p.quantity),
+                    quantity: p.quantity,
                     unitPrice: p.unitPrice,
                     lineDiscount: p.discount,
                     unitCost: productUnitCosts[p.productId]
@@ -222,7 +227,7 @@ public final class QuickQuoteViewModel {
                 QuickQuotePDFProductPayload(
                     productId: product.productId,
                     name: availableProducts.first(where: { $0.id == product.productId })?.name ?? QuickQuoteStrings.product,
-                    quantity: Double(product.quantity),
+                    quantity: product.quantity,
                     unitPrice: product.unitPrice,
                     discount: product.discount
                 )

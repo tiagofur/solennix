@@ -110,7 +110,7 @@ extension EventFormViewModel {
         let itemsBody: [String: Any] = [
             "products": selectedProducts.map { [
                 "product_id": $0.productId,
-                "quantity": Int($0.quantity),
+                "quantity": $0.quantity,  // send as Double — backend stores float64
                 "unit_price": $0.unitPrice,
                 "discount": $0.discount
             ] },

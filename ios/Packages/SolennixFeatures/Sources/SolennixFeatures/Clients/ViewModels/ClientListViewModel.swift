@@ -92,11 +92,6 @@ public final class ClientListViewModel {
 
     // MARK: - Computed
 
-    /// Checks whether the user has reached the plan client limit (basic = 15).
-    public var isAtLimit: Bool {
-        clients.count >= 15
-    }
-
     /// Whether a search filter is active (skip server pagination).
     private var isFiltering: Bool {
         !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty

@@ -218,6 +218,10 @@ public final class EventFormViewModel {
 
     public let apiClient: APIClient
 
+    /// Pending background tasks stored so they can be cancelled on deinit,
+    /// preventing dangling async work from outliving the view model.
+    var pendingTasks: [Task<Void, Never>] = []
+
     func tr(_ key: String, _ defaultValue: String) -> String {
         FeatureL10n.text(key, defaultValue)
     }
@@ -268,7 +272,7 @@ public final class EventFormViewModel {
             SelectedProduct(
                 productId: ep.productId,
                 product: products.first(where: { $0.id == ep.productId }),
-                quantity: Double(ep.quantity),
+                quantity: ep.quantity,
                 unitPrice: ep.unitPrice,
                 discount: ep.discount
             )
@@ -288,6 +292,10 @@ public final class EventFormViewModel {
 
     public init(apiClient: APIClient) {
         self.apiClient = apiClient
+    }
+
+    deinit {
+        pendingTasks.forEach { $0.cancel() }
     }
 
     // MARK: - Computed Properties
