@@ -86,7 +86,12 @@ public struct ProductListView: View {
                             HapticsHelper.play(.success)
                         },
                         onExpire: {
-                            Task { await viewModel.confirmDeleteProduct(removed.product) }
+                            Task {
+                                await viewModel.confirmDeleteProduct(removed.product)
+                                if let message = viewModel.errorMessage {
+                                    toastManager.show(message: message, type: .error)
+                                }
+                            }
                         }
                     )
                 }

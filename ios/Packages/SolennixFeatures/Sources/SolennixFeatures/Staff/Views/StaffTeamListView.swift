@@ -50,7 +50,12 @@ public struct StaffTeamListView: View {
                             HapticsHelper.play(.success)
                         },
                         onExpire: {
-                            Task { await viewModel.confirmDeleteTeam(removed.team) }
+                            Task {
+                                await viewModel.confirmDeleteTeam(removed.team)
+                                if let message = viewModel.errorMessage {
+                                    toastManager.show(message: message, type: .error)
+                                }
+                            }
                         }
                     )
                 }

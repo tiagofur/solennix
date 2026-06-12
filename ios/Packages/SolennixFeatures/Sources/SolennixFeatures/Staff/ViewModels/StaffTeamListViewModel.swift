@@ -75,6 +75,7 @@ public final class StaffTeamListViewModel {
     /// Permanently delete a team via API (called after undo grace period).
     @MainActor
     public func confirmDeleteTeam(_ team: StaffTeam) async {
+        errorMessage = nil
         do {
             try await apiClient.deleteStaffTeam(id: team.id)
         } catch {

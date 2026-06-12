@@ -259,6 +259,7 @@ public final class EventListViewModel {
 
     @MainActor
     public func confirmDeleteEvent(_ event: Event) async {
+        errorMessage = nil
         do {
             try await apiClient.delete(Endpoint.event(event.id))
         } catch {

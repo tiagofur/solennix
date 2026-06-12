@@ -224,6 +224,7 @@ public final class StaffListViewModel {
     /// Permanently delete via API (after undo grace period).
     @MainActor
     public func confirmDeleteStaff(_ item: Staff) async {
+        errorMessage = nil
         do {
             try await apiClient.delete(Endpoint.staff(item.id))
         } catch {

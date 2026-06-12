@@ -230,6 +230,7 @@ public final class ProductListViewModel {
     /// Permanently delete a product via API (called after undo grace period).
     @MainActor
     public func confirmDeleteProduct(_ product: Product) async {
+        errorMessage = nil
         do {
             try await apiClient.delete(Endpoint.product(product.id))
         } catch {
