@@ -289,6 +289,12 @@ public struct ClientListView: View {
                     ) {
                         clientRow(client)
                     }
+                    // Delete is reachable via swipe; wire an explicit action so
+                    // VoiceOver users can trigger it through the rotor — mirrors EventListView.
+                    .accessibilityAction(named: tr("clients.delete.confirm", "Eliminar")) {
+                        viewModel.deleteTarget = client
+                        viewModel.showDeleteConfirm = true
+                    }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button(role: .destructive) {
                             viewModel.deleteTarget = client
@@ -510,15 +516,27 @@ public struct ClientListView: View {
 
     // MARK: - Accessibility
 
+    /// Composed ordered label: name, city, N eventos, $X total, phone.
+    /// Phone is appended last so VoiceOver speaks it as one continuous chunk
+    /// rather than as an isolated element (which would cause digit-by-digit reading).
     private func clientAccessibilityLabel(_ client: Client) -> String {
         var parts: [String] = [client.name]
-        if let city = client.city, !city.isEmpty { parts.append(city) }
-        if let spent = client.totalSpent, spent > 0 { parts.append(formattedAmount(spent)) }
+        if let city = client.city, !city.isEmpty {
+            parts.append(city)
+        }
         if let events = client.totalEvents, events > 0 {
             parts.append(String.localizedStringWithFormat(
                 tr("clients.list.events_count", "%lld eventos"),
                 events
             ))
+        }
+        if let spent = client.totalSpent, spent > 0 {
+            parts.append(formattedAmount(spent))
+        }
+        // Phone last — spoken as part of one label so VoiceOver doesn't
+        // read individual digits as separate accessibility elements.
+        if !client.phone.isEmpty {
+            parts.append(client.phone)
         }
         return parts.joined(separator: ", ")
     }
