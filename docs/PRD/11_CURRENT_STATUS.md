@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-06-03
+updated: 2026-06-11
 status: active
 ---
 
@@ -25,6 +25,18 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.8
 
+> [!success] 2026-06-11 — Auditoría iOS + integración: remediación I1–I8 (Issues #524–#531)
+> Auditoría completa de la app iOS, su integración con el backend y el contrato cross-platform (4 agentes en paralelo + verificación manual). Hallazgos remediados en 8 PRs (#532–#539):
+> - **Seguridad (I1, #532):** llaves privadas Apple `.p8` removidas del tracking + `ios/apple-keys/` en `.gitignore`. Pendiente manual: revocación/rotación en Apple Developer Portal y purge de historia git.
+> - **Sesión iOS (I2, #533):** logout ahora limpia cache SwiftData, datos de widgets (app group), notificaciones locales, índice Spotlight y UserDefaults por usuario; desregistra el push token ANTES de borrar tokens (`SignOutDelegate`); `BiometricGateView` dejó de bypassear el cleanup.
+> - **Resiliencia auth iOS (I3, #534):** todo refresh pasa por el coalescing del `APIClient` (tokens single-use del backend); solo 401/403 borra sesión (429/5xx/red = transitorio); `handleSessionExpired()` elimina el estado zombie; la cola offline respeta `Retry-After` y persiste tras cada item.
+> - **Integridad monetaria iOS (I4, #535):** nuevo `EventFinancials` en SolennixCore como única fuente de la fórmula financiera (espeja `ComputeFinancialSummaryFromItems` del backend, drift máx verificado 0.0048 < tolerancia 0.01); descuentos % clampeados a 100; `EventFinancesDetailView` ahora incluye costos de ingredientes y coincide con el formulario; montos redondeados a centavos antes de enviar.
+> - **Timezones iOS (I5, #536):** política única para fechas `yyyy-MM-dd`: parse/display en UTC (`fromServerDay`/`toServerDay`/`formattedServerDay`), checks de "es hoy" en hora local explícita; 16 archivos barridos; round-trip editar→guardar ya no corre la fecha un día.
+> - **Contrato OpenAPI (I6, #537):** `openapi.yaml` sincronizado con los handlers (6 schemas + `preferred_language`/`account_status`/`last_active_at` en User); types web regenerados; campo muerto `stripe_customer_id` removido de Web/iOS/Android.
+> - **Android auth (I7, #538):** 429 en refresh ya no cierra sesión (backoff con `Retry-After` + single-flight real); backend ahora emite `code` estable (`auth.account_blocked`/`auth.account_deleted`) y Android muestra mensajes específicos.
+> - **Cleanups iOS (I8, #539):** entitlements de extensiones con app group declarado, Keychain con `kSecAttrService` + migración lazy serializada, validación HTTPS en NSE, `os.Logger`, l10n de EventFinancesDetailView, `EventProduct.quantity` Int→Double, `User.accountStatus`.
+> - **Falsos positivos descartados** (no re-reportar): paths de endpoints iOS todos correctos; `Secrets.xcconfig` nunca estuvo en git; `EventExtra` decodifica bien.
+
 > [!success] 2026-06-11 — Integridad de Dinero / Money Integrity (Issue #515)
 > Se corrigieron cuatro inconsistencias y errores financieros en el frontend web para garantizar la exactitud de los montos y los márgenes mostrados a los organizadores y enviados a los clientes.
 > - **Margen Ajustado en Resumen:** Corrección en `EventSummary.tsx` para restar el revenue de extras con passthrough (`exclude_utility = true`) del denominador, unificando el cálculo de margen con la pantalla de finanzas y cotizaciones.
@@ -32,6 +44,19 @@ status: active
 > - **Validación de Monto Positivo en Pagos:** Implementación de validación para requerir montos de pagos mayores a cero (`min: 0.01`) con mensaje de error localizado (`payment.amount_min_error`) en `PaymentFormFields.tsx`.
 > - **Redondeo Aritmético en PDF:** Ajustes en `pdfGenerator.ts` para redondear a 2 decimales todos los totales de líneas de productos, subtotales, montos de descuentos y el cálculo de saldo pendiente/a favor en reportes.
 > - **Validación:** Cobertura de tests unitarios actualizada en `PaymentFormFields.test.tsx`, logrando que toda la suite de pruebas frontend pase en verde.
+=======
+> [!success] 2026-06-11 — Auditoría iOS + integración: remediación I1–I8 (Issues #524–#531)
+> Auditoría completa de la app iOS, su integración con el backend y el contrato cross-platform (4 agentes en paralelo + verificación manual). Hallazgos remediados en 8 PRs (#532–#539):
+> - **Seguridad (I1, #532):** llaves privadas Apple `.p8` removidas del tracking + `ios/apple-keys/` en `.gitignore`. Pendiente manual: revocación/rotación en Apple Developer Portal y purge de historia git.
+> - **Sesión iOS (I2, #533):** logout ahora limpia cache SwiftData, datos de widgets (app group), notificaciones locales, índice Spotlight y UserDefaults por usuario; desregistra el push token ANTES de borrar tokens (`SignOutDelegate`); `BiometricGateView` dejó de bypassear el cleanup.
+> - **Resiliencia auth iOS (I3, #534):** todo refresh pasa por el coalescing del `APIClient` (tokens single-use del backend); solo 401/403 borra sesión (429/5xx/red = transitorio); `handleSessionExpired()` elimina el estado zombie; la cola offline respeta `Retry-After` y persiste tras cada item.
+> - **Integridad monetaria iOS (I4, #535):** nuevo `EventFinancials` en SolennixCore como única fuente de la fórmula financiera (espeja `ComputeFinancialSummaryFromItems` del backend, drift máx verificado 0.0048 < tolerancia 0.01); descuentos % clampeados a 100; `EventFinancesDetailView` ahora incluye costos de ingredientes y coincide con el formulario; montos redondeados a centavos antes de enviar.
+> - **Timezones iOS (I5, #536):** política única para fechas `yyyy-MM-dd`: parse/display en UTC (`fromServerDay`/`toServerDay`/`formattedServerDay`), checks de "es hoy" en hora local explícita; 16 archivos barridos; round-trip editar→guardar ya no corre la fecha un día.
+> - **Contrato OpenAPI (I6, #537):** `openapi.yaml` sincronizado con los handlers (6 schemas + `preferred_language`/`account_status`/`last_active_at` en User); types web regenerados; campo muerto `stripe_customer_id` removido de Web/iOS/Android.
+> - **Android auth (I7, #538):** 429 en refresh ya no cierra sesión (backoff con `Retry-After` + single-flight real); backend ahora emite `code` estable (`auth.account_blocked`/`auth.account_deleted`) y Android muestra mensajes específicos.
+> - **Cleanups iOS (I8, #539):** entitlements de extensiones con app group declarado, Keychain con `kSecAttrService` + migración lazy serializada, validación HTTPS en NSE, `os.Logger`, l10n de EventFinancesDetailView, `EventProduct.quantity` Int→Double, `User.accountStatus`.
+> - **Falsos positivos descartados** (no re-reportar): paths de endpoints iOS todos correctos; `Secrets.xcconfig` nunca estuvo en git; `EventExtra` decodifica bien.
+>>>>>>> 5e5dc5c3 (docs(prd): record iOS audit I1-I8 remediation in current status)
 
 > [!success] 2026-06-10 — Integridad de Sesión y Caché (Issue #516)
 > Se implementó la limpieza del caché de React Query al cerrar sesión y la invalidación dinámica de las queries para asegurar la sincronía de la UI y los límites de plan.
