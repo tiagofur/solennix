@@ -603,16 +603,16 @@ public enum SolennixColors {
     }
 
     /// Initials text color — ensures ≥4.5:1 contrast against avatarBackground.
-    /// Light: #8C7040 (darker gold, ~5.2:1 on #F0EFEC) · Dark: #C4A265 (~5.8:1 on #1B2738).
+    /// Light: #7A6133 (~5.3:1 on #F0EFEC, passes AA) · Dark: #C4A265 (~5.8:1 on #1B2738).
     public static var avatarInitials: Color {
         #if canImport(UIKit)
         Color(uiColor: UIColor { traits in
             traits.userInterfaceStyle == .dark
                 ? UIColor(hex: "#C4A265")
-                : UIColor(hex: "#8C7040")
+                : UIColor(hex: "#7A6133")
         })
         #else
-        Color(hex: "#8C7040")
+        Color(hex: "#7A6133")
         #endif
     }
 

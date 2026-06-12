@@ -20,8 +20,6 @@ public struct ClientListView: View {
     // TipKit tip
     private let swipeActionTip = SwipeActionTip()
 
-    @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 40
-
     public init(apiClient: APIClient) {
         _viewModel = State(initialValue: ClientListViewModel(apiClient: apiClient))
     }
@@ -283,12 +281,19 @@ public struct ClientListView: View {
                 }
             } else {
                 ForEach(viewModel.paginatedClients) { client in
-                    ListCardRow(
-                        navigationValue: Route.clientDetail(id: client.id),
-                        accessibilityLabel: clientAccessibilityLabel(client)
-                    ) {
+                    ZStack {
                         clientRow(client)
+                        NavigationLink(value: Route.clientDetail(id: client.id)) {
+                            EmptyView()
+                        }
+                        .opacity(0)
                     }
+                    .listRowBackground(SolennixColors.card)
+                    .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+                    .alignmentGuide(.listRowSeparatorLeading) { d in d[.leading] + 40 + Spacing.md }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(clientAccessibilityLabel(client))
+                    .accessibilityAddTraits(.isButton)
                     // Delete is reachable via swipe; wire an explicit action so
                     // VoiceOver users can trigger it through the rotor — mirrors EventListView.
                     .accessibilityAction(named: tr("clients.delete.confirm", "Eliminar")) {
@@ -381,26 +386,20 @@ public struct ClientListView: View {
                 }
             }
         }
-        .listStyle(.plain)
+        .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
         .popoverTip(swipeActionTip)
     }
 
     /// Skeleton placeholder rows shown while clients are loading for the first time.
-    /// Mirrors the new clientRow card shape: avatar circle + name bar + caption bars + trailing money bar.
+    /// Matches insetGrouped surface: listRowBackground card, no shadows, default insets.
     @ViewBuilder
     private var skeletonRows: some View {
         ForEach(0..<5, id: \.self) { _ in
             ClientSkeletonCard()
-                .listRowInsets(EdgeInsets(
-                    top: Spacing.xs,
-                    leading: Spacing.md,
-                    bottom: Spacing.xs,
-                    trailing: Spacing.md
-                ))
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
+                .listRowBackground(SolennixColors.card)
+                .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
         }
         .accessibilityHidden(true)
     }
@@ -491,10 +490,6 @@ public struct ClientListView: View {
                     HStack { Spacer(); anchorColumn }
                 }
             }
-            .padding(Spacing.md)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-            .shadowSm()
         } else {
             // Standard layout: trailing anchor aligned top-right
             HStack(alignment: .top, spacing: Spacing.md) {
@@ -507,10 +502,6 @@ public struct ClientListView: View {
                     Spacer()
                 }
             }
-            .padding(Spacing.md)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-            .shadowSm()
         }
     }
 
@@ -619,10 +610,6 @@ struct ClientSkeletonCard: View {
                 SkeletonLine(width: 48, height: 10) // totalEvents — caption2
             }
         }
-        .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadowSm()
     }
 }
 
