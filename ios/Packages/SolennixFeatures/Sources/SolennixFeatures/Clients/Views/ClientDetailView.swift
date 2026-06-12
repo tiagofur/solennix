@@ -15,7 +15,6 @@ public struct ClientDetailView: View {
     @State private var isLoading: Bool = true
     @State private var errorMessage: String?
     @State private var showDeleteConfirm: Bool = false
-    @State private var saveSuccessCounter: Int = 0
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @Environment(PlanLimitsManager.self) private var planLimitsManager
@@ -165,7 +164,7 @@ public struct ClientDetailView: View {
             // MARK: Event history section
             Section(
                 header: Text(
-                    trf("clients.events.history_count", "Historial de eventos (%d)", events.count)
+                    trf("clients.events.history_count", "Historial de eventos (%lld)", events.count)
                 )
                 .font(.caption)
                 .foregroundStyle(SolennixColors.textSecondary)
@@ -408,7 +407,7 @@ public struct ClientDetailView: View {
             ZStack {
                 RoundedRectangle(cornerRadius: CornerRadius.md)
                     .fill(SolennixColors.warning.opacity(0.15))
-                    .frame(width: scaledIconSize, height: scaledIconSize)
+                    .frame(width: cappedIconSize, height: cappedIconSize)
                 Image(systemName: "mappin")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(SolennixColors.warning)
@@ -715,29 +714,30 @@ struct ClientDetailSkeleton: View {
             .listRowSeparator(.hidden)
         }
 
-        // Contact chips skeleton
+        // Contact chips skeleton — single row mirroring contactChipsCard's one-VStack layout
         Section {
-            HStack(spacing: Spacing.sm) {
-                Circle()
-                    .fill(SolennixColors.surfaceAlt)
-                    .frame(width: 32, height: 32)
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    SkeletonLine(width: 140, height: 14)
-                    SkeletonLine(width: 80, height: 12)
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                HStack(spacing: Spacing.sm) {
+                    Circle()
+                        .fill(SolennixColors.surfaceAlt)
+                        .frame(width: 32, height: 32)
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        SkeletonLine(width: 140, height: 14)
+                        SkeletonLine(width: 80, height: 12)
+                    }
+                    Spacer()
                 }
-                Spacer()
-            }
-            HStack(spacing: Spacing.sm) {
-                ForEach(0..<3, id: \.self) { _ in
-                    SkeletonLine(width: 72, height: 28)
-                        .clipShape(Capsule())
+                HStack(spacing: Spacing.sm) {
+                    ForEach(0..<3, id: \.self) { _ in
+                        SkeletonLine(width: 72, height: 28)
+                            .clipShape(Capsule())
+                    }
                 }
             }
-            .padding(.top, Spacing.xs)
+            .padding(Spacing.md)
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
         }
-        .padding(Spacing.md)
-        .listRowBackground(SolennixColors.card)
-        .listRowSeparator(.hidden)
 
         // Insights chart skeleton
         Section {
