@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.R as DesignSystemR
+import com.creapolis.solennix.core.designsystem.component.EmptyState
 import com.creapolis.solennix.core.designsystem.component.SkeletonLoading
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.SwipeRevealActions
@@ -268,14 +269,12 @@ fun InventoryListScreen(
                 if (uiState.isLoading && !hasItems) {
                     InventorySkeletonList()
                 } else if (!hasItems) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = if (uiState.searchQuery.isNotBlank() || uiState.lowStockOnly)
-                                InventoryStrings.emptyFiltered else InventoryStrings.emptyInventory,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = SolennixTheme.colors.secondaryText
-                        )
-                    }
+                    val hasActiveFilter = uiState.searchQuery.isNotBlank() || uiState.lowStockOnly
+                    EmptyState(
+                        icon = Icons.Default.Inventory2,
+                        title = if (hasActiveFilter) InventoryStrings.emptyFiltered else InventoryStrings.emptyInventory,
+                        message = ""
+                    )
                 } else {
                     val allSections = buildList {
                         if (uiState.ingredientItems.isNotEmpty())

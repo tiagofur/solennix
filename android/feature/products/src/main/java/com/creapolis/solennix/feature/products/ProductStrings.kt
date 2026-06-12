@@ -148,6 +148,13 @@ object ProductStrings {
     val validationNameMin: String get() = getString(R.string.products_validation_name_min)
     val validationCategoryRequired: String get() = getString(R.string.products_validation_category_required)
     val defaultUnit: String get() = getString(R.string.products_default_unit)
+
+    // Empty states
+    val emptyTitle: String get() = getString(R.string.products_empty_title)
+    val emptyMessage: String get() = getString(R.string.products_empty_message)
+    val emptyAction: String get() = getString(R.string.products_empty_action)
+    val emptySearchTitle: String get() = getString(R.string.products_empty_search_title)
+    val emptySearchMessage: String get() = getString(R.string.products_empty_search_message)
     
     fun shortDateFormatter(): DateTimeFormatter =
         if (isEnglish) DateTimeFormatter.ofPattern("MMM d", Locale.ENGLISH)

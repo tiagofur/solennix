@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -247,6 +248,15 @@ fun ProductListScreen(
 
                 if (uiState.isLoading && uiState.products.isEmpty()) {
                     ProductSkeletonList()
+                } else if (uiState.products.isEmpty()) {
+                    val hasActiveFilter = uiState.searchQuery.isNotEmpty() || uiState.selectedCategory != null
+                    com.creapolis.solennix.core.designsystem.component.EmptyState(
+                        icon = Icons.Default.ShoppingCart,
+                        title = if (hasActiveFilter) ProductStrings.emptySearchTitle else ProductStrings.emptyTitle,
+                        message = if (hasActiveFilter) ProductStrings.emptySearchMessage else ProductStrings.emptyMessage,
+                        actionText = if (hasActiveFilter) null else ProductStrings.emptyAction,
+                        onAction = if (hasActiveFilter) null else onAddProductClick
+                    )
                 } else {
                     AdaptiveCardGrid(
                         contentPadding = PaddingValues(bottom = 80.dp),

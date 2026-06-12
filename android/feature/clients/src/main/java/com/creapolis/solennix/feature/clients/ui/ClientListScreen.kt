@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -38,6 +39,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.Avatar
+import com.creapolis.solennix.core.designsystem.component.EmptyState
 import com.creapolis.solennix.core.designsystem.component.SkeletonLoading
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.SwipeRevealActions
@@ -197,6 +199,17 @@ fun ClientListScreen(
 
                 if (uiState.isLoading && uiState.clients.isEmpty()) {
                     ClientListSkeleton()
+                } else if (uiState.clients.isEmpty()) {
+                    val hasActiveFilter = uiState.searchQuery.isNotEmpty()
+                    EmptyState(
+                        icon = Icons.Default.People,
+                        title = if (hasActiveFilter) stringResource(R.string.clients_empty_search_title)
+                                else stringResource(R.string.clients_empty_title),
+                        message = if (hasActiveFilter) stringResource(R.string.clients_empty_search_message)
+                                  else stringResource(R.string.clients_empty_message),
+                        actionText = if (hasActiveFilter) null else stringResource(R.string.clients_empty_action),
+                        onAction = if (hasActiveFilter) null else onAddClientClick
+                    )
                 } else {
                     AdaptiveCardGrid(
                         gridContent = {
