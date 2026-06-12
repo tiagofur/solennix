@@ -45,6 +45,7 @@ public struct EventListView: View {
             .navigationTitle(tr("events.list.title", "Eventos"))
             .navigationBarTitleDisplayMode(.large)
             .searchable(text: $viewModel.searchQuery, prompt: tr("events.list.search_placeholder", "Buscar eventos..."))
+            .searchMinimizedIfAvailable()
             .safeAreaInset(edge: .top, spacing: 0) {
                 // Only static banners live in safeAreaInset. Nested horizontal
                 // ScrollViews (filter chips) must stay inside the primary

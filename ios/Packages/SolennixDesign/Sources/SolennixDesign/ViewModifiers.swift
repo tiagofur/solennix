@@ -81,6 +81,26 @@ public extension View {
     }
 }
 
+// MARK: - Search Toolbar Minimize (iOS 26)
+
+public extension View {
+    /// Applies `.searchToolbarBehavior(.minimize)` on iOS 26+ only.
+    ///
+    /// When minimized, the search field collapses to a compact magnifier button
+    /// in the toolbar and expands on tap — matching the system pattern used in
+    /// tab-full apps (Maps, Music). On iOS 17–25 this is a no-op.
+    ///
+    /// Apply **immediately after** `.searchable` within the same NavigationStack.
+    @ViewBuilder
+    func searchMinimizedIfAvailable() -> some View {
+        if #available(iOS 26.0, *) {
+            self.searchToolbarBehavior(.minimize)
+        } else {
+            self
+        }
+    }
+}
+
 // MARK: - Toolbar Spacer Note
 // ToolbarSpacer (iOS 26) is a ToolbarContent type, not a View — it cannot be
 // wrapped in a ViewModifier. Use #available(iOS 26.0, *) inline at each call

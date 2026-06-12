@@ -170,6 +170,7 @@ struct CompactTabLayout: View {
                     RouteDestination(route: route)
                 }
                 .searchable(text: $homeSearchText, prompt: globalSearchPrompt)
+                .searchMinimizedIfAvailable()
                 .onSubmit(of: .search) {
                     appendSearchRoute(query: &homeSearchText, to: &homePath)
                 }
@@ -184,6 +185,7 @@ struct CompactTabLayout: View {
                     RouteDestination(route: route)
                 }
                 .searchable(text: $calendarSearchText, prompt: globalSearchPrompt)
+                .searchMinimizedIfAvailable()
                 .onSubmit(of: .search) {
                     appendSearchRoute(query: &calendarSearchText, to: &calendarPath)
                 }
@@ -218,6 +220,7 @@ struct CompactTabLayout: View {
                     RouteDestination(route: route)
                 }
                 .searchable(text: $moreSearchText, prompt: globalSearchPrompt)
+                .searchMinimizedIfAvailable()
                 .onSubmit(of: .search) {
                     appendSearchRoute(query: &moreSearchText, to: &morePath)
                 }

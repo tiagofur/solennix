@@ -31,6 +31,7 @@ public struct ClientListView: View {
             .navigationTitle(tr("clients.title", "Clientes"))
             .navigationBarTitleDisplayMode(.large)
             .searchable(text: $viewModel.searchText, prompt: tr("clients.search_placeholder", "Buscar clientes"))
+            .searchMinimizedIfAvailable()
             .safeAreaInset(edge: .top, spacing: 0) {
                 VStack(spacing: 0) {
                     if viewModel.isShowingCachedData {

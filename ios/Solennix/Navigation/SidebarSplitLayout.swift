@@ -61,6 +61,7 @@ struct SidebarSplitLayout: View {
                 }
                 .navigationBarTitleDisplayMode(.inline)
                 .searchable(text: $searchText, prompt: globalSearchPrompt)
+                .searchMinimizedIfAvailable()
                 .onSubmit(of: .search) {
                     let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
                     guard !query.isEmpty else { return }
