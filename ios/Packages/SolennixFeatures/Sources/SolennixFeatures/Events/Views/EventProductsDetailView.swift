@@ -18,17 +18,17 @@ public struct EventProductsDetailView: View {
 
     public var body: some View {
         Group {
-            if viewModel.isLoading && viewModel.event == nil {
-                ProgressView("Cargando...")
+            if viewModel.isLoading && viewModel.products.isEmpty {
+                ProgressView(tr("events.detail.products.loading", "Cargando..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 content
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Productos")
+        .navigationTitle(tr("events.detail.products.title", "Productos"))
         .navigationBarTitleDisplayMode(.inline)
-        .task { await viewModel.loadData(eventId: eventId) }
+        .task { await viewModel.loadProductsOnly(eventId: eventId) }
     }
 
     private var content: some View {
@@ -37,8 +37,8 @@ public struct EventProductsDetailView: View {
                 if viewModel.products.isEmpty {
                     EmptyStateView(
                         icon: "bag",
-                        title: "Sin Productos",
-                        message: "Este evento no tiene productos asignados"
+                        title: tr("events.detail.products.empty.title", "Sin Productos"),
+                        message: tr("events.detail.products.empty.message", "Este evento no tiene productos asignados")
                     )
                 } else {
                     // Summary
@@ -65,6 +65,12 @@ public struct EventProductsDetailView: View {
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.lg)
         }
+    }
+
+    // MARK: - Localization
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
     }
 
     private func productRow(_ product: EventProduct) -> some View {

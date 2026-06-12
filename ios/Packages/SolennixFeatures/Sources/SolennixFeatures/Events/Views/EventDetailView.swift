@@ -142,7 +142,6 @@ public struct EventDetailView: View {
                     contractPreviewCard
                     clientPortalCard
                     documentsCard(event)
-                    actionButtonsRow3
                 }
 
                 // Full-width: Photos preview + Live Activity
@@ -210,10 +209,33 @@ public struct EventDetailView: View {
     // MARK: - Finance Summary Card (navigable)
 
     private func financeSummaryCard(_ event: Event) -> some View {
-        let supplyCost = viewModel.supplies.reduce(0.0) { $0 + ($1.quantity * $1.unitCost) }
-        let netSales = event.totalAmount - event.taxAmount
-        let profit = netSales - supplyCost
-        let margin = netSales > 0 ? (profit / netSales) * 100 : 0
+        // Use EventFinancials.compute() — the canonical formula that mirrors the backend.
+        // This replaces the previous supply-only approximation which ignored extras costs,
+        // pass-through extras exclusion from the margin denominator, and supply.excludeCost.
+        let productRows = viewModel.products.map { p in
+            EventFinancials.ProductRow(
+                quantity: p.quantity,
+                unitPrice: p.unitPrice,
+                lineDiscount: p.discount,
+                unitCost: nil
+            )
+        }
+        let extraRows = viewModel.extras.map { e in
+            EventFinancials.ExtraRow(price: e.price, cost: e.cost, excludeUtility: e.excludeUtility)
+        }
+        let supplyRows = viewModel.supplies.map { s in
+            EventFinancials.SupplyRow(quantity: s.quantity, unitCost: s.unitCost, excludeCost: s.excludeCost)
+        }
+        let financials = EventFinancials.compute(
+            products: productRows,
+            extras: extraRows,
+            supplies: supplyRows,
+            globalDiscountType: event.discountType,
+            globalDiscount: event.discount,
+            requiresInvoice: event.requiresInvoice,
+            taxRate: event.taxRate
+        )
+        let margin = financials.profitMargin
         let discountText = event.discount > 0
             ? (event.discountType == .percent
                 ? trf("events.detail.finances.discount_percent", "Descuento %@%%", String(Int(event.discount)))
@@ -324,7 +346,7 @@ public struct EventDetailView: View {
                 icon: "cart",
                 title: "Checklist de compras",
                 tint: SolennixColors.warning,
-                background: SolennixColors.warning.opacity(0.15),
+                background: SolennixColors.warningBg,
                 route: Route.eventPurchaseChecklist(id: eventId)
             )
         }
@@ -365,7 +387,7 @@ public struct EventDetailView: View {
                     depositTitle: (event.depositPercent ?? 0) > 0 && viewModel.depositBalance > 0.01
                         ? trf("events.detail.payments.action.deposit", "Anticipo %@", viewModel.depositBalance.asMXN)
                         : nil,
-                    onRecord: { viewModel.showPaymentSheet = true },
+                    onRecord: { viewModel.showRecordPaymentSheet() },
                     onSettle: { viewModel.payRemaining() },
                     onDeposit: { viewModel.payDeposit() }
                 )
@@ -391,17 +413,6 @@ public struct EventDetailView: View {
                 }
             )
         }
-    }
-
-    // MARK: - Action Buttons Row 3 (Edit)
-
-    private var actionButtonsRow3: some View {
-        EventDetailIconTileLinkCard(
-            icon: "pencil",
-            label: tr("events.detail.action.edit_event", "Editar evento"),
-            tint: SolennixColors.info,
-            route: Route.eventForm(id: eventId)
-        )
     }
 
     // MARK: - Notes Section

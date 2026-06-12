@@ -182,6 +182,44 @@ public final class EventDetailViewModel {
         }
     }
 
+    // MARK: - Scoped Load Methods
+
+    /// Fetches only the equipment list for an event.
+    /// Use this from EventEquipmentDetailView to avoid firing 8 parallel requests.
+    @MainActor
+    public func loadEquipmentOnly(eventId: String) async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let result: [EventEquipment] = try await apiClient.get(Endpoint.eventEquipment(eventId))
+            equipment = result
+        } catch {
+            // Equipment list is non-critical — silently absorb; view shows empty state.
+        }
+    }
+
+    /// Fetches only the products list and the product catalog (for name resolution).
+    /// Use this from EventProductsDetailView to avoid firing 8 parallel requests.
+    @MainActor
+    public func loadProductsOnly(eventId: String) async {
+        isLoading = true
+        defer { isLoading = false }
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { [apiClient] in
+                if let result: [EventProduct] = try? await apiClient.get(Endpoint.eventProducts(eventId)) {
+                    await MainActor.run { self.products = result }
+                }
+            }
+            group.addTask { [apiClient] in
+                if let allProducts: [Product] = try? await apiClient.getAll(Endpoint.products) {
+                    await MainActor.run {
+                        self.productMap = Dictionary(uniqueKeysWithValues: allProducts.map { ($0.id, $0) })
+                    }
+                }
+            }
+        }
+    }
+
     // MARK: - Status
 
     @MainActor
@@ -210,9 +248,10 @@ public final class EventDetailViewModel {
         isSavingPayment = true
 
         do {
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            let today = dateFormatter.string(from: Date())
+            // Use the established Date.localTodayString() helper — it formats the
+            // current date in the DEVICE's local timezone, matching the user's
+            // calendar day (an event paid at 11pm in UTC-6 must record that local day).
+            let today = Date.localTodayString()
 
             let body: [String: Any] = [
                 "event_id": eventId,
@@ -256,10 +295,22 @@ public final class EventDetailViewModel {
         isSavingPayment = false
     }
 
+    /// Opens the payment sheet with all fields reset to defaults.
+    /// Call this for the generic "Registrar pago" action (no pre-fill needed).
+    @MainActor
+    public func showRecordPaymentSheet() {
+        paymentAmount = ""
+        paymentMethod = "cash"
+        paymentNotes = ""
+        showPaymentSheet = true
+    }
+
     @MainActor
     public func payRemaining() {
-        let formatted = String(format: "%.2f", remaining)
-        paymentAmount = formatted
+        // Reset sheet fields before presenting so each presentation starts clean.
+        paymentMethod = "cash"
+        paymentNotes = ""
+        paymentAmount = String(format: "%.2f", remaining)
         showPaymentSheet = true
     }
 
@@ -267,6 +318,8 @@ public final class EventDetailViewModel {
     public func payDeposit() {
         let balance = depositBalance
         guard balance > 0.01 else { return }
+        // Reset sheet fields before presenting; notes is intentionally pre-filled.
+        paymentMethod = "cash"
         paymentAmount = String(format: "%.2f", balance)
         paymentNotes = tr("events.detail.deposit", "Anticipo")
         showPaymentSheet = true

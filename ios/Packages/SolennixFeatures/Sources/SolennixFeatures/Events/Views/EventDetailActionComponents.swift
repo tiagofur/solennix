@@ -106,7 +106,7 @@ struct EventDetailPaymentSheetContent: View {
                                     .fontWeight(.medium)
                                     .foregroundStyle(
                                         method == methodOption.key
-                                            ? .white
+                                            ? SolennixColors.textInverse
                                             : SolennixColors.text
                                     )
                                     .padding(.horizontal, Spacing.md)

@@ -522,13 +522,13 @@ struct EventDetailLiveActivityCard: View {
             HStack(spacing: Spacing.sm) {
                 Image(systemName: isActive ? "stop.circle.fill" : "dot.radiowaves.left.and.right")
                     .font(.body)
-                    .foregroundStyle(isActive ? SolennixColors.error : .white)
+                    .foregroundStyle(isActive ? SolennixColors.error : SolennixColors.textInverse)
                     .symbolEffect(.pulse, isActive: isActive)
 
                 Text(isActive ? stopTitle : startTitle)
                     .font(.body)
                     .fontWeight(.medium)
-                    .foregroundStyle(isActive ? SolennixColors.error : .white)
+                    .foregroundStyle(isActive ? SolennixColors.error : SolennixColors.textInverse)
 
                 Spacer()
 

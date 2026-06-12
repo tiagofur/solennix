@@ -19,17 +19,17 @@ public struct EventEquipmentDetailView: View {
 
     public var body: some View {
         Group {
-            if viewModel.isLoading && viewModel.event == nil {
-                ProgressView("Cargando...")
+            if viewModel.isLoading && viewModel.equipment.isEmpty {
+                ProgressView(tr("events.detail.equipment.loading", "Cargando..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 content
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Equipo Asignado")
+        .navigationTitle(tr("events.detail.equipment.title", "Equipo Asignado"))
         .navigationBarTitleDisplayMode(.inline)
-        .task { await viewModel.loadData(eventId: eventId) }
+        .task { await viewModel.loadEquipmentOnly(eventId: eventId) }
     }
 
     private var content: some View {
@@ -38,8 +38,8 @@ public struct EventEquipmentDetailView: View {
                 if viewModel.equipment.isEmpty {
                     EmptyStateView(
                         icon: "wrench.and.screwdriver",
-                        title: "Sin Equipo",
-                        message: "Este evento no tiene equipo asignado"
+                        title: tr("events.detail.equipment.empty.title", "Sin Equipo"),
+                        message: tr("events.detail.equipment.empty.message", "Este evento no tiene equipo asignado")
                     )
                 } else {
                     HStack {
@@ -55,7 +55,7 @@ public struct EventEquipmentDetailView: View {
                     ForEach(viewModel.equipment) { item in
                         HStack {
                             VStack(alignment: .leading, spacing: Spacing.xxs) {
-                                Text(item.equipmentName ?? "Equipo")
+                                Text(item.equipmentName ?? tr("events.detail.equipment.fallback", "Equipo"))
                                     .font(.body)
                                     .fontWeight(.medium)
                                     .foregroundStyle(SolennixColors.text)
@@ -88,5 +88,11 @@ public struct EventEquipmentDetailView: View {
             .padding(.horizontal, sizeClass == .regular ? Spacing.xl : Spacing.md)
             .padding(.vertical, sizeClass == .regular ? Spacing.xl : Spacing.lg)
         }
+    }
+
+    // MARK: - Localization
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
     }
 }
