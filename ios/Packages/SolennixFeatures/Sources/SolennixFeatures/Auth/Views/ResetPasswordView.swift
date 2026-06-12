@@ -84,6 +84,7 @@ public struct ResetPasswordView: View {
                 }
                 .scrollDismissesKeyboard(.interactively)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 

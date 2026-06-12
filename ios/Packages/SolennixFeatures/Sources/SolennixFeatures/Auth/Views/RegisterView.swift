@@ -118,6 +118,7 @@ public struct RegisterView: View {
             }
             .scrollDismissesKeyboard(.interactively)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 

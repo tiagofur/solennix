@@ -25,6 +25,8 @@ public struct EventListView: View {
     private let newEventTip = NewEventTip()
     private let quickQuoteTip = QuickQuoteTip()
 
+    @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 40
+
     // MARK: - Init
 
     public init(apiClient: APIClient) {
@@ -36,8 +38,8 @@ public struct EventListView: View {
     public var body: some View {
         eventList
             .background(SolennixColors.surfaceGrouped)
-            // Haptic feedback when the destructive delete confirmation is triggered.
-            .sensoryFeedback(.warning, trigger: viewModel.showDeleteConfirm)
+            // Haptic feedback when the destructive delete confirmation appears (true only).
+            .sensoryFeedback(.warning, trigger: viewModel.showDeleteConfirm) { _, newValue in newValue }
             .navigationTitle(tr("events.list.title", "Eventos"))
             .navigationBarTitleDisplayMode(.large)
             .searchable(text: $viewModel.searchQuery, prompt: tr("events.list.search_placeholder", "Buscar eventos..."))
@@ -103,6 +105,9 @@ public struct EventListView: View {
                             .foregroundStyle(SolennixColors.primary)
                             .accessibilityLabel(tr("events.list.create_event_or_quote", "Crear evento o cotización"))
                             .popoverTip(newEventTip)
+                            // quickQuoteTip anchors here because popoverTip cannot attach
+                            // to items inside a Menu's content (they have no stable frame).
+                            .popoverTip(quickQuoteTip)
                     }
 
                     Button {
@@ -124,7 +129,6 @@ public struct EventListView: View {
             .sheet(isPresented: $showQuickQuote) {
                 QuickQuoteView(apiClient: apiClient)
             }
-            .popoverTip(quickQuoteTip)
             .sheet(isPresented: $showDateFilter) {
                 DateFilterSheet(
                     startDate: $viewModel.dateRangeStart,
@@ -523,7 +527,7 @@ public struct EventListView: View {
     private var emptyState: some View {
         VStack(spacing: Spacing.md) {
             Image(systemName: "doc.text.magnifyingglass")
-                .font(.system(size: 40))
+                .font(.system(size: emptyIconSize))
                 .foregroundStyle(SolennixColors.textTertiary)
 
             Text(tr("events.list.empty.no_results_title", "No se encontraron eventos"))

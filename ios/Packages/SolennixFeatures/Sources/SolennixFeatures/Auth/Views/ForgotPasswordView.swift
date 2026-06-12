@@ -80,6 +80,7 @@ public struct ForgotPasswordView: View {
                 }
                 .scrollDismissesKeyboard(.interactively)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 

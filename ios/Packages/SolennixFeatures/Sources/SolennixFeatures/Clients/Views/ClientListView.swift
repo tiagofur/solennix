@@ -26,8 +26,8 @@ public struct ClientListView: View {
     public var body: some View {
         mainList
             .background(SolennixColors.surfaceGrouped)
-            // Haptic feedback for destructive action confirmation dialog trigger.
-            .sensoryFeedback(.warning, trigger: viewModel.showDeleteConfirm)
+            // Haptic feedback when the destructive delete confirmation appears (true only).
+            .sensoryFeedback(.warning, trigger: viewModel.showDeleteConfirm) { _, newValue in newValue }
             .navigationTitle(tr("clients.title", "Clientes"))
             .navigationBarTitleDisplayMode(.large)
             .searchable(text: $viewModel.searchText, prompt: tr("clients.search_placeholder", "Buscar clientes"))

@@ -92,6 +92,7 @@ public struct LoginView: View {
             }
             .scrollDismissesKeyboard(.interactively)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 

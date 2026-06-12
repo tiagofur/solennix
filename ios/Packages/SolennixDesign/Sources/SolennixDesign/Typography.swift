@@ -2,9 +2,9 @@ import SwiftUI
 
 public extension Font {
 
-    /// Black weight heading that scales with Dynamic Type, anchored to `.largeTitle`.
+    /// Black weight heading that scales with Dynamic Type, anchored to `.title`.
     /// Visually equivalent to 28pt Black at the default size.
-    static let h1Premium: Font = .system(.largeTitle, design: .default).weight(.black)
+    static let h1Premium: Font = .system(.title, design: .default).weight(.black)
 
     /// Custom Cinzel SemiBold 32pt, for the Solennix brand title.
     static let solennixTitle: Font = .custom("Cinzel-SemiBold", size: 32, relativeTo: .title)

@@ -305,7 +305,7 @@ public struct DashboardView: View {
 
     private var kpiCardsSection: some View {
         Group {
-            if viewModel == nil || (viewModel?.isLoading == true && viewModel?.eventsThisMonth.isEmpty == true) {
+            if viewModel == nil || (viewModel?.isLoading == true && viewModel?.hasLoadedOnce == false) {
                 // Initial load: skeleton placeholders in place of KPI cards
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: Spacing.md) {
