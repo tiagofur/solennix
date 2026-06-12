@@ -219,20 +219,37 @@ public struct ProductListView: View {
     @ViewBuilder
     private var productListCompact: some View {
         List {
-            // Category chips scroll inline with list rows — same pattern as EventListView
+            // Category chips live in their OWN section: if they share the products
+            // section they become its first row and the first product row loses the
+            // insetGrouped rounded top corners (renders mid-section, squared).
             if !viewModel.categories.isEmpty {
-                CategoryChips(
-                    categories: viewModel.categories,
-                    selectedCategory: $viewModel.selectedCategory
-                ) { category in
-                    viewModel.toggleCategory(category)
+                Section {
+                    CategoryChips(
+                        categories: viewModel.categories,
+                        selectedCategory: $viewModel.selectedCategory
+                    ) { category in
+                        viewModel.toggleCategory(category)
+                    }
+                    .padding(.vertical, Spacing.sm)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())
+                    .listRowSeparator(.hidden)
                 }
-                .padding(.vertical, Spacing.sm)
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
-                .listRowSeparator(.hidden)
             }
 
+            Section {
+                productContentRows
+            }
+        }
+        .listStyle(.insetGrouped)
+        .listSectionSpacing(.compact)
+        .scrollContentBackground(.hidden)
+        .background(SolennixColors.surfaceGrouped)
+    }
+
+    @ViewBuilder
+    private var productContentRows: some View {
+        Group {
             if let error = viewModel.errorMessage, viewModel.products.isEmpty, !viewModel.isLoading {
                 // Error state
                 EmptyStateView(
@@ -337,9 +354,6 @@ public struct ProductListView: View {
                 }
             }
         }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
     }
 
     // MARK: - First-Run Empty Row (Fix 2)
