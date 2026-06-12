@@ -154,7 +154,8 @@ public struct DashboardView: View {
             QuickQuoteView(apiClient: apiClient)
         }
         .overlay {
-            if viewModel?.isLoading == true && viewModel?.eventsThisMonth.isEmpty == true && viewModel?.errorMessage == nil {
+            // Non-empty refresh spinner — shown only when dashboard has data
+            if viewModel?.isLoading == true && viewModel?.eventsThisMonth.isEmpty == false && viewModel?.errorMessage == nil {
                 ProgressView()
                     .tint(SolennixColors.primary)
             }
@@ -304,7 +305,19 @@ public struct DashboardView: View {
 
     private var kpiCardsSection: some View {
         Group {
-            if isIPad {
+            if viewModel == nil || (viewModel?.isLoading == true && viewModel?.eventsThisMonth.isEmpty == true) {
+                // Initial load: skeleton placeholders in place of KPI cards
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: Spacing.md) {
+                        ForEach(0..<4, id: \.self) { _ in
+                            SkeletonCard()
+                                .frame(width: 150, height: 90)
+                        }
+                    }
+                    .padding(.horizontal, Spacing.md)
+                }
+                .accessibilityHidden(true)
+            } else if isIPad {
                 // iPad: multi-column grid showing all KPI cards at once
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 160), spacing: Spacing.md)], spacing: Spacing.md) {
                     kpiCardItems(flexible: true)

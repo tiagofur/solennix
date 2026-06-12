@@ -3,11 +3,14 @@ import SwiftUI
 // MARK: - Skeleton Line
 
 /// A single rounded rectangle placeholder with a pulsing shimmer animation.
+/// Respects `accessibilityReduceMotion` — disables the pulse when the user
+/// has requested reduced motion.
 public struct SkeletonLine: View {
     var width: CGFloat? = nil
     var height: CGFloat = 16
 
     @State private var isAnimating = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     public init(width: CGFloat? = nil, height: CGFloat = 16) {
         self.width = width
@@ -20,11 +23,13 @@ public struct SkeletonLine: View {
             .frame(width: width, height: height)
             .opacity(isAnimating ? 0.4 : 0.8)
             .animation(
-                .easeInOut(duration: 1.0).repeatForever(autoreverses: true),
+                reduceMotion ? nil : .easeInOut(duration: 1.0).repeatForever(autoreverses: true),
                 value: isAnimating
             )
             .onAppear {
-                isAnimating = true
+                if !reduceMotion {
+                    isAnimating = true
+                }
             }
     }
 }

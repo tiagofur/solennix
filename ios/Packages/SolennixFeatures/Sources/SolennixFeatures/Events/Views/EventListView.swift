@@ -166,7 +166,8 @@ public struct EventListView: View {
                 )
             }
             .overlay {
-                if viewModel.isLoading && viewModel.events.isEmpty {
+                // Non-empty refresh spinner (existing items visible behind)
+                if viewModel.isLoading && !viewModel.events.isEmpty {
                     ProgressView()
                         .controlSize(.large)
                         .tint(SolennixColors.primary)
@@ -337,11 +338,26 @@ public struct EventListView: View {
         }
     }
 
+    // MARK: - Skeleton Placeholder
+
+    private var skeletonCards: some View {
+        LazyVStack(spacing: Spacing.sm) {
+            ForEach(0..<5, id: \.self) { _ in
+                SkeletonCard()
+            }
+        }
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.lg)
+        .accessibilityHidden(true)
+    }
+
     @ViewBuilder
     private var eventListContent: some View {
         let filtered = viewModel.filteredEvents
 
-        if let error = viewModel.errorMessage, filtered.isEmpty, !viewModel.isLoading {
+        if viewModel.isLoading && viewModel.events.isEmpty {
+            skeletonCards
+        } else if let error = viewModel.errorMessage, filtered.isEmpty, !viewModel.isLoading {
             EmptyStateView(
                 icon: "wifi.exclamationmark",
                 title: tr("events.list.error.load_title", "Error al cargar"),
