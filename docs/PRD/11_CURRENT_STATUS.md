@@ -25,6 +25,14 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.8
 
+> [!success] 2026-06-12 — Client Detail: Judgment Day → APPROVED (branch `feat/ios-liquid-glass`)
+> Segunda pantalla de detalle del ciclo (3 rondas). Llevada al estándar fijado por Event Detail.
+> - **Hub insetGrouped:** ScrollView + cards con sombras → `List` insetGrouped con skeleton in-List fiel; strip inferior de 3 botones eliminado (editar/nuevo evento/eliminar van al Menu del toolbar; una sola fila primaria dorada "Nuevo evento para este cliente").
+> - **Contacto accionable:** chips Llamar (tel: normalizado a dígitos+`+`), WhatsApp (`wa.me`, guard ≥8 dígitos) y Email — la pantalla del cliente ahora iguala la card de cliente de Event Detail.
+> - **Bugs:** error de borrado ya no se traga (alert bidireccional); bug `trf` con fallback interpolado → `%lld`; `.white`→`textInverse`; frames con `@ScaledMetric` cappeado; promedio de ticket consistente sobre el historial completo; haptics del form migrados a `sensoryFeedback` con counters.
+> - **Pendiente cross-platform anotado:** KPI de saldo pendiente del cliente requiere `pendingBalance` en la API (backend + iOS/Android/Web).
+> - **Commits:** 92fb2c05, 6938d035, accef3be. Build verde por ronda.
+
 > [!success] 2026-06-12 — Event Detail: Judgment Day + edición seccional + wow pass (branch `feat/ios-liquid-glass`)
 > Ciclo completo de revisión dual ciego (3 rondas → APPROVED) sobre la pantalla más importante de la app, con rediseño del flujo de edición.
 > - **Edición seccional:** `Route.eventForm(id:step:)` permite saltar directo a cualquier paso del wizard. Context menu "Editar sección" en cada card del hub (general→1, productos→2, extras→3, personal/equipo/insumos→4, finanzas→5). Sub-pantallas read-only ganaron lápiz en toolbar + CTAs reales en empty states. Stepper con navegación libre en modo edición.
