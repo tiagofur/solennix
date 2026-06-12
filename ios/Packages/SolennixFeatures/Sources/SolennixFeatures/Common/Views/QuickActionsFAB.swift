@@ -8,11 +8,15 @@ import SolennixDesign
 ///
 /// Designed for iPhone compact layouts. The button rotates 45° when expanded
 /// (turning the "+" into an "×").
+///
+/// On iOS 26 the FAB and its action buttons share a `GlassEffectContainer` so
+/// they morph fluidly between collapsed and expanded states.
 public struct QuickActionsFAB: View {
 
     // MARK: - Properties
 
     @State private var isExpanded = false
+    @Namespace private var glassNamespace
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -40,6 +44,95 @@ public struct QuickActionsFAB: View {
 
     @ViewBuilder
     private var fabContent: some View {
+        if #available(iOS 26.0, *) {
+            ios26FABContent
+        } else {
+            legacyFABContent
+        }
+    }
+
+    // MARK: - iOS 26 Glass Morphing FAB
+
+    @available(iOS 26.0, *)
+    @ViewBuilder
+    private var ios26FABContent: some View {
+        GlassEffectContainer(spacing: 40) {
+            VStack(spacing: Spacing.sm) {
+                if isExpanded {
+                    // Quick Quote action
+                    ios26ActionButton(
+                        icon: "bolt.fill",
+                        id: "quick-quote",
+                        action: {
+                            withAnimation(reduceMotion ? nil : .bouncy) { isExpanded = false }
+                            onQuickQuote()
+                        }
+                    )
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+
+                    // New Event action
+                    ios26ActionButton(
+                        icon: "calendar.badge.plus",
+                        id: "new-event",
+                        action: {
+                            withAnimation(reduceMotion ? nil : .bouncy) { isExpanded = false }
+                            onNewEvent()
+                        }
+                    )
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+
+                // Main FAB button — tinted with brand primary (primary action allowed)
+                Button {
+                    withAnimation(reduceMotion ? nil : .bouncy) {
+                        isExpanded.toggle()
+                    }
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.white)
+                        .rotationEffect(.degrees(isExpanded ? 45 : 0))
+                        .frame(width: 56, height: 56)
+                }
+                .glassEffect(
+                    .regular.tint(SolennixColors.primary).interactive(),
+                    in: .circle
+                )
+                .clipShape(Circle())
+                .glassEffectID("fab-main", in: glassNamespace)
+                .accessibilityLabel(isExpanded
+                    ? CommonStrings.fabCollapseLabel
+                    : CommonStrings.fabExpandLabel)
+            }
+        }
+        .padding(.trailing, Spacing.lg)
+        .padding(.bottom, Spacing.lg)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+    }
+
+    @available(iOS 26.0, *)
+    private func ios26ActionButton(
+        icon: String,
+        id: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.body)
+                .fontWeight(.semibold)
+                .foregroundStyle(.white)
+                .frame(width: 44, height: 44)
+        }
+        .glassEffect(.regular.interactive(), in: .circle)
+        .clipShape(Circle())
+        .glassEffectID(id, in: glassNamespace)
+    }
+
+    // MARK: - Legacy FAB (iOS 17–25)
+
+    @ViewBuilder
+    private var legacyFABContent: some View {
         VStack(spacing: Spacing.sm) {
             if isExpanded {
                 // Quick Quote action
@@ -81,13 +174,16 @@ public struct QuickActionsFAB: View {
                     .clipShape(Circle())
                     .shadow(color: SolennixColors.primary.opacity(0.4), radius: 8, x: 0, y: 4)
             }
+            .accessibilityLabel(isExpanded
+                ? CommonStrings.fabCollapseLabel
+                : CommonStrings.fabExpandLabel)
         }
         .padding(.trailing, Spacing.lg)
         .padding(.bottom, Spacing.lg)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
     }
 
-    // MARK: - FAB Action Button
+    // MARK: - Legacy FAB Action Button
 
     private func fabAction(
         icon: String,

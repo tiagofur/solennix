@@ -10,6 +10,8 @@ public enum CommonStrings {
     
     // FAB
     public static var newEventLabel: String { FeatureL10n.text("common.fab.new_event", "Nuevo Evento") }
+    public static var fabExpandLabel: String { FeatureL10n.text("common.fab.expand_label", "Mostrar acciones rápidas") }
+    public static var fabCollapseLabel: String { FeatureL10n.text("common.fab.collapse_label", "Ocultar acciones rápidas") }
     
     // Paywall
     public static var paywallTitle: String { FeatureL10n.text("common.paywall.title", "Límite alcanzado") }
