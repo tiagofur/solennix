@@ -22,8 +22,7 @@ public struct InventoryListView: View {
             .background(SolennixColors.surfaceGrouped)
             .navigationTitle(InventoryStrings.title)
             .navigationBarTitleDisplayMode(.large)
-            .searchable(text: $viewModel.searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: InventoryStrings.searchPrompt)
-            .searchMinimizedIfAvailable()
+            .solennixSearchable(text: $viewModel.searchText, prompt: InventoryStrings.searchPrompt)
             .safeAreaInset(edge: .top, spacing: 0) {
                 VStack(spacing: 0) {
                     if viewModel.isShowingCachedData {

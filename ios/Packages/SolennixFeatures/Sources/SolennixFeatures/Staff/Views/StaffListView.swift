@@ -22,8 +22,7 @@ public struct StaffListView: View {
             .background(SolennixColors.surfaceGrouped)
             .navigationTitle(StaffStrings.title)
             .navigationBarTitleDisplayMode(.large)
-            .searchable(text: $viewModel.searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: StaffStrings.searchPrompt)
-            .searchMinimizedIfAvailable()
+            .solennixSearchable(text: $viewModel.searchText, prompt: StaffStrings.searchPrompt)
             .refreshable { await viewModel.loadStaff() }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {

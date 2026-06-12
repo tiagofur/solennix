@@ -101,6 +101,28 @@ public extension View {
     }
 }
 
+// MARK: - Adaptive Searchable (pushed list screens)
+
+public extension View {
+    /// Search affordance for list screens pushed onto a NavigationStack.
+    ///
+    /// - iOS 26+: default placement (system bottom-aligned field) with the
+    ///   minimized magnifier behavior — identical to the rest of the app's
+    ///   Apple-style search treatment.
+    /// - iOS 17–25: `navigationBarDrawer(displayMode: .always)` so the field
+    ///   is always visible; the default placement on pushed screens hides the
+    ///   field until the user pulls down, which makes search undiscoverable.
+    @ViewBuilder
+    func solennixSearchable(text: Binding<String>, prompt: String) -> some View {
+        if #available(iOS 26.0, *) {
+            self.searchable(text: text, prompt: prompt)
+                .searchToolbarBehavior(.minimize)
+        } else {
+            self.searchable(text: text, placement: .navigationBarDrawer(displayMode: .always), prompt: prompt)
+        }
+    }
+}
+
 // MARK: - Toolbar Spacer Note
 // ToolbarSpacer (iOS 26) is a ToolbarContent type, not a View — it cannot be
 // wrapped in a ViewModifier. Use #available(iOS 26.0, *) inline at each call
