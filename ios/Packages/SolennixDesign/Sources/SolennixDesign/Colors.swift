@@ -619,4 +619,68 @@ public enum SolennixColors {
     /// Deprecated — use tonal `avatarBackground`/`avatarInitials` tokens instead.
     @available(*, deprecated, renamed: "avatarBackground", message: "Replaced by tonal avatar tokens. hashValue is per-launch unstable.")
     public static let avatarColors: [Color] = []
+
+    // MARK: - Icon Square Palette (More Menu / muted brand-tonal)
+    //
+    // All tokens are tuned so a white SF Symbol glyph achieves ≥ 3:1 contrast
+    // against the icon square background (WCAG 1.4.11 non-text contrast).
+    // Contrast values: light mode / dark mode
+    //   iconSlate:  6.87 / 4.34
+    //   iconTaupe:  5.24 / 3.36
+    //   iconSage:   5.86 / 3.80
+    //   iconSteel:  5.47 / 3.39
+    // Note: Payments uses SolennixColors.primary (gold #C4A265, 2.41:1) as a
+    // deliberate brand override — gold = money is the only gold in the palette.
+
+    /// Muted navy-blue — Products icon square.
+    public static var iconSlate: Color {
+        #if canImport(UIKit)
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hex: "#5A7BA8")
+                : UIColor(hex: "#3E5C82")
+        })
+        #else
+        Color(hex: "#3E5C82")
+        #endif
+    }
+
+    /// Muted earth-brown — Inventory icon square.
+    public static var iconTaupe: Color {
+        #if canImport(UIKit)
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hex: "#9A8A72")
+                : UIColor(hex: "#7A6A52")
+        })
+        #else
+        Color(hex: "#7A6A52")
+        #endif
+    }
+
+    /// Muted sage-green — Form Links icon square.
+    public static var iconSage: Color {
+        #if canImport(UIKit)
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hex: "#6B8A78")
+                : UIColor(hex: "#4F6B5A")
+        })
+        #else
+        Color(hex: "#4F6B5A")
+        #endif
+    }
+
+    /// Muted blue-steel — Personnel icon square.
+    public static var iconSteel: Color {
+        #if canImport(UIKit)
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hex: "#7A8E9E")
+                : UIColor(hex: "#5C6B7A")
+        })
+        #else
+        Color(hex: "#5C6B7A")
+        #endif
+    }
 }

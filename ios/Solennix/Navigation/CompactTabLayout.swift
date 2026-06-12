@@ -27,7 +27,6 @@ struct CompactTabLayout: View {
     @State private var morePath = NavigationPath()
     @State private var homeSearchText = ""
     @State private var calendarSearchText = ""
-    @State private var moreSearchText = ""
 
     // MARK: - Body
 
@@ -218,11 +217,6 @@ struct CompactTabLayout: View {
             MoreMenuView()
                 .navigationDestination(for: Route.self) { route in
                     RouteDestination(route: route)
-                }
-                .searchable(text: $moreSearchText, prompt: globalSearchPrompt)
-                .searchMinimizedIfAvailable()
-                .onSubmit(of: .search) {
-                    appendSearchRoute(query: &moreSearchText, to: &morePath)
                 }
         }
     }

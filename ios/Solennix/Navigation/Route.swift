@@ -137,6 +137,17 @@ extension SidebarSection {
         }
     }
 
+    /// SF Symbol icon name used specifically in the iPhone "Más" menu icon squares.
+    /// Overrides `iconName` where the fill/variant differs from the sidebar baseline.
+    /// The sidebar applies `.symbolVariant(.fill)` dynamically on active state, so it
+    /// keeps the plain base name; the More menu always renders the filled variant.
+    var moreMenuIconName: String {
+        switch self {
+        case .eventFormLinks:  return "link.circle.fill"
+        default:               return iconName
+        }
+    }
+
     /// Secondary text used by the iPhone "Mas" list rows.
     var moreMenuSubtitle: String {
         switch self {
