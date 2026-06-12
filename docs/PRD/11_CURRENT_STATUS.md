@@ -25,6 +25,18 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.8
 
+> [!success] 2026-06-12 — iOS Liquid Glass adoption (branch `feat/ios-liquid-glass`, stacked on `feat/ios-hig-quick-wins`)
+> Adopción de Liquid Glass en iOS con SDK 26, gating `#available`, primitivas adaptativas y correcciones de revisión de código.
+> - **`adaptiveGlass` primitive:** modifier en `SolennixDesign/GlassSurface.swift` que aplica `glassEffect(.regular)` en iOS 26+ y fallback configurable en iOS 17–25. Nuevo enum `AdaptiveGlassFallback` con `.material` (ultraThinMaterial) y `.brightChip` (white-opacity chip para superficies navy oscuras como la sidebar).
+> - **FAB con `GlassEffectContainer` + morphing:** `QuickActionsFAB` usa `GlassEffectContainer(spacing: 16)` (threshold de morphing, no spacing de layout) con `glassEffect(.regular.tint(...).interactive())` en el botón principal y `glassEffect(.regular.interactive())` en las acciones iOS 26+. FAB cableado a `DashboardView` como primer call site de producción.
+> - **Tab bar con `tabBarMinimizeBehavior` y search tab nativo:** `CompactTabLayout` usa builder syntax de iOS 26 con `TabView(selection:)` bound (patrón WWDC25) — `Tab(_:systemImage:value:)` para las 5 tabs regulares y `Tab(_:systemImage:value:role: .search)` para la tab de búsqueda flotante nativa. `Tab.search` agregado al enum con `Tab.barTabs` para excluirlo del legacy bar. Pop-to-root en retap y Spotlight `selectedTab = .home` restaurados en ambas ramas.
+> - **Scroll edge effects:** `.softScrollEdgeEffectIfAvailable()` en `DashboardView`, `CalendarView`, `EventListView`, `SettingsView`. Implementado como no-op pre-iOS 26 en `ViewModifiers.swift`.
+> - **Sheet glass:** `.sheetGlassScrollBackground()` en sheets de formularios en iOS 26 para mostrar el material Liquid Glass del sheet a través del fondo del scroll.
+> - **Symbol bounce:** `symbolEffect(.bounce)` en momentos de confirmación (checklist items, filtros). Corregido para disparar solo en transición `false→true` extrayendo filas a structs privados (`ChecklistItemRow`, `PurchaseChecklistItemRow`) con identidad estable. Filtro de eventos dispara sobre `Int activeFilterCount` directamente.
+> - **Min target:** iOS 17 — sin cambios. Todo el código iOS 26 detrás de `#available(iOS 26.0, *)`.
+> - **Archivos clave:** `GlassSurface.swift`, `CompactTabLayout.swift`, `Route.swift` (Tab enum), `SidebarSplitLayout.swift`, `QuickActionsFAB.swift`, `DashboardView.swift`, `EventChecklistView.swift`, `EventPurchaseChecklistView.swift`, `EventListView.swift`, `ViewModifiers.swift`.
+> - **Validación:** `xcodebuild ... build` → BUILD SUCCEEDED.
+
 > [!success] 2026-06-11 — iOS HIG Quick Wins (branch `feat/ios-hig-quick-wins`)
 > Se aplicaron mejoras de calidad HIG en iOS siguiendo las guías oficiales de Apple (iOS 17+).
 > - **TipKit:** Se activaron tips contextuales reales (`NewEventTip`, `QuickQuoteTip`, `SwipeActionTip`) en lugar de los placeholders anteriores. `quickQuoteTip` se ancló al botón "+" del toolbar (el Quick Quote vive dentro de un `Menu` — no puede anclarse a ítems internos).

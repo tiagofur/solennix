@@ -89,6 +89,30 @@ platform: iOS
 > - Se agregan bloqueos por fecha con rango horario opcional (`startTime`/`endTime`) y motivo.
 > - Los cambios refrescan inmediatamente en el portal y usan endpoints scoped del miembro (`/unavailable-dates`).
 
+> [!success] 2026-06-12 — Liquid Glass adoption (iOS 26 SDK)
+>
+> ### Estrategia: SDK 26 build, gating `#available`, capa de navegación únicamente
+>
+> Todos los efectos Liquid Glass se aplican exclusivamente a elementos de la capa de navegación (bars, toolbars, sheets, FABs, popovers). Nunca sobre tarjetas de contenido ni listas. Min target sigue siendo iOS 17.
+>
+> | Componente | iOS 26+ | iOS 17–25 |
+> |---|---|---|
+> | `adaptiveGlass(in:)` | `glassEffect(.regular, in: shape)` | `ultraThinMaterial` o `brightChip` según parámetro |
+> | `QuickActionsFAB` | `GlassEffectContainer(spacing: 16)` + `glassEffect(.regular.tint(...).interactive())` | gradiente premium + sombra |
+> | Tab bar | `tabBarMinimizeBehavior(.onScrollDown)` + search tab nativo `role: .search` | TabView legacy sin minimize |
+> | Scroll edge | `scrollEdgeEffectStyle(.soft, for: .top)` | no-op |
+> | Sheet background | `scrollContentBackground(.hidden)` en iOS 26 sheets | sin cambio |
+>
+> **`AdaptiveGlassFallback`:** enum con `.material` (default) y `.brightChip` (white-opacity 0.12 — para chips en sidebar navy donde `ultraThinMaterial` es casi invisible en dark mode).
+>
+> **`Tab` enum:** `case search` agregado para la tab nativa iOS 26. `Tab.barTabs` (`[.home, .calendar, .events, .clients, .more]`) excluye `.search` para iteraciones en el legacy bar. `Tab.allCases` incluye los 6 casos — switches exhaustivos deben manejar `.search`.
+>
+> **`TabView(selection:)` bound en iOS 26:** `ios26TabSelection` custom binding idéntico a `legacyTabSelection` — pop-to-root en retap y `selectedTab = .home` antes de push en Spotlight están activos en ambas ramas.
+>
+> **`QuickActionsFAB` call site:** `DashboardView` es el primer call site de producción. El FAB se superpone al dashboard vía `.quickActionsFAB(onNewEvent:onQuickQuote:)`. Presenta `EventFormView` como sheet en compact (iPhone); en regular (iPad) el FAB se oculta automáticamente vía `sizeClass` guard interno.
+>
+> **Symbol bounce correctness:** filas de checklist extraídas a structs privados (`ChecklistItemRow`, `PurchaseChecklistItemRow`) con `let item`, `let isChecked`. El `Image(systemName:)` se renderiza incondicionalmente con `.opacity(isChecked ? 1 : 0)` y `.symbolEffect(.bounce, value: isChecked)` fuera de cualquier `if` — SwiftUI observa la transición `false→true` y dispara el bounce exactamente una vez por toggle, no en reloads.
+
 > [!success] 2026-06-11 — iOS HIG Quick Wins
 >
 > - **TipKit activado:** Tips reales (no placeholders) en `EventListView`, `ClientListView` y `DashboardView`. `quickQuoteTip` anclado al botón "+" del toolbar (los ítems internos de `Menu` no exponen un frame estable para `popoverTip`).
