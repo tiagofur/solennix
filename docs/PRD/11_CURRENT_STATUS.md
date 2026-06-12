@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-06-03
+updated: 2026-06-12
 status: active
 ---
 
@@ -24,6 +24,13 @@ status: active
 
 **Fecha:** Junio 2026
 **Version:** 1.8
+
+> [!success] 2026-06-12 — Judgment Day — ciclo completo del menú Más (branch `feat/ios-liquid-glass`)
+> Aplicación de revisión dual ciego pantalla por pantalla sobre el menú Más. Todos los screens ahora cumplen estándar nativo de Apple.
+> - **Pantallas auditadas:** Más (b0179c37), Productos (eba22d25/4f49a005/6c81b1fc), Inventario (b2acf758/fcb5b9e8), Pagos (ccade9b9/29e7ce97 — conversión a List nativa + swipe aprobar/rechazar + feedback), Personal y Equipos (93a4abb5/a1d4fe67 — soft-delete con undo en Equipos), Formularios y Reseñas (8bd5f062/f079b055 — Reseñas convertida a List nativa).
+> - **Estándar canónico app-wide:** `insetGrouped` + fila con card/separador dorado + sin chevron en filas de datos + skeleton in-List + CTA reales + paginación viva con refresh que no limpia + VoiceOver compuesto + Dynamic Type.
+> - **Ganancias transversales:** upgrade banner navega a Pricing en 6 lugares (antes muerto), alerts con bindings reales, hápticas semánticas.
+> - **Pendientes anotados:** scope filter inventario (issue #551), batch Android (issue #552), contraste blanco-sobre-oro en light mode (token-level), errores de borrado invisibles en listas pobladas (chip spawneado).
 
 > [!success] 2026-06-12 — iOS Liquid Glass adoption (branch `feat/ios-liquid-glass`, stacked on `feat/ios-hig-quick-wins`)
 > Adopción de Liquid Glass en iOS con SDK 26, gating `#available`, primitivas adaptativas y correcciones de revisión de código.

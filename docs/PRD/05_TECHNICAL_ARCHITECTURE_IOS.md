@@ -9,7 +9,7 @@ aliases:
   - Arquitectura iOS
   - iOS Architecture
 date: 2026-03-20
-updated: 2026-05-17
+updated: 2026-06-12
 status: active
 platform: iOS
 ---
@@ -88,6 +88,20 @@ platform: iOS
 > - `TeamMemberPortalView` incorpora sección `Mi disponibilidad` con alta/edición/baja de bloqueos.
 > - Se agregan bloqueos por fecha con rango horario opcional (`startTime`/`endTime`) y motivo.
 > - Los cambios refrescan inmediatamente en el portal y usan endpoints scoped del miembro (`/unavailable-dates`).
+
+> [!success] 2026-06-12 — Judgment Day — ciclo completo del menú Más (list standard canonicalized)
+>
+> Aplicación de revisión dual ciego pantalla por pantalla sobre el menú Más. Todas las vistas ListRow ahora siguen el patrón canónico:
+> - **Estructura:** fila con card insetGrouped usando separador dorado (`.SolennixColors.accent`) — no se usa chevron automático de `NavigationLink` en filas de datos.
+> - **Contenido:** información contextual (nombre, ícono, estado, cantidad) + acciones (si aplica, via sheet/menu, no en fila).
+> - **Paginación viva:** endpoints retornan `has_more` + cursor; refresh nativo no limpia lista existente.
+> - **VoiceOver compuesto:** filas anuncian contexto completo (`Producto, 5 unidades disponibles`) vía `.accessibilityElement(children: .combine)`.
+> - **Dynamic Type:** texto escalado vía `@ScaledMetric` en ícono y tipografía, asegurando legibilidad en categorías de acceso grandes.
+> - **Skeleton in-List:** carga inicial muestra placeholders animados dentro de la lista.
+> - **Upgrade banner:** navega a Pricing en lugar de no-op; integrado en todas las CTAs de features Pro.
+> - **Alerts:** usan bindings reales (`@State var show = false`) — no closures hardcodeadas.
+> - **Hápticas semánticas:** warning feedback en confirmación de borrado, success en acciones completadas.
+> - Pantallas completadas: Más, Productos, Inventario, Pagos (List nativa + swipe), Personal, Equipos (soft-delete + undo), Formularios, Reseñas (List nativa).
 
 > [!success] 2026-06-12 — Liquid Glass adoption (iOS 26 SDK)
 >
