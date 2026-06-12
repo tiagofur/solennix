@@ -1,5 +1,9 @@
 package com.creapolis.solennix.feature.payments.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -8,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Inbox
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
@@ -17,8 +22,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.creapolis.solennix.core.designsystem.component.EmptyState
+import com.creapolis.solennix.core.designsystem.component.SkeletonLoading
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
+import com.creapolis.solennix.core.designsystem.util.HapticFeedbackType
+import com.creapolis.solennix.core.designsystem.util.rememberHapticFeedback
 import com.creapolis.solennix.core.model.PaymentSubmission
 import com.creapolis.solennix.feature.payments.R
 import com.creapolis.solennix.feature.payments.viewmodel.PaymentInboxViewModel
@@ -36,12 +45,14 @@ fun PaymentInboxScreen(
     var showRejectDialog by remember { mutableStateOf<PaymentSubmission?>(null) }
     var showApproveDialog by remember { mutableStateOf<PaymentSubmission?>(null) }
     var rejectReason by remember { mutableStateOf("") }
+    val hapticFeedback = rememberHapticFeedback()
 
     // Action error snackbar
     val snackbarHostState = remember { SnackbarHostState() }
+    val retryLabel = stringResource(R.string.payments_inbox_error_retry)
     LaunchedEffect(uiState.actionError) {
         uiState.actionError?.let {
-            snackbarHostState.showSnackbar(it)
+            snackbarHostState.showSnackbar(it, actionLabel = retryLabel)
             viewModel.clearActionError()
         }
     }
@@ -50,9 +61,11 @@ fun PaymentInboxScreen(
         topBar = {
             SolennixTopAppBar(
                 title = { Text(strings.title) },
-                navigationIcon = { IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.Default.Close, contentDescription = strings.back)
-                }}
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.Default.Close, contentDescription = strings.back)
+                    }
+                }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -62,70 +75,75 @@ fun PaymentInboxScreen(
             onRefresh = { viewModel.loadSubmissions(isRefresh = true) },
             modifier = Modifier.padding(padding).fillMaxSize()
         ) {
-            when {
-                uiState.isLoading -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = SolennixTheme.colors.primary)
-                    }
-                }
-                uiState.error != null -> {
-                    Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
-                        Text(uiState.error ?: "", color = SolennixTheme.colors.error, style = MaterialTheme.typography.bodyMedium)
-                    }
-                }
-                uiState.isPlanLocked -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                Icons.Default.Inbox,
-                                contentDescription = null,
-                                tint = SolennixTheme.colors.secondaryText,
-                                modifier = Modifier.size(48.dp)
-                            )
-                            Spacer(Modifier.height(12.dp))
-                            Text(
-                                strings.proOnlyTitle,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = SolennixTheme.colors.secondaryText
-                            )
-                            Spacer(Modifier.height(6.dp))
-                            Text(
-                                strings.proOnlyHint,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = SolennixTheme.colors.tertiaryText
-                            )
-                        }
-                    }
-                }
-                uiState.submissions.isEmpty() -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.Inbox, contentDescription = null,
-                                tint = SolennixTheme.colors.secondaryText,
-                                modifier = Modifier.size(48.dp))
-                            Spacer(Modifier.height(12.dp))
-                            Text(strings.emptyTitle,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = SolennixTheme.colors.secondaryText)
-                        }
-                    }
-                }
-                else -> {
-                    LazyColumn(
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(uiState.submissions, key = { it.id }) { submission ->
-                            PaymentSubmissionCard(
-                                submission = submission,
-                                strings = strings,
-                                isActionLoading = uiState.actionLoading == submission.id,
-                                onApprove = { showApproveDialog = submission },
-                                onReject = {
-                                    rejectReason = ""
-                                    showRejectDialog = submission
-                                }
-                            )
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Search bar — filters by client name, event label, or transfer ref
+                OutlinedTextField(
+                    value = uiState.searchQuery,
+                    onValueChange = viewModel::onSearchQueryChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    placeholder = { Text(strings.searchPlaceholder) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    singleLine = true,
+                    shape = RoundedCornerShape(28.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = SolennixTheme.colors.primary,
+                        unfocusedBorderColor = SolennixTheme.colors.divider,
+                        focusedContainerColor = SolennixTheme.colors.surface,
+                        unfocusedContainerColor = SolennixTheme.colors.surface
+                    )
+                )
+
+                val displaySubmissions = uiState.filteredSubmissions
+
+                AnimatedContent(
+                    targetState = when {
+                        uiState.isLoading -> "loading"
+                        uiState.error != null -> "error"
+                        uiState.isPlanLocked -> "plan_locked"
+                        displaySubmissions.isEmpty() -> "empty"
+                        else -> "content"
+                    },
+                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                    label = "paymentInboxState"
+                ) { screenState ->
+                    when (screenState) {
+                        "loading" -> PaymentInboxSkeleton()
+                        "error" -> EmptyState(
+                            icon = Icons.Default.Inbox,
+                            title = strings.errorTitle,
+                            message = uiState.error ?: "",
+                            actionText = strings.errorRetry,
+                            onAction = { viewModel.loadSubmissions() }
+                        )
+                        "plan_locked" -> EmptyState(
+                            icon = Icons.Default.Inbox,
+                            title = strings.proOnlyTitle,
+                            message = strings.proOnlyHint
+                        )
+                        "empty" -> EmptyState(
+                            icon = Icons.Default.Inbox,
+                            title = if (uiState.searchQuery.isNotEmpty()) strings.emptySearchTitle else strings.emptyTitle,
+                            message = if (uiState.searchQuery.isNotEmpty()) strings.emptySearchMessage else ""
+                        )
+                        else -> LazyColumn(
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(displaySubmissions, key = { it.id }) { submission ->
+                                PaymentSubmissionCard(
+                                    submission = submission,
+                                    strings = strings,
+                                    isActionLoading = uiState.actionLoading == submission.id,
+                                    onApprove = { showApproveDialog = submission },
+                                    onReject = {
+                                        hapticFeedback(HapticFeedbackType.WARNING)
+                                        rejectReason = ""
+                                        showRejectDialog = submission
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -144,6 +162,7 @@ fun PaymentInboxScreen(
             confirmButton = {
                 Button(
                     onClick = {
+                        hapticFeedback(HapticFeedbackType.SUCCESS)
                         viewModel.approveSubmission(sub.id)
                         showApproveDialog = null
                     },
@@ -190,6 +209,68 @@ fun PaymentInboxScreen(
                 TextButton(onClick = { showRejectDialog = null }) { Text(strings.cancel) }
             }
         )
+    }
+}
+
+@Composable
+private fun PaymentInboxSkeleton() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        repeat(4) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SkeletonLoading(
+                            modifier = Modifier
+                                .height(18.dp)
+                                .fillMaxWidth(0.45f)
+                        )
+                        SkeletonLoading(
+                            modifier = Modifier
+                                .height(22.dp)
+                                .width(90.dp)
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    SkeletonLoading(
+                        modifier = Modifier
+                            .height(14.dp)
+                            .fillMaxWidth(0.6f)
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    SkeletonLoading(
+                        modifier = Modifier
+                            .height(14.dp)
+                            .fillMaxWidth(0.35f)
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SkeletonLoading(
+                            modifier = Modifier
+                                .height(32.dp)
+                                .width(100.dp)
+                        )
+                        SkeletonLoading(
+                            modifier = Modifier
+                                .height(32.dp)
+                                .width(100.dp)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -335,6 +416,11 @@ private data class PaymentInboxStrings(
     val proOnlyTitle: String,
     val proOnlyHint: String,
     val emptyTitle: String,
+    val emptySearchTitle: String,
+    val emptySearchMessage: String,
+    val errorTitle: String,
+    val errorRetry: String,
+    val searchPlaceholder: String,
     val approveTitle: String,
     val approveAction: String,
     val approveMessageFormat: String,
@@ -368,6 +454,11 @@ private fun paymentInboxStrings(): PaymentInboxStrings = PaymentInboxStrings(
     proOnlyTitle = stringResource(R.string.payments_inbox_pro_only_title),
     proOnlyHint = stringResource(R.string.payments_inbox_pro_only_hint),
     emptyTitle = stringResource(R.string.payments_inbox_empty_title),
+    emptySearchTitle = stringResource(R.string.payments_inbox_empty_search_title),
+    emptySearchMessage = stringResource(R.string.payments_inbox_empty_search_message),
+    errorTitle = stringResource(R.string.payments_inbox_error_title),
+    errorRetry = stringResource(R.string.payments_inbox_error_retry),
+    searchPlaceholder = stringResource(R.string.payments_inbox_search_placeholder),
     approveTitle = stringResource(R.string.payments_inbox_approve_title),
     approveAction = stringResource(R.string.payments_inbox_approve_action),
     approveMessageFormat = stringResource(R.string.payments_inbox_approve_message),

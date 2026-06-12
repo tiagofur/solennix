@@ -20,4 +20,9 @@
     <string name="payments_inbox_status_approved">Approved</string>
     <string name="payments_inbox_status_rejected">Rejected</string>
     <string name="payments_inbox_status_pending">Pending</string>
+    <string name="payments_inbox_search_placeholder">Search by client or event…</string>
+    <string name="payments_inbox_empty_search_title">No results</string>
+    <string name="payments_inbox_empty_search_message">No receipts matched your search.</string>
+    <string name="payments_inbox_error_title">Failed to load</string>
+    <string name="payments_inbox_error_retry">Retry</string>
 </resources>
