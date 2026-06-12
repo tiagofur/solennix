@@ -34,6 +34,14 @@ enum InventoryStrings {
     static var sortUnitCost: String { FeatureL10n.text("inventory.sort_unit_cost", "Costo unitario") }
     static var hideLowStock: String { FeatureL10n.text("inventory.hide_low_stock", "Ocultar stock bajo") }
     static var showLowStock: String { FeatureL10n.text("inventory.show_low_stock", "Mostrar stock bajo") }
+    // Fix 10: low-stock toggle a11y value — plural-aware
+    static var lowStockToggleInactive: String { FeatureL10n.text("inventory.low_stock_toggle_inactive", "desactivado") }
+    static func lowStockToggleActive(_ count: Int) -> String {
+        String.localizedStringWithFormat(
+            FeatureL10n.text("inventory.low_stock_toggle_active", "activado, %lld artículos"),
+            count
+        )
+    }
     static var loading: String { FeatureL10n.text("inventory.loading", "Cargando...") }
     static var errorTitle: String { FeatureL10n.text("inventory.error_title", "Error") }
     static var itemFallback: String { FeatureL10n.text("inventory.item_fallback", "Item") }
@@ -67,6 +75,7 @@ enum InventoryStrings {
     static var save: String { FeatureL10n.text("inventory.save", "Guardar") }
     static var ok: String { "OK" }
     static var inventoryResource: String { FeatureL10n.text("inventory.inventory_resource", "Inventario") }
+    static var upgradeCta: String { FeatureL10n.text("inventory.upgrade_cta", "Ver planes") }
     static var editItemTitle: String { FeatureL10n.text("inventory.edit_item_title", "Editar Item") }
     static var newItemTitle: String { FeatureL10n.text("inventory.new_item_title", "Nuevo Item") }
     static var informationTitle: String { FeatureL10n.text("inventory.information_title", "Información") }

@@ -38,10 +38,18 @@ public final class InventoryListViewModel {
     }
     public var isLoading: Bool = false
     public var sortKey: InventorySortKey = .name {
-        didSet { applyFilters() }
+        didSet {
+            // Fix 5d: sort change resets pagination and reloads from server
+            currentPage = 1
+            Task { await loadItems() }
+        }
     }
     public var sortAscending: Bool = true {
-        didSet { applyFilters() }
+        didSet {
+            // Fix 5d: sort direction change resets pagination and reloads from server
+            currentPage = 1
+            Task { await loadItems() }
+        }
     }
     public var deleteTarget: InventoryItem?
     public var showDeleteConfirm: Bool = false
@@ -116,6 +124,9 @@ public final class InventoryListViewModel {
     public func loadItems() async {
         isLoading = true
         errorMessage = nil
+        // Fix 5a: full reload always restarts pagination — without this, pull-to-refresh
+        // after paginating re-fetches the CURRENT page and appends duplicates.
+        currentPage = 1
 
         // Show cached data immediately while fetching
         if items.isEmpty, let cached = try? cacheManager?.getCachedInventoryItems(maxAge: cacheMaxAge), !cached.isEmpty {

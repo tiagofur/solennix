@@ -21,6 +21,7 @@ enum ProductStrings {
     static var sortAscending: String { FeatureL10n.text("products.sort_ascending", "Ascendente") }
     static var sortDescending: String { FeatureL10n.text("products.sort_descending", "Descendente") }
     static var sortAccessibility: String { FeatureL10n.text("products.sort_accessibility", "Ordenar productos") }
+    static var upgradeCta: String { FeatureL10n.text("products.upgrade_cta", "Ver planes") }
     static var sortName: String { FeatureL10n.text("products.sort_name", "Nombre") }
     static var sortPrice: String { FeatureL10n.text("products.sort_price", "Precio") }
     static var sortCategory: String { FeatureL10n.text("products.sort_category", "Categoría") }

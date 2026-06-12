@@ -290,7 +290,8 @@ public struct InventoryDetailView: View {
                     .font(.headline)
                     .foregroundStyle(isLowStock ? SolennixColors.error : SolennixColors.success)
                 Spacer()
-                Text(item.type.rawValue.capitalized)
+                // Fix 12: use localized type string instead of rawValue.capitalized
+                Text(localizedTypeName(item.type))
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.textSecondary)
@@ -415,8 +416,9 @@ public struct InventoryDetailView: View {
         let isWarning = demand7Days > 0 && stockAfter7Days >= 0 && stockAfter7Days < item.minimumStock
         let isLowOnly = isLowStock && demand7Days == 0
 
+        // Fix 12: raw .orange/.green → semantic tokens
         let alertColor: Color = isCritical || isLowOnly ? SolennixColors.error :
-            (isWarning ? .orange : .green)
+            (isWarning ? SolennixColors.warning : SolennixColors.success)
         let alertIcon = (isCritical || isWarning || isLowOnly) ? "exclamationmark.triangle.fill" : "checkmark.circle.fill"
 
         return HStack(alignment: .top, spacing: Spacing.md) {
@@ -450,13 +452,14 @@ public struct InventoryDetailView: View {
             Spacer()
         }
         .padding(Spacing.md)
-        .background((isCritical || isLowOnly) ? SolennixColors.error.opacity(0.08) :
-                        (isWarning ? Color.orange.opacity(0.08) :
-                            (demand7Days > 0 ? Color.green.opacity(0.08) : SolennixColors.card)))
+        // Fix 12: replace raw Color.orange/green with semantic tokens
+        .background((isCritical || isLowOnly) ? SolennixColors.errorBg :
+                        (isWarning ? SolennixColors.warningBg :
+                            (demand7Days > 0 ? SolennixColors.successBg : SolennixColors.card)))
         .overlay(
             RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .stroke((isCritical || isLowOnly) ? SolennixColors.error.opacity(0.2) :
-                            (isWarning ? Color.orange.opacity(0.2) : SolennixColors.border), lineWidth: 1)
+                            (isWarning ? SolennixColors.warning.opacity(0.2) : SolennixColors.border), lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
     }
@@ -473,18 +476,19 @@ public struct InventoryDetailView: View {
                 fraction: item.currentStock / maxBar,
                 color: isLowStock ? SolennixColors.error : SolennixColors.primary
             )
+            // Fix 12: raw .orange → SolennixColors.warning
             healthBar(
                 label: InventoryStrings.recommendedMinimum,
                 value: InventoryStrings.quantityWithUnit(Int(item.minimumStock), unit: item.unit),
                 fraction: item.minimumStock / maxBar,
-                color: .orange
+                color: SolennixColors.warning
             )
             if demand7Days > 0 {
                 healthBar(
                     label: InventoryStrings.demandNext7Days,
                     value: InventoryStrings.quantityWithUnit(Int(demand7Days), unit: item.unit),
                     fraction: demand7Days / maxBar,
-                    color: stockAfter7Days < 0 ? SolennixColors.error : .orange
+                    color: stockAfter7Days < 0 ? SolennixColors.error : SolennixColors.warning
                 )
             }
         }
@@ -559,8 +563,9 @@ public struct InventoryDetailView: View {
                     let isWithinWeek = diffDays >= 0 && diffDays <= 7
 
                     HStack {
+                        // Fix 12: raw .orange → SolennixColors.warning
                         Circle()
-                            .fill(isInsufficient ? SolennixColors.error : (isWithinWeek ? .orange : SolennixColors.primary.opacity(0.4)))
+                            .fill(isInsufficient ? SolennixColors.error : (isWithinWeek ? SolennixColors.warning : SolennixColors.primary.opacity(0.4)))
                             .frame(width: 8, height: 8)
 
                         VStack(alignment: .leading, spacing: 2) {
@@ -573,7 +578,8 @@ public struct InventoryDetailView: View {
                                 if diffDays == 0 {
                                     badgeLabel(InventoryStrings.today, color: SolennixColors.primary)
                                 } else if diffDays == 1 {
-                                    badgeLabel(InventoryStrings.tomorrow, color: .orange)
+                                    // Fix 12: raw .orange → SolennixColors.warning
+                                    badgeLabel(InventoryStrings.tomorrow, color: SolennixColors.warning)
                                 } else if diffDays > 1 && diffDays <= 7 {
                                     Text(InventoryStrings.inDays(diffDays))
                                         .font(.caption2)
@@ -717,6 +723,8 @@ public struct InventoryDetailView: View {
                 Spacer()
             }
             .padding(Spacing.lg)
+            // Fix 8: keyboard done toolbar on the stock-adjustment sheet
+            .keyboardDoneToolbar()
             .navigationTitle(InventoryStrings.adjustStock)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -733,6 +741,17 @@ public struct InventoryDetailView: View {
         }
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
+    }
+
+    // MARK: - Helpers
+
+    // Fix 12: localized type name instead of rawValue.capitalized
+    private func localizedTypeName(_ type: InventoryType) -> String {
+        switch type {
+        case .ingredient: return InventoryStrings.ingredientType
+        case .equipment:  return InventoryStrings.equipmentType
+        case .supply:     return InventoryStrings.supplyType
+        }
     }
 }
 

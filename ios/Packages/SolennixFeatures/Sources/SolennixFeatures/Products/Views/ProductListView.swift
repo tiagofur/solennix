@@ -35,15 +35,20 @@ public struct ProductListView: View {
                         CachedDataBanner()
                     }
                     if !planLimitsManager.canCreateProduct {
-                        UpgradeBannerView(
-                            type: .limitReached,
-                            // Fix 11: use ProductStrings.title instead of hardcoded "Productos"
-                            resource: ProductStrings.title,
-                            currentUsage: planLimitsManager.productsCount,
-                            limit: PlanLimitsManager.productLimit
-                        ) {
-                            // Action to go to Pricing
+                        // Fix 14: wrap in NavigationLink(value: Route.pricing) — same pattern as
+                        // ClientDetailView and InventoryListView. Banner CTA navigates to PricingView.
+                        NavigationLink(value: Route.pricing) {
+                            UpgradeBannerView(
+                                type: .limitReached,
+                                // Fix 11: use ProductStrings.title instead of hardcoded "Productos"
+                                resource: ProductStrings.title,
+                                currentUsage: planLimitsManager.productsCount,
+                                limit: PlanLimitsManager.productLimit,
+                                ctaLabel: ProductStrings.upgradeCta,
+                                onUpgrade: {}
+                            )
                         }
+                        .buttonStyle(.plain)
                         .padding(.horizontal, Spacing.md)
                         .padding(.top, Spacing.sm)
                     }

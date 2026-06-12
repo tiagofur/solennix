@@ -13,6 +13,9 @@ public struct UpgradeBannerView: View {
     let resource: String?
     let currentUsage: Int?
     let limit: Int?
+    // Fix 14: callers supply the CTA label so it can be localized by the feature package.
+    // Defaults to the Spanish fallback for backwards-compat with existing callers.
+    let ctaLabel: String
     let onUpgrade: () -> Void
 
     public init(
@@ -20,12 +23,14 @@ public struct UpgradeBannerView: View {
         resource: String? = nil,
         currentUsage: Int? = nil,
         limit: Int? = nil,
+        ctaLabel: String = "Ver planes",
         onUpgrade: @escaping () -> Void
     ) {
         self.type = type
         self.resource = resource
         self.currentUsage = currentUsage
         self.limit = limit
+        self.ctaLabel = ctaLabel
         self.onUpgrade = onUpgrade
     }
 
@@ -48,9 +53,9 @@ public struct UpgradeBannerView: View {
                 .font(.footnote)
                 .foregroundStyle(SolennixColors.textSecondary)
 
-            // Button
+            // Fix 14: use caller-supplied ctaLabel (localized by the feature package)
             Button(action: onUpgrade) {
-                Text("Ver planes")
+                Text(ctaLabel)
                     .font(.caption)
                     .fontWeight(.bold)
                     .foregroundStyle(.white)
