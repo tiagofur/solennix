@@ -82,7 +82,7 @@ public struct PaymentInboxView: View {
         }
         // Fix 9: sensory feedback on approve/reject (counter pattern avoids Bool double-fire)
         .sensoryFeedback(.success, trigger: approveCounter) { old, new in new > old }
-        .sensoryFeedback(.success, trigger: rejectCounter) { old, new in new > old }
+        .sensoryFeedback(.warning, trigger: rejectCounter) { old, new in new > old }
     }
 
     // MARK: - iPhone List (Fix 1)
