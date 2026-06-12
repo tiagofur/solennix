@@ -45,6 +45,7 @@ import androidx.paging.compose.itemKey
 import com.creapolis.solennix.core.designsystem.component.EmptyState
 import com.creapolis.solennix.core.designsystem.component.SkeletonLoading
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
+import com.creapolis.solennix.core.designsystem.component.SwipeRevealActions
 import com.creapolis.solennix.core.designsystem.component.StatusBadge
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCardGrid
 import com.creapolis.solennix.core.designsystem.util.LocalNavAnimatedVisibilityScope
@@ -241,14 +242,24 @@ fun EventListScreen(
                                     items = sortedEvents,
                                     key = { it.id }
                                 ) { event ->
-                                    AnimatedEventListItem(
-                                        index = sortedEvents.indexOf(event),
-                                        event = event,
-                                        clientName = uiState.clientMap[event.clientId]?.name,
-                                        isUpdatingStatus = uiState.updatingStatusEventId == event.id,
-                                        onClick = { onEventClick(event.id) },
-                                        onLongClick = { rowActionsEvent = event }
-                                    )
+                                    SwipeRevealActions(
+                                        onEdit = { onEventEdit(event.id) },
+                                        onDelete = {
+                                            hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.WARNING)
+                                            deleteConfirmEvent = event
+                                        }
+                                    ) {
+                                        Surface(color = SolennixTheme.colors.background) {
+                                            AnimatedEventListItem(
+                                                index = sortedEvents.indexOf(event),
+                                                event = event,
+                                                clientName = uiState.clientMap[event.clientId]?.name,
+                                                isUpdatingStatus = uiState.updatingStatusEventId == event.id,
+                                                onClick = { onEventClick(event.id) },
+                                                onLongClick = { rowActionsEvent = event }
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         )

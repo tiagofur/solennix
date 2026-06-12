@@ -40,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.Avatar
 import com.creapolis.solennix.core.designsystem.component.SkeletonLoading
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
+import com.creapolis.solennix.core.designsystem.component.SwipeRevealActions
 import com.creapolis.solennix.core.designsystem.component.UpgradeBanner
 import com.creapolis.solennix.core.designsystem.component.UpgradeBannerStyle
 import com.creapolis.solennix.core.designsystem.component.UpgradePlanDialog
@@ -218,14 +219,24 @@ fun ClientListScreen(
                         },
                         listContent = {
                             items(uiState.clients, key = { it.id }) { client ->
-                                ClientListItem(
-                                    client = client,
-                                    onClick = { onClientClick(client.id) },
-                                    onLongClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        rowActionsClient = client
+                                SwipeRevealActions(
+                                    onEdit = { onClientEdit(client.id) },
+                                    onDelete = {
+                                        hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.WARNING)
+                                        deleteConfirmClient = client
                                     }
-                                )
+                                ) {
+                                    Surface(color = SolennixTheme.colors.card) {
+                                        ClientListItem(
+                                            client = client,
+                                            onClick = { onClientClick(client.id) },
+                                            onLongClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                rowActionsClient = client
+                                            }
+                                        )
+                                    }
+                                }
                                 HorizontalDivider(
                                     modifier = Modifier.padding(horizontal = 16.dp),
                                     color = SolennixTheme.colors.divider.copy(alpha = 0.5f)
