@@ -9,6 +9,7 @@ import TipKit
 public struct ClientListView: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var viewModel: ClientListViewModel
     @Environment(\.openURL) private var openURL
     @Environment(PlanLimitsManager.self) private var planLimitsManager
@@ -149,18 +150,28 @@ public struct ClientListView: View {
         }
     }
 
+    /// First-run empty state for the iPhone list — placeholder until WU4 replaces with NavigationLink CTA.
+    private var clientFirstRunEmptyRow: some View {
+        fullPageEmptyRow(
+            icon: "person.2",
+            title: tr("clients.empty.title", "Sin clientes"),
+            message: tr("clients.empty.message", "Agregá tu primer cliente para empezar"),
+            actionTitle: nil,
+            action: nil
+        )
+    }
+
     private var clientGrid: some View {
         ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 300))], spacing: Spacing.lg) {
                 ForEach(viewModel.paginatedClients) { client in
                     NavigationLink(value: Route.clientDetail(id: client.id)) {
                         clientRow(client)
-                            .padding(Spacing.md)
-                            .background(SolennixColors.card)
-                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-                            .shadowSm()
                     }
                     .buttonStyle(.plain)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(clientAccessibilityLabel(client))
+                    .accessibilityAddTraits(.isButton)
                     .contextMenu {
                         NavigationLink(value: Route.clientForm(id: client.id)) {
                             Label(tr("clients.action.edit", "Editar"), systemImage: "pencil")
@@ -231,14 +242,7 @@ public struct ClientListView: View {
                 skeletonRows
             } else if viewModel.filteredClients.isEmpty && !viewModel.isLoading {
                 if viewModel.searchText.isEmpty {
-                    fullPageEmptyRow(
-                        icon: "person.2",
-                        title: tr("clients.empty.title", "Sin clientes"),
-                        message: tr("clients.empty.message", "Agregá tu primer cliente para empezar"),
-                        actionTitle: tr("clients.action.add", "Agregar cliente")
-                    ) {
-                        // FAB handles navigation
-                    }
+                    clientFirstRunEmptyRow
                 } else {
                     fullPageEmptyRow(
                         icon: "magnifyingglass",
@@ -250,7 +254,10 @@ public struct ClientListView: View {
                 }
             } else {
                 ForEach(viewModel.paginatedClients) { client in
-                    NavigationLink(value: Route.clientDetail(id: client.id)) {
+                    ListCardRow(
+                        navigationValue: Route.clientDetail(id: client.id),
+                        accessibilityLabel: clientAccessibilityLabel(client)
+                    ) {
                         clientRow(client)
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -339,7 +346,7 @@ public struct ClientListView: View {
                 }
             }
         }
-        .listStyle(.insetGrouped)
+        .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
         .popoverTip(swipeActionTip)
@@ -434,6 +441,30 @@ public struct ClientListView: View {
             Spacer()
         }
         .padding(.vertical, Spacing.xs)
+    }
+
+    // MARK: - Accessibility
+
+    private func clientAccessibilityLabel(_ client: Client) -> String {
+        var parts: [String] = [client.name]
+        if let city = client.city, !city.isEmpty { parts.append(city) }
+        if let spent = client.totalSpent, spent > 0 { parts.append(formattedAmount(spent)) }
+        if let events = client.totalEvents, events > 0 {
+            parts.append(String.localizedStringWithFormat(
+                tr("clients.list.events_count", "%lld eventos"),
+                events
+            ))
+        }
+        return parts.joined(separator: ", ")
+    }
+
+    private func formattedAmount(_ value: Double) -> String {
+        let f = NumberFormatter()
+        f.numberStyle = .currency
+        f.locale = FeatureL10n.locale
+        f.maximumFractionDigits = 0
+        f.minimumFractionDigits = 0
+        return f.string(from: NSNumber(value: value)) ?? "$0"
     }
 
     // MARK: - Sort Menu

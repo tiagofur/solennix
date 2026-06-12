@@ -408,32 +408,22 @@ public struct EventListView: View {
                     .listRowBackground(Color.clear)
             } else {
                 ForEach(filtered) { event in
-                    // The visible NavigationLink renders a trailing disclosure
-                    // chevron inside a List and steals trailing space. Instead
-                    // we layer an opacity-0 link over the fully tappable card so
-                    // navigation works without the chevron. The card itself
-                    // carries the accessible label/value, so the hidden link is
-                    // marked .accessibilityHidden to avoid a duplicate element.
-                    eventCard(event)
-                        .overlay {
-                            NavigationLink(value: Route.eventDetail(id: event.id)) {
-                                EmptyView()
-                            }
-                            .opacity(0)
-                            .accessibilityHidden(true)
-                        }
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(cardAccessibilityLabel(event))
-                        .accessibilityAddTraits(.isButton)
+                    // ListCardRow owns card chrome, insets, separator, background,
+                    // the opacity-0 NavigationLink (chevron-free), and the a11y label.
+                    // Swipe actions and context menu attach outside the card wrapper
+                    // exactly as before.
+                    ListCardRow(
+                        navigationValue: Route.eventDetail(id: event.id),
+                        accessibilityLabel: cardAccessibilityLabel(event)
+                    ) {
+                        eventCard(event)
+                    }
                         // Edit and Checklist are exposed through the context-menu rotor automatically.
                         // Only the delete action needs an explicit wired entry here.
                         .accessibilityAction(named: tr("events.list.actions.delete", "Eliminar")) {
                             viewModel.deleteTarget = event
                             viewModel.showDeleteConfirm = true
                         }
-                        .listRowInsets(EdgeInsets(top: Spacing.xs, leading: Spacing.md, bottom: Spacing.xs, trailing: Spacing.md))
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(Color.clear)
                         .contextMenu {
                             NavigationLink(value: Route.eventForm(id: event.id)) {
                                 Label(tr("events.list.actions.edit", "Editar"), systemImage: "pencil")
