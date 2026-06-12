@@ -29,8 +29,8 @@ enum EventFormLinksStrings {
     static var sheetLabelSection: String { FeatureL10n.text("event_form_links.sheet.label_section", "Etiqueta (opcional)") }
     static var sheetLabelPlaceholder: String { FeatureL10n.text("event_form_links.sheet.label_placeholder", "Ej: Boda Rodriguez, Evento Mayo") }
     static var sheetTtlSection: String { FeatureL10n.text("event_form_links.sheet.ttl_section", "Vigencia del link") }
-    static var sheetTtlLabel: String { FeatureL10n.text("event_form_links.sheet.ttl_label", "Dias de vigencia") }
-    static var sheetHint: String { FeatureL10n.text("event_form_links.sheet.hint", "El cliente podra llenar sus datos de evento a traves de este link. Una vez usado, no podra volver a utilizarse.") }
+    static var sheetTtlLabel: String { FeatureL10n.text("event_form_links.sheet.ttl_label", "Días de vigencia") }
+    static var sheetHint: String { FeatureL10n.text("event_form_links.sheet.hint", "El cliente podrá llenar sus datos de evento a través de este link. Una vez usado, no podrá volver a utilizarse.") }
     static var sheetTitle: String { FeatureL10n.text("event_form_links.sheet.title", "Generar Link") }
     static var sheetGenerateButton: String { FeatureL10n.text("event_form_links.sheet.generate_button", "Generar") }
     
@@ -43,7 +43,7 @@ enum EventFormLinksStrings {
 
     // Formatted
     static func deleteConfirmMessage(label: String) -> String {
-        FeatureL10n.format("event_form_links.delete.confirm_message", "Se eliminara el link \"%@\". Esta accion no se puede deshacer.", label)
+        FeatureL10n.format("event_form_links.delete.confirm_message", "Se eliminará el link \"%@\". Esta acción no se puede deshacer.", label)
     }
     
     static func expiresLabel(date: String) -> String {
@@ -52,9 +52,9 @@ enum EventFormLinksStrings {
     
     static func ttlDaysLabel(_ count: Int) -> String {
         if count == 1 {
-            return FeatureL10n.text("event_form_links.sheet.ttl_day_single", "1 dia")
+            return FeatureL10n.text("event_form_links.sheet.ttl_day_single", "1 día")
         } else {
-            return FeatureL10n.format("event_form_links.sheet.ttl_days_plural", "%lld dias", count)
+            return FeatureL10n.format("event_form_links.sheet.ttl_days_plural", "%lld días", count)
         }
     }
 }

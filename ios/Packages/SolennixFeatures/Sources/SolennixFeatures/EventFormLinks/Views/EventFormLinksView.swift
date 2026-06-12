@@ -11,6 +11,7 @@ public struct EventFormLinksView: View {
     @State private var showGenerateSheet: Bool = false
     @State private var showDeleteConfirm: Bool = false
     @State private var deleteTarget: EventFormLink?
+    @State private var deleteSuccessCounter: Int = 0   // A4: counter for post-delete success haptic
     @Environment(ToastManager.self) private var toastManager
 
     public init(apiClient: APIClient) {
@@ -26,6 +27,10 @@ public struct EventFormLinksView: View {
         .navigationTitle(EventFormLinksStrings.title)
         .navigationBarTitleDisplayMode(.large)
         .refreshable { await viewModel.loadLinks() }
+        // A4: warning haptic when delete confirmation appears
+        .sensoryFeedback(.warning, trigger: showDeleteConfirm) { _, new in new }
+        // A4: success haptic AFTER delete resolves (counter increments post-async)
+        .sensoryFeedback(.success, trigger: deleteSuccessCounter) { old, new in new > old }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -47,9 +52,12 @@ public struct EventFormLinksView: View {
             presenting: deleteTarget
         ) { link in
             Button(EventFormLinksStrings.deleteConfirmButton, role: .destructive) {
-                HapticsHelper.play(.success)
-                Task { await viewModel.deleteLink(id: link.id) }
-                toastManager.show(message: EventFormLinksStrings.linkDeletedToast, type: .success)
+                // A4: warning here (dialog open), success fires AFTER async delete below
+                Task {
+                    await viewModel.deleteLink(id: link.id)
+                    toastManager.show(message: EventFormLinksStrings.linkDeletedToast, type: .success)
+                    deleteSuccessCounter += 1   // A4: triggers .success sensoryFeedback
+                }
             }
             Button(EventFormLinksStrings.cancel, role: .cancel) {}
         } message: { link in
@@ -73,8 +81,6 @@ public struct EventFormLinksView: View {
             ) {
                 Task { await viewModel.loadLinks() }
             }
-        } else if viewModel.isLoading && viewModel.links.isEmpty {
-            skeletonList
         } else if viewModel.links.isEmpty && !viewModel.isLoading {
             EmptyStateView(
                 icon: "link.badge.plus",
@@ -85,66 +91,88 @@ public struct EventFormLinksView: View {
                 showGenerateSheet = true
             }
         } else {
+            // B1 (A1): single List containing both skeleton rows and real rows
             linkList
         }
     }
 
-    // MARK: - Link List
+    // MARK: - Link List (B1: merged skeleton into single List)
 
     private var linkList: some View {
         List {
-            ForEach(viewModel.links) { link in
-                linkRow(link)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) {
-                            HapticsHelper.play(.warning)
-                            deleteTarget = link
-                            showDeleteConfirm = true
-                        } label: {
-                            Label(EventFormLinksStrings.swipeDelete, systemImage: "trash")
-                        }
-                    }
-                    .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                        Button {
-                            copyLink(link)
-                        } label: {
-                            Label(EventFormLinksStrings.swipeCopy, systemImage: "doc.on.doc")
-                        }
-                        .tint(SolennixColors.info)
-
-                        ShareLink(item: link.url) {
-                            Label(EventFormLinksStrings.swipeShare, systemImage: "square.and.arrow.up")
-                        }
-                        .tint(SolennixColors.primary)
-                    }
-                    .contextMenu {
-                        Button {
-                            copyLink(link)
-                        } label: {
-                            Label(EventFormLinksStrings.contextMenuCopy, systemImage: "doc.on.doc")
-                        }
-
-                        ShareLink(item: link.url) {
-                            Label(EventFormLinksStrings.swipeShare, systemImage: "square.and.arrow.up")
-                        }
-
-                        if viewModel.effectiveStatus(for: link) == "used",
-                           let eventId = link.submittedEventId {
-                            NavigationLink(value: Route.eventDetail(id: eventId)) {
-                                Label(EventFormLinksStrings.contextMenuViewEvent, systemImage: "calendar")
+            Section {
+                if viewModel.isLoading && viewModel.links.isEmpty {
+                    // B1: skeleton rows inside the same List — no standalone skeletonList
+                    skeletonRows
+                } else {
+                    ForEach(viewModel.links) { link in
+                        linkRow(link)
+                            // A1: card chrome
+                            .listRowBackground(SolennixColors.card)
+                            .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+                            // A1: composed a11y element
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(accessibilityLabel(for: link))
+                            .accessibilityAddTraits(.isButton)
+                            .accessibilityAction(named: EventFormLinksStrings.swipeCopy) {
+                                copyLink(link)
                             }
-                        }
+                            .accessibilityAction(named: EventFormLinksStrings.swipeDelete) {
+                                deleteTarget = link
+                                showDeleteConfirm = true
+                            }
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                Button(role: .destructive) {
+                                    HapticsHelper.play(.warning)
+                                    deleteTarget = link
+                                    showDeleteConfirm = true
+                                } label: {
+                                    Label(EventFormLinksStrings.swipeDelete, systemImage: "trash")
+                                }
+                            }
+                            .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                Button {
+                                    copyLink(link)
+                                } label: {
+                                    Label(EventFormLinksStrings.swipeCopy, systemImage: "doc.on.doc")
+                                }
+                                .tint(SolennixColors.info)
 
-                        Divider()
+                                ShareLink(item: link.url) {
+                                    Label(EventFormLinksStrings.swipeShare, systemImage: "square.and.arrow.up")
+                                }
+                                .tint(SolennixColors.primary)
+                            }
+                            .contextMenu {
+                                Button {
+                                    copyLink(link)
+                                } label: {
+                                    Label(EventFormLinksStrings.contextMenuCopy, systemImage: "doc.on.doc")
+                                }
 
-                        Button(role: .destructive) {
-                            HapticsHelper.play(.warning)
-                            deleteTarget = link
-                            showDeleteConfirm = true
-                        } label: {
-                            Label(EventFormLinksStrings.swipeDelete, systemImage: "trash")
-                        }
+                                ShareLink(item: link.url) {
+                                    Label(EventFormLinksStrings.swipeShare, systemImage: "square.and.arrow.up")
+                                }
+
+                                if viewModel.effectiveStatus(for: link) == "used",
+                                   let eventId = link.submittedEventId {
+                                    NavigationLink(value: Route.eventDetail(id: eventId)) {
+                                        Label(EventFormLinksStrings.contextMenuViewEvent, systemImage: "calendar")
+                                    }
+                                }
+
+                                Divider()
+
+                                Button(role: .destructive) {
+                                    HapticsHelper.play(.warning)
+                                    deleteTarget = link
+                                    showDeleteConfirm = true
+                                } label: {
+                                    Label(EventFormLinksStrings.swipeDelete, systemImage: "trash")
+                                }
+                            }
                     }
+                }
             }
         }
         .listStyle(.insetGrouped)
@@ -152,11 +180,37 @@ public struct EventFormLinksView: View {
         .background(SolennixColors.surfaceGrouped)
     }
 
+    // MARK: - Skeleton Rows (B1: in-List, card chrome, a11y hidden)
+
+    @ViewBuilder
+    private var skeletonRows: some View {
+        ForEach(0..<4, id: \.self) { _ in
+            HStack(spacing: Spacing.md) {
+                Circle()
+                    .fill(SolennixColors.surfaceAlt)
+                    .frame(width: 36, height: 36)
+
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    SkeletonLine(width: 140, height: 14)
+                    SkeletonLine(width: 100, height: 10)
+                }
+
+                Spacer()
+            }
+            .padding(.vertical, Spacing.xs)
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+        }
+        .accessibilityHidden(true)
+    }
+
     // MARK: - Link Row
 
     private func linkRow(_ link: EventFormLink) -> some View {
         HStack(spacing: Spacing.md) {
+            // A1: decorative icon hidden from a11y
             statusIndicator(for: link)
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 HStack(spacing: Spacing.sm) {
@@ -184,6 +238,7 @@ public struct EventFormLinksView: View {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.caption2)
                             .foregroundStyle(SolennixColors.success)
+                            .accessibilityHidden(true)
                         Text(EventFormLinksStrings.completedForm)
                             .font(.caption2)
                             .foregroundStyle(SolennixColors.success)
@@ -193,22 +248,28 @@ public struct EventFormLinksView: View {
 
             Spacer()
 
-            // Quick share button
+            // A2: trailing action buttons with ≥44pt tap targets
             if viewModel.effectiveStatus(for: link) == "active" {
                 ShareLink(item: link.url) {
                     Image(systemName: "square.and.arrow.up")
                         .font(.body)
                         .foregroundStyle(SolennixColors.primary)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityHidden(true) // covered by swipe action + a11y action
             } else if viewModel.effectiveStatus(for: link) == "used",
                       let eventId = link.submittedEventId {
                 NavigationLink(value: Route.eventDetail(id: eventId)) {
                     Image(systemName: "arrow.right.circle")
                         .font(.body)
                         .foregroundStyle(SolennixColors.primary)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityHidden(true) // covered by a11y action above
             }
         }
         .padding(.vertical, Spacing.xs)
@@ -273,6 +334,22 @@ public struct EventFormLinksView: View {
         }
     }
 
+    // MARK: - Accessibility (A1)
+
+    /// Composed ordered label: label/title, status, expiry or used date.
+    private func accessibilityLabel(for link: EventFormLink) -> String {
+        let label = link.label ?? EventFormLinksStrings.labelPlaceholder
+        let status = viewModel.displayStatus(for: link)
+        let effective = viewModel.effectiveStatus(for: link)
+        var parts = [label, status]
+        if effective == "active" {
+            parts.append(EventFormLinksStrings.expiresLabel(date: formattedDate(link.expiresAt)))
+        } else if effective == "used" {
+            parts.append(EventFormLinksStrings.completedForm)
+        }
+        return parts.joined(separator: ", ")
+    }
+
     // MARK: - Helpers
 
     private func copyLink(_ link: EventFormLink) {
@@ -292,35 +369,6 @@ public struct EventFormLinksView: View {
             return date.formatted(.dateTime.day().month(.abbreviated).year().hour().minute())
         }
         return isoString
-    }
-
-    // MARK: - Skeleton Loading
-
-    private var skeletonList: some View {
-        List(0..<4, id: \.self) { _ in
-            HStack(spacing: Spacing.md) {
-                Circle()
-                    .fill(SolennixColors.surfaceAlt)
-                    .frame(width: 36, height: 36)
-
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    RoundedRectangle(cornerRadius: CornerRadius.sm)
-                        .fill(SolennixColors.surfaceAlt)
-                        .frame(width: 140, height: 14)
-
-                    RoundedRectangle(cornerRadius: CornerRadius.sm)
-                        .fill(SolennixColors.surfaceAlt)
-                        .frame(width: 100, height: 10)
-                }
-
-                Spacer()
-            }
-            .padding(.vertical, Spacing.xs)
-        }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
-        .redacted(reason: .placeholder)
     }
 }
 
@@ -357,10 +405,13 @@ private struct GenerateLinkSheet: View {
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
             }
-            .scrollContentBackground(.hidden)
+            // A3: iOS 26-gated helper instead of unconditional .scrollContentBackground(.hidden)
+            .sheetFormBackground()
             .background(SolennixColors.surfaceGrouped)
             .navigationTitle(EventFormLinksStrings.sheetTitle)
             .navigationBarTitleDisplayMode(.inline)
+            // A3: keyboard Done toolbar on the Form
+            .keyboardDoneToolbar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(EventFormLinksStrings.cancel) {
