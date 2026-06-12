@@ -22,6 +22,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -57,6 +58,9 @@ fun SwipeRevealActions(
     val maxOffsetPx = with(density) { (ACTION_BUTTON_WIDTH_DP * buttonCount).dp.toPx() }
     val scope = rememberCoroutineScope()
     val offsetX = remember { Animatable(0f) }
+
+    // Reset offset on composition entry so reused slots start closed.
+    LaunchedEffect(Unit) { offsetX.snapTo(0f) }
 
     val draggableState = rememberDraggableState { delta ->
         scope.launch {

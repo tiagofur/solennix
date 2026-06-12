@@ -109,10 +109,10 @@ fun DashboardScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            if (uiState.isLoading) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = SolennixTheme.colors.primary)
-                }
+            // isLoading is only true for the cold-start emission (initialValue); the combine
+            // block always emits isLoading=false, so this guard fires at most once per process.
+            if (uiState.isLoading && uiState.upcomingEvents.isEmpty() && uiState.pendingEvents.isEmpty()) {
+                DashboardSkeleton()
             } else {
                 LazyColumn(
                     modifier = Modifier
@@ -992,6 +992,91 @@ internal fun inventoryAlertTalkBackLabel(item: InventoryItem, context: Context):
         item.currentStock.toString(),
         item.unit
     )
+}
+
+@Composable
+private fun DashboardSkeleton() {
+    val isLargeFontScale = LocalDensity.current.fontScale >= 1.3f
+    val cardWidth = if (isLargeFontScale) 180.dp else 160.dp
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp)
+    ) {
+        // Greeting placeholder
+        Spacer(modifier = Modifier.height(24.dp))
+        SkeletonLoading(
+            modifier = Modifier
+                .height(28.dp)
+                .fillMaxWidth(0.55f)
+                .clip(MaterialTheme.shapes.small)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        SkeletonLoading(
+            modifier = Modifier
+                .height(14.dp)
+                .fillMaxWidth(0.35f)
+                .clip(MaterialTheme.shapes.small)
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        // KPI cards strip skeleton
+        Row(
+            modifier = Modifier
+                .horizontalScroll(rememberScrollState())
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Spacer(modifier = Modifier.width(4.dp))
+            repeat(5) {
+                Card(
+                    modifier = Modifier.width(cardWidth),
+                    colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SkeletonLoading(
+                            modifier = Modifier
+                                .height(24.dp)
+                                .width(24.dp)
+                                .clip(MaterialTheme.shapes.small)
+                        )
+                        SkeletonLoading(
+                            modifier = Modifier
+                                .height(28.dp)
+                                .fillMaxWidth(0.65f)
+                                .clip(MaterialTheme.shapes.small)
+                        )
+                        SkeletonLoading(
+                            modifier = Modifier
+                                .height(12.dp)
+                                .fillMaxWidth(0.8f)
+                                .clip(MaterialTheme.shapes.small)
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.width(4.dp))
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        // Quick actions placeholder
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            SkeletonLoading(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp)
+                    .clip(MaterialTheme.shapes.medium)
+            )
+            SkeletonLoading(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp)
+                    .clip(MaterialTheme.shapes.medium)
+            )
+        }
+    }
 }
 
 private fun currentAppLocale(context: Context): Locale {

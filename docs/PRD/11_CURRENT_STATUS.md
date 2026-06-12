@@ -25,6 +25,16 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.8
 
+> [!success] 2026-06-11 — Android UX Parity: quick wins en branch `feat/android-ux-parity`
+> Se aplicaron mejoras de calidad UX en Android (Material 3 + Compose) espejando los patrones del iOS HIG quick wins (PR #544). Todos los cambios sobre el branch `feat/android-ux-parity`.
+> - **Skeletons en Clients y Dashboard:** `ClientListScreen` y `DashboardScreen` ya cuentan con skeleton screens durante la carga inicial. El skeleton del Dashboard está acotado al cold-start (señal one-shot `isLoading=true`).
+> - **Haptics de acciones:** `HapticFeedback.kt` guarda compatibilidad con API 26–29: `CONFIRM`/`REJECT` (requieren API 30) tienen fallback a `VIRTUAL_KEY`/`LONG_PRESS`. Haptic de inicio del gesto de swipe-delete corregido de `SUCCESS` a `WARNING` en `ProductListScreen`.
+> - **Swipe actions en Events y Clients:** `SwipeRevealActions` resetea `offsetX` con `LaunchedEffect(Unit)` en la entrada de cada composición, evitando que slots reutilizados aparezcan abiertos.
+> - **Confirmación antes de borrar en Products:** `ProductListScreen` muestra `AlertDialog` antes de ejecutar `viewModel.deleteProduct()`, tanto desde swipe como desde el bottom-sheet (paridad con Events y Clients).
+> - **IME / double-padding:** `ClientFormScreen` e `InventoryFormScreen` eliminan el `windowInsetsPadding(safeDrawing.only(Bottom))` redundante junto a `imePadding()` — con `enableEdgeToEdge()` (API 30+) el inset IME ya está incluido en `safeDrawing`.
+> - **Tooltips de descubrimiento (`FeatureDiscoveryTooltip`):** el flag "ya mostrado" se persiste en `SharedPreferences` al momento de mostrar el tooltip, no solo en el botón "Got it", garantizando que tocar el anchor (FAB) no cause reapearición en el siguiente arranque.
+> - **Performance `EventListScreen`:** `O(n²)` `sortedEvents.indexOf(event)` reemplazado por `itemsIndexed` en ambos branches de `AdaptiveCardGrid`.
+
 > [!success] 2026-06-11 — Auditoría iOS + integración: remediación I1–I8 (Issues #524–#531)
 > Auditoría completa de la app iOS, su integración con el backend y el contrato cross-platform (4 agentes en paralelo + verificación manual). Hallazgos remediados en 8 PRs (#532–#539):
 > - **Seguridad (I1, #532):** llaves privadas Apple `.p8` removidas del tracking + `ios/apple-keys/` en `.gitignore`. Pendiente manual: revocación/rotación en Apple Developer Portal y purge de historia git.
@@ -44,7 +54,7 @@ status: active
 > - **Validación de Monto Positivo en Pagos:** Implementación de validación para requerir montos de pagos mayores a cero (`min: 0.01`) con mensaje de error localizado (`payment.amount_min_error`) en `PaymentFormFields.tsx`.
 > - **Redondeo Aritmético en PDF:** Ajustes en `pdfGenerator.ts` para redondear a 2 decimales todos los totales de líneas de productos, subtotales, montos de descuentos y el cálculo de saldo pendiente/a favor en reportes.
 > - **Validación:** Cobertura de tests unitarios actualizada en `PaymentFormFields.test.tsx`, logrando que toda la suite de pruebas frontend pase en verde.
-=======
+
 > [!success] 2026-06-11 — Auditoría iOS + integración: remediación I1–I8 (Issues #524–#531)
 > Auditoría completa de la app iOS, su integración con el backend y el contrato cross-platform (4 agentes en paralelo + verificación manual). Hallazgos remediados en 8 PRs (#532–#539):
 > - **Seguridad (I1, #532):** llaves privadas Apple `.p8` removidas del tracking + `ios/apple-keys/` en `.gitignore`. Pendiente manual: revocación/rotación en Apple Developer Portal y purge de historia git.
@@ -56,7 +66,6 @@ status: active
 > - **Android auth (I7, #538):** 429 en refresh ya no cierra sesión (backoff con `Retry-After` + single-flight real); backend ahora emite `code` estable (`auth.account_blocked`/`auth.account_deleted`) y Android muestra mensajes específicos.
 > - **Cleanups iOS (I8, #539):** entitlements de extensiones con app group declarado, Keychain con `kSecAttrService` + migración lazy serializada, validación HTTPS en NSE, `os.Logger`, l10n de EventFinancesDetailView, `EventProduct.quantity` Int→Double, `User.accountStatus`.
 > - **Falsos positivos descartados** (no re-reportar): paths de endpoints iOS todos correctos; `Secrets.xcconfig` nunca estuvo en git; `EventExtra` decodifica bien.
->>>>>>> 5e5dc5c3 (docs(prd): record iOS audit I1-I8 remediation in current status)
 
 > [!success] 2026-06-10 — Integridad de Sesión y Caché (Issue #516)
 > Se implementó la limpieza del caché de React Query al cerrar sesión y la invalidación dinámica de las queries para asegurar la sincronía de la UI y los límites de plan.

@@ -48,4 +48,11 @@
     <string name="common_retry">Retry</string>
     <string name="common_undo">Undo</string>
 
+    <!-- Feature discovery tooltips -->
+    <string name="tooltip_new_event_title">Create your first event</string>
+    <string name="tooltip_new_event_body">Organize weddings, quinceañeras and more from here.</string>
+    <string name="tooltip_quick_quote_title">Quick quote</string>
+    <string name="tooltip_quick_quote_body">Generate a quote instantly, without creating an event.</string>
+    <string name="tooltip_dismiss">Got it</string>
+
 </resources>

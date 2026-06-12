@@ -79,13 +79,20 @@ object HapticFeedbackManager {
      * Trigger haptic feedback using View's built-in support.
      */
     fun performHapticFeedback(view: View, type: HapticFeedbackType) {
+        // CONFIRM and REJECT require API 30; fall back to equivalent constants on API 26–29.
         val feedbackConstant = when (type) {
             HapticFeedbackType.LIGHT_TAP -> HapticFeedbackConstants.KEYBOARD_TAP
             HapticFeedbackType.MEDIUM_TAP -> HapticFeedbackConstants.VIRTUAL_KEY
             HapticFeedbackType.HEAVY_TAP -> HapticFeedbackConstants.LONG_PRESS
-            HapticFeedbackType.SUCCESS -> HapticFeedbackConstants.CONFIRM
-            HapticFeedbackType.WARNING -> HapticFeedbackConstants.REJECT
-            HapticFeedbackType.ERROR -> HapticFeedbackConstants.REJECT
+            HapticFeedbackType.SUCCESS ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) HapticFeedbackConstants.CONFIRM
+                else HapticFeedbackConstants.VIRTUAL_KEY
+            HapticFeedbackType.WARNING ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) HapticFeedbackConstants.REJECT
+                else HapticFeedbackConstants.LONG_PRESS
+            HapticFeedbackType.ERROR ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) HapticFeedbackConstants.REJECT
+                else HapticFeedbackConstants.LONG_PRESS
             HapticFeedbackType.SELECTION_CHANGED -> HapticFeedbackConstants.CLOCK_TICK
             HapticFeedbackType.LONG_PRESS -> HapticFeedbackConstants.LONG_PRESS
         }

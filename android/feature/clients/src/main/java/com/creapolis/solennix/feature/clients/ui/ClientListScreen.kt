@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -25,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -37,7 +39,10 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.Avatar
+import com.creapolis.solennix.core.designsystem.component.EmptyState
+import com.creapolis.solennix.core.designsystem.component.SkeletonLoading
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
+import com.creapolis.solennix.core.designsystem.component.SwipeRevealActions
 import com.creapolis.solennix.core.designsystem.component.UpgradeBanner
 import com.creapolis.solennix.core.designsystem.component.UpgradeBannerStyle
 import com.creapolis.solennix.core.designsystem.component.UpgradePlanDialog
@@ -92,6 +97,7 @@ fun ClientListScreen(
     var rowActionsClient by remember { mutableStateOf<Client?>(null) }
     var deleteConfirmClient by remember { mutableStateOf<Client?>(null) }
     val haptic = LocalHapticFeedback.current
+    val hapticFeedback = com.creapolis.solennix.core.designsystem.util.rememberHapticFeedback()
 
     LifecycleResumeEffect(viewModel) {
         viewModel.refresh()
@@ -178,7 +184,10 @@ fun ClientListScreen(
                     ClientSortOption.entries.forEach { option ->
                         FilterChip(
                             selected = uiState.sortOption == option,
-                            onClick = { viewModel.onSortOptionChange(option) },
+                            onClick = {
+                                hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.SELECTION_CHANGED)
+                                viewModel.onSortOptionChange(option)
+                            },
                             label = { Text(stringResource(option.labelRes)) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = SolennixTheme.colors.primaryLight,
@@ -189,9 +198,18 @@ fun ClientListScreen(
                 }
 
                 if (uiState.isLoading && uiState.clients.isEmpty()) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+                    ClientListSkeleton()
+                } else if (uiState.clients.isEmpty()) {
+                    val hasActiveFilter = uiState.searchQuery.isNotEmpty()
+                    EmptyState(
+                        icon = Icons.Default.People,
+                        title = if (hasActiveFilter) stringResource(R.string.clients_empty_search_title)
+                                else stringResource(R.string.clients_empty_title),
+                        message = if (hasActiveFilter) stringResource(R.string.clients_empty_search_message)
+                                  else stringResource(R.string.clients_empty_message),
+                        actionText = if (hasActiveFilter) null else stringResource(R.string.clients_empty_action),
+                        onAction = if (hasActiveFilter) null else onAddClientClick
+                    )
                 } else {
                     AdaptiveCardGrid(
                         gridContent = {
@@ -214,14 +232,24 @@ fun ClientListScreen(
                         },
                         listContent = {
                             items(uiState.clients, key = { it.id }) { client ->
-                                ClientListItem(
-                                    client = client,
-                                    onClick = { onClientClick(client.id) },
-                                    onLongClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        rowActionsClient = client
+                                SwipeRevealActions(
+                                    onEdit = { onClientEdit(client.id) },
+                                    onDelete = {
+                                        hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.WARNING)
+                                        deleteConfirmClient = client
                                     }
-                                )
+                                ) {
+                                    Surface(color = SolennixTheme.colors.card) {
+                                        ClientListItem(
+                                            client = client,
+                                            onClick = { onClientClick(client.id) },
+                                            onLongClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                rowActionsClient = client
+                                            }
+                                        )
+                                    }
+                                }
                                 HorizontalDivider(
                                     modifier = Modifier.padding(horizontal = 16.dp),
                                     color = SolennixTheme.colors.divider.copy(alpha = 0.5f)
@@ -260,6 +288,7 @@ fun ClientListScreen(
                 }
             },
             onDelete = {
+                hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.WARNING)
                 rowActionsClient = null
                 deleteConfirmClient = client
             },
@@ -274,6 +303,7 @@ fun ClientListScreen(
             text = { Text(stringResource(R.string.clients_delete_message)) },
             confirmButton = {
                 TextButton(onClick = {
+                    hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.SUCCESS)
                     viewModel.deleteClient(client.id)
                     deleteConfirmClient = null
                 }) {
@@ -299,6 +329,60 @@ fun ClientListScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun ClientListSkeleton() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Surface(
+            shape = MaterialTheme.shapes.medium,
+            color = SolennixTheme.colors.card
+        ) {
+            Column {
+                repeat(6) { index ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Avatar placeholder
+                        SkeletonLoading(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(MaterialTheme.shapes.medium)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            SkeletonLoading(
+                                modifier = Modifier
+                                    .height(16.dp)
+                                    .fillMaxWidth(0.5f)
+                                    .clip(MaterialTheme.shapes.small)
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            SkeletonLoading(
+                                modifier = Modifier
+                                    .height(12.dp)
+                                    .fillMaxWidth(0.35f)
+                                    .clip(MaterialTheme.shapes.small)
+                            )
+                        }
+                    }
+                    if (index < 5) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = SolennixTheme.colors.divider.copy(alpha = 0.3f)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
