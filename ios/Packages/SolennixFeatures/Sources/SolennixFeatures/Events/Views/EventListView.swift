@@ -38,6 +38,7 @@ public struct EventListView: View {
     public var body: some View {
         eventList
             .background(SolennixColors.surfaceGrouped)
+            .softScrollEdgeEffectIfAvailable()
             // Haptic feedback when the destructive delete confirmation appears (true only).
             .sensoryFeedback(.warning, trigger: viewModel.showDeleteConfirm) { _, newValue in newValue }
             .navigationTitle(tr("events.list.title", "Eventos"))

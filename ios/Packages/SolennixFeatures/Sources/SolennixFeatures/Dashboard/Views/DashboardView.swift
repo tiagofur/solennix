@@ -116,6 +116,7 @@ public struct DashboardView: View {
                 Spacer(minLength: Spacing.xxl)
             }
         }
+        .softScrollEdgeEffectIfAvailable()
         .navigationTitle(tr("dashboard.title", "Inicio"))
         .navigationBarTitleDisplayMode(.large)
         .toolbar {

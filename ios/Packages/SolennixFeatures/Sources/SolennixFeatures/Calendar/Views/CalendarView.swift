@@ -36,6 +36,7 @@ public struct CalendarView: View {
     public var body: some View {
         calendarBody
             .background(SolennixColors.surfaceGrouped)
+            .softScrollEdgeEffectIfAvailable()
             .navigationTitle(CalendarStrings.title)
             .navigationBarTitleDisplayMode(.large)
         .toolbar {

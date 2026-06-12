@@ -45,6 +45,7 @@ public struct SettingsView: View {
         settingsContent
             .tint(SolennixColors.primary)
             .background(SolennixColors.surfaceGrouped)
+            .softScrollEdgeEffectIfAvailable()
             .navigationTitle(SettingsStrings.title)
             .navigationBarTitleDisplayMode(.large)
             .confirmationDialog(

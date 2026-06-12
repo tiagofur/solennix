@@ -47,3 +47,41 @@ public extension View {
         modifier(KeyboardDoneToolbarModifier())
     }
 }
+
+// MARK: - Scroll Edge Effect (iOS 26)
+
+public extension View {
+    /// Applies `.scrollEdgeEffectStyle(.soft, for: .top)` on iOS 26+ only.
+    ///
+    /// On earlier OS versions this is a no-op, so the call site stays clean
+    /// without per-callsite `#available` guards.
+    func softScrollEdgeEffectIfAvailable() -> some View {
+        if #available(iOS 26.0, *) {
+            return AnyView(self.scrollEdgeEffectStyle(.soft, for: .top))
+        } else {
+            return AnyView(self)
+        }
+    }
+}
+
+// MARK: - Sheet Glass Scroll Background (iOS 26)
+
+public extension View {
+    /// Hides the `Form`/`List` scroll content background on iOS 26+ so the
+    /// automatic Liquid Glass sheet background shows through.
+    ///
+    /// On iOS 17–25 this is a no-op — hiding the background on those versions
+    /// exposes the plain sheet material, which breaks the visual design.
+    func sheetFormBackground() -> some View {
+        if #available(iOS 26.0, *) {
+            return AnyView(self.scrollContentBackground(.hidden))
+        } else {
+            return AnyView(self)
+        }
+    }
+}
+
+// MARK: - Toolbar Spacer Note
+// ToolbarSpacer (iOS 26) is a ToolbarContent type, not a View — it cannot be
+// wrapped in a ViewModifier. Use #available(iOS 26.0, *) inline at each call
+// site within a .toolbar { } block.
