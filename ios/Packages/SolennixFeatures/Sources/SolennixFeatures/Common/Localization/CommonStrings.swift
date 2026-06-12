@@ -8,11 +8,6 @@ public enum CommonStrings {
     public static var swipeActionTipTitle: String { FeatureL10n.text("common.tip.swipe_action.title", "Acciones Rápidas") }
     public static var swipeActionTipMessage: String { FeatureL10n.text("common.tip.swipe_action.message", "Desliza los elementos de la lista hacia la izquierda o derecha para ver más opciones como editar, eliminar o llamar.") }
     
-    // FAB
-    public static var newEventLabel: String { FeatureL10n.text("common.fab.new_event", "Nuevo Evento") }
-    public static var fabExpandLabel: String { FeatureL10n.text("common.fab.expand_label", "Mostrar acciones rápidas") }
-    public static var fabCollapseLabel: String { FeatureL10n.text("common.fab.collapse_label", "Ocultar acciones rápidas") }
-    
     // Paywall
     public static var paywallTitle: String { FeatureL10n.text("common.paywall.title", "Límite alcanzado") }
     public static var paywallUpgradeButton: String { FeatureL10n.text("common.paywall.upgrade_button", "Ver planes") }

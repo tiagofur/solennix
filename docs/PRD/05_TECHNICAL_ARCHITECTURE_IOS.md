@@ -93,12 +93,12 @@ platform: iOS
 >
 > ### Estrategia: SDK 26 build, gating `#available`, capa de navegación únicamente
 >
-> Todos los efectos Liquid Glass se aplican exclusivamente a elementos de la capa de navegación (bars, toolbars, sheets, FABs, popovers). Nunca sobre tarjetas de contenido ni listas. Min target sigue siendo iOS 17.
+> Todos los efectos Liquid Glass se aplican exclusivamente a elementos de la capa de navegación (bars, toolbars, sheets, popovers). Nunca sobre tarjetas de contenido ni listas. Min target sigue siendo iOS 17.
 >
 > | Componente | iOS 26+ | iOS 17–25 |
 > |---|---|---|
 > | `adaptiveGlass(in:)` | `glassEffect(.regular, in: shape)` | `ultraThinMaterial` o `brightChip` según parámetro |
-> | `QuickActionsFAB` | `GlassEffectContainer(spacing: 16)` + `glassEffect(.regular.tint(...).interactive())` | gradiente premium + sombra |
+> | Toolbar actions | Sistema aplica Liquid Glass automáticamente al toolbar | sin cambio visual |
 > | Tab bar | `tabBarMinimizeBehavior(.onScrollDown)` + search tab nativo `role: .search` | TabView legacy sin minimize |
 > | Scroll edge | `scrollEdgeEffectStyle(.soft, for: .top)` | no-op |
 > | Sheet background | `scrollContentBackground(.hidden)` en iOS 26 sheets | sin cambio |
@@ -109,7 +109,7 @@ platform: iOS
 >
 > **`TabView(selection:)` bound en iOS 26:** `ios26TabSelection` custom binding idéntico a `legacyTabSelection` — pop-to-root en retap y `selectedTab = .home` antes de push en Spotlight están activos en ambas ramas.
 >
-> **`QuickActionsFAB` call site:** `DashboardView` es el primer call site de producción. El FAB se superpone al dashboard vía `.quickActionsFAB(onNewEvent:onQuickQuote:)`. Presenta `EventFormView` como sheet en compact (iPhone); en regular (iPad) el FAB se oculta automáticamente vía `sizeClass` guard interno.
+> **Acciones rápidas en toolbar:** `DashboardView` expone "Nuevo evento" y "Cotización rápida" en un `Menu` dentro del `ToolbarItem(.topBarTrailing)`. El FAB (`QuickActionsFAB`) fue eliminado — es un patrón Material, no iOS HIG. El toolbar recibe Liquid Glass automáticamente del sistema en iOS 26.
 >
 > **Symbol bounce correctness:** filas de checklist extraídas a structs privados (`ChecklistItemRow`, `PurchaseChecklistItemRow`) con `let item`, `let isChecked`. El `Image(systemName:)` se renderiza incondicionalmente con `.opacity(isChecked ? 1 : 0)` y `.symbolEffect(.bounce, value: isChecked)` fuera de cualquier `if` — SwiftUI observa la transición `false→true` y dispara el bounce exactamente una vez por toggle, no en reloads.
 
@@ -265,7 +265,7 @@ ios/
 │   ├── Navigation/                        # Sistema de navegacion
 │   │   ├── Route.swift                    # Tab enum, SidebarSection enum
 │   │   ├── RouteDestination.swift         # Switch de Route -> View
-│   │   ├── CompactTabLayout.swift         # TabView para iPhone (4 tabs + FAB)
+│   │   ├── CompactTabLayout.swift         # TabView para iPhone (4 tabs, acciones en toolbar)
 │   │   ├── SidebarSplitLayout.swift       # NavigationSplitView para iPad
 │   │   └── DeepLinkHandler.swift          # Manejo de deep links y Spotlight
 │   ├── Widgets/
@@ -427,7 +427,7 @@ graph TD
 | `SolennixGradient`   | Gradientes premium (gold -> tan)                                                                                                                      |
 | `SolennixTypography` | Estilos tipograficos predefinidos                                                                                                                     |
 | `SolennixSpacing`    | Sistema de espaciado consistente                                                                                                                      |
-| `SolennixShadows`    | Estilos de sombra (card, fab, modal)                                                                                                                  |
+| `SolennixShadows`    | Estilos de sombra (card, modal)                                                                                                                       |
 | Componentes          | `Avatar`, `ConfirmDialog`, `EmptyStateView`, `PremiumButton`, `SkeletonView`, `SolennixTextField`, `StatusBadge`, `ToastOverlay`, `UpgradeBannerView` |
 
 ### SolennixFeatures
@@ -757,7 +757,7 @@ La app usa un layout adaptativo basado en `horizontalSizeClass`:
 
 | Size Class            | Layout               | Descripcion                                          |
 | --------------------- | -------------------- | ---------------------------------------------------- |
-| `.compact` (iPhone)   | `CompactTabLayout`   | `TabView` con 4 tabs + FAB flotante                  |
+| `.compact` (iPhone)   | `CompactTabLayout`   | `TabView` con 4 tabs; acciones rápidas en toolbar    |
 | `.regular` (iPad/Mac) | `SidebarSplitLayout` | `NavigationSplitView` con sidebar + content + detail |
 
 ### CompactTabLayout (iPhone)
@@ -771,7 +771,7 @@ Cuatro tabs, cada uno con su propio `NavigationStack` y `NavigationPath` indepen
 | Clientes   | `person.2.fill` | `ClientListView` |
 | Mas        | `ellipsis`      | `MoreMenuView`   |
 
-Un **FAB (Floating Action Button)** con gradiente premium se superpone al tab bar para creacion rapida de eventos. Se oculta automaticamente cuando el usuario navega a una pantalla de detalle.
+Las acciones rápidas (nuevo evento, cotización rápida) viven en el `ToolbarItem(.topBarTrailing)` de cada vista raíz que las requiere (`DashboardView`), siguiendo el patrón iOS HIG. El FAB fue eliminado por ser un patrón Material.
 
 ### SidebarSplitLayout (iPad)
 
@@ -1007,7 +1007,7 @@ La paleta de Solennix usa tonos dorados/tan como color primario, con soporte com
 
 ### Gradientes
 
-- `SolennixGradient.premium` -- Gradiente dorado usado en el FAB, botones premium, y elementos destacados.
+- `SolennixGradient.premium` -- Gradiente dorado usado en botones premium y elementos destacados.
 
 ### Modo claro / oscuro
 
