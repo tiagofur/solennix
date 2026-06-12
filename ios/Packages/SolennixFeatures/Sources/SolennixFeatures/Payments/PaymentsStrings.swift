@@ -16,7 +16,11 @@ enum PaymentsStrings {
     // MARK: - Empty State
     static var emptyTitle: String { FeatureL10n.text("payments.empty_title", "Sin pagos pendientes") }
     static var emptyMessage: String { FeatureL10n.text("payments.empty_message", "Cuando tus clientes suban comprobantes de transferencia, los verás aquí para aprobar o rechazar.") }
-    static var actionRefresh: String { FeatureL10n.text("payments.action_refresh", "Actualizar") }
+    // Fix 11: actionRefresh removed from empty state — pull-to-refresh exists
+
+    // MARK: - Error / Retry State (Fix 10)
+    static var errorLoadingTitle: String { FeatureL10n.text("payments.error_loading_title", "No se pudo cargar") }
+    static var actionRetry: String { FeatureL10n.text("payments.action_retry", "Reintentar") }
 
     // MARK: - Plan Locked
     static var proOnlyTitle: String { FeatureL10n.text("payments.pro_only_title", "Función exclusiva para usuarios Pro.") }
@@ -41,7 +45,7 @@ enum PaymentsStrings {
     // MARK: - Submission Card & Actions
     static var cardReceiptAttached: String { FeatureL10n.text("payments.card_receipt_attached", "Comprobante adjunto") }
     static var cardReviewPrompt: String { FeatureL10n.text("payments.card_review_prompt", "Toca para revisar") }
-    
+
     static func cardRejectionReason(_ reason: String) -> String {
         FeatureL10n.format("payments.card_rejection_reason", "Motivo: %@", reason)
     }
@@ -51,6 +55,10 @@ enum PaymentsStrings {
     static var statusRejected: String { FeatureL10n.text("payments.status.rejected", "Rechazado") }
 
     static var actionApprove: String { FeatureL10n.text("payments.action_approve", "Aprobar") }
+
+    // MARK: - Toast Feedback (Fix 9)
+    static var toastApproved: String { FeatureL10n.text("payments.toast.approved", "Pago aprobado") }
+    static var toastRejected: String { FeatureL10n.text("payments.toast.rejected", "Pago rechazado") }
 
     // MARK: - Network Error Fallbacks
     static var decodingError: String { FeatureL10n.text("payments.error.decoding", "Error procesando respuesta") }
