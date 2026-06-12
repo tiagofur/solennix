@@ -26,7 +26,9 @@ public struct StaffListView: View {
             .navigationTitle(StaffStrings.title)
             .navigationBarTitleDisplayMode(.large)
             .solennixSearchable(text: $viewModel.searchText, prompt: StaffStrings.searchPrompt)
-            .refreshable { await viewModel.resetPagination() }
+            // loadStaff resets currentPage internally; resetPagination would clear
+            // the array and flash skeletons on every pull-to-refresh.
+            .refreshable { await viewModel.loadStaff() }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: Spacing.sm) {
@@ -243,6 +245,8 @@ public struct StaffListView: View {
         List {
             Section {
                 teamsLinkRow
+                    .listRowBackground(SolennixColors.card)
+                    .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
             }
 
             Section {
