@@ -67,9 +67,8 @@ import { aggregateIngredients } from "./lib/aggregateIngredients";
 // API response types — backend returns `client` (singular)
 type EventWithClient = Event & { client?: Client | null };
 
-// Matches UserProfile in pdfGenerator (User + optional billing/template fields)
+// Matches UserProfile in pdfGenerator (User + optional template fields)
 type UserProfile = User & {
-  stripe_customer_id?: string | null;
   contract_template?: string | null;
 };
 
@@ -385,7 +384,11 @@ export const EventSummary: React.FC = () => {
   const netSales = getEventNetSales(event);
   const revenueExTax = netSales;
   const profit = revenueExTax - totalCost;
-  const margin = revenueExTax > 0 ? (profit / revenueExTax) * 100 : 0;
+  const passThroughRevenue = extras
+    .filter((e) => e.exclude_utility)
+    .reduce((sum, e) => sum + e.price, 0);
+  const adjustedRevenue = revenueExTax - passThroughRevenue;
+  const margin = adjustedRevenue > 0 ? (profit / adjustedRevenue) * 100 : 0;
 
   const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
   const remainingValue = totalCharged - totalPaid;
@@ -694,6 +697,7 @@ export const EventSummary: React.FC = () => {
           eventData={{ deposit_percent: event.deposit_percent }}
           initialAmount={paymentInitialAmount}
           autoOpenAdd={autoOpenPayment}
+          onAutoOpenConsumed={() => setAutoOpenPayment(false)}
           onPaymentAdded={() => {
             import("@/lib/queryClient").then(({ queryClient: qc }) => {
               qc.invalidateQueries({ queryKey: queryKeys.payments.byEvent(id!) });

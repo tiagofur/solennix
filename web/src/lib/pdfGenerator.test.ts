@@ -91,7 +91,6 @@ const makeProfile = (overrides: Record<string, any> = {}) => ({
   default_cancellation_days: 15,
   default_refund_percent: 80,
   plan: 'premium' as const,
-  stripe_customer_id: null,
   created_at: '2024-01-01',
   updated_at: '2024-01-01',
   ...overrides,

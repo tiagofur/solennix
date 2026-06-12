@@ -48,12 +48,14 @@ final class BackgroundTaskManager {
 
     private let apiClient: APIClient
     private let cacheManager: CacheManager?
+    private let authManager: AuthManager
 
     // MARK: - Init
 
-    init(apiClient: APIClient, cacheManager: CacheManager?) {
+    init(apiClient: APIClient, cacheManager: CacheManager?, authManager: AuthManager) {
         self.apiClient = apiClient
         self.cacheManager = cacheManager
+        self.authManager = authManager
     }
 
     // MARK: - Scheduling
@@ -91,6 +93,10 @@ final class BackgroundTaskManager {
 
     /// Fetches fresh data from the API and updates cache, widgets, and Spotlight.
     private func performRefresh() async -> Bool {
+        // Bail out if the user is not authenticated — avoids unauthenticated API
+        // calls that would fail with 401 and pollute Sentry after logout.
+        guard authManager.isAuthenticated else { return false }
+
         do {
             // Fetch core data in parallel
             async let eventsResult: [Event] = apiClient.getAll(Endpoint.events)

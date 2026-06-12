@@ -100,4 +100,11 @@
     <string name="products_validation_name_min">El nombre debe tener al menos 2 caracteres</string>
     <string name="products_validation_category_required">La categoría es requerida</string>
     <string name="products_default_unit">und</string>
+
+    <!-- Empty states -->
+    <string name="products_empty_title">Sin productos aún</string>
+    <string name="products_empty_message">Creá tu primer producto para incluirlo en cotizaciones y eventos.</string>
+    <string name="products_empty_action">Agregar producto</string>
+    <string name="products_empty_search_title">Sin resultados</string>
+    <string name="products_empty_search_message">No encontramos productos que coincidan con el filtro actual.</string>
 </resources>

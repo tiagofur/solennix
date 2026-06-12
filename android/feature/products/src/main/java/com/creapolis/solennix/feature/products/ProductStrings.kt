@@ -131,6 +131,10 @@ object ProductStrings {
     fun stockLabel(stock: Int, unit: String): String = getString(R.string.products_stock_label, stock, unit)
     fun nearLimitMessage(remaining: Int): String = getString(R.string.products_near_limit_message, remaining)
     
+    val deleteCancel: String get() = getString(R.string.products_cancel)
+    val deleteConfirm: String get() = getString(R.string.products_confirm_delete)
+    fun deleteDescription(name: String): String = getString(R.string.products_delete_message)
+
     val productDeleted: String get() = getString(R.string.products_product_deleted)
     val deleteFailed: String get() = getString(R.string.products_delete_failed)
     val syncFailed: String get() = getString(R.string.products_sync_failed)
@@ -148,6 +152,13 @@ object ProductStrings {
     val validationNameMin: String get() = getString(R.string.products_validation_name_min)
     val validationCategoryRequired: String get() = getString(R.string.products_validation_category_required)
     val defaultUnit: String get() = getString(R.string.products_default_unit)
+
+    // Empty states
+    val emptyTitle: String get() = getString(R.string.products_empty_title)
+    val emptyMessage: String get() = getString(R.string.products_empty_message)
+    val emptyAction: String get() = getString(R.string.products_empty_action)
+    val emptySearchTitle: String get() = getString(R.string.products_empty_search_title)
+    val emptySearchMessage: String get() = getString(R.string.products_empty_search_message)
     
     fun shortDateFormatter(): DateTimeFormatter =
         if (isEnglish) DateTimeFormatter.ofPattern("MMM d", Locale.ENGLISH)

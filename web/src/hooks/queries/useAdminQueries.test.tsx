@@ -7,6 +7,7 @@ const mockGetStats = vi.fn();
 const mockGetUsers = vi.fn();
 const mockGetSubscriptions = vi.fn();
 const mockUpgradeUser = vi.fn();
+const mockGetUsersWithZeroResources = vi.fn();
 
 vi.mock('@/services/adminService', () => ({
   adminService: {
@@ -14,6 +15,7 @@ vi.mock('@/services/adminService', () => ({
     getUsers: (...args: any[]) => mockGetUsers(...args),
     getSubscriptions: (...args: any[]) => mockGetSubscriptions(...args),
     upgradeUser: (...args: any[]) => mockUpgradeUser(...args),
+    getUsersWithZeroResources: (...args: any[]) => mockGetUsersWithZeroResources(...args),
   },
 }));
 
@@ -31,6 +33,7 @@ import {
   useAdminUsers,
   useAdminSubscriptions,
   useUpgradeUser,
+  useAdminZeroResourceUsers,
 } from './useAdminQueries';
 
 const createWrapper = () => {
@@ -63,6 +66,18 @@ describe('useAdminQueries', () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
       expect(mockGetUsers).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('useAdminZeroResourceUsers', () => {
+    it('fetches admin users with zero resources', async () => {
+      const mockUsers = [{ id: 'u3', name: 'Zero User' }];
+      mockGetUsersWithZeroResources.mockResolvedValue(mockUsers);
+      const { result } = renderHook(() => useAdminZeroResourceUsers(), { wrapper: createWrapper() });
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(mockGetUsersWithZeroResources).toHaveBeenCalledTimes(1);
+      expect(result.current.data).toEqual(mockUsers);
     });
   });
 

@@ -2,6 +2,19 @@ import Foundation
 import WidgetKit
 import SolennixCore
 
+// MARK: - Widget Data Key Constants
+
+// Mirror of WidgetDataKey in SolennixWidgetExtension. Both targets share the
+// same App Group container, so every key used to write/clear data here MUST
+// match the constant used in the widget extension. Add new keys to BOTH enums.
+private enum WidgetKey {
+    static let upcomingEvents = "widget_upcoming_events"
+    static let kpis           = "widget_kpis"
+    static let lastUpdated    = "widget_last_updated"
+    static let userPlan       = "widget_user_plan"
+    static let completedEvents = "completed_events"
+}
+
 // MARK: - Widget Data Sync
 
 /// Syncs app data to the widget extension via App Group shared container
@@ -25,8 +38,8 @@ final class WidgetDataSync {
             let encoder = JSONEncoder()
             encoder.dateEncodingStrategy = .iso8601
             let data = try encoder.encode(events)
-            userDefaults?.set(data, forKey: "widget_upcoming_events")
-            userDefaults?.set(Date(), forKey: "widget_last_updated")
+            userDefaults?.set(data, forKey: WidgetKey.upcomingEvents)
+            userDefaults?.set(Date(), forKey: WidgetKey.lastUpdated)
 
             // Reload widgets
             reloadEventWidgets()
@@ -40,7 +53,7 @@ final class WidgetDataSync {
     func syncKPIs(_ kpis: WidgetKPIData) {
         do {
             let data = try JSONEncoder().encode(kpis)
-            userDefaults?.set(data, forKey: "widget_kpis")
+            userDefaults?.set(data, forKey: WidgetKey.kpis)
 
             // Reload widgets
             reloadKPIWidgets()
@@ -53,9 +66,9 @@ final class WidgetDataSync {
 
     func syncUserPlan(_ planRawValue: String?) {
         if let planRawValue, !planRawValue.isEmpty {
-            userDefaults?.set(planRawValue, forKey: "widget_user_plan")
+            userDefaults?.set(planRawValue, forKey: WidgetKey.userPlan)
         } else {
-            userDefaults?.removeObject(forKey: "widget_user_plan")
+            userDefaults?.removeObject(forKey: WidgetKey.userPlan)
         }
     }
 
@@ -78,11 +91,11 @@ final class WidgetDataSync {
     // MARK: - Clear Widget Data
 
     func clearWidgetData() {
-        userDefaults?.removeObject(forKey: "widget_upcoming_events")
-        userDefaults?.removeObject(forKey: "widget_kpis")
-        userDefaults?.removeObject(forKey: "widget_user_plan")
-        userDefaults?.removeObject(forKey: "widget_last_updated")
-        userDefaults?.removeObject(forKey: "completed_events")
+        userDefaults?.removeObject(forKey: WidgetKey.upcomingEvents)
+        userDefaults?.removeObject(forKey: WidgetKey.kpis)
+        userDefaults?.removeObject(forKey: WidgetKey.userPlan)
+        userDefaults?.removeObject(forKey: WidgetKey.lastUpdated)
+        userDefaults?.removeObject(forKey: WidgetKey.completedEvents)
         reloadAllWidgets()
     }
 }

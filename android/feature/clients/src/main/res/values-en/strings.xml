@@ -140,4 +140,11 @@
     <string name="clients_list_action_call">Call phone</string>
     <string name="clients_list_action_email">Send email</string>
     <string name="clients_ok">OK</string>
+
+    <!-- Empty states -->
+    <string name="clients_empty_title">No clients yet</string>
+    <string name="clients_empty_message">Add your first client to start managing your events.</string>
+    <string name="clients_empty_action">Add client</string>
+    <string name="clients_empty_search_title">No results</string>
+    <string name="clients_empty_search_message">No clients matched your search.</string>
 </resources>

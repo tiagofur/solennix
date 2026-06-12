@@ -18,18 +18,26 @@ extension EventFormViewModel {
         let timeFormatter = DateFormatter()
         timeFormatter.dateFormat = "HH:mm"
 
+        // Round all money fields to 2 decimal places before sending.
+        // Backend validation rejects |client − server| > 0.01 (crud_handler.go:805).
+        let clampedDiscount: Double
+        switch discountType {
+        case .percent: clampedDiscount = max(0, min(100, discount))
+        case .fixed:   clampedDiscount = max(0, discount)
+        }
+
         var body: [String: Any] = [
             "client_id": clientId,
             "event_date": dateFormatter.string(from: eventDate),
             "service_type": serviceType.trimmingCharacters(in: .whitespacesAndNewlines),
             "num_people": numPeople,
             "status": status.rawValue,
-            "discount": discount,
+            "discount": clampedDiscount,
             "discount_type": discountType.rawValue,
             "requires_invoice": requiresInvoice,
             "tax_rate": taxRate,
-            "tax_amount": taxAmount,
-            "total_amount": total,
+            "tax_amount": EventFinancials.round2(taxAmount),
+            "total_amount": EventFinancials.round2(total),
             "deposit_percent": depositPercent,
             "cancellation_days": cancellationDays,
             "refund_percent": refundPercent,
@@ -102,7 +110,7 @@ extension EventFormViewModel {
         let itemsBody: [String: Any] = [
             "products": selectedProducts.map { [
                 "product_id": $0.productId,
-                "quantity": Int($0.quantity),
+                "quantity": $0.quantity,  // send as Double — backend stores float64
                 "unit_price": $0.unitPrice,
                 "discount": $0.discount
             ] },

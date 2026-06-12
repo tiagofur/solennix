@@ -10,6 +10,10 @@ public enum APIError: LocalizedError, Sendable {
     /// Thrown when the backend returns 403 `{ error: "plan_limit_exceeded" }`.
     /// Carries the structured limit info so the UI can show a paywall.
     case planLimitExceeded(message: String, limitType: String, current: Int, max: Int)
+    /// Thrown when the backend returns 403 `{ code: "auth.account_blocked" }`.
+    case accountBlocked
+    /// Thrown when the backend returns 403 `{ code: "auth.account_deleted" }`.
+    case accountDeleted
 
     public var errorDescription: String? {
         switch self {
@@ -25,6 +29,10 @@ public enum APIError: LocalizedError, Sendable {
             return "Ocurrio un error desconocido."
         case .planLimitExceeded(let message, _, _, _):
             return message
+        case .accountBlocked:
+            return "Tu cuenta fue suspendida. Contactá a soporte para más información."
+        case .accountDeleted:
+            return "Esta cuenta fue eliminada y ya no está disponible."
         }
     }
 
@@ -44,6 +52,10 @@ public enum APIError: LocalizedError, Sendable {
             return "Ocurrió un error inesperado. Intentá de nuevo."
         case .planLimitExceeded(let message, _, _, _):
             return message
+        case .accountBlocked:
+            return "Tu cuenta fue suspendida. Contactá a soporte para más información."
+        case .accountDeleted:
+            return "Esta cuenta fue eliminada y ya no está disponible."
         }
     }
 

@@ -91,7 +91,8 @@ export const EventFormLinksPage: React.FC = () => {
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString(i18n.language === "es" ? "es-MX" : "en-US", {
+    const parsedDate = dateStr.includes("T") ? new Date(dateStr) : new Date(dateStr + "T12:00:00");
+    return parsedDate.toLocaleDateString(i18n.language === "es" ? "es-MX" : "en-US", {
       day: "numeric",
       month: "short",
       year: "numeric",

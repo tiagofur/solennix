@@ -218,6 +218,10 @@ public final class EventFormViewModel {
 
     public let apiClient: APIClient
 
+    /// Pending background tasks stored so they can be cancelled on deinit,
+    /// preventing dangling async work from outliving the view model.
+    var pendingTasks: [Task<Void, Never>] = []
+
     func tr(_ key: String, _ defaultValue: String) -> String {
         FeatureL10n.text(key, defaultValue)
     }
@@ -268,7 +272,7 @@ public final class EventFormViewModel {
             SelectedProduct(
                 productId: ep.productId,
                 product: products.first(where: { $0.id == ep.productId }),
-                quantity: Double(ep.quantity),
+                quantity: ep.quantity,
                 unitPrice: ep.unitPrice,
                 discount: ep.discount
             )
@@ -288,6 +292,10 @@ public final class EventFormViewModel {
 
     public init(apiClient: APIClient) {
         self.apiClient = apiClient
+    }
+
+    deinit {
+        pendingTasks.forEach { $0.cancel() }
     }
 
     // MARK: - Computed Properties
@@ -319,11 +327,14 @@ public final class EventFormViewModel {
     }
 
     public var discountAmount: Double {
+        // Clamp to prevent negative totals. Percent ∈ [0, 100]; fixed ∈ [0, base].
+        // Mirrors EventFinancials.compute() and backend financial.go:84-89.
         switch discountType {
         case .percent:
-            return discountableBase * discount / 100
+            let clampedPercent = max(0, min(100, discount))
+            return discountableBase * clampedPercent / 100
         case .fixed:
-            return min(discount, discountableBase)
+            return min(max(0, discount), discountableBase)
         }
     }
 
@@ -333,11 +344,11 @@ public final class EventFormViewModel {
 
     public var taxAmount: Double {
         let baseTotal = afterDiscount + passThroughExtrasSubtotal
-        return requiresInvoice ? baseTotal * taxRate / 100 : 0
+        return requiresInvoice ? EventFinancials.round2(baseTotal * taxRate / 100) : 0
     }
 
     public var total: Double {
-        afterDiscount + passThroughExtrasSubtotal + taxAmount
+        EventFinancials.round2(afterDiscount + passThroughExtrasSubtotal + taxAmount)
     }
 
     public var depositAmount: Double {

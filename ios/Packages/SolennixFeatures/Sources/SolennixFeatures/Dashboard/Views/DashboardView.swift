@@ -172,6 +172,12 @@ public struct DashboardView: View {
         .onReceive(NotificationCenter.default.publisher(for: .solennixEventUpdated)) { _ in
             Task { await viewModel?.refresh() }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .solennixSceneActivated)) { _ in
+            // Re-fetch dashboard when the app returns to the foreground so that
+            // month-boundary crossings (e.g. app left open on the last day of the month)
+            // don't leave the user staring at last month's KPIs.
+            Task { await viewModel?.refresh() }
+        }
     }
 
     // MARK: - Plan Limits Banner

@@ -100,4 +100,11 @@
     <string name="products_validation_name_min">Name must be at least 2 characters</string>
     <string name="products_validation_category_required">Category is required</string>
     <string name="products_default_unit">unit</string>
+
+    <!-- Empty states -->
+    <string name="products_empty_title">No products yet</string>
+    <string name="products_empty_message">Create your first product to include it in quotes and events.</string>
+    <string name="products_empty_action">Add product</string>
+    <string name="products_empty_search_title">No results</string>
+    <string name="products_empty_search_message">No products matched the current filter.</string>
 </resources>

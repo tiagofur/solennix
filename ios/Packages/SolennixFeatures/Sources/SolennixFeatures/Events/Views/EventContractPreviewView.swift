@@ -348,7 +348,8 @@ public struct EventContractPreviewView: View {
 
     private static func formatDate(_ dateStr: String) -> String {
         guard let date = Date.fromServerDay(dateStr) else { return dateStr }
-        return date.formatted(style: "d 'de' MMMM, yyyy")
+        // UTC display formatter — parse/display timezone must match to avoid day shift.
+        return date.formattedServerDay(style: "d 'de' MMMM, yyyy")
     }
 
     private static func formatDate(_ date: Date) -> String {

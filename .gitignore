@@ -45,6 +45,7 @@ node_modules/
 
 # Solennix iOS secrets (keep template, ignore real values)
 ios/Config/Secrets.xcconfig
+ios/apple-keys/
 android/google-services.json
 .claude/settings.local.json
 web/lint_output.txt

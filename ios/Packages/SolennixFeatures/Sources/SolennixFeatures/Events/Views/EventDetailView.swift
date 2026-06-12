@@ -457,14 +457,17 @@ public struct EventDetailView: View {
 
     private func formatDateShort(_ dateString: String) -> String {
         guard let date = Date.fromServerDay(dateString) else { return dateString }
-        return date.formatted(style: "d MMM yyyy")
+        // Use UTC display formatter — parse/display must share the same timezone
+        // to avoid a one-day shift for users in negative-offset zones.
+        return date.formattedServerDay(style: "d MMM yyyy")
     }
 
     private func parseDateComponents(_ dateString: String) -> (month: String, day: String) {
         guard let date = Date.fromServerDay(dateString) else {
             return ("---", "--")
         }
-        return (date.formatted(style: "MMM"), date.formatted(style: "d"))
+        // Use UTC display formatter — matches the UTC parse in fromServerDay.
+        return (date.formattedServerDay(style: "MMM"), date.formattedServerDay(style: "d"))
     }
 
     private func tr(_ key: String, _ value: String) -> String {

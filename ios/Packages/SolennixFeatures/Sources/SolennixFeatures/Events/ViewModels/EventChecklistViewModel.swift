@@ -107,7 +107,7 @@ public final class EventChecklistViewModel {
                     for ingredient in ingredients {
                         guard ingredient.bringToEvent == true else { continue }
                         let key = ingredient.inventoryId
-                        let totalQty = ingredient.quantityRequired * Double(product.quantity)
+                        let totalQty = ingredient.quantityRequired * product.quantity
 
                         if var existing = ingredientMap[key] {
                             existing.quantity += totalQty

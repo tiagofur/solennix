@@ -43,12 +43,14 @@ public final class SettingsViewModel {
 
     private let apiClient: APIClient
     private let authManager: AuthManager
+    private let subscriptionManager: SubscriptionManager?
 
     // MARK: - Init
 
-    public init(apiClient: APIClient, authManager: AuthManager) {
+    public init(apiClient: APIClient, authManager: AuthManager, subscriptionManager: SubscriptionManager? = nil) {
         self.apiClient = apiClient
         self.authManager = authManager
+        self.subscriptionManager = subscriptionManager
     }
 
     // MARK: - Load User
@@ -171,6 +173,9 @@ public final class SettingsViewModel {
 
     @MainActor
     public func logout() async {
+        // Log out of RevenueCat first so the customer identity is detached
+        // before auth tokens are cleared. Best-effort — non-fatal on failure.
+        try? await subscriptionManager?.logout()
         await authManager.signOut()
         user = nil
     }

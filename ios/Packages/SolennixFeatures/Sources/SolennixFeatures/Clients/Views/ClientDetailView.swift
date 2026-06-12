@@ -407,22 +407,15 @@ public struct ClientDetailView: View {
     }
 
     private func parseDateComponents(_ dateString: String) -> (month: String, day: String) {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.locale = FeatureL10n.locale
-
-        guard let date = formatter.date(from: String(dateString.prefix(10))) else {
+        // Use fromServerDay (UTC parse) then UTC display formatters for a stable
+        // day — avoids shift for users west of UTC.
+        guard let date = Date.fromServerDay(dateString) else {
             return ("---", "--")
         }
-
-        let monthFormatter = DateFormatter()
-        monthFormatter.dateFormat = "MMM"
-        monthFormatter.locale = FeatureL10n.locale
-
-        let dayFormatter = DateFormatter()
-        dayFormatter.dateFormat = "d"
-
-        return (monthFormatter.string(from: date), dayFormatter.string(from: date))
+        return (
+            date.formattedServerDay(style: "MMM", locale: FeatureL10n.locale),
+            date.formattedServerDay(style: "d", locale: FeatureL10n.locale)
+        )
     }
 
     // MARK: - Premium: Client Insights Card
@@ -443,14 +436,11 @@ public struct ClientDetailView: View {
             let isPremium = !planLimitsManager.isBasicPlan
 
             let points: [EventRevenuePoint] = completedEvents.suffix(6).map { event in
-                let formatter = DateFormatter()
-                formatter.dateFormat = "yyyy-MM-dd"
-                formatter.locale = FeatureL10n.locale
-                let displayFmt = DateFormatter()
-                displayFmt.dateFormat = "d MMM"
-                displayFmt.locale = FeatureL10n.locale
-                let label = formatter.date(from: String(event.eventDate.prefix(10)))
-                    .map { displayFmt.string(from: $0) } ?? event.eventDate
+                // fromServerDay parses in UTC; formattedServerDay displays in UTC
+                // for a stable calendar-day label regardless of device timezone.
+                let label = Date.fromServerDay(event.eventDate)
+                    .map { $0.formattedServerDay(style: "d MMM", locale: FeatureL10n.locale) }
+                    ?? String(event.eventDate.prefix(10))
                 return EventRevenuePoint(id: event.id, label: label, revenue: event.totalAmount)
             }
 

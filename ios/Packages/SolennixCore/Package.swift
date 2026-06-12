@@ -8,6 +8,10 @@ let package = Package(
         .library(name: "SolennixCore", targets: ["SolennixCore"])
     ],
     targets: [
-        .target(name: "SolennixCore")
+        .target(name: "SolennixCore"),
+        .testTarget(
+            name: "SolennixCoreTests",
+            dependencies: ["SolennixCore"]
+        )
     ]
 )

@@ -695,11 +695,13 @@ public struct EventListView: View {
     /// Shorter date format for list rows — the card carries so much info
     /// now that the long "Viernes 15 de Marzo, 2025" crowds the row. Users
     /// get "15 mar 2025" which is enough to scan quickly.
+    ///
+    /// NOTE: the `Date` argument was produced by `apiDateFormatter` (UTC), so
+    /// this formatter also uses UTC to preserve the calendar day across timezone
+    /// boundaries.
     private func formattedDisplayDate(_ date: Date) -> String {
-        let f = DateFormatter()
-        f.locale = FeatureL10n.locale
-        f.setLocalizedDateFormatFromTemplate("dMMMyyyy")
-        return f.string(from: date).capitalized(with: FeatureL10n.locale)
+        return date.formattedServerDayTemplate("dMMMyyyy", locale: FeatureL10n.locale)
+            .capitalized(with: FeatureL10n.locale)
     }
 
     /// Build the "18:00 - 20:00" time label (or "Todo el día" when the
@@ -717,7 +719,10 @@ public struct EventListView: View {
 
     private static let apiDateFormatter: DateFormatter = {
         let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
         f.dateFormat = "yyyy-MM-dd"
+        // UTC — matches fromServerDay parse timezone for stable display.
+        f.timeZone = TimeZone(secondsFromGMT: 0)
         return f
     }()
 

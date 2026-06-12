@@ -18,7 +18,9 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed as gridItemsIndexed
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -45,6 +47,7 @@ import androidx.paging.compose.itemKey
 import com.creapolis.solennix.core.designsystem.component.EmptyState
 import com.creapolis.solennix.core.designsystem.component.SkeletonLoading
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
+import com.creapolis.solennix.core.designsystem.component.SwipeRevealActions
 import com.creapolis.solennix.core.designsystem.component.StatusBadge
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCardGrid
 import com.creapolis.solennix.core.designsystem.util.LocalNavAnimatedVisibilityScope
@@ -108,6 +111,7 @@ fun EventListScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val hapticFeedback = com.creapolis.solennix.core.designsystem.util.rememberHapticFeedback()
     val retryLabel = stringResource(R.string.events_list_retry)
     val exportCsvSubject = stringResource(R.string.events_list_export_csv_subject)
     val exportCsvChooser = stringResource(R.string.events_list_export_csv_chooser)
@@ -221,12 +225,12 @@ fun EventListScreen(
                         else -> AdaptiveCardGrid(
                             contentPadding = PaddingValues(vertical = 8.dp),
                             gridContent = {
-                                items(
+                                gridItemsIndexed(
                                     items = sortedEvents,
-                                    key = { it.id }
-                                ) { event ->
+                                    key = { _, e -> e.id }
+                                ) { index, event ->
                                     AnimatedEventListItem(
-                                        index = sortedEvents.indexOf(event),
+                                        index = index,
                                         event = event,
                                         clientName = uiState.clientMap[event.clientId]?.name,
                                         isUpdatingStatus = uiState.updatingStatusEventId == event.id,
@@ -236,18 +240,28 @@ fun EventListScreen(
                                 }
                             },
                             listContent = {
-                                items(
+                                itemsIndexed(
                                     items = sortedEvents,
-                                    key = { it.id }
-                                ) { event ->
-                                    AnimatedEventListItem(
-                                        index = sortedEvents.indexOf(event),
-                                        event = event,
-                                        clientName = uiState.clientMap[event.clientId]?.name,
-                                        isUpdatingStatus = uiState.updatingStatusEventId == event.id,
-                                        onClick = { onEventClick(event.id) },
-                                        onLongClick = { rowActionsEvent = event }
-                                    )
+                                    key = { _, e -> e.id }
+                                ) { index, event ->
+                                    SwipeRevealActions(
+                                        onEdit = { onEventEdit(event.id) },
+                                        onDelete = {
+                                            hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.WARNING)
+                                            deleteConfirmEvent = event
+                                        }
+                                    ) {
+                                        Surface(color = SolennixTheme.colors.background) {
+                                            AnimatedEventListItem(
+                                                index = index,
+                                                event = event,
+                                                clientName = uiState.clientMap[event.clientId]?.name,
+                                                isUpdatingStatus = uiState.updatingStatusEventId == event.id,
+                                                onClick = { onEventClick(event.id) },
+                                                onLongClick = { rowActionsEvent = event }
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         )
@@ -263,6 +277,7 @@ fun EventListScreen(
             activeField = uiState.sortField,
             ascending = uiState.sortAscending,
             onPick = { field ->
+                hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.SELECTION_CHANGED)
                 viewModel.applySort(field)
                 showSortSheet = false
             },
@@ -284,6 +299,7 @@ fun EventListScreen(
                 rowActionsEvent = null
             },
             onDelete = {
+                hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.WARNING)
                 deleteConfirmEvent = event
                 rowActionsEvent = null
             },
@@ -315,6 +331,7 @@ fun EventListScreen(
             },
             confirmButton = {
                 TextButton(onClick = {
+                    hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.SUCCESS)
                     val removed = viewModel.softDeleteEvent(event)
                     deleteConfirmEvent = null
                     if (removed != null) {

@@ -54,11 +54,8 @@ public enum SpotlightIndexer {
             attributes.contentDescription = buildEventDescription(event, clientName: clientName)
             attributes.keywords = buildEventKeywords(event, clientName: clientName)
 
-            // Fecha del evento como fecha de contenido
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd"
-            formatter.locale = Locale(identifier: "es_MX")
-            if let date = formatter.date(from: String(event.eventDate.prefix(10))) {
+            // Fecha del evento como fecha de contenido — parse in UTC via fromServerDay.
+            if let date = Date.fromServerDay(event.eventDate) {
                 attributes.contentCreationDate = date
             }
 
