@@ -189,6 +189,7 @@ struct RecipeItemRow: View {
                     }
                 )
                 .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
             }
 
             // Quantity, cost, and remove

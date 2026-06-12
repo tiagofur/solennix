@@ -122,5 +122,6 @@ public struct PaymentEntrySheet: View {
             .keyboardDoneToolbar()
         }
         .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 }

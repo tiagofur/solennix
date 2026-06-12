@@ -114,6 +114,7 @@ public struct EventDetailView: View {
         .sheet(isPresented: $showClientPortalSheet) {
             ClientPortalShareSheet(apiClient: apiClient, eventId: eventId)
                 .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
         }
     }
 

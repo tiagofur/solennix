@@ -43,6 +43,7 @@ public struct ContractDefaultsView: View {
                 showVariablePicker = false
             }
             .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
         }
         .task { await viewModel.loadUser() }
     }

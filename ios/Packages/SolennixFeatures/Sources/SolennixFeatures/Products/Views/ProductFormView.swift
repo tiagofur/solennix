@@ -416,6 +416,7 @@ public struct ProductFormView: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 
     // MARK: - Save Button

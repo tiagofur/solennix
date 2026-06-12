@@ -97,5 +97,6 @@ struct BlockDateSheet: View {
             }
         }
         .presentationDetents([.medium])
+        .presentationDragIndicator(.visible)
     }
 }

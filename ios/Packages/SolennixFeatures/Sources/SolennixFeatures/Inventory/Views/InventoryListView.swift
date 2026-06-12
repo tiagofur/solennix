@@ -547,6 +547,7 @@ public struct InventoryListView: View {
             }
         }
         .presentationDetents([.medium])
+        .presentationDragIndicator(.visible)
     }
 
     // MARK: - FAB

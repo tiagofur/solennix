@@ -732,6 +732,7 @@ public struct InventoryDetailView: View {
             }
         }
         .presentationDetents([.medium])
+        .presentationDragIndicator(.visible)
     }
 }
 

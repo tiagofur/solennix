@@ -383,6 +383,7 @@ private struct GenerateLinkSheet: View {
             }
         }
         .presentationDetents([.medium])
+        .presentationDragIndicator(.visible)
     }
 }
 

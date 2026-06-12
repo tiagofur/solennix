@@ -267,6 +267,7 @@ public struct PaymentInboxView: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 
     // MARK: - Plan Locked State
