@@ -39,6 +39,7 @@ public enum CommonStrings {
     public static var tabEvents: String { FeatureL10n.text("common.tab.events", "Eventos") }
     public static var tabClients: String { FeatureL10n.text("common.tab.clients", "Clientes") }
     public static var tabMore: String { FeatureL10n.text("common.tab.more", "Más") }
+    public static var tabSearch: String { FeatureL10n.text("common.tab.search", "Buscar") }
     
     // Sidebar Sections
     public static var navPersonnel: String { FeatureL10n.text("common.nav.personnel", "Personal") }

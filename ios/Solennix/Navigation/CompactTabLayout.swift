@@ -4,12 +4,17 @@ import SolennixDesign
 import SolennixFeatures
 import SolennixNetwork
 
+// The app defines a `Tab` enum in Route.swift that shadows SwiftUI.Tab.
+// Provide a local alias so iOS 26 code can use both without qualification noise.
+private typealias AppTab = Tab
+
 // MARK: - Compact Tab Layout (iPhone)
 
 /// The main tab-based layout for compact (iPhone) horizontal size class.
 ///
-/// Contains four tabs, each with its own `NavigationStack` and independent
-/// navigation path.
+/// On iOS 26+ uses the `Tab` builder syntax to unlock `tabBarMinimizeBehavior`
+/// and adds a native `Tab(role: .search)` for a floating search entry point.
+/// On iOS 17–25 falls back to the standard `.tabItem {}` syntax.
 struct CompactTabLayout: View {
 
     @Binding var pendingSpotlightRoute: Route?
@@ -24,23 +29,114 @@ struct CompactTabLayout: View {
     @State private var calendarSearchText = ""
     @State private var moreSearchText = ""
 
-    /// Custom binding that detects same-tab re-taps for pop-to-root.
-    private var tabSelection: Binding<Tab> {
-        Binding(
-            get: { selectedTab },
-            set: { newTab in
-                if newTab == selectedTab {
-                    resetPath(for: newTab)
-                } else {
-                    resetPath(for: selectedTab)
-                }
-                selectedTab = newTab
-            }
-        )
-    }
+    // MARK: - Body
 
     var body: some View {
-        TabView(selection: tabSelection) {
+        if #available(iOS 26.0, *) {
+            ios26TabView
+        } else {
+            legacyTabView
+        }
+    }
+
+    // MARK: - iOS 26+ Tab View
+
+    @available(iOS 26.0, *)
+    @ViewBuilder
+    private var ios26TabView: some View {
+        // Note: the app-local `Tab` enum shadows SwiftUI.Tab, so we use
+        // the fully-qualified SwiftUI.Tab for all tab declarations.
+        // We cannot mix value-based and role-based Tab in a selection-bound
+        // TabView, so we use an unbound TabView and rely on the Tab builder's
+        // built-in selection management for iOS 26.
+        TabView {
+            SwiftUI.Tab(AppTab.home.title, systemImage: AppTab.home.iconName) {
+                NavigationStack(path: $homePath) {
+                    HomeRootView()
+                        .navigationDestination(for: Route.self) { route in
+                            RouteDestination(route: route)
+                        }
+                        .searchable(text: $homeSearchText, prompt: globalSearchPrompt)
+                        .onSubmit(of: .search) {
+                            appendSearchRoute(query: &homeSearchText, to: &homePath)
+                        }
+                }
+            }
+
+            SwiftUI.Tab(AppTab.calendar.title, systemImage: AppTab.calendar.iconName) {
+                NavigationStack(path: $calendarPath) {
+                    CalendarRootView()
+                        .navigationDestination(for: Route.self) { route in
+                            RouteDestination(route: route)
+                        }
+                        .searchable(text: $calendarSearchText, prompt: globalSearchPrompt)
+                        .onSubmit(of: .search) {
+                            appendSearchRoute(query: &calendarSearchText, to: &calendarPath)
+                        }
+                }
+            }
+
+            SwiftUI.Tab(AppTab.events.title, systemImage: AppTab.events.iconName) {
+                NavigationStack(path: $eventsPath) {
+                    EventsRootView()
+                        .navigationDestination(for: Route.self) { route in
+                            RouteDestination(route: route)
+                        }
+                }
+            }
+
+            SwiftUI.Tab(AppTab.clients.title, systemImage: AppTab.clients.iconName) {
+                NavigationStack(path: $clientsPath) {
+                    ClientsRootView()
+                        .navigationDestination(for: Route.self) { route in
+                            RouteDestination(route: route)
+                        }
+                }
+            }
+
+            // Native floating search tab — iOS 26 Liquid Glass behavior
+            SwiftUI.Tab(CommonStrings.tabSearch, systemImage: "magnifyingglass", role: .search) {
+                NavigationStack {
+                    SearchView()
+                        .searchToolbarBehavior(.minimize)
+                        .navigationDestination(for: Route.self) { route in
+                            RouteDestination(route: route)
+                        }
+                }
+            }
+
+            SwiftUI.Tab(AppTab.more.title, systemImage: AppTab.more.iconName) {
+                NavigationStack(path: $morePath) {
+                    MoreMenuView()
+                        .navigationDestination(for: Route.self) { route in
+                            RouteDestination(route: route)
+                        }
+                        .searchable(text: $moreSearchText, prompt: globalSearchPrompt)
+                        .onSubmit(of: .search) {
+                            appendSearchRoute(query: &moreSearchText, to: &morePath)
+                        }
+                }
+            }
+        }
+        .tint(SolennixColors.tabBarActive)
+        .tabBarMinimizeBehavior(.onScrollDown)
+        .onChange(of: pendingSpotlightRoute) { _, newRoute in
+            guard let route = newRoute else { return }
+            // Spotlight routes always land on the home path
+            homePath = NavigationPath()
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(100))
+                homePath.append(route)
+            }
+            pendingSpotlightRoute = nil
+        }
+    }
+
+    // MARK: - Legacy Tab View (iOS 17–25)
+
+    @ViewBuilder
+    private var legacyTabView: some View {
+        TabView(selection: legacyTabSelection) {
             // Home Tab
             NavigationStack(path: $homePath) {
                 HomeRootView()
@@ -55,7 +151,7 @@ struct CompactTabLayout: View {
             .tabItem {
                 Label(Tab.home.title, systemImage: Tab.home.iconName)
             }
-            .tag(Tab.home)
+            .tag(AppTab.home)
 
             // Calendar Tab
             NavigationStack(path: $calendarPath) {
@@ -71,7 +167,7 @@ struct CompactTabLayout: View {
             .tabItem {
                 Label(Tab.calendar.title, systemImage: Tab.calendar.iconName)
             }
-            .tag(Tab.calendar)
+            .tag(AppTab.calendar)
 
             // Events Tab — EventListView provides its own .searchable for
             // local filtering of the events list.
@@ -84,7 +180,7 @@ struct CompactTabLayout: View {
             .tabItem {
                 Label(Tab.events.title, systemImage: Tab.events.iconName)
             }
-            .tag(Tab.events)
+            .tag(AppTab.events)
 
             // Clients Tab — ClientListView provides its own .searchable for
             // local filtering of the clients list.
@@ -97,7 +193,7 @@ struct CompactTabLayout: View {
             .tabItem {
                 Label(Tab.clients.title, systemImage: Tab.clients.iconName)
             }
-            .tag(Tab.clients)
+            .tag(AppTab.clients)
 
             // More Tab
             NavigationStack(path: $morePath) {
@@ -113,12 +209,12 @@ struct CompactTabLayout: View {
             .tabItem {
                 Label(Tab.more.title, systemImage: Tab.more.iconName)
             }
-            .tag(Tab.more)
+            .tag(AppTab.more)
         }
         .tint(SolennixColors.tabBarActive)
         .onChange(of: pendingSpotlightRoute) { _, newRoute in
             guard let route = newRoute else { return }
-            // Navegar desde la pestaña Home para rutas de Spotlight
+            // Navigate from Home tab for Spotlight routes
             selectedTab = .home
             homePath = NavigationPath()
             Task { @MainActor in
@@ -129,19 +225,25 @@ struct CompactTabLayout: View {
         }
     }
 
-    private var globalSearchPrompt: String {
-        CommonStrings.globalSearchPrompt
+    /// Custom binding for the legacy TabView that pops to root on same-tab re-tap.
+    private var legacyTabSelection: Binding<AppTab> {
+        Binding(
+            get: { selectedTab },
+            set: { newTab in
+                if newTab == selectedTab {
+                    resetPath(for: newTab)
+                } else {
+                    resetPath(for: selectedTab)
+                }
+                selectedTab = newTab
+            }
+        )
     }
 
-    /// Pushes a route onto the currently selected tab's NavigationPath.
-    private func appendToCurrentPath(_ route: Route) {
-        switch selectedTab {
-        case .home:     homePath.append(route)
-        case .calendar: calendarPath.append(route)
-        case .events:   eventsPath.append(route)
-        case .clients:  clientsPath.append(route)
-        case .more:     morePath.append(route)
-        }
+    // MARK: - Helpers
+
+    private var globalSearchPrompt: String {
+        CommonStrings.globalSearchPrompt
     }
 
     private func resetPath(for tab: Tab) {
