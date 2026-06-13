@@ -25,6 +25,14 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.8
 
+> [!success] 2026-06-12 — Client pending balance KPI (issue #553): backend + iOS + Web
+> "Cuánto me debe este cliente" como KPI de primera clase — el faltante que ambos jueces marcaron en el juicio de Client Detail.
+> - **Backend:** `pending_balance` calculado al leer en GetByID (eventos confirmed+completed menos sus pagos; quoted excluido como prospecto; negativo = sobrepago sin clamp). `*float64,omitempty` — list/search omiten la key. Tests de integración con 7 escenarios.
+> - **iOS:** stat "Por cobrar" en el header de Client Detail — warning >0, success =0, "A favor" (info) para crédito; grid 2×2 con fallback HStack; oculto si el payload no trae el campo.
+> - **Web:** 4ª celda de stats en ClientDetails con la misma semántica de tres estados; types regenerados de openapi.
+> - **Review pre-push cazó un CRITICAL:** CodingKeys explícitas en snake_case rompían TODO decode de Client bajo `convertFromSnakeCase` — convención del proyecto: sin CodingKeys, camelCase puro.
+> - **Pendiente:** Android via batch #552. Commits: b5984ff8, 21a614ea, 9f12e22c, 46f4b2d2.
+
 > [!success] 2026-06-12 — Inventory scope filter (issue #551): backend + iOS
 > Las 3 secciones agrupadas del listado de inventario (que contradecían la paginación del servidor) se reemplazan por filtro de scope plano.
 > - **Backend:** `GET /api/inventory?type=ingredient|equipment|supply` — valida contra los valores de la migración 023, filtra paths paginado y completo, 400 en valor inválido, openapi sincronizado, 6 tests.
