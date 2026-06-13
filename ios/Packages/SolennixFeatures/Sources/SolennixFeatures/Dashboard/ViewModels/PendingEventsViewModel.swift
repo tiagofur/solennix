@@ -138,7 +138,7 @@ public final class PendingEventsViewModel {
                 self.isPresented = true
             }
         } catch {
-            print("Error loading pending events: \(error)")
+            NSLog("[Dashboard] ⚠️ loadPendingEvents failed: %@", String(describing: error))
         }
         isLoading = false
     }
@@ -159,7 +159,7 @@ public final class PendingEventsViewModel {
                 : tr("dashboard.messages.event_cancelled", "Evento cancelado")
         } catch {
             transientMessage = tr("dashboard.error.status_change_failed", "No se pudo cambiar el estado")
-            print("Error updating event status: \(error)")
+            NSLog("[Dashboard] ⚠️ updateEventStatus failed: %@", String(describing: error))
         }
         updatingEventId = nil
     }

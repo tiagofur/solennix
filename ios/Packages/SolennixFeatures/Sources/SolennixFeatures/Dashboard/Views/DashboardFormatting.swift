@@ -10,12 +10,21 @@ enum DashboardFormatting {
         return formatter
     }()
 
+    // NumberFormatter is expensive to create — cache per locale to avoid
+    // re-allocating on every cell render (30+ calls per dashboard render cycle).
+    private static var currencyFormatterCache: [String: NumberFormatter] = [:]
+
     private static func currencyFormatter(locale: Locale) -> NumberFormatter {
+        let key = locale.identifier
+        if let cached = currencyFormatterCache[key] {
+            return cached
+        }
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = "MXN"
         formatter.locale = locale
         formatter.maximumFractionDigits = 0
+        currencyFormatterCache[key] = formatter
         return formatter
     }
 

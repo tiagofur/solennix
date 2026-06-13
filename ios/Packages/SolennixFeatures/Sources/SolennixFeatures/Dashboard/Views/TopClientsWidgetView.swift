@@ -74,6 +74,14 @@ struct TopClientsWidgetView: View {
         .background(SolennixColors.card)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
         .shadowSm()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(tr("dashboard.widgets.top_clients.title", "Top clientes"))
+        .accessibilityValue(
+            clients.isEmpty
+                ? tr("dashboard.widgets.top_clients.empty", "Sin clientes destacados")
+                : clients.prefix(5).map { "\($0.name): \(DashboardFormatting.currencyMXN($0.totalSpent))" }
+                         .joined(separator: ", ")
+        )
     }
 }
 

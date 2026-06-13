@@ -17,7 +17,7 @@ public struct PendingEventsModalView: View {
     public var body: some View {
         Group {
             if viewModel.isPresented && !viewModel.pendingEvents.isEmpty {
-                Color.black.opacity(0.4)
+                SolennixColors.accent.opacity(0.55)
                     .ignoresSafeArea()
                     .overlay(alignment: .center) {
                         modalContent
@@ -137,7 +137,7 @@ public struct PendingEventsModalView: View {
                         .fontWeight(.bold)
                         .foregroundStyle(SolennixColors.text)
 
-                    Text(pendingEvent.event.eventDate)
+                    Text(DashboardFormatting.compactDate(from: pendingEvent.event.eventDate))
                         .font(.caption2)
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
@@ -150,7 +150,7 @@ public struct PendingEventsModalView: View {
                     .foregroundStyle(SolennixColors.warning)
                     .padding(.horizontal, Spacing.sm)
                     .padding(.vertical, Spacing.xs)
-                    .background(SolennixColors.warning.opacity(0.15))
+                    .background(SolennixColors.warningBg)
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
             }
 
@@ -220,7 +220,7 @@ public struct PendingEventsModalView: View {
                         } label: {
                             HStack(spacing: 4) {
                                 if isUpdating {
-                                    ProgressView().controlSize(.small).tint(.white)
+                                    ProgressView().controlSize(.small).tint(SolennixColors.textInverse)
                                 } else {
                                     Image(systemName: "checkmark.circle")
                                     Text(tr("dashboard.attention.complete", "Completar"))
@@ -228,7 +228,7 @@ public struct PendingEventsModalView: View {
                             }
                             .font(.caption)
                             .fontWeight(.bold)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(SolennixColors.textInverse)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 8)
                             .background(SolennixColors.success)
@@ -268,7 +268,7 @@ public struct PendingEventsModalView: View {
         Button(action: action) {
             HStack(spacing: 4) {
                 if isLoading {
-                    ProgressView().controlSize(.small).tint(.white)
+                    ProgressView().controlSize(.small).tint(SolennixColors.textInverse)
                 } else {
                     Image(systemName: icon)
                     Text(title)
@@ -276,7 +276,7 @@ public struct PendingEventsModalView: View {
             }
             .font(.caption)
             .fontWeight(.bold)
-            .foregroundStyle(.white)
+            .foregroundStyle(SolennixColors.textInverse)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
             .background(SolennixColors.primary)

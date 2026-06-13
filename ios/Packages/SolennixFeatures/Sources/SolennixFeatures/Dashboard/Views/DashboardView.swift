@@ -258,7 +258,7 @@ public struct DashboardView: View {
                     quickActionItem(
                         icon: "person.badge.plus",
                         label: tr("dashboard.quick_new_client", "Nuevo cliente"),
-                        color: planLimitsManager.canCreateClient ? SolennixColors.statusConfirmed : SolennixColors.textTertiary,
+                        color: planLimitsManager.canCreateClient ? SolennixColors.accent : SolennixColors.textTertiary,
                         enabled: planLimitsManager.canCreateClient,
                         destination: Route.clientForm()
                     )
@@ -277,7 +277,7 @@ public struct DashboardView: View {
                     quickActionItem(
                         icon: "person.badge.plus",
                         label: tr("dashboard.quick_new_client", "Nuevo cliente"),
-                        color: planLimitsManager.canCreateClient ? SolennixColors.statusConfirmed : SolennixColors.textTertiary,
+                        color: planLimitsManager.canCreateClient ? SolennixColors.accent : SolennixColors.textTertiary,
                         enabled: planLimitsManager.canCreateClient,
                         destination: Route.clientForm()
                     )
@@ -289,19 +289,16 @@ public struct DashboardView: View {
 
     @ViewBuilder
     private func quickActionItem(icon: String, label: String, color: Color, enabled: Bool, destination: Route) -> some View {
-        Button {
-            HapticsHelper.play(.light)
-        } label: {
-            if enabled {
-                NavigationLink(value: destination) {
-                    quickActionButton(icon: icon, label: label, color: color)
-                }
-            } else {
+        if enabled {
+            NavigationLink(value: destination) {
                 quickActionButton(icon: icon, label: label, color: color)
-                    .opacity(0.6)
             }
+            .buttonStyle(.plain)
+            .simultaneousGesture(TapGesture().onEnded { HapticsHelper.play(.light) })
+        } else {
+            quickActionButton(icon: icon, label: label, color: color)
+                .opacity(0.6)
         }
-        .buttonStyle(.plain)
     }
 
     private func quickActionButton(icon: String, label: String, color: Color) -> some View {
@@ -663,7 +660,7 @@ public struct DashboardView: View {
                         x: .value(tr("dashboard.chart.month", "Mes"), point.month),
                         y: .value(tr("dashboard.chart.revenue", "Ingresos"), point.revenue)
                     )
-                    .foregroundStyle(SolennixGradient.premium)
+                    .foregroundStyle(SolennixColors.primary)
                     .cornerRadius(6)
                 }
                 .chartYAxis {
@@ -683,9 +680,17 @@ public struct DashboardView: View {
                     AxisMarks { _ in
                         AxisValueLabel()
                             .font(.caption2)
+                            .foregroundStyle(SolennixColors.textTertiary)
                     }
                 }
                 .frame(height: 140)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(tr("dashboard.revenue_last_6_months", "Ingresos — últimos 6 meses"))
+                .accessibilityValue(
+                    vm.monthlyRevenueTrend.map { point in
+                        "\(point.month): \(DashboardFormatting.currencyMXN(point.revenue))"
+                    }.joined(separator: ", ")
+                )
             }
             .padding(Spacing.md)
             .background(SolennixColors.card)
