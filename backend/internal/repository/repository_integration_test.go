@@ -294,7 +294,7 @@ func TestInventoryRepoIntegration(t *testing.T) {
 		t.Fatalf("GetByID() ingredient = %q, want %q", got.IngredientName, "Harina")
 	}
 
-	all, err := repo.GetAll(context.Background(), userID)
+	all, err := repo.GetAll(context.Background(), userID, "")
 	if err != nil {
 		t.Fatalf("GetAll() error = %v", err)
 	}

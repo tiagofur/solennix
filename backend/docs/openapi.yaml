@@ -3733,6 +3733,13 @@ paths:
           schema:
             type: string
             enum: [asc, desc]
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ingredient, equipment, supply]
+          description: Filter inventory by type. Omit for all types.
       responses:
         "200":
           description: List of inventory items or paginated inventory when page is provided

@@ -127,8 +127,8 @@ type ProductRepository interface {
 
 // InventoryRepository defines inventory repo operations.
 type InventoryRepository interface {
-	GetAll(ctx context.Context, userID uuid.UUID) ([]models.InventoryItem, error)
-	GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.InventoryItem, int, error)
+	GetAll(ctx context.Context, userID uuid.UUID, typeFilter string) ([]models.InventoryItem, error)
+	GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string, typeFilter string) ([]models.InventoryItem, int, error)
 	GetByID(ctx context.Context, id, userID uuid.UUID) (*models.InventoryItem, error)
 	Create(ctx context.Context, i *models.InventoryItem) error
 	Update(ctx context.Context, i *models.InventoryItem) error

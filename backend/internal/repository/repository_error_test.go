@@ -70,7 +70,7 @@ func TestRepositoryMethodsWithClosedPool(t *testing.T) {
 	if err := NewEventRepo(pool).UpdateEventItems(ctx, id, nil, nil, nil, nil, nil); err == nil {
 		t.Fatalf("EventRepo.UpdateEventItems() expected error with closed pool")
 	}
-	if _, err := NewInventoryRepo(pool).GetAll(ctx, userID); err == nil {
+	if _, err := NewInventoryRepo(pool).GetAll(ctx, userID, ""); err == nil {
 		t.Fatalf("InventoryRepo.GetAll() expected error with closed pool")
 	}
 	if _, err := NewInventoryRepo(pool).GetByID(ctx, id, userID); err == nil {

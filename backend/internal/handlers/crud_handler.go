@@ -1954,13 +1954,25 @@ var inventorySortAllowlist = map[string]string{
 	"last_updated":    "last_updated",
 }
 
+var inventoryValidTypes = map[string]bool{
+	"ingredient": true,
+	"equipment":  true,
+	"supply":     true,
+}
+
 func (h *CRUDHandler) ListInventory(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
+
+	typeFilter := r.URL.Query().Get("type")
+	if typeFilter != "" && !inventoryValidTypes[typeFilter] {
+		writeError(w, http.StatusBadRequest, "Invalid type value")
+		return
+	}
 
 	params := parsePaginationParams(r, inventorySortAllowlist, "ingredient_name")
 	if params != nil {
 		offset := (params.Page - 1) * params.Limit
-		items, total, err := h.inventoryRepo.GetAllPaginated(r.Context(), userID, offset, params.Limit, params.Sort, params.Order)
+		items, total, err := h.inventoryRepo.GetAllPaginated(r.Context(), userID, offset, params.Limit, params.Sort, params.Order, typeFilter)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "Failed to fetch inventory")
 			return
@@ -1972,7 +1984,7 @@ func (h *CRUDHandler) ListInventory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	items, err := h.inventoryRepo.GetAll(r.Context(), userID)
+	items, err := h.inventoryRepo.GetAll(r.Context(), userID, typeFilter)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to fetch inventory")
 		return
