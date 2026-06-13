@@ -118,6 +118,11 @@ public struct InventoryListView: View {
 
     private var inventoryGrid: some View {
         ScrollView {
+            // Scope picker at the top of the scroll view
+            ipadScopePicker
+                .padding(.horizontal, Spacing.lg)
+                .padding(.top, Spacing.md)
+
             if viewModel.isLoading && viewModel.items.isEmpty {
                 ProgressView()
                     .controlSize(.large)
@@ -126,7 +131,15 @@ public struct InventoryListView: View {
                     .padding(.vertical, Spacing.xxxl)
             } else if viewModel.filteredItems.isEmpty && !viewModel.isLoading {
                 if viewModel.searchText.isEmpty && !viewModel.showLowStockOnly {
-                    ipadFirstRunEmptyState
+                    if viewModel.scope == .all {
+                        ipadFirstRunEmptyState
+                    } else {
+                        EmptyStateView(
+                            icon: "archivebox",
+                            title: viewModel.scopedEmptyTitle,
+                            message: viewModel.scopedEmptyMessage
+                        )
+                    }
                 } else {
                     EmptyStateView(
                         icon: "magnifyingglass",
@@ -137,16 +150,12 @@ public struct InventoryListView: View {
                     )
                 }
             } else {
+                // Single flat section — server already filtered by scope
                 LazyVStack(alignment: .leading, spacing: Spacing.lg) {
-                    if !viewModel.ingredientItems.isEmpty {
-                        inventoryGridSection(title: InventoryStrings.ingredients, items: viewModel.ingredientItems)
-                    }
-                    if !viewModel.equipmentItems.isEmpty {
-                        inventoryGridSection(title: InventoryStrings.equipment, items: viewModel.equipmentItems)
-                    }
-                    if !viewModel.supplyItems.isEmpty {
-                        inventoryGridSection(title: InventoryStrings.supplies, items: viewModel.supplyItems)
-                    }
+                    inventoryGridSection(
+                        title: viewModel.scope == .all ? nil : viewModel.scope.label,
+                        items: viewModel.filteredItems
+                    )
                 }
                 .padding(.horizontal, Spacing.lg)
                 .padding(.vertical, Spacing.lg)
@@ -165,15 +174,28 @@ public struct InventoryListView: View {
         .background(SolennixColors.surfaceGrouped)
     }
 
+    /// iPad scope picker — segmented style inside a card-like container.
+    private var ipadScopePicker: some View {
+        Picker(InventoryStrings.scopeFilterAccessibility, selection: $viewModel.scope) {
+            ForEach(InventoryScope.allCases, id: \.self) { s in
+                Text(s.label).tag(s)
+            }
+        }
+        .pickerStyle(.segmented)
+        .accessibilityLabel(InventoryStrings.scopeFilterAccessibility)
+    }
+
     // Fix 13: aligned to system grouped-header styling (footnote/semibold/secondary)
-    private func inventoryGridSection(title: String, items: [InventoryItem]) -> some View {
+    private func inventoryGridSection(title: String?, items: [InventoryItem]) -> some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text(title)
-                .font(.footnote)
-                .fontWeight(.semibold)
-                .foregroundStyle(SolennixColors.textSecondary)
-                .textCase(.uppercase)
-                .padding(.horizontal, Spacing.xs)
+            if let title {
+                Text(title)
+                    .font(.footnote)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(SolennixColors.textSecondary)
+                    .textCase(.uppercase)
+                    .padding(.horizontal, Spacing.xs)
+            }
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 250))], spacing: Spacing.sm) {
                 ForEach(items) { item in
@@ -214,26 +236,33 @@ public struct InventoryListView: View {
     }
 
     private func inventoryCardRow(_ item: InventoryItem) -> some View {
-        HStack(spacing: Spacing.md) {
+        let isLow = item.minimumStock > 0 && item.currentStock < item.minimumStock
+        let showTypeChip = viewModel.scope == .all
+
+        return HStack(spacing: Spacing.md) {
             stockIndicator(item)
 
             VStack(alignment: .leading, spacing: Spacing.xs) {
-                Text(item.ingredientName)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundStyle(SolennixColors.text)
-                    .lineLimit(1)
+                HStack(spacing: Spacing.xs) {
+                    Text(item.ingredientName)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(SolennixColors.text)
+                        .lineLimit(1)
+
+                    if showTypeChip {
+                        ipadTypeChip(item.type)
+                    }
+                }
 
                 HStack(spacing: Spacing.sm) {
                     Text(InventoryStrings.quantityWithUnit(Int(item.currentStock), unit: item.unit))
                         .font(.caption)
                         .foregroundStyle(
-                            item.minimumStock > 0 && item.currentStock < item.minimumStock
-                                ? SolennixColors.error
-                                : SolennixColors.textSecondary
+                            isLow ? SolennixColors.error : SolennixColors.textSecondary
                         )
 
-                    if item.minimumStock > 0 && item.currentStock < item.minimumStock {
+                    if isLow {
                         Text(InventoryStrings.minLabel(Int(item.minimumStock)))
                             .font(.caption2)
                             .foregroundStyle(SolennixColors.textTertiary)
@@ -253,6 +282,26 @@ public struct InventoryListView: View {
         .background(SolennixColors.card)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
         .shadowSm()
+    }
+
+    /// Tonal type badge for iPad grid cards (Todos scope).
+    private func ipadTypeChip(_ type: InventoryType) -> some View {
+        let (icon, color) = gridTypeIconAndColor(type)
+        return Image(systemName: icon)
+            .font(.caption2)
+            .foregroundStyle(color)
+            .padding(4)
+            .background(color.opacity(0.12))
+            .clipShape(Circle())
+            .accessibilityHidden(true)
+    }
+
+    private func gridTypeIconAndColor(_ type: InventoryType) -> (String, Color) {
+        switch type {
+        case .ingredient: return ("leaf.fill", SolennixColors.success)
+        case .equipment:  return ("wrench.and.screwdriver.fill", SolennixColors.primary)
+        case .supply:     return ("shippingbox.fill", SolennixColors.accent)
+        }
     }
 
     // Fix 4: first-run CTA for iPad grid
@@ -293,6 +342,14 @@ public struct InventoryListView: View {
     @ViewBuilder
     private var inventoryContentRows: some View {
         Group {
+            // Scope picker row — always visible above content
+            Section {
+                scopePickerRow
+            }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+            .listSectionSeparator(.hidden)
+
             if let error = viewModel.errorMessage, viewModel.items.isEmpty, !viewModel.isLoading {
                 // Error state
                 EmptyStateView(
@@ -313,8 +370,12 @@ public struct InventoryListView: View {
             } else if viewModel.filteredItems.isEmpty && !viewModel.isLoading {
                 // Fix 4: truly-empty vs filtered/search/low-stock-filter conditions
                 if viewModel.searchText.isEmpty && !viewModel.showLowStockOnly {
-                    // Truly empty — working first-run CTA
-                    inventoryFirstRunEmptyRow
+                    // Truly empty (global or scoped) — CTA
+                    if viewModel.scope == .all {
+                        inventoryFirstRunEmptyRow
+                    } else {
+                        scopedEmptyRow
+                    }
                 } else {
                     // Filtered/search/low-stock filter empty
                     EmptyStateView(
@@ -330,27 +391,11 @@ public struct InventoryListView: View {
                     .listRowSeparator(.hidden)
                 }
             } else {
-                // Fix 1: canonical ZStack + opacity-0 NavigationLink row chrome
-                // Real native Sections for Ingredients/Equipment/Supplies, DEFAULT spacing
-                if !viewModel.ingredientItems.isEmpty {
-                    Section(InventoryStrings.ingredients) {
-                        ForEach(viewModel.ingredientItems) { item in
-                            inventoryRow(item)
-                        }
-                    }
-                }
-                if !viewModel.equipmentItems.isEmpty {
-                    Section(InventoryStrings.equipment) {
-                        ForEach(viewModel.equipmentItems) { item in
-                            inventoryRow(item)
-                        }
-                    }
-                }
-                if !viewModel.supplyItems.isEmpty {
-                    Section(InventoryStrings.supplies) {
-                        ForEach(viewModel.supplyItems) { item in
-                            inventoryRow(item)
-                        }
+                // Single flat section — server already filtered by scope.
+                // Each row carries a type chip in Todos scope for visual identification.
+                Section {
+                    ForEach(viewModel.filteredItems) { item in
+                        inventoryRow(item)
                     }
                 }
 
@@ -365,6 +410,46 @@ public struct InventoryListView: View {
                     .listRowBackground(Color.clear)
                 }
             }
+        }
+    }
+
+    // MARK: - Scope Picker Row
+
+    @ViewBuilder
+    private var scopePickerRow: some View {
+        if dynamicTypeSize >= .accessibility1 {
+            // Accessibility sizes: segmented truncates — use a Menu picker
+            Menu {
+                Picker(InventoryStrings.scopeFilterAccessibility, selection: $viewModel.scope) {
+                    ForEach(InventoryScope.allCases, id: \.self) { s in
+                        Text(s.label).tag(s)
+                    }
+                }
+            } label: {
+                HStack {
+                    Label(viewModel.scope.label, systemImage: "line.3.horizontal.decrease.circle")
+                        .font(.subheadline)
+                        .foregroundStyle(SolennixColors.primary)
+                    Spacer()
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+                .padding(.vertical, Spacing.sm)
+                .padding(.horizontal, Spacing.md)
+            }
+            .accessibilityLabel(InventoryStrings.scopeFilterAccessibility)
+            .accessibilityValue(viewModel.scope.label)
+        } else {
+            Picker(InventoryStrings.scopeFilterAccessibility, selection: $viewModel.scope) {
+                ForEach(InventoryScope.allCases, id: \.self) { s in
+                    Text(s.label).tag(s)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding(.vertical, Spacing.sm)
+            .padding(.horizontal, Spacing.md)
+            .accessibilityLabel(InventoryStrings.scopeFilterAccessibility)
         }
     }
 
@@ -396,21 +481,28 @@ public struct InventoryListView: View {
         .listRowSeparator(.hidden)
     }
 
+    // MARK: - Scoped Empty Row
+
+    /// Empty state for a specific scope (not first-run, no CTA to create).
+    private var scopedEmptyRow: some View {
+        EmptyStateView(
+            icon: "archivebox",
+            title: viewModel.scopedEmptyTitle,
+            message: viewModel.scopedEmptyMessage
+        )
+        .frame(maxWidth: .infinity)
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets())
+        .listRowSeparator(.hidden)
+    }
+
     // MARK: - Skeleton Rows (Fix 3)
 
     /// Per-row skeletons inside the same List — no full-screen List swap.
     @ViewBuilder
     private var inventorySkeletonRows: some View {
-        Section(InventoryStrings.ingredients) {
-            ForEach(0..<3, id: \.self) { _ in
-                InventorySkeletonRow()
-                    .listRowBackground(SolennixColors.card)
-                    .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
-                    .accessibilityHidden(true)
-            }
-        }
-        Section(InventoryStrings.equipment) {
-            ForEach(0..<2, id: \.self) { _ in
+        Section {
+            ForEach(0..<5, id: \.self) { _ in
                 InventorySkeletonRow()
                     .listRowBackground(SolennixColors.card)
                     .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
@@ -423,10 +515,12 @@ public struct InventoryListView: View {
 
     private func inventoryRow(_ item: InventoryItem) -> some View {
         let isLow = item.minimumStock > 0 && item.currentStock < item.minimumStock
+        // Show type chip when viewing all types so each row is self-identifying
+        let showTypeChip = viewModel.scope == .all
 
         return ZStack {
             // Fix 1: plain content (no NavigationLink wrapper)
-            InventoryRowContent(item: item, dynamicTypeSize: dynamicTypeSize)
+            InventoryRowContent(item: item, dynamicTypeSize: dynamicTypeSize, showTypeChip: showTypeChip)
             // Fix 1: invisible NavigationLink for tap navigation
             NavigationLink(value: Route.inventoryDetail(id: item.id)) {
                 EmptyView()
@@ -436,9 +530,9 @@ public struct InventoryListView: View {
         }
         .listRowBackground(SolennixColors.card)
         .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
-        // Fix 2: a11y — composed ordered label
+        // Fix 2: a11y — composed ordered label (includes type in Todos scope)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(inventoryAccessibilityLabel(item, isLow: isLow))
+        .accessibilityLabel(inventoryAccessibilityLabel(item, isLow: isLow, includeType: showTypeChip))
         .accessibilityAddTraits(.isButton)
         .accessibilityAction(named: InventoryStrings.deleteAction) {
             viewModel.deleteTarget = item
@@ -502,11 +596,14 @@ public struct InventoryListView: View {
 
     // MARK: - Accessibility (Fix 2)
 
-    /// Composed ordered label: name, type, stock with unit, low-stock state if applicable, cost.
-    private func inventoryAccessibilityLabel(_ item: InventoryItem, isLow: Bool) -> String {
-        let typeName = localizedTypeName(item.type)
+    /// Composed ordered label: name, (type if includeType), stock with unit, low-stock state if applicable, cost.
+    private func inventoryAccessibilityLabel(_ item: InventoryItem, isLow: Bool, includeType: Bool = true) -> String {
         let stock = InventoryStrings.quantityWithUnit(Int(item.currentStock), unit: item.unit)
-        var parts: [String] = [item.ingredientName, typeName, stock]
+        var parts: [String] = [item.ingredientName]
+        if includeType {
+            parts.append(localizedTypeName(item.type))
+        }
+        parts.append(stock)
         if isLow {
             parts.append(InventoryStrings.stockLow)
         }
@@ -684,9 +781,11 @@ public struct InventoryListView: View {
 
 /// Plain content view for each inventory row.
 /// Stacks vertically at accessibility1+ — mirrors ProductRow pattern.
+/// When `showTypeChip` is true (Todos scope), a tonal type badge is shown.
 struct InventoryRowContent: View {
     let item: InventoryItem
     let dynamicTypeSize: DynamicTypeSize
+    var showTypeChip: Bool = false
 
     // Fix 9: scaled stock indicator size
     @ScaledMetric(relativeTo: .body) private var indicatorSize: CGFloat = 36
@@ -698,7 +797,12 @@ struct InventoryRowContent: View {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 HStack(spacing: Spacing.md) {
                     scaledStockIndicator(isLow: isLow)
-                    itemName
+                    VStack(alignment: .leading, spacing: 2) {
+                        itemName
+                        if showTypeChip {
+                            typeChip
+                        }
+                    }
                 }
                 HStack {
                     stockAndCostInfo(item: item, isLow: isLow)
@@ -715,7 +819,14 @@ struct InventoryRowContent: View {
             HStack(spacing: Spacing.md) {
                 scaledStockIndicator(isLow: isLow)
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    itemName
+                    if showTypeChip {
+                        HStack(spacing: Spacing.xs) {
+                            itemName
+                            typeChip
+                        }
+                    } else {
+                        itemName
+                    }
                     stockAndCostInfo(item: item, isLow: isLow)
                 }
                 Spacer()
@@ -760,6 +871,42 @@ struct InventoryRowContent: View {
                     .font(.caption2)
                     .foregroundStyle(SolennixColors.textTertiary)
             }
+        }
+    }
+
+    /// Tonal type badge shown in the Todos scope so each row is self-identifying.
+    private var typeChip: some View {
+        let (icon, color) = typeIconAndColor(item.type)
+        return Label {
+            Text(typeLabel(item.type))
+                .font(.caption2)
+                .fontWeight(.medium)
+        } icon: {
+            Image(systemName: icon)
+                .font(.caption2)
+                .accessibilityHidden(true)
+        }
+        .foregroundStyle(color)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2)
+        .background(color.opacity(0.12))
+        .clipShape(Capsule())
+        .accessibilityHidden(true) // type is already in the row's a11y label
+    }
+
+    private func typeLabel(_ type: InventoryType) -> String {
+        switch type {
+        case .ingredient: return InventoryStrings.ingredientType
+        case .equipment:  return InventoryStrings.equipmentType
+        case .supply:     return InventoryStrings.supplyType
+        }
+    }
+
+    private func typeIconAndColor(_ type: InventoryType) -> (String, Color) {
+        switch type {
+        case .ingredient: return ("leaf.fill", SolennixColors.success)
+        case .equipment:  return ("wrench.and.screwdriver.fill", SolennixColors.primary)
+        case .supply:     return ("shippingbox.fill", SolennixColors.accent)
         }
     }
 }

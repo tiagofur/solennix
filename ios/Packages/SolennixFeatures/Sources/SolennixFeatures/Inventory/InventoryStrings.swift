@@ -175,6 +175,21 @@ enum InventoryStrings {
         return label
     }
 
+    // MARK: - Scope filter (issue #551)
+
+    static var scopeAll: String { FeatureL10n.text("inventory.scope_all", "Todos") }
+    static var scopeIngredient: String { FeatureL10n.text("inventory.scope_ingredient", "Ingredientes") }
+    static var scopeEquipment: String { FeatureL10n.text("inventory.scope_equipment", "Equipo") }
+    static var scopeSupply: String { FeatureL10n.text("inventory.scope_supply", "Insumos") }
+    static var scopeFilterAccessibility: String { FeatureL10n.text("inventory.scope_filter_accessibility", "Filtrar por tipo") }
+
+    static var scopeEmptyIngredient: String { FeatureL10n.text("inventory.scope_empty_ingredient", "Sin ingredientes") }
+    static var scopeEmptyEquipment: String { FeatureL10n.text("inventory.scope_empty_equipment", "Sin equipo") }
+    static var scopeEmptySupply: String { FeatureL10n.text("inventory.scope_empty_supply", "Sin insumos") }
+    static var scopeEmptyIngredientMessage: String { FeatureL10n.text("inventory.scope_empty_ingredient_message", "No hay ingredientes en el inventario") }
+    static var scopeEmptyEquipmentMessage: String { FeatureL10n.text("inventory.scope_empty_equipment_message", "No hay equipo en el inventario") }
+    static var scopeEmptySupplyMessage: String { FeatureL10n.text("inventory.scope_empty_supply_message", "No hay insumos en el inventario") }
+
     static func demandRowA11y(name: String, quantity: String, unit: String, diffDays: Int, isInsufficient: Bool) -> String {
         var label = FeatureL10n.format("inventory.demand_row_a11y", "%@: %@ %@", name, quantity, unit)
         if diffDays == 0 {
