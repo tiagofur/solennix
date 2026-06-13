@@ -70,13 +70,15 @@ public final class StaffTeamFormViewModel {
     private var initialRoleLabel: String = ""
     private var initialNotes: String = ""
     private var initialMemberIds: [String] = []
+    private var initialLeadIds: Set<String> = []
 
-    /// True when any field or member list differs from its loaded (or default) initial value.
+    /// True when any field, member list, or lead assignment differs from its loaded (or default) initial value.
     public var isDirty: Bool {
         name != initialName
             || roleLabel != initialRoleLabel
             || notes != initialNotes
             || members.map(\.staffId) != initialMemberIds
+            || Set(members.filter(\.isLead).map(\.staffId)) != initialLeadIds
     }
 
     // MARK: - Dependencies
@@ -127,7 +129,7 @@ public final class StaffTeamFormViewModel {
             members = sorted.map { m in
                 StaffTeamMemberDraft(
                     staffId: m.staffId,
-                    staffName: m.staffName ?? "(sin nombre)",
+                    staffName: m.staffName ?? StaffStrings.memberNoName,
                     staffRoleLabel: m.staffRoleLabel,
                     staffPhone: m.staffPhone,
                     staffEmail: m.staffEmail,
@@ -139,6 +141,7 @@ public final class StaffTeamFormViewModel {
             initialRoleLabel = roleLabel
             initialNotes = notes
             initialMemberIds = members.map(\.staffId)
+            initialLeadIds = Set(members.filter(\.isLead).map(\.staffId))
         } catch {
             errorMessage = mapError(error)
         }

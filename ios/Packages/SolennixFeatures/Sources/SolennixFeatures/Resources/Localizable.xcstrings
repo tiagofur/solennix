@@ -24033,6 +24033,86 @@
           }
         }
       }
+    },
+    "events.form.step.a11y.label.1": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 1: General"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 1: General"
+          }
+        }
+      }
+    },
+    "events.form.step.a11y.label.2": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 2: Products"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 2: Productos"
+          }
+        }
+      }
+    },
+    "events.form.step.a11y.label.3": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 3: Extras"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 3: Extras"
+          }
+        }
+      }
+    },
+    "events.form.step.a11y.label.4": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 4: Inventory"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 4: Inventario"
+          }
+        }
+      }
+    },
+    "events.form.step.a11y.label.5": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 5: Finances"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 5: Finanzas"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

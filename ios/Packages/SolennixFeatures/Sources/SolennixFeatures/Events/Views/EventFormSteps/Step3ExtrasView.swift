@@ -135,6 +135,7 @@ struct Step3ExtrasView: View {
             }
             .padding(Spacing.md)
         }
+        .scrollDismissesKeyboard(.interactively)
     }
 
     private func formatCurrency(_ value: Double) -> String {

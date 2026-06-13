@@ -206,9 +206,90 @@ public final class EventFormViewModel {
     public var currentStep: Int = 1
     public var isLoading: Bool = false
     public var isSaving: Bool = false
-    public var isDirty: Bool = false
     public var errorMessage: String?
     public var planLimitMessage: String?
+
+    // MARK: - Dirty-State Snapshot
+    //
+    // Replaces the fragile onChange/markDirty/resetDirty machinery.
+    // A snapshot is taken once after loadInitialData (create mode) and once
+    // after loadEventForEditing (edit mode). isDirty is a pure computed
+    // comparison — no race between resetDirty() and onChange watchers.
+
+    /// Stable signature for a collection item: id + quantity + price.
+    struct ItemSignature: Equatable {
+        let id: String
+        let quantity: Double
+        let price: Double
+    }
+
+    struct FormSnapshot: Equatable {
+        var clientId: String
+        var serviceType: String
+        var eventDate: Date
+        var startTime: Date?
+        var endTime: Date?
+        var numPeople: Int
+        var notes: String
+        var location: String
+        var city: String
+        var status: EventStatus
+        var requiresInvoice: Bool
+        var taxRate: Double
+        var depositPercent: Double
+        var cancellationDays: Double
+        var refundPercent: Double
+        var discount: Double
+        var discountType: DiscountType
+        var products: [ItemSignature]
+        var extras: [ItemSignature]
+        var staff: [ItemSignature]
+        var equipment: [ItemSignature]
+        var supplies: [ItemSignature]
+    }
+
+    /// Snapshot taken once after load. Nil until the first load completes.
+    var formSnapshot: FormSnapshot?
+
+    /// True iff the current form state differs from the post-load snapshot.
+    /// Pure computed — no side effects, no race conditions.
+    public var isDirty: Bool {
+        guard let snap = formSnapshot else { return false }
+        return currentSnapshot != snap
+    }
+
+    var currentSnapshot: FormSnapshot {
+        FormSnapshot(
+            clientId: clientId,
+            serviceType: serviceType,
+            eventDate: eventDate,
+            startTime: startTime,
+            endTime: endTime,
+            numPeople: numPeople,
+            notes: notes,
+            location: location,
+            city: city,
+            status: status,
+            requiresInvoice: requiresInvoice,
+            taxRate: taxRate,
+            depositPercent: depositPercent,
+            cancellationDays: cancellationDays,
+            refundPercent: refundPercent,
+            discount: discount,
+            discountType: discountType,
+            products: selectedProducts.map { ItemSignature(id: $0.productId, quantity: $0.quantity, price: $0.unitPrice) },
+            extras: extras.map { ItemSignature(id: $0.id.uuidString, quantity: 1, price: $0.price) },
+            staff: selectedStaff.map { ItemSignature(id: $0.staffId, quantity: $0.feeAmount, price: $0.feeAmount) },
+            equipment: selectedEquipment.map { ItemSignature(id: $0.inventoryId, quantity: Double($0.quantity), price: 0) },
+            supplies: selectedSupplies.map { ItemSignature(id: $0.inventoryId, quantity: $0.quantity, price: $0.unitCost) }
+        )
+    }
+
+    /// Takes a snapshot of the current form state. Called at the end of both
+    /// loadInitialData and loadEventForEditing, after all fields are populated.
+    func takeSnapshot() {
+        formSnapshot = currentSnapshot
+    }
 
     // MARK: - Edit Mode
 
@@ -225,16 +306,6 @@ public final class EventFormViewModel {
 
     func tr(_ key: String, _ defaultValue: String) -> String {
         FeatureL10n.text(key, defaultValue)
-    }
-
-    /// Called by the view's onChange watchers once the user edits any field.
-    /// Load/save code resets this to false via resetDirty().
-    public func markDirty() {
-        isDirty = true
-    }
-
-    public func resetDirty() {
-        isDirty = false
     }
 
     // MARK: - Prefill Support (Duplicate Event)

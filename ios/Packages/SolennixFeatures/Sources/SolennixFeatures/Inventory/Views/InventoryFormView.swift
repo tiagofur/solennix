@@ -167,7 +167,7 @@ public struct InventoryFormView: View {
             Section(InventoryStrings.costOptionalTitle) {
                 HStack {
                     Text("$")
-                    TextField(InventoryStrings.costPlaceholder, value: $viewModel.unitCost, format: .number)
+                    TextField(InventoryStrings.costPlaceholder, value: $viewModel.unitCost, format: .number.precision(.fractionLength(0...2)))
                         .keyboardType(.decimalPad)
                 }
             }

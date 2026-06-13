@@ -29,6 +29,11 @@ private struct StatusResponse: Decodable {
     let status: String
 }
 
+private struct RecipeSnapshot: Equatable {
+    let inventoryId: String
+    let quantityRequired: Double
+}
+
 // MARK: - Recipe Item
 
 public struct RecipeItem: Identifiable, Hashable {
@@ -125,14 +130,20 @@ public final class ProductFormViewModel {
     private var initialCategory: String = ""
     private var initialBasePrice: Double = 0
     private var initialIsActive: Bool = true
+    private var initialRecipeSnapshot: [RecipeSnapshot] = []
 
-    /// True when any core field differs from its loaded (or default) initial value.
+    /// True when any core field, recipe, or local image differs from its loaded (or default) initial value.
     public var isDirty: Bool {
         name != initialName
             || category != initialCategory
             || basePrice != initialBasePrice
             || isActive != initialIsActive
             || localImageData != nil
+            || currentRecipeSnapshot != initialRecipeSnapshot
+    }
+
+    private var currentRecipeSnapshot: [RecipeSnapshot] {
+        (ingredients + equipment + supplies).map { RecipeSnapshot(inventoryId: $0.inventoryId, quantityRequired: $0.quantityRequired) }
     }
 
     // MARK: - Validation
@@ -249,6 +260,8 @@ public final class ProductFormViewModel {
                 supplies.append(item)
             }
         }
+        // Snapshot recipe so isDirty can detect ingredient/equipment/supply changes
+        initialRecipeSnapshot = currentRecipeSnapshot
     }
 
     // MARK: - Validation

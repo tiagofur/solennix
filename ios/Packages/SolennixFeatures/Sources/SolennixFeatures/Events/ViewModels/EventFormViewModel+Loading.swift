@@ -47,8 +47,8 @@ extension EventFormViewModel {
         }
 
         isLoading = false
-        // Reset dirty after initial load — only user interactions should mark it dirty.
-        resetDirty()
+        // Snapshot the post-load state so isDirty can compare against it.
+        takeSnapshot()
     }
 
     // MARK: - Apply Quick Quote Data
@@ -199,7 +199,7 @@ extension EventFormViewModel {
         }
 
         isLoading = false
-        // Reset dirty after loading event data — only user edits should mark it dirty.
-        resetDirty()
+        // Snapshot the post-load state so isDirty can compare against it.
+        takeSnapshot()
     }
 }

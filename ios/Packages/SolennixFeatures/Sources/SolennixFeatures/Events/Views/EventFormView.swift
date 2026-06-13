@@ -65,7 +65,6 @@ public struct EventFormView: View {
                 eventId: eventId,
                 initialStep: initialStep,
                 didApplyInitialStep: $didApplyInitialStep,
-                showDiscardDialog: $showDiscardDialog,
                 viewModel: viewModel
             )
     }
@@ -297,7 +296,6 @@ private struct FormLifecycleModifier: ViewModifier {
     let eventId: String?
     let initialStep: Int?
     @Binding var didApplyInitialStep: Bool
-    @Binding var showDiscardDialog: Bool
     @Bindable var viewModel: EventFormViewModel
 
     func body(content: Content) -> some View {
@@ -319,16 +317,8 @@ private struct FormLifecycleModifier: ViewModifier {
                     viewModel.currentStep = oldStep
                 }
             }
-            // Dirty-state tracking.
-            .onChange(of: viewModel.clientId) { _, _ in viewModel.markDirty() }
-            .onChange(of: viewModel.serviceType) { _, _ in viewModel.markDirty() }
-            .onChange(of: viewModel.eventDate) { _, _ in viewModel.markDirty() }
-            .onChange(of: viewModel.numPeople) { _, _ in viewModel.markDirty() }
-            .onChange(of: viewModel.notes) { _, _ in viewModel.markDirty() }
-            .onChange(of: viewModel.selectedProducts.count) { _, _ in viewModel.markDirty() }
-            .onChange(of: viewModel.extras.count) { _, _ in viewModel.markDirty() }
-            .onChange(of: viewModel.selectedStaff.count) { _, _ in viewModel.markDirty() }
-            .onChange(of: viewModel.discount) { _, _ in viewModel.markDirty() }
+            // isDirty is now a pure computed comparison against a post-load
+            // snapshot — no onChange watchers needed for dirty tracking.
             .interactiveDismissDisabled(viewModel.isDirty && !viewModel.isSaving)
     }
 }
@@ -338,14 +328,12 @@ private extension View {
         eventId: String?,
         initialStep: Int?,
         didApplyInitialStep: Binding<Bool>,
-        showDiscardDialog: Binding<Bool>,
         viewModel: EventFormViewModel
     ) -> some View {
         modifier(FormLifecycleModifier(
             eventId: eventId,
             initialStep: initialStep,
             didApplyInitialStep: didApplyInitialStep,
-            showDiscardDialog: showDiscardDialog,
             viewModel: viewModel
         ))
     }

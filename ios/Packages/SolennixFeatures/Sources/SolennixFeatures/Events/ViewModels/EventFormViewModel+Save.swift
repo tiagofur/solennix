@@ -175,7 +175,7 @@ extension EventFormViewModel {
 
         HapticsHelper.play(.success)
         NotificationCenter.default.post(name: .solennixEventUpdated, object: nil)
-        resetDirty()
+        takeSnapshot()
     }
 
     // MARK: - Step Navigation
