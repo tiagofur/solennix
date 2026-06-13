@@ -163,9 +163,10 @@ public final class DashboardViewModel {
         isLoading = true
         errorMessage = nil
 
-        // Build date range for current month
+        // Build date range for current month using UTC calendar so the
+        // month boundary matches the server (UTC dates) regardless of device TZ.
         let now = Date()
-        let calendar = Calendar.current
+        let calendar = Self.utcCalendar
         let components = calendar.dateComponents([.year, .month], from: now)
         guard let startOfMonth = calendar.date(from: components),
               let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth)
@@ -175,10 +176,9 @@ public final class DashboardViewModel {
             return
         }
 
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        let startStr = dateFormatter.string(from: startOfMonth)
-        let endStr = dateFormatter.string(from: endOfMonth)
+        // Reuse the UTC-pinned static formatter — no new allocation per load.
+        let startStr = Self.dashboardDateFormatter.string(from: startOfMonth)
+        let endStr = Self.dashboardDateFormatter.string(from: endOfMonth)
 
         var encounteredError = false
 
@@ -191,11 +191,13 @@ public final class DashboardViewModel {
             let aggregated: DashboardKPIs = try await apiClient.get(Endpoint.dashboardKpis)
             kpis = aggregated
             // Mirror low stock count for views that read `lowStockCount`
-            // directly. The list (`lowStockItems`) still comes from the
-            // inventory loader below. Other counts (totalEvents, totalProducts)
-            // are derived from the full lists and are not a clean 1:1 with
-            // kpis fields, so we leave those to the sequential loaders.
-            lowStockCount = aggregated.lowStockItems
+            // directly only while inventory hasn't loaded yet. Once
+            // lowStockItems is populated by the inventory loader below it
+            // becomes the canonical source, so skip the preload write on
+            // pull-to-refresh (lowStockItems is non-empty after first load).
+            if lowStockItems.isEmpty {
+                lowStockCount = aggregated.lowStockItems
+            }
         } catch {
             NSLog("[Dashboard] ⚠️ kpis preload failed: %@", String(describing: error))
             // Non-fatal — the sequential loaders below will still populate
@@ -269,9 +271,11 @@ public final class DashboardViewModel {
             .sorted(by: Self.compareDashboardEvents)
         upcomingEvents = Array(derivedUpcoming.prefix(5))
 
-        // Low stock items = inventory where current_stock < minimum_stock AND minimum_stock > 0
+        // Low stock items = inventory where current_stock < minimum_stock AND minimum_stock > 0.
+        // lowStockItems.count is the single canonical source once inventory loads.
+        // The KPI preload value (set above) is only a pre-inventory placeholder.
         lowStockItems = inventory.filter { $0.minimumStock > 0 && $0.currentStock < $0.minimumStock }
-        lowStockCount = lowStockItems.count
+        lowStockCount = lowStockItems.count  // canonical — KPI preload value is now superseded
 
         // Counts for onboarding checklist
         totalProducts = products.count
@@ -339,7 +343,9 @@ public final class DashboardViewModel {
             // new status without requiring a full pull-to-refresh.
             if let refreshed: DashboardKPIs = try? await apiClient.get(Endpoint.dashboardKpis) {
                 kpis = refreshed
-                lowStockCount = refreshed.lowStockItems
+                // lowStockCount is owned by lowStockItems (canonical source after inventory load).
+                // Do NOT overwrite it from kpis here to avoid a flicker back to the
+                // server-aggregate value. lowStockItems remains authoritative.
             }
             await loadEventStatusCounts()
             HapticsHelper.play(.success)
@@ -377,13 +383,17 @@ public final class DashboardViewModel {
     }
 
     private func shouldDisplayInUpcoming(_ event: Event, now: Date) -> Bool {
+        // Status filter matches isUpcomingEvent: confirmed only.
         guard event.status == .confirmed,
               let eventDate = Self.dashboardDateFormatter.date(from: String(event.eventDate.prefix(10)))
         else {
             return false
         }
 
-        return eventDate >= Calendar.current.startOfDay(for: now)
+        // Use the same UTC round-trip normalization as isUpcomingEvent so that
+        // shouldDisplayInUpcoming and isUpcomingEvent agree for every timezone.
+        let today = Self.dashboardDateFormatter.date(from: Self.dashboardDateFormatter.string(from: now)) ?? now
+        return eventDate >= today
     }
 
     private func replacing(event updatedEvent: Event, in events: [Event], allowInsert: Bool = false) -> [Event] {
@@ -399,12 +409,20 @@ public final class DashboardViewModel {
         return events
     }
 
+    /// UTC calendar shared by makeAttentionEvents so its date arithmetic matches
+    /// dashboardDateFormatter (UTC-pinned) and PendingEventsViewModel (explicit UTC).
+    private static let utcCalendar: Calendar = {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(secondsFromGMT: 0)!
+        return c
+    }()
+
     private static func makeAttentionEvents(
         events: [Event],
         payments: [Payment],
         clientMap: [String: Client],
         now: Date,
-        calendar: Calendar = .current
+        calendar: Calendar = utcCalendar
     ) -> [DashboardAttentionEvent] {
         let startOfToday = calendar.startOfDay(for: now)
         guard let next7Days = calendar.date(byAdding: .day, value: 7, to: startOfToday),
@@ -503,7 +521,11 @@ public final class DashboardViewModel {
     }
 
     private static func isUpcomingEvent(_ event: Event, now: Date = Date()) -> Bool {
-        guard let eventDate = dashboardDateFormatter.date(from: String(event.eventDate.prefix(10))) else {
+        // Only confirmed events appear in "Próximos eventos" — must match
+        // shouldDisplayInUpcoming so both functions agree on membership.
+        guard event.status == .confirmed,
+              let eventDate = dashboardDateFormatter.date(from: String(event.eventDate.prefix(10)))
+        else {
             return false
         }
 
@@ -550,7 +572,7 @@ public final class DashboardViewModel {
     static func buildTrailingSixMonthTrend(
         from serverPoints: [DashboardRevenuePoint],
         now: Date,
-        calendar: Calendar = Calendar(identifier: .gregorian)
+        calendar: Calendar = utcCalendar
     ) -> [MonthlyRevenueTrendPoint] {
         let keyFormatter = DateFormatter()
         keyFormatter.calendar = Calendar(identifier: .gregorian)

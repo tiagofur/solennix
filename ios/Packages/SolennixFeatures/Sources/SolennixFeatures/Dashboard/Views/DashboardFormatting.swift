@@ -10,12 +10,23 @@ enum DashboardFormatting {
         return formatter
     }()
 
+    // NumberFormatter is expensive to create — cache per locale to avoid
+    // re-allocating on every cell render (30+ calls per dashboard render cycle).
+    // NSCache is thread-safe; plain Dictionary is not — callers can come from
+    // ViewModel background tasks as well as View body (MainActor) reads.
+    private static let currencyFormatterCache: NSCache<NSString, NumberFormatter> = NSCache()
+
     private static func currencyFormatter(locale: Locale) -> NumberFormatter {
+        let key = locale.identifier as NSString
+        if let cached = currencyFormatterCache.object(forKey: key) {
+            return cached
+        }
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = "MXN"
         formatter.locale = locale
         formatter.maximumFractionDigits = 0
+        currencyFormatterCache.setObject(formatter, forKey: key)
         return formatter
     }
 

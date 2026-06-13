@@ -53,7 +53,7 @@ struct AttentionEventsCard: View {
                 .foregroundStyle(SolennixColors.warning)
                 .padding(.horizontal, Spacing.sm)
                 .padding(.vertical, Spacing.xs)
-                .background(SolennixColors.warning.opacity(0.15))
+                .background(SolennixColors.warningBg)
                 .clipShape(Capsule())
 
             Spacer()
@@ -166,7 +166,7 @@ struct AttentionEventsCard: View {
         case .overdueEvent:
             return SolennixColors.errorBg
         case .pendingPayment:
-            return SolennixColors.warning.opacity(0.15)
+            return SolennixColors.warningBg
         case .unconfirmedEvent:
             return SolennixColors.primaryLight
         }

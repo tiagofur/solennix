@@ -107,6 +107,15 @@ struct ForecastWidgetView: View {
         .background(SolennixColors.card)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
         .shadowSm()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(tr("dashboard.widgets.forecast.title", "Pronóstico"))
+        .accessibilityValue(
+            forecast.isEmpty
+                ? tr("dashboard.widgets.forecast.empty", "Sin pronóstico disponible")
+                : forecast.prefix(6).map { point in
+                    "\(DashboardFormatting.monthYear(from: point.month)): \(DashboardFormatting.currencyMXN(point.confirmedRevenue))"
+                  }.joined(separator: ", ")
+        )
     }
 }
 

@@ -75,6 +75,13 @@ public struct FinancialComparisonChart: View {
         .background(SolennixColors.card)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
         .shadowSm()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(tr("dashboard.financial_comparison", "Comparativa financiera"))
+        .accessibilityValue(
+            "\(tr("dashboard.kpi.net_sales", "Ventas netas")) \(DashboardFormatting.currencyMXN(netSales)), " +
+            "\(tr("dashboard.kpi.collected", "Cobrado")) \(DashboardFormatting.currencyMXN(cashCollected)), " +
+            "\(tr("dashboard.kpi.vat_outstanding", "IVA pendiente")) \(DashboardFormatting.currencyMXN(vatOutstanding))"
+        )
     }
 
     // MARK: - Bar Row

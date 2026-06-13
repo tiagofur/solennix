@@ -74,6 +74,14 @@ struct ProductDemandWidgetView: View {
         .background(SolennixColors.card)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
         .shadowSm()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(tr("dashboard.widgets.product_demand.title", "Demanda de productos"))
+        .accessibilityValue(
+            products.isEmpty
+                ? tr("dashboard.widgets.product_demand.empty", "Sin demanda registrada")
+                : products.prefix(5).map { "\($0.name): \(DashboardFormatting.currencyMXN($0.totalRevenue))" }
+                          .joined(separator: ", ")
+        )
     }
 }
 

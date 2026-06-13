@@ -5332,6 +5332,134 @@
         }
       }
     },
+    "dashboard.checklist.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Getting started"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primeros pasos"
+          }
+        }
+      }
+    },
+    "dashboard.checklist.dismiss": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dismiss getting started"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar primeros pasos"
+          }
+        }
+      }
+    },
+    "dashboard.checklist.create_client.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create your first client"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crea tu primer cliente"
+          }
+        }
+      }
+    },
+    "dashboard.checklist.create_client.description": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Register your first client's details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registra los datos de tu primer cliente"
+          }
+        }
+      }
+    },
+    "dashboard.checklist.create_product.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a product or service"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agrega un producto o servicio"
+          }
+        }
+      }
+    },
+    "dashboard.checklist.create_product.description": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Define what you offer your clients"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Define lo que ofreces a tus clientes"
+          }
+        }
+      }
+    },
+    "dashboard.checklist.create_event.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create your first event"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crea tu primer evento"
+          }
+        }
+      }
+    },
+    "dashboard.checklist.create_event.description": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quote and organize your first event"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cotiza y organiza tu primer evento"
+          }
+        }
+      }
+    },
     "dashboard.error.invalid_amount": {
       "localizations": {
         "en": {
@@ -5456,6 +5584,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld personas"
+          }
+        }
+      }
+    },
+    "dashboard.event_status": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Event status"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado de eventos"
+          }
+        }
+      }
+    },
+    "dashboard.event_status_accessibility": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Event status for the month"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado de eventos del mes"
           }
         }
       }
@@ -5792,6 +5952,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eventos"
+          }
+        }
+      }
+    },
+    "dashboard.quick_new_client": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New client"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuevo cliente"
           }
         }
       }
