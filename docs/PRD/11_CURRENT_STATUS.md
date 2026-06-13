@@ -25,6 +25,13 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.8
 
+> [!success] 2026-06-12 — Inventory scope filter (issue #551): backend + iOS
+> Las 3 secciones agrupadas del listado de inventario (que contradecían la paginación del servidor) se reemplazan por filtro de scope plano.
+> - **Backend:** `GET /api/inventory?type=ingredient|equipment|supply` — valida contra los valores de la migración 023, filtra paths paginado y completo, 400 en valor inválido, openapi sincronizado, 6 tests.
+> - **iOS:** `InventoryScope` (Todos·Ingredientes·Equipo·Insumos) con Picker segmentado en su propia Section (Menu en tamaños de accesibilidad); lista plana con chip tonal de tipo en "Todos"; paginación coherente por scope con guard anti-mezcla si el scope cambia con página en vuelo; empty states por scope; low-stock compone client-side; 11 keys l10n.
+> - **Pendiente:** Android (chips M3) va en el batch de paridad #552.
+> - **Commits:** 6fe39653, 08852a93, 672ff022.
+
 > [!success] 2026-06-12 — Inventory Detail: Judgment Day → APPROVED (cierra el ciclo de pantallas de detalle)
 > Cuarta y última pantalla de detalle (3 rondas). La más rota del ciclo: 7 CRITICAL convergentes en ronda 1.
 > - **Fechas de demanda reales:** mismo bug ISO8601 que Products — todas las entradas colapsaban a "hoy": demanda de 7 días inflada, alerta roja permanente, badges "Hoy" falsos. Ahora `fromServerDay` + ventana UTC-pinned.
