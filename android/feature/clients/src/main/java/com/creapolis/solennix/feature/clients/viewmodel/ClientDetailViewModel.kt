@@ -28,7 +28,15 @@ data class ClientDetailUiState(
     val eventsLoadFailed: Boolean = false,
     val totalEvents: Int = 0,
     val totalSpent: Double = 0.0,
-    val averagePerEvent: Double = 0.0
+    val averagePerEvent: Double = 0.0,
+    /**
+     * Server-computed balance: confirmed+completed event totals minus payments received.
+     * Positive = client owes money ("Por cobrar").
+     * Zero     = fully settled.
+     * Negative = overpayment / credit ("A favor").
+     * Null     = field absent in payload (list/search endpoint) — hide the KPI.
+     */
+    val pendingBalance: Double? = null
 )
 
 @HiltViewModel
@@ -61,7 +69,13 @@ class ClientDetailViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val client = clientRepository.getClient(clientId)
-                _uiState.update { it.copy(client = client, isLoading = false) }
+                _uiState.update {
+                    it.copy(
+                        client = client,
+                        isLoading = false,
+                        pendingBalance = client?.pendingBalance
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(

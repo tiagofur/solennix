@@ -141,6 +141,11 @@
     <string name="clients_list_action_email">Send email</string>
     <string name="clients_ok">OK</string>
 
+    <string name="clients_stats_pending_balance">Outstanding</string>
+    <string name="clients_stats_in_favor">Credit</string>
+    <string name="clients_cd_pending_balance">Outstanding: %1$s</string>
+    <string name="clients_cd_in_favor">Credit: %1$s</string>
+
     <string name="clients_events_load_error">Could not load events</string>
     <string name="clients_retry">Retry</string>
 

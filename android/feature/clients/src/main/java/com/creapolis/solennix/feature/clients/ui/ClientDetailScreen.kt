@@ -13,6 +13,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -194,7 +196,29 @@ fun ClientDetailScreen(
                             }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 KPICard(title = stringResource(R.string.clients_stats_average), value = uiState.averagePerEvent.asMXN(), icon = Icons.AutoMirrored.Filled.TrendingUp, iconColor = SolennixTheme.colors.kpiOrange, modifier = Modifier.weight(1f))
-                                Spacer(modifier = Modifier.weight(1f))
+                                val balance = uiState.pendingBalance
+                                if (balance != null) {
+                                    val isInFavor = balance < 0
+                                    val absBalance = Math.abs(balance)
+                                    val label = if (isInFavor) stringResource(R.string.clients_stats_in_favor) else stringResource(R.string.clients_stats_pending_balance)
+                                    val cdText = if (isInFavor) stringResource(R.string.clients_cd_in_favor, absBalance.asMXN()) else stringResource(R.string.clients_cd_pending_balance, absBalance.asMXN())
+                                    val iconColor = when {
+                                        balance > 0 -> SolennixTheme.colors.warning
+                                        balance < 0 -> SolennixTheme.colors.info
+                                        else -> SolennixTheme.colors.success
+                                    }
+                                    KPICard(
+                                        title = label,
+                                        value = absBalance.asMXN(),
+                                        icon = Icons.Default.AccountBalance,
+                                        iconColor = iconColor,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .semantics { contentDescription = cdText }
+                                    )
+                                } else {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
                             }
                         }
                     }

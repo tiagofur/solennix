@@ -141,6 +141,11 @@
     <string name="clients_list_action_email">Enviar correo electrónico</string>
     <string name="clients_ok">Aceptar</string>
 
+    <string name="clients_stats_pending_balance">Por cobrar</string>
+    <string name="clients_stats_in_favor">A favor</string>
+    <string name="clients_cd_pending_balance">Por cobrar: %1$s</string>
+    <string name="clients_cd_in_favor">A favor: %1$s</string>
+
     <string name="clients_events_load_error">No se pudieron cargar los eventos</string>
     <string name="clients_retry">Reintentar</string>
 
