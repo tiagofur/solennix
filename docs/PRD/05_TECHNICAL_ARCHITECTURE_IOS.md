@@ -89,6 +89,18 @@ platform: iOS
 > - Se agregan bloqueos por fecha con rango horario opcional (`startTime`/`endTime`) y motivo.
 > - Los cambios refrescan inmediatamente en el portal y usan endpoints scoped del miembro (`/unavailable-dates`).
 
+> [!success] 2026-06-11 — iOS HIG Quick Wins
+>
+> - **TipKit activado:** Tips reales (no placeholders) en `EventListView`, `ClientListView` y `DashboardView`. `quickQuoteTip` anclado al botón "+" del toolbar (los ítems internos de `Menu` no exponen un frame estable para `popoverTip`).
+> - **Skeleton loading:** `DashboardViewModel` expone `hasLoadedOnce` (`private(set) var`); la condición de skeleton en `DashboardView` (y `EventListView`) usa esta flag en lugar de `eventsThisMonth.isEmpty` para evitar que pull-to-refresh re-muestre skeletons en usuarios sin eventos.
+> - **`sensoryFeedback` condicional:** `EventListView` y `ClientListView` usan la variante con closure `{ _, newValue in newValue }` para disparar el haptic de warning solo en la transición `false → true` del diálogo de confirmación de borrado.
+> - **`@ScaledMetric` en íconos:** Íconos de empty state y formularios de Auth escalados con `@ScaledMetric(relativeTo:)` en lugar de `.system(size: X)` hardcodeado. `h1Premium` corregido de `.largeTitle` (34pt) a `.title` (28pt).
+> - **`SwiftUI.List` nativo:** `EventListView` usa `List` en iPhone para swipe actions nativas (trailing: eliminar/editar; leading: checklist) y pull-to-refresh sin sobreescritura.
+> - **Forms + teclado:** Toolbar con botón "Listo" sobre teclado numérico y `.interactiveDismissDisabled(false)` en formularios clave.
+> - **Limpieza de APIs deprecadas:** `UIScreen.main` → `GeometryReader`/`UIWindowScene`; `asyncAfter` → `Task { @MainActor in }`.
+> - **Sheets:** `.presentationDragIndicator(.visible)` en todos los sheets resizables.
+> - **GeometryReader en Auth iPad:** `HStack` interno de `GeometryReader` recibe `.frame(maxWidth: .infinity, maxHeight: .infinity)` en `LoginView`, `RegisterView`, `ForgotPasswordView` y `ResetPasswordView` para evitar colapso de layout en embeddings futuros.
+
 > [!info] Dependencias externas SPM (2026-04-16)
 >
 > | Paquete                          | Versión mínima | Usado en                              |

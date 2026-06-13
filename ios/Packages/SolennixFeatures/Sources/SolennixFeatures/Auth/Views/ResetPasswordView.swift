@@ -11,6 +11,8 @@ public struct ResetPasswordView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var viewModel: AuthViewModel?
+    @ScaledMetric(relativeTo: .largeTitle) private var formIconSize: CGFloat = 48
+    @ScaledMetric(relativeTo: .largeTitle) private var successIconSize: CGFloat = 64
 
     let token: String
 
@@ -56,31 +58,33 @@ public struct ResetPasswordView: View {
     // MARK: - iPad Layout
 
     private var iPadLayout: some View {
-        HStack(spacing: 0) {
-            // Left brand panel (40%)
-            brandPanel
-                .frame(maxWidth: .infinity)
-                .frame(width: UIScreen.main.bounds.width * 0.4)
+        GeometryReader { proxy in
+            HStack(spacing: 0) {
+                // Left brand panel (40%)
+                brandPanel
+                    .frame(width: proxy.size.width * 0.4)
 
-            // Right form panel (60%)
-            ScrollView {
-                VStack(spacing: Spacing.xl) {
-                    Spacer(minLength: Spacing.xxxl)
+                // Right form panel (60%)
+                ScrollView {
+                    VStack(spacing: Spacing.xl) {
+                        Spacer(minLength: Spacing.xxxl)
 
-                    if viewModel?.showSuccess == true {
-                        successState
-                            .frame(maxWidth: 440)
-                    } else {
-                        formState
-                            .frame(maxWidth: 440)
+                        if viewModel?.showSuccess == true {
+                            successState
+                                .frame(maxWidth: 440)
+                        } else {
+                            formState
+                                .frame(maxWidth: 440)
+                        }
+
+                        Spacer(minLength: Spacing.xxxl)
                     }
-
-                    Spacer(minLength: Spacing.xxxl)
+                    .padding(.horizontal, Spacing.xxxl)
+                    .frame(maxWidth: .infinity)
                 }
-                .padding(.horizontal, Spacing.xxxl)
-                .frame(maxWidth: .infinity)
+                .scrollDismissesKeyboard(.interactively)
             }
-            .scrollDismissesKeyboard(.interactively)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 
@@ -140,7 +144,7 @@ public struct ResetPasswordView: View {
             // Instruction
             VStack(spacing: Spacing.sm) {
                 Image(systemName: "key.fill")
-                    .font(.system(size: 48))
+                    .font(.system(size: formIconSize))
                     .foregroundStyle(SolennixColors.primary)
 
                 Text(AuthStrings.resetPasswordSubtitle)
@@ -196,7 +200,7 @@ public struct ResetPasswordView: View {
             Spacer(minLength: Spacing.xxxl)
 
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 64))
+                .font(.system(size: successIconSize))
                 .foregroundStyle(SolennixColors.success)
 
             VStack(spacing: Spacing.sm) {

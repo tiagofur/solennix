@@ -84,7 +84,7 @@ struct OnboardingChecklistView: View {
                         onDismiss()
                     } label: {
                         Image(systemName: "xmark")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.caption.weight(.semibold))
                             .foregroundStyle(SolennixColors.textTertiary)
                             .padding(Spacing.sm)
                     }
@@ -148,7 +148,7 @@ private struct OnboardingStepRow: View {
                     .frame(width: 32, height: 32)
 
                 Image(systemName: "checkmark")
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.caption.weight(.bold))
                     .foregroundStyle(.white)
             }
 
@@ -179,7 +179,7 @@ private struct OnboardingStepRow: View {
                     .frame(width: 32, height: 32)
 
                 Image(systemName: step.icon)
-                    .font(.system(size: 14))
+                    .font(.caption)
                     .foregroundStyle(SolennixColors.primary)
             }
 

@@ -116,6 +116,7 @@ public struct EventFormView: View {
                 }
             )
         }
+        .keyboardDoneToolbar()
         .task {
             await viewModel.loadInitialData()
             if let id = eventId {

@@ -27,6 +27,8 @@ public struct ProductFormView: View {
         }
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
+        .scrollDismissesKeyboard(.interactively)
+        .keyboardDoneToolbar()
         .navigationTitle(viewModel.isEditing ? ProductStrings.editProductTitle : ProductStrings.newProductTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -239,10 +241,12 @@ public struct ProductFormView: View {
         }
     }
 
+    @ScaledMetric(relativeTo: .largeTitle) private var placeholderIconSize: CGFloat = 32
+
     private var imagePlaceholder: some View {
         VStack(spacing: Spacing.sm) {
             Image(systemName: "camera.fill")
-                .font(.system(size: 32))
+                .font(.system(size: placeholderIconSize))
                 .foregroundStyle(SolennixColors.textTertiary)
 
             Text(ProductStrings.addPhoto)
@@ -412,6 +416,7 @@ public struct ProductFormView: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 
     // MARK: - Save Button

@@ -39,7 +39,7 @@ struct AttentionEventsCard: View {
                     .frame(width: 36, height: 36)
 
                 Image(systemName: "exclamationmark.circle.fill")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.callout.weight(.semibold))
                     .foregroundStyle(SolennixColors.warning)
             }
 

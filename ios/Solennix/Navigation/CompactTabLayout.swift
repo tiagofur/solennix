@@ -121,7 +121,8 @@ struct CompactTabLayout: View {
             // Navegar desde la pestaña Home para rutas de Spotlight
             selectedTab = .home
             homePath = NavigationPath()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(100))
                 homePath.append(route)
             }
             pendingSpotlightRoute = nil

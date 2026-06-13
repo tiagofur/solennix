@@ -41,6 +41,8 @@ public struct DemandForecastChart: View {
         self.basePrice = basePrice
     }
 
+    @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 32
+
     private var hasData: Bool {
         !dataPoints.isEmpty
     }
@@ -217,7 +219,7 @@ public struct DemandForecastChart: View {
                 // Empty state
                 VStack(spacing: Spacing.sm) {
                     Image(systemName: "calendar.badge.clock")
-                        .font(.system(size: 32))
+                        .font(.system(size: emptyIconSize))
                         .foregroundStyle(SolennixColors.textTertiary)
 
                     Text(ProductStrings.noUpcomingEvents)

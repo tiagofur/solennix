@@ -13,6 +13,8 @@ public struct SearchView: View {
     @State private var viewModel: SearchViewModel?
     @FocusState private var isSearchFocused: Bool
 
+    @ScaledMetric(relativeTo: .largeTitle) private var illustrationIconSize: CGFloat = 40
+
     public init(initialQuery: String = "") {
         self.initialQuery = initialQuery
     }
@@ -135,7 +137,7 @@ public struct SearchView: View {
         Section {
             VStack(spacing: Spacing.md) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 40))
+                    .font(.system(size: illustrationIconSize))
                     .foregroundStyle(SolennixColors.textTertiary)
 
                 Text(SearchStrings.noResultsTitle)
@@ -158,7 +160,7 @@ public struct SearchView: View {
         Section {
             VStack(spacing: Spacing.md) {
                 Image(systemName: "text.magnifyingglass")
-                    .font(.system(size: 40))
+                    .font(.system(size: illustrationIconSize))
                     .foregroundStyle(SolennixColors.textTertiary)
 
                 Text(SearchStrings.initialStateHint)

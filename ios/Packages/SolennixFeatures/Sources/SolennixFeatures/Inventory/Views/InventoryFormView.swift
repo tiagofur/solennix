@@ -25,6 +25,8 @@ public struct InventoryFormView: View {
         }
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
+        .scrollDismissesKeyboard(.interactively)
+        .keyboardDoneToolbar()
         .navigationTitle(viewModel.isEditing ? InventoryStrings.editItemTitle : InventoryStrings.newItemTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

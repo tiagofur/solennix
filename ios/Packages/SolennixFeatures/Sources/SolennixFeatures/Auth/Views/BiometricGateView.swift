@@ -15,6 +15,8 @@ public struct BiometricGateView: View {
     @State private var errorMessage: String?
     @State private var showLogin: Bool = false
 
+    @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 64
+
     public init() {}
 
     public var body: some View {
@@ -56,7 +58,7 @@ public struct BiometricGateView: View {
             // Biometric icon
             VStack(spacing: Spacing.lg) {
                 Image(systemName: biometricIconName)
-                    .font(.system(size: 64))
+                    .font(.system(size: iconSize))
                     .foregroundStyle(SolennixColors.primary)
 
                 Text(AuthStrings.biometricUnlockTitle)

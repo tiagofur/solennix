@@ -292,6 +292,7 @@ struct Step1GeneralView: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 
     // MARK: - Time Field (reutilizable por cada media columna)
@@ -585,6 +586,7 @@ private struct OptionalTimePicker: View {
             }
         }
         .presentationDetents([.height(320)])
+        .presentationDragIndicator(.visible)
     }
 }
 

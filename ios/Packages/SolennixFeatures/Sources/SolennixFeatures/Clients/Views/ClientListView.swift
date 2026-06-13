@@ -16,6 +16,9 @@ public struct ClientListView: View {
     @Environment(CacheManager.self) private var cacheManager: CacheManager?
     @Environment(ToastManager.self) private var toastManager
 
+    // TipKit tip
+    private let swipeActionTip = SwipeActionTip()
+
     public init(apiClient: APIClient) {
         _viewModel = State(initialValue: ClientListViewModel(apiClient: apiClient))
     }
@@ -23,6 +26,8 @@ public struct ClientListView: View {
     public var body: some View {
         mainList
             .background(SolennixColors.surfaceGrouped)
+            // Haptic feedback when the destructive delete confirmation appears (true only).
+            .sensoryFeedback(.warning, trigger: viewModel.showDeleteConfirm) { _, newValue in newValue }
             .navigationTitle(tr("clients.title", "Clientes"))
             .navigationBarTitleDisplayMode(.large)
             .searchable(text: $viewModel.searchText, prompt: tr("clients.search_placeholder", "Buscar clientes"))
@@ -181,7 +186,6 @@ public struct ClientListView: View {
                         }
                         Divider()
                         Button(role: .destructive) {
-                            HapticsHelper.play(.warning)
                             viewModel.deleteTarget = client
                             viewModel.showDeleteConfirm = true
                         } label: {
@@ -250,7 +254,6 @@ public struct ClientListView: View {
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button(role: .destructive) {
-                            HapticsHelper.play(.warning)
                             viewModel.deleteTarget = client
                             viewModel.showDeleteConfirm = true
                         } label: {
@@ -311,7 +314,6 @@ public struct ClientListView: View {
                         }
                         Divider()
                         Button(role: .destructive) {
-                            HapticsHelper.play(.warning)
                             viewModel.deleteTarget = client
                             viewModel.showDeleteConfirm = true
                         } label: {
@@ -339,6 +341,7 @@ public struct ClientListView: View {
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
+        .popoverTip(swipeActionTip)
     }
 
     /// Skeleton placeholder rows shown while clients are loading for the first time.

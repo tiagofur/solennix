@@ -109,6 +109,7 @@ public struct QuickClientSheet: View {
             }
         }
         .presentationDetents([.medium])
+        .presentationDragIndicator(.visible)
     }
 
     // MARK: - Validation

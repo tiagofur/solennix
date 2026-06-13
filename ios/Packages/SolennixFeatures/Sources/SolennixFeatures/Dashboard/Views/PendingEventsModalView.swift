@@ -57,7 +57,7 @@ public struct PendingEventsModalView: View {
                         .frame(width: 40, height: 40)
 
                     Image(systemName: "exclamationmark.circle")
-                        .font(.system(size: 20))
+                        .font(.title3)
                         .foregroundStyle(SolennixColors.primary)
                 }
 
@@ -86,7 +86,7 @@ public struct PendingEventsModalView: View {
                     }
                 } label: {
                     Image(systemName: "xmark")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.callout.weight(.semibold))
                         .foregroundStyle(SolennixColors.textTertiary)
                         .padding(8)
                 }

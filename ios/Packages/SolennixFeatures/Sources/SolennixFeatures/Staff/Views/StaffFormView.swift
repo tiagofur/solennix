@@ -26,6 +26,8 @@ public struct StaffFormView: View {
         }
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
+        .scrollDismissesKeyboard(.interactively)
+        .keyboardDoneToolbar()
         .navigationTitle(staffId != nil ? StaffStrings.editTitle : StaffStrings.newTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

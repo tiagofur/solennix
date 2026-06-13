@@ -161,7 +161,7 @@ private struct DayCellView: View {
             // expanding the grid cell height.
             if overflow > 0 {
                 Text(CalendarStrings.overflowMore(overflow))
-                    .font(.system(size: 8))
+                    .font(.system(.caption2))
                     .foregroundStyle(SolennixColors.textSecondary)
                     .lineLimit(1)
             }

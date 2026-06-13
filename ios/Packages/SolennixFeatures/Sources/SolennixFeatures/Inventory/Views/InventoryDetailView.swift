@@ -31,6 +31,9 @@ public struct InventoryDetailView: View {
     private let apiClient: APIClient
     private let itemId: String
 
+    @ScaledMetric(relativeTo: .largeTitle) private var stockFontSize: CGFloat = 48
+    @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 28
+
     public init(apiClient: APIClient, itemId: String) {
         self.apiClient = apiClient
         self.itemId = itemId
@@ -299,7 +302,7 @@ public struct InventoryDetailView: View {
 
             HStack(alignment: .lastTextBaseline, spacing: Spacing.xs) {
                 Text("\(Int(item.currentStock))")
-                    .font(.system(size: 48, weight: .bold, design: .rounded))
+                    .font(.system(size: stockFontSize, weight: .bold, design: .rounded))
                     .foregroundStyle(SolennixColors.text)
                 Text(item.unit)
                     .font(.title3)
@@ -536,7 +539,7 @@ public struct InventoryDetailView: View {
             if demandEntries.isEmpty {
                 VStack(spacing: Spacing.sm) {
                     Image(systemName: "calendar.badge.clock")
-                        .font(.system(size: 28))
+                        .font(.system(size: emptyIconSize))
                         .foregroundStyle(SolennixColors.textTertiary)
                     Text(InventoryStrings.noConfirmedEvents)
                         .font(.caption)
@@ -729,6 +732,7 @@ public struct InventoryDetailView: View {
             }
         }
         .presentationDetents([.medium])
+        .presentationDragIndicator(.visible)
     }
 }
 

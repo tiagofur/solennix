@@ -25,6 +25,17 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.8
 
+> [!success] 2026-06-11 — iOS HIG Quick Wins (branch `feat/ios-hig-quick-wins`, PR #544)
+> Se aplicaron mejoras de calidad HIG en iOS siguiendo las guías oficiales de Apple (iOS 17+).
+> - **TipKit:** Se activaron tips contextuales reales (`NewEventTip`, `QuickQuoteTip`, `SwipeActionTip`) en lugar de los placeholders anteriores.
+> - **Skeleton loading:** `DashboardView` y `EventListView` muestran tarjetas skeleton animadas en la primera carga. `hasLoadedOnce` en `DashboardViewModel` evita re-aparición en pull-to-refresh.
+> - **Dynamic Type (`@ScaledMetric`):** Tamaños de ícono hardcodeados reemplazados por `@ScaledMetric(relativeTo:)` en empty states y vistas de auth.
+> - **`sensoryFeedback` condicional:** Doble haptic corregido en `EventListView` y `ClientListView` usando la variante closure `{ _, newValue in newValue }`.
+> - **`SwiftUI.List` nativo para swipe actions:** `EventListView` usa `List` nativo en iPhone (eliminar trailing, checklist leading, pull-to-refresh nativo).
+> - **Teclado y dismissal:** Toolbar "Listo" sobre teclado numérico + `.scrollDismissesKeyboard(.interactively)` en formularios clave.
+> - **Limpieza de APIs deprecadas:** `UIScreen.main` reemplazado; hacks `asyncAfter` → `Task { @MainActor in }`. `h1Premium` corregido de 34pt → 28pt.
+> - **Drag indicators:** `.presentationDragIndicator(.visible)` en todos los sheets resizables.
+
 > [!success] 2026-06-11 — Android UX Parity: quick wins en branch `feat/android-ux-parity`
 > Se aplicaron mejoras de calidad UX en Android (Material 3 + Compose) espejando los patrones del iOS HIG quick wins (PR #544). Todos los cambios sobre el branch `feat/android-ux-parity`.
 > - **Skeletons en Clients y Dashboard:** `ClientListScreen` y `DashboardScreen` ya cuentan con skeleton screens durante la carga inicial. El skeleton del Dashboard está acotado al cold-start (señal one-shot `isLoading=true`).

@@ -11,6 +11,8 @@ public struct TeamInviteAcceptView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     @State private var viewModel: AuthViewModel?
+    @ScaledMetric(relativeTo: .largeTitle) private var formIconSize: CGFloat = 48
+    @ScaledMetric(relativeTo: .largeTitle) private var successIconSize: CGFloat = 64
 
     let token: String
 
@@ -47,7 +49,7 @@ public struct TeamInviteAcceptView: View {
         VStack(spacing: Spacing.xl) {
             VStack(spacing: Spacing.sm) {
                 Image(systemName: "person.badge.key.fill")
-                    .font(.system(size: 48))
+                    .font(.system(size: formIconSize))
                     .foregroundStyle(SolennixColors.primary)
 
                 Text(AuthStrings.teamInviteSubtitle)
@@ -110,7 +112,7 @@ public struct TeamInviteAcceptView: View {
             Spacer(minLength: Spacing.xxxl)
 
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 64))
+                .font(.system(size: successIconSize))
                 .foregroundStyle(SolennixColors.success)
 
             VStack(spacing: Spacing.sm) {

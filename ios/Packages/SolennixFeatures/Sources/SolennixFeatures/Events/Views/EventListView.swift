@@ -2,6 +2,7 @@ import SwiftUI
 import SolennixCore
 import SolennixDesign
 import SolennixNetwork
+import TipKit
 
 // MARK: - Event List View
 
@@ -20,6 +21,12 @@ public struct EventListView: View {
     @State private var showQuickQuote = false
     @State private var showDateFilter = false
 
+    // TipKit tips
+    private let newEventTip = NewEventTip()
+    private let quickQuoteTip = QuickQuoteTip()
+
+    @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 40
+
     // MARK: - Init
 
     public init(apiClient: APIClient) {
@@ -31,6 +38,8 @@ public struct EventListView: View {
     public var body: some View {
         eventList
             .background(SolennixColors.surfaceGrouped)
+            // Haptic feedback when the destructive delete confirmation appears (true only).
+            .sensoryFeedback(.warning, trigger: viewModel.showDeleteConfirm) { _, newValue in newValue }
             .navigationTitle(tr("events.list.title", "Eventos"))
             .navigationBarTitleDisplayMode(.large)
             .searchable(text: $viewModel.searchQuery, prompt: tr("events.list.search_placeholder", "Buscar eventos..."))
@@ -86,6 +95,7 @@ public struct EventListView: View {
 
                         Button {
                             showQuickQuote = true
+                            quickQuoteTip.invalidate(reason: .actionPerformed)
                         } label: {
                             Label(tr("events.list.quick_quote", "Cotización rápida"), systemImage: "doc.text.magnifyingglass")
                         }
@@ -94,6 +104,10 @@ public struct EventListView: View {
                             .font(.body)
                             .foregroundStyle(SolennixColors.primary)
                             .accessibilityLabel(tr("events.list.create_event_or_quote", "Crear evento o cotización"))
+                            .popoverTip(newEventTip)
+                            // quickQuoteTip anchors here because popoverTip cannot attach
+                            // to items inside a Menu's content (they have no stable frame).
+                            .popoverTip(quickQuoteTip)
                     }
 
                     Button {
@@ -158,7 +172,8 @@ public struct EventListView: View {
                 )
             }
             .overlay {
-                if viewModel.isLoading && viewModel.events.isEmpty {
+                // Non-empty refresh spinner (existing items visible behind)
+                if viewModel.isLoading && !viewModel.events.isEmpty {
                     ProgressView()
                         .controlSize(.large)
                         .tint(SolennixColors.primary)
@@ -317,23 +332,147 @@ public struct EventListView: View {
 
     // MARK: - Event List
 
+    @ViewBuilder
     private var eventList: some View {
-        // The ScrollView is always the body root so the large title tracks it
-        // correctly and collapses to inline on scroll. Filters scroll with the
-        // content (Apple-standard behavior for list views with filter chips).
-        ScrollView {
-            filterChips
-            resultCount
-
-            eventListContent
+        if sizeClass == .regular {
+            // iPad: keep the ScrollView+LazyVGrid layout unchanged.
+            // The ScrollView root ensures large title tracking and the
+            // grid provides multi-column density.
+            ScrollView {
+                filterChips
+                resultCount
+                eventListContent
+            }
+        } else {
+            // iPhone: native List for pull-to-refresh, swipe actions,
+            // and correct keyboard avoidance. Filter chips and result count
+            // are the first row so they scroll with the content (same
+            // behavior as the previous ScrollView layout).
+            iPhoneEventList
         }
     }
 
+    /// iPhone-only event list built on native `List` so swipe actions work.
+    @ViewBuilder
+    private var iPhoneEventList: some View {
+        let filtered = viewModel.filteredEvents
+
+        List {
+            // Filters + result count scroll inline with the list rows.
+            Section {
+                VStack(spacing: 0) {
+                    filterChips
+                    resultCount
+                }
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+            }
+
+            if viewModel.isLoading && viewModel.events.isEmpty {
+                // Skeleton loading state
+                skeletonCards
+                    .listRowInsets(EdgeInsets())
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+            } else if let error = viewModel.errorMessage, filtered.isEmpty, !viewModel.isLoading {
+                EmptyStateView(
+                    icon: "wifi.exclamationmark",
+                    title: tr("events.list.error.load_title", "Error al cargar"),
+                    message: error,
+                    actionTitle: tr("events.list.error.retry", "Reintentar")
+                ) {
+                    Task { await viewModel.loadEvents() }
+                }
+                .padding(.top, Spacing.xl)
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+            } else if filtered.isEmpty && !viewModel.isLoading {
+                emptyState
+                    .listRowInsets(EdgeInsets())
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+            } else {
+                ForEach(filtered) { event in
+                    NavigationLink(value: Route.eventDetail(id: event.id)) {
+                        eventCard(event)
+                    }
+                    .buttonStyle(.plain)
+                    .listRowInsets(EdgeInsets(top: Spacing.xs, leading: Spacing.md, bottom: Spacing.xs, trailing: Spacing.md))
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+                    .contextMenu {
+                        NavigationLink(value: Route.eventForm(id: event.id)) {
+                            Label(tr("events.list.actions.edit", "Editar"), systemImage: "pencil")
+                        }
+                        NavigationLink(value: Route.eventChecklist(id: event.id)) {
+                            Label(tr("events.list.actions.checklist", "Checklist"), systemImage: "checklist")
+                        }
+                        Menu {
+                            statusChangeButton(event: event, status: .quoted,    label: tr("events.list.status.quoted", "Cotizado"))
+                            statusChangeButton(event: event, status: .confirmed, label: tr("events.list.status.confirmed", "Confirmado"))
+                            statusChangeButton(event: event, status: .completed, label: tr("events.list.status.completed", "Completado"))
+                            statusChangeButton(event: event, status: .cancelled, label: tr("events.list.status.cancelled", "Cancelado"))
+                        } label: {
+                            Label(tr("events.list.actions.change_status", "Cambiar estado"), systemImage: "arrow.triangle.2.circlepath")
+                        }
+                        Divider()
+                        Button(role: .destructive) {
+                            viewModel.deleteTarget = event
+                            viewModel.showDeleteConfirm = true
+                        } label: {
+                            Label(tr("events.list.actions.delete", "Eliminar"), systemImage: "trash")
+                        }
+                    }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button(role: .destructive) {
+                            viewModel.deleteTarget = event
+                            viewModel.showDeleteConfirm = true
+                        } label: {
+                            Label(tr("events.list.actions.delete", "Eliminar"), systemImage: "trash")
+                        }
+                        NavigationLink(value: Route.eventForm(id: event.id)) {
+                            Label(tr("events.list.actions.edit", "Editar"), systemImage: "pencil")
+                        }
+                        .tint(.blue)
+                    }
+                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                        NavigationLink(value: Route.eventChecklist(id: event.id)) {
+                            Label(tr("events.list.actions.checklist", "Checklist"), systemImage: "checklist")
+                        }
+                        .tint(SolennixColors.primary)
+                    }
+                }
+            }
+        }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(SolennixColors.surfaceGrouped)
+    }
+
+    // MARK: - Skeleton Placeholder
+
+    private var skeletonCards: some View {
+        LazyVStack(spacing: Spacing.sm) {
+            ForEach(0..<5, id: \.self) { _ in
+                SkeletonCard()
+            }
+        }
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.lg)
+        .accessibilityHidden(true)
+    }
+
+    /// iPad-only content used inside the ScrollView+LazyVGrid layout.
+    /// The iPhone path uses `iPhoneEventList` (a native `List`) instead.
     @ViewBuilder
     private var eventListContent: some View {
         let filtered = viewModel.filteredEvents
 
-        if let error = viewModel.errorMessage, filtered.isEmpty, !viewModel.isLoading {
+        if viewModel.isLoading && viewModel.events.isEmpty {
+            skeletonCards
+        } else if let error = viewModel.errorMessage, filtered.isEmpty, !viewModel.isLoading {
             EmptyStateView(
                 icon: "wifi.exclamationmark",
                 title: tr("events.list.error.load_title", "Error al cargar"),
@@ -345,7 +484,8 @@ public struct EventListView: View {
             .padding(.top, Spacing.xl)
         } else if filtered.isEmpty && !viewModel.isLoading {
             emptyState
-        } else if sizeClass == .regular {
+        } else {
+            // iPad multi-column grid
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 300))], spacing: Spacing.sm) {
                 ForEach(filtered) { event in
                     NavigationLink(value: Route.eventDetail(id: event.id)) {
@@ -359,9 +499,6 @@ public struct EventListView: View {
                         NavigationLink(value: Route.eventChecklist(id: event.id)) {
                             Label(tr("events.list.actions.checklist", "Checklist"), systemImage: "checklist")
                         }
-                        // Inline status change — mirrors Web's inline
-                        // dropdown. Each option marks the current one with
-                        // a checkmark and skips the API call if unchanged.
                         Menu {
                             statusChangeButton(event: event, status: .quoted,    label: tr("events.list.status.quoted", "Cotizado"))
                             statusChangeButton(event: event, status: .confirmed, label: tr("events.list.status.confirmed", "Confirmado"))
@@ -372,7 +509,6 @@ public struct EventListView: View {
                         }
                         Divider()
                         Button(role: .destructive) {
-                            HapticsHelper.play(.warning)
                             viewModel.deleteTarget = event
                             viewModel.showDeleteConfirm = true
                         } label: {
@@ -381,46 +517,8 @@ public struct EventListView: View {
                     }
                 }
             }
-            .padding(.horizontal, sizeClass == .regular ? Spacing.lg : Spacing.md)
+            .padding(.horizontal, Spacing.lg)
             .padding(.vertical, Spacing.lg)
-        } else {
-            LazyVStack(spacing: Spacing.sm) {
-                ForEach(filtered) { event in
-                    NavigationLink(value: Route.eventDetail(id: event.id)) {
-                        eventCard(event)
-                    }
-                    .buttonStyle(.plain)
-                    .contextMenu {
-                        NavigationLink(value: Route.eventForm(id: event.id)) {
-                            Label(tr("events.list.actions.edit", "Editar"), systemImage: "pencil")
-                        }
-                        NavigationLink(value: Route.eventChecklist(id: event.id)) {
-                            Label(tr("events.list.actions.checklist", "Checklist"), systemImage: "checklist")
-                        }
-                        // Inline status change — mirrors Web's inline
-                        // dropdown. Each option marks the current one with
-                        // a checkmark and skips the API call if unchanged.
-                        Menu {
-                            statusChangeButton(event: event, status: .quoted,    label: tr("events.list.status.quoted", "Cotizado"))
-                            statusChangeButton(event: event, status: .confirmed, label: tr("events.list.status.confirmed", "Confirmado"))
-                            statusChangeButton(event: event, status: .completed, label: tr("events.list.status.completed", "Completado"))
-                            statusChangeButton(event: event, status: .cancelled, label: tr("events.list.status.cancelled", "Cancelado"))
-                        } label: {
-                            Label(tr("events.list.actions.change_status", "Cambiar estado"), systemImage: "arrow.triangle.2.circlepath")
-                        }
-                        Divider()
-                        Button(role: .destructive) {
-                            HapticsHelper.play(.warning)
-                            viewModel.deleteTarget = event
-                            viewModel.showDeleteConfirm = true
-                        } label: {
-                            Label(tr("events.list.actions.delete", "Eliminar"), systemImage: "trash")
-                        }
-                    }
-                }
-            }
-            .padding(.horizontal, Spacing.md)
-            .padding(.bottom, Spacing.xxl)
         }
     }
 
@@ -429,7 +527,7 @@ public struct EventListView: View {
     private var emptyState: some View {
         VStack(spacing: Spacing.md) {
             Image(systemName: "doc.text.magnifyingglass")
-                .font(.system(size: 40))
+                .font(.system(size: emptyIconSize))
                 .foregroundStyle(SolennixColors.textTertiary)
 
             Text(tr("events.list.empty.no_results_title", "No se encontraron eventos"))

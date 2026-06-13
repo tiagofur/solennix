@@ -125,7 +125,9 @@ public struct PaymentEntrySheet: View {
                         .foregroundStyle(SolennixColors.primary)
                 }
             }
+            .keyboardDoneToolbar()
         }
         .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 }

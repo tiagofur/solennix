@@ -84,6 +84,7 @@ public final class DashboardViewModel {
     public var totalProducts: Int = 0
     public var totalEvents: Int = 0
     public var isLoading: Bool = false
+    public private(set) var hasLoadedOnce: Bool = false
     public var errorMessage: String?
     public var attentionEvents: [DashboardAttentionEvent] = []
     public var updatingEventId: String?
@@ -312,6 +313,7 @@ public final class DashboardViewModel {
             }
         }
 
+        hasLoadedOnce = true
         isLoading = false
     }
 
