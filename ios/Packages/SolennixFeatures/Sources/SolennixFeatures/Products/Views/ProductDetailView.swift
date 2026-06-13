@@ -59,20 +59,19 @@ final class ProductDetailViewModel {
     // MARK: - Demand
 
     /// Today as UTC-midnight Date for stable day comparisons (same technique as EventCountdownChip).
-    private var todayUTC: Date? {
-        Date.fromServerDay(Date.localTodayString())
-    }
+    /// Stored during loadDemandData so all window calculations use the same anchor.
+    private var todayUTC: Date?
 
     /// A UTC-pinned calendar for day-diff arithmetic (avoids UTC-negative timezone shifts).
-    private var utcCalendar: Calendar {
+    private static let utcCalendar: Calendar = {
         var cal = Calendar(identifier: .gregorian)
         cal.timeZone = TimeZone(identifier: "UTC")!
         return cal
-    }
+    }()
 
     var demand7Days: Int {
         guard let todayUTC else { return 0 }
-        let in7 = utcCalendar.date(byAdding: .day, value: 7, to: todayUTC) ?? todayUTC
+        let in7 = Self.utcCalendar.date(byAdding: .day, value: 7, to: todayUTC) ?? todayUTC
         return demandData.filter { $0.eventDate >= todayUTC && $0.eventDate <= in7 }
             .reduce(0) { $0 + $1.quantity }
     }
@@ -84,7 +83,7 @@ final class ProductDetailViewModel {
     /// Revenue computed over the 7-day window only, consistent with demand7Days / smart alert.
     var estimatedRevenue7Days: Double {
         guard let price = product?.basePrice, let todayUTC else { return 0 }
-        let in7 = utcCalendar.date(byAdding: .day, value: 7, to: todayUTC) ?? todayUTC
+        let in7 = Self.utcCalendar.date(byAdding: .day, value: 7, to: todayUTC) ?? todayUTC
         let window = demandData.filter { $0.eventDate >= todayUTC && $0.eventDate <= in7 }
         return window.reduce(0) { acc, dp in
             let unitPrice = dp.unitPrice > 0 ? dp.unitPrice : price
@@ -113,65 +112,78 @@ final class ProductDetailViewModel {
         isLoading = false
     }
 
-    // MARK: - Parallelized demand loading (fixes N+1 serial waterfall)
+    // MARK: - Parallelized demand loading (fault-isolated: one 404/timeout won't discard collected points)
 
     @MainActor
     private func loadDemandData() async {
+        // Anchor today once for the entire load; window KPIs read this stored value.
+        todayUTC = Date.fromServerDay(Date.localTodayString())
+
         do {
             let events: [Event] = try await apiClient.getAll(Endpoint.upcomingEvents)
             let eventsSlice = Array(events.prefix(10))
 
             var collected: [DemandDataPoint] = []
 
-            // Process all events concurrently; each event's two calls also run concurrently.
-            try await withThrowingTaskGroup(of: DemandDataPoint?.self) { group in
+            // Non-throwing group: each child isolates its own errors so a single
+            // 404/timeout does not discard points already collected from other events.
+            await withTaskGroup(of: DemandDataPoint?.self) { group in
                 for event in eventsSlice {
                     group.addTask {
-                        // Parse date first — skip if unparseable (no fabricated Date()).
-                        guard let eventDate = Date.fromServerDay(event.eventDate) else { return nil }
+                        do {
+                            // Parse date first — skip if unparseable (no fabricated Date()).
+                            guard let eventDate = Date.fromServerDay(event.eventDate) else { return nil }
 
-                        async let epTask: [EventProduct] = self.apiClient.get(Endpoint.eventProducts(event.id))
+                            async let epTask: [EventProduct] = self.apiClient.get(Endpoint.eventProducts(event.id))
 
-                        // Client fetch is independent — run concurrently with eventProducts.
-                        var clientName = FeatureL10n.text("clients.title_singular", "Cliente")
-                        if !event.clientId.isEmpty {
-                            async let clientTask: Client = self.apiClient.get(Endpoint.client(event.clientId))
-                            let (eps, maybeClient) = try await (epTask, clientTask)
-                            clientName = maybeClient.name
-                            guard let ep = eps.first(where: { $0.productId == self.productId }) else { return nil }
-                            return DemandDataPoint(
-                                id: event.id,
-                                eventDate: eventDate,
-                                clientName: clientName,
-                                quantity: Int(ep.quantity),
-                                numPeople: event.numPeople,
-                                unitPrice: ep.unitPrice
-                            )
-                        } else {
-                            let eps = try await epTask
-                            guard let ep = eps.first(where: { $0.productId == self.productId }) else { return nil }
-                            return DemandDataPoint(
-                                id: event.id,
-                                eventDate: eventDate,
-                                clientName: clientName,
-                                quantity: Int(ep.quantity),
-                                numPeople: event.numPeople,
-                                unitPrice: ep.unitPrice
-                            )
+                            // Client fetch is independent — run concurrently with eventProducts.
+                            var clientName = FeatureL10n.text("clients.title_singular", "Cliente")
+                            if !event.clientId.isEmpty {
+                                async let clientTask: Client = self.apiClient.get(Endpoint.client(event.clientId))
+                                let (eps, maybeClient) = try await (epTask, clientTask)
+                                clientName = maybeClient.name
+                                guard let ep = eps.first(where: { $0.productId == self.productId }) else { return nil }
+                                return DemandDataPoint(
+                                    id: event.id,
+                                    eventDate: eventDate,
+                                    clientName: clientName,
+                                    quantity: Int(ep.quantity),
+                                    numPeople: event.numPeople,
+                                    unitPrice: ep.unitPrice
+                                )
+                            } else {
+                                let eps = try await epTask
+                                guard let ep = eps.first(where: { $0.productId == self.productId }) else { return nil }
+                                return DemandDataPoint(
+                                    id: event.id,
+                                    eventDate: eventDate,
+                                    clientName: clientName,
+                                    quantity: Int(ep.quantity),
+                                    numPeople: event.numPeople,
+                                    unitPrice: ep.unitPrice
+                                )
+                            }
+                        } catch {
+                            // Swallow per-event errors; partial results are kept.
+                            return nil
                         }
                     }
                 }
 
-                for try await point in group {
+                for await point in group {
                     if let point { collected.append(point) }
                 }
+            }
+
+            // Surface an error only when every event failed AND there were events to process.
+            if collected.isEmpty && !eventsSlice.isEmpty {
+                errorMessage = ProductStrings.unexpectedRetryError
             }
 
             // Sort by event date ascending so chart renders chronologically.
             demandData = collected.sorted { $0.eventDate < $1.eventDate }
         } catch {
-            // All events failed — surface in errorMessage only if demand was the only failure.
-            // Currently we silently keep demandData empty (non-critical data).
+            // Upcoming events fetch itself failed — keep demandData empty (non-critical).
         }
     }
 
@@ -563,7 +575,7 @@ public struct ProductDetailView: View {
         }
         .padding(Spacing.md)
         .listRowBackground(isHighDemand ? SolennixColors.primary.opacity(0.08) : SolennixColors.card)
-        .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
 
     // MARK: - General Info Section
@@ -620,8 +632,6 @@ public struct ProductDetailView: View {
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
         .listRowBackground(SolennixColors.card)
         .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
@@ -729,8 +739,6 @@ public struct ProductDetailView: View {
                 .padding(Spacing.md)
             }
         }
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
         .listRowBackground(SolennixColors.card)
         .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
@@ -776,6 +784,23 @@ struct ProductDetailSkeleton: View {
             .listRowSeparator(.hidden)
         }
 
+        // Smart alert skeleton
+        Section {
+            HStack(alignment: .top, spacing: Spacing.md) {
+                SkeletonLine(width: 22, height: 22)
+                    .clipShape(Circle())
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    SkeletonLine(width: 180, height: 14)
+                    SkeletonLine(width: 120, height: 12)
+                }
+                Spacer()
+            }
+            .padding(Spacing.md)
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+        }
+
         // Chart placeholder
         Section {
             VStack(alignment: .leading, spacing: Spacing.md) {
@@ -788,18 +813,87 @@ struct ProductDetailSkeleton: View {
             .listRowSeparator(.hidden)
         }
 
-        // Recipe rows skeleton
+        // Recipe / composition skeleton — single card with rows inside, mirrors compositionSection layout
         Section {
-            ForEach(0..<3, id: \.self) { _ in
-                HStack {
-                    SkeletonLine(width: 120, height: 14)
+            VStack(alignment: .leading, spacing: 0) {
+                // Section header
+                HStack(spacing: Spacing.sm) {
+                    SkeletonLine(width: 16, height: 16)
+                    SkeletonLine(width: 140, height: 16)
                     Spacer()
-                    SkeletonLine(width: 60, height: 14)
                 }
+                .padding(Spacing.md)
+
+                Divider()
+
+                // Column header bar
+                HStack {
+                    SkeletonLine(width: 60, height: 10)
+                    Spacer()
+                    SkeletonLine(width: 60, height: 10)
+                    SkeletonLine(width: 70, height: 10)
+                }
+                .padding(.horizontal, Spacing.md)
                 .padding(.vertical, Spacing.sm)
-                .listRowBackground(SolennixColors.card)
-                .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+                .background(SolennixColors.surface)
+
+                // Item rows
+                ForEach(0..<3, id: \.self) { _ in
+                    Divider().opacity(0.5)
+                    HStack {
+                        SkeletonLine(width: 100, height: 14)
+                        Spacer()
+                        SkeletonLine(width: 50, height: 14)
+                        SkeletonLine(width: 60, height: 14)
+                    }
+                    .padding(.horizontal, Spacing.md)
+                    .padding(.vertical, Spacing.sm)
+                    .frame(minHeight: 44)
+                }
             }
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+        }
+
+        // General info skeleton — mirrors generalInfoSection single-card layout
+        Section {
+            VStack(alignment: .leading, spacing: Spacing.md) {
+                SkeletonLine(width: 140, height: 10)
+
+                HStack(spacing: Spacing.md) {
+                    SkeletonLine(width: 18, height: 18)
+                    VStack(alignment: .leading, spacing: 4) {
+                        SkeletonLine(width: 60, height: 10)
+                        SkeletonLine(width: 100, height: 14)
+                    }
+                }
+
+                Divider()
+
+                HStack(spacing: Spacing.md) {
+                    SkeletonLine(width: 18, height: 18)
+                    VStack(alignment: .leading, spacing: 4) {
+                        SkeletonLine(width: 60, height: 10)
+                        SkeletonLine(width: 80, height: 14)
+                    }
+                }
+
+                Divider()
+
+                HStack(spacing: Spacing.md) {
+                    SkeletonLine(width: 18, height: 18)
+                    VStack(alignment: .leading, spacing: 4) {
+                        SkeletonLine(width: 80, height: 10)
+                        SkeletonLine(width: 140, height: 14)
+                    }
+                }
+            }
+            .padding(Spacing.md)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
         }
     }
 }

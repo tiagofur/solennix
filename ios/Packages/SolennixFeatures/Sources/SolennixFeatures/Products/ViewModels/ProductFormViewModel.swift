@@ -400,11 +400,11 @@ public final class ProductFormViewModel {
                 }
             }
 
-            saveSuccessCounter += 1
+            saveSuccessCounter &+= 1
             isSaving = false
             return true
         } catch let error as APIError {
-            saveErrorCounter += 1
+            saveErrorCounter &+= 1
             isSaving = false
             if case .planLimitExceeded(let message, _, _, _) = error {
                 planLimitMessage = message
@@ -413,7 +413,7 @@ public final class ProductFormViewModel {
             }
             return false
         } catch {
-            saveErrorCounter += 1
+            saveErrorCounter &+= 1
             errorMessage = mapError(error)
             isSaving = false
             return false

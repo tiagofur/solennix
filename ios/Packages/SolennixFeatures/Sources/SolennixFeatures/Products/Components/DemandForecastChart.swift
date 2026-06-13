@@ -41,7 +41,8 @@ public struct DemandForecastChart: View {
         self.basePrice = basePrice
     }
 
-    @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 32
+    @ScaledMetric(relativeTo: .largeTitle) private var scaledEmptyIconSize: CGFloat = 32
+    private var emptyIconSize: CGFloat { min(scaledEmptyIconSize, 72) }
     @ScaledMetric(relativeTo: .body) private var scaledChartHeight: CGFloat = 200
     private var cappedChartHeight: CGFloat { min(scaledChartHeight, 280) }
 
@@ -52,11 +53,11 @@ public struct DemandForecastChart: View {
         Date.fromServerDay(Date.localTodayString()) ?? Date()
     }
 
-    private var utcCalendar: Calendar {
+    private static let utcCalendar: Calendar = {
         var cal = Calendar(identifier: .gregorian)
         cal.timeZone = TimeZone(identifier: "UTC")!
         return cal
-    }
+    }()
 
     private var hasData: Bool {
         !dataPoints.isEmpty
@@ -93,7 +94,7 @@ public struct DemandForecastChart: View {
 
             if hasData {
                 let today = todayUTC
-                let cal = utcCalendar
+                let cal = Self.utcCalendar
 
                 // Chart
                 Chart(dataPoints) { point in
@@ -105,8 +106,13 @@ public struct DemandForecastChart: View {
                     .cornerRadius(4)
                 }
                 .chartXAxis {
-                    AxisMarks(values: .stride(by: .day)) { _ in
-                        AxisValueLabel(format: .dateTime.day().month(.abbreviated))
+                    AxisMarks(values: .stride(by: .day)) { value in
+                        AxisValueLabel {
+                            if let d = value.as(Date.self) {
+                                Text(d.formattedServerDay(style: "d MMM", locale: FeatureL10n.locale))
+                                    .font(.caption2)
+                            }
+                        }
                     }
                 }
                 .chartYAxis {
