@@ -102,6 +102,8 @@ class ProductDetailViewModel @Inject constructor(
                 val product = productRepository.getProduct(productId)
                 val ingredients = try {
                     productRepository.getProductIngredients(productId)
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (_: Exception) {
                     emptyList()
                 }
@@ -110,6 +112,8 @@ class ProductDetailViewModel @Inject constructor(
                     ingredients = ingredients,
                     isLoading = false
                 )
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _uiState.value = ProductDetailUiState(errorMessage = e.message, isLoading = false)
             }

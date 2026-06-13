@@ -94,6 +94,8 @@ class InventoryDetailViewModel @Inject constructor(
                 val item = inventoryRepository.getInventoryItem(itemId)
                 _uiState.value = InventoryDetailUiState(item = item, isLoading = false)
                 loadDemandForecast()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _uiState.value = InventoryDetailUiState(errorMessage = e.message, isLoading = false)
             }
@@ -213,6 +215,8 @@ class InventoryDetailViewModel @Inject constructor(
                 inventoryRepository.updateInventoryItem(updated)
                 _uiState.value = _uiState.value.copy(item = updated)
                 adjustmentSuccess = true
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     errorMessage = InventoryStrings.adjustStockError(e.message)
@@ -226,6 +230,8 @@ class InventoryDetailViewModel @Inject constructor(
             try {
                 inventoryRepository.deleteInventoryItem(itemId)
                 deleteSuccess = true
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(errorMessage = InventoryStrings.deleteError(e.message))
             }
