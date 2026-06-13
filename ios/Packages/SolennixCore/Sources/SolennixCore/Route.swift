@@ -8,7 +8,7 @@ public enum Route: Hashable {
     // MARK: Events
     case eventList
     case eventDetail(id: String)
-    case eventForm(id: String? = nil, clientId: String? = nil, date: Date? = nil)
+    case eventForm(id: String? = nil, clientId: String? = nil, date: Date? = nil, step: Int? = nil)
     case eventChecklist(id: String)
     case eventFinances(id: String)
     case eventPayments(id: String)

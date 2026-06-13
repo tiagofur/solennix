@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -416,17 +417,33 @@ fun ClientListItem(
                 style = MaterialTheme.typography.bodySmall,
                 color = SolennixTheme.colors.secondaryText
             )
-            val statsItems = mutableListOf<String>()
-            client.totalEvents?.let {
-                if (it > 0) statsItems.add(pluralStringResource(R.plurals.clients_event_count, it, it))
-            }
-            client.totalSpent?.let { if (it > 0.0) statsItems.add(it.asMXN()) }
-            if (statsItems.isNotEmpty()) {
-                Text(
-                    text = statsItems.joinToString(" · "),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = SolennixTheme.colors.primary
-                )
+            // Spend anchor — show total events + total spent as separate
+            // metrics for quick scanning (matches iOS spend anchor pattern).
+            // Events count in secondary, spend amount in primary bold.
+            client.totalEvents?.let { events ->
+                if (events > 0) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = pluralStringResource(R.plurals.clients_event_count, events, events),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = SolennixTheme.colors.secondaryText
+                        )
+                        client.totalSpent?.let { spent ->
+                            if (spent > 0.0) {
+                                Text(
+                                    text = spent.asMXN(),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = SolennixTheme.colors.primary
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }

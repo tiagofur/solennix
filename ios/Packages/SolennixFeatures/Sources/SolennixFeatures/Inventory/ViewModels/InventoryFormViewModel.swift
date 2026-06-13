@@ -25,7 +25,7 @@ public final class InventoryFormViewModel {
     public var type: InventoryType = .ingredient
     public var currentStock: Double = 0
     public var minimumStock: Double = 0
-    public var unit: String = "piezas"
+    public var unit: String = InventoryStrings.unitDefault
     public var unitCost: Double?
 
     // MARK: - UI State
@@ -34,14 +34,24 @@ public final class InventoryFormViewModel {
     public var isSaving: Bool = false
     public var errorMessage: String?
 
+    // MARK: - Haptic Counters (observed by InventoryFormView via .sensoryFeedback)
+
+    /// Incremented on successful save — triggers `.sensoryFeedback(.success, trigger:)`.
+    public var saveSuccessCounter: Int = 0
+    /// Incremented on save error — triggers `.sensoryFeedback(.error, trigger:)`.
+    public var saveErrorCounter: Int = 0
+
     // MARK: - Validation
 
     public var nameError: String?
     public var stockError: String?
 
+    /// Pure computed validity check — does NOT mutate error props (fix #9: avoids re-render loop).
+    /// Call `validateForm()` explicitly on save or field commit to surface inline error messages.
     public var isValid: Bool {
-        validateForm()
-        return nameError == nil && stockError == nil
+        let nameOk = ingredientName.trimmingCharacters(in: .whitespacesAndNewlines).count >= 2
+        let stockOk = currentStock >= 0 && minimumStock >= 0 && (unitCost == nil || (unitCost ?? 0) >= 0)
+        return nameOk && stockOk
     }
 
     // MARK: - Unit Options
@@ -149,12 +159,12 @@ public final class InventoryFormViewModel {
                 let _: InventoryItem = try await apiClient.post(Endpoint.inventory, body: body)
             }
 
-            HapticsHelper.play(.success)
+            saveSuccessCounter &+= 1
             isSaving = false
             return true
         } catch {
-            HapticsHelper.play(.error)
             errorMessage = mapError(error)
+            saveErrorCounter &+= 1
             isSaving = false
             return false
         }

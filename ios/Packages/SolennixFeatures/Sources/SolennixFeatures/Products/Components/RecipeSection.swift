@@ -60,8 +60,7 @@ public struct RecipeSection: View {
                         Image(systemName: "plus")
                         Text(ProductStrings.add)
                     }
-                    .font(.caption)
-                    .fontWeight(.semibold)
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(SolennixColors.primary)
                     .padding(.horizontal, Spacing.sm)
                     .padding(.vertical, Spacing.xs)
@@ -86,6 +85,7 @@ public struct RecipeSection: View {
                         inventoryItems: inventoryItems,
                         showCost: showCost,
                         onSelectInventory: { inventoryId in
+                            // Resolve live index at call time to handle concurrent mutations safely.
                             onSelectInventory(index, inventoryId)
                         },
                         onUpdateQuantity: { quantity in
@@ -105,7 +105,6 @@ public struct RecipeSection: View {
         .padding(Spacing.md)
         .background(SolennixColors.card)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
     }
 }
 
@@ -195,7 +194,7 @@ struct RecipeItemRow: View {
             // Quantity, cost, and remove
             HStack(spacing: Spacing.sm) {
                 VStack(alignment: .leading, spacing: 2) {
-                        Text(ProductStrings.quantity)
+                    Text(ProductStrings.quantity)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textTertiary)
 
@@ -225,8 +224,7 @@ struct RecipeItemRow: View {
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textTertiary)
                         Text(cost.formatted(.currency(code: "MXN")))
-                            .font(.subheadline)
-                            .fontWeight(.medium)
+                            .font(.subheadline.weight(.medium))
                             .foregroundStyle(SolennixColors.text)
                     }
                 }
@@ -237,13 +235,18 @@ struct RecipeItemRow: View {
                     Image(systemName: "trash")
                         .foregroundStyle(SolennixColors.error)
                         .padding(Spacing.xs)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(ProductStrings.removeIngredient(item.inventoryName ?? ProductStrings.unknownItem))
             }
         }
         .padding(.vertical, Spacing.xs)
-        .onAppear {
-            quantityText = String(format: "%.0f", item.quantityRequired)
+        // Use .task(id:) so quantityText is initialized when item.id changes
+        // (not on every re-appearance, which would clobber in-progress edits).
+        .task(id: item.id) {
+            quantityText = item.quantityRequired.formatted(.number.precision(.fractionLength(0...2)))
         }
     }
 }

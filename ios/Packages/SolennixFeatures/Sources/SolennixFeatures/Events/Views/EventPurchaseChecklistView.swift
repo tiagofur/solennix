@@ -116,13 +116,39 @@ public struct EventPurchaseChecklistView: View {
     }
 
     private func checklistRow(_ item: ChecklistItem) -> some View {
-        let isChecked = viewModel.checkedIds.contains(item.id)
-
-        return Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                viewModel.toggleItem(id: item.id)
+        PurchaseChecklistItemRow(
+            item: item,
+            isChecked: viewModel.checkedIds.contains(item.id),
+            onToggle: {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    viewModel.toggleItem(id: item.id)
+                }
             }
-        } label: {
+        )
+    }
+}
+
+// MARK: - Purchase Checklist Item Row
+
+/// Private row view with stable identity per purchase item.
+///
+/// See `ChecklistItemRow` in EventChecklistView for the rationale:
+/// extracting into a struct prevents bounce on list reload by giving
+/// SwiftUI stable identity to diff against.
+private struct PurchaseChecklistItemRow: View {
+    let item: ChecklistItem
+    let isChecked: Bool
+    let onToggle: () -> Void
+
+    private func formatQuantity(_ value: Double) -> String {
+        if value == floor(value) {
+            return String(Int(value))
+        }
+        return String(format: "%.2f", value)
+    }
+
+    var body: some View {
+        Button(action: onToggle) {
             HStack(spacing: Spacing.md) {
                 ZStack {
                     Circle()
@@ -136,12 +162,14 @@ public struct EventPurchaseChecklistView: View {
                         )
                         .frame(width: 24, height: 24)
 
-                    if isChecked {
-                        Image(systemName: "checkmark")
-                            .font(.caption2)
-                            .fontWeight(.bold)
-                            .foregroundStyle(.white)
-                    }
+                    // Rendered unconditionally — bounce triggers on false→true
+                    // transition only, not on initial appear or list reloads.
+                    Image(systemName: "checkmark")
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.white)
+                        .opacity(isChecked ? 1 : 0)
+                        .symbolEffect(.bounce, value: isChecked)
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -176,13 +204,6 @@ public struct EventPurchaseChecklistView: View {
             )
         }
         .buttonStyle(.plain)
-    }
-
-    private func formatQuantity(_ value: Double) -> String {
-        if value == floor(value) {
-            return String(Int(value))
-        }
-        return String(format: "%.2f", value)
     }
 }
 

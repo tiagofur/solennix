@@ -9,7 +9,7 @@ aliases:
   - Arquitectura iOS
   - iOS Architecture
 date: 2026-03-20
-updated: 2026-05-17
+updated: 2026-06-12
 status: active
 platform: iOS
 ---
@@ -88,6 +88,44 @@ platform: iOS
 > - `TeamMemberPortalView` incorpora sección `Mi disponibilidad` con alta/edición/baja de bloqueos.
 > - Se agregan bloqueos por fecha con rango horario opcional (`startTime`/`endTime`) y motivo.
 > - Los cambios refrescan inmediatamente en el portal y usan endpoints scoped del miembro (`/unavailable-dates`).
+
+> [!success] 2026-06-12 — Judgment Day — ciclo completo del menú Más (list standard canonicalized)
+>
+> Aplicación de revisión dual ciego pantalla por pantalla sobre el menú Más. Todas las vistas ListRow ahora siguen el patrón canónico:
+> - **Estructura:** fila con card insetGrouped usando separador dorado (`.SolennixColors.accent`) — no se usa chevron automático de `NavigationLink` en filas de datos.
+> - **Contenido:** información contextual (nombre, ícono, estado, cantidad) + acciones (si aplica, via sheet/menu, no en fila).
+> - **Paginación viva:** endpoints retornan `has_more` + cursor; refresh nativo no limpia lista existente.
+> - **VoiceOver compuesto:** filas anuncian contexto completo (`Producto, 5 unidades disponibles`) vía `.accessibilityElement(children: .combine)`.
+> - **Dynamic Type:** texto escalado vía `@ScaledMetric` en ícono y tipografía, asegurando legibilidad en categorías de acceso grandes.
+> - **Skeleton in-List:** carga inicial muestra placeholders animados dentro de la lista.
+> - **Upgrade banner:** navega a Pricing en lugar de no-op; integrado en todas las CTAs de features Pro.
+> - **Alerts:** usan bindings reales (`@State var show = false`) — no closures hardcodeadas.
+> - **Hápticas semánticas:** warning feedback en confirmación de borrado, success en acciones completadas.
+> - Pantallas completadas: Más, Productos, Inventario, Pagos (List nativa + swipe), Personal, Equipos (soft-delete + undo), Formularios, Reseñas (List nativa).
+
+> [!success] 2026-06-12 — Liquid Glass adoption (iOS 26 SDK)
+>
+> ### Estrategia: SDK 26 build, gating `#available`, capa de navegación únicamente
+>
+> Todos los efectos Liquid Glass se aplican exclusivamente a elementos de la capa de navegación (bars, toolbars, sheets, popovers). Nunca sobre tarjetas de contenido ni listas. Min target sigue siendo iOS 17.
+>
+> | Componente | iOS 26+ | iOS 17–25 |
+> |---|---|---|
+> | `adaptiveGlass(in:)` | `glassEffect(.regular, in: shape)` | `ultraThinMaterial` o `brightChip` según parámetro |
+> | Toolbar actions | Sistema aplica Liquid Glass automáticamente al toolbar | sin cambio visual |
+> | Tab bar | `tabBarMinimizeBehavior(.onScrollDown)` + search tab nativo `role: .search` | TabView legacy sin minimize |
+> | Scroll edge | `scrollEdgeEffectStyle(.soft, for: .top)` | no-op |
+> | Sheet background | `scrollContentBackground(.hidden)` en iOS 26 sheets | sin cambio |
+>
+> **`AdaptiveGlassFallback`:** enum con `.material` (default) y `.brightChip` (white-opacity 0.12 — para chips en sidebar navy donde `ultraThinMaterial` es casi invisible en dark mode).
+>
+> **`Tab` enum:** `case search` agregado para la tab nativa iOS 26. `Tab.barTabs` (`[.home, .calendar, .events, .clients, .more]`) excluye `.search` para iteraciones en el legacy bar. `Tab.allCases` incluye los 6 casos — switches exhaustivos deben manejar `.search`.
+>
+> **`TabView(selection:)` bound en iOS 26:** `ios26TabSelection` custom binding idéntico a `legacyTabSelection` — pop-to-root en retap y `selectedTab = .home` antes de push en Spotlight están activos en ambas ramas.
+>
+> **Acciones rápidas en toolbar:** `DashboardView` expone "Nuevo evento" y "Cotización rápida" en un `Menu` dentro del `ToolbarItem(.topBarTrailing)`. El FAB (`QuickActionsFAB`) fue eliminado — es un patrón Material, no iOS HIG. El toolbar recibe Liquid Glass automáticamente del sistema en iOS 26.
+>
+> **Symbol bounce correctness:** filas de checklist extraídas a structs privados (`ChecklistItemRow`, `PurchaseChecklistItemRow`) con `let item`, `let isChecked`. El `Image(systemName:)` se renderiza incondicionalmente con `.opacity(isChecked ? 1 : 0)` y `.symbolEffect(.bounce, value: isChecked)` fuera de cualquier `if` — SwiftUI observa la transición `false→true` y dispara el bounce exactamente una vez por toggle, no en reloads.
 
 > [!success] 2026-06-11 — iOS HIG Quick Wins
 >
@@ -241,7 +279,7 @@ ios/
 │   ├── Navigation/                        # Sistema de navegacion
 │   │   ├── Route.swift                    # Tab enum, SidebarSection enum
 │   │   ├── RouteDestination.swift         # Switch de Route -> View
-│   │   ├── CompactTabLayout.swift         # TabView para iPhone (4 tabs + FAB)
+│   │   ├── CompactTabLayout.swift         # TabView para iPhone (4 tabs, acciones en toolbar)
 │   │   ├── SidebarSplitLayout.swift       # NavigationSplitView para iPad
 │   │   └── DeepLinkHandler.swift          # Manejo de deep links y Spotlight
 │   ├── Widgets/
@@ -403,7 +441,7 @@ graph TD
 | `SolennixGradient`   | Gradientes premium (gold -> tan)                                                                                                                      |
 | `SolennixTypography` | Estilos tipograficos predefinidos                                                                                                                     |
 | `SolennixSpacing`    | Sistema de espaciado consistente                                                                                                                      |
-| `SolennixShadows`    | Estilos de sombra (card, fab, modal)                                                                                                                  |
+| `SolennixShadows`    | Estilos de sombra (card, modal)                                                                                                                       |
 | Componentes          | `Avatar`, `ConfirmDialog`, `EmptyStateView`, `PremiumButton`, `SkeletonView`, `SolennixTextField`, `StatusBadge`, `ToastOverlay`, `UpgradeBannerView` |
 
 ### SolennixFeatures
@@ -733,7 +771,7 @@ La app usa un layout adaptativo basado en `horizontalSizeClass`:
 
 | Size Class            | Layout               | Descripcion                                          |
 | --------------------- | -------------------- | ---------------------------------------------------- |
-| `.compact` (iPhone)   | `CompactTabLayout`   | `TabView` con 4 tabs + FAB flotante                  |
+| `.compact` (iPhone)   | `CompactTabLayout`   | `TabView` con 4 tabs; acciones rápidas en toolbar    |
 | `.regular` (iPad/Mac) | `SidebarSplitLayout` | `NavigationSplitView` con sidebar + content + detail |
 
 ### CompactTabLayout (iPhone)
@@ -747,7 +785,7 @@ Cuatro tabs, cada uno con su propio `NavigationStack` y `NavigationPath` indepen
 | Clientes   | `person.2.fill` | `ClientListView` |
 | Mas        | `ellipsis`      | `MoreMenuView`   |
 
-Un **FAB (Floating Action Button)** con gradiente premium se superpone al tab bar para creacion rapida de eventos. Se oculta automaticamente cuando el usuario navega a una pantalla de detalle.
+Las acciones rápidas (nuevo evento, cotización rápida) viven en el `ToolbarItem(.topBarTrailing)` de cada vista raíz que las requiere (`DashboardView`), siguiendo el patrón iOS HIG. El FAB fue eliminado por ser un patrón Material.
 
 ### SidebarSplitLayout (iPad)
 
@@ -768,7 +806,7 @@ public enum Route: Hashable {
     // Events
     case eventList
     case eventDetail(id: String)
-    case eventForm(id: String? = nil, clientId: String? = nil, date: Date? = nil)
+    case eventForm(id: String? = nil, clientId: String? = nil, date: Date? = nil, step: Int? = nil)
     case eventChecklist(id: String)
 
     // Clients
@@ -787,6 +825,20 @@ public enum Route: Hashable {
 ```
 
 `RouteDestination` resuelve cada `Route` a su `View` correspondiente via `.navigationDestination(for: Route.self)`.
+
+### Edición seccional de eventos (2026-06-12)
+
+`Route.eventForm` acepta `step: Int?` (1–5, clampeado) para abrir el wizard directo en una sección:
+
+| Sección | Paso | Entradas |
+| --- | --- | --- |
+| General (fecha/hora/lugar/cliente) | 1 | Context menu del header card |
+| Productos | 2 | Context menu + lápiz/CTA en sub-vista |
+| Extras | 3 | Context menu + lápiz/CTA en sub-vista |
+| Personal / Insumos / Equipo | 4 | Context menu + lápiz/CTA en sub-vistas |
+| Finanzas | 5 | Context menu + lápiz en finanzas detail |
+
+Reglas: `initialStep` se aplica una sola vez tras `loadEventForEditing` (solo en edición, nunca en alta); el step indicator permite navegación libre entre pasos en modo edición (backward-only en alta porque los datos posteriores aún no son válidos).
 
 ### Navigation Bar y Búsqueda (Apple Default)
 
@@ -983,7 +1035,7 @@ La paleta de Solennix usa tonos dorados/tan como color primario, con soporte com
 
 ### Gradientes
 
-- `SolennixGradient.premium` -- Gradiente dorado usado en el FAB, botones premium, y elementos destacados.
+- `SolennixGradient.premium` -- Gradiente dorado usado en botones premium y elementos destacados.
 
 ### Modo claro / oscuro
 

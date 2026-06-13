@@ -8,9 +8,6 @@ public enum CommonStrings {
     public static var swipeActionTipTitle: String { FeatureL10n.text("common.tip.swipe_action.title", "Acciones Rápidas") }
     public static var swipeActionTipMessage: String { FeatureL10n.text("common.tip.swipe_action.message", "Desliza los elementos de la lista hacia la izquierda o derecha para ver más opciones como editar, eliminar o llamar.") }
     
-    // FAB
-    public static var newEventLabel: String { FeatureL10n.text("common.fab.new_event", "Nuevo Evento") }
-    
     // Paywall
     public static var paywallTitle: String { FeatureL10n.text("common.paywall.title", "Límite alcanzado") }
     public static var paywallUpgradeButton: String { FeatureL10n.text("common.paywall.upgrade_button", "Ver planes") }
@@ -37,6 +34,7 @@ public enum CommonStrings {
     public static var tabEvents: String { FeatureL10n.text("common.tab.events", "Eventos") }
     public static var tabClients: String { FeatureL10n.text("common.tab.clients", "Clientes") }
     public static var tabMore: String { FeatureL10n.text("common.tab.more", "Más") }
+    public static var tabSearch: String { FeatureL10n.text("common.tab.search", "Buscar") }
     
     // Sidebar Sections
     public static var navPersonnel: String { FeatureL10n.text("common.nav.personnel", "Personal") }
@@ -44,6 +42,7 @@ public enum CommonStrings {
     public static var navInventory: String { FeatureL10n.text("common.nav.inventory", "Inventario") }
     public static var navPaymentInbox: String { FeatureL10n.text("common.nav.payment_inbox", "Pagos") }
     public static var navEventFormLinks: String { FeatureL10n.text("common.nav.event_form_links", "Formularios") }
+    public static var navReviews: String { FeatureL10n.text("common.nav.reviews", "Reseñas") }
     public static var navSettings: String { FeatureL10n.text("common.nav.settings", "Ajustes") }
     
     // More Menu Subtitles
@@ -52,6 +51,7 @@ public enum CommonStrings {
     public static var moreMenuPaymentInboxSubtitle: String { FeatureL10n.text("common.more_menu.payment_inbox_subtitle", "Revisión de pagos de clientes") }
     public static var moreMenuEventFormLinksSubtitle: String { FeatureL10n.text("common.more_menu.event_form_links_subtitle", "Formularios para clientes nuevos") }
     public static var moreMenuPersonnelSubtitle: String { FeatureL10n.text("common.more_menu.personnel_subtitle", "Colaboradores y equipo") }
+    public static var moreMenuReviewsSubtitle: String { FeatureL10n.text("common.more_menu.reviews_subtitle", "Opiniones de tus clientes") }
     public static var moreMenuSettingsSubtitle: String { FeatureL10n.text("common.more_menu.settings_subtitle", "Perfil, negocio, cuenta") }
     
     // Navigation Headers / Placeholders

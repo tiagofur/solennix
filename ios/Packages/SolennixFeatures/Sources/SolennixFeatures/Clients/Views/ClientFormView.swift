@@ -85,6 +85,8 @@ public struct ClientFormView: View {
                 }
             )
         }
+        .sensoryFeedback(.success, trigger: viewModel.saveSuccessCounter)
+        .sensoryFeedback(.error, trigger: viewModel.saveErrorCounter)
         .task {
             if let id = clientId {
                 await viewModel.loadClient(id: id)
@@ -125,7 +127,7 @@ public struct ClientFormView: View {
 
                         Image(systemName: "camera.fill")
                             .font(.caption)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(SolennixColors.textInverse)
                             .frame(width: 28, height: 28)
                             .background(SolennixColors.primary)
                             .clipShape(Circle())

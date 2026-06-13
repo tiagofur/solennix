@@ -569,6 +569,15 @@ components:
         total_spent:
           type: number
           format: double
+        pending_balance:
+          type: number
+          format: double
+          nullable: true
+          description: >
+            Computed on read (detail endpoint only). Sum of total_amount across confirmed and
+            completed events minus sum of payments on those same events. Quoted events
+            are excluded as prospects, not committed debt. Negative values indicate
+            the client has overpaid. Absent (omitted) on list and search responses.
         created_at:
           type: string
           format: date-time
@@ -3733,6 +3742,13 @@ paths:
           schema:
             type: string
             enum: [asc, desc]
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ingredient, equipment, supply]
+          description: Filter inventory by type. Omit for all types.
       responses:
         "200":
           description: List of inventory items or paginated inventory when page is provided

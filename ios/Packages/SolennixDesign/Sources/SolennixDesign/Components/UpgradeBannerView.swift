@@ -13,20 +13,22 @@ public struct UpgradeBannerView: View {
     let resource: String?
     let currentUsage: Int?
     let limit: Int?
-    let onUpgrade: () -> Void
+    // Fix 14: callers supply the CTA label so it can be localized by the feature package.
+    // Defaults to the Spanish fallback for backwards-compat with existing callers.
+    let ctaLabel: String
 
     public init(
         type: UpgradeBannerType,
         resource: String? = nil,
         currentUsage: Int? = nil,
         limit: Int? = nil,
-        onUpgrade: @escaping () -> Void
+        ctaLabel: String = "Ver planes"
     ) {
         self.type = type
         self.resource = resource
         self.currentUsage = currentUsage
         self.limit = limit
-        self.onUpgrade = onUpgrade
+        self.ctaLabel = ctaLabel
     }
 
     public var body: some View {
@@ -48,18 +50,16 @@ public struct UpgradeBannerView: View {
                 .font(.footnote)
                 .foregroundStyle(SolennixColors.textSecondary)
 
-            // Button
-            Button(action: onUpgrade) {
-                Text("Ver planes")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, Spacing.md)
-                    .padding(.vertical, Spacing.xs)
-                    .background(buttonColor)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-            }
-            .padding(.top, Spacing.xs)
+            // CTA label — non-interactive; navigation is owned by the caller's NavigationLink wrapper.
+            Text(ctaLabel)
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundStyle(.white)
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, Spacing.xs)
+                .background(buttonColor)
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                .padding(.top, Spacing.xs)
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -110,16 +110,14 @@ public struct UpgradeBannerView: View {
 #Preview {
     VStack(spacing: Spacing.md) {
         UpgradeBannerView(
-            type: .upsell,
-            onUpgrade: {}
+            type: .upsell
         )
 
         UpgradeBannerView(
             type: .limitReached,
             resource: "Eventos",
             currentUsage: 5,
-            limit: 5,
-            onUpgrade: {}
+            limit: 5
         )
     }
     .padding()

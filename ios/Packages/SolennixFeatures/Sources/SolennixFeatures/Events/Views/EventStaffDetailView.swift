@@ -26,15 +26,24 @@ public struct EventStaffDetailView: View {
     public var body: some View {
         Group {
             if isLoading && assignments.isEmpty {
-                ProgressView("Cargando...")
+                ProgressView(tr("events.detail.staff.loading", "Cargando..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 content
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Personal Asignado")
+        .navigationTitle(tr("events.detail.staff.title", "Personal Asignado"))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink(value: Route.eventForm(id: eventId, step: 4)) {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(SolennixColors.primary)
+                        .accessibilityLabel(tr("events.detail.staff.edit_a11y", "Editar personal"))
+                }
+            }
+        }
         .task { await loadData() }
     }
 
@@ -44,25 +53,34 @@ public struct EventStaffDetailView: View {
                 if let errorMessage {
                     EmptyStateView(
                         icon: "wifi.exclamationmark",
-                        title: "Error al cargar",
+                        title: tr("events.detail.staff.error.title", "Error al cargar"),
                         message: errorMessage,
-                        actionTitle: "Reintentar"
+                        actionTitle: tr("events.detail.staff.retry", "Reintentar")
                     ) {
                         Task { await loadData() }
                     }
                 } else if assignments.isEmpty {
                     EmptyStateView(
                         icon: "person.3",
-                        title: "Sin personal",
-                        message: "Este evento no tiene colaboradores asignados. Editalo para agregar personal."
+                        title: tr("events.detail.staff.empty.title", "Sin personal"),
+                        message: tr("events.detail.staff.empty.message", "Este evento no tiene colaboradores asignados.")
                     )
+                    NavigationLink(value: Route.eventForm(id: eventId, step: 4)) {
+                        Text(tr("events.detail.staff.empty.cta", "Agregar personal"))
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, Spacing.xl)
+                            .padding(.vertical, 16)
+                            .background(SolennixColors.primary)
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    }
                 } else {
                     HStack {
-                        Text("\(assignments.count) colaboradores asignados")
+                        Text(String(format: tr("events.detail.staff.assigned_count", "%d colaboradores asignados"), assignments.count))
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.textSecondary)
                         Spacer()
-                        Text("Total: \(totalFee.asMXN)")
+                        Text(String(format: tr("events.detail.staff.total_fee", "Total: %@"), totalFee.asMXN))
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundStyle(SolennixColors.primary)
@@ -93,7 +111,7 @@ public struct EventStaffDetailView: View {
                 Avatar(name: assignment.staffName ?? "?", photoURL: nil, size: 40)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(assignment.staffName ?? "Colaborador")
+                    Text(assignment.staffName ?? tr("events.detail.staff.name_fallback", "Colaborador"))
                         .font(.body)
                         .fontWeight(.semibold)
                         .foregroundStyle(SolennixColors.text)
@@ -153,7 +171,7 @@ public struct EventStaffDetailView: View {
                     Image(systemName: "bell.badge.fill")
                         .font(.caption2)
                         .foregroundStyle(SolennixColors.success)
-                    Text("Aviso enviado")
+                    Text(tr("events.detail.staff.notification_sent", "Aviso enviado"))
                         .font(.caption2)
                         .foregroundStyle(SolennixColors.success)
                 }
@@ -186,10 +204,10 @@ public struct EventStaffDetailView: View {
 
     private func statusLabel(_ s: AssignmentStatus) -> String {
         switch s {
-        case .pending:   return "Sin confirmar"
-        case .confirmed: return "Confirmado"
-        case .declined:  return "Rechazó"
-        case .cancelled: return "Cancelado"
+        case .pending:   return tr("events.detail.staff.status.pending", "Sin confirmar")
+        case .confirmed: return tr("events.detail.staff.status.confirmed", "Confirmado")
+        case .declined:  return tr("events.detail.staff.status.declined", "Rechazó")
+        case .cancelled: return tr("events.detail.staff.status.cancelled", "Cancelado")
         }
     }
 
@@ -240,6 +258,12 @@ public struct EventStaffDetailView: View {
         assignments.reduce(0) { $0 + ($1.feeAmount ?? 0) }
     }
 
+    // MARK: - Localization
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     // MARK: - Data Loading
 
     @MainActor
@@ -254,7 +278,7 @@ public struct EventStaffDetailView: View {
             if let apiError = error as? APIError {
                 errorMessage = apiError.errorDescription
             } else {
-                errorMessage = "Ocurrio un error inesperado."
+                errorMessage = tr("events.detail.staff.error.unexpected", "Ocurrió un error inesperado.")
             }
         }
 

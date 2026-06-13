@@ -34,6 +34,8 @@ public struct InventoryFormView: View {
                 saveButton
             }
         }
+        .sensoryFeedback(.success, trigger: viewModel.saveSuccessCounter)
+        .sensoryFeedback(.error, trigger: viewModel.saveErrorCounter)
         .task { await viewModel.loadData() }
     }
 
@@ -117,7 +119,7 @@ public struct InventoryFormView: View {
                                         )
                                         .foregroundStyle(
                                             viewModel.unit == unit
-                                                ? .white
+                                                ? SolennixColors.textInverse
                                                 : SolennixColors.text
                                         )
                                         .clipShape(Capsule())

@@ -108,6 +108,20 @@ public enum SolennixColors {
         #endif
     }
 
+    /// Navy anchor — `#1B2A4A`. Use for swipe-edit actions and other brand-navy UI
+    /// that must be visually distinct from the destructive red and the gold primary.
+    public static var accent: Color {
+        #if canImport(UIKit)
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hex: "#2D4A7A")
+                : UIColor(hex: "#1B2A4A")
+        })
+        #else
+        Color(hex: "#1B2A4A")
+        #endif
+    }
+
     public static var secondary: Color {
         #if canImport(UIKit)
         Color(uiColor: UIColor { traits in
@@ -586,16 +600,115 @@ public enum SolennixColors {
         #endif
     }
 
-    // MARK: - Avatar Palette
+    // MARK: - Avatar Palette (tonal — brand-consistent)
 
-    public static let avatarColors: [Color] = [
-        Color(hex: "#5B8DEF"),
-        Color(hex: "#E57373"),
-        Color(hex: "#7DB38A"),
-        Color(hex: "#D4B87A"),
-        Color(hex: "#BA68C8"),
-        Color(hex: "#F06292"),
-        Color(hex: "#4DB6AC"),
-        Color(hex: "#FF8A65"),
-    ]
+    /// Background chip for initials avatars.
+    /// Dark: navy chip (#1B2738) · Light: warm neutral (#F0EFEC = surfaceAlt light).
+    public static var avatarBackground: Color {
+        #if canImport(UIKit)
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hex: "#1B2738")
+                : UIColor(hex: "#F0EFEC")
+        })
+        #else
+        Color(hex: "#F0EFEC")
+        #endif
+    }
+
+    /// Initials text color — ensures ≥4.5:1 contrast against avatarBackground.
+    /// Light: #7A6133 (~5.3:1 on #F0EFEC, passes AA) · Dark: #C4A265 (~5.8:1 on #1B2738).
+    public static var avatarInitials: Color {
+        #if canImport(UIKit)
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hex: "#C4A265")
+                : UIColor(hex: "#7A6133")
+        })
+        #else
+        Color(hex: "#7A6133")
+        #endif
+    }
+
+    /// Deprecated — use tonal `avatarBackground`/`avatarInitials` tokens instead.
+    @available(*, deprecated, renamed: "avatarBackground", message: "Replaced by tonal avatar tokens. hashValue is per-launch unstable.")
+    public static let avatarColors: [Color] = []
+
+    // MARK: - Icon Square Palette (More Menu / muted brand-tonal)
+    //
+    // All tokens are tuned so a white SF Symbol glyph achieves ≥ 3:1 contrast
+    // against the icon square background (WCAG 1.4.11 non-text contrast).
+    // Contrast values: light mode / dark mode
+    //   iconSlate:  6.87 / 4.34
+    //   iconTaupe:  5.24 / 3.36
+    //   iconSage:   5.86 / 3.80
+    //   iconSteel:  5.47 / 3.39
+    // Note: Payments uses SolennixColors.primary (gold #C4A265, 2.41:1) as a
+    // deliberate brand override — gold = money is the only gold in the palette.
+
+    /// Muted navy-blue — Products icon square.
+    public static var iconSlate: Color {
+        #if canImport(UIKit)
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hex: "#5A7BA8")
+                : UIColor(hex: "#3E5C82")
+        })
+        #else
+        Color(hex: "#3E5C82")
+        #endif
+    }
+
+    /// Muted earth-brown — Inventory icon square.
+    public static var iconTaupe: Color {
+        #if canImport(UIKit)
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hex: "#9A8A72")
+                : UIColor(hex: "#7A6A52")
+        })
+        #else
+        Color(hex: "#7A6A52")
+        #endif
+    }
+
+    /// Muted sage-green — Form Links icon square.
+    public static var iconSage: Color {
+        #if canImport(UIKit)
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hex: "#6B8A78")
+                : UIColor(hex: "#4F6B5A")
+        })
+        #else
+        Color(hex: "#4F6B5A")
+        #endif
+    }
+
+    /// Muted blue-steel — Personnel icon square.
+    public static var iconSteel: Color {
+        #if canImport(UIKit)
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hex: "#7A8E9E")
+                : UIColor(hex: "#5C6B7A")
+        })
+        #else
+        Color(hex: "#5C6B7A")
+        #endif
+    }
+
+    /// Muted graphite-plum — Reviews icon square.
+    /// Contrast (white glyph): light #6B5B7B = 5.93:1 / dark #9A82B0 = 3.47:1 (both ≥ 3:1).
+    public static var iconPlum: Color {
+        #if canImport(UIKit)
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hex: "#9A82B0")
+                : UIColor(hex: "#6B5B7B")
+        })
+        #else
+        Color(hex: "#6B5B7B")
+        #endif
+    }
 }

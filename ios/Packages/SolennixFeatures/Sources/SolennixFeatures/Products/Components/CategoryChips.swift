@@ -52,12 +52,17 @@ struct CategoryChip: View {
                 .fontWeight(.semibold)
                 .padding(.horizontal, Spacing.md)
                 .padding(.vertical, 6)
+                // Fix 7: minimum 44pt touch target + Rectangle content shape (visual stays Capsule)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
                 .background(isSelected ? SolennixColors.primary : SolennixColors.card)
                 .foregroundStyle(isSelected ? .white : SolennixColors.textSecondary)
                 .clipShape(Capsule())
-                .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+                // Fix 7: decorative shadow removed
         }
         .buttonStyle(.plain)
+        // Fix 7: .isSelected trait for VoiceOver
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 

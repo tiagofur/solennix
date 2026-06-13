@@ -10,6 +10,8 @@ public struct EventPaymentsDetailView: View {
     let eventId: String
 
     @State private var viewModel: EventDetailViewModel
+    @State private var deletePaymentTarget: Payment?
+    @State private var showDeletePaymentConfirm: Bool = false
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     public init(eventId: String, apiClient: APIClient) {
@@ -45,6 +47,20 @@ public struct EventPaymentsDetailView: View {
             Button(tr("events.form.ok", "OK"), role: .cancel) { }
         } message: {
             Text(viewModel.errorMessage ?? "")
+        }
+        // Warning haptic fires when the dialog opens
+        .sensoryFeedback(.warning, trigger: showDeletePaymentConfirm) { _, new in new }
+        .confirmationDialog(
+            tr("events.detail.payments.delete.title", "Eliminar pago"),
+            isPresented: $showDeletePaymentConfirm,
+            presenting: deletePaymentTarget
+        ) { payment in
+            Button(tr("events.detail.payments.delete.confirm", "Eliminar"), role: .destructive) {
+                Task { await viewModel.deletePayment(id: payment.id, eventId: eventId) }
+            }
+            Button(tr("events.form.cancel", "Cancelar"), role: .cancel) {}
+        } message: { payment in
+            Text(trf("events.detail.payments.delete.message", "¿Eliminar el pago de %@?", payment.amount.asMXN))
         }
         .task { await viewModel.loadData(eventId: eventId) }
     }
@@ -124,7 +140,7 @@ public struct EventPaymentsDetailView: View {
                     VStack(spacing: Spacing.sm) {
                         HStack(spacing: Spacing.sm) {
                             PremiumButton(title: tr("events.detail.payments.action.record", "Registrar pago"), fullWidth: true) {
-                                viewModel.showPaymentSheet = true
+                                viewModel.showRecordPaymentSheet()
                             }
 
                             PremiumButton(title: trf("events.detail.payments.action.settle", "Liquidar %@", viewModel.remaining.asMXN), fullWidth: true) {
@@ -219,7 +235,8 @@ public struct EventPaymentsDetailView: View {
                 .foregroundStyle(SolennixColors.success)
 
             Button {
-                Task { await viewModel.deletePayment(id: payment.id, eventId: eventId) }
+                deletePaymentTarget = payment
+                showDeletePaymentConfirm = true
             } label: {
                 Image(systemName: "trash")
                     .font(.caption)

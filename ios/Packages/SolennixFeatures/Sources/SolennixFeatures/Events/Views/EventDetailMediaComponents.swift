@@ -99,9 +99,6 @@ struct EventDetailPhotosPreviewCard: View {
                 }
             }
             .padding(Spacing.md)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-            .shadowSm()
         }
         .buttonStyle(.plain)
     }

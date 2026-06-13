@@ -6,7 +6,7 @@ import SolennixFeatures
 
 // MARK: - Tab
 
-/// The five tabs shown in the compact (iPhone) tab bar.
+/// The tabs shown in the compact (iPhone) tab bar.
 public enum Tab: Int, Hashable, CaseIterable {
     case home
     case calendar
@@ -50,6 +50,7 @@ public enum SidebarSection: String, Hashable, CaseIterable {
     case inventory
     case paymentInbox
     case eventFormLinks
+    case reviews
     case settings
 
     /// The SF Symbol icon name for this sidebar section.
@@ -64,6 +65,7 @@ public enum SidebarSection: String, Hashable, CaseIterable {
         case .inventory:       return "archivebox.fill"
         case .paymentInbox:    return "wallet.pass.fill"
         case .eventFormLinks:  return "link"
+        case .reviews:         return "star.fill"
         case .settings:        return "gearshape.fill"
         }
     }
@@ -80,6 +82,7 @@ public enum SidebarSection: String, Hashable, CaseIterable {
         case .inventory:       return CommonStrings.navInventory
         case .paymentInbox:    return CommonStrings.navPaymentInbox
         case .eventFormLinks:  return CommonStrings.navEventFormLinks
+        case .reviews:         return CommonStrings.navReviews
         case .settings:        return CommonStrings.navSettings
         }
     }
@@ -90,12 +93,12 @@ public enum SidebarSection: String, Hashable, CaseIterable {
 extension SidebarSection {
     /// Main sidebar order for iPad/macOS.
     static let mainSections: [SidebarSection] = [
-        .dashboard, .calendar, .events, .clients, .personnel, .products, .inventory, .paymentInbox, .eventFormLinks
+        .dashboard, .calendar, .events, .clients, .personnel, .products, .inventory, .paymentInbox, .eventFormLinks, .reviews
     ]
 
     /// Catalog section order for the iPhone "Mas" menu.
     static let moreMenuCatalogSections: [SidebarSection] = [
-        .products, .inventory, .paymentInbox, .eventFormLinks, .personnel
+        .products, .inventory, .paymentInbox, .personnel, .eventFormLinks, .reviews
     ]
 
     /// Canonical route destination used by menu navigation.
@@ -121,8 +124,21 @@ extension SidebarSection {
             return .paymentInbox
         case .eventFormLinks:
             return .eventFormLinks
+        case .reviews:
+            return .reviews
         case .settings:
             return .settings
+        }
+    }
+
+    /// SF Symbol icon name used specifically in the iPhone "Más" menu icon squares.
+    /// Overrides `iconName` where the fill/variant differs from the sidebar baseline.
+    /// The sidebar applies `.symbolVariant(.fill)` dynamically on active state, so it
+    /// keeps the plain base name; the More menu always renders the filled variant.
+    var moreMenuIconName: String {
+        switch self {
+        case .eventFormLinks:  return "link.circle.fill"
+        default:               return iconName
         }
     }
 
@@ -139,6 +155,8 @@ extension SidebarSection {
             return CommonStrings.moreMenuEventFormLinksSubtitle
         case .personnel:
             return CommonStrings.moreMenuPersonnelSubtitle
+        case .reviews:
+            return CommonStrings.moreMenuReviewsSubtitle
         case .settings:
             return CommonStrings.moreMenuSettingsSubtitle
         case .dashboard, .calendar, .events, .clients:

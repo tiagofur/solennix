@@ -18,6 +18,8 @@ import javax.inject.Inject
 
 data class PaymentInboxUiState(
     val submissions: List<PaymentSubmission> = emptyList(),
+    val filteredSubmissions: List<PaymentSubmission> = emptyList(),
+    val searchQuery: String = "",
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val isPlanLocked: Boolean = false,
@@ -38,6 +40,20 @@ class PaymentInboxViewModel @Inject constructor(
         loadSubmissions()
     }
 
+    fun onSearchQueryChange(query: String) {
+        _uiState.update { it.copy(searchQuery = query, filteredSubmissions = filterSubmissions(it.submissions, query)) }
+    }
+
+    private fun filterSubmissions(submissions: List<PaymentSubmission>, query: String): List<PaymentSubmission> {
+        if (query.isBlank()) return submissions
+        val lowered = query.lowercase(Locale.ROOT)
+        return submissions.filter { sub ->
+            (sub.clientName?.lowercase(Locale.ROOT)?.contains(lowered) == true) ||
+            (sub.eventLabel?.lowercase(Locale.ROOT)?.contains(lowered) == true) ||
+            (sub.transferRef?.lowercase(Locale.ROOT)?.contains(lowered) == true)
+        }
+    }
+
     fun loadSubmissions(isRefresh: Boolean = false) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = !isRefresh, isRefreshing = isRefresh, isPlanLocked = false, error = null) }
@@ -46,8 +62,10 @@ class PaymentInboxViewModel @Inject constructor(
                     "payment-submissions"
                 )
                 _uiState.update {
+                    val subs = result["data"] ?: emptyList()
                     it.copy(
-                        submissions = result["data"] ?: emptyList(),
+                        submissions = subs,
+                        filteredSubmissions = filterSubmissions(subs, it.searchQuery),
                         isLoading = false,
                         isRefreshing = false,
                         isPlanLocked = false

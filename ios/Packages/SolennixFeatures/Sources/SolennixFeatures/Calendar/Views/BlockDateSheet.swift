@@ -66,6 +66,7 @@ struct BlockDateSheet: View {
                     Text(CalendarStrings.blockReasonLabel)
                 }
             }
+            .sheetFormBackground()
             .navigationTitle(CalendarStrings.blockTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

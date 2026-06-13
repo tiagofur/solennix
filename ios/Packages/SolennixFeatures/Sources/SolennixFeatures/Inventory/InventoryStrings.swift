@@ -34,6 +34,14 @@ enum InventoryStrings {
     static var sortUnitCost: String { FeatureL10n.text("inventory.sort_unit_cost", "Costo unitario") }
     static var hideLowStock: String { FeatureL10n.text("inventory.hide_low_stock", "Ocultar stock bajo") }
     static var showLowStock: String { FeatureL10n.text("inventory.show_low_stock", "Mostrar stock bajo") }
+    // Fix 10: low-stock toggle a11y value — plural-aware
+    static var lowStockToggleInactive: String { FeatureL10n.text("inventory.low_stock_toggle_inactive", "desactivado") }
+    static func lowStockToggleActive(_ count: Int) -> String {
+        String.localizedStringWithFormat(
+            FeatureL10n.text("inventory.low_stock_toggle_active", "activado, %lld artículos"),
+            count
+        )
+    }
     static var loading: String { FeatureL10n.text("inventory.loading", "Cargando...") }
     static var errorTitle: String { FeatureL10n.text("inventory.error_title", "Error") }
     static var itemFallback: String { FeatureL10n.text("inventory.item_fallback", "Item") }
@@ -65,8 +73,12 @@ enum InventoryStrings {
     static var lastUpdated: String { FeatureL10n.text("inventory.last_updated", "Última actualización") }
     static var newStock: String { FeatureL10n.text("inventory.new_stock", "Nuevo stock:") }
     static var save: String { FeatureL10n.text("inventory.save", "Guardar") }
-    static var ok: String { "OK" }
+    static var ok: String { FeatureL10n.text("inventory.ok", "OK") }
+    static var moreActions: String { FeatureL10n.text("inventory.more_actions", "Más acciones") }
+    static var stockHealthTitle: String { FeatureL10n.text("inventory.stock_health_title", "Salud del Stock") }
+    static var unitDefault: String { FeatureL10n.text("inventory.unit_default", "piezas") }
     static var inventoryResource: String { FeatureL10n.text("inventory.inventory_resource", "Inventario") }
+    static var upgradeCta: String { FeatureL10n.text("inventory.upgrade_cta", "Ver planes") }
     static var editItemTitle: String { FeatureL10n.text("inventory.edit_item_title", "Editar Item") }
     static var newItemTitle: String { FeatureL10n.text("inventory.new_item_title", "Nuevo Item") }
     static var informationTitle: String { FeatureL10n.text("inventory.information_title", "Información") }
@@ -101,7 +113,7 @@ enum InventoryStrings {
     }
 
     static func permanentDeletePrompt(_ name: String) -> String {
-        FeatureL10n.format("inventory.permanent_delete_prompt", "¿Estás seguro de que querés eliminar \"%@\"? Esta acción no se puede deshacer.", name)
+        FeatureL10n.format("inventory.permanent_delete_prompt", "¿Estás seguro de que quieres eliminar \"%@\"? Esta acción no se puede deshacer.", name)
     }
 
     static func minLabel(_ value: Int) -> String {
@@ -153,5 +165,43 @@ enum InventoryStrings {
 
     static func inDays(_ days: Int) -> String {
         FeatureL10n.format("inventory.in_days", "en %lld días", days)
+    }
+
+    static func stockStatusA11y(stock: String, unit: String, isLow: Bool, minimum: Int?) -> String {
+        var label = FeatureL10n.format("inventory.stock_status_a11y_base", "Stock: %@ %@", stock, unit)
+        if isLow, let min = minimum {
+            label += ". " + FeatureL10n.format("inventory.stock_status_a11y_low", "bajo el mínimo de %lld", min)
+        }
+        return label
+    }
+
+    // MARK: - Scope filter (issue #551)
+
+    static var scopeAll: String { FeatureL10n.text("inventory.scope_all", "Todos") }
+    static var scopeIngredient: String { FeatureL10n.text("inventory.scope_ingredient", "Ingredientes") }
+    static var scopeEquipment: String { FeatureL10n.text("inventory.scope_equipment", "Equipo") }
+    static var scopeSupply: String { FeatureL10n.text("inventory.scope_supply", "Insumos") }
+    static var scopeFilterAccessibility: String { FeatureL10n.text("inventory.scope_filter_accessibility", "Filtrar por tipo") }
+
+    static var scopeEmptyIngredient: String { FeatureL10n.text("inventory.scope_empty_ingredient", "Sin ingredientes") }
+    static var scopeEmptyEquipment: String { FeatureL10n.text("inventory.scope_empty_equipment", "Sin equipo") }
+    static var scopeEmptySupply: String { FeatureL10n.text("inventory.scope_empty_supply", "Sin insumos") }
+    static var scopeEmptyIngredientMessage: String { FeatureL10n.text("inventory.scope_empty_ingredient_message", "No hay ingredientes en el inventario") }
+    static var scopeEmptyEquipmentMessage: String { FeatureL10n.text("inventory.scope_empty_equipment_message", "No hay equipo en el inventario") }
+    static var scopeEmptySupplyMessage: String { FeatureL10n.text("inventory.scope_empty_supply_message", "No hay insumos en el inventario") }
+
+    static func demandRowA11y(name: String, quantity: String, unit: String, diffDays: Int, isInsufficient: Bool) -> String {
+        var label = FeatureL10n.format("inventory.demand_row_a11y", "%@: %@ %@", name, quantity, unit)
+        if diffDays == 0 {
+            label += ". \(FeatureL10n.text("inventory.today", "Hoy"))"
+        } else if diffDays == 1 {
+            label += ". \(FeatureL10n.text("inventory.tomorrow", "Mañana"))"
+        } else if diffDays > 1 && diffDays <= 7 {
+            label += ". " + FeatureL10n.format("inventory.in_days", "en %lld días", diffDays)
+        }
+        if isInsufficient {
+            label += ". \(FeatureL10n.text("inventory.stock_insufficient_a11y", "Stock insuficiente"))"
+        }
+        return label
     }
 }

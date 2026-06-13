@@ -9,6 +9,7 @@ import TipKit
 public struct ClientListView: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var viewModel: ClientListViewModel
     @Environment(\.openURL) private var openURL
     @Environment(PlanLimitsManager.self) private var planLimitsManager
@@ -31,20 +32,22 @@ public struct ClientListView: View {
             .navigationTitle(tr("clients.title", "Clientes"))
             .navigationBarTitleDisplayMode(.large)
             .searchable(text: $viewModel.searchText, prompt: tr("clients.search_placeholder", "Buscar clientes"))
+            .searchMinimizedIfAvailable()
             .safeAreaInset(edge: .top, spacing: 0) {
                 VStack(spacing: 0) {
                     if viewModel.isShowingCachedData {
                         CachedDataBanner()
                     }
                     if !planLimitsManager.canCreateClient {
-                        UpgradeBannerView(
-                            type: .limitReached,
-                            resource: tr("clients.title", "Clientes"),
-                            currentUsage: planLimitsManager.clientsCount,
-                            limit: PlanLimitsManager.clientLimit
-                        ) {
-                            // Action to go to Pricing
+                        NavigationLink(value: Route.pricing) {
+                            UpgradeBannerView(
+                                type: .limitReached,
+                                resource: tr("clients.title", "Clientes"),
+                                currentUsage: planLimitsManager.clientsCount,
+                                limit: PlanLimitsManager.clientLimit
+                            )
                         }
+                        .buttonStyle(.plain)
                         .padding(.horizontal, Spacing.md)
                         .padding(.top, Spacing.sm)
                     }
@@ -128,13 +131,24 @@ public struct ClientListView: View {
                 .tint(SolennixColors.primary)
         } else if viewModel.filteredClients.isEmpty && !viewModel.isLoading {
             if viewModel.searchText.isEmpty {
-                EmptyStateView(
-                    icon: "person.2",
-                    title: tr("clients.empty.title", "Sin clientes"),
-                    message: tr("clients.empty.message", "Agregá tu primer cliente para empezar"),
-                    actionTitle: tr("clients.action.add", "Agregar cliente")
-                ) {
-                    // FAB handles navigation
+                // First-run: real NavigationLink CTA styled like EventListView first-run.
+                VStack(spacing: 0) {
+                    EmptyStateView(
+                        icon: "person.2",
+                        title: tr("clients.empty.title", "Sin clientes"),
+                        message: tr("clients.empty.message", "Agregá tu primer cliente para empezar")
+                    )
+                    NavigationLink(value: Route.clientForm()) {
+                        Text(tr("clients.empty.cta", "Agregar cliente"))
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, Spacing.xl)
+                            .padding(.vertical, 16)
+                            .background(SolennixGradient.premium)
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                            .shadowFab()
+                    }
+                    .padding(.bottom, Spacing.xxl)
                 }
                 .background(SolennixColors.surfaceGrouped)
             } else {
@@ -148,18 +162,44 @@ public struct ClientListView: View {
         }
     }
 
+    /// First-run empty state for the iPhone list with a working NavigationLink CTA.
+    /// Mirrors EventListView's first-run empty state pattern (line 596-619).
+    private var clientFirstRunEmptyRow: some View {
+        VStack(spacing: 0) {
+            EmptyStateView(
+                icon: "person.2",
+                title: tr("clients.empty.title", "Sin clientes"),
+                message: tr("clients.empty.message", "Agregá tu primer cliente para empezar")
+            )
+            NavigationLink(value: Route.clientForm()) {
+                Text(tr("clients.empty.cta", "Agregar cliente"))
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, Spacing.xl)
+                    .padding(.vertical, 16)
+                    .background(SolennixGradient.premium)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    .shadowFab()
+            }
+            .padding(.bottom, Spacing.xxl)
+        }
+        .frame(maxWidth: .infinity)
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets())
+        .listRowSeparator(.hidden)
+    }
+
     private var clientGrid: some View {
         ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 300))], spacing: Spacing.lg) {
                 ForEach(viewModel.paginatedClients) { client in
                     NavigationLink(value: Route.clientDetail(id: client.id)) {
                         clientRow(client)
-                            .padding(Spacing.md)
-                            .background(SolennixColors.card)
-                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-                            .shadowSm()
                     }
                     .buttonStyle(.plain)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(clientAccessibilityLabel(client))
+                    .accessibilityAddTraits(.isButton)
                     .contextMenu {
                         NavigationLink(value: Route.clientForm(id: client.id)) {
                             Label(tr("clients.action.edit", "Editar"), systemImage: "pencil")
@@ -230,14 +270,7 @@ public struct ClientListView: View {
                 skeletonRows
             } else if viewModel.filteredClients.isEmpty && !viewModel.isLoading {
                 if viewModel.searchText.isEmpty {
-                    fullPageEmptyRow(
-                        icon: "person.2",
-                        title: tr("clients.empty.title", "Sin clientes"),
-                        message: tr("clients.empty.message", "Agregá tu primer cliente para empezar"),
-                        actionTitle: tr("clients.action.add", "Agregar cliente")
-                    ) {
-                        // FAB handles navigation
-                    }
+                    clientFirstRunEmptyRow
                 } else {
                     fullPageEmptyRow(
                         icon: "magnifyingglass",
@@ -249,8 +282,24 @@ public struct ClientListView: View {
                 }
             } else {
                 ForEach(viewModel.paginatedClients) { client in
-                    NavigationLink(value: Route.clientDetail(id: client.id)) {
+                    ZStack {
                         clientRow(client)
+                        NavigationLink(value: Route.clientDetail(id: client.id)) {
+                            EmptyView()
+                        }
+                        .opacity(0)
+                    }
+                    .listRowBackground(SolennixColors.card)
+                    .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+                    .alignmentGuide(.listRowSeparatorLeading) { d in d[.leading] + 40 + Spacing.md }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(clientAccessibilityLabel(client))
+                    .accessibilityAddTraits(.isButton)
+                    // Delete is reachable via swipe; wire an explicit action so
+                    // VoiceOver users can trigger it through the rotor — mirrors EventListView.
+                    .accessibilityAction(named: tr("clients.delete.confirm", "Eliminar")) {
+                        viewModel.deleteTarget = client
+                        viewModel.showDeleteConfirm = true
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button(role: .destructive) {
@@ -263,7 +312,8 @@ public struct ClientListView: View {
                         NavigationLink(value: Route.clientForm(id: client.id)) {
                             Label(tr("clients.action.edit", "Editar"), systemImage: "pencil")
                         }
-                        .tint(.blue)
+                        // Fix 13: navy accent instead of blue — differentiates edit from destructive red
+                        .tint(SolennixColors.accent)
                     }
                     .swipeActions(edge: .leading, allowsFullSwipe: true) {
                         if let email = client.email, !email.isEmpty,
@@ -345,29 +395,15 @@ public struct ClientListView: View {
     }
 
     /// Skeleton placeholder rows shown while clients are loading for the first time.
+    /// Matches insetGrouped surface: listRowBackground card, no shadows, default insets.
     @ViewBuilder
     private var skeletonRows: some View {
         ForEach(0..<5, id: \.self) { _ in
-            HStack(spacing: Spacing.md) {
-                Circle()
-                    .fill(SolennixColors.surfaceAlt)
-                    .frame(width: 40, height: 40)
-
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    RoundedRectangle(cornerRadius: CornerRadius.sm)
-                        .fill(SolennixColors.surfaceAlt)
-                        .frame(width: 140, height: 14)
-
-                    RoundedRectangle(cornerRadius: CornerRadius.sm)
-                        .fill(SolennixColors.surfaceAlt)
-                        .frame(width: 100, height: 10)
-                }
-
-                Spacer()
-            }
-            .padding(.vertical, Spacing.xs)
+            ClientSkeletonCard()
+                .listRowBackground(SolennixColors.card)
+                .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
         }
-        .redacted(reason: .placeholder)
+        .accessibilityHidden(true)
     }
 
     /// Renders an `EmptyStateView` as a List row that fills the available space
@@ -394,45 +430,117 @@ public struct ClientListView: View {
 
     // MARK: - Client Row
 
+    /// Card-vocabulary row: Avatar + name (line 1) / pin+city (line 2) / phone (line 3)
+    /// with a trailing anchor showing totalSpent (gold) + totalEvents (caption).
+    /// Email is intentionally removed from the row — it lives in the detail screen.
+    @ViewBuilder
     private func clientRow(_ client: Client) -> some View {
-        HStack(spacing: Spacing.md) {
-            Avatar(name: client.name, photoURL: client.photoUrl, size: 40)
+        let hasSpend = (client.totalSpent ?? 0) > 0
+        let hasEvents = (client.totalEvents ?? 0) > 0
+        let showAnchor = hasSpend || hasEvents
 
-            VStack(alignment: .leading, spacing: Spacing.xs) {
-                Text(client.name)
-                    .font(.body)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(SolennixColors.text)
+        let textColumn = Group {
+            // Line 1: name
+            Text(client.name)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(SolennixColors.text)
+                .lineLimit(2)
 
-                if let city = client.city, !city.isEmpty {
-                    HStack(spacing: Spacing.xs) {
-                        Image(systemName: "mappin")
-                            .font(.caption2)
-                            .foregroundStyle(SolennixColors.textTertiary)
-                        Text(city)
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.textSecondary)
-                    }
-                }
-
-                HStack(spacing: Spacing.sm) {
-                    if !client.phone.isEmpty {
-                        Text(client.phone)
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.textTertiary)
-                    }
-                    if let email = client.email, !email.isEmpty {
-                        Text(email)
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.textTertiary)
-                            .lineLimit(1)
-                    }
-                }
+            // Line 2: pin + city
+            if let city = client.city, !city.isEmpty {
+                Label(city, systemImage: "mappin")
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textSecondary)
+                    .lineLimit(1)
             }
 
-            Spacer()
+            // Line 3: phone only (email intentionally omitted — lives in detail)
+            if !client.phone.isEmpty {
+                Text(client.phone)
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textSecondary)
+                    .lineLimit(1)
+            }
         }
-        .padding(.vertical, Spacing.xs)
+
+        let anchorColumn = VStack(alignment: .trailing, spacing: Spacing.xxs) {
+            if hasSpend {
+                Text(formattedAmount(client.totalSpent ?? 0))
+                    .font(.subheadline)
+                    .fontWeight(.bold)
+                    .foregroundStyle(SolennixColors.primary)
+            }
+            if hasEvents {
+                Text(String.localizedStringWithFormat(
+                    tr("clients.list.events_count", "%lld eventos"),
+                    client.totalEvents ?? 0
+                ))
+                .font(.caption2)
+                .foregroundStyle(SolennixColors.textSecondary)
+            }
+        }
+
+        if dynamicTypeSize >= .accessibility1 {
+            // Large accessibility sizes: stack spend anchor below text column
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                HStack(alignment: .top, spacing: Spacing.md) {
+                    Avatar(name: client.name, photoURL: client.photoUrl, size: 40)
+                    VStack(alignment: .leading, spacing: Spacing.xs) { textColumn }
+                }
+                if showAnchor {
+                    HStack { Spacer(); anchorColumn }
+                }
+            }
+        } else {
+            // Standard layout: trailing anchor aligned top-right
+            HStack(alignment: .top, spacing: Spacing.md) {
+                Avatar(name: client.name, photoURL: client.photoUrl, size: 40)
+                VStack(alignment: .leading, spacing: Spacing.xs) { textColumn }
+                if showAnchor {
+                    Spacer(minLength: Spacing.sm)
+                    anchorColumn
+                } else {
+                    Spacer()
+                }
+            }
+        }
+    }
+
+    // MARK: - Accessibility
+
+    /// Composed ordered label: name, city, N eventos, $X total, phone.
+    /// Phone is appended last so VoiceOver speaks it as one continuous chunk
+    /// rather than as an isolated element (which would cause digit-by-digit reading).
+    private func clientAccessibilityLabel(_ client: Client) -> String {
+        var parts: [String] = [client.name]
+        if let city = client.city, !city.isEmpty {
+            parts.append(city)
+        }
+        if let events = client.totalEvents, events > 0 {
+            parts.append(String.localizedStringWithFormat(
+                tr("clients.list.events_count", "%lld eventos"),
+                events
+            ))
+        }
+        if let spent = client.totalSpent, spent > 0 {
+            parts.append(formattedAmount(spent))
+        }
+        // Phone last — spoken as part of one label so VoiceOver doesn't
+        // read individual digits as separate accessibility elements.
+        if !client.phone.isEmpty {
+            parts.append(client.phone)
+        }
+        return parts.joined(separator: ", ")
+    }
+
+    private func formattedAmount(_ value: Double) -> String {
+        let f = NumberFormatter()
+        f.numberStyle = .currency
+        f.locale = FeatureL10n.locale
+        f.maximumFractionDigits = 0
+        f.minimumFractionDigits = 0
+        return f.string(from: NSNumber(value: value)) ?? "$0"
     }
 
     // MARK: - Sort Menu
@@ -473,6 +581,38 @@ public struct ClientListView: View {
         FeatureL10n.format(key, value, arg)
     }
 
+}
+
+// MARK: - Client Skeleton Card
+
+/// Skeleton placeholder matching the new clientRow card shape:
+/// avatar circle + name bar + 2 caption bars + trailing money bar.
+struct ClientSkeletonCard: View {
+    public init() {}
+
+    public var body: some View {
+        HStack(alignment: .top, spacing: Spacing.md) {
+            // Avatar stub
+            Circle()
+                .fill(SolennixColors.surfaceAlt)
+                .frame(width: 40, height: 40)
+
+            // Text column stubs
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                SkeletonLine(width: 160, height: 14) // name — subheadline
+                SkeletonLine(width: 110, height: 12) // city — caption
+                SkeletonLine(width: 90,  height: 12) // phone — caption
+            }
+
+            Spacer(minLength: Spacing.sm)
+
+            // Trailing money stub
+            VStack(alignment: .trailing, spacing: Spacing.xxs) {
+                SkeletonLine(width: 64, height: 14) // totalSpent — subheadline.bold
+                SkeletonLine(width: 48, height: 10) // totalEvents — caption2
+            }
+        }
+    }
 }
 
 // MARK: - Preview

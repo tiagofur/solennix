@@ -28,6 +28,13 @@ public final class ClientFormViewModel {
     public var isEdit: Bool = false
     public var editId: String?
 
+    // MARK: - Haptic Counters (observed by ClientFormView via .sensoryFeedback)
+
+    /// Incremented on successful save — triggers `.sensoryFeedback(.success, trigger:)`.
+    public var saveSuccessCounter: Int = 0
+    /// Incremented on save error — triggers `.sensoryFeedback(.error, trigger:)`.
+    public var saveErrorCounter: Int = 0
+
     // MARK: - Dependencies
 
     private let apiClient: APIClient
@@ -151,11 +158,11 @@ public final class ClientFormViewModel {
 
         do {
             let client = try await save()
-            HapticsHelper.play(.success)
+            saveSuccessCounter &+= 1
             isSaving = false
             return client
         } catch let error as APIError {
-            HapticsHelper.play(.error)
+            saveErrorCounter &+= 1
             isSaving = false
             if case .planLimitExceeded(let message, _, _, _) = error {
                 planLimitMessage = message
@@ -164,7 +171,7 @@ public final class ClientFormViewModel {
             }
             return nil
         } catch {
-            HapticsHelper.play(.error)
+            saveErrorCounter &+= 1
             isSaving = false
             errorMessage = mapError(error)
             return nil

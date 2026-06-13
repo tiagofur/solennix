@@ -23,10 +23,21 @@ func (r *InventoryRepo) CountByUserID(ctx context.Context, userID uuid.UUID) (in
 	return count, err
 }
 
-func (r *InventoryRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.InventoryItem, error) {
-	query := fmt.Sprintf(`SELECT id, user_id, ingredient_name, current_stock, minimum_stock, unit, unit_cost, type, last_updated
-		FROM inventory WHERE user_id = $1 ORDER BY ingredient_name LIMIT %d`, GetAllSafetyLimit)
-	rows, err := r.pool.Query(ctx, query, userID)
+func (r *InventoryRepo) GetAll(ctx context.Context, userID uuid.UUID, typeFilter string) ([]models.InventoryItem, error) {
+	var (
+		query string
+		args  []any
+	)
+	if typeFilter != "" {
+		query = fmt.Sprintf(`SELECT id, user_id, ingredient_name, current_stock, minimum_stock, unit, unit_cost, type, last_updated
+			FROM inventory WHERE user_id = $1 AND type = $2 ORDER BY ingredient_name LIMIT %d`, GetAllSafetyLimit)
+		args = []any{userID, typeFilter}
+	} else {
+		query = fmt.Sprintf(`SELECT id, user_id, ingredient_name, current_stock, minimum_stock, unit, unit_cost, type, last_updated
+			FROM inventory WHERE user_id = $1 ORDER BY ingredient_name LIMIT %d`, GetAllSafetyLimit)
+		args = []any{userID}
+	}
+	rows, err := r.pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -49,19 +60,37 @@ func (r *InventoryRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.
 
 var inventoryAllowedSortCols = []string{"ingredient_name", "current_stock", "minimum_stock", "unit_cost", "type", "last_updated"}
 
-func (r *InventoryRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.InventoryItem, int, error) {
+func (r *InventoryRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string, typeFilter string) ([]models.InventoryItem, int, error) {
 	sortCol = safeSortColumn(sortCol, inventoryAllowedSortCols, "ingredient_name")
 	order = safeSortOrder(order)
 
-	var total int
-	countQuery := `SELECT COUNT(*) FROM inventory WHERE user_id = $1`
-	if err := r.pool.QueryRow(ctx, countQuery, userID).Scan(&total); err != nil {
+	var (
+		total      int
+		countQuery string
+		countArgs  []any
+		dataQuery  string
+		dataArgs   []any
+	)
+
+	if typeFilter != "" {
+		countQuery = `SELECT COUNT(*) FROM inventory WHERE user_id = $1 AND type = $2`
+		countArgs = []any{userID, typeFilter}
+		dataQuery = fmt.Sprintf(`SELECT id, user_id, ingredient_name, current_stock, minimum_stock, unit, unit_cost, type, last_updated
+			FROM inventory WHERE user_id = $1 AND type = $2 ORDER BY %s %s LIMIT $3 OFFSET $4`, sortCol, order)
+		dataArgs = []any{userID, typeFilter, limit, offset}
+	} else {
+		countQuery = `SELECT COUNT(*) FROM inventory WHERE user_id = $1`
+		countArgs = []any{userID}
+		dataQuery = fmt.Sprintf(`SELECT id, user_id, ingredient_name, current_stock, minimum_stock, unit, unit_cost, type, last_updated
+			FROM inventory WHERE user_id = $1 ORDER BY %s %s LIMIT $2 OFFSET $3`, sortCol, order)
+		dataArgs = []any{userID, limit, offset}
+	}
+
+	if err := r.pool.QueryRow(ctx, countQuery, countArgs...).Scan(&total); err != nil {
 		return nil, 0, fmt.Errorf("count inventory: %w", err)
 	}
 
-	query := fmt.Sprintf(`SELECT id, user_id, ingredient_name, current_stock, minimum_stock, unit, unit_cost, type, last_updated
-		FROM inventory WHERE user_id = $1 ORDER BY %s %s LIMIT $2 OFFSET $3`, sortCol, order)
-	rows, err := r.pool.Query(ctx, query, userID, limit, offset)
+	rows, err := r.pool.Query(ctx, dataQuery, dataArgs...)
 	if err != nil {
 		return nil, 0, err
 	}

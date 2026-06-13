@@ -3,6 +3,36 @@ import Observation
 import SolennixCore
 import SolennixNetwork
 
+// MARK: - Inventory Scope
+
+/// Server-side type filter for the inventory list.
+public enum InventoryScope: CaseIterable, Hashable {
+    case all
+    case ingredient
+    case equipment
+    case supply
+
+    /// Query parameter value sent to `GET /api/inventory?type=`.
+    /// `nil` means no `type` param is sent (returns all types).
+    public var typeParam: String? {
+        switch self {
+        case .all:        return nil
+        case .ingredient: return "ingredient"
+        case .equipment:  return "equipment"
+        case .supply:     return "supply"
+        }
+    }
+
+    public var label: String {
+        switch self {
+        case .all:        return InventoryStrings.scopeAll
+        case .ingredient: return InventoryStrings.scopeIngredient
+        case .equipment:  return InventoryStrings.scopeEquipment
+        case .supply:     return InventoryStrings.scopeSupply
+        }
+    }
+}
+
 // MARK: - Sort Key
 
 public enum InventorySortKey: String, CaseIterable {
@@ -38,10 +68,31 @@ public final class InventoryListViewModel {
     }
     public var isLoading: Bool = false
     public var sortKey: InventorySortKey = .name {
-        didSet { applyFilters() }
+        didSet {
+            // R2: cancel any in-flight sort reload before spawning a new one to prevent races
+            sortReloadTask?.cancel()
+            currentPage = 1
+            sortReloadTask = Task { await loadItems() }
+        }
     }
     public var sortAscending: Bool = true {
-        didSet { applyFilters() }
+        didSet {
+            // R2: cancel any in-flight sort reload before spawning a new one to prevent races
+            sortReloadTask?.cancel()
+            currentPage = 1
+            sortReloadTask = Task { await loadItems() }
+        }
+    }
+    public var scope: InventoryScope = .all {
+        didSet {
+            guard scope != oldValue else { return }
+            sortReloadTask?.cancel()
+            currentPage = 1
+            sortReloadTask = Task {
+                guard !Task.isCancelled else { return }
+                await loadItems()
+            }
+        }
     }
     public var deleteTarget: InventoryItem?
     public var showDeleteConfirm: Bool = false
@@ -67,17 +118,24 @@ public final class InventoryListViewModel {
 
     // MARK: - Computed
 
-    /// Items grouped by type
-    public var ingredientItems: [InventoryItem] {
-        filteredItems.filter { $0.type == .ingredient }
+    /// Scoped empty-state title: shown when filteredItems is empty and no search/low-stock filter is active.
+    public var scopedEmptyTitle: String {
+        switch scope {
+        case .all:        return InventoryStrings.emptyTitle
+        case .ingredient: return InventoryStrings.scopeEmptyIngredient
+        case .equipment:  return InventoryStrings.scopeEmptyEquipment
+        case .supply:     return InventoryStrings.scopeEmptySupply
+        }
     }
 
-    public var equipmentItems: [InventoryItem] {
-        filteredItems.filter { $0.type == .equipment }
-    }
-
-    public var supplyItems: [InventoryItem] {
-        filteredItems.filter { $0.type == .supply }
+    /// Scoped empty-state message: shown alongside scopedEmptyTitle.
+    public var scopedEmptyMessage: String {
+        switch scope {
+        case .all:        return InventoryStrings.emptyMessage
+        case .ingredient: return InventoryStrings.scopeEmptyIngredientMessage
+        case .equipment:  return InventoryStrings.scopeEmptyEquipmentMessage
+        case .supply:     return InventoryStrings.scopeEmptySupplyMessage
+        }
     }
 
     /// Count of low stock items
@@ -93,6 +151,8 @@ public final class InventoryListViewModel {
     private let apiClient: APIClient
     private var cacheManager: CacheManager?
     private let cacheMaxAge: TimeInterval = 30 * 60
+    /// Tracks the most recent sort-triggered reload task so rapid sort changes cancel the previous one.
+    private var sortReloadTask: Task<Void, Never>?
 
     // MARK: - Init
 
@@ -105,7 +165,9 @@ public final class InventoryListViewModel {
         self.cacheManager = manager
     }
 
-    /// Whether a search/filter is active (skip server pagination).
+    /// Whether a client-side search/filter is active.
+    /// When true, we fetch all items (no pagination) so client filters can run over the full set.
+    /// Note: `scope` is server-side and does NOT disable pagination.
     private var isFiltering: Bool {
         !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || showLowStockOnly
     }
@@ -116,6 +178,9 @@ public final class InventoryListViewModel {
     public func loadItems() async {
         isLoading = true
         errorMessage = nil
+        // Fix 5a: full reload always restarts pagination — without this, pull-to-refresh
+        // after paginating re-fetches the CURRENT page and appends duplicates.
+        currentPage = 1
 
         // Show cached data immediately while fetching
         if items.isEmpty, let cached = try? cacheManager?.getCachedInventoryItems(maxAge: cacheMaxAge), !cached.isEmpty {
@@ -126,7 +191,12 @@ public final class InventoryListViewModel {
 
         do {
             if isFiltering {
-                let result: [InventoryItem] = try await apiClient.getAll(Endpoint.inventory)
+                var allParams: [String: String] = [:]
+                if let typeValue = scope.typeParam {
+                    allParams["type"] = typeValue
+                }
+                let result: [InventoryItem] = try await apiClient.getAll(Endpoint.inventory, params: allParams.isEmpty ? nil : allParams)
+                guard !Task.isCancelled else { isLoading = false; return }
                 items = result
                 currentPage = 1
                 totalPages = 1
@@ -139,13 +209,17 @@ public final class InventoryListViewModel {
                 case .minimumStock: sortParam = "minimum_stock"
                 case .unitCost:     sortParam = "unit_cost"
                 }
-                let params: [String: String] = [
+                var params: [String: String] = [
                     "page": "\(currentPage)",
                     "limit": "\(pageSize)",
                     "sort": sortParam,
                     "order": sortAscending ? "asc" : "desc"
                 ]
+                if let typeValue = scope.typeParam {
+                    params["type"] = typeValue
+                }
                 let paginated: PaginatedResponse<InventoryItem> = try await apiClient.getPaginated(Endpoint.inventory, params: params)
+                guard !Task.isCancelled else { isLoading = false; return }
                 if currentPage == 1 {
                     items = paginated.data
                 } else {
@@ -178,6 +252,7 @@ public final class InventoryListViewModel {
         guard !isLoadingMore, hasMorePages, !isFiltering else { return }
         isLoadingMore = true
         currentPage += 1
+        let requestScope = scope
 
         do {
             let sortParam: String
@@ -187,13 +262,28 @@ public final class InventoryListViewModel {
             case .minimumStock: sortParam = "minimum_stock"
             case .unitCost:     sortParam = "unit_cost"
             }
-            let params: [String: String] = [
+            var params: [String: String] = [
                 "page": "\(currentPage)",
                 "limit": "\(pageSize)",
                 "sort": sortParam,
                 "order": sortAscending ? "asc" : "desc"
             ]
+            if let typeValue = scope.typeParam {
+                params["type"] = typeValue
+            }
             let paginated: PaginatedResponse<InventoryItem> = try await apiClient.getPaginated(Endpoint.inventory, params: params)
+            // Scope may have changed while this page was in flight — appending
+            // would mix the previous scope's results into the new scope's list.
+            // The scope didSet already reset currentPage, so don't decrement here.
+            guard scope == requestScope else {
+                isLoadingMore = false
+                return
+            }
+            if Task.isCancelled {
+                currentPage -= 1
+                isLoadingMore = false
+                return
+            }
             items.append(contentsOf: paginated.data)
             totalPages = paginated.totalPages
             totalItems = paginated.total

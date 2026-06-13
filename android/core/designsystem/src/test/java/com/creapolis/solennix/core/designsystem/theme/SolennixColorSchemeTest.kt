@@ -41,9 +41,12 @@ class SolennixColorSchemeTest {
     }
 
     @Test
-    fun `theme palettes keep stable brand tokens`() {
-        assertEquals(8, LightSolennixColors.avatarPalette.size)
-        assertEquals(LightSolennixColors.avatarPalette, DarkSolennixColors.avatarPalette)
-        assertEquals(SolennixGold, LightSolennixColors.avatarPalette[0])
+    fun `avatar tokens use brand tonal colors`() {
+        // Light: warm neutral bg + dark gold initials
+        assertEquals(AvatarBackgroundLight, LightSolennixColors.avatarBackground)
+        assertEquals(AvatarInitialsLight, LightSolennixColors.avatarInitials)
+        // Dark: navy bg + gold initials
+        assertEquals(AvatarBackgroundDark, DarkSolennixColors.avatarBackground)
+        assertEquals(AvatarInitialsDark, DarkSolennixColors.avatarInitials)
     }
 }

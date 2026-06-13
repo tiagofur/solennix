@@ -31,7 +31,6 @@ public final class EventDetailViewModel {
     public var paymentNotes: String = ""
     public var isSavingPayment: Bool = false
     public var isUploadingPhoto: Bool = false
-    public var deletePaymentId: String?
 
     public var errorMessage: String?
     public var isLiveActivityActive: Bool = false
@@ -72,6 +71,16 @@ public final class EventDetailViewModel {
     public var isFullyPaid: Bool {
         remaining <= 0.01
     }
+
+    /// Bumped by 1 each time a payment is registered AND the event becomes fully paid
+    /// as a result. Used by PaymentCollectionRing's `.sensoryFeedback(.success, trigger:)`.
+    public var fullyPaidCounter: Int = 0
+
+    /// Bumped by 1 each time a payment is saved but does NOT tip the event to fully paid.
+    /// EventDetailView observes this for its `.sensoryFeedback(.success, trigger:)` so
+    /// that exactly one success haptic fires per payment — never a double haptic on the
+    /// fully-paid crossing (where fullyPaidCounter fires instead).
+    public var paymentSavedCounter: Int = 0
 
     /// Monto total del anticipo basado en `depositPercent` y `totalAmount`.
     /// Devuelve 0 si el evento no tiene porcentaje de anticipo.
@@ -182,6 +191,72 @@ public final class EventDetailViewModel {
         }
     }
 
+    // MARK: - Scoped Load Methods
+
+    /// Fetches only the equipment list for an event.
+    /// Use this from EventEquipmentDetailView to avoid firing 8 parallel requests.
+    @MainActor
+    public func loadEquipmentOnly(eventId: String) async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let result: [EventEquipment] = try await apiClient.get(Endpoint.eventEquipment(eventId))
+            equipment = result
+        } catch {
+            // Equipment list is non-critical — silently absorb; view shows empty state.
+        }
+    }
+
+    /// Fetches only the extras list for an event.
+    /// Use this from EventExtrasDetailView to avoid firing 8 parallel requests.
+    @MainActor
+    public func loadExtrasOnly(eventId: String) async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let result: [EventExtra] = try await apiClient.get(Endpoint.eventExtras(eventId))
+            extras = result
+        } catch {
+            // Extras list is non-critical — silently absorb; view shows empty state.
+        }
+    }
+
+    /// Fetches only the supplies list for an event.
+    /// Use this from EventSuppliesDetailView to avoid firing 8 parallel requests.
+    @MainActor
+    public func loadSuppliesOnly(eventId: String) async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let result: [EventSupply] = try await apiClient.get(Endpoint.eventSupplies(eventId))
+            supplies = result
+        } catch {
+            // Supplies list is non-critical — silently absorb; view shows empty state.
+        }
+    }
+
+    /// Fetches only the products list and the product catalog (for name resolution).
+    /// Use this from EventProductsDetailView to avoid firing 8 parallel requests.
+    @MainActor
+    public func loadProductsOnly(eventId: String) async {
+        isLoading = true
+        defer { isLoading = false }
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { [apiClient] in
+                if let result: [EventProduct] = try? await apiClient.get(Endpoint.eventProducts(eventId)) {
+                    await MainActor.run { self.products = result }
+                }
+            }
+            group.addTask { [apiClient] in
+                if let allProducts: [Product] = try? await apiClient.getAll(Endpoint.products) {
+                    await MainActor.run {
+                        self.productMap = Dictionary(uniqueKeysWithValues: allProducts.map { ($0.id, $0) })
+                    }
+                }
+            }
+        }
+    }
+
     // MARK: - Status
 
     @MainActor
@@ -210,9 +285,10 @@ public final class EventDetailViewModel {
         isSavingPayment = true
 
         do {
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            let today = dateFormatter.string(from: Date())
+            // Use the established Date.localTodayString() helper — it formats the
+            // current date in the DEVICE's local timezone, matching the user's
+            // calendar day (an event paid at 11pm in UTC-6 must record that local day).
+            let today = Date.localTodayString()
 
             let body: [String: Any] = [
                 "event_id": eventId,
@@ -225,7 +301,15 @@ public final class EventDetailViewModel {
             let payment: Payment = try await apiClient.post(Endpoint.payments, body: AnyCodable(body))
 
             payments.append(payment)
-            HapticsHelper.play(.success)
+
+            // Route to the correct counter so exactly one haptic fires:
+            // - fully-paid crossing → fullyPaidCounter (ring's .sensoryFeedback fires)
+            // - any other payment   → paymentSavedCounter (EventDetailView's .sensoryFeedback fires)
+            if isFullyPaid {
+                fullyPaidCounter &+= 1
+            } else {
+                paymentSavedCounter &+= 1
+            }
 
             // Notificar a la app target para que programe el recibo en Notification Center.
             NotificationCenter.default.post(
@@ -256,10 +340,22 @@ public final class EventDetailViewModel {
         isSavingPayment = false
     }
 
+    /// Opens the payment sheet with all fields reset to defaults.
+    /// Call this for the generic "Registrar pago" action (no pre-fill needed).
+    @MainActor
+    public func showRecordPaymentSheet() {
+        paymentAmount = ""
+        paymentMethod = "cash"
+        paymentNotes = ""
+        showPaymentSheet = true
+    }
+
     @MainActor
     public func payRemaining() {
-        let formatted = String(format: "%.2f", remaining)
-        paymentAmount = formatted
+        // Reset sheet fields before presenting so each presentation starts clean.
+        paymentMethod = "cash"
+        paymentNotes = ""
+        paymentAmount = String(format: "%.2f", remaining)
         showPaymentSheet = true
     }
 
@@ -267,6 +363,8 @@ public final class EventDetailViewModel {
     public func payDeposit() {
         let balance = depositBalance
         guard balance > 0.01 else { return }
+        // Reset sheet fields before presenting; notes is intentionally pre-filled.
+        paymentMethod = "cash"
         paymentAmount = String(format: "%.2f", balance)
         paymentNotes = tr("events.detail.deposit", "Anticipo")
         showPaymentSheet = true

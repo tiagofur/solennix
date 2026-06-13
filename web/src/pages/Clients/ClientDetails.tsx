@@ -143,7 +143,7 @@ export const ClientDetails: React.FC = () => {
             {t("clients:details.contact_info")}
           </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border border-t border-border">
+        <div className={`grid divide-y sm:divide-y-0 sm:divide-x divide-border border-t border-border ${client.pending_balance !== undefined ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3 sm:grid-cols-3'}`}>
           <div className="px-4 py-4 text-center">
             <p className="text-2xl font-black text-text">
               {client.total_events ?? 0}
@@ -169,6 +169,44 @@ export const ClientDetails: React.FC = () => {
               {t("clients:details.avg_per_event")}
             </p>
           </div>
+          {client.pending_balance !== undefined && (
+            <div className="px-4 py-4 text-center">
+              {client.pending_balance < 0 ? (
+                <>
+                  <p className="text-2xl font-black text-blue-600 dark:text-blue-400">
+                    $
+                    {Math.abs(client.pending_balance).toLocaleString(moneyLocale, {
+                      minimumFractionDigits: 0,
+                    })}
+                  </p>
+                  <p className="text-xs text-blue-500 dark:text-blue-400 mt-0.5">
+                    {t("clients:details.credit_balance")}
+                  </p>
+                </>
+              ) : client.pending_balance === 0 ? (
+                <>
+                  <p className="text-2xl font-black text-green-600 dark:text-green-400">
+                    $0
+                  </p>
+                  <p className="text-xs text-green-500 dark:text-green-400 mt-0.5">
+                    {t("clients:details.pending_balance")}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-2xl font-black text-amber-600 dark:text-amber-400">
+                    $
+                    {client.pending_balance.toLocaleString(moneyLocale, {
+                      minimumFractionDigits: 0,
+                    })}
+                  </p>
+                  <p className="text-xs text-amber-500 dark:text-amber-400 mt-0.5">
+                    {t("clients:details.pending_balance")}
+                  </p>
+                </>
+              )}
+            </div>
+          )}
         </div>
         <div className="border-t border-border px-4 py-5 sm:px-6">
           <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">

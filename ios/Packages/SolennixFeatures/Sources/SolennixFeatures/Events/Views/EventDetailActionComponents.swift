@@ -44,9 +44,6 @@ struct EventDetailDocumentsCard: View {
             }
         }
         .padding(Spacing.lg)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadowSm()
     }
 }
 
@@ -106,7 +103,7 @@ struct EventDetailPaymentSheetContent: View {
                                     .fontWeight(.medium)
                                     .foregroundStyle(
                                         method == methodOption.key
-                                            ? .white
+                                            ? SolennixColors.textInverse
                                             : SolennixColors.text
                                     )
                                     .padding(.horizontal, Spacing.md)

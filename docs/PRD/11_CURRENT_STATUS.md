@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-06-11
+updated: 2026-06-12
 status: active
 ---
 
@@ -24,6 +24,72 @@ status: active
 
 **Fecha:** Junio 2026
 **Version:** 1.8
+
+> [!success] 2026-06-12 — Client pending balance KPI (issue #553): backend + iOS + Web
+> "Cuánto me debe este cliente" como KPI de primera clase — el faltante que ambos jueces marcaron en el juicio de Client Detail.
+> - **Backend:** `pending_balance` calculado al leer en GetByID (eventos confirmed+completed menos sus pagos; quoted excluido como prospecto; negativo = sobrepago sin clamp). `*float64,omitempty` — list/search omiten la key. Tests de integración con 7 escenarios.
+> - **iOS:** stat "Por cobrar" en el header de Client Detail — warning >0, success =0, "A favor" (info) para crédito; grid 2×2 con fallback HStack; oculto si el payload no trae el campo.
+> - **Web:** 4ª celda de stats en ClientDetails con la misma semántica de tres estados; types regenerados de openapi.
+> - **Review pre-push cazó un CRITICAL:** CodingKeys explícitas en snake_case rompían TODO decode de Client bajo `convertFromSnakeCase` — convención del proyecto: sin CodingKeys, camelCase puro.
+> - **Pendiente:** Android via batch #552. Commits: b5984ff8, 21a614ea, 9f12e22c, 46f4b2d2.
+
+> [!success] 2026-06-12 — Inventory scope filter (issue #551): backend + iOS
+> Las 3 secciones agrupadas del listado de inventario (que contradecían la paginación del servidor) se reemplazan por filtro de scope plano.
+> - **Backend:** `GET /api/inventory?type=ingredient|equipment|supply` — valida contra los valores de la migración 023, filtra paths paginado y completo, 400 en valor inválido, openapi sincronizado, 6 tests.
+> - **iOS:** `InventoryScope` (Todos·Ingredientes·Equipo·Insumos) con Picker segmentado en su propia Section (Menu en tamaños de accesibilidad); lista plana con chip tonal de tipo en "Todos"; paginación coherente por scope con guard anti-mezcla si el scope cambia con página en vuelo; empty states por scope; low-stock compone client-side; 11 keys l10n.
+> - **Pendiente:** Android (chips M3) va en el batch de paridad #552.
+> - **Commits:** 6fe39653, 08852a93, 672ff022.
+
+> [!success] 2026-06-12 — Inventory Detail: Judgment Day → APPROVED (cierra el ciclo de pantallas de detalle)
+> Cuarta y última pantalla de detalle (3 rondas). La más rota del ciclo: 7 CRITICAL convergentes en ronda 1.
+> - **Fechas de demanda reales:** mismo bug ISO8601 que Products — todas las entradas colapsaban a "hoy": demanda de 7 días inflada, alerta roja permanente, badges "Hoy" falsos. Ahora `fromServerDay` + ventana UTC-pinned.
+> - **Waterfall eliminado:** hasta ~200 requests SECUENCIALES en el forecast → `withTaskGroup` anidado con aislamiento por evento.
+> - **Errores visibles:** delete y ajuste de stock fallaban en silencio (sin alert bindeado) → alert bidireccional gated al item cargado. El gating distingue falla real de "item sin demanda" (`DemandFetchResult.fetchFailed`) — fix retro-aplicado a Product Detail que tenía el mismo falso positivo.
+> - **Hub insetGrouped** + skeleton fiel; refresh ya no flashea; acumulador mutable en ForEach reemplazado por filas precomputadas (era no-determinista); stock fraccionario ya no se trunca; `isValid` puro (mutaba estado por render); haptics `sensoryFeedback`; a11y compuesta; español neutro en strings.
+> - **Commits:** 3069c785, 55ba59f4. Build verde por ronda. 10 keys nuevas verificadas en catálogo.
+
+> [!success] 2026-06-12 — Product Detail: Judgment Day → APPROVED (branch `feat/ios-liquid-glass`)
+> Tercera pantalla de detalle del ciclo (4 rondas — los jueces cazaron una regresión del propio fix agent en la ronda 2).
+> - **Datos de demanda reales:** `ISO8601DateFormatter` no parseaba el "yyyy-MM-dd" del backend → todos los puntos colapsaban a "hoy" (chart, contador 7 días y badges de urgencia FALSOS). Ahora `fromServerDay` + comparación de días UTC-pinned; puntos no parseables se omiten.
+> - **Margen honesto:** incluye costo de insumos (antes inflado) y muestra "—" sin receta (antes 100% engañoso); colores semánticos warning/success.
+> - **Cargas en paralelo con aislamiento de fallas:** `withTaskGroup` con do/catch por evento (antes hasta 21 requests SECUENCIALES; la 1ª versión paralela con `withThrowingTaskGroup` perdía todo el chart si fallaba 1 evento — cazado en re-juicio).
+> - **Hub insetGrouped** + skeleton fiel (6 secciones); 7 sombras manuales eliminadas; labels del eje del chart UTC-pinned (antes off-by-one en UTC-negativo).
+> - **A11y:** labels compuestos en KPIs/filas/chart/trash 44pt; cantidades fraccionarias ya no se truncan (0.5 mostraba "0"); haptics del form via `sensoryFeedback`.
+> - **Commits:** be86c987, 6b7a437c, d45b3ce1. Build verde por ronda. Catálogo xcstrings verificado íntegro tras reformateo Xcode (1876→1883 keys, 0 perdidas).
+
+> [!success] 2026-06-12 — Client Detail: Judgment Day → APPROVED (branch `feat/ios-liquid-glass`)
+> Segunda pantalla de detalle del ciclo (3 rondas). Llevada al estándar fijado por Event Detail.
+> - **Hub insetGrouped:** ScrollView + cards con sombras → `List` insetGrouped con skeleton in-List fiel; strip inferior de 3 botones eliminado (editar/nuevo evento/eliminar van al Menu del toolbar; una sola fila primaria dorada "Nuevo evento para este cliente").
+> - **Contacto accionable:** chips Llamar (tel: normalizado a dígitos+`+`), WhatsApp (`wa.me`, guard ≥8 dígitos) y Email — la pantalla del cliente ahora iguala la card de cliente de Event Detail.
+> - **Bugs:** error de borrado ya no se traga (alert bidireccional); bug `trf` con fallback interpolado → `%lld`; `.white`→`textInverse`; frames con `@ScaledMetric` cappeado; promedio de ticket consistente sobre el historial completo; haptics del form migrados a `sensoryFeedback` con counters.
+> - **Pendiente cross-platform anotado:** KPI de saldo pendiente del cliente requiere `pendingBalance` en la API (backend + iOS/Android/Web).
+> - **Commits:** 92fb2c05, 6938d035, accef3be. Build verde por ronda.
+
+> [!success] 2026-06-12 — Event Detail: Judgment Day + edición seccional + wow pass (branch `feat/ios-liquid-glass`)
+> Ciclo completo de revisión dual ciego (3 rondas → APPROVED) sobre la pantalla más importante de la app, con rediseño del flujo de edición.
+> - **Edición seccional:** `Route.eventForm(id:step:)` permite saltar directo a cualquier paso del wizard. Context menu "Editar sección" en cada card del hub (general→1, productos→2, extras→3, personal/equipo/insumos→4, finanzas→5). Sub-pantallas read-only ganaron lápiz en toolbar + CTAs reales en empty states. Stepper con navegación libre en modo edición.
+> - **Wow pass:** chip countdown HOY (oro) / MAÑANA / FALTAN N DÍAS (navy) / FINALIZADO con cálculo timezone-safe (día calendario local vs server-day); anillo de cobro dorado (Circle trim) con sello al 100% y haptic solo en cruce in-session; hub convertido a `List` insetGrouped con skeleton fiel; cliente accionable (tel:/WhatsApp/mailto, 44pt, a11y).
+> - **Bugs corregidos:** margen del hub ahora usa `EventFinancials.compute` canónico (antes solo restaba insumos — margen inflado); fecha de pago timezone-safe; confirmación antes de borrar pagos; `.white`→`textInverse`; sheet de pago resetea campos; entrada de edición duplicada eliminada; ~49 strings localizados vía `tr()`; sub-vistas con loads scoped (1-2 requests en vez de 8); dead code removido.
+> - **Commits:** f3e4036b, 3e89601c, 03306679, d97a9351. Build verde en cada ronda.
+
+> [!success] 2026-06-12 — Judgment Day — ciclo completo del menú Más (branch `feat/ios-liquid-glass`)
+> Aplicación de revisión dual ciego pantalla por pantalla sobre el menú Más. Todos los screens ahora cumplen estándar nativo de Apple.
+> - **Pantallas auditadas:** Más (b0179c37), Productos (eba22d25/4f49a005/6c81b1fc), Inventario (b2acf758/fcb5b9e8), Pagos (ccade9b9/29e7ce97 — conversión a List nativa + swipe aprobar/rechazar + feedback), Personal y Equipos (93a4abb5/a1d4fe67 — soft-delete con undo en Equipos), Formularios y Reseñas (8bd5f062/f079b055 — Reseñas convertida a List nativa).
+> - **Estándar canónico app-wide:** `insetGrouped` + fila con card/separador dorado + sin chevron en filas de datos + skeleton in-List + CTA reales + paginación viva con refresh que no limpia + VoiceOver compuesto + Dynamic Type.
+> - **Ganancias transversales:** upgrade banner navega a Pricing en 6 lugares (antes muerto), alerts con bindings reales, hápticas semánticas.
+> - **Pendientes anotados:** scope filter inventario (issue #551), batch Android (issue #552), contraste blanco-sobre-oro en light mode (token-level), errores de borrado invisibles en listas pobladas (chip spawneado).
+
+> [!success] 2026-06-12 — iOS Liquid Glass adoption (branch `feat/ios-liquid-glass`, stacked on `feat/ios-hig-quick-wins`)
+> Adopción de Liquid Glass en iOS con SDK 26, gating `#available`, primitivas adaptativas y correcciones de revisión de código.
+> - **`adaptiveGlass` primitive:** modifier en `SolennixDesign/GlassSurface.swift` que aplica `glassEffect(.regular)` en iOS 26+ y fallback configurable en iOS 17–25. Nuevo enum `AdaptiveGlassFallback` con `.material` (ultraThinMaterial) y `.brightChip` (white-opacity chip para superficies navy oscuras como la sidebar).
+> - **FAB eliminado — acciones en toolbar:** `QuickActionsFAB` fue removido por ser un patrón Material, no iOS. Las acciones "Nuevo evento" y "Cotización rápida" ya vivían en el `Menu` del `ToolbarItem(.topBarTrailing)` de `DashboardView`. El toolbar recibe Liquid Glass automáticamente del sistema en iOS 26 — no requiere código adicional.
+> - **Tab bar con `tabBarMinimizeBehavior` y search tab nativo:** `CompactTabLayout` usa builder syntax de iOS 26 con `TabView(selection:)` bound (patrón WWDC25) — `Tab(_:systemImage:value:)` para las 5 tabs regulares y `Tab(_:systemImage:value:role: .search)` para la tab de búsqueda flotante nativa. `Tab.search` agregado al enum con `Tab.barTabs` para excluirlo del legacy bar. Pop-to-root en retap y Spotlight `selectedTab = .home` restaurados en ambas ramas.
+> - **Scroll edge effects:** `.softScrollEdgeEffectIfAvailable()` en `DashboardView`, `CalendarView`, `EventListView`, `SettingsView`. Implementado como no-op pre-iOS 26 en `ViewModifiers.swift`.
+> - **Sheet glass:** `.sheetGlassScrollBackground()` en sheets de formularios en iOS 26 para mostrar el material Liquid Glass del sheet a través del fondo del scroll.
+> - **Symbol bounce:** `symbolEffect(.bounce)` en momentos de confirmación (checklist items, filtros). Corregido para disparar solo en transición `false→true` extrayendo filas a structs privados (`ChecklistItemRow`, `PurchaseChecklistItemRow`) con identidad estable. Filtro de eventos dispara sobre `Int activeFilterCount` directamente.
+> - **Min target:** iOS 17 — sin cambios. Todo el código iOS 26 detrás de `#available(iOS 26.0, *)`.
+> - **Archivos clave:** `GlassSurface.swift`, `CompactTabLayout.swift`, `Route.swift` (Tab enum), `SidebarSplitLayout.swift`, `DashboardView.swift`, `EventChecklistView.swift`, `EventPurchaseChecklistView.swift`, `EventListView.swift`, `ViewModifiers.swift`.
+> - **Validación:** `xcodebuild ... build` → BUILD SUCCEEDED.
 
 > [!success] 2026-06-11 — iOS HIG Quick Wins (branch `feat/ios-hig-quick-wins`, PR #544)
 > Se aplicaron mejoras de calidad HIG en iOS siguiendo las guías oficiales de Apple (iOS 17+).

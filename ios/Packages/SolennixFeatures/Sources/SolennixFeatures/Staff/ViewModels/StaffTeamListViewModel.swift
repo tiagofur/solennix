@@ -54,8 +54,37 @@ public final class StaffTeamListViewModel {
         isLoading = false
     }
 
-    // MARK: - Delete
+    // MARK: - Soft Delete (with undo)
 
+    /// Remove the team from the local list immediately (for undo pattern).
+    /// Returns the removed team and its index for restoration.
+    @MainActor
+    public func softDeleteTeam(_ team: StaffTeam) -> (team: StaffTeam, index: Int)? {
+        guard let index = teams.firstIndex(where: { $0.id == team.id }) else { return nil }
+        let removed = teams.remove(at: index)
+        return (removed, index)
+    }
+
+    /// Restore a previously soft-deleted team.
+    @MainActor
+    public func restoreTeam(_ team: StaffTeam, at index: Int) {
+        let safeIndex = min(index, teams.count)
+        teams.insert(team, at: safeIndex)
+    }
+
+    /// Permanently delete a team via API (called after undo grace period).
+    @MainActor
+    public func confirmDeleteTeam(_ team: StaffTeam) async {
+        do {
+            try await apiClient.deleteStaffTeam(id: team.id)
+        } catch {
+            // Restore on failure
+            teams.append(team)
+            errorMessage = mapError(error)
+        }
+    }
+
+    /// Hard-delete path (kept for compatibility; prefer soft-delete + undo in the UI).
     @MainActor
     public func deleteTeam(_ team: StaffTeam) async {
         do {
@@ -70,8 +99,8 @@ public final class StaffTeamListViewModel {
 
     private func mapError(_ error: Error) -> String {
         if let apiError = error as? APIError {
-            return apiError.errorDescription ?? "Ocurrio un error inesperado."
+            return apiError.errorDescription ?? StaffStrings.unexpectedError
         }
-        return "Ocurrio un error inesperado. Intenta de nuevo."
+        return StaffStrings.unexpectedErrorRetry
     }
 }

@@ -62,6 +62,7 @@ struct SidebarSplitLayout: View {
                 }
                 .navigationBarTitleDisplayMode(.inline)
                 .searchable(text: $searchText, prompt: globalSearchPrompt)
+                .searchMinimizedIfAvailable()
                 .onSubmit(of: .search) {
                     let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
                     guard !query.isEmpty else { return }
@@ -148,7 +149,9 @@ struct SidebarSplitLayout: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .glassSurface(opacity: 0.2, blur: 10)
+        // .brightChip: ultraThinMaterial is nearly invisible on the navy dark sidebar;
+        // white-opacity chip recreates the original GlassSurface appearance pre-iOS 26.
+        .adaptiveGlass(in: RoundedRectangle(cornerRadius: 10, style: .continuous), fallback: .brightChip)
         .listRowBackground(Color.clear)
         .listRowSeparator(.hidden)
         .listRowInsets(EdgeInsets(top: 4, leading: SidebarMetrics.rowInsetLeading, bottom: 6, trailing: SidebarMetrics.rowInsetTrailing))
@@ -194,7 +197,8 @@ struct SidebarSplitLayout: View {
             .buttonStyle(.plain)
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .glassSurface(opacity: 0.18, blur: 10)
+            // .brightChip: same rationale as the logo chip above — navy sidebar pre-iOS 26.
+            .adaptiveGlass(in: RoundedRectangle(cornerRadius: 12, style: .continuous), fallback: .brightChip)
         }
     }
 
@@ -217,6 +221,7 @@ struct SidebarSplitLayout: View {
             HStack(spacing: Spacing.sm) {
                 Image(systemName: section.iconName)
                     .font(.body.weight(isActive ? .semibold : .regular))
+                    .symbolVariant(isActive ? .fill : .none)
                     .frame(width: 20, alignment: .center)
 
                 Text(section.title)
@@ -275,6 +280,8 @@ struct SidebarSplitLayout: View {
             PaymentInboxView(apiClient: apiClient)
         case .eventFormLinks:
             EventFormLinksView(apiClient: apiClient)
+        case .reviews:
+            ReviewsView(apiClient: apiClient)
         case .settings:
             SettingsView(apiClient: apiClient, authManager: authManager, subscriptionManager: subscriptionManager)
         }

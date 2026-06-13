@@ -20,4 +20,9 @@
     <string name="payments_inbox_status_approved">Aprobado</string>
     <string name="payments_inbox_status_rejected">Rechazado</string>
     <string name="payments_inbox_status_pending">Pendiente</string>
+    <string name="payments_inbox_search_placeholder">Buscar por cliente o evento…</string>
+    <string name="payments_inbox_empty_search_title">Sin resultados</string>
+    <string name="payments_inbox_empty_search_message">No encontramos comprobantes que coincidan con tu búsqueda.</string>
+    <string name="payments_inbox_error_title">Error al cargar</string>
+    <string name="payments_inbox_error_retry">Reintentar</string>
 </resources>

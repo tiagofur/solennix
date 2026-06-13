@@ -18,17 +18,26 @@ public struct EventExtrasDetailView: View {
 
     public var body: some View {
         Group {
-            if viewModel.isLoading && viewModel.event == nil {
-                ProgressView("Cargando...")
+            if viewModel.isLoading && viewModel.extras.isEmpty {
+                ProgressView(tr("events.detail.extras.loading", "Cargando..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 content
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Extras")
+        .navigationTitle(tr("events.detail.extras.title", "Extras"))
         .navigationBarTitleDisplayMode(.inline)
-        .task { await viewModel.loadData(eventId: eventId) }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink(value: Route.eventForm(id: eventId, step: 3)) {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(SolennixColors.primary)
+                        .accessibilityLabel(tr("events.detail.extras.edit_a11y", "Editar extras"))
+                }
+            }
+        }
+        .task { await viewModel.loadExtrasOnly(eventId: eventId) }
     }
 
     private var content: some View {
@@ -37,17 +46,26 @@ public struct EventExtrasDetailView: View {
                 if viewModel.extras.isEmpty {
                     EmptyStateView(
                         icon: "sparkles",
-                        title: "Sin Extras",
-                        message: "Este evento no tiene extras asignados"
+                        title: tr("events.detail.extras.empty.title", "Sin Extras"),
+                        message: tr("events.detail.extras.empty.message", "Este evento no tiene extras asignados.")
                     )
+                    NavigationLink(value: Route.eventForm(id: eventId, step: 3)) {
+                        Text(tr("events.detail.extras.empty.cta", "Agregar extras"))
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, Spacing.xl)
+                            .padding(.vertical, 16)
+                            .background(SolennixColors.primary)
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    }
                 } else {
                     let subtotal = viewModel.extras.reduce(0.0) { $0 + $1.price }
                     HStack {
-                        Text("\(viewModel.extras.count) extras")
+                        Text(String(format: tr("events.detail.extras.count", "%d extras"), viewModel.extras.count))
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.textSecondary)
                         Spacer()
-                        Text("Subtotal: \(subtotal.asMXN)")
+                        Text(String(format: tr("events.detail.extras.subtotal", "Subtotal: %@"), subtotal.asMXN))
                             .font(.subheadline)
                             .fontWeight(.bold)
                             .foregroundStyle(SolennixColors.info)
@@ -80,5 +98,11 @@ public struct EventExtrasDetailView: View {
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.lg)
         }
+    }
+
+    // MARK: - Localization
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
     }
 }

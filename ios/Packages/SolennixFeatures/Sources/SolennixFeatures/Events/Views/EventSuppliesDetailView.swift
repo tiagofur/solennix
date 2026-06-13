@@ -18,17 +18,26 @@ public struct EventSuppliesDetailView: View {
 
     public var body: some View {
         Group {
-            if viewModel.isLoading && viewModel.event == nil {
-                ProgressView("Cargando...")
+            if viewModel.isLoading && viewModel.supplies.isEmpty {
+                ProgressView(tr("events.detail.supplies.loading", "Cargando..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 content
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Insumos del Evento")
+        .navigationTitle(tr("events.detail.supplies.title", "Insumos del Evento"))
         .navigationBarTitleDisplayMode(.inline)
-        .task { await viewModel.loadData(eventId: eventId) }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink(value: Route.eventForm(id: eventId, step: 4)) {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(SolennixColors.primary)
+                        .accessibilityLabel(tr("events.detail.supplies.edit_a11y", "Editar insumos"))
+                }
+            }
+        }
+        .task { await viewModel.loadSuppliesOnly(eventId: eventId) }
     }
 
     private var content: some View {
@@ -37,9 +46,18 @@ public struct EventSuppliesDetailView: View {
                 if viewModel.supplies.isEmpty {
                     EmptyStateView(
                         icon: "drop",
-                        title: "Sin Insumos",
-                        message: "Este evento no tiene insumos asignados"
+                        title: tr("events.detail.supplies.empty.title", "Sin Insumos"),
+                        message: tr("events.detail.supplies.empty.message", "Este evento no tiene insumos asignados.")
                     )
+                    NavigationLink(value: Route.eventForm(id: eventId, step: 4)) {
+                        Text(tr("events.detail.supplies.empty.cta", "Agregar insumos"))
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, Spacing.xl)
+                            .padding(.vertical, 16)
+                            .background(SolennixColors.primary)
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    }
                 } else {
                     // Cost summary
                     let totalCost = viewModel.supplies.reduce(0.0) { $0 + ($1.quantity * $1.unitCost) }
@@ -52,7 +70,7 @@ public struct EventSuppliesDetailView: View {
                                 .font(.title3)
                                 .fontWeight(.bold)
                                 .foregroundStyle(SolennixColors.warning)
-                            Text("Total")
+                            Text(tr("events.detail.supplies.stat.total", "Total"))
                                 .font(.caption2)
                                 .foregroundStyle(SolennixColors.textSecondary)
                         }
@@ -63,7 +81,7 @@ public struct EventSuppliesDetailView: View {
                                 .font(.title3)
                                 .fontWeight(.bold)
                                 .foregroundStyle(SolennixColors.success)
-                            Text("Del Stock")
+                            Text(tr("events.detail.supplies.stat.stock", "Del Stock"))
                                 .font(.caption2)
                                 .foregroundStyle(SolennixColors.textSecondary)
                         }
@@ -74,7 +92,7 @@ public struct EventSuppliesDetailView: View {
                                 .font(.title3)
                                 .fontWeight(.bold)
                                 .foregroundStyle(SolennixColors.error)
-                            Text("Compra")
+                            Text(tr("events.detail.supplies.stat.purchase", "Compra"))
                                 .font(.caption2)
                                 .foregroundStyle(SolennixColors.textSecondary)
                         }
@@ -87,7 +105,7 @@ public struct EventSuppliesDetailView: View {
                                 .foregroundStyle(SolennixColors.warning)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.7)
-                            Text("Costo")
+                            Text(tr("events.detail.supplies.stat.cost", "Costo"))
                                 .font(.caption2)
                                 .foregroundStyle(SolennixColors.textSecondary)
                         }
@@ -110,7 +128,7 @@ public struct EventSuppliesDetailView: View {
     private func supplyRow(_ supply: EventSupply) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: Spacing.xxs) {
-                Text(supply.supplyName ?? "Insumo")
+                Text(supply.supplyName ?? tr("events.detail.supplies.row.fallback", "Insumo"))
                     .font(.body)
                     .fontWeight(.medium)
                     .foregroundStyle(SolennixColors.text)
@@ -138,7 +156,9 @@ public struct EventSuppliesDetailView: View {
     }
 
     private func sourceBadge(_ source: SupplySource) -> some View {
-        let label = source == .stock ? "Almacen" : "Compra"
+        let label = source == .stock
+            ? tr("events.detail.supplies.source.stock", "Almacén")
+            : tr("events.detail.supplies.source.purchase", "Compra")
         let color = source == .stock ? SolennixColors.success : SolennixColors.warning
         return Text(label)
             .font(.caption2)
@@ -154,5 +174,11 @@ public struct EventSuppliesDetailView: View {
         value.truncatingRemainder(dividingBy: 1) == 0
             ? String(format: "%.0f", value)
             : String(format: "%.2f", value)
+    }
+
+    // MARK: - Localization
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
     }
 }

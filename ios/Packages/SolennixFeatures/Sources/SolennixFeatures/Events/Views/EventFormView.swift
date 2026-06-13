@@ -8,14 +8,17 @@ import SolennixNetwork
 public struct EventFormView: View {
 
     let eventId: String?
+    let initialStep: Int?
 
     @State private var viewModel: EventFormViewModel
+    @State private var didApplyInitialStep = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(PlanLimitsManager.self) private var planLimitsManager
 
-    public init(eventId: String? = nil, apiClient: APIClient) {
+    public init(eventId: String? = nil, initialStep: Int? = nil, apiClient: APIClient) {
         self.eventId = eventId
+        self.initialStep = initialStep
         _viewModel = State(initialValue: EventFormViewModel(apiClient: apiClient))
     }
 
@@ -23,6 +26,7 @@ public struct EventFormView: View {
     /// before being passed here — prefill is applied after initial data loads.
     public init(prefilledViewModel: EventFormViewModel) {
         self.eventId = nil
+        self.initialStep = nil
         _viewModel = State(initialValue: prefilledViewModel)
     }
 
@@ -121,6 +125,11 @@ public struct EventFormView: View {
             await viewModel.loadInitialData()
             if let id = eventId {
                 await viewModel.loadEventForEditing(id: id)
+                // Apply deep-link step exactly once, only for editing an existing event.
+                if !didApplyInitialStep, let step = initialStep {
+                    didApplyInitialStep = true
+                    viewModel.currentStep = max(1, min(5, step))
+                }
             }
         }
     }
@@ -134,6 +143,7 @@ public struct EventFormView: View {
 
     private var stepIndicator: some View {
         let current = viewModel.currentStep
+        let isEditing = viewModel.isEdit
         return VStack(spacing: Spacing.xs) {
             ProgressView(value: Double(current), total: Double(steps.count))
                 .progressViewStyle(.linear)
@@ -144,6 +154,8 @@ public struct EventFormView: View {
                     let stepNumber = index + 1
                     let isActive = stepNumber == current
                     let isCompleted = stepNumber < current
+                    // In edit mode all steps are tappable; in new mode only backward.
+                    let isTappable = isEditing ? (stepNumber != current) : (stepNumber < current)
                     VStack(spacing: 4) {
                         ZStack {
                             Circle()
@@ -174,8 +186,10 @@ public struct EventFormView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .contentShape(Rectangle())
+                    .accessibilityLabel(tr("events.form.step.a11y.label.\(stepNumber)", "Paso \(stepNumber): \(meta.label)"))
+                    .accessibilityAddTraits(isTappable ? [.isButton] : [])
                     .onTapGesture {
-                        if stepNumber < current {
+                        if isTappable {
                             viewModel.currentStep = stepNumber
                         }
                     }

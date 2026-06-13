@@ -1520,6 +1520,11 @@ export interface components {
             total_events: number;
             /** Format: double */
             total_spent: number;
+            /**
+             * Format: double
+             * @description Computed on read (detail only). Sum of total_amount across confirmed and completed events minus sum of payments on those same events. Quoted events are excluded as prospects, not committed debt. Negative values indicate the client has overpaid. List responses return 0 for this field.
+             */
+            pending_balance?: number;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -4275,6 +4280,8 @@ export interface operations {
                 limit?: number;
                 sort?: string;
                 order?: "asc" | "desc";
+                /** @description Filter inventory by type. Omit for all types. */
+                type?: "ingredient" | "equipment" | "supply";
             };
             header?: never;
             path?: never;

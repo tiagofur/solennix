@@ -386,4 +386,53 @@ describe('ClientDetails', () => {
 
     expect(screen.getByText(/Este cliente aún no tiene eventos registrados/i)).toBeInTheDocument();
   });
+
+  it('hides pending_balance stat when field is undefined', async () => {
+    (clientService.getById as any).mockResolvedValue({ ...baseClient });
+    (eventService.getByClientId as any).mockResolvedValue([]);
+
+    renderDetails();
+
+    await waitForClientLoaded();
+
+    expect(screen.queryByText('Por cobrar')).not.toBeInTheDocument();
+    expect(screen.queryByText('A favor')).not.toBeInTheDocument();
+  });
+
+  it('shows amber "Por cobrar" stat when pending_balance > 0', async () => {
+    (clientService.getById as any).mockResolvedValue({ ...baseClient, pending_balance: 5000 });
+    (eventService.getByClientId as any).mockResolvedValue([]);
+
+    renderDetails();
+
+    await waitForClientLoaded();
+
+    expect(screen.getByText('Por cobrar')).toBeInTheDocument();
+    expect(screen.getByText('$5,000')).toBeInTheDocument();
+  });
+
+  it('shows green "$0" stat when pending_balance === 0', async () => {
+    (clientService.getById as any).mockResolvedValue({ ...baseClient, pending_balance: 0 });
+    (eventService.getByClientId as any).mockResolvedValue([]);
+
+    renderDetails();
+
+    await waitForClientLoaded();
+
+    expect(screen.getByText('Por cobrar')).toBeInTheDocument();
+    expect(screen.getByText('$0')).toBeInTheDocument();
+  });
+
+  it('shows blue "A favor" stat with absolute value when pending_balance < 0', async () => {
+    (clientService.getById as any).mockResolvedValue({ ...baseClient, pending_balance: -2500 });
+    (eventService.getByClientId as any).mockResolvedValue([]);
+
+    renderDetails();
+
+    await waitForClientLoaded();
+
+    expect(screen.getByText('A favor')).toBeInTheDocument();
+    expect(screen.getByText('$2,500')).toBeInTheDocument();
+    expect(screen.queryByText('Por cobrar')).not.toBeInTheDocument();
+  });
 });

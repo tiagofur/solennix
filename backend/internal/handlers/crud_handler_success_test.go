@@ -698,6 +698,140 @@ func TestCreateInventoryItem_BasicUser_AtInventoryLimit_Forbidden(t *testing.T) 
 }
 
 // ---------------------------------------------------------------------------
+// ListInventory — type filter
+// ---------------------------------------------------------------------------
+
+func TestListInventory_NoTypeFilter_ReturnsAll(t *testing.T) {
+	userID := uuid.New()
+	inventoryRepo := new(MockInventoryRepo)
+
+	expected := []models.InventoryItem{
+		{ID: uuid.New(), UserID: userID, IngredientName: "Flour", Type: "ingredient"},
+		{ID: uuid.New(), UserID: userID, IngredientName: "Camera", Type: "equipment"},
+	}
+	inventoryRepo.On("GetAll", mock.Anything, userID, "").Return(expected, nil)
+
+	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), new(MockProductRepo), inventoryRepo, new(MockFullPaymentRepo), new(MockFullUserRepo))
+
+	req := makeReqWithUserID(http.MethodGet, "/api/inventory", "", userID)
+	rr := httptest.NewRecorder()
+	h.ListInventory(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusOK, rr.Body.String())
+	}
+	inventoryRepo.AssertExpectations(t)
+}
+
+func TestListInventory_TypeIngredient_PassesFilterThrough(t *testing.T) {
+	userID := uuid.New()
+	inventoryRepo := new(MockInventoryRepo)
+
+	expected := []models.InventoryItem{
+		{ID: uuid.New(), UserID: userID, IngredientName: "Flour", Type: "ingredient"},
+	}
+	inventoryRepo.On("GetAll", mock.Anything, userID, "ingredient").Return(expected, nil)
+
+	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), new(MockProductRepo), inventoryRepo, new(MockFullPaymentRepo), new(MockFullUserRepo))
+
+	req := makeReqWithUserID(http.MethodGet, "/api/inventory?type=ingredient", "", userID)
+	rr := httptest.NewRecorder()
+	h.ListInventory(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusOK, rr.Body.String())
+	}
+	var items []models.InventoryItem
+	if err := json.NewDecoder(rr.Body).Decode(&items); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if len(items) != 1 || items[0].Type != "ingredient" {
+		t.Fatalf("expected 1 ingredient item, got %+v", items)
+	}
+	inventoryRepo.AssertExpectations(t)
+}
+
+func TestListInventory_TypeEquipment_PassesFilterThrough(t *testing.T) {
+	userID := uuid.New()
+	inventoryRepo := new(MockInventoryRepo)
+
+	expected := []models.InventoryItem{
+		{ID: uuid.New(), UserID: userID, IngredientName: "Camera", Type: "equipment"},
+	}
+	inventoryRepo.On("GetAll", mock.Anything, userID, "equipment").Return(expected, nil)
+
+	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), new(MockProductRepo), inventoryRepo, new(MockFullPaymentRepo), new(MockFullUserRepo))
+
+	req := makeReqWithUserID(http.MethodGet, "/api/inventory?type=equipment", "", userID)
+	rr := httptest.NewRecorder()
+	h.ListInventory(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusOK, rr.Body.String())
+	}
+	inventoryRepo.AssertExpectations(t)
+}
+
+func TestListInventory_TypeSupply_PassesFilterThrough(t *testing.T) {
+	userID := uuid.New()
+	inventoryRepo := new(MockInventoryRepo)
+
+	expected := []models.InventoryItem{
+		{ID: uuid.New(), UserID: userID, IngredientName: "Napkins", Type: "supply"},
+	}
+	inventoryRepo.On("GetAll", mock.Anything, userID, "supply").Return(expected, nil)
+
+	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), new(MockProductRepo), inventoryRepo, new(MockFullPaymentRepo), new(MockFullUserRepo))
+
+	req := makeReqWithUserID(http.MethodGet, "/api/inventory?type=supply", "", userID)
+	rr := httptest.NewRecorder()
+	h.ListInventory(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusOK, rr.Body.String())
+	}
+	inventoryRepo.AssertExpectations(t)
+}
+
+func TestListInventory_InvalidType_Returns400(t *testing.T) {
+	userID := uuid.New()
+	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), new(MockProductRepo), new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))
+
+	req := makeReqWithUserID(http.MethodGet, "/api/inventory?type=invalid_type", "", userID)
+	rr := httptest.NewRecorder()
+	h.ListInventory(rr, req)
+
+	if rr.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusBadRequest, rr.Body.String())
+	}
+	if !strings.Contains(rr.Body.String(), "Invalid type value") {
+		t.Fatalf("body = %q, expected to contain 'Invalid type value'", rr.Body.String())
+	}
+}
+
+func TestListInventory_PaginatedWithTypeFilter_PassesFilterThrough(t *testing.T) {
+	userID := uuid.New()
+	inventoryRepo := new(MockInventoryRepo)
+
+	expected := []models.InventoryItem{
+		{ID: uuid.New(), UserID: userID, IngredientName: "Flour", Type: "ingredient"},
+	}
+	inventoryRepo.On("GetAllPaginated", mock.Anything, userID, 0, 20, "ingredient_name", "DESC", "ingredient").
+		Return(expected, 1, nil)
+
+	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), new(MockProductRepo), inventoryRepo, new(MockFullPaymentRepo), new(MockFullUserRepo))
+
+	req := makeReqWithUserID(http.MethodGet, "/api/inventory?page=1&type=ingredient", "", userID)
+	rr := httptest.NewRecorder()
+	h.ListInventory(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusOK, rr.Body.String())
+	}
+	inventoryRepo.AssertExpectations(t)
+}
+
+// ---------------------------------------------------------------------------
 // UpdateEventItems — success with products, extras, and equipment
 // ---------------------------------------------------------------------------
 
@@ -1591,7 +1725,7 @@ func TestListInventory_Success(t *testing.T) {
 	userID := uuid.New()
 	inventoryRepo := new(MockInventoryRepo)
 
-	inventoryRepo.On("GetAll", mock.Anything, userID).Return([]models.InventoryItem{}, nil)
+	inventoryRepo.On("GetAll", mock.Anything, userID, "").Return([]models.InventoryItem{}, nil)
 
 	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), new(MockProductRepo), inventoryRepo, new(MockFullPaymentRepo), new(MockFullUserRepo))
 

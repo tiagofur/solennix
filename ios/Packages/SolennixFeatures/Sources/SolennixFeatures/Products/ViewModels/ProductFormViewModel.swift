@@ -112,6 +112,13 @@ public final class ProductFormViewModel {
     public var errorMessage: String?
     public var planLimitMessage: String?
 
+    // MARK: - Haptic Counters (observed by ProductFormView via .sensoryFeedback)
+
+    /// Incremented on successful save — triggers `.sensoryFeedback(.success, trigger:)`.
+    public var saveSuccessCounter: Int = 0
+    /// Incremented on save error — triggers `.sensoryFeedback(.error, trigger:)`.
+    public var saveErrorCounter: Int = 0
+
     // MARK: - Validation
 
     public var nameError: String?
@@ -393,11 +400,11 @@ public final class ProductFormViewModel {
                 }
             }
 
-            HapticsHelper.play(.success)
+            saveSuccessCounter &+= 1
             isSaving = false
             return true
         } catch let error as APIError {
-            HapticsHelper.play(.error)
+            saveErrorCounter &+= 1
             isSaving = false
             if case .planLimitExceeded(let message, _, _, _) = error {
                 planLimitMessage = message
@@ -406,7 +413,7 @@ public final class ProductFormViewModel {
             }
             return false
         } catch {
-            HapticsHelper.play(.error)
+            saveErrorCounter &+= 1
             errorMessage = mapError(error)
             isSaving = false
             return false

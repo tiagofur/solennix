@@ -18,17 +18,26 @@ public struct EventProductsDetailView: View {
 
     public var body: some View {
         Group {
-            if viewModel.isLoading && viewModel.event == nil {
-                ProgressView("Cargando...")
+            if viewModel.isLoading && viewModel.products.isEmpty {
+                ProgressView(tr("events.detail.products.loading", "Cargando..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 content
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Productos")
+        .navigationTitle(tr("events.detail.products.title", "Productos"))
         .navigationBarTitleDisplayMode(.inline)
-        .task { await viewModel.loadData(eventId: eventId) }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink(value: Route.eventForm(id: eventId, step: 2)) {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(SolennixColors.primary)
+                        .accessibilityLabel(tr("events.detail.products.edit_a11y", "Editar productos"))
+                }
+            }
+        }
+        .task { await viewModel.loadProductsOnly(eventId: eventId) }
     }
 
     private var content: some View {
@@ -37,18 +46,27 @@ public struct EventProductsDetailView: View {
                 if viewModel.products.isEmpty {
                     EmptyStateView(
                         icon: "bag",
-                        title: "Sin Productos",
-                        message: "Este evento no tiene productos asignados"
+                        title: tr("events.detail.products.empty.title", "Sin Productos"),
+                        message: tr("events.detail.products.empty.message", "Este evento no tiene productos asignados.")
                     )
+                    NavigationLink(value: Route.eventForm(id: eventId, step: 2)) {
+                        Text(tr("events.detail.products.empty.cta", "Agregar productos"))
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, Spacing.xl)
+                            .padding(.vertical, 16)
+                            .background(SolennixColors.primary)
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    }
                 } else {
                     // Summary
                     let subtotal = viewModel.products.reduce(0.0) { $0 + ($1.quantity * $1.unitPrice) }
                     HStack {
-                        Text("\(viewModel.products.count) productos")
+                        Text(String(format: tr("events.detail.products.count", "%d productos"), viewModel.products.count))
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.textSecondary)
                         Spacer()
-                        Text("Subtotal: \(subtotal.asMXN)")
+                        Text(String(format: tr("events.detail.products.subtotal", "Subtotal: %@"), subtotal.asMXN))
                             .font(.subheadline)
                             .fontWeight(.bold)
                             .foregroundStyle(SolennixColors.primary)
@@ -65,6 +83,12 @@ public struct EventProductsDetailView: View {
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.lg)
         }
+    }
+
+    // MARK: - Localization
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
     }
 
     private func productRow(_ product: EventProduct) -> some View {

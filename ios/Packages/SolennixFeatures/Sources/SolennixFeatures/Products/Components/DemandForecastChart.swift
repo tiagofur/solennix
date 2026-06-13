@@ -41,7 +41,22 @@ public struct DemandForecastChart: View {
         self.basePrice = basePrice
     }
 
-    @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 32
+    @ScaledMetric(relativeTo: .largeTitle) private var scaledEmptyIconSize: CGFloat = 32
+    private var emptyIconSize: CGFloat { min(scaledEmptyIconSize, 72) }
+    @ScaledMetric(relativeTo: .body) private var scaledChartHeight: CGFloat = 200
+    private var cappedChartHeight: CGFloat { min(scaledChartHeight, 280) }
+
+    // Today (UTC-pinned), captured once at view init so body evaluations don't
+    // re-allocate formatters. Uses the same technique as EventCountdownChip:
+    // compare UTC-midnight Dates with a UTC calendar so that day boundaries are
+    // stable for UTC-negative users.
+    private let todayUTC: Date = Date.fromServerDay(Date.localTodayString()) ?? Date()
+
+    private static let utcCalendar: Calendar = {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "UTC")!
+        return cal
+    }()
 
     private var hasData: Bool {
         !dataPoints.isEmpty
@@ -77,30 +92,38 @@ public struct DemandForecastChart: View {
             }
 
             if hasData {
+                let today = todayUTC
+                let cal = Self.utcCalendar
+
                 // Chart
                 Chart(dataPoints) { point in
                     BarMark(
-                        x: .value("Fecha", point.eventDate, unit: .day),
-                        y: .value("Cantidad", point.quantity)
+                        x: .value(ProductStrings.chartAxisDate, point.eventDate, unit: .day),
+                        y: .value(ProductStrings.chartAxisQuantity, point.quantity)
                     )
                     .foregroundStyle(SolennixGradient.premium)
                     .cornerRadius(4)
                 }
                 .chartXAxis {
-                    AxisMarks(values: .stride(by: .day)) { _ in
-                        AxisValueLabel(format: .dateTime.day().month(.abbreviated))
+                    AxisMarks(values: .stride(by: .day)) { value in
+                        AxisValueLabel {
+                            if let d = value.as(Date.self) {
+                                Text(d.formattedServerDay(style: "d MMM", locale: FeatureL10n.locale))
+                                    .font(.caption2)
+                            }
+                        }
                     }
                 }
                 .chartYAxis {
                     AxisMarks(position: .leading)
                 }
-                .frame(height: 200)
+                .frame(height: cappedChartHeight)
+                .accessibilityLabel(ProductStrings.chartA11yLabel(dataPoints.count))
 
                 // Summary
                 VStack(alignment: .leading, spacing: Spacing.xs) {
                     Text(ProductStrings.upcomingEventsCount(dataPoints.count))
-                        .font(.subheadline)
-                        .fontWeight(.medium)
+                        .font(.subheadline.weight(.medium))
                         .foregroundStyle(SolennixColors.text)
 
                     Text(ProductStrings.quantityForPeople(quantity: totalQuantity, people: totalPeople))
@@ -110,32 +133,28 @@ public struct DemandForecastChart: View {
 
                 Divider()
 
-                // Event list with urgency badges
-                let today = Calendar.current.startOfDay(for: Date())
-
+                // Event list with urgency badges — today hoisted, UTC calendar used for diff
                 ForEach(dataPoints.prefix(5)) { point in
-                    let diffDays = Calendar.current.dateComponents([.day], from: today, to: Calendar.current.startOfDay(for: point.eventDate)).day ?? 999
+                    let diffDays = cal.dateComponents([.day], from: today, to: point.eventDate).day ?? 999
                     let isUrgent = diffDays <= 3
                     let isThisWeek = diffDays > 3 && diffDays <= 7
                     let pointRevenue = point.unitPrice > 0 ? point.revenue : Double(point.quantity) * basePrice
 
                     HStack {
-                        // Urgency dot
                         Circle()
-                            .fill(isUrgent ? SolennixColors.primary : (isThisWeek ? .orange : SolennixColors.primary.opacity(0.4)))
+                            .fill(isUrgent ? SolennixColors.primary : (isThisWeek ? SolennixColors.warning : SolennixColors.primary.opacity(0.4)))
                             .frame(width: 8, height: 8)
 
                         VStack(alignment: .leading, spacing: 2) {
                             HStack(spacing: 4) {
-                                Text(point.eventDate.formatted(.dateTime.day().month(.abbreviated)))
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
+                                Text(point.eventDate.formattedServerDay(style: "d MMM", locale: FeatureL10n.locale))
+                                    .font(.subheadline.weight(.medium))
                                     .foregroundStyle(SolennixColors.text)
 
                                 if diffDays == 0 {
                                     urgencyBadge(ProductStrings.today, color: SolennixColors.primary)
                                 } else if diffDays == 1 {
-                                    urgencyBadge(ProductStrings.tomorrow, color: .orange)
+                                    urgencyBadge(ProductStrings.tomorrow, color: SolennixColors.warning)
                                 } else if diffDays > 1 && diffDays <= 7 {
                                     Text(ProductStrings.inDays(diffDays))
                                         .font(.caption2)
@@ -164,8 +183,7 @@ public struct DemandForecastChart: View {
 
                         VStack(alignment: .trailing, spacing: 2) {
                             Text(ProductStrings.quantityUnits(point.quantity))
-                                .font(.subheadline)
-                                .fontWeight(.bold)
+                                .font(.subheadline.weight(.bold))
                                 .foregroundStyle(SolennixColors.text)
 
                             if pointRevenue > 0 {
@@ -180,7 +198,7 @@ public struct DemandForecastChart: View {
                     .background(
                         RoundedRectangle(cornerRadius: 8)
                             .fill(isUrgent ? SolennixColors.primary.opacity(0.05) :
-                                    (isThisWeek ? Color.orange.opacity(0.05) : SolennixColors.surface))
+                                    (isThisWeek ? SolennixColors.warning.opacity(0.05) : SolennixColors.surface))
                     )
                 }
 
@@ -202,8 +220,7 @@ public struct DemandForecastChart: View {
 
                         VStack(alignment: .trailing, spacing: 2) {
                             Text(ProductStrings.quantityUnits(totalQuantity))
-                                .font(.subheadline)
-                                .fontWeight(.bold)
+                                .font(.subheadline.weight(.bold))
                                 .foregroundStyle(SolennixColors.text)
 
                             if totalRevenue > 0 {
@@ -238,13 +255,11 @@ public struct DemandForecastChart: View {
         .padding(Spacing.md)
         .background(SolennixColors.card)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
     }
 
     private func urgencyBadge(_ text: String, color: Color) -> some View {
         Text(text)
-            .font(.caption2)
-            .fontWeight(.semibold)
+            .font(.caption2.weight(.semibold))
             .foregroundStyle(color)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)

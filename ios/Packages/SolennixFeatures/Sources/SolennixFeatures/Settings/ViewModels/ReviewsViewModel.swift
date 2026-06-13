@@ -19,10 +19,23 @@ private struct UpdateReviewVisibilityRequest: Encodable {
 public final class ReviewsViewModel {
 
     public var reviews: [EventReview] = []
+    public var searchText: String = ""
     public var isLoading: Bool = false
     public var errorMessage: String?
     public var savingResponseId: String?
     public var updatingVisibilityId: String?
+
+    // MARK: - Filtered
+
+    /// Reviews filtered by `searchText` across client name and comment (case- and diacritic-insensitive).
+    public var filteredReviews: [EventReview] {
+        guard !searchText.trimmingCharacters(in: .whitespaces).isEmpty else { return reviews }
+        return reviews.filter { review in
+            (review.clientName ?? "").localizedStandardContains(searchText)
+                || (review.eventLabel ?? "").localizedStandardContains(searchText)
+                || (review.comment ?? "").localizedStandardContains(searchText)
+        }
+    }
 
     private let apiClient: APIClient
 

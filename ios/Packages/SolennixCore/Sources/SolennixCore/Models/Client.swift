@@ -12,6 +12,9 @@ public struct Client: Codable, Identifiable, Sendable, Hashable {
     public var photoUrl: String?
     public var totalEvents: Int?
     public var totalSpent: Double?
+    /// Confirmed + completed event totals minus payments. Negative = overpayment (client has credit).
+    /// Absent on list endpoint responses (nil-safe: older payloads decode without error).
+    public var pendingBalance: Double?
     public let createdAt: String
     public let updatedAt: String
 
@@ -29,6 +32,7 @@ public struct Client: Codable, Identifiable, Sendable, Hashable {
         photoUrl: String? = nil,
         totalEvents: Int? = nil,
         totalSpent: Double? = nil,
+        pendingBalance: Double? = nil,
         createdAt: String,
         updatedAt: String
     ) {
@@ -43,6 +47,7 @@ public struct Client: Codable, Identifiable, Sendable, Hashable {
         self.photoUrl = photoUrl
         self.totalEvents = totalEvents
         self.totalSpent = totalSpent
+        self.pendingBalance = pendingBalance
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }

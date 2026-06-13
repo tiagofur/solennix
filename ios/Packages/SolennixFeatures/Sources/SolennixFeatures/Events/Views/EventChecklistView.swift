@@ -186,15 +186,42 @@ public struct EventChecklistView: View {
     // MARK: - Checklist Row
 
     private func checklistRow(_ item: ChecklistItem) -> some View {
-        let isChecked = viewModel.checkedIds.contains(item.id)
-
-        return Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                viewModel.toggleItem(id: item.id)
+        ChecklistItemRow(
+            item: item,
+            isChecked: viewModel.checkedIds.contains(item.id),
+            onToggle: {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    viewModel.toggleItem(id: item.id)
+                }
             }
-        } label: {
+        )
+    }
+}
+
+// MARK: - Checklist Item Row
+
+/// Private row view with stable identity per item.
+///
+/// Extracting into a struct ensures SwiftUI diffs by value rather than
+/// re-evaluating the function on every list reload, so `.symbolEffect(.bounce)`
+/// triggers only when `isChecked` transitions false→true (user toggle), not
+/// on initial appear or unrelated reloads.
+private struct ChecklistItemRow: View {
+    let item: ChecklistItem
+    let isChecked: Bool
+    let onToggle: () -> Void
+
+    private func formatQuantity(_ value: Double) -> String {
+        value.truncatingRemainder(dividingBy: 1) == 0
+            ? String(format: "%.0f", value)
+            : String(format: "%.2f", value)
+    }
+
+    var body: some View {
+        Button(action: onToggle) {
             HStack(spacing: Spacing.md) {
-                // Checkbox
+                // Checkbox — Image rendered unconditionally so SwiftUI can
+                // observe the false→true transition and fire the bounce.
                 ZStack {
                     Circle()
                         .fill(isChecked ? SolennixColors.primary : Color.clear)
@@ -207,12 +234,14 @@ public struct EventChecklistView: View {
                         )
                         .frame(width: 24, height: 24)
 
-                    if isChecked {
-                        Image(systemName: "checkmark")
-                            .font(.caption2)
-                            .fontWeight(.bold)
-                            .foregroundStyle(.white)
-                    }
+                    Image(systemName: "checkmark")
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.white)
+                        .opacity(isChecked ? 1 : 0)
+                        // Outside any `if isChecked` — SwiftUI sees the value
+                        // transition false→true and fires the bounce exactly once.
+                        .symbolEffect(.bounce, value: isChecked)
                 }
 
                 // Name
@@ -234,14 +263,6 @@ public struct EventChecklistView: View {
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
         }
         .buttonStyle(.plain)
-    }
-
-    // MARK: - Helpers
-
-    private func formatQuantity(_ value: Double) -> String {
-        value.truncatingRemainder(dividingBy: 1) == 0
-            ? String(format: "%.0f", value)
-            : String(format: "%.2f", value)
     }
 }
 

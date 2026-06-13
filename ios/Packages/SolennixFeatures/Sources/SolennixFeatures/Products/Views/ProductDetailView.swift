@@ -37,23 +37,43 @@ final class ProductDetailViewModel {
         ingredients.filter { $0.type == .equipment }
     }
 
+    /// Unit cost = ingredient items + supply items (both carry quantityRequired × unitCost).
     var unitCost: Double {
-        ingredientItems.reduce(0) { $0 + $1.quantityRequired * ($1.unitCost ?? 0) }
+        let ingredientCost = ingredientItems.reduce(0) { $0 + $1.quantityRequired * ($1.unitCost ?? 0) }
+        let supplyCost = supplyItems.reduce(0) { $0 + $1.quantityRequired * ($1.unitCost ?? 0) }
+        return ingredientCost + supplyCost
     }
 
     var perEventCost: Double {
         supplyItems.reduce(0) { $0 + $1.quantityRequired * ($1.unitCost ?? 0) }
     }
 
-    var margin: Double {
+    /// Returns nil when there are no recipe items (no basis for margin).
+    var margin: Double? {
+        let hasRecipe = !ingredientItems.isEmpty || !supplyItems.isEmpty
+        guard hasRecipe else { return nil }
         guard let price = product?.basePrice, price > 0 else { return 0 }
         return ((price - unitCost) / price) * 100
     }
 
+    // MARK: - Demand
+
+    /// Today as UTC-midnight Date for stable day comparisons (same technique as EventCountdownChip).
+    /// Initialized eagerly so KPIs never see a nil window; refreshed on each loadDemandData
+    /// so all window calculations within one load share the same anchor.
+    private var todayUTC: Date? = Date.fromServerDay(Date.localTodayString())
+
+    /// A UTC-pinned calendar for day-diff arithmetic (avoids UTC-negative timezone shifts).
+    private static let utcCalendar: Calendar = {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "UTC")!
+        return cal
+    }()
+
     var demand7Days: Int {
-        let today = Calendar.current.startOfDay(for: Date())
-        let in7Days = Calendar.current.date(byAdding: .day, value: 7, to: today) ?? today
-        return demandData.filter { $0.eventDate >= today && $0.eventDate <= in7Days }
+        guard let todayUTC else { return 0 }
+        let in7 = Self.utcCalendar.date(byAdding: .day, value: 7, to: todayUTC) ?? todayUTC
+        return demandData.filter { $0.eventDate >= todayUTC && $0.eventDate <= in7 }
             .reduce(0) { $0 + $1.quantity }
     }
 
@@ -61,9 +81,15 @@ final class ProductDetailViewModel {
         demandData.reduce(0) { $0 + $1.quantity }
     }
 
-    var estimatedRevenue: Double {
-        guard let price = product?.basePrice else { return 0 }
-        return Double(totalDemand) * price
+    /// Revenue computed over the 7-day window only, consistent with demand7Days / smart alert.
+    var estimatedRevenue7Days: Double {
+        guard let price = product?.basePrice, let todayUTC else { return 0 }
+        let in7 = Self.utcCalendar.date(byAdding: .day, value: 7, to: todayUTC) ?? todayUTC
+        let window = demandData.filter { $0.eventDate >= todayUTC && $0.eventDate <= in7 }
+        return window.reduce(0) { acc, dp in
+            let unitPrice = dp.unitPrice > 0 ? dp.unitPrice : price
+            return acc + Double(dp.quantity) * unitPrice
+        }
     }
 
     @MainActor
@@ -72,7 +98,6 @@ final class ProductDetailViewModel {
         errorMessage = nil
 
         do {
-            // Load product and ingredients
             async let productTask: Product = apiClient.get(Endpoint.product(productId))
             async let ingredientsTask: [ProductIngredient] = apiClient.get(Endpoint.productIngredients(productId))
 
@@ -80,7 +105,6 @@ final class ProductDetailViewModel {
             product = loadedProduct
             ingredients = loadedIngredients
 
-            // Load demand data (upcoming events using this product)
             await loadDemandData()
         } catch {
             errorMessage = mapError(error)
@@ -89,40 +113,105 @@ final class ProductDetailViewModel {
         isLoading = false
     }
 
+    // MARK: - Parallelized demand loading (fault-isolated: one 404/timeout won't discard collected points)
+
+    private struct DemandFetchResult {
+        let point: DemandDataPoint?
+        let fetchFailed: Bool
+    }
+
     @MainActor
     private func loadDemandData() async {
+        // Anchor today once for the entire load; window KPIs read this stored value.
+        todayUTC = Date.fromServerDay(Date.localTodayString())
+
         do {
             let events: [Event] = try await apiClient.getAll(Endpoint.upcomingEvents)
+            let eventsSlice = Array(events.prefix(10))
 
-            var demand: [DemandDataPoint] = []
-            for event in events.prefix(10) {
-                let eventProducts: [EventProduct] = try await apiClient.get(Endpoint.eventProducts(event.id))
-                if let ep = eventProducts.first(where: { $0.productId == productId }) {
-                    // Fetch client name
-                    var clientName = FeatureL10n.text("clients.title_singular", "Cliente")
-                    if !event.clientId.isEmpty {
+            var collected: [DemandDataPoint] = []
+            var fetchFailedCount = 0
+            var successfulFetchCount = 0
+
+            // Non-throwing group: each child isolates its own errors so a single
+            // 404/timeout does not discard points already collected from other events.
+            await withTaskGroup(of: DemandFetchResult.self) { group in
+                for event in eventsSlice {
+                    group.addTask {
                         do {
-                            let client: Client = try await apiClient.get(Endpoint.client(event.clientId))
-                            clientName = client.name
+                            // Parse date first — skip if unparseable (no fabricated Date()).
+                            guard let eventDate = Date.fromServerDay(event.eventDate) else {
+                                return DemandFetchResult(point: nil, fetchFailed: false)
+                            }
+
+                            async let epTask: [EventProduct] = self.apiClient.get(Endpoint.eventProducts(event.id))
+
+                            // Client fetch is independent — run concurrently with eventProducts.
+                            var clientName = FeatureL10n.text("clients.title_singular", "Cliente")
+                            if !event.clientId.isEmpty {
+                                async let clientTask: Client = self.apiClient.get(Endpoint.client(event.clientId))
+                                let (eps, maybeClient) = try await (epTask, clientTask)
+                                clientName = maybeClient.name
+                                // Product not in this event is a legitimate success (zero demand).
+                                guard let ep = eps.first(where: { $0.productId == self.productId }) else {
+                                    return DemandFetchResult(point: nil, fetchFailed: false)
+                                }
+                                return DemandFetchResult(
+                                    point: DemandDataPoint(
+                                        id: event.id,
+                                        eventDate: eventDate,
+                                        clientName: clientName,
+                                        quantity: Int(ep.quantity),
+                                        numPeople: event.numPeople,
+                                        unitPrice: ep.unitPrice
+                                    ),
+                                    fetchFailed: false
+                                )
+                            } else {
+                                let eps = try await epTask
+                                // Product not in this event is a legitimate success (zero demand).
+                                guard let ep = eps.first(where: { $0.productId == self.productId }) else {
+                                    return DemandFetchResult(point: nil, fetchFailed: false)
+                                }
+                                return DemandFetchResult(
+                                    point: DemandDataPoint(
+                                        id: event.id,
+                                        eventDate: eventDate,
+                                        clientName: clientName,
+                                        quantity: Int(ep.quantity),
+                                        numPeople: event.numPeople,
+                                        unitPrice: ep.unitPrice
+                                    ),
+                                    fetchFailed: false
+                                )
+                            }
                         } catch {
-                            // Silently fail
+                            // Network/auth failure — counts against fetch failures.
+                            return DemandFetchResult(point: nil, fetchFailed: true)
                         }
                     }
+                }
 
-                    let point = DemandDataPoint(
-                        id: event.id,
-                        eventDate: ISO8601DateFormatter().date(from: event.eventDate) ?? Date(),
-                        clientName: clientName,
-                        quantity: Int(ep.quantity),  // chart display only — truncation intentional
-                        numPeople: event.numPeople,
-                        unitPrice: ep.unitPrice
-                    )
-                    demand.append(point)
+                for await result in group {
+                    if result.fetchFailed {
+                        fetchFailedCount += 1
+                    } else {
+                        successfulFetchCount += 1
+                        if let point = result.point { collected.append(point) }
+                    }
                 }
             }
-            demandData = demand
+
+            // Surface an error only when every fetch genuinely failed (network/auth),
+            // not when the product simply has no demand in upcoming events.
+            if fetchFailedCount > 0 && successfulFetchCount == 0 && !eventsSlice.isEmpty {
+                errorMessage = ProductStrings.unexpectedRetryError
+            }
+
+            // Sort by event date ascending so chart renders chronologically.
+            demandData = collected.sorted { $0.eventDate < $1.eventDate }
         } catch {
-            // Silently fail for demand data - not critical
+            // Upcoming events fetch itself failed — keep demandData empty (non-critical).
         }
     }
 
@@ -151,7 +240,6 @@ public struct ProductDetailView: View {
 
     @State private var viewModel: ProductDetailViewModel
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.horizontalSizeClass) private var sizeClass
 
     public init(apiClient: APIClient, productId: String) {
         _viewModel = State(initialValue: ProductDetailViewModel(apiClient: apiClient, productId: productId))
@@ -160,21 +248,19 @@ public struct ProductDetailView: View {
     public var body: some View {
         Group {
             if viewModel.isLoading && viewModel.product == nil {
-                ProgressView(ProductStrings.loading)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                List {
+                    ProductDetailSkeleton()
+                }
+                .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+                .background(SolennixColors.surfaceGrouped)
             } else if let product = viewModel.product {
-                detailContent(product)
-            } else if let error = viewModel.errorMessage {
-                ContentUnavailableView(
-                    ProductStrings.errorTitle,
-                    systemImage: "exclamationmark.triangle",
-                    description: Text(error)
-                )
+                hubList(product)
             } else {
-                ContentUnavailableView(
-                    ProductStrings.notFoundTitle,
-                    systemImage: "shippingbox",
-                    description: Text(ProductStrings.notFoundMessage)
+                EmptyStateView(
+                    icon: "exclamationmark.triangle",
+                    title: ProductStrings.errorTitle,
+                    message: viewModel.errorMessage ?? ProductStrings.notFoundMessage
                 )
             }
         }
@@ -188,6 +274,8 @@ public struct ProductDetailView: View {
                         Label(ProductStrings.edit, systemImage: "pencil")
                     }
 
+                    Divider()
+
                     Button(role: .destructive) {
                         viewModel.showDeleteConfirm = true
                     } label: {
@@ -195,6 +283,8 @@ public struct ProductDetailView: View {
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
+                        .foregroundStyle(SolennixColors.primary)
+                        .accessibilityLabel(ProductStrings.moreActions)
                 }
             }
         }
@@ -213,79 +303,126 @@ public struct ProductDetailView: View {
         } message: {
             Text(ProductStrings.deletePrompt(viewModel.product?.name ?? ""))
         }
-        .refreshable { await viewModel.loadData() }
+        // Gate alert: only present when the main entity is loaded — first-load failures
+        // stay in the empty-state branch only (prevents double error UI).
+        .alert(ProductStrings.errorTitle, isPresented: Binding(
+            get: { viewModel.errorMessage != nil && viewModel.product != nil },
+            set: { if !$0 { viewModel.errorMessage = nil } }
+        )) {
+            Button(ProductStrings.ok, role: .cancel) {}
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
         .task { await viewModel.loadData() }
     }
 
-    // MARK: - Detail Content
+    // MARK: - Hub List
 
-    private func detailContent(_ product: Product) -> some View {
-        let isRegularWidth = sizeClass == .regular
-        return ScrollView {
-            VStack(spacing: Spacing.md) {
-                AdaptiveDetailLayout {
-                    // Left: Product info, image, KPI cards
-                    headerSection(product)
-                    kpiSection(product)
-                    smartAlertSection(product)
-                    generalInfoSection(product)
-                } right: {
-                    // Right: Ingredients/recipe, cost breakdown
-                        if !viewModel.ingredientItems.isEmpty {
-                            compositionSection(
-                            title: ProductStrings.compositionTitle,
-                            icon: "square.stack.3d.up.fill",
-                            iconColor: SolennixColors.primary,
-                            items: viewModel.ingredientItems,
-                            showCost: true,
-                            totalLabel: ProductStrings.totalUnitCost,
-                            totalValue: viewModel.unitCost
-                        )
-                    }
+    private func hubList(_ product: Product) -> some View {
+        List {
+            // MARK: Header — image + name + category badge
+            Section {
+                productHeaderCard(product)
+            }
+            .listRowSeparator(.hidden)
 
-                    if !viewModel.supplyItems.isEmpty {
-                        compositionSection(
-                            title: ProductStrings.suppliesTitle,
-                            icon: "flame.fill",
-                            iconColor: .orange,
-                            items: viewModel.supplyItems,
-                            showCost: true,
-                            badge: ProductStrings.fixedCostPerEvent,
-                            badgeColor: .orange,
-                            totalLabel: ProductStrings.costPerEvent,
-                            totalValue: viewModel.perEventCost,
-                            totalColor: .orange
-                        )
-                    }
+            // MARK: KPI row
+            Section {
+                kpiSection(product)
+            }
+            .listRowSeparator(.hidden)
 
-                    if !viewModel.equipmentItems.isEmpty {
-                        compositionSection(
-                            title: ProductStrings.equipmentTitle,
-                            icon: "wrench.and.screwdriver.fill",
-                            iconColor: .blue,
-                            items: viewModel.equipmentItems,
-                            showCost: false,
-                            badge: ProductStrings.reusableNoCost,
-                            badgeColor: .blue
-                        )
-                    }
-                }
+            // MARK: Smart alert
+            Section {
+                smartAlertRow(product)
+            }
+            .listRowSeparator(.hidden)
 
-                // Demand forecast (full-width below)
+            // MARK: Demand chart
+            Section {
                 DemandForecastChart(
                     dataPoints: viewModel.demandData,
                     productName: product.name,
                     basePrice: product.basePrice
                 )
+                .listRowBackground(SolennixColors.card)
+                .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
             }
-            .padding(.horizontal, isRegularWidth ? Spacing.xl : Spacing.md)
-            .padding(.vertical, isRegularWidth ? Spacing.xl : Spacing.lg)
+            .listRowSeparator(.hidden)
+
+            // MARK: Composition / Recipe sections
+            if !viewModel.ingredientItems.isEmpty {
+                Section {
+                    compositionSection(
+                        title: ProductStrings.compositionTitle,
+                        icon: "square.stack.3d.up.fill",
+                        iconColor: SolennixColors.primary,
+                        items: viewModel.ingredientItems,
+                        showCost: true,
+                        totalLabel: ProductStrings.totalUnitCost,
+                        totalValue: viewModel.unitCost
+                    )
+                }
+                .listRowSeparator(.hidden)
+            }
+
+            if !viewModel.supplyItems.isEmpty {
+                Section {
+                    compositionSection(
+                        title: ProductStrings.suppliesTitle,
+                        icon: "flame.fill",
+                        iconColor: SolennixColors.warning,
+                        items: viewModel.supplyItems,
+                        showCost: true,
+                        badge: ProductStrings.fixedCostPerEvent,
+                        badgeColor: SolennixColors.warning,
+                        totalLabel: ProductStrings.costPerEvent,
+                        totalValue: viewModel.perEventCost,
+                        totalColor: SolennixColors.warning
+                    )
+                }
+                .listRowSeparator(.hidden)
+            }
+
+            if !viewModel.equipmentItems.isEmpty {
+                Section {
+                    compositionSection(
+                        title: ProductStrings.equipmentTitle,
+                        icon: "wrench.and.screwdriver.fill",
+                        iconColor: .blue,
+                        items: viewModel.equipmentItems,
+                        showCost: false,
+                        badge: ProductStrings.reusableNoCost,
+                        badgeColor: .blue
+                    )
+                }
+                .listRowSeparator(.hidden)
+            }
+
+            // MARK: General info — category + price + composition summary
+            Section {
+                generalInfoSection(product)
+            }
+            .listRowSeparator(.hidden)
+        }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(SolennixColors.surfaceGrouped)
+        .softScrollEdgeEffectIfAvailable()
+        .refreshable {
+            // Does NOT clear arrays — avoids skeleton flash on pull-to-refresh.
+            await viewModel.loadData()
         }
     }
 
-    // MARK: - Header Section
+    // MARK: - @ScaledMetric sizes (Dynamic Type-safe, capped)
 
-    private func headerSection(_ product: Product) -> some View {
+    @ScaledMetric(relativeTo: .body) private var scaledImageHeight: CGFloat = 200
+    private var cappedImageHeight: CGFloat { min(scaledImageHeight, 280) }
+
+    // MARK: - Header Card
+
+    private func productHeaderCard(_ product: Product) -> some View {
         VStack(spacing: Spacing.md) {
             if let imageUrl = product.imageUrl, !imageUrl.isEmpty,
                let url = APIClient.resolveURL(imageUrl) {
@@ -298,14 +435,19 @@ public struct ProductDetailView: View {
                         .fill(SolennixColors.surface)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 200)
+                .frame(height: cappedImageHeight)
                 .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+                .accessibilityLabel(product.name)
             }
+
+            Text(product.name)
+                .font(.title2.weight(.bold))
+                .foregroundStyle(SolennixColors.text)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             HStack(spacing: Spacing.sm) {
                 Text(product.category)
-                    .font(.caption)
-                    .fontWeight(.semibold)
+                    .font(.caption.weight(.semibold))
                     .textCase(.uppercase)
                     .foregroundStyle(SolennixColors.primary)
                     .padding(.horizontal, Spacing.sm)
@@ -313,10 +455,9 @@ public struct ProductDetailView: View {
                     .background(SolennixColors.primary.opacity(0.1))
                     .clipShape(Capsule())
 
-                        if !product.isActive {
+                if !product.isActive {
                     Text(ProductStrings.inactive)
-                        .font(.caption)
-                        .fontWeight(.semibold)
+                        .font(.caption.weight(.semibold))
                         .foregroundStyle(SolennixColors.error)
                         .padding(.horizontal, Spacing.sm)
                         .padding(.vertical, Spacing.xs)
@@ -327,47 +468,60 @@ public struct ProductDetailView: View {
                 Spacer()
             }
         }
+        .padding(Spacing.md)
+        .frame(maxWidth: .infinity)
+        .listRowBackground(SolennixColors.card)
+        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
 
     // MARK: - KPI Section
 
     private func kpiSection(_ product: Product) -> some View {
-        let columns = sizeClass == .regular
-            ? Array(repeating: GridItem(.flexible(), spacing: Spacing.sm), count: 4)
-            : Array(repeating: GridItem(.flexible(), spacing: Spacing.sm), count: 2)
-        let marginColor: Color = viewModel.margin >= 50 ? .green :
-            (viewModel.margin >= 20 ? SolennixColors.text : .orange)
-        return LazyVGrid(columns: columns, spacing: Spacing.sm) {
+        let marginValue = viewModel.margin
+        let marginColor: Color = {
+            guard let m = marginValue else { return SolennixColors.textSecondary }
+            return m >= 50 ? SolennixColors.success : (m >= 20 ? SolennixColors.text : SolennixColors.warning)
+        }()
+        let marginDisplay = marginValue.map { String(format: "%.1f%%", $0) } ?? "—"
+        let marginSubtitle = marginValue != nil ? ProductStrings.profitEstimated : ProductStrings.noRecipe
+
+        return HStack(spacing: Spacing.md) {
             kpiCard(
                 icon: "dollarsign.circle.fill",
                 iconColor: SolennixColors.primary,
                 label: ProductStrings.basePrice,
                 value: product.basePrice.formatted(.currency(code: "MXN")),
-                subtitle: ProductStrings.perUnit
+                subtitle: ProductStrings.perUnit,
+                a11yLabel: "\(ProductStrings.basePrice): \(product.basePrice.formatted(.currency(code: "MXN")))"
             )
             kpiCard(
                 icon: "square.stack.3d.up.fill",
                 iconColor: SolennixColors.textSecondary,
                 label: ProductStrings.unitCost,
                 value: viewModel.unitCost.formatted(.currency(code: "MXN")),
-                subtitle: ProductStrings.inSupplies
+                subtitle: ProductStrings.inSupplies,
+                a11yLabel: "\(ProductStrings.unitCost): \(viewModel.unitCost.formatted(.currency(code: "MXN")))"
             )
             kpiCard(
                 icon: "arrow.up.right",
                 iconColor: marginColor,
                 label: ProductStrings.marginEstimated,
-                value: String(format: "%.1f%%", viewModel.margin),
-                subtitle: ProductStrings.profitEstimated,
-                valueColor: marginColor
+                value: marginDisplay,
+                subtitle: marginSubtitle,
+                valueColor: marginColor,
+                a11yLabel: "\(ProductStrings.marginEstimated): \(marginDisplay)"
             )
             kpiCard(
                 icon: "calendar",
                 iconColor: SolennixColors.primary,
                 label: ProductStrings.upcomingEvents,
                 value: "\(viewModel.demandData.count)",
-                subtitle: ProductStrings.confirmed
+                subtitle: ProductStrings.confirmed,
+                a11yLabel: "\(ProductStrings.upcomingEvents): \(viewModel.demandData.count)"
             )
         }
+        .listRowBackground(SolennixColors.card)
+        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
 
     private func kpiCard(
@@ -376,7 +530,8 @@ public struct ProductDetailView: View {
         label: String,
         value: String,
         subtitle: String,
-        valueColor: Color = SolennixColors.text
+        valueColor: Color = SolennixColors.text,
+        a11yLabel: String
     ) -> some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
             HStack(spacing: 4) {
@@ -400,19 +555,20 @@ public struct ProductDetailView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .background(SolennixColors.surface)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(a11yLabel)
     }
 
-    // MARK: - Smart Alert Section
+    // MARK: - Smart Alert Row
 
-    private func smartAlertSection(_ product: Product) -> some View {
+    private func smartAlertRow(_ product: Product) -> some View {
         let isHighDemand = viewModel.demand7Days > 0
 
         return HStack(alignment: .top, spacing: Spacing.md) {
             Image(systemName: isHighDemand ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
-                .foregroundStyle(isHighDemand ? SolennixColors.primary : .green)
+                .foregroundStyle(isHighDemand ? SolennixColors.primary : SolennixColors.success)
                 .font(.title3)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -420,13 +576,13 @@ public struct ProductDetailView: View {
                      ? ProductStrings.unitsNext7Days(viewModel.demand7Days)
                      : viewModel.demandData.isEmpty ? ProductStrings.noUpcomingEvents : ProductStrings.noImmediateDemand
                 )
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundStyle(isHighDemand ? SolennixColors.primary : .green)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(isHighDemand ? SolennixColors.primary : SolennixColors.success)
 
                 if isHighDemand {
-                    if viewModel.estimatedRevenue > 0 {
-                        Text(ProductStrings.revenueMessage(viewModel.estimatedRevenue.formatted(.currency(code: "MXN"))))
+                    // Revenue computed over the 7-day window (consistent with demand7Days).
+                    if viewModel.estimatedRevenue7Days > 0 {
+                        Text(ProductStrings.revenueMessage(viewModel.estimatedRevenue7Days.formatted(.currency(code: "MXN"))))
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textSecondary)
                     } else {
@@ -448,12 +604,8 @@ public struct ProductDetailView: View {
             Spacer()
         }
         .padding(Spacing.md)
-        .background(isHighDemand ? SolennixColors.primary.opacity(0.08) : SolennixColors.card)
-        .overlay(
-            RoundedRectangle(cornerRadius: CornerRadius.lg)
-                .stroke(isHighDemand ? SolennixColors.primary.opacity(0.2) : SolennixColors.border, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        .listRowBackground(isHighDemand ? SolennixColors.primary.opacity(0.08) : SolennixColors.card)
+        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
 
     // MARK: - General Info Section
@@ -461,11 +613,9 @@ public struct ProductDetailView: View {
     private func generalInfoSection(_ product: Product) -> some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             Text(ProductStrings.generalInfo)
-                .font(.caption)
-                .fontWeight(.semibold)
+                .font(.caption.weight(.semibold))
                 .foregroundStyle(SolennixColors.textSecondary)
 
-            // Category
             HStack(spacing: Spacing.md) {
                 Image(systemName: "tag.fill")
                     .foregroundStyle(SolennixColors.primary)
@@ -474,14 +624,12 @@ public struct ProductDetailView: View {
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                     Text(product.category)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
+                        .font(.subheadline.weight(.medium))
                 }
             }
 
             Divider()
 
-            // Price
             HStack(spacing: Spacing.md) {
                 Image(systemName: "dollarsign.circle.fill")
                     .foregroundStyle(SolennixColors.primary)
@@ -490,14 +638,12 @@ public struct ProductDetailView: View {
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                     Text(product.basePrice.formatted(.currency(code: "MXN")))
-                        .font(.subheadline)
-                        .fontWeight(.medium)
+                        .font(.subheadline.weight(.medium))
                 }
             }
 
             Divider()
 
-            // Composition summary
             HStack(spacing: Spacing.md) {
                 Image(systemName: "square.stack.3d.up.fill")
                     .foregroundStyle(SolennixColors.primary)
@@ -505,26 +651,22 @@ public struct ProductDetailView: View {
                     Text(ProductStrings.composition)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
-
-                    let compositionText = ProductStrings.compositionSummary(
+                    Text(ProductStrings.compositionSummary(
                         ingredients: viewModel.ingredientItems.count,
                         supplies: viewModel.supplyItems.count,
                         equipment: viewModel.equipmentItems.count
-                    )
-
-                    Text(compositionText)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
+                    ))
+                    .font(.subheadline.weight(.medium))
                 }
             }
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .listRowBackground(SolennixColors.card)
+        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
 
-    // MARK: - Composition Section
+    // MARK: - Composition Section (List row-native, no shadow)
 
     private func compositionSection(
         title: String,
@@ -553,8 +695,7 @@ public struct ProductDetailView: View {
 
                 if let badge {
                     Text(badge)
-                        .font(.caption2)
-                        .fontWeight(.medium)
+                        .font(.caption2.weight(.medium))
                         .foregroundStyle(badgeColor)
                         .padding(.horizontal, Spacing.sm)
                         .padding(.vertical, Spacing.xs)
@@ -569,18 +710,15 @@ public struct ProductDetailView: View {
             // Table header
             HStack {
                 Text(ProductStrings.ingredientHeader)
-                    .font(.caption2)
-                    .fontWeight(.semibold)
+                    .font(.caption2.weight(.semibold))
                     .foregroundStyle(SolennixColors.textSecondary)
                 Spacer()
                 Text(ProductStrings.quantityHeader)
-                    .font(.caption2)
-                    .fontWeight(.semibold)
+                    .font(.caption2.weight(.semibold))
                     .foregroundStyle(SolennixColors.textSecondary)
                 if showCost {
                     Text(ProductStrings.estimatedCostHeader)
-                        .font(.caption2)
-                        .fontWeight(.semibold)
+                        .font(.caption2.weight(.semibold))
                         .foregroundStyle(SolennixColors.textSecondary)
                         .frame(width: 80, alignment: .trailing)
                 }
@@ -592,26 +730,28 @@ public struct ProductDetailView: View {
             // Items
             ForEach(items) { ingredient in
                 Divider().opacity(0.5)
+                let qtyFormatted = ingredient.quantityRequired.formatted(.number.precision(.fractionLength(0...2)))
                 HStack {
                     Text(ingredient.ingredientName ?? ProductStrings.unknownItem)
                         .font(.subheadline)
                         .foregroundStyle(SolennixColors.text)
                     Spacer()
-                    Text("\(Int(ingredient.quantityRequired)) \(ingredient.unit ?? ProductStrings.unitFallback)")
-                        .font(.subheadline)
-                        .fontWeight(.bold)
+                    Text("\(qtyFormatted) \(ingredient.unit ?? ProductStrings.unitFallback)")
+                        .font(.subheadline.weight(.bold))
                         .foregroundStyle(SolennixColors.text)
                     if showCost {
                         let cost = ingredient.quantityRequired * (ingredient.unitCost ?? 0)
                         Text(cost > 0 ? cost.formatted(.currency(code: "MXN")) : "—")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundStyle(totalColor == .orange ? .orange : SolennixColors.text)
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(totalColor)
                             .frame(width: 80, alignment: .trailing)
                     }
                 }
                 .padding(.horizontal, Spacing.md)
                 .padding(.vertical, Spacing.sm)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+                .accessibilityElement(children: .combine)
             }
 
             // Total footer
@@ -623,16 +763,168 @@ public struct ProductDetailView: View {
                         .foregroundStyle(SolennixColors.textSecondary)
                     Spacer()
                     Text(totalValue.formatted(.currency(code: "MXN")))
-                        .font(.title3)
-                        .fontWeight(.bold)
+                        .font(.title3.weight(.bold))
                         .foregroundStyle(totalColor)
                 }
                 .padding(Spacing.md)
             }
         }
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .listRowBackground(SolennixColors.card)
+        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+    }
+}
+
+// MARK: - Product Detail Skeleton (in-List placeholder)
+
+struct ProductDetailSkeleton: View {
+    @ScaledMetric(relativeTo: .body) private var scaledImageHeight: CGFloat = 200
+    private var cappedImageHeight: CGFloat { min(scaledImageHeight, 280) }
+
+    var body: some View {
+        // Header — image block + name + category
+        Section {
+            VStack(alignment: .leading, spacing: Spacing.md) {
+                SkeletonLine(height: cappedImageHeight)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+                SkeletonLine(width: 200, height: 24)
+                SkeletonLine(width: 80, height: 18)
+                    .clipShape(Capsule())
+            }
+            .padding(Spacing.md)
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+        }
+
+        // KPI row — 4 mini boxes
+        Section {
+            HStack(spacing: Spacing.md) {
+                ForEach(0..<4, id: \.self) { _ in
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        SkeletonLine(width: 40, height: 10)
+                        SkeletonLine(width: 60, height: 22)
+                        SkeletonLine(width: 30, height: 10)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(Spacing.md)
+                    .background(SolennixColors.surface)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                }
+            }
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+        }
+
+        // Smart alert skeleton
+        Section {
+            HStack(alignment: .top, spacing: Spacing.md) {
+                SkeletonLine(width: 22, height: 22)
+                    .clipShape(Circle())
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    SkeletonLine(width: 180, height: 14)
+                    SkeletonLine(width: 120, height: 12)
+                }
+                Spacer()
+            }
+            .padding(Spacing.md)
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+        }
+
+        // Chart placeholder
+        Section {
+            VStack(alignment: .leading, spacing: Spacing.md) {
+                SkeletonLine(width: 160, height: 18)
+                SkeletonLine(height: 200)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+            }
+            .padding(Spacing.md)
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+        }
+
+        // Recipe / composition skeleton — single card with rows inside, mirrors compositionSection layout
+        Section {
+            VStack(alignment: .leading, spacing: 0) {
+                // Section header
+                HStack(spacing: Spacing.sm) {
+                    SkeletonLine(width: 16, height: 16)
+                    SkeletonLine(width: 140, height: 16)
+                    Spacer()
+                }
+                .padding(Spacing.md)
+
+                Divider()
+
+                // Column header bar
+                HStack {
+                    SkeletonLine(width: 60, height: 10)
+                    Spacer()
+                    SkeletonLine(width: 60, height: 10)
+                    SkeletonLine(width: 70, height: 10)
+                }
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, Spacing.sm)
+                .background(SolennixColors.surface)
+
+                // Item rows
+                ForEach(0..<3, id: \.self) { _ in
+                    Divider().opacity(0.5)
+                    HStack {
+                        SkeletonLine(width: 100, height: 14)
+                        Spacer()
+                        SkeletonLine(width: 50, height: 14)
+                        SkeletonLine(width: 60, height: 14)
+                    }
+                    .padding(.horizontal, Spacing.md)
+                    .padding(.vertical, Spacing.sm)
+                    .frame(minHeight: 44)
+                }
+            }
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+        }
+
+        // General info skeleton — mirrors generalInfoSection single-card layout
+        Section {
+            VStack(alignment: .leading, spacing: Spacing.md) {
+                SkeletonLine(width: 140, height: 10)
+
+                HStack(spacing: Spacing.md) {
+                    SkeletonLine(width: 18, height: 18)
+                    VStack(alignment: .leading, spacing: 4) {
+                        SkeletonLine(width: 60, height: 10)
+                        SkeletonLine(width: 100, height: 14)
+                    }
+                }
+
+                Divider()
+
+                HStack(spacing: Spacing.md) {
+                    SkeletonLine(width: 18, height: 18)
+                    VStack(alignment: .leading, spacing: 4) {
+                        SkeletonLine(width: 60, height: 10)
+                        SkeletonLine(width: 80, height: 14)
+                    }
+                }
+
+                Divider()
+
+                HStack(spacing: Spacing.md) {
+                    SkeletonLine(width: 18, height: 18)
+                    VStack(alignment: .leading, spacing: 4) {
+                        SkeletonLine(width: 80, height: 10)
+                        SkeletonLine(width: 140, height: 14)
+                    }
+                }
+            }
+            .padding(Spacing.md)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+        }
     }
 }
 

@@ -1,8 +1,6 @@
 import Foundation
 
 enum ProductStrings {
-    private static var isEnglish: Bool { FeatureL10n.languageCode == "en" }
-
     static var title: String { FeatureL10n.text("products.title", "Productos") }
     static var searchPrompt: String { FeatureL10n.text("products.search_prompt", "Buscar productos") }
     static var addProductAccessibility: String { FeatureL10n.text("products.add_product_accessibility", "Agregar producto") }
@@ -23,6 +21,7 @@ enum ProductStrings {
     static var sortAscending: String { FeatureL10n.text("products.sort_ascending", "Ascendente") }
     static var sortDescending: String { FeatureL10n.text("products.sort_descending", "Descendente") }
     static var sortAccessibility: String { FeatureL10n.text("products.sort_accessibility", "Ordenar productos") }
+    static var upgradeCta: String { FeatureL10n.text("products.upgrade_cta", "Ver planes") }
     static var sortName: String { FeatureL10n.text("products.sort_name", "Nombre") }
     static var sortPrice: String { FeatureL10n.text("products.sort_price", "Precio") }
     static var sortCategory: String { FeatureL10n.text("products.sort_category", "Categoría") }
@@ -59,7 +58,7 @@ enum ProductStrings {
     static var editProductTitle: String { FeatureL10n.text("products.edit_product_title", "Editar Producto") }
     static var newProductTitle: String { FeatureL10n.text("products.new_product_title", "Nuevo Producto") }
     static var alertErrorTitle: String { FeatureL10n.text("products.alert_error_title", "Error") }
-    static var ok: String { "OK" }
+    static var ok: String { FeatureL10n.text("products.ok", "OK") }
     static var compositionDescription: String { FeatureL10n.text("products.composition_description", "Solo insumos generan costo al producto.") }
     static var equipmentDescription: String { FeatureL10n.text("products.equipment_description", "Activos reutilizables. No se incluyen en el costo.") }
     static var suppliesDescription: String { FeatureL10n.text("products.supplies_description", "Costo fijo por evento (ej. aceite, gas).") }
@@ -166,6 +165,19 @@ enum ProductStrings {
         let key = count == 1 ? "products.event_count_one" : "products.event_count_other"
         let fallback = count == 1 ? "%lld evento" : "%lld eventos"
         return FeatureL10n.format(key, fallback, count)
+    }
+
+    static var moreActions: String { FeatureL10n.text("products.detail.action.more", "Acciones del producto") }
+    static var noRecipe: String { FeatureL10n.text("products.no_recipe", "Sin receta") }
+    static var chartAxisDate: String { FeatureL10n.text("products.chart.axis_date", "Fecha") }
+    static var chartAxisQuantity: String { FeatureL10n.text("products.chart.axis_quantity", "Cantidad") }
+
+    static func chartA11yLabel(_ count: Int) -> String {
+        FeatureL10n.format("products.chart.a11y_label", "Demanda: %lld eventos próximos", count)
+    }
+
+    static func removeIngredient(_ name: String) -> String {
+        FeatureL10n.format("products.remove_ingredient", "Eliminar %@", name)
     }
 
     static func estimatedAmount(_ amount: String) -> String {

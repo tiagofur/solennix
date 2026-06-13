@@ -17,7 +17,6 @@ public struct ClientDetailView: View {
     @State private var showDeleteConfirm: Bool = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
-    @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(PlanLimitsManager.self) private var planLimitsManager
 
     private let apiClient: APIClient
@@ -30,10 +29,15 @@ public struct ClientDetailView: View {
     public var body: some View {
         Group {
             if isLoading && client == nil {
-                ProgressView(tr("clients.loading.detail", "Cargando cliente..."))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                // In-List skeleton so the layout doesn't flash from ProgressView → content
+                List {
+                    ClientDetailSkeleton()
+                }
+                .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+                .background(SolennixColors.surfaceGrouped)
             } else if let client {
-                scrollContent(client)
+                hubList(client)
             } else {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
@@ -45,6 +49,31 @@ public struct ClientDetailView: View {
         .background(SolennixColors.surfaceGrouped)
         .navigationTitle(client?.name ?? tr("clients.title_singular", "Cliente"))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    NavigationLink(value: Route.clientForm(id: clientId)) {
+                        Label(tr("clients.action.edit", "Editar"), systemImage: "pencil")
+                    }
+
+                    NavigationLink(value: Route.eventForm(clientId: clientId)) {
+                        Label(tr("clients.action.create_event", "Nuevo evento"), systemImage: "calendar.badge.plus")
+                    }
+
+                    Divider()
+
+                    Button(role: .destructive) {
+                        showDeleteConfirm = true
+                    } label: {
+                        Label(tr("clients.delete.confirm", "Eliminar"), systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .foregroundStyle(SolennixColors.primary)
+                        .accessibilityLabel(tr("clients.detail.action.more", "Acciones del cliente"))
+                }
+            }
+        }
         .confirmationDialog(
             tr("clients.delete.title", "Eliminar cliente"),
             isPresented: $showDeleteConfirm
@@ -61,91 +90,271 @@ public struct ClientDetailView: View {
             }
             Button(tr("clients.delete.cancel", "Cancelar"), role: .cancel) {}
         } message: {
-            Text(trf("clients.delete.message_full", "¿Estás seguro de que quieres eliminar a %@? Esta acción no se puede deshacer.", client?.name ?? tr("clients.title_singular", "este cliente")))
+            Text(trf(
+                "clients.delete.message_full",
+                "¿Estás seguro de que quieres eliminar a %@? Esta acción no se puede deshacer.",
+                client?.name ?? tr("clients.title_singular", "este cliente")
+            ))
+        }
+        .alert(tr("clients.error.title", "Error"), isPresented: Binding(
+            get: { errorMessage != nil },
+            set: { if !$0 { errorMessage = nil } }
+        )) {
+            Button(tr("clients.action.ok", "OK"), role: .cancel) {}
+        } message: {
+            Text(errorMessage ?? "")
         }
         .task { await loadData() }
     }
 
-    // MARK: - Scroll Content
+    // MARK: - Hub List
 
-    private func scrollContent(_ client: Client) -> some View {
-        let isRegularWidth = sizeClass == .regular
-        return ScrollView {
-            VStack(spacing: Spacing.lg) {
-                headerCard(client)
-
-                clientInsightsCard
-
-                AdaptiveDetailLayout {
-                    // Left: Contact info, notes
-                    contactSection(client)
-                } right: {
-                    // Right: Stats (in header), recent events
-                    eventHistorySection
-                }
-
-                actionButtons
+    private func hubList(_ client: Client) -> some View {
+        List {
+            // MARK: Header section — avatar + name + stat boxes
+            Section {
+                clientHeaderCard(client)
             }
-            .padding(.horizontal, isRegularWidth ? Spacing.xl : Spacing.md)
-            .padding(.vertical, isRegularWidth ? Spacing.xl : Spacing.lg)
+            .listRowSeparator(.hidden)
+
+            // MARK: Contact section
+            Section {
+                contactChipsCard(client)
+            }
+            .listRowSeparator(.hidden)
+
+            // MARK: Address row (informational only — no fake tappability)
+            if let address = client.address, !address.isEmpty {
+                Section {
+                    addressRow(address: address, city: client.city)
+                }
+                .listRowSeparator(.hidden)
+            } else if let city = client.city, !city.isEmpty {
+                Section {
+                    addressRow(address: nil, city: city)
+                }
+                .listRowSeparator(.hidden)
+            }
+
+            // MARK: Primary action — Nuevo evento
+            Section {
+                NavigationLink(value: Route.eventForm(clientId: clientId)) {
+                    HStack(spacing: Spacing.sm) {
+                        Image(systemName: "calendar.badge.plus")
+                            .font(.body)
+                        Text(tr("clients.action.create_event", "Nuevo evento para este cliente"))
+                            .font(.body.weight(.medium))
+                        Spacer()
+                    }
+                    .foregroundStyle(SolennixColors.primary)
+                    .frame(minHeight: 44)
+                }
+                .listRowBackground(SolennixColors.primaryLight)
+                .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+            }
+
+            // MARK: Insights section
+            if !sortedCompletedEvents.isEmpty {
+                Section {
+                    clientInsightsCard
+                }
+                .listRowSeparator(.hidden)
+            }
+
+            // MARK: Event history section
+            Section(
+                header: Text(
+                    trf("clients.events.history_count", "Historial de eventos (%lld)", events.count)
+                )
+                .font(.caption)
+                .foregroundStyle(SolennixColors.textSecondary)
+            ) {
+                if sortedEvents.isEmpty {
+                    HStack {
+                        Spacer()
+                        VStack(spacing: Spacing.sm) {
+                            Image(systemName: "calendar")
+                                .font(.title)
+                                .foregroundStyle(SolennixColors.textTertiary)
+                            Text(tr("clients.events.empty", "Este cliente aún no tiene eventos"))
+                                .font(.subheadline)
+                                .foregroundStyle(SolennixColors.textSecondary)
+                        }
+                        .padding(.vertical, Spacing.xl)
+                        Spacer()
+                    }
+                    .listRowBackground(SolennixColors.card)
+                    .listRowSeparator(.hidden)
+                } else {
+                    ForEach(sortedEvents) { event in
+                        NavigationLink(value: Route.eventDetail(id: event.id)) {
+                            eventRow(event)
+                        }
+                        .buttonStyle(.plain)
+                        .listRowBackground(SolennixColors.card)
+                        .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+                        .accessibilityElement(children: .combine)
+                    }
+                }
+            }
+
+            // MARK: Notes section
+            if let notes = client.notes, !notes.isEmpty {
+                Section {
+                    VStack(alignment: .leading, spacing: Spacing.sm) {
+                        HStack(spacing: Spacing.sm) {
+                            Image(systemName: "note.text")
+                                .font(.caption)
+                                .foregroundStyle(SolennixColors.primary)
+                            Text(tr("clients.detail.notes", "Notas"))
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(SolennixColors.textSecondary)
+                        }
+                        Text(notes)
+                            .font(.caption)
+                            .foregroundStyle(SolennixColors.textSecondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .listRowBackground(SolennixColors.card)
+                    .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+                }
+            }
         }
-        .refreshable { await loadData() }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(SolennixColors.surfaceGrouped)
+        .softScrollEdgeEffectIfAvailable()
+        .refreshable {
+            // Does NOT clear arrays — avoids skeleton flash on pull-to-refresh.
+            await loadData()
+        }
     }
 
     // MARK: - Header Card
 
-    private func headerCard(_ client: Client) -> some View {
+    private func clientHeaderCard(_ client: Client) -> some View {
         VStack(spacing: Spacing.md) {
             Avatar(name: client.name, photoURL: client.photoUrl, size: 72)
 
             Text(client.name)
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.title2.weight(.bold))
                 .foregroundStyle(SolennixColors.text)
 
-            // Stats row
-            HStack(spacing: Spacing.md) {
-                statBox(
-                    icon: "calendar",
-                    value: "\(client.totalEvents ?? 0)",
-                    label: tr("clients.stats.events", "Eventos")
-                )
+            // Stats: 2×2 LazyVGrid only when all 4 boxes are present (pendingBalance available
+            // and avg computable). Falls back to a plain HStack for 2–3 boxes so there is never
+            // an orphaned cell in the right column.
+            let hasAvg = (client.totalEvents ?? 0) > 0 && (client.totalSpent ?? 0) > 0
+            let hasBalance = client.pendingBalance != nil
+            let useGrid = hasAvg && hasBalance
 
-                statBox(
-                    icon: "dollarsign.circle",
-                    value: (client.totalSpent ?? 0).asMXN,
-                    label: tr("clients.stats.total", "Total")
-                )
-
-                if let totalEvents = client.totalEvents, totalEvents > 0,
-                   let totalSpent = client.totalSpent, totalSpent > 0 {
+            if useGrid {
+                LazyVGrid(
+                    columns: [
+                        GridItem(.flexible(), spacing: Spacing.md),
+                        GridItem(.flexible(), spacing: Spacing.md)
+                    ],
+                    spacing: Spacing.md
+                ) {
                     statBox(
-                        icon: "chart.bar",
-                        value: (totalSpent / Double(totalEvents)).asMXN,
-                        label: tr("clients.stats.average", "Promedio")
+                        icon: "calendar",
+                        value: "\(client.totalEvents ?? 0)",
+                        label: tr("clients.stats.events", "Eventos"),
+                        a11yLabel: trf("clients.detail.a11y.stat_events", "Eventos: %lld", client.totalEvents ?? 0)
                     )
+
+                    statBox(
+                        icon: "dollarsign.circle",
+                        value: (client.totalSpent ?? 0).asMXN,
+                        label: tr("clients.stats.total", "Total"),
+                        a11yLabel: "\(tr("clients.stats.total", "Total gastado")): \((client.totalSpent ?? 0).asMXN)"
+                    )
+
+                    if let totalEvents = client.totalEvents, totalEvents > 0,
+                       let totalSpent = client.totalSpent, totalSpent > 0 {
+                        let avg = totalSpent / Double(totalEvents)
+                        statBox(
+                            icon: "chart.bar",
+                            value: avg.asMXN,
+                            label: tr("clients.stats.average", "Promedio"),
+                            a11yLabel: "\(tr("clients.stats.average", "Ticket promedio")): \(avg.asMXN)"
+                        )
+                    }
+
+                    if let balance = client.pendingBalance {
+                        let isOverpaid = balance < 0
+                        let isSettled = balance == 0
+                        let label = isOverpaid
+                            ? tr("clients.stats.pending_balance_credit", "A favor")
+                            : tr("clients.stats.pending_balance", "Por cobrar")
+                        let valueColor: Color = isSettled
+                            ? SolennixColors.success
+                            : isOverpaid ? SolennixColors.info : SolennixColors.warning
+                        let formattedBalance = abs(balance).asMXN
+                        let a11yLabel = isOverpaid
+                            ? trf("clients.detail.a11y.stat_credit", "A favor: %@", formattedBalance)
+                            : trf("clients.detail.a11y.stat_pending_balance", "Por cobrar: %@", formattedBalance)
+
+                        statBox(
+                            icon: isOverpaid ? "checkmark.circle" : "clock.badge.exclamationmark",
+                            value: formattedBalance,
+                            label: label,
+                            valueColor: valueColor,
+                            a11yLabel: a11yLabel
+                        )
+                    }
+                }
+            } else {
+                HStack(spacing: Spacing.md) {
+                    statBox(
+                        icon: "calendar",
+                        value: "\(client.totalEvents ?? 0)",
+                        label: tr("clients.stats.events", "Eventos"),
+                        a11yLabel: trf("clients.detail.a11y.stat_events", "Eventos: %lld", client.totalEvents ?? 0)
+                    )
+
+                    statBox(
+                        icon: "dollarsign.circle",
+                        value: (client.totalSpent ?? 0).asMXN,
+                        label: tr("clients.stats.total", "Total"),
+                        a11yLabel: "\(tr("clients.stats.total", "Total gastado")): \((client.totalSpent ?? 0).asMXN)"
+                    )
+
+                    if let totalEvents = client.totalEvents, totalEvents > 0,
+                       let totalSpent = client.totalSpent, totalSpent > 0 {
+                        let avg = totalSpent / Double(totalEvents)
+                        statBox(
+                            icon: "chart.bar",
+                            value: avg.asMXN,
+                            label: tr("clients.stats.average", "Promedio"),
+                            a11yLabel: "\(tr("clients.stats.average", "Ticket promedio")): \(avg.asMXN)"
+                        )
+                    }
                 }
             }
         }
         .padding(Spacing.lg)
         .frame(maxWidth: .infinity)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-        .shadowSm()
+        .listRowBackground(SolennixColors.card)
+        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
 
     // MARK: - Stat Box
 
-    private func statBox(icon: String, value: String, label: String) -> some View {
+    private func statBox(
+        icon: String,
+        value: String,
+        label: String,
+        valueColor: Color = SolennixColors.text,
+        a11yLabel: String
+    ) -> some View {
         VStack(spacing: Spacing.xs) {
             Image(systemName: icon)
                 .font(.body)
                 .foregroundStyle(SolennixColors.primary)
 
             Text(value)
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundStyle(SolennixColors.text)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(valueColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
 
@@ -157,203 +366,153 @@ public struct ClientDetailView: View {
         .padding(.vertical, Spacing.sm)
         .background(SolennixColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(a11yLabel)
     }
 
-    // MARK: - Contact Section
+    // MARK: - Contact Chips Card (actionable: call, whatsapp, email)
 
-    private func contactSection(_ client: Client) -> some View {
-        VStack(spacing: Spacing.sm) {
-            // Phone
-            if !client.phone.isEmpty {
-                contactRow(
-                    icon: "phone.fill",
-                    iconBg: SolennixColors.success,
-                    text: client.phone
-                ) {
-                    if let url = URL(string: "tel:\(client.phone)") {
-                        openURL(url)
-                    }
-                }
-            }
+    private func contactChipsCard(_ client: Client) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            // Name + city sub-header
+            HStack(spacing: Spacing.sm) {
+                Image(systemName: "person.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(SolennixColors.primary)
 
-            // Email
-            if let email = client.email, !email.isEmpty {
-                contactRow(
-                    icon: "envelope.fill",
-                    iconBg: SolennixColors.info,
-                    text: email
-                ) {
-                    if let url = URL(string: "mailto:\(email)") {
-                        openURL(url)
-                    }
-                }
-            }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(client.name)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(SolennixColors.text)
 
-            // Address
-            if let address = client.address, !address.isEmpty {
-                let fullAddress = [address, client.city].compactMap { $0 }.joined(separator: ", ")
-                contactRow(
-                    icon: "mappin",
-                    iconBg: SolennixColors.warning,
-                    text: fullAddress
-                )
-            } else if let city = client.city, !city.isEmpty {
-                contactRow(
-                    icon: "mappin",
-                    iconBg: SolennixColors.warning,
-                    text: city
-                )
-            }
-
-            // Notes
-            if let notes = client.notes, !notes.isEmpty {
-                contactRow(
-                    icon: "note.text",
-                    iconBg: SolennixColors.primary.opacity(0.1),
-                    iconFg: SolennixColors.primary,
-                    text: notes
-                )
-            }
-        }
-    }
-
-    // MARK: - Contact Row
-
-    private func contactRow(
-        icon: String,
-        iconBg: Color,
-        iconFg: Color = .white,
-        text: String,
-        action: (() -> Void)? = nil
-    ) -> some View {
-        Button {
-            action?()
-        } label: {
-            HStack(spacing: Spacing.md) {
-                Image(systemName: icon)
-                    .font(.body)
-                    .foregroundStyle(iconFg)
-                    .frame(width: 36, height: 36)
-                    .background(iconBg)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-
-                Text(text)
-                    .font(.body)
-                    .foregroundStyle(SolennixColors.text)
-                    .multilineTextAlignment(.leading)
-
-                Spacer()
-
-                if action != nil {
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textTertiary)
-                }
-            }
-            .padding(Spacing.md)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        }
-        .buttonStyle(.plain)
-        .disabled(action == nil)
-    }
-
-    // MARK: - Action Buttons
-
-    private var actionButtons: some View {
-        HStack(spacing: Spacing.sm) {
-            NavigationLink(value: Route.eventForm(clientId: clientId)) {
-                actionButton(
-                    icon: "calendar.badge.plus",
-                    label: tr("clients.action.create_event", "Crear evento"),
-                    fg: SolennixColors.primary
-                )
-            }
-
-            NavigationLink(value: Route.clientForm(id: clientId)) {
-                actionButton(
-                    icon: "pencil",
-                    label: tr("clients.action.edit", "Editar"),
-                    fg: SolennixColors.info
-                )
-            }
-
-            Button {
-                showDeleteConfirm = true
-            } label: {
-                actionButton(
-                    icon: "trash",
-                    label: tr("clients.delete.confirm", "Eliminar"),
-                    fg: SolennixColors.error
-                )
-            }
-        }
-    }
-
-    private func actionButton(icon: String, label: String, fg: Color) -> some View {
-        VStack(spacing: Spacing.xs) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundStyle(fg)
-
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(SolennixColors.textSecondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadowSm()
-    }
-
-    // MARK: - Event History Section
-
-    private var eventHistorySection: some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
-            Text(trf("clients.events.history_count", "Historial de eventos (\(events.count))", events.count))
-                .font(.headline)
-                .foregroundStyle(SolennixColors.text)
-                .padding(.horizontal, Spacing.xs)
-
-            if events.isEmpty {
-                HStack {
-                    Spacer()
-                    VStack(spacing: Spacing.sm) {
-                        Image(systemName: "calendar")
-                            .font(.title)
-                            .foregroundStyle(SolennixColors.textTertiary)
-                        Text(tr("clients.events.empty", "Este cliente aún no tiene eventos"))
-                            .font(.subheadline)
+                    if let city = client.city, !city.isEmpty {
+                        Text(city)
+                            .font(.caption)
                             .foregroundStyle(SolennixColors.textSecondary)
                     }
-                    .padding(.vertical, Spacing.xl)
-                    Spacer()
                 }
-            } else {
-                let sortedEvents = events.sorted { $0.eventDate > $1.eventDate }
-                ForEach(sortedEvents) { event in
-                    NavigationLink(value: Route.eventDetail(id: event.id)) {
-                        eventRow(event)
+
+                Spacer()
+            }
+
+            // Action chips
+            if !client.phone.isEmpty || (client.email != nil && !(client.email?.isEmpty ?? true)) {
+                HStack(spacing: Spacing.sm) {
+                    if !client.phone.isEmpty {
+                        contactChip(
+                            icon: "phone.fill",
+                            label: tr("clients.detail.action.call", "Llamar"),
+                            url: URL(string: "tel:\(client.phone.filter { $0.isNumber || $0 == "+" })"),
+                            a11yLabel: "\(tr("clients.detail.action.call", "Llamar")) a \(client.phone)"
+                        )
                     }
-                    .buttonStyle(.plain)
+
+                    if let digits = whatsappDigits(for: client.phone) {
+                        contactChip(
+                            icon: "message.fill",
+                            label: tr("clients.detail.action.whatsapp", "WhatsApp"),
+                            url: URL(string: "https://wa.me/\(digits)"),
+                            a11yLabel: "WhatsApp: \(client.name)"
+                        )
+                    }
+
+                    if let email = client.email, !email.isEmpty {
+                        contactChip(
+                            icon: "envelope.fill",
+                            label: tr("clients.detail.action.email", "Email"),
+                            url: URL(string: "mailto:\(email)"),
+                            a11yLabel: "Email: \(client.name)"
+                        )
+                    }
                 }
             }
         }
+        .padding(Spacing.md)
+        .listRowBackground(SolennixColors.card)
+        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
+
+    @ViewBuilder
+    private func contactChip(icon: String, label: String, url: URL?, a11yLabel: String) -> some View {
+        Button {
+            if let url { openURL(url) }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.caption.weight(.semibold))
+                Text(label)
+                    .font(.caption.weight(.semibold))
+            }
+            .foregroundStyle(SolennixColors.primary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(SolennixColors.primaryLight)
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .frame(minHeight: 44)
+        .accessibilityLabel(a11yLabel)
+    }
+
+    /// Returns stripped digit string for WhatsApp deep-link, or nil if fewer than 8 digits.
+    private func whatsappDigits(for phone: String) -> String? {
+        let digits = phone.filter(\.isNumber)
+        return digits.count >= 8 ? digits : nil
+    }
+
+    // MARK: - Address Row (informational — no chevron, not tappable)
+
+    private func addressRow(address: String?, city: String?) -> some View {
+        let text: String = {
+            if let address, !address.isEmpty {
+                return [address, city].compactMap { v in
+                    guard let v, !v.isEmpty else { return nil }
+                    return v
+                }.joined(separator: ", ")
+            }
+            return city ?? ""
+        }()
+
+        return HStack(spacing: Spacing.md) {
+            ZStack {
+                RoundedRectangle(cornerRadius: CornerRadius.md)
+                    .fill(SolennixColors.warning.opacity(0.15))
+                    .frame(width: cappedIconSize, height: cappedIconSize)
+                Image(systemName: "mappin")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(SolennixColors.warning)
+            }
+
+            Text(text)
+                .font(.body)
+                .foregroundStyle(SolennixColors.text)
+                .multilineTextAlignment(.leading)
+
+            Spacer()
+        }
+        .padding(Spacing.md)
+        .listRowBackground(SolennixColors.card)
+        .listRowInsets(EdgeInsets(top: 0, leading: Spacing.md, bottom: 0, trailing: Spacing.md))
+    }
+
+    // MARK: - @ScaledMetric icon sizes (Dynamic Type-safe)
+
+    @ScaledMetric(relativeTo: .body) private var scaledIconSize: CGFloat = 36
+    /// Cap icon frames so they don't balloon at AX text sizes.
+    private var cappedIconSize: CGFloat { min(scaledIconSize, 54) }
+
+    @ScaledMetric(relativeTo: .body) private var scaledDateBoxSize: CGFloat = 48
+    private var cappedDateBoxSize: CGFloat { min(scaledDateBoxSize, 72) }
 
     // MARK: - Event Row
 
     private func eventRow(_ event: Event) -> some View {
         HStack(spacing: Spacing.md) {
-            // Date box
             dateBox(event.eventDate)
 
-            // Details
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 Text(event.serviceType)
-                    .font(.body)
-                    .fontWeight(.semibold)
+                    .font(.body.weight(.semibold))
                     .foregroundStyle(SolennixColors.text)
 
                 HStack(spacing: Spacing.sm) {
@@ -372,17 +531,10 @@ public struct ClientDetailView: View {
             Spacer()
 
             Text(event.totalAmount.asMXN)
-                .font(.subheadline)
-                .fontWeight(.medium)
+                .font(.subheadline.weight(.medium))
                 .foregroundStyle(SolennixColors.text)
-
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundStyle(SolennixColors.textTertiary)
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
     }
 
     // MARK: - Date Box
@@ -391,24 +543,20 @@ public struct ClientDetailView: View {
         let components = parseDateComponents(dateString)
         return VStack(spacing: Spacing.xxs) {
             Text(components.month)
-                .font(.caption2)
-                .fontWeight(.semibold)
+                .font(.caption2.weight(.semibold))
                 .foregroundStyle(SolennixColors.primary)
                 .textCase(.uppercase)
 
             Text(components.day)
-                .font(.title3)
-                .fontWeight(.bold)
+                .font(.title3.weight(.bold))
                 .foregroundStyle(SolennixColors.text)
         }
-        .frame(width: 48, height: 48)
+        .frame(width: cappedDateBoxSize, height: cappedDateBoxSize)
         .background(SolennixColors.primaryLight)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
     }
 
     private func parseDateComponents(_ dateString: String) -> (month: String, day: String) {
-        // Use fromServerDay (UTC parse) then UTC display formatters for a stable
-        // day — avoids shift for users west of UTC.
         guard let date = Date.fromServerDay(dateString) else {
             return ("---", "--")
         }
@@ -418,7 +566,21 @@ public struct ClientDetailView: View {
         )
     }
 
-    // MARK: - Premium: Client Insights Card
+    // MARK: - Sorted Events (computed once, not inside ForEach)
+
+    /// All events sorted descending by date prefix (robust string sort for yyyy-MM-dd).
+    private var sortedEvents: [Event] {
+        events.sorted { String($0.eventDate.prefix(10)) > String($1.eventDate.prefix(10)) }
+    }
+
+    /// Completed + confirmed events sorted ascending for insights chart.
+    private var sortedCompletedEvents: [Event] {
+        events
+            .filter { $0.status == .completed || $0.status == .confirmed }
+            .sorted { String($0.eventDate.prefix(10)) < String($1.eventDate.prefix(10)) }
+    }
+
+    // MARK: - Insights Card
 
     private struct EventRevenuePoint: Identifiable {
         let id: String
@@ -428,16 +590,12 @@ public struct ClientDetailView: View {
 
     @ViewBuilder
     private var clientInsightsCard: some View {
-        let completedEvents = events
-            .filter { $0.status == .completed || $0.status == .confirmed }
-            .sorted { $0.eventDate < $1.eventDate }
+        let completedEvents = sortedCompletedEvents
 
         if !completedEvents.isEmpty {
             let isPremium = !planLimitsManager.isBasicPlan
 
             let points: [EventRevenuePoint] = completedEvents.suffix(6).map { event in
-                // fromServerDay parses in UTC; formattedServerDay displays in UTC
-                // for a stable calendar-day label regardless of device timezone.
                 let label = Date.fromServerDay(event.eventDate)
                     .map { $0.formattedServerDay(style: "d MMM", locale: FeatureL10n.locale) }
                     ?? String(event.eventDate.prefix(10))
@@ -446,6 +604,9 @@ public struct ClientDetailView: View {
 
             let topServiceType = Dictionary(grouping: completedEvents, by: \.serviceType)
                 .max(by: { $0.value.count < $1.value.count })?.key ?? ""
+
+            // Average ticket over ALL completed+confirmed events (not just the 6-event chart slice)
+            let avgTicket = completedEvents.reduce(0.0) { $0 + $1.totalAmount } / Double(completedEvents.count)
 
             VStack(alignment: .leading, spacing: Spacing.md) {
                 HStack {
@@ -457,8 +618,7 @@ public struct ClientDetailView: View {
                     Spacer()
                     if !isPremium {
                         Label(tr("clients.insights.pro", "Pro"), systemImage: "bolt.fill")
-                            .font(.caption2)
-                            .fontWeight(.bold)
+                            .font(.caption2.weight(.bold))
                             .foregroundStyle(SolennixColors.primary)
                             .padding(.horizontal, Spacing.sm)
                             .padding(.vertical, 3)
@@ -505,11 +665,10 @@ public struct ClientDetailView: View {
                             value: topServiceType
                         )
                         if completedEvents.count > 1 {
-                            let avg = completedEvents.reduce(0.0) { $0 + $1.totalAmount } / Double(completedEvents.count)
                             insightBadge(
                                 icon: "arrow.up.right",
                                 label: tr("clients.insights.average_ticket", "Ticket promedio"),
-                                value: avg.asMXN
+                                value: avgTicket.asMXN
                             )
                         }
                     }
@@ -517,15 +676,14 @@ public struct ClientDetailView: View {
 
                 if !isPremium {
                     NavigationLink(value: Route.pricing) {
-                        UpgradeBannerView(type: .upsell, onUpgrade: {})
+                        UpgradeBannerView(type: .upsell)
                     }
                     .buttonStyle(.plain)
                 }
             }
             .padding(Spacing.md)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-            .shadowSm()
+            .listRowBackground(SolennixColors.card)
+            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
         }
     }
 
@@ -540,8 +698,7 @@ public struct ClientDetailView: View {
                     .foregroundStyle(SolennixColors.textSecondary)
             }
             Text(value)
-                .font(.subheadline)
-                .fontWeight(.semibold)
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(SolennixColors.text)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
@@ -557,8 +714,8 @@ public struct ClientDetailView: View {
     @MainActor
     private func loadData() async {
         isLoading = true
-        errorMessage = nil
-
+        // errorMessage is NOT cleared here so existing errors remain visible during
+        // pull-to-refresh; they will be replaced if the new load succeeds or fails.
         do {
             async let clientResult: Client = apiClient.get(Endpoint.client(clientId))
             async let eventsResult: [Event] = apiClient.getAll(
@@ -568,6 +725,7 @@ public struct ClientDetailView: View {
 
             client = try await clientResult
             events = try await eventsResult
+            errorMessage = nil
         } catch {
             if let apiError = error as? APIError {
                 errorMessage = apiError.errorDescription
@@ -579,6 +737,8 @@ public struct ClientDetailView: View {
         isLoading = false
     }
 
+    // MARK: - Localization helpers
+
     private func tr(_ key: String, _ value: String) -> String {
         FeatureL10n.text(key, value)
     }
@@ -586,7 +746,103 @@ public struct ClientDetailView: View {
     private func trf(_ key: String, _ value: String, _ arg: CVarArg) -> String {
         FeatureL10n.format(key, value, arg)
     }
+}
 
+// MARK: - Client Detail Skeleton (in-List placeholder rows)
+
+struct ClientDetailSkeleton: View {
+    @ScaledMetric(relativeTo: .body) private var avatarSize: CGFloat = 72
+    @ScaledMetric(relativeTo: .body) private var dateBoxSize: CGFloat = 48
+
+    var body: some View {
+        // Header skeleton — avatar + name + stat boxes
+        Section {
+            VStack(spacing: Spacing.md) {
+                Circle()
+                    .fill(SolennixColors.surfaceAlt)
+                    .frame(width: min(avatarSize, 96), height: min(avatarSize, 96))
+
+                SkeletonLine(width: 160, height: 22)
+
+                HStack(spacing: Spacing.md) {
+                    ForEach(0..<3, id: \.self) { _ in
+                        VStack(spacing: Spacing.xs) {
+                            SkeletonLine(width: 20, height: 14)
+                            SkeletonLine(width: 60, height: 16)
+                            SkeletonLine(width: 40, height: 12)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Spacing.sm)
+                        .background(SolennixColors.surface)
+                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    }
+                }
+            }
+            .padding(Spacing.lg)
+            .frame(maxWidth: .infinity)
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+        }
+
+        // Contact chips skeleton — single row mirroring contactChipsCard's one-VStack layout
+        Section {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                HStack(spacing: Spacing.sm) {
+                    Circle()
+                        .fill(SolennixColors.surfaceAlt)
+                        .frame(width: 32, height: 32)
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        SkeletonLine(width: 140, height: 14)
+                        SkeletonLine(width: 80, height: 12)
+                    }
+                    Spacer()
+                }
+                HStack(spacing: Spacing.sm) {
+                    ForEach(0..<3, id: \.self) { _ in
+                        SkeletonLine(width: 72, height: 28)
+                            .clipShape(Capsule())
+                    }
+                }
+            }
+            .padding(Spacing.md)
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+        }
+
+        // Insights chart skeleton
+        Section {
+            VStack(alignment: .leading, spacing: Spacing.md) {
+                SkeletonLine(width: 160, height: 18)
+                SkeletonLine(height: 130)
+            }
+            .padding(Spacing.md)
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+        }
+
+        // Event rows skeleton
+        Section {
+            ForEach(0..<3, id: \.self) { _ in
+                HStack(spacing: Spacing.md) {
+                    RoundedRectangle(cornerRadius: CornerRadius.md)
+                        .fill(SolennixColors.surfaceAlt)
+                        .frame(
+                            width: min(dateBoxSize, 72),
+                            height: min(dateBoxSize, 72)
+                        )
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        SkeletonLine(width: 140, height: 16)
+                        SkeletonLine(width: 90, height: 12)
+                    }
+                    Spacer()
+                    SkeletonLine(width: 70, height: 16)
+                }
+                .padding(Spacing.md)
+                .listRowBackground(SolennixColors.card)
+                .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+            }
+        }
+    }
 }
 
 // MARK: - Preview

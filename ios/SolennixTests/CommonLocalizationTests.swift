@@ -68,18 +68,6 @@ final class CommonLocalizationTests: XCTestCase {
         XCTAssertEqual(CommonStrings.swipeActionTipMessage, "Swipe list items left or right to see more options like edit, delete, or call.")
     }
 
-    // MARK: - FAB Tests
-
-    func testNewEventLabel_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.newEventLabel, "Nuevo Evento")
-    }
-
-    func testNewEventLabel_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.newEventLabel, "New Event")
-    }
-
     // MARK: - Paywall Tests
 
     func testPaywallTitle_Spanish() {
