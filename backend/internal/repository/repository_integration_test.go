@@ -117,6 +117,156 @@ func TestClientRepoIntegration(t *testing.T) {
 	}
 }
 
+func TestClientPendingBalanceIntegration(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userID := seedUser(t, pool, "pending.balance@test.dev")
+	clientID := seedClient(t, pool, userID, "Balance Client")
+	repo := NewClientRepo(pool)
+
+	// No events yet — pending_balance must be 0.
+	got, err := repo.GetByID(context.Background(), clientID, userID)
+	if err != nil {
+		t.Fatalf("GetByID() error = %v", err)
+	}
+	if got.PendingBalance != 0 {
+		t.Fatalf("PendingBalance with no events = %v, want 0", got.PendingBalance)
+	}
+
+	// Seed a quoted event with total_amount = 8000 — must NOT count toward pending_balance.
+	_, err = pool.Exec(context.Background(), `
+		INSERT INTO events (user_id, client_id, event_date, service_type, num_people, status, total_amount)
+		VALUES ($1, $2, '2026-07-01', 'banquete', 30, 'quoted', 8000)
+	`, userID, clientID)
+	if err != nil {
+		t.Fatalf("seed quoted event: %v", err)
+	}
+
+	got, err = repo.GetByID(context.Background(), clientID, userID)
+	if err != nil {
+		t.Fatalf("GetByID() error after quoted event = %v", err)
+	}
+	if got.PendingBalance != 0 {
+		t.Fatalf("PendingBalance with only quoted event = %v, want 0", got.PendingBalance)
+	}
+
+	// Seed a quoted event with a payment — payment must also NOT count.
+	var quotedWithPaymentEventID uuid.UUID
+	err = pool.QueryRow(context.Background(), `
+		INSERT INTO events (user_id, client_id, event_date, service_type, num_people, status, total_amount)
+		VALUES ($1, $2, '2026-07-15', 'catering', 20, 'quoted', 5000)
+		RETURNING id
+	`, userID, clientID).Scan(&quotedWithPaymentEventID)
+	if err != nil {
+		t.Fatalf("seed quoted event with payment: %v", err)
+	}
+	_, err = pool.Exec(context.Background(), `
+		INSERT INTO payments (event_id, user_id, amount, payment_date, payment_method)
+		VALUES ($1, $2, 2000, '2026-07-15', 'cash')
+	`, quotedWithPaymentEventID, userID)
+	if err != nil {
+		t.Fatalf("seed payment on quoted event: %v", err)
+	}
+
+	got, err = repo.GetByID(context.Background(), clientID, userID)
+	if err != nil {
+		t.Fatalf("GetByID() error after quoted event with payment = %v", err)
+	}
+	if got.PendingBalance != 0 {
+		t.Fatalf("PendingBalance with quoted events (one with payment) = %v, want 0", got.PendingBalance)
+	}
+
+	// Seed one confirmed event with total_amount = 10000.
+	var eventID uuid.UUID
+	err = pool.QueryRow(context.Background(), `
+		INSERT INTO events (user_id, client_id, event_date, service_type, num_people, status, total_amount)
+		VALUES ($1, $2, '2026-08-01', 'banquete', 50, 'confirmed', 10000)
+		RETURNING id
+	`, userID, clientID).Scan(&eventID)
+	if err != nil {
+		t.Fatalf("seed event: %v", err)
+	}
+
+	// No payments yet on confirmed event — pending_balance = 10000.
+	got, err = repo.GetByID(context.Background(), clientID, userID)
+	if err != nil {
+		t.Fatalf("GetByID() error = %v", err)
+	}
+	if got.PendingBalance != 10000 {
+		t.Fatalf("PendingBalance (no payments) = %v, want 10000", got.PendingBalance)
+	}
+
+	// Add a partial payment of 3000.
+	_, err = pool.Exec(context.Background(), `
+		INSERT INTO payments (event_id, user_id, amount, payment_date, payment_method)
+		VALUES ($1, $2, 3000, '2026-08-01', 'cash')
+	`, eventID, userID)
+	if err != nil {
+		t.Fatalf("seed payment: %v", err)
+	}
+
+	got, err = repo.GetByID(context.Background(), clientID, userID)
+	if err != nil {
+		t.Fatalf("GetByID() error = %v", err)
+	}
+	if got.PendingBalance != 7000 {
+		t.Fatalf("PendingBalance (partial payment) = %v, want 7000", got.PendingBalance)
+	}
+
+	// Seed a cancelled event with total_amount = 5000 — must NOT affect pending_balance.
+	_, err = pool.Exec(context.Background(), `
+		INSERT INTO events (user_id, client_id, event_date, service_type, num_people, status, total_amount)
+		VALUES ($1, $2, '2026-09-01', 'banquete', 20, 'cancelled', 5000)
+	`, userID, clientID)
+	if err != nil {
+		t.Fatalf("seed cancelled event: %v", err)
+	}
+
+	got, err = repo.GetByID(context.Background(), clientID, userID)
+	if err != nil {
+		t.Fatalf("GetByID() error = %v", err)
+	}
+	if got.PendingBalance != 7000 {
+		t.Fatalf("PendingBalance (after cancelled event) = %v, want 7000", got.PendingBalance)
+	}
+
+	// Full payment — pending_balance drops to 0.
+	_, err = pool.Exec(context.Background(), `
+		INSERT INTO payments (event_id, user_id, amount, payment_date, payment_method)
+		VALUES ($1, $2, 7000, '2026-08-02', 'transfer')
+	`, eventID, userID)
+	if err != nil {
+		t.Fatalf("seed full payment: %v", err)
+	}
+
+	got, err = repo.GetByID(context.Background(), clientID, userID)
+	if err != nil {
+		t.Fatalf("GetByID() error = %v", err)
+	}
+	if got.PendingBalance != 0 {
+		t.Fatalf("PendingBalance (fully paid) = %v, want 0", got.PendingBalance)
+	}
+
+	// Overpayment — result must be negative (not clamped).
+	_, err = pool.Exec(context.Background(), `
+		INSERT INTO payments (event_id, user_id, amount, payment_date, payment_method)
+		VALUES ($1, $2, 500, '2026-08-03', 'cash')
+	`, eventID, userID)
+	if err != nil {
+		t.Fatalf("seed overpayment: %v", err)
+	}
+
+	got, err = repo.GetByID(context.Background(), clientID, userID)
+	if err != nil {
+		t.Fatalf("GetByID() error = %v", err)
+	}
+	if got.PendingBalance != -500 {
+		t.Fatalf("PendingBalance (overpaid) = %v, want -500", got.PendingBalance)
+	}
+}
+
 func TestPaymentRepoIntegration(t *testing.T) {
 	pool := openTestPool(t)
 	defer pool.Close()

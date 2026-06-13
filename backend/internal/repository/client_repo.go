@@ -88,12 +88,28 @@ func (r *ClientRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offs
 
 func (r *ClientRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Client, error) {
 	c := &models.Client{}
-	query := `SELECT id, user_id, name, phone, email, address, city, notes, photo_url,
-		total_events, total_spent, created_at, updated_at
-		FROM clients WHERE id = $1 AND user_id = $2`
+	query := `
+		SELECT
+			c.id, c.user_id, c.name, c.phone, c.email, c.address, c.city, c.notes, c.photo_url,
+			c.total_events, c.total_spent,
+			COALESCE((
+				SELECT SUM(e.total_amount)
+				FROM events e
+				WHERE e.client_id = c.id AND e.status IN ('confirmed', 'completed')
+			), 0) -
+			COALESCE((
+				SELECT SUM(p.amount)
+				FROM payments p
+				JOIN events e ON e.id = p.event_id
+				WHERE e.client_id = c.id AND e.status IN ('confirmed', 'completed')
+			), 0) AS pending_balance,
+			c.created_at, c.updated_at
+		FROM clients c
+		WHERE c.id = $1 AND c.user_id = $2`
 	err := r.pool.QueryRow(ctx, query, id, userID).Scan(
 		&c.ID, &c.UserID, &c.Name, &c.Phone, &c.Email,
 		&c.Address, &c.City, &c.Notes, &c.PhotoURL, &c.TotalEvents, &c.TotalSpent,
+		&c.PendingBalance,
 		&c.CreatedAt, &c.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("client not found: %w", err)
