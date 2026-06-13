@@ -8,6 +8,7 @@ import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.InventoryType
 import com.creapolis.solennix.feature.inventory.InventoryStrings
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -77,13 +78,13 @@ class InventoryListViewModel @Inject constructor(
 
         // Server-side scope filter is applied at sync time; this client-side pass guards
         // against stale cached items of other types bleeding in while the new sync loads.
-        if (scope != InventoryScope.ALL) {
-            val expectedType = when (scope) {
-                InventoryScope.INGREDIENT -> InventoryType.INGREDIENT
-                InventoryScope.EQUIPMENT -> InventoryType.EQUIPMENT
-                InventoryScope.SUPPLY -> InventoryType.SUPPLY
-                InventoryScope.ALL -> null
-            }
+        val expectedType = when (scope) {
+            InventoryScope.INGREDIENT -> InventoryType.INGREDIENT
+            InventoryScope.EQUIPMENT -> InventoryType.EQUIPMENT
+            InventoryScope.SUPPLY -> InventoryType.SUPPLY
+            InventoryScope.ALL -> null
+        }
+        if (expectedType != null) {
             filtered = filtered.filter { it.type == expectedType }
         }
 
@@ -165,6 +166,8 @@ class InventoryListViewModel @Inject constructor(
             _isRefreshing.value = true
             try {
                 inventoryRepository.syncInventory(requestedScope.typeParam)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 if (_scope.value == requestedScope) {
                     _uiEvents.tryEmit(
