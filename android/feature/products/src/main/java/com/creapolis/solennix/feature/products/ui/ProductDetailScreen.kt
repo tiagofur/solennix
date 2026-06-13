@@ -45,10 +45,21 @@ fun ProductDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showDeleteDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(viewModel.deleteSuccess) {
         if (viewModel.deleteSuccess) {
+            viewModel.consumeDeleteSuccess()
             onNavigateBack()
+        }
+    }
+
+    // Surface post-load errors (e.g. delete failure) via Snackbar when product is loaded.
+    LaunchedEffect(uiState.errorMessage) {
+        val msg = uiState.errorMessage
+        if (msg != null && uiState.product != null) {
+            snackbarHostState.showSnackbar(msg)
+            viewModel.onErrorShown()
         }
     }
 
@@ -77,6 +88,7 @@ fun ProductDetailScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             SolennixTopAppBar(
                 title = { Text(ProductStrings.detailTitle) },
@@ -113,7 +125,8 @@ fun ProductDetailScreen(
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
-        } else if (uiState.errorMessage != null) {
+        } else if (uiState.errorMessage != null && uiState.product == null) {
+            // Full-screen error only on initial load failure. Post-load errors use SnackbarHost.
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Text(uiState.errorMessage.orEmpty(), color = SolennixTheme.colors.error)
             }
@@ -219,17 +232,20 @@ fun ProductDetailScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
+                            val marginValue = uiState.margin
+                            // Use semantic theme colors; null margin (no recipe) renders as "—"
                             val marginColor = when {
-                                uiState.margin >= 50 -> Color(0xFF4CAF50)
-                                uiState.margin >= 20 -> colors.primaryText
-                                else -> Color(0xFFFF9800)
+                                marginValue == null -> colors.secondaryText
+                                marginValue >= 50 -> colors.success
+                                marginValue >= 20 -> colors.primaryText
+                                else -> colors.warning
                             }
                             KpiCard(
                                 icon = Icons.AutoMirrored.Filled.TrendingUp,
                                 iconColor = marginColor,
                                 label = ProductStrings.marginEstimated,
-                                value = "%.1f%%".format(uiState.margin),
-                                subtitle = ProductStrings.marginSubtitle,
+                                value = if (marginValue != null) "%.1f%%".format(marginValue) else "—",
+                                subtitle = if (marginValue != null) ProductStrings.marginSubtitle else ProductStrings.noRecipeLabel,
                                 valueColor = marginColor,
                                 modifier = Modifier.weight(1f)
                             )
@@ -243,10 +259,26 @@ fun ProductDetailScreen(
                             )
                         }
 
-                        // Smart Alert
+                        // Smart Alert — demand windows precomputed here using the VM's
+                        // anchored 'today' to avoid repeated LocalDate.now() + parse on
+                        // every recomposition (fix #12).
+                        val today = viewModel.todayDate
+                        val in7Days = today.plusDays(7)
+                        val demand7Days = demandData.filter { dp ->
+                            try {
+                                val date = java.time.LocalDate.parse(dp.eventDate)
+                                !date.isBefore(today) && !date.isAfter(in7Days)
+                            } catch (_: Exception) { false }
+                        }.sumOf { it.quantity }
+                        val totalDemand = demandData.sumOf { it.quantity }
+                        val estimatedRevenue = demandData.sumOf { dp ->
+                            if (dp.unitPrice > 0) dp.revenue else dp.quantity * product.basePrice
+                        }
                         SmartAlertSection(
-                            demandData = demandData,
-                            basePrice = product.basePrice,
+                            demand7Days = demand7Days,
+                            totalDemand = totalDemand,
+                            estimatedRevenue = estimatedRevenue,
+                            demandDataSize = demandData.size,
                             colors = colors
                         )
 
@@ -370,28 +402,20 @@ private fun KpiCard(
 
 @Composable
 private fun SmartAlertSection(
-    demandData: List<DemandDataPoint>,
-    basePrice: Double,
+    demand7Days: Double,
+    totalDemand: Double,
+    estimatedRevenue: Double,
+    demandDataSize: Int,
     colors: com.creapolis.solennix.core.designsystem.theme.SolennixColorScheme
 ) {
-    val today = LocalDate.now()
-    val in7Days = today.plusDays(7)
-
-    val demand7Days = demandData.filter { dp ->
-        try {
-            val date = LocalDate.parse(dp.eventDate)
-            !date.isBefore(today) && !date.isAfter(in7Days)
-        } catch (_: Exception) { false }
-    }.sumOf { it.quantity }
-
-    val totalDemand = demandData.sumOf { it.quantity }
-    val estimatedRevenue = demandData.sumOf { dp ->
-        if (dp.unitPrice > 0) dp.revenue else dp.quantity * basePrice
-    }
-
     val isHighDemand = demand7Days > 0
     val bgColor = if (isHighDemand) colors.primary.copy(alpha = 0.08f) else colors.card
     val borderColor = if (isHighDemand) colors.primary.copy(alpha = 0.2f) else colors.divider
+
+    // Format demand7Days with up to 2 fraction digits, dropping trailing zeros
+    fun formatQty(qty: Double): String = if (qty == qty.toLong().toDouble()) {
+        qty.toLong().toString()
+    } else "%.2f".format(qty).trimEnd('0').trimEnd('.')
 
     Surface(
         shape = MaterialTheme.shapes.medium,
@@ -414,8 +438,8 @@ private fun SmartAlertSection(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = when {
-                        isHighDemand -> ProductStrings.unitsNext7Days(demand7Days)
-                        demandData.isNotEmpty() -> ProductStrings.noImmediateDemand
+                        isHighDemand -> ProductStrings.unitsNext7Days(formatQty(demand7Days))
+                        demandDataSize > 0 -> ProductStrings.noImmediateDemand
                         else -> ProductStrings.noUpcomingEvents
                     },
                     style = MaterialTheme.typography.titleSmall,
@@ -428,8 +452,8 @@ private fun SmartAlertSection(
                         isHighDemand && estimatedRevenue > 0 ->
                             ProductStrings.totalRevenueMessage(estimatedRevenue.asMXN())
                         isHighDemand -> ProductStrings.highDemandThisWeek
-                        demandData.isNotEmpty() ->
-                            ProductStrings.upcomingEventsSummary(totalDemand, demandData.size)
+                        demandDataSize > 0 ->
+                            ProductStrings.upcomingEventsSummary(formatQty(totalDemand), demandDataSize)
                         else -> ProductStrings.noConfirmedEventsIncludingProduct
                     },
                     style = MaterialTheme.typography.bodySmall,
