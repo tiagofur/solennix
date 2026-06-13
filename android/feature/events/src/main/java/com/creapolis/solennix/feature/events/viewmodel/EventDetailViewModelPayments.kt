@@ -29,6 +29,7 @@ fun EventDetailViewModel.addPayment(amount: Double, method: String, notes: Strin
             )
             paymentRepository.createPayment(newPayment)
             reloadEventSilently()
+            addPaymentSuccess = true
         } catch (e: Exception) {
             _errorMessage.value = tr(R.string.events_detail_error_add_payment, e.message.orEmpty())
         }
@@ -39,6 +40,8 @@ fun EventDetailViewModel.deletePayment(paymentId: String) {
     viewModelScope.launch {
         try {
             paymentRepository.deletePayment(paymentId)
+            reloadEventSilently()
+            deletePaymentSuccess = true
         } catch (e: Exception) {
             _errorMessage.value = tr(R.string.events_detail_error_delete_payment, e.message.orEmpty())
         }

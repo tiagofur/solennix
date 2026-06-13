@@ -2,7 +2,6 @@ package com.creapolis.solennix.feature.events.ui
 
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -88,6 +87,7 @@ fun EventDetailScreen(
     var showPhotoGallery by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showClientPortalSheet by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val windowInfoTracker = WindowInfoTracker.getOrCreate(context)
     val windowLayoutInfo by (context as? android.app.Activity)?.let { activity ->
@@ -109,6 +109,25 @@ fun EventDetailScreen(
         }
     }
 
+    // Surface post-load errors (e.g. delete/status failures) via Snackbar when event is loaded.
+    // Guard with event != null so we don't race with the full-screen error on initial load failure.
+    LaunchedEffect(uiState.errorMessage) {
+        val msg = uiState.errorMessage
+        if (msg != null && uiState.event != null) {
+            snackbarHostState.showSnackbar(msg)
+            viewModel.onErrorShown()
+        }
+    }
+
+    // Show success Snackbar only after the repository call confirms success (not optimistically).
+    val addPaymentSuccessLabel = stringResource(R.string.events_detail_payments_add_success)
+    LaunchedEffect(viewModel.addPaymentSuccess) {
+        if (viewModel.addPaymentSuccess) {
+            viewModel.consumeAddPaymentSuccess()
+            snackbarHostState.showSnackbar(addPaymentSuccessLabel)
+        }
+    }
+
     val sts = LocalSharedTransitionScope.current
     val avs = LocalNavAnimatedVisibilityScope.current
     val sharedBoundsModifier: Modifier = if (sharedElementKey != null && sts != null && avs != null) {
@@ -122,6 +141,7 @@ fun EventDetailScreen(
 
     Scaffold(
         modifier = sharedBoundsModifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             SolennixTopAppBar(
                 title = { Text(stringResource(R.string.events_detail_title)) },
@@ -332,7 +352,8 @@ fun EventDetailScreen(
                     onConfirm = { amount, method, notes, date ->
                         viewModel.addPayment(amount, method, notes, date)
                         showPaymentModal = false
-                        Toast.makeText(context, context.getString(R.string.events_detail_payments_add_success), Toast.LENGTH_SHORT).show()
+                        // Success feedback is driven by viewModel.addPaymentSuccess (LaunchedEffect above)
+                        // so it only fires after the repository call confirms — not optimistically.
                     }
                 )
             }

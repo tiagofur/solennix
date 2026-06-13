@@ -271,6 +271,24 @@ class EventDetailViewModel @Inject constructor(
         deleteSuccess = false
     }
 
+    /** One-shot flag: set true after payment is successfully added; consumed by the UI. */
+    var addPaymentSuccess by mutableStateOf(false)
+        internal set
+
+    /** Reset after the add-payment-success side effect has been consumed by the UI. */
+    fun consumeAddPaymentSuccess() {
+        addPaymentSuccess = false
+    }
+
+    /** One-shot flag: set true after payment is successfully deleted; consumed by the UI. */
+    var deletePaymentSuccess by mutableStateOf(false)
+        internal set
+
+    /** Reset after the delete-payment-success side effect has been consumed by the UI. */
+    fun consumeDeletePaymentSuccess() {
+        deletePaymentSuccess = false
+    }
+
     fun deleteEvent() {
         viewModelScope.launch {
             try {
@@ -280,6 +298,11 @@ class EventDetailViewModel @Inject constructor(
                 _errorMessage.value = tr(R.string.events_detail_error_delete_event, e.message.orEmpty())
             }
         }
+    }
+
+    /** Clears [EventDetailUiState.errorMessage] after it has been shown in the UI. */
+    fun onErrorShown() {
+        _errorMessage.value = null
     }
 
     suspend fun downloadEventPdf(type: String): ByteArray =
