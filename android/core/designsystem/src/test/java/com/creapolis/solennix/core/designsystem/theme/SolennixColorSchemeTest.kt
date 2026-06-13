@@ -49,4 +49,20 @@ class SolennixColorSchemeTest {
         assertEquals(AvatarBackgroundDark, DarkSolennixColors.avatarBackground)
         assertEquals(AvatarInitialsDark, DarkSolennixColors.avatarInitials)
     }
+
+    @Test
+    fun `tonal icon tokens adapt to light and dark`() {
+        // Light mode tonal icon colors
+        assertEquals(IconSlateLight, LightSolennixColors.iconSlate)
+        assertEquals(IconTaupeLight, LightSolennixColors.iconTaupe)
+        assertEquals(IconSageLight, LightSolennixColors.iconSage)
+        assertEquals(IconSteelLight, LightSolennixColors.iconSteel)
+        assertEquals(IconPlumLight, LightSolennixColors.iconPlum)
+        // Dark mode tonal icon colors
+        assertEquals(IconSlateDark, DarkSolennixColors.iconSlate)
+        assertEquals(IconTaupeDark, DarkSolennixColors.iconTaupe)
+        assertEquals(IconSageDark, DarkSolennixColors.iconSage)
+        assertEquals(IconSteelDark, DarkSolennixColors.iconSteel)
+        assertEquals(IconPlumDark, DarkSolennixColors.iconPlum)
+    }
 }

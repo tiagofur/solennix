@@ -24,6 +24,7 @@
     <string name="settings_action_change_password">Change password</string>
     <string name="settings_action_business_settings">Business settings</string>
     <string name="settings_action_contract_defaults">Contract defaults</string>
+    <string name="settings_action_reviews">Client reviews</string>
     <string name="settings_tab_notifications">Notifications</string>
     <string name="settings_action_manage_plan">Manage plan</string>
     <string name="settings_action_help_center">Help Center</string>
@@ -306,4 +307,17 @@ hola@creapolis.dev</string>
     <string name="settings_account_deletion_success_message">Your account has been successfully scheduled for deletion. A 90-day grace period will apply. You will be logged out shortly.</string>
     <string name="settings_account_deletion_logging_out">Signing out…</string>
     <string name="settings_account_deletion_consent_required">You must accept the conditions to continue.</string>
+
+    <!-- Reviews -->
+    <string name="reviews_title">Reviews</string>
+    <string name="reviews_empty_title">No reviews yet</string>
+    <string name="reviews_empty_hint">When your clients rate their events, they will appear here.</string>
+    <string name="reviews_error_loading">Failed to load reviews</string>
+    <string name="reviews_retry">Retry</string>
+    <string name="reviews_unknown_client">Client</string>
+    <string name="reviews_unknown_event">Event</string>
+    <string name="reviews_visibility_private">Private</string>
+    <string name="reviews_visibility_public">Public</string>
+    <string name="reviews_response_placeholder">Organizer response</string>
+    <string name="reviews_save_response">Save</string>
 </resources>

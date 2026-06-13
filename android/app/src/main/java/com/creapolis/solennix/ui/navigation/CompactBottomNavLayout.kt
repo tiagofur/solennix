@@ -1,7 +1,9 @@
 package com.creapolis.solennix.ui.navigation
 
 import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +21,7 @@ import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Wallet
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -37,6 +41,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
@@ -98,6 +104,7 @@ import com.creapolis.solennix.feature.staff.ui.StaffTeamDetailScreen
 import com.creapolis.solennix.feature.staff.ui.StaffTeamFormScreen
 import com.creapolis.solennix.feature.staff.ui.StaffTeamListScreen
 import com.creapolis.solennix.feature.payments.ui.PaymentInboxScreen
+import com.creapolis.solennix.feature.settings.ui.ReviewsScreen
 
 @Composable
 fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
@@ -222,12 +229,20 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onStaffClick = { navController.navigate("staff") },
                     onEventFormLinksClick = { navController.navigate("event_form_links") },
                     onSettingsClick = { navController.navigate("settings") },
-                    onPaymentInboxClick = { navController.navigate("payment_inbox") }
+                    onPaymentInboxClick = { navController.navigate("payment_inbox") },
+                    onReviewsClick = { navController.navigate("reviews") }
                 )
             }
 
             composable("payment_inbox") {
                 PaymentInboxScreen(
+                    viewModel = hiltViewModel(),
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable("reviews") {
+                ReviewsScreen(
                     viewModel = hiltViewModel(),
                     onNavigateBack = { navController.popBackStack() }
                 )
@@ -303,13 +318,14 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
 
             composable("settings") {
                 val uriHandler = LocalUriHandler.current
-                SettingsScreen(
-                    viewModel = hiltViewModel(),
-                    onEditProfile = { navController.navigate("edit_profile") },
-                    onChangePassword = { navController.navigate("change_password") },
-                    onBusinessSettings = { navController.navigate("business_settings") },
-                    onContractDefaults = { navController.navigate("contract_defaults") },
-                    onNotificationPreferences = { navController.navigate("notification_preferences") },
+                 SettingsScreen(
+                     viewModel = hiltViewModel(),
+                     onEditProfile = { navController.navigate("edit_profile") },
+                     onChangePassword = { navController.navigate("change_password") },
+                     onBusinessSettings = { navController.navigate("business_settings") },
+                     onContractDefaults = { navController.navigate("contract_defaults") },
+                     onReviews = { navController.navigate("reviews") },
+                     onNotificationPreferences = { navController.navigate("notification_preferences") },
                     onPricing = { navController.navigate("pricing") },
                     onHelp = { uriHandler.openUri("https://solennix.com/help") },
                     onAbout = { navController.navigate("about") },
@@ -556,13 +572,14 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
 
 @Composable
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
-fun MoreMenuScreen(
+ fun MoreMenuScreen(
     onProductsClick: () -> Unit,
     onInventoryClick: () -> Unit,
     onStaffClick: () -> Unit,
     onEventFormLinksClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    onPaymentInboxClick: () -> Unit = {}
+    onPaymentInboxClick: () -> Unit = {},
+    onReviewsClick: () -> Unit = {}
 ) {
     Scaffold(topBar = { SolennixTopAppBar(title = { Text(stringResource(R.string.nav_more)) }) }) { padding ->
         Column(
@@ -576,36 +593,49 @@ fun MoreMenuScreen(
                 title = stringResource(R.string.nav_products),
                 subtitle = stringResource(R.string.nav_catalog_costs),
                 icon = Icons.Default.Inventory2,
+                iconColor = SolennixTheme.colors.iconSlate,
                 onClick = onProductsClick
             )
             MenuOptionItem(
                 title = stringResource(R.string.nav_inventory),
                 subtitle = stringResource(R.string.nav_stock_supply),
                 icon = Icons.Default.Inventory2,
+                iconColor = SolennixTheme.colors.iconTaupe,
                 onClick = onInventoryClick
+            )
+            MenuOptionItem(
+                title = stringResource(R.string.nav_payment_receipts),
+                subtitle = stringResource(R.string.nav_review_client_submissions),
+                icon = Icons.Default.Wallet,
+                iconColor = SolennixTheme.colors.primary,
+                onClick = onPaymentInboxClick
             )
             MenuOptionItem(
                 title = stringResource(R.string.nav_staff),
                 subtitle = stringResource(R.string.nav_staff_rates),
                 icon = Icons.Default.Group,
+                iconColor = SolennixTheme.colors.iconSteel,
                 onClick = onStaffClick
             )
             MenuOptionItem(
                 title = stringResource(R.string.nav_form_links),
                 subtitle = stringResource(R.string.nav_share_clients),
                 icon = Icons.Default.Link,
+                iconColor = SolennixTheme.colors.iconSage,
                 onClick = onEventFormLinksClick
             )
             MenuOptionItem(
-                title = stringResource(R.string.nav_payment_receipts),
-                subtitle = stringResource(R.string.nav_review_client_submissions),
-                icon = Icons.Default.Wallet,
-                onClick = onPaymentInboxClick
+                title = stringResource(R.string.nav_reviews),
+                subtitle = stringResource(R.string.nav_reviews_subtitle),
+                icon = Icons.Default.Star,
+                iconColor = SolennixTheme.colors.iconPlum,
+                onClick = onReviewsClick
             )
             MenuOptionItem(
                 title = stringResource(R.string.nav_settings),
                 subtitle = stringResource(R.string.nav_profile),
                 icon = Icons.Default.Settings,
+                iconColor = SolennixTheme.colors.secondary,
                 onClick = onSettingsClick
             )
         }
@@ -617,6 +647,7 @@ private fun MenuOptionItem(
     title: String,
     subtitle: String = "",
     icon: ImageVector,
+    iconColor: Color,
     onClick: () -> Unit
 ) {
     Card(
@@ -628,11 +659,25 @@ private fun MenuOptionItem(
         shape = RoundedCornerShape(14.dp)
     ) {
         Row(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(icon, contentDescription = title, tint = SolennixTheme.colors.primary)
-            Spacer(modifier = Modifier.width(16.dp))
+            // Tonal icon square — matches iOS MoreMenuView pattern
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(iconColor),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.titleMedium)
                 if (subtitle.isNotEmpty()) {

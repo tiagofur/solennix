@@ -40,6 +40,7 @@ fun SettingsScreen(
     onChangePassword: () -> Unit,
     onBusinessSettings: () -> Unit,
     onContractDefaults: () -> Unit,
+    onReviews: () -> Unit = {},
     onNotificationPreferences: () -> Unit = {},
     onPricing: () -> Unit,
     onHelp: () -> Unit,
@@ -170,6 +171,7 @@ fun SettingsScreen(
                             SettingsItem(icon = Icons.Default.Lock, label = stringResource(R.string.settings_action_change_password), onClick = onChangePassword)
                             SettingsItem(icon = Icons.Default.Business, label = stringResource(R.string.settings_action_business_settings), onClick = onBusinessSettings)
                             SettingsItem(icon = Icons.Default.Receipt, label = stringResource(R.string.settings_action_contract_defaults), onClick = onContractDefaults)
+                            SettingsItem(icon = Icons.Default.Star, label = stringResource(R.string.settings_action_reviews), onClick = onReviews)
                             SettingsItem(icon = Icons.Default.Notifications, label = stringResource(R.string.settings_tab_notifications), onClick = onNotificationPreferences)
                             LogoutItem(onClick = { viewModel.logout() })
                         }
@@ -203,6 +205,7 @@ fun SettingsScreen(
                     SettingsItem(icon = Icons.Default.Lock, label = stringResource(R.string.settings_action_change_password), onClick = onChangePassword)
                     SettingsItem(icon = Icons.Default.Business, label = stringResource(R.string.settings_action_business_settings), onClick = onBusinessSettings)
                     SettingsItem(icon = Icons.Default.Receipt, label = stringResource(R.string.settings_action_contract_defaults), onClick = onContractDefaults)
+                    SettingsItem(icon = Icons.Default.Star, label = stringResource(R.string.settings_action_reviews), onClick = onReviews)
                     SettingsItem(icon = Icons.Default.Notifications, label = stringResource(R.string.settings_tab_notifications), onClick = onNotificationPreferences)
                     LogoutItem(onClick = { viewModel.logout() })
                 }

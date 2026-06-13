@@ -31,6 +31,20 @@ val AvatarInitialsLight = Color(0xFF7A6133)
 val AvatarBackgroundDark = Color(0xFF1B2738)
 val AvatarInitialsDark = Color(0xFFC4A265)
 
+// Tonal icon-square tokens (matching iOS iconSlate/iconTaupe/iconSage/iconSteel/iconPlum).
+// Used for menu-row icon backgrounds with white glyphs.
+// Contrast (white glyph): light / dark — all ≥ 3:1 WCAG 1.4.11 non-text.
+val IconSlateLight = Color(0xFF3E5C82)     // Products — 6.87:1
+val IconSlateDark = Color(0xFF5A7BA8)      // 4.34:1
+val IconTaupeLight = Color(0xFF7A6A52)     // Inventory — 5.24:1
+val IconTaupeDark = Color(0xFF9A8A72)      // 3.36:1
+val IconSageLight = Color(0xFF4F6B5A)      // Form Links — 5.86:1
+val IconSageDark = Color(0xFF6B8A78)       // 3.80:1
+val IconSteelLight = Color(0xFF5C6B7A)     // Personnel — 5.47:1
+val IconSteelDark = Color(0xFF7A8E9E)      // 3.39:1
+val IconPlumLight = Color(0xFF6B5B7B)      // Reviews — 5.93:1
+val IconPlumDark = Color(0xFF9A82B0)       // 3.47:1
+
 val LightSolennixColors = SolennixColorScheme(
     primary = SolennixGold,
     primaryDark = SolennixGoldDark,
@@ -64,7 +78,12 @@ val LightSolennixColors = SolennixColorScheme(
     tabBarActive = SolennixGold,
     tabBarInactive = Color(0xFF5F5852),
     avatarBackground = AvatarBackgroundLight,
-    avatarInitials = AvatarInitialsLight
+    avatarInitials = AvatarInitialsLight,
+    iconSlate = IconSlateLight,
+    iconTaupe = IconTaupeLight,
+    iconSage = IconSageLight,
+    iconSteel = IconSteelLight,
+    iconPlum = IconPlumLight
 )
 
 val DarkSolennixColors = SolennixColorScheme(
@@ -100,5 +119,10 @@ val DarkSolennixColors = SolennixColorScheme(
     tabBarActive = SolennixGold,
     tabBarInactive = Color(0xFFC7C0B8),
     avatarBackground = AvatarBackgroundDark,
-    avatarInitials = AvatarInitialsDark
+    avatarInitials = AvatarInitialsDark,
+    iconSlate = IconSlateDark,
+    iconTaupe = IconTaupeDark,
+    iconSage = IconSageDark,
+    iconSteel = IconSteelDark,
+    iconPlum = IconPlumDark
 )

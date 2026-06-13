@@ -79,6 +79,8 @@
     <string name="nav_staff_rates">Colaboradores y tarifas</string>
     <string name="nav_payment_receipts">Comprobantes de pago</string>
     <string name="nav_review_client_submissions">Revisar envíos de clientes</string>
+    <string name="nav_reviews">Reseñas</string>
+    <string name="nav_reviews_subtitle">Opiniones de tus clientes</string>
 
     <!-- Notifications -->
     <string name="notif_channel_general">Notificaciones Generales</string>
