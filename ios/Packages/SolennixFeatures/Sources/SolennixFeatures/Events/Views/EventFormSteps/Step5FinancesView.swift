@@ -9,6 +9,9 @@ struct Step5FinancesView: View {
 
     @Bindable var viewModel: EventFormViewModel
 
+    /// Profit margin threshold (%) above which the margin is considered healthy.
+    private let healthyMarginThreshold: Double = 20
+
     var body: some View {
         ScrollView {
             VStack(spacing: Spacing.lg) {
@@ -37,6 +40,7 @@ struct Step5FinancesView: View {
         // Fetch costos unitarios de productos al llegar al Paso 5 — necesario
         // para computar ganancia neta y margen. Si el usuario vuelve al Paso 2
         // y agrega más productos, el onChange refetch los missing.
+        .scrollDismissesKeyboard(.interactively)
         .task {
             await viewModel.fetchProductCosts()
         }
@@ -63,8 +67,8 @@ struct Step5FinancesView: View {
                         Text("%")
                             .font(.subheadline)
                             .fontWeight(.semibold)
-                            .foregroundStyle(viewModel.discountType == .percent ? .white : SolennixColors.textSecondary)
-                            .frame(width: 44, height: 36)
+                            .foregroundStyle(viewModel.discountType == .percent ? SolennixColors.textInverse : SolennixColors.textSecondary)
+                            .frame(width: 44, height: 44)
                             .background(viewModel.discountType == .percent ? SolennixColors.primary : SolennixColors.surfaceAlt)
                     }
                     .buttonStyle(.plain)
@@ -75,8 +79,8 @@ struct Step5FinancesView: View {
                         Text("$")
                             .font(.subheadline)
                             .fontWeight(.semibold)
-                            .foregroundStyle(viewModel.discountType == .fixed ? .white : SolennixColors.textSecondary)
-                            .frame(width: 44, height: 36)
+                            .foregroundStyle(viewModel.discountType == .fixed ? SolennixColors.textInverse : SolennixColors.textSecondary)
+                            .frame(width: 44, height: 44)
                             .background(viewModel.discountType == .fixed ? SolennixColors.primary : SolennixColors.surfaceAlt)
                     }
                     .buttonStyle(.plain)
@@ -270,10 +274,14 @@ struct Step5FinancesView: View {
     }
 
     // MARK: - Notes Section
+    //
+    // NOTE: This binds to the same viewModel.notes as Step1GeneralView.
+    // It is intentionally a single shared notes field shown on both steps.
+    // Label kept consistent with Step1 for clarity.
 
     private var notesSection: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text(tr("events.form.finances.notes", "Notas"))
+            Text(tr("events.form.general.notes", "Notas adicionales"))
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundStyle(SolennixColors.text)
@@ -378,7 +386,11 @@ struct Step5FinancesView: View {
                 Text("\(String(format: "%.1f", viewModel.profitMargin))%")
                     .font(.subheadline)
                     .fontWeight(.semibold)
-                    .foregroundStyle(viewModel.profitMargin >= 20 ? SolennixColors.success : SolennixColors.warning)
+                    .foregroundStyle(
+                        viewModel.profitMargin < 0
+                            ? SolennixColors.error
+                            : (viewModel.profitMargin >= healthyMarginThreshold ? SolennixColors.success : SolennixColors.warning)
+                    )
             }
         }
         .padding(Spacing.lg)

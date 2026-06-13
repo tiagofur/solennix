@@ -198,6 +198,9 @@ struct Step4PickerSheet<Content: View>: View {
             List {
                 content()
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(SolennixColors.surfaceGrouped)
             .searchable(text: $searchText, prompt: searchPrompt)
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
@@ -208,6 +211,8 @@ struct Step4PickerSheet<Content: View>: View {
                 }
             }
         }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 }
 

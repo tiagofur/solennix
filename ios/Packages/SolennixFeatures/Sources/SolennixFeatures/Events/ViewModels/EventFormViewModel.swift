@@ -164,7 +164,7 @@ public final class EventFormViewModel {
     public var startTime: Date?
     public var endTime: Date?
     public var serviceType: String = ""
-    public var numPeople: Int = 0
+    public var numPeople: Int = 1
     public var status: EventStatus = .quoted
     public var discount: Double = 0
     public var discountType: DiscountType = .percent
@@ -206,6 +206,7 @@ public final class EventFormViewModel {
     public var currentStep: Int = 1
     public var isLoading: Bool = false
     public var isSaving: Bool = false
+    public var isDirty: Bool = false
     public var errorMessage: String?
     public var planLimitMessage: String?
 
@@ -224,6 +225,16 @@ public final class EventFormViewModel {
 
     func tr(_ key: String, _ defaultValue: String) -> String {
         FeatureL10n.text(key, defaultValue)
+    }
+
+    /// Called by the view's onChange watchers once the user edits any field.
+    /// Load/save code resets this to false via resetDirty().
+    public func markDirty() {
+        isDirty = true
+    }
+
+    public func resetDirty() {
+        isDirty = false
     }
 
     // MARK: - Prefill Support (Duplicate Event)

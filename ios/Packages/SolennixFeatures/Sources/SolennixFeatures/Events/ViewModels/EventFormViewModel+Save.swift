@@ -7,13 +7,18 @@ extension EventFormViewModel {
 
     @MainActor
     public func save() async throws {
+        guard !isSaving else { return }
         isSaving = true
         errorMessage = nil
 
         defer { isSaving = false }
 
         let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "yyyy-MM-dd"
+        // Pin to UTC — matches fromServerDay parse contract so the calendar day
+        // round-trips correctly for users in negative UTC-offset zones (MX = UTC-6).
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
 
         let timeFormatter = DateFormatter()
         timeFormatter.dateFormat = "HH:mm"
@@ -23,7 +28,7 @@ extension EventFormViewModel {
         let clampedDiscount: Double
         switch discountType {
         case .percent: clampedDiscount = max(0, min(100, discount))
-        case .fixed:   clampedDiscount = max(0, discount)
+        case .fixed:   clampedDiscount = max(0, min(discount, discountableBase))
         }
 
         var body: [String: Any] = [
@@ -170,6 +175,7 @@ extension EventFormViewModel {
 
         HapticsHelper.play(.success)
         NotificationCenter.default.post(name: .solennixEventUpdated, object: nil)
+        resetDirty()
     }
 
     // MARK: - Step Navigation

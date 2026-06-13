@@ -10,6 +10,7 @@ extension EventFormViewModel {
         isLoading = true
         errorMessage = nil
 
+        var fetchSucceeded = false
         do {
             async let fetchClients: [Client] = apiClient.getAll(Endpoint.clients)
             async let fetchProducts: [Product] = apiClient.getAll(Endpoint.products)
@@ -25,21 +26,29 @@ extension EventFormViewModel {
             equipmentInventory = loadedInventory.filter { $0.type == .equipment }
             supplyInventory = loadedInventory.filter { $0.type == .supply }
             staff = loadedStaff
+            fetchSucceeded = true
         } catch {
             errorMessage = mapError(error)
         }
 
-        if let transferData = QuickQuoteDataHolder.shared.pendingData {
-            applyQuickQuoteData(transferData)
-            QuickQuoteDataHolder.shared.pendingData = nil
-        }
+        // Only apply prefill/quickquote when catalogs loaded successfully.
+        // On error, pendingPrefill is intentionally preserved so the next
+        // successful load can apply it.
+        if fetchSucceeded {
+            if let transferData = QuickQuoteDataHolder.shared.pendingData {
+                applyQuickQuoteData(transferData)
+                QuickQuoteDataHolder.shared.pendingData = nil
+            }
 
-        if let prefill = pendingPrefill {
-            applyPrefillData(prefill)
-            pendingPrefill = nil
+            if let prefill = pendingPrefill {
+                applyPrefillData(prefill)
+                pendingPrefill = nil
+            }
         }
 
         isLoading = false
+        // Reset dirty after initial load — only user interactions should mark it dirty.
+        resetDirty()
     }
 
     // MARK: - Apply Quick Quote Data
@@ -105,15 +114,20 @@ extension EventFormViewModel {
             refundPercent = event.refundPercent ?? 50
             notes = event.notes ?? ""
 
+            // Fault-isolated sub-resource loads: a transient failure on one
+            // sub-resource (e.g. staff) does not block the rest of the edit
+            // form. Each defaults to empty on error.
             async let fetchProducts: [EventProduct] = apiClient.get(Endpoint.eventProducts(id))
             async let fetchExtras: [EventExtra] = apiClient.get(Endpoint.eventExtras(id))
             async let fetchEquipment: [EventEquipment] = apiClient.get(Endpoint.eventEquipment(id))
             async let fetchSupplies: [EventSupply] = apiClient.get(Endpoint.eventSupplies(id))
             async let fetchStaff: [EventStaff] = apiClient.get(Endpoint.eventStaff(id))
 
-            let (eventProducts, eventExtras, eventEquipment, eventSupplies, eventStaff) = try await (
-                fetchProducts, fetchExtras, fetchEquipment, fetchSupplies, fetchStaff
-            )
+            let eventProducts = (try? await fetchProducts) ?? []
+            let eventExtras = (try? await fetchExtras) ?? []
+            let eventEquipment = (try? await fetchEquipment) ?? []
+            let eventSupplies = (try? await fetchSupplies) ?? []
+            let eventStaff = (try? await fetchStaff) ?? []
 
             selectedProducts = eventProducts.map { ep in
                 SelectedProduct(
@@ -185,5 +199,7 @@ extension EventFormViewModel {
         }
 
         isLoading = false
+        // Reset dirty after loading event data — only user edits should mark it dirty.
+        resetDirty()
     }
 }

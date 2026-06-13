@@ -70,6 +70,7 @@ struct Step1GeneralView: View {
             }
             .padding(Spacing.md)
         }
+        .scrollDismissesKeyboard(.interactively)
         .sheet(isPresented: $showClientPicker) {
             clientPickerSheet
         }
@@ -179,6 +180,9 @@ struct Step1GeneralView: View {
                     .buttonStyle(.plain)
                 }
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(SolennixColors.surfaceGrouped)
             .searchable(text: $clientSearch, prompt: tr("events.form.general.search_client", "Buscar cliente"))
             .navigationTitle(tr("events.form.general.select_client_title", "Seleccionar cliente"))
             .navigationBarTitleDisplayMode(.inline)
@@ -206,6 +210,8 @@ struct Step1GeneralView: View {
                 }
             }
         }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 
     private var filteredClients: [Client] {
@@ -357,26 +363,26 @@ struct Step1GeneralView: View {
             // glyph sea moderado.
             HStack(spacing: 0) {
                 Button {
-                    if viewModel.numPeople > 0 {
+                    if viewModel.numPeople > 1 {
                         viewModel.numPeople -= 1
                     }
                 } label: {
                     Image(systemName: "minus.circle.fill")
                         .font(.title2)
-                        .foregroundStyle(viewModel.numPeople > 0 ? SolennixColors.primary : SolennixColors.textTertiary)
+                        .foregroundStyle(viewModel.numPeople > 1 ? SolennixColors.primary : SolennixColors.textTertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .disabled(viewModel.numPeople <= 0)
+                .disabled(viewModel.numPeople <= 1)
 
                 EditableQuantityText(
                     quantity: $viewModel.numPeople,
-                    minValue: 0,
+                    minValue: 1,
                     id: "numPeople",
                     font: .title3,
                     width: 44,
-                    showTertiaryAtMin: true
+                    showTertiaryAtMin: false
                 )
 
                 Button {
@@ -569,15 +575,15 @@ private struct OptionalTimePicker: View {
 
                 Spacer()
             }
-            .navigationTitle("Hora")
+            .navigationTitle(FeatureL10n.text("events.form.general.time", "Hora"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancelar") { showPickerSheet = false }
+                    Button(FeatureL10n.text("events.form.cancel", "Cancelar")) { showPickerSheet = false }
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Listo") {
+                    Button(FeatureL10n.text("events.form.general.done", "Listo")) {
                         selection = draftTime
                         showPickerSheet = false
                     }

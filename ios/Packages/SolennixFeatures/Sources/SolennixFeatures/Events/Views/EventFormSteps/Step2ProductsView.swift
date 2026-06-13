@@ -115,6 +115,7 @@ struct Step2ProductsView: View {
             }
             .padding(Spacing.md)
         }
+        .scrollDismissesKeyboard(.interactively)
         .sheet(isPresented: $showProductPicker) {
             productPickerSheet
         }
@@ -216,7 +217,7 @@ struct Step2ProductsView: View {
                 // exactamente lo mismo y los botones no se muevan.
                 HStack(spacing: 0) {
                     Button {
-                        let newQty = max(1, item.quantity - 1)
+                        let newQty = max(1.0, item.quantity - 1)
                         viewModel.updateProductQuantity(at: index, quantity: newQty)
                     } label: {
                         Image(systemName: "minus.circle.fill")
@@ -228,10 +229,10 @@ struct Step2ProductsView: View {
                     .buttonStyle(.plain)
                     .disabled(item.quantity <= 1)
 
-                    EditableQuantityText(
-                        quantity: Binding<Int>(
-                            get: { Int(item.quantity) },
-                            set: { viewModel.updateProductQuantity(at: index, quantity: Double($0)) }
+                    EditableQuantityTextDouble(
+                        quantity: Binding<Double>(
+                            get: { item.quantity },
+                            set: { viewModel.updateProductQuantity(at: index, quantity: $0) }
                         ),
                         minValue: 1,
                         id: item.id,
@@ -261,7 +262,7 @@ struct Step2ProductsView: View {
                 Text(trf("events.form.products.total", "Total: %@", formatCurrency(lineTotal)))
                     .font(.subheadline)
                     .fontWeight(.bold)
-                    .foregroundStyle(item.discount > 0 ? SolennixColors.success : SolennixColors.text)
+                    .foregroundStyle(SolennixColors.text)
             }
         }
         .padding(Spacing.md)
@@ -311,6 +312,9 @@ struct Step2ProductsView: View {
                     .buttonStyle(.plain)
                 }
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(SolennixColors.surfaceGrouped)
             .searchable(text: $productSearch, prompt: tr("events.form.products.search", "Buscar producto"))
             .navigationTitle(tr("events.form.products.add", "Agregar producto"))
             .navigationBarTitleDisplayMode(.inline)
@@ -323,6 +327,8 @@ struct Step2ProductsView: View {
                 }
             }
         }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 
     private var filteredProducts: [Product] {
