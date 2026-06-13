@@ -18,6 +18,14 @@ enum class InventorySortKey {
     NAME, CURRENT_STOCK, MINIMUM_STOCK, UNIT_COST
 }
 
+/** Scope filter for the inventory list screen. Mirrors the iOS segmented control (issue #551). */
+enum class InventoryScope(val typeParam: String?) {
+    ALL(null),
+    INGREDIENT("ingredient"),
+    EQUIPMENT("equipment"),
+    SUPPLY("supply");
+}
+
 data class InventoryListUiState(
     val ingredientItems: List<InventoryItem> = emptyList(),
     val equipmentItems: List<InventoryItem> = emptyList(),
@@ -27,7 +35,8 @@ data class InventoryListUiState(
     val searchQuery: String = "",
     val lowStockOnly: Boolean = false,
     val sortKey: InventorySortKey = InventorySortKey.NAME,
-    val sortAscending: Boolean = true
+    val sortAscending: Boolean = true,
+    val scope: InventoryScope = InventoryScope.ALL,
 )
 
 @HiltViewModel
@@ -40,6 +49,10 @@ class InventoryListViewModel @Inject constructor(
     private val _isRefreshing = MutableStateFlow(false)
     private val _sortKey = MutableStateFlow(InventorySortKey.NAME)
     private val _sortAscending = MutableStateFlow(true)
+    private val _scope = MutableStateFlow(InventoryScope.ALL)
+
+    /** Tracks the active sync job so we can cancel an in-flight request when scope changes. */
+    private var syncJob: Job? = null
 
     private val _uiEvents = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
     val uiEvents: SharedFlow<UiEvent> = _uiEvents.asSharedFlow()
@@ -56,10 +69,24 @@ class InventoryListViewModel @Inject constructor(
         inventoryRepository.getInventoryItems(),
         _searchQuery,
         _lowStockOnly,
+        _scope,
         combine(_isRefreshing, _sortKey, _sortAscending, _pendingDeleteIds) { r, k, a, p -> Triple(r, k, a) to p }
-    ) { items, query, lowStock, (triple, pendingIds) ->
+    ) { items, query, lowStock, scope, (triple, pendingIds) ->
         val (refreshing, sortKey, sortAscending) = triple
         var filtered = items.filter { it.id !in pendingIds }
+
+        // Server-side scope filter is applied at sync time; this client-side pass guards
+        // against stale cached items of other types bleeding in while the new sync loads.
+        if (scope != InventoryScope.ALL) {
+            val expectedType = when (scope) {
+                InventoryScope.INGREDIENT -> InventoryType.INGREDIENT
+                InventoryScope.EQUIPMENT -> InventoryType.EQUIPMENT
+                InventoryScope.SUPPLY -> InventoryType.SUPPLY
+                InventoryScope.ALL -> null
+            }
+            filtered = filtered.filter { it.type == expectedType }
+        }
+
         if (query.isNotBlank()) {
             filtered = filtered.filter { it.ingredientName.contains(query, ignoreCase = true) }
         }
@@ -84,7 +111,8 @@ class InventoryListViewModel @Inject constructor(
             searchQuery = query,
             lowStockOnly = lowStock,
             sortKey = sortKey,
-            sortAscending = sortAscending
+            sortAscending = sortAscending,
+            scope = scope,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -113,20 +141,43 @@ class InventoryListViewModel @Inject constructor(
         }
     }
 
+    fun onScopeChange(newScope: InventoryScope) {
+        if (_scope.value == newScope) return
+        _scope.value = newScope
+        // Cancel any in-flight sync so a stale result from the previous scope cannot
+        // append to the new scope's cached list (mirrors the iOS stale-append guard).
+        syncJob?.cancel()
+        refresh(newScope)
+    }
+
     fun refresh() {
-        viewModelScope.launch {
+        refresh(_scope.value)
+    }
+
+    private fun refresh(scope: InventoryScope) {
+        // Capture the scope at the time this refresh was requested. If the scope changes
+        // again before the coroutine finishes we cancel the job in onScopeChange, but as
+        // an extra safety net we also check after the await that we are still on the same
+        // scope before updating the refreshing flag.
+        val requestedScope = scope
+        syncJob?.cancel()
+        syncJob = viewModelScope.launch {
             _isRefreshing.value = true
             try {
-                inventoryRepository.syncInventory()
+                inventoryRepository.syncInventory(requestedScope.typeParam)
             } catch (e: Exception) {
-                _uiEvents.tryEmit(
-                    UiEvent.Error(
-                        message = InventoryStrings.syncInventoryFailed,
-                        retryActionId = ACTION_REFRESH,
+                if (_scope.value == requestedScope) {
+                    _uiEvents.tryEmit(
+                        UiEvent.Error(
+                            message = InventoryStrings.syncInventoryFailed,
+                            retryActionId = ACTION_REFRESH,
+                        )
                     )
-                )
+                }
             } finally {
-                _isRefreshing.value = false
+                if (_scope.value == requestedScope) {
+                    _isRefreshing.value = false
+                }
             }
         }
     }
