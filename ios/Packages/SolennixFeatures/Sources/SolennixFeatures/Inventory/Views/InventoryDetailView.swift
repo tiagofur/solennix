@@ -34,6 +34,8 @@ final class InventoryDetailViewModel {
     var showDeleteConfirm: Bool = false
     var showStockAdjustment: Bool = false
     var adjustmentQuantity: Double = 0
+    var stockSavedCounter: Int = 0
+    var stockErrorCounter: Int = 0
 
     private let apiClient: APIClient
     let itemId: String
@@ -103,6 +105,11 @@ final class InventoryDetailViewModel {
 
     // MARK: - Parallelized demand loading (fix #3 — withTaskGroup, fault-isolated)
 
+    private struct DemandFetchResult {
+        let entry: InventoryDemandEntry?
+        let fetchFailed: Bool
+    }
+
     @MainActor
     private func loadDemandForecast() async {
         guard let item else { return }
@@ -110,22 +117,30 @@ final class InventoryDetailViewModel {
         // Anchor today once for the whole load (fix #2).
         todayUTC = Date.fromServerDay(Date.localTodayString())
 
+        // Snapshot properties accessed inside child tasks to satisfy Swift 6 capture hygiene.
+        let itemType = item.type
+        let itemUnit = item.unit
+
         do {
             let events: [Event] = try await apiClient.getAll(Endpoint.upcomingEvents)
             let eventsSlice = Array(events.prefix(15))
 
             var collected: [InventoryDemandEntry] = []
+            var fetchFailedCount = 0
+            var successfulFetchCount = 0
 
-            await withTaskGroup(of: InventoryDemandEntry?.self) { group in
+            await withTaskGroup(of: DemandFetchResult.self) { group in
                 for event in eventsSlice {
                     group.addTask { [apiClient, itemId] in
                         do {
-                            // Fix #1: parse date with fromServerDay — skip if nil, never fabricate
-                            guard let eventDate = Date.fromServerDay(event.eventDate) else { return nil }
+                            // Parse date first — skip if unparseable, never fabricate.
+                            guard let eventDate = Date.fromServerDay(event.eventDate) else {
+                                return DemandFetchResult(entry: nil, fetchFailed: false)
+                            }
 
                             let eventProducts: [EventProduct] = try await apiClient.get(Endpoint.eventProducts(event.id))
 
-                            // Compute demand for this item across all products concurrently
+                            // Compute demand for this item across all products concurrently.
                             var eventDemand: Double = 0
                             await withTaskGroup(of: Double.self) { ingredientGroup in
                                 for ep in eventProducts {
@@ -133,7 +148,7 @@ final class InventoryDetailViewModel {
                                         do {
                                             let ingredients: [ProductIngredient] = try await apiClient.get(Endpoint.productIngredients(ep.productId))
                                             if let matching = ingredients.first(where: { $0.inventoryId == itemId }) {
-                                                if item.type == .supply {
+                                                if itemType == .supply {
                                                     return matching.quantityRequired
                                                 } else {
                                                     return matching.quantityRequired * ep.quantity
@@ -150,9 +165,12 @@ final class InventoryDetailViewModel {
                                 }
                             }
 
-                            guard eventDemand > 0 else { return nil }
+                            // Zero demand is a legitimate success — this event just doesn't use the item.
+                            guard eventDemand > 0 else {
+                                return DemandFetchResult(entry: nil, fetchFailed: false)
+                            }
 
-                            // Client fetch concurrent with ingredient fetches
+                            // Client fetch runs sequentially after the ingredient group completes.
                             var eventName = InventoryStrings.defaultEventName(serviceType: event.serviceType)
                             if !event.clientId.isEmpty {
                                 if let client = try? await apiClient.get(Endpoint.client(event.clientId)) as Client {
@@ -160,32 +178,41 @@ final class InventoryDetailViewModel {
                                 }
                             }
 
-                            return InventoryDemandEntry(
-                                id: event.id,
-                                eventDate: eventDate,
-                                eventName: eventName,
-                                quantity: eventDemand,
-                                unit: item.unit
+                            return DemandFetchResult(
+                                entry: InventoryDemandEntry(
+                                    id: event.id,
+                                    eventDate: eventDate,
+                                    eventName: eventName,
+                                    quantity: eventDemand,
+                                    unit: itemUnit
+                                ),
+                                fetchFailed: false
                             )
                         } catch {
-                            return nil
+                            return DemandFetchResult(entry: nil, fetchFailed: true)
                         }
                     }
                 }
 
-                for await entry in group {
-                    if let entry { collected.append(entry) }
+                for await result in group {
+                    if result.fetchFailed {
+                        fetchFailedCount += 1
+                    } else {
+                        successfulFetchCount += 1
+                        if let entry = result.entry { collected.append(entry) }
+                    }
                 }
             }
 
-            // Error only if all events failed and there were events to process
-            if collected.isEmpty && !eventsSlice.isEmpty {
+            // Surface an error only when every fetch genuinely failed (network/auth),
+            // not when items simply have zero demand in upcoming events.
+            if fetchFailedCount > 0 && successfulFetchCount == 0 && !eventsSlice.isEmpty {
                 errorMessage = InventoryStrings.unexpectedRetryError
             }
 
             demandEntries = collected.sorted { $0.eventDate < $1.eventDate }
         } catch {
-            // Demand forecast is supplementary — keep empty
+            // Upcoming events fetch itself failed — demand section stays empty (non-critical).
         }
     }
 
@@ -222,12 +249,14 @@ final class InventoryDetailViewModel {
             let updated: InventoryItem = try await apiClient.put(Endpoint.inventoryItem(itemId), body: body)
             item = updated
             showStockAdjustment = false
+            stockSavedCounter &+= 1
         } catch {
             if let apiError = error as? APIError {
                 errorMessage = apiError.errorDescription ?? InventoryStrings.unexpectedError
             } else {
                 errorMessage = InventoryStrings.unexpectedError
             }
+            stockErrorCounter &+= 1
         }
     }
 
@@ -329,9 +358,10 @@ public struct InventoryDetailView: View {
         } message: {
             Text(InventoryStrings.permanentDeletePrompt(viewModel.item?.ingredientName ?? ""))
         }
-        // Fix #6: bidirectional error alert (ProductDetail pattern)
+        // Gate alert: only present when the main entity is loaded — first-load failures
+        // stay in the empty-state branch only (prevents double error UI).
         .alert(InventoryStrings.errorTitle, isPresented: Binding(
-            get: { viewModel.errorMessage != nil },
+            get: { viewModel.errorMessage != nil && viewModel.item != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
             Button(InventoryStrings.ok, role: .cancel) {}
@@ -341,6 +371,8 @@ public struct InventoryDetailView: View {
         .sheet(isPresented: $viewModel.showStockAdjustment) {
             stockAdjustmentSheet
         }
+        .sensoryFeedback(.success, trigger: viewModel.stockSavedCounter)
+        .sensoryFeedback(.error, trigger: viewModel.stockErrorCounter)
         .task { await viewModel.loadData() }
     }
 
@@ -786,7 +818,7 @@ public struct InventoryDetailView: View {
                         .foregroundStyle(SolennixColors.textSecondary)
                     Spacer()
                     let total = viewModel.demandEntries.reduce(0) { $0 + $1.quantity }
-                    Text(InventoryStrings.quantityWithUnit(Int(total), unit: item.unit))
+                    Text(total.formatted(.number.precision(.fractionLength(0...2))) + " \(item.unit)")
                         .font(.subheadline)
                         .fontWeight(.bold)
                         .foregroundStyle(SolennixColors.text)
@@ -971,6 +1003,7 @@ struct InventoryDetailSkeleton: View {
             .padding(Spacing.md)
             .listRowBackground(SolennixColors.card)
             .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
         }
 
         // KPI row

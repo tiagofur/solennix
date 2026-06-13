@@ -73,7 +73,7 @@ enum InventoryStrings {
     static var lastUpdated: String { FeatureL10n.text("inventory.last_updated", "Última actualización") }
     static var newStock: String { FeatureL10n.text("inventory.new_stock", "Nuevo stock:") }
     static var save: String { FeatureL10n.text("inventory.save", "Guardar") }
-    static var ok: String { "OK" }
+    static var ok: String { FeatureL10n.text("inventory.ok", "OK") }
     static var moreActions: String { FeatureL10n.text("inventory.more_actions", "Más acciones") }
     static var stockHealthTitle: String { FeatureL10n.text("inventory.stock_health_title", "Salud del Stock") }
     static var unitDefault: String { FeatureL10n.text("inventory.unit_default", "piezas") }

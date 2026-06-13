@@ -115,6 +115,11 @@ final class ProductDetailViewModel {
 
     // MARK: - Parallelized demand loading (fault-isolated: one 404/timeout won't discard collected points)
 
+    private struct DemandFetchResult {
+        let point: DemandDataPoint?
+        let fetchFailed: Bool
+    }
+
     @MainActor
     private func loadDemandData() async {
         // Anchor today once for the entire load; window KPIs read this stored value.
@@ -125,15 +130,19 @@ final class ProductDetailViewModel {
             let eventsSlice = Array(events.prefix(10))
 
             var collected: [DemandDataPoint] = []
+            var fetchFailedCount = 0
+            var successfulFetchCount = 0
 
             // Non-throwing group: each child isolates its own errors so a single
             // 404/timeout does not discard points already collected from other events.
-            await withTaskGroup(of: DemandDataPoint?.self) { group in
+            await withTaskGroup(of: DemandFetchResult.self) { group in
                 for event in eventsSlice {
                     group.addTask {
                         do {
                             // Parse date first — skip if unparseable (no fabricated Date()).
-                            guard let eventDate = Date.fromServerDay(event.eventDate) else { return nil }
+                            guard let eventDate = Date.fromServerDay(event.eventDate) else {
+                                return DemandFetchResult(point: nil, fetchFailed: false)
+                            }
 
                             async let epTask: [EventProduct] = self.apiClient.get(Endpoint.eventProducts(event.id))
 
@@ -143,41 +152,59 @@ final class ProductDetailViewModel {
                                 async let clientTask: Client = self.apiClient.get(Endpoint.client(event.clientId))
                                 let (eps, maybeClient) = try await (epTask, clientTask)
                                 clientName = maybeClient.name
-                                guard let ep = eps.first(where: { $0.productId == self.productId }) else { return nil }
-                                return DemandDataPoint(
-                                    id: event.id,
-                                    eventDate: eventDate,
-                                    clientName: clientName,
-                                    quantity: Int(ep.quantity),
-                                    numPeople: event.numPeople,
-                                    unitPrice: ep.unitPrice
+                                // Product not in this event is a legitimate success (zero demand).
+                                guard let ep = eps.first(where: { $0.productId == self.productId }) else {
+                                    return DemandFetchResult(point: nil, fetchFailed: false)
+                                }
+                                return DemandFetchResult(
+                                    point: DemandDataPoint(
+                                        id: event.id,
+                                        eventDate: eventDate,
+                                        clientName: clientName,
+                                        quantity: Int(ep.quantity),
+                                        numPeople: event.numPeople,
+                                        unitPrice: ep.unitPrice
+                                    ),
+                                    fetchFailed: false
                                 )
                             } else {
                                 let eps = try await epTask
-                                guard let ep = eps.first(where: { $0.productId == self.productId }) else { return nil }
-                                return DemandDataPoint(
-                                    id: event.id,
-                                    eventDate: eventDate,
-                                    clientName: clientName,
-                                    quantity: Int(ep.quantity),
-                                    numPeople: event.numPeople,
-                                    unitPrice: ep.unitPrice
+                                // Product not in this event is a legitimate success (zero demand).
+                                guard let ep = eps.first(where: { $0.productId == self.productId }) else {
+                                    return DemandFetchResult(point: nil, fetchFailed: false)
+                                }
+                                return DemandFetchResult(
+                                    point: DemandDataPoint(
+                                        id: event.id,
+                                        eventDate: eventDate,
+                                        clientName: clientName,
+                                        quantity: Int(ep.quantity),
+                                        numPeople: event.numPeople,
+                                        unitPrice: ep.unitPrice
+                                    ),
+                                    fetchFailed: false
                                 )
                             }
                         } catch {
-                            // Swallow per-event errors; partial results are kept.
-                            return nil
+                            // Network/auth failure — counts against fetch failures.
+                            return DemandFetchResult(point: nil, fetchFailed: true)
                         }
                     }
                 }
 
-                for await point in group {
-                    if let point { collected.append(point) }
+                for await result in group {
+                    if result.fetchFailed {
+                        fetchFailedCount += 1
+                    } else {
+                        successfulFetchCount += 1
+                        if let point = result.point { collected.append(point) }
+                    }
                 }
             }
 
-            // Surface an error only when every event failed AND there were events to process.
-            if collected.isEmpty && !eventsSlice.isEmpty {
+            // Surface an error only when every fetch genuinely failed (network/auth),
+            // not when the product simply has no demand in upcoming events.
+            if fetchFailedCount > 0 && successfulFetchCount == 0 && !eventsSlice.isEmpty {
                 errorMessage = ProductStrings.unexpectedRetryError
             }
 
@@ -276,8 +303,10 @@ public struct ProductDetailView: View {
         } message: {
             Text(ProductStrings.deletePrompt(viewModel.product?.name ?? ""))
         }
+        // Gate alert: only present when the main entity is loaded — first-load failures
+        // stay in the empty-state branch only (prevents double error UI).
         .alert(ProductStrings.errorTitle, isPresented: Binding(
-            get: { viewModel.errorMessage != nil },
+            get: { viewModel.errorMessage != nil && viewModel.product != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
             Button(ProductStrings.ok, role: .cancel) {}
