@@ -39,6 +39,8 @@ public struct ProductFormView: View {
         .sheet(isPresented: $viewModel.showCategoryPicker) {
             categoryPickerSheet
         }
+        .sensoryFeedback(.success, trigger: viewModel.saveSuccessCounter)
+        .sensoryFeedback(.error, trigger: viewModel.saveErrorCounter)
         .task { await viewModel.loadData() }
         .onChange(of: viewModel.selectedPhoto) { _, _ in
             Task { await viewModel.handlePhotoSelection() }
@@ -47,7 +49,7 @@ public struct ProductFormView: View {
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
-            Button(ProductStrings.ok) { viewModel.errorMessage = nil }
+            Button(ProductStrings.ok, role: .cancel) { viewModel.errorMessage = nil }
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
@@ -191,7 +193,6 @@ public struct ProductFormView: View {
         .padding(Spacing.md)
         .background(SolennixColors.card)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
     }
 
     private var selectedTeamLabel: String {
@@ -355,7 +356,6 @@ public struct ProductFormView: View {
         .padding(Spacing.md)
         .background(SolennixColors.card)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
     }
 
     // MARK: - Category Picker Sheet
@@ -363,7 +363,7 @@ public struct ProductFormView: View {
     private var categoryPickerSheet: some View {
         NavigationStack {
             List {
-                // Existing categories
+                // Existing categories — List applies .insetGrouped + surfaceGrouped matching InventoryPickerSheet
                 if !viewModel.existingCategories.isEmpty {
                     Section(ProductStrings.existingCategories) {
                         ForEach(viewModel.existingCategories, id: \.self) { cat in
@@ -405,6 +405,9 @@ public struct ProductFormView: View {
                     }
                 }
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(SolennixColors.surfaceGrouped)
             .navigationTitle(ProductStrings.selectCategoryTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
