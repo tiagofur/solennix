@@ -5588,6 +5588,38 @@
         }
       }
     },
+    "dashboard.event_status": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Event status"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado de eventos"
+          }
+        }
+      }
+    },
+    "dashboard.event_status_accessibility": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Event status for the month"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado de eventos del mes"
+          }
+        }
+      }
+    },
     "dashboard.financial_comparison": {
       "localizations": {
         "en": {

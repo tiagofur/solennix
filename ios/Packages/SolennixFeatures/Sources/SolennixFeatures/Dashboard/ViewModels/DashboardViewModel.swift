@@ -191,11 +191,13 @@ public final class DashboardViewModel {
             let aggregated: DashboardKPIs = try await apiClient.get(Endpoint.dashboardKpis)
             kpis = aggregated
             // Mirror low stock count for views that read `lowStockCount`
-            // directly. The list (`lowStockItems`) still comes from the
-            // inventory loader below. Other counts (totalEvents, totalProducts)
-            // are derived from the full lists and are not a clean 1:1 with
-            // kpis fields, so we leave those to the sequential loaders.
-            lowStockCount = aggregated.lowStockItems
+            // directly only while inventory hasn't loaded yet. Once
+            // lowStockItems is populated by the inventory loader below it
+            // becomes the canonical source, so skip the preload write on
+            // pull-to-refresh (lowStockItems is non-empty after first load).
+            if lowStockItems.isEmpty {
+                lowStockCount = aggregated.lowStockItems
+            }
         } catch {
             NSLog("[Dashboard] ⚠️ kpis preload failed: %@", String(describing: error))
             // Non-fatal — the sequential loaders below will still populate
@@ -381,7 +383,7 @@ public final class DashboardViewModel {
     }
 
     private func shouldDisplayInUpcoming(_ event: Event, now: Date) -> Bool {
-        // Status filter must match the initial load filter (isUpcomingEvent uses .confirmed too).
+        // Status filter matches isUpcomingEvent: confirmed only.
         guard event.status == .confirmed,
               let eventDate = Self.dashboardDateFormatter.date(from: String(event.eventDate.prefix(10)))
         else {
@@ -409,7 +411,7 @@ public final class DashboardViewModel {
 
     /// UTC calendar shared by makeAttentionEvents so its date arithmetic matches
     /// dashboardDateFormatter (UTC-pinned) and PendingEventsViewModel (explicit UTC).
-    private static var utcCalendar: Calendar = {
+    private static let utcCalendar: Calendar = {
         var c = Calendar(identifier: .gregorian)
         c.timeZone = TimeZone(secondsFromGMT: 0)!
         return c
@@ -519,7 +521,11 @@ public final class DashboardViewModel {
     }
 
     private static func isUpcomingEvent(_ event: Event, now: Date = Date()) -> Bool {
-        guard let eventDate = dashboardDateFormatter.date(from: String(event.eventDate.prefix(10))) else {
+        // Only confirmed events appear in "Próximos eventos" — must match
+        // shouldDisplayInUpcoming so both functions agree on membership.
+        guard event.status == .confirmed,
+              let eventDate = dashboardDateFormatter.date(from: String(event.eventDate.prefix(10)))
+        else {
             return false
         }
 
@@ -566,7 +572,7 @@ public final class DashboardViewModel {
     static func buildTrailingSixMonthTrend(
         from serverPoints: [DashboardRevenuePoint],
         now: Date,
-        calendar: Calendar = Calendar(identifier: .gregorian)
+        calendar: Calendar = utcCalendar
     ) -> [MonthlyRevenueTrendPoint] {
         let keyFormatter = DateFormatter()
         keyFormatter.calendar = Calendar(identifier: .gregorian)

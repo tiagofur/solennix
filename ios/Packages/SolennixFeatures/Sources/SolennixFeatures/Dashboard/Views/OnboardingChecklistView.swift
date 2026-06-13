@@ -74,16 +74,13 @@ struct OnboardingChecklistView: View {
             VStack(alignment: .leading, spacing: Spacing.md) {
                 // Auto-dismiss: when the last step is checked, mark onboarding
                 // as complete so the checklist doesn't flash on the next launch.
+                // The parent DashboardView already guards `!hasCompletedOnboarding`
+                // before instantiating this view, so returning users never reach here.
                 EmptyView()
                     .onChange(of: allCompleted) { _, completed in
                         if completed {
                             hasCompletedOnboarding = true
                             onDismiss()
-                        }
-                    }
-                    .onAppear {
-                        if allCompleted {
-                            hasCompletedOnboarding = true
                         }
                     }
                 // Header
