@@ -27,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveDetailLayout
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
+import com.creapolis.solennix.core.model.InventoryType
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.feature.inventory.InventoryStrings
 import com.creapolis.solennix.feature.inventory.viewmodel.InventoryDetailViewModel
@@ -48,13 +49,29 @@ fun InventoryDetailScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showAdjustSheet by remember { mutableStateOf(false) }
     var adjustmentValue by remember { mutableStateOf("") }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(viewModel.deleteSuccess) {
-        if (viewModel.deleteSuccess) onNavigateBack()
+        if (viewModel.deleteSuccess) {
+            viewModel.consumeDeleteSuccess()
+            onNavigateBack()
+        }
     }
 
     LaunchedEffect(viewModel.adjustmentSuccess) {
-        if (viewModel.adjustmentSuccess) showAdjustSheet = false
+        if (viewModel.adjustmentSuccess) {
+            viewModel.consumeAdjustmentSuccess()
+            showAdjustSheet = false
+        }
+    }
+
+    // Surface post-load errors (e.g. delete failure) via Snackbar when item is loaded.
+    LaunchedEffect(uiState.errorMessage) {
+        val msg = uiState.errorMessage
+        if (msg != null && uiState.item != null) {
+            snackbarHostState.showSnackbar(msg)
+            viewModel.onErrorShown()
+        }
     }
 
     if (showDeleteDialog) {
@@ -95,6 +112,7 @@ fun InventoryDetailScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             SolennixTopAppBar(
                 title = { Text(InventoryStrings.detailTitle) },
@@ -144,21 +162,22 @@ fun InventoryDetailScreen(
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
-        } else if (uiState.errorMessage != null) {
+        } else if (uiState.errorMessage != null && uiState.item == null) {
+            // Full-screen error only on initial load failure. Post-load errors use SnackbarHost.
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Text(uiState.errorMessage.orEmpty(), color = colors.error)
             }
         } else if (uiState.item != null) {
             val item = uiState.item ?: return@Scaffold
 
-            val typeBadgeColor = when (item.type.name) {
-                "EQUIPMENT" -> Color(0xFF9C27B0)
-                "SUPPLY" -> Color(0xFFFF9800)
+            val typeBadgeColor = when (item.type) {
+                InventoryType.EQUIPMENT -> Color(0xFF9C27B0)
+                InventoryType.SUPPLY -> Color(0xFFFF9800)
                 else -> colors.primary
             }
-            val typeLabel = when (item.type.name) {
-                "EQUIPMENT" -> InventoryStrings.detailTypeEquipment
-                "SUPPLY" -> InventoryStrings.detailTypeSupply
+            val typeLabel = when (item.type) {
+                InventoryType.EQUIPMENT -> InventoryStrings.detailTypeEquipment
+                InventoryType.SUPPLY -> InventoryStrings.detailTypeSupply
                 else -> InventoryStrings.detailTypeIngredient
             }
             val isCritical = uiState.demand7Days > 0 && uiState.stockAfter7Days < 0
@@ -329,7 +348,7 @@ private fun InventoryKpiCard(
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(label, style = MaterialTheme.typography.labelSmall, color = SolennixTheme.colors.secondaryText)
             }
-            Spacer(modifier = Modifier.height(6.6.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = valueColor, maxLines = 1)
             Text(subtitle, style = MaterialTheme.typography.labelSmall, color = SolennixTheme.colors.secondaryText)
             if (extraLabel != null) {
@@ -525,20 +544,38 @@ private fun DemandForecastCard(
                     Text(InventoryStrings.noConfirmedEventsUsingItem, style = MaterialTheme.typography.bodySmall, color = colors.secondaryText)
                 }
             } else {
-                val today = LocalDate.now()
-                    val dateFormatter = if (Locale.getDefault().language.startsWith("en")) {
+                // Anchor today once per composition and wrap formatter in remember to
+                // avoid re-creating it on every recomposition (fix #15).
+                val today = remember { LocalDate.now() }
+                val dateFormatter = remember {
+                    if (Locale.getDefault().language.startsWith("en")) {
                         DateTimeFormatter.ofPattern("MMMM d", Locale.ENGLISH)
                     } else {
                         DateTimeFormatter.ofPattern("d 'de' MMMM", Locale.forLanguageTag("es"))
                     }
-                var accumulated = currentStock
+                }
 
-                entries.forEach { entry ->
-                    accumulated -= entry.quantity
-                    val eventDate = try { LocalDate.parse(entry.eventDate) } catch (_: Exception) { null }
-                    val diffDays = eventDate?.let { ChronoUnit.DAYS.between(today, it).toInt() } ?: Int.MAX_VALUE
-                    val isUrgent = accumulated < 0
-                    val isWithinWeek = diffDays in 0..7
+                // Precompute running balance list — avoids mutable var mutated inside
+                // a Compose forEach loop (fix #15).
+                data class EntryRow(
+                    val entry: InventoryDemandEntry,
+                    val eventDate: LocalDate?,
+                    val diffDays: Int,
+                    val afterBalance: Double
+                )
+                val rowData = remember(entries, currentStock) {
+                    var balance = currentStock
+                    entries.map { entry ->
+                        balance -= entry.quantity
+                        val date = try { LocalDate.parse(entry.eventDate) } catch (_: Exception) { null }
+                        val diff = date?.let { ChronoUnit.DAYS.between(today, it).toInt() } ?: Int.MAX_VALUE
+                        EntryRow(entry, date, diff, balance)
+                    }
+                }
+
+                rowData.forEach { row ->
+                    val isUrgent = row.afterBalance < 0
+                    val isWithinWeek = row.diffDays in 0..7
 
                     val dotColor = when {
                         isUrgent -> colors.error
@@ -555,20 +592,20 @@ private fun DemandForecastCard(
                         Column(modifier = Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Text(
-                                    eventDate?.format(dateFormatter) ?: entry.eventDate,
+                                    row.eventDate?.format(dateFormatter) ?: row.entry.eventDate,
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium,
                                     color = colors.primaryText
                                 )
-                                when (diffDays) {
+                                when (row.diffDays) {
                                     0 -> BadgeLabel(InventoryStrings.today, colors.primary)
                                     1 -> BadgeLabel(InventoryStrings.tomorrow, Color(0xFFFF9800))
-                                    in 2..7 -> Text(InventoryStrings.inDays(diffDays), style = MaterialTheme.typography.labelSmall, color = colors.secondaryText)
+                                    in 2..7 -> Text(InventoryStrings.inDays(row.diffDays), style = MaterialTheme.typography.labelSmall, color = colors.secondaryText)
                                 }
                             }
                         }
                         Text(
-                            "${entry.quantity.let { if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it) }} $unit",
+                            "${row.entry.quantity.let { if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it) }} $unit",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                             color = if (isUrgent) colors.error else colors.primaryText

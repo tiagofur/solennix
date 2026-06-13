@@ -38,6 +38,9 @@ data class InventoryDemandEntry(
 data class InventoryDetailUiState(
     val item: InventoryItem? = null,
     val demandEntries: List<InventoryDemandEntry> = emptyList(),
+    /** Precomputed once when entries are set — avoids repeated LocalDate.parse on every access (fix #15). */
+    val demand7Days: Double = 0.0,
+    val stockAfter7Days: Double = 0.0,
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 ) {
@@ -49,21 +52,6 @@ data class InventoryDetailUiState(
 
     val totalDemand: Double
         get() = demandEntries.sumOf { it.quantity }
-
-    val demand7Days: Double
-        get() {
-            val today = LocalDate.now()
-            val in7Days = today.plusDays(7)
-            return demandEntries.filter { entry ->
-                try {
-                    val date = LocalDate.parse(entry.eventDate)
-                    !date.isBefore(today) && !date.isAfter(in7Days)
-                } catch (_: Exception) { false }
-            }.sumOf { it.quantity }
-        }
-
-    val stockAfter7Days: Double
-        get() = (item?.currentStock ?: 0.0) - demand7Days
 }
 
 @HiltViewModel
@@ -88,6 +76,16 @@ class InventoryDetailViewModel @Inject constructor(
 
     var adjustmentSuccess by mutableStateOf(false)
         private set
+
+    /** Reset after delete-success has been consumed by the UI. */
+    fun consumeDeleteSuccess() {
+        deleteSuccess = false
+    }
+
+    /** Reset after adjustment-success has been consumed by the UI. */
+    fun consumeAdjustmentSuccess() {
+        adjustmentSuccess = false
+    }
 
     private fun loadItem() {
         viewModelScope.launch {
@@ -129,13 +127,22 @@ class InventoryDetailViewModel @Inject constructor(
                                     val eventProducts = eventRepository.getEventProductsFromApi(event.id)
                                     var eventDemand = 0.0
                                     for (ep in eventProducts) {
-                                        val ingredients = cacheLock.withLock {
-                                            ingredientsCache.getOrPut(ep.productId) {
-                                                try {
-                                                    productRepository.getProductIngredients(ep.productId)
-                                                } catch (_: Exception) {
-                                                    emptyList()
-                                                }
+                                        // Optimistic read outside the lock — avoids holding the
+                                        // Mutex across the network call (fix #14).
+                                        val cached = cacheLock.withLock { ingredientsCache[ep.productId] }
+                                        val ingredients = if (cached != null) {
+                                            cached
+                                        } else {
+                                            // Fetch OUTSIDE the lock so concurrent coroutines can
+                                            // make progress. Then double-check under lock before insert
+                                            // to handle the rare concurrent-fetch race.
+                                            val fetched = try {
+                                                productRepository.getProductIngredients(ep.productId)
+                                            } catch (_: Exception) {
+                                                emptyList()
+                                            }
+                                            cacheLock.withLock {
+                                                ingredientsCache.getOrPut(ep.productId) { fetched }
                                             }
                                         }
                                         val matching = ingredients.find { it.inventoryId == itemId }
@@ -165,8 +172,21 @@ class InventoryDetailViewModel @Inject constructor(
                     }.awaitAll().filterNotNull()
                 }
 
+                val sortedEntries = demandEntries.sortedBy { it.eventDate }
+                val todayDate = LocalDate.now()
+                val in7Days = todayDate.plusDays(7)
+                val computed7Days = sortedEntries.filter { entry ->
+                    try {
+                        val date = LocalDate.parse(entry.eventDate)
+                        !date.isBefore(todayDate) && !date.isAfter(in7Days)
+                    } catch (_: Exception) { false }
+                }.sumOf { it.quantity }
+                val computedStockAfter7Days = (_uiState.value.item?.currentStock ?: 0.0) - computed7Days
+
                 _uiState.value = _uiState.value.copy(
-                    demandEntries = demandEntries.sortedBy { it.eventDate }
+                    demandEntries = sortedEntries,
+                    demand7Days = computed7Days,
+                    stockAfter7Days = computedStockAfter7Days
                 )
             } catch (_: Exception) {
                 // Demand forecast is supplementary
@@ -199,5 +219,10 @@ class InventoryDetailViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(errorMessage = InventoryStrings.deleteError(e.message))
             }
         }
+    }
+
+    /** Clears [InventoryDetailUiState.errorMessage] after it has been shown in the UI. */
+    fun onErrorShown() {
+        _uiState.value = _uiState.value.copy(errorMessage = null)
     }
 }
