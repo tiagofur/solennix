@@ -130,6 +130,7 @@ public final class ProductFormViewModel {
     private var initialCategory: String = ""
     private var initialBasePrice: Double = 0
     private var initialIsActive: Bool = true
+    private var initialStaffTeamId: String?
     private var initialRecipeSnapshot: [RecipeSnapshot] = []
 
     /// True when any core field, recipe, or local image differs from its loaded (or default) initial value.
@@ -138,6 +139,7 @@ public final class ProductFormViewModel {
             || category != initialCategory
             || basePrice != initialBasePrice
             || isActive != initialIsActive
+            || staffTeamId != initialStaffTeamId
             || localImageData != nil
             || currentRecipeSnapshot != initialRecipeSnapshot
     }
@@ -234,6 +236,7 @@ public final class ProductFormViewModel {
         initialCategory = category
         initialBasePrice = basePrice
         initialIsActive = isActive
+        initialStaffTeamId = staffTeamId
     }
 
     private func populateRecipe(from productIngredients: [ProductIngredient]) {

@@ -221,6 +221,10 @@ public final class EventFormViewModel {
         let id: String
         let quantity: Double
         let price: Double
+        /// Extra per-type fields folded into the dirty signature so that editing
+        /// (e.g.) an extra's description or a staff member's shift — without
+        /// touching price — still marks the form dirty.
+        var detail: String = ""
     }
 
     struct FormSnapshot: Equatable {
@@ -278,9 +282,25 @@ public final class EventFormViewModel {
             discount: discount,
             discountType: discountType,
             products: selectedProducts.map { ItemSignature(id: $0.productId, quantity: $0.quantity, price: $0.unitPrice) },
-            extras: extras.map { ItemSignature(id: $0.id.uuidString, quantity: 1, price: $0.price) },
-            staff: selectedStaff.map { ItemSignature(id: $0.staffId, quantity: $0.feeAmount, price: $0.feeAmount) },
-            equipment: selectedEquipment.map { ItemSignature(id: $0.inventoryId, quantity: Double($0.quantity), price: 0) },
+            extras: extras.map {
+                ItemSignature(
+                    id: $0.id.uuidString,
+                    quantity: 1,
+                    price: $0.price,
+                    detail: "\($0.description)|\($0.cost)|\($0.excludeUtility)|\($0.includeInChecklist)"
+                )
+            },
+            staff: selectedStaff.map {
+                ItemSignature(
+                    id: $0.staffId,
+                    quantity: $0.feeAmount,
+                    price: $0.feeAmount,
+                    detail: "\($0.staffRoleLabel ?? "")|\($0.roleOverride)|\($0.notes)|\($0.shiftStart?.timeIntervalSince1970 ?? -1)|\($0.shiftEnd?.timeIntervalSince1970 ?? -1)|\($0.status)"
+                )
+            },
+            equipment: selectedEquipment.map {
+                ItemSignature(id: $0.inventoryId, quantity: Double($0.quantity), price: 0, detail: $0.notes)
+            },
             supplies: selectedSupplies.map { ItemSignature(id: $0.inventoryId, quantity: $0.quantity, price: $0.unitCost) }
         )
     }
