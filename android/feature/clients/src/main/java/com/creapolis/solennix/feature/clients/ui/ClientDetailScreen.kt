@@ -53,11 +53,11 @@ fun ClientDetailScreen(
         }
     }
 
-    // Surface post-load errors (e.g. failed delete) via Snackbar so they are
-    // visible even when client != null — mirrors iOS error toast pattern.
+    // Surface post-load errors (e.g. failed delete) via Snackbar when client is loaded.
+    // Guard with client != null so we don't race with the full-screen error on initial load failure.
     LaunchedEffect(uiState.errorMessage) {
         val msg = uiState.errorMessage
-        if (msg != null) {
+        if (msg != null && uiState.client != null) {
             snackbarHostState.showSnackbar(msg)
             viewModel.onErrorShown()
         }
