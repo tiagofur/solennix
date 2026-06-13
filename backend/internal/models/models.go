@@ -86,9 +86,9 @@ type Client struct {
 	City        *string   `json:"city,omitempty"`
 	Notes       *string   `json:"notes,omitempty"`
 	PhotoURL    *string   `json:"photo_url,omitempty"`
-	TotalEvents    int       `json:"total_events"`
-	TotalSpent     float64   `json:"total_spent"`
-	PendingBalance float64   `json:"pending_balance"`
+	TotalEvents    int      `json:"total_events"`
+	TotalSpent     float64  `json:"total_spent"`
+	PendingBalance *float64 `json:"pending_balance,omitempty"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
 }

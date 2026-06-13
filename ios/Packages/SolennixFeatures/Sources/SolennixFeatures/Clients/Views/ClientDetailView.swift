@@ -240,62 +240,95 @@ public struct ClientDetailView: View {
                 .font(.title2.weight(.bold))
                 .foregroundStyle(SolennixColors.text)
 
-            // Stats grid — 2 columns; expands to 4 boxes when pendingBalance is available.
-            // LazyVGrid handles Dynamic Type gracefully: each cell scales independently,
-            // no horizontal overflow at AX sizes (vs a 4-box HStack).
-            LazyVGrid(
-                columns: [
-                    GridItem(.flexible(), spacing: Spacing.md),
-                    GridItem(.flexible(), spacing: Spacing.md)
-                ],
-                spacing: Spacing.md
-            ) {
-                statBox(
-                    icon: "calendar",
-                    value: "\(client.totalEvents ?? 0)",
-                    label: tr("clients.stats.events", "Eventos"),
-                    a11yLabel: trf("clients.detail.a11y.stat_events", "Eventos: %lld", client.totalEvents ?? 0)
-                )
+            // Stats: 2×2 LazyVGrid only when all 4 boxes are present (pendingBalance available
+            // and avg computable). Falls back to a plain HStack for 2–3 boxes so there is never
+            // an orphaned cell in the right column.
+            let hasAvg = (client.totalEvents ?? 0) > 0 && (client.totalSpent ?? 0) > 0
+            let hasBalance = client.pendingBalance != nil
+            let useGrid = hasAvg && hasBalance
 
-                statBox(
-                    icon: "dollarsign.circle",
-                    value: (client.totalSpent ?? 0).asMXN,
-                    label: tr("clients.stats.total", "Total"),
-                    a11yLabel: "\(tr("clients.stats.total", "Total gastado")): \((client.totalSpent ?? 0).asMXN)"
-                )
-
-                if let totalEvents = client.totalEvents, totalEvents > 0,
-                   let totalSpent = client.totalSpent, totalSpent > 0 {
-                    let avg = totalSpent / Double(totalEvents)
+            if useGrid {
+                LazyVGrid(
+                    columns: [
+                        GridItem(.flexible(), spacing: Spacing.md),
+                        GridItem(.flexible(), spacing: Spacing.md)
+                    ],
+                    spacing: Spacing.md
+                ) {
                     statBox(
-                        icon: "chart.bar",
-                        value: avg.asMXN,
-                        label: tr("clients.stats.average", "Promedio"),
-                        a11yLabel: "\(tr("clients.stats.average", "Ticket promedio")): \(avg.asMXN)"
+                        icon: "calendar",
+                        value: "\(client.totalEvents ?? 0)",
+                        label: tr("clients.stats.events", "Eventos"),
+                        a11yLabel: trf("clients.detail.a11y.stat_events", "Eventos: %lld", client.totalEvents ?? 0)
                     )
+
+                    statBox(
+                        icon: "dollarsign.circle",
+                        value: (client.totalSpent ?? 0).asMXN,
+                        label: tr("clients.stats.total", "Total"),
+                        a11yLabel: "\(tr("clients.stats.total", "Total gastado")): \((client.totalSpent ?? 0).asMXN)"
+                    )
+
+                    if let totalEvents = client.totalEvents, totalEvents > 0,
+                       let totalSpent = client.totalSpent, totalSpent > 0 {
+                        let avg = totalSpent / Double(totalEvents)
+                        statBox(
+                            icon: "chart.bar",
+                            value: avg.asMXN,
+                            label: tr("clients.stats.average", "Promedio"),
+                            a11yLabel: "\(tr("clients.stats.average", "Ticket promedio")): \(avg.asMXN)"
+                        )
+                    }
+
+                    if let balance = client.pendingBalance {
+                        let isOverpaid = balance < 0
+                        let isSettled = balance == 0
+                        let label = isOverpaid
+                            ? tr("clients.stats.pending_balance_credit", "A favor")
+                            : tr("clients.stats.pending_balance", "Por cobrar")
+                        let valueColor: Color = isSettled
+                            ? SolennixColors.success
+                            : isOverpaid ? SolennixColors.info : SolennixColors.warning
+                        let formattedBalance = abs(balance).asMXN
+                        let a11yLabel = isOverpaid
+                            ? trf("clients.detail.a11y.stat_credit", "A favor: %@", formattedBalance)
+                            : trf("clients.detail.a11y.stat_pending_balance", "Por cobrar: %@", formattedBalance)
+
+                        statBox(
+                            icon: isOverpaid ? "checkmark.circle" : "clock.badge.exclamationmark",
+                            value: formattedBalance,
+                            label: label,
+                            valueColor: valueColor,
+                            a11yLabel: a11yLabel
+                        )
+                    }
                 }
-
-                if let balance = client.pendingBalance {
-                    let isOverpaid = balance < 0
-                    let isSettled = balance == 0
-                    let label = isOverpaid
-                        ? tr("clients.stats.pending_balance_credit", "A favor")
-                        : tr("clients.stats.pending_balance", "Por cobrar")
-                    let valueColor: Color = isSettled
-                        ? SolennixColors.success
-                        : isOverpaid ? SolennixColors.info : SolennixColors.warning
-                    let formattedBalance = abs(balance).asMXN
-                    let a11yLabel = isOverpaid
-                        ? trf("clients.detail.a11y.stat_credit", "A favor: %@", formattedBalance)
-                        : trf("clients.detail.a11y.stat_pending_balance", "Por cobrar: %@", formattedBalance)
+            } else {
+                HStack(spacing: Spacing.md) {
+                    statBox(
+                        icon: "calendar",
+                        value: "\(client.totalEvents ?? 0)",
+                        label: tr("clients.stats.events", "Eventos"),
+                        a11yLabel: trf("clients.detail.a11y.stat_events", "Eventos: %lld", client.totalEvents ?? 0)
+                    )
 
                     statBox(
-                        icon: isOverpaid ? "checkmark.circle" : "clock.badge.exclamationmark",
-                        value: formattedBalance,
-                        label: label,
-                        valueColor: valueColor,
-                        a11yLabel: a11yLabel
+                        icon: "dollarsign.circle",
+                        value: (client.totalSpent ?? 0).asMXN,
+                        label: tr("clients.stats.total", "Total"),
+                        a11yLabel: "\(tr("clients.stats.total", "Total gastado")): \((client.totalSpent ?? 0).asMXN)"
                     )
+
+                    if let totalEvents = client.totalEvents, totalEvents > 0,
+                       let totalSpent = client.totalSpent, totalSpent > 0 {
+                        let avg = totalSpent / Double(totalEvents)
+                        statBox(
+                            icon: "chart.bar",
+                            value: avg.asMXN,
+                            label: tr("clients.stats.average", "Promedio"),
+                            a11yLabel: "\(tr("clients.stats.average", "Ticket promedio")): \(avg.asMXN)"
+                        )
+                    }
                 }
             }
         }

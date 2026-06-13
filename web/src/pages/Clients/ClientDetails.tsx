@@ -143,7 +143,7 @@ export const ClientDetails: React.FC = () => {
             {t("clients:details.contact_info")}
           </p>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border border-t border-border">
+        <div className={`grid divide-y sm:divide-y-0 sm:divide-x divide-border border-t border-border ${client.pending_balance !== undefined ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3 sm:grid-cols-3'}`}>
           <div className="px-4 py-4 text-center">
             <p className="text-2xl font-black text-text">
               {client.total_events ?? 0}

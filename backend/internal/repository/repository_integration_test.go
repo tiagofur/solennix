@@ -131,8 +131,11 @@ func TestClientPendingBalanceIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetByID() error = %v", err)
 	}
-	if got.PendingBalance != 0 {
-		t.Fatalf("PendingBalance with no events = %v, want 0", got.PendingBalance)
+	if got.PendingBalance == nil {
+		t.Fatalf("PendingBalance with no events = nil, want non-nil")
+	}
+	if *got.PendingBalance != 0 {
+		t.Fatalf("PendingBalance with no events = %v, want 0", *got.PendingBalance)
 	}
 
 	// Seed a quoted event with total_amount = 8000 — must NOT count toward pending_balance.
@@ -148,8 +151,11 @@ func TestClientPendingBalanceIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetByID() error after quoted event = %v", err)
 	}
-	if got.PendingBalance != 0 {
-		t.Fatalf("PendingBalance with only quoted event = %v, want 0", got.PendingBalance)
+	if got.PendingBalance == nil {
+		t.Fatalf("PendingBalance with only quoted event = nil, want non-nil")
+	}
+	if *got.PendingBalance != 0 {
+		t.Fatalf("PendingBalance with only quoted event = %v, want 0", *got.PendingBalance)
 	}
 
 	// Seed a quoted event with a payment — payment must also NOT count.
@@ -174,8 +180,11 @@ func TestClientPendingBalanceIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetByID() error after quoted event with payment = %v", err)
 	}
-	if got.PendingBalance != 0 {
-		t.Fatalf("PendingBalance with quoted events (one with payment) = %v, want 0", got.PendingBalance)
+	if got.PendingBalance == nil {
+		t.Fatalf("PendingBalance with quoted events (one with payment) = nil, want non-nil")
+	}
+	if *got.PendingBalance != 0 {
+		t.Fatalf("PendingBalance with quoted events (one with payment) = %v, want 0", *got.PendingBalance)
 	}
 
 	// Seed one confirmed event with total_amount = 10000.
@@ -194,8 +203,11 @@ func TestClientPendingBalanceIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetByID() error = %v", err)
 	}
-	if got.PendingBalance != 10000 {
-		t.Fatalf("PendingBalance (no payments) = %v, want 10000", got.PendingBalance)
+	if got.PendingBalance == nil {
+		t.Fatalf("PendingBalance (no payments) = nil, want non-nil")
+	}
+	if *got.PendingBalance != 10000 {
+		t.Fatalf("PendingBalance (no payments) = %v, want 10000", *got.PendingBalance)
 	}
 
 	// Add a partial payment of 3000.
@@ -211,8 +223,11 @@ func TestClientPendingBalanceIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetByID() error = %v", err)
 	}
-	if got.PendingBalance != 7000 {
-		t.Fatalf("PendingBalance (partial payment) = %v, want 7000", got.PendingBalance)
+	if got.PendingBalance == nil {
+		t.Fatalf("PendingBalance (partial payment) = nil, want non-nil")
+	}
+	if *got.PendingBalance != 7000 {
+		t.Fatalf("PendingBalance (partial payment) = %v, want 7000", *got.PendingBalance)
 	}
 
 	// Seed a cancelled event with total_amount = 5000 — must NOT affect pending_balance.
@@ -228,8 +243,11 @@ func TestClientPendingBalanceIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetByID() error = %v", err)
 	}
-	if got.PendingBalance != 7000 {
-		t.Fatalf("PendingBalance (after cancelled event) = %v, want 7000", got.PendingBalance)
+	if got.PendingBalance == nil {
+		t.Fatalf("PendingBalance (after cancelled event) = nil, want non-nil")
+	}
+	if *got.PendingBalance != 7000 {
+		t.Fatalf("PendingBalance (after cancelled event) = %v, want 7000", *got.PendingBalance)
 	}
 
 	// Full payment — pending_balance drops to 0.
@@ -245,8 +263,11 @@ func TestClientPendingBalanceIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetByID() error = %v", err)
 	}
-	if got.PendingBalance != 0 {
-		t.Fatalf("PendingBalance (fully paid) = %v, want 0", got.PendingBalance)
+	if got.PendingBalance == nil {
+		t.Fatalf("PendingBalance (fully paid) = nil, want non-nil")
+	}
+	if *got.PendingBalance != 0 {
+		t.Fatalf("PendingBalance (fully paid) = %v, want 0", *got.PendingBalance)
 	}
 
 	// Overpayment — result must be negative (not clamped).
@@ -262,8 +283,11 @@ func TestClientPendingBalanceIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetByID() error = %v", err)
 	}
-	if got.PendingBalance != -500 {
-		t.Fatalf("PendingBalance (overpaid) = %v, want -500", got.PendingBalance)
+	if got.PendingBalance == nil {
+		t.Fatalf("PendingBalance (overpaid) = nil, want non-nil")
+	}
+	if *got.PendingBalance != -500 {
+		t.Fatalf("PendingBalance (overpaid) = %v, want -500", *got.PendingBalance)
 	}
 }
 

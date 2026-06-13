@@ -572,11 +572,12 @@ components:
         pending_balance:
           type: number
           format: double
+          nullable: true
           description: >
-            Computed on read (detail only). Sum of total_amount across confirmed and
+            Computed on read (detail endpoint only). Sum of total_amount across confirmed and
             completed events minus sum of payments on those same events. Quoted events
             are excluded as prospects, not committed debt. Negative values indicate
-            the client has overpaid. List responses return 0 for this field.
+            the client has overpaid. Absent (omitted) on list and search responses.
         created_at:
           type: string
           format: date-time

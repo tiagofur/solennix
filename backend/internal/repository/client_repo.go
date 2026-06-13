@@ -106,14 +106,16 @@ func (r *ClientRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models
 			c.created_at, c.updated_at
 		FROM clients c
 		WHERE c.id = $1 AND c.user_id = $2`
+	var pendingBalance float64
 	err := r.pool.QueryRow(ctx, query, id, userID).Scan(
 		&c.ID, &c.UserID, &c.Name, &c.Phone, &c.Email,
 		&c.Address, &c.City, &c.Notes, &c.PhotoURL, &c.TotalEvents, &c.TotalSpent,
-		&c.PendingBalance,
+		&pendingBalance,
 		&c.CreatedAt, &c.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("client not found: %w", err)
 	}
+	c.PendingBalance = &pendingBalance
 	return c, nil
 }
 
