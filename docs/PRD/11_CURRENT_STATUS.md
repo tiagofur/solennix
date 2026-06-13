@@ -25,6 +25,13 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.8
 
+> [!success] 2026-06-13 — Dashboard (home): Judgment Day → APPROVED (branch `feat/ios-dashboard-judgment`)
+> Revisión dual ciego (3 rondas) del home — KPIs, 5 charts, widgets, onboarding. La pantalla de primera impresión.
+> - **Colores (causa raíz de los "raros"):** `warning.opacity(0.15)` reemplazado por el token `warningBg` en los badges de atención (en dark mode daba un naranja garish en vez del `#2A1A00` diseñado); `.white` sobre oro/verde → `textInverse`; "Nuevo cliente" usaba `statusConfirmed` (azul de estado) → `accent` navy; barras del chart premium con `SolennixGradient.premium` (el gradiente se repartía por el canvas, cada barra un tono según altura) → oro plano; scrim del modal navy en vez de negro.
+> - **Lógica (timezone, la misma clase):** `shouldDisplayInUpcoming`, `makeAttentionEvents` y el rango de mes usaban `Calendar.current.startOfDay` sobre fechas UTC → los eventos confirmados de HOY desaparecían del dashboard en México (UTC-6). Todo normalizado a UTC; `isUpcomingEvent` y `shouldDisplayInUpcoming` ahora filtran ambos `.confirmed` y coinciden en membresía. `buildTrailingSixMonthTrend` con calendar UTC (bug de frontera de año). `lowStockCount` con fuente única.
+> - **UX/UI:** fecha ISO cruda mostrada al usuario → formateada; `Button` envolviendo `NavigationLink` → link directo + `simultaneousGesture`; accesibilidad de VoiceOver en los 5 charts/widgets; onboarding localizado + auto-dismiss; `NumberFormatter` cacheado (NSCache); `print()` → `NSLog`.
+> - **Commits:** 2fa221b0, 5b348f81. Build verde por ronda.
+
 > [!success] 2026-06-13 — Edit/Form screens: Judgment Day → APPROVED (branch `feat/ios-edit-forms-judgment`)
 > Revisión dual ciego (4 jueces, 3 rondas) de todas las pantallas de edición: Cliente, Evento (wizard 5 pasos), Producto, Inventario, Personal, Equipos. El usuario reportó "colores raros" — eran varias cosas.
 > - **Colores:** `.white` hardcodeado sobre superficies doradas (check de paso, botón Siguiente, toggle %/$ de Finanzas) → `textInverse` (fallaba WCAG AA ~2:1). Botones Guardar en azul del sistema en iPad (sin `foregroundStyle`) → oro. Chip de unidad blanco-sobre-oro → primaryLight/primary. Total de línea verde con descuento (semánticamente al revés) → neutral.
