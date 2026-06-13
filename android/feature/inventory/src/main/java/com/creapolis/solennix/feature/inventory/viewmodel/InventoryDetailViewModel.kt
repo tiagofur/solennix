@@ -14,6 +14,7 @@ import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.InventoryType
 import com.creapolis.solennix.feature.inventory.InventoryStrings
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -102,10 +103,13 @@ class InventoryDetailViewModel @Inject constructor(
     private fun loadDemandForecast() {
         viewModelScope.launch {
             try {
-                val today = LocalDate.now().toString()
+                // Capture now ONCE — avoids midnight race if the function spans midnight
+                val nowDate = LocalDate.now()
+                val nowString = nowDate.toString()
+
                 val events = eventRepository.getEventsFromApi()
                 val upcomingEvents = events.filter {
-                    it.eventDate >= today && it.status == EventStatus.CONFIRMED
+                    it.eventDate >= nowString && it.status == EventStatus.CONFIRMED
                 }
 
                 val item = _uiState.value.item ?: return@launch
@@ -138,6 +142,8 @@ class InventoryDetailViewModel @Inject constructor(
                                             // to handle the rare concurrent-fetch race.
                                             val fetched = try {
                                                 productRepository.getProductIngredients(ep.productId)
+                                            } catch (e: CancellationException) {
+                                                throw e
                                             } catch (_: Exception) {
                                                 emptyList()
                                             }
@@ -164,6 +170,8 @@ class InventoryDetailViewModel @Inject constructor(
                                             unit = item.unit
                                         )
                                     } else null
+                                } catch (e: CancellationException) {
+                                    throw e
                                 } catch (_: Exception) {
                                     null
                                 }
@@ -173,12 +181,13 @@ class InventoryDetailViewModel @Inject constructor(
                 }
 
                 val sortedEntries = demandEntries.sortedBy { it.eventDate }
-                val todayDate = LocalDate.now()
-                val in7Days = todayDate.plusDays(7)
+                // Reuse the nowDate captured above — avoids a second LocalDate.now() call
+                // after network awaits (midnight race fix).
+                val in7Days = nowDate.plusDays(7)
                 val computed7Days = sortedEntries.filter { entry ->
                     try {
                         val date = LocalDate.parse(entry.eventDate)
-                        !date.isBefore(todayDate) && !date.isAfter(in7Days)
+                        !date.isBefore(nowDate) && !date.isAfter(in7Days)
                     } catch (_: Exception) { false }
                 }.sumOf { it.quantity }
                 val computedStockAfter7Days = (_uiState.value.item?.currentStock ?: 0.0) - computed7Days
@@ -188,6 +197,8 @@ class InventoryDetailViewModel @Inject constructor(
                     demand7Days = computed7Days,
                     stockAfter7Days = computedStockAfter7Days
                 )
+            } catch (e: CancellationException) {
+                throw e
             } catch (_: Exception) {
                 // Demand forecast is supplementary
             }
