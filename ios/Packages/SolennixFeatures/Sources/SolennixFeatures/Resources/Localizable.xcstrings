@@ -3210,6 +3210,38 @@
         }
       }
     },
+    "clients.detail.a11y.stat_pending_balance": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outstanding: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Por cobrar: %@"
+          }
+        }
+      }
+    },
+    "clients.detail.a11y.stat_credit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credit: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A favor: %@"
+          }
+        }
+      }
+    },
     "clients.detail.action.call": {
       "localizations": {
         "en": {
@@ -4127,6 +4159,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Total"
+          }
+        }
+      }
+    },
+    "clients.stats.pending_balance": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outstanding"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Por cobrar"
+          }
+        }
+      }
+    },
+    "clients.stats.pending_balance_credit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A favor"
           }
         }
       }

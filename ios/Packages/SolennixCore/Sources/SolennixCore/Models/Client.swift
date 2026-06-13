@@ -12,8 +12,30 @@ public struct Client: Codable, Identifiable, Sendable, Hashable {
     public var photoUrl: String?
     public var totalEvents: Int?
     public var totalSpent: Double?
+    /// Confirmed + completed event totals minus payments. Negative = overpayment (client has credit).
+    /// Absent on list endpoint responses (nil-safe: older payloads decode without error).
+    public var pendingBalance: Double?
     public let createdAt: String
     public let updatedAt: String
+
+    // MARK: - CodingKeys
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case userId = "user_id"
+        case name
+        case phone
+        case email
+        case address
+        case city
+        case notes
+        case photoUrl = "photo_url"
+        case totalEvents = "total_events"
+        case totalSpent = "total_spent"
+        case pendingBalance = "pending_balance"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
 
     // MARK: - Init
 
@@ -29,6 +51,7 @@ public struct Client: Codable, Identifiable, Sendable, Hashable {
         photoUrl: String? = nil,
         totalEvents: Int? = nil,
         totalSpent: Double? = nil,
+        pendingBalance: Double? = nil,
         createdAt: String,
         updatedAt: String
     ) {
@@ -43,6 +66,7 @@ public struct Client: Codable, Identifiable, Sendable, Hashable {
         self.photoUrl = photoUrl
         self.totalEvents = totalEvents
         self.totalSpent = totalSpent
+        self.pendingBalance = pendingBalance
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }

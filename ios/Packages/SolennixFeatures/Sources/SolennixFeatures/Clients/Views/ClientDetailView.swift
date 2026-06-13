@@ -240,8 +240,16 @@ public struct ClientDetailView: View {
                 .font(.title2.weight(.bold))
                 .foregroundStyle(SolennixColors.text)
 
-            // Stats row
-            HStack(spacing: Spacing.md) {
+            // Stats grid — 2 columns; expands to 4 boxes when pendingBalance is available.
+            // LazyVGrid handles Dynamic Type gracefully: each cell scales independently,
+            // no horizontal overflow at AX sizes (vs a 4-box HStack).
+            LazyVGrid(
+                columns: [
+                    GridItem(.flexible(), spacing: Spacing.md),
+                    GridItem(.flexible(), spacing: Spacing.md)
+                ],
+                spacing: Spacing.md
+            ) {
                 statBox(
                     icon: "calendar",
                     value: "\(client.totalEvents ?? 0)",
@@ -266,6 +274,29 @@ public struct ClientDetailView: View {
                         a11yLabel: "\(tr("clients.stats.average", "Ticket promedio")): \(avg.asMXN)"
                     )
                 }
+
+                if let balance = client.pendingBalance {
+                    let isOverpaid = balance < 0
+                    let isSettled = balance == 0
+                    let label = isOverpaid
+                        ? tr("clients.stats.pending_balance_credit", "A favor")
+                        : tr("clients.stats.pending_balance", "Por cobrar")
+                    let valueColor: Color = isSettled
+                        ? SolennixColors.success
+                        : isOverpaid ? SolennixColors.info : SolennixColors.warning
+                    let formattedBalance = abs(balance).asMXN
+                    let a11yLabel = isOverpaid
+                        ? trf("clients.detail.a11y.stat_credit", "A favor: %@", formattedBalance)
+                        : trf("clients.detail.a11y.stat_pending_balance", "Por cobrar: %@", formattedBalance)
+
+                    statBox(
+                        icon: isOverpaid ? "checkmark.circle" : "clock.badge.exclamationmark",
+                        value: formattedBalance,
+                        label: label,
+                        valueColor: valueColor,
+                        a11yLabel: a11yLabel
+                    )
+                }
             }
         }
         .padding(Spacing.lg)
@@ -276,7 +307,13 @@ public struct ClientDetailView: View {
 
     // MARK: - Stat Box
 
-    private func statBox(icon: String, value: String, label: String, a11yLabel: String) -> some View {
+    private func statBox(
+        icon: String,
+        value: String,
+        label: String,
+        valueColor: Color = SolennixColors.text,
+        a11yLabel: String
+    ) -> some View {
         VStack(spacing: Spacing.xs) {
             Image(systemName: icon)
                 .font(.body)
@@ -284,7 +321,7 @@ public struct ClientDetailView: View {
 
             Text(value)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(SolennixColors.text)
+                .foregroundStyle(valueColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
 
