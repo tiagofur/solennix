@@ -46,12 +46,11 @@ public struct DemandForecastChart: View {
     @ScaledMetric(relativeTo: .body) private var scaledChartHeight: CGFloat = 200
     private var cappedChartHeight: CGFloat { min(scaledChartHeight, 280) }
 
-    // Hoist today (UTC-pinned) out of ForEach to compute once per body evaluation.
-    // Uses the same technique as EventCountdownChip: compare UTC-midnight Dates with
-    // a UTC calendar so that day boundaries are stable for UTC-negative users.
-    private var todayUTC: Date {
-        Date.fromServerDay(Date.localTodayString()) ?? Date()
-    }
+    // Today (UTC-pinned), captured once at view init so body evaluations don't
+    // re-allocate formatters. Uses the same technique as EventCountdownChip:
+    // compare UTC-midnight Dates with a UTC calendar so that day boundaries are
+    // stable for UTC-negative users.
+    private let todayUTC: Date = Date.fromServerDay(Date.localTodayString()) ?? Date()
 
     private static let utcCalendar: Calendar = {
         var cal = Calendar(identifier: .gregorian)

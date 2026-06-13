@@ -59,8 +59,9 @@ final class ProductDetailViewModel {
     // MARK: - Demand
 
     /// Today as UTC-midnight Date for stable day comparisons (same technique as EventCountdownChip).
-    /// Stored during loadDemandData so all window calculations use the same anchor.
-    private var todayUTC: Date?
+    /// Initialized eagerly so KPIs never see a nil window; refreshed on each loadDemandData
+    /// so all window calculations within one load share the same anchor.
+    private var todayUTC: Date? = Date.fromServerDay(Date.localTodayString())
 
     /// A UTC-pinned calendar for day-diff arithmetic (avoids UTC-negative timezone shifts).
     private static let utcCalendar: Calendar = {
