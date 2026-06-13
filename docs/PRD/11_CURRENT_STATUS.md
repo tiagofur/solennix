@@ -25,6 +25,15 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.8
 
+> [!success] 2026-06-12 — Product Detail: Judgment Day → APPROVED (branch `feat/ios-liquid-glass`)
+> Tercera pantalla de detalle del ciclo (4 rondas — los jueces cazaron una regresión del propio fix agent en la ronda 2).
+> - **Datos de demanda reales:** `ISO8601DateFormatter` no parseaba el "yyyy-MM-dd" del backend → todos los puntos colapsaban a "hoy" (chart, contador 7 días y badges de urgencia FALSOS). Ahora `fromServerDay` + comparación de días UTC-pinned; puntos no parseables se omiten.
+> - **Margen honesto:** incluye costo de insumos (antes inflado) y muestra "—" sin receta (antes 100% engañoso); colores semánticos warning/success.
+> - **Cargas en paralelo con aislamiento de fallas:** `withTaskGroup` con do/catch por evento (antes hasta 21 requests SECUENCIALES; la 1ª versión paralela con `withThrowingTaskGroup` perdía todo el chart si fallaba 1 evento — cazado en re-juicio).
+> - **Hub insetGrouped** + skeleton fiel (6 secciones); 7 sombras manuales eliminadas; labels del eje del chart UTC-pinned (antes off-by-one en UTC-negativo).
+> - **A11y:** labels compuestos en KPIs/filas/chart/trash 44pt; cantidades fraccionarias ya no se truncan (0.5 mostraba "0"); haptics del form via `sensoryFeedback`.
+> - **Commits:** be86c987, 6b7a437c, d45b3ce1. Build verde por ronda. Catálogo xcstrings verificado íntegro tras reformateo Xcode (1876→1883 keys, 0 perdidas).
+
 > [!success] 2026-06-12 — Client Detail: Judgment Day → APPROVED (branch `feat/ios-liquid-glass`)
 > Segunda pantalla de detalle del ciclo (3 rondas). Llevada al estándar fijado por Event Detail.
 > - **Hub insetGrouped:** ScrollView + cards con sombras → `List` insetGrouped con skeleton in-List fiel; strip inferior de 3 botones eliminado (editar/nuevo evento/eliminar van al Menu del toolbar; una sola fila primaria dorada "Nuevo evento para este cliente").
