@@ -13,121 +13,77 @@ struct InventoryDemandEntry: Identifiable {
     let unit: String
 }
 
-// MARK: - Inventory Detail View
+// MARK: - Demand Row Display Data (precomputed outside ForEach — fix #7)
 
-public struct InventoryDetailView: View {
+struct DemandRowData {
+    let entry: InventoryDemandEntry
+    let runningBalance: Double
+    let isInsufficient: Bool
+    let diffDays: Int
+}
 
-    @State private var item: InventoryItem?
-    @State private var demandEntries: [InventoryDemandEntry] = []
-    @State private var isLoading: Bool = true
-    @State private var errorMessage: String?
-    @State private var showDeleteConfirm: Bool = false
-    @State private var showStockAdjustment: Bool = false
-    @State private var adjustmentQuantity: Double = 0
+// MARK: - Inventory Detail View Model
 
-    @Environment(\.dismiss) private var dismiss
-    @Environment(\.horizontalSizeClass) private var sizeClass
+@Observable
+final class InventoryDetailViewModel {
+
+    var item: InventoryItem?
+    var demandEntries: [InventoryDemandEntry] = []
+    var isLoading: Bool = true
+    var errorMessage: String?
+    var showDeleteConfirm: Bool = false
+    var showStockAdjustment: Bool = false
+    var adjustmentQuantity: Double = 0
 
     private let apiClient: APIClient
-    private let itemId: String
+    let itemId: String
 
-    @ScaledMetric(relativeTo: .largeTitle) private var stockFontSize: CGFloat = 48
-    @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 28
-
-    public init(apiClient: APIClient, itemId: String) {
+    init(apiClient: APIClient, itemId: String) {
         self.apiClient = apiClient
         self.itemId = itemId
     }
 
-    // MARK: - Computed
+    // MARK: - Computed KPIs
 
-    private var isLowStock: Bool {
+    var isLowStock: Bool {
         guard let item else { return false }
         return item.minimumStock > 0 && item.currentStock < item.minimumStock
     }
 
-    private var stockValue: Double {
+    var stockValue: Double {
         guard let item, let cost = item.unitCost else { return 0 }
         return cost * item.currentStock
     }
 
-    private var demand7Days: Double {
-        let today = Calendar.current.startOfDay(for: Date())
-        let in7Days = Calendar.current.date(byAdding: .day, value: 7, to: today) ?? today
-        return demandEntries.filter { $0.eventDate >= today && $0.eventDate <= in7Days }
+    // MARK: - UTC-pinned window (fix #2 — matches ProductDetail pattern)
+
+    /// Today anchored to UTC midnight for stable day-window comparisons.
+    /// Initialized eagerly; refreshed at the top of loadDemandForecast.
+    private(set) var todayUTC: Date? = Date.fromServerDay(Date.localTodayString())
+
+    /// UTC-pinned calendar for day-diff arithmetic — avoids timezone shifts.
+    static let utcCalendar: Calendar = {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "UTC")!
+        return cal
+    }()
+
+    var demand7Days: Double {
+        guard let todayUTC else { return 0 }
+        let in7 = Self.utcCalendar.date(byAdding: .day, value: 7, to: todayUTC) ?? todayUTC
+        return demandEntries
+            .filter { $0.eventDate >= todayUTC && $0.eventDate <= in7 }
             .reduce(0) { $0 + $1.quantity }
     }
 
-    private var stockAfter7Days: Double {
+    var stockAfter7Days: Double {
         (item?.currentStock ?? 0) - demand7Days
-    }
-
-    public var body: some View {
-        Group {
-            if isLoading {
-                ProgressView(InventoryStrings.loading)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if let item = item {
-                detailContent(item)
-            } else if let error = errorMessage {
-                ContentUnavailableView(
-                    InventoryStrings.errorTitle,
-                    systemImage: "exclamationmark.triangle",
-                    description: Text(error)
-                )
-            }
-        }
-        .background(SolennixColors.surfaceGrouped)
-        .navigationTitle(item?.ingredientName ?? InventoryStrings.itemFallback)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Button {
-                        if let item = item {
-                            adjustmentQuantity = item.currentStock
-                            showStockAdjustment = true
-                        }
-                    } label: {
-                        Label(InventoryStrings.adjustStock, systemImage: "plusminus")
-                    }
-
-                    NavigationLink(value: Route.inventoryForm(id: itemId)) {
-                        Label(InventoryStrings.edit, systemImage: "pencil")
-                    }
-
-                    Button(role: .destructive) {
-                        showDeleteConfirm = true
-                    } label: {
-                        Label(InventoryStrings.deleteAction, systemImage: "trash")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                }
-            }
-        }
-        .confirmationDialog(
-            InventoryStrings.deleteTitle,
-            isPresented: $showDeleteConfirm
-        ) {
-            Button(InventoryStrings.deleteAction, role: .destructive) {
-                Task { await deleteItem() }
-            }
-            Button(InventoryStrings.cancel, role: .cancel) {}
-        } message: {
-            Text(InventoryStrings.permanentDeletePrompt(item?.ingredientName ?? ""))
-        }
-        .sheet(isPresented: $showStockAdjustment) {
-            stockAdjustmentSheet
-        }
-        .refreshable { await loadData() }
-        .task { await loadData() }
     }
 
     // MARK: - Data Loading
 
     @MainActor
-    private func loadData() async {
+    func loadData() async {
         isLoading = true
         errorMessage = nil
 
@@ -145,74 +101,111 @@ public struct InventoryDetailView: View {
         isLoading = false
     }
 
+    // MARK: - Parallelized demand loading (fix #3 — withTaskGroup, fault-isolated)
+
     @MainActor
     private func loadDemandForecast() async {
         guard let item else { return }
 
+        // Anchor today once for the whole load (fix #2).
+        todayUTC = Date.fromServerDay(Date.localTodayString())
+
         do {
             let events: [Event] = try await apiClient.getAll(Endpoint.upcomingEvents)
-            var entries: [InventoryDemandEntry] = []
+            let eventsSlice = Array(events.prefix(15))
 
-            for event in events.prefix(15) {
-                let eventProducts: [EventProduct] = try await apiClient.get(Endpoint.eventProducts(event.id))
-                var eventDemand: Double = 0
+            var collected: [InventoryDemandEntry] = []
 
-                for ep in eventProducts {
-                    do {
-                        let ingredients: [ProductIngredient] = try await apiClient.get(Endpoint.productIngredients(ep.productId))
-                        if let matching = ingredients.first(where: { $0.inventoryId == itemId }) {
-                            // Supplies have fixed per-event quantity, not scaled by product qty
-                            if item.type == .supply {
-                                eventDemand += matching.quantityRequired
-                            } else {
-                                eventDemand += matching.quantityRequired * ep.quantity
+            await withTaskGroup(of: InventoryDemandEntry?.self) { group in
+                for event in eventsSlice {
+                    group.addTask { [apiClient, itemId] in
+                        do {
+                            // Fix #1: parse date with fromServerDay — skip if nil, never fabricate
+                            guard let eventDate = Date.fromServerDay(event.eventDate) else { return nil }
+
+                            let eventProducts: [EventProduct] = try await apiClient.get(Endpoint.eventProducts(event.id))
+
+                            // Compute demand for this item across all products concurrently
+                            var eventDemand: Double = 0
+                            await withTaskGroup(of: Double.self) { ingredientGroup in
+                                for ep in eventProducts {
+                                    ingredientGroup.addTask {
+                                        do {
+                                            let ingredients: [ProductIngredient] = try await apiClient.get(Endpoint.productIngredients(ep.productId))
+                                            if let matching = ingredients.first(where: { $0.inventoryId == itemId }) {
+                                                if item.type == .supply {
+                                                    return matching.quantityRequired
+                                                } else {
+                                                    return matching.quantityRequired * ep.quantity
+                                                }
+                                            }
+                                            return 0
+                                        } catch {
+                                            return 0
+                                        }
+                                    }
+                                }
+                                for await qty in ingredientGroup {
+                                    eventDemand += qty
+                                }
                             }
+
+                            guard eventDemand > 0 else { return nil }
+
+                            // Client fetch concurrent with ingredient fetches
+                            var eventName = InventoryStrings.defaultEventName(serviceType: event.serviceType)
+                            if !event.clientId.isEmpty {
+                                if let client = try? await apiClient.get(Endpoint.client(event.clientId)) as Client {
+                                    eventName = InventoryStrings.eventWithClient(client.name)
+                                }
+                            }
+
+                            return InventoryDemandEntry(
+                                id: event.id,
+                                eventDate: eventDate,
+                                eventName: eventName,
+                                quantity: eventDemand,
+                                unit: item.unit
+                            )
+                        } catch {
+                            return nil
                         }
-                    } catch {
-                        // Skip failed ingredient fetches
                     }
                 }
 
-                if eventDemand > 0 {
-                    // Try to get client name
-                    var eventName = InventoryStrings.defaultEventName(serviceType: event.serviceType)
-                    if !event.clientId.isEmpty {
-                        do {
-                            let client: Client = try await apiClient.get(Endpoint.client(event.clientId))
-                            eventName = InventoryStrings.eventWithClient(client.name)
-                        } catch {}
-                    }
-
-                    entries.append(InventoryDemandEntry(
-                        id: event.id,
-                        eventDate: ISO8601DateFormatter().date(from: event.eventDate) ?? Date(),
-                        eventName: eventName,
-                        quantity: eventDemand,
-                        unit: item.unit
-                    ))
+                for await entry in group {
+                    if let entry { collected.append(entry) }
                 }
             }
 
-            demandEntries = entries.sorted { $0.eventDate < $1.eventDate }
+            // Error only if all events failed and there were events to process
+            if collected.isEmpty && !eventsSlice.isEmpty {
+                errorMessage = InventoryStrings.unexpectedRetryError
+            }
+
+            demandEntries = collected.sorted { $0.eventDate < $1.eventDate }
         } catch {
-            // Demand forecast is supplementary
+            // Demand forecast is supplementary — keep empty
         }
     }
 
     @MainActor
-    private func deleteItem() async {
+    func deleteItem() async -> Bool {
         do {
             try await apiClient.delete(Endpoint.inventoryItem(itemId))
-            dismiss()
+            return true
         } catch {
             if let apiError = error as? APIError {
-                errorMessage = apiError.errorDescription
+                errorMessage = apiError.errorDescription ?? InventoryStrings.unexpectedError
+            } else {
+                errorMessage = InventoryStrings.unexpectedError
             }
+            return false
         }
     }
 
     @MainActor
-    private func saveStockAdjustment() async {
+    func saveStockAdjustment() async {
         guard let currentItem = item else { return }
         do {
             let body = InventoryItem(
@@ -231,48 +224,173 @@ public struct InventoryDetailView: View {
             showStockAdjustment = false
         } catch {
             if let apiError = error as? APIError {
-                errorMessage = apiError.errorDescription
+                errorMessage = apiError.errorDescription ?? InventoryStrings.unexpectedError
+            } else {
+                errorMessage = InventoryStrings.unexpectedError
             }
         }
     }
 
-    // MARK: - Detail Content
+    // MARK: - Precomputed demand row data (fix #7 — no mutable accumulator inside ForEach)
 
-    private func detailContent(_ item: InventoryItem) -> some View {
-        let isRegularWidth = sizeClass == .regular
-        return ScrollView {
-            VStack(spacing: Spacing.md) {
-                AdaptiveDetailLayout {
-                    // Left: Item info, KPI cards
-                    stockStatusCard(item)
-                    kpiSection(item)
-                    smartAlertSection(item)
-                    infoCard(item)
-                } right: {
-                    // Right: Stock health, demand forecast
-                    stockHealthBars(item)
-                    demandForecastSection(item)
+    func makeDemandRows() -> [DemandRowData] {
+        guard let todayUTC else { return demandEntries.map {
+            DemandRowData(entry: $0, runningBalance: 0, isInsufficient: false, diffDays: 999)
+        }}
+        var balance = item?.currentStock ?? 0
+        return demandEntries.map { entry in
+            balance -= entry.quantity
+            let diff = Self.utcCalendar.dateComponents([.day], from: todayUTC, to: entry.eventDate).day ?? 999
+            return DemandRowData(
+                entry: entry,
+                runningBalance: balance,
+                isInsufficient: balance < 0,
+                diffDays: diff
+            )
+        }
+    }
+}
+
+// MARK: - Inventory Detail View
+
+public struct InventoryDetailView: View {
+
+    @State private var viewModel: InventoryDetailViewModel
+    @Environment(\.dismiss) private var dismiss
+
+    // MARK: - @ScaledMetric sizes (capped — fix #10)
+    @ScaledMetric(relativeTo: .largeTitle) private var stockFontSize: CGFloat = 48
+    private var cappedStockFontSize: CGFloat { min(stockFontSize, 64) }
+
+    @ScaledMetric(relativeTo: .body) private var emptyIconSize: CGFloat = 28
+    private var cappedEmptyIconSize: CGFloat { min(emptyIconSize, 56) }
+
+    public init(apiClient: APIClient, itemId: String) {
+        _viewModel = State(initialValue: InventoryDetailViewModel(apiClient: apiClient, itemId: itemId))
+    }
+
+    public var body: some View {
+        Group {
+            // Fix #5 + #6: skeleton guard is isLoading && item == nil
+            if viewModel.isLoading && viewModel.item == nil {
+                List {
+                    InventoryDetailSkeleton()
                 }
+                .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+                .background(SolennixColors.surfaceGrouped)
+            } else if let item = viewModel.item {
+                hubList(item)
+            } else {
+                EmptyStateView(
+                    icon: "exclamationmark.triangle",
+                    title: InventoryStrings.errorTitle,
+                    message: viewModel.errorMessage ?? InventoryStrings.errorLoadingTitle
+                )
+            }
+        }
+        .background(SolennixColors.surfaceGrouped)
+        .navigationTitle(viewModel.item?.ingredientName ?? InventoryStrings.itemFallback)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                // Fix #8: only Edit + Delete in toolbar Menu; "Ajustar Stock" stays in body
+                Menu {
+                    NavigationLink(value: Route.inventoryForm(id: viewModel.itemId)) {
+                        Label(InventoryStrings.edit, systemImage: "pencil")
+                    }
 
-                // Last updated (full-width below)
-                HStack {
-                    Image(systemName: "clock")
-                        .foregroundStyle(SolennixColors.textTertiary)
-                    Text(InventoryStrings.lastUpdated)
-                        .foregroundStyle(SolennixColors.textSecondary)
-                    Spacer()
-                    if let date = ISO8601DateFormatter().date(from: item.lastUpdated) {
-                        Text(date.formatted(date: .abbreviated, time: .shortened))
-                            .foregroundStyle(SolennixColors.text)
+                    Divider()
+
+                    Button(role: .destructive) {
+                        viewModel.showDeleteConfirm = true
+                    } label: {
+                        Label(InventoryStrings.deleteAction, systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .foregroundStyle(SolennixColors.primary)
+                        .accessibilityLabel(InventoryStrings.moreActions)
+                }
+            }
+        }
+        .confirmationDialog(
+            InventoryStrings.deleteTitle,
+            isPresented: $viewModel.showDeleteConfirm
+        ) {
+            Button(InventoryStrings.deleteAction, role: .destructive) {
+                Task {
+                    if await viewModel.deleteItem() {
+                        dismiss()
                     }
                 }
-                .padding(Spacing.md)
-                .background(SolennixColors.card)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-                .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
             }
-            .padding(.horizontal, isRegularWidth ? Spacing.xl : Spacing.md)
-            .padding(.vertical, isRegularWidth ? Spacing.xl : Spacing.lg)
+            Button(InventoryStrings.cancel, role: .cancel) {}
+        } message: {
+            Text(InventoryStrings.permanentDeletePrompt(viewModel.item?.ingredientName ?? ""))
+        }
+        // Fix #6: bidirectional error alert (ProductDetail pattern)
+        .alert(InventoryStrings.errorTitle, isPresented: Binding(
+            get: { viewModel.errorMessage != nil },
+            set: { if !$0 { viewModel.errorMessage = nil } }
+        )) {
+            Button(InventoryStrings.ok, role: .cancel) {}
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
+        .sheet(isPresented: $viewModel.showStockAdjustment) {
+            stockAdjustmentSheet
+        }
+        .task { await viewModel.loadData() }
+    }
+
+    // MARK: - Hub List (fix #4 — List insetGrouped, no shadows, no AdaptiveDetailLayout)
+
+    private func hubList(_ item: InventoryItem) -> some View {
+        List {
+            // Stock status hero
+            Section {
+                stockStatusCard(item)
+            }
+            .listRowSeparator(.hidden)
+
+            // KPI row
+            Section {
+                kpiSection(item)
+            }
+            .listRowSeparator(.hidden)
+
+            // Smart alert
+            Section {
+                smartAlertSection(item)
+            }
+            .listRowSeparator(.hidden)
+
+            // Stock health bars
+            Section {
+                stockHealthBars(item)
+            }
+            .listRowSeparator(.hidden)
+
+            // Info card
+            Section {
+                infoCard(item)
+            }
+            .listRowSeparator(.hidden)
+
+            // Demand forecast
+            Section {
+                demandForecastSection(item)
+            }
+            .listRowSeparator(.hidden)
+        }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(SolennixColors.surfaceGrouped)
+        .softScrollEdgeEffectIfAvailable()
+        // Fix #6: refreshable keeps content visible (does NOT clear item/arrays)
+        .refreshable {
+            await viewModel.loadData()
         }
     }
 
@@ -280,17 +398,18 @@ public struct InventoryDetailView: View {
 
     private func stockStatusCard(_ item: InventoryItem) -> some View {
         let percentage = item.minimumStock > 0 ? min(1.0, item.currentStock / item.minimumStock) : 1.0
+        // Fix #10: .formatted instead of Int() truncation
+        let stockFormatted = item.currentStock.formatted(.number.precision(.fractionLength(0...2)))
 
         return VStack(spacing: Spacing.md) {
             HStack {
-                Image(systemName: isLowStock ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
+                Image(systemName: viewModel.isLowStock ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
                     .font(.title2)
-                    .foregroundStyle(isLowStock ? SolennixColors.error : SolennixColors.success)
-                Text(isLowStock ? InventoryStrings.stockLow : InventoryStrings.stockOk)
+                    .foregroundStyle(viewModel.isLowStock ? SolennixColors.error : SolennixColors.success)
+                Text(viewModel.isLowStock ? InventoryStrings.stockLow : InventoryStrings.stockOk)
                     .font(.headline)
-                    .foregroundStyle(isLowStock ? SolennixColors.error : SolennixColors.success)
+                    .foregroundStyle(viewModel.isLowStock ? SolennixColors.error : SolennixColors.success)
                 Spacer()
-                // Fix 12: use localized type string instead of rawValue.capitalized
                 Text(localizedTypeName(item.type))
                     .font(.caption)
                     .fontWeight(.semibold)
@@ -302,8 +421,8 @@ public struct InventoryDetailView: View {
             }
 
             HStack(alignment: .lastTextBaseline, spacing: Spacing.xs) {
-                Text("\(Int(item.currentStock))")
-                    .font(.system(size: stockFontSize, weight: .bold, design: .rounded))
+                Text(stockFormatted)
+                    .font(.system(size: cappedStockFontSize, weight: .bold, design: .rounded))
                     .foregroundStyle(SolennixColors.text)
                 Text(item.unit)
                     .font(.title3)
@@ -319,6 +438,14 @@ public struct InventoryDetailView: View {
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
             }
+            // Fix #10: a11y composite label on this hero composite element
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(InventoryStrings.stockStatusA11y(
+                stock: stockFormatted,
+                unit: item.unit,
+                isLow: viewModel.isLowStock,
+                minimum: item.minimumStock > 0 ? Int(item.minimumStock) : nil
+            ))
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
@@ -326,15 +453,17 @@ public struct InventoryDetailView: View {
                         .fill(SolennixColors.surface)
                         .frame(height: 8)
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(isLowStock ? SolennixColors.error : SolennixColors.success)
+                        .fill(viewModel.isLowStock ? SolennixColors.error : SolennixColors.success)
                         .frame(width: geo.size.width * percentage, height: 8)
                 }
             }
             .frame(height: 8)
+            .accessibilityHidden(true)
 
+            // Fix #8: single "Ajustar Stock" action — gold primary row pattern
             Button {
-                adjustmentQuantity = item.currentStock
-                showStockAdjustment = true
+                viewModel.adjustmentQuantity = item.currentStock
+                viewModel.showStockAdjustment = true
             } label: {
                 HStack {
                     Image(systemName: "plusminus")
@@ -351,9 +480,9 @@ public struct InventoryDetailView: View {
             .buttonStyle(.plain)
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .frame(maxWidth: .infinity)
+        .listRowBackground(SolennixColors.card)
+        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
 
     // MARK: - KPI Section
@@ -367,21 +496,32 @@ public struct InventoryDetailView: View {
                 value: (item.unitCost ?? 0) > 0
                     ? (item.unitCost ?? 0).formatted(.currency(code: "MXN"))
                     : "—",
-                subtitle: InventoryStrings.perUnit(item.unit)
+                subtitle: InventoryStrings.perUnit(item.unit),
+                a11yLabel: "\(InventoryStrings.unitCost): \((item.unitCost ?? 0) > 0 ? (item.unitCost ?? 0).formatted(.currency(code: "MXN")) : "—")"
             )
             kpiCard(
                 icon: "chart.bar.fill",
                 iconColor: SolennixColors.primary,
                 label: InventoryStrings.stockValue,
                 value: item.unitCost != nil
-                    ? stockValue.formatted(.currency(code: "MXN"))
+                    ? viewModel.stockValue.formatted(.currency(code: "MXN"))
                     : "—",
                 subtitle: InventoryStrings.totalValue,
+                a11yLabel: "\(InventoryStrings.stockValue): \(item.unitCost != nil ? viewModel.stockValue.formatted(.currency(code: "MXN")) : "—")"
             )
         }
+        .listRowBackground(SolennixColors.card)
+        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
 
-    private func kpiCard(icon: String, iconColor: Color, label: String, value: String, subtitle: String) -> some View {
+    private func kpiCard(
+        icon: String,
+        iconColor: Color,
+        label: String,
+        value: String,
+        subtitle: String,
+        a11yLabel: String
+    ) -> some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
             HStack(spacing: 4) {
                 Image(systemName: icon)
@@ -404,19 +544,21 @@ public struct InventoryDetailView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .background(SolennixColors.surface)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(a11yLabel)
     }
 
     // MARK: - Smart Alert
 
     private func smartAlertSection(_ item: InventoryItem) -> some View {
-        let isCritical = demand7Days > 0 && stockAfter7Days < 0
-        let isWarning = demand7Days > 0 && stockAfter7Days >= 0 && stockAfter7Days < item.minimumStock
-        let isLowOnly = isLowStock && demand7Days == 0
+        let demand = viewModel.demand7Days
+        let stockAfter = viewModel.stockAfter7Days
+        let isCritical = demand > 0 && stockAfter < 0
+        let isWarning = demand > 0 && stockAfter >= 0 && stockAfter < item.minimumStock
+        let isLowOnly = viewModel.isLowStock && demand == 0
 
-        // Fix 12: raw .orange/.green → semantic tokens
         let alertColor: Color = isCritical || isLowOnly ? SolennixColors.error :
             (isWarning ? SolennixColors.warning : SolennixColors.success)
         let alertIcon = (isCritical || isWarning || isLowOnly) ? "exclamationmark.triangle.fill" : "checkmark.circle.fill"
@@ -425,14 +567,15 @@ public struct InventoryDetailView: View {
             Image(systemName: alertIcon)
                 .foregroundStyle(alertColor)
                 .font(.title3)
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text({
                     if isCritical { return InventoryStrings.critical7Days }
                     if isWarning { return InventoryStrings.belowMinAfterEvents }
                     if isLowOnly { return InventoryStrings.belowMinRecommended }
-                    if demand7Days > 0 { return InventoryStrings.enough7Days }
-                    if !demandEntries.isEmpty { return InventoryStrings.noDemand7Days }
+                    if demand > 0 { return InventoryStrings.enough7Days }
+                    if !viewModel.demandEntries.isEmpty { return InventoryStrings.noDemand7Days }
                     return InventoryStrings.noUpcomingEvents
                 }())
                 .font(.subheadline)
@@ -440,62 +583,69 @@ public struct InventoryDetailView: View {
                 .foregroundStyle(alertColor)
 
                 if isCritical {
-                    Text(InventoryStrings.shortageMessage(demand: Int(demand7Days), stock: Int(item.currentStock), missing: Int(-stockAfter7Days), unit: item.unit))
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textSecondary)
+                    Text(InventoryStrings.shortageMessage(
+                        demand: Int(demand),
+                        stock: Int(item.currentStock),
+                        missing: Int(-stockAfter),
+                        unit: item.unit
+                    ))
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textSecondary)
                 } else if isLowOnly {
-                    Text(InventoryStrings.lowStockMessage(stock: Int(item.currentStock), unit: item.unit, minimum: Int(item.minimumStock)))
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textSecondary)
+                    Text(InventoryStrings.lowStockMessage(
+                        stock: Int(item.currentStock),
+                        unit: item.unit,
+                        minimum: Int(item.minimumStock)
+                    ))
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textSecondary)
                 }
             }
             Spacer()
         }
         .padding(Spacing.md)
-        // Fix 12: replace raw Color.orange/green with semantic tokens
-        .background((isCritical || isLowOnly) ? SolennixColors.errorBg :
-                        (isWarning ? SolennixColors.warningBg :
-                            (demand7Days > 0 ? SolennixColors.successBg : SolennixColors.card)))
-        .overlay(
-            RoundedRectangle(cornerRadius: CornerRadius.lg)
-                .stroke((isCritical || isLowOnly) ? SolennixColors.error.opacity(0.2) :
-                            (isWarning ? SolennixColors.warning.opacity(0.2) : SolennixColors.border), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        .listRowBackground((isCritical || isLowOnly) ? SolennixColors.errorBg :
+                            (isWarning ? SolennixColors.warningBg :
+                             (demand > 0 ? SolennixColors.successBg : SolennixColors.card)))
+        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
 
     // MARK: - Stock Health Bars
 
     private func stockHealthBars(_ item: InventoryItem) -> some View {
-        let maxBar = max(item.currentStock, item.minimumStock, demand7Days, 1)
+        let demand = viewModel.demand7Days
+        let maxBar = max(item.currentStock, item.minimumStock, demand, 1)
 
         return VStack(alignment: .leading, spacing: Spacing.md) {
+            Text(InventoryStrings.stockHealthTitle)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(SolennixColors.textSecondary)
+
             healthBar(
                 label: InventoryStrings.currentStock,
                 value: InventoryStrings.quantityWithUnit(Int(item.currentStock), unit: item.unit),
                 fraction: item.currentStock / maxBar,
-                color: isLowStock ? SolennixColors.error : SolennixColors.primary
+                color: viewModel.isLowStock ? SolennixColors.error : SolennixColors.primary
             )
-            // Fix 12: raw .orange → SolennixColors.warning
             healthBar(
                 label: InventoryStrings.recommendedMinimum,
                 value: InventoryStrings.quantityWithUnit(Int(item.minimumStock), unit: item.unit),
                 fraction: item.minimumStock / maxBar,
                 color: SolennixColors.warning
             )
-            if demand7Days > 0 {
+            if demand > 0 {
                 healthBar(
                     label: InventoryStrings.demandNext7Days,
-                    value: InventoryStrings.quantityWithUnit(Int(demand7Days), unit: item.unit),
-                    fraction: demand7Days / maxBar,
-                    color: stockAfter7Days < 0 ? SolennixColors.error : SolennixColors.warning
+                    value: InventoryStrings.quantityWithUnit(Int(demand), unit: item.unit),
+                    fraction: demand / maxBar,
+                    color: viewModel.stockAfter7Days < 0 ? SolennixColors.error : SolennixColors.warning
                 )
             }
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .listRowBackground(SolennixColors.card)
+        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
 
     private func healthBar(label: String, value: String, fraction: Double, color: Color) -> some View {
@@ -521,7 +671,73 @@ public struct InventoryDetailView: View {
                 }
             }
             .frame(height: 8)
+            .accessibilityHidden(true)
         }
+    }
+
+    // MARK: - Info Card
+
+    private func infoCard(_ item: InventoryItem) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            Text(InventoryStrings.information)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(SolennixColors.textSecondary)
+
+            if let cost = item.unitCost, cost > 0 {
+                HStack(spacing: Spacing.md) {
+                    Image(systemName: "dollarsign.circle.fill")
+                        .foregroundStyle(SolennixColors.primary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(InventoryStrings.costPerUnit)
+                            .font(.caption)
+                            .foregroundStyle(SolennixColors.textSecondary)
+                        Text(cost.formatted(.currency(code: "MXN")))
+                            .font(.subheadline.weight(.medium))
+                    }
+                }
+
+                Divider()
+
+                HStack(spacing: Spacing.md) {
+                    Image(systemName: "chart.bar.fill")
+                        .foregroundStyle(SolennixColors.textTertiary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(InventoryStrings.totalStockValue)
+                            .font(.caption)
+                            .foregroundStyle(SolennixColors.textSecondary)
+                        Text((cost * item.currentStock).formatted(.currency(code: "MXN")))
+                            .font(.subheadline.weight(.medium))
+                    }
+                }
+            } else {
+                Text(InventoryStrings.noUnitCost)
+                    .font(.subheadline)
+                    .foregroundStyle(SolennixColors.textTertiary)
+                    .italic()
+            }
+
+            // Fix #1: lastUpdated display via cached Date.from(isoString:) helper — no per-render allocation
+            if let lastUpdated = Date.from(isoString: item.lastUpdated) {
+                Divider()
+
+                HStack(spacing: Spacing.md) {
+                    Image(systemName: "clock")
+                        .foregroundStyle(SolennixColors.textTertiary)
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(InventoryStrings.lastUpdated)
+                            .font(.caption)
+                            .foregroundStyle(SolennixColors.textSecondary)
+                        Text(lastUpdated.formattedServerDayTemplate("dMMMyyyy HH:mm", locale: Date.mexicanLocale))
+                            .font(.subheadline.weight(.medium))
+                    }
+                }
+            }
+        }
+        .padding(Spacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .listRowBackground(SolennixColors.card)
+        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
 
     // MARK: - Demand Forecast
@@ -531,6 +747,7 @@ public struct InventoryDetailView: View {
             HStack {
                 Image(systemName: "calendar")
                     .foregroundStyle(SolennixColors.primary)
+                    .accessibilityHidden(true)
                 Text(InventoryStrings.demandByDate)
                     .font(.headline)
                     .foregroundStyle(SolennixColors.text)
@@ -540,11 +757,12 @@ public struct InventoryDetailView: View {
                     .foregroundStyle(SolennixColors.textSecondary)
             }
 
-            if demandEntries.isEmpty {
+            if viewModel.demandEntries.isEmpty {
                 VStack(spacing: Spacing.sm) {
                     Image(systemName: "calendar.badge.clock")
-                        .font(.system(size: emptyIconSize))
+                        .font(.system(size: cappedEmptyIconSize))
                         .foregroundStyle(SolennixColors.textTertiary)
+                        .accessibilityHidden(true)
                     Text(InventoryStrings.noConfirmedEvents)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
@@ -552,50 +770,13 @@ public struct InventoryDetailView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, Spacing.lg)
+                .accessibilityElement(children: .combine)
             } else {
-                let today = Calendar.current.startOfDay(for: Date())
-                var accumulated = item.currentStock
+                // Fix #7: precomputed rows OUTSIDE ForEach — no mutable accumulator inside body
+                let rows = viewModel.makeDemandRows()
 
-                ForEach(demandEntries) { entry in
-                    let _ = (accumulated -= entry.quantity)
-                    let isInsufficient = accumulated < 0
-                    let diffDays = Calendar.current.dateComponents([.day], from: today, to: Calendar.current.startOfDay(for: entry.eventDate)).day ?? 999
-                    let isWithinWeek = diffDays >= 0 && diffDays <= 7
-
-                    HStack {
-                        // Fix 12: raw .orange → SolennixColors.warning
-                        Circle()
-                            .fill(isInsufficient ? SolennixColors.error : (isWithinWeek ? SolennixColors.warning : SolennixColors.primary.opacity(0.4)))
-                            .frame(width: 8, height: 8)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            HStack(spacing: 4) {
-                                Text(entry.eventDate.formatted(.dateTime.day().month(.abbreviated)))
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .foregroundStyle(SolennixColors.text)
-
-                                if diffDays == 0 {
-                                    badgeLabel(InventoryStrings.today, color: SolennixColors.primary)
-                                } else if diffDays == 1 {
-                                    // Fix 12: raw .orange → SolennixColors.warning
-                                    badgeLabel(InventoryStrings.tomorrow, color: SolennixColors.warning)
-                                } else if diffDays > 1 && diffDays <= 7 {
-                                    Text(InventoryStrings.inDays(diffDays))
-                                        .font(.caption2)
-                                        .foregroundStyle(SolennixColors.textSecondary)
-                                }
-                            }
-                        }
-
-                        Spacer()
-
-                        Text(InventoryStrings.quantityWithUnit(Int(entry.quantity), unit: entry.unit))
-                            .font(.subheadline)
-                            .fontWeight(.bold)
-                            .foregroundStyle(isInsufficient ? SolennixColors.error : SolennixColors.text)
-                    }
-                    .padding(.vertical, Spacing.xs)
+                ForEach(rows, id: \.entry.id) { row in
+                    demandRow(row)
                 }
 
                 Divider()
@@ -604,7 +785,7 @@ public struct InventoryDetailView: View {
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                     Spacer()
-                    let total = demandEntries.reduce(0) { $0 + $1.quantity }
+                    let total = viewModel.demandEntries.reduce(0) { $0 + $1.quantity }
                     Text(InventoryStrings.quantityWithUnit(Int(total), unit: item.unit))
                         .font(.subheadline)
                         .fontWeight(.bold)
@@ -613,9 +794,65 @@ public struct InventoryDetailView: View {
             }
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .listRowBackground(SolennixColors.card)
+        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+    }
+
+    private func demandRow(_ row: DemandRowData) -> some View {
+        let entry = row.entry
+        // Fix #2: diffDays already computed with utcCalendar against todayUTC
+        let diffDays = row.diffDays
+        let isWithinWeek = diffDays >= 0 && diffDays <= 7
+
+        return HStack {
+            Circle()
+                .fill(row.isInsufficient ? SolennixColors.error : (isWithinWeek ? SolennixColors.warning : SolennixColors.primary.opacity(0.4)))
+                .frame(width: 8, height: 8)
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 4) {
+                    // Fix #1: entry.eventDate already parsed with fromServerDay; format with UTC formatter
+                    Text(entry.eventDate.formattedServerDay(style: "d MMM"))
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(SolennixColors.text)
+
+                    if diffDays == 0 {
+                        badgeLabel(InventoryStrings.today, color: SolennixColors.primary)
+                    } else if diffDays == 1 {
+                        badgeLabel(InventoryStrings.tomorrow, color: SolennixColors.warning)
+                    } else if diffDays > 1 && diffDays <= 7 {
+                        Text(InventoryStrings.inDays(diffDays))
+                            .font(.caption2)
+                            .foregroundStyle(SolennixColors.textSecondary)
+                    }
+                }
+                Text(entry.eventName)
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textSecondary)
+                    .lineLimit(1)
+            }
+
+            Spacer()
+
+            // Fix #10: .formatted instead of Int() truncation
+            Text(entry.quantity.formatted(.number.precision(.fractionLength(0...2))) + " \(entry.unit)")
+                .font(.subheadline)
+                .fontWeight(.bold)
+                .foregroundStyle(row.isInsufficient ? SolennixColors.error : SolennixColors.text)
+        }
+        .padding(.vertical, Spacing.xs)
+        // Fix #10: a11y combined label for demand rows
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(InventoryStrings.demandRowA11y(
+            name: entry.eventName,
+            quantity: entry.quantity.formatted(.number.precision(.fractionLength(0...2))),
+            unit: entry.unit,
+            diffDays: diffDays,
+            isInsufficient: row.isInsufficient
+        ))
     }
 
     private func badgeLabel(_ text: String, color: Color) -> some View {
@@ -629,59 +866,12 @@ public struct InventoryDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: 4))
     }
 
-    // MARK: - Info Card
-
-    private func infoCard(_ item: InventoryItem) -> some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
-            Text(InventoryStrings.information)
-                .font(.headline)
-                .foregroundStyle(SolennixColors.text)
-
-            if let cost = item.unitCost, cost > 0 {
-                HStack {
-                    Image(systemName: "dollarsign.circle.fill")
-                        .foregroundStyle(SolennixColors.primary)
-                    Text(InventoryStrings.costPerUnit)
-                        .foregroundStyle(SolennixColors.textSecondary)
-                    Spacer()
-                    Text(cost.formatted(.currency(code: "MXN")))
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(SolennixColors.text)
-                }
-
-                Divider()
-
-                HStack {
-                    Image(systemName: "chart.bar.fill")
-                        .foregroundStyle(SolennixColors.textTertiary)
-                    Text(InventoryStrings.totalStockValue)
-                        .foregroundStyle(SolennixColors.textSecondary)
-                    Spacer()
-                    Text((cost * item.currentStock).formatted(.currency(code: "MXN")))
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(SolennixColors.text)
-                }
-            } else {
-                Text(InventoryStrings.noUnitCost)
-                    .font(.subheadline)
-                    .foregroundStyle(SolennixColors.textTertiary)
-                    .italic()
-            }
-        }
-        .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
-    }
-
     // MARK: - Stock Adjustment Sheet
 
     private var stockAdjustmentSheet: some View {
         NavigationStack {
             VStack(spacing: Spacing.lg) {
-                if let item = item {
+                if let item = viewModel.item {
                     Text(item.ingredientName)
                         .font(.title3)
                         .fontWeight(.semibold)
@@ -694,7 +884,7 @@ public struct InventoryDetailView: View {
 
                     HStack {
                         Text(InventoryStrings.newStock)
-                        TextField("0", value: $adjustmentQuantity, format: .number)
+                        TextField("0", value: $viewModel.adjustmentQuantity, format: .number)
                             .keyboardType(.decimalPad)
                             .textFieldStyle(.roundedBorder)
                             .frame(width: 100)
@@ -705,7 +895,7 @@ public struct InventoryDetailView: View {
                     HStack(spacing: Spacing.md) {
                         ForEach([-10, -1, 1, 10], id: \.self) { delta in
                             Button {
-                                adjustmentQuantity = max(0, adjustmentQuantity + Double(delta))
+                                viewModel.adjustmentQuantity = max(0, viewModel.adjustmentQuantity + Double(delta))
                             } label: {
                                 Text(delta > 0 ? "+\(delta)" : "\(delta)")
                                     .font(.subheadline)
@@ -723,17 +913,16 @@ public struct InventoryDetailView: View {
                 Spacer()
             }
             .padding(Spacing.lg)
-            // Fix 8: keyboard done toolbar on the stock-adjustment sheet
             .keyboardDoneToolbar()
             .navigationTitle(InventoryStrings.adjustStock)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(InventoryStrings.cancel) { showStockAdjustment = false }
+                    Button(InventoryStrings.cancel) { viewModel.showStockAdjustment = false }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(InventoryStrings.save) {
-                        Task { await saveStockAdjustment() }
+                        Task { await viewModel.saveStockAdjustment() }
                     }
                     .fontWeight(.semibold)
                 }
@@ -745,12 +934,155 @@ public struct InventoryDetailView: View {
 
     // MARK: - Helpers
 
-    // Fix 12: localized type name instead of rawValue.capitalized
     private func localizedTypeName(_ type: InventoryType) -> String {
         switch type {
         case .ingredient: return InventoryStrings.ingredientType
         case .equipment:  return InventoryStrings.equipmentType
         case .supply:     return InventoryStrings.supplyType
+        }
+    }
+}
+
+// MARK: - Inventory Detail Skeleton (in-List, fix #5)
+
+struct InventoryDetailSkeleton: View {
+
+    @ScaledMetric(relativeTo: .body) private var scaledIconSize: CGFloat = 48
+    private var cappedIconSize: CGFloat { min(scaledIconSize, 64) }
+
+    var body: some View {
+        // Stock hero
+        Section {
+            VStack(spacing: Spacing.md) {
+                HStack {
+                    SkeletonLine(width: 22, height: 22).clipShape(Circle())
+                    SkeletonLine(width: 80, height: 16)
+                    Spacer()
+                    SkeletonLine(width: 60, height: 20).clipShape(Capsule())
+                }
+                HStack(alignment: .lastTextBaseline, spacing: Spacing.xs) {
+                    SkeletonLine(width: 80, height: CGFloat(cappedIconSize))
+                    SkeletonLine(width: 40, height: 20)
+                    Spacer()
+                }
+                SkeletonLine(height: 8).clipShape(RoundedRectangle(cornerRadius: 4))
+                SkeletonLine(height: 36).clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+            }
+            .padding(Spacing.md)
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+        }
+
+        // KPI row
+        Section {
+            HStack(spacing: Spacing.sm) {
+                ForEach(0..<2, id: \.self) { _ in
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        SkeletonLine(width: 40, height: 10)
+                        SkeletonLine(width: 60, height: 22)
+                        SkeletonLine(width: 30, height: 10)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(Spacing.md)
+                    .background(SolennixColors.surface)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                }
+            }
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+        }
+
+        // Smart alert
+        Section {
+            HStack(alignment: .top, spacing: Spacing.md) {
+                SkeletonLine(width: 22, height: 22).clipShape(Circle())
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    SkeletonLine(width: 180, height: 14)
+                    SkeletonLine(width: 120, height: 12)
+                }
+                Spacer()
+            }
+            .padding(Spacing.md)
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+        }
+
+        // Stock health bars
+        Section {
+            VStack(alignment: .leading, spacing: Spacing.md) {
+                SkeletonLine(width: 100, height: 10)
+                ForEach(0..<3, id: \.self) { _ in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            SkeletonLine(width: 80, height: 10)
+                            Spacer()
+                            SkeletonLine(width: 50, height: 10)
+                        }
+                        SkeletonLine(height: 8).clipShape(RoundedRectangle(cornerRadius: 4))
+                    }
+                }
+            }
+            .padding(Spacing.md)
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+        }
+
+        // Info card
+        Section {
+            VStack(alignment: .leading, spacing: Spacing.md) {
+                SkeletonLine(width: 100, height: 10)
+                HStack(spacing: Spacing.md) {
+                    SkeletonLine(width: 18, height: 18)
+                    VStack(alignment: .leading, spacing: 4) {
+                        SkeletonLine(width: 60, height: 10)
+                        SkeletonLine(width: 100, height: 14)
+                    }
+                }
+                Divider()
+                HStack(spacing: Spacing.md) {
+                    SkeletonLine(width: 18, height: 18)
+                    VStack(alignment: .leading, spacing: 4) {
+                        SkeletonLine(width: 80, height: 10)
+                        SkeletonLine(width: 120, height: 14)
+                    }
+                }
+            }
+            .padding(Spacing.md)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+        }
+
+        // Demand forecast skeleton
+        Section {
+            VStack(alignment: .leading, spacing: Spacing.md) {
+                HStack {
+                    SkeletonLine(width: 16, height: 16)
+                    SkeletonLine(width: 140, height: 16)
+                    Spacer()
+                    SkeletonLine(width: 80, height: 10)
+                }
+                ForEach(0..<3, id: \.self) { _ in
+                    HStack {
+                        SkeletonLine(width: 8, height: 8).clipShape(Circle())
+                        VStack(alignment: .leading, spacing: 2) {
+                            SkeletonLine(width: 60, height: 14)
+                            SkeletonLine(width: 100, height: 10)
+                        }
+                        Spacer()
+                        SkeletonLine(width: 50, height: 14)
+                    }
+                    .padding(.vertical, Spacing.xs)
+                }
+            }
+            .padding(Spacing.md)
+            .listRowBackground(SolennixColors.card)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
         }
     }
 }

@@ -13990,7 +13990,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "¿Estás seguro de que querés eliminar \"%@\"? Esta acción no se puede deshacer."
+            "value": "¿Estás seguro de que quieres eliminar \"%@\"? Esta acción no se puede deshacer."
           }
         }
       }
@@ -23425,7 +23425,167 @@
     },
     "¿Estás seguro de que quieres cerrar sesión?": {},
     "Última actualización": {},
-    "•": {}
+    "•": {},
+    "inventory.more_actions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More actions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más acciones"
+          }
+        }
+      }
+    },
+    "inventory.stock_health_title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock Health"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salud del Stock"
+          }
+        }
+      }
+    },
+    "inventory.unit_default": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pieces"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "piezas"
+          }
+        }
+      }
+    },
+    "inventory.stock_status_a11y_base": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock: %@ %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock: %@ %@"
+          }
+        }
+      }
+    },
+    "inventory.stock_status_a11y_low": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "below minimum of %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bajo el mínimo de %lld"
+          }
+        }
+      }
+    },
+    "inventory.demand_row_a11y": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: %@ %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: %@ %@"
+          }
+        }
+      }
+    },
+    "inventory.stock_insufficient_a11y": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insufficient stock"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock insuficiente"
+          }
+        }
+      }
+    },
+    "inventory.low_stock_toggle_active": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "active, %lld items"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "activado, %lld artículos"
+          }
+        }
+      }
+    },
+    "inventory.low_stock_toggle_inactive": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "inactive"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "desactivado"
+          }
+        }
+      }
+    },
+    "inventory.upgrade_cta": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View plans"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver planes"
+          }
+        }
+      }
+    }
   },
   "version": "1.0"
 }

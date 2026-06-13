@@ -74,6 +74,9 @@ enum InventoryStrings {
     static var newStock: String { FeatureL10n.text("inventory.new_stock", "Nuevo stock:") }
     static var save: String { FeatureL10n.text("inventory.save", "Guardar") }
     static var ok: String { "OK" }
+    static var moreActions: String { FeatureL10n.text("inventory.more_actions", "Más acciones") }
+    static var stockHealthTitle: String { FeatureL10n.text("inventory.stock_health_title", "Salud del Stock") }
+    static var unitDefault: String { FeatureL10n.text("inventory.unit_default", "piezas") }
     static var inventoryResource: String { FeatureL10n.text("inventory.inventory_resource", "Inventario") }
     static var upgradeCta: String { FeatureL10n.text("inventory.upgrade_cta", "Ver planes") }
     static var editItemTitle: String { FeatureL10n.text("inventory.edit_item_title", "Editar Item") }
@@ -110,7 +113,7 @@ enum InventoryStrings {
     }
 
     static func permanentDeletePrompt(_ name: String) -> String {
-        FeatureL10n.format("inventory.permanent_delete_prompt", "¿Estás seguro de que querés eliminar \"%@\"? Esta acción no se puede deshacer.", name)
+        FeatureL10n.format("inventory.permanent_delete_prompt", "¿Estás seguro de que quieres eliminar \"%@\"? Esta acción no se puede deshacer.", name)
     }
 
     static func minLabel(_ value: Int) -> String {
@@ -162,5 +165,28 @@ enum InventoryStrings {
 
     static func inDays(_ days: Int) -> String {
         FeatureL10n.format("inventory.in_days", "en %lld días", days)
+    }
+
+    static func stockStatusA11y(stock: String, unit: String, isLow: Bool, minimum: Int?) -> String {
+        var label = FeatureL10n.format("inventory.stock_status_a11y_base", "Stock: %@ %@", stock, unit)
+        if isLow, let min = minimum {
+            label += ". " + FeatureL10n.format("inventory.stock_status_a11y_low", "bajo el mínimo de %lld", min)
+        }
+        return label
+    }
+
+    static func demandRowA11y(name: String, quantity: String, unit: String, diffDays: Int, isInsufficient: Bool) -> String {
+        var label = FeatureL10n.format("inventory.demand_row_a11y", "%@: %@ %@", name, quantity, unit)
+        if diffDays == 0 {
+            label += ". \(FeatureL10n.text("inventory.today", "Hoy"))"
+        } else if diffDays == 1 {
+            label += ". \(FeatureL10n.text("inventory.tomorrow", "Mañana"))"
+        } else if diffDays > 1 && diffDays <= 7 {
+            label += ". " + FeatureL10n.format("inventory.in_days", "en %lld días", diffDays)
+        }
+        if isInsufficient {
+            label += ". \(FeatureL10n.text("inventory.stock_insufficient_a11y", "Stock insuficiente"))"
+        }
+        return label
     }
 }
