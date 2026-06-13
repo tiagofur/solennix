@@ -46,6 +46,12 @@ fun FinanceSummaryCard(
 ) {
     val netSales = event.totalAmount - event.taxAmount
     val profit = netSales - supplyCost
+    // Margin denominator = adjustedRevenue (excludes pass-through extras that flow
+    // to third parties). For the hub card we use netSales as-is because extras are
+    // not loaded here. Product ingredient costs are not included in supplyCost
+    // (that is passed in from EventDetailScreen which only sums EventSupply rows).
+    // Both limitations are accepted as first-slice scope — full EventFinancials
+    // parity requires products+extras on this card too.
     val margin = if (netSales > 0) (profit / netSales) * 100 else 0.0
 
     Card(

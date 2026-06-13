@@ -28,7 +28,7 @@ fun EventDetailViewModel.addPayment(amount: Double, method: String, notes: Strin
                 createdAt = ""
             )
             paymentRepository.createPayment(newPayment)
-            loadEvent()
+            reloadEventSilently()
         } catch (e: Exception) {
             _errorMessage.value = tr(R.string.events_detail_error_add_payment, e.message.orEmpty())
         }

@@ -17,8 +17,10 @@ fun EventDetailViewModel.stopEventDayNotification() {
 
 internal fun EventDetailViewModel.checkAndShowEventDayNotification(event: Event?, client: Client?) {
     if (event == null || client == null) return
+    // Take only the date part (yyyy-MM-dd) before comparing: eventDate may carry a
+    // time/UTC suffix from the server, which would cause the equality check to fail.
     val today = LocalDate.now().toString()
-    if (event.eventDate == today && event.status == EventStatus.CONFIRMED) {
+    if (event.eventDate.take(10) == today && event.status == EventStatus.CONFIRMED) {
         eventDayNotificationManager.showEventNotification(event, client)
     }
 }

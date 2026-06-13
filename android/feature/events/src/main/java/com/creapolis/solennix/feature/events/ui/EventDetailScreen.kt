@@ -101,9 +101,10 @@ fun EventDetailScreen(
     val isTableTop = foldingFeature?.state == FoldingFeature.State.HALF_OPENED &&
             foldingFeature.orientation == FoldingFeature.Orientation.HORIZONTAL
 
-    // Navigate back on delete success
+    // Navigate back on delete success; consume flag so re-entry doesn't re-fire.
     LaunchedEffect(viewModel.deleteSuccess) {
         if (viewModel.deleteSuccess) {
+            viewModel.consumeDeleteSuccess()
             onNavigateBack()
         }
     }
@@ -149,11 +150,11 @@ fun EventDetailScreen(
             )
         }
     ) { padding ->
-        if (uiState.isLoading) {
+        if (uiState.isLoading && uiState.event == null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
-        } else if (uiState.errorMessage != null) {
+        } else if (uiState.errorMessage != null && uiState.event == null) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Text(uiState.errorMessage.orEmpty(), color = SolennixTheme.colors.error)
             }
@@ -220,7 +221,12 @@ fun EventDetailScreen(
                             // Finance Summary Card (navigable)
                             FinanceSummaryCard(
                                 event = event,
-                                supplyCost = uiState.supplies.sumOf { it.quantity * it.unitCost },
+                                // Honor excludeCost: supplies marked as reused/excluded
+                                // must not contribute to the cost basis (mirrors iOS
+                                // EventFinancials.suppliesCost filter).
+                                supplyCost = uiState.supplies
+                                    .filter { !it.excludeCost }
+                                    .sumOf { it.quantity * it.unitCost },
                                 onClick = { onFinancesClick(event.id) }
                             )
 
@@ -239,7 +245,7 @@ fun EventDetailScreen(
                                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         PremiumButton(
-                                            text = "Registrar Pago",
+                                            text = stringResource(R.string.events_detail_payments_record),
                                             onClick = {
                                                 paymentInitialAmount = null
                                                 showPaymentModal = true
