@@ -8,6 +8,7 @@ import SolennixNetwork
 public struct InventoryFormView: View {
 
     @State private var viewModel: InventoryFormViewModel
+    @State private var showDiscardDialog: Bool = false
     @Environment(\.dismiss) private var dismiss
 
     public init(apiClient: APIClient, itemId: String? = nil) {
@@ -30,12 +31,41 @@ public struct InventoryFormView: View {
         .navigationTitle(viewModel.isEditing ? InventoryStrings.editItemTitle : InventoryStrings.newItemTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(InventoryStrings.cancel) {
+                    if viewModel.isDirty {
+                        showDiscardDialog = true
+                    } else {
+                        dismiss()
+                    }
+                }
+                .foregroundStyle(SolennixColors.textSecondary)
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 saveButton
             }
         }
+        .interactiveDismissDisabled(viewModel.isDirty && !viewModel.isSaving)
+        .confirmationDialog(
+            FeatureL10n.text("common.discard_changes.title", "¿Descartar cambios?"),
+            isPresented: $showDiscardDialog,
+            titleVisibility: .visible
+        ) {
+            Button(FeatureL10n.text("common.discard_changes.confirm", "Descartar"), role: .destructive) {
+                dismiss()
+            }
+            Button(FeatureL10n.text("common.discard_changes.cancel", "Cancelar"), role: .cancel) {}
+        }
         .sensoryFeedback(.success, trigger: viewModel.saveSuccessCounter)
         .sensoryFeedback(.error, trigger: viewModel.saveErrorCounter)
+        .alert(InventoryStrings.errorTitle, isPresented: .init(
+            get: { viewModel.errorMessage != nil },
+            set: { if !$0 { viewModel.errorMessage = nil } }
+        )) {
+            Button(InventoryStrings.ok, role: .cancel) {}
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
         .task { await viewModel.loadData() }
     }
 
@@ -63,6 +93,8 @@ public struct InventoryFormView: View {
                         Text(InventoryStrings.equipmentType).tag(InventoryType.equipment)
                         Text(InventoryStrings.supplyType).tag(InventoryType.supply)
                     }
+                    .pickerStyle(.menu)
+                    .tint(SolennixColors.primary)
                 }
             }
 
@@ -114,12 +146,12 @@ public struct InventoryFormView: View {
                                         .padding(.vertical, Spacing.xs)
                                         .background(
                                             viewModel.unit == unit
-                                                ? SolennixColors.primary
+                                                ? SolennixColors.primaryLight
                                                 : SolennixColors.surface
                                         )
                                         .foregroundStyle(
                                             viewModel.unit == unit
-                                                ? SolennixColors.textInverse
+                                                ? SolennixColors.primary
                                                 : SolennixColors.text
                                         )
                                         .clipShape(Capsule())
@@ -158,9 +190,10 @@ public struct InventoryFormView: View {
             } else {
                 Text(InventoryStrings.save)
                     .fontWeight(.semibold)
+                    .foregroundStyle(viewModel.isValid ? SolennixColors.primary : SolennixColors.textTertiary)
             }
         }
-        .disabled(viewModel.isSaving)
+        .disabled(!viewModel.isValid || viewModel.isSaving)
     }
 }
 

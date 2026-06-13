@@ -119,14 +119,33 @@ public final class ProductFormViewModel {
     /// Incremented on save error — triggers `.sensoryFeedback(.error, trigger:)`.
     public var saveErrorCounter: Int = 0
 
+    // MARK: - Dirty State
+
+    private var initialName: String = ""
+    private var initialCategory: String = ""
+    private var initialBasePrice: Double = 0
+    private var initialIsActive: Bool = true
+
+    /// True when any core field differs from its loaded (or default) initial value.
+    public var isDirty: Bool {
+        name != initialName
+            || category != initialCategory
+            || basePrice != initialBasePrice
+            || isActive != initialIsActive
+            || localImageData != nil
+    }
+
     // MARK: - Validation
 
     public var nameError: String?
     public var categoryError: String?
 
+    /// Pure computed validity check — does NOT mutate error props (avoids re-render loop).
+    /// Call `validateForm()` explicitly on save or field commit to surface inline error messages.
     public var isValid: Bool {
-        validateForm()
-        return nameError == nil && categoryError == nil
+        let nameOk = name.trimmingCharacters(in: .whitespacesAndNewlines).count >= 2
+        let categoryOk = !category.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return nameOk && categoryOk
     }
 
     // MARK: - Mode
@@ -199,6 +218,11 @@ public final class ProductFormViewModel {
         isActive = product.isActive
         imageUrl = product.imageUrl
         staffTeamId = product.staffTeamId
+        // Snapshot initial values so isDirty can compare
+        initialName = name
+        initialCategory = category
+        initialBasePrice = basePrice
+        initialIsActive = isActive
     }
 
     private func populateRecipe(from productIngredients: [ProductIngredient]) {

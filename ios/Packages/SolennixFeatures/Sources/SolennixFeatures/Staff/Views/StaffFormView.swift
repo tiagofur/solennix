@@ -10,6 +10,7 @@ public struct StaffFormView: View {
     let staffId: String?
 
     @State private var viewModel: StaffFormViewModel
+    @State private var showDiscardDialog: Bool = false
     @Environment(\.dismiss) private var dismiss
 
     public init(staffId: String? = nil, apiClient: APIClient) {
@@ -31,6 +32,16 @@ public struct StaffFormView: View {
         .navigationTitle(staffId != nil ? StaffStrings.editTitle : StaffStrings.newTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(StaffStrings.cancel) {
+                    if viewModel.isDirty {
+                        showDiscardDialog = true
+                    } else {
+                        dismiss()
+                    }
+                }
+                .foregroundStyle(SolennixColors.textSecondary)
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     Task {
@@ -50,6 +61,17 @@ public struct StaffFormView: View {
                 .disabled(!viewModel.isFormValid || viewModel.isSaving)
             }
         }
+        .interactiveDismissDisabled(viewModel.isDirty && !viewModel.isSaving)
+        .confirmationDialog(
+            StaffStrings.discardChangesTitle,
+            isPresented: $showDiscardDialog,
+            titleVisibility: .visible
+        ) {
+            Button(StaffStrings.discardChangesConfirm, role: .destructive) {
+                dismiss()
+            }
+            Button(StaffStrings.cancel, role: .cancel) {}
+        }
         .overlay {
             if viewModel.isLoading {
                 ProgressView(StaffStrings.loading)
@@ -65,6 +87,8 @@ public struct StaffFormView: View {
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
+        .sensoryFeedback(.success, trigger: viewModel.saveSuccessCounter)
+        .sensoryFeedback(.error, trigger: viewModel.saveErrorCounter)
         .task {
             if let id = staffId {
                 await viewModel.loadStaff(id: id)
@@ -166,11 +190,6 @@ public struct StaffFormView: View {
     private var notesSection: some View {
         Section(StaffStrings.sectionNotes) {
             VStack(alignment: .leading, spacing: Spacing.xs) {
-                Text(StaffStrings.sectionNotes)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundStyle(SolennixColors.text)
-
                 TextEditor(text: $viewModel.notes)
                     .frame(minHeight: 80)
                     .font(.body)

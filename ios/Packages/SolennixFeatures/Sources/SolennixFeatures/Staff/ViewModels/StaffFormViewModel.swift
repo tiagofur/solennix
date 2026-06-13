@@ -25,6 +25,32 @@ public final class StaffFormViewModel {
     public var isEdit: Bool = false
     public var editId: String?
 
+    // MARK: - Haptic Counters (observed by StaffFormView via .sensoryFeedback)
+
+    /// Incremented on successful save — triggers `.sensoryFeedback(.success, trigger:)`.
+    public var saveSuccessCounter: Int = 0
+    /// Incremented on save error — triggers `.sensoryFeedback(.error, trigger:)`.
+    public var saveErrorCounter: Int = 0
+
+    // MARK: - Dirty State
+
+    private var initialName: String = ""
+    private var initialRoleLabel: String = ""
+    private var initialPhone: String = ""
+    private var initialEmail: String = ""
+    private var initialNotes: String = ""
+    private var initialNotificationEmailOptIn: Bool = false
+
+    /// True when any field differs from its loaded (or default) initial value.
+    public var isDirty: Bool {
+        name != initialName
+            || roleLabel != initialRoleLabel
+            || phone != initialPhone
+            || email != initialEmail
+            || notes != initialNotes
+            || notificationEmailOptIn != initialNotificationEmailOptIn
+    }
+
     // MARK: - Dependencies
 
     private let apiClient: APIClient
@@ -41,11 +67,16 @@ public final class StaffFormViewModel {
         name.trimmingCharacters(in: .whitespacesAndNewlines).count >= 2
     }
 
-    /// El email es opcional, pero si se activa el opt-in debe ser valido.
+    /// El email es opcional, pero si se activa el opt-in debe ser válido.
     public var isEmailValidIfProvided: Bool {
         let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty { return true }
-        return trimmed.contains("@") && trimmed.contains(".")
+        // Require at least one char before @, chars between @ and ., and char(s) after .
+        let parts = trimmed.split(separator: "@", maxSplits: 1)
+        guard parts.count == 2, !parts[0].isEmpty else { return false }
+        let domainParts = parts[1].split(separator: ".", maxSplits: 1)
+        guard domainParts.count == 2, !domainParts[0].isEmpty, !domainParts[1].isEmpty else { return false }
+        return true
     }
 
     /// Si el opt-in esta activo, se exige email valido.
@@ -76,6 +107,13 @@ public final class StaffFormViewModel {
             notificationEmailOptIn = item.notificationEmailOptIn
             isEdit = true
             editId = item.id
+            // Snapshot initial values so isDirty can compare
+            initialName = name
+            initialRoleLabel = roleLabel
+            initialPhone = phone
+            initialEmail = email
+            initialNotes = notes
+            initialNotificationEmailOptIn = notificationEmailOptIn
         } catch {
             errorMessage = mapError(error)
         }
@@ -134,15 +172,15 @@ public final class StaffFormViewModel {
     @MainActor
     public func validateAndSave() async -> Staff? {
         guard isNameValid else {
-            errorMessage = "El nombre debe tener al menos 2 caracteres"
+            errorMessage = StaffStrings.validationNameMin
             return nil
         }
         guard isEmailValidIfProvided else {
-            errorMessage = "El email no parece valido"
+            errorMessage = StaffStrings.validationEmailInvalid
             return nil
         }
         guard isOptInConsistent else {
-            errorMessage = "Para activar el aviso por email necesitas un email valido"
+            errorMessage = StaffStrings.validationOptInEmailRequired
             return nil
         }
 
@@ -151,11 +189,11 @@ public final class StaffFormViewModel {
 
         do {
             let saved = try await save()
-            HapticsHelper.play(.success)
+            saveSuccessCounter &+= 1
             isSaving = false
             return saved
         } catch {
-            HapticsHelper.play(.error)
+            saveErrorCounter &+= 1
             errorMessage = mapError(error)
             isSaving = false
             return nil
@@ -166,8 +204,8 @@ public final class StaffFormViewModel {
 
     private func mapError(_ error: Error) -> String {
         if let apiError = error as? APIError {
-            return apiError.errorDescription ?? "Ocurrio un error inesperado."
+            return apiError.errorDescription ?? StaffStrings.unexpectedError
         }
-        return "Ocurrio un error inesperado. Intenta de nuevo."
+        return StaffStrings.unexpectedErrorRetry
     }
 }

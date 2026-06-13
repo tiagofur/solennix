@@ -12,6 +12,7 @@ public struct ClientFormView: View {
 
     @State private var viewModel: ClientFormViewModel
     @State private var selectedItem: PhotosPickerItem?
+    @State private var showDiscardDialog: Bool = false
     @Environment(\.dismiss) private var dismiss
     @Environment(PlanLimitsManager.self) private var planLimitsManager
 
@@ -36,6 +37,16 @@ public struct ClientFormView: View {
             : tr("clients.form.new_title", "Nuevo cliente"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(tr("clients.action.cancel", "Cancelar")) {
+                    if viewModel.isDirty {
+                        showDiscardDialog = true
+                    } else {
+                        dismiss()
+                    }
+                }
+                .foregroundStyle(SolennixColors.textSecondary)
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     Task {
@@ -54,6 +65,17 @@ public struct ClientFormView: View {
                 }
                 .disabled(!viewModel.isFormValid || viewModel.isSaving)
             }
+        }
+        .interactiveDismissDisabled(viewModel.isDirty && !viewModel.isSaving)
+        .confirmationDialog(
+            tr("common.discard_changes.title", "¿Descartar cambios?"),
+            isPresented: $showDiscardDialog,
+            titleVisibility: .visible
+        ) {
+            Button(tr("common.discard_changes.confirm", "Descartar"), role: .destructive) {
+                dismiss()
+            }
+            Button(tr("common.discard_changes.cancel", "Cancelar"), role: .cancel) {}
         }
         .overlay {
             if viewModel.isLoading {
@@ -213,11 +235,6 @@ public struct ClientFormView: View {
     private var notesSection: some View {
         Section(tr("clients.form.notes_section", "Notas")) {
             VStack(alignment: .leading, spacing: Spacing.xs) {
-                Text(tr("clients.form.notes", "Notas"))
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundStyle(SolennixColors.text)
-
                 TextEditor(text: $viewModel.notes)
                     .frame(minHeight: 80)
                     .font(.body)
