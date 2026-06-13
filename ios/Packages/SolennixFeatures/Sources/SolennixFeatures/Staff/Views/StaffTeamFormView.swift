@@ -11,6 +11,8 @@ public struct StaffTeamFormView: View {
 
     @State private var viewModel: StaffTeamFormViewModel
     @State private var showMemberPicker: Bool = false
+    @State private var leadToggleCounter: Int = 0
+    @State private var showDiscardDialog: Bool = false
     @Environment(\.dismiss) private var dismiss
 
     public init(teamId: String? = nil, apiClient: APIClient) {
@@ -26,9 +28,21 @@ public struct StaffTeamFormView: View {
         }
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
+        .scrollDismissesKeyboard(.interactively)
+        .keyboardDoneToolbar()
         .navigationTitle(teamId != nil ? StaffStrings.teamEditTitle : StaffStrings.teamNewTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(StaffStrings.cancel) {
+                    if viewModel.isDirty {
+                        showDiscardDialog = true
+                    } else {
+                        dismiss()
+                    }
+                }
+                .foregroundStyle(SolennixColors.textSecondary)
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     Task {
@@ -48,6 +62,17 @@ public struct StaffTeamFormView: View {
                 .disabled(!viewModel.isFormValid || viewModel.isSaving)
             }
         }
+        .interactiveDismissDisabled(viewModel.isDirty && !viewModel.isSaving)
+        .confirmationDialog(
+            StaffStrings.discardChangesTitle,
+            isPresented: $showDiscardDialog,
+            titleVisibility: .visible
+        ) {
+            Button(StaffStrings.discardChangesConfirm, role: .destructive) {
+                dismiss()
+            }
+            Button(StaffStrings.discardChangesCancel, role: .cancel) {}
+        }
         .overlay {
             if viewModel.isLoading {
                 ProgressView(StaffStrings.loading)
@@ -55,14 +80,17 @@ public struct StaffTeamFormView: View {
                     .background(SolennixColors.background.opacity(0.6))
             }
         }
-        .alert("Error", isPresented: .init(
+        .alert(StaffStrings.errorTitle, isPresented: .init(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
-            Button("OK", role: .cancel) {}
+            Button(StaffStrings.cancel, role: .cancel) {}
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
+        .sensoryFeedback(.success, trigger: viewModel.saveSuccessCounter)
+        .sensoryFeedback(.error, trigger: viewModel.saveErrorCounter)
+        .sensoryFeedback(.selection, trigger: leadToggleCounter)
         .sheet(isPresented: $showMemberPicker) {
             memberPickerSheet
         }
@@ -194,7 +222,7 @@ public struct StaffTeamFormView: View {
 
             Button {
                 viewModel.toggleLead(for: member.staffId)
-                HapticsHelper.play(.success)
+                leadToggleCounter &+= 1
             } label: {
                 Image(systemName: member.isLead ? "crown.fill" : "crown")
                     .font(.body)
@@ -237,6 +265,8 @@ public struct StaffTeamFormView: View {
                 }
             }
         }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 }
 
@@ -282,7 +312,10 @@ private struct MemberPickerList: View {
                 .disabled(alreadySelected.contains(item.id))
             }
         }
-        .searchable(text: $search, prompt: StaffStrings.searchPrompt)
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(SolennixColors.surfaceGrouped)
+        .solennixSearchable(text: $search, prompt: StaffStrings.searchPrompt)
     }
 
     private var filtered: [Staff] {

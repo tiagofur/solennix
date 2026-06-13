@@ -35,6 +35,26 @@ public final class ClientFormViewModel {
     /// Incremented on save error — triggers `.sensoryFeedback(.error, trigger:)`.
     public var saveErrorCounter: Int = 0
 
+    // MARK: - Dirty State
+
+    private var initialName: String = ""
+    private var initialPhone: String = ""
+    private var initialEmail: String = ""
+    private var initialAddress: String = ""
+    private var initialCity: String = ""
+    private var initialNotes: String = ""
+
+    /// True when any field differs from its loaded (or default empty) initial value.
+    public var isDirty: Bool {
+        name != initialName
+            || phone != initialPhone
+            || email != initialEmail
+            || address != initialAddress
+            || city != initialCity
+            || notes != initialNotes
+            || selectedPhotoData != nil
+    }
+
     // MARK: - Dependencies
 
     private let apiClient: APIClient
@@ -78,6 +98,13 @@ public final class ClientFormViewModel {
             photoURL = client.photoUrl
             isEdit = true
             editId = client.id
+            // Snapshot initial values so isDirty can compare
+            initialName = name
+            initialPhone = phone
+            initialEmail = email
+            initialAddress = address
+            initialCity = city
+            initialNotes = notes
         } catch {
             errorMessage = mapError(error)
         }

@@ -164,7 +164,7 @@ public final class EventFormViewModel {
     public var startTime: Date?
     public var endTime: Date?
     public var serviceType: String = ""
-    public var numPeople: Int = 0
+    public var numPeople: Int = 1
     public var status: EventStatus = .quoted
     public var discount: Double = 0
     public var discountType: DiscountType = .percent
@@ -208,6 +208,108 @@ public final class EventFormViewModel {
     public var isSaving: Bool = false
     public var errorMessage: String?
     public var planLimitMessage: String?
+
+    // MARK: - Dirty-State Snapshot
+    //
+    // Replaces the fragile onChange/markDirty/resetDirty machinery.
+    // A snapshot is taken once after loadInitialData (create mode) and once
+    // after loadEventForEditing (edit mode). isDirty is a pure computed
+    // comparison — no race between resetDirty() and onChange watchers.
+
+    /// Stable signature for a collection item: id + quantity + price.
+    struct ItemSignature: Equatable {
+        let id: String
+        let quantity: Double
+        let price: Double
+        /// Extra per-type fields folded into the dirty signature so that editing
+        /// (e.g.) an extra's description or a staff member's shift — without
+        /// touching price — still marks the form dirty.
+        var detail: String = ""
+    }
+
+    struct FormSnapshot: Equatable {
+        var clientId: String
+        var serviceType: String
+        var eventDate: Date
+        var startTime: Date?
+        var endTime: Date?
+        var numPeople: Int
+        var notes: String
+        var location: String
+        var city: String
+        var status: EventStatus
+        var requiresInvoice: Bool
+        var taxRate: Double
+        var depositPercent: Double
+        var cancellationDays: Double
+        var refundPercent: Double
+        var discount: Double
+        var discountType: DiscountType
+        var products: [ItemSignature]
+        var extras: [ItemSignature]
+        var staff: [ItemSignature]
+        var equipment: [ItemSignature]
+        var supplies: [ItemSignature]
+    }
+
+    /// Snapshot taken once after load. Nil until the first load completes.
+    var formSnapshot: FormSnapshot?
+
+    /// True iff the current form state differs from the post-load snapshot.
+    /// Pure computed — no side effects, no race conditions.
+    public var isDirty: Bool {
+        guard let snap = formSnapshot else { return false }
+        return currentSnapshot != snap
+    }
+
+    var currentSnapshot: FormSnapshot {
+        FormSnapshot(
+            clientId: clientId,
+            serviceType: serviceType,
+            eventDate: eventDate,
+            startTime: startTime,
+            endTime: endTime,
+            numPeople: numPeople,
+            notes: notes,
+            location: location,
+            city: city,
+            status: status,
+            requiresInvoice: requiresInvoice,
+            taxRate: taxRate,
+            depositPercent: depositPercent,
+            cancellationDays: cancellationDays,
+            refundPercent: refundPercent,
+            discount: discount,
+            discountType: discountType,
+            products: selectedProducts.map { ItemSignature(id: $0.productId, quantity: $0.quantity, price: $0.unitPrice) },
+            extras: extras.map {
+                ItemSignature(
+                    id: $0.id.uuidString,
+                    quantity: 1,
+                    price: $0.price,
+                    detail: "\($0.description)|\($0.cost)|\($0.excludeUtility)|\($0.includeInChecklist)"
+                )
+            },
+            staff: selectedStaff.map {
+                ItemSignature(
+                    id: $0.staffId,
+                    quantity: $0.feeAmount,
+                    price: $0.feeAmount,
+                    detail: "\($0.staffRoleLabel ?? "")|\($0.roleOverride)|\($0.notes)|\($0.shiftStart?.timeIntervalSince1970 ?? -1)|\($0.shiftEnd?.timeIntervalSince1970 ?? -1)|\($0.status)"
+                )
+            },
+            equipment: selectedEquipment.map {
+                ItemSignature(id: $0.inventoryId, quantity: Double($0.quantity), price: 0, detail: $0.notes)
+            },
+            supplies: selectedSupplies.map { ItemSignature(id: $0.inventoryId, quantity: $0.quantity, price: $0.unitCost) }
+        )
+    }
+
+    /// Takes a snapshot of the current form state. Called at the end of both
+    /// loadInitialData and loadEventForEditing, after all fields are populated.
+    func takeSnapshot() {
+        formSnapshot = currentSnapshot
+    }
 
     // MARK: - Edit Mode
 

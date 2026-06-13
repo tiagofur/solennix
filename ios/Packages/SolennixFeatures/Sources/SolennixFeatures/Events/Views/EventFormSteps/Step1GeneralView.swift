@@ -70,6 +70,7 @@ struct Step1GeneralView: View {
             }
             .padding(Spacing.md)
         }
+        .scrollDismissesKeyboard(.interactively)
         .sheet(isPresented: $showClientPicker) {
             clientPickerSheet
         }
@@ -179,6 +180,9 @@ struct Step1GeneralView: View {
                     .buttonStyle(.plain)
                 }
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(SolennixColors.surfaceGrouped)
             .searchable(text: $clientSearch, prompt: tr("events.form.general.search_client", "Buscar cliente"))
             .navigationTitle(tr("events.form.general.select_client_title", "Seleccionar cliente"))
             .navigationBarTitleDisplayMode(.inline)
@@ -206,6 +210,8 @@ struct Step1GeneralView: View {
                 }
             }
         }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 
     private var filteredClients: [Client] {
@@ -263,19 +269,46 @@ struct Step1GeneralView: View {
     }
 
     private var formattedEventDate: String {
-        let formatter = DateFormatter()
-        formatter.locale = FeatureL10n.locale
-        formatter.setLocalizedDateFormatFromTemplate("dMMMMyyyy")
-        return formatter.string(from: viewModel.eventDate)
+        // eventDate is stored as UTC-midnight (parsed via Date.fromServerDay /
+        // stored that way on save). Use formattedServerDayTemplate so the
+        // displayed calendar day matches the server yyyy-MM-dd value regardless
+        // of the device's UTC offset (fixes -1 day for UTC-negative users).
+        viewModel.eventDate.formattedServerDayTemplate("dMMMMyyyy", locale: FeatureL10n.locale)
     }
 
     // MARK: - Date Picker Sheet
+
+    /// UTC-calendar proxy binding for the graphical DatePicker.
+    ///
+    /// eventDate is stored as UTC-midnight. The graphical DatePicker renders
+    /// using the device calendar (local timezone), so for a UTC-6 user it
+    /// would display the prior day. This proxy offsets the Date by the device
+    /// UTC-offset delta so the picker's local-calendar view aligns with the
+    /// intended UTC calendar day, and reverses the offset on write.
+    private var utcEventDateBinding: Binding<Date> {
+        Binding(
+            get: {
+                // eventDate is UTC-midnight; the picker renders in local tz.
+                // Counter the local offset so the local-calendar picker lands on
+                // the intended UTC day: a UTC-6 device needs +6h so that
+                // 2026-06-15T00:00Z displays as June 15 (not June 14) locally.
+                let secondsFromGMT = TimeInterval(TimeZone.current.secondsFromGMT(for: viewModel.eventDate))
+                return viewModel.eventDate.addingTimeInterval(-secondsFromGMT)
+            },
+            set: { localPickerDate in
+                // Reverse the shift to recover the UTC-midnight instant for the
+                // selected local calendar day.
+                let secondsFromGMT = TimeInterval(TimeZone.current.secondsFromGMT(for: localPickerDate))
+                viewModel.eventDate = localPickerDate.addingTimeInterval(secondsFromGMT)
+            }
+        )
+    }
 
     private var datePickerSheet: some View {
         NavigationStack {
             DatePicker(
                 tr("events.form.general.event_date", "Fecha del evento"),
-                selection: $viewModel.eventDate,
+                selection: utcEventDateBinding,
                 displayedComponents: .date
             )
             .datePickerStyle(.graphical)
@@ -357,26 +390,26 @@ struct Step1GeneralView: View {
             // glyph sea moderado.
             HStack(spacing: 0) {
                 Button {
-                    if viewModel.numPeople > 0 {
+                    if viewModel.numPeople > 1 {
                         viewModel.numPeople -= 1
                     }
                 } label: {
                     Image(systemName: "minus.circle.fill")
                         .font(.title2)
-                        .foregroundStyle(viewModel.numPeople > 0 ? SolennixColors.primary : SolennixColors.textTertiary)
+                        .foregroundStyle(viewModel.numPeople > 1 ? SolennixColors.primary : SolennixColors.textTertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .disabled(viewModel.numPeople <= 0)
+                .disabled(viewModel.numPeople <= 1)
 
                 EditableQuantityText(
                     quantity: $viewModel.numPeople,
-                    minValue: 0,
+                    minValue: 1,
                     id: "numPeople",
                     font: .title3,
                     width: 44,
-                    showTertiaryAtMin: true
+                    showTertiaryAtMin: false
                 )
 
                 Button {
@@ -569,15 +602,15 @@ private struct OptionalTimePicker: View {
 
                 Spacer()
             }
-            .navigationTitle("Hora")
+            .navigationTitle(FeatureL10n.text("events.form.general.time", "Hora"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancelar") { showPickerSheet = false }
+                    Button(FeatureL10n.text("events.form.cancel", "Cancelar")) { showPickerSheet = false }
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Listo") {
+                    Button(FeatureL10n.text("events.form.general.done", "Listo")) {
                         selection = draftTime
                         showPickerSheet = false
                     }

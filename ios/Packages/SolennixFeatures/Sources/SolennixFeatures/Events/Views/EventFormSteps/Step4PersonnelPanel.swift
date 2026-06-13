@@ -99,7 +99,7 @@ struct Step4PersonnelPanel: View {
                 Step4PersonnelActionButton(
                     icon: "person.3.fill",
                     label: tr("events.form.staff.add_team", "Agregar equipo completo"),
-                    background: SolennixColors.surface
+                    background: SolennixColors.primaryLight
                 ) {
                     showTeamPicker = true
                     Task { await loadTeamsIfNeeded() }
@@ -193,6 +193,8 @@ struct Step4PersonnelPanel: View {
                         }
                     }
                     .listStyle(.insetGrouped)
+                    .scrollContentBackground(.hidden)
+                    .background(SolennixColors.surfaceGrouped)
                 }
             }
             .navigationTitle(tr("events.form.staff.add_team_short", "Agregar equipo"))
@@ -204,6 +206,8 @@ struct Step4PersonnelPanel: View {
                 }
             }
         }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 
     private func loadTeamsIfNeeded() async {
@@ -212,16 +216,21 @@ struct Step4PersonnelPanel: View {
         isLoadingTeams = true
         defer { isLoadingTeams = false }
         do {
-            // Listado liviano — para el detalle de miembros llamamos por ID.
             let list = try await viewModel.apiClient.listStaffTeams()
-            // Hidratamos miembros por cada team (N requests pero N suele ser chico).
-            var hydrated: [StaffTeam] = []
-            for t in list {
-                if let full = try? await viewModel.apiClient.getStaffTeam(id: t.id) {
-                    hydrated.append(full)
-                } else {
-                    hydrated.append(t)
+            // Hydrate member details in parallel — fault-isolated per team.
+            let hydrated: [StaffTeam] = await withTaskGroup(of: StaffTeam.self) { group in
+                for t in list {
+                    group.addTask {
+                        (try? await viewModel.apiClient.getStaffTeam(id: t.id)) ?? t
+                    }
                 }
+                var result: [StaffTeam] = []
+                for await team in group {
+                    result.append(team)
+                }
+                // Restore original order (taskGroup results arrive out of order).
+                let order = Dictionary(uniqueKeysWithValues: list.enumerated().map { ($0.element.id, $0.offset) })
+                return result.sorted { (order[$0.id] ?? 0) < (order[$1.id] ?? 0) }
             }
             teams = hydrated
         } catch {
@@ -285,6 +294,9 @@ struct Step4PersonnelPanel: View {
                             .buttonStyle(.plain)
                         }
                     }
+                    .listStyle(.insetGrouped)
+                    .scrollContentBackground(.hidden)
+                    .background(SolennixColors.surfaceGrouped)
                     .searchable(text: $staffSearch, prompt: tr("events.form.staff.search", "Buscar personal"))
                 }
             }
@@ -299,6 +311,8 @@ struct Step4PersonnelPanel: View {
                 }
             }
         }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 
     // MARK: - Filtered List

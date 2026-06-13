@@ -41,6 +41,25 @@ public final class InventoryFormViewModel {
     /// Incremented on save error — triggers `.sensoryFeedback(.error, trigger:)`.
     public var saveErrorCounter: Int = 0
 
+    // MARK: - Dirty State
+
+    private var initialIngredientName: String = ""
+    private var initialType: InventoryType = .ingredient
+    private var initialCurrentStock: Double = 0
+    private var initialMinimumStock: Double = 0
+    private var initialUnit: String = InventoryStrings.unitDefault
+    private var initialUnitCost: Double? = nil
+
+    /// True when any field differs from its loaded (or default) initial value.
+    public var isDirty: Bool {
+        ingredientName != initialIngredientName
+            || type != initialType
+            || currentStock != initialCurrentStock
+            || minimumStock != initialMinimumStock
+            || unit != initialUnit
+            || unitCost != initialUnitCost
+    }
+
     // MARK: - Validation
 
     public var nameError: String?
@@ -106,6 +125,13 @@ public final class InventoryFormViewModel {
         minimumStock = item.minimumStock
         unit = item.unit
         unitCost = item.unitCost
+        // Snapshot initial values so isDirty can compare
+        initialIngredientName = ingredientName
+        initialType = type
+        initialCurrentStock = currentStock
+        initialMinimumStock = minimumStock
+        initialUnit = unit
+        initialUnitCost = unitCost
     }
 
     // MARK: - Validation

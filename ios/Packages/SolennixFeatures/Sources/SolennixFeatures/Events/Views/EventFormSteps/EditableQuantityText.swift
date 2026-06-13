@@ -46,6 +46,8 @@ struct EditableQuantityText: View {
             )
             .focused($focused)
             .frame(width: width)
+            .accessibilityLabel(tr("common.quantity.a11y_label", "Cantidad"))
+            .accessibilityValue(String(quantity))
             .onAppear { text = String(quantity) }
             .onChange(of: id) { _, _ in text = String(quantity) }
             .onChange(of: quantity) { _, newValue in
@@ -68,5 +70,72 @@ struct EditableQuantityText: View {
                     text = String(clamped)
                 }
             }
+    }
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+}
+
+/// Double-typed editable quantity for product/supply quantities that are
+/// conceptually fractional (e.g. 1.5 portions). The model and backend both
+/// store `float64` — using Int truncates 1.5 → 1 on load/save.
+///
+/// Supports one decimal place via `.decimalPad`. Blur clamps to `minValue`.
+struct EditableQuantityTextDouble: View {
+
+    @Binding var quantity: Double
+    let minValue: Double
+    let id: AnyHashable
+    var font: Font = .body
+    var width: CGFloat = 44
+    var colorOverride: Color? = nil
+
+    @State private var text: String = ""
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        TextField(formatQuantity(minValue), text: $text)
+            .keyboardType(.decimalPad)
+            .multilineTextAlignment(.center)
+            .font(font)
+            .fontWeight(.semibold)
+            .monospacedDigit()
+            .foregroundStyle(colorOverride ?? SolennixColors.text)
+            .focused($focused)
+            .frame(width: width)
+            .accessibilityLabel(tr("common.quantity.a11y_label", "Cantidad"))
+            .accessibilityValue(formatQuantity(quantity))
+            .onAppear { text = formatQuantity(quantity) }
+            .onChange(of: id) { _, _ in text = formatQuantity(quantity) }
+            .onChange(of: quantity) { _, newValue in
+                if !focused { text = formatQuantity(newValue) }
+            }
+            .onChange(of: text) { _, newText in
+                let normalized = newText.replacingOccurrences(of: ",", with: ".")
+                if let parsed = Double(normalized) {
+                    quantity = parsed
+                }
+            }
+            .onChange(of: focused) { _, isFocused in
+                if !isFocused {
+                    let normalized = text.replacingOccurrences(of: ",", with: ".")
+                    let parsed = Double(normalized) ?? minValue
+                    let clamped = max(minValue, parsed)
+                    quantity = clamped
+                    text = formatQuantity(clamped)
+                }
+            }
+    }
+
+    /// Format without trailing `.0` for whole numbers, up to 2 decimal places otherwise.
+    private func formatQuantity(_ value: Double) -> String {
+        value.truncatingRemainder(dividingBy: 1) == 0
+            ? String(Int(value))
+            : String(format: "%g", value)
+    }
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
     }
 }

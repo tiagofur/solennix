@@ -33,11 +33,11 @@ public struct PremiumButton: View {
             HStack(spacing: Spacing.sm) {
                 if isLoading {
                     ProgressView()
-                        .tint(.white)
+                        .tint(SolennixColors.textInverse)
                 } else {
                     Text(title)
                         .font(.headline)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(SolennixColors.textInverse)
                 }
             }
             .frame(maxWidth: fullWidth ? .infinity : nil)

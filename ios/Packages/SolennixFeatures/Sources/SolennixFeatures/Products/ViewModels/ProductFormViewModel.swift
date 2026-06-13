@@ -29,6 +29,11 @@ private struct StatusResponse: Decodable {
     let status: String
 }
 
+private struct RecipeSnapshot: Equatable {
+    let inventoryId: String
+    let quantityRequired: Double
+}
+
 // MARK: - Recipe Item
 
 public struct RecipeItem: Identifiable, Hashable {
@@ -119,14 +124,41 @@ public final class ProductFormViewModel {
     /// Incremented on save error — triggers `.sensoryFeedback(.error, trigger:)`.
     public var saveErrorCounter: Int = 0
 
+    // MARK: - Dirty State
+
+    private var initialName: String = ""
+    private var initialCategory: String = ""
+    private var initialBasePrice: Double = 0
+    private var initialIsActive: Bool = true
+    private var initialStaffTeamId: String?
+    private var initialRecipeSnapshot: [RecipeSnapshot] = []
+
+    /// True when any core field, recipe, or local image differs from its loaded (or default) initial value.
+    public var isDirty: Bool {
+        name != initialName
+            || category != initialCategory
+            || basePrice != initialBasePrice
+            || isActive != initialIsActive
+            || staffTeamId != initialStaffTeamId
+            || localImageData != nil
+            || currentRecipeSnapshot != initialRecipeSnapshot
+    }
+
+    private var currentRecipeSnapshot: [RecipeSnapshot] {
+        (ingredients + equipment + supplies).map { RecipeSnapshot(inventoryId: $0.inventoryId, quantityRequired: $0.quantityRequired) }
+    }
+
     // MARK: - Validation
 
     public var nameError: String?
     public var categoryError: String?
 
+    /// Pure computed validity check — does NOT mutate error props (avoids re-render loop).
+    /// Call `validateForm()` explicitly on save or field commit to surface inline error messages.
     public var isValid: Bool {
-        validateForm()
-        return nameError == nil && categoryError == nil
+        let nameOk = name.trimmingCharacters(in: .whitespacesAndNewlines).count >= 2
+        let categoryOk = !category.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return nameOk && categoryOk
     }
 
     // MARK: - Mode
@@ -199,6 +231,12 @@ public final class ProductFormViewModel {
         isActive = product.isActive
         imageUrl = product.imageUrl
         staffTeamId = product.staffTeamId
+        // Snapshot initial values so isDirty can compare
+        initialName = name
+        initialCategory = category
+        initialBasePrice = basePrice
+        initialIsActive = isActive
+        initialStaffTeamId = staffTeamId
     }
 
     private func populateRecipe(from productIngredients: [ProductIngredient]) {
@@ -225,6 +263,8 @@ public final class ProductFormViewModel {
                 supplies.append(item)
             }
         }
+        // Snapshot recipe so isDirty can detect ingredient/equipment/supply changes
+        initialRecipeSnapshot = currentRecipeSnapshot
     }
 
     // MARK: - Validation

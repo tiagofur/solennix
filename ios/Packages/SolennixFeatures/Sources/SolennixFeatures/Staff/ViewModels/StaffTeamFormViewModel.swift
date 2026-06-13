@@ -57,6 +57,30 @@ public final class StaffTeamFormViewModel {
     public var isEdit: Bool = false
     public var editId: String?
 
+    // MARK: - Haptic Counters (observed by StaffTeamFormView via .sensoryFeedback)
+
+    /// Incremented on successful save — triggers `.sensoryFeedback(.success, trigger:)`.
+    public var saveSuccessCounter: Int = 0
+    /// Incremented on save error — triggers `.sensoryFeedback(.error, trigger:)`.
+    public var saveErrorCounter: Int = 0
+
+    // MARK: - Dirty State
+
+    private var initialName: String = ""
+    private var initialRoleLabel: String = ""
+    private var initialNotes: String = ""
+    private var initialMemberIds: [String] = []
+    private var initialLeadIds: Set<String> = []
+
+    /// True when any field, member list, or lead assignment differs from its loaded (or default) initial value.
+    public var isDirty: Bool {
+        name != initialName
+            || roleLabel != initialRoleLabel
+            || notes != initialNotes
+            || members.map(\.staffId) != initialMemberIds
+            || Set(members.filter(\.isLead).map(\.staffId)) != initialLeadIds
+    }
+
     // MARK: - Dependencies
 
     private let apiClient: APIClient
@@ -105,13 +129,19 @@ public final class StaffTeamFormViewModel {
             members = sorted.map { m in
                 StaffTeamMemberDraft(
                     staffId: m.staffId,
-                    staffName: m.staffName ?? "(sin nombre)",
+                    staffName: m.staffName ?? StaffStrings.memberNoName,
                     staffRoleLabel: m.staffRoleLabel,
                     staffPhone: m.staffPhone,
                     staffEmail: m.staffEmail,
                     isLead: m.isLead
                 )
             }
+            // Snapshot initial values so isDirty can compare
+            initialName = name
+            initialRoleLabel = roleLabel
+            initialNotes = notes
+            initialMemberIds = members.map(\.staffId)
+            initialLeadIds = Set(members.filter(\.isLead).map(\.staffId))
         } catch {
             errorMessage = mapError(error)
         }
@@ -152,7 +182,7 @@ public final class StaffTeamFormViewModel {
     @MainActor
     public func save() async -> StaffTeam? {
         guard isFormValid else {
-            errorMessage = "El nombre es obligatorio"
+            errorMessage = StaffStrings.validationTeamNameRequired
             return nil
         }
 
@@ -185,11 +215,11 @@ public final class StaffTeamFormViewModel {
             } else {
                 result = try await apiClient.createStaffTeam(payload)
             }
-            HapticsHelper.play(.success)
+            saveSuccessCounter &+= 1
             isSaving = false
             return result
         } catch {
-            HapticsHelper.play(.error)
+            saveErrorCounter &+= 1
             errorMessage = mapError(error)
             isSaving = false
             return nil

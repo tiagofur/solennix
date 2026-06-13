@@ -9,6 +9,7 @@ import SolennixNetwork
 public struct ProductFormView: View {
 
     @State private var viewModel: ProductFormViewModel
+    @State private var showDiscardDialog: Bool = false
     @Environment(\.dismiss) private var dismiss
     @Environment(PlanLimitsManager.self) private var planLimitsManager
 
@@ -21,20 +22,41 @@ public struct ProductFormView: View {
             if viewModel.isLoading {
                 ProgressView(ProductStrings.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(SolennixColors.surfaceGrouped)
             } else {
                 formContent
             }
         }
-        .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
         .scrollDismissesKeyboard(.interactively)
         .keyboardDoneToolbar()
         .navigationTitle(viewModel.isEditing ? ProductStrings.editProductTitle : ProductStrings.newProductTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(ProductStrings.cancel) {
+                    if viewModel.isDirty {
+                        showDiscardDialog = true
+                    } else {
+                        dismiss()
+                    }
+                }
+                .foregroundStyle(SolennixColors.textSecondary)
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 saveButton
             }
+        }
+        .interactiveDismissDisabled(viewModel.isDirty && !viewModel.isSaving)
+        .confirmationDialog(
+            FeatureL10n.text("common.discard_changes.title", "¿Descartar cambios?"),
+            isPresented: $showDiscardDialog,
+            titleVisibility: .visible
+        ) {
+            Button(FeatureL10n.text("common.discard_changes.confirm", "Descartar"), role: .destructive) {
+                dismiss()
+            }
+            Button(FeatureL10n.text("common.discard_changes.cancel", "Cancelar"), role: .cancel) {}
         }
         .sheet(isPresented: $viewModel.showCategoryPicker) {
             categoryPickerSheet
@@ -270,11 +292,10 @@ public struct ProductFormView: View {
             AdaptiveFormRow {
                 // Name
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text(ProductStrings.name)
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textSecondary)
-
                     TextField(ProductStrings.namePlaceholder, text: $viewModel.name)
+                        .textContentType(.name)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.words)
                         .textFieldStyle(.roundedBorder)
 
                     if let error = viewModel.nameError {
@@ -332,7 +353,7 @@ public struct ProductFormView: View {
                         Text("$")
                             .foregroundStyle(SolennixColors.textSecondary)
 
-                        TextField("0.00", value: $viewModel.basePrice, format: .number)
+                        TextField("0.00", value: $viewModel.basePrice, format: .number.precision(.fractionLength(0...2)))
                             .keyboardType(.decimalPad)
                             .textFieldStyle(.roundedBorder)
                     }
@@ -438,9 +459,10 @@ public struct ProductFormView: View {
             } else {
                 Text(ProductStrings.save)
                     .fontWeight(.semibold)
+                    .foregroundStyle(viewModel.isValid ? SolennixColors.primary : SolennixColors.textTertiary)
             }
         }
-        .disabled(viewModel.isSaving)
+        .disabled(!viewModel.isValid || viewModel.isSaving)
     }
 }
 

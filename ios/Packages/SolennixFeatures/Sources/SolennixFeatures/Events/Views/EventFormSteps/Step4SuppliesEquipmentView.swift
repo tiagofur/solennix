@@ -47,6 +47,7 @@ struct Step4SuppliesEquipmentView: View {
             }
             .padding(Spacing.md)
         }
+        .scrollDismissesKeyboard(.interactively)
         .sheet(isPresented: $showSupplyPicker) {
             supplyPickerSheet
         }

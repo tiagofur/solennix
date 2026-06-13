@@ -106,6 +106,12 @@ enum StaffStrings {
     static var notifToggleSubtitle: String { FeatureL10n.text("staff.form.notif_toggle_subtitle", "Se activará en Phase 2 (Pro+). Por ahora guardamos la preferencia.") }
     static var notifEmailRequired: String { FeatureL10n.text("staff.form.notif_email_required", "Para activar el aviso necesitás un email válido") }
     static var sectionNotes: String { FeatureL10n.text("staff.form.section_notes", "Notas") }
+    static var validationNameMin: String { FeatureL10n.text("staff.form.validation.name_min", "El nombre debe tener al menos 2 caracteres") }
+    static var validationEmailInvalid: String { FeatureL10n.text("staff.form.validation.email_invalid", "El email no parece válido") }
+    static var validationOptInEmailRequired: String { FeatureL10n.text("staff.form.validation.opt_in_email_required", "Para activar el aviso por email necesitás un email válido") }
+    static var discardChangesTitle: String { FeatureL10n.text("common.discard_changes.title", "¿Descartar cambios?") }
+    static var discardChangesConfirm: String { FeatureL10n.text("common.discard_changes.confirm", "Descartar") }
+    static var discardChangesCancel: String { FeatureL10n.text("common.discard_changes.cancel", "Cancelar") }
 
     // MARK: - Teams List
 
@@ -151,6 +157,7 @@ enum StaffStrings {
     static var teamNewTitle: String { FeatureL10n.text("staff.teams_form.team_new_title", "Nuevo Equipo") }
     static var teamNamePlaceholder: String { FeatureL10n.text("staff.teams_form.team_name_placeholder", "Ej: Cuadrilla de meseros A") }
     static var teamNameError: String { FeatureL10n.text("staff.teams_form.team_name_error", "El nombre es obligatorio (max 255)") }
+    static var validationTeamNameRequired: String { FeatureL10n.text("staff.teams_form.validation.name_required", "El nombre es obligatorio") }
     static var teamRoleLabel: String { FeatureL10n.text("staff.teams_form.team_role_label", "Rol del equipo (opcional)") }
     static var teamRolePlaceholder: String { FeatureL10n.text("staff.teams_form.team_role_placeholder", "Ej: Meseros, Fotografía") }
     static var teamNotesLabel: String { FeatureL10n.text("staff.teams_form.team_notes_label", "Notas internas") }
