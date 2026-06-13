@@ -151,7 +151,8 @@ status: active
 > - **Fan-out en paralelo:** demand de Producto e Inventario eran N+1 secuenciales (hasta ~200 requests) → `coroutineScope`+`async`+`Semaphore`, con `DemandResult` sellado tallado tras `awaitAll` (sin mutación compartida) y rethrow de `CancellationException` en cada catch hijo (el patrón naïve se tragaba la cancelación cooperativa). Inventario: `getProductIngredients` ya no se sostiene a través de la red dentro del `Mutex`.
 > - **Errores visibles:** delete/ajuste fallaban en silencio en 3 pantallas → `SnackbarHost` + feedback de pago dirigido por flags del VM (antes un Toast optimista disparaba éxito antes de saber el resultado).
 > - **Otros:** truncado fraccionario (`.toInt()` → Double), acumulador mutable en `forEach` precomputado, branching por valor de enum, strings a recursos.
-> - **Aislamiento:** worktree propio para no pisar el checkout del otro agente Android. Cierra la parte de detalle de #552 (quedan list-polish, scope filter chips M3, pending balance KPI).
+> - **Aislamiento:** worktree propio para no pisar el checkout del otro agente Android. Cierra la parte de detalle de #552 (queda list-polish general).
+> - **Paridad cross-platform cerrada en el mismo PR:** scope filter de inventario (#551, M3 FilterChip server-side con guard anti-stale) y KPI pending balance de cliente (#553, decode nullable + 4ª stat card warning/success/info) — ahora completos en backend+iOS+web+Android.
 
 > [!success] 2026-06-11 — Android UX Parity: quick wins en branch `feat/android-ux-parity`
 > Se aplicaron mejoras de calidad UX en Android (Material 3 + Compose) espejando los patrones del iOS HIG quick wins (PR #544). Todos los cambios sobre el branch `feat/android-ux-parity`.
