@@ -252,6 +252,7 @@ public final class InventoryListViewModel {
         guard !isLoadingMore, hasMorePages, !isFiltering else { return }
         isLoadingMore = true
         currentPage += 1
+        let requestScope = scope
 
         do {
             let sortParam: String
@@ -271,6 +272,18 @@ public final class InventoryListViewModel {
                 params["type"] = typeValue
             }
             let paginated: PaginatedResponse<InventoryItem> = try await apiClient.getPaginated(Endpoint.inventory, params: params)
+            // Scope may have changed while this page was in flight — appending
+            // would mix the previous scope's results into the new scope's list.
+            // The scope didSet already reset currentPage, so don't decrement here.
+            guard scope == requestScope else {
+                isLoadingMore = false
+                return
+            }
+            if Task.isCancelled {
+                currentPage -= 1
+                isLoadingMore = false
+                return
+            }
             items.append(contentsOf: paginated.data)
             totalPages = paginated.totalPages
             totalItems = paginated.total
