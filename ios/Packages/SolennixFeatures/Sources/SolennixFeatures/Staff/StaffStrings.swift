@@ -111,6 +111,7 @@ enum StaffStrings {
     static var validationOptInEmailRequired: String { FeatureL10n.text("staff.form.validation.opt_in_email_required", "Para activar el aviso por email necesitás un email válido") }
     static var discardChangesTitle: String { FeatureL10n.text("common.discard_changes.title", "¿Descartar cambios?") }
     static var discardChangesConfirm: String { FeatureL10n.text("common.discard_changes.confirm", "Descartar") }
+    static var discardChangesCancel: String { FeatureL10n.text("common.discard_changes.cancel", "Cancelar") }
 
     // MARK: - Teams List
 

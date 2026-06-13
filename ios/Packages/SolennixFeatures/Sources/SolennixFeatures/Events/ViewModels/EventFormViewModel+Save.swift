@@ -21,6 +21,7 @@ extension EventFormViewModel {
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
 
         let timeFormatter = DateFormatter()
+        timeFormatter.locale = Locale(identifier: "en_US_POSIX")
         timeFormatter.dateFormat = "HH:mm"
 
         // Round all money fields to 2 decimal places before sending.

@@ -71,7 +71,7 @@ public struct StaffTeamFormView: View {
             Button(StaffStrings.discardChangesConfirm, role: .destructive) {
                 dismiss()
             }
-            Button(StaffStrings.cancel, role: .cancel) {}
+            Button(StaffStrings.discardChangesCancel, role: .cancel) {}
         }
         .overlay {
             if viewModel.isLoading {
