@@ -57,6 +57,8 @@
     "not_registered": "No registrado",
     "no_notes": "Sin notas adicionales",
     "total_spent": "Total Gastado",
+    "pending_balance": "Por cobrar",
+    "credit_balance": "A favor",
     "email": "Correo electrónico",
     "city": "Ciudad",
     "create_event": "Crear evento"

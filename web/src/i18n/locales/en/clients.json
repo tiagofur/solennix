@@ -57,6 +57,8 @@
     "not_registered": "Not registered",
     "no_notes": "No additional notes",
     "total_spent": "Total Spent",
+    "pending_balance": "Outstanding",
+    "credit_balance": "Credit",
     "email": "Email",
     "city": "City",
     "create_event": "Create event"
