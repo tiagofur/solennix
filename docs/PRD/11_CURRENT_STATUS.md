@@ -25,6 +25,14 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.8
 
+> [!success] 2026-06-13 — Edit/Form screens: Judgment Day → APPROVED (branch `feat/ios-edit-forms-judgment`)
+> Revisión dual ciego (4 jueces, 3 rondas) de todas las pantallas de edición: Cliente, Evento (wizard 5 pasos), Producto, Inventario, Personal, Equipos. El usuario reportó "colores raros" — eran varias cosas.
+> - **Colores:** `.white` hardcodeado sobre superficies doradas (check de paso, botón Siguiente, toggle %/$ de Finanzas) → `textInverse` (fallaba WCAG AA ~2:1). Botones Guardar en azul del sistema en iPad (sin `foregroundStyle`) → oro. Chip de unidad blanco-sobre-oro → primaryLight/primary. Total de línea verde con descuento (semánticamente al revés) → neutral.
+> - **Lógica:** `ProductFormViewModel.isValid` mutaba estado (re-render loop) → puro; `InventoryFormView` sin alert de error → agregado; save de evento con fecha sin timezone (−1 día MX) → UTC; descuento fijo sin clamp a `discountableBase` → clampeado; cantidad fraccionaria truncada con `Int()` → `EditableQuantityTextDouble`; haptics imperativos en Staff/Equipos → `sensoryFeedback`.
+> - **UX:** protección de cambios sin guardar (`isDirty` computado por snapshot) en TODOS los forms — incluyendo el bug sutil de que el display de fecha mostraba −1 día en UTC-6 y el picker (proxy de timezone corregido a mano tras un signo invertido del agente); pickers con detents; `scrollDismissesKeyboard`; strings hardcodeados + typos a catálogo.
+> - **Disciplina:** los reportes de los fix agents fueron poco confiables esta vuelta (uno shippeó un proxy de timezone al revés afirmando que andaba) — cada claim se verificó contra el código real; los jueces confirmaron el proxy corregido y el race del dirty-state resueltos.
+> - **Commits:** a71daf17, 8d5df2fa, 45f17307, c48af2c0. Build verde por ronda.
+
 > [!success] 2026-06-12 — Client pending balance KPI (issue #553): backend + iOS + Web
 > "Cuánto me debe este cliente" como KPI de primera clase — el faltante que ambos jueces marcaron en el juicio de Client Detail.
 > - **Backend:** `pending_balance` calculado al leer en GetByID (eventos confirmed+completed menos sus pagos; quoted excluido como prospecto; negativo = sobrepago sin clamp). `*float64,omitempty` — list/search omiten la key. Tests de integración con 7 escenarios.
