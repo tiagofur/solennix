@@ -25,6 +25,14 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.8
 
+> [!success] 2026-06-12 — Inventory Detail: Judgment Day → APPROVED (cierra el ciclo de pantallas de detalle)
+> Cuarta y última pantalla de detalle (3 rondas). La más rota del ciclo: 7 CRITICAL convergentes en ronda 1.
+> - **Fechas de demanda reales:** mismo bug ISO8601 que Products — todas las entradas colapsaban a "hoy": demanda de 7 días inflada, alerta roja permanente, badges "Hoy" falsos. Ahora `fromServerDay` + ventana UTC-pinned.
+> - **Waterfall eliminado:** hasta ~200 requests SECUENCIALES en el forecast → `withTaskGroup` anidado con aislamiento por evento.
+> - **Errores visibles:** delete y ajuste de stock fallaban en silencio (sin alert bindeado) → alert bidireccional gated al item cargado. El gating distingue falla real de "item sin demanda" (`DemandFetchResult.fetchFailed`) — fix retro-aplicado a Product Detail que tenía el mismo falso positivo.
+> - **Hub insetGrouped** + skeleton fiel; refresh ya no flashea; acumulador mutable en ForEach reemplazado por filas precomputadas (era no-determinista); stock fraccionario ya no se trunca; `isValid` puro (mutaba estado por render); haptics `sensoryFeedback`; a11y compuesta; español neutro en strings.
+> - **Commits:** 3069c785, 55ba59f4. Build verde por ronda. 10 keys nuevas verificadas en catálogo.
+
 > [!success] 2026-06-12 — Product Detail: Judgment Day → APPROVED (branch `feat/ios-liquid-glass`)
 > Tercera pantalla de detalle del ciclo (4 rondas — los jueces cazaron una regresión del propio fix agent en la ronda 2).
 > - **Datos de demanda reales:** `ISO8601DateFormatter` no parseaba el "yyyy-MM-dd" del backend → todos los puntos colapsaban a "hoy" (chart, contador 7 días y badges de urgencia FALSOS). Ahora `fromServerDay` + comparación de días UTC-pinned; puntos no parseables se omiten.
