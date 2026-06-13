@@ -27,6 +27,7 @@ import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.network.UrlResolver
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.toFormattedDate
 import com.creapolis.solennix.feature.clients.R
 import com.creapolis.solennix.feature.clients.viewmodel.ClientDetailViewModel
 
@@ -42,15 +43,28 @@ fun ClientDetailScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
     var showDeleteDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    // Navigate back on delete success
+    // Navigate back on delete success; consume flag so re-entry doesn't re-fire.
     LaunchedEffect(viewModel.deleteSuccess) {
         if (viewModel.deleteSuccess) {
+            viewModel.consumeDeleteSuccess()
             onNavigateBack()
         }
     }
 
+    // Surface post-load errors (e.g. failed delete) via Snackbar so they are
+    // visible even when client != null — mirrors iOS error toast pattern.
+    LaunchedEffect(uiState.errorMessage) {
+        val msg = uiState.errorMessage
+        if (msg != null) {
+            snackbarHostState.showSnackbar(msg)
+            viewModel.onErrorShown()
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             SolennixTopAppBar(
                 title = { Text(stringResource(R.string.clients_detail_title)) },
@@ -77,7 +91,9 @@ fun ClientDetailScreen(
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
-        } else if (uiState.errorMessage != null) {
+        } else if (uiState.errorMessage != null && uiState.client == null) {
+            // Full-screen error only on initial load failure (no client loaded yet).
+            // Post-load errors (e.g. delete failure) surface via SnackbarHost above.
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Text(uiState.errorMessage.orEmpty(), color = SolennixTheme.colors.error)
             }
@@ -201,6 +217,25 @@ fun ClientDetailScreen(
                     ) {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp))
                     }
+                } else if (uiState.eventsLoadFailed) {
+                    // Events fetch failed — surface inline error with retry so the user
+                    // can distinguish a network error from a genuinely empty history.
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.clients_events_load_error),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = SolennixTheme.colors.error
+                        )
+                        TextButton(onClick = { viewModel.retryLoadClientEvents() }) {
+                            Text(stringResource(R.string.clients_retry))
+                        }
+                    }
                 } else if (uiState.clientEvents.isEmpty()) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -288,7 +323,7 @@ private fun EventHistoryItem(
             ) {
                 StatusBadge(status = event.status.name)
                 Text(
-                    text = event.eventDate,
+                    text = event.eventDate.toFormattedDate(),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText
                 )

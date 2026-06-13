@@ -141,6 +141,9 @@
     <string name="clients_list_action_email">Send email</string>
     <string name="clients_ok">OK</string>
 
+    <string name="clients_events_load_error">Could not load events</string>
+    <string name="clients_retry">Retry</string>
+
     <!-- Empty states -->
     <string name="clients_empty_title">No clients yet</string>
     <string name="clients_empty_message">Add your first client to start managing your events.</string>
