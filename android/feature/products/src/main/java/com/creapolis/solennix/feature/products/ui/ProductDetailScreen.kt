@@ -259,20 +259,24 @@ fun ProductDetailScreen(
                             )
                         }
 
-                        // Smart Alert — demand windows precomputed here using the VM's
-                        // anchored 'today' to avoid repeated LocalDate.now() + parse on
-                        // every recomposition (fix #12).
+                        // Smart Alert — demand windows precomputed via remember so the
+                        // filter/sumOf only re-runs when demandData or todayDate change,
+                        // not on every unrelated recomposition.
                         val today = viewModel.todayDate
-                        val in7Days = today.plusDays(7)
-                        val demand7Days = demandData.filter { dp ->
-                            try {
-                                val date = java.time.LocalDate.parse(dp.eventDate)
-                                !date.isBefore(today) && !date.isAfter(in7Days)
-                            } catch (_: Exception) { false }
-                        }.sumOf { it.quantity }
-                        val totalDemand = demandData.sumOf { it.quantity }
-                        val estimatedRevenue = demandData.sumOf { dp ->
-                            if (dp.unitPrice > 0) dp.revenue else dp.quantity * product.basePrice
+                        val in7Days = remember(today) { today.plusDays(7) }
+                        val demand7Days = remember(demandData, today) {
+                            demandData.filter { dp ->
+                                try {
+                                    val date = java.time.LocalDate.parse(dp.eventDate)
+                                    !date.isBefore(today) && !date.isAfter(in7Days)
+                                } catch (_: Exception) { false }
+                            }.sumOf { it.quantity }
+                        }
+                        val totalDemand = remember(demandData) { demandData.sumOf { it.quantity } }
+                        val estimatedRevenue = remember(demandData, product.basePrice) {
+                            demandData.sumOf { dp ->
+                                if (dp.unitPrice > 0) dp.revenue else dp.quantity * product.basePrice
+                            }
                         }
                         SmartAlertSection(
                             demand7Days = demand7Days,

@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -124,7 +125,8 @@ fun DemandForecastChart(
                 HorizontalDivider(color = colors.divider)
 
                 // Event list with urgency badges
-                val today = LocalDate.now()
+                // Stable within a composition session; avoids repeated LocalDate.now() per recomposition.
+                val today = remember { LocalDate.now() }
                 dataPoints.take(5).forEach { point ->
                     DemandEventRow(
                         point = point,

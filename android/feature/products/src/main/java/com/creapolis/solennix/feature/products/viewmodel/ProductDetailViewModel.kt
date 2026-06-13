@@ -15,6 +15,7 @@ import com.creapolis.solennix.core.model.InventoryType
 import com.creapolis.solennix.feature.products.ProductStrings
 import com.creapolis.solennix.feature.products.ui.DemandDataPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -115,10 +116,16 @@ class ProductDetailViewModel @Inject constructor(
         }
     }
 
+    /** Sealed result type so each child async returns success/failure without shared mutation. */
+    private sealed interface DemandResult {
+        data class Success(val point: DemandDataPoint?) : DemandResult // null = product not in this event (still a success)
+        object Failure : DemandResult
+    }
+
     private fun loadDemandData() {
         viewModelScope.launch {
             try {
-                val today = LocalDate.now().toString()
+                val today = todayDate.toString()
 
                 val events = eventRepository.getEventsFromApi()
                 val upcomingEvents = events.filter {
@@ -127,10 +134,8 @@ class ProductDetailViewModel @Inject constructor(
 
                 // Cap concurrent event-product fetches to avoid hammering the server.
                 val semaphore = Semaphore(permits = 6)
-                var successCount = 0
-                var failCount = 0
 
-                val demandPoints = coroutineScope {
+                val results: List<DemandResult> = coroutineScope {
                     upcomingEvents.map { event ->
                         async {
                             semaphore.withPermit {
@@ -139,35 +144,49 @@ class ProductDetailViewModel @Inject constructor(
                                     val matchingProduct = eventProducts.find { it.productId == productId }
 
                                     if (matchingProduct != null) {
-                                        // eventProducts and client fetches are independent — run in parallel
+                                        // Client fetch is independent — run in parallel
                                         val clientDeferred = async {
-                                            try { clientRepository.getClient(event.clientId) } catch (_: Exception) { null }
+                                            try {
+                                                clientRepository.getClient(event.clientId)
+                                            } catch (e: CancellationException) {
+                                                throw e
+                                            } catch (_: Exception) {
+                                                null
+                                            }
                                         }
                                         val client = clientDeferred.await()
                                         val clientName = client?.name ?: ProductStrings.fallbackClient
 
-                                        successCount++
-                                        DemandDataPoint(
-                                            eventId = event.id,
-                                            eventDate = event.eventDate,
-                                            clientName = clientName,
-                                            // Preserve fractional quantities — do NOT truncate to Int
-                                            quantity = matchingProduct.quantity,
-                                            numPeople = event.numPeople,
-                                            unitPrice = matchingProduct.unitPrice
+                                        DemandResult.Success(
+                                            DemandDataPoint(
+                                                eventId = event.id,
+                                                eventDate = event.eventDate,
+                                                clientName = clientName,
+                                                // Preserve fractional quantities — do NOT truncate to Int
+                                                quantity = matchingProduct.quantity,
+                                                numPeople = event.numPeople,
+                                                unitPrice = matchingProduct.unitPrice
+                                            )
                                         )
                                     } else {
-                                        successCount++
-                                        null
+                                        // Product not in this event — counts as success (zero-demand)
+                                        DemandResult.Success(null)
                                     }
+                                } catch (e: CancellationException) {
+                                    throw e
                                 } catch (_: Exception) {
-                                    failCount++
-                                    null // Skip this event on failure; don't fabricate data
+                                    DemandResult.Failure
                                 }
                             }
                         }
-                    }.awaitAll().filterNotNull()
+                    }.awaitAll()
                 }
+
+                // Tally after awaitAll — single-threaded, no shared mutation inside children
+                val successCount = results.count { it is DemandResult.Success }
+                val failCount = results.count { it is DemandResult.Failure }
+                val demandPoints = results.filterIsInstance<DemandResult.Success>()
+                    .mapNotNull { it.point }
 
                 // Only surface an error if every single event fetch failed (genuine
                 // network outage). Partial failures are silently skipped — mirrors iOS
@@ -179,6 +198,8 @@ class ProductDetailViewModel @Inject constructor(
                 }
 
                 _demandData.value = demandPoints.sortedBy { it.eventDate }
+            } catch (e: CancellationException) {
+                throw e
             } catch (_: Exception) {
                 _demandData.value = emptyList()
             }
