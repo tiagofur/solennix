@@ -80,6 +80,7 @@ public struct SolennixTextField: View {
                             .foregroundStyle(SolennixColors.textTertiary)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(isSecureVisible ? "Ocultar contraseña" : "Mostrar contraseña")
                 }
             }
             .padding(.horizontal, Spacing.md)

@@ -41,7 +41,7 @@ enum AuthStrings {
     static var resetPasswordBrandSubtitle: String { FeatureL10n.text("auth.reset_password.brand.subtitle", "Crea una nueva contraseña segura") }
     static var resetPasswordBrandFeatureMin: String { FeatureL10n.text("auth.reset_password.brand.feature_min", "Mínimo 8 caracteres") }
     static var resetPasswordBrandFeatureRules: String { FeatureL10n.text("auth.reset_password.brand.feature_rules", "Mayúsculas, minúsculas y números") }
-    static var resetPasswordSubtitle: String { FeatureL10n.text("auth.reset_password.subtitle", "Ingresa tu nueva contraseña. Debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.") }
+    static var resetPasswordSubtitle: String { FeatureL10n.text("auth.reset_password.subtitle", "Ingresa tu nueva contraseña. Debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo.") }
     static var resetPasswordPasswordLabel: String { FeatureL10n.text("auth.reset_password.password_label", "Nueva contraseña") }
     static var resetPasswordPasswordPlaceholder: String { FeatureL10n.text("auth.reset_password.password_placeholder", "Mínimo 8 caracteres") }
     static var resetPasswordConfirmLabel: String { FeatureL10n.text("auth.reset_password.confirm_label", "Confirmar contraseña") }

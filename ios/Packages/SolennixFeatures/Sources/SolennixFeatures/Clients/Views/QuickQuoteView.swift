@@ -24,6 +24,17 @@ public struct QuickQuoteView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     Form {
+                        // keyboardDoneToolbar and scrollDismissesKeyboard are applied
+                        // at the Form level so numeric/decimal fields can dismiss.
+
+                        // Error banner — shown for load failures and PDF export errors.
+                        if let err = viewModel.errorMessage {
+                            Section {
+                                Text(err)
+                                    .font(.subheadline)
+                                    .foregroundStyle(SolennixColors.error)
+                            }
+                        }
                         Section {
                             DisclosureGroup(QuickQuoteStrings.clientData, isExpanded: $viewModel.showClientInfo) {
                                 AdaptiveFormRow {
@@ -54,7 +65,17 @@ public struct QuickQuoteView: View {
                             if sizeClass == .regular {
                                 LazyVGrid(columns: [GridItem(.flexible(), spacing: Spacing.md), GridItem(.flexible(), spacing: Spacing.md)], spacing: Spacing.md) {
                                     ForEach($viewModel.selectedProducts) { $product in
-                                        productRow(for: $product)
+                                        // On iPad, .onDelete is not available in LazyVGrid.
+                                        // Wrap each cell with a per-row trailing delete button.
+                                        iPadDeletableRow(
+                                            onDelete: {
+                                                if let idx = viewModel.selectedProducts.firstIndex(where: { $0.id == product.id }) {
+                                                    viewModel.removeProduct(at: IndexSet(integer: idx))
+                                                }
+                                            }
+                                        ) {
+                                            productRow(for: $product)
+                                        }
                                     }
                                 }
                             } else {
@@ -74,7 +95,15 @@ public struct QuickQuoteView: View {
                             if sizeClass == .regular {
                                 LazyVGrid(columns: [GridItem(.flexible(), spacing: Spacing.md), GridItem(.flexible(), spacing: Spacing.md)], spacing: Spacing.md) {
                                     ForEach($viewModel.extras) { $extra in
-                                        extraRow(for: $extra)
+                                        iPadDeletableRow(
+                                            onDelete: {
+                                                if let idx = viewModel.extras.firstIndex(where: { $0.id == extra.id }) {
+                                                    viewModel.removeExtra(at: IndexSet(integer: idx))
+                                                }
+                                            }
+                                        ) {
+                                            extraRow(for: $extra)
+                                        }
                                     }
                                 }
                             } else {
@@ -145,14 +174,14 @@ public struct QuickQuoteView: View {
                                         .foregroundStyle(SolennixColors.textSecondary)
                                     Spacer()
                                     Text(profitFin.profit.asMXN)
-                                        .foregroundStyle(profitFin.profit >= 0 ? SolennixColors.success : .red)
+                                        .foregroundStyle(profitFin.profit >= 0 ? SolennixColors.success : SolennixColors.error)
                                 }
                                 HStack {
                                     Text(QuickQuoteStrings.margin)
                                         .foregroundStyle(SolennixColors.textSecondary)
                                     Spacer()
                                     Text(String(format: "%.1f%%", profitFin.margin))
-                                        .foregroundStyle(profitFin.margin >= 0 ? SolennixColors.success : .red)
+                                        .foregroundStyle(profitFin.margin >= 0 ? SolennixColors.success : SolennixColors.error)
                                 }
                             }
                         }
@@ -170,6 +199,8 @@ public struct QuickQuoteView: View {
                     }
                     .scrollContentBackground(.hidden)
                     .background(SolennixColors.surfaceGrouped)
+                    .keyboardDoneToolbar()
+                    .scrollDismissesKeyboard(.interactively)
                 }
             }
             .navigationTitle(QuickQuoteStrings.title)
@@ -207,16 +238,36 @@ public struct QuickQuoteView: View {
                 await viewModel.loadData()
             }
             .sheet(isPresented: $viewModel.showShareSheet) {
-                if let data = viewModel.pdfData {
-                    let tempURL = FileManager.default.temporaryDirectory
-                        .appendingPathComponent(QuickQuoteStrings.pdfFileName)
-                    let _ = try? data.write(to: tempURL)
-                    ShareSheetView(activityItems: [tempURL])
+                // pdfURL is written by generatePDF() before showShareSheet becomes true.
+                // The write happens in the VM so errors can be surfaced as errorMessage
+                // rather than silently swallowed in the view body with try?.
+                if let url = viewModel.pdfURL {
+                    ShareSheetView(activityItems: [url])
                 }
             }
         }
     }
     
+    /// Wraps a grid cell with a small trailing delete button for iPad (where .onDelete
+    /// is unavailable in LazyVGrid). Not shown on iPhone — use .onDelete there instead.
+    @ViewBuilder
+    private func iPadDeletableRow<Content: View>(
+        onDelete: @escaping () -> Void,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        ZStack(alignment: .topTrailing) {
+            content()
+            Button(action: onDelete) {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(SolennixColors.error)
+                    .background(SolennixColors.surface)
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(QuickQuoteStrings.deleteRow)
+        }
+    }
+
     private func productRow(for product: Binding<EventProduct>) -> some View {
         VStack(spacing: Spacing.sm) {
             Picker(QuickQuoteStrings.product, selection: product.productId) {

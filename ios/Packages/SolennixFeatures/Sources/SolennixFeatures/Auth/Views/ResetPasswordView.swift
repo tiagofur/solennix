@@ -98,37 +98,38 @@ public struct ResetPasswordView: View {
             VStack(alignment: .leading, spacing: Spacing.xl) {
                 Text("Solennix")
                     .font(.solennixTitle)
-                    .foregroundStyle(.white)
+                    // Navy on gold: contrast ≥4.9:1 on both gradient ends (WCAG AA).
+                    .foregroundStyle(SolennixColors.onPrimary)
 
                 Text(AuthStrings.resetPasswordBrandSubtitle)
                     .font(.body)
-                    .foregroundStyle(.white.opacity(0.85))
+                    .foregroundStyle(SolennixColors.onPrimary.opacity(0.85))
 
                 VStack(alignment: .leading, spacing: Spacing.md) {
                     HStack(spacing: Spacing.sm) {
                         Image(systemName: "key.fill")
                             .font(.body)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(SolennixColors.onPrimary)
                             .frame(width: 36, height: 36)
-                            .background(.white.opacity(0.2))
+                            .background(SolennixColors.onPrimary.opacity(0.15))
                             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
 
                         Text(AuthStrings.resetPasswordBrandFeatureMin)
                             .font(.body)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(SolennixColors.onPrimary)
                     }
 
                     HStack(spacing: Spacing.sm) {
                         Image(systemName: "checkmark.shield.fill")
                             .font(.body)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(SolennixColors.onPrimary)
                             .frame(width: 36, height: 36)
-                            .background(.white.opacity(0.2))
+                            .background(SolennixColors.onPrimary.opacity(0.15))
                             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
 
                         Text(AuthStrings.resetPasswordBrandFeatureRules)
                             .font(.body)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(SolennixColors.onPrimary)
                     }
                 }
                 .padding(.top, Spacing.sm)
@@ -180,7 +181,9 @@ public struct ResetPasswordView: View {
                 placeholder: AuthStrings.resetPasswordConfirmPlaceholder,
                 leftIcon: "lock",
                 isSecure: true,
-                textContentType: .newPassword
+                // No content type on confirm field — .newPassword on both causes iOS to
+                // auto-fill both with the same suggestion, defeating confirmation.
+                textContentType: nil
             )
 
             PremiumButton(
@@ -220,10 +223,11 @@ public struct ResetPasswordView: View {
             } label: {
                 Text(AuthStrings.resetPasswordGoToLogin)
                     .font(.headline)
-                    .foregroundStyle(SolennixColors.primary)
+                    // Navy on gold: ≥4.9:1 on both gradient ends (WCAG AA).
+                    .foregroundStyle(SolennixColors.onPrimary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Spacing.md)
-                    .background(SolennixColors.primaryLight)
+                    .background(SolennixColors.primary)
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
             }
 

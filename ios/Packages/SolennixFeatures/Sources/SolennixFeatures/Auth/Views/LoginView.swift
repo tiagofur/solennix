@@ -124,11 +124,13 @@ public struct LoginView: View {
             VStack(alignment: .leading, spacing: Spacing.xl) {
                 Text("Solennix")
                     .font(.solennixTitle)
-                    .foregroundStyle(.white)
+                    // Navy on gold: contrast ≥4.9:1 on both gradient ends (WCAG AA).
+                    .foregroundStyle(SolennixColors.onPrimary)
 
                 Text(AuthStrings.loginBrandSubtitle)
                     .font(.body)
-                    .foregroundStyle(.white.opacity(0.85))
+                    // Slightly lighter navy at 85% opacity — still passes AA at this opacity.
+                    .foregroundStyle(SolennixColors.onPrimary.opacity(0.85))
 
                 VStack(alignment: .leading, spacing: Spacing.md) {
                     BrandFeatureRow(icon: "calendar", text: AuthStrings.loginBrandFeatureEvents)
@@ -233,23 +235,17 @@ public struct LoginView: View {
 
     private var socialSignInButtons: some View {
         VStack(spacing: Spacing.md) {
-            // Apple Sign In
-            Button {
-                Task { await viewModel?.signInWithApple() }
-            } label: {
-                HStack(spacing: Spacing.sm) {
-                    Image(systemName: "apple.logo")
-                        .font(.title3)
-                    Text(AuthStrings.socialAppleContinue)
-                        .font(.body)
-                        .fontWeight(.medium)
-                }
-                .foregroundStyle(colorScheme == .dark ? .black : .white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .background(colorScheme == .dark ? Color.white : Color.black)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+            // Apple Sign In — native button required by App Store review guidelines.
+            // The native button automatically adapts colors to the color scheme.
+            SignInWithAppleButton(.signIn) { request in
+                request.requestedScopes = [.fullName, .email]
+            } onCompletion: { result in
+                Task { await viewModel?.handleAppleSignInResult(result) }
             }
+            .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+            .frame(maxWidth: .infinity)
+            .frame(height: 50)
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
             .disabled(viewModel?.isLoading ?? false)
 
             // Google Sign In
@@ -260,7 +256,9 @@ public struct LoginView: View {
                     Text("G")
                         .font(.title3)
                         .fontWeight(.bold)
-                        .foregroundStyle(.red)
+                        // Google brand red #DB4437 — this is NOT a semantic error color;
+                        // it is a brand identity requirement for the Google sign-in button.
+                        .foregroundStyle(Color(red: 0.859, green: 0.267, blue: 0.216))
                     Text(AuthStrings.socialGoogleContinue)
                         .font(.body)
                         .fontWeight(.medium)
@@ -328,7 +326,9 @@ public struct LoginView: View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             Text(message)
                 .font(.subheadline)
-                .foregroundStyle(SolennixColors.success)
+                // info (blue) — not success (green). "Verify email" is informational,
+                // not a completion state; green = done is semantically wrong here.
+                .foregroundStyle(SolennixColors.info)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Button(actionTitle) {
@@ -336,15 +336,15 @@ public struct LoginView: View {
             }
             .font(.subheadline)
             .fontWeight(.semibold)
-            .foregroundStyle(SolennixColors.success)
+            .foregroundStyle(SolennixColors.info)
             .disabled(viewModel?.isLoading ?? false)
         }
         .padding(Spacing.sm + 4)
-        .background(SolennixColors.success.opacity(0.12))
+        .background(SolennixColors.infoBg)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
         .overlay(alignment: .leading) {
             Rectangle()
-                .fill(SolennixColors.success)
+                .fill(SolennixColors.info)
                 .frame(width: 4)
                 .clipShape(
                     UnevenRoundedRectangle(
@@ -366,14 +366,16 @@ private struct BrandFeatureRow: View {
         HStack(spacing: Spacing.sm) {
             Image(systemName: icon)
                 .font(.body)
-                .foregroundStyle(.white)
+                // Navy on gold for legibility (≥4.9:1 on both gradient ends).
+                .foregroundStyle(SolennixColors.onPrimary)
                 .frame(width: 36, height: 36)
-                .background(.white.opacity(0.2))
+                // Translucent navy chip behind the icon — decorative, low-opacity.
+                .background(SolennixColors.onPrimary.opacity(0.15))
                 .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
 
             Text(text)
                 .font(.body)
-                .foregroundStyle(.white)
+                .foregroundStyle(SolennixColors.onPrimary)
         }
     }
 }

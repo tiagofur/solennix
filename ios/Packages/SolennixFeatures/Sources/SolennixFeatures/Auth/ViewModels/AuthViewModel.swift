@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import AuthenticationServices
 import SolennixCore
 import SolennixNetwork
 
@@ -86,12 +87,12 @@ public final class AuthViewModel {
             _ = try await authManager.signIn(email: trimmedEmail, password: password)
         } catch {
             if let apiError = error as? APIError,
-               case .serverError(let statusCode, let message) = apiError,
+               case .serverError(let statusCode, _) = apiError,
                statusCode == 403 {
                 verificationEmail = trimmedEmail
-                verificationNotice = message.isEmpty
-                    ? AuthStrings.loginVerificationRequiredNotice
-                    : message
+                // Always use the localized string — never echo the raw server message,
+                // which could expose account existence or internal details.
+                verificationNotice = AuthStrings.loginVerificationRequiredNotice
                 errorMessage = nil
             } else {
                 errorMessage = mapError(error)
@@ -146,6 +147,63 @@ public final class AuthViewModel {
     }
 
     // MARK: - Sign In with Apple
+
+    /// Handles the result from `SignInWithAppleButton`'s `onCompletion` closure.
+    ///
+    /// Preferred over `signInWithApple()` when using the native `SignInWithAppleButton`
+    /// (required by App Store guidelines) because the native button drives the
+    /// ASAuthorizationController internally and delivers a `Result<ASAuthorization, Error>`
+    /// rather than invoking the coordinator-pattern `AppleSignInService`.
+    @MainActor
+    public func handleAppleSignInResult(_ result: Result<ASAuthorization, Error>) async {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        switch result {
+        case .failure(let error):
+            if let authError = error as? ASAuthorizationError,
+               authError.code == .canceled {
+                // User cancelled — no error message needed.
+                return
+            }
+            errorMessage = mapError(error)
+
+        case .success(let authorization):
+            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential else {
+                errorMessage = AuthStrings.socialAppleInvalidCredential
+                return
+            }
+            guard let identityTokenData = credential.identityToken,
+                  let identityToken = String(data: identityTokenData, encoding: .utf8) else {
+                errorMessage = AuthStrings.socialAppleMissingIdentityToken
+                return
+            }
+            guard let authCodeData = credential.authorizationCode,
+                  let authorizationCode = String(data: authCodeData, encoding: .utf8) else {
+                errorMessage = AuthStrings.socialAppleMissingAuthorizationCode
+                return
+            }
+
+            var fullName: String?
+            if let nameComponents = credential.fullName {
+                let formatter = PersonNameComponentsFormatter()
+                let name = formatter.string(from: nameComponents)
+                if !name.isEmpty { fullName = name }
+            }
+
+            do {
+                _ = try await authManager.signInWithApple(
+                    identityToken: identityToken,
+                    authorizationCode: authorizationCode,
+                    fullName: fullName,
+                    email: credential.email
+                )
+            } catch {
+                errorMessage = mapError(error)
+            }
+        }
+    }
 
     @MainActor
     public func signInWithApple() async {
@@ -233,8 +291,21 @@ public final class AuthViewModel {
             let body = ["email": trimmedEmail]
             let _: EmptyResponse = try await client.post(Endpoint.forgotPassword, body: body)
             showSuccess = true
+        } catch let apiError as APIError {
+            switch apiError {
+            case .networkError:
+                // Surface genuine network failures — the email was not sent.
+                errorMessage = AuthStrings.errorNetwork
+            case .serverError(let statusCode, _) where statusCode >= 500:
+                // Surface 5xx server errors — the request did not succeed.
+                errorMessage = AuthStrings.errorUnexpected
+            default:
+                // 404 (unknown email) and all other API errors: show success to prevent
+                // account enumeration — the privacy-preserving behaviour is intentional.
+                showSuccess = true
+            }
         } catch {
-            // Always show success for forgot password (backend returns 200 even for non-existent emails)
+            // Unknown non-API errors (e.g., encoding): show success to stay safe.
             showSuccess = true
         }
 
@@ -380,11 +451,14 @@ public final class AuthViewModel {
             switch apiError {
             case .unauthorized:
                 return AuthStrings.errorInvalidCredentials
-            case .serverError(let statusCode, let message):
+            case .serverError(let statusCode, _):
                 if statusCode == 409 {
                     return AuthStrings.errorEmailTaken
                 }
-                return message
+                // Never surface the raw server message — it may expose account enumeration
+                // or internal error details. Return a generic localized string for all
+                // other server errors.
+                return AuthStrings.errorUnexpected
             case .networkError:
                 return AuthStrings.errorNetwork
             default:

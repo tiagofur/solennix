@@ -16,6 +16,8 @@ public struct RegisterView: View {
     @State private var viewModel: AuthViewModel?
     @State private var legalSheetURL: IdentifiableURL?
 
+    @ScaledMetric(relativeTo: .largeTitle) private var successIconSize: CGFloat = 64
+
     public init() {}
 
     public var body: some View {
@@ -45,23 +47,27 @@ public struct RegisterView: View {
     private var iPhoneLayout: some View {
         ScrollView {
             VStack(spacing: Spacing.xl) {
-                formContent
+                if viewModel?.showSuccess == true {
+                    successState
+                } else {
+                    formContent
 
-                termsText
+                    termsText
 
-                PremiumButton(
-                    title: AuthStrings.registerTitle,
-                    isLoading: viewModel?.isLoading ?? false,
-                    isDisabled: !(viewModel?.isRegisterValid ?? false)
-                ) {
-                    Task { await viewModel?.signUp() }
+                    PremiumButton(
+                        title: AuthStrings.registerTitle,
+                        isLoading: viewModel?.isLoading ?? false,
+                        isDisabled: !(viewModel?.isRegisterValid ?? false)
+                    ) {
+                        Task { await viewModel?.signUp() }
+                    }
+
+                    dividerWithText
+
+                    socialSignInButtons
+
+                    loginLink
                 }
-
-                dividerWithText
-
-                socialSignInButtons
-
-                loginLink
             }
             .padding(.horizontal, Spacing.xl)
             .padding(.vertical, Spacing.xl)
@@ -83,33 +89,38 @@ public struct RegisterView: View {
                 VStack(spacing: Spacing.xl) {
                     Spacer(minLength: Spacing.xxl)
 
-                    Text(AuthStrings.registerTitle)
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(SolennixColors.text)
+                    if viewModel?.showSuccess == true {
+                        successState
+                            .frame(maxWidth: 440)
+                    } else {
+                        Text(AuthStrings.registerTitle)
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(SolennixColors.text)
 
-                    formContent
+                        formContent
+                            .frame(maxWidth: 440)
+
+                        termsText
+                            .frame(maxWidth: 440)
+
+                        PremiumButton(
+                            title: AuthStrings.registerTitle,
+                            isLoading: viewModel?.isLoading ?? false,
+                            isDisabled: !(viewModel?.isRegisterValid ?? false)
+                        ) {
+                            Task { await viewModel?.signUp() }
+                        }
                         .frame(maxWidth: 440)
 
-                    termsText
-                        .frame(maxWidth: 440)
+                        dividerWithText
+                            .frame(maxWidth: 440)
 
-                    PremiumButton(
-                        title: AuthStrings.registerTitle,
-                        isLoading: viewModel?.isLoading ?? false,
-                        isDisabled: !(viewModel?.isRegisterValid ?? false)
-                    ) {
-                        Task { await viewModel?.signUp() }
+                        socialSignInButtons
+                            .frame(maxWidth: 440)
+
+                        loginLink
                     }
-                    .frame(maxWidth: 440)
-
-                    dividerWithText
-                        .frame(maxWidth: 440)
-
-                    socialSignInButtons
-                        .frame(maxWidth: 440)
-
-                    loginLink
 
                     Spacer(minLength: Spacing.xxl)
                 }
@@ -132,11 +143,12 @@ public struct RegisterView: View {
             VStack(alignment: .leading, spacing: Spacing.xl) {
                 Text(AuthStrings.registerBrandTitle)
                     .font(.solennixSubtitle)
-                    .foregroundStyle(.white)
+                    // Navy on gold: contrast ≥4.9:1 on both gradient ends (WCAG AA).
+                    .foregroundStyle(SolennixColors.onPrimary)
 
                 Text(AuthStrings.registerBrandSubtitle)
                     .font(.body)
-                    .foregroundStyle(.white.opacity(0.85))
+                    .foregroundStyle(SolennixColors.onPrimary.opacity(0.85))
 
                 VStack(alignment: .leading, spacing: Spacing.md) {
                     FeaturePill(icon: "gift.fill", text: AuthStrings.registerFeatureFree, description: AuthStrings.registerFeatureFreeDesc)
@@ -146,6 +158,47 @@ public struct RegisterView: View {
                 .padding(.top, Spacing.sm)
             }
             .padding(.horizontal, Spacing.xxxl)
+        }
+    }
+
+    // MARK: - Success State
+
+    private var successState: some View {
+        VStack(spacing: Spacing.xl) {
+            Spacer(minLength: Spacing.xxxl)
+
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: successIconSize))
+                .foregroundStyle(SolennixColors.success)
+
+            VStack(spacing: Spacing.sm) {
+                Text(AuthStrings.registerTitle)
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(SolennixColors.text)
+
+                if let notice = viewModel?.verificationNotice {
+                    Text(notice)
+                        .font(.body)
+                        .foregroundStyle(SolennixColors.textSecondary)
+                        .multilineTextAlignment(.center)
+                }
+            }
+
+            Button {
+                dismiss()
+            } label: {
+                Text(AuthStrings.loginTitle)
+                    .font(.headline)
+                    // Navy on gold: ≥4.9:1 on both gradient ends (WCAG AA).
+                    .foregroundStyle(SolennixColors.onPrimary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.md)
+                    .background(SolennixColors.primary)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+            }
+
+            Spacer(minLength: Spacing.xxxl)
         }
     }
 
@@ -207,7 +260,10 @@ public struct RegisterView: View {
                 placeholder: AuthStrings.registerConfirmPasswordPlaceholder,
                 leftIcon: "lock",
                 isSecure: true,
-                textContentType: .newPassword
+                // No content type on the confirm field — setting .newPassword here causes
+                // iOS to auto-fill both fields with the same suggestion, defeating the
+                // confirmation purpose. The first password field keeps .newPassword.
+                textContentType: nil
             )
         }
         .onSubmit {
@@ -274,23 +330,16 @@ public struct RegisterView: View {
 
     private var socialSignInButtons: some View {
         VStack(spacing: Spacing.md) {
-            // Apple Sign In
-            Button {
-                Task { await viewModel?.signInWithApple() }
-            } label: {
-                HStack(spacing: Spacing.sm) {
-                    Image(systemName: "apple.logo")
-                        .font(.title3)
-                    Text(AuthStrings.socialAppleContinue)
-                        .font(.body)
-                        .fontWeight(.medium)
-                }
-                .foregroundStyle(colorScheme == .dark ? .black : .white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .background(colorScheme == .dark ? Color.white : Color.black)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+            // Apple Sign In — native button required by App Store review guidelines.
+            SignInWithAppleButton(.signIn) { request in
+                request.requestedScopes = [.fullName, .email]
+            } onCompletion: { result in
+                Task { await viewModel?.handleAppleSignInResult(result) }
             }
+            .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+            .frame(maxWidth: .infinity)
+            .frame(height: 50)
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
             .disabled(viewModel?.isLoading ?? false)
 
             // Google Sign In
@@ -301,7 +350,8 @@ public struct RegisterView: View {
                     Text("G")
                         .font(.title3)
                         .fontWeight(.bold)
-                        .foregroundStyle(.red)
+                        // Google brand red #DB4437 — brand identity requirement, not a semantic color.
+                        .foregroundStyle(Color(red: 0.859, green: 0.267, blue: 0.216))
                     Text(AuthStrings.socialGoogleContinue)
                         .font(.body)
                         .fontWeight(.medium)
@@ -369,15 +419,16 @@ public struct RegisterView: View {
         HStack(spacing: Spacing.sm) {
             Text(message)
                 .font(.subheadline)
-                .foregroundStyle(SolennixColors.success)
+                // info (blue) — "verify email" is informational, not a completion state.
+                .foregroundStyle(SolennixColors.info)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(Spacing.sm + 4)
-        .background(SolennixColors.success.opacity(0.12))
+        .background(SolennixColors.infoBg)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
         .overlay(alignment: .leading) {
             Rectangle()
-                .fill(SolennixColors.success)
+                .fill(SolennixColors.info)
                 .frame(width: 4)
                 .clipShape(
                     UnevenRoundedRectangle(
@@ -400,19 +451,22 @@ private struct FeaturePill: View {
         HStack(spacing: Spacing.sm) {
             Image(systemName: icon)
                 .font(.body)
-                .foregroundStyle(.white)
+                // Navy on gold for legibility (≥4.9:1 on both gradient ends).
+                .foregroundStyle(SolennixColors.onPrimary)
                 .frame(width: 36, height: 36)
-                .background(.white.opacity(0.2))
+                // Translucent navy chip — decorative, low-opacity.
+                .background(SolennixColors.onPrimary.opacity(0.15))
                 .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
 
             VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(text)
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(SolennixColors.onPrimary)
 
                 Text(description)
                     .font(.caption)
-                    .foregroundStyle(.white.opacity(0.7))
+                    // Reduced opacity for hierarchy; still readable against gold.
+                    .foregroundStyle(SolennixColors.onPrimary.opacity(0.7))
             }
         }
     }

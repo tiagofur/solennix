@@ -25,19 +25,23 @@ public struct PremiumButton: View {
     public var body: some View {
         Button(action: {
             guard !isLoading && !isDisabled else { return }
-            // Haptic feedback for premium feel
+            // Haptic feedback for premium feel.
+            // prepare() is called before impactOccurred() to reduce latency.
             let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.prepare()
             generator.impactOccurred()
             action()
         }) {
             HStack(spacing: Spacing.sm) {
                 if isLoading {
                     ProgressView()
-                        .tint(SolennixColors.textInverse)
+                        // Use fixed navy — contrast on gold gradient ≥4.9:1 (WCAG AA).
+                        .tint(SolennixColors.onPrimary)
                 } else {
                     Text(title)
                         .font(.headline)
-                        .foregroundStyle(SolennixColors.textInverse)
+                        // Use fixed navy — contrast on gold gradient ≥4.9:1 (WCAG AA).
+                        .foregroundStyle(SolennixColors.onPrimary)
                 }
             }
             .frame(maxWidth: fullWidth ? .infinity : nil)

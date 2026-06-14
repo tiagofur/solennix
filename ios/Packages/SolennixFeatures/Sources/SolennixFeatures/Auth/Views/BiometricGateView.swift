@@ -13,25 +13,18 @@ public struct BiometricGateView: View {
 
     @State private var biometricType: BiometricType = .none
     @State private var errorMessage: String?
-    @State private var showLogin: Bool = false
 
     @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 64
 
     public init() {}
 
     public var body: some View {
-        if showLogin {
-            NavigationStack {
-                LoginView()
+        biometricContent
+            .onAppear {
+                biometricType = detectBiometricType()
+                // Auto-prompt on appear
+                Task { await authenticate() }
             }
-        } else {
-            biometricContent
-                .onAppear {
-                    biometricType = detectBiometricType()
-                    // Auto-prompt on appear
-                    Task { await authenticate() }
-                }
-        }
     }
 
     // MARK: - Content
@@ -82,18 +75,21 @@ public struct BiometricGateView: View {
                 PremiumButton(title: biometricButtonTitle) {
                     Task { await authenticate() }
                 }
+                .accessibilityLabel(biometricButtonTitle)
 
                 Button {
-                    // Fallback: sign out properly (invalidates server session, then clears local tokens)
-                    Task {
-                        await authManager.signOut()
-                        showLogin = true
-                    }
+                    // Transition to login WITHOUT invalidating the server session.
+                    // signOut() would revoke tokens on all devices — that is wrong
+                    // for a biometric fallback where the user still has a valid session.
+                    // presentPasswordFallback() clears only the local biometric gate and
+                    // sets authState = .unauthenticated so the router shows LoginView.
+                    authManager.presentPasswordFallback()
                 } label: {
                     Text(AuthStrings.biometricButtonPassword)
                         .font(.body)
                         .foregroundStyle(SolennixColors.primary)
                 }
+                .accessibilityLabel(AuthStrings.biometricButtonPassword)
             }
             .padding(.bottom, Spacing.xxl)
         }
