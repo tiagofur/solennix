@@ -52,7 +52,7 @@ public struct EventExtrasDetailView: View {
                     NavigationLink(value: Route.eventForm(id: eventId, step: 3)) {
                         Text(tr("events.detail.extras.empty.cta", "Agregar extras"))
                             .font(.headline)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(SolennixColors.onPrimary)
                             .padding(.horizontal, Spacing.xl)
                             .padding(.vertical, 16)
                             .background(SolennixColors.primary)

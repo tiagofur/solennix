@@ -206,14 +206,14 @@ public struct EventListView: View {
                                 .padding(.vertical, 2)
                                 .background(
                                     isSelected
-                                        ? Color.white.opacity(0.3)
+                                        ? SolennixColors.onPrimary.opacity(0.2)
                                         : SolennixColors.textTertiary.opacity(0.2)
                                 )
                                 .clipShape(Capsule())
                         }
                         .foregroundStyle(
                             isSelected
-                                ? .white
+                                ? SolennixColors.onPrimary
                                 : SolennixColors.textSecondary
                         )
                         .padding(.horizontal, Spacing.sm)
@@ -618,7 +618,7 @@ public struct EventListView: View {
                 NavigationLink(value: Route.eventForm()) {
                     Text(tr("events.list.empty.first_run_cta", "Crear evento"))
                         .font(.headline)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(SolennixColors.onPrimary)
                         .padding(.horizontal, Spacing.xl)
                         .padding(.vertical, 16)
                         .background(SolennixGradient.premium)

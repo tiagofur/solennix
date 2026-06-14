@@ -500,6 +500,23 @@ public final class AuthManager {
         biometricPassed = true
     }
 
+    /// Present the password fallback from the biometric lock screen.
+    ///
+    /// This clears the biometric-lock gate and transitions to `.unauthenticated` so
+    /// the router surfaces LoginView — WITHOUT calling the server logout endpoint.
+    /// The user's session tokens remain valid so they can sign in without disrupting
+    /// sessions on other devices.
+    ///
+    /// Do NOT call `signOut()` for this — that invalidates the server session app-wide.
+    @MainActor
+    public func presentPasswordFallback() {
+        // Reset biometric state so the gate does not reappear immediately.
+        biometricPassed = false
+        // Transition the router to unauthenticated without touching server tokens.
+        // The tokens remain in the Keychain; the next successful login will reuse them.
+        authState = .unauthenticated
+    }
+
     /// Prompt the user for biometric authentication.
     /// - Returns: `true` if authentication succeeded.
     public func authenticateWithBiometrics() async throws -> Bool {

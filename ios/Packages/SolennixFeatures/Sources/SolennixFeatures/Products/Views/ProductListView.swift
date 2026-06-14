@@ -206,7 +206,7 @@ public struct ProductListView: View {
             NavigationLink(value: Route.productForm()) {
                 Text(ProductStrings.emptyAction)
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(SolennixColors.onPrimary)
                     .padding(.horizontal, Spacing.xl)
                     .padding(.vertical, 16)
                     .background(SolennixGradient.premium)
@@ -373,7 +373,7 @@ public struct ProductListView: View {
             NavigationLink(value: Route.productForm()) {
                 Text(ProductStrings.emptyAction)
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(SolennixColors.onPrimary)
                     .padding(.horizontal, Spacing.xl)
                     .padding(.vertical, 16)
                     .background(SolennixGradient.premium)

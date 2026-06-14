@@ -24,7 +24,7 @@ enum QuickQuoteStrings {
     static var summary: String { FeatureL10n.text("quick_quote.summary", "Resumen") }
     static var subtotalProducts: String { FeatureL10n.text("quick_quote.subtotal_products", "Subtotal Productos") }
     static var subtotalExtras: String { FeatureL10n.text("quick_quote.subtotal_extras", "Subtotal Extras") }
-    static var vat: String { "IVA" }
+    static var vat: String { FeatureL10n.text("quick_quote.vat", "IVA") }
     static var total: String { FeatureL10n.text("quick_quote.total", "Total") }
     static var profitabilityMetrics: String { FeatureL10n.text("quick_quote.profitability_metrics", "Métricas de Rentabilidad (Interno)") }
     static var productCost: String { FeatureL10n.text("quick_quote.product_cost", "Costo Productos") }
@@ -53,7 +53,10 @@ enum QuickQuoteStrings {
     static var pdfDescription: String { FeatureL10n.text("quick_quote.pdf_description", "Descripción") }
     static var pdfQuantity: String { FeatureL10n.text("quick_quote.pdf_quantity", "Cant.") }
     static var pdfUnitPrice: String { FeatureL10n.text("quick_quote.pdf_unit_price", "Precio Unit.") }
-    static var pdfTotal: String { "TOTAL:" }
+    static var pdfTotal: String { FeatureL10n.text("quick_quote.pdf_total", "TOTAL:") }
+    static var pdfExportError: String { FeatureL10n.text("quick_quote.pdf_export_error", "No se pudo generar el PDF. Intenta de nuevo.") }
+    static var deleteRow: String { FeatureL10n.text("quick_quote.delete_row", "Eliminar fila") }
+    static var productsLoadError: String { FeatureL10n.text("quick_quote.products_load_error", "No se pudieron cargar los productos. Revisa tu conexión.") }
     static var pdfSubtotalProducts: String { FeatureL10n.text("quick_quote.pdf_subtotal_products", "Subtotal Productos:") }
     static var pdfSubtotalExtras: String { FeatureL10n.text("quick_quote.pdf_subtotal_extras", "Subtotal Extras:") }
     
@@ -75,10 +78,16 @@ enum QuickQuoteStrings {
     
     static var pdfFooter: String { FeatureL10n.text("quick_quote.pdf_footer", "Generado por Solennix") }
     
+    // DateFormatter is expensive to create — cache a shared instance.
+    // The formatter is re-configured on each call if the locale has changed,
+    // but the object itself is reused to avoid repeated allocation.
+    private static let _dateFormatter = DateFormatter()
+
     static func formattedDate(from date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: isEnglish ? "en_US" : "es_MX")
-        formatter.dateFormat = isEnglish ? "MMMM d, yyyy" : "d 'de' MMMM, yyyy"
-        return formatter.string(from: date)
+        let localeId = isEnglish ? "en_US" : "es_MX"
+        let dateFormat = isEnglish ? "MMMM d, yyyy" : "d 'de' MMMM, yyyy"
+        _dateFormatter.locale = Locale(identifier: localeId)
+        _dateFormatter.dateFormat = dateFormat
+        return _dateFormatter.string(from: date)
     }
 }

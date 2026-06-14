@@ -84,7 +84,9 @@ public struct TeamInviteAcceptView: View {
                 placeholder: AuthStrings.teamInviteConfirmPlaceholder,
                 leftIcon: "lock",
                 isSecure: true,
-                textContentType: .newPassword
+                // No content type on confirm field — .newPassword on both causes iOS to
+                // auto-fill both with the same suggestion, defeating confirmation.
+                textContentType: nil
             )
 
             PremiumButton(
@@ -132,10 +134,11 @@ public struct TeamInviteAcceptView: View {
             } label: {
                 Text(AuthStrings.teamInviteGoToApp)
                     .font(.headline)
-                    .foregroundStyle(SolennixColors.primary)
+                    // Navy on gold: ≥4.9:1 on both gradient ends (WCAG AA).
+                    .foregroundStyle(SolennixColors.onPrimary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Spacing.md)
-                    .background(SolennixColors.primaryLight)
+                    .background(SolennixColors.primary)
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
             }
 

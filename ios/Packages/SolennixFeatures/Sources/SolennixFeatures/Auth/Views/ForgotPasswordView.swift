@@ -94,37 +94,38 @@ public struct ForgotPasswordView: View {
             VStack(alignment: .leading, spacing: Spacing.xl) {
                 Text("Solennix")
                     .font(.solennixTitle)
-                    .foregroundStyle(.white)
+                    // Navy on gold: contrast ≥4.9:1 on both gradient ends (WCAG AA).
+                    .foregroundStyle(SolennixColors.onPrimary)
 
                 Text(AuthStrings.forgotPasswordBrandSubtitle)
                     .font(.body)
-                    .foregroundStyle(.white.opacity(0.85))
+                    .foregroundStyle(SolennixColors.onPrimary)
 
                 VStack(alignment: .leading, spacing: Spacing.md) {
                     HStack(spacing: Spacing.sm) {
                         Image(systemName: "envelope.open.fill")
                             .font(.body)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(SolennixColors.onPrimary)
                             .frame(width: 36, height: 36)
-                            .background(.white.opacity(0.2))
+                            .background(SolennixColors.onPrimary.opacity(0.15))
                             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
 
                         Text(AuthStrings.forgotPasswordBrandFeatureEmail)
                             .font(.body)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(SolennixColors.onPrimary)
                     }
 
                     HStack(spacing: Spacing.sm) {
                         Image(systemName: "lock.shield.fill")
                             .font(.body)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(SolennixColors.onPrimary)
                             .frame(width: 36, height: 36)
-                            .background(.white.opacity(0.2))
+                            .background(SolennixColors.onPrimary.opacity(0.15))
                             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
 
                         Text(AuthStrings.forgotPasswordBrandFeatureSecure)
                             .font(.body)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(SolennixColors.onPrimary)
                     }
                 }
                 .padding(.top, Spacing.sm)
@@ -213,10 +214,12 @@ public struct ForgotPasswordView: View {
             } label: {
                 Text(AuthStrings.forgotPasswordBackToLogin)
                     .font(.headline)
-                    .foregroundStyle(SolennixColors.primary)
+                    // Navy on gold: ≥4.9:1 on both gradient ends (WCAG AA).
+                    // primaryLight (#F5F0E8 light / #1B2A4A dark) had gold-on-cream ≈2.1:1 — fails AA.
+                    .foregroundStyle(SolennixColors.onPrimary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Spacing.md)
-                    .background(SolennixColors.primaryLight)
+                    .background(SolennixColors.primary)
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
             }
 

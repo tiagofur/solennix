@@ -634,6 +634,20 @@ public enum SolennixColors {
     @available(*, deprecated, renamed: "avatarBackground", message: "Replaced by tonal avatar tokens. hashValue is per-launch unstable.")
     public static let avatarColors: [Color] = []
 
+    // MARK: - On-Primary
+
+    /// Fixed dark navy for text/icons placed on top of the gold premium gradient.
+    ///
+    /// The gradient endpoints are:
+    ///   #C4A265 (start) — navy contrast ≈ 5.69:1  ✓ WCAG AA
+    ///   #B8965A (end)   — navy contrast ≈ 4.93:1  ✓ WCAG AA
+    ///
+    /// This value is the SAME in light and dark because the gradient itself does not
+    /// flip between modes — navy-on-gold is the intended premium look in both modes.
+    public static var onPrimary: Color {
+        Color(hex: "#1B2A4A")
+    }
+
     // MARK: - Icon Square Palette (More Menu / muted brand-tonal)
     //
     // All tokens are tuned so a white SF Symbol glyph achieves ≥ 3:1 contrast

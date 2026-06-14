@@ -169,7 +169,7 @@ public struct StaffTeamListView: View {
             NavigationLink(value: Route.staffTeamForm()) {
                 Text(StaffStrings.teamsEmptyAction)
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(SolennixColors.onPrimary)
                     .padding(.horizontal, Spacing.xl)
                     .padding(.vertical, 16)
                     .background(SolennixGradient.premium)

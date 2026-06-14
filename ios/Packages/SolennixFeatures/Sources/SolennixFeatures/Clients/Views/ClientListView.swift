@@ -141,7 +141,7 @@ public struct ClientListView: View {
                     NavigationLink(value: Route.clientForm()) {
                         Text(tr("clients.empty.cta", "Agregar cliente"))
                             .font(.headline)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(SolennixColors.onPrimary)
                             .padding(.horizontal, Spacing.xl)
                             .padding(.vertical, 16)
                             .background(SolennixGradient.premium)
@@ -174,7 +174,7 @@ public struct ClientListView: View {
             NavigationLink(value: Route.clientForm()) {
                 Text(tr("clients.empty.cta", "Agregar cliente"))
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(SolennixColors.onPrimary)
                     .padding(.horizontal, Spacing.xl)
                     .padding(.vertical, 16)
                     .background(SolennixGradient.premium)

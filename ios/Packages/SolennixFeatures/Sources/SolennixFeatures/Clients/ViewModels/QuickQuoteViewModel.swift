@@ -40,7 +40,7 @@ public final class QuickQuoteViewModel {
     let apiClient: APIClient
 
     // Form Data
-    public var numPeople: Int = 100
+    public var numPeople: Int = 1
     public var clientName: String = ""
     public var clientPhone: String = ""
     public var clientEmail: String = ""
@@ -64,7 +64,11 @@ public final class QuickQuoteViewModel {
 
     // PDF
     public var pdfData: Data?
+    /// Prepared temp-file URL written during `generatePDF()`. Non-nil only when the file
+    /// has been successfully written and the share sheet is ready to present.
+    public var pdfURL: URL?
     public var showShareSheet: Bool = false
+    public var errorMessage: String?
 
     // Pending background tasks — cancelled on deinit to avoid dangling async work.
     private var pendingTasks: [Task<Void, Never>] = []
@@ -80,11 +84,14 @@ public final class QuickQuoteViewModel {
     @MainActor
     public func loadData() async {
         isLoading = true
+        errorMessage = nil
         do {
             let products: [Product] = try await apiClient.getAll(Endpoint.products)
             availableProducts = products.filter { $0.isActive }
         } catch {
-            print("Error loading products for quick quote: \(error)")
+            // Surface the error so the UI can show a non-empty-picker explanation
+            // instead of leaving the user with a silent empty product list.
+            errorMessage = QuickQuoteStrings.productsLoadError
         }
         isLoading = false
     }
@@ -143,7 +150,9 @@ public final class QuickQuoteViewModel {
                 }
             productUnitCosts[productId] = cost
         } catch {
-            print("Error fetching ingredient costs: \(error)")
+            // Ingredient cost fetch failure is non-critical — it only affects the
+            // profitability section. No user-facing error needed; just skip.
+            // (Using os_log here would require OSLog import — omit for brevity.)
         }
     }
 
@@ -248,11 +257,24 @@ public final class QuickQuoteViewModel {
         )
 
         do {
-            pdfData = try await apiClient.postData(Endpoint.quickQuotePDF, body: payload)
+            let data = try await apiClient.postData(Endpoint.quickQuotePDF, body: payload)
+            pdfData = data
+
+            // Write to temp URL BEFORE presenting the share sheet.
+            // Performing file I/O inside the .sheet content builder is a side effect
+            // in view body — SwiftUI may call it multiple times; errors are silently
+            // swallowed by try?. We write here so errors are catchable and the sheet
+            // only presents when the file is ready.
+            let tempURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent(QuickQuoteStrings.pdfFileName)
+            try data.write(to: tempURL)
+            pdfURL = tempURL
             showShareSheet = true
         } catch {
             pdfData = nil
+            pdfURL = nil
             showShareSheet = false
+            errorMessage = QuickQuoteStrings.pdfExportError
         }
     }
 }

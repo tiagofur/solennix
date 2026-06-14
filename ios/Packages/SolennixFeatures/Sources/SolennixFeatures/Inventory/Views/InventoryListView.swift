@@ -315,7 +315,7 @@ public struct InventoryListView: View {
             NavigationLink(value: Route.inventoryForm()) {
                 Text(InventoryStrings.emptyAction)
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(SolennixColors.onPrimary)
                     .padding(.horizontal, Spacing.xl)
                     .padding(.vertical, 16)
                     .background(SolennixGradient.premium)
@@ -466,7 +466,7 @@ public struct InventoryListView: View {
             NavigationLink(value: Route.inventoryForm()) {
                 Text(InventoryStrings.emptyAction)
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(SolennixColors.onPrimary)
                     .padding(.horizontal, Spacing.xl)
                     .padding(.vertical, 16)
                     .background(SolennixGradient.premium)

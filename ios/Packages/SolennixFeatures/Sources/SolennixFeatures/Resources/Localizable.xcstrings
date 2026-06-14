@@ -1234,6 +1234,54 @@
         }
       }
     },
+    "auth.login.resend_verification": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resend link"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reenviar enlace"
+          }
+        }
+      }
+    },
+    "auth.login.verification_required_notice": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verify your email before signing in"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificá tu correo antes de iniciar sesión"
+          }
+        }
+      }
+    },
+    "auth.login.verification_resent": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We sent you a new verification link."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te enviamos un nuevo enlace de verificación."
+          }
+        }
+      }
+    },
     "auth.register.and": {
       "localizations": {
         "en": {
@@ -1586,6 +1634,22 @@
         }
       }
     },
+    "auth.register.verification_sent": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We sent a link to verify your email. Check your inbox before signing in."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te enviamos un enlace para verificar tu correo. Revisá tu bandeja antes de iniciar sesión."
+          }
+        }
+      }
+    },
     "auth.register.submit": {
       "extractionState": "stale",
       "localizations": {
@@ -1887,6 +1951,182 @@
           "stringUnit": {
             "state": "translated",
             "value": "Inicio de sesión con Apple cancelado."
+          }
+        }
+      }
+    },
+    "auth.team_invite.back_to_login": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to sign in"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver al inicio de sesión"
+          }
+        }
+      }
+    },
+    "auth.team_invite.confirm_label": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm password"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar contraseña"
+          }
+        }
+      }
+    },
+    "auth.team_invite.confirm_placeholder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat your password"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repite tu contraseña"
+          }
+        }
+      }
+    },
+    "auth.team_invite.go_to_app": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar"
+          }
+        }
+      }
+    },
+    "auth.team_invite.password_label": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contraseña"
+          }
+        }
+      }
+    },
+    "auth.team_invite.password_placeholder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At least 8 characters"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mínimo 8 caracteres"
+          }
+        }
+      }
+    },
+    "auth.team_invite.submit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accept invitation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aceptar invitación"
+          }
+        }
+      }
+    },
+    "auth.team_invite.subtitle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create your password to access the team portal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crea tu contraseña para ingresar al portal del equipo."
+          }
+        }
+      }
+    },
+    "auth.team_invite.success_message": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your team account was activated successfully."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu cuenta del equipo fue activada correctamente."
+          }
+        }
+      }
+    },
+    "auth.team_invite.success_title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitation accepted"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitación aceptada"
+          }
+        }
+      }
+    },
+    "auth.team_invite.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activate access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activar acceso"
           }
         }
       }
@@ -18764,6 +19004,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "IVA"
+          }
+        }
+      }
+    },
+    "quick_quote.delete_row": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete row"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar fila"
+          }
+        }
+      }
+    },
+    "quick_quote.pdf_export_error": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not generate the PDF. Please try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo generar el PDF. Intenta de nuevo."
+          }
+        }
+      }
+    },
+    "quick_quote.products_load_error": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not load products. Check your connection."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron cargar los productos. Revisa tu conexión."
           }
         }
       }

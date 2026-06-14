@@ -52,7 +52,7 @@ public struct EventProductsDetailView: View {
                     NavigationLink(value: Route.eventForm(id: eventId, step: 2)) {
                         Text(tr("events.detail.products.empty.cta", "Agregar productos"))
                             .font(.headline)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(SolennixColors.onPrimary)
                             .padding(.horizontal, Spacing.xl)
                             .padding(.vertical, 16)
                             .background(SolennixColors.primary)
