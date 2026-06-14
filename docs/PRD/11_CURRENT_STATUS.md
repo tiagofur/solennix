@@ -25,6 +25,15 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.8
 
+> [!success] 2026-06-13 — Calendario: Judgment Day → APPROVED (branch `feat/ios-calendar-judgment`)
+> Revisión dual ciego (3 rondas) de la vista mensual + bloqueo de fechas. Un calendario es el terreno de mayor riesgo para bugs de fecha — y aparecieron.
+> - **Grilla desalineada (eventos en el día equivocado):** el header rotaba con un `firstWeekday` y los blancos con otro → en locales lunes-primero la grilla corrida un día. Unificado a `(rawWeekday - firstWeekday + 7) % 7` con el `firstWeekday` del DEVICE (`Calendar.current`, no `FeatureL10n.locale` que strip la región y forzaba lunes-primero en México domingo-primero — verificado empíricamente). Etiquetas en idioma de la app, orden según región.
+> - **Fechas timezone:** `apiDateFormatter` quedó device-local (las celdas son local-midnight → formatter local da el día correcto en TODOS los timezones; un intento de pin UTC fue una regresión que los jueces cazaron — habría corrido el día para UTC-positivo). a11y formatter idem.
+> - **Colores (la queja):** botón "Bloquear" en ROJO (`statusCancelled`) → `primary` (agendar no es destruir); ícono de candado rojo → `textSecondary`; el trash sí queda `error`.
+> - **UX/Lógica/a11y:** VoiceOver de cada celda ahora dice el día (era "Día bloqueado" sin número); `loadEvents` con guard anti-race + fault-isolation de fetches secundarios; sheets de bloqueo quedan abiertos en error; debounce de borrado; formatters `static let`; íconos escalables.
+> - **Disciplina:** corregí DOS regresiones que yo mismo introduje vía el fix agent (el pin UTC y el override de locale) — verificadas empíricamente contra el código antes de confiar en la narrativa.
+> - **Commits:** 2eeb7ee5, 25c6b0a3, eaa0f613. Build verde por ronda.
+
 > [!success] 2026-06-13 — Auth + QuickQuote: Judgment Day → APPROVED (branch `feat/ios-auth-quote-judgment`)
 > Revisión dual ciego (2 rondas) de Login/Register/Forgot/Reset/TeamInvite/BiometricGate + QuickQuote. "Pantallas chicas" pero con problemas de seguridad reales.
 > - **Seguridad:** `mapError` filtraba el mensaje crudo del server (enumeración de cuentas) → genérico en todos los paths, incluido `planLimitExceeded`; campos de confirmar-contraseña dejaron `.newPassword` (el autofill llenaba ambos con la misma sugerencia); el fallback biométrico llamaba `signOut()` (revocaba la sesión en TODOS los dispositivos) → `presentPasswordFallback()` local-only.
