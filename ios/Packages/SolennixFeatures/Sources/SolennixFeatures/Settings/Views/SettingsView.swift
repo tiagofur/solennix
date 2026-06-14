@@ -592,7 +592,7 @@ public struct PlanBadge: View {
         Text(planLabel)
             .font(.caption2)
             .fontWeight(.semibold)
-            .foregroundStyle(plan.isPaid ? .white : SolennixColors.text)
+            .foregroundStyle(plan.isPaid ? SolennixColors.onPrimary : SolennixColors.text)
             .padding(.horizontal, Spacing.sm)
             .padding(.vertical, 2)
             .background(

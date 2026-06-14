@@ -55,35 +55,40 @@ public struct NotificationPreferencesView: View {
                     tr("settings.notifications.email_payment_receipt", "Recibos de pago"),
                     description: tr("settings.notifications.email_payment_receipt_hint", "Recibe un correo cuando se registra un pago"),
                     icon: "creditcard",
-                    keyPath: \.emailPaymentReceipt
+                    keyPath: \.emailPaymentReceipt,
+                    id: "emailPaymentReceipt"
                 )
 
                 preferenceToggle(
                     tr("settings.notifications.email_event_reminder", "Recordatorio de eventos"),
                     description: tr("settings.notifications.email_event_reminder_hint", "Recibe un correo 24h antes de tu evento"),
                     icon: "calendar.badge.clock",
-                    keyPath: \.emailEventReminder
+                    keyPath: \.emailEventReminder,
+                    id: "emailEventReminder"
                 )
 
                 preferenceToggle(
                     tr("settings.notifications.email_subscription_updates", "Actualizaciones de suscripción"),
                     description: tr("settings.notifications.email_subscription_updates_hint", "Correos sobre cambios en tu plan"),
                     icon: "star",
-                    keyPath: \.emailSubscriptionUpdates
+                    keyPath: \.emailSubscriptionUpdates,
+                    id: "emailSubscriptionUpdates"
                 )
 
                 preferenceToggle(
                     tr("settings.notifications.email_weekly_summary", "Resumen semanal"),
                     description: tr("settings.notifications.email_weekly_summary_hint", "Resumen de actividad de la semana"),
                     icon: "chart.bar",
-                    keyPath: \.emailWeeklySummary
+                    keyPath: \.emailWeeklySummary,
+                    id: "emailWeeklySummary"
                 )
 
                 preferenceToggle(
                     tr("settings.notifications.email_marketing", "Noticias y tips"),
                     description: tr("settings.notifications.email_marketing_hint", "Novedades y consejos de Solennix"),
                     icon: "megaphone",
-                    keyPath: \.emailMarketing
+                    keyPath: \.emailMarketing,
+                    id: "emailMarketing"
                 )
             } header: {
                 Text(tr("settings.notifications.email_section", "Correos electrónicos"))
@@ -95,14 +100,16 @@ public struct NotificationPreferencesView: View {
                     tr("settings.notifications.push_enabled", "Notificaciones push"),
                     description: tr("settings.notifications.push_enabled_hint", "Habilitar o deshabilitar todas las notificaciones push"),
                     icon: "bell.badge",
-                    keyPath: \.pushEnabled
+                    keyPath: \.pushEnabled,
+                    id: "pushEnabled"
                 )
 
                 preferenceToggle(
                     tr("settings.notifications.push_event_reminder", "Recordatorio de eventos"),
                     description: tr("settings.notifications.push_event_reminder_hint", "Notificación push antes de tu evento"),
                     icon: "calendar.badge.clock",
-                    keyPath: \.pushEventReminder
+                    keyPath: \.pushEventReminder,
+                    id: "pushEventReminder"
                 )
                 .disabled(!viewModel.pushEnabled)
                 .opacity(viewModel.pushEnabled ? 1 : 0.5)
@@ -111,7 +118,8 @@ public struct NotificationPreferencesView: View {
                     tr("settings.notifications.push_payment_received", "Pago recibido"),
                     description: tr("settings.notifications.push_payment_received_hint", "Notificación push cuando se registra un pago"),
                     icon: "creditcard.fill",
-                    keyPath: \.pushPaymentReceived
+                    keyPath: \.pushPaymentReceived,
+                    id: "pushPaymentReceived"
                 )
                 .disabled(!viewModel.pushEnabled)
                 .opacity(viewModel.pushEnabled ? 1 : 0.5)
@@ -127,12 +135,13 @@ public struct NotificationPreferencesView: View {
         _ title: String,
         description: String,
         icon: String,
-        keyPath: ReferenceWritableKeyPath<NotificationPreferencesViewModel, Bool>
+        keyPath: ReferenceWritableKeyPath<NotificationPreferencesViewModel, Bool>,
+        id: String
     ) -> some View {
         Toggle(isOn: Binding(
             get: { viewModel[keyPath: keyPath] },
             set: { _ in
-                Task { await viewModel.togglePreference(keyPath) }
+                Task { await viewModel.togglePreference(keyPath, id: id) }
             }
         )) {
             Label {
@@ -147,6 +156,7 @@ public struct NotificationPreferencesView: View {
             }
         }
         .tint(SolennixColors.primary)
+        .disabled(viewModel.inFlightKeys.contains(id))
     }
 }
 

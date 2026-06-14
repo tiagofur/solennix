@@ -11,6 +11,14 @@ public struct EditProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var sizeClass
 
+    @State private var initialName: String = ""
+    @State private var initialEmail: String = ""
+    @State private var showDiscardConfirm = false
+
+    private var isDirty: Bool {
+        viewModel.editName != initialName || viewModel.editEmail != initialEmail
+    }
+
     public init(apiClient: APIClient, authManager: AuthManager) {
         _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient, authManager: authManager))
     }
@@ -30,12 +38,34 @@ public struct EditProfileView: View {
         }
         .navigationTitle(tr("settings.action.edit_profile", "Editar perfil"))
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(isDirty)
+        .confirmationDialog(
+            "¿Descartar los cambios sin guardar?",
+            isPresented: $showDiscardConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Descartar cambios", role: .destructive) { dismiss() }
+            Button("Seguir editando", role: .cancel) {}
+        }
         .toolbar {
+            if isDirty {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showDiscardConfirm = true
+                    } label: {
+                        Label(tr("common.back", "Atrás"), systemImage: "chevron.backward")
+                    }
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 saveButton
             }
         }
-        .task { await viewModel.loadUser() }
+        .task {
+            await viewModel.loadUser()
+            initialName = viewModel.editName
+            initialEmail = viewModel.editEmail
+        }
     }
 
     // MARK: - Form Content

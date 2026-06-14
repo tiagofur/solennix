@@ -268,8 +268,9 @@ public struct ReviewsView: View {
                 .padding(.horizontal, Spacing.sm)
                 .padding(.vertical, Spacing.xs)
                 .frame(maxWidth: .infinity)
-                // B7: SolennixColors.textInverse replaces hardcoded Color.white
-                .foregroundStyle(selected ? SolennixColors.textInverse : SolennixColors.textSecondary)
+                // Text on the gold (primary) selected chip must use onPrimary
+                // (navy, WCAG AA) — textInverse resolves to white and fails contrast.
+                .foregroundStyle(selected ? SolennixColors.onPrimary : SolennixColors.textSecondary)
                 .background(selected ? SolennixColors.primary : SolennixColors.surfaceGrouped)
                 .clipShape(Capsule())
         }

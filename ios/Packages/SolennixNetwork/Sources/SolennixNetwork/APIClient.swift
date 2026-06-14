@@ -708,8 +708,14 @@ public actor APIClient {
     }
 
     /// Returns true if the URL targets an auth endpoint that issues tokens
-    /// (login, register, refresh, OAuth providers, password reset). 401 on
+    /// (login, register, refresh, OAuth providers, password reset) or an endpoint
+    /// whose 401 means "wrong credential" rather than "expired token". 401 on
     /// these routes must propagate as "invalid credentials", not trigger refresh.
+    ///
+    /// `/auth/change-password` belongs here because the backend returns 401 when
+    /// the supplied *current* password is wrong (auth.current_password_incorrect),
+    /// not when the session token has expired. Excluding it prevents a typo from
+    /// triggering the token-refresh path and potentially logging the user out.
     private nonisolated func isAuthEndpoint(_ url: URL?) -> Bool {
         guard let path = url?.path else { return false }
         let authPaths = [
@@ -719,7 +725,8 @@ public actor APIClient {
             "/auth/google",
             "/auth/apple",
             "/auth/forgot-password",
-            "/auth/reset-password"
+            "/auth/reset-password",
+            "/auth/change-password"
         ]
         return authPaths.contains { path.hasSuffix($0) }
     }

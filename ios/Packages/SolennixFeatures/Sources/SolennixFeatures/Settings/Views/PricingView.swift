@@ -365,13 +365,13 @@ public struct PricingView: View {
             HStack {
                 if subscriptionManager.isPurchasing {
                     ProgressView()
-                        .tint(isPrimary ? .white : SolennixColors.primary)
+                        .tint(isPrimary ? SolennixColors.onPrimary : SolennixColors.primary)
                 }
                 Text(title)
                     .font(.subheadline)
                     .fontWeight(.semibold)
             }
-            .foregroundStyle(isPrimary ? .white : SolennixColors.primary)
+            .foregroundStyle(isPrimary ? SolennixColors.onPrimary : SolennixColors.primary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, Spacing.sm)
             .background(isPrimary ? AnyShapeStyle(SolennixGradient.premium) : AnyShapeStyle(SolennixColors.primary.opacity(0.1)))
