@@ -130,7 +130,7 @@ public struct LoginView: View {
                 Text(AuthStrings.loginBrandSubtitle)
                     .font(.body)
                     // Slightly lighter navy at 85% opacity — still passes AA at this opacity.
-                    .foregroundStyle(SolennixColors.onPrimary.opacity(0.85))
+                    .foregroundStyle(SolennixColors.onPrimary)
 
                 VStack(alignment: .leading, spacing: Spacing.md) {
                     BrandFeatureRow(icon: "calendar", text: AuthStrings.loginBrandFeatureEvents)

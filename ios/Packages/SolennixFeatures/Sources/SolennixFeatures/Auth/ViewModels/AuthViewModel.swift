@@ -462,7 +462,10 @@ public final class AuthViewModel {
             case .networkError:
                 return AuthStrings.errorNetwork
             default:
-                return apiError.errorDescription ?? AuthStrings.errorUnexpected
+                // Do NOT pass through errorDescription — APIError.planLimitExceeded and
+                // similar carry the raw server message (account/internal detail leak).
+                // Generic localized string only for any unmapped auth error.
+                return AuthStrings.errorUnexpected
             }
         }
         return AuthStrings.errorRetry

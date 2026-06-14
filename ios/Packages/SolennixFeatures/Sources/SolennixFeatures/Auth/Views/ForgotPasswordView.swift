@@ -99,7 +99,7 @@ public struct ForgotPasswordView: View {
 
                 Text(AuthStrings.forgotPasswordBrandSubtitle)
                     .font(.body)
-                    .foregroundStyle(SolennixColors.onPrimary.opacity(0.85))
+                    .foregroundStyle(SolennixColors.onPrimary)
 
                 VStack(alignment: .leading, spacing: Spacing.md) {
                     HStack(spacing: Spacing.sm) {

@@ -148,7 +148,7 @@ public struct RegisterView: View {
 
                 Text(AuthStrings.registerBrandSubtitle)
                     .font(.body)
-                    .foregroundStyle(SolennixColors.onPrimary.opacity(0.85))
+                    .foregroundStyle(SolennixColors.onPrimary)
 
                 VStack(alignment: .leading, spacing: Spacing.md) {
                     FeaturePill(icon: "gift.fill", text: AuthStrings.registerFeatureFree, description: AuthStrings.registerFeatureFreeDesc)
@@ -466,7 +466,7 @@ private struct FeaturePill: View {
                 Text(description)
                     .font(.caption)
                     // Reduced opacity for hierarchy; still readable against gold.
-                    .foregroundStyle(SolennixColors.onPrimary.opacity(0.7))
+                    .foregroundStyle(SolennixColors.onPrimary)
             }
         }
     }
