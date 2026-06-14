@@ -25,6 +25,16 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.8
 
+> [!success] 2026-06-14 — Ajustes (Settings): Judgment Day → APPROVED (branch `feat/ios-settings-judgment`)
+> Revisión dual ciego (3 rondas) del cluster de Ajustes: SettingsView, EditProfile, BusinessSettings, ContractDefaults, NotificationPreferences, ChangePassword.
+> - **Seguridad/auth (el bug más grave, lo vio un solo juez fuera de los archivos target):** escribir mal la contraseña actual te DESLOGEABA. El backend devuelve 401 (`auth.current_password_incorrect`), el cliente lo trataba como token expirado → refresh → si el refresh token venció, `handleSessionExpired()`. Fix: `/auth/change-password` agregado a `APIClient.isAuthEndpoint` → el 401 propaga como `.unauthorized`. Verificado contra `auth_handler.go:998`.
+> - **Seguridad AutoFill:** el campo *confirmar* contraseña usaba `.textContentType(.newPassword)` → AutoFill generaba/guardaba una credencial fantasma. Corregido a `.password` (triplete current `.password` / new `.newPassword` / confirm `.password`).
+> - **Contraste (la queja "colores raros"):** PlanBadge, botón primario de PricingView y chip de filtro de Reseñas usaban `.white`/`textInverse` sobre oro (~2.4:1) → `SolennixColors.onPrimary` (navy, WCAG AA).
+> - **Carrera de estado:** toggles de notificaciones sin guard → taps rápidos = carrera optimista/rollback. Agregado `inFlightKeys` por preferencia + disable del toggle en vuelo.
+> - **UX/HIG:** guardia de cambios sin guardar en 4 forms — el primer intento (`interactiveDismissDisabled`) era no-op en navegación pushed y el diálogo era código muerto; los jueces lo cazaron en ronda 2. Reworkeado a `navigationBarBackButtonHidden(isDirty)` + diálogo de descarte. Dynamic Type en ícono del logo; Guardar deshabilitado hasta confirmar; "dias" → "días".
+> - **Disciplina:** el fix agent introdujo el guard roto en ronda 1; los jueces lo detectaron; reworkeado en ronda 2. En ronda 3 verifiqué los 3 hallazgos suspect uno por uno — 1 falsa alarma (los campos se limpian en éxito), 1 real (chip oro), 1 no-aplicable (`tr` es privado, el literal es válido).
+> - **Commit:** adc34fd6. Build verde por ronda.
+
 > [!success] 2026-06-13 — Calendario: Judgment Day → APPROVED (branch `feat/ios-calendar-judgment`)
 > Revisión dual ciego (3 rondas) de la vista mensual + bloqueo de fechas. Un calendario es el terreno de mayor riesgo para bugs de fecha — y aparecieron.
 > - **Grilla desalineada (eventos en el día equivocado):** el header rotaba con un `firstWeekday` y los blancos con otro → en locales lunes-primero la grilla corrida un día. Unificado a `(rawWeekday - firstWeekday + 7) % 7` con el `firstWeekday` del DEVICE (`Calendar.current`, no `FeatureL10n.locale` que strip la región y forzaba lunes-primero en México domingo-primero — verificado empíricamente). Etiquetas en idioma de la app, orden según región.

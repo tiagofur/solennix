@@ -13,6 +13,19 @@ public struct ContractDefaultsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var sizeClass
 
+    @State private var initialDepositPercent: Double = 50
+    @State private var initialCancellationDays: Double = 7
+    @State private var initialRefundPercent: Double = 50
+    @State private var initialContractTemplate: String = ""
+    @State private var showDiscardConfirm = false
+
+    private var isDirty: Bool {
+        viewModel.depositPercent != initialDepositPercent
+            || viewModel.cancellationDays != initialCancellationDays
+            || viewModel.refundPercent != initialRefundPercent
+            || viewModel.contractTemplate != initialContractTemplate
+    }
+
     public init(apiClient: APIClient) {
         _viewModel = State(initialValue: BusinessSettingsViewModel(apiClient: apiClient))
     }
@@ -32,7 +45,25 @@ public struct ContractDefaultsView: View {
         }
         .navigationTitle(tr("settings.action.contract_defaults", "Valores del contrato"))
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(isDirty)
+        .confirmationDialog(
+            "¿Descartar los cambios sin guardar?",
+            isPresented: $showDiscardConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Descartar cambios", role: .destructive) { dismiss() }
+            Button("Seguir editando", role: .cancel) {}
+        }
         .toolbar {
+            if isDirty {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showDiscardConfirm = true
+                    } label: {
+                        Label(tr("common.back", "Atrás"), systemImage: "chevron.backward")
+                    }
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 saveButton
             }
@@ -45,7 +76,13 @@ public struct ContractDefaultsView: View {
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
         }
-        .task { await viewModel.loadUser() }
+        .task {
+            await viewModel.loadUser()
+            initialDepositPercent = viewModel.depositPercent
+            initialCancellationDays = viewModel.cancellationDays
+            initialRefundPercent = viewModel.refundPercent
+            initialContractTemplate = viewModel.contractTemplate
+        }
     }
 
     // MARK: - Form Content
@@ -80,7 +117,7 @@ public struct ContractDefaultsView: View {
                     HStack {
                         Text(tr("settings.contract.cancellation_days", "Días de anticipación"))
                         Spacer()
-                        Text("\(Int(viewModel.cancellationDays)) dias")
+                        Text("\(Int(viewModel.cancellationDays)) días")
                             .font(.headline)
                             .foregroundStyle(SolennixColors.primary)
                     }
@@ -182,7 +219,7 @@ public struct ContractDefaultsView: View {
 
                     VStack(alignment: .leading, spacing: Spacing.sm) {
                         previewRow(label: tr("settings.contract.preview.deposit_required", "Anticipo requerido"), value: "\(Int(viewModel.depositPercent))% del total")
-                        previewRow(label: tr("settings.contract.preview.cancellation", "Cancelación sin penalización"), value: "\(Int(viewModel.cancellationDays)) dias antes")
+                        previewRow(label: tr("settings.contract.preview.cancellation", "Cancelación sin penalización"), value: "\(Int(viewModel.cancellationDays)) días antes")
                         previewRow(label: tr("settings.contract.preview.refund", "Reembolso por cancelación"), value: "\(Int(viewModel.refundPercent))% del anticipo")
                     }
                     .padding(Spacing.md)

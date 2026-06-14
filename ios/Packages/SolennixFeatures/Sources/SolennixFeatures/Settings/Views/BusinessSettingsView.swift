@@ -12,6 +12,17 @@ public struct BusinessSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var sizeClass
 
+    @State private var initialBusinessName: String = ""
+    @State private var initialShowInPdf: Bool = true
+    @State private var initialBrandColor: Color = .blue
+    @State private var showDiscardConfirm = false
+
+    private var isDirty: Bool {
+        viewModel.businessName != initialBusinessName
+            || viewModel.showBusinessNameInPdf != initialShowInPdf
+            || viewModel.brandColor != initialBrandColor
+    }
+
     public init(apiClient: APIClient) {
         _viewModel = State(initialValue: BusinessSettingsViewModel(apiClient: apiClient))
     }
@@ -31,7 +42,25 @@ public struct BusinessSettingsView: View {
         }
         .navigationTitle(tr("settings.action.business_settings", "Ajustes del negocio"))
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(isDirty)
+        .confirmationDialog(
+            "¿Descartar los cambios sin guardar?",
+            isPresented: $showDiscardConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Descartar cambios", role: .destructive) { dismiss() }
+            Button("Seguir editando", role: .cancel) {}
+        }
         .toolbar {
+            if isDirty {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showDiscardConfirm = true
+                    } label: {
+                        Label(tr("common.back", "Atrás"), systemImage: "chevron.backward")
+                    }
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 saveButton
             }
@@ -41,7 +70,12 @@ public struct BusinessSettingsView: View {
                 Task { await viewModel.handleLogoSelection() }
             }
         }
-        .task { await viewModel.loadUser() }
+        .task {
+            await viewModel.loadUser()
+            initialBusinessName = viewModel.businessName
+            initialShowInPdf = viewModel.showBusinessNameInPdf
+            initialBrandColor = viewModel.brandColor
+        }
     }
 
     // MARK: - Form Content
@@ -150,7 +184,7 @@ public struct BusinessSettingsView: View {
                 .frame(width: 100, height: 100)
 
             Image(systemName: "building.2")
-                .font(.system(size: 32))
+                .font(.system(.largeTitle))
                 .foregroundStyle(SolennixColors.textTertiary)
         }
     }

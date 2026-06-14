@@ -30,6 +30,10 @@ public final class NotificationPreferencesViewModel {
     public var isLoading: Bool = false
     public var errorMessage: String?
 
+    /// Keys of in-flight toggle requests. Used by the view to disable a
+    /// specific toggle while its save round-trip is in progress.
+    public private(set) var inFlightKeys: Set<String> = []
+
     // Email preferences
     public var emailPaymentReceipt: Bool = true
     public var emailEventReminder: Bool = true
@@ -85,7 +89,14 @@ public final class NotificationPreferencesViewModel {
     // MARK: - Toggle (saves immediately)
 
     @MainActor
-    public func togglePreference(_ keyPath: ReferenceWritableKeyPath<NotificationPreferencesViewModel, Bool>) async {
+    public func togglePreference(
+        _ keyPath: ReferenceWritableKeyPath<NotificationPreferencesViewModel, Bool>,
+        id: String
+    ) async {
+        guard !inFlightKeys.contains(id) else { return }
+        inFlightKeys.insert(id)
+        defer { inFlightKeys.remove(id) }
+
         let oldValue = self[keyPath: keyPath]
         self[keyPath: keyPath] = !oldValue
         errorMessage = nil

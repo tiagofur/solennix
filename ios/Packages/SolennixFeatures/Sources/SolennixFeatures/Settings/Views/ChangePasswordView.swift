@@ -11,6 +11,14 @@ public struct ChangePasswordView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var sizeClass
 
+    @State private var showDiscardConfirm = false
+
+    private var isDirty: Bool {
+        !viewModel.currentPassword.isEmpty
+            || !viewModel.newPassword.isEmpty
+            || !viewModel.confirmPassword.isEmpty
+    }
+
     public init(apiClient: APIClient, authManager: AuthManager) {
         _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient, authManager: authManager))
     }
@@ -30,7 +38,7 @@ public struct ChangePasswordView: View {
                         .textContentType(.newPassword)
 
                     SecureField(SettingsStrings.passwordConfirmLabel, text: $viewModel.confirmPassword)
-                        .textContentType(.newPassword)
+                        .textContentType(.password)
                 } header: {
                     Text(SettingsStrings.passwordNewSection)
                 } footer: {
@@ -71,7 +79,25 @@ public struct ChangePasswordView: View {
         }
         .navigationTitle(SettingsStrings.actionChangePassword)
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(isDirty)
+        .confirmationDialog(
+            "¿Descartar los cambios sin guardar?",
+            isPresented: $showDiscardConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Descartar cambios", role: .destructive) { dismiss() }
+            Button("Seguir editando", role: .cancel) {}
+        }
         .toolbar {
+            if isDirty {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showDiscardConfirm = true
+                    } label: {
+                        Label("Atrás", systemImage: "chevron.backward")
+                    }
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 saveButton
             }
@@ -98,7 +124,7 @@ public struct ChangePasswordView: View {
                     .fontWeight(.semibold)
             }
         }
-        .disabled(viewModel.isSavingPassword || viewModel.currentPassword.isEmpty || viewModel.newPassword.isEmpty)
+        .disabled(viewModel.isSavingPassword || viewModel.currentPassword.isEmpty || viewModel.newPassword.isEmpty || viewModel.confirmPassword.isEmpty)
     }
 }
 
