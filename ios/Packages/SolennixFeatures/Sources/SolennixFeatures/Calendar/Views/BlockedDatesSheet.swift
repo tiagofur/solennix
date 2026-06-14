@@ -228,7 +228,9 @@ struct AddBlockSheet: View {
                                 reason: trimmed.isEmpty ? nil : trimmed
                             )
                             isSubmitting = false
-                            dismiss()
+                            // Keep the form open on failure so the user doesn't
+                            // lose their range/reason; dismiss only on success.
+                            if viewModel.error == nil { dismiss() }
                         }
                     }
                     .fontWeight(.semibold)

@@ -54,9 +54,9 @@ public final class CalendarViewModel {
     // MARK: - Dependencies
 
     private let apiClient: APIClient
-    /// Calendar configured to the feature locale so firstWeekday agrees with
-    /// the weekday header in CalendarGridView. Both grid and header must use
-    /// the same firstWeekday so leading-blank offsets stay aligned.
+    /// The DEVICE calendar — its `firstWeekday` follows the user's region, and
+    /// the CalendarGridView header rotates by the same `Calendar.current.firstWeekday`
+    /// so grid blanks and weekday labels stay aligned.
     // Use the DEVICE calendar (Calendar.current) so `firstWeekday` follows the
     // user's REGION (Sunday-first for Mexico, Monday-first for ES/most of Europe).
     // Do NOT override with FeatureL10n.locale — that returns a region-less
