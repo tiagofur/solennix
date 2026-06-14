@@ -237,7 +237,7 @@ private struct ChecklistItemRow: View {
                     Image(systemName: "checkmark")
                         .font(.caption2)
                         .fontWeight(.bold)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(SolennixColors.onPrimary)
                         .opacity(isChecked ? 1 : 0)
                         // Outside any `if isChecked` — SwiftUI sees the value
                         // transition false→true and fires the bounce exactly once.

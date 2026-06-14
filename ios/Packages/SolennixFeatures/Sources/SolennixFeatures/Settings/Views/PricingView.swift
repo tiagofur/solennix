@@ -201,7 +201,7 @@ public struct PricingView: View {
                     Text(FeatureL10n.text("Recomendado", "Recomendado"))
                                 .font(.caption2)
                                 .fontWeight(.semibold)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(SolennixColors.onPrimary)
                                 .padding(.horizontal, Spacing.sm)
                                 .padding(.vertical, 2)
                                 .background(SolennixGradient.premium)

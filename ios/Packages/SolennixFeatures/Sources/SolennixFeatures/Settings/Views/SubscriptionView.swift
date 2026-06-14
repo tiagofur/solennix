@@ -295,7 +295,7 @@ public struct SubscriptionView: View {
                         Text(tr("settings.subscription.upgrade_plan", "Mejorar plan"))
                             .fontWeight(.semibold)
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(SolennixColors.onPrimary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Spacing.md)
                     .background(SolennixGradient.premium)

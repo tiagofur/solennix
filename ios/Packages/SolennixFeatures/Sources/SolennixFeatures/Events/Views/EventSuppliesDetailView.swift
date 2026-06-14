@@ -52,7 +52,7 @@ public struct EventSuppliesDetailView: View {
                     NavigationLink(value: Route.eventForm(id: eventId, step: 4)) {
                         Text(tr("events.detail.supplies.empty.cta", "Agregar insumos"))
                             .font(.headline)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(SolennixColors.onPrimary)
                             .padding(.horizontal, Spacing.xl)
                             .padding(.vertical, 16)
                             .background(SolennixColors.primary)

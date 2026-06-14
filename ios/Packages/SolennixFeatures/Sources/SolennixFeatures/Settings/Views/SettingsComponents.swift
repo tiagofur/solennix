@@ -82,7 +82,7 @@ struct SettingsUserHeaderContent: View {
                 Text(user.name.prefix(1).uppercased())
                     .font(.title2)
                     .fontWeight(.bold)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(SolennixColors.onPrimary)
             }
 
             VStack(alignment: .leading, spacing: Spacing.xs) {

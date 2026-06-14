@@ -1005,7 +1005,7 @@ private struct TeamMemberAssignmentCard: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                             .background(SolennixColors.primary)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(SolennixColors.onPrimary)
                             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
                     }
                     .disabled(isResponding)

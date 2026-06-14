@@ -227,7 +227,7 @@ public struct StaffListView: View {
             NavigationLink(value: Route.staffForm()) {
                 Text(StaffStrings.emptyAction)
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(SolennixColors.onPrimary)
                     .padding(.horizontal, Spacing.xl)
                     .padding(.vertical, 16)
                     .background(SolennixGradient.premium)
@@ -415,7 +415,7 @@ public struct StaffListView: View {
             NavigationLink(value: Route.staffForm()) {
                 Text(StaffStrings.emptyAction)
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(SolennixColors.onPrimary)
                     .padding(.horizontal, Spacing.xl)
                     .padding(.vertical, 16)
                     .background(SolennixGradient.premium)

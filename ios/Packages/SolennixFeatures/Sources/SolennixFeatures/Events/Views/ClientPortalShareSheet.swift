@@ -200,7 +200,7 @@ public struct ClientPortalShareSheet: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, Spacing.md)
                 .background(SolennixGradient.premium)
-                .foregroundStyle(.white)
+                .foregroundStyle(SolennixColors.onPrimary)
                 .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
             }
             .disabled(viewModel.isBusy)

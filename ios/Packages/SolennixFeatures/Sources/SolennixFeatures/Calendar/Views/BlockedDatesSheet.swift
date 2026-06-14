@@ -113,7 +113,7 @@ public struct BlockedDatesSheet: View {
                 )
                 .font(.subheadline)
                 .fontWeight(.semibold)
-                .foregroundStyle(.white)
+                .foregroundStyle(SolennixColors.onPrimary)
                 .padding(.horizontal, Spacing.lg)
                 .padding(.vertical, Spacing.sm)
                 .background(SolennixColors.primary)
