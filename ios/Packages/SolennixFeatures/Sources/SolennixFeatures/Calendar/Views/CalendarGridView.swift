@@ -25,14 +25,14 @@ public struct CalendarGridView: View {
     /// also respects the locale's `firstWeekday` so Monday-first locales
     /// get the right layout.
     private var weekdaySymbols: [String] {
+        // Fix #10: source symbols from the locale-aware calendar (not a throwaway
+        // DateFormatter) — Calendar.shortWeekdaySymbols already respects the
+        // calendar's locale. Both this computed property and the ViewModel's
+        // `calendar` use FeatureL10n.locale so firstWeekday values agree.
         var cal = Calendar.current
         cal.locale = FeatureL10n.locale
-        // DateFormatter.shortWeekdaySymbols is Sunday-first; rotate to the
-        // locale's first weekday (1=Sun, 2=Mon) minus one for zero-index.
-        let formatter = DateFormatter()
-        formatter.locale = FeatureL10n.locale
-        let symbols = formatter.shortWeekdaySymbols ?? ["S", "M", "T", "W", "T", "F", "S"]
-        let shift = cal.firstWeekday - 1
+        let symbols = cal.shortWeekdaySymbols   // always length 7, Sunday at index 0
+        let shift = cal.firstWeekday - 1        // 0 for Sunday-first, 1 for Monday-first
         return Array(symbols[shift...]) + Array(symbols[..<shift])
     }
 
@@ -195,19 +195,39 @@ private struct DayCellView: View {
         }
     }
 
-    // G10 — human-readable accessibility label for the day cell.
-    // Format: "15 de marzo, confirmado y cotizado"
-    // or "15 de marzo, bloqueado" for blocked days.
+    // Fix #5 & #10: human-readable accessibility label for the day cell.
+    // Prepend the day date ("15 de junio") so VoiceOver users know which cell.
+    // Format: "15 de junio, confirmado y cotizado"
+    //         "15 de junio, día bloqueado"
+    //         "15 de junio, sin eventos"
     private var accessibilityLabelForDay: String {
+        let dayLabel = Self.a11yDayFormatter.string(from: day.date)
+        // Fix #10 (a11y list separator): use ListFormatter so the connector
+        // ("y"/"and") is locale-appropriate rather than hardcoded " y ".
         if isBlocked {
-            return CalendarStrings.a11yDayBlocked
+            return "\(dayLabel), \(CalendarStrings.a11yDayBlocked)"
         }
         if dots.isEmpty {
-            return CalendarStrings.a11yDayNoEvents
+            return "\(dayLabel), \(CalendarStrings.a11yDayNoEvents)"
         }
-        let statusDescriptions = dots.map { statusName(for: $0) }.joined(separator: " y ")
-        return CalendarStrings.a11yDayWithEvents(dots.count) + ", " + statusDescriptions
+        let statusDescriptions: String
+        if #available(iOS 15, *) {
+            statusDescriptions = ListFormatter.localizedString(byJoining: dots.map { statusName(for: $0) })
+        } else {
+            statusDescriptions = dots.map { statusName(for: $0) }.joined(separator: ", ")
+        }
+        return "\(dayLabel), \(CalendarStrings.a11yDayWithEvents(dots.count)), \(statusDescriptions)"
     }
+
+    // UTC display formatter so the day date in VoiceOver matches the server
+    // date displayed in the cell (avoids a timezone-induced day mismatch).
+    private static let a11yDayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = FeatureL10n.locale
+        f.timeZone = TimeZone(secondsFromGMT: 0)
+        f.setLocalizedDateFormatFromTemplate("dMMMM")
+        return f
+    }()
 
     private func statusName(for status: EventStatus) -> String {
         switch status {
@@ -227,11 +247,13 @@ private struct DayCellView: View {
     let components = calendar.dateComponents([.year, .month], from: today)
     let firstOfMonth = calendar.date(from: components)!
     let range = calendar.range(of: .day, in: .month, for: firstOfMonth)!
-    let firstWeekday = calendar.component(.weekday, from: firstOfMonth)
+    let rawWeekday = calendar.component(.weekday, from: firstOfMonth)
+    // Fix #1 (preview): use same locale-aware offset as ViewModel.daysInMonth.
+    let leadingBlanks = (rawWeekday - calendar.firstWeekday + 7) % 7
     let todayDay = calendar.component(.day, from: today)
 
-    let days: [DateDay] = (1..<firstWeekday).map { offset in
-        let date = calendar.date(byAdding: .day, value: -(firstWeekday - offset), to: firstOfMonth)!
+    let days: [DateDay] = (0..<leadingBlanks).map { offset in
+        let date = calendar.date(byAdding: .day, value: -(leadingBlanks - offset), to: firstOfMonth)!
         let dayNum = calendar.component(.day, from: date)
         return DateDay(date: date, dayNumber: dayNum, isCurrentMonth: false, isToday: false, isSelected: false)
     } + range.map { day in

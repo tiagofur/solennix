@@ -10,6 +10,8 @@ public struct BlockedDatesSheet: View {
     @Bindable var viewModel: CalendarViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showAddForm = false
+    // Fix #9: guard delete button against double-tap while a delete is in-flight.
+    @State private var isDeletingID: String? = nil
 
     public init(viewModel: CalendarViewModel) {
         self.viewModel = viewModel
@@ -55,8 +57,9 @@ public struct BlockedDatesSheet: View {
 
     private func blockedDateRow(_ entry: UnavailableDate) -> some View {
         HStack(spacing: Spacing.sm) {
+            // Fix #4: lock icon is informational — use textSecondary, not red.
             Image(systemName: "lock.fill")
-                .foregroundStyle(SolennixColors.statusCancelled)
+                .foregroundStyle(SolennixColors.textSecondary)
                 .frame(width: 24)
 
             VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -74,13 +77,26 @@ public struct BlockedDatesSheet: View {
 
             Spacer()
 
+            // Fix #4: trash/delete IS destructive — use semantic `error` token (not statusCancelled).
+            // Fix #9: disable while this entry's delete is in-flight to prevent double-tap.
             Button {
-                Task { await viewModel.deleteBlock(entry) }
+                guard isDeletingID == nil else { return }
+                isDeletingID = entry.id
+                Task {
+                    await viewModel.deleteBlock(entry)
+                    isDeletingID = nil
+                }
             } label: {
-                Image(systemName: "trash")
-                    .foregroundStyle(SolennixColors.statusCancelled)
+                if isDeletingID == entry.id {
+                    ProgressView()
+                        .controlSize(.small)
+                } else {
+                    Image(systemName: "trash")
+                        .foregroundStyle(SolennixColors.error)
+                }
             }
             .buttonStyle(.plain)
+            .disabled(isDeletingID != nil)
             .accessibilityLabel(CalendarStrings.actionDelete)
         }
         .padding(.vertical, Spacing.xs)
