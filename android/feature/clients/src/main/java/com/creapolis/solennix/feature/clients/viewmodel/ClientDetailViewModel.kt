@@ -24,9 +24,19 @@ data class ClientDetailUiState(
     val errorMessage: String? = null,
     val clientEvents: List<Event> = emptyList(),
     val isEventsLoading: Boolean = false,
+    /** True when the events fetch failed (distinct from genuinely empty). */
+    val eventsLoadFailed: Boolean = false,
     val totalEvents: Int = 0,
     val totalSpent: Double = 0.0,
-    val averagePerEvent: Double = 0.0
+    val averagePerEvent: Double = 0.0,
+    /**
+     * Server-computed balance: confirmed+completed event totals minus payments received.
+     * Positive = client owes money ("Por cobrar").
+     * Zero     = fully settled.
+     * Negative = overpayment / credit ("A favor").
+     * Null     = field absent in payload (list/search endpoint) — hide the KPI.
+     */
+    val pendingBalance: Double? = null
 )
 
 @HiltViewModel
@@ -45,6 +55,11 @@ class ClientDetailViewModel @Inject constructor(
     var deleteSuccess by mutableStateOf(false)
         private set
 
+    /** Reset after the delete-success side effect has been consumed by the UI. */
+    fun consumeDeleteSuccess() {
+        deleteSuccess = false
+    }
+
     init {
         loadClient()
         loadClientEvents()
@@ -54,7 +69,13 @@ class ClientDetailViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val client = clientRepository.getClient(clientId)
-                _uiState.update { it.copy(client = client, isLoading = false) }
+                _uiState.update {
+                    it.copy(
+                        client = client,
+                        isLoading = false,
+                        pendingBalance = client?.pendingBalance
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
@@ -68,7 +89,7 @@ class ClientDetailViewModel @Inject constructor(
 
     private fun loadClientEvents() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isEventsLoading = true) }
+            _uiState.update { it.copy(isEventsLoading = true, eventsLoadFailed = false) }
             try {
                 eventRepository.getEvents()
                     .map { events -> events.filter { it.clientId == clientId } }
@@ -82,6 +103,7 @@ class ClientDetailViewModel @Inject constructor(
                             it.copy(
                                 clientEvents = sortedEvents,
                                 isEventsLoading = false,
+                                eventsLoadFailed = false,
                                 totalEvents = totalEvents,
                                 totalSpent = totalSpent,
                                 averagePerEvent = average
@@ -89,9 +111,15 @@ class ClientDetailViewModel @Inject constructor(
                         }
                     }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isEventsLoading = false) }
+                // Mark as failed so the UI can distinguish a fetch error from a
+                // genuinely empty history — prevents 0/0/0 looking like real data.
+                _uiState.update { it.copy(isEventsLoading = false, eventsLoadFailed = true) }
             }
         }
+    }
+
+    fun retryLoadClientEvents() {
+        loadClientEvents()
     }
 
     fun deleteClient() {
@@ -110,5 +138,10 @@ class ClientDetailViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /** Clears [ClientDetailUiState.errorMessage] after it has been shown in the UI. */
+    fun onErrorShown() {
+        _uiState.update { it.copy(errorMessage = null) }
     }
 }

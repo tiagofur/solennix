@@ -33,6 +33,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -188,19 +190,50 @@ class EventDetailViewModel @Inject constructor(
         }
     }
 
-    private suspend fun loadEquipmentAndSupplies() {
-        try {
-            val equipment: List<EventEquipment> = apiService.get(Endpoints.eventEquipment(eventId))
-            _equipment.value = equipment
-        } catch (e: Exception) {
-            _equipment.value = emptyList()
+    /**
+     * Refreshes event data silently — does NOT toggle [_isLoading], so the screen
+     * keeps showing its current content. Use this for incremental updates (e.g.
+     * after adding or deleting a payment) to avoid the full-screen spinner.
+     */
+    internal fun reloadEventSilently() {
+        viewModelScope.launch {
+            try {
+                paymentRepository.syncPaymentsByEventId(eventId)
+                eventRepository.syncEventItems(eventId)
+            } catch (_: Exception) {
+                // Sync errors are non-fatal; local data stays visible
+            }
+            try {
+                val event = eventRepository.getEvent(eventId)
+                _event.value = event
+                event?.clientId?.let { clientId ->
+                    _client.value = clientRepository.getClient(clientId)
+                }
+                loadEquipmentAndSupplies()
+            } catch (e: Exception) {
+                _errorMessage.value = e.message
+            }
         }
+    }
 
-        try {
-            val supplies: List<EventSupply> = apiService.get(Endpoints.eventSupplies(eventId))
-            _supplies.value = supplies
-        } catch (e: Exception) {
-            _supplies.value = emptyList()
+    private suspend fun loadEquipmentAndSupplies() {
+        coroutineScope {
+            val equipmentDeferred = async {
+                try {
+                    apiService.get<List<EventEquipment>>(Endpoints.eventEquipment(eventId))
+                } catch (_: Exception) {
+                    emptyList()
+                }
+            }
+            val suppliesDeferred = async {
+                try {
+                    apiService.get<List<EventSupply>>(Endpoints.eventSupplies(eventId))
+                } catch (_: Exception) {
+                    emptyList()
+                }
+            }
+            _equipment.value = equipmentDeferred.await()
+            _supplies.value = suppliesDeferred.await()
         }
     }
 
@@ -233,6 +266,29 @@ class EventDetailViewModel @Inject constructor(
     var deleteSuccess by mutableStateOf(false)
         private set
 
+    /** Reset after the delete-success side effect has been consumed by the UI. */
+    fun consumeDeleteSuccess() {
+        deleteSuccess = false
+    }
+
+    /** One-shot flag: set true after payment is successfully added; consumed by the UI. */
+    var addPaymentSuccess by mutableStateOf(false)
+        internal set
+
+    /** Reset after the add-payment-success side effect has been consumed by the UI. */
+    fun consumeAddPaymentSuccess() {
+        addPaymentSuccess = false
+    }
+
+    /** One-shot flag: set true after payment is successfully deleted; consumed by the UI. */
+    var deletePaymentSuccess by mutableStateOf(false)
+        internal set
+
+    /** Reset after the delete-payment-success side effect has been consumed by the UI. */
+    fun consumeDeletePaymentSuccess() {
+        deletePaymentSuccess = false
+    }
+
     fun deleteEvent() {
         viewModelScope.launch {
             try {
@@ -242,6 +298,11 @@ class EventDetailViewModel @Inject constructor(
                 _errorMessage.value = tr(R.string.events_detail_error_delete_event, e.message.orEmpty())
             }
         }
+    }
+
+    /** Clears [EventDetailUiState.errorMessage] after it has been shown in the UI. */
+    fun onErrorShown() {
+        _errorMessage.value = null
     }
 
     suspend fun downloadEventPdf(type: String): ByteArray =

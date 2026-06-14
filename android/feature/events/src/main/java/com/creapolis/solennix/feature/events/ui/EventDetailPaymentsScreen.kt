@@ -1,6 +1,5 @@
 package com.creapolis.solennix.feature.events.ui
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,10 +33,13 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,7 +47,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -67,12 +68,38 @@ fun EventPaymentsScreen(
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
     var showPaymentModal by remember { mutableStateOf(false) }
     var paymentInitialAmount by remember { mutableStateOf<Double?>(null) }
     var pendingDeletePaymentId by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Surface errors via Snackbar (guarded by event != null to avoid race with full-screen loader).
+    LaunchedEffect(uiState.errorMessage) {
+        val msg = uiState.errorMessage
+        if (msg != null && uiState.event != null) {
+            snackbarHostState.showSnackbar(msg)
+            viewModel.onErrorShown()
+        }
+    }
+
+    val addSuccessLabel = stringResource(R.string.events_detail_payments_add_success)
+    LaunchedEffect(viewModel.addPaymentSuccess) {
+        if (viewModel.addPaymentSuccess) {
+            viewModel.consumeAddPaymentSuccess()
+            snackbarHostState.showSnackbar(addSuccessLabel)
+        }
+    }
+
+    val deleteSuccessLabel = stringResource(R.string.events_detail_payments_delete_success)
+    LaunchedEffect(viewModel.deletePaymentSuccess) {
+        if (viewModel.deletePaymentSuccess) {
+            viewModel.consumeDeletePaymentSuccess()
+            snackbarHostState.showSnackbar(deleteSuccessLabel)
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             SolennixTopAppBar(
                 title = { Text(stringResource(R.string.events_detail_payments_title)) },
@@ -243,7 +270,7 @@ fun EventPaymentsScreen(
                     viewModel.addPayment(amount, method, notes, date)
                     showPaymentModal = false
                     paymentInitialAmount = null
-                    Toast.makeText(context, context.getString(R.string.events_detail_payments_add_success), Toast.LENGTH_SHORT).show()
+                    // Success feedback driven by viewModel.addPaymentSuccess (LaunchedEffect above).
                 }
             )
         }
@@ -258,7 +285,7 @@ fun EventPaymentsScreen(
                         onClick = {
                             viewModel.deletePayment(paymentId)
                             pendingDeletePaymentId = null
-                            Toast.makeText(context, context.getString(R.string.events_detail_payments_delete_success), Toast.LENGTH_SHORT).show()
+                            // Success feedback driven by viewModel.deletePaymentSuccess (LaunchedEffect above).
                         }
                     ) {
                         Text(stringResource(R.string.events_detail_payments_delete), color = SolennixTheme.colors.error)

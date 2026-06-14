@@ -44,6 +44,7 @@ object ProductStrings {
     val inSupplies: String get() = getString(R.string.products_in_supplies)
     val marginEstimated: String get() = getString(R.string.products_margin_estimated)
     val marginSubtitle: String get() = getString(R.string.products_margin_subtitle)
+    val noRecipeLabel: String get() = getString(R.string.products_no_recipe_label)
     val upcomingEvents: String get() = getString(R.string.products_upcoming_events)
     val confirmed: String get() = getString(R.string.products_confirmed)
     val generalInfo: String get() = getString(R.string.products_general_info)
@@ -68,6 +69,8 @@ object ProductStrings {
     
     fun upcomingEventsCount(count: Int): String = getString(R.string.products_upcoming_events_count, count)
     fun totalSummary(quantity: Int, people: Int): String = getString(R.string.products_total_summary, quantity, people)
+    /** Overload accepting a pre-formatted quantity string (used when quantity is Double). */
+    fun totalSummary(quantityStr: String, people: Int): String = getString(R.string.products_total_summary_str, quantityStr, people)
     
     val totalDemand: String get() = getString(R.string.products_total_demand)
     
@@ -77,6 +80,8 @@ object ProductStrings {
     }
     
     fun quantityUnits(count: Int): String = getString(R.string.products_quantity_units, count)
+    /** Overload accepting a pre-formatted quantity string (used when quantity is Double). */
+    fun quantityUnits(quantityStr: String): String = getString(R.string.products_quantity_units_str, quantityStr)
     fun estimatedRevenueShort(value: String): String = getString(R.string.products_estimated_revenue_short, value)
     
     val noUpcomingEvents: String get() = getString(R.string.products_no_upcoming_events)
@@ -85,11 +90,18 @@ object ProductStrings {
     val highDemandThisWeek: String get() = getString(R.string.products_high_demand_this_week)
     
     fun unitsNext7Days(count: Int): String = getString(R.string.products_units_next_7_days, count)
+    /** Overload accepting a pre-formatted quantity string (used when quantity is Double). */
+    fun unitsNext7Days(quantityStr: String): String = getString(R.string.products_units_next_7_days_str, quantityStr)
     fun totalRevenueMessage(value: String): String = getString(R.string.products_total_revenue_message, value)
-    
+
     fun upcomingEventsSummary(units: Int, events: Int): String {
         val suffix = if (events != 1) "s" else ""
         return getString(R.string.products_upcoming_events_summary, units, events, suffix)
+    }
+    /** Overload accepting a pre-formatted units string (used when quantity is Double). */
+    fun upcomingEventsSummary(unitsStr: String, events: Int): String {
+        val suffix = if (events != 1) "s" else ""
+        return getString(R.string.products_upcoming_events_summary_str, unitsStr, events, suffix)
     }
     
     val noConfirmedEventsIncludingProduct: String get() = getString(R.string.products_no_confirmed_events_including_product)

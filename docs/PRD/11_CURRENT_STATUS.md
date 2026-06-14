@@ -144,6 +144,15 @@ status: active
 > - **Teclado y dismissal:** Toolbar "Listo" sobre teclado numérico + `.scrollDismissesKeyboard(.interactively)` en formularios clave.
 > - **Limpieza de APIs deprecadas:** `UIScreen.main` reemplazado; hacks `asyncAfter` → `Task { @MainActor in }`. `h1Premium` corregido de 34pt → 28pt.
 > - **Drag indicators:** `.presentationDragIndicator(.visible)` en todos los sheets resizables.
+> [!success] 2026-06-12 — Android detail screens: Judgment Day parity (branch `feat/android-judgment-parity`)
+> Port a Android de los fixes de las 4 pantallas de detalle ya aprobadas en iOS. Revisión dual ciego, 3 rondas (los jueces cazaron 2 regresiones que el propio fix agent introdujo). Android había heredado casi todos los bugs de iOS.
+> - **Fechas reales:** la notificación de evento comparaba `LocalDate.now()` contra fecha UTC (boundary bug); forecasts re-parseaban en cada recomposición. Corregido con anclas de día únicas.
+> - **Margen honesto:** `supplyCost` ignoraba el flag `excludeCost` en hub + finanzas (Event); margen de Producto ignoraba `perEventCost` y mostraba 100% sin receta → ahora nullable "—". Gap de costo de ingredientes documentado (Android no tiene aún un helper `EventFinancials`).
+> - **Fan-out en paralelo:** demand de Producto e Inventario eran N+1 secuenciales (hasta ~200 requests) → `coroutineScope`+`async`+`Semaphore`, con `DemandResult` sellado tallado tras `awaitAll` (sin mutación compartida) y rethrow de `CancellationException` en cada catch hijo (el patrón naïve se tragaba la cancelación cooperativa). Inventario: `getProductIngredients` ya no se sostiene a través de la red dentro del `Mutex`.
+> - **Errores visibles:** delete/ajuste fallaban en silencio en 3 pantallas → `SnackbarHost` + feedback de pago dirigido por flags del VM (antes un Toast optimista disparaba éxito antes de saber el resultado).
+> - **Otros:** truncado fraccionario (`.toInt()` → Double), acumulador mutable en `forEach` precomputado, branching por valor de enum, strings a recursos.
+> - **Aislamiento:** worktree propio para no pisar el checkout del otro agente Android. Cierra la parte de detalle de #552 (queda list-polish general).
+> - **Paridad cross-platform cerrada en el mismo PR:** scope filter de inventario (#551, M3 FilterChip server-side con guard anti-stale) y KPI pending balance de cliente (#553, decode nullable + 4ª stat card warning/success/info) — ahora completos en backend+iOS+web+Android.
 
 > [!success] 2026-06-11 — Android UX Parity: quick wins en branch `feat/android-ux-parity`
 > Se aplicaron mejoras de calidad UX en Android (Material 3 + Compose) espejando los patrones del iOS HIG quick wins (PR #544). Todos los cambios sobre el branch `feat/android-ux-parity`.

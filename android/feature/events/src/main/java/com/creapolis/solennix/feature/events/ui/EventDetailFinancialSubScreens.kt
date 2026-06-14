@@ -88,7 +88,13 @@ fun EventFinancesScreen(
         }
 
         val netSales = event.totalAmount - event.taxAmount
-        val supplyCost = uiState.supplies.sumOf { it.quantity * it.unitCost }
+        // Honor excludeCost: supplies marked as reused/excluded must not count as
+        // cost (mirrors iOS EventFinancials.suppliesCost filter). Product ingredient
+        // costs are not loaded on this screen — that gap is documented; at minimum
+        // excludeCost is honoured here.
+        val supplyCost = uiState.supplies
+            .filter { !it.excludeCost }
+            .sumOf { it.quantity * it.unitCost }
         val profit = netSales - supplyCost
         val margin = if (netSales > 0) (profit / netSales) * 100 else 0.0
         val totalPaid = uiState.totalPaid

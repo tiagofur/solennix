@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,7 +33,8 @@ data class DemandDataPoint(
     val eventId: String,
     val eventDate: String, // YYYY-MM-DD
     val clientName: String,
-    val quantity: Int,
+    /** Fractional quantity preserved — do NOT convert to Int at the call site. */
+    val quantity: Double,
     val numPeople: Int,
     val unitPrice: Double = 0.0
 ) {
@@ -101,6 +103,10 @@ fun DemandForecastChart(
                 val totalRevenue = dataPoints.sumOf { dp ->
                     if (dp.unitPrice > 0) dp.revenue else dp.quantity * basePrice
                 }
+                // Format quantity with up to 2 fraction digits, dropping trailing zeros
+                val totalQuantityDisplay = if (totalQuantity == totalQuantity.toLong().toDouble()) {
+                    totalQuantity.toLong().toString()
+                } else "%.2f".format(totalQuantity).trimEnd('0').trimEnd('.')
 
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
@@ -110,7 +116,7 @@ fun DemandForecastChart(
                         color = colors.primaryText
                     )
                     Text(
-                        text = ProductStrings.totalSummary(totalQuantity, totalPeople),
+                        text = ProductStrings.totalSummary(totalQuantityDisplay, totalPeople),
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.secondaryText
                     )
@@ -119,7 +125,8 @@ fun DemandForecastChart(
                 HorizontalDivider(color = colors.divider)
 
                 // Event list with urgency badges
-                val today = LocalDate.now()
+                // Stable within a composition session; avoids repeated LocalDate.now() per recomposition.
+                val today = remember { LocalDate.now() }
                 dataPoints.take(5).forEach { point ->
                     DemandEventRow(
                         point = point,
@@ -153,7 +160,7 @@ fun DemandForecastChart(
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                text = ProductStrings.quantityUnits(totalQuantity),
+                                text = ProductStrings.quantityUnits(totalQuantityDisplay),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = colors.primaryText
@@ -182,7 +189,7 @@ private fun DemandBarChart(
     labelColor: Color,
     modifier: Modifier = Modifier
 ) {
-    val maxQuantity = dataPoints.maxOf { it.quantity }.coerceAtLeast(1)
+    val maxQuantity = dataPoints.maxOf { it.quantity }.coerceAtLeast(1.0)
     val dateFormatter = ProductStrings.shortDateFormatter()
 
     val textMeasurer = rememberTextMeasurer()
@@ -208,7 +215,7 @@ private fun DemandBarChart(
         val startX = (size.width - totalBarsWidth) / 2f
 
         dataPoints.forEachIndexed { index, point ->
-            val barHeight = (point.quantity.toFloat() / maxQuantity) * chartHeight
+            val barHeight = (point.quantity.toFloat() / maxQuantity.toFloat()) * chartHeight
             val x = startX + barSpacing + index * (barWidth + barSpacing)
             val y = topPadding + chartHeight - barHeight
 
@@ -219,7 +226,9 @@ private fun DemandBarChart(
                 cornerRadius = CornerRadius(4f, 4f)
             )
 
-            val valueText = "${point.quantity}"
+            val valueText = if (point.quantity == point.quantity.toLong().toDouble()) {
+                "${point.quantity.toLong()}"
+            } else "%.2f".format(point.quantity).trimEnd('0').trimEnd('.')
             val valueLayout = textMeasurer.measure(valueText, valueStyle)
             drawText(
                 textLayoutResult = valueLayout,
@@ -348,7 +357,11 @@ private fun DemandEventRow(
 
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = ProductStrings.quantityUnits(point.quantity),
+                    text = ProductStrings.quantityUnits(
+                        if (point.quantity == point.quantity.toLong().toDouble()) {
+                            point.quantity.toLong().toString()
+                        } else "%.2f".format(point.quantity).trimEnd('0').trimEnd('.')
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = colors.primaryText

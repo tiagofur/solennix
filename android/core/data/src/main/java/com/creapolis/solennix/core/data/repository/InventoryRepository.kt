@@ -25,7 +25,10 @@ interface InventoryRepository {
     fun getInventoryItems(): Flow<List<InventoryItem>>
     fun getLowStockItems(): Flow<List<InventoryItem>>
     suspend fun getInventoryItem(id: String): InventoryItem?
-    suspend fun syncInventory()
+    /** Fetches items from the server and caches them locally.
+     *  [typeParam] maps to the backend `type` query param (ingredient|equipment|supply).
+     *  Pass null to fetch all types. */
+    suspend fun syncInventory(typeParam: String? = null)
     suspend fun createInventoryItem(item: InventoryItem): InventoryItem
     suspend fun updateInventoryItem(item: InventoryItem): InventoryItem
     suspend fun deleteInventoryItem(id: String)
@@ -57,8 +60,11 @@ class OfflineFirstInventoryRepository @Inject constructor(
     override suspend fun getInventoryItem(id: String): InventoryItem? =
         inventoryDao.getInventoryItem(id)?.asExternalModel()
 
-    override suspend fun syncInventory() {
-        val networkItems: List<InventoryItem> = apiService.get(Endpoints.INVENTORY)
+    override suspend fun syncInventory(typeParam: String?) {
+        val params = buildMap<String, String> {
+            if (!typeParam.isNullOrBlank()) put("type", typeParam)
+        }
+        val networkItems: List<InventoryItem> = apiService.get(Endpoints.INVENTORY, params)
         inventoryDao.insertInventoryItems(networkItems.map { it.asEntity() })
     }
 

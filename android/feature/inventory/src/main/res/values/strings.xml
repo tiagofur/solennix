@@ -15,6 +15,14 @@
     <string name="inventory_sort_cost">Costo</string>
     <string name="inventory_empty_filtered">Sin resultados para el filtro</string>
     <string name="inventory_empty_inventory">Sin inventario</string>
+    <string name="inventory_scope_all">Todos</string>
+    <string name="inventory_scope_ingredient">Ingredientes</string>
+    <string name="inventory_scope_equipment">Equipo</string>
+    <string name="inventory_scope_supply">Insumos</string>
+    <string name="inventory_empty_scope_ingredient">Sin ingredientes</string>
+    <string name="inventory_empty_scope_equipment">Sin equipo</string>
+    <string name="inventory_empty_scope_supply">Sin insumos</string>
+    <string name="inventory_cd_scope_filter">Filtrar por tipo de inventario</string>
     <string name="inventory_ingredients">Consumibles</string>
     <string name="inventory_supplies">Insumos por Evento</string>
     <string name="inventory_equipment">Equipos</string>

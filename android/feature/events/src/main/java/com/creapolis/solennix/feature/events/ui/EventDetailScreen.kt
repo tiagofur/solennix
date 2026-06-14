@@ -2,7 +2,6 @@ package com.creapolis.solennix.feature.events.ui
 
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -88,6 +87,7 @@ fun EventDetailScreen(
     var showPhotoGallery by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showClientPortalSheet by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val windowInfoTracker = WindowInfoTracker.getOrCreate(context)
     val windowLayoutInfo by (context as? android.app.Activity)?.let { activity ->
@@ -101,10 +101,30 @@ fun EventDetailScreen(
     val isTableTop = foldingFeature?.state == FoldingFeature.State.HALF_OPENED &&
             foldingFeature.orientation == FoldingFeature.Orientation.HORIZONTAL
 
-    // Navigate back on delete success
+    // Navigate back on delete success; consume flag so re-entry doesn't re-fire.
     LaunchedEffect(viewModel.deleteSuccess) {
         if (viewModel.deleteSuccess) {
+            viewModel.consumeDeleteSuccess()
             onNavigateBack()
+        }
+    }
+
+    // Surface post-load errors (e.g. delete/status failures) via Snackbar when event is loaded.
+    // Guard with event != null so we don't race with the full-screen error on initial load failure.
+    LaunchedEffect(uiState.errorMessage) {
+        val msg = uiState.errorMessage
+        if (msg != null && uiState.event != null) {
+            snackbarHostState.showSnackbar(msg)
+            viewModel.onErrorShown()
+        }
+    }
+
+    // Show success Snackbar only after the repository call confirms success (not optimistically).
+    val addPaymentSuccessLabel = stringResource(R.string.events_detail_payments_add_success)
+    LaunchedEffect(viewModel.addPaymentSuccess) {
+        if (viewModel.addPaymentSuccess) {
+            viewModel.consumeAddPaymentSuccess()
+            snackbarHostState.showSnackbar(addPaymentSuccessLabel)
         }
     }
 
@@ -121,6 +141,7 @@ fun EventDetailScreen(
 
     Scaffold(
         modifier = sharedBoundsModifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             SolennixTopAppBar(
                 title = { Text(stringResource(R.string.events_detail_title)) },
@@ -149,11 +170,11 @@ fun EventDetailScreen(
             )
         }
     ) { padding ->
-        if (uiState.isLoading) {
+        if (uiState.isLoading && uiState.event == null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
-        } else if (uiState.errorMessage != null) {
+        } else if (uiState.errorMessage != null && uiState.event == null) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Text(uiState.errorMessage.orEmpty(), color = SolennixTheme.colors.error)
             }
@@ -220,7 +241,12 @@ fun EventDetailScreen(
                             // Finance Summary Card (navigable)
                             FinanceSummaryCard(
                                 event = event,
-                                supplyCost = uiState.supplies.sumOf { it.quantity * it.unitCost },
+                                // Honor excludeCost: supplies marked as reused/excluded
+                                // must not contribute to the cost basis (mirrors iOS
+                                // EventFinancials.suppliesCost filter).
+                                supplyCost = uiState.supplies
+                                    .filter { !it.excludeCost }
+                                    .sumOf { it.quantity * it.unitCost },
                                 onClick = { onFinancesClick(event.id) }
                             )
 
@@ -239,7 +265,7 @@ fun EventDetailScreen(
                                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         PremiumButton(
-                                            text = "Registrar Pago",
+                                            text = stringResource(R.string.events_detail_payments_record),
                                             onClick = {
                                                 paymentInitialAmount = null
                                                 showPaymentModal = true
@@ -326,7 +352,8 @@ fun EventDetailScreen(
                     onConfirm = { amount, method, notes, date ->
                         viewModel.addPayment(amount, method, notes, date)
                         showPaymentModal = false
-                        Toast.makeText(context, context.getString(R.string.events_detail_payments_add_success), Toast.LENGTH_SHORT).show()
+                        // Success feedback is driven by viewModel.addPaymentSuccess (LaunchedEffect above)
+                        // so it only fires after the repository call confirms — not optimistically.
                     }
                 )
             }

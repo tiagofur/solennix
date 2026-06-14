@@ -13,6 +13,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -27,6 +29,7 @@ import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.network.UrlResolver
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.toFormattedDate
 import com.creapolis.solennix.feature.clients.R
 import com.creapolis.solennix.feature.clients.viewmodel.ClientDetailViewModel
 
@@ -42,15 +45,28 @@ fun ClientDetailScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
     var showDeleteDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    // Navigate back on delete success
+    // Navigate back on delete success; consume flag so re-entry doesn't re-fire.
     LaunchedEffect(viewModel.deleteSuccess) {
         if (viewModel.deleteSuccess) {
+            viewModel.consumeDeleteSuccess()
             onNavigateBack()
         }
     }
 
+    // Surface post-load errors (e.g. failed delete) via Snackbar when client is loaded.
+    // Guard with client != null so we don't race with the full-screen error on initial load failure.
+    LaunchedEffect(uiState.errorMessage) {
+        val msg = uiState.errorMessage
+        if (msg != null && uiState.client != null) {
+            snackbarHostState.showSnackbar(msg)
+            viewModel.onErrorShown()
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             SolennixTopAppBar(
                 title = { Text(stringResource(R.string.clients_detail_title)) },
@@ -77,7 +93,9 @@ fun ClientDetailScreen(
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
-        } else if (uiState.errorMessage != null) {
+        } else if (uiState.errorMessage != null && uiState.client == null) {
+            // Full-screen error only on initial load failure (no client loaded yet).
+            // Post-load errors (e.g. delete failure) surface via SnackbarHost above.
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Text(uiState.errorMessage.orEmpty(), color = SolennixTheme.colors.error)
             }
@@ -178,7 +196,29 @@ fun ClientDetailScreen(
                             }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 KPICard(title = stringResource(R.string.clients_stats_average), value = uiState.averagePerEvent.asMXN(), icon = Icons.AutoMirrored.Filled.TrendingUp, iconColor = SolennixTheme.colors.kpiOrange, modifier = Modifier.weight(1f))
-                                Spacer(modifier = Modifier.weight(1f))
+                                val balance = uiState.pendingBalance
+                                if (balance != null) {
+                                    val isInFavor = balance < 0
+                                    val absBalance = Math.abs(balance)
+                                    val label = if (isInFavor) stringResource(R.string.clients_stats_in_favor) else stringResource(R.string.clients_stats_pending_balance)
+                                    val cdText = if (isInFavor) stringResource(R.string.clients_cd_in_favor, absBalance.asMXN()) else stringResource(R.string.clients_cd_pending_balance, absBalance.asMXN())
+                                    val iconColor = when {
+                                        balance > 0 -> SolennixTheme.colors.warning
+                                        balance < 0 -> SolennixTheme.colors.info
+                                        else -> SolennixTheme.colors.success
+                                    }
+                                    KPICard(
+                                        title = label,
+                                        value = absBalance.asMXN(),
+                                        icon = Icons.Default.AccountBalance,
+                                        iconColor = iconColor,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .semantics { contentDescription = cdText }
+                                    )
+                                } else {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
                             }
                         }
                     }
@@ -200,6 +240,25 @@ fun ClientDetailScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    }
+                } else if (uiState.eventsLoadFailed) {
+                    // Events fetch failed — surface inline error with retry so the user
+                    // can distinguish a network error from a genuinely empty history.
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.clients_events_load_error),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = SolennixTheme.colors.error
+                        )
+                        TextButton(onClick = { viewModel.retryLoadClientEvents() }) {
+                            Text(stringResource(R.string.clients_retry))
+                        }
                     }
                 } else if (uiState.clientEvents.isEmpty()) {
                     Card(
@@ -288,7 +347,7 @@ private fun EventHistoryItem(
             ) {
                 StatusBadge(status = event.status.name)
                 Text(
-                    text = event.eventDate,
+                    text = event.eventDate.toFormattedDate(),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText
                 )

@@ -29,6 +29,9 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -48,6 +51,7 @@ import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.feature.inventory.InventoryStrings
 import com.creapolis.solennix.feature.inventory.viewmodel.InventoryListViewModel
+import com.creapolis.solennix.feature.inventory.viewmodel.InventoryScope
 import com.creapolis.solennix.feature.inventory.viewmodel.InventorySortKey
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -216,6 +220,51 @@ fun InventoryListScreen(
                     singleLine = true
                 )
 
+                // Scope filter chips (All / Ingredients / Equipment / Supplies)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                        .semantics { contentDescription = InventoryStrings.cdScopeFilter },
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    InventoryScope.entries.forEach { scope ->
+                        val label = when (scope) {
+                            InventoryScope.ALL -> InventoryStrings.scopeAll
+                            InventoryScope.INGREDIENT -> InventoryStrings.scopeIngredient
+                            InventoryScope.EQUIPMENT -> InventoryStrings.scopeEquipment
+                            InventoryScope.SUPPLY -> InventoryStrings.scopeSupply
+                        }
+                        val isSelected = uiState.scope == scope
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.SELECTION_CHANGED)
+                                viewModel.onScopeChange(scope)
+                            },
+                            label = { Text(label) },
+                            leadingIcon = if (isSelected) {
+                                {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            } else null,
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = SolennixTheme.colors.primaryLight,
+                                selectedLabelColor = SolennixTheme.colors.primary
+                            ),
+                            modifier = Modifier.semantics {
+                                stateDescription = if (isSelected) "seleccionado" else "no seleccionado"
+                            }
+                        )
+                    }
+                }
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -270,9 +319,16 @@ fun InventoryListScreen(
                     InventorySkeletonList()
                 } else if (!hasItems) {
                     val hasActiveFilter = uiState.searchQuery.isNotBlank() || uiState.lowStockOnly
+                    val emptyTitle = when {
+                        hasActiveFilter -> InventoryStrings.emptyFiltered
+                        uiState.scope == InventoryScope.INGREDIENT -> InventoryStrings.emptyScopeIngredient
+                        uiState.scope == InventoryScope.EQUIPMENT -> InventoryStrings.emptyScopeEquipment
+                        uiState.scope == InventoryScope.SUPPLY -> InventoryStrings.emptyScopeSupply
+                        else -> InventoryStrings.emptyInventory
+                    }
                     EmptyState(
                         icon = Icons.Default.Inventory2,
-                        title = if (hasActiveFilter) InventoryStrings.emptyFiltered else InventoryStrings.emptyInventory,
+                        title = emptyTitle,
                         message = ""
                     )
                 } else {
