@@ -25,6 +25,15 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.8
 
+> [!success] 2026-06-13 — Auth + QuickQuote: Judgment Day → APPROVED (branch `feat/ios-auth-quote-judgment`)
+> Revisión dual ciego (2 rondas) de Login/Register/Forgot/Reset/TeamInvite/BiometricGate + QuickQuote. "Pantallas chicas" pero con problemas de seguridad reales.
+> - **Seguridad:** `mapError` filtraba el mensaje crudo del server (enumeración de cuentas) → genérico en todos los paths, incluido `planLimitExceeded`; campos de confirmar-contraseña dejaron `.newPassword` (el autofill llenaba ambos con la misma sugerencia); el fallback biométrico llamaba `signOut()` (revocaba la sesión en TODOS los dispositivos) → `presentPasswordFallback()` local-only.
+> - **Contraste (token nuevo `onPrimary`):** el botón primario dorado tenía texto BLANCO a ~2.4:1 (falla WCAG AA) — nuevo token `SolennixColors.onPrimary` (navy `#1B2A4A`, ~5.9:1 sobre oro) aplicado a `PremiumButton` app-wide, botones de éxito, brand panels y los CTA empty-state de ClientListView. Navy-sobre-oro es más accesible Y más premium (el blanco lavado ERA el "color raro"). Las opacidades de texto que aún fallaban (0.85/0.7 en el extremo oscuro del gradiente) → opacidad completa.
+> - **Colores/HIG:** `.red` crudo → tokens; `SignInWithAppleButton` nativo (era casero con `.black/.white` — riesgo de rechazo en App Store); banner de info en azul no verde.
+> - **UX:** QuickQuote PDF write fuera del view builder + error surfaced; keyboardDoneToolbar; numPeople default 1; borrar en iPad; RegisterView con estado de éxito; forgot-password muestra errores de red reales; hint de contraseña coincide con la validación; a11y en toggle de password + biométrico.
+> - **Pendiente cross-screen anotado:** sweep app-wide de `.white` sobre el gradiente premium (quedan ~varios sitios en otras pantallas, mismo patrón, ahora con token `onPrimary` disponible).
+> - **Commits:** 7fdfe827, 7e5d6c3a. Build verde por ronda. La narrativa del fix agent fue poco confiable (dijo "ya estaba" sobre 14 fixes que él mismo hizo) — todo verificado contra el código real.
+
 > [!success] 2026-06-13 — Dashboard (home): Judgment Day → APPROVED (branch `feat/ios-dashboard-judgment`)
 > Revisión dual ciego (3 rondas) del home — KPIs, 5 charts, widgets, onboarding. La pantalla de primera impresión.
 > - **Colores (causa raíz de los "raros"):** `warning.opacity(0.15)` reemplazado por el token `warningBg` en los badges de atención (en dark mode daba un naranja garish en vez del `#2A1A00` diseñado); `.white` sobre oro/verde → `textInverse`; "Nuevo cliente" usaba `statusConfirmed` (azul de estado) → `accent` navy; barras del chart premium con `SolennixGradient.premium` (el gradiente se repartía por el canvas, cada barra un tono según altura) → oro plano; scrim del modal navy en vez de negro.
