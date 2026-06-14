@@ -54,7 +54,16 @@ public final class CalendarViewModel {
     // MARK: - Dependencies
 
     private let apiClient: APIClient
-    private let calendar = Calendar.current
+    /// The DEVICE calendar — its `firstWeekday` follows the user's region, and
+    /// the CalendarGridView header rotates by the same `Calendar.current.firstWeekday`
+    /// so grid blanks and weekday labels stay aligned.
+    // Use the DEVICE calendar (Calendar.current) so `firstWeekday` follows the
+    // user's REGION (Sunday-first for Mexico, Monday-first for ES/most of Europe).
+    // Do NOT override with FeatureL10n.locale — that returns a region-less
+    // Locale("es") whose firstWeekday is 2 (Monday), which would force a
+    // Monday-first grid on Mexican (Sunday-first) devices. Symbol LANGUAGE is
+    // handled separately in CalendarGridView; structure follows the region.
+    private let calendar: Calendar = Calendar.current
 
     // MARK: - Date Formatters
 
@@ -62,22 +71,31 @@ public final class CalendarViewModel {
     // them follow the device language (es → "marzo 2026", en → "March
     // 2026"). Previously hardcoded `es_MX`, which prevented EN users from
     // ever seeing English month names.
-    private static var monthFormatter: DateFormatter {
+    // Fix #8: lazy static (once) instead of computed var (new instance per call).
+    private static let monthFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = FeatureL10n.locale
         f.setLocalizedDateFormatFromTemplate("MMMM yyyy")
         return f
-    }
+    }()
 
-    private static var selectedDateFormatter: DateFormatter {
+    private static let selectedDateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = FeatureL10n.locale
         f.setLocalizedDateFormatFromTemplate("EEEEdMMMM")
         return f
-    }
+    }()
 
+    // DEVICE-local formatter (NO UTC pin). Every Date passed through this
+    // formatter is built from the device `calendar` (local-midnight cells,
+    // Date()-derived query ranges) and represents a LOCAL calendar day. A local
+    // formatter on a local Date yields the correct calendar-day string in EVERY
+    // timezone. (A UTC pin here would shift the day for UTC-positive users:
+    // local-midnight June 15 in UTC+5 is June 14 in UTC.) POSIX locale keeps the
+    // yyyy-MM-dd numerals stable regardless of language.
     private static let apiDateFormatter: DateFormatter = {
         let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
         f.dateFormat = "yyyy-MM-dd"
         return f
     }()
@@ -123,8 +141,15 @@ public final class CalendarViewModel {
               let range = calendar.range(of: .day, in: .month, for: firstOfMonth)
         else { return [] }
 
-        let firstWeekday = calendar.component(.weekday, from: firstOfMonth)
-        let leadingBlanks = firstWeekday - 1
+        // Fix #1: locale-aware offset so the first-day cell aligns with the
+        // weekday HEADER in CalendarGridView (which rotates by firstWeekday - 1).
+        // Using (rawWeekday - 1) was Sunday-indexed and broke Monday-first locales.
+        // Formula: (rawWeekday - firstWeekday + 7) % 7
+        //   • Sunday-first (firstWeekday=1), month starts Sunday (rawWeekday=1): (1-1+7)%7 = 0 ✓
+        //   • Monday-first (firstWeekday=2), month starts Monday (rawWeekday=2): (2-2+7)%7 = 0 ✓
+        //   • Monday-first (firstWeekday=2), month starts Tuesday (rawWeekday=3): (3-2+7)%7 = 1 ✓
+        let rawWeekday = calendar.component(.weekday, from: firstOfMonth)
+        let leadingBlanks = (rawWeekday - calendar.firstWeekday + 7) % 7
 
         let today = Date()
         let todayComponents = calendar.dateComponents([.year, .month, .day], from: today)
@@ -286,7 +311,10 @@ public final class CalendarViewModel {
         let now = Date()
         let components = calendar.dateComponents([.year, .month], from: now)
         currentMonth = calendar.date(from: components) ?? now
-        selectedDate = now
+        // Fix #3: normalize to start-of-day so the selected anchor is consistent
+        // with how the grid builds cell dates (also start-of-day via dateComponents).
+        // Raw Date() has sub-second precision and would never equal a grid cell date.
+        selectDate(calendar.startOfDay(for: now))
     }
 
     public func selectDate(_ date: Date) {
@@ -308,6 +336,9 @@ public final class CalendarViewModel {
     /// Block a date range, or unblock if it is already blocked.
     @MainActor
     public func toggleDateBlock(startDate: Date, endDate: Date, reason: String?) async {
+        // Clear any stale error first so BlockDateSheet's "dismiss only when
+        // error == nil" correctly dismisses on a successful block.
+        error = nil
         isBlockingDate = true
         let wasBlocked = unavailableDateFor(startDate) != nil
         do {
@@ -372,50 +403,60 @@ public final class CalendarViewModel {
 
     @MainActor
     public func loadEvents() async {
+        // Fix #6: guard against concurrent loads racing on @Observable assignment.
+        guard !isLoading else { return }
         isLoading = true
         error = nil
 
-        do {
-            let now = Date()
-            guard let startDate = calendar.date(byAdding: .month, value: -6, to: now),
-                  let endDate = calendar.date(byAdding: .month, value: 6, to: now)
-            else {
-                self.error = .loadFailed
-                isLoading = false
-                return
-            }
+        defer { isLoading = false }
 
-            let startStr = Self.apiDateFormatter.string(from: startDate)
-            let endStr = Self.apiDateFormatter.string(from: endDate)
-
-            async let eventsResult: [Event] = apiClient.getAll(
-                Endpoint.events,
-                params: ["start_date": startStr, "end_date": endStr]
-            )
-            async let clientsResult: [Client] = apiClient.getAll(Endpoint.clients)
-            async let unavailableResult: [UnavailableDate] = apiClient.getAll(
-                Endpoint.unavailableDates,
-                params: ["start": startStr, "end": endStr]
-            )
-
-            let fetchedEvents = try await eventsResult
-            let fetchedClients = try await clientsResult
-            let fetchedUnavailable = try await unavailableResult
-
-            events = fetchedEvents
-            clientMap = Dictionary(uniqueKeysWithValues: fetchedClients.map { ($0.id, $0) })
-            unavailableDates = fetchedUnavailable
-
-        } catch {
+        let now = Date()
+        guard let startDate = calendar.date(byAdding: .month, value: -6, to: now),
+              let endDate = calendar.date(byAdding: .month, value: 6, to: now)
+        else {
             self.error = .loadFailed
+            return
         }
 
-        isLoading = false
+        let startStr = Self.apiDateFormatter.string(from: startDate)
+        let endStr = Self.apiDateFormatter.string(from: endDate)
+
+        // Fix #7: fault-isolated fetch — events is the hard requirement.
+        // Clients and unavailable-dates failures degrade gracefully (keep
+        // existing data / fall back to empty) so one secondary outage does
+        // not blank the entire calendar screen.
+        async let eventsResult: [Event] = apiClient.getAll(
+            Endpoint.events,
+            params: ["start_date": startStr, "end_date": endStr]
+        )
+        async let clientsResult: [Client] = apiClient.getAll(Endpoint.clients)
+        async let unavailableResult: [UnavailableDate] = apiClient.getAll(
+            Endpoint.unavailableDates,
+            params: ["start": startStr, "end": endStr]
+        )
+
+        do {
+            events = try await eventsResult
+        } catch {
+            self.error = .loadFailed
+            return
+        }
+
+        if let fetched = try? await clientsResult {
+            clientMap = Dictionary(uniqueKeysWithValues: fetched.map { ($0.id, $0) })
+        }
+
+        if let fetched = try? await unavailableResult {
+            unavailableDates = fetched
+        }
     }
 
     /// Downloads the iCal export for the current displayed month and writes it
     /// to a temporary file. Returns the file URL on success, or nil on failure
     /// (the `.loadFailed` error is also set so the view can show an alert).
+    // Fix #10: @MainActor required — mutates @Observable properties
+    // (isExportingCalendar, error) which must be updated on the main actor.
+    @MainActor
     public func exportCalendarToFile() async -> URL? {
         isExportingCalendar = true
         defer { isExportingCalendar = false }

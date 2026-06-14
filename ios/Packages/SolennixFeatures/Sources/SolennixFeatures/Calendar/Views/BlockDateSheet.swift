@@ -23,12 +23,13 @@ struct BlockDateSheet: View {
         self._endDate = State(initialValue: startDate)
     }
 
-    private static var displayFormatter: DateFormatter {
+    // Fix #8: lazy static — one instance, not a new one per property access.
+    private static let displayFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = FeatureL10n.locale
         f.setLocalizedDateFormatFromTemplate("EEEEdMMMM")
         return f
-    }
+    }()
 
     var body: some View {
         NavigationStack {
@@ -77,7 +78,9 @@ struct BlockDateSheet: View {
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(CalendarStrings.blockSave) {
+                    // Fix #4: confirmatory scheduling action → primary color (not red).
+                    // Fix #9: show ProgressView while submitting; only dismiss on success.
+                    Button {
                         Task {
                             isSubmitting = true
                             let trimmed = reason.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -87,12 +90,23 @@ struct BlockDateSheet: View {
                                 reason: trimmed.isEmpty ? nil : trimmed
                             )
                             isSubmitting = false
-                            onDismiss()
-                            dismiss()
+                            // Only dismiss when no error was set by the ViewModel.
+                            if viewModel.error == nil {
+                                onDismiss()
+                                dismiss()
+                            }
+                        }
+                    } label: {
+                        if isSubmitting {
+                            ProgressView()
+                                .controlSize(.small)
+                                .tint(SolennixColors.primary)
+                        } else {
+                            Text(CalendarStrings.blockSave)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(SolennixColors.primary)
                         }
                     }
-                    .fontWeight(.semibold)
-                    .foregroundStyle(SolennixColors.statusCancelled)
                     .disabled(isSubmitting)
                 }
             }

@@ -355,7 +355,8 @@ public struct CalendarView: View {
                 } else {
                     VStack(spacing: Spacing.md) {
                         Image(systemName: "hand.tap")
-                            .font(.system(size: 40))
+                            .font(.system(.largeTitle))
+                            .imageScale(.large)
                             .foregroundStyle(SolennixColors.textTertiary)
 
                         Text(CalendarStrings.selectDayPrompt)
@@ -463,7 +464,8 @@ public struct CalendarView: View {
     private var emptyDayView: some View {
         VStack(spacing: Spacing.md) {
             Image(systemName: "calendar")
-                .font(.system(size: 40))
+                .font(.system(.largeTitle))
+                .imageScale(.large)
                 .foregroundStyle(SolennixColors.textTertiary)
 
             Text(CalendarStrings.noEventsForDay)
