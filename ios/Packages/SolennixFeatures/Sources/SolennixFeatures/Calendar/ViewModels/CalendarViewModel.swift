@@ -57,11 +57,13 @@ public final class CalendarViewModel {
     /// Calendar configured to the feature locale so firstWeekday agrees with
     /// the weekday header in CalendarGridView. Both grid and header must use
     /// the same firstWeekday so leading-blank offsets stay aligned.
-    private let calendar: Calendar = {
-        var cal = Calendar.current
-        cal.locale = FeatureL10n.locale
-        return cal
-    }()
+    // Use the DEVICE calendar (Calendar.current) so `firstWeekday` follows the
+    // user's REGION (Sunday-first for Mexico, Monday-first for ES/most of Europe).
+    // Do NOT override with FeatureL10n.locale — that returns a region-less
+    // Locale("es") whose firstWeekday is 2 (Monday), which would force a
+    // Monday-first grid on Mexican (Sunday-first) devices. Symbol LANGUAGE is
+    // handled separately in CalendarGridView; structure follows the region.
+    private let calendar: Calendar = Calendar.current
 
     // MARK: - Date Formatters
 
@@ -84,15 +86,17 @@ public final class CalendarViewModel {
         return f
     }()
 
-    // Fix #2: UTC + POSIX — aligns with BlockedDatesSheet.apiFormatter and
-    // the canonical DateFormatting.serverDayFormatter contract. Without UTC,
-    // the month-range query params (startStr/endStr) are device-local and shift
-    // by the UTC offset, corrupting event-on-day matching for negative-offset zones.
+    // DEVICE-local formatter (NO UTC pin). Every Date passed through this
+    // formatter is built from the device `calendar` (local-midnight cells,
+    // Date()-derived query ranges) and represents a LOCAL calendar day. A local
+    // formatter on a local Date yields the correct calendar-day string in EVERY
+    // timezone. (A UTC pin here would shift the day for UTC-positive users:
+    // local-midnight June 15 in UTC+5 is June 14 in UTC.) POSIX locale keeps the
+    // yyyy-MM-dd numerals stable regardless of language.
     private static let apiDateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US_POSIX")
         f.dateFormat = "yyyy-MM-dd"
-        f.timeZone = TimeZone(secondsFromGMT: 0)
         return f
     }()
 
@@ -332,6 +336,9 @@ public final class CalendarViewModel {
     /// Block a date range, or unblock if it is already blocked.
     @MainActor
     public func toggleDateBlock(startDate: Date, endDate: Date, reason: String?) async {
+        // Clear any stale error first so BlockDateSheet's "dismiss only when
+        // error == nil" correctly dismisses on a successful block.
+        error = nil
         isBlockingDate = true
         let wasBlocked = unavailableDateFor(startDate) != nil
         do {

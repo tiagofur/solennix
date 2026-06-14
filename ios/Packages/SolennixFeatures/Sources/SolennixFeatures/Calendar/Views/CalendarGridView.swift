@@ -25,14 +25,15 @@ public struct CalendarGridView: View {
     /// also respects the locale's `firstWeekday` so Monday-first locales
     /// get the right layout.
     private var weekdaySymbols: [String] {
-        // Fix #10: source symbols from the locale-aware calendar (not a throwaway
-        // DateFormatter) — Calendar.shortWeekdaySymbols already respects the
-        // calendar's locale. Both this computed property and the ViewModel's
-        // `calendar` use FeatureL10n.locale so firstWeekday values agree.
-        var cal = Calendar.current
-        cal.locale = FeatureL10n.locale
-        let symbols = cal.shortWeekdaySymbols   // always length 7, Sunday at index 0
-        let shift = cal.firstWeekday - 1        // 0 for Sunday-first, 1 for Monday-first
+        // Symbol LANGUAGE follows the app locale (FeatureL10n) so EN users see
+        // "Sun/Mon" even on an ES device; symbol ORDER follows the DEVICE region
+        // (Calendar.current.firstWeekday) so the header matches the grid blanks
+        // (which also use Calendar.current). Using FeatureL10n.locale's
+        // firstWeekday would force Monday-first on Mexican (Sunday-first) devices.
+        var nameCal = Calendar.current
+        nameCal.locale = FeatureL10n.locale
+        let symbols = nameCal.shortWeekdaySymbols   // localized, length 7, Sunday at index 0
+        let shift = Calendar.current.firstWeekday - 1  // device order: 0 Sunday-first, 1 Monday-first
         return Array(symbols[shift...]) + Array(symbols[..<shift])
     }
 
@@ -219,12 +220,13 @@ private struct DayCellView: View {
         return "\(dayLabel), \(CalendarStrings.a11yDayWithEvents(dots.count)), \(statusDescriptions)"
     }
 
-    // UTC display formatter so the day date in VoiceOver matches the server
-    // date displayed in the cell (avoids a timezone-induced day mismatch).
+    // DEVICE-local formatter: the cell's `day.date` is a local-midnight Date, so
+    // a local formatter announces the same calendar day the cell visually shows
+    // in EVERY timezone. (A UTC pin would announce the wrong day for UTC-positive
+    // users — local-midnight June 15 in UTC+5 is June 14 in UTC.)
     private static let a11yDayFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = FeatureL10n.locale
-        f.timeZone = TimeZone(secondsFromGMT: 0)
         f.setLocalizedDateFormatFromTemplate("dMMMM")
         return f
     }()
