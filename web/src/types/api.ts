@@ -1314,7 +1314,8 @@ export interface components {
              */
             plan: "basic" | "pro" | "business" | "premium";
             /** @enum {string} */
-            role: "user" | "admin";
+            role: "user" | "admin" | "team_member" | "assistant";
+            preferred_language: string;
             /** Format: date-time */
             plan_expires_at?: string | null;
             /** Format: date-time */
@@ -1325,6 +1326,8 @@ export interface components {
         TokenPair: {
             access_token: string;
             refresh_token: string;
+            /** Format: int64 */
+            expires_at: number;
         };
         AuthSuccessResponse: {
             user: components["schemas"]["User"];
@@ -1522,9 +1525,9 @@ export interface components {
             total_spent: number;
             /**
              * Format: double
-             * @description Computed on read (detail only). Sum of total_amount across confirmed and completed events minus sum of payments on those same events. Quoted events are excluded as prospects, not committed debt. Negative values indicate the client has overpaid. List responses return 0 for this field.
+             * @description Computed on read (detail endpoint only). Sum of total_amount across confirmed and completed events minus sum of payments on those same events. Quoted events are excluded as prospects, not committed debt. Negative values indicate the client has overpaid. Absent (omitted) on list and search responses.
              */
-            pending_balance?: number;
+            pending_balance?: number | null;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */

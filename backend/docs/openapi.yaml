@@ -25,6 +25,7 @@ components:
         - name
         - plan
         - role
+        - preferred_language
         - created_at
         - updated_at
       properties:
@@ -93,7 +94,9 @@ components:
           description: Current plan. 'premium' is a legacy value retained for backward compat.
         role:
           type: string
-          enum: [user, admin]
+          enum: [user, admin, team_member, assistant]
+        preferred_language:
+          type: string
         plan_expires_at:
           type: string
           format: date-time
@@ -109,11 +112,15 @@ components:
       required:
         - access_token
         - refresh_token
+        - expires_at
       properties:
         access_token:
           type: string
         refresh_token:
           type: string
+        expires_at:
+          type: integer
+          format: int64
     AuthSuccessResponse:
       type: object
       required:
