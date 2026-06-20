@@ -266,12 +266,14 @@ export const ProductForm: React.FC = () => {
     if (!user) return;
     setError(null);
 
-    const ingredientsToSave = recipeIngredients.map((i) => ({
-      inventoryId: i.inventory_id,
-      quantityRequired: i.quantity_required,
-      capacity: i.itemType === "equipment" ? (i.capacity ?? null) : null,
-      bringToEvent: i.bring_to_event,
-    }));
+    const ingredientsToSave = recipeIngredients
+      .filter((i) => i.inventory_id !== "")
+      .map((i) => ({
+        inventoryId: i.inventory_id,
+        quantityRequired: i.quantity_required,
+        capacity: i.itemType === "equipment" ? (i.capacity ?? null) : null,
+        bringToEvent: i.bring_to_event,
+      }));
 
     if (id) {
       updateProduct.mutate(

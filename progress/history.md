@@ -287,6 +287,17 @@
   - `HapticFeedback.kt` y `NetworkMonitor.kt` (Corregido warning de permisos faltantes con `@SuppressLint("MissingPermission")` al usarse en contextos controlados)
   - `AndroidManifest.xml` (Añadido permiso `<uses-permission android:name="android.permission.VIBRATE" />` necesario para las respuesta háptica)
 
+## Sesión 2026-06-20: Limpieza de deuda técnica menor en Frontend Web (Issue #518)
+- **Feature ID:** web-low-severity-cleanups
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1239 tests de Vitest en verde).
+- **Entregables:**
+  - `useAdminQueries.ts` e `es/admin.json` / `en/admin.json` (Localizados los mensajes de toast de administración al eliminar, verificar o bloquear usuarios)
+  - `useStaffQueries.ts` e `es/staff.json` / `en/staff.json` (Localizado el toast de error al marcar el timeline de colaborador como leído)
+  - `ClientPortalPage.tsx` e `es/public.json` / `en/public.json` (Localizadas las validaciones de carga de archivos en el portal de cliente)
+  - `ProductForm.tsx` (Filtradas las filas de ingredientes de recetas con `inventory_id: ""` antes de ser enviadas a la API)
+  - `EventFormLinksPage.tsx` (Reemplazado el uso de `window.confirm` nativo por el componente de diseño `ConfirmDialog`)
+  - `lib/firebase.ts` (Eliminado archivo redundante/muerto de Firebase que causaba fallas en las inicializaciones)
+
 
 
 

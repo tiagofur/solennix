@@ -29,6 +29,7 @@
     "error_update": "Error updating staff member",
     "error_delete": "Error deleting staff member",
     "error_respond_assignment": "Could not respond to assignment.",
+    "error_mark_read": "Could not update read status.",
     "delete_confirm": {
       "title": "Delete staff member",
       "description": "They will be removed from the catalog and any assigned events. This action cannot be undone.",

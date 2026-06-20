@@ -87,6 +87,7 @@ export function useMyTimeline(unreadOnly = false, limit = 50) {
 export function useMarkMyTimelineRead() {
   const queryClient = useQueryClient();
   const { addToast } = useToast();
+  const { t } = useTranslation('staff');
 
   return useMutation({
     mutationKey: ['staff', 'timeline', 'mark-read'],
@@ -96,7 +97,7 @@ export function useMarkMyTimelineRead() {
     },
     onError: (error) => {
       logError('Error marking timeline as read', error);
-      addToast(getErrorMessage(error, 'No pudimos actualizar el estado de lectura.'), 'error');
+      addToast(getErrorMessage(error, t('list.error_mark_read')), 'error');
     },
   });
 }
