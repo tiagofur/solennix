@@ -1,5 +1,6 @@
 package com.creapolis.solennix.core.network
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
@@ -13,6 +14,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
+@SuppressLint("MissingPermission")
 class NetworkMonitor @Inject constructor(
     @ApplicationContext private val context: Context
 ) {

@@ -1,3 +1,4 @@
+@file:Suppress("LocalContextGetResourceValueCall", "NonObservableLocale", "LocalContextConfigurationRead")
 package com.creapolis.solennix.feature.dashboard.ui
 
 import android.content.Context

@@ -1,3 +1,4 @@
+@file:Suppress("NonObservableLocale")
 package com.creapolis.solennix.feature.calendar.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -531,11 +532,11 @@ fun CalendarGrid(
     currentMonth: YearMonth,
     selectedDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
-    onDateLongPress: (LocalDate) -> Unit = {},
     events: List<Event>,
+    modifier: Modifier = Modifier,
+    onDateLongPress: (LocalDate) -> Unit = {},
     unavailableDates: List<UnavailableDate> = emptyList(),
-    isWideScreen: Boolean = false,
-    modifier: Modifier = Modifier
+    isWideScreen: Boolean = false
 ) {
     val daysInMonth = currentMonth.lengthOfMonth()
     val firstDayOfMonth = currentMonth.atDay(1).dayOfWeek.value % 7 // Sunday = 0

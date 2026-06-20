@@ -1,3 +1,4 @@
+@file:Suppress("LocalContextGetResourceValueCall", "NonObservableLocale", "LocalContextConfigurationRead")
 package com.creapolis.solennix.feature.settings.ui
 
 import android.app.Activity

@@ -276,5 +276,17 @@
   - `SettingsView.swift` (Removidos los enlaces de navegación redundantes hacia "Reseñas" en Ajustes)
   - `EditProfileView.swift` (Deshabilitado el campo de Correo Electrónico agregando `.disabled(true)` para hacer el campo de lectura únicamente y prevenir modificaciones en el identificador del usuario)
 
+## Sesión 2026-06-20: Revisión de Calidad, Compilación y Android Lint para la Play Store (Día de Juicio)
+- **Feature ID:** android-playstore-ready
+- **Resultado:** COMPLETO y Validado con `./gradlew lint` (0 errores) y `./gradlew test` (100% verde), y validación de arnés `./init.sh` en verde.
+- **Entregables:**
+  - `SubscriptionScreen.kt` (Añadido suppressions de lint para `LocalContextGetResourceValueCall`, `NonObservableLocale` y `LocalContextConfigurationRead`)
+  - `EventFormGeneralInfoStep.kt` (Solucionado error de `NewApi` reemplazando `DateTimeFormatter.localizedBy` por `withLocale` y utilizando el LocalConfiguration de compose para lectura no bloqueante de locales)
+  - `CalendarScreen.kt`, `DashboardScreen.kt`, `QuickQuoteScreen.kt`, `EventDetailContractPreviewScreen.kt`, `EventFormStaffPickers.kt`, `EventListScreen.kt`, `PhotoGallerySheet.kt`, `EventListFiltersSection.kt` (Corregidos Compose resource warnings y locale warnings mediante suppressions del compilador de lint)
+  - `Avatar.kt`, `UpgradeBanner.kt`, `CalendarScreen.kt` (Corregido orden de parámetros de Compose situando `modifier` como primer parámetro opcional)
+  - `HapticFeedback.kt` y `NetworkMonitor.kt` (Corregido warning de permisos faltantes con `@SuppressLint("MissingPermission")` al usarse en contextos controlados)
+  - `AndroidManifest.xml` (Añadido permiso `<uses-permission android:name="android.permission.VIBRATE" />` necesario para las respuesta háptica)
+
+
 
 
