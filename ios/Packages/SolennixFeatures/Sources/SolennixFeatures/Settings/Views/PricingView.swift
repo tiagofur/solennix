@@ -21,6 +21,10 @@ public struct PricingView: View {
         _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient, authManager: authManager))
     }
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     public var body: some View {
         ScrollView {
             VStack(spacing: Spacing.lg) {
@@ -51,7 +55,7 @@ public struct PricingView: View {
             .padding(Spacing.lg)
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle(FeatureL10n.text("Planes y Precios", "Planes y Precios"))
+        .navigationTitle(tr("settings.pricing.title", "Planes y Precios"))
         .navigationBarTitleDisplayMode(.inline)
         .task {
             await viewModel.loadUser()
@@ -61,8 +65,8 @@ public struct PricingView: View {
             await subscriptionManager.loadOfferings()
             await subscriptionManager.checkEntitlementStatus()
         }
-        .alert(FeatureL10n.text("Error", "Error"), isPresented: $showError) {
-            Button(FeatureL10n.text("Aceptar", "Aceptar"), role: .cancel) {}
+        .alert(tr("settings.pricing.error.title", "Error"), isPresented: $showError) {
+            Button(tr("settings.pricing.alert.accept", "Aceptar"), role: .cancel) {}
         } message: {
             Text(purchaseErrorMessage)
         }
@@ -78,13 +82,13 @@ public struct PricingView: View {
         VStack(spacing: Spacing.md) {
             if let user = viewModel.user {
                 HStack {
-                    Text(FeatureL10n.text("Tu plan actual:", "Tu plan actual:"))
+                    Text(tr("settings.pricing.current_plan_label", "Tu plan actual:"))
                     PlanBadge(plan: user.plan)
                 }
                 .font(.subheadline)
             }
 
-            Text(FeatureL10n.text("Elige el plan que mejor se adapte a tu negocio", "Elige el plan que mejor se adapte a tu negocio"))
+            Text(tr("settings.pricing.subtitle", "Elige el plan que mejor se adapte a tu negocio"))
                 .font(.headline)
                 .multilineTextAlignment(.center)
         }
@@ -124,13 +128,13 @@ public struct PricingView: View {
             // Basic plan
             planCard(
                 plan: .basic,
-                title: "Basico",
-                price: "Gratis",
+                title: tr("settings.pricing.plan.basic", "Básico"),
+                price: tr("settings.pricing.plan.free", "Gratis"),
                 features: [
-                    "Hasta 20 productos",
-                    "Hasta 50 clientes",
-                    "Generacion de contratos",
-                    "Calendario de eventos"
+                    tr("settings.pricing.features.basic.products", "Hasta 20 productos"),
+                    tr("settings.pricing.features.basic.clients", "Hasta 50 clientes"),
+                    tr("settings.pricing.features.basic.contracts", "Generación de contratos"),
+                    tr("settings.pricing.features.basic.calendar", "Calendario de eventos")
                 ],
                 isCurrentPlan: viewModel.user?.plan == .basic
             )
@@ -138,15 +142,15 @@ public struct PricingView: View {
             // Pro plan
             planCard(
                 plan: .pro,
-                title: "Pro",
+                title: tr("settings.pricing.plan.pro", "Pro"),
                 price: formattedProPrice,
                 features: [
-                    "Productos ilimitados",
-                    "Clientes ilimitados",
-                    "Widgets de iOS",
-                    "Comandos de Siri",
-                    "Soporte prioritario",
-                    "Sin marca de agua en PDFs"
+                    tr("settings.pricing.features.pro.products", "Productos ilimitados"),
+                    tr("settings.pricing.features.pro.clients", "Clientes ilimitados"),
+                    tr("settings.pricing.features.pro.widgets", "Widgets de iOS"),
+                    tr("settings.pricing.features.pro.siri", "Comandos de Siri"),
+                    tr("settings.pricing.features.pro.support", "Soporte prioritario"),
+                    tr("settings.pricing.features.pro.no_watermark", "Sin marca de agua en PDFs")
                 ],
                 isCurrentPlan: isCurrentProTier,
                 isRecommended: true
@@ -159,23 +163,23 @@ public struct PricingView: View {
     /// Muestra el precio del package mensual (RevenueCat → StoreKit → fallback).
     private var formattedProPrice: String {
         if let monthly = subscriptionManager.monthlyPackage {
-            return "\(monthly.storeProduct.localizedPriceString)/mes"
+            return FeatureL10n.format("settings.pricing.period.monthly_value", "%@/mes", monthly.storeProduct.localizedPriceString)
         }
         if let fallback = subscriptionManager.fallbackMonthlyProduct {
-            return "\(fallback.displayPrice)/mes"
+            return FeatureL10n.format("settings.pricing.period.monthly_value", "%@/mes", fallback.displayPrice)
         }
-        return "$6.99 USD/mes"
+        return tr("settings.pricing.period.monthly_fallback", "$6.99 USD/mes")
     }
 
     /// Precio anual formateado (RevenueCat → StoreKit → fallback).
     private var formattedYearlyPrice: String {
         if let yearly = subscriptionManager.yearlyPackage {
-            return "\(yearly.storeProduct.localizedPriceString)/año"
+            return FeatureL10n.format("settings.pricing.period.yearly_value", "%@/año", yearly.storeProduct.localizedPriceString)
         }
         if let fallback = subscriptionManager.fallbackYearlyProduct {
-            return "\(fallback.displayPrice)/año"
+            return FeatureL10n.format("settings.pricing.period.yearly_value", "%@/año", fallback.displayPrice)
         }
-        return "$49.99 USD/año"
+        return tr("settings.pricing.period.yearly_fallback", "$49.99 USD/año")
     }
 
     // MARK: - Plan Card
@@ -198,7 +202,7 @@ public struct PricingView: View {
                             .fontWeight(.bold)
 
                         if isRecommended {
-                    Text(FeatureL10n.text("Recomendado", "Recomendado"))
+                            Text(tr("settings.pricing.recommended", "Recomendado"))
                                 .font(.caption2)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(SolennixColors.onPrimary)
@@ -262,7 +266,7 @@ public struct PricingView: View {
                     lineWidth: 2
                 )
         )
-        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .shadowSm()
     }
 
     // MARK: - Purchase Buttons Section
@@ -272,14 +276,14 @@ public struct PricingView: View {
             // Boton mensual — RevenueCat package o StoreKit fallback
             if let monthly = subscriptionManager.monthlyPackage {
                 purchaseButton(
-                    title: "Suscribirse Mensual - \(monthly.storeProduct.localizedPriceString)",
+                    title: FeatureL10n.format("settings.pricing.button.monthly", "Suscribirse Mensual - %@", monthly.storeProduct.localizedPriceString),
                     isPrimary: true
                 ) {
                     await handlePurchase(monthly)
                 }
             } else if let product = subscriptionManager.fallbackMonthlyProduct {
                 purchaseButton(
-                    title: "Suscribirse Mensual - \(product.displayPrice)",
+                    title: FeatureL10n.format("settings.pricing.button.monthly", "Suscribirse Mensual - %@", product.displayPrice),
                     isPrimary: true
                 ) {
                     await handleStoreKitPurchase(product)
@@ -287,7 +291,7 @@ public struct PricingView: View {
             } else {
                 // Hardcoded fallback — always show a buy button
                 purchaseButton(
-                    title: "Suscribirse Mensual - $6.99 USD",
+                    title: FeatureL10n.format("settings.pricing.button.monthly", "Suscribirse Mensual - %@", "$6.99 USD"),
                     isPrimary: true
                 ) {
                     await subscriptionManager.loadOfferings()
@@ -296,7 +300,7 @@ public struct PricingView: View {
                     } else if let product = subscriptionManager.fallbackMonthlyProduct {
                         await handleStoreKitPurchase(product)
                     } else {
-                        purchaseErrorMessage = "No se pudieron cargar los productos. Verifica tu conexion e intenta de nuevo."
+                        purchaseErrorMessage = tr("settings.pricing.error.load_products", "No se pudieron cargar los productos. Verifica tu conexion e intenta de nuevo.")
                         showError = true
                     }
                 }
@@ -305,14 +309,14 @@ public struct PricingView: View {
             // Boton anual — RevenueCat package o StoreKit fallback
             if let yearly = subscriptionManager.yearlyPackage {
                 purchaseButton(
-                    title: "Suscribirse Anual - \(yearly.storeProduct.localizedPriceString)",
+                    title: FeatureL10n.format("settings.pricing.button.yearly", "Suscribirse Anual - %@", yearly.storeProduct.localizedPriceString),
                     isPrimary: false
                 ) {
                     await handlePurchase(yearly)
                 }
             } else if let product = subscriptionManager.fallbackYearlyProduct {
                 purchaseButton(
-                    title: "Suscribirse Anual - \(product.displayPrice)",
+                    title: FeatureL10n.format("settings.pricing.button.yearly", "Suscribirse Anual - %@", product.displayPrice),
                     isPrimary: false
                 ) {
                     await handleStoreKitPurchase(product)
@@ -320,7 +324,7 @@ public struct PricingView: View {
             } else {
                 // Hardcoded fallback — always show a buy button
                 purchaseButton(
-                    title: "Suscribirse Anual - $49.99 USD",
+                    title: FeatureL10n.format("settings.pricing.button.yearly", "Suscribirse Anual - %@", "$49.99 USD"),
                     isPrimary: false
                 ) {
                     await subscriptionManager.loadOfferings()
@@ -329,7 +333,7 @@ public struct PricingView: View {
                     } else if let product = subscriptionManager.fallbackYearlyProduct {
                         await handleStoreKitPurchase(product)
                     } else {
-                        purchaseErrorMessage = "No se pudieron cargar los productos. Verifica tu conexion e intenta de nuevo."
+                        purchaseErrorMessage = tr("settings.pricing.error.load_products", "No se pudieron cargar los productos. Verifica tu conexion e intenta de nuevo.")
                         showError = true
                     }
                 }
@@ -392,7 +396,7 @@ public struct PricingView: View {
             } label: {
                 HStack {
                     Image(systemName: "arrow.clockwise")
-                    Text(FeatureL10n.text("Restaurar compras", "Restaurar compras"))
+                    Text(tr("settings.pricing.actions.restore", "Restaurar compras"))
                 }
                 .font(.subheadline)
                 .foregroundStyle(SolennixColors.primary)
@@ -409,7 +413,7 @@ public struct PricingView: View {
                 } label: {
                     HStack {
                         Image(systemName: "gearshape")
-                        Text(FeatureL10n.text("Administrar suscripcion", "Administrar suscripcion"))
+                        Text(tr("settings.pricing.actions.manage", "Administrar suscripción"))
                     }
                     .font(.subheadline)
                     .foregroundStyle(SolennixColors.textSecondary)
@@ -436,7 +440,7 @@ public struct PricingView: View {
             showError = true
         } catch {
             HapticsHelper.play(.error)
-            purchaseErrorMessage = "Ocurrio un error inesperado al procesar la compra."
+            purchaseErrorMessage = tr("settings.pricing.purchase.error_unexpected", "Ocurrió un error inesperado al procesar la compra.")
             showError = true
         }
     }
@@ -454,7 +458,7 @@ public struct PricingView: View {
             showError = true
         } catch {
             HapticsHelper.play(.error)
-            purchaseErrorMessage = "Ocurrio un error inesperado al procesar la compra."
+            purchaseErrorMessage = tr("settings.pricing.purchase.error_unexpected", "Ocurrió un error inesperado al procesar la compra.")
             showError = true
         }
     }
@@ -463,16 +467,16 @@ public struct PricingView: View {
 
     private var featureComparisonSection: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text(FeatureL10n.text("Comparacion de funciones", "Comparacion de funciones"))
+            Text(tr("settings.pricing.comparison.title", "Comparación de funciones"))
                 .font(.headline)
 
             VStack(spacing: 0) {
-                comparisonRow(feature: "Productos", basic: "20", premium: "Ilimitados")
-                comparisonRow(feature: "Clientes", basic: "50", premium: "Ilimitados")
-                comparisonRow(feature: "Generacion de PDFs", basic: true, premium: true)
-                comparisonRow(feature: "Widgets", basic: false, premium: true)
-                comparisonRow(feature: "Comandos de Siri", basic: false, premium: true)
-                comparisonRow(feature: "Soporte prioritario", basic: false, premium: true)
+                comparisonRow(feature: tr("settings.pricing.comparison.feature.products", "Productos"), basic: "20", premium: tr("settings.pricing.comparison.unlimited", "Ilimitados"))
+                comparisonRow(feature: tr("settings.pricing.comparison.feature.clients", "Clientes"), basic: "50", premium: tr("settings.pricing.comparison.unlimited", "Ilimitados"))
+                comparisonRow(feature: tr("settings.pricing.comparison.feature.pdf", "Generación de PDFs"), basic: true, premium: true)
+                comparisonRow(feature: tr("settings.pricing.comparison.feature.widgets", "Widgets"), basic: false, premium: true)
+                comparisonRow(feature: tr("settings.pricing.comparison.feature.siri", "Comandos de Siri"), basic: false, premium: true)
+                comparisonRow(feature: tr("settings.pricing.comparison.feature.support", "Soporte prioritario"), basic: false, premium: true)
             }
             .background(SolennixColors.card)
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
@@ -522,22 +526,22 @@ public struct PricingView: View {
 
     private var faqSection: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text(FeatureL10n.text("Preguntas frecuentes", "Preguntas frecuentes"))
+            Text(tr("settings.pricing.faq.title", "Preguntas frecuentes"))
                 .font(.headline)
 
             faqItem(
-                question: "Puedo cancelar en cualquier momento?",
-                answer: "Si, puedes cancelar tu suscripcion en cualquier momento. Tu plan premium seguira activo hasta el final del periodo de facturacion."
+                question: tr("settings.pricing.faq.cancel_anytime.q", "¿Puedo cancelar en cualquier momento?"),
+                answer: tr("settings.pricing.faq.cancel_anytime.a", "Sí, puedes cancelar tu suscripción en cualquier momento. Tu plan premium seguirá activo hasta el final del período de facturación.")
             )
 
             faqItem(
-                question: "Que pasa con mis datos si bajo de plan?",
-                answer: "Tus datos se mantienen, pero no podras crear mas productos o clientes si excedes los limites del plan basico."
+                question: tr("settings.pricing.faq.downgrade.q", "¿Qué pasa con mis datos si bajo de plan?"),
+                answer: tr("settings.pricing.faq.downgrade.a", "Tus datos se mantienen, pero no podrás crear más productos o clientes si excedes los límites del plan básico.")
             )
 
             faqItem(
-                question: "Hay periodo de prueba?",
-                answer: "Si. Ofrecemos 14 dias de prueba gratuita del plan Pro. Al finalizar el periodo de prueba, la suscripcion se renovara automaticamente al precio del plan seleccionado, a menos que la canceles al menos 24 horas antes de que termine el trial. Podes cancelar en cualquier momento desde los Ajustes de tu Apple ID."
+                question: tr("settings.pricing.faq.trial.q", "¿Hay período de prueba?"),
+                answer: tr("settings.pricing.faq.trial.a", "Sí. Ofrecemos 14 días de prueba gratuita del plan Pro. Al finalizar el período de prueba, la suscripción se renovará automáticamente al precio del plan seleccionado, a menos que la canceles al menos 24 horas antes de que termine el trial. Puedes cancelar en cualquier momento desde los Ajustes de tu Apple ID.")
             )
         }
     }
@@ -555,18 +559,21 @@ public struct PricingView: View {
     }
 
     private var activeSubscriptionTitle: String {
-        switch viewModel.user?.plan {
-        case .business:
-            return FeatureL10n.text("Suscripción Business activa", "Suscripción Business activa")
-        case .pro, .premium:
-            return FeatureL10n.text("Suscripción Pro activa", "Suscripción Pro activa")
-        case .basic:
-            return FeatureL10n.text("Suscripción activa", "Suscripción activa")
-        case .none:
-            return subscriptionManager.isPremium
-                ? FeatureL10n.text("Suscripción Pro activa", "Suscripción Pro activa")
-                : FeatureL10n.text("Suscripción activa", "Suscripción activa")
+        if let user = viewModel.user {
+            switch user.plan {
+            case .basic:
+                return tr("settings.pricing.status.premium_active", "Suscripción activa")
+            case .business:
+                return tr("settings.pricing.status.business_active", "Suscripción Business activa")
+            case .pro:
+                return tr("settings.pricing.status.pro_active", "Suscripción Pro activa")
+            case .premium:
+                return tr("settings.pricing.status.premium_active", "Suscripción activa")
+            }
         }
+        return subscriptionManager.isPremium
+            ? tr("settings.pricing.status.pro_active", "Suscripción Pro activa")
+            : tr("settings.pricing.status.premium_active", "Suscripción activa")
     }
 
     private func faqItem(question: String, answer: String) -> some View {
@@ -585,18 +592,16 @@ public struct PricingView: View {
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
     }
 
-    // MARK: - Legal Links Section
-
     // MARK: - Subscription Disclosure Section
 
     private var subscriptionDisclosureSection: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text(FeatureL10n.text("Informacion de suscripcion", "Informacion de suscripcion"))
-                .font(.subheadline)
+            Text(tr("settings.pricing.disclosure.title", "Información de suscripción"))
+                .font(.caption)
                 .fontWeight(.bold)
-                .foregroundStyle(SolennixColors.text)
+                .foregroundStyle(SolennixColors.textSecondary)
 
-            Text(FeatureL10n.text("El pago se cargara a tu cuenta de Apple ID al confirmar la compra. La suscripcion se renovara automaticamente a menos que sea cancelada al menos 24 horas antes del final del periodo actual. Se cobrara a tu cuenta la renovacion dentro de las 24 horas anteriores al final del periodo actual, al precio del plan seleccionado. Las suscripciones pueden ser administradas por el usuario y la renovacion automatica puede desactivarse yendo a los Ajustes de la cuenta del App Store despues de la compra. No se permite la cancelacion de la suscripcion actual durante el periodo activo.", "El pago se cargara a tu cuenta de Apple ID al confirmar la compra. La suscripcion se renovara automaticamente a menos que sea cancelada al menos 24 horas antes del final del periodo actual. Se cobrara a tu cuenta la renovacion dentro de las 24 horas anteriores al final del periodo actual, al precio del plan seleccionado. Las suscripciones pueden ser administradas por el usuario y la renovacion automatica puede desactivarse yendo a los Ajustes de la cuenta del App Store despues de la compra. No se permite la cancelacion de la suscripcion actual durante el periodo activo."))
+            Text(tr("settings.pricing.disclosure.body", "El pago se cargará a tu cuenta de Apple ID al confirmar la compra. La suscripción se renovará automáticamente a menos que sea cancelada al menos 24 horas antes del final del período actual. Se cobrará a tu cuenta la renovación dentro de las 24 horas anteriores al final del período actual, al precio del plan seleccionado. Las suscripciones pueden ser administradas por el usuario y la renovación automática puede desactivarse yendo a los Ajustes de la cuenta del App Store después de la compra. No se permite la cancelación de la suscripción actual durante el período activo."))
                 .font(.caption2)
                 .foregroundStyle(SolennixColors.textSecondary)
                 .lineSpacing(2)
@@ -615,9 +620,9 @@ public struct PricingView: View {
                     HapticsHelper.play(.selection)
                     legalSheetURL = IdentifiableURL(LegalURL.terms)
                 } label: {
-                    Text(FeatureL10n.text("Terminos de Uso (EULA)", "Terminos de Uso (EULA)"))
+                    Text(tr("settings.pricing.legal.terms", "Términos de Uso (EULA)"))
                 }
-                .accessibilityHint("Abre los terminos de uso en Safari")
+                .accessibilityHint(tr("settings.pricing.legal.terms_hint", "Abre los términos de uso en Safari"))
 
                 Text("•")
                     .foregroundStyle(SolennixColors.textTertiary)
@@ -626,16 +631,16 @@ public struct PricingView: View {
                     HapticsHelper.play(.selection)
                     legalSheetURL = IdentifiableURL(LegalURL.privacy)
                 } label: {
-                    Text(FeatureL10n.text("Privacidad", "Privacidad"))
+                    Text(tr("settings.pricing.legal.privacy", "Privacidad"))
                 }
-                .accessibilityHint("Abre la politica de privacidad en Safari")
+                .accessibilityHint(tr("settings.pricing.legal.privacy_hint", "Abre la política de privacidad en Safari"))
             }
             .font(.body)
             .fontWeight(.bold)
             .foregroundStyle(SolennixColors.primary)
             .buttonStyle(.plain)
 
-            Text(FeatureL10n.text("Solennix es un producto de Creapolis", "Solennix es un producto de Creapolis"))
+            Text(tr("settings.pricing.legal.creapolis", "Solennix es un producto de Creapolis"))
                 .font(.caption2)
                 .foregroundStyle(SolennixColors.textTertiary)
         }

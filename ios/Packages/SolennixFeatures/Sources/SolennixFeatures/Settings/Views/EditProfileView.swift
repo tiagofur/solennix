@@ -94,6 +94,8 @@ public struct EditProfileView: View {
                             .keyboardType(.emailAddress)
                             .autocapitalization(.none)
                             .autocorrectionDisabled()
+                            .disabled(true)
+                            .foregroundStyle(SolennixColors.textSecondary)
 
                         if let error = viewModel.emailError {
                             Text(error)
@@ -107,6 +109,7 @@ public struct EditProfileView: View {
             } footer: {
                 Text(tr("settings.profile.personal_info_hint", "Tu nombre aparecerá en los contratos y documentos que generes."))
             }
+            .listRowBackground(SolennixColors.card)
 
             // Error message
             if let error = viewModel.errorMessage {
@@ -115,6 +118,7 @@ public struct EditProfileView: View {
                         .font(.subheadline)
                         .foregroundStyle(SolennixColors.error)
                 }
+                .listRowBackground(SolennixColors.card)
             }
         }
         .scrollContentBackground(.hidden)

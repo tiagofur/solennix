@@ -253,3 +253,28 @@
   - `build.gradle.kts` (Versión de Android actualizada a versionName 1.3.1 y versionCode 9)
   - `releases.json` (Registro oficial de la versión 1.3.1 con los menús contextuales y fixes en el manifest de releases)
   - `CHANGELOG.md` y `changelog.generated.ts` (Archivos autogenerados y sincronizados correctamente)
+
+## Sesión 2026-06-13: Refactorización y Homogeneidad en Formulario de Cliente en iOS
+- **Feature ID:** ios-client-form-styling
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1239 tests en verde) y Día de Juicio (Ronda 2) aprobado.
+- **Entregables:**
+  - `ClientFormView.swift` (Reemplazado `Form` con `ScrollView` y estructuradas las secciones en tarjetas `SolennixColors.card`, corrigiendo dobles fondos)
+  - `ClientFormView.swift` (Removida etiqueta interna redundante de "Notas" en el editor de notas)
+  - `ClientFormView.swift` (Ajustado el relleno principal a `.padding(Spacing.lg)` para alinear con `ProductFormView.swift`)
+  - `ProductDetailView.swift` (Refactorizado el contenedor horizontal de KPIs de un HStack a un LazyVGrid de 2 columnas, previniendo el apiñamiento e hipenación de texto en móviles)
+  - `PaymentInboxView.swift` (Modificado `iPhoneListContent` para renderizar estados vacíos/bloqueados/errores condicionalmente fuera del contenedor `List`, permitiendo un centrado vertical en pantalla completa)
+
+## Sesión 2026-06-13: Auditoría y Correcciones de Estilo y Localización en Pantallas de Ajustes en iOS
+- **Feature ID:** ios-settings-audit
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1239 tests en verde), `xcodebuild test` (412 tests de iOS en verde) y Día de Juicio (Ronda 2) aprobado por jueces ciegos con `VERDICT: CLEAN`.
+- **Entregables:**
+  - `ReviewsView.swift` (Corregido doble fondo reemplazando `.textFieldStyle(.roundedBorder)` por `.textFieldStyle(.plain)` y fondo del tema de tokens)
+  - `PricingView.swift` (Localizadas etiquetas de planes, características, fallas inesperadas de compras y enlaces legales)
+  - `ContractDefaultsView.swift` (Localizadas variables estáticas del contrato y etiquetas dinámicas del picker; aplicados fondos de tarjeta a secciones)
+  - `AboutView.swift` (Localizadas etiquetas estáticas y enlaces a redes sociales)
+  - `BusinessSettingsView.swift`, `EditProfileView.swift`, `ChangePasswordView.swift`, `NotificationPreferencesView.swift` (Homogeneizado estilo visual con tarjetas usando `.listRowBackground(SolennixColors.card)` en todas sus secciones)
+  - `SettingsView.swift` (Removidos los enlaces de navegación redundantes hacia "Reseñas" en Ajustes)
+  - `EditProfileView.swift` (Deshabilitado el campo de Correo Electrónico agregando `.disabled(true)` para hacer el campo de lectura únicamente y prevenir modificaciones en el identificador del usuario)
+
+
+

@@ -195,7 +195,14 @@ public struct ReviewsView: View {
                 axis: .vertical
             )
             .lineLimit(2...5)
-            .textFieldStyle(.roundedBorder)
+            .textFieldStyle(.plain)
+            .padding(Spacing.sm)
+            .background(SolennixColors.surface)
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+            .overlay(
+                RoundedRectangle(cornerRadius: CornerRadius.md)
+                    .stroke(SolennixColors.border, lineWidth: 1)
+            )
 
             Button {
                 let draft = responseDrafts[review.id] ?? ""

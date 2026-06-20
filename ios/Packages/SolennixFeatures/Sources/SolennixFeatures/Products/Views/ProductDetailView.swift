@@ -485,7 +485,13 @@ public struct ProductDetailView: View {
         let marginDisplay = marginValue.map { String(format: "%.1f%%", $0) } ?? "—"
         let marginSubtitle = marginValue != nil ? ProductStrings.profitEstimated : ProductStrings.noRecipe
 
-        return HStack(spacing: Spacing.md) {
+        return LazyVGrid(
+            columns: [
+                GridItem(.flexible(), spacing: Spacing.md),
+                GridItem(.flexible(), spacing: Spacing.md)
+            ],
+            spacing: Spacing.md
+        ) {
             kpiCard(
                 icon: "dollarsign.circle.fill",
                 iconColor: SolennixColors.primary,

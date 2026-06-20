@@ -276,13 +276,6 @@ public struct SettingsView: View {
                 SettingsNavRow(title: SettingsStrings.actionContractDefaults, systemImage: "doc.text")
             }
             .buttonStyle(.plain)
-
-            Divider()
-
-            NavigationLink(value: Route.reviews) {
-                SettingsNavRow(title: SettingsStrings.actionReviews, systemImage: "star.bubble")
-            }
-            .buttonStyle(.plain)
         }
     }
 
@@ -432,11 +425,6 @@ public struct SettingsView: View {
 
         NavigationLink(value: Route.contractDefaults) {
             Label(SettingsStrings.actionContractDefaults, systemImage: "doc.text")
-        }
-        .listRowSeparator(.hidden)
-
-        NavigationLink(value: Route.reviews) {
-            Label(SettingsStrings.actionReviews, systemImage: "star.bubble")
         }
         .listRowSeparator(.hidden)
     }

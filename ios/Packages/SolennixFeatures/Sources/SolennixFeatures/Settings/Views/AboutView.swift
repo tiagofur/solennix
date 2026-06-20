@@ -152,7 +152,7 @@ public struct AboutView: View {
                 .font(.headline)
 
             HStack(spacing: Spacing.lg) {
-                socialButton(icon: "globe", label: "Web", urlString: "https://solennix.com")
+                socialButton(icon: "globe", label: tr("settings.about.social.web", "Web"), urlString: "https://solennix.com")
                 socialButton(icon: "camera", label: "Instagram", urlString: "https://instagram.com/solennix")
                 socialButton(icon: "message", label: "Twitter", urlString: "https://x.com/solennix")
                 socialButton(icon: "play.rectangle", label: "YouTube", urlString: "https://youtube.com/@solennix")

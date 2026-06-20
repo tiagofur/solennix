@@ -32,6 +32,7 @@ public struct ChangePasswordView: View {
                 } header: {
                     Text(SettingsStrings.passwordCurrentSection)
                 }
+                .listRowBackground(SolennixColors.card)
 
                 Section {
                     SecureField(SettingsStrings.passwordNewLabel, text: $viewModel.newPassword)
@@ -44,6 +45,7 @@ public struct ChangePasswordView: View {
                 } footer: {
                     Text(SettingsStrings.passwordHint)
                 }
+                .listRowBackground(SolennixColors.card)
 
                 // Error message
                 if let error = viewModel.passwordError {
@@ -52,6 +54,7 @@ public struct ChangePasswordView: View {
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.error)
                     }
+                    .listRowBackground(SolennixColors.card)
                 }
 
                 if let error = viewModel.errorMessage {
@@ -60,6 +63,7 @@ public struct ChangePasswordView: View {
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.error)
                     }
+                    .listRowBackground(SolennixColors.card)
                 }
 
                 // Success message
@@ -72,6 +76,7 @@ public struct ChangePasswordView: View {
                                 .foregroundStyle(SolennixColors.success)
                         }
                     }
+                    .listRowBackground(SolennixColors.card)
                 }
             }
             .scrollContentBackground(.hidden)

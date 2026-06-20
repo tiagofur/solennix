@@ -266,7 +266,7 @@ final class EventFormLinksLocalizationTests: XCTestCase {
 
     func testSheetTtlLabel_Spanish() {
         setLocale("es")
-        XCTAssertEqual(EventFormLinksStrings.sheetTtlLabel, "Dias de vigencia")
+        XCTAssertEqual(EventFormLinksStrings.sheetTtlLabel, "Días de vigencia")
     }
 
     func testSheetTtlLabel_English() {
@@ -276,7 +276,7 @@ final class EventFormLinksLocalizationTests: XCTestCase {
 
     func testSheetHint_Spanish() {
         setLocale("es")
-        XCTAssertEqual(EventFormLinksStrings.sheetHint, "El cliente podra llenar sus datos de evento a traves de este link. Una vez usado, no podra volver a utilizarse.")
+        XCTAssertEqual(EventFormLinksStrings.sheetHint, "El cliente podrá llenar sus datos de evento a través de este link. Una vez usado, no podrá volver a utilizarse.")
     }
 
     func testSheetHint_English() {
@@ -342,7 +342,7 @@ final class EventFormLinksLocalizationTests: XCTestCase {
         setLocale("es")
         XCTAssertEqual(
             EventFormLinksStrings.deleteConfirmMessage(label: "Boda Rodriguez"),
-            "Se eliminara el link \"Boda Rodriguez\". Esta accion no se puede deshacer."
+            "Se eliminará el link \"Boda Rodriguez\". Esta acción no se puede deshacer."
         )
     }
 
@@ -366,7 +366,7 @@ final class EventFormLinksLocalizationTests: XCTestCase {
 
     func testTtlDaysLabel_Single_Spanish() {
         setLocale("es")
-        XCTAssertEqual(EventFormLinksStrings.ttlDaysLabel(1), "1 dia")
+        XCTAssertEqual(EventFormLinksStrings.ttlDaysLabel(1), "1 día")
     }
 
     func testTtlDaysLabel_Single_English() {
@@ -376,7 +376,7 @@ final class EventFormLinksLocalizationTests: XCTestCase {
 
     func testTtlDaysLabel_Plural_Spanish() {
         setLocale("es")
-        XCTAssertEqual(EventFormLinksStrings.ttlDaysLabel(7), "7 dias")
+        XCTAssertEqual(EventFormLinksStrings.ttlDaysLabel(7), "7 días")
     }
 
     func testTtlDaysLabel_Plural_English() {
