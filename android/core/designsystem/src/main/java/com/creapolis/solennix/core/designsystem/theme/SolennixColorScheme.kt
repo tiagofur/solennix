@@ -38,7 +38,13 @@ data class SolennixColorScheme(
     val tabBarActive: Color,
     val tabBarInactive: Color,
     val avatarBackground: Color,
-    val avatarInitials: Color
+    val avatarInitials: Color,
+    // Tonal icon-square tokens (per-section, matching iOS).
+    val iconSlate: Color,
+    val iconTaupe: Color,
+    val iconSage: Color,
+    val iconSteel: Color,
+    val iconPlum: Color
 ) {
     fun toMaterialColorScheme(isDarkTheme: Boolean): ColorScheme {
         return if (isDarkTheme) {

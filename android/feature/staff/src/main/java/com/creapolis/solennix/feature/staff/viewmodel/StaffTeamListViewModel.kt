@@ -55,6 +55,10 @@ class StaffTeamListViewModel @Inject constructor(
         }
     }
 
+    fun clearError() {
+        _uiState.update { it.copy(errorMessage = null) }
+    }
+
     fun deleteTeam(id: String) {
         viewModelScope.launch {
             try {

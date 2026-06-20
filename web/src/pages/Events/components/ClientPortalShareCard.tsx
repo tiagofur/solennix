@@ -39,6 +39,7 @@ export const ClientPortalShareCard: React.FC<Props> = ({ eventId }) => {
       addToast(t("client_portal_share.toast_generate"), "success");
     } catch (err) {
       logError("ClientPortalShareCard:generate", err);
+      addToast(t("client_portal_share.toast_error_generate"), "error");
     }
   };
 
@@ -55,6 +56,7 @@ export const ClientPortalShareCard: React.FC<Props> = ({ eventId }) => {
       addToast(t("client_portal_share.toast_rotate"), "success");
     } catch (err) {
       logError("ClientPortalShareCard:rotate", err);
+      addToast(t("client_portal_share.toast_error_rotate"), "error");
     }
   };
 
@@ -71,6 +73,7 @@ export const ClientPortalShareCard: React.FC<Props> = ({ eventId }) => {
       addToast(t("client_portal_share.toast_revoke"), "info");
     } catch (err) {
       logError("ClientPortalShareCard:revoke", err);
+      addToast(t("client_portal_share.toast_error_revoke"), "error");
     }
   };
 

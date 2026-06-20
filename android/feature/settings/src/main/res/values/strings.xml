@@ -24,6 +24,7 @@
     <string name="settings_action_change_password">Cambiar contraseña</string>
     <string name="settings_action_business_settings">Ajustes del negocio</string>
     <string name="settings_action_contract_defaults">Valores del contrato</string>
+    <string name="settings_action_reviews">Reseñas de clientes</string>
     <string name="settings_tab_notifications">Notificaciones</string>
     <string name="settings_action_manage_plan">Gestionar plan</string>
     <string name="settings_action_help_center">Centro de ayuda</string>
@@ -306,4 +307,17 @@ hola@creapolis.dev</string>
     <string name="settings_account_deletion_success_message">Tu cuenta ha sido programada para eliminación de forma exitosa. Se aplicará un período de gracia de 90 días. En instantes cerraremos tu sesión.</string>
     <string name="settings_account_deletion_logging_out">Cerrando sesión…</string>
     <string name="settings_account_deletion_consent_required">Debes aceptar las condiciones para continuar.</string>
+
+    <!-- Reviews -->
+    <string name="reviews_title">Reseñas</string>
+    <string name="reviews_empty_title">Sin reseñas todavía</string>
+    <string name="reviews_empty_hint">Cuando tus clientes califiquen sus eventos, aparecerán aquí.</string>
+    <string name="reviews_error_loading">Error al cargar reseñas</string>
+    <string name="reviews_retry">Reintentar</string>
+    <string name="reviews_unknown_client">Cliente</string>
+    <string name="reviews_unknown_event">Evento</string>
+    <string name="reviews_visibility_private">Privada</string>
+    <string name="reviews_visibility_public">Pública</string>
+    <string name="reviews_response_placeholder">Respuesta del organizador</string>
+    <string name="reviews_save_response">Guardar</string>
 </resources>

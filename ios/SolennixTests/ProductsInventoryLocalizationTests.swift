@@ -72,7 +72,7 @@ final class ProductsInventoryLocalizationTests: XCTestCase {
         XCTAssertEqual(InventoryStrings.searchPrompt, "Buscar inventario")
         XCTAssertEqual(InventoryStrings.deletedMessage("Carne"), "Carne eliminado")
         XCTAssertEqual(InventoryStrings.deletePrompt("Pan"), "Se eliminará \"Pan\". Podrás deshacer durante unos segundos.")
-        XCTAssertEqual(InventoryStrings.permanentDeletePrompt("Queso"), "¿Estás seguro de que querés eliminar \"Queso\"? Esta acción no se puede deshacer.")
+        XCTAssertEqual(InventoryStrings.permanentDeletePrompt("Queso"), "¿Estás seguro de que quieres eliminar \"Queso\"? Esta acción no se puede deshacer.")
         XCTAssertEqual(InventoryStrings.minLabel(5), "(min: 5)")
         XCTAssertEqual(InventoryStrings.stockActual(50, unit: "lts"), "Stock actual: 50 lts")
         XCTAssertEqual(InventoryStrings.minimumValue(10, unit: "lts"), "10 lts")

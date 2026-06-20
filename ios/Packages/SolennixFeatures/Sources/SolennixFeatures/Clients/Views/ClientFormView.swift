@@ -22,11 +22,14 @@ public struct ClientFormView: View {
     }
 
     public var body: some View {
-        Form {
-            photoSection
-            infoSection
-            addressSection
-            notesSection
+        ScrollView {
+            VStack(spacing: Spacing.md) {
+                photoSection
+                infoSection
+                addressSection
+                notesSection
+            }
+            .padding(Spacing.lg)
         }
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
@@ -126,47 +129,49 @@ public struct ClientFormView: View {
     // MARK: - Photo Section
 
     private var photoSection: some View {
-        Section {
-            HStack {
-                Spacer()
+        HStack {
+            Spacer()
 
-                PhotosPicker(selection: $selectedItem, matching: .images) {
-                    ZStack(alignment: .bottomTrailing) {
-                        if let photoData = viewModel.selectedPhotoData,
-                           let uiImage = UIImage(data: photoData) {
-                            Image(uiImage: uiImage)
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 80, height: 80)
-                                .clipShape(Circle())
-                        } else {
-                            Avatar(
-                                name: viewModel.name.isEmpty ? "?" : viewModel.name,
-                                photoURL: viewModel.photoURL,
-                                size: 80
-                            )
-                        }
-
-                        Image(systemName: "camera.fill")
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.textInverse)
-                            .frame(width: 28, height: 28)
-                            .background(SolennixColors.primary)
+            PhotosPicker(selection: $selectedItem, matching: .images) {
+                ZStack(alignment: .bottomTrailing) {
+                    if let photoData = viewModel.selectedPhotoData,
+                       let uiImage = UIImage(data: photoData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 80, height: 80)
                             .clipShape(Circle())
-                            .offset(x: 2, y: 2)
+                    } else {
+                        Avatar(
+                            name: viewModel.name.isEmpty ? "?" : viewModel.name,
+                            photoURL: viewModel.photoURL,
+                            size: 80
+                        )
                     }
-                }
 
-                Spacer()
+                    Image(systemName: "camera.fill")
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textInverse)
+                        .frame(width: 28, height: 28)
+                        .background(SolennixColors.primary)
+                        .clipShape(Circle())
+                        .offset(x: 2, y: 2)
+                }
             }
-            .listRowBackground(Color.clear)
+
+            Spacer()
         }
+        .padding(.vertical, Spacing.sm)
     }
 
     // MARK: - Info Section
 
     private var infoSection: some View {
-        Section(tr("clients.form.info_section", "Información")) {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            Text(tr("clients.form.info_section", "Información"))
+                .font(.headline)
+                .foregroundStyle(SolennixColors.text)
+
             AdaptiveFormRow {
                 SolennixTextField(
                     label: tr("clients.form.name", "Nombre"),
@@ -190,7 +195,6 @@ public struct ClientFormView: View {
                     keyboardType: .phonePad
                 )
             }
-            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
 
             AdaptiveFormRow {
                 SolennixTextField(
@@ -211,14 +215,20 @@ public struct ClientFormView: View {
                     textContentType: .addressCity
                 )
             }
-            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
         }
+        .padding(Spacing.md)
+        .background(SolennixColors.card)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
     }
 
     // MARK: - Address Section
 
     private var addressSection: some View {
-        Section(tr("clients.form.address_section", "Dirección")) {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            Text(tr("clients.form.address_section", "Dirección"))
+                .font(.headline)
+                .foregroundStyle(SolennixColors.text)
+
             SolennixTextField(
                 label: tr("clients.form.address", "Dirección"),
                 text: $viewModel.address,
@@ -226,30 +236,36 @@ public struct ClientFormView: View {
                 leftIcon: "mappin.and.ellipse",
                 textContentType: .fullStreetAddress
             )
-            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
         }
+        .padding(Spacing.md)
+        .background(SolennixColors.card)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
     }
 
     // MARK: - Notes Section
 
     private var notesSection: some View {
-        Section(tr("clients.form.notes_section", "Notas")) {
-            VStack(alignment: .leading, spacing: Spacing.xs) {
-                TextEditor(text: $viewModel.notes)
-                    .frame(minHeight: 80)
-                    .font(.body)
-                    .foregroundStyle(SolennixColors.text)
-                    .scrollContentBackground(.hidden)
-                    .padding(Spacing.sm)
-                    .background(SolennixColors.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: CornerRadius.md)
-                            .stroke(SolennixColors.border, lineWidth: 1)
-                    )
-            }
-            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            Text(tr("clients.form.notes_section", "Notas"))
+                .font(.headline)
+                .foregroundStyle(SolennixColors.text)
+
+            TextEditor(text: $viewModel.notes)
+                .frame(minHeight: 80)
+                .font(.body)
+                .foregroundStyle(SolennixColors.text)
+                .scrollContentBackground(.hidden)
+                .padding(Spacing.sm)
+                .background(SolennixColors.surface)
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                .overlay(
+                    RoundedRectangle(cornerRadius: CornerRadius.md)
+                        .stroke(SolennixColors.border, lineWidth: 1)
+                )
         }
+        .padding(Spacing.md)
+        .background(SolennixColors.card)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
     }
 
     private func tr(_ key: String, _ value: String) -> String {

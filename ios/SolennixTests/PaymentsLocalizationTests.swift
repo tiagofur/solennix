@@ -28,7 +28,7 @@ final class PaymentsLocalizationTests: XCTestCase {
         // Empty State
         XCTAssertEqual(PaymentsStrings.emptyTitle, "Sin pagos pendientes")
         XCTAssertEqual(PaymentsStrings.emptyMessage, "Cuando tus clientes suban comprobantes de transferencia, los verás aquí para aprobar o rechazar.")
-        XCTAssertEqual(PaymentsStrings.actionRefresh, "Actualizar")
+        XCTAssertEqual(PaymentsStrings.actionRetry, "Reintentar")
 
         // Plan Locked
         XCTAssertEqual(PaymentsStrings.proOnlyTitle, "Función exclusiva para usuarios Pro.")
@@ -76,7 +76,7 @@ final class PaymentsLocalizationTests: XCTestCase {
         // Empty State
         XCTAssertEqual(PaymentsStrings.emptyTitle, "No Pending Payments")
         XCTAssertEqual(PaymentsStrings.emptyMessage, "When your clients submit transfer receipts, you'll see them here to approve or reject.")
-        XCTAssertEqual(PaymentsStrings.actionRefresh, "Refresh")
+        XCTAssertEqual(PaymentsStrings.actionRetry, "Retry")
 
         // Plan Locked
         XCTAssertEqual(PaymentsStrings.proOnlyTitle, "Pro Exclusive Feature")

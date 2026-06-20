@@ -145,8 +145,8 @@ public struct EventListView: View {
                 presenting: viewModel.deleteTarget
             ) { event in
                 Button(tr("events.list.actions.delete", "Eliminar"), role: .destructive) {
-                    HapticsHelper.play(.success)
                     guard let removed = viewModel.softDeleteEvent(event) else { return }
+                    HapticsHelper.play(.success)
                     toastManager.showUndo(
                         message: String(
                             format: tr("events.list.delete_confirm.undo_message", "%@ eliminado"),

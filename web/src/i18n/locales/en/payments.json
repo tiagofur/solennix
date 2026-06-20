@@ -31,5 +31,9 @@
     "reject_description": "Provide a rejection reason. The client will see it in their history.",
     "reject_placeholder": "Rejection reason...",
     "rejecting": "Rejecting..."
+  },
+  "errors": {
+    "approve": "Could not approve the payment. Please try again.",
+    "reject": "Could not reject the payment. Please try again."
   }
 }

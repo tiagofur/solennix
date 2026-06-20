@@ -85,23 +85,8 @@ public struct PaymentInboxView: View {
         .sensoryFeedback(.warning, trigger: rejectCounter) { old, new in new > old }
     }
 
-    // MARK: - iPhone List (Fix 1)
-
     @ViewBuilder
     private var iPhoneListContent: some View {
-        List {
-            Section {
-                iPhoneContentRows
-            }
-        }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
-    }
-
-    @ViewBuilder
-    private var iPhoneContentRows: some View {
-        // Fix 10: error branch BEFORE empty branch
         if let error = viewModel.errorMessage, viewModel.submissions.isEmpty, !viewModel.isLoading {
             EmptyStateView(
                 icon: "wifi.exclamationmark",
@@ -111,74 +96,72 @@ public struct PaymentInboxView: View {
             ) {
                 Task { await viewModel.fetchSubmissions() }
             }
-            .frame(maxWidth: .infinity)
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets())
-            .listRowSeparator(.hidden)
         } else if viewModel.isLoading && viewModel.submissions.isEmpty {
-            // Fix 5: skeleton rows inside the List
-            skeletonRows
+            List {
+                Section {
+                    skeletonRows
+                }
+            }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(SolennixColors.surfaceGrouped)
         } else if viewModel.isPlanLocked {
             planLockedContent
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
-                .listRowSeparator(.hidden)
         } else if viewModel.submissions.isEmpty {
-            // Fix 11: inbox-empty is good news — no "Actualizar" CTA
             emptyContent
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
-                .listRowSeparator(.hidden)
         } else if viewModel.filteredSubmissions.isEmpty {
             searchEmptyContent
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
-                .listRowSeparator(.hidden)
         } else {
-            // Fix 1: native List rows with swipe actions
-            ForEach(viewModel.filteredSubmissions) { submission in
-                PaymentSubmissionRow(submission: submission)
-                    .contentShape(Rectangle())            // Fix 13
-                    .onTapGesture {
-                        sheetState = .detail(submission)
-                    }
-                    .listRowBackground(SolennixColors.card)                        // Fix 1
-                    .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))     // Fix 1
-                    // Fix 12: composed a11y label
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(accessibilityLabel(for: submission))
-                    .accessibilityAddTraits(.isButton)
-                    // Fix 12: approve/reject VoiceOver actions on pending rows
-                    .accessibilityAction(named: PaymentsStrings.actionApprove) {
-                        guard submission.status == .pending else { return }
-                        Task { await performApprove(submission) }
-                    }
-                    .accessibilityAction(named: PaymentsStrings.actionReject) {
-                        guard submission.status == .pending else { return }
-                        openReject(submission)
-                    }
-                    // Fix 2: swipe actions — pending only
-                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                        if submission.status == .pending {
-                            Button {
+            List {
+                Section {
+                    ForEach(viewModel.filteredSubmissions) { submission in
+                        PaymentSubmissionRow(submission: submission)
+                            .contentShape(Rectangle())            // Fix 13
+                            .onTapGesture {
+                                sheetState = .detail(submission)
+                            }
+                            .listRowBackground(SolennixColors.card)                        // Fix 1
+                            .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))     // Fix 1
+                            // Fix 12: composed a11y label
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(accessibilityLabel(for: submission))
+                            .accessibilityAddTraits(.isButton)
+                            // Fix 12: approve/reject VoiceOver actions on pending rows
+                            .accessibilityAction(named: PaymentsStrings.actionApprove) {
+                                guard submission.status == .pending else { return }
                                 Task { await performApprove(submission) }
-                            } label: {
-                                Label(PaymentsStrings.actionApprove, systemImage: "checkmark.circle.fill")
                             }
-                            .tint(SolennixColors.success)
-                        }
-                    }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        if submission.status == .pending {
-                            Button {
+                            .accessibilityAction(named: PaymentsStrings.actionReject) {
+                                guard submission.status == .pending else { return }
                                 openReject(submission)
-                            } label: {
-                                Label(PaymentsStrings.actionReject, systemImage: "xmark.circle.fill")
                             }
-                            .tint(SolennixColors.error)
-                        }
+                            // Fix 2: swipe actions — pending only
+                            .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                if submission.status == .pending {
+                                    Button {
+                                        Task { await performApprove(submission) }
+                                    } label: {
+                                        Label(PaymentsStrings.actionApprove, systemImage: "checkmark.circle.fill")
+                                    }
+                                    .tint(SolennixColors.success)
+                                }
+                            }
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                if submission.status == .pending {
+                                    Button {
+                                        openReject(submission)
+                                    } label: {
+                                        Label(PaymentsStrings.actionReject, systemImage: "xmark.circle.fill")
+                                    }
+                                    .tint(SolennixColors.error)
+                                }
+                            }
                     }
+                }
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(SolennixColors.surfaceGrouped)
         }
     }
 

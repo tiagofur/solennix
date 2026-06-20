@@ -139,6 +139,7 @@ public struct BusinessSettingsView: View {
             } footer: {
                 Text(tr("settings.business.logo.hint", "Tu logo aparecerá en los contratos y cotizaciones que generes."))
             }
+            .listRowBackground(SolennixColors.card)
 
             // Business name + Brand color section (2-col on iPad)
             Section {
@@ -161,6 +162,7 @@ public struct BusinessSettingsView: View {
             } header: {
                 Text(tr("settings.business.identity_section", "Negocio e identidad visual"))
             }
+            .listRowBackground(SolennixColors.card)
 
             // Error message
             if let error = viewModel.errorMessage {
@@ -169,6 +171,7 @@ public struct BusinessSettingsView: View {
                         .font(.subheadline)
                         .foregroundStyle(SolennixColors.error)
                 }
+                .listRowBackground(SolennixColors.card)
             }
         }
         .scrollContentBackground(.hidden)

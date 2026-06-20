@@ -47,6 +47,7 @@ public struct NotificationPreferencesView: View {
                         .font(.subheadline)
                         .foregroundStyle(SolennixColors.error)
                 }
+                .listRowBackground(SolennixColors.card)
             }
 
             // Email preferences
@@ -93,6 +94,7 @@ public struct NotificationPreferencesView: View {
             } header: {
                 Text(tr("settings.notifications.email_section", "Correos electrónicos"))
             }
+            .listRowBackground(SolennixColors.card)
 
             // Push preferences
             Section {
@@ -126,6 +128,7 @@ public struct NotificationPreferencesView: View {
             } header: {
                 Text(tr("settings.notifications.push_section", "Notificaciones push"))
             }
+            .listRowBackground(SolennixColors.card)
         }
     }
 

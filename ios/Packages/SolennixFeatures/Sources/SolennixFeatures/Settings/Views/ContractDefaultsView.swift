@@ -110,6 +110,7 @@ public struct ContractDefaultsView: View {
             } footer: {
                 Text(tr("settings.contract.deposit_hint", "Porcentaje del total que solicitas como anticipo al confirmar un evento."))
             }
+            .listRowBackground(SolennixColors.card)
 
             // Cancellation section
             Section {
@@ -117,7 +118,7 @@ public struct ContractDefaultsView: View {
                     HStack {
                         Text(tr("settings.contract.cancellation_days", "Días de anticipación"))
                         Spacer()
-                        Text("\(Int(viewModel.cancellationDays)) días")
+                        Text(FeatureL10n.format("settings.contract.cancellation_days_value", "%d días", Int(viewModel.cancellationDays)))
                             .font(.headline)
                             .foregroundStyle(SolennixColors.primary)
                     }
@@ -131,6 +132,7 @@ public struct ContractDefaultsView: View {
             } footer: {
                 Text(tr("settings.contract.cancellation_hint", "Número mínimo de días antes del evento para permitir cancelación con reembolso."))
             }
+            .listRowBackground(SolennixColors.card)
 
             // Refund section
             Section {
@@ -152,6 +154,7 @@ public struct ContractDefaultsView: View {
             } footer: {
                 Text(tr("settings.contract.refund_hint", "Porcentaje del anticipo que devuelves en caso de cancelación dentro del plazo permitido."))
             }
+            .listRowBackground(SolennixColors.card)
 
             // Contract template section
             Section {
@@ -209,6 +212,7 @@ public struct ContractDefaultsView: View {
             } footer: {
                 Text(tr("settings.contract.template_hint", "Las variables como [Nombre del cliente] se reemplazan automáticamente con los datos del evento al generar el contrato."))
             }
+            .listRowBackground(SolennixColors.card)
 
             // Preview section
             Section {
@@ -218,15 +222,16 @@ public struct ContractDefaultsView: View {
                         .fontWeight(.medium)
 
                     VStack(alignment: .leading, spacing: Spacing.sm) {
-                        previewRow(label: tr("settings.contract.preview.deposit_required", "Anticipo requerido"), value: "\(Int(viewModel.depositPercent))% del total")
-                        previewRow(label: tr("settings.contract.preview.cancellation", "Cancelación sin penalización"), value: "\(Int(viewModel.cancellationDays)) días antes")
-                        previewRow(label: tr("settings.contract.preview.refund", "Reembolso por cancelación"), value: "\(Int(viewModel.refundPercent))% del anticipo")
+                        previewRow(label: tr("settings.contract.preview.deposit_required", "Anticipo requerido"), value: FeatureL10n.format("settings.contract.preview.deposit_percent_value", "%d%% del total", Int(viewModel.depositPercent)))
+                        previewRow(label: tr("settings.contract.preview.cancellation", "Cancelación sin penalización"), value: FeatureL10n.format("settings.contract.preview.cancellation_days_value", "%d días antes", Int(viewModel.cancellationDays)))
+                        previewRow(label: tr("settings.contract.preview.refund", "Reembolso por cancelación"), value: FeatureL10n.format("settings.contract.preview.refund_percent_value", "%d%% del anticipo", Int(viewModel.refundPercent)))
                     }
                     .padding(Spacing.md)
                     .background(SolennixColors.surface)
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
                 }
             }
+            .listRowBackground(SolennixColors.card)
 
             // Error message
             if let error = viewModel.errorMessage {
@@ -346,7 +351,7 @@ private struct ContractVariablePickerSheet: View {
 
                     ForEach(ContractVariable.grouped, id: \.0) { category, variables in
                         VStack(alignment: .leading, spacing: Spacing.sm) {
-                            Text(category)
+                            Text(FeatureL10n.text("settings.contract.category.\(category.lowercased())", category))
                                 .font(.caption)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(SolennixColors.textTertiary)
@@ -357,7 +362,7 @@ private struct ContractVariablePickerSheet: View {
                                     Button {
                                         onSelect(variable)
                                     } label: {
-                                        Text(variable.label)
+                                        Text(FeatureL10n.text("settings.contract.variable.\(variable.id)", variable.label))
                                             .font(.caption)
                                             .fontWeight(.medium)
                                             .foregroundStyle(SolennixColors.primary)

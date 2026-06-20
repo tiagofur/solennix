@@ -40,9 +40,9 @@ public struct StaffTeamListView: View {
                 presenting: viewModel.deleteTarget
             ) { team in
                 Button(StaffStrings.deleteAction, role: .destructive) {
-                    HapticsHelper.play(.warning)
                     // Fix 16: soft-delete + undo (mirroring StaffListView pattern)
                     guard let removed = viewModel.softDeleteTeam(team) else { return }
+                    HapticsHelper.play(.success)
                     toastManager.showUndo(
                         message: StaffStrings.teamDeletedToast(team.name),
                         onUndo: {
