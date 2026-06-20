@@ -31,5 +31,9 @@
     "reject_description": "Indica el motivo del rechazo. El cliente podra verlo en su historial.",
     "reject_placeholder": "Motivo del rechazo...",
     "rejecting": "Rechazando..."
+  },
+  "errors": {
+    "approve": "No se pudo aprobar el pago. Intenta de nuevo.",
+    "reject": "No se pudo rechazar el pago. Intenta de nuevo."
   }
 }

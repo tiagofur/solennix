@@ -630,7 +630,10 @@
     "toast_generate": "Link generated. Share it with your client.",
     "toast_rotate": "Link rotated. The previous one no longer works.",
     "toast_revoke": "Link disabled.",
-    "toast_copy": "Link copied to clipboard."
+    "toast_copy": "Link copied to clipboard.",
+    "toast_error_generate": "Could not generate the link. Please try again.",
+    "toast_error_rotate": "Could not rotate the link. Please try again.",
+    "toast_error_revoke": "Could not disable the link. Please try again."
   },
   "quick_client": {
     "title": "New Quick Client",

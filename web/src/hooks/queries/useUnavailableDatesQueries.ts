@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unavailableDatesService, type UnavailableDateInput } from '../../services/unavailableDatesService';
 import { queryKeys } from './queryKeys';
+import { useToast } from '@/hooks/useToast';
+import { logError } from '@/lib/errorHandler';
 
 /**
  * Fetches unavailable date ranges for a given date window via React Query.
@@ -41,11 +43,16 @@ export function useUpdateUnavailableDate() {
 
 export function useDeleteUnavailableDate() {
   const queryClient = useQueryClient();
+  const { addToast } = useToast();
 
   return useMutation({
     mutationFn: (id: string) => unavailableDatesService.removeDate(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.unavailableDates.all });
+    },
+    onError: (error) => {
+      logError('Error deleting unavailable date', error);
+      addToast('No se pudo eliminar la fecha. Intenta de nuevo.', 'error');
     },
   });
 }

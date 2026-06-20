@@ -456,7 +456,10 @@
     "toast_generate": "Enlace generado. Compartilo con tu cliente.",
     "toast_rotate": "Enlace rotado. El anterior ya no funciona.",
     "toast_revoke": "Enlace deshabilitado.",
-    "toast_copy": "Enlace copiado al portapapeles."
+    "toast_copy": "Enlace copiado al portapapeles.",
+    "toast_error_generate": "No se pudo generar el enlace. Intenta de nuevo.",
+    "toast_error_rotate": "No se pudo rotar el enlace. Intenta de nuevo.",
+    "toast_error_revoke": "No se pudo deshabilitar el enlace. Intenta de nuevo."
   },
   "quick_client": {
     "title": "Nuevo Cliente Rápido",

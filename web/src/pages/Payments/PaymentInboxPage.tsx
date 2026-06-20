@@ -52,6 +52,7 @@ export const PaymentInboxPage: React.FC = () => {
 		},
 		onError: () => {
 			setApproveId(null);
+			addToast(t("payments:errors.approve"), "error");
 		},
 	});
 
@@ -68,6 +69,7 @@ export const PaymentInboxPage: React.FC = () => {
 			setRejectId(null);
 			setRejectReason("");
 			setRejectError("");
+			addToast(t("payments:errors.reject"), "error");
 		},
 	});
 
