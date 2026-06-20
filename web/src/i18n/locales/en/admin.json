@@ -81,7 +81,15 @@
       "active_sub_help": "Active paid subscription — managed by payment provider"
     },
     "errors": {
-      "loading": "Error loading users. Try reloading."
+      "loading": "Error loading users. Try reloading.",
+      "delete_failed": "Could not delete user",
+      "verify_email_failed": "Could not verify user email",
+      "block_failed": "Could not block user"
+    },
+    "messages": {
+      "delete_success": "User deleted successfully",
+      "verify_email_success": "Email verified successfully",
+      "block_success": "User blocked successfully"
     },
     "filters": {
       "search_placeholder": "Search by name, email or business...",

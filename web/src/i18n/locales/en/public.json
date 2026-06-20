@@ -147,7 +147,9 @@
       "tab_enviar": "Send payment",
       "tab_historial": "My receipts",
       "amount_required": "Amount must be a positive number.",
-      "submit_error": "Could not send receipt. Please try again."
+      "submit_error": "Could not send receipt. Please try again.",
+      "invalid_file_type": "Invalid format. Use jpeg, png, webp or pdf.",
+      "file_too_large": "File size cannot exceed 10 MB."
     },
     "footer_note": "Private client portal · powered by Solennix",
     "unavailable": {

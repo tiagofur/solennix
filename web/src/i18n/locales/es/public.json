@@ -147,7 +147,9 @@
       "tab_enviar": "Enviar pago",
       "tab_historial": "Mis envíos",
       "amount_required": "El monto debe ser un número positivo.",
-      "submit_error": "No se pudo enviar el comprobante. Intentá de nuevo."
+      "submit_error": "No se pudo enviar el comprobante. Intentá de nuevo.",
+      "invalid_file_type": "Formato no válido. Usá jpeg, png, webp o pdf.",
+      "file_too_large": "El archivo no puede superar los 10 MB."
     },
     "footer_note": "Portal privado del cliente · powered by Solennix",
     "unavailable": {

@@ -29,6 +29,7 @@
     "error_update": "Error al actualizar el colaborador",
     "error_delete": "Error al eliminar el colaborador",
     "error_respond_assignment": "No se pudo responder la asignación.",
+    "error_mark_read": "No pudimos actualizar el estado de lectura.",
     "delete_confirm": {
       "title": "Eliminar colaborador",
       "description": "Se eliminará del catálogo y de los eventos donde esté asignado. Esta acción no se puede deshacer.",

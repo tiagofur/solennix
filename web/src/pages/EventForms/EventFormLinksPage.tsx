@@ -22,6 +22,7 @@ import {
 import { useToast } from "@/hooks/useToast";
 import type { EventFormLink } from "@/types/entities";
 import { useTranslation } from "react-i18next";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 export const EventFormLinksPage: React.FC = () => {
   const { t, i18n } = useTranslation("public");
@@ -35,6 +36,7 @@ export const EventFormLinksPage: React.FC = () => {
   const [label, setLabel] = useState("");
   const [ttlDays, setTtlDays] = useState(7);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [deleteLinkId, setDeleteLinkId] = useState<string | null>(null);
 
   const handleGenerate = async () => {
     try {
@@ -80,13 +82,19 @@ export const EventFormLinksPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm(t("admin_links.confirm_revoke"))) return;
+  const handleDelete = (id: string) => {
+    setDeleteLinkId(id);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteLinkId) return;
     try {
-      await deleteLink.mutateAsync(id);
+      await deleteLink.mutateAsync(deleteLinkId);
       addToast(t("admin_links.toast.revoked"), "success");
     } catch {
       addToast(t("admin_links.toast.error_revoke"), "error");
+    } finally {
+      setDeleteLinkId(null);
     }
   };
 
@@ -311,6 +319,16 @@ export const EventFormLinksPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteLinkId !== null}
+        title={t("admin_links.revoke")}
+        description={t("admin_links.confirm_revoke")}
+        confirmText={t("admin_links.revoke")}
+        cancelText={t("admin_links.cancel")}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteLinkId(null)}
+      />
     </div>
   );
 };

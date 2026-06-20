@@ -560,12 +560,12 @@ export const ClientPortalPage: React.FC = () => {
                       if (!file) return;
                       const allowed = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
                       if (!allowed.includes(file.type)) {
-                        setSubmitError("Formato no válido. Usá jpeg, png, webp o pdf.");
+                        setSubmitError(t("portal.payments.invalid_file_type"));
                         e.target.value = "";
                         return;
                       }
                       if (file.size > 10 * 1024 * 1024) {
-                        setSubmitError("El archivo no puede superar los 10 MB.");
+                        setSubmitError(t("portal.payments.file_too_large"));
                         e.target.value = "";
                         return;
                       }

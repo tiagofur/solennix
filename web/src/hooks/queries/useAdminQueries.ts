@@ -77,6 +77,7 @@ export function useUpgradeUser() {
 export function useDeleteAdminUser() {
   const queryClient = useQueryClient();
   const { addToast } = useToast();
+  const { t } = useTranslation('admin');
 
   return useMutation({
     mutationKey: ['admin', 'deleteUser'],
@@ -84,11 +85,11 @@ export function useDeleteAdminUser() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.users, exact: false });
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.stats });
-      addToast('Usuario eliminado exitosamente', 'success');
+      addToast(t('users.messages.delete_success'), 'success');
     },
     onError: (error) => {
       logError('Error deleting user', error);
-      addToast('No se pudo eliminar el usuario', 'error');
+      addToast(t('users.errors.delete_failed'), 'error');
     },
   });
 }
@@ -96,6 +97,7 @@ export function useDeleteAdminUser() {
 export function useVerifyUserEmail() {
   const queryClient = useQueryClient();
   const { addToast } = useToast();
+  const { t } = useTranslation('admin');
 
   return useMutation({
     mutationKey: ['admin', 'verifyEmail'],
@@ -103,11 +105,11 @@ export function useVerifyUserEmail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.users, exact: false });
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.stats });
-      addToast('Email verificado exitosamente', 'success');
+      addToast(t('users.messages.verify_email_success'), 'success');
     },
     onError: (error) => {
       logError('Error verifying user email', error);
-      addToast(getErrorMessage(error, 'No se pudo verificar el email del usuario'), 'error');
+      addToast(getErrorMessage(error, t('users.errors.verify_email_failed')), 'error');
     },
   });
 }
@@ -115,6 +117,7 @@ export function useVerifyUserEmail() {
 export function useBlockUser() {
   const queryClient = useQueryClient();
   const { addToast } = useToast();
+  const { t } = useTranslation('admin');
 
   return useMutation({
     mutationKey: ['admin', 'blockUser'],
@@ -123,11 +126,11 @@ export function useBlockUser() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.users, exact: false });
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.stats });
-      addToast('Usuario bloqueado exitosamente', 'success');
+      addToast(t('users.messages.block_success'), 'success');
     },
     onError: (error) => {
       logError('Error blocking user', error);
-      addToast(getErrorMessage(error, 'No se pudo bloquear al usuario'), 'error');
+      addToast(getErrorMessage(error, t('users.errors.block_failed')), 'error');
     },
   });
 }
