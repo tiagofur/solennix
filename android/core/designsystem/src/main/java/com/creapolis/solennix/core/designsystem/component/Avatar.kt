@@ -28,8 +28,8 @@ import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 @Composable
 fun Avatar(
     name: String,
-    photoUrl: String? = null,
     modifier: Modifier = Modifier,
+    photoUrl: String? = null,
     size: Dp = 40.dp
 ) {
     Box(

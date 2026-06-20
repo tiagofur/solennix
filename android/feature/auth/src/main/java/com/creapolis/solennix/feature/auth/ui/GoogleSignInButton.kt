@@ -1,5 +1,6 @@
 package com.creapolis.solennix.feature.auth.ui
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
@@ -35,6 +36,7 @@ import kotlinx.coroutines.launch
  * - Roboto medium typography (we use Material's titleMedium)
  * - Disabled state while the credential flow is running
  */
+@SuppressLint("LocalContextGetResourceValueCall", "LocalContextResourcesRead", "DiscouragedApi")
 @Composable
 fun GoogleSignInButton(
     onSuccess: (String, String?) -> Unit,

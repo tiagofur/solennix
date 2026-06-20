@@ -1,5 +1,6 @@
 package com.creapolis.solennix.core.designsystem.util
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import android.os.VibrationEffect
@@ -40,6 +41,7 @@ object HapticFeedbackManager {
     /**
      * Trigger haptic feedback of the specified type.
      */
+    @SuppressLint("MissingPermission")
     fun vibrate(context: Context, type: HapticFeedbackType) {
         val vibrator = getVibrator(context) ?: return
 

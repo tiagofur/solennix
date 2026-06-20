@@ -31,8 +31,7 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StepGeneralInfo(viewModel: EventFormViewModel) {
-    val context = LocalContext.current
-    val locale = context.resources.configuration.locales[0] ?: Locale.getDefault()
+    val locale = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
     var showClientPicker by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showStartTimePicker by remember { mutableStateOf(false) }
@@ -100,7 +99,7 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
                     Icon(Icons.Default.CalendarToday, contentDescription = null, tint = SolennixTheme.colors.primary)
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(
-                        text = viewModel.eventDate.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).localizedBy(locale)),
+                        text = viewModel.eventDate.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale)),
                         style = MaterialTheme.typography.bodyLarge,
                         color = SolennixTheme.colors.primaryText,
                         modifier = Modifier.weight(1f)

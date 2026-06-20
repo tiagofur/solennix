@@ -27,6 +27,7 @@ import com.creapolis.solennix.feature.auth.R
 import java.net.URLEncoder
 import java.util.UUID
 
+@SuppressLint("LocalContextGetResourceValueCall", "LocalContextResourcesRead", "DiscouragedApi")
 @Composable
 fun AppleSignInButton(
     onSuccess: (String, String?) -> Unit,
@@ -131,7 +132,7 @@ fun AppleSignInButton(
     }
 }
 
-@SuppressLint("SetJavaScriptEnabled")
+@SuppressLint("SetJavaScriptEnabled", "LocalContextGetResourceValueCall")
 @Composable
 private fun AppleSignInDialog(
     clientId: String,

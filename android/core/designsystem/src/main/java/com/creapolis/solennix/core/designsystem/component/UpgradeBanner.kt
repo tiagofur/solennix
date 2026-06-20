@@ -37,11 +37,11 @@ enum class UpgradeBannerStyle {
 @Composable
 fun UpgradeBanner(
     message: String,
-    style: UpgradeBannerStyle = UpgradeBannerStyle.PROMO,
     onUpgradeClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    style: UpgradeBannerStyle = UpgradeBannerStyle.PROMO,
     onDismiss: (() -> Unit)? = null,
-    visible: Boolean = true,
-    modifier: Modifier = Modifier
+    visible: Boolean = true
 ) {
     val (backgroundColor, iconColor, icon) = when (style) {
         UpgradeBannerStyle.WARNING -> Triple(
