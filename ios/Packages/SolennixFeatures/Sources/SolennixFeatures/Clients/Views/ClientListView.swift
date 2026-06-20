@@ -76,8 +76,8 @@ public struct ClientListView: View {
                 presenting: viewModel.deleteTarget
             ) { client in
                 Button(tr("clients.delete.confirm", "Eliminar"), role: .destructive) {
-                    HapticsHelper.play(.success)
                     guard let removed = viewModel.softDeleteClient(client) else { return }
+                    HapticsHelper.play(.success)
                     toastManager.showUndo(
                         message: trf("clients.delete.undo_message", "\(client.name) eliminado", client.name),
                         onUndo: {

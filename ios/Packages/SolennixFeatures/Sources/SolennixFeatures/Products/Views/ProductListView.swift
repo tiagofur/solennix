@@ -77,8 +77,8 @@ public struct ProductListView: View {
                 presenting: viewModel.deleteTarget
             ) { product in
                 Button(ProductStrings.deleteAction, role: .destructive) {
-                    HapticsHelper.play(.success)
                     guard let removed = viewModel.softDeleteProduct(product) else { return }
+                    HapticsHelper.play(.success)
                     toastManager.showUndo(
                         message: ProductStrings.deletedMessage(product.name),
                         onUndo: {

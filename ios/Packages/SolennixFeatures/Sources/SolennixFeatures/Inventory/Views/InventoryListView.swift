@@ -74,8 +74,8 @@ public struct InventoryListView: View {
                 presenting: viewModel.deleteTarget
             ) { item in
                 Button(InventoryStrings.deleteAction, role: .destructive) {
-                    HapticsHelper.play(.success)
                     guard let removed = viewModel.softDeleteItem(item) else { return }
+                    HapticsHelper.play(.success)
                     toastManager.showUndo(
                         message: InventoryStrings.deletedMessage(item.ingredientName),
                         onUndo: {

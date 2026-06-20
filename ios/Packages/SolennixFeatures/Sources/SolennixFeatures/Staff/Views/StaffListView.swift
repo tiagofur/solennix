@@ -49,8 +49,8 @@ public struct StaffListView: View {
                 presenting: viewModel.deleteTarget
             ) { item in
                 Button(StaffStrings.deleteAction, role: .destructive) {
-                    HapticsHelper.play(.success)
                     guard let removed = viewModel.softDeleteStaff(item) else { return }
+                    HapticsHelper.play(.success)
                     toastManager.showUndo(
                         message: StaffStrings.deletedToast(item.name),
                         onUndo: {
