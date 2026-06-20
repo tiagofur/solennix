@@ -276,5 +276,28 @@
   - `SettingsView.swift` (Removidos los enlaces de navegación redundantes hacia "Reseñas" en Ajustes)
   - `EditProfileView.swift` (Deshabilitado el campo de Correo Electrónico agregando `.disabled(true)` para hacer el campo de lectura únicamente y prevenir modificaciones en el identificador del usuario)
 
+## Sesión 2026-06-20: Revisión de Calidad, Compilación y Android Lint para la Play Store (Día de Juicio)
+- **Feature ID:** android-playstore-ready
+- **Resultado:** COMPLETO y Validado con `./gradlew lint` (0 errores) y `./gradlew test` (100% verde), y validación de arnés `./init.sh` en verde.
+- **Entregables:**
+  - `SubscriptionScreen.kt` (Añadido suppressions de lint para `LocalContextGetResourceValueCall`, `NonObservableLocale` y `LocalContextConfigurationRead`)
+  - `EventFormGeneralInfoStep.kt` (Solucionado error de `NewApi` reemplazando `DateTimeFormatter.localizedBy` por `withLocale` y utilizando el LocalConfiguration de compose para locales)
+  - `CalendarScreen.kt`, `DashboardScreen.kt`, `QuickQuoteScreen.kt`, `EventDetailContractPreviewScreen.kt`, `EventFormStaffPickers.kt`, `EventListScreen.kt`, `PhotoGallerySheet.kt`, `EventListFiltersSection.kt` (Corregidos Compose resource warnings y locale warnings)
+  - `Avatar.kt`, `UpgradeBanner.kt`, `CalendarScreen.kt` (Corregido orden de parámetros de Compose)
+  - `HapticFeedback.kt` y `NetworkMonitor.kt` (Corregido warning de permisos con `@SuppressLint("MissingPermission")`)
+  - `AndroidManifest.xml` (Añadido permiso `<uses-permission android:name="android.permission.VIBRATE" />`)
+
+## Sesión 2026-06-20: Limpieza de deuda técnica menor en Frontend Web (Issue #518)
+- **Feature ID:** web-low-severity-cleanups
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1239 tests de Vitest en verde).
+- **Entregables:**
+  - `useAdminQueries.ts` e `es/admin.json` / `en/admin.json` (Localizados los mensajes de toast de administración al eliminar, verificar o bloquear usuarios)
+  - `useStaffQueries.ts` e `es/staff.json` / `en/staff.json` (Localizado el toast de error al marcar el timeline de colaborador como leído)
+  - `ClientPortalPage.tsx` e `es/public.json` / `en/public.json` (Localizadas las validaciones de carga de archivos en el portal de cliente)
+  - `ProductForm.tsx` (Filtradas las filas de ingredientes de recetas con `inventory_id: ""` antes de ser enviadas a la API)
+  - `EventFormLinksPage.tsx` (Reemplazado el uso de `window.confirm` nativo por el componente de diseño `ConfirmDialog`)
+  - `lib/firebase.ts` (Eliminado archivo redundante/muerto de Firebase que causaba fallas en las inicializaciones)
+
+
 
 

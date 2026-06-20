@@ -81,7 +81,15 @@
       "active_sub_help": "Suscripción pagada activa — gestionada por el proveedor de pagos"
     },
     "errors": {
-      "loading": "Error al cargar usuarios. Intenta recargar."
+      "loading": "Error al cargar usuarios. Intenta recargar.",
+      "delete_failed": "No se pudo eliminar el usuario",
+      "verify_email_failed": "No se pudo verificar el email del usuario",
+      "block_failed": "No se pudo bloquear al usuario"
+    },
+    "messages": {
+      "delete_success": "Usuario eliminado exitosamente",
+      "verify_email_success": "Email verificado exitosamente",
+      "block_success": "Usuario bloqueado exitosamente"
     },
     "filters": {
       "search_placeholder": "Buscar por nombre, email o negocio...",
