@@ -32,10 +32,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -69,10 +73,25 @@ fun StaffTeamListScreen(
     var pendingDelete by remember { mutableStateOf<StaffTeam?>(null) }
     var rowActionsTeam by remember { mutableStateOf<StaffTeam?>(null) }
     val haptic = LocalHapticFeedback.current
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LifecycleResumeEffect(viewModel) {
         viewModel.refresh()
         onPauseOrDispose { }
+    }
+
+    // Show delete (and refresh) errors as a snackbar regardless of whether the list is
+    // empty or populated. Previously, errorMessage was only displayed inside the empty-state
+    // branch, so a failed delete on a non-empty list was silently swallowed.
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { message ->
+            snackbarHostState.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Long,
+                withDismissAction = true,
+            )
+            viewModel.clearError()
+        }
     }
 
     Scaffold(
@@ -98,6 +117,7 @@ fun StaffTeamListScreen(
                 Icon(Icons.Default.Add, contentDescription = stringResource(R.string.staff_team_form_title_create))
             }
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         contentWindowInsets = WindowInsets(0)
     ) { padding ->
         PullToRefreshBox(
