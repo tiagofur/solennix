@@ -21,15 +21,24 @@ type EventReviewHandler struct {
 	userRepo     FullUserRepository
 	emailService *services.EmailService
 	frontendURL  string
+
+	// injectable for unit testing; default wires to h.repo.GetByID
+	getReviewForReply      func(ctx context.Context, id uuid.UUID) (*models.EventReview, error)
+	getReviewForVisibility func(ctx context.Context, id uuid.UUID) (*models.EventReview, error)
 }
 
 func NewEventReviewHandler(repo *repository.EventReviewRepo, userRepo FullUserRepository, emailService *services.EmailService, frontendURL string) *EventReviewHandler {
-	return &EventReviewHandler{
+	h := &EventReviewHandler{
 		repo:         repo,
 		userRepo:     userRepo,
 		emailService: emailService,
 		frontendURL:  strings.TrimSuffix(frontendURL, "/"),
 	}
+	if repo != nil {
+		h.getReviewForReply = repo.GetByID
+		h.getReviewForVisibility = repo.GetByID
+	}
+	return h
 }
 
 type PublicReviewMetaResponse struct {
@@ -213,7 +222,13 @@ func (h *EventReviewHandler) UpdateOrganizerResponse(w http.ResponseWriter, r *h
 		return
 	}
 
-	review, err := h.repo.GetByID(ctx, reviewID)
+	var reviewGetter func(context.Context, uuid.UUID) (*models.EventReview, error)
+	if h.getReviewForReply != nil {
+		reviewGetter = h.getReviewForReply
+	} else {
+		reviewGetter = h.repo.GetByID
+	}
+	review, err := reviewGetter(ctx, reviewID)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "Review not found")
 		return
@@ -261,7 +276,13 @@ func (h *EventReviewHandler) UpdateReviewVisibility(w http.ResponseWriter, r *ht
 		return
 	}
 
-	review, err := h.repo.GetByID(ctx, reviewID)
+	var visibilityGetter func(context.Context, uuid.UUID) (*models.EventReview, error)
+	if h.getReviewForVisibility != nil {
+		visibilityGetter = h.getReviewForVisibility
+	} else {
+		visibilityGetter = h.repo.GetByID
+	}
+	review, err := visibilityGetter(ctx, reviewID)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "Review not found")
 		return

@@ -3133,3 +3133,193 @@ func TestAuthHandler_ResetPassword_BlacklistError_Returns503(t *testing.T) {
 	assert.Equal(t, http.StatusServiceUnavailable, rr.Code)
 	assert.Contains(t, rr.Body.String(), "unavailable")
 }
+
+// ---------------------------------------------------------------------------
+// C5 — OAuth Account Status Gate tests (Google + Apple)
+// ---------------------------------------------------------------------------
+
+// mockGoogleValidator returns a validateGoogleTokenFunc that always succeeds
+// with the provided claims.
+func mockGoogleValidator(sub, email, name string) validateGoogleTokenFunc {
+	return func(_ context.Context, _ string, _ []string) (*GoogleIDTokenClaims, error) {
+		return &GoogleIDTokenClaims{Subject: sub, Email: email, Name: name}, nil
+	}
+}
+
+// mockAppleValidator returns a validateAppleTokenFunc that always succeeds
+// with the provided claims.
+func mockAppleValidator(sub, email string) validateAppleTokenFunc {
+	return func(_ string, _ []string) (*AppleIDTokenClaims, error) {
+		return &AppleIDTokenClaims{Subject: sub, Email: email}, nil
+	}
+}
+
+// blockedUserNoGrace returns a *models.User in blocked state with no pending deletion.
+func blockedUserNoGrace() *models.User {
+	return &models.User{
+		ID:            uuid.New(),
+		Email:         "blocked@test.dev",
+		AccountStatus: repository.AccountStatusBlocked,
+	}
+}
+
+// deletedOAuthUser returns a *models.User in deleted state.
+func deletedOAuthUser() *models.User {
+	return &models.User{
+		ID:            uuid.New(),
+		Email:         "deleted@test.dev",
+		AccountStatus: repository.AccountStatusDeleted,
+	}
+}
+
+// gracePeriodOAuthUser returns a *models.User in blocked state WITH a future DeletionEligibleAt.
+// On OAuth login, such an account should have its pending deletion cancelled and get reactivated.
+func gracePeriodOAuthUser() *models.User {
+	future := time.Now().Add(48 * time.Hour)
+	return &models.User{
+		ID:                 uuid.New(),
+		Email:              "grace@test.dev",
+		AccountStatus:      repository.AccountStatusBlocked,
+		DeletionEligibleAt: &future,
+	}
+}
+
+func TestAuthHandler_GoogleSignIn_AccountStatusGate(t *testing.T) {
+	authService := services.NewAuthService("test-secret-key-32bytes-minimum!!", 1)
+	cfg := &config.Config{GoogleClientIDs: []string{"test-client-id"}}
+	body := `{"id_token":"mock-token"}`
+
+	t.Run("BlockedAccount_Returns403", func(t *testing.T) {
+		user := blockedUserNoGrace()
+		mockRepo := new(MockFullUserRepo)
+		mockRepo.On("GetByGoogleUserID", mock.Anything, "google-sub-blocked").Return(user, nil)
+
+		h := &AuthHandler{
+			userRepo:            mockRepo,
+			authService:         authService,
+			cfg:                 cfg,
+			validateGoogleToken: mockGoogleValidator("google-sub-blocked", user.Email, "Blocked User"),
+		}
+
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/google", strings.NewReader(body))
+		rr := httptest.NewRecorder()
+		h.GoogleSignIn(rr, req)
+
+		assert.Equal(t, http.StatusForbidden, rr.Code)
+		assert.Contains(t, rr.Body.String(), "blocked")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("DeletedAccount_Returns403", func(t *testing.T) {
+		user := deletedOAuthUser()
+		mockRepo := new(MockFullUserRepo)
+		mockRepo.On("GetByGoogleUserID", mock.Anything, "google-sub-deleted").Return(user, nil)
+
+		h := &AuthHandler{
+			userRepo:            mockRepo,
+			authService:         authService,
+			cfg:                 cfg,
+			validateGoogleToken: mockGoogleValidator("google-sub-deleted", user.Email, "Deleted User"),
+		}
+
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/google", strings.NewReader(body))
+		rr := httptest.NewRecorder()
+		h.GoogleSignIn(rr, req)
+
+		assert.Equal(t, http.StatusForbidden, rr.Code)
+		assert.Contains(t, rr.Body.String(), "deleted")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("GracePeriodAccount_CancelsDeletionAndReturns200", func(t *testing.T) {
+		user := gracePeriodOAuthUser()
+		mockRepo := new(MockFullUserRepo)
+		mockRepo.On("GetByGoogleUserID", mock.Anything, "google-sub-grace").Return(user, nil)
+		mockRepo.On("CancelPendingDeletion", mock.Anything, user.ID).Return(nil)
+
+		h := &AuthHandler{
+			userRepo:            mockRepo,
+			authService:         authService,
+			cfg:                 cfg,
+			validateGoogleToken: mockGoogleValidator("google-sub-grace", user.Email, "Grace User"),
+		}
+
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/google", strings.NewReader(body))
+		rr := httptest.NewRecorder()
+		h.GoogleSignIn(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		mockRepo.AssertCalled(t, "CancelPendingDeletion", mock.Anything, user.ID)
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestAuthHandler_AppleSignIn_AccountStatusGate(t *testing.T) {
+	authService := services.NewAuthService("test-secret-key-32bytes-minimum!!", 1)
+	cfg := &config.Config{AppleClientIDs: []string{"com.solennix.app"}}
+	body := `{"identity_token":"mock-apple-token"}`
+
+	t.Run("BlockedAccount_Returns403", func(t *testing.T) {
+		user := blockedUserNoGrace()
+		mockRepo := new(MockFullUserRepo)
+		mockRepo.On("GetByAppleUserID", mock.Anything, "apple-sub-blocked").Return(user, nil)
+
+		h := &AuthHandler{
+			userRepo:           mockRepo,
+			authService:        authService,
+			cfg:                cfg,
+			validateAppleToken: mockAppleValidator("apple-sub-blocked", user.Email),
+		}
+
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/apple", strings.NewReader(body))
+		rr := httptest.NewRecorder()
+		h.AppleSignIn(rr, req)
+
+		assert.Equal(t, http.StatusForbidden, rr.Code)
+		assert.Contains(t, rr.Body.String(), "blocked")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("DeletedAccount_Returns403", func(t *testing.T) {
+		user := deletedOAuthUser()
+		mockRepo := new(MockFullUserRepo)
+		mockRepo.On("GetByAppleUserID", mock.Anything, "apple-sub-deleted").Return(user, nil)
+
+		h := &AuthHandler{
+			userRepo:           mockRepo,
+			authService:        authService,
+			cfg:                cfg,
+			validateAppleToken: mockAppleValidator("apple-sub-deleted", user.Email),
+		}
+
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/apple", strings.NewReader(body))
+		rr := httptest.NewRecorder()
+		h.AppleSignIn(rr, req)
+
+		assert.Equal(t, http.StatusForbidden, rr.Code)
+		assert.Contains(t, rr.Body.String(), "deleted")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("GracePeriodAccount_CancelsDeletionAndReturns200", func(t *testing.T) {
+		user := gracePeriodOAuthUser()
+		mockRepo := new(MockFullUserRepo)
+		mockRepo.On("GetByAppleUserID", mock.Anything, "apple-sub-grace").Return(user, nil)
+		mockRepo.On("CancelPendingDeletion", mock.Anything, user.ID).Return(nil)
+
+		h := &AuthHandler{
+			userRepo:           mockRepo,
+			authService:        authService,
+			cfg:                cfg,
+			validateAppleToken: mockAppleValidator("apple-sub-grace", user.Email),
+		}
+
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/apple", strings.NewReader(body))
+		rr := httptest.NewRecorder()
+		h.AppleSignIn(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		mockRepo.AssertCalled(t, "CancelPendingDeletion", mock.Anything, user.ID)
+		mockRepo.AssertExpectations(t)
+	})
+}
