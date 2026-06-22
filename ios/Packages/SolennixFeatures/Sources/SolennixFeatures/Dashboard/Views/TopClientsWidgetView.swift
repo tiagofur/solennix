@@ -35,16 +35,16 @@ struct TopClientsWidgetView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, Spacing.xl)
             } else {
-                VStack(spacing: Spacing.sm) {
-                    ForEach(clients.prefix(5), id: \.id) { client in
+                VStack(spacing: 0) {
+                    ForEach(Array(clients.prefix(5).enumerated()), id: \.element.id) { index, client in
                         NavigationLink(value: Route.clientDetail(id: client.id)) {
-                            VStack(alignment: .leading, spacing: Spacing.xs) {
-                                Text(client.name)
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .foregroundStyle(SolennixColors.text)
-                                    .lineLimit(1)
-                                HStack {
+                            HStack {
+                                VStack(alignment: .leading, spacing: Spacing.xxs) {
+                                    Text(client.name)
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                        .foregroundStyle(SolennixColors.text)
+                                        .lineLimit(1)
                                     Text(String.localizedStringWithFormat(
                                         tr(
                                             client.eventCount == 1
@@ -54,21 +54,25 @@ struct TopClientsWidgetView: View {
                                         ),
                                         client.eventCount
                                     ))
-                                        .font(.caption)
-                                        .foregroundStyle(SolennixColors.textSecondary)
-                                    Spacer()
-                                    Text(DashboardFormatting.currencyMXN(client.totalSpent))
-                                        .font(.caption)
-                                        .fontWeight(.semibold)
-                                        .foregroundStyle(SolennixColors.text)
+                                    .font(.caption)
+                                    .foregroundStyle(SolennixColors.textSecondary)
                                 }
+                                Spacer()
+                                Text(DashboardFormatting.currencyMXN(client.totalSpent))
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(SolennixColors.primary)
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundStyle(SolennixColors.textTertiary)
                             }
                             .padding(.vertical, Spacing.sm)
-                            .padding(.horizontal, Spacing.md)
-                            .background(SolennixColors.surfaceAlt)
-                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
                         }
                         .buttonStyle(.plain)
+
+                        if index < clients.prefix(5).count - 1 {
+                            Divider()
+                        }
                     }
                 }
             }
