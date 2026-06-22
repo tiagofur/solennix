@@ -275,7 +275,7 @@
       "id": 23,
       "name": "dashboard-top-clients-navigation",
       "description": "feat(dashboard): redireccionar al detalle de cliente al cliquear en Top Clientes (Issue #576)",
-      "status": "in_progress",
+      "status": "done",
       "acceptance_criteria": [
         "Al hacer clic en un cliente de la lista de Clientes Principales en Web, se navega a /clients/:id",
         "En iOS, al hacer clic en un cliente en Top Clients, se navega a Route.clientDetail",

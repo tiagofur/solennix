@@ -311,3 +311,14 @@
 
 
 
+
+## Sesión 2026-06-21: Redirección desde Top Clientes en el Dashboard
+- **Feature ID:** 23 (dashboard-top-clients-navigation)
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1246 tests en verde).
+- **Entregables:**
+  - `web/src/components/TopClientsWidget.tsx` (Enrutado al detalle del cliente usando `useNavigate`)
+  - `web/src/components/TopClientsWidget.test.tsx` (Nuevas pruebas unitarias para interactividad de clics)
+  - `ios/Packages/SolennixFeatures/Sources/SolennixFeatures/Dashboard/Views/TopClientsWidgetView.swift` (Envolver ítems de clientes en NavigationLink)
+  - `android/feature/dashboard/src/main/java/com/creapolis/solennix/feature/dashboard/ui/TopClientsWidget.kt` (Añadir callback clickable en ítems de clientes)
+  - `android/feature/dashboard/src/main/java/com/creapolis/solennix/feature/dashboard/ui/DashboardScreen.kt` (Pasar listener de navegación al widget)
+  - `android/app/src/main/java/com/creapolis/solennix/ui/navigation/CompactBottomNavLayout.kt` (Enrutar callback de navegación a client_detail/{id})
