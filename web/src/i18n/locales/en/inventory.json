@@ -43,7 +43,17 @@
     "item_deleted": "Item deleted successfully",
     "error_create": "Error creating item",
     "error_update": "Error updating item",
-    "error_delete": "Error deleting item"
+    "error_delete": "Error deleting item",
+    "scope_all": "All",
+    "scope_ingredient": "Ingredients",
+    "scope_equipment": "Equipment",
+    "scope_supply": "Supplies",
+    "scope_empty_ingredient": "No ingredients",
+    "scope_empty_equipment": "No equipment",
+    "scope_empty_supply": "No supplies",
+    "scope_empty_ingredient_desc": "There are no ingredients in the inventory.",
+    "scope_empty_equipment_desc": "There is no equipment in the inventory.",
+    "scope_empty_supply_desc": "There are no supplies in the inventory."
   },
   "form": {
     "basic_info": "Basic Information",

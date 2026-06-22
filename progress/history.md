@@ -298,13 +298,14 @@
   - `EventFormLinksPage.tsx` (Reemplazado el uso de `window.confirm` nativo por el componente de diseño `ConfirmDialog`)
   - `lib/firebase.ts` (Eliminado archivo redundante/muerto de Firebase que causaba fallas en las inicializaciones)
 
-## Sesión 2026-06-20: Sincronización de Contrato de OpenAPI y Unificación de Tipo User en Frontend (Issue #519)
-- **Feature ID:** 519
-- **Resultado:** COMPLETO y Validado con `./init.sh` (1239 tests de Vitest en verde).
+## Sesión 2026-06-21: Filtro de Ámbito en Inventario en Web (Issue #551)
+- **Feature ID:** 551
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1242 tests de Vitest en verde).
 - **Entregables:**
-  - `backend/docs/openapi.yaml` (Añadido `expires_at` a `TokenPair` y `preferred_language` a `User`, y expandido enum de roles a `[user, admin, team_member, assistant]`)
-  - `web/src/types/api.ts` (Tipos TS autogenerados actualizados y regenerados)
-  - `web/src/types/auth.ts` (Eliminada duplicación de tipos mediante reexportación del tipo User de `entities.ts`)
+  - `web/src/pages/Inventory/InventoryList.tsx` (Filtro de ámbito client-side de consumibles, insumos y equipos con tabs interactivas)
+  - `web/src/pages/Inventory/InventoryList.test.tsx` (Tests de Vitest para renderizado, filtrado por tabs y estados vacíos específicos)
+  - `web/src/i18n/locales/es/inventory.json` / `web/src/i18n/locales/en/inventory.json` (Claves de traducción para filtros de ámbito y sus estados vacíos en español e inglés)
+
 
 
 

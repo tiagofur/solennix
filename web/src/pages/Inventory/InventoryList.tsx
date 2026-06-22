@@ -135,6 +135,15 @@ export const InventoryList: React.FC = () => {
 
   const moneyLocale = i18n.language === "en" ? "en-US" : "es-MX";
 
+  const [activeScope, setActiveScope] = useState<"all" | "ingredient" | "supply" | "equipment">("all");
+
+  const scopeChips = [
+    { label: t("inventory:list.scope_all"), value: "all" },
+    { label: t("inventory:list.scope_ingredient"), value: "ingredient" },
+    { label: t("inventory:list.scope_supply"), value: "supply" },
+    { label: t("inventory:list.scope_equipment"), value: "equipment" },
+  ];
+
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
   const [ingredientSort, setIngredientSort] = useState<{
     key: SortKey;
@@ -206,7 +215,8 @@ export const InventoryList: React.FC = () => {
     const matchesLowStock =
       !showLowStockOnly ||
       (item.minimum_stock > 0 && item.current_stock < item.minimum_stock);
-    return matchesSearch && matchesLowStock;
+    const matchesScope = activeScope === "all" || item.type === activeScope;
+    return matchesSearch && matchesLowStock && matchesScope;
   });
 
   const ingredients = sortItems(
@@ -509,6 +519,26 @@ export const InventoryList: React.FC = () => {
         />
       </div>
 
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap gap-2">
+          {scopeChips.map((chip) => (
+            <button
+              key={chip.value}
+              type="button"
+              onClick={() => setActiveScope(chip.value as any)}
+              className={clsx(
+                "px-3 py-1 rounded-full text-xs font-semibold border transition-colors",
+                activeScope === chip.value
+                  ? "bg-primary text-white border-primary"
+                  : "bg-card text-text-secondary border-border hover:border-primary/50 hover:text-primary"
+              )}
+            >
+              {chip.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {loading ? (
         <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
           <SkeletonTable
@@ -526,10 +556,30 @@ export const InventoryList: React.FC = () => {
         <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
           <Empty
             icon={Package}
-            title={!searchTerm && !showLowStockOnly ? t("inventory:list.empty_title") : t("inventory:list.no_results")}
+            title={
+              searchTerm || showLowStockOnly
+                ? showLowStockOnly
+                  ? t("inventory:list.no_alerts")
+                  : t("inventory:list.no_results")
+                : activeScope === "ingredient"
+                ? t("inventory:list.scope_empty_ingredient")
+                : activeScope === "equipment"
+                ? t("inventory:list.scope_empty_equipment")
+                : activeScope === "supply"
+                ? t("inventory:list.scope_empty_supply")
+                : t("inventory:list.empty_title")
+            }
             description={
               searchTerm || showLowStockOnly
-                ? showLowStockOnly ? t("inventory:list.no_alerts") : t("inventory:list.search_desc")
+                ? showLowStockOnly
+                  ? t("inventory:list.no_alerts")
+                  : t("inventory:list.search_desc")
+                : activeScope === "ingredient"
+                ? t("inventory:list.scope_empty_ingredient_desc")
+                : activeScope === "equipment"
+                ? t("inventory:list.scope_empty_equipment_desc")
+                : activeScope === "supply"
+                ? t("inventory:list.scope_empty_supply_desc")
                 : t("inventory:list.add_first")
             }
             action={
@@ -548,94 +598,100 @@ export const InventoryList: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-8">
-          <section>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10">
-                <ShoppingBasket
-                  className="h-5 w-5 text-primary"
-                  aria-hidden="true"
-                />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-text">{t("inventory:list.type_ingredient")}</h2>
-                <p className="text-xs text-text-secondary">
-                  {ingredients.length}{" "}
-                  {t("inventory:list.type_ingredient")}
-                </p>
-              </div>
-            </div>
-            <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
-              {ingredients.length === 0 ? (
-                <div className="px-6 py-8 text-center text-sm text-text-secondary">
-                   {t("inventory:list.section_empty")}
+          {(activeScope === "all" || activeScope === "ingredient") && (
+            <section>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10">
+                  <ShoppingBasket
+                    className="h-5 w-5 text-primary"
+                    aria-hidden="true"
+                  />
                 </div>
-              ) : (
-                <>
-                  {renderMobileSortBar(ingredientSort, setIngredientSort)}
-                  {renderTable(ingredients, ingredientSort, handleIngredientSort, t("inventory:list.type_ingredient"))}
-                </>
-              )}
-            </div>
-          </section>
+                <div>
+                  <h2 className="text-lg font-semibold text-text">{t("inventory:list.type_ingredient")}</h2>
+                  <p className="text-xs text-text-secondary">
+                    {ingredients.length}{" "}
+                    {t("inventory:list.type_ingredient")}
+                  </p>
+                </div>
+              </div>
+              <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
+                {ingredients.length === 0 ? (
+                  <div className="px-6 py-8 text-center text-sm text-text-secondary">
+                     {t("inventory:list.section_empty")}
+                  </div>
+                ) : (
+                  <>
+                    {renderMobileSortBar(ingredientSort, setIngredientSort)}
+                    {renderTable(ingredients, ingredientSort, handleIngredientSort, t("inventory:list.type_ingredient"))}
+                  </>
+                )}
+              </div>
+            </section>
+          )}
 
-          <section>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-warning/10">
-                <Fuel className="h-5 w-5 text-warning" aria-hidden="true" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-text">
-                  {t("inventory:list.type_supply")}
-                </h2>
-                <p className="text-xs text-text-secondary">
-                  {supplies.length}{" "}
-                  {t("inventory:list.type_supply")}
-                </p>
-              </div>
-            </div>
-            <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
-              {supplies.length === 0 ? (
-                <div className="px-6 py-8 text-center text-sm text-text-secondary">
-                   {t("inventory:list.section_empty")}
+          {(activeScope === "all" || activeScope === "supply") && (
+            <section>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-warning/10">
+                  <Fuel className="h-5 w-5 text-warning" aria-hidden="true" />
                 </div>
-              ) : (
-                <>
-                  {renderMobileSortBar(supplySort, setSupplySort)}
-                  {renderTable(supplies, supplySort, handleSupplySort, t("inventory:list.type_supply"))}
-                </>
-              )}
-            </div>
-          </section>
+                <div>
+                  <h2 className="text-lg font-semibold text-text">
+                    {t("inventory:list.type_supply")}
+                  </h2>
+                  <p className="text-xs text-text-secondary">
+                    {supplies.length}{" "}
+                    {t("inventory:list.type_supply")}
+                  </p>
+                </div>
+              </div>
+              <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
+                {supplies.length === 0 ? (
+                  <div className="px-6 py-8 text-center text-sm text-text-secondary">
+                     {t("inventory:list.section_empty")}
+                  </div>
+                ) : (
+                  <>
+                    {renderMobileSortBar(supplySort, setSupplySort)}
+                    {renderTable(supplies, supplySort, handleSupplySort, t("inventory:list.type_supply"))}
+                  </>
+                )}
+              </div>
+            </section>
+          )}
 
-          <section>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-info/10">
-                <Wrench
-                  className="h-5 w-5 text-info"
-                  aria-hidden="true"
-                />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-text">{t("inventory:list.type_equipment")}</h2>
-                <p className="text-xs text-text-secondary">
-                  {equipment.length}{" "}
-                  {t("inventory:list.type_equipment")}
-                </p>
-              </div>
-            </div>
-            <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
-              {equipment.length === 0 ? (
-                <div className="px-6 py-8 text-center text-sm text-text-secondary">
-                   {t("inventory:list.section_empty")}
+          {(activeScope === "all" || activeScope === "equipment") && (
+            <section>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-info/10">
+                  <Wrench
+                    className="h-5 w-5 text-info"
+                    aria-hidden="true"
+                  />
                 </div>
-              ) : (
-                <>
-                  {renderMobileSortBar(equipmentSort, setEquipmentSort)}
-                  {renderTable(equipment, equipmentSort, handleEquipmentSort, t("inventory:list.type_equipment"))}
-                </>
-              )}
-            </div>
-          </section>
+                <div>
+                  <h2 className="text-lg font-semibold text-text">{t("inventory:list.type_equipment")}</h2>
+                  <p className="text-xs text-text-secondary">
+                    {equipment.length}{" "}
+                    {t("inventory:list.type_equipment")}
+                  </p>
+                </div>
+              </div>
+              <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
+                {equipment.length === 0 ? (
+                  <div className="px-6 py-8 text-center text-sm text-text-secondary">
+                     {t("inventory:list.section_empty")}
+                  </div>
+                ) : (
+                  <>
+                    {renderMobileSortBar(equipmentSort, setEquipmentSort)}
+                    {renderTable(equipment, equipmentSort, handleEquipmentSort, t("inventory:list.type_equipment"))}
+                  </>
+                )}
+              </div>
+            </section>
+          )}
         </div>
       )}
 
