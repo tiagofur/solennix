@@ -79,6 +79,15 @@ public struct DashboardView: View {
                 // Premium: Monthly Revenue Trend
                 premiumReportsCard
 
+                // Forecast
+                if let vm = viewModel {
+                    ForecastWidgetView(
+                        forecast: vm.forecast,
+                        isLoading: vm.isLoading
+                    )
+                    .padding(.horizontal, sectionHorizontalPadding)
+                }
+
                 // Low Stock Alerts
                 if let vm = viewModel, !vm.lowStockItems.isEmpty {
                     lowStockSection(items: vm.lowStockItems)
@@ -103,12 +112,6 @@ public struct DashboardView: View {
                             products: vm.productDemand,
                             isLoading: vm.isLoading
                         )
-
-                        ForecastWidgetView(
-                            forecast: vm.forecast,
-                            isLoading: vm.isLoading
-                        )
-                        .gridCellColumns(sizeClass == .regular ? 2 : 1)
                     }
                     .padding(.horizontal, sectionHorizontalPadding)
                 }

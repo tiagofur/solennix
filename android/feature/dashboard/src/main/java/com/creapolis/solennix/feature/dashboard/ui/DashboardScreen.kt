@@ -303,6 +303,15 @@ fun DashboardScreen(
                     }
                 }
 
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    ForecastWidget(
+                        forecast = uiState.forecast,
+                        isLoading = uiState.isRefreshing,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
                 // Low Stock Alerts
                 if (uiState.lowStockItems.isNotEmpty()) {
                     item {
@@ -366,14 +375,7 @@ fun DashboardScreen(
                     )
                 }
 
-                item {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    ForecastWidget(
-                        forecast = uiState.forecast,
-                        isLoading = uiState.isRefreshing,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
+
 
                 item {
                     Spacer(modifier = Modifier.height(32.dp))
