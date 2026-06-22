@@ -70,7 +70,9 @@ fun DashboardScreen(
     onNewEventClick: () -> Unit = {},
     onNewClientClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
-    onOnboardingAction: (String) -> Unit = {}
+    onOnboardingAction: (String) -> Unit = {},
+    onClientClick: (String) -> Unit = {},
+    onProductClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isWideScreen = LocalIsWideScreen.current
@@ -301,6 +303,15 @@ fun DashboardScreen(
                     }
                 }
 
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    ForecastWidget(
+                        forecast = uiState.forecast,
+                        isLoading = uiState.isRefreshing,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
                 // Low Stock Alerts
                 if (uiState.lowStockItems.isNotEmpty()) {
                     item {
@@ -349,6 +360,7 @@ fun DashboardScreen(
                     TopClientsWidget(
                         clients = uiState.topClients,
                         isLoading = uiState.isRefreshing,
+                        onClientClick = onClientClick,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -358,18 +370,12 @@ fun DashboardScreen(
                     ProductDemandWidget(
                         products = uiState.productDemand,
                         isLoading = uiState.isRefreshing,
+                        onProductClick = onProductClick,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
 
-                item {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    ForecastWidget(
-                        forecast = uiState.forecast,
-                        isLoading = uiState.isRefreshing,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
+
 
                 item {
                     Spacer(modifier = Modifier.height(32.dp))

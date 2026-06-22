@@ -37,35 +37,38 @@ struct TopClientsWidgetView: View {
             } else {
                 VStack(spacing: Spacing.sm) {
                     ForEach(clients.prefix(5), id: \.id) { client in
-                        VStack(alignment: .leading, spacing: Spacing.xs) {
-                            Text(client.name)
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .foregroundStyle(SolennixColors.text)
-                                .lineLimit(1)
-                            HStack {
-                                Text(String.localizedStringWithFormat(
-                                    tr(
-                                        client.eventCount == 1
-                                            ? "dashboard.widgets.top_clients.events_one"
-                                            : "dashboard.widgets.top_clients.events_other",
-                                        client.eventCount == 1 ? "%lld evento" : "%lld eventos"
-                                    ),
-                                    client.eventCount
-                                ))
-                                    .font(.caption)
-                                    .foregroundStyle(SolennixColors.textSecondary)
-                                Spacer()
-                                Text(DashboardFormatting.currencyMXN(client.totalSpent))
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
+                        NavigationLink(value: Route.clientDetail(id: client.id)) {
+                            VStack(alignment: .leading, spacing: Spacing.xs) {
+                                Text(client.name)
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
                                     .foregroundStyle(SolennixColors.text)
+                                    .lineLimit(1)
+                                HStack {
+                                    Text(String.localizedStringWithFormat(
+                                        tr(
+                                            client.eventCount == 1
+                                                ? "dashboard.widgets.top_clients.events_one"
+                                                : "dashboard.widgets.top_clients.events_other",
+                                            client.eventCount == 1 ? "%lld evento" : "%lld eventos"
+                                        ),
+                                        client.eventCount
+                                    ))
+                                        .font(.caption)
+                                        .foregroundStyle(SolennixColors.textSecondary)
+                                    Spacer()
+                                    Text(DashboardFormatting.currencyMXN(client.totalSpent))
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .foregroundStyle(SolennixColors.text)
+                                }
                             }
+                            .padding(.vertical, Spacing.sm)
+                            .padding(.horizontal, Spacing.md)
+                            .background(SolennixColors.surfaceAlt)
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
                         }
-                        .padding(.vertical, Spacing.sm)
-                        .padding(.horizontal, Spacing.md)
-                        .background(SolennixColors.surfaceAlt)
-                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+                        .buttonStyle(.plain)
                     }
                 }
             }

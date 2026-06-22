@@ -270,6 +270,30 @@
         "La suite completa de tests de frontend (incluyendo PaymentFormFields) pasa al 100% en verde",
         "La suite ./init.sh se ejecuta y pasa correctamente sin errores"
       ]
+    },
+    {
+      "id": 23,
+      "name": "dashboard-top-clients-navigation",
+      "description": "feat(dashboard): redireccionar al detalle de cliente al cliquear en Top Clientes (Issue #576)",
+      "status": "done",
+      "acceptance_criteria": [
+        "Al hacer clic en un cliente de la lista de Clientes Principales en Web, se navega a /clients/:id",
+        "En iOS, al hacer clic en un cliente en Top Clients, se navega a Route.clientDetail",
+        "En Android, al hacer clic en un cliente de la lista, se navega a la pantalla client_detail/{clientId}",
+        "La navegación funciona correctamente y todos los tests pasan"
+      ]
+    },
+    {
+      "id": 24,
+      "name": "dashboard-product-demand-navigation",
+      "description": "feat(dashboard): redireccionar al detalle de producto al cliquear en Demanda de Productos (Issue #576)",
+      "status": "done",
+      "acceptance_criteria": [
+        "Al hacer clic en un producto de la lista de Demanda de Productos en Web, se navega a /products/:id",
+        "En iOS, al hacer clic en un producto en Product Demand, se navega a Route.productDetail",
+        "En Android, al hacer clic en un producto de la lista, se navega a la pantalla product_detail/{productId}",
+        "La navegación funciona correctamente y todos los tests pasan"
+      ]
     }
   ]
 }

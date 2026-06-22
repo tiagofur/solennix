@@ -928,13 +928,14 @@ export const Dashboard: React.FC = () => {
              )}
           </div>
 
+          <ForecastWidget />
+
           <RecentActivityCard />
 
           {/* Analytics Widgets */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <TopClientsWidget />
             <ProductDemandWidget />
-            <ForecastWidget />
           </div>
         </div>
 
