@@ -665,4 +665,79 @@ describe('InventoryList', () => {
     const ingredientTh = stockHeaders[0].closest('th');
     expect(ingredientTh).toHaveAttribute('aria-sort', 'none');
   });
+
+  it('renders scope filter buttons correctly', async () => {
+    (inventoryService.getAll as any).mockResolvedValue(sampleItems);
+
+    renderList();
+
+    await waitFor(() => {
+      expect(screen.getByText('Harina')).toBeInTheDocument();
+    });
+
+    // Check scope buttons exist
+    expect(screen.getByRole('button', { name: 'Todos' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ingredientes' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Insumos' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Equipo' })).toBeInTheDocument();
+  });
+
+  it('filters items correctly when scope buttons are clicked', async () => {
+    (inventoryService.getAll as any).mockResolvedValue(sampleItems);
+
+    renderList();
+
+    await waitFor(() => {
+      expect(screen.getByText('Harina')).toBeInTheDocument();
+    });
+
+    // Default state: all types shown
+    expect(screen.getByText('Harina')).toBeInTheDocument();
+    expect(screen.getByText('Horno')).toBeInTheDocument();
+
+    // Click on "Ingredientes"
+    fireEvent.click(screen.getByRole('button', { name: 'Ingredientes' }));
+
+    // Consumibles (Harina, Azucar) should be visible, Equipos (Horno) should be hidden
+    expect(screen.getByText('Harina')).toBeInTheDocument();
+    expect(screen.queryByText('Horno')).not.toBeInTheDocument();
+
+    // Click on "Equipo"
+    fireEvent.click(screen.getByRole('button', { name: 'Equipo' }));
+
+    // Equipos should be visible, Consumibles should be hidden
+    expect(screen.getByText('Horno')).toBeInTheDocument();
+    expect(screen.queryByText('Harina')).not.toBeInTheDocument();
+  });
+
+  it('shows correct empty state when a scope is empty', async () => {
+    // Only ingredient items
+    (inventoryService.getAll as any).mockResolvedValue([
+      {
+        id: '1',
+        ingredient_name: 'Harina',
+        unit: 'kg',
+        type: 'ingredient',
+        current_stock: 10,
+        minimum_stock: 5,
+        unit_cost: 10,
+      },
+    ]);
+
+    renderList();
+
+    await waitFor(() => {
+      expect(screen.getByText('Harina')).toBeInTheDocument();
+    });
+
+    // Click on "Equipo"
+    fireEvent.click(screen.getByRole('button', { name: 'Equipo' }));
+
+    // Harina should be hidden
+    expect(screen.queryByText('Harina')).not.toBeInTheDocument();
+
+    // Should show the empty state for Equipment
+    expect(screen.getByText('Sin equipo')).toBeInTheDocument();
+    expect(screen.getByText('No hay equipo en el inventario.')).toBeInTheDocument();
+  });
 });

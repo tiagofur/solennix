@@ -43,7 +43,17 @@
     "item_deleted": "Ítem eliminado exitosamente",
     "error_create": "Error al crear el ítem",
     "error_update": "Error al actualizar el ítem",
-    "error_delete": "Error al eliminar el ítem"
+    "error_delete": "Error al eliminar el ítem",
+    "scope_all": "Todos",
+    "scope_ingredient": "Ingredientes",
+    "scope_equipment": "Equipo",
+    "scope_supply": "Insumos",
+    "scope_empty_ingredient": "Sin ingredientes",
+    "scope_empty_equipment": "Sin equipo",
+    "scope_empty_supply": "Sin insumos",
+    "scope_empty_ingredient_desc": "No hay ingredientes en el inventario.",
+    "scope_empty_equipment_desc": "No hay equipo en el inventario.",
+    "scope_empty_supply_desc": "No hay insumos en el inventario."
   },
   "form": {
     "basic_info": "Información Básica",
