@@ -1,0 +1,23 @@
+changeName: backend-access-control-gaps
+artifactStore: openspec
+executionMode: interactive
+currentPhase: sdd-tasks
+nextPhase: sdd-apply
+status: success
+blockedReasons: []
+history:
+  - phase: sdd-explore
+    status: success
+    timestamp: 2026-06-20T23:21:00Z
+  - phase: sdd-propose
+    status: success
+    timestamp: 2026-06-20T23:21:49Z
+  - phase: sdd-spec
+    status: success
+    timestamp: 2026-06-20T23:22:32Z
+  - phase: sdd-design
+    status: success
+    timestamp: 2026-06-20T23:24:10Z
+  - phase: sdd-tasks
+    status: success
+    timestamp: 2026-06-20T23:25:02Z
