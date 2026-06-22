@@ -44,6 +44,13 @@ const pwnedPasswordRangeURL = "https://api.pwnedpasswords.com/range"
 
 type passwordBreachCheckFunc func(ctx context.Context, password string) (bool, error)
 
+// validateGoogleTokenFunc is the function type for validating Google ID tokens.
+// Using a function field allows tests to inject a mock without external network calls.
+type validateGoogleTokenFunc func(ctx context.Context, idToken string, allowedClientIDs []string) (*GoogleIDTokenClaims, error)
+
+// validateAppleTokenFunc is the function type for validating Apple identity tokens.
+type validateAppleTokenFunc func(identityToken string, allowedClientIDs []string) (*AppleIDTokenClaims, error)
+
 // clientIP returns the real client IP address.
 // It only trusts X-Forwarded-For when middleware.TrustProxy is set, preventing
 // IP spoofing in audit logs. Always strips the port from RemoteAddr.
@@ -180,14 +187,18 @@ type AuthHandler struct {
 	cfg                 *config.Config
 	refreshTokenRepo    RefreshTokenRepository
 	passwordBreachCheck passwordBreachCheckFunc
+	validateGoogleToken validateGoogleTokenFunc
+	validateAppleToken  validateAppleTokenFunc
 }
 
 func NewAuthHandler(userRepo FullUserRepository, authService *services.AuthService, emailService *services.EmailService, cfg *config.Config) *AuthHandler {
 	h := &AuthHandler{
-		userRepo:     userRepo,
-		authService:  authService,
-		emailService: emailService,
-		cfg:          cfg,
+		userRepo:            userRepo,
+		authService:         authService,
+		emailService:        emailService,
+		cfg:                 cfg,
+		validateGoogleToken: validateGoogleIDToken,
+		validateAppleToken:  validateAppleIDToken,
 	}
 
 	if cfg != nil && cfg.PasswordBreachCheckEnabled {
@@ -1149,8 +1160,12 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate Google ID token
-	claims, err := validateGoogleIDToken(r.Context(), req.IDToken, h.cfg.GoogleClientIDs)
+	// Validate Google ID token (uses injectable func for testability; falls back to real validator)
+	googleTokenValidator := h.validateGoogleToken
+	if googleTokenValidator == nil {
+		googleTokenValidator = validateGoogleIDToken
+	}
+	claims, err := googleTokenValidator(r.Context(), req.IDToken, h.cfg.GoogleClientIDs)
 	if err != nil {
 		slog.Warn("Invalid Google ID token", "error", err)
 		writeAuthI18nError(w, r, http.StatusUnauthorized, "auth.google_token_invalid")
@@ -1536,8 +1551,12 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate Apple identity token
-	claims, err := validateAppleIDToken(req.IdentityToken, h.cfg.AppleClientIDs)
+	// Validate Apple identity token (uses injectable func for testability; falls back to real validator)
+	appleTokenValidator := h.validateAppleToken
+	if appleTokenValidator == nil {
+		appleTokenValidator = validateAppleIDToken
+	}
+	claims, err := appleTokenValidator(req.IdentityToken, h.cfg.AppleClientIDs)
 	if err != nil {
 		slog.Warn("Invalid Apple identity token", "error", err)
 		writeError(w, http.StatusUnauthorized, "Invalid Apple identity token")
