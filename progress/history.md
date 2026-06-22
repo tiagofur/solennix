@@ -322,3 +322,15 @@
   - `android/feature/dashboard/src/main/java/com/creapolis/solennix/feature/dashboard/ui/TopClientsWidget.kt` (Añadir callback clickable en ítems de clientes)
   - `android/feature/dashboard/src/main/java/com/creapolis/solennix/feature/dashboard/ui/DashboardScreen.kt` (Pasar listener de navegación al widget)
   - `android/app/src/main/java/com/creapolis/solennix/ui/navigation/CompactBottomNavLayout.kt` (Enrutar callback de navegación a client_detail/{id})
+
+## Sesión 2026-06-22: Redirección desde Demanda de Productos en el Dashboard
+- **Feature ID:** 24 (dashboard-product-demand-navigation)
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1250 tests en verde).
+- **Entregables:**
+  - `web/src/components/ProductDemandWidget.tsx` (Enrutado al detalle del producto usando `useNavigate`)
+  - `web/src/components/ProductDemandWidget.test.tsx` (Nuevas pruebas unitarias para interactividad de clics)
+  - `ios/Packages/SolennixFeatures/Sources/SolennixFeatures/Dashboard/Views/ProductDemandWidgetView.swift` (Envolver ítems de productos en NavigationLink con PlainButtonStyle)
+  - `android/feature/dashboard/src/main/java/com/creapolis/solennix/feature/dashboard/ui/ProductDemandWidget.kt` (Añadir callback clickable en ítems de productos)
+  - `android/feature/dashboard/src/main/java/com/creapolis/solennix/feature/dashboard/ui/DashboardScreen.kt` (Pasar listener de navegación al widget)
+  - `android/app/src/main/java/com/creapolis/solennix/ui/navigation/CompactBottomNavLayout.kt` (Enrutar callback de navegación a product_detail/{id})
+

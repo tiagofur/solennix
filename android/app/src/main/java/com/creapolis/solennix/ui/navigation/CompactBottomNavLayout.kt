@@ -183,6 +183,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onNewClientClick = { navController.navigate("client_form") },
                     onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onClientClick = { id -> navController.navigate("client_detail/$id") },
+                    onProductClick = { id -> navController.navigate("product_detail/$id") },
                     onOnboardingAction = { action ->
                         when (action) {
                             "clients" -> navController.navigate("client_form")

@@ -71,7 +71,8 @@ fun DashboardScreen(
     onNewClientClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
     onOnboardingAction: (String) -> Unit = {},
-    onClientClick: (String) -> Unit = {}
+    onClientClick: (String) -> Unit = {},
+    onProductClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isWideScreen = LocalIsWideScreen.current
@@ -360,6 +361,7 @@ fun DashboardScreen(
                     ProductDemandWidget(
                         products = uiState.productDemand,
                         isLoading = uiState.isRefreshing,
+                        onProductClick = onProductClick,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }

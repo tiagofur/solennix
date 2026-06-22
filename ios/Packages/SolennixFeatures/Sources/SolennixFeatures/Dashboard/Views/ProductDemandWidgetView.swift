@@ -37,35 +37,38 @@ struct ProductDemandWidgetView: View {
             } else {
                 VStack(spacing: Spacing.sm) {
                     ForEach(products.prefix(5), id: \.id) { product in
-                        VStack(alignment: .leading, spacing: Spacing.xs) {
-                            Text(product.name)
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .foregroundStyle(SolennixColors.text)
-                                .lineLimit(1)
-                            HStack {
-                                Text(String.localizedStringWithFormat(
-                                    tr(
-                                        product.timesUsed == 1
-                                            ? "dashboard.widgets.product_demand.uses_one"
-                                            : "dashboard.widgets.product_demand.uses_other",
-                                        product.timesUsed == 1 ? "%lld uso" : "%lld usos"
-                                    ),
-                                    product.timesUsed
-                                ))
-                                    .font(.caption)
-                                    .foregroundStyle(SolennixColors.textSecondary)
-                                Spacer()
-                                Text(DashboardFormatting.currencyMXN(product.totalRevenue))
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
+                        NavigationLink(value: Route.productDetail(id: product.id)) {
+                            VStack(alignment: .leading, spacing: Spacing.xs) {
+                                Text(product.name)
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
                                     .foregroundStyle(SolennixColors.text)
+                                    .lineLimit(1)
+                                HStack {
+                                    Text(String.localizedStringWithFormat(
+                                        tr(
+                                            product.timesUsed == 1
+                                                ? "dashboard.widgets.product_demand.uses_one"
+                                                : "dashboard.widgets.product_demand.uses_other",
+                                            product.timesUsed == 1 ? "%lld uso" : "%lld usos"
+                                        ),
+                                        product.timesUsed
+                                    ))
+                                        .font(.caption)
+                                        .foregroundStyle(SolennixColors.textSecondary)
+                                    Spacer()
+                                    Text(DashboardFormatting.currencyMXN(product.totalRevenue))
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .foregroundStyle(SolennixColors.text)
+                                }
                             }
+                            .padding(.vertical, Spacing.sm)
+                            .padding(.horizontal, Spacing.md)
+                            .background(SolennixColors.surfaceAlt)
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
                         }
-                        .padding(.vertical, Spacing.sm)
-                        .padding(.horizontal, Spacing.md)
-                        .background(SolennixColors.surfaceAlt)
-                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+                        .buttonStyle(.plain)
                     }
                 }
             }

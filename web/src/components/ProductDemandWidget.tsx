@@ -1,11 +1,13 @@
 import React from "react";
 import { useProductDemand } from "@/hooks/queries/useDashboardQueries";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { Package, AlertTriangle } from "lucide-react";
 import { formatCurrency } from "@/lib/finance";
 
 export function ProductDemandWidget() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { data, isLoading, error } = useProductDemand();
 
   if (isLoading) {
@@ -71,7 +73,8 @@ export function ProductDemandWidget() {
         {data.slice(0, 5).map((item) => (
           <div
             key={item.id}
-            className="flex items-center justify-between p-3 bg-surface-alt rounded-lg hover:bg-surface-alt/80 transition-colors"
+            onClick={() => navigate(`/products/${item.id}`)}
+            className="flex items-center justify-between p-3 bg-surface-alt rounded-lg hover:bg-surface-alt/80 transition-colors cursor-pointer"
           >
             <div className="min-w-0">
               <p className="text-sm font-medium text-foreground truncate">
