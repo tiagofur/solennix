@@ -335,10 +335,15 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// M15: validate client_id belongs to this event.
+	// M15: fail-closed validation — client_id must match this event's ClientID.
+	// If the event cannot be looked up, deny access rather than allowing bypass.
 	if h.lookupEvent != nil {
 		event, evErr := h.lookupEvent(ctx, eventID)
-		if evErr == nil && event != nil && event.ClientID != clientID {
+		if evErr != nil || event == nil {
+			writeError(w, http.StatusForbidden, "Unable to verify client access")
+			return
+		}
+		if event.ClientID != clientID {
 			writeError(w, http.StatusForbidden, "Client ID mismatch")
 			return
 		}
@@ -506,10 +511,15 @@ func (h *PaymentSubmissionHandler) GetHistoryPublic(w http.ResponseWriter, r *ht
 		return
 	}
 
-	// M15: validate client_id belongs to this event.
+	// M15: fail-closed validation — client_id must match this event's ClientID.
+	// If the event cannot be looked up, deny access rather than allowing bypass.
 	if h.lookupEvent != nil {
 		event, evErr := h.lookupEvent(ctx, eventID)
-		if evErr == nil && event != nil && event.ClientID != clientID {
+		if evErr != nil || event == nil {
+			writeError(w, http.StatusForbidden, "Unable to verify client access")
+			return
+		}
+		if event.ClientID != clientID {
 			writeError(w, http.StatusForbidden, "Client ID mismatch")
 			return
 		}
