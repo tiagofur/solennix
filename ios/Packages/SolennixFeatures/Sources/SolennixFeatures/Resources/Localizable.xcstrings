@@ -4,6 +4,9 @@
     "" : {
 
     },
+    "¿Descartar los cambios sin guardar?" : {
+
+    },
     "¿Estás seguro de que quieres cerrar sesión?" : {
 
     },
@@ -353,6 +356,9 @@
 
     },
     "Asignación" : {
+
+    },
+    "Atrás" : {
 
     },
     "auth.biometric.brand.tagline" : {
@@ -6242,6 +6248,9 @@
     "Desbloquea Solennix" : {
 
     },
+    "Descartar cambios" : {
+
+    },
     "Descendente" : {
 
     },
@@ -10060,6 +10069,7 @@
       }
     },
     "events.form.finances.notes" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -20034,6 +20044,9 @@
       }
     },
     "Seccion" : {
+
+    },
+    "Seguir editando" : {
 
     },
     "Selecciona el nuevo estado del evento" : {

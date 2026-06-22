@@ -1,6 +1,7 @@
 package com.creapolis.solennix.feature.dashboard.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -22,6 +23,7 @@ import com.creapolis.solennix.feature.dashboard.R
 fun TopClientsWidget(
     clients: List<TopClient>,
     isLoading: Boolean,
+    onClientClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -73,6 +75,7 @@ fun TopClientsWidget(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .clickable { onClientClick(client.id) }
                                     .padding(8.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween

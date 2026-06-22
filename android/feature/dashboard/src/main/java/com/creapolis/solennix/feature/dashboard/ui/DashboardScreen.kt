@@ -70,7 +70,8 @@ fun DashboardScreen(
     onNewEventClick: () -> Unit = {},
     onNewClientClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
-    onOnboardingAction: (String) -> Unit = {}
+    onOnboardingAction: (String) -> Unit = {},
+    onClientClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isWideScreen = LocalIsWideScreen.current
@@ -349,6 +350,7 @@ fun DashboardScreen(
                     TopClientsWidget(
                         clients = uiState.topClients,
                         isLoading = uiState.isRefreshing,
+                        onClientClick = onClientClick,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }

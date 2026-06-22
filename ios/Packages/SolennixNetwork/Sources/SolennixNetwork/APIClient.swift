@@ -951,12 +951,12 @@ public actor APIClient {
         let mimeType = filename.hasSuffix(".png") ? "image/png" : "image/jpeg"
 
         // Data(string.utf8) is non-failable — no force-unwrap risk.
-        body.append(Data("--\(boundary)\r\n".utf8))
-        body.append(Data("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n".utf8))
-        body.append(Data("Content-Type: \(mimeType)\r\n\r\n".utf8))
-        body.append(data)
-        body.append(Data("\r\n".utf8))
-        body.append(Data("--\(boundary)--\r\n".utf8))
+        body.append(contentsOf: Data("--\(boundary)\r\n".utf8))
+        body.append(contentsOf: Data("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n".utf8))
+        body.append(contentsOf: Data("Content-Type: \(mimeType)\r\n\r\n".utf8))
+        body.append(contentsOf: data)
+        body.append(contentsOf: Data("\r\n".utf8))
+        body.append(contentsOf: Data("--\(boundary)--\r\n".utf8))
 
         return body
     }
