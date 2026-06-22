@@ -35,16 +35,16 @@ struct ProductDemandWidgetView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, Spacing.xl)
             } else {
-                VStack(spacing: Spacing.sm) {
-                    ForEach(products.prefix(5), id: \.id) { product in
+                VStack(spacing: 0) {
+                    ForEach(Array(products.prefix(5).enumerated()), id: \.element.id) { index, product in
                         NavigationLink(value: Route.productDetail(id: product.id)) {
-                            VStack(alignment: .leading, spacing: Spacing.xs) {
-                                Text(product.name)
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .foregroundStyle(SolennixColors.text)
-                                    .lineLimit(1)
-                                HStack {
+                            HStack {
+                                VStack(alignment: .leading, spacing: Spacing.xxs) {
+                                    Text(product.name)
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                        .foregroundStyle(SolennixColors.text)
+                                        .lineLimit(1)
                                     Text(String.localizedStringWithFormat(
                                         tr(
                                             product.timesUsed == 1
@@ -54,21 +54,25 @@ struct ProductDemandWidgetView: View {
                                         ),
                                         product.timesUsed
                                     ))
-                                        .font(.caption)
-                                        .foregroundStyle(SolennixColors.textSecondary)
-                                    Spacer()
-                                    Text(DashboardFormatting.currencyMXN(product.totalRevenue))
-                                        .font(.caption)
-                                        .fontWeight(.semibold)
-                                        .foregroundStyle(SolennixColors.text)
+                                    .font(.caption)
+                                    .foregroundStyle(SolennixColors.textSecondary)
                                 }
+                                Spacer()
+                                Text(DashboardFormatting.currencyMXN(product.totalRevenue))
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(SolennixColors.primary)
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundStyle(SolennixColors.textTertiary)
                             }
                             .padding(.vertical, Spacing.sm)
-                            .padding(.horizontal, Spacing.md)
-                            .background(SolennixColors.surfaceAlt)
-                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
                         }
                         .buttonStyle(.plain)
+
+                        if index < products.prefix(5).count - 1 {
+                            Divider()
+                        }
                     }
                 }
             }

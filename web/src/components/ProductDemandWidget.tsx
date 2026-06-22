@@ -69,12 +69,12 @@ export function ProductDemandWidget() {
           {t("dashboard:widgets.product_demand.title")}
         </h3>
       </div>
-      <div className="space-y-3">
+      <div className="divide-y divide-border">
         {data.slice(0, 5).map((item) => (
           <div
             key={item.id}
             onClick={() => navigate(`/products/${item.id}`)}
-            className="flex items-center justify-between p-3 bg-surface-alt rounded-lg hover:bg-surface-alt/80 transition-colors cursor-pointer"
+            className="flex items-center justify-between py-3 hover:bg-surface-alt/50 transition-colors cursor-pointer -mx-6 px-6"
           >
             <div className="min-w-0">
               <p className="text-sm font-medium text-foreground truncate">

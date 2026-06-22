@@ -1,10 +1,9 @@
 package com.creapolis.solennix.feature.dashboard.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -42,17 +41,29 @@ fun TopClientsWidget(
 
             when {
                 isLoading -> {
-                    repeat(3) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp)
-                                .padding(vertical = 4.dp)
-                                .background(
-                                    SolennixTheme.colors.surfaceAlt,
-                                    RoundedCornerShape(8.dp)
+                    repeat(3) { index ->
+                        Column {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(16.dp, 10.dp)
+                                        .weight(1f)
                                 )
-                        )
+                                Box(
+                                    modifier = Modifier
+                                        .width(60.dp)
+                                        .height(10.dp)
+                                )
+                            }
+                            if (index < 2) {
+                                HorizontalDivider(color = SolennixTheme.colors.divider.copy(alpha = 0.5f))
+                            }
+                        }
                     }
                 }
                 clients.isEmpty() -> {
@@ -70,13 +81,13 @@ fun TopClientsWidget(
                     }
                 }
                 else -> {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        clients.forEach { client ->
+                    Column {
+                        clients.forEachIndexed { index, client ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable { onClientClick(client.id) }
-                                    .padding(8.dp),
+                                    .padding(vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
@@ -105,11 +116,28 @@ fun TopClientsWidget(
                                         )
                                     }
                                 }
-                                Text(
-                                    client.totalSpent.asMXNCompact(),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = SolennixTheme.colors.kpiGreen,
-                                    fontWeight = FontWeight.SemiBold
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(
+                                        client.totalSpent.asMXNCompact(),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = SolennixTheme.colors.kpiGreen,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                        contentDescription = null,
+                                        tint = SolennixTheme.colors.secondaryText,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                            if (index < clients.lastIndex) {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(horizontal = 0.dp),
+                                    color = SolennixTheme.colors.divider.copy(alpha = 0.5f)
                                 )
                             }
                         }
