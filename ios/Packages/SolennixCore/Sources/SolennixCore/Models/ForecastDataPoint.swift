@@ -5,11 +5,11 @@ import Foundation
 public struct ForecastDataPoint: Codable, Sendable, Hashable {
     public let month: String // "YYYY-MM"
     public let confirmedRevenue: Double
-    public let confirmedEventCount: Int
+    public let confirmedEvents: Int
 
-    public init(month: String, confirmedRevenue: Double, confirmedEventCount: Int) {
+    public init(month: String, confirmedRevenue: Double, confirmedEvents: Int) {
         self.month = month
         self.confirmedRevenue = confirmedRevenue
-        self.confirmedEventCount = confirmedEventCount
+        self.confirmedEvents = confirmedEvents
     }
 }

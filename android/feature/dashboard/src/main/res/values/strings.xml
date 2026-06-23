@@ -74,8 +74,10 @@
         <item quantity="other">%1$d usos</item>
     </plurals>
 
-    <string name="dashboard_widget_forecast_title">Proyección de ingresos</string>
-    <string name="dashboard_widget_forecast_empty">Sin proyecciones disponibles</string>
+    <string name="dashboard_widget_forecast_title">Pronóstico</string>
+    <string name="dashboard_widget_forecast_empty">Sin pronóstico disponible</string>
+    <string name="dashboard_widget_forecast_projected_revenue">Ingresos proyectados</string>
+    <string name="dashboard_widget_forecast_confirmed_events">Eventos confirmados</string>
     <plurals name="dashboard_widget_forecast_events">
         <item quantity="one">%1$d evento</item>
         <item quantity="other">%1$d eventos</item>

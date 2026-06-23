@@ -88,7 +88,7 @@ final class DashboardMetricsModelsTests: XCTestCase {
         {
           "month": "2026-08",
           "confirmed_revenue": 35000.75,
-          "confirmed_event_count": 9
+          "confirmed_events": 9
         }
         """.data(using: .utf8)!
 
@@ -99,7 +99,7 @@ final class DashboardMetricsModelsTests: XCTestCase {
 
         XCTAssertEqual(point.month, "2026-08")
         XCTAssertEqual(point.confirmedRevenue, 35000.75)
-        XCTAssertEqual(point.confirmedEventCount, 9)
+        XCTAssertEqual(point.confirmedEvents, 9)
     }
 
     func testProductDemandItemInitAndIdentity() {
