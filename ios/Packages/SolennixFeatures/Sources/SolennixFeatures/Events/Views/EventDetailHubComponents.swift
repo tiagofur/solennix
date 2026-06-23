@@ -290,10 +290,10 @@ struct EventDetailHeaderCard: View {
                 }
 
                 EventDetailQuickInfoItem(icon: "person.2", label: peopleLabel, value: peopleValue)
+            }
 
-                if let locationLabel, let locationValue, !locationValue.isEmpty {
-                    EventDetailQuickInfoItem(icon: "mappin", label: locationLabel, value: locationValue)
-                }
+            if let locationLabel, let locationValue, !locationValue.isEmpty {
+                EventDetailQuickInfoItem(icon: "mappin", label: locationLabel, value: locationValue, lineLimit: nil)
             }
 
             // Client contact actions (Call, WhatsApp, Email) inside the same card!
@@ -952,8 +952,9 @@ struct EventDetailHubSkeleton: View {
                     SkeletonLine(width: 80, height: 24)
                 }
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Spacing.sm) {
-                    ForEach(0..<4, id: \.self) { _ in SkeletonLine(height: 36) }
+                    ForEach(0..<3, id: \.self) { _ in SkeletonLine(height: 36) }
                 }
+                SkeletonLine(height: 36)
             }
             .padding(Spacing.md)
             .listRowBackground(SolennixColors.card)
