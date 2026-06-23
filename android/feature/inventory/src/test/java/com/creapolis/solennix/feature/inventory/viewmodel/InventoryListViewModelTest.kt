@@ -68,8 +68,7 @@ class InventoryListViewModelTest {
         vm.onLowStockToggle(true)
         advanceUntilIdle()
 
-        assertEquals(listOf("Harina"), vm.uiState.value.ingredientItems.map { it.ingredientName })
-        assertEquals(listOf("Microfono"), vm.uiState.value.equipmentItems.map { it.ingredientName })
+        assertEquals(listOf("Harina", "Microfono"), vm.uiState.value.items.map { it.ingredientName })
 
         collector.cancel()
     }
@@ -89,11 +88,11 @@ class InventoryListViewModelTest {
 
         vm.onSortChange(InventorySortKey.CURRENT_STOCK)
         advanceUntilIdle()
-        assertEquals(listOf(3.0, 6.0, 9.0), vm.uiState.value.ingredientItems.map { it.currentStock })
+        assertEquals(listOf(3.0, 6.0, 9.0), vm.uiState.value.items.map { it.currentStock })
 
         vm.onSortChange(InventorySortKey.CURRENT_STOCK)
         advanceUntilIdle()
-        assertEquals(listOf(9.0, 6.0, 3.0), vm.uiState.value.ingredientItems.map { it.currentStock })
+        assertEquals(listOf(9.0, 6.0, 3.0), vm.uiState.value.items.map { it.currentStock })
 
         collector.cancel()
     }
@@ -108,9 +107,7 @@ class InventoryListViewModelTest {
         advanceUntilIdle()
 
         assertEquals(InventoryScope.ALL, vm.uiState.value.scope)
-        assertTrue(vm.uiState.value.ingredientItems.isNotEmpty())
-        assertTrue(vm.uiState.value.equipmentItems.isNotEmpty())
-        assertTrue(vm.uiState.value.supplyItems.isNotEmpty())
+        assertEquals(4, vm.uiState.value.items.size)
 
         collector.cancel()
     }
@@ -126,10 +123,8 @@ class InventoryListViewModelTest {
         advanceUntilIdle()
 
         assertEquals(InventoryScope.INGREDIENT, vm.uiState.value.scope)
-        // UI state client-side filter: equipment and supply must be hidden
-        assertTrue(vm.uiState.value.equipmentItems.isEmpty())
-        assertTrue(vm.uiState.value.supplyItems.isEmpty())
-        // Sync was called with the ingredient type param
+        assertTrue(vm.uiState.value.items.all { it.type == InventoryType.INGREDIENT })
+        assertEquals(2, vm.uiState.value.items.size)
         coVerify { repo.syncInventory("ingredient") }
 
         collector.cancel()
@@ -146,8 +141,8 @@ class InventoryListViewModelTest {
         advanceUntilIdle()
 
         assertEquals(InventoryScope.EQUIPMENT, vm.uiState.value.scope)
-        assertTrue(vm.uiState.value.ingredientItems.isEmpty())
-        assertTrue(vm.uiState.value.supplyItems.isEmpty())
+        assertTrue(vm.uiState.value.items.all { it.type == InventoryType.EQUIPMENT })
+        assertEquals(1, vm.uiState.value.items.size)
         coVerify { repo.syncInventory("equipment") }
 
         collector.cancel()
@@ -164,8 +159,8 @@ class InventoryListViewModelTest {
         advanceUntilIdle()
 
         assertEquals(InventoryScope.SUPPLY, vm.uiState.value.scope)
-        assertTrue(vm.uiState.value.ingredientItems.isEmpty())
-        assertTrue(vm.uiState.value.equipmentItems.isEmpty())
+        assertTrue(vm.uiState.value.items.all { it.type == InventoryType.SUPPLY })
+        assertEquals(1, vm.uiState.value.items.size)
         coVerify { repo.syncInventory("supply") }
 
         collector.cancel()
@@ -209,11 +204,9 @@ class InventoryListViewModelTest {
         advanceUntilIdle()
 
         // Even though DB still has equipment+supply items, client-side filter hides them
-        assertTrue(vm.uiState.value.equipmentItems.isEmpty(),
-            "Equipment items must be hidden when scope is INGREDIENT (stale-append guard)")
-        assertTrue(vm.uiState.value.supplyItems.isEmpty(),
-            "Supply items must be hidden when scope is INGREDIENT (stale-append guard)")
-        assertTrue(vm.uiState.value.ingredientItems.isNotEmpty())
+        assertTrue(vm.uiState.value.items.all { it.type == InventoryType.INGREDIENT },
+            "Only ingredient items must be shown when scope is INGREDIENT (stale-append guard)")
+        assertTrue(vm.uiState.value.items.isNotEmpty())
 
         collector.cancel()
     }
