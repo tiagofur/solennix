@@ -76,6 +76,8 @@
 
     <string name="dashboard_widget_forecast_title">Revenue forecast</string>
     <string name="dashboard_widget_forecast_empty">No forecast available</string>
+    <string name="dashboard_widget_forecast_projected_revenue">Projected revenue</string>
+    <string name="dashboard_widget_forecast_confirmed_events">Confirmed</string>
     <plurals name="dashboard_widget_forecast_events">
         <item quantity="one">%1$d event</item>
         <item quantity="other">%1$d events</item>

@@ -55,7 +55,7 @@ struct ForecastWidgetView: View {
                         Text(tr("dashboard.widgets.forecast.confirmed_events", "Eventos confirmados"))
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textSecondary)
-                        Text("\(forecast.reduce(0) { $0 + $1.confirmedEventCount })")
+                        Text("\(forecast.reduce(0) { $0 + $1.confirmedEvents })")
                             .font(.headline)
                             .fontWeight(.semibold)
                             .foregroundStyle(SolennixColors.text)
@@ -83,12 +83,12 @@ struct ForecastWidgetView: View {
                             HStack {
                                 Text(String.localizedStringWithFormat(
                                     tr(
-                                        point.confirmedEventCount == 1
+                                        point.confirmedEvents == 1
                                             ? "dashboard.widgets.forecast.events_one"
                                             : "dashboard.widgets.forecast.events_other",
-                                        point.confirmedEventCount == 1 ? "%lld evento" : "%lld eventos"
+                                        point.confirmedEvents == 1 ? "%lld evento" : "%lld eventos"
                                     ),
-                                    point.confirmedEventCount
+                                    point.confirmedEvents
                                 ))
                                     .font(.caption)
                                     .foregroundStyle(SolennixColors.textSecondary)
@@ -123,10 +123,10 @@ struct ForecastWidgetView: View {
     VStack(spacing: 16) {
         ForecastWidgetView(
             forecast: [
-                ForecastDataPoint(month: "2024-05", confirmedRevenue: 45000, confirmedEventCount: 3),
-                ForecastDataPoint(month: "2024-06", confirmedRevenue: 62000, confirmedEventCount: 5),
-                ForecastDataPoint(month: "2024-07", confirmedRevenue: 58000, confirmedEventCount: 4),
-                ForecastDataPoint(month: "2024-08", confirmedRevenue: 75000, confirmedEventCount: 6),
+                ForecastDataPoint(month: "2024-05", confirmedRevenue: 45000, confirmedEvents: 3),
+                ForecastDataPoint(month: "2024-06", confirmedRevenue: 62000, confirmedEvents: 5),
+                ForecastDataPoint(month: "2024-07", confirmedRevenue: 58000, confirmedEvents: 4),
+                ForecastDataPoint(month: "2024-08", confirmedRevenue: 75000, confirmedEvents: 6),
             ],
             isLoading: false
         )

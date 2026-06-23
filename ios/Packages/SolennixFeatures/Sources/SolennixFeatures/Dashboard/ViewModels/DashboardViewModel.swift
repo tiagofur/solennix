@@ -244,6 +244,10 @@ public final class DashboardViewModel {
             Endpoint.events,
             label: "all events"
         )
+        let loadedUpcomingEvents: [Event] = await loadOrEmpty(
+            Endpoint.upcomingEvents,
+            label: "upcoming events"
+        )
         let inventory: [InventoryItem] = await loadOrEmpty(
             Endpoint.inventory,
             label: "inventory"
@@ -266,10 +270,7 @@ public final class DashboardViewModel {
         allPayments = loadedAllPayments
 
         // Upcoming events
-        let derivedUpcoming = loadedAllEvents
-            .filter { Self.isUpcomingEvent($0) }
-            .sorted(by: Self.compareDashboardEvents)
-        upcomingEvents = Array(derivedUpcoming.prefix(5))
+        upcomingEvents = Array(loadedUpcomingEvents.sorted(by: Self.compareDashboardEvents).prefix(5))
 
         // Low stock items = inventory where current_stock < minimum_stock AND minimum_stock > 0.
         // lowStockItems.count is the single canonical source once inventory loads.
