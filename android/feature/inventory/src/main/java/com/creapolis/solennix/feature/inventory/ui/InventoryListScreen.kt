@@ -311,9 +311,7 @@ fun InventoryListScreen(
                     }
                 }
 
-                val hasItems = uiState.ingredientItems.isNotEmpty() ||
-                    uiState.equipmentItems.isNotEmpty() ||
-                    uiState.supplyItems.isNotEmpty()
+                val hasItems = uiState.items.isNotEmpty()
 
                 if (uiState.isLoading && !hasItems) {
                     InventorySkeletonList()
@@ -332,95 +330,63 @@ fun InventoryListScreen(
                         message = ""
                     )
                 } else {
-                    val allSections = buildList {
-                        if (uiState.ingredientItems.isNotEmpty())
-                            add(Triple(InventoryStrings.ingredients, Icons.Default.ShoppingBasket, uiState.ingredientItems))
-                        if (uiState.supplyItems.isNotEmpty())
-                            add(Triple(InventoryStrings.supplies, Icons.Default.Kitchen, uiState.supplyItems))
-                        if (uiState.equipmentItems.isNotEmpty())
-                            add(Triple(InventoryStrings.equipment, Icons.Outlined.Build, uiState.equipmentItems))
-                    }
-
                     AdaptiveCardGrid(
                         gridContent = {
-                            allSections.forEach { (title, icon, sectionItems) ->
-                                item(span = { GridItemSpan(maxLineSpan) }) {
-                                    InventorySectionHeader(title = title, icon = icon, itemCount = sectionItems.size)
-                                }
-                                items(items = sectionItems, key = { it.id }) { item ->
-                                    InventoryGridCard(
-                                        item = item,
-                                        onClick = { onItemClick(item.id) },
-                                        onLongClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            rowActionsInventoryItem = item
-                                        }
-                                    )
-                                }
-                                item(span = { GridItemSpan(maxLineSpan) }) {
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                }
+                            items(items = uiState.items, key = { it.id }) { item ->
+                                InventoryGridCard(
+                                    item = item,
+                                    showTypeBadge = uiState.scope == InventoryScope.ALL,
+                                    onClick = { onItemClick(item.id) },
+                                    onLongClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        rowActionsInventoryItem = item
+                                    }
+                                )
                             }
                             item(span = { GridItemSpan(maxLineSpan) }) {
                                 Spacer(modifier = Modifier.height(80.dp))
                             }
                         },
                         listContent = {
-                            if (uiState.ingredientItems.isNotEmpty()) {
-                                item {
-                                    InventorySection(
-                                        title = InventoryStrings.ingredients,
-                                        icon = Icons.Default.ShoppingBasket,
-                                        itemCount = uiState.ingredientItems.size,
-                                        items = uiState.ingredientItems,
-                                        onItemClick = onItemClick,
-                                        onEditItem = onEditItem,
-                                        onDeleteWithConfirm = { viewModel.deleteItem(it) },
-                                        onLongClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            rowActionsInventoryItem = it
+                            item {
+                                Surface(
+                                    shape = MaterialTheme.shapes.medium,
+                                    color = SolennixTheme.colors.card,
+                                    tonalElevation = 1.dp
+                                ) {
+                                    Column(
+                                        modifier = Modifier.animateContentSize(
+                                            animationSpec = spring(
+                                                dampingRatio = Spring.DampingRatioNoBouncy,
+                                                stiffness = Spring.StiffnessLow
+                                            )
+                                        )
+                                    ) {
+                                        uiState.items.forEachIndexed { index, item ->
+                                            key(item.id) {
+                                                SwipeRevealActions(
+                                                    onEdit = { onEditItem(item.id) },
+                                                    onDelete = { viewModel.deleteItem(item.id) }
+                                                ) {
+                                                    InventoryListItem(
+                                                        item = item,
+                                                        showTypeBadge = uiState.scope == InventoryScope.ALL,
+                                                        onClick = { onItemClick(item.id) },
+                                                        onLongClick = {
+                                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                            rowActionsInventoryItem = item
+                                                        }
+                                                    )
+                                                }
+                                            }
+                                            if (index < uiState.items.lastIndex) {
+                                                HorizontalDivider(
+                                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                                    color = SolennixTheme.colors.divider.copy(alpha = 0.2f)
+                                                )
+                                            }
                                         }
-                                    )
-                                }
-                                item {
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                }
-                            }
-                            if (uiState.supplyItems.isNotEmpty()) {
-                                item {
-                                    InventorySection(
-                                        title = InventoryStrings.supplies,
-                                        icon = Icons.Default.Kitchen,
-                                        itemCount = uiState.supplyItems.size,
-                                        items = uiState.supplyItems,
-                                        onItemClick = onItemClick,
-                                        onEditItem = onEditItem,
-                                        onDeleteWithConfirm = { viewModel.deleteItem(it) },
-                                        onLongClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            rowActionsInventoryItem = it
-                                        }
-                                    )
-                                }
-                                item {
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                }
-                            }
-                            if (uiState.equipmentItems.isNotEmpty()) {
-                                item {
-                                    InventorySection(
-                                        title = InventoryStrings.equipment,
-                                        icon = Icons.Outlined.Build,
-                                        itemCount = uiState.equipmentItems.size,
-                                        items = uiState.equipmentItems,
-                                        onItemClick = onItemClick,
-                                        onEditItem = onEditItem,
-                                        onDeleteWithConfirm = { viewModel.deleteItem(it) },
-                                        onLongClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            rowActionsInventoryItem = it
-                                        }
-                                    )
+                                    }
                                 }
                             }
                             item { Spacer(modifier = Modifier.height(80.dp)) }
@@ -512,75 +478,51 @@ private fun InventorySkeletonList() {
     }
 }
 
-// MARK: - List Section (Phone)
+// MARK: - Row Components
 
 @Composable
-private fun InventorySection(
-    title: String,
-    icon: ImageVector,
-    itemCount: Int,
-    items: List<InventoryItem>,
-    onItemClick: (String) -> Unit,
-    onEditItem: (String) -> Unit,
-    onDeleteWithConfirm: (String) -> Unit,
-    onLongClick: (InventoryItem) -> Unit
+private fun InventoryTypeBadge(
+    type: com.creapolis.solennix.core.model.InventoryType,
+    modifier: Modifier = Modifier
 ) {
+    val label = when (type) {
+        com.creapolis.solennix.core.model.InventoryType.INGREDIENT -> InventoryStrings.scopeIngredient
+        com.creapolis.solennix.core.model.InventoryType.EQUIPMENT -> InventoryStrings.scopeEquipment
+        com.creapolis.solennix.core.model.InventoryType.SUPPLY -> InventoryStrings.scopeSupply
+    }
+    val icon = when (type) {
+        com.creapolis.solennix.core.model.InventoryType.INGREDIENT -> Icons.Default.ShoppingBasket
+        com.creapolis.solennix.core.model.InventoryType.EQUIPMENT -> Icons.Outlined.Build
+        com.creapolis.solennix.core.model.InventoryType.SUPPLY -> Icons.Default.Kitchen
+    }
+    val color = when (type) {
+        com.creapolis.solennix.core.model.InventoryType.INGREDIENT -> SolennixTheme.colors.success
+        com.creapolis.solennix.core.model.InventoryType.EQUIPMENT -> SolennixTheme.colors.primary
+        com.creapolis.solennix.core.model.InventoryType.SUPPLY -> SolennixTheme.colors.info
+    }
+
     Surface(
-        shape = MaterialTheme.shapes.medium,
-        color = SolennixTheme.colors.card,
-        tonalElevation = 1.dp
+        color = color.copy(alpha = 0.12f),
+        contentColor = color,
+        shape = MaterialTheme.shapes.extraSmall,
+        modifier = modifier
     ) {
-        Column(
-            modifier = Modifier.animateContentSize(
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioNoBouncy,
-                    stiffness = Spring.StiffnessLow
-                )
-            )
+        Row(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = SolennixTheme.colors.primary)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = SolennixTheme.colors.primaryText)
-                Spacer(modifier = Modifier.weight(1f))
-                Surface(shape = MaterialTheme.shapes.extraSmall, color = SolennixTheme.colors.primary.copy(alpha = 0.1f)) {
-                    Text(
-                        text = "$itemCount",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = SolennixTheme.colors.primary,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            HorizontalDivider(color = SolennixTheme.colors.divider.copy(alpha = 0.3f))
-
-            items.forEachIndexed { index, item ->
-                key(item.id) {
-                    SwipeRevealActions(
-                        onEdit = { onEditItem(item.id) },
-                        onDelete = { onDeleteWithConfirm(item.id) }
-                    ) {
-                        InventoryListItem(
-                            item = item,
-                            onClick = { onItemClick(item.id) },
-                            onLongClick = { onLongClick(item) }
-                        )
-                    }
-                }
-                if (index < items.lastIndex) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = SolennixTheme.colors.divider.copy(alpha = 0.2f)
-                    )
-                }
-            }
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(12.dp),
+                tint = color
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }
@@ -589,6 +531,7 @@ private fun InventorySection(
 @Composable
 private fun InventoryListItem(
     item: InventoryItem,
+    showTypeBadge: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
@@ -606,11 +549,24 @@ private fun InventoryListItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = item.ingredientName, style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = item.ingredientName,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = SolennixTheme.colors.primaryText,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                if (showTypeBadge) {
+                    InventoryTypeBadge(type = item.type)
+                }
+            }
             Text(
                 text = InventoryStrings.stockLabel(item.currentStock, item.unit),
                 style = MaterialTheme.typography.bodySmall,
-                color = SolennixTheme.colors.secondaryText
+                color = if (isLowStock) SolennixTheme.colors.error else SolennixTheme.colors.secondaryText
             )
         }
         if (item.unitCost != null && item.unitCost!! > 0) {
@@ -643,34 +599,11 @@ private fun InventoryListItem(
 
 // MARK: - Grid Components (Tablet)
 
-@Composable
-private fun InventorySectionHeader(title: String, icon: ImageVector, itemCount: Int) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = SolennixTheme.colors.primary)
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text = title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = SolennixTheme.colors.primaryText)
-        Spacer(modifier = Modifier.weight(1f))
-        Surface(shape = MaterialTheme.shapes.extraSmall, color = SolennixTheme.colors.primary.copy(alpha = 0.1f)) {
-            Text(
-                text = "$itemCount",
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                style = MaterialTheme.typography.labelSmall,
-                color = SolennixTheme.colors.primary,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun InventoryGridCard(
     item: InventoryItem,
+    showTypeBadge: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
@@ -688,7 +621,20 @@ private fun InventoryGridCard(
         tonalElevation = 1.dp
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = item.ingredientName, style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = item.ingredientName,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = SolennixTheme.colors.primaryText,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                if (showTypeBadge) {
+                    InventoryTypeBadge(type = item.type)
+                }
+            }
             Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -698,7 +644,7 @@ private fun InventoryGridCard(
                 Text(
                     text = InventoryStrings.stockLabel(item.currentStock, item.unit),
                     style = MaterialTheme.typography.bodySmall,
-                    color = SolennixTheme.colors.secondaryText
+                    color = if (isLowStock) SolennixTheme.colors.error else SolennixTheme.colors.secondaryText
                 )
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

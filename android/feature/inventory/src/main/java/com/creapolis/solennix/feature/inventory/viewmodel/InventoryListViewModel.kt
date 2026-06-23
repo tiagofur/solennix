@@ -28,9 +28,7 @@ enum class InventoryScope(val typeParam: String?) {
 }
 
 data class InventoryListUiState(
-    val ingredientItems: List<InventoryItem> = emptyList(),
-    val equipmentItems: List<InventoryItem> = emptyList(),
-    val supplyItems: List<InventoryItem> = emptyList(),
+    val items: List<InventoryItem> = emptyList(),
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val searchQuery: String = "",
@@ -105,9 +103,7 @@ class InventoryListViewModel @Inject constructor(
                 else filtered.sortedByDescending { it.unitCost ?: 0.0 }
         }
         InventoryListUiState(
-            ingredientItems = sorted.filter { it.type == InventoryType.INGREDIENT },
-            equipmentItems = sorted.filter { it.type == InventoryType.EQUIPMENT },
-            supplyItems = sorted.filter { it.type == InventoryType.SUPPLY },
+            items = sorted,
             isRefreshing = refreshing,
             searchQuery = query,
             lowStockOnly = lowStock,
