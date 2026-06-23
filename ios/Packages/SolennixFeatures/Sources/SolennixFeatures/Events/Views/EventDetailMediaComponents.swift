@@ -55,51 +55,55 @@ struct EventDetailPhotosPreviewCard: View {
     let route: Route
 
     var body: some View {
-        NavigationLink(value: route) {
-            VStack(alignment: .leading, spacing: Spacing.sm) {
-                HStack {
-                    Text(title)
-                        .font(.headline)
-                        .foregroundStyle(SolennixColors.text)
-                    Spacer()
-                    Text("\(photos.count)")
-                        .font(.caption)
-                        .fontWeight(.bold)
-                        .foregroundStyle(SolennixColors.info)
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textTertiary)
-                }
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            HStack {
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(SolennixColors.text)
+                Spacer()
+                Text("\(photos.count)")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundStyle(SolennixColors.info)
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textTertiary)
+            }
 
-                HStack(spacing: Spacing.sm) {
-                    ForEach(Array(photos.prefix(4).enumerated()), id: \.offset) { index, url in
-                        AsyncImage(url: APIClient.resolveURL(url)) { image in
-                            image
-                                .resizable()
-                                .scaledToFill()
-                        } placeholder: {
-                            ProgressView()
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .background(SolennixColors.surfaceAlt)
-                        }
-                        .frame(height: 60)
-                        .frame(maxWidth: .infinity)
-                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
-                        .overlay {
-                            if index == 3 && photos.count > 4 {
-                                RoundedRectangle(cornerRadius: CornerRadius.sm)
-                                    .fill(.black.opacity(0.5))
-                                Text("+\(photos.count - 4)")
-                                    .font(.caption)
-                                    .fontWeight(.bold)
-                                    .foregroundStyle(.white)
-                            }
+            HStack(spacing: Spacing.sm) {
+                ForEach(Array(photos.prefix(4).enumerated()), id: \.offset) { index, url in
+                    AsyncImage(url: APIClient.resolveURL(url)) { image in
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    } placeholder: {
+                        ProgressView()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(SolennixColors.surfaceAlt)
+                    }
+                    .frame(height: 60)
+                    .frame(maxWidth: .infinity)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
+                    .overlay {
+                        if index == 3 && photos.count > 4 {
+                            RoundedRectangle(cornerRadius: CornerRadius.sm)
+                                .fill(.black.opacity(0.5))
+                            Text("+\(photos.count - 4)")
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .foregroundStyle(.white)
                         }
                     }
                 }
             }
-            .padding(Spacing.md)
         }
-        .buttonStyle(.plain)
+        .padding(Spacing.md)
+        .background(
+            NavigationLink(value: route) {
+                Color.clear
+            }
+            .buttonStyle(.plain)
+            .opacity(0)
+        )
     }
 }

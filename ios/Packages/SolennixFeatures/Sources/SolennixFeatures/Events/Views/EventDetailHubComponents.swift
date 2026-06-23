@@ -411,66 +411,70 @@ struct EventDetailFinanceSummaryCard: View {
     }
 
     var body: some View {
-        NavigationLink(value: route) {
-            VStack(alignment: .leading, spacing: Spacing.sm) {
-                HStack {
-                    Image(systemName: "chart.bar.fill")
-                        .font(.body)
-                        .foregroundStyle(SolennixColors.primary)
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            HStack {
+                Image(systemName: "chart.bar.fill")
+                    .font(.body)
+                    .foregroundStyle(SolennixColors.primary)
 
-                    Text(title)
-                        .font(.headline)
-                        .foregroundStyle(SolennixColors.text)
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(SolennixColors.text)
 
-                    Spacer()
+                Spacer()
 
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textTertiary)
+            }
+
+            Divider().background(SolennixColors.border)
+
+            HStack(spacing: Spacing.md) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(totalLabel)
+                        .font(.caption2)
                         .foregroundStyle(SolennixColors.textTertiary)
+                        .textCase(.uppercase)
+                    Text(totalValue)
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(SolennixColors.primary)
                 }
 
-                Divider().background(SolennixColors.border)
+                Spacer()
 
-                HStack(spacing: Spacing.md) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(totalLabel)
-                            .font(.caption2)
-                            .foregroundStyle(SolennixColors.textTertiary)
-                            .textCase(.uppercase)
-                        Text(totalValue)
-                            .font(.title3.weight(.bold))
-                            .foregroundStyle(SolennixColors.primary)
-                    }
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(profitLabel)
+                        .font(.caption2)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                        .textCase(.uppercase)
 
-                    Spacer()
-
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text(profitLabel)
-                            .font(.caption2)
-                            .foregroundStyle(SolennixColors.textTertiary)
-                            .textCase(.uppercase)
-
-                        Text(profitValue)
-                            .font(.title3.weight(.bold))
-                            .foregroundStyle(SolennixColors.success)
-                    }
-                }
-
-                if let discountText, !discountText.isEmpty {
-                    Text(discountText)
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.error)
-                }
-
-                if let taxText, !taxText.isEmpty {
-                    Text(taxText)
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textSecondary)
+                    Text(profitValue)
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(SolennixColors.success)
                 }
             }
-            .padding(Spacing.md)
+
+            if let discountText, !discountText.isEmpty {
+                Text(discountText)
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.error)
+            }
+
+            if let taxText, !taxText.isEmpty {
+                Text(taxText)
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textSecondary)
+            }
         }
-        .buttonStyle(.plain)
+        .padding(Spacing.md)
+        .background(
+            NavigationLink(value: route) {
+                Color.clear
+            }
+            .buttonStyle(.plain)
+            .opacity(0)
+        )
         .listRowBackground(SolennixColors.card)
         .listRowInsets(EdgeInsets(top: 0, leading: Spacing.md, bottom: 0, trailing: Spacing.md))
         .contextMenu {
@@ -557,32 +561,36 @@ struct EventDetailPaymentSummaryCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            NavigationLink(value: route) {
-                HStack {
-                    Image(systemName: "dollarsign.circle.fill")
-                        .font(.body)
-                        .foregroundStyle(SolennixColors.success)
+            HStack {
+                Image(systemName: "dollarsign.circle.fill")
+                    .font(.body)
+                    .foregroundStyle(SolennixColors.success)
 
-                    Text(title)
-                        .font(.headline)
-                        .foregroundStyle(SolennixColors.text)
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(SolennixColors.text)
 
-                    Spacer()
+                Spacer()
 
-                    Text("\(paymentsCount)")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(SolennixColors.primary)
-                        .padding(.horizontal, Spacing.sm)
-                        .padding(.vertical, 2)
-                        .background(SolennixColors.primaryLight)
-                        .clipShape(Capsule())
+                Text("\(paymentsCount)")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(SolennixColors.primary)
+                    .padding(.horizontal, Spacing.sm)
+                    .padding(.vertical, 2)
+                    .background(SolennixColors.primaryLight)
+                    .clipShape(Capsule())
 
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textTertiary)
-                }
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textTertiary)
             }
-            .buttonStyle(.plain)
+            .background(
+                NavigationLink(value: route) {
+                    Color.clear
+                }
+                .buttonStyle(.plain)
+                .opacity(0)
+            )
 
             Divider().background(SolennixColors.border)
 
