@@ -77,6 +77,23 @@ public struct EventListView: View {
                             .accessibilityLabel(tr("events.list.filters.title", "Filtrar por fecha"))
                     }
 
+                    // Status filter menu (Apple Liquid Glass / native style)
+                    Menu {
+                        Picker(tr("events.list.toolbar.status_filter", "Estado"), selection: $viewModel.selectedStatus) {
+                            ForEach(viewModel.statusFilters, id: \.label) { filter in
+                                Text("\(filter.label) (\(filter.count))")
+                                    .tag(filter.status)
+                            }
+                        }
+                        .pickerStyle(.inline)
+                    } label: {
+                        Image(systemName: viewModel.selectedStatus != nil ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                            .font(.body)
+                            .foregroundStyle(SolennixColors.primary)
+                            .symbolEffect(.bounce, value: viewModel.selectedStatus)
+                            .accessibilityLabel(tr("events.list.toolbar.status_filter_accessibility", "Filtrar por estado"))
+                    }
+
                     // Add + overflow menu (sort + export consolidated per WU5)
                     Menu {
                         NavigationLink(value: Route.eventForm()) {
@@ -182,68 +199,6 @@ public struct EventListView: View {
             }
     }
 
-    // MARK: - Filter Chips
-
-    private var filterChips: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Spacing.sm) {
-                ForEach(viewModel.statusFilters, id: \.label) { filter in
-                    let isSelected = viewModel.selectedStatus == filter.status
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            viewModel.selectedStatus = filter.status
-                        }
-                    } label: {
-                        HStack(spacing: Spacing.xs) {
-                            Text(filter.label)
-                                .font(.caption)
-                                .fontWeight(.semibold)
-
-                            Text("\(filter.count)")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(
-                                    isSelected
-                                        ? SolennixColors.onPrimary.opacity(0.2)
-                                        : SolennixColors.textTertiary.opacity(0.2)
-                                )
-                                .clipShape(Capsule())
-                        }
-                        .foregroundStyle(
-                            isSelected
-                                ? SolennixColors.onPrimary
-                                : SolennixColors.textSecondary
-                        )
-                        .padding(.horizontal, Spacing.sm)
-                        .padding(.vertical, Spacing.xs)
-                        .frame(minHeight: 44)
-                        .contentShape(Rectangle())
-                        .background(
-                            isSelected
-                                ? SolennixColors.primary
-                                : SolennixColors.surfaceAlt
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.full))
-                    }
-                    .accessibilityLabel(
-                        isSelected
-                            ? String.localizedStringWithFormat(
-                                tr("events.list.chip.selected_label", "%@, %lld events, selected"),
-                                filter.label, filter.count)
-                            : String.localizedStringWithFormat(
-                                tr("events.list.chip.label", "%@, %lld events"),
-                                filter.label, filter.count)
-                    )
-                    .accessibilityAddTraits(isSelected ? [.isSelected] : [])
-                }
-            }
-            .padding(.horizontal, Spacing.md)
-        }
-        .padding(.top, Spacing.sm)
-    }
-
     // MARK: - Date Filter Sheet
 
     private struct DateFilterSheet: View {
@@ -324,25 +279,6 @@ public struct EventListView: View {
         }
     }
 
-    // MARK: - Result Count
-
-    private var resultCount: some View {
-        HStack {
-            Text(
-                String.localizedStringWithFormat(
-                    tr("events.list.result_count", "%lld events"),
-                    viewModel.filteredEvents.count
-                )
-            )
-                .font(.caption)
-                .foregroundStyle(SolennixColors.textSecondary)
-            Spacer()
-        }
-        .padding(.horizontal, Spacing.md)
-        .padding(.top, Spacing.sm)
-        .padding(.bottom, Spacing.xs)
-    }
-
     // MARK: - Event List
 
     @ViewBuilder
@@ -352,15 +288,11 @@ public struct EventListView: View {
             // The ScrollView root ensures large title tracking and the
             // grid provides multi-column density.
             ScrollView {
-                filterChips
-                resultCount
                 eventListContent
             }
         } else {
             // iPhone: native List for pull-to-refresh, swipe actions,
-            // and correct keyboard avoidance. Filter chips and result count
-            // are the first row so they scroll with the content (same
-            // behavior as the previous ScrollView layout).
+            // and correct keyboard avoidance.
             iPhoneEventList
         }
     }
@@ -371,18 +303,6 @@ public struct EventListView: View {
         let filtered = viewModel.filteredEvents
 
         List {
-            // Filters + result count scroll inline with the list rows.
-            // insetGrouped adds horizontal insets automatically; negate them so
-            // the chip ScrollView runs full-width as it did in the old plain list.
-            Section {
-                VStack(spacing: 0) {
-                    filterChips
-                    resultCount
-                }
-                .listRowInsets(EdgeInsets())
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
-            }
 
             if viewModel.isLoading && viewModel.events.isEmpty {
                 // Skeleton loading state — native grouped surface, no manual insets.
