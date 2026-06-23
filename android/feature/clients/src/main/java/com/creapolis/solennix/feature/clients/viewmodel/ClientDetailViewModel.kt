@@ -65,8 +65,15 @@ class ClientDetailViewModel @Inject constructor(
         loadClientEvents()
     }
 
+    private var loadClientJob: kotlinx.coroutines.Job? = null
+
+    fun refresh() {
+        loadClient()
+    }
+
     private fun loadClient() {
-        viewModelScope.launch {
+        loadClientJob?.cancel()
+        loadClientJob = viewModelScope.launch {
             try {
                 val client = clientRepository.getClient(clientId)
                 _uiState.update {

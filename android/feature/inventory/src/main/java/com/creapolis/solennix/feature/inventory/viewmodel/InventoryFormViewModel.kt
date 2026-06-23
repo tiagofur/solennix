@@ -90,6 +90,10 @@ class InventoryFormViewModel @Inject constructor(
         viewModelScope.launch {
             isLoading = true
             try {
+                try {
+                    inventoryRepository.syncInventory()
+                } catch (_: Exception) {}
+
                 val item = inventoryRepository.getInventoryItem(id)
                 if (item != null) {
                     ingredientName = item.ingredientName
