@@ -5,12 +5,10 @@ import SolennixDesign
 // MARK: - Countdown Hero Chip
 
 /// Shows date proximity for upcoming or past events.
-/// Hidden for cancelled events.
-struct EventCountdownChip: View {
+/// Plain text countdown label, hidden for cancelled events.
+struct EventCountdownText: View {
     let eventDate: String
     let status: EventStatus
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private enum Proximity {
         case today
@@ -23,11 +21,6 @@ struct EventCountdownChip: View {
         guard status != .cancelled else { return nil }
 
         // Compare CALENDAR DAY strings, not Date values.
-        // eventDate is a raw "yyyy-MM-dd" server string; today is the device's
-        // local calendar day (via localTodayString). We parse both with
-        // fromServerDay (midnight UTC) and diff with a UTC calendar so that
-        // the day-difference is in pure 24-hour units, independent of the
-        // device's timezone offset.
         let todayString = Date.localTodayString()                  // e.g. "2026-06-15" in device TZ
         let eventDayString = String(eventDate.prefix(10))          // first 10 chars of server date
 
@@ -45,46 +38,31 @@ struct EventCountdownChip: View {
         return .past
     }
 
-    // Stable trigger: fires once on appear (value changes 0→1 on onAppear).
-    @State private var bounceTrigger: Int = 0
-
     var body: some View {
         if let proximity {
-            chipView(proximity)
-                .symbolEffect(.bounce, value: bounceTrigger)
-                .onAppear {
-                    if !reduceMotion { bounceTrigger = 1 }
-                }
+            HStack(spacing: 4) {
+                Image(systemName: iconName(proximity))
+                    .font(.caption2.weight(.bold))
+                Text(label(proximity))
+                    .font(.caption2.weight(.bold))
+                    .kerning(0.8)
+            }
+            .foregroundStyle(textColor(proximity))
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(accessibilityLabel(proximity))
         }
-    }
-
-    @ViewBuilder
-    private func chipView(_ proximity: Proximity) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: iconName(proximity))
-                .font(.caption.weight(.bold))
-            Text(label(proximity))
-                .font(.caption.weight(.bold))
-                .kerning(0.5)
-        }
-        .foregroundStyle(foregroundColor(proximity))
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
-        .background(backgroundColor(proximity), in: Capsule())
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityLabel(proximity))
     }
 
     private func label(_ p: Proximity) -> String {
         switch p {
         case .today:
-            return FeatureL10n.text("events.detail.countdown.today", "HOY")
+            return FeatureL10n.text("events.detail.countdown.today", "HOY").uppercased()
         case .tomorrow:
-            return FeatureL10n.text("events.detail.countdown.tomorrow", "MAÑANA")
+            return FeatureL10n.text("events.detail.countdown.tomorrow", "MAÑANA").uppercased()
         case .future(let n):
-            return String(format: FeatureL10n.text("events.detail.countdown.future", "FALTAN %d DÍAS"), n)
+            return String(format: FeatureL10n.text("events.detail.countdown.future", "FALTAN %d DÍAS"), n).uppercased()
         case .past:
-            return FeatureL10n.text("events.detail.countdown.past", "FINALIZADO")
+            return FeatureL10n.text("events.detail.countdown.past", "FINALIZADO").uppercased()
         }
     }
 
@@ -97,21 +75,12 @@ struct EventCountdownChip: View {
         }
     }
 
-    private func backgroundColor(_ p: Proximity) -> Color {
+    private func textColor(_ p: Proximity) -> Color {
         switch p {
         case .today:    return SolennixColors.primary
-        case .tomorrow: return SolennixColors.accent
-        case .future:   return SolennixColors.accent
-        case .past:     return SolennixColors.surfaceAlt
-        }
-    }
-
-    private func foregroundColor(_ p: Proximity) -> Color {
-        switch p {
-        case .today:    return SolennixColors.textInverse
-        case .tomorrow: return SolennixColors.textInverse
-        case .future:   return SolennixColors.textInverse
-        case .past:     return SolennixColors.textSecondary
+        case .tomorrow: return SolennixColors.primary
+        case .future:   return SolennixColors.textSecondary
+        case .past:     return SolennixColors.textTertiary
         }
     }
 
@@ -215,6 +184,9 @@ struct PaymentCollectionRing: View {
 struct EventDetailHeaderCard: View {
     let event: Event
     let clientName: String?
+    let clientCity: String?
+    let clientPhone: String?
+    let clientEmail: String?
     let month: String
     let day: String
     let dateLabel: String
@@ -229,10 +201,14 @@ struct EventDetailHeaderCard: View {
     let editRoute: Route?
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.openURL) private var openURL
 
     init(
         event: Event,
         clientName: String?,
+        clientCity: String?,
+        clientPhone: String?,
+        clientEmail: String?,
         month: String,
         day: String,
         dateLabel: String,
@@ -248,6 +224,9 @@ struct EventDetailHeaderCard: View {
     ) {
         self.event = event
         self.clientName = clientName
+        self.clientCity = clientCity
+        self.clientPhone = clientPhone
+        self.clientEmail = clientEmail
         self.month = month
         self.day = day
         self.dateLabel = dateLabel
@@ -270,17 +249,25 @@ struct EventDetailHeaderCard: View {
 
     var body: some View {
         VStack(spacing: Spacing.md) {
-            // Top row: date box + name/client/status + countdown chip
+            // Top row: date box + name/client/status
             HStack(alignment: .top, spacing: Spacing.md) {
                 EventDetailDateBox(month: month, day: day)
 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
+                    EventCountdownText(eventDate: event.eventDate, status: event.status)
+
                     Text(event.serviceType)
                         .font(.title3.weight(.bold))
                         .foregroundStyle(SolennixColors.text)
+                        .lineLimit(2)
 
                     if let clientName, !clientName.isEmpty {
-                        Text(clientName)
+                        let displayClient = [clientName, clientCity].compactMap { val in
+                            guard let val, !val.isEmpty else { return nil }
+                            return val
+                        }.joined(separator: " • ")
+
+                        Text(displayClient)
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.textSecondary)
                     }
@@ -292,8 +279,6 @@ struct EventDetailHeaderCard: View {
                 }
 
                 Spacer()
-
-                EventCountdownChip(eventDate: event.eventDate, status: event.status)
             }
 
             // Quick info grid — 2 cols compact, 1 col accessibility sizes
@@ -310,8 +295,38 @@ struct EventDetailHeaderCard: View {
                     EventDetailQuickInfoItem(icon: "mappin", label: locationLabel, value: locationValue)
                 }
             }
+
+            // Client contact actions (Call, WhatsApp, Email) inside the same card!
+            if let phone = clientPhone, !phone.isEmpty {
+                Divider().background(SolennixColors.border)
+
+                HStack(spacing: Spacing.sm) {
+                    actionChip(
+                        icon: "phone.fill",
+                        label: FeatureL10n.text("events.detail.client.action.call", "Llamar"),
+                        url: URL(string: "tel:\(phone.filter { $0.isNumber || $0 == "+" })")
+                    )
+
+                    if let digits = whatsappDigits {
+                        actionChip(
+                            icon: "message.fill",
+                            label: FeatureL10n.text("events.detail.client.action.whatsapp", "WhatsApp"),
+                            url: URL(string: "https://wa.me/\(digits)")
+                        )
+                    }
+
+                    if let email = clientEmail, !email.isEmpty {
+                        actionChip(
+                            icon: "envelope.fill",
+                            label: FeatureL10n.text("events.detail.client.action.email", "Email"),
+                            url: URL(string: "mailto:\(email)")
+                        )
+                    }
+                }
+                .padding(.top, Spacing.xs)
+            }
         }
-        .padding(Spacing.lg)
+        .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
         .listRowBackground(SolennixColors.card)
         .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
@@ -326,77 +341,11 @@ struct EventDetailHeaderCard: View {
             }
         }
     }
-}
 
-// MARK: - Actionable Client Info Card
-
-struct EventDetailClientInfoCard: View {
-    let client: Client
-
-    @Environment(\.openURL) private var openURL
-
-    /// Returns the stripped digits for WhatsApp deep-link.
-    /// Nil if fewer than 8 digits (skip WhatsApp).
     private var whatsappDigits: String? {
-        let digits = client.phone.filter(\.isNumber)
+        guard let phone = clientPhone else { return nil }
+        let digits = phone.filter(\.isNumber)
         return digits.count >= 8 ? digits : nil
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            // Name + city header
-            HStack(spacing: Spacing.sm) {
-                Image(systemName: "person.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(SolennixColors.primary)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(client.name)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(SolennixColors.text)
-
-                    if let city = client.city, !city.isEmpty {
-                        Text(city)
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.textSecondary)
-                    }
-                }
-
-                Spacer()
-            }
-
-            // Action chips row
-            if !client.phone.isEmpty || client.email != nil {
-                HStack(spacing: Spacing.sm) {
-                    if !client.phone.isEmpty {
-                        actionChip(
-                            icon: "phone.fill",
-                            label: FeatureL10n.text("events.detail.client.action.call", "Llamar"),
-                            url: URL(string: "tel:\(client.phone.filter { $0.isNumber || $0 == "+" })")
-                        )
-                    }
-
-                    if let digits = whatsappDigits {
-                        actionChip(
-                            icon: "message.fill",
-                            label: FeatureL10n.text("events.detail.client.action.whatsapp", "WhatsApp"),
-                            url: URL(string: "https://wa.me/\(digits)")
-                        )
-                    }
-
-                    if let email = client.email, !email.isEmpty {
-                        actionChip(
-                            icon: "envelope.fill",
-                            label: FeatureL10n.text("events.detail.client.action.email", "Email"),
-                            url: URL(string: "mailto:\(email)")
-                        )
-                    }
-                }
-            }
-        }
-        .padding(Spacing.md)
-        .listRowBackground(SolennixColors.card)
-        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
 
     @ViewBuilder
@@ -420,8 +369,8 @@ struct EventDetailClientInfoCard: View {
         .frame(minHeight: 44)
         .accessibilityLabel(
             label == FeatureL10n.text("events.detail.client.action.call", "Llamar")
-                ? "\(label) a \(client.phone)"
-                : "\(label): \(client.name)"
+                ? "\(label) a \(clientPhone ?? "")"
+                : "\(label): \(clientName ?? "")"
         )
     }
 }
@@ -519,7 +468,7 @@ struct EventDetailFinanceSummaryCard: View {
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
             }
-            .padding(Spacing.lg)
+            .padding(Spacing.md)
         }
         .buttonStyle(.plain)
         .listRowBackground(SolennixColors.card)
@@ -553,6 +502,14 @@ struct EventDetailPaymentSummaryCard: View {
     let route: Route
     let fullyPaidCounter: Int
 
+    // Action Menu Parameters
+    let recordTitle: String?
+    let settleTitle: String?
+    let depositTitle: String?
+    let onRecord: (() -> Void)?
+    let onSettle: (() -> Void)?
+    let onDeposit: (() -> Void)?
+
     init(
         title: String,
         paymentsCount: Int,
@@ -565,7 +522,13 @@ struct EventDetailPaymentSummaryCard: View {
         depositText: String?,
         isDepositMet: Bool,
         route: Route,
-        fullyPaidCounter: Int = 0
+        fullyPaidCounter: Int = 0,
+        recordTitle: String? = nil,
+        settleTitle: String? = nil,
+        depositTitle: String? = nil,
+        onRecord: (() -> Void)? = nil,
+        onSettle: (() -> Void)? = nil,
+        onDeposit: (() -> Void)? = nil
     ) {
         self.title = title
         self.paymentsCount = paymentsCount
@@ -579,6 +542,12 @@ struct EventDetailPaymentSummaryCard: View {
         self.isDepositMet = isDepositMet
         self.route = route
         self.fullyPaidCounter = fullyPaidCounter
+        self.recordTitle = recordTitle
+        self.settleTitle = settleTitle
+        self.depositTitle = depositTitle
+        self.onRecord = onRecord
+        self.onSettle = onSettle
+        self.onDeposit = onDeposit
     }
 
     @ScaledMetric(relativeTo: .body) private var scaledRingSize: CGFloat = 64
@@ -587,8 +556,8 @@ struct EventDetailPaymentSummaryCard: View {
     private var ringSize: CGFloat { min(scaledRingSize, 96) }
 
     var body: some View {
-        NavigationLink(value: route) {
-            VStack(alignment: .leading, spacing: Spacing.sm) {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            NavigationLink(value: route) {
                 HStack {
                     Image(systemName: "dollarsign.circle.fill")
                         .font(.body)
@@ -612,75 +581,92 @@ struct EventDetailPaymentSummaryCard: View {
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textTertiary)
                 }
+            }
+            .buttonStyle(.plain)
 
-                Divider().background(SolennixColors.border)
+            Divider().background(SolennixColors.border)
 
-                // Ring + KPI columns
-                HStack(alignment: .center, spacing: Spacing.lg) {
-                    PaymentCollectionRing(
-                        progress: progress,
-                        paidValue: paidValue,
-                        balanceValue: balanceValue,
-                        isFullyPaid: isFullyPaid,
-                        fullyPaidCounter: fullyPaidCounter,
-                        size: ringSize
+            // Ring + KPI columns
+            HStack(alignment: .center, spacing: Spacing.lg) {
+                PaymentCollectionRing(
+                    progress: progress,
+                    paidValue: paidValue,
+                    balanceValue: balanceValue,
+                    isFullyPaid: isFullyPaid,
+                    fullyPaidCounter: fullyPaidCounter,
+                    size: ringSize
+                )
+
+                VStack(spacing: Spacing.sm) {
+                    EventDetailMiniKPI(
+                        label: paidLabel,
+                        value: paidValue,
+                        color: SolennixColors.success,
+                        bgColor: SolennixColors.successBg
                     )
-
-                    VStack(spacing: Spacing.sm) {
-                        EventDetailMiniKPI(
-                            label: paidLabel,
-                            value: paidValue,
-                            color: SolennixColors.success,
-                            bgColor: SolennixColors.successBg
-                        )
-                        EventDetailMiniKPI(
-                            label: balanceLabel,
-                            value: balanceValue,
-                            color: isFullyPaid ? SolennixColors.success : SolennixColors.error,
-                            bgColor: isFullyPaid ? SolennixColors.successBg : SolennixColors.errorBg
-                        )
-                    }
-                    .frame(maxWidth: .infinity)
+                    EventDetailMiniKPI(
+                        label: balanceLabel,
+                        value: balanceValue,
+                        color: isFullyPaid ? SolennixColors.success : SolennixColors.error,
+                        bgColor: isFullyPaid ? SolennixColors.successBg : SolennixColors.errorBg
+                    )
                 }
+                .frame(maxWidth: .infinity)
+            }
 
-                if let depositText, !depositText.isEmpty {
+            if let depositText, !depositText.isEmpty {
+                HStack(spacing: Spacing.xs) {
+                    Image(systemName: isDepositMet ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                        .font(.caption)
+                        .foregroundStyle(isDepositMet ? SolennixColors.success : SolennixColors.warning)
+                    Text(depositText)
+                        .font(.caption)
+                        .foregroundStyle(isDepositMet ? SolennixColors.success : SolennixColors.warning)
+                }
+            }
+
+            if let recordTitle, let onRecord, let onSettle {
+                Spacer().frame(height: Spacing.xs)
+
+                Menu {
+                    Button {
+                        onRecord()
+                    } label: {
+                        Label(recordTitle, systemImage: "pencil.and.outline")
+                    }
+
+                    if let settleTitle {
+                        Button {
+                            onSettle()
+                        } label: {
+                            Label(settleTitle, systemImage: "checkmark.circle")
+                        }
+                    }
+
+                    if let depositTitle, let onDeposit {
+                        Button {
+                            onDeposit()
+                        } label: {
+                            Label(depositTitle, systemImage: "clock")
+                        }
+                    }
+                } label: {
                     HStack(spacing: Spacing.xs) {
-                        Image(systemName: isDepositMet ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
-                            .font(.caption)
-                            .foregroundStyle(isDepositMet ? SolennixColors.success : SolennixColors.warning)
-                        Text(depositText)
-                            .font(.caption)
-                            .foregroundStyle(isDepositMet ? SolennixColors.success : SolennixColors.warning)
+                        Spacer()
+                        Image(systemName: "creditcard")
+                            .font(.subheadline.weight(.semibold))
+                        Text(recordTitle)
+                            .font(.subheadline.weight(.bold))
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.caption2)
+                        Spacer()
                     }
+                    .foregroundStyle(SolennixColors.primary)
+                    .padding(.vertical, 12)
+                    .background(SolennixColors.primaryLight)
+                    .clipShape(Capsule())
                 }
-            }
-            .padding(Spacing.lg)
-        }
-        .buttonStyle(.plain)
-        .listRowBackground(SolennixColors.card)
-        .listRowInsets(EdgeInsets(top: 0, leading: Spacing.md, bottom: 0, trailing: Spacing.md))
-    }
-}
-
-// MARK: - Payment Actions Card
-
-struct EventDetailPaymentActionsCard: View {
-    let recordTitle: String
-    let settleTitle: String
-    let depositTitle: String?
-    let onRecord: () -> Void
-    let onSettle: () -> Void
-    let onDeposit: () -> Void
-
-    var body: some View {
-        VStack(spacing: Spacing.sm) {
-            HStack(spacing: Spacing.sm) {
-                PremiumButton(title: recordTitle, fullWidth: true, action: onRecord)
-                PremiumButton(title: settleTitle, fullWidth: true, action: onSettle)
-            }
-
-            if let depositTitle, !depositTitle.isEmpty {
-                PremiumButton(title: depositTitle, fullWidth: true, action: onDeposit)
+                .buttonStyle(.plain)
             }
         }
         .padding(Spacing.md)
@@ -688,6 +674,7 @@ struct EventDetailPaymentActionsCard: View {
         .listRowInsets(EdgeInsets(top: 0, leading: Spacing.md, bottom: 0, trailing: Spacing.md))
     }
 }
+
 
 // MARK: - Content Grid Section (List rows)
 
@@ -968,27 +955,11 @@ struct EventDetailHubSkeleton: View {
                     ForEach(0..<4, id: \.self) { _ in SkeletonLine(height: 36) }
                 }
             }
-            .padding(Spacing.lg)
-            .listRowBackground(SolennixColors.card)
-            .listRowSeparator(.hidden)
-        }
-
-        // Client card skeleton — mirrors EventDetailClientInfoCard
-        Section {
-            HStack(spacing: Spacing.sm) {
-                Circle()
-                    .fill(SolennixColors.surfaceAlt)
-                    .frame(width: 32, height: 32)
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    SkeletonLine(width: 140, height: 14)
-                    SkeletonLine(width: 80, height: 12)
-                }
-                Spacer()
-            }
             .padding(Spacing.md)
             .listRowBackground(SolennixColors.card)
             .listRowSeparator(.hidden)
         }
+
 
         // Finance summary skeleton — mirrors EventDetailFinanceSummaryCard
         Section {
@@ -1003,7 +974,7 @@ struct EventDetailHubSkeleton: View {
                     SkeletonLine(width: 80, height: 24)
                 }
             }
-            .padding(Spacing.lg)
+            .padding(Spacing.md)
             .listRowBackground(SolennixColors.card)
             .listRowSeparator(.hidden)
         }
@@ -1024,7 +995,7 @@ struct EventDetailHubSkeleton: View {
                 }
                 .frame(maxWidth: .infinity)
             }
-            .padding(Spacing.lg)
+            .padding(Spacing.md)
             .listRowBackground(SolennixColors.card)
             .listRowSeparator(.hidden)
         }
