@@ -36,8 +36,15 @@ struct BlockDateSheet: View {
             Form {
                 Section {
                     HStack {
+                        let formattedText: String = {
+                            let formatter = Self.displayFormatter
+                            if formatter.locale != FeatureL10n.locale {
+                                formatter.locale = FeatureL10n.locale
+                            }
+                            return formatter.string(from: startDate).capitalized
+                        }()
                         Label(
-                            Self.displayFormatter.string(from: startDate).capitalized,
+                            formattedText,
                             systemImage: "calendar"
                         )
                         .foregroundStyle(SolennixColors.text)
