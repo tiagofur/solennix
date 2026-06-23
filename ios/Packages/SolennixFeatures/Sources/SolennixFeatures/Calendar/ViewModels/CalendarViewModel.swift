@@ -251,7 +251,11 @@ public final class CalendarViewModel {
 
     /// Formatted month title, e.g. "Marzo de 2026" or "March 2026".
     public var monthTitle: String {
-        let original = Self.monthFormatter.string(from: currentMonth)
+        let formatter = Self.monthFormatter
+        if formatter.locale != FeatureL10n.locale {
+            formatter.locale = FeatureL10n.locale
+        }
+        let original = formatter.string(from: currentMonth)
         guard !original.isEmpty else { return "" }
         return original.prefix(1).uppercased() + original.dropFirst()
     }
@@ -273,7 +277,11 @@ public final class CalendarViewModel {
     /// Format the selected date for display, e.g. "lunes, 17 de marzo".
     public func formattedSelectedDate() -> String {
         guard let date = selectedDate else { return "" }
-        return Self.selectedDateFormatter.string(from: date)
+        let formatter = Self.selectedDateFormatter
+        if formatter.locale != FeatureL10n.locale {
+            formatter.locale = FeatureL10n.locale
+        }
+        return formatter.string(from: date)
     }
 
     /// Format a time string like "14:00:00" to "14:00".

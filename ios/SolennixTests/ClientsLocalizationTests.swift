@@ -106,7 +106,7 @@ final class ClientsLocalizationTests: XCTestCase {
         XCTAssertEqual(QuickQuoteStrings.summary, "Summary")
         XCTAssertEqual(QuickQuoteStrings.subtotalProducts, "Products Subtotal")
         XCTAssertEqual(QuickQuoteStrings.subtotalExtras, "Extras Subtotal")
-        XCTAssertEqual(QuickQuoteStrings.vat, "IVA")
+        XCTAssertEqual(QuickQuoteStrings.vat, "VAT")
         XCTAssertEqual(QuickQuoteStrings.total, "Total")
         XCTAssertEqual(QuickQuoteStrings.profitabilityMetrics, "Profitability Metrics (Internal)")
         XCTAssertEqual(QuickQuoteStrings.productCost, "Products Cost")

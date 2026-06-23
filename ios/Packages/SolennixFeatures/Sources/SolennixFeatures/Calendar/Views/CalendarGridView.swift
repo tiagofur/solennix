@@ -202,7 +202,11 @@ private struct DayCellView: View {
     //         "15 de junio, día bloqueado"
     //         "15 de junio, sin eventos"
     private var accessibilityLabelForDay: String {
-        let dayLabel = Self.a11yDayFormatter.string(from: day.date)
+        let formatter = Self.a11yDayFormatter
+        if formatter.locale != FeatureL10n.locale {
+            formatter.locale = FeatureL10n.locale
+        }
+        let dayLabel = formatter.string(from: day.date)
         // Fix #10 (a11y list separator): use ListFormatter so the connector
         // ("y"/"and") is locale-appropriate rather than hardcoded " y ".
         if isBlocked {

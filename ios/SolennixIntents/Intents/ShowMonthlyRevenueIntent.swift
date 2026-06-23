@@ -10,6 +10,9 @@ struct ShowMonthlyRevenueIntent: AppIntent {
 
     static var openAppWhenRun: Bool = false
 
+    nonisolated init() {}
+
+    @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         guard IntentSharedDataStore.hasProAccess else {
             return .result(
