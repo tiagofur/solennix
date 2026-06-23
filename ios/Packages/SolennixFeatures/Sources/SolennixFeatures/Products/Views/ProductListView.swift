@@ -67,6 +67,23 @@ public struct ProductListView: View {
                         }
                         .disabled(!planLimitsManager.canCreateProduct)
 
+                        // Category filter menu (Apple Liquid Glass / native style)
+                        Menu {
+                            Picker(ProductStrings.categoryFilterAccessibility, selection: $viewModel.selectedCategory) {
+                                Text(ProductStrings.categoryAll).tag(nil as String?)
+                                ForEach(viewModel.categories, id: \.self) { cat in
+                                    Text(cat).tag(cat as String?)
+                                }
+                            }
+                            .pickerStyle(.inline)
+                        } label: {
+                            Image(systemName: viewModel.selectedCategory != nil ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                                .font(.body)
+                                .foregroundStyle(SolennixColors.primary)
+                                .symbolEffect(.bounce, value: viewModel.selectedCategory)
+                                .accessibilityLabel(ProductStrings.categoryFilterAccessibility)
+                        }
+
                         sortMenu
                     }
                 }
@@ -118,16 +135,6 @@ public struct ProductListView: View {
 
     private var productGrid: some View {
         ScrollView {
-            if !viewModel.categories.isEmpty {
-                CategoryChips(
-                    categories: viewModel.categories,
-                    selectedCategory: $viewModel.selectedCategory
-                ) { category in
-                    viewModel.toggleCategory(category)
-                }
-                .padding(.vertical, Spacing.sm)
-            }
-
             if viewModel.isLoading && viewModel.products.isEmpty {
                 // iPad skeleton: ProgressView overlay (grid deferred)
                 ProgressView()
@@ -223,24 +230,6 @@ public struct ProductListView: View {
     @ViewBuilder
     private var productListCompact: some View {
         List {
-            // Category chips live in their OWN section: if they share the products
-            // section they become its first row and the first product row loses the
-            // insetGrouped rounded top corners (renders mid-section, squared).
-            if !viewModel.categories.isEmpty {
-                Section {
-                    CategoryChips(
-                        categories: viewModel.categories,
-                        selectedCategory: $viewModel.selectedCategory
-                    ) { category in
-                        viewModel.toggleCategory(category)
-                    }
-                    .padding(.vertical, Spacing.sm)
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets())
-                    .listRowSeparator(.hidden)
-                }
-            }
-
             Section {
                 productContentRows
             }

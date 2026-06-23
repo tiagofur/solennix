@@ -64,6 +64,23 @@ public struct InventoryListView: View {
                         .disabled(!planLimitsManager.canCreateInventoryItem)
 
                         lowStockToggle
+
+                        // Scope filter menu (Apple Liquid Glass / native style)
+                        Menu {
+                            Picker(InventoryStrings.scopeFilterAccessibility, selection: $viewModel.scope) {
+                                ForEach(InventoryScope.allCases, id: \.self) { s in
+                                    Text(s.label).tag(s)
+                                }
+                            }
+                            .pickerStyle(.inline)
+                        } label: {
+                            Image(systemName: viewModel.scope != .all ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                                .font(.body)
+                                .foregroundStyle(SolennixColors.primary)
+                                .symbolEffect(.bounce, value: viewModel.scope)
+                                .accessibilityLabel(InventoryStrings.scopeFilterAccessibility)
+                        }
+
                         sortMenu
                     }
                 }
@@ -118,11 +135,6 @@ public struct InventoryListView: View {
 
     private var inventoryGrid: some View {
         ScrollView {
-            // Scope picker at the top of the scroll view
-            ipadScopePicker
-                .padding(.horizontal, Spacing.lg)
-                .padding(.top, Spacing.md)
-
             if viewModel.isLoading && viewModel.items.isEmpty {
                 ProgressView()
                     .controlSize(.large)
@@ -174,16 +186,7 @@ public struct InventoryListView: View {
         .background(SolennixColors.surfaceGrouped)
     }
 
-    /// iPad scope picker — segmented style inside a card-like container.
-    private var ipadScopePicker: some View {
-        Picker(InventoryStrings.scopeFilterAccessibility, selection: $viewModel.scope) {
-            ForEach(InventoryScope.allCases, id: \.self) { s in
-                Text(s.label).tag(s)
-            }
-        }
-        .pickerStyle(.segmented)
-        .accessibilityLabel(InventoryStrings.scopeFilterAccessibility)
-    }
+
 
     // Fix 13: aligned to system grouped-header styling (footnote/semibold/secondary)
     private func inventoryGridSection(title: String?, items: [InventoryItem]) -> some View {
@@ -342,14 +345,6 @@ public struct InventoryListView: View {
     @ViewBuilder
     private var inventoryContentRows: some View {
         Group {
-            // Scope picker row — always visible above content
-            Section {
-                scopePickerRow
-            }
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-            .listSectionSeparator(.hidden)
-
             if let error = viewModel.errorMessage, viewModel.items.isEmpty, !viewModel.isLoading {
                 // Error state
                 EmptyStateView(
@@ -413,45 +408,7 @@ public struct InventoryListView: View {
         }
     }
 
-    // MARK: - Scope Picker Row
 
-    @ViewBuilder
-    private var scopePickerRow: some View {
-        if dynamicTypeSize >= .accessibility1 {
-            // Accessibility sizes: segmented truncates — use a Menu picker
-            Menu {
-                Picker(InventoryStrings.scopeFilterAccessibility, selection: $viewModel.scope) {
-                    ForEach(InventoryScope.allCases, id: \.self) { s in
-                        Text(s.label).tag(s)
-                    }
-                }
-            } label: {
-                HStack {
-                    Label(viewModel.scope.label, systemImage: "line.3.horizontal.decrease.circle")
-                        .font(.subheadline)
-                        .foregroundStyle(SolennixColors.primary)
-                    Spacer()
-                    Image(systemName: "chevron.up.chevron.down")
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textTertiary)
-                }
-                .padding(.vertical, Spacing.sm)
-                .padding(.horizontal, Spacing.md)
-            }
-            .accessibilityLabel(InventoryStrings.scopeFilterAccessibility)
-            .accessibilityValue(viewModel.scope.label)
-        } else {
-            Picker(InventoryStrings.scopeFilterAccessibility, selection: $viewModel.scope) {
-                ForEach(InventoryScope.allCases, id: \.self) { s in
-                    Text(s.label).tag(s)
-                }
-            }
-            .pickerStyle(.segmented)
-            .padding(.vertical, Spacing.sm)
-            .padding(.horizontal, Spacing.md)
-            .accessibilityLabel(InventoryStrings.scopeFilterAccessibility)
-        }
-    }
 
     // MARK: - First-Run Empty Row (Fix 4)
 

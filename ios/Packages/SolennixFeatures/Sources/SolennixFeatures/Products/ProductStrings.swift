@@ -3,6 +3,8 @@ import Foundation
 enum ProductStrings {
     static var title: String { FeatureL10n.text("products.title", "Productos") }
     static var searchPrompt: String { FeatureL10n.text("products.search_prompt", "Buscar productos") }
+    static var categoryAll: String { FeatureL10n.text("products.category_all", "Todos") }
+    static var categoryFilterAccessibility: String { FeatureL10n.text("products.category_filter_accessibility", "Filtrar por categoría") }
     static var addProductAccessibility: String { FeatureL10n.text("products.add_product_accessibility", "Agregar producto") }
     static var deleteTitle: String { FeatureL10n.text("products.delete_title", "Eliminar producto") }
     static var deleteAction: String { FeatureL10n.text("products.delete_action", "Eliminar") }
