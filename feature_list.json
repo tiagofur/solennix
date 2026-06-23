@@ -294,6 +294,29 @@
         "En Android, al hacer clic en un producto de la lista, se navega a la pantalla product_detail/{productId}",
         "La navegación funciona correctamente y todos los tests pasan"
       ]
+    },
+    {
+      "id": 25,
+      "name": "dashboard-metrics-loading",
+      "description": "fix(dashboard): correct monthly forecast property decoding on iOS and align upcoming events logic on Android",
+      "status": "done",
+      "acceptance_criteria": [
+        "Forecast data point property confirmedEvents is correctly mapped to confirmed_events from Go backend API",
+        "Upcoming events on Android are filtered by status = 'confirmed' for parity with Web and iOS",
+        "iOS unit tests for DashboardMetricsModels decodes without errors",
+        "Global init.sh validation suite runs and passes successfully"
+      ]
+    },
+    {
+      "id": 26,
+      "name": "ios-upcoming-events-api-fix",
+      "description": "fix(ios): fetch upcoming events directly from /events/upcoming instead of locally filtering the paginated /events list",
+      "status": "done",
+      "acceptance_criteria": [
+        "DashboardViewModel fetches upcoming events using Endpoint.upcomingEvents directly",
+        "Local filtering is bypassed for the initial upcomingEvents assignment, keeping chronological sorting",
+        "Global init.sh validation suite runs and stays 100% green"
+      ]
     }
   ]
 }

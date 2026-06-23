@@ -1,7 +1,7 @@
 # Sesión Activa — Solennix Agent Progress
 
 ## Feature en curso
-- **ID:** 
+- **ID:** pending
 - **Nombre:** 
 - **Estado:** pending
 
@@ -13,3 +13,4 @@
 
 ## Bloqueos
 - Ninguno.
+

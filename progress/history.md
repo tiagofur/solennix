@@ -334,3 +334,46 @@
   - `android/feature/dashboard/src/main/java/com/creapolis/solennix/feature/dashboard/ui/DashboardScreen.kt` (Pasar listener de navegación al widget)
   - `android/app/src/main/java/com/creapolis/solennix/ui/navigation/CompactBottomNavLayout.kt` (Enrutar callback de navegación a product_detail/{id})
 
+## Sesión 2026-06-22: Estilo de Lista Plana y Divisores en Widgets del Dashboard
+- **Feature ID:** 578 (dashboard-flat-list-dividers)
+- **Resultado:** COMPLETO y Validado (PR #579 abierto).
+- **Entregables:**
+  - Web: `TopClientsWidget.tsx` y `ProductDemandWidget.tsx` (Migración a divide-y con divide-border y rows full-bleed)
+  - iOS: `TopClientsWidgetView.swift` y `ProductDemandWidgetView.swift` (Estructurados con VStack y Divider, chevron.right trailing icon, primary color amount)
+  - Android: `TopClientsWidget.kt` y `ProductDemandWidget.kt` (Refactorizados con forEachIndexed + HorizontalDivider, KeyboardArrowRight trailing icon)
+
+## Sesión 2026-06-22: Corrección y Auditoría del Sistema de Caché en Android
+- **Feature ID:** android-cache-sync-fixes
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1250 tests en verde).
+- **Entregables:**
+  - `ClientFormViewModel.kt` (Inyectado syncClients() antes de getClient() con fallback silencioso offline para prevenir PUTs con campos obligatorios vacíos y error 400)
+  - `InventoryFormViewModel.kt` (Inyectado syncInventory() antes de getInventoryItem() con fallback silencioso offline)
+  - `InventoryDetailViewModel.kt` (Inyectado syncInventory() antes de getInventoryItem() para asegurar información fresca en detalle de inventario)
+  - `cache_audit.md` (Documentación completa de la auditoría de caché local en ViewModels de Android)
+
+## Sesión 2026-06-22: Corrección de Pronóstico en iOS y Alineación de Próximos Eventos
+- **Feature ID:** 25 (dashboard-metrics-loading)
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1250 tests en verde) y `xcodebuild test` (7/7 tests de DashboardMetrics en verde).
+- **Entregables:**
+  - `ForecastDataPoint.swift` (Renombrada propiedad `confirmedEventCount` a `confirmedEvents` para alineación directa con la clave JSON `"confirmed_events"` del backend)
+  - `ForecastWidgetView.swift` (Actualizadas todas las referencias a `confirmedEvents` en la vista y en los mocks de previsualización)
+  - `DashboardMetricsModelsTests.swift` (Actualizado el payload mock a `"confirmed_events"` y corregidas las aserciones de pruebas)
+  - `EventDao.kt` (Actualizadas las queries de Room `getUpcomingEvents` en Android para filtrar por `status = 'confirmed'`, logrando paridad lógica con iOS y Web)
+
+## Sesión 2026-06-22: Corrección de Carga de Próximos Eventos en Dashboard iOS
+- **Feature ID:** 26 (ios-upcoming-events-api-fix)
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1250 tests en verde) y `xcodebuild test` (413/413 tests de iOS en verde).
+- **Entregables:**
+  - `DashboardViewModel.swift` (Refactorizado `loadDashboard()` para invocar directamente a `Endpoint.upcomingEvents` y asignar de manera directa los eventos próximos ordenados, evitando la limitación de paginación del listado general).
+
+
+
+
+
+## Sesión 2026-06-22: Sincronización del Dashboard de Android con iOS
+- **Feature ID:** android-dashboard-alignment
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1250 tests en verde), pruebas de feature compiladas y pasadas, y rebuild exitoso e instalado en el emulador Android running.
+- **Entregables:**
+  - `EventDao.kt` (Corregido bug de consulta en `getUpcomingEvents` filtrando por `status = 'CONFIRMED'` en mayúsculas, restaurando la visibilidad de la sección de Próximos eventos)
+  - `strings.xml` (Español / Inglés) (Renombrado a Pronóstico y añadidas cadenas de paridad)
+  - `ForecastWidget.kt` (Rediseñado el widget con tarjetas de resumen side-by-side e ítems de tarjetas mensuales compactas sin íconos decorativos y con formato exacto al de iOS)
