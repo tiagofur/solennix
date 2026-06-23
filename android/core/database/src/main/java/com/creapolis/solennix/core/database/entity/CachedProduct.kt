@@ -36,7 +36,7 @@ fun CachedProduct.asExternalModel() = Product(
 
 fun Product.asEntity() = CachedProduct(
     id = id,
-    userId = userId,
+    userId = userId ?: "",
     name = name,
     category = category,
     basePrice = basePrice,
@@ -44,6 +44,6 @@ fun Product.asEntity() = CachedProduct(
     imageUrl = imageUrl,
     isActive = isActive,
     staffTeamId = staffTeamId,
-    createdAt = createdAt,
-    updatedAt = updatedAt
+    createdAt = createdAt ?: "",
+    updatedAt = updatedAt ?: ""
 )

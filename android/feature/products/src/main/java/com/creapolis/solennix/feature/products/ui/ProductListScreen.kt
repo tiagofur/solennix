@@ -7,6 +7,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.SortByAlpha
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -80,6 +82,7 @@ fun ProductListScreen(
     val hapticFeedback = com.creapolis.solennix.core.designsystem.util.rememberHapticFeedback()
     var rowActionsProduct by remember { mutableStateOf<Product?>(null) }
     var deleteConfirmProduct by remember { mutableStateOf<Product?>(null) }
+    var showFilterBottomSheet by remember { mutableStateOf(false) }
 
     LifecycleResumeEffect(viewModel) {
         viewModel.refresh()
@@ -166,55 +169,17 @@ fun ProductListScreen(
                             contentDescription = stringResource(DesignSystemR.string.cd_search)
                         )
                     },
+                    trailingIcon = {
+                        IconButton(onClick = { showFilterBottomSheet = true }) {
+                            Icon(
+                                Icons.Default.Tune,
+                                contentDescription = stringResource(DesignSystemR.string.cd_tune)
+                            )
+                        }
+                    },
                     shape = MaterialTheme.shapes.medium,
                     singleLine = true
                 )
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Default.SortByAlpha,
-                        contentDescription = stringResource(DesignSystemR.string.cd_tune),
-                        modifier = Modifier.size(16.dp),
-                        tint = SolennixTheme.colors.secondaryText
-                    )
-                    ProductSortKey.entries.forEach { key ->
-                        val label = when (key) {
-                            ProductSortKey.NAME -> ProductStrings.sortName
-                            ProductSortKey.PRICE -> ProductStrings.sortPrice
-                            ProductSortKey.CATEGORY -> ProductStrings.sortCategory
-                        }
-                        val isSelected = uiState.sortKey == key
-                        FilterChip(
-                            selected = isSelected,
-                            onClick = {
-                                hapticFeedback(com.creapolis.solennix.core.designsystem.util.HapticFeedbackType.SELECTION_CHANGED)
-                                viewModel.onSortChange(key)
-                            },
-                            label = { Text(label) },
-                            trailingIcon = if (isSelected) {
-                                {
-                                    Icon(
-                                        if (uiState.sortAscending) Icons.Default.ArrowUpward
-                                        else Icons.Default.ArrowDownward,
-                                        contentDescription = stringResource(DesignSystemR.string.cd_tune),
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                }
-                            } else null,
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = SolennixTheme.colors.primaryLight,
-                                selectedLabelColor = SolennixTheme.colors.primary
-                            )
-                        )
-                    }
-                }
 
                 if (uiState.allCategories.isNotEmpty()) {
                     Row(
@@ -325,6 +290,18 @@ fun ProductListScreen(
         )
     }
 
+    if (showFilterBottomSheet) {
+        ProductFilterBottomSheet(
+            sortKey = uiState.sortKey,
+            sortAscending = uiState.sortAscending,
+            showInactive = uiState.showInactive,
+            onSortKeyChange = { viewModel.onSortChange(it) },
+            onSortAscendingChange = { viewModel.onSortAscendingChange(it) },
+            onShowInactiveChange = { viewModel.onShowInactiveChange(it) },
+            onDismiss = { showFilterBottomSheet = false }
+        )
+    }
+
     deleteConfirmProduct?.let { product ->
         AlertDialog(
             onDismissRequest = { deleteConfirmProduct = null },
@@ -420,7 +397,8 @@ fun ProductGridItem(
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
-            ),
+            )
+            .alpha(if (product.isActive) 1f else 0.5f),
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
         shape = MaterialTheme.shapes.medium
     ) {
@@ -447,12 +425,35 @@ fun ProductGridItem(
                 }
             }
             Column(modifier = Modifier.padding(12.dp)) {
-                Text(
-                    text = product.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = SolennixTheme.colors.primaryText,
-                    maxLines = 1
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = product.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (product.isActive) SolennixTheme.colors.primaryText else SolennixTheme.colors.secondaryText,
+                        maxLines = 1,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (!product.isActive) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Box(
+                            modifier = Modifier.background(
+                                color = SolennixTheme.colors.error.copy(alpha = 0.1f),
+                                shape = MaterialTheme.shapes.extraSmall
+                            ).padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = ProductStrings.inactive.uppercase(),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = SolennixTheme.colors.error,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                            )
+                        }
+                    }
+                }
                 Text(
                     text = product.category,
                     style = MaterialTheme.typography.bodySmall,
@@ -484,7 +485,8 @@ fun ProductListItem(
                 onClick = onClick,
                 onLongClick = onLongClick
             )
-            .padding(16.dp),
+            .padding(16.dp)
+            .alpha(if (product.isActive) 1f else 0.5f),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Card(
@@ -508,11 +510,30 @@ fun ProductListItem(
         Spacer(modifier = Modifier.width(16.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = product.name,
-                style = MaterialTheme.typography.titleMedium,
-                color = SolennixTheme.colors.primaryText
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = product.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (product.isActive) SolennixTheme.colors.primaryText else SolennixTheme.colors.secondaryText,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                if (!product.isActive) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier.background(
+                            color = SolennixTheme.colors.error.copy(alpha = 0.1f),
+                            shape = MaterialTheme.shapes.extraSmall
+                        ).padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = ProductStrings.inactive.uppercase(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = SolennixTheme.colors.error,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                        )
+                    }
+                }
+            }
             Text(
                 text = product.category,
                 style = MaterialTheme.typography.bodySmall,

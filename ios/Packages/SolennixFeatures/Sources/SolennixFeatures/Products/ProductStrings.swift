@@ -169,6 +169,7 @@ enum ProductStrings {
 
     static var moreActions: String { FeatureL10n.text("products.detail.action.more", "Acciones del producto") }
     static var noRecipe: String { FeatureL10n.text("products.no_recipe", "Sin receta") }
+    static var showInactiveLabel: String { FeatureL10n.text("products.show_inactive", "Mostrar productos inactivos") }
     static var chartAxisDate: String { FeatureL10n.text("products.chart.axis_date", "Fecha") }
     static var chartAxisQuantity: String { FeatureL10n.text("products.chart.axis_quantity", "Cantidad") }
 

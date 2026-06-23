@@ -102,4 +102,41 @@ class ProductListViewModelTest {
 
         collector.cancel()
     }
+
+    @Test
+    fun `onSortAscendingChange sets sort order direction directly`() = runTest {
+        val productsFlow = MutableStateFlow(
+            listOf(
+                Product(id = "p1", name = "A", category = "Cat", basePrice = 120.0),
+                Product(id = "p2", name = "B", category = "Cat", basePrice = 80.0),
+                Product(id = "p3", name = "C", category = "Cat", basePrice = 60.0)
+            )
+        )
+
+        val productRepository = mockk<ProductRepository>()
+        val planLimitsManager = mockk<PlanLimitsManager>()
+        val authManager = mockk<AuthManager>(relaxed = true)
+
+        every { productRepository.getProducts() } returns productsFlow
+        coEvery { productRepository.syncProducts() } returns Unit
+        coEvery { planLimitsManager.canCreateProduct(any()) } returns LimitCheckResult.Allowed
+        every { authManager.currentUser } returns MutableStateFlow(null)
+
+        val vm = ProductListViewModel(productRepository, planLimitsManager, authManager)
+        val collector = backgroundScope.launch { vm.uiState.collect { } }
+
+        vm.onSortChange(ProductSortKey.PRICE)
+        advanceUntilIdle()
+        assertEquals(listOf(60.0, 80.0, 120.0), vm.uiState.value.products.map { it.basePrice })
+
+        vm.onSortAscendingChange(false)
+        advanceUntilIdle()
+        assertEquals(listOf(120.0, 80.0, 60.0), vm.uiState.value.products.map { it.basePrice })
+
+        vm.onSortAscendingChange(true)
+        advanceUntilIdle()
+        assertEquals(listOf(60.0, 80.0, 120.0), vm.uiState.value.products.map { it.basePrice })
+
+        collector.cancel()
+    }
 }

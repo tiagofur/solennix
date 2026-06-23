@@ -32,7 +32,8 @@ data class ProductListUiState(
     val isRefreshing: Boolean = false,
     val searchQuery: String = "",
     val sortKey: ProductSortKey = ProductSortKey.NAME,
-    val sortAscending: Boolean = true
+    val sortAscending: Boolean = true,
+    val showInactive: Boolean = false
 )
 
 @HiltViewModel
@@ -59,6 +60,7 @@ class ProductListViewModel @Inject constructor(
     private val _isRefreshing = MutableStateFlow(false)
     private val _sortKey = MutableStateFlow(ProductSortKey.NAME)
     private val _sortAscending = MutableStateFlow(true)
+    private val _showInactive = MutableStateFlow(false)
 
     private val _uiEvents = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
     val uiEvents: SharedFlow<UiEvent> = _uiEvents.asSharedFlow()
@@ -70,11 +72,17 @@ class ProductListViewModel @Inject constructor(
         productRepository.getProducts(),
         _searchQuery,
         _selectedCategory,
-        combine(_isRefreshing, _sortKey, _sortAscending, _pendingDeleteIds) { r, k, a, p -> Triple(r, k, a) to p }
-    ) { products, query, category, (triple, pendingIds) ->
+        combine(_isRefreshing, _sortKey, _sortAscending, _pendingDeleteIds, _showInactive) { r, k, a, p, si ->
+            Triple(r, k, a) to (p to si)
+        }
+    ) { products, query, category, (triple, pair) ->
         val (refreshing, sortKey, sortAscending) = triple
+        val (pendingIds, showInactive) = pair
         val allCategories = products.map { it.category }.distinct().sorted()
         var filtered = products.filter { it.id !in pendingIds }
+        if (!showInactive) {
+            filtered = filtered.filter { it.isActive }
+        }
         if (query.isNotBlank()) {
             filtered = filtered.filter {
                 it.name.contains(query, ignoreCase = true) || it.category.contains(query, ignoreCase = true)
@@ -98,7 +106,8 @@ class ProductListViewModel @Inject constructor(
             isRefreshing = refreshing,
             searchQuery = query,
             sortKey = sortKey,
-            sortAscending = sortAscending
+            sortAscending = sortAscending,
+            showInactive = showInactive
         )
     }.stateIn(
         scope = viewModelScope,
@@ -126,6 +135,10 @@ class ProductListViewModel @Inject constructor(
         _selectedCategory.value = category
     }
 
+    fun onShowInactiveChange(show: Boolean) {
+        _showInactive.value = show
+    }
+
     fun onSortChange(key: ProductSortKey) {
         if (_sortKey.value == key) {
             _sortAscending.value = !_sortAscending.value
@@ -133,6 +146,10 @@ class ProductListViewModel @Inject constructor(
             _sortKey.value = key
             _sortAscending.value = true
         }
+    }
+
+    fun onSortAscendingChange(ascending: Boolean) {
+        _sortAscending.value = ascending
     }
 
     fun deleteProduct(id: String) {

@@ -105,6 +105,12 @@
     <string name="products_validation_name_min">Name must be at least 2 characters</string>
     <string name="products_validation_category_required">Category is required</string>
     <string name="products_default_unit">unit</string>
+    <string name="products_show_inactive">Show inactive products</string>
+    <string name="products_filter_title">Sort &amp; Filter</string>
+    <string name="products_sort_by">Sort by</string>
+    <string name="products_order">Order</string>
+    <string name="products_order_asc">Ascending</string>
+    <string name="products_order_desc">Descending</string>
 
     <!-- Empty states -->
     <string name="products_empty_title">No products yet</string>
