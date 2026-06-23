@@ -27,6 +27,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveDetailLayout
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.creapolis.solennix.core.model.InventoryType
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.feature.inventory.InventoryStrings
@@ -50,6 +52,19 @@ fun InventoryDetailScreen(
     var showAdjustSheet by remember { mutableStateOf(false) }
     var adjustmentValue by remember { mutableStateOf("") }
     val snackbarHostState = remember { SnackbarHostState() }
+
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.refresh()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     LaunchedEffect(viewModel.deleteSuccess) {
         if (viewModel.deleteSuccess) {

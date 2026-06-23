@@ -27,6 +27,8 @@ import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveDetai
 import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.network.UrlResolver
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.core.model.extensions.toFormattedDate
@@ -46,6 +48,19 @@ fun ClientDetailScreen(
     val scrollState = rememberScrollState()
     var showDeleteDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.refresh()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     // Navigate back on delete success; consume flag so re-entry doesn't re-fire.
     LaunchedEffect(viewModel.deleteSuccess) {

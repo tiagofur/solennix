@@ -114,6 +114,10 @@ class ClientFormViewModel @Inject constructor(
         viewModelScope.launch {
             isLoading = true
             try {
+                try {
+                    clientRepository.syncClients()
+                } catch (_: Exception) {}
+
                 val client = clientRepository.getClient(id)
                 if (client != null) {
                     name = client.name

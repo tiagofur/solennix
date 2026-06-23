@@ -88,22 +88,45 @@ class InventoryDetailViewModel @Inject constructor(
         adjustmentSuccess = false
     }
 
+    private var loadItemJob: kotlinx.coroutines.Job? = null
+    private var loadDemandJob: kotlinx.coroutines.Job? = null
+
+    fun refresh() {
+        loadItem()
+    }
+
     private fun loadItem() {
-        viewModelScope.launch {
+        loadItemJob?.cancel()
+        loadItemJob = viewModelScope.launch {
             try {
+                try {
+                    inventoryRepository.syncInventory()
+                } catch (_: Exception) {}
+
                 val item = inventoryRepository.getInventoryItem(itemId)
-                _uiState.value = InventoryDetailUiState(item = item, isLoading = false)
+                _uiState.update {
+                    it.copy(
+                        item = item,
+                        isLoading = false
+                    )
+                }
                 loadDemandForecast()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _uiState.value = InventoryDetailUiState(errorMessage = e.message, isLoading = false)
+                _uiState.update {
+                    it.copy(
+                        errorMessage = e.message,
+                        isLoading = false
+                    )
+                }
             }
         }
     }
 
     private fun loadDemandForecast() {
-        viewModelScope.launch {
+        loadDemandJob?.cancel()
+        loadDemandJob = viewModelScope.launch {
             try {
                 // Capture now ONCE — avoids midnight race if the function spans midnight
                 val nowDate = LocalDate.now()
