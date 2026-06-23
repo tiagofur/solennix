@@ -111,15 +111,9 @@ public struct ClientDetailView: View {
 
     private func hubList(_ client: Client) -> some View {
         List {
-            // MARK: Header section — avatar + name + stat boxes
+            // MARK: Header section — avatar + name + stats
             Section {
                 clientHeaderCard(client)
-            }
-            .listRowSeparator(.hidden)
-
-            // MARK: Contact section
-            Section {
-                contactChipsCard(client)
             }
             .listRowSeparator(.hidden)
 
@@ -236,9 +230,50 @@ public struct ClientDetailView: View {
         VStack(spacing: Spacing.md) {
             Avatar(name: client.name, photoURL: client.photoUrl, size: 72)
 
-            Text(client.name)
-                .font(.title2.weight(.bold))
-                .foregroundStyle(SolennixColors.text)
+            VStack(spacing: Spacing.xs) {
+                Text(client.name)
+                    .font(.title2.weight(.bold))
+                    .foregroundStyle(SolennixColors.text)
+
+                if let city = client.city, !city.isEmpty {
+                    Text(city)
+                        .font(.subheadline)
+                        .foregroundStyle(SolennixColors.textSecondary)
+                }
+            }
+
+            if !client.phone.isEmpty || (client.email != nil && !(client.email?.isEmpty ?? true)) {
+                HStack(spacing: Spacing.sm) {
+                    if !client.phone.isEmpty {
+                        contactChip(
+                            icon: "phone.fill",
+                            label: tr("clients.detail.action.call", "Llamar"),
+                            url: URL(string: "tel:\(client.phone.filter { $0.isNumber || $0 == "+" })"),
+                            a11yLabel: "\(tr("clients.detail.action.call", "Llamar")) a \(client.phone)"
+                        )
+                    }
+
+                    if let digits = whatsappDigits(for: client.phone) {
+                        contactChip(
+                            icon: "message.fill",
+                            label: tr("clients.detail.action.whatsapp", "WhatsApp"),
+                            url: URL(string: "https://wa.me/\(digits)"),
+                            a11yLabel: "WhatsApp: \(client.name)"
+                        )
+                    }
+
+                    if let email = client.email, !email.isEmpty {
+                        contactChip(
+                            icon: "envelope.fill",
+                            label: tr("clients.detail.action.email", "Email"),
+                            url: URL(string: "mailto:\(email)"),
+                            a11yLabel: "Email: \(client.name)"
+                        )
+                    }
+                }
+            }
+
+            Divider().background(SolennixColors.border)
 
             // Stats: 2×2 LazyVGrid only when all 4 boxes are present (pendingBalance available
             // and avg computable). Falls back to a plain HStack for 2–3 boxes so there is never
@@ -332,7 +367,7 @@ public struct ClientDetailView: View {
                 }
             }
         }
-        .padding(Spacing.lg)
+        .padding(Spacing.md)
         .frame(maxWidth: .infinity)
         .listRowBackground(SolennixColors.card)
         .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
@@ -370,67 +405,7 @@ public struct ClientDetailView: View {
         .accessibilityLabel(a11yLabel)
     }
 
-    // MARK: - Contact Chips Card (actionable: call, whatsapp, email)
 
-    private func contactChipsCard(_ client: Client) -> some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            // Name + city sub-header
-            HStack(spacing: Spacing.sm) {
-                Image(systemName: "person.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(SolennixColors.primary)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(client.name)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(SolennixColors.text)
-
-                    if let city = client.city, !city.isEmpty {
-                        Text(city)
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.textSecondary)
-                    }
-                }
-
-                Spacer()
-            }
-
-            // Action chips
-            if !client.phone.isEmpty || (client.email != nil && !(client.email?.isEmpty ?? true)) {
-                HStack(spacing: Spacing.sm) {
-                    if !client.phone.isEmpty {
-                        contactChip(
-                            icon: "phone.fill",
-                            label: tr("clients.detail.action.call", "Llamar"),
-                            url: URL(string: "tel:\(client.phone.filter { $0.isNumber || $0 == "+" })"),
-                            a11yLabel: "\(tr("clients.detail.action.call", "Llamar")) a \(client.phone)"
-                        )
-                    }
-
-                    if let digits = whatsappDigits(for: client.phone) {
-                        contactChip(
-                            icon: "message.fill",
-                            label: tr("clients.detail.action.whatsapp", "WhatsApp"),
-                            url: URL(string: "https://wa.me/\(digits)"),
-                            a11yLabel: "WhatsApp: \(client.name)"
-                        )
-                    }
-
-                    if let email = client.email, !email.isEmpty {
-                        contactChip(
-                            icon: "envelope.fill",
-                            label: tr("clients.detail.action.email", "Email"),
-                            url: URL(string: "mailto:\(email)"),
-                            a11yLabel: "Email: \(client.name)"
-                        )
-                    }
-                }
-            }
-        }
-        .padding(Spacing.md)
-        .listRowBackground(SolennixColors.card)
-        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
-    }
 
     @ViewBuilder
     private func contactChip(icon: String, label: String, url: URL?, a11yLabel: String) -> some View {
@@ -755,7 +730,7 @@ struct ClientDetailSkeleton: View {
     @ScaledMetric(relativeTo: .body) private var dateBoxSize: CGFloat = 48
 
     var body: some View {
-        // Header skeleton — avatar + name + stat boxes
+        // Header skeleton — avatar + name + city + chips + stat boxes
         Section {
             VStack(spacing: Spacing.md) {
                 Circle()
@@ -763,6 +738,16 @@ struct ClientDetailSkeleton: View {
                     .frame(width: min(avatarSize, 96), height: min(avatarSize, 96))
 
                 SkeletonLine(width: 160, height: 22)
+                
+                SkeletonLine(width: 80, height: 14)
+
+                HStack(spacing: Spacing.sm) {
+                    ForEach(0..<3, id: \.self) { _ in
+                        SkeletonLine(width: 72, height: 28)
+                            .clipShape(Capsule())
+                    }
+                }
+                .padding(.vertical, Spacing.xs)
 
                 HStack(spacing: Spacing.md) {
                     ForEach(0..<3, id: \.self) { _ in
@@ -778,33 +763,8 @@ struct ClientDetailSkeleton: View {
                     }
                 }
             }
-            .padding(Spacing.lg)
-            .frame(maxWidth: .infinity)
-            .listRowBackground(SolennixColors.card)
-            .listRowSeparator(.hidden)
-        }
-
-        // Contact chips skeleton — single row mirroring contactChipsCard's one-VStack layout
-        Section {
-            VStack(alignment: .leading, spacing: Spacing.sm) {
-                HStack(spacing: Spacing.sm) {
-                    Circle()
-                        .fill(SolennixColors.surfaceAlt)
-                        .frame(width: 32, height: 32)
-                    VStack(alignment: .leading, spacing: Spacing.xs) {
-                        SkeletonLine(width: 140, height: 14)
-                        SkeletonLine(width: 80, height: 12)
-                    }
-                    Spacer()
-                }
-                HStack(spacing: Spacing.sm) {
-                    ForEach(0..<3, id: \.self) { _ in
-                        SkeletonLine(width: 72, height: 28)
-                            .clipShape(Capsule())
-                    }
-                }
-            }
             .padding(Spacing.md)
+            .frame(maxWidth: .infinity)
             .listRowBackground(SolennixColors.card)
             .listRowSeparator(.hidden)
         }
