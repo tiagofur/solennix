@@ -164,6 +164,12 @@ object ProductStrings {
     val validationNameMin: String get() = getString(R.string.products_validation_name_min)
     val validationCategoryRequired: String get() = getString(R.string.products_validation_category_required)
     val defaultUnit: String get() = getString(R.string.products_default_unit)
+    val showInactiveLabel: String get() = getString(R.string.products_show_inactive)
+    val filterTitle: String get() = getString(R.string.products_filter_title)
+    val sortBy: String get() = getString(R.string.products_sort_by)
+    val order: String get() = getString(R.string.products_order)
+    val orderAsc: String get() = getString(R.string.products_order_asc)
+    val orderDesc: String get() = getString(R.string.products_order_desc)
 
     // Empty states
     val emptyTitle: String get() = getString(R.string.products_empty_title)

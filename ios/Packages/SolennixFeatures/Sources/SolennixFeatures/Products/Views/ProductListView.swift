@@ -409,32 +409,35 @@ public struct ProductListView: View {
         let dynamicTypeSize: DynamicTypeSize
 
         var body: some View {
-            // Fix 10: stack vertically at accessibility1+ (mirrors ClientListView pattern)
-            if dynamicTypeSize >= .accessibility1 {
-                VStack(alignment: .leading, spacing: Spacing.sm) {
+            Group {
+                // Fix 10: stack vertically at accessibility1+ (mirrors ClientListView pattern)
+                if dynamicTypeSize >= .accessibility1 {
+                    VStack(alignment: .leading, spacing: Spacing.sm) {
+                        HStack(spacing: Spacing.md) {
+                            productIcon
+                            productName
+                        }
+                        HStack {
+                            categoryAndStatusBadge
+                            Spacer()
+                            priceText
+                        }
+                    }
+                    .padding(.vertical, Spacing.xs)
+                } else {
                     HStack(spacing: Spacing.md) {
                         productIcon
-                        productName
-                    }
-                    HStack {
-                        categoryAndStatusBadge
+                        VStack(alignment: .leading, spacing: Spacing.xs) {
+                            productName
+                            categoryAndStatusBadge
+                        }
                         Spacer()
                         priceText
                     }
+                    .padding(.vertical, Spacing.xs)
                 }
-                .padding(.vertical, Spacing.xs)
-            } else {
-                HStack(spacing: Spacing.md) {
-                    productIcon
-                    VStack(alignment: .leading, spacing: Spacing.xs) {
-                        productName
-                        categoryAndStatusBadge
-                    }
-                    Spacer()
-                    priceText
-                }
-                .padding(.vertical, Spacing.xs)
             }
+            .opacity(product.isActive ? 1.0 : 0.5)
         }
 
         // Fix 6: muted tonal icon — iconSlate glyph on surfaceAlt fill
@@ -554,6 +557,17 @@ public struct ProductListView: View {
                 Label(
                     viewModel.sortAscending ? ProductStrings.sortAscending : ProductStrings.sortDescending,
                     systemImage: viewModel.sortAscending ? "arrow.up" : "arrow.down"
+                )
+            }
+
+            Divider()
+
+            Button {
+                viewModel.showInactive.toggle()
+            } label: {
+                Label(
+                    ProductStrings.showInactiveLabel,
+                    systemImage: viewModel.showInactive ? "checkmark.circle.fill" : "circle"
                 )
             }
         } label: {

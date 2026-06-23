@@ -19,8 +19,14 @@ import com.creapolis.solennix.core.network.Endpoints
 import io.ktor.util.reflect.typeInfo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
 import javax.inject.Inject
 import javax.inject.Singleton
+
+@Serializable
+data class ProductIngredientsUpdateRequest(
+    val ingredients: List<ProductIngredient>
+)
 
 interface ProductRepository {
     fun getProducts(): Flow<List<Product>>
@@ -31,7 +37,7 @@ interface ProductRepository {
     suspend fun updateProduct(product: Product): Product
     suspend fun deleteProduct(id: String)
     suspend fun getProductIngredients(productId: String): List<ProductIngredient>
-    suspend fun updateProductIngredients(productId: String, ingredients: List<ProductIngredient>): List<ProductIngredient>
+    suspend fun updateProductIngredients(productId: String, ingredients: List<ProductIngredient>)
 
     /**
      * Returns a [PagingData] stream that loads product pages directly from
@@ -92,8 +98,10 @@ class OfflineFirstProductRepository @Inject constructor(
     override suspend fun updateProductIngredients(
         productId: String,
         ingredients: List<ProductIngredient>
-    ): List<ProductIngredient> =
-        apiService.put(Endpoints.productIngredients(productId), ingredients)
+    ) {
+        val request = ProductIngredientsUpdateRequest(ingredients)
+        apiService.put<Map<String, String>>(Endpoints.productIngredients(productId), request)
+    }
 
     override fun getProductsRemotePaging(
         sort: String,

@@ -154,6 +154,12 @@ class ProductFormViewModel @Inject constructor(
 
     private suspend fun loadProduct(id: String) {
         try {
+            // Sync from network first so the form is never pre-filled from stale cache.
+            // If the sync fails (e.g. offline), fall back to the local cache silently.
+            try {
+                productRepository.syncProducts()
+            } catch (_: Exception) { }
+
             val product = productRepository.getProduct(id)
             if (product != null) {
                 name = product.name
@@ -172,7 +178,7 @@ class ProductFormViewModel @Inject constructor(
 
             for (pi in productIngredients) {
                 val item = RecipeItem(
-                    id = pi.id,
+                    id = pi.id ?: UUID.randomUUID().toString(),
                     inventoryId = pi.inventoryId,
                     quantityRequired = pi.quantityRequired,
                     inventoryName = pi.ingredientName,
@@ -225,7 +231,7 @@ class ProductFormViewModel @Inject constructor(
             try {
                 val product = Product(
                     id = productId ?: UUID.randomUUID().toString(),
-                    userId = "",
+                    userId = null,
                     name = name,
                     category = category,
                     basePrice = basePrice.toDoubleOrNull() ?: 0.0,
@@ -233,8 +239,8 @@ class ProductFormViewModel @Inject constructor(
                     imageUrl = imageUrl.takeIf { it.isNotBlank() },
                     isActive = isActive,
                     staffTeamId = staffTeamId,
-                    createdAt = "",
-                    updatedAt = ""
+                    createdAt = null,
+                    updatedAt = null
                 )
 
                 val savedProduct = if (productId != null) {
@@ -250,11 +256,11 @@ class ProductFormViewModel @Inject constructor(
                 if (validItems.isNotEmpty() || productId != null) {
                     val ingredientBodies = validItems.map { item ->
                         ProductIngredient(
-                            id = "",
+                            id = null,
                             productId = savedProduct.id,
                             inventoryId = item.inventoryId,
                             quantityRequired = item.quantityRequired,
-                            createdAt = ""
+                            createdAt = null
                         )
                     }
                     productRepository.updateProductIngredients(savedProduct.id, ingredientBodies)

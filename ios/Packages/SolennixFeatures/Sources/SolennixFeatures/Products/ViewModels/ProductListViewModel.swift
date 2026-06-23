@@ -41,6 +41,9 @@ public final class ProductListViewModel {
     public var sortAscending: Bool = true {
         didSet { applyFilters() }
     }
+    public var showInactive: Bool = false {
+        didSet { applyFilters() }
+    }
     public var deleteTarget: Product?
     public var showDeleteConfirm: Bool = false
     public var errorMessage: String?
@@ -243,6 +246,11 @@ public final class ProductListViewModel {
 
     public func applyFilters() {
         var result = products
+
+        // Filter by active status
+        if !showInactive {
+            result = result.filter { $0.isActive }
+        }
 
         // Filter by category
         if let category = selectedCategory {

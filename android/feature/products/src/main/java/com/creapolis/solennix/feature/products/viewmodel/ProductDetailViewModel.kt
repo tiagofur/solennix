@@ -96,8 +96,17 @@ class ProductDetailViewModel @Inject constructor(
         loadDemandData()
     }
 
+    private var loadProductJob: kotlinx.coroutines.Job? = null
+    private var loadDemandJob: kotlinx.coroutines.Job? = null
+
+    fun refresh() {
+        loadProduct()
+        loadDemandData()
+    }
+
     private fun loadProduct() {
-        viewModelScope.launch {
+        loadProductJob?.cancel()
+        loadProductJob = viewModelScope.launch {
             try {
                 val product = productRepository.getProduct(productId)
                 val ingredients = try {
@@ -107,15 +116,22 @@ class ProductDetailViewModel @Inject constructor(
                 } catch (_: Exception) {
                     emptyList()
                 }
-                _uiState.value = ProductDetailUiState(
-                    product = product,
-                    ingredients = ingredients,
-                    isLoading = false
-                )
+                _uiState.update {
+                    it.copy(
+                        product = product,
+                        ingredients = ingredients,
+                        isLoading = false
+                    )
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _uiState.value = ProductDetailUiState(errorMessage = e.message, isLoading = false)
+                _uiState.update {
+                    it.copy(
+                        errorMessage = e.message,
+                        isLoading = false
+                    )
+                }
             }
         }
     }
@@ -127,7 +143,8 @@ class ProductDetailViewModel @Inject constructor(
     }
 
     private fun loadDemandData() {
-        viewModelScope.launch {
+        loadDemandJob?.cancel()
+        loadDemandJob = viewModelScope.launch {
             try {
                 val today = todayDate.toString()
 
