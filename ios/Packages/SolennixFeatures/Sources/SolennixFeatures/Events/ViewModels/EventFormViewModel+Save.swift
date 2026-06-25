@@ -71,20 +71,13 @@ extension EventFormViewModel {
             body["notes"] = trimmedNotes
         }
 
-        let event: Event
-        do {
-            if isEdit, let editId {
-                event = try await apiClient.put(Endpoint.event(editId), body: AnyCodable(body))
-            } else {
-                event = try await apiClient.post(Endpoint.events, body: AnyCodable(body))
-            }
-        } catch {
-            HapticsHelper.play(.error)
-            throw error
-        }
-
         // Defensive validation: avoid sending malformed staff rows that can fail
-        // server-side in legacy environments.
+        // server-side in legacy environments. This runs BEFORE the repository
+        // call because the repository's `create`/`update` take BOTH bodies
+        // atomically (POST /events then PUT /events/{id}/items) — `itemsBody`
+        // below uses `normalizedStaff`, so it must be built up front. Net effect
+        // vs. the old ordering: invalid staff now fails fast instead of leaving
+        // an orphan event behind on the server (strictly better).
         var normalizedStaff = [SelectedStaffAssignment]()
         for (idx, assignment) in selectedStaff.enumerated() {
             let trimmedId = assignment.staffId.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -169,10 +162,28 @@ extension EventFormViewModel {
             }
         ]
 
-        let _: EmptyResponse = try await apiClient.put(
-            Endpoint.eventItems(event.id),
-            body: AnyCodable(itemsBody)
-        )
+        // Route the mutation through the EventRepository (ADR-2/ADR-9). The
+        // repository preserves the EXACT two-call body shape verbatim —
+        // POST /events then PUT /events/{id}/items for create, or
+        // PUT /events/{id} then PUT /events/{id}/items for edit — and fans the
+        // write out to the system calendar. No `EventDraft` type is introduced.
+        do {
+            if isEdit, let editId {
+                _ = try await eventRepository.update(
+                    editId,
+                    body: AnyCodable(body),
+                    itemsBody: AnyCodable(itemsBody)
+                )
+            } else {
+                _ = try await eventRepository.create(
+                    eventBody: AnyCodable(body),
+                    itemsBody: AnyCodable(itemsBody)
+                )
+            }
+        } catch {
+            HapticsHelper.play(.error)
+            throw error
+        }
 
         HapticsHelper.play(.success)
         NotificationCenter.default.post(name: .solennixEventUpdated, object: nil)

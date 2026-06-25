@@ -14,6 +14,16 @@ public enum EventSortField: String, CaseIterable, Sendable {
     case totalAmount
 }
 
+/// Period filter chips shared by Lista + Calendario (ADR-7). A non-nil
+/// `periodFilter` means a chip is active. `.custom` ("Personalizado") defers the
+/// actual bounds to the `dateRange*` pair set by the two-tap custom range
+/// (`selectCustomRangeStart` / `selectCustomRangeEnd`); the bounded chips
+/// (`.today` / `.thisWeek` / `.thisMonth`) recompute that pair from
+/// `Calendar.current`.
+public enum EventPeriodFilter: String, CaseIterable, Sendable, Equatable {
+    case today, thisWeek, thisMonth, custom
+}
+
 // MARK: - Event List View Model
 
 @Observable
@@ -27,6 +37,34 @@ public final class EventListViewModel {
     public var selectedStatus: EventStatus? = nil
     public var dateRangeStart: Date? = nil
     public var dateRangeEnd: Date? = nil
+
+    // MARK: - Unified calendar state (ADR-7)
+    //
+    // Folded in from `CalendarViewModel` so Lista + Calendario share ONE filter
+    // surface. Both modes read the same `events` array and the same `dateRange*`
+    // pair — a day-tap and a period chip BOTH write `dateRange*`, so
+    // `filteredEvents` stays a single code path. `viewMode` itself lives on the
+    // VIEW (`EventListView`), default `.lista` and NOT persisted — toggling it
+    // never touches `events`/`selectedDay`/filters.
+
+    /// Active period chip, or `nil` when no chip is active (a day-tap clears it).
+    public var periodFilter: EventPeriodFilter? = nil
+    /// The day the user tapped in the grid; `nil` shows all events in range.
+    public var selectedDay: Date? = nil
+    /// The month the grid is showing (anchors to the start of the current month).
+    public var currentMonth: Date = {
+        let now = Date()
+        return Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: now)) ?? now
+    }()
+    /// Blocked/unavailable dates (from `CalendarViewModel`).
+    public var unavailableDates: [UnavailableDate] = []
+    /// True while a block/unblock request is in flight (from `CalendarViewModel`).
+    public var isBlockingDate: Bool = false
+    /// Typed last calendar error (load/block/unblock); the view maps it to a
+    /// localized string. `CalendarError` is currently declared in
+    /// `CalendarViewModel.swift` (moved to `Events/Models` in Phase 6).
+    public var calendarError: CalendarError? = nil
+
     public var sortField: EventSortField = .eventDate
     /// For `eventDate` and `totalAmount` we default to DESC (latest / highest
     /// first — that's how organizers scan a list). For string fields we
@@ -47,13 +85,27 @@ public final class EventListViewModel {
     // MARK: - Dependencies
 
     private let apiClient: APIClient
+    /// Single event-mutation surface (ADR-2). `confirmDeleteEvent` and
+    /// `updateEventStatus` route through this repository so every list-path
+    /// mutation fans out to the system calendar consistently. Reading the
+    /// events list (loadEvents/refresh) stays on `apiClient` — ADR-2 covers the
+    /// *mutation* sites only; reading is not a mutation.
+    public let eventRepository: any EventRepository
     private var cacheManager: CacheManager?
     private let cacheMaxAge: TimeInterval = 30 * 60
 
     // MARK: - Init
 
-    public init(apiClient: APIClient) {
+    /// - Parameters:
+    ///   - apiClient: kept for list reads (`loadEvents`/`refresh`) + cache, which
+    ///     are NOT mutations and stay on `APIClient` per ADR-2.
+    ///   - eventRepository: the mutation boundary. When `nil`, a production
+    ///     default is wired so existing `init(apiClient:)` call sites keep
+    ///     compiling AND route mutations through the repository. Tests inject a
+    ///     mock-backed repository.
+    public init(apiClient: APIClient, eventRepository: (any EventRepository)? = nil) {
         self.apiClient = apiClient
+        self.eventRepository = eventRepository ?? DefaultEventRepository.makeDefault(eventAPI: apiClient)
     }
 
     /// Set the cache manager for offline support.
@@ -97,6 +149,85 @@ public final class EventListViewModel {
     public func clearAdvancedFilters() {
         dateRangeStart = nil
         dateRangeEnd = nil
+    }
+
+    // MARK: - Shared Filter Invariant (ADR-7)
+    //
+    // A day-tap and a period chip BOTH write the same `dateRange*` pair, so
+    // `filteredEvents` stays one code path in Lista AND Calendario. Each clears
+    // the other's selection (mutual-clearing invariant):
+    //   • `selectDate(day)`        → selectedDay = day, dateRange* = that day,
+    //                                 periodFilter = nil
+    //   • `setPeriodFilter(_)`     → periodFilter = chip, dateRange* recomputed
+    //                                 from Calendar.current, selectedDay = nil
+    // The view (Phase 4) wires the taps; the VM owns the state + setters.
+
+    /// Day-tap: filter to a single day. Sets `selectedDay`, bounds the range to
+    /// that day's start-of-day, and clears any active period chip.
+    public func selectDate(_ day: Date) {
+        selectedDay = day
+        periodFilter = nil
+        let start = Calendar.current.startOfDay(for: day)
+        dateRangeStart = start
+        dateRangeEnd = start
+    }
+
+    /// Period chip (Hoy / Esta semana / Este mes / Personalizado): sets the
+    /// period, recomputes `dateRange*` from `Calendar.current`, and clears
+    /// `selectedDay`. `.custom` defers to the two-tap custom-range setters
+    /// (it clears any prior range so re-tapping the chip resets cleanly).
+    public func setPeriodFilter(_ filter: EventPeriodFilter) {
+        periodFilter = filter
+        selectedDay = nil
+        let calendar = Calendar.current
+        switch filter {
+        case .today:
+            let start = calendar.startOfDay(for: Date())
+            dateRangeStart = start
+            dateRangeEnd = start
+        case .thisWeek:
+            applyInclusiveDateInterval(calendar.dateInterval(of: .weekOfYear, for: Date()))
+        case .thisMonth:
+            applyInclusiveDateInterval(calendar.dateInterval(of: .month, for: Date()))
+        case .custom:
+            dateRangeStart = nil
+            dateRangeEnd = nil
+        }
+    }
+
+    /// First tap of the Personalizado two-tap range: records the start, clears
+    /// the end (pending the second tap), and marks the period as `.custom`.
+    public func selectCustomRangeStart(_ day: Date) {
+        periodFilter = .custom
+        selectedDay = nil
+        dateRangeStart = Calendar.current.startOfDay(for: day)
+        dateRangeEnd = nil
+    }
+
+    /// Second tap of the Personalizado two-tap range: records the end. Requires
+    /// a prior `selectCustomRangeStart`; if none, this tap seeds both bounds.
+    public func selectCustomRangeEnd(_ day: Date) {
+        periodFilter = .custom
+        let end = Calendar.current.startOfDay(for: day)
+        let start = dateRangeStart ?? end
+        dateRangeStart = Swift.min(start, end)
+        dateRangeEnd = Swift.max(start, end)
+    }
+
+    /// Maps a `Calendar.dateInterval` (half-open `[start, end)`) onto the
+    /// INCLUSIVE `dateRange*` semantics `filteredEvents` expects:
+    ///   • `dateRangeStart` = the first day (`interval.start`, already 00:00)
+    ///   • `dateRangeEnd`   = the last day = `interval.end - 1 day`
+    /// (`interval.end` is the exclusive first instant of the NEXT period and is
+    /// already at 00:00, so subtracting one day yields the last day at 00:00.)
+    private func applyInclusiveDateInterval(_ interval: DateInterval?) {
+        guard let interval else {
+            dateRangeStart = nil
+            dateRangeEnd = nil
+            return
+        }
+        dateRangeStart = interval.start
+        dateRangeEnd = Calendar.current.date(byAdding: .day, value: -1, to: interval.end)
     }
 
     public var filteredEvents: [Event] {
@@ -260,7 +391,9 @@ public final class EventListViewModel {
     @MainActor
     public func confirmDeleteEvent(_ event: Event) async {
         do {
-            try await apiClient.delete(Endpoint.event(event.id))
+            // Route through the repository (ADR-2): the delete + system-mirror
+            // cleanup + identity clearing fan out from this single boundary.
+            try await eventRepository.delete(event.id)
         } catch {
             events.append(event)
             errorMessage = tr("events.list.error.delete_failed", "Error al eliminar el evento")
@@ -280,10 +413,10 @@ public final class EventListViewModel {
         updatingStatusEventId = event.id
         defer { updatingStatusEventId = nil }
         do {
-            let updated: Event = try await apiClient.put(
-                Endpoint.event(event.id),
-                body: ["status": newStatus.rawValue]
-            )
+            // Route through the repository (ADR-2): status change + system-mirror
+            // update fan out from this single boundary; the returned event
+            // patches the local row so the badge updates without a refetch.
+            let updated = try await eventRepository.changeStatus(event.id, to: newStatus)
             if let index = events.firstIndex(where: { $0.id == event.id }) {
                 events[index] = updated
             }

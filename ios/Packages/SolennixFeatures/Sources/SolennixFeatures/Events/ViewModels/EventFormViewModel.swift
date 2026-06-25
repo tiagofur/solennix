@@ -320,6 +320,12 @@ public final class EventFormViewModel {
 
     public let apiClient: APIClient
 
+    /// Single event-mutation surface (ADR-2). Every create/edit fans out to the
+    /// system calendar through this repository instead of hitting `APIClient`
+    /// directly (ADR-9 rewire). The `save()` call routes here; non-event
+    /// `apiClient` usage (staff teams, conflict/suggestion lookups) stays put.
+    public let eventRepository: any EventRepository
+
     /// Pending background tasks stored so they can be cancelled on deinit,
     /// preventing dangling async work from outliving the view model.
     var pendingTasks: [Task<Void, Never>] = []
@@ -392,8 +398,18 @@ public final class EventFormViewModel {
 
     // MARK: - Init
 
-    public init(apiClient: APIClient) {
+    /// - Parameters:
+    ///   - apiClient: concrete network client, kept for non-event lookups
+    ///     (staff teams, equipment conflicts/suggestions) which stay on
+    ///     `APIClient` per ADR-9 ("non-event APIClient usage stays as-is").
+    ///   - eventRepository: the mutation boundary. When `nil`, a production
+    ///     default (`EventKitSyncService` + `UserDefaults` identity store, sync
+    ///     OFF until opt-in) is wired so existing `init(apiClient:)` call sites
+    ///     keep compiling AND route mutations through the repository boundary.
+    ///     Tests inject a mock-backed repository.
+    public init(apiClient: APIClient, eventRepository: (any EventRepository)? = nil) {
         self.apiClient = apiClient
+        self.eventRepository = eventRepository ?? DefaultEventRepository.makeDefault(eventAPI: apiClient)
     }
 
     deinit {
