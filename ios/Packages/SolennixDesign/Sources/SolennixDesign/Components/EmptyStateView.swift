@@ -1,12 +1,16 @@
 import SwiftUI
 
 /// Empty content placeholder with icon, title, message, and optional CTA.
+///
+/// Use `iconColor` to apply brand color to the icon (e.g. `.primary` for gold).
+/// Works both standalone and inside List rows.
 public struct EmptyStateView: View {
     let icon: String
     let title: String
     let message: String
     var actionTitle: String? = nil
     var action: (() -> Void)? = nil
+    var iconColor: Color? = nil
 
     @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 56
 
@@ -15,12 +19,14 @@ public struct EmptyStateView: View {
         title: String,
         message: String,
         actionTitle: String? = nil,
+        iconColor: Color? = nil,
         action: (() -> Void)? = nil
     ) {
         self.icon = icon
         self.title = title
         self.message = message
         self.actionTitle = actionTitle
+        self.iconColor = iconColor
         self.action = action
     }
 
@@ -28,7 +34,7 @@ public struct EmptyStateView: View {
         VStack(spacing: Spacing.md) {
             Image(systemName: icon)
                 .font(.system(size: iconSize))
-                .foregroundStyle(SolennixColors.textTertiary)
+                .foregroundStyle(iconColor ?? SolennixColors.textTertiary)
 
             Text(title)
                 .font(.title3)
@@ -47,7 +53,7 @@ public struct EmptyStateView: View {
             }
         }
         .padding(Spacing.xxl)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        .frame(maxWidth: .infinity, minHeight: 300, maxHeight: .infinity, alignment: .center)
     }
 }
 
@@ -59,7 +65,8 @@ public struct EmptyStateView: View {
             icon: "calendar.badge.plus",
             title: "Sin eventos",
             message: "Aun no tienes eventos programados. Crea tu primer evento para comenzar.",
-            actionTitle: "Crear Evento"
+            actionTitle: "Crear Evento",
+            iconColor: SolennixColors.primary
         ) {
             // action
         }
@@ -69,7 +76,8 @@ public struct EmptyStateView: View {
         EmptyStateView(
             icon: "person.2",
             title: "Sin clientes",
-            message: "Agrega tu primer cliente para comenzar a organizar eventos."
+            message: "Agrega tu primer cliente para comenzar a organizar eventos.",
+            iconColor: SolennixColors.primary
         )
     }
     .background(SolennixColors.background)

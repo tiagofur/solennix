@@ -34,7 +34,8 @@ public struct StaffTeamDetailView: View {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
                     title: StaffStrings.errorTitle,
-                    message: errorMessage ?? StaffStrings.teamNotFoundMessage
+                    message: errorMessage ?? StaffStrings.teamNotFoundMessage,
+                    iconColor: SolennixColors.primary
                 )
             }
         }
@@ -44,9 +45,22 @@ public struct StaffTeamDetailView: View {
         .toolbar {
             if team != nil {
                 ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink(value: Route.staffTeamForm(id: teamId)) {
-                        Text(StaffStrings.edit)
+                    Menu {
+                        NavigationLink(value: Route.staffTeamForm(id: teamId)) {
+                            Label(StaffStrings.edit, systemImage: "pencil")
+                        }
+
+                        Divider()
+
+                        Button(role: .destructive) {
+                            showDeleteConfirm = true
+                        } label: {
+                            Label(StaffStrings.deleteAction, systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
                             .foregroundStyle(SolennixColors.primary)
+                            .accessibilityLabel(StaffStrings.moreActions)
                     }
                 }
             }
@@ -84,8 +98,6 @@ public struct StaffTeamDetailView: View {
                 }
 
                 membersSection(team)
-
-                deleteButton
             }
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.lg)
@@ -136,9 +148,7 @@ public struct StaffTeamDetailView: View {
         }
         .padding(Spacing.lg)
         .frame(maxWidth: .infinity)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-        .shadowSm()
+        .solennixCard(border: false)
     }
 
     // MARK: - Notes
@@ -161,9 +171,7 @@ public struct StaffTeamDetailView: View {
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadowSm()
+        .solennixCard(radius: CornerRadius.lg, border: false)
     }
 
     // MARK: - Members
@@ -184,8 +192,7 @@ public struct StaffTeamDetailView: View {
                     .foregroundStyle(SolennixColors.textTertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(Spacing.md)
-                    .background(SolennixColors.card)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+                    .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
             } else {
                 VStack(spacing: Spacing.xs) {
                     ForEach(sorted) { member in
@@ -245,29 +252,7 @@ public struct StaffTeamDetailView: View {
             }
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-    }
-
-    // MARK: - Delete
-
-    private var deleteButton: some View {
-        Button {
-            showDeleteConfirm = true
-        } label: {
-            HStack(spacing: Spacing.sm) {
-                Image(systemName: "trash")
-                Text(StaffStrings.teamDeleteTitle)
-            }
-            .font(.subheadline)
-            .fontWeight(.medium)
-            .foregroundStyle(SolennixColors.error)
-            .frame(maxWidth: .infinity)
-            .padding(Spacing.md)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        }
-        .buttonStyle(.plain)
+        .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
     }
 
     // MARK: - Load

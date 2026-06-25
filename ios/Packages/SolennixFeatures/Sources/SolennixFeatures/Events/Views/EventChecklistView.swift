@@ -27,7 +27,8 @@ public struct EventChecklistView: View {
                 EmptyStateView(
                     icon: "checklist",
                     title: "Sin elementos",
-                    message: "Este evento no tiene elementos para el checklist"
+                    message: "Este evento no tiene elementos para el checklist",
+                    iconColor: SolennixColors.primary
                 )
             } else {
                 scrollContent
@@ -154,9 +155,7 @@ public struct EventChecklistView: View {
         }
         .padding(Spacing.lg)
         .frame(maxWidth: .infinity)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-        .shadowSm()
+        .solennixCard(border: false)
     }
 
     // MARK: - Checklist Section
@@ -259,8 +258,7 @@ private struct ChecklistItemRow: View {
                     .foregroundStyle(isChecked ? SolennixColors.textTertiary : SolennixColors.textSecondary)
             }
             .padding(Spacing.md)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+            .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
         }
         .buttonStyle(.plain)
     }

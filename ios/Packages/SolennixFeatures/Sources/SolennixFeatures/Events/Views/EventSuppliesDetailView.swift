@@ -47,16 +47,18 @@ public struct EventSuppliesDetailView: View {
                     EmptyStateView(
                         icon: "drop",
                         title: tr("events.detail.supplies.empty.title", "Sin Insumos"),
-                        message: tr("events.detail.supplies.empty.message", "Este evento no tiene insumos asignados.")
+                        message: tr("events.detail.supplies.empty.message", "Este evento no tiene insumos asignados."),
+                        iconColor: SolennixColors.primary
                     )
                     NavigationLink(value: Route.eventForm(id: eventId, step: 4)) {
                         Text(tr("events.detail.supplies.empty.cta", "Agregar insumos"))
                             .font(.headline)
-                            .foregroundStyle(SolennixColors.onPrimary)
+                            .foregroundStyle(SolennixColors.primaryDark)
                             .padding(.horizontal, Spacing.xl)
                             .padding(.vertical, 16)
-                            .background(SolennixColors.primary)
-                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                            .background(SolennixColors.primaryLight)
+                            .clipShape(Capsule())
+                            .adaptiveGlass(in: Capsule(), fallback: .material)
                     }
                 } else {
                     // Cost summary
@@ -150,9 +152,7 @@ public struct EventSuppliesDetailView: View {
             }
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-        .shadowSm()
+        .solennixCard(radius: CornerRadius.md, border: false)
     }
 
     private func sourceBadge(_ source: SupplySource) -> some View {

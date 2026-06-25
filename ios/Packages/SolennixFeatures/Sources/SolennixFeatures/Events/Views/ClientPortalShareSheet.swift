@@ -147,8 +147,7 @@ public struct ClientPortalShareSheet: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
     }
 
     // MARK: - Active Link State
@@ -199,9 +198,10 @@ public struct ClientPortalShareSheet: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, Spacing.md)
-                .background(SolennixGradient.premium)
-                .foregroundStyle(SolennixColors.onPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                .background(SolennixColors.primaryLight)
+                .foregroundStyle(SolennixColors.primaryDark)
+                .clipShape(Capsule())
+                .adaptiveGlass(in: Capsule(), fallback: .material)
             }
             .disabled(viewModel.isBusy)
 
@@ -303,8 +303,7 @@ public struct ClientPortalShareSheet: View {
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
     }
 
     // MARK: - Actions

@@ -54,15 +54,25 @@ public struct BusinessSettingsView: View {
         .toolbar {
             if isDirty {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button {
+                    SolennixCancelButton(title: tr("common.back", "Atrás")) {
                         showDiscardConfirm = true
-                    } label: {
-                        Label(tr("common.back", "Atrás"), systemImage: "chevron.backward")
                     }
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                saveButton
+                SolennixSaveButton(
+                    title: tr("common.save", "Guardar"),
+                    action: {
+                        Task {
+                            let success = await viewModel.saveBusinessSettings()
+                            if success {
+                                dismiss()
+                            }
+                        }
+                    },
+                    isValid: true,
+                    isSaving: viewModel.isSaving
+                )
             }
         }
         .onChange(of: viewModel.selectedPhoto) { _, newValue in
@@ -134,12 +144,12 @@ public struct BusinessSettingsView: View {
                     Spacer()
                 }
                 .padding(.vertical, Spacing.md)
+                .solennixRow()
             } header: {
                 Text(tr("settings.business.logo.title", "Logo"))
             } footer: {
                 Text(tr("settings.business.logo.hint", "Tu logo aparecerá en los contratos y cotizaciones que generes."))
             }
-            .listRowBackground(SolennixColors.card)
 
             // Business name + Brand color section (2-col on iPad)
             Section {
@@ -159,10 +169,10 @@ public struct BusinessSettingsView: View {
                             .foregroundStyle(SolennixColors.textTertiary)
                     }
                 }
+                .solennixRow()
             } header: {
                 Text(tr("settings.business.identity_section", "Negocio e identidad visual"))
             }
-            .listRowBackground(SolennixColors.card)
 
             // Error message
             if let error = viewModel.errorMessage {
@@ -170,12 +180,11 @@ public struct BusinessSettingsView: View {
                     Text(error)
                         .font(.subheadline)
                         .foregroundStyle(SolennixColors.error)
+                        .solennixRow()
                 }
-                .listRowBackground(SolennixColors.card)
             }
         }
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
+        .solennixListStyle()
     }
 
     // MARK: - Logo Placeholder
@@ -192,26 +201,6 @@ public struct BusinessSettingsView: View {
         }
     }
 
-    // MARK: - Save Button
-
-    private var saveButton: some View {
-        Button {
-            Task {
-                let success = await viewModel.saveBusinessSettings()
-                if success {
-                    dismiss()
-                }
-            }
-        } label: {
-            if viewModel.isSaving {
-                ProgressView()
-            } else {
-                Text(tr("common.save", "Guardar"))
-                    .fontWeight(.semibold)
-            }
-        }
-        .disabled(viewModel.isSaving)
-    }
 }
 
 // MARK: - Preview

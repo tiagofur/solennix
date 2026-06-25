@@ -25,9 +25,7 @@ struct AttentionEventsCard: View {
                 }
             }
             .padding(Spacing.md)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-            .shadowSm()
+            .solennixCard(border: false)
         }
     }
 

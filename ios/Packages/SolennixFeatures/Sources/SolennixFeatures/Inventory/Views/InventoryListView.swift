@@ -54,7 +54,7 @@ public struct InventoryListView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: Spacing.sm) {
-                        // Fix 11: plus.circle → plus
+                        // 1. Create
                         NavigationLink(value: Route.inventoryForm()) {
                             Image(systemName: "plus")
                                 .font(.body)
@@ -63,9 +63,12 @@ public struct InventoryListView: View {
                         }
                         .disabled(!planLimitsManager.canCreateInventoryItem)
 
+                        // 2. Sort
+                        sortMenu
+
+                        // 3. Filters
                         lowStockToggle
 
-                        // Scope filter menu (Apple Liquid Glass / native style)
                         Menu {
                             Picker(InventoryStrings.scopeFilterAccessibility, selection: $viewModel.scope) {
                                 ForEach(InventoryScope.allCases, id: \.self) { s in
@@ -80,8 +83,6 @@ public struct InventoryListView: View {
                                 .symbolEffect(.bounce, value: viewModel.scope)
                                 .accessibilityLabel(InventoryStrings.scopeFilterAccessibility)
                         }
-
-                        sortMenu
                     }
                 }
             }
@@ -149,7 +150,8 @@ public struct InventoryListView: View {
                         EmptyStateView(
                             icon: "archivebox",
                             title: viewModel.scopedEmptyTitle,
-                            message: viewModel.scopedEmptyMessage
+                            message: viewModel.scopedEmptyMessage,
+                            iconColor: SolennixColors.primary
                         )
                     }
                 } else {
@@ -158,7 +160,8 @@ public struct InventoryListView: View {
                         title: InventoryStrings.filteredEmptyTitle,
                         message: viewModel.showLowStockOnly
                             ? InventoryStrings.lowStockEmptyMessage
-                            : InventoryStrings.filteredEmptyMessage
+                            : InventoryStrings.filteredEmptyMessage,
+                        iconColor: SolennixColors.primary
                     )
                 }
             } else {
@@ -282,9 +285,7 @@ public struct InventoryListView: View {
             }
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadowSm()
+        .solennixCard(radius: CornerRadius.lg, border: false)
     }
 
     /// Tonal type badge for iPad grid cards (Todos scope).
@@ -313,17 +314,18 @@ public struct InventoryListView: View {
             EmptyStateView(
                 icon: "archivebox",
                 title: InventoryStrings.emptyTitle,
-                message: InventoryStrings.emptyMessage
+                message: InventoryStrings.emptyMessage,
+                iconColor: SolennixColors.primary
             )
             NavigationLink(value: Route.inventoryForm()) {
                 Text(InventoryStrings.emptyAction)
                     .font(.headline)
-                    .foregroundStyle(SolennixColors.onPrimary)
+                    .foregroundStyle(SolennixColors.primaryDark)
                     .padding(.horizontal, Spacing.xl)
                     .padding(.vertical, 16)
-                    .background(SolennixGradient.premium)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                    .shadowFab()
+                    .background(SolennixColors.primaryLight)
+                    .clipShape(Capsule())
+                    .adaptiveGlass(in: Capsule(), fallback: .material)
             }
             .padding(.bottom, Spacing.xxl)
         }
@@ -334,60 +336,49 @@ public struct InventoryListView: View {
 
     @ViewBuilder
     private var inventoryListCompact: some View {
-        List {
-            inventoryContentRows
-        }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
-    }
-
-    @ViewBuilder
-    private var inventoryContentRows: some View {
-        Group {
-            if let error = viewModel.errorMessage, viewModel.items.isEmpty, !viewModel.isLoading {
-                // Error state
-                EmptyStateView(
-                    icon: "wifi.exclamationmark",
-                    title: InventoryStrings.errorLoadingTitle,
-                    message: error,
-                    actionTitle: InventoryStrings.retry
-                ) {
-                    Task { await viewModel.loadItems() }
-                }
-                .frame(maxWidth: .infinity)
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
-                .listRowSeparator(.hidden)
-            } else if viewModel.isLoading && viewModel.items.isEmpty {
-                // Fix 3: skeleton rows inside the same List — no jump
+        if let error = viewModel.errorMessage, viewModel.items.isEmpty, !viewModel.isLoading {
+            // Error state — outside List for proper centering
+            EmptyStateView(
+                icon: "wifi.exclamationmark",
+                title: InventoryStrings.errorLoadingTitle,
+                message: error,
+                actionTitle: InventoryStrings.retry,
+                iconColor: SolennixColors.primary
+            ) {
+                Task { await viewModel.loadItems() }
+            }
+        } else if viewModel.isLoading && viewModel.items.isEmpty {
+            // Fix 3: skeleton rows inside the same List — no jump
+            List {
                 inventorySkeletonRows
-            } else if viewModel.filteredItems.isEmpty && !viewModel.isLoading {
-                // Fix 4: truly-empty vs filtered/search/low-stock-filter conditions
-                if viewModel.searchText.isEmpty && !viewModel.showLowStockOnly {
-                    // Truly empty (global or scoped) — CTA
-                    if viewModel.scope == .all {
-                        inventoryFirstRunEmptyRow
-                    } else {
-                        scopedEmptyRow
-                    }
+            }
+            .listStyle(.insetGrouped)
+            .solennixListStyle()
+        } else if viewModel.filteredItems.isEmpty && !viewModel.isLoading {
+            // Empty states — outside List for proper centering
+            if viewModel.searchText.isEmpty && !viewModel.showLowStockOnly {
+                if viewModel.scope == .all {
+                    inventoryFirstRunEmptyState
                 } else {
-                    // Filtered/search/low-stock filter empty
                     EmptyStateView(
-                        icon: "magnifyingglass",
-                        title: InventoryStrings.filteredEmptyTitle,
-                        message: viewModel.showLowStockOnly
-                            ? InventoryStrings.lowStockEmptyMessage
-                            : InventoryStrings.filteredEmptyMessage
+                        icon: "archivebox",
+                        title: viewModel.scopedEmptyTitle,
+                        message: viewModel.scopedEmptyMessage,
+                        iconColor: SolennixColors.primary
                     )
-                    .frame(maxWidth: .infinity)
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets())
-                    .listRowSeparator(.hidden)
                 }
             } else {
-                // Single flat section — server already filtered by scope.
-                // Each row carries a type chip in Todos scope for visual identification.
+                EmptyStateView(
+                    icon: "magnifyingglass",
+                    title: InventoryStrings.filteredEmptyTitle,
+                    message: viewModel.showLowStockOnly
+                        ? InventoryStrings.lowStockEmptyMessage
+                        : InventoryStrings.filteredEmptyMessage,
+                    iconColor: SolennixColors.primary
+                )
+            }
+        } else {
+            List {
                 Section {
                     ForEach(viewModel.filteredItems) { item in
                         inventoryRow(item)
@@ -405,52 +396,37 @@ public struct InventoryListView: View {
                     .listRowBackground(Color.clear)
                 }
             }
+            .listStyle(.insetGrouped)
+            .solennixListStyle()
         }
     }
 
 
 
-    // MARK: - First-Run Empty Row (Fix 4)
+    // MARK: - First-Run Empty State (Fix 4) — outside List for proper centering
 
     /// Working NavigationLink CTA for the truly-empty state.
-    private var inventoryFirstRunEmptyRow: some View {
+    private var inventoryFirstRunEmptyState: some View {
         VStack(spacing: 0) {
             EmptyStateView(
                 icon: "archivebox",
                 title: InventoryStrings.emptyTitle,
-                message: InventoryStrings.emptyMessage
+                message: InventoryStrings.emptyMessage,
+                iconColor: SolennixColors.primary
             )
             NavigationLink(value: Route.inventoryForm()) {
                 Text(InventoryStrings.emptyAction)
                     .font(.headline)
-                    .foregroundStyle(SolennixColors.onPrimary)
+                    .foregroundStyle(SolennixColors.primaryDark)
                     .padding(.horizontal, Spacing.xl)
                     .padding(.vertical, 16)
-                    .background(SolennixGradient.premium)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                    .shadowFab()
+                    .background(SolennixColors.primaryLight)
+                    .clipShape(Capsule())
+                    .adaptiveGlass(in: Capsule(), fallback: .material)
             }
             .padding(.bottom, Spacing.xxl)
         }
         .frame(maxWidth: .infinity)
-        .listRowBackground(Color.clear)
-        .listRowInsets(EdgeInsets())
-        .listRowSeparator(.hidden)
-    }
-
-    // MARK: - Scoped Empty Row
-
-    /// Empty state for a specific scope (not first-run, no CTA to create).
-    private var scopedEmptyRow: some View {
-        EmptyStateView(
-            icon: "archivebox",
-            title: viewModel.scopedEmptyTitle,
-            message: viewModel.scopedEmptyMessage
-        )
-        .frame(maxWidth: .infinity)
-        .listRowBackground(Color.clear)
-        .listRowInsets(EdgeInsets())
-        .listRowSeparator(.hidden)
     }
 
     // MARK: - Skeleton Rows (Fix 3)
@@ -461,7 +437,7 @@ public struct InventoryListView: View {
         Section {
             ForEach(0..<5, id: \.self) { _ in
                 InventorySkeletonRow()
-                    .listRowBackground(SolennixColors.card)
+                    .solennixRow()
                     .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
                     .accessibilityHidden(true)
             }
@@ -485,7 +461,7 @@ public struct InventoryListView: View {
             .opacity(0)
             .accessibilityHidden(true)
         }
-        .listRowBackground(SolennixColors.card)
+        .solennixRow()
         .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
         // Fix 2: a11y — composed ordered label (includes type in Todos scope)
         .accessibilityElement(children: .ignore)

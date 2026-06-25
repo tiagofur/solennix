@@ -16,6 +16,7 @@ public struct RecipeSection: View {
     let onSelectInventory: (Int, String) -> Void
     let onUpdateQuantity: (Int, Double) -> Void
     let showCost: Bool
+    let embeddedInForm: Bool
 
     public init(
         title: String,
@@ -26,7 +27,8 @@ public struct RecipeSection: View {
         onRemove: @escaping (Int) -> Void,
         onSelectInventory: @escaping (Int, String) -> Void,
         onUpdateQuantity: @escaping (Int, Double) -> Void,
-        showCost: Bool = false
+        showCost: Bool = false,
+        embeddedInForm: Bool = false
     ) {
         self.title = title
         self.description = description
@@ -37,9 +39,22 @@ public struct RecipeSection: View {
         self.onSelectInventory = onSelectInventory
         self.onUpdateQuantity = onUpdateQuantity
         self.showCost = showCost
+        self.embeddedInForm = embeddedInForm
     }
 
     public var body: some View {
+        if embeddedInForm {
+            // Embedded inside a native Form Section — the Section provides the
+            // card background, so we skip the custom card chrome here.
+            contentVStack
+        } else {
+            contentVStack
+                .padding(Spacing.md)
+                .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
+        }
+    }
+
+    private var contentVStack: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             // Header
             HStack {
@@ -102,9 +117,6 @@ public struct RecipeSection: View {
                 }
             }
         }
-        .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
     }
 }
 
@@ -302,10 +314,10 @@ private struct InventoryPickerSheet: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .solennixRow()
             }
             .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(SolennixColors.surfaceGrouped)
+            .solennixListStyle()
             .searchable(text: $searchText, prompt: ProductStrings.searchItemPrompt)
             .navigationTitle(ProductStrings.selectItemTitle)
             .navigationBarTitleDisplayMode(.inline)

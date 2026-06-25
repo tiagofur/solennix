@@ -25,40 +25,35 @@ public struct StaffFormView: View {
             notificationSection
             notesSection
         }
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
+        .solennixListStyle()
         .scrollDismissesKeyboard(.interactively)
         .keyboardDoneToolbar()
         .navigationTitle(staffId != nil ? StaffStrings.editTitle : StaffStrings.newTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button(StaffStrings.cancel) {
+                SolennixCancelButton(title: StaffStrings.cancel) {
                     if viewModel.isDirty {
                         showDiscardDialog = true
                     } else {
                         dismiss()
                     }
                 }
-                .foregroundStyle(SolennixColors.textSecondary)
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    Task {
-                        if let _ = await viewModel.validateAndSave() {
-                            dismiss()
+                SolennixSaveButton(
+                    title: StaffStrings.save,
+                    action: {
+                        Task {
+                            if let _ = await viewModel.validateAndSave() {
+                                dismiss()
+                            }
                         }
-                    }
-                } label: {
-                    if viewModel.isSaving {
-                        ProgressView()
-                    } else {
-                        Text(StaffStrings.save)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(viewModel.isFormValid ? SolennixColors.primary : SolennixColors.textTertiary)
-                    }
-                }
-                .disabled(!viewModel.isFormValid || viewModel.isSaving)
+                    },
+                    isValid: viewModel.isFormValid,
+                    isSaving: viewModel.isSaving
+                )
             }
         }
         .interactiveDismissDisabled(viewModel.isDirty && !viewModel.isSaving)
@@ -99,58 +94,54 @@ public struct StaffFormView: View {
     // MARK: - Info Section
 
     private var infoSection: some View {
-        Section(StaffStrings.sectionInfo) {
-            AdaptiveFormRow {
-                SolennixTextField(
-                    label: StaffStrings.fieldName,
-                    text: $viewModel.name,
-                    placeholder: StaffStrings.fieldNamePlaceholder,
-                    leftIcon: "person",
-                    errorMessage: !viewModel.name.isEmpty && !viewModel.isNameValid
-                        ? StaffStrings.nameMinError : nil,
-                    textContentType: .name,
-                    autocapitalization: .words
-                )
-            } right: {
-                SolennixTextField(
-                    label: StaffStrings.fieldRole,
-                    text: $viewModel.roleLabel,
-                    placeholder: StaffStrings.fieldRolePlaceholder,
-                    leftIcon: "briefcase",
-                    autocapitalization: .words
-                )
+        Section {
+            TextField(StaffStrings.fieldName, text: $viewModel.name,
+                      prompt: Text(StaffStrings.fieldNamePlaceholder))
+                .textContentType(.name)
+                .textInputAutocapitalization(.words)
+                .solennixRow()
+
+            if !viewModel.name.isEmpty && !viewModel.isNameValid {
+                Text(StaffStrings.nameMinError)
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.error)
+                    .solennixRow()
             }
-            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+
+            TextField(StaffStrings.fieldRole, text: $viewModel.roleLabel,
+                      prompt: Text(StaffStrings.fieldRolePlaceholder))
+                .textInputAutocapitalization(.words)
+                .solennixRow()
+        } header: {
+            Text(StaffStrings.sectionInfo)
         }
     }
 
     // MARK: - Contact Section
 
     private var contactSection: some View {
-        Section(StaffStrings.sectionContact) {
-            AdaptiveFormRow {
-                SolennixTextField(
-                    label: StaffStrings.fieldPhone,
-                    text: $viewModel.phone,
-                    placeholder: StaffStrings.fieldPhonePlaceholder,
-                    leftIcon: "phone",
-                    textContentType: .telephoneNumber,
-                    keyboardType: .phonePad
-                )
-            } right: {
-                SolennixTextField(
-                    label: StaffStrings.fieldEmail,
-                    text: $viewModel.email,
-                    placeholder: StaffStrings.fieldEmailPlaceholder,
-                    leftIcon: "envelope",
-                    errorMessage: !viewModel.email.isEmpty && !viewModel.isEmailValidIfProvided
-                        ? StaffStrings.emailInvalidError : nil,
-                    textContentType: .emailAddress,
-                    keyboardType: .emailAddress,
-                    autocapitalization: .never
-                )
+        Section {
+            TextField(StaffStrings.fieldPhone, text: $viewModel.phone,
+                      prompt: Text(StaffStrings.fieldPhonePlaceholder))
+                .textContentType(.telephoneNumber)
+                .keyboardType(.phonePad)
+                .solennixRow()
+
+            TextField(StaffStrings.fieldEmail, text: $viewModel.email,
+                      prompt: Text(StaffStrings.fieldEmailPlaceholder))
+                .textContentType(.emailAddress)
+                .keyboardType(.emailAddress)
+                .textInputAutocapitalization(.never)
+                .solennixRow()
+
+            if !viewModel.email.isEmpty && !viewModel.isEmailValidIfProvided {
+                Text(StaffStrings.emailInvalidError)
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.error)
+                    .solennixRow()
             }
-            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+        } header: {
+            Text(StaffStrings.sectionContact)
         }
     }
 
@@ -158,28 +149,20 @@ public struct StaffFormView: View {
 
     private var notificationSection: some View {
         Section {
-            VStack(alignment: .leading, spacing: Spacing.xs) {
-                Toggle(isOn: $viewModel.notificationEmailOptIn) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(StaffStrings.notifToggleLabel)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundStyle(SolennixColors.text)
-
-                        Text(StaffStrings.notifToggleSubtitle)
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.textSecondary)
-                    }
-                }
-                .tint(SolennixColors.primary)
-
-                if viewModel.notificationEmailOptIn && !viewModel.isOptInConsistent {
-                    Text(StaffStrings.notifEmailRequired)
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.error)
-                }
+            Toggle(isOn: $viewModel.notificationEmailOptIn) {
+                Text(StaffStrings.notifToggleLabel)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
             }
-            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+            .tint(SolennixColors.primary)
+            .solennixRow()
+
+            if viewModel.notificationEmailOptIn && !viewModel.isOptInConsistent {
+                Text(StaffStrings.notifEmailRequired)
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.error)
+                    .solennixRow()
+            }
         } header: {
             Text(StaffStrings.sectionNotif)
         }
@@ -188,22 +171,15 @@ public struct StaffFormView: View {
     // MARK: - Notes Section
 
     private var notesSection: some View {
-        Section(StaffStrings.sectionNotes) {
-            VStack(alignment: .leading, spacing: Spacing.xs) {
-                TextEditor(text: $viewModel.notes)
-                    .frame(minHeight: 80)
-                    .font(.body)
-                    .foregroundStyle(SolennixColors.text)
-                    .scrollContentBackground(.hidden)
-                    .padding(Spacing.sm)
-                    .background(SolennixColors.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: CornerRadius.md)
-                            .stroke(SolennixColors.border, lineWidth: 1)
-                    )
-            }
-            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+        Section {
+            TextEditor(text: $viewModel.notes)
+                .frame(minHeight: 80)
+                .font(.body)
+                .foregroundStyle(SolennixColors.text)
+                .scrollContentBackground(.hidden)
+                .solennixRow()
+        } header: {
+            Text(StaffStrings.sectionNotes)
         }
     }
 }

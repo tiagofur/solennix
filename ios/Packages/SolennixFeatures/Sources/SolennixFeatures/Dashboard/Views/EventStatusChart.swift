@@ -28,7 +28,7 @@ public struct EventStatusChart: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text(tr("dashboard.event_status", "Estado de eventos"))
+            Label(tr("dashboard.event_status", "Estado de eventos"), systemImage: "chart.bar.fill")
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .foregroundStyle(SolennixColors.text)
@@ -70,9 +70,7 @@ public struct EventStatusChart: View {
             }
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-        .shadowSm()
+        .solennixCard(border: false)
         // VoiceOver: collapse the bar + legend dots into a single summary so
         // the user hears "Estado de Eventos: 3 cotizados, 5 confirmados, 2
         // completados, 1 cancelado" instead of ~12 unlabeled pieces.

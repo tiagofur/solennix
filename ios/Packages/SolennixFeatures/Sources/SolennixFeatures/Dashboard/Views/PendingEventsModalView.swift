@@ -121,8 +121,7 @@ public struct PendingEventsModalView: View {
                     .padding(.vertical, Spacing.md)
             }
         }
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.xl))
+        .solennixCard(radius: CornerRadius.xl, shadow: false, border: false)
         .shadowLg()
     }
 
@@ -268,7 +267,7 @@ public struct PendingEventsModalView: View {
         Button(action: action) {
             HStack(spacing: 4) {
                 if isLoading {
-                    ProgressView().controlSize(.small).tint(SolennixColors.textInverse)
+                    ProgressView().controlSize(.small).tint(SolennixColors.primaryDark)
                 } else {
                     Image(systemName: icon)
                     Text(title)
@@ -276,11 +275,12 @@ public struct PendingEventsModalView: View {
             }
             .font(.caption)
             .fontWeight(.bold)
-            .foregroundStyle(SolennixColors.textInverse)
+            .foregroundStyle(SolennixColors.primaryDark)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
-            .background(SolennixColors.primary)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
+            .background(SolennixColors.primaryLight)
+            .clipShape(Capsule())
+            .adaptiveGlass(in: Capsule(), fallback: .material)
         }
         .disabled(disabled)
     }

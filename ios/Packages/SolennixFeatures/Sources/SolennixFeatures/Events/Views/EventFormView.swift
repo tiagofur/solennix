@@ -79,14 +79,13 @@ public struct EventFormView: View {
             .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(tr("events.form.cancel", "Cancelar")) {
+                    SolennixCancelButton(title: tr("events.form.cancel", "Cancelar")) {
                         if viewModel.isDirty {
                             showDiscardDialog = true
                         } else {
                             dismiss()
                         }
                     }
-                    .foregroundStyle(SolennixColors.text)
                 }
             }
             .overlay {
@@ -204,53 +203,35 @@ public struct EventFormView: View {
     private var navigationButtons: some View {
         HStack(spacing: Spacing.md) {
             if viewModel.currentStep > 1 {
-                Button {
+                PremiumButton(
+                    title: tr("events.form.previous", "Anterior"),
+                    fullWidth: false,
+                    style: .secondary,
+                    icon: "chevron.left"
+                ) {
                     viewModel.previousStep()
-                } label: {
-                    HStack(spacing: Spacing.xs) {
-                        Image(systemName: "chevron.left")
-                        Text(tr("events.form.previous", "Anterior"))
-                    }
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundStyle(SolennixColors.text)
-                    .padding(.horizontal, Spacing.lg)
-                    .padding(.vertical, 12)
-                    .background(SolennixColors.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: CornerRadius.md)
-                            .stroke(SolennixColors.border, lineWidth: 1)
-                    )
                 }
             }
 
             Spacer()
 
             if viewModel.currentStep < 5 {
-                Button {
+                PremiumButton(
+                    title: tr("events.form.next", "Siguiente"),
+                    isDisabled: viewModel.currentStep == 1 && !viewModel.isStep1Valid,
+                    fullWidth: false,
+                    icon: "chevron.right",
+                    iconPosition: .trailing
+                ) {
                     viewModel.nextStep()
-                } label: {
-                    HStack(spacing: Spacing.xs) {
-                        Text(tr("events.form.next", "Siguiente"))
-                        Image(systemName: "chevron.right")
-                    }
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundStyle(SolennixColors.textInverse)
-                    .padding(.horizontal, Spacing.lg)
-                    .padding(.vertical, 12)
-                    .background(SolennixGradient.premium)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
                 }
-                .disabled(viewModel.currentStep == 1 && !viewModel.isStep1Valid)
-                .opacity(viewModel.currentStep == 1 && !viewModel.isStep1Valid ? 0.5 : 1.0)
             } else {
                 PremiumButton(
                     title: tr("events.form.save", "Guardar"),
                     isLoading: viewModel.isSaving,
                     isDisabled: !viewModel.isStep1Valid || viewModel.isSaving,
-                    fullWidth: false
+                    fullWidth: false,
+                    icon: "checkmark"
                 ) {
                     Task {
                         do {

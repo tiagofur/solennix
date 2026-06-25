@@ -209,18 +209,8 @@ public struct ForgotPasswordView: View {
                     .multilineTextAlignment(.center)
             }
 
-            Button {
+            PremiumButton(title: AuthStrings.forgotPasswordBackToLogin) {
                 dismiss()
-            } label: {
-                Text(AuthStrings.forgotPasswordBackToLogin)
-                    .font(.headline)
-                    // Navy on gold: ≥4.9:1 on both gradient ends (WCAG AA).
-                    // primaryLight (#F5F0E8 light / #1B2A4A dark) had gold-on-cream ≈2.1:1 — fails AA.
-                    .foregroundStyle(SolennixColors.onPrimary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Spacing.md)
-                    .background(SolennixColors.primary)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
             }
 
             Spacer(minLength: Spacing.xxxl)

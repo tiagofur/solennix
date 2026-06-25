@@ -49,6 +49,7 @@ struct BlockDateSheet: View {
                         )
                         .foregroundStyle(SolennixColors.text)
                     }
+                    .solennixRow()
                 } header: {
                     Text(CalendarStrings.blockStartDate)
                 }
@@ -60,6 +61,7 @@ struct BlockDateSheet: View {
                         in: startDate...,
                         displayedComponents: .date
                     )
+                    .solennixRow()
                 } header: {
                     Text(CalendarStrings.blockEndDate)
                 }
@@ -70,16 +72,17 @@ struct BlockDateSheet: View {
                         text: $reason
                     )
                     .textInputAutocapitalization(.sentences)
+                    .solennixRow()
                 } header: {
                     Text(CalendarStrings.blockReasonLabel)
                 }
             }
-            .sheetFormBackground()
+            .solennixListStyle()
             .navigationTitle(CalendarStrings.blockTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(CalendarStrings.actionCancel) {
+                    SolennixCancelButton(title: CalendarStrings.actionCancel) {
                         onDismiss()
                         dismiss()
                     }
@@ -87,34 +90,28 @@ struct BlockDateSheet: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     // Fix #4: confirmatory scheduling action → primary color (not red).
                     // Fix #9: show ProgressView while submitting; only dismiss on success.
-                    Button {
-                        Task {
-                            isSubmitting = true
-                            let trimmed = reason.trimmingCharacters(in: .whitespacesAndNewlines)
-                            await viewModel.toggleDateBlock(
-                                startDate: startDate,
-                                endDate: endDate,
-                                reason: trimmed.isEmpty ? nil : trimmed
-                            )
-                            isSubmitting = false
-                            // Only dismiss when no error was set by the ViewModel.
-                            if viewModel.error == nil {
-                                onDismiss()
-                                dismiss()
+                    SolennixSaveButton(
+                        title: CalendarStrings.blockSave,
+                        action: {
+                            Task {
+                                isSubmitting = true
+                                let trimmed = reason.trimmingCharacters(in: .whitespacesAndNewlines)
+                                await viewModel.toggleDateBlock(
+                                    startDate: startDate,
+                                    endDate: endDate,
+                                    reason: trimmed.isEmpty ? nil : trimmed
+                                )
+                                isSubmitting = false
+                                // Only dismiss when no error was set by the ViewModel.
+                                if viewModel.error == nil {
+                                    onDismiss()
+                                    dismiss()
+                                }
                             }
-                        }
-                    } label: {
-                        if isSubmitting {
-                            ProgressView()
-                                .controlSize(.small)
-                                .tint(SolennixColors.primary)
-                        } else {
-                            Text(CalendarStrings.blockSave)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(SolennixColors.primary)
-                        }
-                    }
-                    .disabled(isSubmitting)
+                        },
+                        isValid: true,
+                        isSaving: isSubmitting
+                    )
                 }
             }
         }

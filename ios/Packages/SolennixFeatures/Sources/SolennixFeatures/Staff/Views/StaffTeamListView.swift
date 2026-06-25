@@ -72,7 +72,8 @@ public struct StaffTeamListView: View {
                 icon: "wifi.exclamationmark",
                 title: StaffStrings.errorLoadingTitle,
                 message: error,
-                actionTitle: StaffStrings.retry
+                actionTitle: StaffStrings.retry,
+                iconColor: SolennixColors.primary
             ) {
                 Task { await viewModel.load() }
             }
@@ -87,7 +88,8 @@ public struct StaffTeamListView: View {
                 EmptyStateView(
                     icon: "magnifyingglass",
                     title: StaffStrings.filteredEmptyTitle,
-                    message: StaffStrings.teamsFilteredEmptyMessage
+                    message: StaffStrings.teamsFilteredEmptyMessage,
+                    iconColor: SolennixColors.primary
                 )
             }
         } else {
@@ -111,7 +113,7 @@ public struct StaffTeamListView: View {
                         .accessibilityHidden(true)
                     }
                     // Fix 11: card background + separator tint
-                    .listRowBackground(SolennixColors.card)
+                    .solennixRow()
                     .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(teamAccessibilityLabel(team))
@@ -153,8 +155,7 @@ public struct StaffTeamListView: View {
         }
         .listStyle(.insetGrouped)
         .listSectionSpacing(.compact)
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
+        .solennixListStyle()
     }
 
     // MARK: - First-Run Empty (Fix 13)
@@ -164,17 +165,18 @@ public struct StaffTeamListView: View {
             EmptyStateView(
                 icon: "person.3.sequence",
                 title: StaffStrings.teamsEmptyTitle,
-                message: StaffStrings.teamsEmptyMessage
+                message: StaffStrings.teamsEmptyMessage,
+                iconColor: SolennixColors.primary
             )
             NavigationLink(value: Route.staffTeamForm()) {
                 Text(StaffStrings.teamsEmptyAction)
                     .font(.headline)
-                    .foregroundStyle(SolennixColors.onPrimary)
+                    .foregroundStyle(SolennixColors.primaryDark)
                     .padding(.horizontal, Spacing.xl)
                     .padding(.vertical, 16)
-                    .background(SolennixGradient.premium)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                    .shadowFab()
+                    .background(SolennixColors.primaryLight)
+                    .clipShape(Capsule())
+                    .adaptiveGlass(in: Capsule(), fallback: .material)
             }
             .padding(.bottom, Spacing.xxl)
         }
@@ -188,7 +190,7 @@ public struct StaffTeamListView: View {
             Section {
                 ForEach(0..<4, id: \.self) { _ in
                     TeamSkeletonRow()
-                        .listRowBackground(SolennixColors.card)
+                        .solennixRow()
                         .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
                 }
                 .accessibilityHidden(true)
@@ -196,8 +198,7 @@ public struct StaffTeamListView: View {
         }
         .listStyle(.insetGrouped)
         .listSectionSpacing(.compact)
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
+        .solennixListStyle()
     }
 
     // MARK: - Team Row (Fix 15: Dynamic Type stacking)

@@ -57,15 +57,25 @@ public struct ContractDefaultsView: View {
         .toolbar {
             if isDirty {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button {
+                    SolennixCancelButton(title: tr("common.back", "Atrás")) {
                         showDiscardConfirm = true
-                    } label: {
-                        Label(tr("common.back", "Atrás"), systemImage: "chevron.backward")
                     }
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                saveButton
+                SolennixSaveButton(
+                    title: tr("common.save", "Guardar"),
+                    action: {
+                        Task {
+                            let success = await viewModel.saveContractDefaults()
+                            if success {
+                                dismiss()
+                            }
+                        }
+                    },
+                    isValid: true,
+                    isSaving: viewModel.isSaving
+                )
             }
         }
         .sheet(isPresented: $showVariablePicker) {
@@ -105,12 +115,12 @@ public struct ContractDefaultsView: View {
                         Text(tr("settings.contract.deposit", "Anticipo"))
                     }
                 }
+                .solennixRow()
             } header: {
                 Text(tr("settings.contract.deposit", "Anticipo"))
             } footer: {
                 Text(tr("settings.contract.deposit_hint", "Porcentaje del total que solicitas como anticipo al confirmar un evento."))
             }
-            .listRowBackground(SolennixColors.card)
 
             // Cancellation section
             Section {
@@ -127,12 +137,12 @@ public struct ContractDefaultsView: View {
                         Text(tr("settings.contract.days", "Días"))
                     }
                 }
+                .solennixRow()
             } header: {
                 Text(tr("settings.contract.cancellation", "Cancelación"))
             } footer: {
                 Text(tr("settings.contract.cancellation_hint", "Número mínimo de días antes del evento para permitir cancelación con reembolso."))
             }
-            .listRowBackground(SolennixColors.card)
 
             // Refund section
             Section {
@@ -149,12 +159,12 @@ public struct ContractDefaultsView: View {
                         Text(tr("settings.contract.refund", "Reembolso"))
                     }
                 }
+                .solennixRow()
             } header: {
                 Text(tr("settings.contract.refund", "Reembolso"))
             } footer: {
                 Text(tr("settings.contract.refund_hint", "Porcentaje del anticipo que devuelves en caso de cancelación dentro del plazo permitido."))
             }
-            .listRowBackground(SolennixColors.card)
 
             // Contract template section
             Section {
@@ -207,12 +217,12 @@ public struct ContractDefaultsView: View {
                     .frame(height: 450)
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
                 }
+                .solennixRow()
             } header: {
                 Text(tr("settings.contract.template", "Plantilla del contrato"))
             } footer: {
                 Text(tr("settings.contract.template_hint", "Las variables como [Nombre del cliente] se reemplazan automáticamente con los datos del evento al generar el contrato."))
             }
-            .listRowBackground(SolennixColors.card)
 
             // Preview section
             Section {
@@ -230,8 +240,8 @@ public struct ContractDefaultsView: View {
                     .background(SolennixColors.surface)
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
                 }
+                .solennixRow()
             }
-            .listRowBackground(SolennixColors.card)
 
             // Error message
             if let error = viewModel.errorMessage {
@@ -239,11 +249,11 @@ public struct ContractDefaultsView: View {
                     Text(error)
                         .font(.subheadline)
                         .foregroundStyle(SolennixColors.error)
+                        .solennixRow()
                 }
             }
         }
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
+        .solennixListStyle()
         }
     }
 
@@ -262,26 +272,6 @@ public struct ContractDefaultsView: View {
         }
     }
 
-    // MARK: - Save Button
-
-    private var saveButton: some View {
-        Button {
-            Task {
-                let success = await viewModel.saveContractDefaults()
-                if success {
-                    dismiss()
-                }
-            }
-        } label: {
-            if viewModel.isSaving {
-                ProgressView()
-            } else {
-                Text(tr("common.save", "Guardar"))
-                    .fontWeight(.semibold)
-            }
-        }
-        .disabled(viewModel.isSaving)
-    }
 }
 
 // MARK: - Contract Variable

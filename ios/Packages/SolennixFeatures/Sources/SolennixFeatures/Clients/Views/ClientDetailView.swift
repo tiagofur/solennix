@@ -34,15 +34,15 @@ public struct ClientDetailView: View {
                     ClientDetailSkeleton()
                 }
                 .listStyle(.insetGrouped)
-                .scrollContentBackground(.hidden)
-                .background(SolennixColors.surfaceGrouped)
+                .solennixListStyle()
             } else if let client {
                 hubList(client)
             } else {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
                     title: tr("clients.error.title", "Error"),
-                    message: errorMessage ?? tr("clients.error.load", "No se pudo cargar el cliente")
+                    message: errorMessage ?? tr("clients.error.load", "No se pudo cargar el cliente"),
+                    iconColor: SolennixColors.primary
                 )
             }
         }
@@ -143,7 +143,7 @@ public struct ClientDetailView: View {
                     .foregroundStyle(SolennixColors.primary)
                     .frame(minHeight: 44)
                 }
-                .listRowBackground(SolennixColors.primaryLight)
+                .solennixRow()
                 .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
             }
 
@@ -177,7 +177,7 @@ public struct ClientDetailView: View {
                         .padding(.vertical, Spacing.xl)
                         Spacer()
                     }
-                    .listRowBackground(SolennixColors.card)
+                    .solennixRow()
                     .listRowSeparator(.hidden)
                 } else {
                     ForEach(sortedEvents) { event in
@@ -185,7 +185,7 @@ public struct ClientDetailView: View {
                             eventRow(event)
                         }
                         .buttonStyle(.plain)
-                        .listRowBackground(SolennixColors.card)
+                        .solennixRow()
                         .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
                         .accessibilityElement(children: .combine)
                     }
@@ -209,14 +209,13 @@ public struct ClientDetailView: View {
                             .foregroundStyle(SolennixColors.textSecondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .listRowBackground(SolennixColors.card)
+                    .solennixRow()
                     .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
                 }
             }
         }
         .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
+        .solennixListStyle()
         .softScrollEdgeEffectIfAvailable()
         .refreshable {
             // Does NOT clear arrays — avoids skeleton flash on pull-to-refresh.
@@ -369,7 +368,7 @@ public struct ClientDetailView: View {
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity)
-        .listRowBackground(SolennixColors.card)
+        .solennixRow()
         .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
 
@@ -466,7 +465,7 @@ public struct ClientDetailView: View {
             Spacer()
         }
         .padding(Spacing.md)
-        .listRowBackground(SolennixColors.card)
+        .solennixRow()
         .listRowInsets(EdgeInsets(top: 0, leading: Spacing.md, bottom: 0, trailing: Spacing.md))
     }
 
@@ -657,7 +656,7 @@ public struct ClientDetailView: View {
                 }
             }
             .padding(Spacing.md)
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
             .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
         }
     }
@@ -765,7 +764,7 @@ struct ClientDetailSkeleton: View {
             }
             .padding(Spacing.md)
             .frame(maxWidth: .infinity)
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
             .listRowSeparator(.hidden)
         }
 
@@ -776,7 +775,7 @@ struct ClientDetailSkeleton: View {
                 SkeletonLine(height: 130)
             }
             .padding(Spacing.md)
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
             .listRowSeparator(.hidden)
         }
 
@@ -798,7 +797,7 @@ struct ClientDetailSkeleton: View {
                     SkeletonLine(width: 70, height: 16)
                 }
                 .padding(Spacing.md)
-                .listRowBackground(SolennixColors.card)
+                .solennixRow()
                 .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
             }
         }

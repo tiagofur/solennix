@@ -725,4 +725,26 @@ public enum SolennixColors {
         Color(hex: "#6B5B7B")
         #endif
     }
+
+    // MARK: - UIKit Dynamic Colors (for appearance proxies)
+
+    #if canImport(UIKit)
+    /// Dynamic UIColor for card backgrounds (List/Form rows). Use with UITableViewCell.appearance().
+    public static var cardUIColor: UIColor {
+        UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hex: "#1A2740")
+                : UIColor(hex: "#FFFFFF")
+        }
+    }
+
+    /// Dynamic UIColor for grouped page backgrounds (List/Form gaps). Use with UITableView.appearance().
+    public static var surfaceGroupedUIColor: UIColor {
+        UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hex: "#070D17")
+                : UIColor(hex: "#F5F4F1")
+        }
+    }
+    #endif
 }

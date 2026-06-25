@@ -85,7 +85,8 @@ public struct TeamMemberPortalView: View {
                 icon: "exclamationmark.triangle.fill",
                 title: "No pudimos cargar tus asignaciones",
                 message: errorMessage,
-                actionTitle: "Reintentar"
+                actionTitle: "Reintentar",
+                iconColor: SolennixColors.primary
             ) {
                 Task { await viewModel.loadAssignments() }
             }
@@ -96,7 +97,8 @@ public struct TeamMemberPortalView: View {
             EmptyStateView(
                 icon: "calendar.badge.clock",
                 title: "Todavia no tenes asignaciones",
-                message: "Cuando te asignen a un evento, va a aparecer aca con respuesta rapida."
+                message: "Cuando te asignen a un evento, va a aparecer aca con respuesta rapida.",
+                iconColor: SolennixColors.primary
             ) {}
         } else {
             ScrollView {
@@ -543,9 +545,7 @@ public struct TeamMemberPortalView: View {
                     }
                     .padding(Spacing.md)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(SolennixColors.card)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-                    .shadowSm()
+                    .solennixCard(radius: CornerRadius.lg, border: false)
                 }
                 .buttonStyle(.plain)
             }
@@ -804,9 +804,7 @@ public struct TeamMemberPortalView: View {
         content()
             .padding(Spacing.lg)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-            .shadowSm()
+            .solennixCard(radius: CornerRadius.lg, border: false)
     }
 
     private func parseLocalDate(_ value: String) -> Date? {
@@ -998,24 +996,17 @@ private struct TeamMemberAssignmentCard: View {
                     }
                     .disabled(isResponding)
 
-                    Button {
+                    PremiumButton(
+                        title: "Aceptar",
+                        isDisabled: isResponding
+                    ) {
                         onAccept()
-                    } label: {
-                        Text("Aceptar")
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(SolennixColors.primary)
-                            .foregroundStyle(SolennixColors.onPrimary)
-                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
                     }
-                    .disabled(isResponding)
                 }
             }
         }
         .padding(Spacing.lg)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadowSm()
+        .solennixCard(radius: CornerRadius.lg, border: false)
         .contentShape(Rectangle())
         .onTapGesture {
             onTap?()

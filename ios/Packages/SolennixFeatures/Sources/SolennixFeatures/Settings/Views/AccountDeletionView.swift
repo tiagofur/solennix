@@ -101,9 +101,7 @@ public struct AccountDeletionView: View {
             )
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-        .shadowSm()
+        .solennixCard(border: false)
         .padding(.horizontal, Spacing.md)
     }
 
@@ -163,8 +161,7 @@ public struct AccountDeletionView: View {
                     .multilineTextAlignment(.leading)
             }
             .padding(Spacing.md)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
+            .solennixCard(shadow: false, border: false)
             .overlay(
                 RoundedRectangle(cornerRadius: CornerRadius.card)
                     .stroke(

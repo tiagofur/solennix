@@ -55,7 +55,8 @@ public struct EventStaffDetailView: View {
                         icon: "wifi.exclamationmark",
                         title: tr("events.detail.staff.error.title", "Error al cargar"),
                         message: errorMessage,
-                        actionTitle: tr("events.detail.staff.retry", "Reintentar")
+                        actionTitle: tr("events.detail.staff.retry", "Reintentar"),
+                        iconColor: SolennixColors.primary
                     ) {
                         Task { await loadData() }
                     }
@@ -63,16 +64,18 @@ public struct EventStaffDetailView: View {
                     EmptyStateView(
                         icon: "person.3",
                         title: tr("events.detail.staff.empty.title", "Sin personal"),
-                        message: tr("events.detail.staff.empty.message", "Este evento no tiene colaboradores asignados.")
+                        message: tr("events.detail.staff.empty.message", "Este evento no tiene colaboradores asignados."),
+                        iconColor: SolennixColors.primary
                     )
                     NavigationLink(value: Route.eventForm(id: eventId, step: 4)) {
                         Text(tr("events.detail.staff.empty.cta", "Agregar personal"))
                             .font(.headline)
-                            .foregroundStyle(SolennixColors.onPrimary)
+                            .foregroundStyle(SolennixColors.primaryDark)
                             .padding(.horizontal, Spacing.xl)
                             .padding(.vertical, 16)
-                            .background(SolennixColors.primary)
-                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                            .background(SolennixColors.primaryLight)
+                            .clipShape(Capsule())
+                            .adaptiveGlass(in: Capsule(), fallback: .material)
                     }
                 } else {
                     HStack {
@@ -179,9 +182,7 @@ public struct EventStaffDetailView: View {
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-        .shadowSm()
+        .solennixCard(radius: CornerRadius.md, border: false)
     }
 
     // MARK: - Status Badge

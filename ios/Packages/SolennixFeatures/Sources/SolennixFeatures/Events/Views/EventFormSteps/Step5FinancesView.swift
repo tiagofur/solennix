@@ -13,30 +13,15 @@ struct Step5FinancesView: View {
     private let healthyMarginThreshold: Double = 20
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: Spacing.lg) {
-                // Discount + IVA
-                AdaptiveFormRow {
-                    discountSection
-                } right: {
-                    taxSection
-                }
-
-                // Deposit + Cancellation
-                AdaptiveFormRow {
-                    depositSection
-                } right: {
-                    cancellationSection
-                }
-
-                // Notes
-                notesSection
-
-                // Totals card
-                totalsCard
-            }
-            .padding(Spacing.md)
+        Form {
+            discountSection
+            taxSection
+            depositSection
+            cancellationSection
+            notesSection
+            totalsSection
         }
+        .solennixListStyle()
         // Fetch costos unitarios de productos al llegar al Paso 5 — necesario
         // para computar ganancia neta y margen. Si el usuario vuelve al Paso 2
         // y agrega más productos, el onChange refetch los missing.
@@ -52,224 +37,142 @@ struct Step5FinancesView: View {
     // MARK: - Discount Section
 
     private var discountSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text(tr("events.form.finances.discount", "Descuento"))
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundStyle(SolennixColors.text)
-
-            HStack(spacing: Spacing.sm) {
-                // Discount type toggle
-                HStack(spacing: 0) {
-                    Button {
-                        viewModel.discountType = .percent
-                    } label: {
-                        Text("%")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(viewModel.discountType == .percent ? SolennixColors.textInverse : SolennixColors.textSecondary)
-                            .frame(width: 44, height: 44)
-                            .background(viewModel.discountType == .percent ? SolennixColors.primary : SolennixColors.surfaceAlt)
-                    }
-                    .buttonStyle(.plain)
-
-                    Button {
-                        viewModel.discountType = .fixed
-                    } label: {
-                        Text("$")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(viewModel.discountType == .fixed ? SolennixColors.textInverse : SolennixColors.textSecondary)
-                            .frame(width: 44, height: 44)
-                            .background(viewModel.discountType == .fixed ? SolennixColors.primary : SolennixColors.surfaceAlt)
-                    }
-                    .buttonStyle(.plain)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
-
-                // Discount value
-                HStack(spacing: Spacing.xs) {
-                    TextField("0", value: $viewModel.discount, format: .number.precision(.fractionLength(2)))
-                        .keyboardType(.decimalPad)
-                        .font(.body)
-                        .foregroundStyle(SolennixColors.text)
-                        .multilineTextAlignment(.trailing)
-
-                    Text(viewModel.discountType == .percent ? "%" : "$")
-                        .font(.body)
-                        .foregroundStyle(SolennixColors.textTertiary)
-                }
-                .padding(.horizontal, Spacing.md)
-                .padding(.vertical, 10)
-                .background(SolennixColors.surface)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                .overlay(
-                    RoundedRectangle(cornerRadius: CornerRadius.md)
-                        .stroke(SolennixColors.border, lineWidth: 1)
-                )
+        Section {
+            // Discount type — native segmented control replaces the custom
+            // sliding-highlight segmented control. The Form row provides the
+            // background, so the old .adaptiveGlass/.background chrome is gone.
+            Picker(selection: $viewModel.discountType) {
+                Text("%")
+                    .tag(DiscountType.percent)
+                Text("$")
+                    .tag(DiscountType.fixed)
+            } label: {
+                Text(tr("events.form.finances.discount", "Descuento"))
             }
+            .pickerStyle(.segmented)
+            .solennixRow()
+
+            // Discount value with unit suffix.
+            HStack(spacing: Spacing.xs) {
+                TextField(
+                    "0",
+                    value: $viewModel.discount,
+                    format: .number.precision(.fractionLength(2))
+                )
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.trailing)
+
+                Text(viewModel.discountType == .percent ? "%" : "$")
+                    .foregroundStyle(SolennixColors.textTertiary)
+            }
+            .solennixRow()
+        } header: {
+            Text(tr("events.form.finances.discount", "Descuento"))
         }
     }
 
     // MARK: - Tax Section
 
     private var taxSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
+        Section {
             Toggle(isOn: $viewModel.requiresInvoice) {
-                HStack(spacing: Spacing.sm) {
-                    Image(systemName: "doc.text")
-                        .foregroundStyle(SolennixColors.textSecondary)
-
-                    Text(tr("events.form.finances.invoice", "Requiere factura (IVA)"))
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundStyle(SolennixColors.text)
-                }
+                Label(tr("events.form.finances.invoice", "Requiere factura (IVA)"), systemImage: "doc.text")
             }
             .tint(SolennixColors.primary)
+            .solennixRow()
 
             if viewModel.requiresInvoice {
-                HStack(spacing: Spacing.sm) {
+                HStack {
                     Text(tr("events.form.finances.tax_rate", "Tasa IVA:"))
-                        .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
-
-                    HStack(spacing: Spacing.xs) {
-                        TextField("16", value: $viewModel.taxRate, format: .number.precision(.fractionLength(0)))
-                            .keyboardType(.decimalPad)
-                            .font(.body)
-                            .foregroundStyle(SolennixColors.text)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 50)
-
-                        Text("%")
-                            .font(.body)
-                            .foregroundStyle(SolennixColors.textTertiary)
-                    }
-                    .padding(.horizontal, Spacing.sm)
-                    .padding(.vertical, 6)
-                    .background(SolennixColors.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: CornerRadius.sm)
-                            .stroke(SolennixColors.border, lineWidth: 1)
-                    )
-
                     Spacer()
+                    TextField(
+                        "16",
+                        value: $viewModel.taxRate,
+                        format: .number.precision(.fractionLength(0))
+                    )
+                    .keyboardType(.decimalPad)
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 50)
+
+                    Text("%")
+                        .foregroundStyle(SolennixColors.textTertiary)
                 }
+                .solennixRow()
             }
         }
-        .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: CornerRadius.md)
-                .stroke(SolennixColors.border, lineWidth: 1)
-        )
     }
 
     // MARK: - Deposit Section
 
     private var depositSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text(tr("events.form.finances.deposit", "Anticipo"))
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundStyle(SolennixColors.text)
-
-            HStack(spacing: Spacing.sm) {
-                HStack(spacing: Spacing.xs) {
-                    TextField("50", value: $viewModel.depositPercent, format: .number.precision(.fractionLength(0)))
-                        .keyboardType(.decimalPad)
-                        .font(.body)
-                        .foregroundStyle(SolennixColors.text)
-                        .multilineTextAlignment(.trailing)
-
-                    Text("%")
-                        .font(.body)
-                        .foregroundStyle(SolennixColors.textTertiary)
-                }
-                .padding(.horizontal, Spacing.md)
-                .padding(.vertical, 10)
-                .background(SolennixColors.surface)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                .overlay(
-                    RoundedRectangle(cornerRadius: CornerRadius.md)
-                        .stroke(SolennixColors.border, lineWidth: 1)
+        Section {
+            HStack {
+                TextField(
+                    "50",
+                    value: $viewModel.depositPercent,
+                    format: .number.precision(.fractionLength(0))
                 )
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.trailing)
+                .frame(width: 60)
+
+                Text("%")
+                    .foregroundStyle(SolennixColors.textTertiary)
 
                 Spacer()
 
                 Text(formatCurrency(viewModel.depositAmount))
-                    .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundStyle(SolennixColors.primary)
             }
+            .solennixRow()
+        } header: {
+            Text(tr("events.form.finances.deposit", "Anticipo"))
         }
     }
 
     // MARK: - Cancellation Section
 
     private var cancellationSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text(tr("events.form.finances.cancellation_policy", "Política de cancelación"))
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundStyle(SolennixColors.text)
+        Section {
+            HStack {
+                Text(tr("events.form.finances.cancellation_days", "Días anticipación"))
+                    .foregroundStyle(SolennixColors.textSecondary)
+                Spacer()
+                TextField(
+                    "3",
+                    value: $viewModel.cancellationDays,
+                    format: .number.precision(.fractionLength(0))
+                )
+                .keyboardType(.numberPad)
+                .multilineTextAlignment(.trailing)
+                .frame(width: 60)
 
-            HStack(spacing: Spacing.md) {
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text(tr("events.form.finances.cancellation_days", "Días anticipación"))
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textSecondary)
-
-                    HStack(spacing: Spacing.xs) {
-                        TextField("3", value: $viewModel.cancellationDays, format: .number.precision(.fractionLength(0)))
-                            .keyboardType(.numberPad)
-                            .font(.body)
-                            .foregroundStyle(SolennixColors.text)
-                            .multilineTextAlignment(.trailing)
-
-                        Text(tr("events.form.finances.days", "días"))
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.textTertiary)
-                    }
-                    .padding(.horizontal, Spacing.md)
-                    .padding(.vertical, 10)
-                    .background(SolennixColors.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: CornerRadius.md)
-                            .stroke(SolennixColors.border, lineWidth: 1)
-                    )
-                }
-
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text(tr("events.form.finances.refund", "Reembolso"))
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textSecondary)
-
-                    HStack(spacing: Spacing.xs) {
-                        TextField("50", value: $viewModel.refundPercent, format: .number.precision(.fractionLength(0)))
-                            .keyboardType(.decimalPad)
-                            .font(.body)
-                            .foregroundStyle(SolennixColors.text)
-                            .multilineTextAlignment(.trailing)
-
-                        Text("%")
-                            .font(.body)
-                            .foregroundStyle(SolennixColors.textTertiary)
-                    }
-                    .padding(.horizontal, Spacing.md)
-                    .padding(.vertical, 10)
-                    .background(SolennixColors.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: CornerRadius.md)
-                            .stroke(SolennixColors.border, lineWidth: 1)
-                    )
-                }
+                Text(tr("events.form.finances.days", "días"))
+                    .foregroundStyle(SolennixColors.textTertiary)
             }
+            .solennixRow()
+
+            HStack {
+                Text(tr("events.form.finances.refund", "Reembolso"))
+                    .foregroundStyle(SolennixColors.textSecondary)
+                Spacer()
+                TextField(
+                    "50",
+                    value: $viewModel.refundPercent,
+                    format: .number.precision(.fractionLength(0))
+                )
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.trailing)
+                .frame(width: 60)
+
+                Text("%")
+                    .foregroundStyle(SolennixColors.textTertiary)
+            }
+            .solennixRow()
+        } header: {
+            Text(tr("events.form.finances.cancellation_policy", "Política de cancelación"))
         }
     }
 
@@ -280,46 +183,35 @@ struct Step5FinancesView: View {
     // Label kept consistent with Step1 for clarity.
 
     private var notesSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text(tr("events.form.general.notes", "Notas adicionales"))
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundStyle(SolennixColors.text)
-
+        Section {
             TextEditor(text: $viewModel.notes)
                 .frame(minHeight: 80)
                 .font(.body)
-                .foregroundStyle(SolennixColors.text)
                 .scrollContentBackground(.hidden)
-                .padding(Spacing.sm)
-                .background(SolennixColors.surface)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                .overlay(
-                    RoundedRectangle(cornerRadius: CornerRadius.md)
-                        .stroke(SolennixColors.border, lineWidth: 1)
-                )
+                .solennixRow()
+        } header: {
+            Text(tr("events.form.general.notes", "Notas adicionales"))
         }
     }
 
-    // MARK: - Totals Card
+    // MARK: - Totals Section
     //
     // Parity con Android StepSummary: muestra subtotales separados
     // (productos/extras), descuento, IVA, total, anticipo, y sección de
     // Rentabilidad (costos totales, ganancia neta, margen %).
+    //
+    // El antiguo card con borde pasa a ser una Section nativa del Form. Las
+    // filas de sólo lectura (costos, márgenes, totales) se mantienen como filas
+    // nativas con Text; los separadores nativos del Form reemplazan los
+    // Divider() manuales del card original.
 
-    private var totalsCard: some View {
-        VStack(spacing: Spacing.sm) {
-            Text(tr("events.form.finances.summary", "Resumen"))
-                .font(.headline)
-                .fontWeight(.bold)
-                .foregroundStyle(SolennixColors.text)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
+    private var totalsSection: some View {
+        Section {
             if viewModel.hasPendingProductCosts {
                 Text(tr("events.form.finances.pending_costs", "Algunos costos de productos siguen cargando. La rentabilidad puede ajustarse en segundos."))
                     .font(.caption)
                     .foregroundStyle(SolennixColors.warning)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .solennixRow()
             }
 
             totalRow(label: tr("events.form.finances.subtotal_products", "Subtotal productos"), value: viewModel.productsSubtotal)
@@ -332,9 +224,6 @@ struct Step5FinancesView: View {
             if viewModel.requiresInvoice && viewModel.taxAmount > 0 {
                 totalRow(label: trf("events.form.finances.tax_label", "IVA (%@%%)", String(format: "%.0f", viewModel.taxRate)), value: viewModel.taxAmount)
             }
-
-            Divider()
-                .foregroundStyle(SolennixColors.border)
 
             // Total
             HStack {
@@ -350,6 +239,7 @@ struct Step5FinancesView: View {
                     .fontWeight(.bold)
                     .foregroundStyle(SolennixColors.primary)
             }
+            .solennixRow()
 
             // Deposit
             totalRow(
@@ -358,15 +248,13 @@ struct Step5FinancesView: View {
                 color: SolennixColors.primary
             )
 
-            Divider()
-                .foregroundStyle(SolennixColors.border)
-
-            // Profitability
+            // Profitability sub-header
             Text(tr("events.form.finances.profitability", "Rentabilidad"))
                 .font(.caption)
                 .fontWeight(.semibold)
                 .foregroundStyle(SolennixColors.textSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .solennixRow()
 
             totalRow(label: tr("events.form.finances.total_costs", "Costos totales"), value: viewModel.totalCosts)
             totalRow(
@@ -392,14 +280,10 @@ struct Step5FinancesView: View {
                             : (viewModel.profitMargin >= healthyMarginThreshold ? SolennixColors.success : SolennixColors.warning)
                     )
             }
+            .solennixRow()
+        } header: {
+            Text(tr("events.form.finances.summary", "Resumen"))
         }
-        .padding(Spacing.lg)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .overlay(
-            RoundedRectangle(cornerRadius: CornerRadius.lg)
-                .stroke(SolennixColors.primary.opacity(0.3), lineWidth: 1)
-        )
     }
 
     // MARK: - Total Row
@@ -417,6 +301,7 @@ struct Step5FinancesView: View {
                 .fontWeight(.medium)
                 .foregroundStyle(color)
         }
+        .solennixRow()
     }
 
     // MARK: - Helpers

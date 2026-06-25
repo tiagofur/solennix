@@ -21,21 +21,18 @@ public struct ReviewsView: View {
     }
 
     public var body: some View {
-        // B2: List with insetGrouped replacing ScrollView+LazyVStack
-        List {
-            Section {
-                reviewContent
+        Group {
+            if shouldShowEmptyState {
+                emptyStateContent
+            } else {
+                reviewList
             }
         }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
         .navigationTitle(tr("reviews.organizer.title", "Reseñas"))
         .navigationBarTitleDisplayMode(.large)
-        // B6: solennixSearchable replacing raw .searchable
         .solennixSearchable(text: $viewModel.searchText, prompt: tr("reviews.organizer.search_prompt", "Buscar reseñas..."))
         .searchMinimizedIfAvailable()
-        // B9: keyboard Done toolbar at screen level
         .keyboardDoneToolbar()
         .task {
             await viewModel.fetchReviews()
@@ -45,7 +42,6 @@ public struct ReviewsView: View {
             await viewModel.fetchReviews()
             hydrateDrafts()
         }
-        // B5: real bidirectional Binding (Payments pattern), localized OK
         .alert(tr("reviews.organizer.error.title", "Error"), isPresented: Binding(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
@@ -54,61 +50,61 @@ public struct ReviewsView: View {
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
-        // B9: success haptic AFTER save resolves
         .sensoryFeedback(.success, trigger: saveSuccessCounter) { old, new in new > old }
-        // B9: selection haptic on visibility change success
         .sensoryFeedback(.success, trigger: visibilitySuccessCounter) { old, new in new > old }
     }
 
-    // MARK: - Review Content (inside List)
+    // MARK: - State Helpers
+
+    private var shouldShowEmptyState: Bool {
+        viewModel.reviews.isEmpty && !viewModel.isLoading
+    }
+
+    // MARK: - Empty State Content (outside List for proper centering)
 
     @ViewBuilder
-    private var reviewContent: some View {
-        // B4: error branch BEFORE empty branch
-        if let error = viewModel.errorMessage, viewModel.reviews.isEmpty, !viewModel.isLoading {
+    private var emptyStateContent: some View {
+        if let error = viewModel.errorMessage {
             EmptyStateView(
                 icon: "wifi.exclamationmark",
                 title: tr("reviews.organizer.empty_title", "Sin reseñas todavía"),
                 message: error,
-                actionTitle: tr("event_form_links.shared.retry", "Reintentar")
+                actionTitle: tr("event_form_links.shared.retry", "Reintentar"),
+                iconColor: SolennixColors.primary
             ) {
                 Task { await viewModel.fetchReviews() }
             }
-            .frame(maxWidth: .infinity)
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets())
-            .listRowSeparator(.hidden)
-        } else if viewModel.isLoading && viewModel.reviews.isEmpty {
-            // B3: in-List skeleton rows
-            skeletonRows
-        } else if viewModel.reviews.isEmpty && !viewModel.isLoading {
-            EmptyStateView(
-                icon: "star.bubble",
-                title: tr("reviews.organizer.empty_title", "Sin reseñas todavía"),
-                message: tr("reviews.organizer.empty_hint", "Cuando tus clientes califiquen sus eventos, aparecerán aquí.")
-            )
-            .frame(maxWidth: .infinity)
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets())
-            .listRowSeparator(.hidden)
-        } else if viewModel.filteredReviews.isEmpty && !viewModel.isLoading {
+        } else if viewModel.filteredReviews.isEmpty && !viewModel.searchText.isEmpty {
             EmptyStateView(
                 icon: "magnifyingglass",
                 title: tr("reviews.organizer.search.empty_title", "Sin resultados"),
-                message: tr("reviews.organizer.search.empty_message", "No se encontraron reseñas que coincidan con tu búsqueda")
+                message: tr("reviews.organizer.search.empty_message", "No se encontraron reseñas que coincidan con tu búsqueda"),
+                iconColor: SolennixColors.primary
             )
-            .frame(maxWidth: .infinity)
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets())
-            .listRowSeparator(.hidden)
         } else {
-            // B2: rows use listRowBackground(card) + separator tint; internal layout preserved
-            ForEach(viewModel.filteredReviews) { review in
-                reviewCardRow(review)
-                    .listRowBackground(SolennixColors.card)
-                    .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+            EmptyStateView(
+                icon: "star.bubble",
+                title: tr("reviews.organizer.empty_title", "Sin reseñas todavía"),
+                message: tr("reviews.organizer.empty_hint", "Cuando tus clientes califiquen sus eventos, aparecerán aquí."),
+                iconColor: SolennixColors.primary
+            )
+        }
+    }
+
+    // MARK: - Review List (inside List)
+
+    private var reviewList: some View {
+        List {
+            Section {
+                ForEach(viewModel.filteredReviews) { review in
+                    reviewCardRow(review)
+                        .solennixRow()
+                        .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+                }
             }
         }
+        .listStyle(.insetGrouped)
+        .solennixListStyle()
     }
 
     // MARK: - Skeleton Rows (B3)
@@ -130,7 +126,7 @@ public struct ReviewsView: View {
                 SkeletonLine(width: 180, height: 10)           // comment line 2
             }
             .padding(.vertical, Spacing.xs)
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
             .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
         }
         .accessibilityHidden(true)

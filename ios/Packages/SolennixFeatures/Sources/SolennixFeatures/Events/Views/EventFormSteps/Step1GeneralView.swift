@@ -15,61 +15,13 @@ struct Step1GeneralView: View {
     @State private var clientSearch = ""
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: Spacing.lg) {
-                // Cliente — ancho completo (antes estaba pareado con fecha).
-                clientPickerSection
-
-                // Fecha — ancho completo, parity con Android.
-                dateSection
-
-                // Hora Inicio / Hora Fin — siempre 2 columnas. Gap central =
-                // mismo tamaño que los márgenes laterales (Spacing.md).
-                HStack(alignment: .top, spacing: Spacing.md) {
-                    timeFieldSection(title: tr("events.form.general.start_time", "Hora inicio"), binding: $viewModel.startTime)
-                    timeFieldSection(title: tr("events.form.general.end_time", "Hora fin"), binding: $viewModel.endTime)
-                }
-
-                // Tipo de Servicio + Personas
-                HStack(alignment: .top, spacing: Spacing.md) {
-                    SolennixTextField(
-                        label: tr("events.form.general.service_type", "Tipo de servicio"),
-                        text: $viewModel.serviceType,
-                        placeholder: tr("events.form.general.service_placeholder", "Ej: Banquete, Coffee Break"),
-                        leftIcon: "briefcase",
-                        errorMessage: !viewModel.serviceType.isEmpty && viewModel.serviceType.count < 2
-                            ? tr("events.form.general.service_min", "Mínimo 2 caracteres") : nil
-                    )
-                    peopleSection
-                }
-
-                // Lugar + Ciudad — AdaptiveFormRow stackea en phone (son
-                // textos largos, no conviene apretar).
-                AdaptiveFormRow {
-                    SolennixTextField(
-                        label: tr("events.form.general.location", "Lugar"),
-                        text: $viewModel.location,
-                        placeholder: tr("events.form.general.location_placeholder", "Lugar del evento (opcional)"),
-                        leftIcon: "mappin.and.ellipse"
-                    )
-                } right: {
-                    SolennixTextField(
-                        label: tr("events.form.general.city", "Ciudad"),
-                        text: $viewModel.city,
-                        placeholder: tr("events.form.general.city_placeholder", "Ciudad (opcional)"),
-                        leftIcon: "building.2"
-                    )
-                }
-
-                // Estado — ancho completo (Menu dropdown).
-                statusSection
-
-                // Notas adicionales — multiline, 3 líneas mínimo. Parity
-                // cross-platform con Android que ya tiene este campo.
-                notesSection
-            }
-            .padding(Spacing.md)
+        Form {
+            clientSection
+            scheduleSection
+            detailsSection
+            notesSection
         }
+        .solennixListStyle()
         .scrollDismissesKeyboard(.interactively)
         .sheet(isPresented: $showClientPicker) {
             clientPickerSheet
@@ -95,44 +47,28 @@ struct Step1GeneralView: View {
         }
     }
 
-    // MARK: - Client Picker Section
+    // MARK: - Client Section
 
-    private var clientPickerSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text(tr("events.form.general.client", "Cliente"))
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundStyle(SolennixColors.text)
-
+    private var clientSection: some View {
+        Section {
             Button {
                 showClientPicker = true
             } label: {
-                HStack(spacing: Spacing.sm) {
-                    Image(systemName: "person")
-                        .font(.body)
-                        .foregroundStyle(SolennixColors.textTertiary)
-                        .frame(width: 20)
-
-                    Text(viewModel.clientName.isEmpty ? tr("events.form.general.select_client", "Seleccionar cliente") : viewModel.clientName)
-                        .font(.body)
-                        .foregroundStyle(viewModel.clientName.isEmpty ? SolennixColors.textTertiary : SolennixColors.text)
-
+                HStack {
+                    Text(tr("events.form.general.client", "Cliente"))
+                        .foregroundStyle(.primary)
                     Spacer()
-
+                    Text(viewModel.clientName.isEmpty
+                        ? tr("events.form.general.select_client", "Seleccionar cliente")
+                        : viewModel.clientName)
+                        .foregroundStyle(viewModel.clientName.isEmpty ? Color.secondary : Color.primary)
                     Image(systemName: "chevron.right")
                         .font(.caption)
-                        .foregroundStyle(SolennixColors.textTertiary)
+                        .foregroundStyle(.tertiary)
                 }
-                .padding(.horizontal, Spacing.md)
-                .padding(.vertical, 14)
-                .background(SolennixColors.surface)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                .overlay(
-                    RoundedRectangle(cornerRadius: CornerRadius.md)
-                        .stroke(viewModel.clientId.isEmpty ? SolennixColors.border : SolennixColors.primary, lineWidth: 1)
-                )
             }
             .buttonStyle(.plain)
+            .solennixRow()
         }
     }
 
@@ -178,11 +114,11 @@ struct Step1GeneralView: View {
                         }
                     }
                     .buttonStyle(.plain)
+                    .solennixRow()
                 }
             }
             .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(SolennixColors.surfaceGrouped)
+            .solennixListStyle()
             .searchable(text: $clientSearch, prompt: tr("events.form.general.search_client", "Buscar cliente"))
             .navigationTitle(tr("events.form.general.select_client_title", "Seleccionar cliente"))
             .navigationBarTitleDisplayMode(.inline)
@@ -222,49 +158,46 @@ struct Step1GeneralView: View {
         }
     }
 
-    // MARK: - Date Section
+    // MARK: - Schedule Section (date + start/end time)
 
-    private var dateSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text(tr("events.form.general.event_date", "Fecha del evento"))
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundStyle(SolennixColors.text)
-
-            // Botón full-width con la fecha formateada (parity con Android).
-            // Al tap abre una sheet con DatePicker .graphical nativo. Esto da
-            // área de toque grande y texto legible en vez del botón compact
-            // chiquito que iOS pone por default.
+    private var scheduleSection: some View {
+        Section {
+            // Fecha — botón full-width que abre la sheet con DatePicker .graphical.
             Button {
                 showDatePickerSheet = true
             } label: {
-                HStack(spacing: Spacing.sm) {
-                    Image(systemName: "calendar")
-                        .font(.body)
-                        .foregroundStyle(SolennixColors.primary)
-                        .frame(width: 20)
-
-                    Text(formattedEventDate)
-                        .font(.body)
-                        .foregroundStyle(SolennixColors.text)
-
+                HStack {
+                    Text(tr("events.form.general.event_date", "Fecha del evento"))
+                        .foregroundStyle(.primary)
                     Spacer()
-
+                    Text(formattedEventDate)
+                        .foregroundStyle(.primary)
                     Image(systemName: "chevron.right")
                         .font(.caption)
-                        .foregroundStyle(SolennixColors.textTertiary)
+                        .foregroundStyle(.tertiary)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, Spacing.md)
-                .padding(.vertical, 14)
-                .background(SolennixColors.surface)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                .overlay(
-                    RoundedRectangle(cornerRadius: CornerRadius.md)
-                        .stroke(SolennixColors.border, lineWidth: 1)
-                )
             }
             .buttonStyle(.plain)
+            .solennixRow()
+
+            // Hora inicio / Hora fin — filas nativas con label a la izquierda.
+            OptionalTimePicker(
+                selection: $viewModel.startTime,
+                placeholder: tr("events.form.general.optional", "Opcional"),
+                title: tr("events.form.general.start_time", "Hora inicio"),
+                embeddedInForm: true
+            )
+            .solennixRow()
+
+            OptionalTimePicker(
+                selection: $viewModel.endTime,
+                placeholder: tr("events.form.general.optional", "Opcional"),
+                title: tr("events.form.general.end_time", "Hora fin"),
+                embeddedInForm: true
+            )
+            .solennixRow()
+        } header: {
+            Text(tr("events.form.general.schedule", "Fecha y horario"))
         }
     }
 
@@ -328,154 +261,117 @@ struct Step1GeneralView: View {
         .presentationDragIndicator(.visible)
     }
 
-    // MARK: - Time Field (reutilizable por cada media columna)
+    // MARK: - Details Section (service type + people + location + city + status)
 
-    private func timeFieldSection(title: String, binding: Binding<Date?>) -> some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text(title)
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundStyle(SolennixColors.text)
-
-            OptionalTimePicker(
-                selection: binding,
-                placeholder: tr("events.form.general.optional", "Opcional")
+    private var detailsSection: some View {
+        Section {
+            TextField(
+                tr("events.form.general.service_type", "Tipo de servicio"),
+                text: $viewModel.serviceType,
+                prompt: Text(tr("events.form.general.service_placeholder", "Ej: Banquete, Coffee Break"))
             )
+            .solennixRow()
+
+            if !viewModel.serviceType.isEmpty && viewModel.serviceType.count < 2 {
+                Text(tr("events.form.general.service_min", "Mínimo 2 caracteres"))
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .solennixRow()
+            }
+
+            peopleRow
+
+            TextField(
+                tr("events.form.general.location", "Lugar"),
+                text: $viewModel.location,
+                prompt: Text(tr("events.form.general.location_placeholder", "Lugar del evento (opcional)"))
+            )
+            .solennixRow()
+
+            TextField(
+                tr("events.form.general.city", "Ciudad"),
+                text: $viewModel.city,
+                prompt: Text(tr("events.form.general.city_placeholder", "Ciudad (opcional)"))
+            )
+            .solennixRow()
+
+            statusRow
+        } header: {
+            Text(tr("events.form.general.details", "Detalles"))
         }
+    }
+
+    // MARK: - People Row (stepper)
+
+    // Label a la izquierda + stepper compacto a la derecha. La fila del Form
+    // provee el fondo, por eso no hay .background/.clipShape/.overlay aquí.
+    private var peopleRow: some View {
+        HStack {
+            Text(tr("events.form.general.people", "Número de personas"))
+                .foregroundStyle(.primary)
+            Spacer()
+
+            Button {
+                if viewModel.numPeople > 1 {
+                    viewModel.numPeople -= 1
+                }
+            } label: {
+                Image(systemName: "minus.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(viewModel.numPeople > 1 ? SolennixColors.primary : SolennixColors.textTertiary)
+            }
+            .buttonStyle(.plain)
+            .disabled(viewModel.numPeople <= 1)
+
+            EditableQuantityText(
+                quantity: $viewModel.numPeople,
+                minValue: 1,
+                id: "numPeople",
+                font: .title3,
+                width: 44,
+                showTertiaryAtMin: false
+            )
+
+            Button {
+                viewModel.numPeople += 1
+            } label: {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(SolennixColors.primary)
+            }
+            .buttonStyle(.plain)
+        }
+        .solennixRow()
+    }
+
+    // MARK: - Status Row (native Picker .menu)
+
+    private var statusRow: some View {
+        Picker(tr("events.form.general.status", "Estado"), selection: $viewModel.status) {
+            ForEach(EventStatus.allCases, id: \.self) { status in
+                Label(statusLabel(status), systemImage: statusSymbol(status))
+                    .tag(status)
+            }
+        }
+        .pickerStyle(.menu)
+        .solennixRow()
     }
 
     // MARK: - Notes Section
 
     private var notesSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text(tr("events.form.general.notes", "Notas adicionales"))
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundStyle(SolennixColors.text)
-
+        Section {
             // TextField con axis: .vertical es el patrón nativo iOS 16+ para
-            // multiline inputs. reservesSpace hace que el field arranque ya
-            // con la altura de 3 líneas aunque esté vacío.
+            // multiline inputs. reservesSpace arranca con la altura de 3 líneas.
             TextField(
                 tr("events.form.general.notes_placeholder", "Instrucciones especiales para el montaje..."),
                 text: $viewModel.notes,
                 axis: .vertical
             )
             .lineLimit(3, reservesSpace: true)
-            .font(.body)
-            .foregroundStyle(SolennixColors.text)
-            .padding(.horizontal, Spacing.md)
-            .padding(.vertical, Spacing.sm)
-            .background(SolennixColors.surface)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-            .overlay(
-                RoundedRectangle(cornerRadius: CornerRadius.md)
-                    .stroke(SolennixColors.border, lineWidth: 1)
-            )
-        }
-    }
-
-    // MARK: - People Section
-
-    private var peopleSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text(tr("events.form.general.people", "Número de personas"))
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundStyle(SolennixColors.text)
-
-            // Altura pareja con SolennixTextField (padding vertical 14 +
-            // icon 22pt ≈ 50pt). Hit area del botón cubre toda la zona
-            // horizontal hasta el número — el dedo pega fácil aunque el
-            // glyph sea moderado.
-            HStack(spacing: 0) {
-                Button {
-                    if viewModel.numPeople > 1 {
-                        viewModel.numPeople -= 1
-                    }
-                } label: {
-                    Image(systemName: "minus.circle.fill")
-                        .font(.title2)
-                        .foregroundStyle(viewModel.numPeople > 1 ? SolennixColors.primary : SolennixColors.textTertiary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .disabled(viewModel.numPeople <= 1)
-
-                EditableQuantityText(
-                    quantity: $viewModel.numPeople,
-                    minValue: 1,
-                    id: "numPeople",
-                    font: .title3,
-                    width: 44,
-                    showTertiaryAtMin: false
-                )
-
-                Button {
-                    viewModel.numPeople += 1
-                } label: {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.title2)
-                        .foregroundStyle(SolennixColors.primary)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.horizontal, Spacing.md)
-            .padding(.vertical, 14)
-            .background(SolennixColors.surface)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-            .overlay(
-                RoundedRectangle(cornerRadius: CornerRadius.md)
-                    .stroke(SolennixColors.border, lineWidth: 1)
-            )
-        }
-    }
-
-    // MARK: - Status Section
-    //
-    // Picker con .menu style = native iOS dropdown compacto. Antes eran 4 pills
-    // que apretaban el espacio horizontal junto con numPeople en iPhone base.
-
-    private var statusSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text(tr("events.form.general.status", "Estado"))
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundStyle(SolennixColors.text)
-
-            Menu {
-                Picker(tr("events.form.general.status", "Estado"), selection: $viewModel.status) {
-                    ForEach(EventStatus.allCases, id: \.self) { status in
-                        Label(statusLabel(status), systemImage: statusSymbol(status))
-                            .tag(status)
-                    }
-                }
-            } label: {
-                HStack(spacing: Spacing.sm) {
-                    Circle()
-                        .fill(statusColor(viewModel.status))
-                        .frame(width: 10, height: 10)
-                    Text(statusLabel(viewModel.status))
-                        .font(.body)
-                        .foregroundStyle(SolennixColors.text)
-                    Spacer()
-                    Image(systemName: "chevron.up.chevron.down")
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textTertiary)
-                }
-                .padding(.horizontal, Spacing.md)
-                .padding(.vertical, 14)
-                .background(SolennixColors.surface)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                .overlay(
-                    RoundedRectangle(cornerRadius: CornerRadius.md)
-                        .stroke(SolennixColors.border, lineWidth: 1)
-                )
-            }
-            .buttonStyle(.plain)
+            .solennixRow()
+        } header: {
+            Text(tr("events.form.general.notes", "Notas adicionales"))
         }
     }
 
@@ -522,11 +418,17 @@ struct Step1GeneralView: View {
 
 // MARK: - Optional Time Picker
 
-/// Botón full-width que muestra la hora formateada (o "Opcional") y al tap
-/// abre una sheet con DatePicker.wheel nativo. Mismo patrón que dateSection.
+/// Botón que muestra la hora formateada (o "Opcional") y al tap abre una sheet
+/// con DatePicker.wheel nativo.
+///
+/// En modo `embeddedInForm` se renderiza sin su chrome (background/border) —
+/// la fila del Form provee el fondo. Si se pasa `title`, se usa como label a la
+/// izquierda en vez del ícono de reloj (patrón nativo de fila).
 private struct OptionalTimePicker: View {
     @Binding var selection: Date?
     let placeholder: String
+    var title: String? = nil
+    var embeddedInForm: Bool = false
 
     @State private var showPickerSheet = false
     @State private var draftTime = Date()
@@ -536,47 +438,61 @@ private struct OptionalTimePicker: View {
             draftTime = selection ?? Date()
             showPickerSheet = true
         } label: {
-            HStack(spacing: Spacing.sm) {
-                Image(systemName: "clock")
-                    .font(.body)
-                    .foregroundStyle(selection != nil ? SolennixColors.primary : SolennixColors.textTertiary)
-                    .frame(width: 20)
-
-                Text(displayLabel)
-                    .font(.body)
-                    .foregroundStyle(selection != nil ? SolennixColors.text : SolennixColors.textTertiary)
-
-                Spacer()
-
-                if selection != nil {
-                    Button {
-                        selection = nil
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.body)
-                            .foregroundStyle(SolennixColors.textTertiary)
-                    }
-                    .buttonStyle(.plain)
-                } else {
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textTertiary)
-                }
+            if embeddedInForm {
+                rowLabel
+            } else {
+                rowLabel
+                    .padding(.horizontal, Spacing.md)
+                    .padding(.vertical, 14)
+                    .background(SolennixColors.surface)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: CornerRadius.md)
+                            .stroke(SolennixColors.border, lineWidth: 1)
+                    )
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, Spacing.md)
-            .padding(.vertical, 14)
-            .background(SolennixColors.surface)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-            .overlay(
-                RoundedRectangle(cornerRadius: CornerRadius.md)
-                    .stroke(SolennixColors.border, lineWidth: 1)
-            )
         }
         .buttonStyle(.plain)
         .sheet(isPresented: $showPickerSheet) {
             pickerSheet
         }
+    }
+
+    @ViewBuilder
+    private var rowLabel: some View {
+        HStack(spacing: Spacing.sm) {
+            if let title {
+                Text(title)
+                    .foregroundStyle(.primary)
+                Spacer()
+                Text(displayLabel)
+                    .foregroundStyle(selection != nil ? Color.primary : Color.secondary)
+            } else {
+                Image(systemName: "clock")
+                    .font(.body)
+                    .foregroundStyle(selection != nil ? SolennixColors.primary : SolennixColors.textTertiary)
+                    .frame(width: 20)
+                Text(displayLabel)
+                    .foregroundStyle(selection != nil ? SolennixColors.text : SolennixColors.textTertiary)
+                Spacer()
+            }
+
+            if selection != nil {
+                Button {
+                    selection = nil
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.body)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+                .buttonStyle(.plain)
+            } else {
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textTertiary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var displayLabel: String {

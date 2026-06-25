@@ -16,16 +16,15 @@ private func trf(_ key: String, _ value: String, _ arg: String) -> String {
 struct Step2ProductsView: View {
 
     @Bindable var viewModel: EventFormViewModel
-    @Environment(\.horizontalSizeClass) private var sizeClass
 
     @State private var showProductPicker = false
     @State private var productSearch = ""
     @State private var pendingDeleteIndex: Int?
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: Spacing.lg) {
-                // Add product button
+        Form {
+            // Add product
+            Section {
                 Button {
                     showProductPicker = true
                 } label: {
@@ -40,18 +39,14 @@ struct Step2ProductsView: View {
 
                         Spacer()
                     }
-                    .padding(Spacing.md)
-                    .background(SolennixColors.primaryLight)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: CornerRadius.md)
-                            .stroke(SolennixColors.primary.opacity(0.3), lineWidth: 1)
-                    )
                 }
                 .buttonStyle(.plain)
+                .solennixRow()
+            }
 
-                // Selected products
-                if viewModel.selectedProducts.isEmpty {
+            // Selected products / empty state
+            if viewModel.selectedProducts.isEmpty {
+                Section {
                     VStack(spacing: Spacing.sm) {
                         // shippingbox = mismo concepto visual que Android
                         // (Inventory2 outlined) — paquete/producto genérico.
@@ -69,33 +64,28 @@ struct Step2ProductsView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Spacing.xxxl)
-                } else {
-                    let columns: [GridItem] = sizeClass == .regular
-                        ? [GridItem(.flexible(), spacing: Spacing.md), GridItem(.flexible(), spacing: Spacing.md)]
-                        : [GridItem(.flexible())]
-
-                    LazyVGrid(columns: columns, spacing: Spacing.md) {
-                        ForEach(Array(viewModel.selectedProducts.enumerated()), id: \.element.id) { index, item in
-                            productRow(item: item, index: index)
-                                .draggable(item.id.uuidString) {
-                                    // Drag preview
-                                    Text(item.product?.name ?? tr("events.detail.product_fallback", "Producto"))
-                                        .padding(Spacing.sm)
-                                        .background(SolennixColors.card)
-                                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
-                                }
-                                .dropDestination(for: String.self) { droppedItems, _ in
-                                    guard let sourceId = droppedItems.first,
-                                          let sourceIndex = viewModel.selectedProducts.firstIndex(where: { $0.id.uuidString == sourceId }) else { return false }
-                                    viewModel.moveProduct(from: sourceIndex, to: index)
-                                    return true
-                                }
+                    .solennixRow()
+                    .listRowSeparator(.hidden)
+                }
+            } else {
+                ForEach(Array(viewModel.selectedProducts.enumerated()), id: \.element.id) { index, item in
+                    productSection(item: item, index: index)
+                        .draggable(item.id.uuidString) {
+                            // Drag preview
+                            Text(item.product?.name ?? tr("events.detail.product_fallback", "Producto"))
+                                .padding(Spacing.sm)
+                                .solennixCard(radius: CornerRadius.sm, shadow: false, border: false)
                         }
-                    }
+                        .dropDestination(for: String.self) { droppedItems, _ in
+                            guard let sourceId = droppedItems.first,
+                                  let sourceIndex = viewModel.selectedProducts.firstIndex(where: { $0.id.uuidString == sourceId }) else { return false }
+                            viewModel.moveProduct(from: sourceIndex, to: index)
+                            return true
+                        }
                 }
 
                 // Subtotal
-                if !viewModel.selectedProducts.isEmpty {
+                Section {
                     HStack {
                         Text(tr("events.form.products.subtotal", "Subtotal productos"))
                             .font(.subheadline)
@@ -108,13 +98,11 @@ struct Step2ProductsView: View {
                             .font(.headline)
                             .foregroundStyle(SolennixColors.primary)
                     }
-                    .padding(Spacing.md)
-                    .background(SolennixColors.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    .solennixRow()
                 }
             }
-            .padding(Spacing.md)
         }
+        .solennixListStyle()
         .scrollDismissesKeyboard(.interactively)
         .sheet(isPresented: $showProductPicker) {
             productPickerSheet
@@ -152,35 +140,14 @@ struct Step2ProductsView: View {
         return trf("events.form.products.delete_named", "¿Eliminar %@?", name)
     }
 
-    // MARK: - Product Row
+    // MARK: - Product Section
 
-    private func productRow(item: SelectedProduct, index: Int) -> some View {
+    private func productSection(item: SelectedProduct, index: Int) -> some View {
         let effectivePrice = item.unitPrice - item.discount
         let lineTotal = effectivePrice * item.quantity
 
-        return VStack(alignment: .leading, spacing: Spacing.sm) {
-            // Header: ordinal + trash rojo alineado a la derecha. Paridad
-            // visual con Step 3 (Extras) — el trash vive en su propia fila
-            // separado del contenido editable.
-            HStack {
-                Text(trf("events.form.products.row_title", "Producto %@", String(index + 1)))
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(SolennixColors.textSecondary)
-
-                Spacer()
-
-                Button {
-                    pendingDeleteIndex = index
-                } label: {
-                    Image(systemName: "trash")
-                        .font(.body)
-                        .foregroundStyle(SolennixColors.error)
-                }
-                .buttonStyle(.plain)
-            }
-
-            // Producto + stepper.
+        return Section {
+            // Producto + stepper. La fila del Form provee el fondo.
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.product?.name ?? tr("events.detail.product_fallback", "Producto"))
@@ -251,6 +218,7 @@ struct Step2ProductsView: View {
                     .buttonStyle(.plain)
                 }
             }
+            .solennixRow()
 
             // Descuento + Total — parity con Android. Descuento como monto
             // por unidad ($ subtraído, no %) — igual que backend/web/Android.
@@ -264,14 +232,28 @@ struct Step2ProductsView: View {
                     .fontWeight(.bold)
                     .foregroundStyle(SolennixColors.text)
             }
+            .solennixRow()
+        } header: {
+            // Ordinal + trash rojo alineado a la derecha. Paridad visual con
+            // Step 3 (Extras).
+            HStack {
+                Text(trf("events.form.products.row_title", "Producto %@", String(index + 1)))
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(SolennixColors.textSecondary)
+
+                Spacer()
+
+                Button {
+                    pendingDeleteIndex = index
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.body)
+                        .foregroundStyle(SolennixColors.error)
+                }
+                .buttonStyle(.plain)
+            }
         }
-        .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: CornerRadius.md)
-                .stroke(SolennixColors.border, lineWidth: 1)
-        )
     }
 
 
@@ -310,11 +292,11 @@ struct Step2ProductsView: View {
                         }
                     }
                     .buttonStyle(.plain)
+                    .solennixRow()
                 }
             }
             .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(SolennixColors.surfaceGrouped)
+            .solennixListStyle()
             .searchable(text: $productSearch, prompt: tr("events.form.products.search", "Buscar producto"))
             .navigationTitle(tr("events.form.products.add", "Agregar producto"))
             .navigationBarTitleDisplayMode(.inline)
@@ -362,12 +344,12 @@ private struct ProductDiscountField: View {
     @State private var discountText: String = ""
 
     var body: some View {
-        SolennixTextField(
-            label: tr("events.form.finances.discount", "Descuento"),
+        TextField(
+            tr("events.form.finances.discount", "Descuento"),
             text: $discountText,
-            placeholder: "0",
-            keyboardType: .decimalPad
+            prompt: Text("0")
         )
+        .keyboardType(.decimalPad)
         .frame(maxWidth: 140)
         .onChange(of: discountText) { _, newValue in
             let d = Double(newValue.replacingOccurrences(of: ",", with: ".")) ?? 0

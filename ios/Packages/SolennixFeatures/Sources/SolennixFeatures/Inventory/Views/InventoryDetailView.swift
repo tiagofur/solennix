@@ -306,15 +306,15 @@ public struct InventoryDetailView: View {
                     InventoryDetailSkeleton()
                 }
                 .listStyle(.insetGrouped)
-                .scrollContentBackground(.hidden)
-                .background(SolennixColors.surfaceGrouped)
+                .solennixListStyle()
             } else if let item = viewModel.item {
                 hubList(item)
             } else {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
                     title: InventoryStrings.errorTitle,
-                    message: viewModel.errorMessage ?? InventoryStrings.errorLoadingTitle
+                    message: viewModel.errorMessage ?? InventoryStrings.errorLoadingTitle,
+                    iconColor: SolennixColors.primary
                 )
             }
         }
@@ -417,8 +417,7 @@ public struct InventoryDetailView: View {
             .listRowSeparator(.hidden)
         }
         .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
+        .solennixListStyle()
         .softScrollEdgeEffectIfAvailable()
         // Fix #6: refreshable keeps content visible (does NOT clear item/arrays)
         .refreshable {
@@ -430,7 +429,6 @@ public struct InventoryDetailView: View {
 
     private func stockStatusCard(_ item: InventoryItem) -> some View {
         let percentage = item.minimumStock > 0 ? min(1.0, item.currentStock / item.minimumStock) : 1.0
-        // Fix #10: .formatted instead of Int() truncation
         let stockFormatted = item.currentStock.formatted(.number.precision(.fractionLength(0...2)))
 
         return VStack(spacing: Spacing.md) {
@@ -442,14 +440,31 @@ public struct InventoryDetailView: View {
                     .font(.headline)
                     .foregroundStyle(viewModel.isLowStock ? SolennixColors.error : SolennixColors.success)
                 Spacer()
-                Text(localizedTypeName(item.type))
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(SolennixColors.textSecondary)
-                    .padding(.horizontal, Spacing.sm)
-                    .padding(.vertical, Spacing.xs)
-                    .background(SolennixColors.surface)
-                    .clipShape(Capsule())
+                
+                HStack(spacing: Spacing.xs) {
+                    Text(localizedTypeName(item.type))
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(SolennixColors.textSecondary)
+                        .padding(.horizontal, Spacing.sm)
+                        .padding(.vertical, Spacing.xs)
+                        .background(SolennixColors.surface)
+                        .clipShape(Capsule())
+
+                    Button {
+                        viewModel.adjustmentQuantity = item.currentStock
+                        viewModel.showStockAdjustment = true
+                    } label: {
+                        Text(InventoryStrings.adjustStock)
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(SolennixColors.primary)
+                            .padding(.horizontal, Spacing.sm)
+                            .padding(.vertical, Spacing.xs)
+                            .background(SolennixColors.primaryLight)
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
             }
 
             HStack(alignment: .lastTextBaseline, spacing: Spacing.xs) {
@@ -470,7 +485,6 @@ public struct InventoryDetailView: View {
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
             }
-            // Fix #10: a11y composite label on this hero composite element
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(InventoryStrings.stockStatusA11y(
                 stock: stockFormatted,
@@ -481,46 +495,27 @@ public struct InventoryDetailView: View {
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 4)
+                    RoundedRectangle(cornerRadius: 2)
                         .fill(SolennixColors.surface)
-                        .frame(height: 8)
-                    RoundedRectangle(cornerRadius: 4)
+                        .frame(height: 4)
+                    RoundedRectangle(cornerRadius: 2)
                         .fill(viewModel.isLowStock ? SolennixColors.error : SolennixColors.success)
-                        .frame(width: geo.size.width * percentage, height: 8)
+                        .frame(width: geo.size.width * percentage, height: 4)
                 }
             }
-            .frame(height: 8)
+            .frame(height: 4)
             .accessibilityHidden(true)
-
-            // Fix #8: single "Ajustar Stock" action — gold primary row pattern
-            Button {
-                viewModel.adjustmentQuantity = item.currentStock
-                viewModel.showStockAdjustment = true
-            } label: {
-                HStack {
-                    Image(systemName: "plusminus")
-                    Text(InventoryStrings.adjustStock)
-                }
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundStyle(SolennixColors.primary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, Spacing.sm)
-                .background(SolennixColors.primaryLight)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-            }
-            .buttonStyle(.plain)
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity)
-        .listRowBackground(SolennixColors.card)
+        .solennixRow()
         .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
 
     // MARK: - KPI Section
 
     private func kpiSection(_ item: InventoryItem) -> some View {
-        HStack(spacing: Spacing.sm) {
+        HStack(spacing: 0) {
             kpiCard(
                 icon: "dollarsign.circle.fill",
                 iconColor: SolennixColors.primary,
@@ -531,6 +526,10 @@ public struct InventoryDetailView: View {
                 subtitle: InventoryStrings.perUnit(item.unit),
                 a11yLabel: "\(InventoryStrings.unitCost): \((item.unitCost ?? 0) > 0 ? (item.unitCost ?? 0).formatted(.currency(code: "MXN")) : "—")"
             )
+
+            Divider()
+                .frame(height: 50)
+
             kpiCard(
                 icon: "chart.bar.fill",
                 iconColor: SolennixColors.primary,
@@ -542,7 +541,7 @@ public struct InventoryDetailView: View {
                 a11yLabel: "\(InventoryStrings.stockValue): \(item.unitCost != nil ? viewModel.stockValue.formatted(.currency(code: "MXN")) : "—")"
             )
         }
-        .listRowBackground(SolennixColors.card)
+        .solennixRow()
         .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
 
@@ -566,7 +565,7 @@ public struct InventoryDetailView: View {
             }
             Text(value)
                 .font(.title3)
-                .fontWeight(.black)
+                .fontWeight(.bold)
                 .foregroundStyle(SolennixColors.text)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
@@ -576,8 +575,6 @@ public struct InventoryDetailView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Spacing.md)
-        .background(SolennixColors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(a11yLabel)
     }
@@ -601,7 +598,7 @@ public struct InventoryDetailView: View {
                 .font(.title3)
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text({
                     if isCritical { return InventoryStrings.critical7Days }
                     if isWarning { return InventoryStrings.belowMinAfterEvents }
@@ -636,9 +633,8 @@ public struct InventoryDetailView: View {
             Spacer()
         }
         .padding(Spacing.md)
-        .listRowBackground((isCritical || isLowOnly) ? SolennixColors.errorBg :
-                            (isWarning ? SolennixColors.warningBg :
-                             (demand > 0 ? SolennixColors.successBg : SolennixColors.card)))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .solennixRow()
         .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
 
@@ -676,7 +672,7 @@ public struct InventoryDetailView: View {
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .listRowBackground(SolennixColors.card)
+        .solennixRow()
         .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
 
@@ -768,7 +764,7 @@ public struct InventoryDetailView: View {
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .listRowBackground(SolennixColors.card)
+        .solennixRow()
         .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
 
@@ -801,6 +797,7 @@ public struct InventoryDetailView: View {
                         .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity)
+                .padding(.horizontal, Spacing.md)
                 .padding(.vertical, Spacing.lg)
                 .accessibilityElement(children: .combine)
             } else {
@@ -827,7 +824,7 @@ public struct InventoryDetailView: View {
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .listRowBackground(SolennixColors.card)
+        .solennixRow()
         .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
     }
 
@@ -990,38 +987,48 @@ struct InventoryDetailSkeleton: View {
                     SkeletonLine(width: 22, height: 22).clipShape(Circle())
                     SkeletonLine(width: 80, height: 16)
                     Spacer()
-                    SkeletonLine(width: 60, height: 20).clipShape(Capsule())
+                    
+                    HStack(spacing: Spacing.xs) {
+                        SkeletonLine(width: 60, height: 20).clipShape(Capsule())
+                        SkeletonLine(width: 70, height: 20).clipShape(Capsule())
+                    }
                 }
                 HStack(alignment: .lastTextBaseline, spacing: Spacing.xs) {
                     SkeletonLine(width: 80, height: CGFloat(cappedIconSize))
                     SkeletonLine(width: 40, height: 20)
                     Spacer()
                 }
-                SkeletonLine(height: 8).clipShape(RoundedRectangle(cornerRadius: 4))
-                SkeletonLine(height: 36).clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                SkeletonLine(height: 4).clipShape(RoundedRectangle(cornerRadius: 2))
             }
             .padding(Spacing.md)
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
             .listRowSeparator(.hidden)
             .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
         }
 
         // KPI row
         Section {
-            HStack(spacing: Spacing.sm) {
-                ForEach(0..<2, id: \.self) { _ in
-                    VStack(alignment: .leading, spacing: Spacing.xs) {
-                        SkeletonLine(width: 40, height: 10)
-                        SkeletonLine(width: 60, height: 22)
-                        SkeletonLine(width: 30, height: 10)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(Spacing.md)
-                    .background(SolennixColors.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+            HStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    SkeletonLine(width: 40, height: 10)
+                    SkeletonLine(width: 60, height: 22)
+                    SkeletonLine(width: 30, height: 10)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(Spacing.md)
+
+                Divider()
+                    .frame(height: 50)
+
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    SkeletonLine(width: 40, height: 10)
+                    SkeletonLine(width: 60, height: 22)
+                    SkeletonLine(width: 30, height: 10)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(Spacing.md)
             }
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
             .listRowSeparator(.hidden)
             .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
         }
@@ -1037,7 +1044,7 @@ struct InventoryDetailSkeleton: View {
                 Spacer()
             }
             .padding(Spacing.md)
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
             .listRowSeparator(.hidden)
             .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
         }
@@ -1058,7 +1065,7 @@ struct InventoryDetailSkeleton: View {
                 }
             }
             .padding(Spacing.md)
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
             .listRowSeparator(.hidden)
             .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
         }
@@ -1085,7 +1092,7 @@ struct InventoryDetailSkeleton: View {
             }
             .padding(Spacing.md)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
             .listRowSeparator(.hidden)
             .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
         }
@@ -1113,7 +1120,7 @@ struct InventoryDetailSkeleton: View {
                 }
             }
             .padding(Spacing.md)
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
             .listRowSeparator(.hidden)
             .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
         }

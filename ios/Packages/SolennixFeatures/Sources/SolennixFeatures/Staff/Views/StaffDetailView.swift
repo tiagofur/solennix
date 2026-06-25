@@ -22,7 +22,6 @@ public struct StaffDetailView: View {
     @State private var showDeleteConfirm: Bool = false
     @State private var showRevokeConfirm: Bool = false
     @State private var isInviting: Bool = false
-    @State private var isRevoking: Bool = false
     @State private var inviteURL: String?
     @State private var inviteFeedback: String?
     @State private var inviteFeedbackIsError: Bool = false
@@ -47,13 +46,43 @@ public struct StaffDetailView: View {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
                     title: StaffStrings.errorTitle,
-                    message: errorMessage ?? StaffStrings.notFoundMessage
+                    message: errorMessage ?? StaffStrings.notFoundMessage,
+                    iconColor: SolennixColors.primary
                 )
             }
         }
         .background(SolennixColors.surfaceGrouped)
         .navigationTitle(staff?.name ?? StaffStrings.navTitleFallback)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    NavigationLink(value: Route.staffForm(id: staffId)) {
+                        Label(StaffStrings.edit, systemImage: "pencil")
+                    }
+
+                    if hasPendingInvite {
+                        Button(role: .destructive) {
+                            showRevokeConfirm = true
+                        } label: {
+                            Label(StaffStrings.revokeInvite, systemImage: "xmark.shield")
+                        }
+                    }
+
+                    Divider()
+
+                    Button(role: .destructive) {
+                        showDeleteConfirm = true
+                    } label: {
+                        Label(StaffStrings.deleteAction, systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .foregroundStyle(SolennixColors.primary)
+                        .accessibilityLabel(StaffStrings.moreActions)
+                }
+            }
+        }
         .confirmationDialog(
             StaffStrings.deleteTitle,
             isPresented: $showDeleteConfirm
@@ -116,7 +145,7 @@ public struct StaffDetailView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
-                actionButtons
+                primaryInviteAction
             }
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.lg)
@@ -148,9 +177,7 @@ public struct StaffDetailView: View {
         }
         .padding(Spacing.lg)
         .frame(maxWidth: .infinity)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-        .shadowSm()
+        .solennixCard(border: false)
     }
 
     // MARK: - Contact Section
@@ -229,9 +256,7 @@ public struct StaffDetailView: View {
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadowSm()
+        .solennixCard(radius: CornerRadius.lg, border: false)
     }
 
     // MARK: - Contact Row
@@ -268,82 +293,30 @@ public struct StaffDetailView: View {
                 }
             }
             .padding(Spacing.md)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+            .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
         }
         .buttonStyle(.plain)
         .disabled(action == nil)
     }
 
-    // MARK: - Action Buttons
+    // MARK: - Primary Action
 
-    private var actionButtons: some View {
-        HStack(spacing: Spacing.sm) {
-                if let item = staff,
-               let email = item.email,
-               !email.isEmpty,
-                    item.invitedUserId == nil,
-                    !hasPendingInvite {
-                Button {
-                    inviteAccess()
-                } label: {
-                    actionButton(
-                        icon: "paperplane",
-                        label: isInviting ? StaffStrings.inviting : StaffStrings.inviteAccess,
-                        fg: SolennixColors.primary
-                    )
-                }
-                .disabled(isInviting)
-            }
-
-            if hasPendingInvite {
-                Button {
-                    showRevokeConfirm = true
-                } label: {
-                    actionButton(
-                        icon: "xmark.shield",
-                        label: isRevoking ? StaffStrings.revoking : StaffStrings.revokeInvite,
-                        fg: SolennixColors.error
-                    )
-                }
-                .disabled(isRevoking || isInviting)
-            }
-
-            NavigationLink(value: Route.staffForm(id: staffId)) {
-                actionButton(
-                    icon: "pencil",
-                    label: StaffStrings.edit,
-                    fg: SolennixColors.info
-                )
-            }
-
-            Button {
-                showDeleteConfirm = true
-            } label: {
-                actionButton(
-                    icon: "trash",
-                    label: StaffStrings.deleteAction,
-                    fg: SolennixColors.error
-                )
+    @ViewBuilder
+    private var primaryInviteAction: some View {
+        if let item = staff,
+           let email = item.email,
+           !email.isEmpty,
+           item.invitedUserId == nil,
+           !hasPendingInvite {
+            PremiumButton(
+                title: isInviting ? StaffStrings.inviting : StaffStrings.inviteAccess,
+                isLoading: isInviting,
+                isDisabled: isInviting,
+                icon: "paperplane.fill"
+            ) {
+                inviteAccess()
             }
         }
-    }
-
-    private func actionButton(icon: String, label: String, fg: Color) -> some View {
-        VStack(spacing: Spacing.xs) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundStyle(fg)
-
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(SolennixColors.textSecondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadowSm()
     }
 
     private func inviteLinkCard(_ url: String) -> some View {
@@ -370,9 +343,7 @@ public struct StaffDetailView: View {
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadowSm()
+        .solennixCard(radius: CornerRadius.lg, border: false)
     }
 
     private var pendingInviteCard: some View {
@@ -388,9 +359,7 @@ public struct StaffDetailView: View {
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadowSm()
+        .solennixCard(radius: CornerRadius.lg, border: false)
     }
 
     private var hasPendingInvite: Bool {
@@ -461,7 +430,6 @@ public struct StaffDetailView: View {
     @MainActor
     private func revokeInviteAccess() async {
         guard hasPendingInvite else { return }
-        isRevoking = true
         inviteFeedback = nil
         inviteFeedbackIsError = false
 
@@ -479,8 +447,6 @@ public struct StaffDetailView: View {
             }
             inviteFeedbackIsError = true
         }
-
-        isRevoking = false
     }
 }
 

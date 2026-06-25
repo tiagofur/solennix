@@ -36,15 +36,15 @@ public struct EventDetailView: View {
                     EventDetailHubSkeleton()
                 }
                 .listStyle(.insetGrouped)
-                .scrollContentBackground(.hidden)
-                .background(SolennixColors.surfaceGrouped)
+                .solennixListStyle()
             } else if let event = viewModel.event {
                 hubList(event)
             } else {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
                     title: tr("events.detail.error.title", "Error"),
-                    message: viewModel.errorMessage ?? tr("events.detail.error.load_fallback", "No se pudo cargar el evento")
+                    message: viewModel.errorMessage ?? tr("events.detail.error.load_fallback", "No se pudo cargar el evento"),
+                    iconColor: SolennixColors.primary
                 )
             }
         }
@@ -271,7 +271,7 @@ public struct EventDetailView: View {
                     }
                 )
             }
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
             .listRowSeparator(.hidden)
 
             // MARK: Photos preview (only when photos exist)
@@ -283,7 +283,7 @@ public struct EventDetailView: View {
                         route: Route.eventPhotos(id: eventId)
                     )
                 }
-                .listRowBackground(SolennixColors.card)
+                .solennixRow()
                 .listRowSeparator(.hidden)
             }
 
@@ -306,8 +306,7 @@ public struct EventDetailView: View {
             }
         }
         .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
+        .solennixListStyle()
         .softScrollEdgeEffectIfAvailable()
         .refreshable {
             // Does NOT clear arrays — avoids skeleton flash on pull-to-refresh.

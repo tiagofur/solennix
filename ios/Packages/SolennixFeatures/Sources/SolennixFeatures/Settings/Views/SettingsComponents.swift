@@ -24,9 +24,7 @@ struct SettingsCardContainer<Content: View>: View {
             }
         }
         .padding(Spacing.lg)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-        .shadowSm()
+        .solennixCard(border: false)
     }
 }
 

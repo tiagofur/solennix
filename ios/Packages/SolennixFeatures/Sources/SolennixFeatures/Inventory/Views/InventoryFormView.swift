@@ -18,31 +18,38 @@ public struct InventoryFormView: View {
     public var body: some View {
         Group {
             if viewModel.isLoading {
-                ProgressView(InventoryStrings.loading)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                ProgressView()
             } else {
                 formContent
             }
         }
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
-        .scrollDismissesKeyboard(.interactively)
-        .keyboardDoneToolbar()
         .navigationTitle(viewModel.isEditing ? InventoryStrings.editItemTitle : InventoryStrings.newItemTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button(InventoryStrings.cancel) {
+                SolennixCancelButton(title: InventoryStrings.cancel) {
                     if viewModel.isDirty {
                         showDiscardDialog = true
                     } else {
                         dismiss()
                     }
                 }
-                .foregroundStyle(SolennixColors.textSecondary)
             }
             ToolbarItem(placement: .topBarTrailing) {
-                saveButton
+                SolennixSaveButton(
+                    title: InventoryStrings.save,
+                    action: {
+                        Task {
+                            let success = await viewModel.save()
+                            if success {
+                                dismiss()
+                            }
+                        }
+                    },
+                    isValid: viewModel.isValid,
+                    isSaving: viewModel.isSaving
+                )
             }
         }
         .interactiveDismissDisabled(viewModel.isDirty && !viewModel.isSaving)
@@ -69,71 +76,74 @@ public struct InventoryFormView: View {
         .task { await viewModel.loadData() }
     }
 
-    // MARK: - Form Content
+    // MARK: - Form Content (native Apple Form — no custom chrome)
 
     private var formContent: some View {
         Form {
-            // Basic info
-            Section(InventoryStrings.informationTitle) {
-                AdaptiveFormRow {
-                    // Name
-                    VStack(alignment: .leading, spacing: Spacing.xs) {
-                        TextField(InventoryStrings.namePlaceholder, text: $viewModel.ingredientName)
+            // MARK: Información
+            Section {
+                TextField(InventoryStrings.namePlaceholder, text: $viewModel.ingredientName)
+                    .textContentType(.name)
+                    .textInputAutocapitalization(.words)
+                    .solennixRow()
 
-                        if let error = viewModel.nameError {
-                            Text(error)
-                                .font(.caption)
-                                .foregroundStyle(SolennixColors.error)
-                        }
-                    }
-                } right: {
-                    // Type
-                    Picker(InventoryStrings.type, selection: $viewModel.type) {
-                        Text(InventoryStrings.ingredientType).tag(InventoryType.ingredient)
-                        Text(InventoryStrings.equipmentType).tag(InventoryType.equipment)
-                        Text(InventoryStrings.supplyType).tag(InventoryType.supply)
-                    }
-                    .pickerStyle(.menu)
-                    .tint(SolennixColors.primary)
+                if let error = viewModel.nameError {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .solennixRow()
                 }
+
+                Picker(InventoryStrings.type, selection: $viewModel.type) {
+                    Text(InventoryStrings.ingredientType).tag(InventoryType.ingredient)
+                    Text(InventoryStrings.equipmentType).tag(InventoryType.equipment)
+                    Text(InventoryStrings.supplyType).tag(InventoryType.supply)
+                }
+                .pickerStyle(.menu)
+                .solennixRow()
+            } header: {
+                Text(InventoryStrings.informationTitle)
             }
 
-            // Stock
-            Section(InventoryStrings.stockTitle) {
-                AdaptiveFormRow {
-                    HStack {
-                        Text(InventoryStrings.currentStockTitle)
-                        Spacer()
-                        TextField("0", value: $viewModel.currentStock, format: .number)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
-                    }
-                } right: {
-                    HStack {
-                        Text(InventoryStrings.minimumStockTitle)
-                        Spacer()
-                        TextField("0", value: $viewModel.minimumStock, format: .number)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
-                    }
+            // MARK: Stock
+            Section {
+                HStack {
+                    Text(InventoryStrings.currentStockTitle)
+                    Spacer()
+                    TextField("0", value: $viewModel.currentStock, format: .number)
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 80)
                 }
+                .solennixRow()
+
+                HStack {
+                    Text(InventoryStrings.minimumStockTitle)
+                    Spacer()
+                    TextField("0", value: $viewModel.minimumStock, format: .number)
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 80)
+                }
+                .solennixRow()
 
                 if let error = viewModel.stockError {
                     Text(error)
                         .font(.caption)
-                        .foregroundStyle(SolennixColors.error)
+                        .foregroundStyle(.red)
+                        .solennixRow()
                 }
+            } header: {
+                Text(InventoryStrings.stockTitle)
             }
 
-            // Unit
-            Section(InventoryStrings.unitTitle) {
+            // MARK: Unidad
+            Section {
                 ForEach(InventoryFormViewModel.unitGroups, id: \.0) { group in
                     VStack(alignment: .leading, spacing: Spacing.sm) {
                         Text(group.0)
                             .font(.caption)
-                            .foregroundStyle(SolennixColors.textTertiary)
+                            .foregroundStyle(.secondary)
 
                         InventoryFlowLayout(spacing: Spacing.xs) {
                             ForEach(group.1, id: \.self) { unit in
@@ -146,13 +156,13 @@ public struct InventoryFormView: View {
                                         .padding(.vertical, Spacing.xs)
                                         .background(
                                             viewModel.unit == unit
-                                                ? SolennixColors.primaryLight
-                                                : SolennixColors.surface
+                                                ? AnyShapeStyle(Color.accentColor.opacity(0.15))
+                                                : AnyShapeStyle(Color(.secondarySystemBackground))
                                         )
                                         .foregroundStyle(
                                             viewModel.unit == unit
-                                                ? SolennixColors.primary
-                                                : SolennixColors.text
+                                                ? Color.accentColor
+                                                : Color.primary
                                         )
                                         .clipShape(Capsule())
                                 }
@@ -160,41 +170,29 @@ public struct InventoryFormView: View {
                             }
                         }
                     }
+                    .padding(.vertical, 4)
+                    .solennixRow()
                 }
+            } header: {
+                Text(InventoryStrings.unitTitle)
             }
 
-            // Cost
-            Section(InventoryStrings.costOptionalTitle) {
+            // MARK: Costo
+            Section {
                 HStack {
                     Text("$")
+                        .foregroundStyle(.secondary)
                     TextField(InventoryStrings.costPlaceholder, value: $viewModel.unitCost, format: .number.precision(.fractionLength(0...2)))
                         .keyboardType(.decimalPad)
                 }
+                .solennixRow()
+            } header: {
+                Text(InventoryStrings.costOptionalTitle)
             }
         }
+        .solennixListStyle()
     }
 
-    // MARK: - Save Button
-
-    private var saveButton: some View {
-        Button {
-            Task {
-                let success = await viewModel.save()
-                if success {
-                    dismiss()
-                }
-            }
-        } label: {
-            if viewModel.isSaving {
-                ProgressView()
-            } else {
-                Text(InventoryStrings.save)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(viewModel.isValid ? SolennixColors.primary : SolennixColors.textTertiary)
-            }
-        }
-        .disabled(!viewModel.isValid || viewModel.isSaving)
-    }
 }
 
 // MARK: - Flow Layout

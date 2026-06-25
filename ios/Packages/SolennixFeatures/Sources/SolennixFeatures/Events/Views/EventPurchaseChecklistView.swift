@@ -40,7 +40,8 @@ public struct EventPurchaseChecklistView: View {
                 EmptyStateView(
                     icon: "cart",
                     title: "Sin compras pendientes",
-                    message: "Este evento no tiene insumos marcados para comprar"
+                    message: "Este evento no tiene insumos marcados para comprar",
+                    iconColor: SolennixColors.primary
                 )
             } else {
                 ScrollView {
@@ -110,9 +111,7 @@ public struct EventPurchaseChecklistView: View {
         }
         .padding(Spacing.lg)
         .frame(maxWidth: .infinity)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-        .shadowSm()
+        .solennixCard(border: false)
     }
 
     private func checklistRow(_ item: ChecklistItem) -> some View {
@@ -193,8 +192,7 @@ private struct PurchaseChecklistItemRow: View {
                 Spacer()
             }
             .padding(Spacing.md)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+            .solennixCard(radius: CornerRadius.md, shadow: false, border: false)
             .overlay(
                 RoundedRectangle(cornerRadius: CornerRadius.md)
                     .stroke(

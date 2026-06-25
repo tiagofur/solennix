@@ -185,17 +185,8 @@ public struct RegisterView: View {
                 }
             }
 
-            Button {
+            PremiumButton(title: AuthStrings.loginTitle) {
                 dismiss()
-            } label: {
-                Text(AuthStrings.loginTitle)
-                    .font(.headline)
-                    // Navy on gold: ≥4.9:1 on both gradient ends (WCAG AA).
-                    .foregroundStyle(SolennixColors.onPrimary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Spacing.md)
-                    .background(SolennixColors.primary)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
             }
 
             Spacer(minLength: Spacing.xxxl)

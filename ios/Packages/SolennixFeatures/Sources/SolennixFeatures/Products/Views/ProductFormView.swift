@@ -27,24 +27,35 @@ public struct ProductFormView: View {
                 formContent
             }
         }
-        .background(SolennixColors.surfaceGrouped)
         .scrollDismissesKeyboard(.interactively)
         .keyboardDoneToolbar()
         .navigationTitle(viewModel.isEditing ? ProductStrings.editProductTitle : ProductStrings.newProductTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button(ProductStrings.cancel) {
+                SolennixCancelButton(title: ProductStrings.cancel) {
                     if viewModel.isDirty {
                         showDiscardDialog = true
                     } else {
                         dismiss()
                     }
                 }
-                .foregroundStyle(SolennixColors.textSecondary)
             }
             ToolbarItem(placement: .topBarTrailing) {
-                saveButton
+                SolennixSaveButton(
+                    title: ProductStrings.save,
+                    action: {
+                        Task {
+                            let success = await viewModel.save()
+                            if success {
+                                dismiss()
+                            }
+                        }
+                    },
+                    isValid: viewModel.isValid,
+                    isSaving: viewModel.isSaving
+                )
             }
         }
         .interactiveDismissDisabled(viewModel.isDirty && !viewModel.isSaving)
@@ -95,75 +106,86 @@ public struct ProductFormView: View {
     // MARK: - Form Content
 
     private var formContent: some View {
-        ScrollView {
-            VStack(spacing: Spacing.md) {
-                // Image section
-                imageSection
+        Form {
+            imageSection
+            basicInfoSection
+            recipeIngredientsSection
+            recipeEquipmentSection
+            recipeSuppliesSection
+            staffTeamSection
+        }
+        .solennixListStyle()
+    }
 
-                // Basic info section
-                basicInfoSection
+    // MARK: - Recipe Sections
 
-                // Recipe sections
-                RecipeSection(
-                    title: ProductStrings.compositionTitle,
-                    description: ProductStrings.compositionDescription,
-                    items: viewModel.ingredients,
-                    inventoryItems: viewModel.ingredientInventoryItems,
-                    onAdd: { viewModel.addIngredient() },
-                    onRemove: { viewModel.removeIngredient(at: $0) },
-                    onSelectInventory: { viewModel.updateIngredient(at: $0, inventoryId: $1) },
-                    onUpdateQuantity: { index, qty in
-                        viewModel.ingredients[index].quantityRequired = qty
-                    },
-                    showCost: true
-                )
+    private var recipeIngredientsSection: some View {
+        Section {
+            RecipeSection(
+                title: ProductStrings.compositionTitle,
+                description: ProductStrings.compositionDescription,
+                items: viewModel.ingredients,
+                inventoryItems: viewModel.ingredientInventoryItems,
+                onAdd: { viewModel.addIngredient() },
+                onRemove: { viewModel.removeIngredient(at: $0) },
+                onSelectInventory: { viewModel.updateIngredient(at: $0, inventoryId: $1) },
+                onUpdateQuantity: { index, qty in
+                    viewModel.ingredients[index].quantityRequired = qty
+                },
+                showCost: true,
+                embeddedInForm: true
+            )
+            .solennixRow()
+            .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+        }
+    }
 
-                RecipeSection(
-                    title: ProductStrings.equipmentTitle,
-                    description: ProductStrings.equipmentDescription,
-                    items: viewModel.equipment,
-                    inventoryItems: viewModel.equipmentInventoryItems,
-                    onAdd: { viewModel.addEquipment() },
-                    onRemove: { viewModel.removeEquipment(at: $0) },
-                    onSelectInventory: { viewModel.updateEquipment(at: $0, inventoryId: $1) },
-                    onUpdateQuantity: { index, qty in
-                        viewModel.equipment[index].quantityRequired = qty
-                    },
-                    showCost: false
-                )
+    private var recipeEquipmentSection: some View {
+        Section {
+            RecipeSection(
+                title: ProductStrings.equipmentTitle,
+                description: ProductStrings.equipmentDescription,
+                items: viewModel.equipment,
+                inventoryItems: viewModel.equipmentInventoryItems,
+                onAdd: { viewModel.addEquipment() },
+                onRemove: { viewModel.removeEquipment(at: $0) },
+                onSelectInventory: { viewModel.updateEquipment(at: $0, inventoryId: $1) },
+                onUpdateQuantity: { index, qty in
+                    viewModel.equipment[index].quantityRequired = qty
+                },
+                showCost: false,
+                embeddedInForm: true
+            )
+            .solennixRow()
+            .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+        }
+    }
 
-                RecipeSection(
-                    title: ProductStrings.suppliesTitle,
-                    description: ProductStrings.suppliesDescription,
-                    items: viewModel.supplies,
-                    inventoryItems: viewModel.supplyInventoryItems,
-                    onAdd: { viewModel.addSupply() },
-                    onRemove: { viewModel.removeSupply(at: $0) },
-                    onSelectInventory: { viewModel.updateSupply(at: $0, inventoryId: $1) },
-                    onUpdateQuantity: { index, qty in
-                        viewModel.supplies[index].quantityRequired = qty
-                    },
-                    showCost: true
-                )
-
-                staffTeamSection
-            }
-            .padding(Spacing.lg)
+    private var recipeSuppliesSection: some View {
+        Section {
+            RecipeSection(
+                title: ProductStrings.suppliesTitle,
+                description: ProductStrings.suppliesDescription,
+                items: viewModel.supplies,
+                inventoryItems: viewModel.supplyInventoryItems,
+                onAdd: { viewModel.addSupply() },
+                onRemove: { viewModel.removeSupply(at: $0) },
+                onSelectInventory: { viewModel.updateSupply(at: $0, inventoryId: $1) },
+                onUpdateQuantity: { index, qty in
+                    viewModel.supplies[index].quantityRequired = qty
+                },
+                showCost: true,
+                embeddedInForm: true
+            )
+            .solennixRow()
+            .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
         }
     }
 
     // MARK: - Staff Team Section (Ola 3)
 
     private var staffTeamSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text(ProductStrings.associatedTeam)
-                .font(.headline)
-                .foregroundStyle(SolennixColors.text)
-
-            Text(ProductStrings.associatedTeamDescription)
-                .font(.caption)
-                .foregroundStyle(SolennixColors.textSecondary)
-
+        Section {
             Menu {
                 Button {
                     viewModel.staffTeamId = nil
@@ -197,24 +219,20 @@ public struct ProductFormView: View {
                     Image(systemName: "chevron.down")
                         .foregroundStyle(SolennixColors.textTertiary)
                 }
-                .padding(Spacing.md)
-                .background(SolennixColors.surface)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                .overlay(
-                    RoundedRectangle(cornerRadius: CornerRadius.md)
-                        .stroke(SolennixColors.border, lineWidth: 1)
-                )
             }
+            .solennixRow()
 
             if viewModel.availableStaffTeams.isEmpty {
                 Text(ProductStrings.addTeamsHint)
                     .font(.caption2)
                     .foregroundStyle(SolennixColors.textTertiary)
+                    .solennixRow()
             }
+        } header: {
+            Text(ProductStrings.associatedTeam)
+        } footer: {
+            Text(ProductStrings.associatedTeamDescription)
         }
-        .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
     }
 
     private var selectedTeamLabel: String {
@@ -228,39 +246,43 @@ public struct ProductFormView: View {
     // MARK: - Image Section
 
     private var imageSection: some View {
-        VStack(alignment: .center, spacing: Spacing.sm) {
-            PhotosPicker(
-                selection: $viewModel.selectedPhoto,
-                matching: .images,
-                photoLibrary: .shared()
-            ) {
-                ZStack {
-                    if let data = viewModel.localImageData,
-                       let uiImage = UIImage(data: data) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } else if let imageUrl = viewModel.imageUrl,
-                              let url = APIClient.resolveURL(imageUrl) {
-                        AsyncImage(url: url) { image in
-                            image
+        Section {
+            VStack(alignment: .center, spacing: Spacing.sm) {
+                PhotosPicker(
+                    selection: $viewModel.selectedPhoto,
+                    matching: .images,
+                    photoLibrary: .shared()
+                ) {
+                    ZStack {
+                        if let data = viewModel.localImageData,
+                           let uiImage = UIImage(data: data) {
+                            Image(uiImage: uiImage)
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
-                        } placeholder: {
+                        } else if let imageUrl = viewModel.imageUrl,
+                                  let url = APIClient.resolveURL(imageUrl) {
+                            AsyncImage(url: url) { image in
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            } placeholder: {
+                                imagePlaceholder
+                            }
+                        } else {
                             imagePlaceholder
                         }
-                    } else {
-                        imagePlaceholder
                     }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 200)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: CornerRadius.lg)
+                            .stroke(SolennixColors.border, style: StrokeStyle(lineWidth: 2, dash: [8]))
+                    )
                 }
-                .frame(maxWidth: .infinity)
-                .frame(height: 200)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-                .overlay(
-                    RoundedRectangle(cornerRadius: CornerRadius.lg)
-                        .stroke(SolennixColors.border, style: StrokeStyle(lineWidth: 2, dash: [8]))
-                )
             }
+            .solennixRow()
+            .listRowSeparator(.hidden)
         }
     }
 
@@ -283,100 +305,74 @@ public struct ProductFormView: View {
     // MARK: - Basic Info Section
 
     private var basicInfoSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
-            Text(ProductStrings.productInfo)
-                .font(.headline)
-                .foregroundStyle(SolennixColors.text)
+        Section {
+            // Name
+            TextField(ProductStrings.namePlaceholder, text: $viewModel.name)
+                .textContentType(.name)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.words)
+                .solennixRow()
 
-            // Name + Category
-            AdaptiveFormRow {
-                // Name
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    TextField(ProductStrings.namePlaceholder, text: $viewModel.name)
-                        .textContentType(.name)
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.words)
-                        .textFieldStyle(.roundedBorder)
+            if let error = viewModel.nameError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.error)
+                    .solennixRow()
+            }
 
-                    if let error = viewModel.nameError {
-                        Text(error)
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.error)
-                    }
-                }
-            } right: {
-                // Category
-                VStack(alignment: .leading, spacing: Spacing.xs) {
+            // Category — Button row that opens the picker sheet
+            Button {
+                viewModel.showCategoryPicker = true
+            } label: {
+                HStack {
                     Text(ProductStrings.category)
+                        .foregroundStyle(SolennixColors.text)
+                    Spacer()
+                    Text(viewModel.category.isEmpty ? ProductStrings.selectCategory : viewModel.category)
+                        .foregroundStyle(viewModel.category.isEmpty ? SolennixColors.textTertiary : SolennixColors.text)
+                    Image(systemName: "chevron.down")
                         .font(.caption)
-                        .foregroundStyle(SolennixColors.textSecondary)
-
-                    Button {
-                        viewModel.showCategoryPicker = true
-                    } label: {
-                        HStack {
-                            Text(viewModel.category.isEmpty ? ProductStrings.selectCategory : viewModel.category)
-                                .foregroundStyle(viewModel.category.isEmpty ? SolennixColors.textTertiary : SolennixColors.text)
-
-                            Spacer()
-
-                            Image(systemName: "chevron.down")
-                                .foregroundStyle(SolennixColors.textTertiary)
-                        }
-                        .padding(Spacing.md)
-                        .background(SolennixColors.surface)
-                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: CornerRadius.md)
-                                .stroke(viewModel.categoryError != nil ? SolennixColors.error : SolennixColors.border, lineWidth: 1)
-                        )
-                    }
-                    .buttonStyle(.plain)
-
-                    if let error = viewModel.categoryError {
-                        Text(error)
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.error)
-                    }
+                        .foregroundStyle(SolennixColors.textTertiary)
                 }
             }
+            .solennixRow()
 
-            // Price + Active
-            AdaptiveFormRow {
-                // Base Price
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text(ProductStrings.basePrice)
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textSecondary)
-
-                    HStack {
-                        Text("$")
-                            .foregroundStyle(SolennixColors.textSecondary)
-
-                        TextField("0.00", value: $viewModel.basePrice, format: .number.precision(.fractionLength(0...2)))
-                            .keyboardType(.decimalPad)
-                            .textFieldStyle(.roundedBorder)
-                    }
-                }
-            } right: {
-                // Active toggle
-                Toggle(isOn: $viewModel.isActive) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(ProductStrings.activeProduct)
-                            .font(.body)
-                            .foregroundStyle(SolennixColors.text)
-
-                        Text(ProductStrings.visibleInQuotes)
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.textTertiary)
-                    }
-                }
-                .tint(SolennixColors.primary)
+            if let error = viewModel.categoryError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.error)
+                    .solennixRow()
             }
+
+            // Price
+            HStack {
+                Text(ProductStrings.basePrice)
+                    .foregroundStyle(SolennixColors.text)
+                Spacer()
+                Text("$")
+                    .foregroundStyle(SolennixColors.textSecondary)
+                TextField("0.00", value: $viewModel.basePrice, format: .number.precision(.fractionLength(0...2)))
+                    .keyboardType(.decimalPad)
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 80)
+            }
+            .solennixRow()
+
+            // Active toggle
+            Toggle(isOn: $viewModel.isActive) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(ProductStrings.activeProduct)
+                        .foregroundStyle(SolennixColors.text)
+                    Text(ProductStrings.visibleInQuotes)
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+            }
+            .tint(SolennixColors.primary)
+            .solennixRow()
+        } header: {
+            Text(ProductStrings.productInfo)
         }
-        .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
     }
 
     // MARK: - Category Picker Sheet
@@ -384,7 +380,7 @@ public struct ProductFormView: View {
     private var categoryPickerSheet: some View {
         NavigationStack {
             List {
-                // Existing categories — List applies .insetGrouped + surfaceGrouped matching InventoryPickerSheet
+                // Existing categories
                 if !viewModel.existingCategories.isEmpty {
                     Section(ProductStrings.existingCategories) {
                         ForEach(viewModel.existingCategories, id: \.self) { cat in
@@ -403,6 +399,7 @@ public struct ProductFormView: View {
                                     }
                                 }
                             }
+                            .solennixRow()
                         }
                     }
                 }
@@ -424,11 +421,11 @@ public struct ProductFormView: View {
                         }
                         .disabled(viewModel.customCategory.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     }
+                    .solennixRow()
                 }
             }
             .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(SolennixColors.surfaceGrouped)
+            .solennixListStyle()
             .navigationTitle(ProductStrings.selectCategoryTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -443,27 +440,6 @@ public struct ProductFormView: View {
         .presentationDragIndicator(.visible)
     }
 
-    // MARK: - Save Button
-
-    private var saveButton: some View {
-        Button {
-            Task {
-                let success = await viewModel.save()
-                if success {
-                    dismiss()
-                }
-            }
-        } label: {
-            if viewModel.isSaving {
-                ProgressView()
-            } else {
-                Text(ProductStrings.save)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(viewModel.isValid ? SolennixColors.primary : SolennixColors.textTertiary)
-            }
-        }
-        .disabled(!viewModel.isValid || viewModel.isSaving)
-    }
 }
 
 // MARK: - Preview

@@ -205,8 +205,7 @@ public struct SubscriptionView: View {
                     }
                 }
             }
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+            .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
         }
     }
 
@@ -295,11 +294,12 @@ public struct SubscriptionView: View {
                         Text(tr("settings.subscription.upgrade_plan", "Mejorar plan"))
                             .fontWeight(.semibold)
                     }
-                    .foregroundStyle(SolennixColors.onPrimary)
+                    .foregroundStyle(SolennixColors.primaryDark)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Spacing.md)
-                    .background(SolennixGradient.premium)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    .background(SolennixColors.primaryLight)
+                    .clipShape(Capsule())
+                    .adaptiveGlass(in: Capsule(), fallback: .material)
                 }
                 .buttonStyle(.plain)
             }

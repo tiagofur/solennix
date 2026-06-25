@@ -29,7 +29,7 @@ struct MoreMenuView: View {
                                 color: rowColor(for: section)
                             )
                         }
-                        .listRowBackground(SolennixColors.card)
+                        .solennixRow()
                         .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
                     }
                 }
@@ -46,14 +46,13 @@ struct MoreMenuView: View {
                             color: rowColor(for: .settings)
                         )
                     }
-                    .listRowBackground(SolennixColors.card)
+                    .solennixRow()
                     .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
                 }
             }
         }
         .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
+        .solennixListStyle()
         .navigationTitle(CommonStrings.tabMore)
         .navigationBarTitleDisplayMode(.large)
     }

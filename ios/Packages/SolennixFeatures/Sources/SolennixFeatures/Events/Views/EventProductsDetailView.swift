@@ -47,16 +47,18 @@ public struct EventProductsDetailView: View {
                     EmptyStateView(
                         icon: "bag",
                         title: tr("events.detail.products.empty.title", "Sin Productos"),
-                        message: tr("events.detail.products.empty.message", "Este evento no tiene productos asignados.")
+                        message: tr("events.detail.products.empty.message", "Este evento no tiene productos asignados."),
+                        iconColor: SolennixColors.primary
                     )
                     NavigationLink(value: Route.eventForm(id: eventId, step: 2)) {
                         Text(tr("events.detail.products.empty.cta", "Agregar productos"))
                             .font(.headline)
-                            .foregroundStyle(SolennixColors.onPrimary)
+                            .foregroundStyle(SolennixColors.primaryDark)
                             .padding(.horizontal, Spacing.xl)
                             .padding(.vertical, 16)
-                            .background(SolennixColors.primary)
-                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                            .background(SolennixColors.primaryLight)
+                            .clipShape(Capsule())
+                            .adaptiveGlass(in: Capsule(), fallback: .material)
                     }
                 } else {
                     // Summary
@@ -112,8 +114,6 @@ public struct EventProductsDetailView: View {
                 .foregroundStyle(SolennixColors.text)
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-        .shadowSm()
+        .solennixCard(radius: CornerRadius.md, border: false)
     }
 }

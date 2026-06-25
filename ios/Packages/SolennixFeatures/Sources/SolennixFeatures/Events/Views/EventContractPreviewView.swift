@@ -50,7 +50,8 @@ public struct EventContractPreviewView: View {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
                     title: "Error",
-                    message: viewModel.errorMessage ?? "No se pudo cargar el evento"
+                    message: viewModel.errorMessage ?? "No se pudo cargar el evento",
+                    iconColor: SolennixColors.primary
                 )
             }
         }
@@ -142,8 +143,7 @@ public struct EventContractPreviewView: View {
                 }
             }
             .padding(Spacing.md)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+            .solennixCard(radius: CornerRadius.md, shadow: false, border: false)
 
             Spacer()
         }
@@ -184,8 +184,7 @@ public struct EventContractPreviewView: View {
                 Spacer(minLength: Spacing.xl)
             }
             .padding(Spacing.lg)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+            .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
             .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
             .padding(Spacing.md)
         }

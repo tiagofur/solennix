@@ -30,7 +30,8 @@ public struct EventPaymentsDetailView: View {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
                     title: tr("events.detail.error.title", "Error"),
-                    message: viewModel.errorMessage ?? tr("events.detail.payments.error.load", "No se pudo cargar")
+                    message: viewModel.errorMessage ?? tr("events.detail.payments.error.load", "No se pudo cargar"),
+                    iconColor: SolennixColors.primary
                 )
             }
         }
@@ -100,9 +101,7 @@ public struct EventPaymentsDetailView: View {
                     }
                 }
                 .padding(Spacing.lg)
-                .background(SolennixColors.card)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-                .shadowSm()
+                .solennixCard(border: false)
 
                 // Deposit status
                 if let depositPercent = event.depositPercent, depositPercent > 0 {
@@ -200,9 +199,7 @@ public struct EventPaymentsDetailView: View {
                     }
                 }
                 .padding(Spacing.lg)
-                .background(SolennixColors.card)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-                .shadowSm()
+                .solennixCard(border: false)
             }
             .padding(.horizontal, sizeClass == .regular ? Spacing.xl : Spacing.md)
             .padding(.vertical, sizeClass == .regular ? Spacing.xl : Spacing.lg)

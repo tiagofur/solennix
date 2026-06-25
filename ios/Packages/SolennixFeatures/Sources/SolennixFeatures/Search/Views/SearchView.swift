@@ -68,8 +68,7 @@ public struct SearchView: View {
                 }
             }
             .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(SolennixColors.surfaceGrouped)
+            .solennixListStyle()
         }
     }
 
@@ -108,9 +107,7 @@ public struct SearchView: View {
             }
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-        .shadowSm()
+        .solennixCard(border: false)
         .padding(.horizontal, Spacing.md)
         .padding(.vertical, Spacing.sm)
     }
@@ -127,7 +124,7 @@ public struct SearchView: View {
                     .foregroundStyle(SolennixColors.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .center)
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
         }
     }
 
@@ -150,7 +147,7 @@ public struct SearchView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, Spacing.xxl)
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
         }
     }
 
@@ -170,7 +167,7 @@ public struct SearchView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, Spacing.xxl)
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
         }
     }
 
@@ -191,7 +188,7 @@ public struct SearchView: View {
                         Spacer()
                     }
                 }
-                .listRowBackground(SolennixColors.card)
+                .solennixRow()
             }
         } header: {
             HStack {
@@ -319,8 +316,7 @@ public struct SearchView: View {
             }
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
     }
 
     // MARK: - iPhone Results List
@@ -386,7 +382,7 @@ public struct SearchView: View {
                 NavigationLink(value: routeBuilder(item)) {
                     resultRow(item: item)
                 }
-                .listRowBackground(SolennixColors.card)
+                .solennixRow()
             }
         } header: {
             HStack(spacing: Spacing.sm) {
