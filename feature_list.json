@@ -317,6 +317,19 @@
         "Local filtering is bypassed for the initial upcomingEvents assignment, keeping chronological sorting",
         "Global init.sh validation suite runs and stays 100% green"
       ]
+    },
+    {
+      "id": 27,
+      "name": "ios-upcoming-events-flat-list-style",
+      "description": "feat(dashboard ios): refactorizar la sección Próximos Eventos a estilo lista plana con Dividers, consistente con Top Clients",
+      "status": "done",
+      "acceptance_criteria": [
+        "Los items de Próximos Eventos se renderizan como lista plana con Divider entre items (estilo Top Clients)",
+        "Se eliminó el background surfaceAlt y cornerRadius de cada fila individual",
+        "El Card contenedor (SolennixColors.card + shadow + cornerRadius) se mantiene intacto",
+        "El contenido de cada item (DateBox, cliente, servicio, personas, StatusDropdown) no se modifica",
+        "El ./init.sh completa sin errores"
+      ]
     }
   ]
 }
