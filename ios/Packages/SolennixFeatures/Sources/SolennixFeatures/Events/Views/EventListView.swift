@@ -22,6 +22,13 @@ public struct EventListView: View {
     @State private var showQuickQuote = false
     @State private var showDateFilter = false
 
+    /// Presents the `Personalizado` start-then-end custom-range picker (task
+    /// 4.5). Flipped by `EventListPeriodFilterActions.presentCustomRangePicker`
+    /// when the `Personalizado` chip is tapped. A sheet (not grid-bound) so the
+    /// custom range works in BOTH `.lista` and `.calendario` modes — the spec's
+    /// "Eventos in either mode" requirement.
+    @State private var showCustomRangeSheet = false
+
     /// Long-press presentation anchor for `BlockDateSheet` in `.calendario`
     /// (task 4.4). Non-nil while the block sheet is presented for a day; the
     /// `.sheet(item:)` reads + clears it. A long-press sets this WITHOUT calling
@@ -71,10 +78,26 @@ public struct EventListView: View {
                         .padding(.horizontal, Spacing.md)
                         .padding(.vertical, Spacing.sm)
 
-                    // Only static banners live in safeAreaInset. Nested horizontal
-                    // ScrollViews (filter chips) must stay inside the primary
-                    // ScrollView so they don't steal scroll-edge tracking from
-                    // the large title.
+                    // Period-filter chips `Hoy · Esta semana · Este mes ·
+                    // Personalizado` (task 4.5). Pinned in the top safe-area
+                    // inset so the active filter stays visible in BOTH modes —
+                    // INCLUDING empty / filtered-empty states (without pinning,
+                    // tapping a chip that yields no events would hide the chips
+                    // and trap the user with no way to change the filter). This
+                    // is a persistent PRIMARY content-header control alongside
+                    // the view-mode toggle, not a scrollable list row: the
+                    // earlier "chips must stay inside the primary ScrollView"
+                    // note referred to chips nested as list ROWS (which can
+                    // steal large-title edge tracking); a pinned safe-area-inset
+                    // control is rendered in a separate region and, like the
+                    // `EventosViewModeToggle` already proven in this inset, does
+                    // not compete with the primary scroll view for tracking.
+                    EventListPeriodFilterBar(viewModel: viewModel) {
+                        showCustomRangeSheet = true
+                    }
+                    .padding(.vertical, Spacing.xs)
+
+                    // Only static banners live in safeAreaInset below the chips.
                     if viewModel.isShowingCachedData {
                         CachedDataBanner()
                             .background(SolennixColors.surfaceGrouped)
@@ -199,6 +222,17 @@ public struct EventListView: View {
                     .presentationDetents([.medium])
                     .presentationDragIndicator(.visible)
             }
+            .sheet(isPresented: $showCustomRangeSheet) {
+                // `Personalizado` chip → start-then-end custom-range picker
+                // (task 4.5). The seam's `selectChip(.custom)` flipped this flag.
+                // On Apply the picker records start then end on the ViewModel via
+                // the dedicated custom-range setters from 3.3 (the spec's "two
+                // sequential taps → [start, end] inclusive"). A sheet so the
+                // custom range works in BOTH modes.
+                PeriodCustomRangeSheet(viewModel: viewModel)
+                    .presentationDetents([.height(360)])
+                    .presentationDragIndicator(.visible)
+            }
             .confirmationDialog(
                 tr("events.list.delete_confirm.title", "Eliminar evento"),
                 isPresented: $viewModel.showDeleteConfirm,
@@ -317,6 +351,81 @@ public struct EventListView: View {
                     }
                     ToolbarItem(placement: .topBarTrailing) {
                         Button(tr("events.list.filters.apply", "Aplicar")) {
+                            dismiss()
+                        }
+                        .fontWeight(.semibold)
+                        .foregroundStyle(SolennixColors.primary)
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Personalizado Custom-Range Sheet (task 4.5)
+
+    /// Start-then-end date picker for the `Personalizado` chip. Presented as a
+    /// sheet (so the custom range works in BOTH `.lista` and `.calendario`
+    /// modes — the spec's "either mode" requirement). On Apply it records start
+    /// then end on the unified ViewModel via the dedicated custom-range setters
+    /// from 3.3 (`selectCustomRangeStart` → `selectCustomRangeEnd`), which is the
+    /// spec's "two sequential taps → `[start, end]` inclusive" flow. Seeds from
+    /// any existing custom range so re-editing keeps the prior selection.
+    private struct PeriodCustomRangeSheet: View {
+        @Bindable var viewModel: EventListViewModel
+        @Environment(\.dismiss) private var dismiss
+
+        @State private var start: Date
+        @State private var end: Date
+
+        init(viewModel: EventListViewModel) {
+            self.viewModel = viewModel
+            _start = State(initialValue: viewModel.dateRangeStart ?? Date())
+            _end = State(initialValue: viewModel.dateRangeEnd ?? Date())
+        }
+
+        private func tr(_ key: String, _ value: String) -> String {
+            FeatureL10n.text(key, value)
+        }
+
+        var body: some View {
+            NavigationStack {
+                Form {
+                    Section {
+                        DatePicker(
+                            tr("events.list.period.custom_start", "Fecha de inicio"),
+                            selection: $start,
+                            displayedComponents: .date
+                        )
+                        .tint(SolennixColors.primary)
+                        .solennixRow()
+                    }
+                    Section {
+                        DatePicker(
+                            tr("events.list.period.custom_end", "Fecha de fin"),
+                            selection: $end,
+                            displayedComponents: .date
+                        )
+                        .tint(SolennixColors.primary)
+                        .solennixRow()
+                    }
+                }
+                .solennixListStyle()
+                .navigationTitle(tr("events.list.period.custom", "Personalizado"))
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        SolennixCancelButton(title: tr("common.cancel", "Cancelar")) {
+                            dismiss()
+                        }
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(tr("events.list.filters.apply", "Aplicar")) {
+                            // Two-tap custom range wiring (spec "start then end"):
+                            // the dedicated 3.3 setters set `.custom` + order/clamp
+                            // the bounds. A chip and a day-tap stay mutually
+                            // exclusive against the same `dateRange*` surface.
+                            viewModel.selectCustomRangeStart(start)
+                            viewModel.selectCustomRangeEnd(end)
                             dismiss()
                         }
                         .fontWeight(.semibold)
