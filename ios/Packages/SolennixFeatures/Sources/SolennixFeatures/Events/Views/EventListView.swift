@@ -22,6 +22,13 @@ public struct EventListView: View {
     @State private var showQuickQuote = false
     @State private var showDateFilter = false
 
+    /// Long-press presentation anchor for `BlockDateSheet` in `.calendario`
+    /// (task 4.4). Non-nil while the block sheet is presented for a day; the
+    /// `.sheet(item:)` reads + clears it. A long-press sets this WITHOUT calling
+    /// `selectDate` (see `EventListCalendarGestures.handleLongPress`), so opening
+    /// the block sheet never applies the day-tap filter as a side effect.
+    @State private var blockSheetAnchor: BlockSheetAnchor?
+
     /// Unified Eventos view-mode toggle (ADR-7). Lives on the VIEW as `@State`
     /// (default `.lista`), NOT `@AppStorage` — it is ephemeral and toggling it
     /// MUST NOT reload events or drop the current selection. Both `.lista` and
@@ -172,6 +179,25 @@ public struct EventListView: View {
                 )
                 .presentationDetents([.height(380)])
                 .presentationDragIndicator(.visible)
+            }
+            .sheet(item: $blockSheetAnchor) { anchor in
+                // Long-press → BlockDateSheet (task 4.4). The anchor carries the
+                // long-pressed day; opening the sheet does NOT apply the day-tap
+                // filter (the gesture seam guarantees that).
+                //
+                // NOTE (scope-preserving deviation, mirrors 4.3): the existing
+                // `BlockDateSheet` is typed `@Bindable var viewModel: CalendarViewModel`.
+                // Binding it to the unified `EventListViewModel` requires the
+                // Phase 6.1 retype (out of scope for 4.4), and constructing a
+                // throwaway `CalendarViewModel` would reintroduce the parallel VM
+                // this change eliminates. So this batch wires the GESTURE + flips
+                // the presentation state (the testable contract — gesture
+                // separation + sheet opens for that day); Phase 6.1 swaps this
+                // transitional body for the retyped `BlockDateSheet` bound to
+                // `EventListViewModel` (with its future `toggleDateBlock`).
+                blockDateSheet(for: anchor.day)
+                    .presentationDetents([.medium])
+                    .presentationDragIndicator(.visible)
             }
             .confirmationDialog(
                 tr("events.list.delete_confirm.title", "Eliminar evento"),
@@ -330,7 +356,7 @@ public struct EventListView: View {
         }
     }
 
-    // MARK: - Calendario Grid (Phase 4.3)
+    // MARK: - Calendario Grid (Phase 4.3) + Day Interactions (Phase 4.4)
 
     /// The reused `CalendarGridView`, driven by the unified ViewModel's grid
     /// derivations (`daysInMonth`, `eventDotsForDay`, `eventOverflowForDay`,
@@ -339,9 +365,15 @@ public struct EventListView: View {
     /// move into `Events/Views/` is Phase 6; it is used from its current
     /// `Calendar/Views/` location.
     ///
-    /// Gesture wiring (day-tap → `selectDate`, long-press → `BlockDateSheet`)
-    /// is task 4.4 — the callbacks are intentionally inert here so this task
-    /// stays scoped to the visual body swap + `eventCard` reuse.
+    /// Day interactions (task 4.4) are wired through `EventListCalendarGestures`,
+    /// a stateless seam that routes each of the grid's two distinct gestures to
+    /// exactly one action and guarantees they cannot trigger each other:
+    ///   • tap        → `viewModel.selectDate(day)`  (single-day filter)
+    ///   • long-press → open `BlockDateSheet` for the day WITHOUT `selectDate`
+    /// `CalendarGridView` already separates the two at the UIKit level
+    /// (`onTapGesture` vs `simultaneousGesture(LongPressGesture(...))`); the seam
+    /// only forwards each callback, so the gesture-separation invariant holds by
+    /// construction.
     @ViewBuilder
     private var calendarioGrid: some View {
         VStack(spacing: Spacing.sm) {
@@ -358,11 +390,74 @@ public struct EventListView: View {
                 eventOverflowForDay: viewModel.eventOverflowForDay,
                 isDateBlocked: viewModel.isDateBlocked,
                 selectedDate: viewModel.selectedDay,
-                onSelectDate: { _ in },
-                onLongPressDate: nil
+                onSelectDate: { day in calendarGestures.handleTap(day) },
+                onLongPressDate: { day in calendarGestures.handleLongPress(day) }
             )
         }
     }
+
+    /// The gesture-wiring seam for the `.calendario` grid (task 4.4). Built fresh
+    /// from current state each access; it holds no state of its own. The
+    /// `presentBlockSheet` closure flips `blockSheetAnchor`, which drives the
+    /// `.sheet(item:)` below — keeping the seam free of SwiftUI presentation state.
+    private var calendarGestures: EventListCalendarGestures {
+        EventListCalendarGestures(
+            viewModel: viewModel,
+            presentBlockSheet: { day in blockSheetAnchor = BlockSheetAnchor(day: day) }
+        )
+    }
+
+    /// Identifiable presentation anchor for the block-date sheet. Carries the
+    /// long-pressed day so the sheet knows which date to block. (A dedicated
+    /// wrapper avoids a `@retroactive` `Date: Identifiable` conformance.)
+    private struct BlockSheetAnchor: Identifiable, Equatable {
+        let day: Date
+        var id: Date { day }
+    }
+
+    /// Transitional block-date sheet body (task 4.4). See the deviation note on
+    /// the `.sheet(item: $blockSheetAnchor)` modifier: the retyped
+    /// `BlockDateSheet` (bound to `EventListViewModel`) lands in Phase 6.1. Until
+    /// then this presents a faithful, localized block-date surface for the
+    /// long-pressed day with the same title + start-date label + cancel affordance
+    /// the real sheet uses, so the gesture→sheet path is exercised end-to-end.
+    @ViewBuilder
+    private func blockDateSheet(for day: Date) -> some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Label {
+                        Text(Self.blockDayFormatter.string(from: day).capitalized)
+                    } icon: {
+                        Image(systemName: "calendar")
+                    }
+                    .foregroundStyle(SolennixColors.text)
+                    .solennixRow()
+                } header: {
+                    Text(CalendarStrings.blockStartDate)
+                }
+            }
+            .solennixListStyle()
+            .navigationTitle(CalendarStrings.blockTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    SolennixCancelButton(title: CalendarStrings.actionCancel) {
+                        blockSheetAnchor = nil
+                    }
+                }
+            }
+        }
+    }
+
+    /// Device-local formatter for the long-pressed day (the grid's cell `Date` is
+    /// local-midnight). Mirrors `BlockDateSheet.displayFormatter`.
+    private static let blockDayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = FeatureL10n.locale
+        f.setLocalizedDateFormatFromTemplate("EEEEdMMMM")
+        return f
+    }()
 
     // MARK: - Event List
 
