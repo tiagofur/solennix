@@ -175,6 +175,30 @@ final class MockSystemCalendarSyncingTests: XCTestCase {
         let calls = await mock.recordedCalls
         XCTAssertEqual(calls, [.ensureSolennixCalendarExists])
     }
+
+    // MARK: - ensureSolennixCalendarExists: the recreate path (ADR-3)
+
+    func testEnsureSolennixReturnsEnsuredDestinationWhenConfigured() async throws {
+        // Models "resolve says the Solennix calendar is missing, then ensure recreates
+        // it": resolveDestination(.solennix) fails (solennixDestination = nil), but
+        // ensure returns the recreated handle (distinct from the missing one).
+        let mock = MockSystemCalendarSyncing()
+        await mock.setSolennixDestination(nil)
+        let recreated = SyncedDestination(calendarIdentifier: "sol-recreated", sourceIdentifier: "sol-src")
+        await mock.setEnsuredSolennixDestination(recreated)
+
+        // resolve reports missing...
+        do {
+            _ = try await mock.resolveDestination(.solennix)
+            XCTFail("Expected resolve to report the Solennix calendar as missing")
+        } catch let err as SyncError {
+            XCTAssertEqual(err, .calendarResolutionFailed)
+        }
+
+        // ...but ensure recreates it.
+        let ensured = try await mock.ensureSolennixCalendarExists()
+        XCTAssertEqual(ensured, recreated)
+    }
 }
 
 /// Sendable accumulator for the `@Sendable` migration-progress closure. A captured
