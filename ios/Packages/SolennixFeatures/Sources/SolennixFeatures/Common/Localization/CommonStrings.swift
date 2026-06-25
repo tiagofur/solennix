@@ -7,6 +7,9 @@ public enum CommonStrings {
     public static var quickQuoteTipMessage: String { FeatureL10n.text("common.tip.quick_quote.message", "Usa esta herramienta para generar un presupuesto en el momento sin necesidad de crear el cliente primero.") }
     public static var swipeActionTipTitle: String { FeatureL10n.text("common.tip.swipe_action.title", "Acciones Rápidas") }
     public static var swipeActionTipMessage: String { FeatureL10n.text("common.tip.swipe_action.message", "Desliza los elementos de la lista hacia la izquierda o derecha para ver más opciones como editar, eliminar o llamar.") }
+    // Unified Eventos onboarding tip (task 4.7) — shown once on first run.
+    public static var eventosOnboardingTipTitle: String { FeatureL10n.text("common.tip.eventos_onboarding.title", "El Calendario ahora está en Eventos") }
+    public static var eventosOnboardingTipMessage: String { FeatureL10n.text("common.tip.eventos_onboarding.message", "Usa el interruptor Lista · Calendario para ver tus eventos en modo calendario sin salir de Eventos.") }
     
     // Paywall
     public static var paywallTitle: String { FeatureL10n.text("common.paywall.title", "Límite alcanzado") }

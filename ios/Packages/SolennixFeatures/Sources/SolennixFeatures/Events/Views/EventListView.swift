@@ -43,9 +43,19 @@ public struct EventListView: View {
     /// real moved `CalendarGridView` + reused `eventCard`.
     @State private var viewMode: EventosViewMode = .lista
 
+    /// First-run onboarding tip (task 4.7, spec "First-Run Onboarding Tip").
+    /// Gated by the SINGLE `@AppStorage` flag owned by
+    /// `EventosOnboardingTipGate`: shown once on the first appearance of the
+    /// unified Eventos screen, suppressed forever after dismissal. The flag is
+    /// the sole source of truth — NOT the view-mode toggle's state — so the tip
+    /// never reappears on a subsequent launch regardless of which mode the user
+    /// lands in. See `EventosOnboardingTipGate` for the pure gating contract.
+    @AppStorage(EventosOnboardingTipGate.storageKey) private var eventosOnboardingShown = false
+
     // TipKit tips
     private let newEventTip = NewEventTip()
     private let quickQuoteTip = QuickQuoteTip()
+    private let onboardingTip = EventosOnboardingTip()
 
     @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 40
 
@@ -74,6 +84,14 @@ public struct EventListView: View {
                     // never reloads events nor touches the ViewModel's
                     // selectedDay/filters (the toggle holds only a binding).
                     EventosViewModeToggle(viewMode: $viewMode)
+                        // First-run onboarding tip (task 4.7), anchored on the
+                        // `Lista | Calendario` toggle because the tip explains
+                        // exactly that affordance. The presenter gates the
+                        // popover on the single `@AppStorage` flag and persists
+                        // it true once TipKit reports the tip dismissed — so it
+                        // shows on the first run and never again. See
+                        // `EventosOnboardingTipPresenter`.
+                        .eventosOnboardingTip(onboardingTip, shown: $eventosOnboardingShown)
                         .padding(.horizontal, Spacing.md)
                         .padding(.vertical, Spacing.sm)
 
