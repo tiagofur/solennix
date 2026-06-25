@@ -2,6 +2,7 @@ import XCTest
 import SwiftUI
 import SnapshotTesting
 import SolennixCore
+import SolennixDesign
 import SolennixNetwork
 @testable import SolennixFeatures
 
@@ -30,6 +31,50 @@ final class EventosLayoutFactoryTests: XCTestCase {
         let vm = EventListViewModel(apiClient: APIClient(), eventRepository: nil)
         vm.events = Self.fixedEvents
         return vm
+    }
+
+    /// Deterministic grid stand-in (no `Date` logic / locale drift) so the
+    /// split/stack ARRANGEMENT is the only thing these snapshots assert. After
+    /// 4.3 the factory takes the grid as injected content (production passes the
+    /// real `CalendarGridView`); these layout tests inject this fixed marker.
+    private func layoutTestGrid() -> some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Text("Calendario")
+                .font(.headline)
+                .foregroundStyle(SolennixColors.text)
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 7),
+                spacing: 4
+            ) {
+                ForEach(Array(1...28), id: \.self) { day in
+                    Text("\(day)")
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textSecondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                }
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(SolennixColors.surfaceGrouped)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    /// Deterministic per-event cell used by the layout snapshots. The factory's
+    /// real cell is injected by `EventListView` (`eventCard`); here we only need
+    /// stable content so the split/stack arrangement is unambiguous.
+    private func layoutTestCell(_ event: Event) -> some View {
+        HStack {
+            Text(event.serviceType)
+                .font(.subheadline)
+                .foregroundStyle(SolennixColors.text)
+            Spacer()
+            Text(event.eventDate)
+                .font(.caption)
+                .foregroundStyle(SolennixColors.textSecondary)
+        }
+        .padding(.vertical, 4)
     }
 
     private static let fixedEvents: [Event] = [
@@ -93,7 +138,9 @@ final class EventosLayoutFactoryTests: XCTestCase {
         let view = EventosLayoutFactory.make(
             vm: makeViewModel(),
             viewMode: .calendario,
-            sizeClass: .regular
+            sizeClass: .regular,
+            grid: { self.layoutTestGrid() },
+            cell: layoutTestCell
         )
 
         // iPad-landscape proportions. The factory uses the EXPLICIT sizeClass
@@ -108,7 +155,9 @@ final class EventosLayoutFactoryTests: XCTestCase {
         let view = EventosLayoutFactory.make(
             vm: makeViewModel(),
             viewMode: .calendario,
-            sizeClass: .compact
+            sizeClass: .compact,
+            grid: { self.layoutTestGrid() },
+            cell: layoutTestCell
         )
 
         // iPhone proportions: grid above, filtered list below.
@@ -117,13 +166,15 @@ final class EventosLayoutFactoryTests: XCTestCase {
 
     func testListaModeHasNoCalendarGrid() {
         // Lista mode renders the events list only — no calendar grid region.
-        // Distinct from the calendario snapshots so the absence of the grid is
-        // a documented, regression-guarded fact (the view toggle is added in
-        // 4.2; the factory already routes `.lista` to the list-only seam).
+        // The grid closure is ignored in `.lista`; we pass EmptyView to make the
+        // "no grid" intent explicit. Distinct from the calendario snapshots so
+        // the absence of the grid is a documented, regression-guarded fact.
         let view = EventosLayoutFactory.make(
             vm: makeViewModel(),
             viewMode: .lista,
-            sizeClass: .regular
+            sizeClass: .regular,
+            grid: { EmptyView() },
+            cell: layoutTestCell
         )
 
         assertSnapshot(of: view, as: .image(layout: .fixed(width: 390, height: 520)), testName: "lista-list-only")

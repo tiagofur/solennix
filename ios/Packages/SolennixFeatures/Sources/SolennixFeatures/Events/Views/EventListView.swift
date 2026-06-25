@@ -304,17 +304,63 @@ public struct EventListView: View {
     // MARK: - Content (view-mode switch, ADR-7)
 
     /// Routes the body by `viewMode`. `.lista` keeps the existing events list;
-    /// `.calendario` renders the `EventosLayoutFactory` seam (Phase 4.3 swaps the
-    /// seam placeholders for the real moved `CalendarGridView` + reused
-    /// `eventCard`). Both branches read the SAME `viewModel` — switching `viewMode`
-    /// is purely presentational and never reloads events or drops the selection.
+    /// `.calendario` renders the `EventosLayoutFactory` split/stack seam with
+    /// REAL content injected (ADR-8): the reused `CalendarGridView` (still at
+    /// `Calendar/Views/` — formal move is Phase 6) for the month grid with
+    /// status dots, and the SAME `eventCard(_:)` builder `.lista` uses for the
+    /// filtered-list rows. Both branches read the SAME `viewModel` — switching
+    /// `viewMode` is purely presentational and never reloads events or drops the
+    /// selection. Because the factory renders the filtered list through the ONE
+    /// injected `eventCard` cell in both modes, `.calendario` reuses `eventCard`
+    /// by construction and no distinct `eventRowContent` row can appear (spec
+    /// scenario "Calendario reuses eventCard").
     @ViewBuilder
     private var content: some View {
         switch viewMode {
         case .lista:
             eventList
         case .calendario:
-            EventosLayoutFactory.make(vm: viewModel, viewMode: viewMode, sizeClass: sizeClass)
+            EventosLayoutFactory.make(
+                vm: viewModel,
+                viewMode: viewMode,
+                sizeClass: sizeClass,
+                grid: { calendarioGrid },
+                cell: { event in eventCard(event) }
+            )
+        }
+    }
+
+    // MARK: - Calendario Grid (Phase 4.3)
+
+    /// The reused `CalendarGridView`, driven by the unified ViewModel's grid
+    /// derivations (`daysInMonth`, `eventDotsForDay`, `eventOverflowForDay`,
+    /// `isDateBlocked`, `selectedDay`). Renders the current month with status
+    /// dots and blocked-date indicators. The file is NOT moved here — its formal
+    /// move into `Events/Views/` is Phase 6; it is used from its current
+    /// `Calendar/Views/` location.
+    ///
+    /// Gesture wiring (day-tap → `selectDate`, long-press → `BlockDateSheet`)
+    /// is task 4.4 — the callbacks are intentionally inert here so this task
+    /// stays scoped to the visual body swap + `eventCard` reuse.
+    @ViewBuilder
+    private var calendarioGrid: some View {
+        VStack(spacing: Spacing.sm) {
+            // Month title anchor — keeps the grid legible without wiring full
+            // month navigation (prev/next/Today), which lands with the formal
+            // CalendarViewModel migration in Phase 6.
+            Text(viewModel.monthTitle)
+                .font(.headline)
+                .foregroundStyle(SolennixColors.text)
+
+            CalendarGridView(
+                days: viewModel.daysInMonth,
+                eventDotsForDay: viewModel.eventDotsForDay,
+                eventOverflowForDay: viewModel.eventOverflowForDay,
+                isDateBlocked: viewModel.isDateBlocked,
+                selectedDate: viewModel.selectedDay,
+                onSelectDate: { _ in },
+                onLongPressDate: nil
+            )
         }
     }
 

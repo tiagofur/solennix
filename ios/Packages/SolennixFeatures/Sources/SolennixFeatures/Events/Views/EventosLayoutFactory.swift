@@ -1,4 +1,5 @@
 import SwiftUI
+import SolennixCore
 import SolennixDesign
 
 // MARK: - EventosViewMode (ADR-7)
@@ -26,12 +27,14 @@ public enum EventosViewMode: String, CaseIterable, Sendable, Equatable {
 ///   - `compact` horizontal size class (iPhone) → **stack**: calendar grid
 ///     above, filtered events list below.
 ///
-/// This is the layout SEAM only. It chooses split vs stack by horizontal size
-/// class; the real calendar grid body (the moved `CalendarGridView`, Phase 6)
-/// and the reused `eventCard` row are wired INTO the seam by task 4.3. The seam
-/// placeholders render a deterministic grid region + a data-driven filtered
-/// list region so the split/stack arrangement is unambiguous in snapshots and
-/// the single-ViewModel invariant is preserved (both regions read `vm`).
+/// The factory is the **layout** seam only — it arranges two pieces of injected
+/// content (a grid view and a per-event cell builder) in split vs stack by
+/// horizontal size class. The real calendar grid (`CalendarGridView`, still in
+/// `Calendar/Views/` — formal move is Phase 6) and the reused `eventCard` row
+/// are passed IN by `EventListView`. Task 4.3 made the filtered list render the
+/// SAME `eventCard` cell as `.lista` by injecting a single shared cell builder;
+/// the factory has no row type of its own, so a distinct `eventRowContent` row
+/// can never appear.
 public enum EventosLayoutFactory {
 
     /// Builds the Eventos view subtree for the given mode and horizontal size class.
@@ -42,23 +45,34 @@ public enum EventosLayoutFactory {
     ///   - sizeClass: the current `horizontalSizeClass`. `.regular` → split;
     ///     `.compact` or `nil` → stack (unknown/nil must never be treated as
     ///     iPad).
+    ///   - grid: the calendar-grid view rendered in `.calendario` (ignored in
+    ///     `.lista`). Production passes the reused `CalendarGridView`; tests
+    ///     pass a deterministic stand-in so the split/stack arrangement stays
+    ///     snapshot-stable (no `Date`/locale drift — ADR-8).
+    ///   - cell: the SINGLE per-event cell builder used by the filtered list in
+    ///     BOTH modes. Production passes `EventListView.eventCard(_:)`; this is
+    ///     how `.calendario` reuses the same `eventCard` as `.lista` (spec
+    ///     scenario "Calendario reuses eventCard"). The factory renders nothing
+    ///     else, so no `eventRowContent`-style duplicate can appear.
     @ViewBuilder
-    public static func make(
+    public static func make<Grid: View, Cell: View>(
         vm: EventListViewModel,
         viewMode: EventosViewMode,
-        sizeClass: UserInterfaceSizeClass?
+        sizeClass: UserInterfaceSizeClass?,
+        @ViewBuilder grid: @escaping () -> Grid,
+        @ViewBuilder cell: @escaping (Event) -> Cell
     ) -> some View {
         switch viewMode {
         case .lista:
             // No calendar grid in Lista mode — events list only.
-            EventosFilteredListSeam(vm: vm)
+            EventosFilteredList(vm: vm, cell: cell)
         case .calendario:
             if sizeClass == .regular {
                 // iPad landscape: grid LEFT, filtered list RIGHT.
-                EventosCalendarioSplit(vm: vm)
+                EventosCalendarioSplit(vm: vm, grid: grid, cell: cell)
             } else {
                 // iPhone (compact width) or unknown (nil): grid ABOVE, list BELOW.
-                EventosCalendarioStack(vm: vm)
+                EventosCalendarioStack(vm: vm, grid: grid, cell: cell)
             }
         }
     }
@@ -68,14 +82,16 @@ public enum EventosLayoutFactory {
 
 /// Split layout (regular width): calendar grid on the LEFT, filtered events
 /// list on the RIGHT — iPad landscape.
-private struct EventosCalendarioSplit: View {
+private struct EventosCalendarioSplit<Grid: View, Cell: View>: View {
     let vm: EventListViewModel
+    @ViewBuilder let grid: () -> Grid
+    let cell: (Event) -> Cell
 
     var body: some View {
         HStack(alignment: .top, spacing: Spacing.lg) {
-            EventosCalendarGridSeam()
+            grid()
                 .frame(maxWidth: .infinity, alignment: .leading)
-            EventosFilteredListSeam(vm: vm)
+            EventosFilteredList(vm: vm, cell: cell)
                 .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .padding()
@@ -84,75 +100,46 @@ private struct EventosCalendarioSplit: View {
 
 /// Stack layout (compact width): calendar grid ABOVE, filtered events list
 /// BELOW — iPhone.
-private struct EventosCalendarioStack: View {
+private struct EventosCalendarioStack<Grid: View, Cell: View>: View {
     let vm: EventListViewModel
+    @ViewBuilder let grid: () -> Grid
+    let cell: (Event) -> Cell
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.lg) {
-            EventosCalendarGridSeam()
-            EventosFilteredListSeam(vm: vm)
+            grid()
+            EventosFilteredList(vm: vm, cell: cell)
         }
         .padding()
     }
 }
 
-// MARK: - Seam regions (placeholders — replaced in 4.3 / Phase 6)
+// MARK: - Filtered events list region (renders the SAME shared cell in both modes)
 
-/// Placeholder calendar-grid region. Renders a fixed 7-column grid of day
-/// numbers under a "Calendario" header. Deterministic (no `Date` logic, no
-/// `EventKit`, no locale drift) so the snapshot is stable across runs. Task 4.3
-/// swaps this for the real, moved `CalendarGridView` (status dots, blocked
-/// dates, accessibility, day-tap/long-press).
-private struct EventosCalendarGridSeam: View {
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 7)
-    private let days = Array(1...28)
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text("Calendario")
-                .font(.headline)
-                .foregroundStyle(SolennixColors.text)
-            LazyVGrid(columns: columns, spacing: 4) {
-                ForEach(days, id: \.self) { day in
-                    Text("\(day)")
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textSecondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 6)
-                }
-            }
-        }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(SolennixColors.surfaceGrouped)
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-    }
-}
-
-/// Placeholder filtered-events-list region. Renders an "Eventos" header and one
-/// row per event in `vm.filteredEvents` (service type + event date). It is
-/// data-driven from the shared ViewModel so BOTH modes read the same events —
-/// the single-ViewModel invariant from ADR-7. Task 4.3 swaps the row for the
-/// reused `eventCard` (NOT a distinct `eventRowContent`).
-private struct EventosFilteredListSeam: View {
+/// The filtered-events-list region. Renders one row per event in
+/// `vm.filteredEvents` through the injected `cell` builder — the SAME builder
+/// `.lista` and `.calendario` share (production: `eventCard`). The region owns
+/// only its card chrome; it has no row type of its own, so a distinct
+/// `eventRowContent` row can never be rendered here (spec scenario
+/// "reuses eventCard").
+struct EventosFilteredList<Cell: View>: View {
     let vm: EventListViewModel
+    let cell: (Event) -> Cell
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text("Eventos")
-                .font(.headline)
-                .foregroundStyle(SolennixColors.text)
-            ForEach(vm.filteredEvents) { event in
-                HStack {
-                    Text(event.serviceType)
-                        .font(.subheadline)
-                        .foregroundStyle(SolennixColors.text)
-                    Spacer()
-                    Text(event.eventDate)
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textSecondary)
+            if vm.filteredEvents.isEmpty {
+                // Empty region — no fallback row. The shared cell renders only
+                // for real events, so an empty filter cannot introduce a
+                // placeholder/duplicate row.
+                Text(FeatureL10n.text("events.list.empty.no_results_title", "No se encontraron eventos"))
+                    .font(.subheadline)
+                    .foregroundStyle(SolennixColors.textSecondary)
+                    .padding(.vertical, Spacing.sm)
+            } else {
+                ForEach(vm.filteredEvents) { event in
+                    cell(event)
                 }
-                .padding(.vertical, 4)
             }
         }
         .padding()
