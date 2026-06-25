@@ -137,23 +137,43 @@ public struct EventPaymentsDetailView: View {
 
                 // Action buttons
                 if viewModel.remaining > 0.01 {
-                    VStack(spacing: Spacing.sm) {
-                        HStack(spacing: Spacing.sm) {
-                            PremiumButton(title: tr("events.detail.payments.action.record", "Registrar pago"), fullWidth: true) {
-                                viewModel.showRecordPaymentSheet()
-                            }
+                    Menu {
+                        Button {
+                            viewModel.showRecordPaymentSheet()
+                        } label: {
+                            Label(tr("events.detail.payments.action.record", "Registrar pago"), systemImage: "pencil.and.outline")
+                        }
 
-                            PremiumButton(title: trf("events.detail.payments.action.settle", "Liquidar %@", viewModel.remaining.asMXN), fullWidth: true) {
-                                viewModel.payRemaining()
-                            }
+                        Button {
+                            viewModel.payRemaining()
+                        } label: {
+                            Label(trf("events.detail.payments.action.settle", "Liquidar %@", viewModel.remaining.asMXN), systemImage: "checkmark.circle")
                         }
 
                         if viewModel.depositBalance > 0.01 {
-                            PremiumButton(title: trf("events.detail.payments.action.deposit", "Anticipo %@", viewModel.depositBalance.asMXN), fullWidth: true) {
+                            Button {
                                 viewModel.payDeposit()
+                            } label: {
+                                Label(trf("events.detail.payments.action.deposit", "Anticipo %@", viewModel.depositBalance.asMXN), systemImage: "clock")
                             }
                         }
+                    } label: {
+                        HStack(spacing: Spacing.xs) {
+                            Spacer()
+                            Image(systemName: "creditcard")
+                                .font(.subheadline.weight(.semibold))
+                            Text(tr("events.detail.payments.action.record", "Registrar pago"))
+                                .font(.subheadline.weight(.bold))
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.caption2)
+                            Spacer()
+                        }
+                        .foregroundStyle(SolennixColors.primary)
+                        .padding(.vertical, 12)
+                        .background(SolennixColors.primaryLight)
+                        .clipShape(Capsule())
                     }
+                    .buttonStyle(.plain)
                 }
 
                 // Payment history

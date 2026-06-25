@@ -132,6 +132,9 @@ public struct EventDetailView: View {
                 EventDetailHeaderCard(
                     event: event,
                     clientName: viewModel.client?.name,
+                    clientCity: viewModel.client?.city,
+                    clientPhone: viewModel.client?.phone,
+                    clientEmail: viewModel.client?.email,
                     month: parseDateComponents(event.eventDate).month,
                     day: parseDateComponents(event.eventDate).day,
                     dateLabel: tr("events.detail.info.date", "Fecha"),
@@ -147,14 +150,6 @@ public struct EventDetailView: View {
                 )
             }
             .listRowSeparator(.hidden)
-
-            // MARK: Client section
-            if let client = viewModel.client {
-                Section {
-                    EventDetailClientInfoCard(client: client)
-                }
-                .listRowSeparator(.hidden)
-            }
 
             // MARK: Notes section
             if let notes = event.notes, !notes.isEmpty {
@@ -197,27 +192,18 @@ public struct EventDetailView: View {
                     depositText: depositText(event),
                     isDepositMet: isDepositMet(event),
                     route: Route.eventPayments(id: eventId),
-                    fullyPaidCounter: viewModel.fullyPaidCounter
+                    fullyPaidCounter: viewModel.fullyPaidCounter,
+                    recordTitle: viewModel.remaining > 0.01 ? tr("events.detail.payments.action.record", "Registrar pago") : nil,
+                    settleTitle: viewModel.remaining > 0.01 ? trf("events.detail.payments.action.settle", "Liquidar %@", viewModel.remaining.asMXN) : nil,
+                    depositTitle: viewModel.remaining > 0.01 && (event.depositPercent ?? 0) > 0 && viewModel.depositBalance > 0.01
+                        ? trf("events.detail.payments.action.deposit", "Anticipo %@", viewModel.depositBalance.asMXN)
+                        : nil,
+                    onRecord: { viewModel.showRecordPaymentSheet() },
+                    onSettle: { viewModel.payRemaining() },
+                    onDeposit: { viewModel.payDeposit() }
                 )
             }
             .listRowSeparator(.hidden)
-
-            // MARK: Payment actions
-            if viewModel.remaining > 0.01 {
-                Section {
-                    EventDetailPaymentActionsCard(
-                        recordTitle: tr("events.detail.payments.action.record", "Registrar pago"),
-                        settleTitle: trf("events.detail.payments.action.settle", "Liquidar %@", viewModel.remaining.asMXN),
-                        depositTitle: (event.depositPercent ?? 0) > 0 && viewModel.depositBalance > 0.01
-                            ? trf("events.detail.payments.action.deposit", "Anticipo %@", viewModel.depositBalance.asMXN)
-                            : nil,
-                        onRecord: { viewModel.showRecordPaymentSheet() },
-                        onSettle: { viewModel.payRemaining() },
-                        onDeposit: { viewModel.payDeposit() }
-                    )
-                }
-                .listRowSeparator(.hidden)
-            }
 
             // MARK: Content navigation section (products, extras, supplies, equipment, staff, photos)
             Section(header: Text(tr("events.detail.section.content", "Contenido")).font(.caption).foregroundStyle(SolennixColors.textSecondary)) {

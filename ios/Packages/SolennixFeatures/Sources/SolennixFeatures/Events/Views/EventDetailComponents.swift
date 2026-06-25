@@ -6,6 +6,7 @@ struct EventDetailQuickInfoItem: View {
     let icon: String
     let label: String
     let value: String
+    var lineLimit: Int? = 1
 
     var body: some View {
         HStack(spacing: Spacing.sm) {
@@ -24,7 +25,7 @@ struct EventDetailQuickInfoItem: View {
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.text)
-                    .lineLimit(1)
+                    .lineLimit(lineLimit)
             }
 
             Spacer()
