@@ -151,6 +151,150 @@ public final class EventListViewModel {
         dateRangeEnd = nil
     }
 
+    // MARK: - Calendar Grid Derivations (Phase 4.3 / ADR-7)
+    //
+    // Read-only helpers ported from `CalendarViewModel` so the `.calendario`
+    // body can drive the reused `CalendarGridView` (status dots, blocked dates,
+    // selection) from the SAME unified state. Both Lista and Calendario read the
+    // same `events`/`currentMonth`/`unavailableDates`/`selectedDay`, so the grid
+    // stays in sync with the filtered list. Phase 6 deletes `CalendarViewModel`
+    // and these become the single source of truth.
+
+    // DEVICE-local formatter (NO UTC pin). Every grid cell `Date` is built from
+    // `Calendar.current` (local-midnight) and represents a LOCAL calendar day,
+    // so a local formatter yields the correct yyyy-MM-dd key in every timezone.
+    // POSIX locale keeps the numerals stable regardless of language. Mirrors
+    // `CalendarViewModel.apiDateFormatter` exactly so grid behavior is
+    // identical during the migration.
+    private static let gridApiDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
+    private static let gridMonthFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = FeatureL10n.locale
+        f.setLocalizedDateFormatFromTemplate("MMMM yyyy")
+        return f
+    }()
+
+    /// Array of `DateDay` structs for the current-month grid, with leading
+    /// empty slots so the first day aligns to the correct weekday column.
+    /// Locale-aware offset matches `CalendarGridView`'s header rotation.
+    public var daysInMonth: [DateDay] {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month], from: currentMonth)
+        guard let firstOfMonth = calendar.date(from: components),
+              let range = calendar.range(of: .day, in: .month, for: firstOfMonth)
+        else { return [] }
+
+        let rawWeekday = calendar.component(.weekday, from: firstOfMonth)
+        let leadingBlanks = (rawWeekday - calendar.firstWeekday + 7) % 7
+
+        let today = Date()
+        let todayComponents = calendar.dateComponents([.year, .month, .day], from: today)
+        let selectedComponents: DateComponents? = selectedDay.map {
+            calendar.dateComponents([.year, .month, .day], from: $0)
+        }
+
+        var days: [DateDay] = []
+
+        if leadingBlanks > 0 {
+            guard let lastDayPrev = calendar.date(byAdding: .day, value: -1, to: firstOfMonth),
+                  let prevMonthRange = calendar.range(of: .day, in: .month, for: lastDayPrev)
+            else { return [] }
+            for i in 0..<leadingBlanks {
+                let dayNum = prevMonthRange.upperBound - leadingBlanks + i
+                if let date = calendar.date(byAdding: .day, value: -(leadingBlanks - i), to: firstOfMonth) {
+                    days.append(DateDay(
+                        date: date,
+                        dayNumber: dayNum,
+                        isCurrentMonth: false,
+                        isToday: false,
+                        isSelected: false
+                    ))
+                }
+            }
+        }
+
+        for day in range {
+            var dayComponents = components
+            dayComponents.day = day
+            guard let date = calendar.date(from: dayComponents) else { continue }
+
+            let dc = calendar.dateComponents([.year, .month, .day], from: date)
+            let isToday = dc.year == todayComponents.year
+                && dc.month == todayComponents.month
+                && dc.day == todayComponents.day
+            let isSelected: Bool = {
+                guard let sc = selectedComponents else { return false }
+                return dc.year == sc.year && dc.month == sc.month && dc.day == sc.day
+            }()
+
+            days.append(DateDay(
+                date: date,
+                dayNumber: day,
+                isCurrentMonth: true,
+                isToday: isToday,
+                isSelected: isSelected
+            ))
+        }
+
+        return days
+    }
+
+    /// Up to 3 status-colored dots for a given day. Each dot represents ONE
+    /// UNIQUE STATUS (not one event). Honors `selectedStatus` so grid dots stay
+    /// in sync with the list filter.
+    public func eventDotsForDay(_ date: Date) -> [EventStatus] {
+        let dateStr = Self.gridApiDateFormatter.string(from: date)
+        let dayEvents = events
+            .filter { $0.eventDate == dateStr }
+            .filter { selectedStatus == nil || $0.status == selectedStatus }
+
+        var seen: Set<EventStatus> = []
+        var dots: [EventStatus] = []
+        for event in dayEvents {
+            if !seen.contains(event.status) {
+                seen.insert(event.status)
+                dots.append(event.status)
+                if dots.count >= 3 { break }
+            }
+        }
+        return dots
+    }
+
+    /// How many events on a day are NOT rendered as dots:
+    /// `totalEvents - min(uniqueStatusesCount, 3)`. Drives the "+N más" caption.
+    public func eventOverflowForDay(_ date: Date) -> Int {
+        let dateStr = Self.gridApiDateFormatter.string(from: date)
+        guard !events.isEmpty else { return 0 }
+        let dayEvents = events
+            .filter { $0.eventDate == dateStr }
+            .filter { selectedStatus == nil || $0.status == selectedStatus }
+        let uniqueStatusCount = Set(dayEvents.map { $0.status }).count
+        return max(0, dayEvents.count - Swift.min(uniqueStatusCount, 3))
+    }
+
+    /// True when the day falls inside any `UnavailableDate` range.
+    public func isDateBlocked(_ date: Date) -> Bool {
+        let dateStr = Self.gridApiDateFormatter.string(from: date)
+        return unavailableDates.contains { $0.startDate <= dateStr && dateStr <= $0.endDate }
+    }
+
+    /// Formatted month title, e.g. "Marzo de 2026" / "March 2026".
+    public var monthTitle: String {
+        let formatter = Self.gridMonthFormatter
+        if formatter.locale != FeatureL10n.locale {
+            formatter.locale = FeatureL10n.locale
+        }
+        let original = formatter.string(from: currentMonth)
+        guard !original.isEmpty else { return "" }
+        return original.prefix(1).uppercased() + original.dropFirst()
+    }
+
     // MARK: - Shared Filter Invariant (ADR-7)
     //
     // A day-tap and a period chip BOTH write the same `dateRange*` pair, so
