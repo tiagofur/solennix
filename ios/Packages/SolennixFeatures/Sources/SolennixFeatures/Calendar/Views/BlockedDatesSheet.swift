@@ -26,16 +26,18 @@ public struct BlockedDatesSheet: View {
                     List {
                         ForEach(viewModel.unavailableDates.sorted(by: { $0.startDate < $1.startDate })) { entry in
                             blockedDateRow(entry)
+                                .solennixRow()
                         }
                     }
                     .listStyle(.insetGrouped)
+                    .solennixListStyle()
                 }
             }
             .navigationTitle(CalendarStrings.blockedDatesTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(CalendarStrings.actionCancel) {
+                    SolennixCancelButton(title: CalendarStrings.actionCancel) {
                         dismiss()
                     }
                 }
@@ -120,20 +122,12 @@ public struct BlockedDatesSheet: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, Spacing.xl)
 
-            Button {
+            PremiumButton(
+                title: CalendarStrings.blockAddRange,
+                fullWidth: false,
+                icon: "plus"
+            ) {
                 showAddForm = true
-            } label: {
-                Label(
-                    CalendarStrings.blockAddRange,
-                    systemImage: "plus"
-                )
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundStyle(SolennixColors.onPrimary)
-                .padding(.horizontal, Spacing.lg)
-                .padding(.vertical, Spacing.sm)
-                .background(SolennixColors.primary)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.full))
             }
             .padding(.top, Spacing.sm)
         }
@@ -192,6 +186,7 @@ struct AddBlockSheet: View {
                     .onChange(of: startDate) { _, new in
                         if endDate < new { endDate = new }
                     }
+                    .solennixRow()
 
                     DatePicker(
                         CalendarStrings.blockEndDate,
@@ -199,6 +194,7 @@ struct AddBlockSheet: View {
                         in: startDate...,
                         displayedComponents: .date
                     )
+                    .solennixRow()
                 }
 
                 Section(CalendarStrings.blockReasonLabel) {
@@ -207,34 +203,39 @@ struct AddBlockSheet: View {
                         text: $reason
                     )
                     .textInputAutocapitalization(.sentences)
+                    .solennixRow()
                 }
             }
+            .solennixListStyle()
             .navigationTitle(CalendarStrings.blockAddRange)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(CalendarStrings.actionCancel) {
+                    SolennixCancelButton(title: CalendarStrings.actionCancel) {
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(CalendarStrings.blockSave) {
-                        Task {
-                            isSubmitting = true
-                            let trimmed = reason.trimmingCharacters(in: .whitespacesAndNewlines)
-                            await viewModel.toggleDateBlock(
-                                startDate: startDate,
-                                endDate: endDate,
-                                reason: trimmed.isEmpty ? nil : trimmed
-                            )
-                            isSubmitting = false
-                            // Keep the form open on failure so the user doesn't
-                            // lose their range/reason; dismiss only on success.
-                            if viewModel.error == nil { dismiss() }
-                        }
-                    }
-                    .fontWeight(.semibold)
-                    .disabled(isSubmitting)
+                    SolennixSaveButton(
+                        title: CalendarStrings.blockSave,
+                        action: {
+                            Task {
+                                isSubmitting = true
+                                let trimmed = reason.trimmingCharacters(in: .whitespacesAndNewlines)
+                                await viewModel.toggleDateBlock(
+                                    startDate: startDate,
+                                    endDate: endDate,
+                                    reason: trimmed.isEmpty ? nil : trimmed
+                                )
+                                isSubmitting = false
+                                // Keep the form open on failure so the user doesn't
+                                // lose their range/reason; dismiss only on success.
+                                if viewModel.error == nil { dismiss() }
+                            }
+                        },
+                        isValid: true,
+                        isSaving: isSubmitting
+                    )
                 }
             }
         }

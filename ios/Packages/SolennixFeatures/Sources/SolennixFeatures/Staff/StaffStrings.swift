@@ -62,6 +62,7 @@ enum StaffStrings {
     static var notFoundMessage: String { FeatureL10n.text("staff.detail.not_found_message", "No se pudo cargar el personal") }
     static var navTitleFallback: String { FeatureL10n.text("staff.detail.nav_title_fallback", "Personal") }
     static var deleteError: String { FeatureL10n.text("staff.detail.delete_error", "Error al eliminar el personal") }
+    static var moreActions: String { FeatureL10n.text("staff.detail.more_actions", "Acciones del personal") }
     static var emailNotifTitle: String { FeatureL10n.text("staff.detail.email_notif_title", "Avisos por email activados") }
     static var emailNotifSubtitle: String { FeatureL10n.text("staff.detail.email_notif_subtitle", "Se activará en Phase 2 (Pro+). Por ahora queda registrada la preferencia.") }
     static var inviteAccess: String { FeatureL10n.text("staff.detail.invite_access", "Invitar acceso") }

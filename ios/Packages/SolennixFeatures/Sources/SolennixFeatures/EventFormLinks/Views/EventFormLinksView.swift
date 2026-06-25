@@ -80,7 +80,8 @@ public struct EventFormLinksView: View {
                 icon: "wifi.exclamationmark",
                 title: EventFormLinksStrings.errorLoading,
                 message: error,
-                actionTitle: EventFormLinksStrings.retry
+                actionTitle: EventFormLinksStrings.retry,
+                iconColor: SolennixColors.primary
             ) {
                 Task { await viewModel.loadLinks() }
             }
@@ -89,7 +90,8 @@ public struct EventFormLinksView: View {
                 icon: "link.badge.plus",
                 title: EventFormLinksStrings.emptyTitle,
                 message: EventFormLinksStrings.emptyMessage,
-                actionTitle: EventFormLinksStrings.emptyAction
+                actionTitle: EventFormLinksStrings.emptyAction,
+                iconColor: SolennixColors.primary
             ) {
                 showGenerateSheet = true
             }
@@ -111,7 +113,7 @@ public struct EventFormLinksView: View {
                     ForEach(viewModel.links) { link in
                         linkRow(link)
                             // A1: card chrome
-                            .listRowBackground(SolennixColors.card)
+                            .solennixRow()
                             .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
                             // A1: composed a11y element
                             .accessibilityElement(children: .ignore)
@@ -179,8 +181,7 @@ public struct EventFormLinksView: View {
             }
         }
         .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
+        .solennixListStyle()
     }
 
     // MARK: - Skeleton Rows (B1: in-List, card chrome, a11y hidden)
@@ -201,7 +202,7 @@ public struct EventFormLinksView: View {
                 Spacer()
             }
             .padding(.vertical, Spacing.xs)
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
             .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
         }
         .accessibilityHidden(true)
@@ -391,6 +392,7 @@ private struct GenerateLinkSheet: View {
             Form {
                 Section(EventFormLinksStrings.sheetLabelSection) {
                     TextField(EventFormLinksStrings.sheetLabelPlaceholder, text: $label)
+                        .solennixRow()
                 }
 
                 Section(EventFormLinksStrings.sheetTtlSection) {
@@ -400,17 +402,17 @@ private struct GenerateLinkSheet: View {
                         }
                     }
                     .pickerStyle(.segmented)
+                    .solennixRow()
                 }
 
                 Section {
                     Text(EventFormLinksStrings.sheetHint)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
+                        .solennixRow()
                 }
             }
-            // A3: iOS 26-gated helper instead of unconditional .scrollContentBackground(.hidden)
-            .sheetFormBackground()
-            .background(SolennixColors.surfaceGrouped)
+            .solennixListStyle()
             .navigationTitle(EventFormLinksStrings.sheetTitle)
             .navigationBarTitleDisplayMode(.inline)
             // A3: keyboard Done toolbar on the Form

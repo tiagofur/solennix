@@ -126,9 +126,7 @@ struct OnboardingChecklistView: View {
                 }
             }
             .padding(Spacing.md)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-            .shadowSm()
+            .solennixCard(border: false)
             .padding(.horizontal, Spacing.md)
             .transition(.move(edge: .top).combined(with: .opacity))
         }

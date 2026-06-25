@@ -118,9 +118,7 @@ public struct StaffListView: View {
             teamsLinkRow
                 .buttonStyle(.plain)
                 .padding(Spacing.md)
-                .background(SolennixColors.card)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-                .shadowSm()
+                .solennixCard(radius: CornerRadius.lg, border: false)
                 .padding(.horizontal, Spacing.md)
                 .padding(.top, Spacing.sm)
 
@@ -138,7 +136,8 @@ public struct StaffListView: View {
                     EmptyStateView(
                         icon: "magnifyingglass",
                         title: StaffStrings.filteredEmptyTitle,
-                        message: StaffStrings.filteredEmptyMessage
+                        message: StaffStrings.filteredEmptyMessage,
+                        iconColor: SolennixColors.primary
                     )
                 }
             } else {
@@ -147,9 +146,7 @@ public struct StaffListView: View {
                         ZStack {
                             staffRow(item)
                                 .padding(Spacing.md)
-                                .background(SolennixColors.card)
-                                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-                                .shadowSm()
+                                .solennixCard(radius: CornerRadius.lg, border: false)
                             NavigationLink(value: Route.staffDetail(id: item.id)) {
                                 EmptyView()
                             }
@@ -222,17 +219,18 @@ public struct StaffListView: View {
             EmptyStateView(
                 icon: "person.3",
                 title: StaffStrings.emptyTitle,
-                message: StaffStrings.emptyMessage
+                message: StaffStrings.emptyMessage,
+                iconColor: SolennixColors.primary
             )
             NavigationLink(value: Route.staffForm()) {
                 Text(StaffStrings.emptyAction)
                     .font(.headline)
-                    .foregroundStyle(SolennixColors.onPrimary)
+                    .foregroundStyle(SolennixColors.primaryDark)
                     .padding(.horizontal, Spacing.xl)
                     .padding(.vertical, 16)
-                    .background(SolennixGradient.premium)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                    .shadowFab()
+                    .background(SolennixColors.primaryLight)
+                    .clipShape(Capsule())
+                    .adaptiveGlass(in: Capsule(), fallback: .material)
             }
             .padding(.bottom, Spacing.xxl)
         }
@@ -241,193 +239,109 @@ public struct StaffListView: View {
 
     // MARK: - iPhone Compact List
 
+    @ViewBuilder
     private var staffListCompact: some View {
-        List {
-            Section {
-                teamsLinkRow
-                    .listRowBackground(SolennixColors.card)
-                    .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+        if let error = viewModel.errorMessage, viewModel.staff.isEmpty, !viewModel.isLoading {
+            // Error state — outside List for proper centering
+            EmptyStateView(
+                icon: "wifi.exclamationmark",
+                title: StaffStrings.errorLoadingTitle,
+                message: error,
+                actionTitle: StaffStrings.retry,
+                iconColor: SolennixColors.primary
+            ) {
+                Task { await viewModel.loadStaff() }
             }
+        } else if viewModel.isLoading && viewModel.staff.isEmpty {
+            List {
+                Section {
+                    teamsLinkRow
+                        .solennixRow()
+                        .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+                }
 
-            Section {
-                staffContentRows
+                Section {
+                    // Fix 3: in-List skeleton rows — no standalone List swap
+                    staffSkeletonRows
+                }
             }
+            .listStyle(.insetGrouped)
+            .listSectionSpacing(.compact)
+            .solennixListStyle()
+        } else if viewModel.filteredStaff.isEmpty && !viewModel.isLoading {
+            // Empty states — outside List for proper centering
+            staffEmptyState
+        } else {
+            List {
+                Section {
+                    teamsLinkRow
+                        .solennixRow()
+                        .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+                }
+
+                Section {
+                    // Fix 1: canonical ZStack + opacity-0 NavigationLink row chrome
+                    ForEach(viewModel.paginatedStaff) { item in
+                        staffRowContent(item)
+                    }
+
+                    // Fix 5: footer condition → isLoadingMore (not hasMorePages)
+                    if viewModel.isLoadingMore {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                            Spacer()
+                        }
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                    }
+                }
+            }
+            .listStyle(.insetGrouped)
+            .listSectionSpacing(.compact)
+            .solennixListStyle()
         }
-        .listStyle(.insetGrouped)
-        .listSectionSpacing(.compact)
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
     }
+
+    // MARK: - Empty State (first-run vs filtered)
 
     @ViewBuilder
-    private var staffContentRows: some View {
-        Group {
-            if let error = viewModel.errorMessage, viewModel.staff.isEmpty, !viewModel.isLoading {
-                EmptyStateView(
-                    icon: "wifi.exclamationmark",
-                    title: StaffStrings.errorLoadingTitle,
-                    message: error,
-                    actionTitle: StaffStrings.retry
-                ) {
-                    Task { await viewModel.loadStaff() }
-                }
-                .frame(maxWidth: .infinity)
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
-                .listRowSeparator(.hidden)
-            } else if viewModel.isLoading && viewModel.staff.isEmpty {
-                // Fix 3: in-List skeleton rows — no standalone List swap
-                staffSkeletonRows
-            } else if viewModel.filteredStaff.isEmpty && !viewModel.isLoading {
-                if viewModel.searchText.isEmpty {
-                    // Fix 4: working first-run CTA
-                    staffFirstRunEmptyRow
-                } else {
-                    EmptyStateView(
-                        icon: "magnifyingglass",
-                        title: StaffStrings.filteredEmptyTitle,
-                        message: StaffStrings.filteredEmptyMessage
-                    )
-                    .frame(maxWidth: .infinity)
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets())
-                    .listRowSeparator(.hidden)
-                }
-            } else {
-                // Fix 1: canonical ZStack + opacity-0 NavigationLink row chrome
-                ForEach(viewModel.paginatedStaff) { item in
-                    ZStack {
-                        staffRow(item)
-                        NavigationLink(value: Route.staffDetail(id: item.id)) {
-                            EmptyView()
-                        }
-                        .opacity(0)
-                        .accessibilityHidden(true)
-                    }
-                    .listRowBackground(SolennixColors.card)
-                    .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(staffAccessibilityLabel(item))
-                    .accessibilityAddTraits(.isButton)
-                    .accessibilityAction(named: StaffStrings.deleteAction) {
-                        viewModel.deleteTarget = item
-                        viewModel.showDeleteConfirm = true
-                    }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) {
-                            HapticsHelper.play(.warning)
-                            viewModel.deleteTarget = item
-                            viewModel.showDeleteConfirm = true
-                        } label: {
-                            Label(StaffStrings.deleteAction, systemImage: "trash")
-                        }
-
-                        NavigationLink(value: Route.staffForm(id: item.id)) {
-                            Label(StaffStrings.edit, systemImage: "pencil")
-                        }
-                        // Fix 6: accent tint on edit swipe (not .blue)
-                        .tint(SolennixColors.accent)
-                    }
-                    .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                        // LEAVE contact swipes AS-IS (platform semantics, Clients precedent)
-                        if let email = item.email, !email.isEmpty,
-                           let url = URL(string: "mailto:\(email)") {
-                            Button {
-                                HapticsHelper.play(.success)
-                                openURL(url)
-                            } label: {
-                                Label(StaffStrings.emailAction, systemImage: "envelope.fill")
-                            }
-                            .tint(.blue)
-                        }
-
-                        if let phone = item.phone, !phone.isEmpty,
-                           let url = URL(string: "tel:\(phone)") {
-                            Button {
-                                HapticsHelper.play(.success)
-                                openURL(url)
-                            } label: {
-                                Label(StaffStrings.callAction, systemImage: "phone.fill")
-                            }
-                            .tint(.green)
-                        }
-                    }
-                    .contextMenu {
-                        NavigationLink(value: Route.staffForm(id: item.id)) {
-                            Label(StaffStrings.edit, systemImage: "pencil")
-                        }
-                        if let phone = item.phone, !phone.isEmpty {
-                            Button {
-                                if let url = URL(string: "tel:\(phone)") { openURL(url) }
-                                HapticsHelper.play(.success)
-                            } label: {
-                                Label(StaffStrings.callAction, systemImage: "phone")
-                            }
-                        }
-                        if let email = item.email, !email.isEmpty {
-                            Button {
-                                if let url = URL(string: "mailto:\(email)") { openURL(url) }
-                                HapticsHelper.play(.success)
-                            } label: {
-                                Label(StaffStrings.emailAction, systemImage: "envelope")
-                            }
-                        }
-                        Divider()
-                        Button(role: .destructive) {
-                            HapticsHelper.play(.warning)
-                            viewModel.deleteTarget = item
-                            viewModel.showDeleteConfirm = true
-                        } label: {
-                            Label(StaffStrings.deleteAction, systemImage: "trash")
-                        }
-                    }
-                    // Fix 5: infinite scroll trigger on last row
-                    .task {
-                        if item == viewModel.paginatedStaff.last {
-                            await viewModel.loadMore()
-                        }
-                    }
-                }
-
-                // Fix 5: footer condition → isLoadingMore (not hasMorePages)
-                if viewModel.isLoadingMore {
-                    HStack {
-                        Spacer()
-                        ProgressView()
-                        Spacer()
-                    }
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
-                }
-            }
+    private var staffEmptyState: some View {
+        if viewModel.searchText.isEmpty {
+            staffFirstRunEmptyState
+        } else {
+            EmptyStateView(
+                icon: "magnifyingglass",
+                title: StaffStrings.filteredEmptyTitle,
+                message: StaffStrings.filteredEmptyMessage,
+                iconColor: SolennixColors.primary
+            )
         }
     }
 
-    // MARK: - First-Run Empty Row (Fix 4)
+    // MARK: - First-Run Empty State (Fix 4) — outside List for proper centering
 
-    private var staffFirstRunEmptyRow: some View {
+    private var staffFirstRunEmptyState: some View {
         VStack(spacing: 0) {
             EmptyStateView(
                 icon: "person.3",
                 title: StaffStrings.emptyTitle,
-                message: StaffStrings.emptyMessage
+                message: StaffStrings.emptyMessage,
+                iconColor: SolennixColors.primary
             )
             NavigationLink(value: Route.staffForm()) {
                 Text(StaffStrings.emptyAction)
                     .font(.headline)
-                    .foregroundStyle(SolennixColors.onPrimary)
+                    .foregroundStyle(SolennixColors.primaryDark)
                     .padding(.horizontal, Spacing.xl)
                     .padding(.vertical, 16)
-                    .background(SolennixGradient.premium)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                    .shadowFab()
+                    .background(SolennixColors.primaryLight)
+                    .clipShape(Capsule())
+                    .adaptiveGlass(in: Capsule(), fallback: .material)
             }
             .padding(.bottom, Spacing.xxl)
         }
         .frame(maxWidth: .infinity)
-        .listRowBackground(Color.clear)
-        .listRowInsets(EdgeInsets())
-        .listRowSeparator(.hidden)
     }
 
     // MARK: - Skeleton Rows (Fix 3)
@@ -437,10 +351,104 @@ public struct StaffListView: View {
     private var staffSkeletonRows: some View {
         ForEach(0..<5, id: \.self) { _ in
             StaffSkeletonRow()
-                .listRowBackground(SolennixColors.card)
+                .solennixRow()
                 .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
         }
         .accessibilityHidden(true)
+    }
+
+    // MARK: - Staff Row Content (extracted to avoid type-checker timeout)
+
+    @ViewBuilder
+    private func staffRowContent(_ item: Staff) -> some View {
+        ZStack {
+            staffRow(item)
+            NavigationLink(value: Route.staffDetail(id: item.id)) {
+                EmptyView()
+            }
+            .opacity(0)
+            .accessibilityHidden(true)
+        }
+        .solennixRow()
+        .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(staffAccessibilityLabel(item))
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction(named: StaffStrings.deleteAction) {
+            viewModel.deleteTarget = item
+            viewModel.showDeleteConfirm = true
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button(role: .destructive) {
+                HapticsHelper.play(.warning)
+                viewModel.deleteTarget = item
+                viewModel.showDeleteConfirm = true
+            } label: {
+                Label(StaffStrings.deleteAction, systemImage: "trash")
+            }
+
+            NavigationLink(value: Route.staffForm(id: item.id)) {
+                Label(StaffStrings.edit, systemImage: "pencil")
+            }
+            .tint(SolennixColors.accent)
+        }
+        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+            if let email = item.email, !email.isEmpty,
+               let url = URL(string: "mailto:\(email)") {
+                Button {
+                    HapticsHelper.play(.success)
+                    openURL(url)
+                } label: {
+                    Label(StaffStrings.emailAction, systemImage: "envelope.fill")
+                }
+                .tint(.blue)
+            }
+
+            if let phone = item.phone, !phone.isEmpty,
+               let url = URL(string: "tel:\(phone)") {
+                Button {
+                    HapticsHelper.play(.success)
+                    openURL(url)
+                } label: {
+                    Label(StaffStrings.callAction, systemImage: "phone.fill")
+                }
+                .tint(.green)
+            }
+        }
+        .contextMenu {
+            NavigationLink(value: Route.staffForm(id: item.id)) {
+                Label(StaffStrings.edit, systemImage: "pencil")
+            }
+            if let phone = item.phone, !phone.isEmpty {
+                Button {
+                    if let url = URL(string: "tel:\(phone)") { openURL(url) }
+                    HapticsHelper.play(.success)
+                } label: {
+                    Label(StaffStrings.callAction, systemImage: "phone")
+                }
+            }
+            if let email = item.email, !email.isEmpty {
+                Button {
+                    if let url = URL(string: "mailto:\(email)") { openURL(url) }
+                    HapticsHelper.play(.success)
+                } label: {
+                    Label(StaffStrings.emailAction, systemImage: "envelope")
+                }
+            }
+            Divider()
+            Button(role: .destructive) {
+                HapticsHelper.play(.warning)
+                viewModel.deleteTarget = item
+                viewModel.showDeleteConfirm = true
+            } label: {
+                Label(StaffStrings.deleteAction, systemImage: "trash")
+            }
+        }
+        .task {
+            if item == viewModel.paginatedStaff.last {
+                await viewModel.loadMore()
+            }
+        }
     }
 
     // MARK: - Staff Row (Fix 8: Dynamic Type stacking)

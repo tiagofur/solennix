@@ -328,7 +328,7 @@ struct EventDetailHeaderCard: View {
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .listRowBackground(SolennixColors.card)
+        .solennixRow()
         .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
         .contextMenu {
             if let editRoute {
@@ -475,7 +475,7 @@ struct EventDetailFinanceSummaryCard: View {
             .buttonStyle(.plain)
             .opacity(0)
         )
-        .listRowBackground(SolennixColors.card)
+        .solennixRow()
         .listRowInsets(EdgeInsets(top: 0, leading: Spacing.md, bottom: 0, trailing: Spacing.md))
         .contextMenu {
             if let editRoute {
@@ -678,7 +678,7 @@ struct EventDetailPaymentSummaryCard: View {
             }
         }
         .padding(Spacing.md)
-        .listRowBackground(SolennixColors.card)
+        .solennixRow()
         .listRowInsets(EdgeInsets(top: 0, leading: Spacing.md, bottom: 0, trailing: Spacing.md))
     }
 }
@@ -804,7 +804,7 @@ struct EventDetailContentGridSection: View {
             .frame(minHeight: 44)
             .accessibilityElement(children: .combine)
         }
-        .listRowBackground(SolennixColors.card)
+        .solennixRow()
         .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
         .contextMenu {
             if let editRoute, let editLabel {
@@ -895,7 +895,7 @@ struct EventDetailNotesCard: View {
                 .lineLimit(3)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .listRowBackground(SolennixColors.card)
+        .solennixRow()
         .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
     }
 }
@@ -965,7 +965,7 @@ struct EventDetailHubSkeleton: View {
                 SkeletonLine(height: 36)
             }
             .padding(Spacing.md)
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
             .listRowSeparator(.hidden)
         }
 
@@ -984,7 +984,7 @@ struct EventDetailHubSkeleton: View {
                 }
             }
             .padding(Spacing.md)
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
             .listRowSeparator(.hidden)
         }
 
@@ -1005,7 +1005,7 @@ struct EventDetailHubSkeleton: View {
                 .frame(maxWidth: .infinity)
             }
             .padding(Spacing.md)
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
             .listRowSeparator(.hidden)
         }
 
@@ -1020,7 +1020,7 @@ struct EventDetailHubSkeleton: View {
                     Spacer()
                     SkeletonLine(width: 28, height: 20)
                 }
-                .listRowBackground(SolennixColors.card)
+                .solennixRow()
                 .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
             }
         }

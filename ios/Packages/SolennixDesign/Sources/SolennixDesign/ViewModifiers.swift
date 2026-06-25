@@ -127,3 +127,92 @@ public extension View {
 // ToolbarSpacer (iOS 26) is a ToolbarContent type, not a View — it cannot be
 // wrapped in a ViewModifier. Use #available(iOS 26.0, *) inline at each call
 // site within a .toolbar { } block.
+
+// MARK: - Solennix List / Form Theming
+
+public extension View {
+
+    /// Applies the Solennix card background to a Form/List row.
+    ///
+    /// Apply to each row inside a `Section`:
+    /// ```swift
+    /// Form {
+    ///     Section {
+    ///         TextField("Name", text: $name).solennixRow()
+    ///         Picker("Type", selection: $type) { ... }.solennixRow()
+    ///     }
+    /// }
+    /// .solennixListStyle()
+    /// ```
+    ///
+    /// Apply to each row inside a `Section`:
+    /// ```swift
+    /// Form {
+    ///     Section {
+    ///         TextField("Name", text: $name).solennixRow()
+    ///         Picker("Type", selection: $type) { ... }.solennixRow()
+    ///     }
+    /// }
+    /// .solennixListStyle()
+    /// ```
+    func solennixRow() -> some View {
+        self.listRowBackground(SolennixColors.card)
+    }
+
+    /// Applies the Solennix page background, hides the system scroll background,
+    /// and sets the primary tint — apply once to the `Form` or `List`.
+    func solennixListStyle() -> some View {
+        self
+            .scrollContentBackground(.hidden)
+            .background(SolennixColors.surfaceGrouped)
+            .tint(SolennixColors.primary)
+    }
+
+    /// Standard Solennix card for standalone content in `ScrollView`s and
+    /// detail screens. Consolidates the `.background + .clipShape + .overlay
+    /// + .shadow` pattern that was duplicated 80+ times across the app.
+    ///
+    /// Apply **after** `.padding()`:
+    /// ```swift
+    /// VStack { ... }
+    ///     .padding(Spacing.md)
+    ///     .solennixCard()
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - radius: Corner radius. Defaults to `.card` (24pt).
+    ///   - shadow: Soft elevation shadow. Defaults to `true`.
+    ///   - border: Hairline border in `SolennixColors.border`. Defaults to `true`.
+    func solennixCard(
+        radius: CGFloat = CornerRadius.card,
+        shadow: Bool = true,
+        border: Bool = true
+    ) -> some View {
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        return self
+            .background(SolennixColors.card)
+            .clipShape(shape)
+            .overlay(
+                Group {
+                    if border {
+                        shape.stroke(SolennixColors.border, lineWidth: 1)
+                    }
+                }
+            )
+            .modifier(SolennixShadowModifier(enabled: shadow))
+    }
+}
+
+/// Conditional wrapper for `.shadowSm()` so `.solennixCard(shadow: false)`
+/// is a clean no-op without branching the view tree.
+private struct SolennixShadowModifier: ViewModifier {
+    let enabled: Bool
+
+    func body(content: Content) -> some View {
+        if enabled {
+            content.shadowSm()
+        } else {
+            content
+        }
+    }
+}

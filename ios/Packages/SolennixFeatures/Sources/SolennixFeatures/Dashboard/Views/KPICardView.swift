@@ -68,9 +68,7 @@ public struct KPICardView: View {
         .frame(maxWidth: flexible ? .infinity : nil)
         .padding(.vertical, Spacing.md)
         .padding(.horizontal, Spacing.sm)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-        .shadowSm()
+        .solennixCard(border: false)
         // VoiceOver: merge icon + value + title + subtitle into a single
         // readable utterance ("Ventas Netas: $45,000, 71% cobrado") instead
         // of having VoiceOver announce each Text view separately.

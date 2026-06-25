@@ -76,8 +76,7 @@ public struct AboutView: View {
             infoRow(label: tr("settings.about.support", "Soporte"), value: "soporte@solennix.com", isLink: true)
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
     }
 
     private func infoRow(label: String, value: String, isLink: Bool = false) -> some View {
@@ -139,8 +138,7 @@ public struct AboutView: View {
         }
         .font(.subheadline)
         .foregroundStyle(SolennixColors.text)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
         .buttonStyle(.plain)
     }
 

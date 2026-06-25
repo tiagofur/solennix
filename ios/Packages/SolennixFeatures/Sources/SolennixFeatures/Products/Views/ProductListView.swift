@@ -58,7 +58,7 @@ public struct ProductListView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: Spacing.sm) {
-                        // Fix 8: plus.circle → plus (consistency with Clients/Events)
+                        // 1. Create
                         NavigationLink(value: Route.productForm()) {
                             Image(systemName: "plus")
                                 .font(.body)
@@ -67,7 +67,10 @@ public struct ProductListView: View {
                         }
                         .disabled(!planLimitsManager.canCreateProduct)
 
-                        // Category filter menu (Apple Liquid Glass / native style)
+                        // 2. Sort
+                        sortMenu
+
+                        // 3. Category filter
                         Menu {
                             Picker(ProductStrings.categoryFilterAccessibility, selection: $viewModel.selectedCategory) {
                                 Text(ProductStrings.categoryAll).tag(nil as String?)
@@ -83,8 +86,6 @@ public struct ProductListView: View {
                                 .symbolEffect(.bounce, value: viewModel.selectedCategory)
                                 .accessibilityLabel(ProductStrings.categoryFilterAccessibility)
                         }
-
-                        sortMenu
                     }
                 }
             }
@@ -149,7 +150,8 @@ public struct ProductListView: View {
                     EmptyStateView(
                         icon: "magnifyingglass",
                         title: ProductStrings.filteredEmptyTitle,
-                        message: ProductStrings.filteredEmptyMessage
+                        message: ProductStrings.filteredEmptyMessage,
+                        iconColor: SolennixColors.primary
                     )
                 }
             } else {
@@ -158,9 +160,7 @@ public struct ProductListView: View {
                         NavigationLink(value: Route.productDetail(id: product.id)) {
                             ProductRow(product: product, dynamicTypeSize: dynamicTypeSize)
                                 .padding(Spacing.md)
-                                .background(SolennixColors.card)
-                                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-                                .shadowSm()
+                                .solennixCard(radius: CornerRadius.lg, border: false)
                         }
                         .buttonStyle(.plain)
                         .contextMenu {
@@ -208,17 +208,18 @@ public struct ProductListView: View {
             EmptyStateView(
                 icon: "shippingbox",
                 title: ProductStrings.emptyTitle,
-                message: ProductStrings.emptyMessage
+                message: ProductStrings.emptyMessage,
+                iconColor: SolennixColors.primary
             )
             NavigationLink(value: Route.productForm()) {
                 Text(ProductStrings.emptyAction)
                     .font(.headline)
-                    .foregroundStyle(SolennixColors.onPrimary)
+                    .foregroundStyle(SolennixColors.primaryDark)
                     .padding(.horizontal, Spacing.xl)
                     .padding(.vertical, 16)
-                    .background(SolennixGradient.premium)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                    .shadowFab()
+                    .background(SolennixColors.primaryLight)
+                    .clipShape(Capsule())
+                    .adaptiveGlass(in: Capsule(), fallback: .material)
             }
             .padding(.bottom, Spacing.xxl)
         }
@@ -229,152 +230,144 @@ public struct ProductListView: View {
 
     @ViewBuilder
     private var productListCompact: some View {
-        List {
-            Section {
-                productContentRows
+        if let error = viewModel.errorMessage, viewModel.products.isEmpty, !viewModel.isLoading {
+            // Error state — outside List for proper centering
+            EmptyStateView(
+                icon: "wifi.exclamationmark",
+                title: ProductStrings.errorLoadingTitle,
+                message: error,
+                actionTitle: ProductStrings.retry,
+                iconColor: SolennixColors.primary
+            ) {
+                Task { await viewModel.loadProducts() }
             }
-        }
-        .listStyle(.insetGrouped)
-        .listSectionSpacing(.compact)
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
-    }
-
-    @ViewBuilder
-    private var productContentRows: some View {
-        Group {
-            if let error = viewModel.errorMessage, viewModel.products.isEmpty, !viewModel.isLoading {
-                // Error state
-                EmptyStateView(
-                    icon: "wifi.exclamationmark",
-                    title: ProductStrings.errorLoadingTitle,
-                    message: error,
-                    actionTitle: ProductStrings.retry
-                ) {
-                    Task { await viewModel.loadProducts() }
+        } else if viewModel.isLoading && viewModel.products.isEmpty {
+            // Fix 3: skeleton rows inside the same List — no jump
+            List {
+                Section {
+                    productSkeletonRows
                 }
-                .frame(maxWidth: .infinity)
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
-                .listRowSeparator(.hidden)
-            } else if viewModel.isLoading && viewModel.products.isEmpty {
-                // Fix 3: skeleton rows inside the same List — no jump
-                productSkeletonRows
-            } else if viewModel.filteredProducts.isEmpty && !viewModel.isLoading {
-                if viewModel.searchText.isEmpty && viewModel.selectedCategory == nil {
-                    // Fix 2: working first-run CTA with real NavigationLink
-                    productFirstRunEmptyRow
-                } else {
-                    EmptyStateView(
-                        icon: "magnifyingglass",
-                        title: ProductStrings.filteredEmptyTitle,
-                        message: ProductStrings.filteredEmptyMessage
-                    )
-                    .frame(maxWidth: .infinity)
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets())
-                    .listRowSeparator(.hidden)
-                }
+            }
+            .listStyle(.insetGrouped)
+            .listSectionSpacing(.compact)
+            .solennixListStyle()
+        } else if viewModel.filteredProducts.isEmpty && !viewModel.isLoading {
+            // Empty states — outside List for proper centering
+            if viewModel.searchText.isEmpty && viewModel.selectedCategory == nil {
+                // Fix 2: working first-run CTA with real NavigationLink
+                productFirstRunEmptyState
             } else {
-                // Fix 1: canonical ZStack + opacity-0 NavigationLink row chrome
-                ForEach(viewModel.filteredProducts) { product in
-                    ZStack {
-                        ProductRow(product: product, dynamicTypeSize: dynamicTypeSize)
-                        NavigationLink(value: Route.productDetail(id: product.id)) {
-                            EmptyView()
+                EmptyStateView(
+                    icon: "magnifyingglass",
+                    title: ProductStrings.filteredEmptyTitle,
+                    message: ProductStrings.filteredEmptyMessage,
+                    iconColor: SolennixColors.primary
+                )
+            }
+        } else {
+            List {
+                Section {
+                    // Fix 1: canonical ZStack + opacity-0 NavigationLink row chrome
+                    ForEach(viewModel.filteredProducts) { product in
+                        ZStack {
+                            ProductRow(product: product, dynamicTypeSize: dynamicTypeSize)
+                            NavigationLink(value: Route.productDetail(id: product.id)) {
+                                EmptyView()
+                            }
+                            .opacity(0)
+                            .accessibilityHidden(true)
                         }
-                        .opacity(0)
-                        .accessibilityHidden(true)
-                    }
-                    .listRowBackground(SolennixColors.card)
-                    .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(productAccessibilityLabel(product))
-                    .accessibilityAddTraits(.isButton)
-                    // Fix 1: VoiceOver delete action wired to delete-confirm flow
-                    .accessibilityAction(named: ProductStrings.deleteAction) {
-                        viewModel.deleteTarget = product
-                        viewModel.showDeleteConfirm = true
-                    }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) {
-                            HapticsHelper.play(.warning)
+                        .solennixRow()
+                        .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(productAccessibilityLabel(product))
+                        .accessibilityAddTraits(.isButton)
+                        // Fix 1: VoiceOver delete action wired to delete-confirm flow
+                        .accessibilityAction(named: ProductStrings.deleteAction) {
                             viewModel.deleteTarget = product
                             viewModel.showDeleteConfirm = true
-                        } label: {
-                            Label(ProductStrings.deleteAction, systemImage: "trash")
                         }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                HapticsHelper.play(.warning)
+                                viewModel.deleteTarget = product
+                                viewModel.showDeleteConfirm = true
+                            } label: {
+                                Label(ProductStrings.deleteAction, systemImage: "trash")
+                            }
 
-                        NavigationLink(value: Route.productForm(id: product.id)) {
-                            Label(ProductStrings.edit, systemImage: "pencil")
+                            NavigationLink(value: Route.productForm(id: product.id)) {
+                                Label(ProductStrings.edit, systemImage: "pencil")
+                            }
+                            // Fix 13: navy accent, not .blue
+                            .tint(SolennixColors.accent)
                         }
-                        // Fix 13: navy accent, not .blue
-                        .tint(SolennixColors.accent)
+                        .contextMenu {
+                            NavigationLink(value: Route.productForm(id: product.id)) {
+                                Label(ProductStrings.edit, systemImage: "pencil")
+                            }
+                            NavigationLink(value: Route.productDetail(id: product.id)) {
+                                Label(ProductStrings.viewDetail, systemImage: "eye")
+                            }
+                            Divider()
+                            Button(role: .destructive) {
+                                HapticsHelper.play(.warning)
+                                viewModel.deleteTarget = product
+                                viewModel.showDeleteConfirm = true
+                            } label: {
+                                Label(ProductStrings.deleteAction, systemImage: "trash")
+                            }
+                        }
+                        // Fix 4: infinite scroll — trigger loadNextPage on last row
+                        .task {
+                            if product == viewModel.filteredProducts.last {
+                                await viewModel.loadNextPage()
+                            }
+                        }
                     }
-                    .contextMenu {
-                        NavigationLink(value: Route.productForm(id: product.id)) {
-                            Label(ProductStrings.edit, systemImage: "pencil")
-                        }
-                        NavigationLink(value: Route.productDetail(id: product.id)) {
-                            Label(ProductStrings.viewDetail, systemImage: "eye")
-                        }
-                        Divider()
-                        Button(role: .destructive) {
-                            HapticsHelper.play(.warning)
-                            viewModel.deleteTarget = product
-                            viewModel.showDeleteConfirm = true
-                        } label: {
-                            Label(ProductStrings.deleteAction, systemImage: "trash")
-                        }
-                    }
-                    // Fix 4: infinite scroll — trigger loadNextPage on last row
-                    .task {
-                        if product == viewModel.filteredProducts.last {
-                            await viewModel.loadNextPage()
-                        }
-                    }
-                }
 
-                // Fix 4: ProgressView footer row while loading more
-                if viewModel.isLoadingMore {
-                    HStack {
-                        Spacer()
-                        ProgressView()
-                        Spacer()
+                    // Fix 4: ProgressView footer row while loading more
+                    if viewModel.isLoadingMore {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                            Spacer()
+                        }
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
                     }
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
                 }
             }
+            .listStyle(.insetGrouped)
+            .listSectionSpacing(.compact)
+            .solennixListStyle()
         }
     }
 
-    // MARK: - First-Run Empty Row (Fix 2)
+    // MARK: - First-Run Empty State (Fix 2) — outside List for proper centering
 
     /// Working NavigationLink CTA for the truly-empty state — mirrors ClientListView/EventListView.
-    private var productFirstRunEmptyRow: some View {
+    private var productFirstRunEmptyState: some View {
         VStack(spacing: 0) {
             EmptyStateView(
                 icon: "shippingbox",
                 title: ProductStrings.emptyTitle,
-                message: ProductStrings.emptyMessage
+                message: ProductStrings.emptyMessage,
+                iconColor: SolennixColors.primary
             )
             NavigationLink(value: Route.productForm()) {
                 Text(ProductStrings.emptyAction)
                     .font(.headline)
-                    .foregroundStyle(SolennixColors.onPrimary)
+                    .foregroundStyle(SolennixColors.primaryDark)
                     .padding(.horizontal, Spacing.xl)
                     .padding(.vertical, 16)
-                    .background(SolennixGradient.premium)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                    .shadowFab()
+                    .background(SolennixColors.primaryLight)
+                    .clipShape(Capsule())
+                    .adaptiveGlass(in: Capsule(), fallback: .material)
             }
             .padding(.bottom, Spacing.xxl)
         }
         .frame(maxWidth: .infinity)
-        .listRowBackground(Color.clear)
-        .listRowInsets(EdgeInsets())
-        .listRowSeparator(.hidden)
     }
 
     // MARK: - Skeleton Rows (Fix 3)
@@ -385,7 +378,7 @@ public struct ProductListView: View {
     private var productSkeletonRows: some View {
         ForEach(0..<6, id: \.self) { _ in
             ProductSkeletonRow()
-                .listRowBackground(SolennixColors.card)
+                .solennixRow()
                 .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
         }
         .accessibilityHidden(true)

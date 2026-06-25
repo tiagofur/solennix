@@ -21,9 +21,7 @@ struct DashboardQuickActionButton: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-        .shadowSm()
+        .solennixCard(border: false)
     }
 }
 
@@ -51,9 +49,7 @@ struct DashboardLowStockCard: View {
                 .font(.body)
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-        .shadowSm()
+        .solennixCard(border: false)
     }
 }
 
@@ -96,8 +92,6 @@ struct DashboardEmptyCardState: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, Spacing.xxl)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-        .shadowSm()
+        .solennixCard(border: false)
     }
 }

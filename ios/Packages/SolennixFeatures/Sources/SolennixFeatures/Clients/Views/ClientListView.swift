@@ -120,7 +120,8 @@ public struct ClientListView: View {
                 icon: "wifi.exclamationmark",
                 title: tr("clients.error.load_title", "Error al cargar"),
                 message: error,
-                actionTitle: tr("clients.action.retry", "Reintentar")
+                actionTitle: tr("clients.action.retry", "Reintentar"),
+                iconColor: SolennixColors.primary
             ) {
                 Task { await viewModel.loadClients() }
             }
@@ -136,17 +137,18 @@ public struct ClientListView: View {
                     EmptyStateView(
                         icon: "person.2",
                         title: tr("clients.empty.title", "Sin clientes"),
-                        message: tr("clients.empty.message", "Agregá tu primer cliente para empezar")
+                        message: tr("clients.empty.message", "Agregá tu primer cliente para empezar"),
+                        iconColor: SolennixColors.primary
                     )
                     NavigationLink(value: Route.clientForm()) {
                         Text(tr("clients.empty.cta", "Agregar cliente"))
                             .font(.headline)
-                            .foregroundStyle(SolennixColors.onPrimary)
+                            .foregroundStyle(SolennixColors.primaryDark)
                             .padding(.horizontal, Spacing.xl)
                             .padding(.vertical, 16)
-                            .background(SolennixGradient.premium)
-                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                            .shadowFab()
+                            .background(SolennixColors.primaryLight)
+                            .clipShape(Capsule())
+                            .adaptiveGlass(in: Capsule(), fallback: .material)
                     }
                     .padding(.bottom, Spacing.xxl)
                 }
@@ -155,7 +157,8 @@ public struct ClientListView: View {
                 EmptyStateView(
                     icon: "magnifyingglass",
                     title: tr("clients.search.empty_title", "Sin resultados"),
-                    message: tr("clients.search.empty_message", "No se encontraron clientes que coincidan con tu búsqueda")
+                    message: tr("clients.search.empty_message", "No se encontraron clientes que coincidan con tu búsqueda"),
+                    iconColor: SolennixColors.primary
                 )
                 .background(SolennixColors.surfaceGrouped)
             }
@@ -163,30 +166,29 @@ public struct ClientListView: View {
     }
 
     /// First-run empty state for the iPhone list with a working NavigationLink CTA.
-    /// Mirrors EventListView's first-run empty state pattern (line 596-619).
-    private var clientFirstRunEmptyRow: some View {
+    /// Mirrors EventListView's first-run empty state pattern.
+    /// Outside List for proper vertical centering.
+    private var clientFirstRunEmptyState: some View {
         VStack(spacing: 0) {
             EmptyStateView(
                 icon: "person.2",
                 title: tr("clients.empty.title", "Sin clientes"),
-                message: tr("clients.empty.message", "Agregá tu primer cliente para empezar")
+                message: tr("clients.empty.message", "Agregá tu primer cliente para empezar"),
+                iconColor: SolennixColors.primary
             )
             NavigationLink(value: Route.clientForm()) {
                 Text(tr("clients.empty.cta", "Agregar cliente"))
                     .font(.headline)
-                    .foregroundStyle(SolennixColors.onPrimary)
+                    .foregroundStyle(SolennixColors.primaryDark)
                     .padding(.horizontal, Spacing.xl)
                     .padding(.vertical, 16)
-                    .background(SolennixGradient.premium)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                    .shadowFab()
+                    .background(SolennixColors.primaryLight)
+                    .clipShape(Capsule())
+                    .adaptiveGlass(in: Capsule(), fallback: .material)
             }
             .padding(.bottom, Spacing.xxl)
         }
         .frame(maxWidth: .infinity)
-        .listRowBackground(Color.clear)
-        .listRowInsets(EdgeInsets())
-        .listRowSeparator(.hidden)
     }
 
     private var clientGrid: some View {
@@ -256,31 +258,39 @@ public struct ClientListView: View {
 
     @ViewBuilder
     private var clientListCompact: some View {
-        List {
-            if let error = viewModel.errorMessage, viewModel.clients.isEmpty, !viewModel.isLoading {
-                fullPageEmptyRow(
-                    icon: "wifi.exclamationmark",
-                    title: tr("clients.error.load_title", "Error al cargar"),
-                    message: error,
-                    actionTitle: tr("clients.action.retry", "Reintentar")
-                ) {
-                    Task { await viewModel.loadClients() }
-                }
-            } else if viewModel.isLoading && viewModel.clients.isEmpty {
+        if let error = viewModel.errorMessage, viewModel.clients.isEmpty, !viewModel.isLoading {
+            // Error state — outside List for proper centering
+            EmptyStateView(
+                icon: "wifi.exclamationmark",
+                title: tr("clients.error.load_title", "Error al cargar"),
+                message: error,
+                actionTitle: tr("clients.action.retry", "Reintentar"),
+                iconColor: SolennixColors.primary
+            ) {
+                Task { await viewModel.loadClients() }
+            }
+        } else if viewModel.isLoading && viewModel.clients.isEmpty {
+            List {
                 skeletonRows
-            } else if viewModel.filteredClients.isEmpty && !viewModel.isLoading {
-                if viewModel.searchText.isEmpty {
-                    clientFirstRunEmptyRow
-                } else {
-                    fullPageEmptyRow(
-                        icon: "magnifyingglass",
-                        title: tr("clients.search.empty_title", "Sin resultados"),
-                        message: tr("clients.search.empty_message", "No se encontraron clientes que coincidan con tu búsqueda"),
-                        actionTitle: nil,
-                        action: nil
-                    )
-                }
+            }
+            .listStyle(.insetGrouped)
+            .solennixListStyle()
+            .popoverTip(swipeActionTip)
+        } else if viewModel.filteredClients.isEmpty && !viewModel.isLoading {
+            // Empty states — outside List for proper centering
+            if viewModel.searchText.isEmpty {
+                // First-run: real NavigationLink CTA
+                clientFirstRunEmptyState
             } else {
+                EmptyStateView(
+                    icon: "magnifyingglass",
+                    title: tr("clients.search.empty_title", "Sin resultados"),
+                    message: tr("clients.search.empty_message", "No se encontraron clientes que coincidan con tu búsqueda"),
+                    iconColor: SolennixColors.primary
+                )
+            }
+        } else {
+            List {
                 ForEach(viewModel.paginatedClients) { client in
                     ZStack {
                         clientRow(client)
@@ -289,7 +299,7 @@ public struct ClientListView: View {
                         }
                         .opacity(0)
                     }
-                    .listRowBackground(SolennixColors.card)
+                    .solennixRow()
                     .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
                     .alignmentGuide(.listRowSeparatorLeading) { d in d[.leading] + 40 + Spacing.md }
                     .accessibilityElement(children: .ignore)
@@ -387,11 +397,10 @@ public struct ClientListView: View {
                     .listRowBackground(Color.clear)
                 }
             }
+            .listStyle(.insetGrouped)
+            .solennixListStyle()
+            .popoverTip(swipeActionTip)
         }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
-        .popoverTip(swipeActionTip)
     }
 
     /// Skeleton placeholder rows shown while clients are loading for the first time.
@@ -400,32 +409,10 @@ public struct ClientListView: View {
     private var skeletonRows: some View {
         ForEach(0..<5, id: \.self) { _ in
             ClientSkeletonCard()
-                .listRowBackground(SolennixColors.card)
+                .solennixRow()
                 .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
         }
         .accessibilityHidden(true)
-    }
-
-    /// Renders an `EmptyStateView` as a List row that fills the available space
-    /// without List chrome (no background, no insets, no separator).
-    private func fullPageEmptyRow(
-        icon: String,
-        title: String,
-        message: String,
-        actionTitle: String? = nil,
-        action: (() -> Void)? = nil
-    ) -> some View {
-        EmptyStateView(
-            icon: icon,
-            title: title,
-            message: message,
-            actionTitle: actionTitle,
-            action: action
-        )
-        .frame(maxWidth: .infinity)
-        .listRowBackground(Color.clear)
-        .listRowInsets(EdgeInsets())
-        .listRowSeparator(.hidden)
     }
 
     // MARK: - Client Row

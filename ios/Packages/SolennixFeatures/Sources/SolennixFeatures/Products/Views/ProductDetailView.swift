@@ -248,19 +248,15 @@ public struct ProductDetailView: View {
     public var body: some View {
         Group {
             if viewModel.isLoading && viewModel.product == nil {
-                List {
-                    ProductDetailSkeleton()
-                }
-                .listStyle(.insetGrouped)
-                .scrollContentBackground(.hidden)
-                .background(SolennixColors.surfaceGrouped)
+                ProductDetailSkeleton()
             } else if let product = viewModel.product {
-                hubList(product)
+                hubScrollView(product)
             } else {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
                     title: ProductStrings.errorTitle,
-                    message: viewModel.errorMessage ?? ProductStrings.notFoundMessage
+                    message: viewModel.errorMessage ?? ProductStrings.notFoundMessage,
+                    iconColor: SolennixColors.primary
                 )
             }
         }
@@ -316,162 +312,153 @@ public struct ProductDetailView: View {
         .task { await viewModel.loadData() }
     }
 
-    // MARK: - Hub List
+    // MARK: - @ScaledMetric sizes (Dynamic Type-safe, capped)
 
-    private func hubList(_ product: Product) -> some View {
-        List {
-            // MARK: Header — image + name + category badge
-            Section {
-                productHeaderCard(product)
-            }
-            .listRowSeparator(.hidden)
+    @ScaledMetric(relativeTo: .body) private var scaledImageHeight: CGFloat = 280
+    private var cappedImageHeight: CGFloat { min(scaledImageHeight, 400) }
 
-            // MARK: KPI row
-            Section {
-                kpiSection(product)
-            }
-            .listRowSeparator(.hidden)
+    // MARK: - Hub ScrollView
 
-            // MARK: Smart alert
-            Section {
-                smartAlertRow(product)
-            }
-            .listRowSeparator(.hidden)
+    private func hubScrollView(_ product: Product) -> some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                // Hero Image at the very top (ignores safe area top)
+                heroHeaderView(product)
 
-            // MARK: Demand chart
-            Section {
-                DemandForecastChart(
-                    dataPoints: viewModel.demandData,
-                    productName: product.name,
-                    basePrice: product.basePrice
-                )
-                .listRowBackground(SolennixColors.card)
-                .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
-            }
-            .listRowSeparator(.hidden)
+                VStack(spacing: Spacing.md) {
+                    // Category & Status Kicker + Title inside a card
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        HStack(spacing: Spacing.xs) {
+                            Text(product.category)
+                                .font(.caption.weight(.bold))
+                                .textCase(.uppercase)
+                                .foregroundStyle(SolennixColors.primary)
 
-            // MARK: Composition / Recipe sections
-            if !viewModel.ingredientItems.isEmpty {
-                Section {
-                    compositionSection(
-                        title: ProductStrings.compositionTitle,
-                        icon: "square.stack.3d.up.fill",
-                        iconColor: SolennixColors.primary,
-                        items: viewModel.ingredientItems,
-                        showCost: true,
-                        totalLabel: ProductStrings.totalUnitCost,
-                        totalValue: viewModel.unitCost
+                            if !product.isActive {
+                                Text("•")
+                                    .foregroundStyle(SolennixColors.textSecondary)
+                                Text(ProductStrings.inactive)
+                                    .font(.caption.weight(.bold))
+                                    .textCase(.uppercase)
+                                    .foregroundStyle(SolennixColors.error)
+                            }
+                        }
+
+                        Text(product.name)
+                            .font(.title.weight(.bold))
+                            .foregroundStyle(SolennixColors.text)
+                    }
+                    .padding(Spacing.md)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
+                    .shadow(color: Color.black.opacity(0.04), radius: 10, y: 5)
+                    .padding(.horizontal, Spacing.md)
+
+                    // Smart alert banner (Translucent iOS style)
+                    smartAlertRow(product)
+
+                    // KPI grid card
+                    kpiSection(product)
+
+                    // Demand chart card
+                    DemandForecastChart(
+                        dataPoints: viewModel.demandData,
+                        productName: product.name,
+                        basePrice: product.basePrice
                     )
-                }
-                .listRowSeparator(.hidden)
-            }
+                    .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
+                    .padding(.horizontal, Spacing.md)
 
-            if !viewModel.supplyItems.isEmpty {
-                Section {
-                    compositionSection(
-                        title: ProductStrings.suppliesTitle,
-                        icon: "flame.fill",
-                        iconColor: SolennixColors.warning,
-                        items: viewModel.supplyItems,
-                        showCost: true,
-                        badge: ProductStrings.fixedCostPerEvent,
-                        badgeColor: SolennixColors.warning,
-                        totalLabel: ProductStrings.costPerEvent,
-                        totalValue: viewModel.perEventCost,
-                        totalColor: SolennixColors.warning
-                    )
-                }
-                .listRowSeparator(.hidden)
-            }
+                    // Composition / Recipe sections
+                    if !viewModel.ingredientItems.isEmpty {
+                        compositionSection(
+                            title: ProductStrings.compositionTitle,
+                            icon: "square.stack.3d.up.fill",
+                            iconColor: SolennixColors.primary,
+                            items: viewModel.ingredientItems,
+                            showCost: true,
+                            totalLabel: ProductStrings.totalUnitCost,
+                            totalValue: viewModel.unitCost
+                        )
+                    }
 
-            if !viewModel.equipmentItems.isEmpty {
-                Section {
-                    compositionSection(
-                        title: ProductStrings.equipmentTitle,
-                        icon: "wrench.and.screwdriver.fill",
-                        iconColor: .blue,
-                        items: viewModel.equipmentItems,
-                        showCost: false,
-                        badge: ProductStrings.reusableNoCost,
-                        badgeColor: .blue
-                    )
-                }
-                .listRowSeparator(.hidden)
-            }
+                    if !viewModel.supplyItems.isEmpty {
+                        compositionSection(
+                            title: ProductStrings.suppliesTitle,
+                            icon: "flame.fill",
+                            iconColor: SolennixColors.warning,
+                            items: viewModel.supplyItems,
+                            showCost: true,
+                            badge: ProductStrings.fixedCostPerEvent,
+                            badgeColor: SolennixColors.warning,
+                            totalLabel: ProductStrings.costPerEvent,
+                            totalValue: viewModel.perEventCost,
+                            totalColor: SolennixColors.warning
+                        )
+                    }
 
-            // MARK: General info — category + price + composition summary
-            Section {
-                generalInfoSection(product)
+                    if !viewModel.equipmentItems.isEmpty {
+                        compositionSection(
+                            title: ProductStrings.equipmentTitle,
+                            icon: "wrench.and.screwdriver.fill",
+                            iconColor: .blue,
+                            items: viewModel.equipmentItems,
+                            showCost: false,
+                            badge: ProductStrings.reusableNoCost,
+                            badgeColor: .blue
+                        )
+                    }
+
+                    // General info
+                    generalInfoSection(product)
+
+                    Color.clear.frame(height: Spacing.xl)
+                }
+                .padding(.top, -24)
+                .zIndex(1)
             }
-            .listRowSeparator(.hidden)
         }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
+        .ignoresSafeArea(.container, edges: .top)
         .background(SolennixColors.surfaceGrouped)
         .softScrollEdgeEffectIfAvailable()
         .refreshable {
-            // Does NOT clear arrays — avoids skeleton flash on pull-to-refresh.
             await viewModel.loadData()
         }
     }
 
-    // MARK: - @ScaledMetric sizes (Dynamic Type-safe, capped)
+    // MARK: - Hero Header View
 
-    @ScaledMetric(relativeTo: .body) private var scaledImageHeight: CGFloat = 200
-    private var cappedImageHeight: CGFloat { min(scaledImageHeight, 280) }
+    private func heroHeaderView(_ product: Product) -> some View {
+        GeometryReader { geometry in
+            let minY = geometry.frame(in: .global).minY
+            let height = cappedImageHeight + (minY > 0 ? minY : 0)
 
-    // MARK: - Header Card
-
-    private func productHeaderCard(_ product: Product) -> some View {
-        VStack(spacing: Spacing.md) {
-            if let imageUrl = product.imageUrl, !imageUrl.isEmpty,
-               let url = APIClient.resolveURL(imageUrl) {
-                AsyncImage(url: url) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
+            Group {
+                if let imageUrl = product.imageUrl, !imageUrl.isEmpty,
+                   let url = APIClient.resolveURL(imageUrl) {
+                    AsyncImage(url: url) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Rectangle()
+                            .fill(SolennixColors.surface)
+                    }
+                } else {
                     Rectangle()
                         .fill(SolennixColors.surface)
+                        .overlay {
+                            Image(systemName: "photo")
+                                .font(.title)
+                                .foregroundStyle(SolennixColors.textSecondary)
+                        }
                 }
-                .frame(maxWidth: .infinity)
-                .frame(height: cappedImageHeight)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-                .accessibilityLabel(product.name)
             }
-
-            Text(product.name)
-                .font(.title2.weight(.bold))
-                .foregroundStyle(SolennixColors.text)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            HStack(spacing: Spacing.sm) {
-                Text(product.category)
-                    .font(.caption.weight(.semibold))
-                    .textCase(.uppercase)
-                    .foregroundStyle(SolennixColors.primary)
-                    .padding(.horizontal, Spacing.sm)
-                    .padding(.vertical, Spacing.xs)
-                    .background(SolennixColors.primary.opacity(0.1))
-                    .clipShape(Capsule())
-
-                if !product.isActive {
-                    Text(ProductStrings.inactive)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(SolennixColors.error)
-                        .padding(.horizontal, Spacing.sm)
-                        .padding(.vertical, Spacing.xs)
-                        .background(SolennixColors.errorBg)
-                        .clipShape(Capsule())
-                }
-
-                Spacer()
-            }
+            .frame(width: geometry.size.width, height: height)
+            .clipped()
+            .offset(y: minY > 0 ? -minY : 0)
         }
-        .padding(Spacing.md)
-        .frame(maxWidth: .infinity)
-        .listRowBackground(SolennixColors.card)
-        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+        .frame(height: cappedImageHeight)
     }
 
     // MARK: - KPI Section
@@ -485,49 +472,59 @@ public struct ProductDetailView: View {
         let marginDisplay = marginValue.map { String(format: "%.1f%%", $0) } ?? "—"
         let marginSubtitle = marginValue != nil ? ProductStrings.profitEstimated : ProductStrings.noRecipe
 
-        return LazyVGrid(
-            columns: [
-                GridItem(.flexible(), spacing: Spacing.md),
-                GridItem(.flexible(), spacing: Spacing.md)
-            ],
-            spacing: Spacing.md
-        ) {
-            kpiCard(
-                icon: "dollarsign.circle.fill",
-                iconColor: SolennixColors.primary,
-                label: ProductStrings.basePrice,
-                value: product.basePrice.formatted(.currency(code: "MXN")),
-                subtitle: ProductStrings.perUnit,
-                a11yLabel: "\(ProductStrings.basePrice): \(product.basePrice.formatted(.currency(code: "MXN")))"
-            )
-            kpiCard(
-                icon: "square.stack.3d.up.fill",
-                iconColor: SolennixColors.textSecondary,
-                label: ProductStrings.unitCost,
-                value: viewModel.unitCost.formatted(.currency(code: "MXN")),
-                subtitle: ProductStrings.inSupplies,
-                a11yLabel: "\(ProductStrings.unitCost): \(viewModel.unitCost.formatted(.currency(code: "MXN")))"
-            )
-            kpiCard(
-                icon: "arrow.up.right",
-                iconColor: marginColor,
-                label: ProductStrings.marginEstimated,
-                value: marginDisplay,
-                subtitle: marginSubtitle,
-                valueColor: marginColor,
-                a11yLabel: "\(ProductStrings.marginEstimated): \(marginDisplay)"
-            )
-            kpiCard(
-                icon: "calendar",
-                iconColor: SolennixColors.primary,
-                label: ProductStrings.upcomingEvents,
-                value: "\(viewModel.demandData.count)",
-                subtitle: ProductStrings.confirmed,
-                a11yLabel: "\(ProductStrings.upcomingEvents): \(viewModel.demandData.count)"
-            )
+        return VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                kpiCard(
+                    icon: "dollarsign.circle.fill",
+                    iconColor: SolennixColors.primary,
+                    label: ProductStrings.basePrice,
+                    value: product.basePrice.formatted(.currency(code: "MXN")),
+                    subtitle: ProductStrings.perUnit,
+                    a11yLabel: "\(ProductStrings.basePrice): \(product.basePrice.formatted(.currency(code: "MXN")))"
+                )
+
+                Divider()
+                    .frame(height: 70)
+
+                kpiCard(
+                    icon: "square.stack.3d.up.fill",
+                    iconColor: SolennixColors.textSecondary,
+                    label: ProductStrings.unitCost,
+                    value: viewModel.unitCost.formatted(.currency(code: "MXN")),
+                    subtitle: ProductStrings.inSupplies,
+                    a11yLabel: "\(ProductStrings.unitCost): \(viewModel.unitCost.formatted(.currency(code: "MXN")))"
+                )
+            }
+
+            Divider()
+                .padding(.horizontal, Spacing.md)
+
+            HStack(spacing: 0) {
+                kpiCard(
+                    icon: "arrow.up.right",
+                    iconColor: marginColor,
+                    label: ProductStrings.marginEstimated,
+                    value: marginDisplay,
+                    subtitle: marginSubtitle,
+                    valueColor: marginColor,
+                    a11yLabel: "\(ProductStrings.marginEstimated): \(marginDisplay)"
+                )
+
+                Divider()
+                    .frame(height: 70)
+
+                kpiCard(
+                    icon: "calendar",
+                    iconColor: SolennixColors.primary,
+                    label: ProductStrings.upcomingEvents,
+                    value: "\(viewModel.demandData.count)",
+                    subtitle: ProductStrings.confirmed,
+                    a11yLabel: "\(ProductStrings.upcomingEvents): \(viewModel.demandData.count)"
+                )
+            }
         }
-        .listRowBackground(SolennixColors.card)
-        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+        .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
+        .padding(.horizontal, Spacing.md)
     }
 
     private func kpiCard(
@@ -550,8 +547,8 @@ public struct ProductDetailView: View {
                     .textCase(.uppercase)
             }
             Text(value)
-                .font(.title2)
-                .fontWeight(.black)
+                .font(.title3)
+                .fontWeight(.bold)
                 .foregroundStyle(valueColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
@@ -561,8 +558,6 @@ public struct ProductDetailView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Spacing.md)
-        .background(SolennixColors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(a11yLabel)
     }
@@ -577,7 +572,7 @@ public struct ProductDetailView: View {
                 .foregroundStyle(isHighDemand ? SolennixColors.primary : SolennixColors.success)
                 .font(.title3)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(isHighDemand
                      ? ProductStrings.unitsNext7Days(viewModel.demand7Days)
                      : viewModel.demandData.isEmpty ? ProductStrings.noUpcomingEvents : ProductStrings.noImmediateDemand
@@ -585,33 +580,34 @@ public struct ProductDetailView: View {
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(isHighDemand ? SolennixColors.primary : SolennixColors.success)
 
-                if isHighDemand {
-                    // Revenue computed over the 7-day window (consistent with demand7Days).
-                    if viewModel.estimatedRevenue7Days > 0 {
-                        Text(ProductStrings.revenueMessage(viewModel.estimatedRevenue7Days.formatted(.currency(code: "MXN"))))
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.textSecondary)
+                Group {
+                    if isHighDemand {
+                        if viewModel.estimatedRevenue7Days > 0 {
+                            Text(ProductStrings.revenueMessage(viewModel.estimatedRevenue7Days.formatted(.currency(code: "MXN"))))
+                        } else {
+                            Text(ProductStrings.highDemandWeek)
+                        }
+                    } else if !viewModel.demandData.isEmpty {
+                        Text(ProductStrings.demandSummary(units: viewModel.totalDemand, events: viewModel.demandData.count))
                     } else {
-                        Text(ProductStrings.highDemandWeek)
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.textSecondary)
+                        Text(ProductStrings.noConfirmedEvents)
                     }
-                } else if !viewModel.demandData.isEmpty {
-                    Text(ProductStrings.demandSummary(units: viewModel.totalDemand, events: viewModel.demandData.count))
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textSecondary)
-                } else {
-                    Text(ProductStrings.noConfirmedEvents)
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textSecondary)
                 }
+                .font(.caption)
+                .foregroundStyle(SolennixColors.textSecondary)
             }
 
             Spacer()
         }
         .padding(Spacing.md)
-        .listRowBackground(isHighDemand ? SolennixColors.primary.opacity(0.08) : SolennixColors.card)
-        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+        .overlay(
+            RoundedRectangle(cornerRadius: CornerRadius.md)
+                .stroke(isHighDemand ? SolennixColors.primary.opacity(0.2) : Color.primary.opacity(0.06), lineWidth: 0.5)
+        )
+        .shadow(color: Color.black.opacity(0.03), radius: 6, y: 3)
+        .padding(.horizontal, Spacing.md)
     }
 
     // MARK: - General Info Section
@@ -668,11 +664,11 @@ public struct ProductDetailView: View {
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .listRowBackground(SolennixColors.card)
-        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+        .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
+        .padding(.horizontal, Spacing.md)
     }
 
-    // MARK: - Composition Section (List row-native, no shadow)
+    // MARK: - Composition Section
 
     private func compositionSection(
         title: String,
@@ -775,162 +771,169 @@ public struct ProductDetailView: View {
                 .padding(Spacing.md)
             }
         }
-        .listRowBackground(SolennixColors.card)
-        .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+        .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
+        .padding(.horizontal, Spacing.md)
     }
 }
 
-// MARK: - Product Detail Skeleton (in-List placeholder)
+// MARK: - Product Detail Skeleton (in-ScrollView placeholder)
 
 struct ProductDetailSkeleton: View {
-    @ScaledMetric(relativeTo: .body) private var scaledImageHeight: CGFloat = 200
-    private var cappedImageHeight: CGFloat { min(scaledImageHeight, 280) }
+    @ScaledMetric(relativeTo: .body) private var scaledImageHeight: CGFloat = 280
+    private var cappedImageHeight: CGFloat { min(scaledImageHeight, 400) }
 
     var body: some View {
-        // Header — image block + name + category
-        Section {
-            VStack(alignment: .leading, spacing: Spacing.md) {
-                SkeletonLine(height: cappedImageHeight)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-                SkeletonLine(width: 200, height: 24)
-                SkeletonLine(width: 80, height: 18)
-                    .clipShape(Capsule())
-            }
-            .padding(Spacing.md)
-            .listRowBackground(SolennixColors.card)
-            .listRowSeparator(.hidden)
-        }
+        ScrollView {
+            VStack(spacing: 0) {
+                // Stretchy Header placeholder (flat because loading, but matches height)
+                Rectangle()
+                    .fill(SolennixColors.surface)
+                    .frame(height: cappedImageHeight)
 
-        // KPI row — 4 mini boxes
-        Section {
-            HStack(spacing: Spacing.md) {
-                ForEach(0..<4, id: \.self) { _ in
+                VStack(spacing: Spacing.md) {
+                    // Title & Category skeleton card
                     VStack(alignment: .leading, spacing: Spacing.xs) {
-                        SkeletonLine(width: 40, height: 10)
-                        SkeletonLine(width: 60, height: 22)
-                        SkeletonLine(width: 30, height: 10)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(Spacing.md)
-                    .background(SolennixColors.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                }
-            }
-            .listRowBackground(SolennixColors.card)
-            .listRowSeparator(.hidden)
-        }
-
-        // Smart alert skeleton
-        Section {
-            HStack(alignment: .top, spacing: Spacing.md) {
-                SkeletonLine(width: 22, height: 22)
-                    .clipShape(Circle())
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    SkeletonLine(width: 180, height: 14)
-                    SkeletonLine(width: 120, height: 12)
-                }
-                Spacer()
-            }
-            .padding(Spacing.md)
-            .listRowBackground(SolennixColors.card)
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
-        }
-
-        // Chart placeholder
-        Section {
-            VStack(alignment: .leading, spacing: Spacing.md) {
-                SkeletonLine(width: 160, height: 18)
-                SkeletonLine(height: 200)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-            }
-            .padding(Spacing.md)
-            .listRowBackground(SolennixColors.card)
-            .listRowSeparator(.hidden)
-        }
-
-        // Recipe / composition skeleton — single card with rows inside, mirrors compositionSection layout
-        Section {
-            VStack(alignment: .leading, spacing: 0) {
-                // Section header
-                HStack(spacing: Spacing.sm) {
-                    SkeletonLine(width: 16, height: 16)
-                    SkeletonLine(width: 140, height: 16)
-                    Spacer()
-                }
-                .padding(Spacing.md)
-
-                Divider()
-
-                // Column header bar
-                HStack {
-                    SkeletonLine(width: 60, height: 10)
-                    Spacer()
-                    SkeletonLine(width: 60, height: 10)
-                    SkeletonLine(width: 70, height: 10)
-                }
-                .padding(.horizontal, Spacing.md)
-                .padding(.vertical, Spacing.sm)
-                .background(SolennixColors.surface)
-
-                // Item rows
-                ForEach(0..<3, id: \.self) { _ in
-                    Divider().opacity(0.5)
-                    HStack {
-                        SkeletonLine(width: 100, height: 14)
-                        Spacer()
-                        SkeletonLine(width: 50, height: 14)
-                        SkeletonLine(width: 60, height: 14)
-                    }
-                    .padding(.horizontal, Spacing.md)
-                    .padding(.vertical, Spacing.sm)
-                    .frame(minHeight: 44)
-                }
-            }
-            .listRowBackground(SolennixColors.card)
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
-        }
-
-        // General info skeleton — mirrors generalInfoSection single-card layout
-        Section {
-            VStack(alignment: .leading, spacing: Spacing.md) {
-                SkeletonLine(width: 140, height: 10)
-
-                HStack(spacing: Spacing.md) {
-                    SkeletonLine(width: 18, height: 18)
-                    VStack(alignment: .leading, spacing: 4) {
-                        SkeletonLine(width: 60, height: 10)
-                        SkeletonLine(width: 100, height: 14)
-                    }
-                }
-
-                Divider()
-
-                HStack(spacing: Spacing.md) {
-                    SkeletonLine(width: 18, height: 18)
-                    VStack(alignment: .leading, spacing: 4) {
-                        SkeletonLine(width: 60, height: 10)
                         SkeletonLine(width: 80, height: 14)
+                        SkeletonLine(width: 200, height: 24)
                     }
-                }
+                    .padding(Spacing.md)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
+                    .padding(.horizontal, Spacing.md)
 
-                Divider()
-
-                HStack(spacing: Spacing.md) {
-                    SkeletonLine(width: 18, height: 18)
-                    VStack(alignment: .leading, spacing: 4) {
-                        SkeletonLine(width: 80, height: 10)
-                        SkeletonLine(width: 140, height: 14)
+                    // Smart Alert Skeleton
+                    HStack(alignment: .top, spacing: Spacing.md) {
+                        SkeletonLine(width: 22, height: 22)
+                            .clipShape(Circle())
+                        VStack(alignment: .leading, spacing: Spacing.xs) {
+                            SkeletonLine(width: 180, height: 14)
+                            SkeletonLine(width: 120, height: 12)
+                        }
+                        Spacer()
                     }
+                    .padding(Spacing.md)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    .padding(.horizontal, Spacing.md)
+
+                    // KPI Skeleton (2x2 grid inside a single card)
+                    VStack(spacing: 0) {
+                        HStack(spacing: 0) {
+                            kpiSkeletonCard()
+                            Divider().frame(height: 70)
+                            kpiSkeletonCard()
+                        }
+                        Divider().padding(.horizontal, Spacing.md)
+                        HStack(spacing: 0) {
+                            kpiSkeletonCard()
+                            Divider().frame(height: 70)
+                            kpiSkeletonCard()
+                        }
+                    }
+                    .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
+                    .padding(.horizontal, Spacing.md)
+
+                    // Chart skeleton
+                    VStack(alignment: .leading, spacing: Spacing.md) {
+                        SkeletonLine(width: 160, height: 18)
+                        SkeletonLine(height: 200)
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    }
+                    .padding(Spacing.md)
+                    .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
+                    .padding(.horizontal, Spacing.md)
+
+                    // Recipe composition skeleton
+                    VStack(alignment: .leading, spacing: 0) {
+                        HStack(spacing: Spacing.sm) {
+                            SkeletonLine(width: 16, height: 16)
+                            SkeletonLine(width: 140, height: 16)
+                            Spacer()
+                        }
+                        .padding(Spacing.md)
+
+                        Divider()
+
+                        HStack {
+                            SkeletonLine(width: 60, height: 10)
+                            Spacer()
+                            SkeletonLine(width: 60, height: 10)
+                            SkeletonLine(width: 70, height: 10)
+                        }
+                        .padding(.horizontal, Spacing.md)
+                        .padding(.vertical, Spacing.sm)
+                        .background(SolennixColors.surface)
+
+                        ForEach(0..<3, id: \.self) { _ in
+                            Divider().opacity(0.5)
+                            HStack {
+                                SkeletonLine(width: 100, height: 14)
+                                Spacer()
+                                SkeletonLine(width: 50, height: 14)
+                                SkeletonLine(width: 60, height: 14)
+                            }
+                            .padding(.horizontal, Spacing.md)
+                            .padding(.vertical, Spacing.sm)
+                            .frame(minHeight: 44)
+                        }
+                    }
+                    .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
+                    .padding(.horizontal, Spacing.md)
+
+                    // General info skeleton
+                    VStack(alignment: .leading, spacing: Spacing.md) {
+                        SkeletonLine(width: 140, height: 10)
+
+                        HStack(spacing: Spacing.md) {
+                            SkeletonLine(width: 18, height: 18)
+                            VStack(alignment: .leading, spacing: 4) {
+                                SkeletonLine(width: 60, height: 10)
+                                SkeletonLine(width: 100, height: 14)
+                            }
+                        }
+
+                        Divider()
+
+                        HStack(spacing: Spacing.md) {
+                            SkeletonLine(width: 18, height: 18)
+                            VStack(alignment: .leading, spacing: 4) {
+                                SkeletonLine(width: 60, height: 10)
+                                SkeletonLine(width: 80, height: 14)
+                            }
+                        }
+
+                        Divider()
+
+                        HStack(spacing: Spacing.md) {
+                            SkeletonLine(width: 18, height: 18)
+                            VStack(alignment: .leading, spacing: 4) {
+                                SkeletonLine(width: 80, height: 10)
+                                SkeletonLine(width: 140, height: 14)
+                            }
+                        }
+                    }
+                    .padding(Spacing.md)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
+                    .padding(.horizontal, Spacing.md)
+
+                    Color.clear.frame(height: Spacing.xl)
                 }
+                .padding(.top, -24)
+                .zIndex(1)
             }
-            .padding(Spacing.md)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .listRowBackground(SolennixColors.card)
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
         }
+        .ignoresSafeArea(.container, edges: .top)
+    }
+
+    private func kpiSkeletonCard() -> some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            SkeletonLine(width: 40, height: 10)
+            SkeletonLine(width: 60, height: 22)
+            SkeletonLine(width: 30, height: 10)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Spacing.md)
     }
 }
 

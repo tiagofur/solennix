@@ -16,126 +16,136 @@ private func trf(_ key: String, _ value: String, _ arg: String) -> String {
 struct Step3ExtrasView: View {
 
     @Bindable var viewModel: EventFormViewModel
-    @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: Spacing.lg) {
-                Button {
-                    viewModel.addExtra()
-                } label: {
-                    HStack(spacing: Spacing.sm) {
-                        Image(systemName: "plus.circle.fill")
-                            .foregroundStyle(SolennixColors.primary)
+        Form {
+            addExtraSection
 
-                        Text(tr("events.form.extras.add", "Agregar extra"))
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundStyle(SolennixColors.primary)
-
-                        Spacer()
-                    }
-                    .padding(Spacing.md)
-                    .background(SolennixColors.primaryLight)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: CornerRadius.md)
-                            .stroke(SolennixColors.primary.opacity(0.3), lineWidth: 1)
-                    )
-                }
-                .buttonStyle(.plain)
-
-                if viewModel.extras.isEmpty {
-                    VStack(spacing: Spacing.sm) {
-                        Image(systemName: "star")
-                            .font(.largeTitle)
-                            .foregroundStyle(SolennixColors.textTertiary)
-
-                        Text(tr("events.form.extras.empty_title", "Sin extras"))
-                            .font(.subheadline)
-                            .foregroundStyle(SolennixColors.textSecondary)
-
-                        Text(tr("events.form.extras.empty_desc", "Agrega servicios o ítems adicionales"))
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.textTertiary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Spacing.xxxl)
-                } else {
-                    let columns: [GridItem] = sizeClass == .regular
-                        ? [GridItem(.flexible(), spacing: Spacing.md), GridItem(.flexible(), spacing: Spacing.md)]
-                        : [GridItem(.flexible())]
-
-                    LazyVGrid(columns: columns, spacing: Spacing.md) {
-                        ForEach(Array(viewModel.extras.enumerated()), id: \.element.id) { index, extra in
-                            ExtraRowView(
-                                extra: extra,
-                                index: index,
-                                onRemove: { viewModel.removeExtra(at: index) },
-                                onDescriptionChange: { newValue in
-                                    guard viewModel.extras.indices.contains(index) else { return }
-                                    viewModel.extras[index].description = newValue
-                                },
-                                onCostChange: { newCost in
-                                    guard viewModel.extras.indices.contains(index) else { return }
-                                    viewModel.extras[index].cost = newCost
-                                    if viewModel.extras[index].excludeUtility {
-                                        viewModel.extras[index].price = newCost
-                                    }
-                                },
-                                onPriceChange: { newPrice in
-                                    guard viewModel.extras.indices.contains(index) else { return }
-                                    viewModel.extras[index].price = newPrice
-                                },
-                                onExcludeUtilityChange: { newValue in
-                                    guard viewModel.extras.indices.contains(index) else { return }
-                                    viewModel.extras[index].excludeUtility = newValue
-                                    if newValue {
-                                        viewModel.extras[index].price = viewModel.extras[index].cost
-                                    }
-                                },
-                                onIncludeInChecklistChange: { newValue in
-                                    guard viewModel.extras.indices.contains(index) else { return }
-                                    viewModel.extras[index].includeInChecklist = newValue
-                                }
-                            )
-                            .draggable(extra.id.uuidString) {
-                                Text(extra.description.isEmpty ? trf("events.form.extras.row_title", "Extra %@", String(index + 1)) : extra.description)
-                                    .padding(Spacing.sm)
-                                    .background(SolennixColors.card)
-                                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
+            if viewModel.extras.isEmpty {
+                emptyStateSection
+            } else {
+                ForEach(Array(viewModel.extras.enumerated()), id: \.element.id) { index, extra in
+                    ExtraRowView(
+                        extra: extra,
+                        index: index,
+                        onRemove: { viewModel.removeExtra(at: index) },
+                        onDescriptionChange: { newValue in
+                            guard viewModel.extras.indices.contains(index) else { return }
+                            viewModel.extras[index].description = newValue
+                        },
+                        onCostChange: { newCost in
+                            guard viewModel.extras.indices.contains(index) else { return }
+                            viewModel.extras[index].cost = newCost
+                            if viewModel.extras[index].excludeUtility {
+                                viewModel.extras[index].price = newCost
                             }
-                            .dropDestination(for: String.self) { droppedItems, _ in
-                                guard let sourceId = droppedItems.first,
-                                      let sourceIndex = viewModel.extras.firstIndex(where: { $0.id.uuidString == sourceId }) else { return false }
-                                viewModel.moveExtra(from: sourceIndex, to: index)
-                                return true
+                        },
+                        onPriceChange: { newPrice in
+                            guard viewModel.extras.indices.contains(index) else { return }
+                            viewModel.extras[index].price = newPrice
+                        },
+                        onExcludeUtilityChange: { newValue in
+                            guard viewModel.extras.indices.contains(index) else { return }
+                            viewModel.extras[index].excludeUtility = newValue
+                            if newValue {
+                                viewModel.extras[index].price = viewModel.extras[index].cost
                             }
+                        },
+                        onIncludeInChecklistChange: { newValue in
+                            guard viewModel.extras.indices.contains(index) else { return }
+                            viewModel.extras[index].includeInChecklist = newValue
                         }
+                    )
+                    .draggable(extra.id.uuidString) {
+                        Text(extra.description.isEmpty
+                             ? trf("events.form.extras.row_title", "Extra %@", String(index + 1))
+                             : extra.description)
+                            .padding(.horizontal, Spacing.sm)
+                            .padding(.vertical, Spacing.xs)
+                            .background(.regularMaterial)
+                            .clipShape(Capsule())
+                    }
+                    .dropDestination(for: String.self) { droppedItems, _ in
+                        guard let sourceId = droppedItems.first,
+                              let sourceIndex = viewModel.extras.firstIndex(where: { $0.id.uuidString == sourceId }) else { return false }
+                        viewModel.moveExtra(from: sourceIndex, to: index)
+                        return true
                     }
                 }
 
-                if !viewModel.extras.isEmpty {
-                    HStack {
-                        Text(tr("events.form.finances.subtotal_extras", "Subtotal extras"))
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundStyle(SolennixColors.textSecondary)
+                subtotalSection
+            }
+        }
+        .solennixListStyle()
+        .scrollDismissesKeyboard(.interactively)
+    }
 
-                        Spacer()
+    // MARK: - Add Extra
 
-                        Text(formatCurrency(viewModel.extrasSubtotal))
-                            .font(.headline)
-                            .foregroundStyle(SolennixColors.primary)
-                    }
-                    .padding(Spacing.md)
-                    .background(SolennixColors.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+    private var addExtraSection: some View {
+        Section {
+            Button {
+                viewModel.addExtra()
+            } label: {
+                HStack(spacing: Spacing.sm) {
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundStyle(SolennixColors.primary)
+
+                    Text(tr("events.form.extras.add", "Agregar extra"))
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(SolennixColors.primary)
+
+                    Spacer()
                 }
             }
-            .padding(Spacing.md)
+            .buttonStyle(.plain)
+            .solennixRow()
         }
-        .scrollDismissesKeyboard(.interactively)
+    }
+
+    // MARK: - Empty State
+
+    private var emptyStateSection: some View {
+        Section {
+            VStack(spacing: Spacing.sm) {
+                Image(systemName: "star")
+                    .font(.largeTitle)
+                    .foregroundStyle(SolennixColors.textTertiary)
+
+                Text(tr("events.form.extras.empty_title", "Sin extras"))
+                    .font(.subheadline)
+                    .foregroundStyle(SolennixColors.textSecondary)
+
+                Text(tr("events.form.extras.empty_desc", "Agrega servicios o ítems adicionales"))
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textTertiary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, Spacing.xxxl)
+            .solennixRow()
+            .listRowSeparator(.hidden)
+        }
+    }
+
+    // MARK: - Subtotal
+
+    private var subtotalSection: some View {
+        Section {
+            HStack {
+                Text(tr("events.form.finances.subtotal_extras", "Subtotal extras"))
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(SolennixColors.textSecondary)
+
+                Spacer()
+
+                Text(formatCurrency(viewModel.extrasSubtotal))
+                    .font(.headline)
+                    .foregroundStyle(SolennixColors.primary)
+            }
+            .solennixRow()
+        }
     }
 
     private func formatCurrency(_ value: Double) -> String {
@@ -149,6 +159,9 @@ struct Step3ExtrasView: View {
 // VM, evita crashes out-of-bounds durante el remove (SwiftUI re-sampla las
 // expresiones de .onChange y Bindings subscript antes de desmontar el view;
 // si el array ya se achicó, `extras[staleIndex]` revienta).
+//
+// Cada extra ahora se renderiza como un `Section` nativo del Form (header
+// "Extra N" + botón eliminar), y cada campo es una fila `.solennixRow()`.
 //
 // @State local de costText/priceText: autoritativo mientras el usuario
 // tipia. Si bindeáramos el TextField directo al Double del modelo, el
@@ -169,36 +182,18 @@ private struct ExtraRowView: View {
     @State private var priceText: String = ""
 
     var body: some View {
-        VStack(spacing: Spacing.sm) {
-            HStack {
-                Text(trf("events.form.extras.row_title", "Extra %@", String(index + 1)))
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(SolennixColors.textSecondary)
-
-                Spacer()
-
-                Button {
-                    onRemove()
-                } label: {
-                    Image(systemName: "trash")
-                        .font(.body)
-                        .foregroundStyle(SolennixColors.error)
-                }
-                .buttonStyle(.plain)
-            }
-
-            SolennixTextField(
-                label: tr("events.form.extras.description", "Descripción"),
+        Section {
+            TextField(
+                tr("events.form.extras.description", "Descripción"),
                 text: Binding(
                     get: { extra.description },
                     set: onDescriptionChange
                 ),
-                placeholder: tr("events.form.extras.description_placeholder", "Descripción del extra"),
-                leftIcon: "text.alignleft"
+                prompt: Text(tr("events.form.extras.description_placeholder", "Descripción del extra"))
             )
+            .solennixRow()
 
-            HStack(spacing: Spacing.sm) {
+            HStack(spacing: Spacing.md) {
                 VStack(alignment: .leading, spacing: Spacing.xs) {
                     Text(tr("events.form.extras.cost", "Costo"))
                         .font(.caption)
@@ -210,6 +205,7 @@ private struct ExtraRowView: View {
                             onCostChange(d)
                         }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
                     Text(tr("events.form.extras.price", "Precio"))
@@ -233,17 +229,18 @@ private struct ExtraRowView: View {
                     .disabled(extra.excludeUtility)
                     .opacity(extra.excludeUtility ? 0.5 : 1.0)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .solennixRow()
 
             Toggle(isOn: Binding(
                 get: { extra.excludeUtility },
                 set: onExcludeUtilityChange
             )) {
                 Text(tr("events.form.extras.exclude_utility", "Solo cobrar costo (sin utilidad)"))
-                    .font(.caption)
-                    .foregroundStyle(SolennixColors.textSecondary)
             }
             .tint(SolennixColors.primary)
+            .solennixRow()
             .onChange(of: extra.excludeUtility) { _, newValue in
                 if newValue {
                     // Sincroniza priceText para que al toggle off el field
@@ -258,23 +255,31 @@ private struct ExtraRowView: View {
             )) {
                 Label {
                     Text(tr("events.form.extras.include_checklist", "Incluir en checklist"))
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textSecondary)
                 } icon: {
                     Image(systemName: "checklist")
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textSecondary)
                 }
             }
             .tint(SolennixColors.primary)
+            .solennixRow()
+        } header: {
+            HStack {
+                Text(trf("events.form.extras.row_title", "Extra %@", String(index + 1)))
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(SolennixColors.textSecondary)
+
+                Spacer()
+
+                Button {
+                    onRemove()
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.body)
+                        .foregroundStyle(SolennixColors.error)
+                }
+                .buttonStyle(.plain)
+            }
         }
-        .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: CornerRadius.md)
-                .stroke(SolennixColors.border, lineWidth: 1)
-        )
         .onAppear { hydrate(from: extra) }
         .onChange(of: extra.id) { _, _ in hydrate(from: extra) }
     }
@@ -284,6 +289,8 @@ private struct ExtraRowView: View {
         priceText = extra.price > 0 ? String(format: "%g", extra.price) : ""
     }
 
+    // El fondo/borde lo provee la fila del Form (`.solennixRow()`), por eso
+    // acá queda solo el "$" + TextField, sin `.background`/`.clipShape`.
     private func currencyField(text: Binding<String>) -> some View {
         HStack(spacing: Spacing.xs) {
             Text("$")
@@ -295,14 +302,6 @@ private struct ExtraRowView: View {
                 .font(.body)
                 .foregroundStyle(SolennixColors.text)
         }
-        .padding(.horizontal, Spacing.md)
-        .padding(.vertical, 10)
-        .background(SolennixColors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: CornerRadius.md)
-                .stroke(SolennixColors.border, lineWidth: 1)
-        )
     }
 }
 

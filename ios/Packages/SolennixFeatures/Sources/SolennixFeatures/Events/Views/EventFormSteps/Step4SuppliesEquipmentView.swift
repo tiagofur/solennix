@@ -31,22 +31,12 @@ struct Step4SuppliesEquipmentView: View {
     @State private var equipmentSearch = ""
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: Spacing.xl) {
-                suppliesSection
-
-                Divider()
-                    .foregroundStyle(SolennixColors.border)
-
-                equipmentSection
-
-                Divider()
-                    .foregroundStyle(SolennixColors.border)
-
-                personnelSection
-            }
-            .padding(Spacing.md)
+        Form {
+            suppliesSection
+            equipmentSection
+            personnelSection
         }
+        .solennixListStyle()
         .scrollDismissesKeyboard(.interactively)
         .sheet(isPresented: $showSupplyPicker) {
             supplyPickerSheet
@@ -71,9 +61,7 @@ struct Step4SuppliesEquipmentView: View {
     // MARK: - Supplies Section
 
     private var suppliesSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
-            Step4SectionHeader(title: tr("events.form.inventory.supplies", "Insumos"))
-
+        Section {
             if !viewModel.supplySuggestions.isEmpty {
                 Step4SuggestionsBanner(
                     title: tr("events.form.inventory.suggestions", "Sugerencias por productos"),
@@ -87,9 +75,13 @@ struct Step4SuppliesEquipmentView: View {
                         )
                     }
                 )
+                .solennixRow()
+                .listRowSeparator(.hidden)
             }
 
-            Step4AddButton(label: tr("events.form.inventory.add_supply", "Agregar insumo")) { showSupplyPicker = true }
+            Step4AddButton(label: tr("events.form.inventory.add_supply", "Agregar insumo"), embeddedInForm: true) { showSupplyPicker = true }
+                .solennixRow()
+                .listRowSeparator(.hidden)
 
             if viewModel.selectedSupplies.isEmpty {
                 Step4EmptyState(
@@ -97,6 +89,8 @@ struct Step4SuppliesEquipmentView: View {
                     title: tr("events.form.inventory.empty_supplies_title", "Sin insumos (opcional)"),
                     subtitle: tr("events.form.inventory.empty_supplies_desc", "Agrega consumibles del inventario")
                 )
+                .solennixRow()
+                .listRowSeparator(.hidden)
             } else {
                 ForEach(Array(viewModel.selectedSupplies.enumerated()), id: \.element.id) { index, item in
                     let inventory = viewModel.supplyInventory.first { $0.id == item.inventoryId }
@@ -119,23 +113,29 @@ struct Step4SuppliesEquipmentView: View {
                         onExcludeCostChange: { newValue in
                             guard viewModel.selectedSupplies.indices.contains(index) else { return }
                             viewModel.selectedSupplies[index].excludeCost = newValue
-                        }
+                        },
+                        embeddedInForm: true
                     )
+                    .solennixRow()
                 }
 
-                Step4SuppliesCostSummary(total: viewModel.suppliesCost)
+                Step4SuppliesCostSummary(total: viewModel.suppliesCost, embeddedInForm: true)
+                    .solennixRow()
+                    .listRowSeparator(.hidden)
             }
+        } header: {
+            Text(tr("events.form.inventory.supplies", "Insumos"))
         }
     }
 
     // MARK: - Equipment Section
 
     private var equipmentSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
-            Step4SectionHeader(title: tr("events.form.inventory.equipment", "Equipamiento"))
-
+        Section {
             if !viewModel.equipmentConflicts.isEmpty {
                 Step4EquipmentConflictsBanner(conflicts: viewModel.equipmentConflicts)
+                    .solennixRow()
+                    .listRowSeparator(.hidden)
             }
 
             if !viewModel.equipmentSuggestions.isEmpty {
@@ -151,9 +151,13 @@ struct Step4SuppliesEquipmentView: View {
                         )
                     }
                 )
+                .solennixRow()
+                .listRowSeparator(.hidden)
             }
 
-            Step4AddButton(label: tr("events.form.inventory.add_equipment", "Agregar equipamiento")) { showEquipmentPicker = true }
+            Step4AddButton(label: tr("events.form.inventory.add_equipment", "Agregar equipamiento"), embeddedInForm: true) { showEquipmentPicker = true }
+                .solennixRow()
+                .listRowSeparator(.hidden)
 
             if viewModel.selectedEquipment.isEmpty {
                 Step4EmptyState(
@@ -161,6 +165,8 @@ struct Step4SuppliesEquipmentView: View {
                     title: tr("events.form.inventory.empty_equipment_title", "Sin equipamiento (opcional)"),
                     subtitle: tr("events.form.inventory.empty_equipment_desc", "Agrega equipo reutilizable para el evento")
                 )
+                .solennixRow()
+                .listRowSeparator(.hidden)
             } else {
                 ForEach(Array(viewModel.selectedEquipment.enumerated()), id: \.element.id) { index, item in
                     let inventory = viewModel.equipmentInventory.first { $0.id == item.inventoryId }
@@ -173,20 +179,26 @@ struct Step4SuppliesEquipmentView: View {
                         onQuantityChange: { newQty in
                             guard viewModel.selectedEquipment.indices.contains(index) else { return }
                             viewModel.selectedEquipment[index].quantity = newQty
-                        }
+                        },
+                        embeddedInForm: true
                     )
+                    .solennixRow()
                 }
             }
+        } header: {
+            Text(tr("events.form.inventory.equipment", "Equipamiento"))
         }
     }
 
     // MARK: - Personnel Section
 
     private var personnelSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
-            Step4SectionHeader(title: tr("events.form.inventory.staff", "Personal"))
-
-            Step4PersonnelPanel(viewModel: viewModel)
+        Section {
+            Step4PersonnelPanel(viewModel: viewModel, embeddedInForm: true)
+                .solennixRow()
+                .listRowSeparator(.hidden)
+        } header: {
+            Text(tr("events.form.inventory.staff", "Personal"))
         }
     }
 
@@ -235,6 +247,7 @@ struct Step4SuppliesEquipmentView: View {
                         )
                     }
                     .buttonStyle(.plain)
+                    .solennixRow()
                 }
         }
     }
@@ -257,6 +270,7 @@ struct Step4SuppliesEquipmentView: View {
                         )
                     }
                     .buttonStyle(.plain)
+                    .solennixRow()
                 }
         }
     }

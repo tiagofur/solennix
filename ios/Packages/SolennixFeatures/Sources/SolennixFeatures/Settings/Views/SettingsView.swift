@@ -89,7 +89,7 @@ public struct SettingsView: View {
         } else {
             settingsListCompact
                 .listStyle(.insetGrouped)
-                .scrollContentBackground(.hidden)
+                .solennixListStyle()
         }
     }
 
@@ -138,27 +138,27 @@ public struct SettingsView: View {
             Section(header: Text(SettingsStrings.sectionAppearance).foregroundStyle(SolennixColors.text)) {
                 appearanceContent
             }
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
 
             Section(header: Text(SettingsStrings.sectionAccount).foregroundStyle(SolennixColors.text)) {
                 accountContent
             }
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
 
             Section(header: Text(SettingsStrings.sectionSubscription).foregroundStyle(SolennixColors.text)) {
                 subscriptionContent
             }
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
 
             Section(header: Text(SettingsStrings.sectionBusiness).foregroundStyle(SolennixColors.text)) {
                 businessContent
             }
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
 
             Section(header: Text(SettingsStrings.sectionLegal).foregroundStyle(SolennixColors.text)) {
                 legalContent
             }
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
 
             // Logout
             Section {
@@ -171,7 +171,7 @@ public struct SettingsView: View {
                     }
                 }
             }
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
 
             // App version
             Section {
@@ -182,7 +182,7 @@ public struct SettingsView: View {
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
             }
-            .listRowBackground(SolennixColors.card)
+            .solennixRow()
         }
     }
 
@@ -361,17 +361,13 @@ public struct SettingsView: View {
                 .foregroundStyle(SolennixColors.textSecondary)
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-        .shadowSm()
+        .solennixCard(border: false)
     }
 
     private func userHeaderCard(_ user: User) -> some View {
         SettingsUserHeaderContent(user: user)
         .padding(Spacing.lg)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-        .shadowSm()
+        .solennixCard(border: false)
     }
 
     // MARK: - Section Content Views
@@ -512,7 +508,7 @@ public struct SettingsView: View {
             SettingsUserHeaderContent(user: user)
             .padding(.vertical, Spacing.sm)
         }
-        .listRowBackground(SolennixColors.card)
+        .solennixRow()
         .listRowSeparator(.hidden)
     }
 

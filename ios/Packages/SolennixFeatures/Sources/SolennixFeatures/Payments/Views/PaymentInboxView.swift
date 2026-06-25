@@ -92,7 +92,8 @@ public struct PaymentInboxView: View {
                 icon: "wifi.exclamationmark",
                 title: PaymentsStrings.errorLoadingTitle,
                 message: error,
-                actionTitle: PaymentsStrings.actionRetry
+                actionTitle: PaymentsStrings.actionRetry,
+                iconColor: SolennixColors.primary
             ) {
                 Task { await viewModel.fetchSubmissions() }
             }
@@ -103,8 +104,7 @@ public struct PaymentInboxView: View {
                 }
             }
             .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(SolennixColors.surfaceGrouped)
+            .solennixListStyle()
         } else if viewModel.isPlanLocked {
             planLockedContent
         } else if viewModel.submissions.isEmpty {
@@ -120,7 +120,7 @@ public struct PaymentInboxView: View {
                             .onTapGesture {
                                 sheetState = .detail(submission)
                             }
-                            .listRowBackground(SolennixColors.card)                        // Fix 1
+                            .solennixRow()                        // Fix 1
                             .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))     // Fix 1
                             // Fix 12: composed a11y label
                             .accessibilityElement(children: .ignore)
@@ -160,8 +160,7 @@ public struct PaymentInboxView: View {
                 }
             }
             .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(SolennixColors.surfaceGrouped)
+            .solennixListStyle()
         }
     }
 
@@ -170,7 +169,7 @@ public struct PaymentInboxView: View {
     private var skeletonRows: some View {
         ForEach(0..<5, id: \.self) { _ in
             PaymentSubmissionSkeletonRow()
-                .listRowBackground(SolennixColors.card)
+                .solennixRow()
                 .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
         }
         .accessibilityHidden(true)
@@ -191,7 +190,8 @@ public struct PaymentInboxView: View {
                     icon: "wifi.exclamationmark",
                     title: PaymentsStrings.errorLoadingTitle,
                     message: error,
-                    actionTitle: PaymentsStrings.actionRetry
+                    actionTitle: PaymentsStrings.actionRetry,
+                    iconColor: SolennixColors.primary
                 ) {
                     Task { await viewModel.fetchSubmissions() }
                 }
@@ -222,7 +222,8 @@ public struct PaymentInboxView: View {
         EmptyStateView(
             icon: "magnifyingglass",
             title: PaymentsStrings.searchEmptyTitle,
-            message: PaymentsStrings.searchEmptyMessage
+            message: PaymentsStrings.searchEmptyMessage,
+            iconColor: SolennixColors.primary
         )
     }
 
@@ -230,7 +231,8 @@ public struct PaymentInboxView: View {
         EmptyStateView(
             icon: "lock.fill",
             title: PaymentsStrings.proOnlyTitle,
-            message: PaymentsStrings.proOnlyMessage
+            message: PaymentsStrings.proOnlyMessage,
+            iconColor: SolennixColors.primary
         )
     }
 
@@ -239,7 +241,8 @@ public struct PaymentInboxView: View {
         EmptyStateView(
             icon: "checkmark.seal",
             title: PaymentsStrings.emptyTitle,
-            message: PaymentsStrings.emptyMessage
+            message: PaymentsStrings.emptyMessage,
+            iconColor: SolennixColors.primary
         )
     }
 
@@ -392,8 +395,7 @@ public struct PaymentInboxView: View {
                 .foregroundStyle(SolennixColors.textSecondary)
         }
         .frame(maxWidth: .infinity, minHeight: 180)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
     }
 
     // MARK: - Reject Sheet (Fix 7, Fix 9)

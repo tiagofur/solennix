@@ -66,35 +66,7 @@ public struct EventListView: View {
             .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: Spacing.sm) {
-                    // Date filter
-                    Button {
-                        showDateFilter = true
-                    } label: {
-                        Image(systemName: viewModel.activeFilterCount > 0 ? "calendar.badge.clock" : "calendar")
-                            .font(.body)
-                            .foregroundStyle(viewModel.activeFilterCount > 0 ? SolennixColors.primary : SolennixColors.primary)
-                            .symbolEffect(.bounce, value: viewModel.activeFilterCount)
-                            .accessibilityLabel(tr("events.list.filters.title", "Filtrar por fecha"))
-                    }
-
-                    // Status filter menu (Apple Liquid Glass / native style)
-                    Menu {
-                        Picker(tr("events.list.toolbar.status_filter", "Estado"), selection: $viewModel.selectedStatus) {
-                            ForEach(viewModel.statusFilters, id: \.label) { filter in
-                                Text("\(filter.label) (\(filter.count))")
-                                    .tag(filter.status)
-                            }
-                        }
-                        .pickerStyle(.inline)
-                    } label: {
-                        Image(systemName: viewModel.selectedStatus != nil ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
-                            .font(.body)
-                            .foregroundStyle(SolennixColors.primary)
-                            .symbolEffect(.bounce, value: viewModel.selectedStatus)
-                            .accessibilityLabel(tr("events.list.toolbar.status_filter_accessibility", "Filtrar por estado"))
-                    }
-
-                    // Add + overflow menu (sort + export consolidated per WU5)
+                    // 1. Create (event or quick quote)
                     Menu {
                         NavigationLink(value: Route.eventForm()) {
                             Label(tr("events.list.new_event", "Nuevo evento"), systemImage: "calendar.badge.plus")
@@ -115,7 +87,7 @@ public struct EventListView: View {
                             .popoverTip(quickQuoteTip)
                     }
 
-                    // Overflow: sort options + CSV export
+                    // 2. Sort + export
                     Menu {
                         Section {
                             sortMenuButton(field: .eventDate,    label: tr("events.list.sort.date",    "Fecha"))
@@ -135,6 +107,33 @@ public struct EventListView: View {
                             .foregroundStyle(SolennixColors.primary)
                             .symbolEffect(.bounce, value: viewModel.sortField)
                             .accessibilityLabel(tr("events.list.toolbar.more_actions", "Más acciones"))
+                    }
+
+                    // 3. Filters
+                    Menu {
+                        Picker(tr("events.list.toolbar.status_filter", "Estado"), selection: $viewModel.selectedStatus) {
+                            ForEach(viewModel.statusFilters, id: \.label) { filter in
+                                Text("\(filter.label) (\(filter.count))")
+                                    .tag(filter.status)
+                            }
+                        }
+                        .pickerStyle(.inline)
+                    } label: {
+                        Image(systemName: viewModel.selectedStatus != nil ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                            .font(.body)
+                            .foregroundStyle(SolennixColors.primary)
+                            .symbolEffect(.bounce, value: viewModel.selectedStatus)
+                            .accessibilityLabel(tr("events.list.toolbar.status_filter_accessibility", "Filtrar por estado"))
+                    }
+
+                    Button {
+                        showDateFilter = true
+                    } label: {
+                        Image(systemName: viewModel.activeFilterCount > 0 ? "calendar.badge.clock" : "calendar")
+                            .font(.body)
+                            .foregroundStyle(viewModel.activeFilterCount > 0 ? SolennixColors.primary : SolennixColors.primary)
+                            .symbolEffect(.bounce, value: viewModel.activeFilterCount)
+                            .accessibilityLabel(tr("events.list.filters.title", "Filtrar por fecha"))
                     }
                 }
             }
@@ -231,12 +230,14 @@ public struct EventListView: View {
                                 .font(.body)
                         }
                         .tint(SolennixColors.primary)
+                        .solennixRow()
 
                         if startDate != nil {
                             DatePicker("", selection: startBinding, displayedComponents: .date)
                                 .datePickerStyle(.compact)
                                 .labelsHidden()
                                 .tint(SolennixColors.primary)
+                                .solennixRow()
                         }
                     }
 
@@ -249,15 +250,18 @@ public struct EventListView: View {
                                 .font(.body)
                         }
                         .tint(SolennixColors.primary)
+                        .solennixRow()
 
                         if endDate != nil {
                             DatePicker("", selection: endBinding, displayedComponents: .date)
                                 .datePickerStyle(.compact)
                                 .labelsHidden()
                                 .tint(SolennixColors.primary)
+                                .solennixRow()
                         }
                     }
                 }
+                .solennixListStyle()
                 .navigationTitle(tr("events.list.filters.title", "Filtrar por fecha"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -302,30 +306,29 @@ public struct EventListView: View {
     private var iPhoneEventList: some View {
         let filtered = viewModel.filteredEvents
 
-        List {
-
-            if viewModel.isLoading && viewModel.events.isEmpty {
-                // Skeleton loading state — native grouped surface, no manual insets.
+        if viewModel.isLoading && viewModel.events.isEmpty {
+            List {
                 skeletonRows
-            } else if let error = viewModel.errorMessage, filtered.isEmpty, !viewModel.isLoading {
-                EmptyStateView(
-                    icon: "wifi.exclamationmark",
-                    title: tr("events.list.error.load_title", "Error al cargar"),
-                    message: error,
-                    actionTitle: tr("events.list.error.retry", "Reintentar")
-                ) {
-                    Task { await viewModel.loadEvents() }
-                }
-                .padding(.top, Spacing.xl)
-                .listRowInsets(EdgeInsets())
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
-            } else if filtered.isEmpty && !viewModel.isLoading {
-                emptyState
-                    .listRowInsets(EdgeInsets())
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
-            } else {
+            }
+            .listStyle(.insetGrouped)
+            .solennixListStyle()
+        } else if let error = viewModel.errorMessage, filtered.isEmpty, !viewModel.isLoading {
+            // Error state — outside List for proper centering
+            EmptyStateView(
+                icon: "wifi.exclamationmark",
+                title: tr("events.list.error.load_title", "Error al cargar"),
+                message: error,
+                actionTitle: tr("events.list.error.retry", "Reintentar"),
+                iconColor: SolennixColors.primary
+            ) {
+                Task { await viewModel.loadEvents() }
+            }
+            .padding(.top, Spacing.xl)
+        } else if filtered.isEmpty && !viewModel.isLoading {
+            // Empty state — outside List for proper centering
+            emptyState
+        } else {
+            List {
                 ForEach(filtered) { event in
                     // Inline ZStack: row content behind an opacity-0 NavigationLink
                     // so taps navigate without showing the disclosure chevron.
@@ -338,7 +341,7 @@ public struct EventListView: View {
                         }
                         .opacity(0)
                     }
-                    .listRowBackground(SolennixColors.card)
+                    .solennixRow()
                     .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
                     .alignmentGuide(.listRowSeparatorLeading) { d in d[.leading] }
                     .accessibilityElement(children: .ignore)
@@ -394,10 +397,9 @@ public struct EventListView: View {
                     }
                 }
             }
+            .listStyle(.insetGrouped)
+            .solennixListStyle()
         }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
     }
 
     // MARK: - Skeleton Placeholder
@@ -408,7 +410,7 @@ public struct EventListView: View {
     private var skeletonRows: some View {
         ForEach(0..<5, id: \.self) { _ in
             EventSkeletonCard()
-                .listRowBackground(SolennixColors.card)
+                .solennixRow()
                 .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
         }
         .accessibilityHidden(true)
@@ -440,7 +442,8 @@ public struct EventListView: View {
                 icon: "wifi.exclamationmark",
                 title: tr("events.list.error.load_title", "Error al cargar"),
                 message: error,
-                actionTitle: tr("events.list.error.retry", "Reintentar")
+                actionTitle: tr("events.list.error.retry", "Reintentar"),
+                iconColor: SolennixColors.primary
             ) {
                 Task { await viewModel.loadEvents() }
             }
@@ -532,18 +535,19 @@ public struct EventListView: View {
                 EmptyStateView(
                     icon: "calendar.badge.plus",
                     title: tr("events.list.empty.first_run_title", "Crea tu primer evento"),
-                    message: tr("events.list.empty.first_run_message", "Registra tus eventos para llevar el control de fechas, clientes y pagos en un solo lugar.")
+                    message: tr("events.list.empty.first_run_message", "Registra tus eventos para llevar el control de fechas, clientes y pagos en un solo lugar."),
+                    iconColor: SolennixColors.primary
                 )
 
                 NavigationLink(value: Route.eventForm()) {
                     Text(tr("events.list.empty.first_run_cta", "Crear evento"))
                         .font(.headline)
-                        .foregroundStyle(SolennixColors.onPrimary)
+                        .foregroundStyle(SolennixColors.primaryDark)
                         .padding(.horizontal, Spacing.xl)
                         .padding(.vertical, 16)
-                        .background(SolennixGradient.premium)
-                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                        .shadowFab()
+                        .background(SolennixColors.primaryLight)
+                        .clipShape(Capsule())
+                        .adaptiveGlass(in: Capsule(), fallback: .material)
                 }
                 .padding(.bottom, Spacing.xxl)
             }

@@ -47,16 +47,18 @@ public struct EventExtrasDetailView: View {
                     EmptyStateView(
                         icon: "sparkles",
                         title: tr("events.detail.extras.empty.title", "Sin Extras"),
-                        message: tr("events.detail.extras.empty.message", "Este evento no tiene extras asignados.")
+                        message: tr("events.detail.extras.empty.message", "Este evento no tiene extras asignados."),
+                        iconColor: SolennixColors.primary
                     )
                     NavigationLink(value: Route.eventForm(id: eventId, step: 3)) {
                         Text(tr("events.detail.extras.empty.cta", "Agregar extras"))
                             .font(.headline)
-                            .foregroundStyle(SolennixColors.onPrimary)
+                            .foregroundStyle(SolennixColors.primaryDark)
                             .padding(.horizontal, Spacing.xl)
                             .padding(.vertical, 16)
-                            .background(SolennixColors.primary)
-                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                            .background(SolennixColors.primaryLight)
+                            .clipShape(Capsule())
+                            .adaptiveGlass(in: Capsule(), fallback: .material)
                     }
                 } else {
                     let subtotal = viewModel.extras.reduce(0.0) { $0 + $1.price }
@@ -89,9 +91,7 @@ public struct EventExtrasDetailView: View {
                                 .foregroundStyle(SolennixColors.text)
                         }
                         .padding(Spacing.md)
-                        .background(SolennixColors.card)
-                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                        .shadowSm()
+                        .solennixCard(radius: CornerRadius.md, border: false)
                     }
                 }
             }

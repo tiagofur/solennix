@@ -257,8 +257,7 @@ public struct PricingView: View {
             }
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
         .overlay(
             RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .stroke(
@@ -478,8 +477,7 @@ public struct PricingView: View {
                 comparisonRow(feature: tr("settings.pricing.comparison.feature.siri", "Comandos de Siri"), basic: false, premium: true)
                 comparisonRow(feature: tr("settings.pricing.comparison.feature.support", "Soporte prioritario"), basic: false, premium: true)
             }
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+            .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
         }
     }
 
@@ -588,8 +586,7 @@ public struct PricingView: View {
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+        .solennixCard(radius: CornerRadius.md, shadow: false, border: false)
     }
 
     // MARK: - Subscription Disclosure Section

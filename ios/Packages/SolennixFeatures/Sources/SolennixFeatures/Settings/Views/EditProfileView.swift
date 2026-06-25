@@ -50,15 +50,25 @@ public struct EditProfileView: View {
         .toolbar {
             if isDirty {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button {
+                    SolennixCancelButton(title: tr("common.back", "Atrás")) {
                         showDiscardConfirm = true
-                    } label: {
-                        Label(tr("common.back", "Atrás"), systemImage: "chevron.backward")
                     }
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                saveButton
+                SolennixSaveButton(
+                    title: tr("common.save", "Guardar"),
+                    action: {
+                        Task {
+                            let success = await viewModel.saveProfile()
+                            if success {
+                                dismiss()
+                            }
+                        }
+                    },
+                    isValid: true,
+                    isSaving: viewModel.isSavingProfile
+                )
             }
         }
         .task {
@@ -104,12 +114,12 @@ public struct EditProfileView: View {
                         }
                     }
                 }
+                .solennixRow()
             } header: {
                 Text(tr("settings.profile.personal_info", "Información personal"))
             } footer: {
                 Text(tr("settings.profile.personal_info_hint", "Tu nombre aparecerá en los contratos y documentos que generes."))
             }
-            .listRowBackground(SolennixColors.card)
 
             // Error message
             if let error = viewModel.errorMessage {
@@ -117,34 +127,13 @@ public struct EditProfileView: View {
                     Text(error)
                         .font(.subheadline)
                         .foregroundStyle(SolennixColors.error)
-                }
-                .listRowBackground(SolennixColors.card)
-            }
-        }
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
-    }
-
-    // MARK: - Save Button
-
-    private var saveButton: some View {
-        Button {
-            Task {
-                let success = await viewModel.saveProfile()
-                if success {
-                    dismiss()
+                        .solennixRow()
                 }
             }
-        } label: {
-            if viewModel.isSavingProfile {
-                ProgressView()
-            } else {
-                Text(tr("common.save", "Guardar"))
-                    .fontWeight(.semibold)
-            }
         }
-        .disabled(viewModel.isSavingProfile)
+        .solennixListStyle()
     }
+
 }
 
 // MARK: - Preview

@@ -253,8 +253,7 @@ public struct DemandForecastChart: View {
             }
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
     }
 
     private func urgencyBadge(_ text: String, color: Color) -> some View {

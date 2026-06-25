@@ -13,8 +13,6 @@ struct ReviewCardContainer<Content: View>: View {
     var body: some View {
         content
             .padding(Spacing.md)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-            .shadowSm()
+            .solennixCard(radius: CornerRadius.lg, border: false)
     }
 }

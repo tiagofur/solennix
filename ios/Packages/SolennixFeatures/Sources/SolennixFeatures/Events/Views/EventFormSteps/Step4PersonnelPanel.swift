@@ -19,6 +19,7 @@ private func trf(_ key: String, _ value: String, _ arg: String) -> String {
 struct Step4PersonnelPanel: View {
 
     @Bindable var viewModel: EventFormViewModel
+    var embeddedInForm: Bool = false
 
     @State private var showStaffPicker = false
     @State private var showTeamPicker = false
@@ -35,9 +36,11 @@ struct Step4PersonnelPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text(tr("events.form.inventory.staff", "Personal"))
-                .font(.headline)
-                .foregroundStyle(SolennixColors.text)
+            if !embeddedInForm {
+                Text(tr("events.form.inventory.staff", "Personal"))
+                    .font(.headline)
+                    .foregroundStyle(SolennixColors.text)
+            }
 
             // Selected staff
             ForEach(Array(viewModel.selectedStaff.enumerated()), id: \.element.id) { index, assignment in
@@ -82,7 +85,8 @@ struct Step4PersonnelPanel: View {
                     },
                     labelFor: { label(for: $0) },
                     colorFor: { color(for: $0) },
-                    backgroundFor: { background(for: $0) }
+                    backgroundFor: { background(for: $0) },
+                    embeddedInForm: embeddedInForm
                 )
             }
 
@@ -91,7 +95,8 @@ struct Step4PersonnelPanel: View {
                 Step4PersonnelActionButton(
                     icon: "person.crop.circle.badge.plus",
                     label: tr("events.form.staff.add_person", "Agregar personal"),
-                    background: SolennixColors.primaryLight
+                    background: SolennixColors.primaryLight,
+                    embeddedInForm: embeddedInForm
                 ) {
                     showStaffPicker = true
                 }
@@ -99,7 +104,8 @@ struct Step4PersonnelPanel: View {
                 Step4PersonnelActionButton(
                     icon: "person.3.fill",
                     label: tr("events.form.staff.add_team", "Agregar equipo completo"),
-                    background: SolennixColors.primaryLight
+                    background: SolennixColors.primaryLight,
+                    embeddedInForm: embeddedInForm
                 ) {
                     showTeamPicker = true
                     Task { await loadTeamsIfNeeded() }
@@ -108,7 +114,7 @@ struct Step4PersonnelPanel: View {
 
             // Staff cost total (informativo — no suma al total en Phase 1)
             if !viewModel.selectedStaff.isEmpty {
-                Step4PersonnelCostSummary(total: viewModel.staffCost)
+                Step4PersonnelCostSummary(total: viewModel.staffCost, embeddedInForm: embeddedInForm)
             }
         }
         .sheet(isPresented: $showStaffPicker) {
@@ -134,7 +140,8 @@ struct Step4PersonnelPanel: View {
                     EmptyStateView(
                         icon: "person.3.sequence",
                         title: tr("events.form.staff.empty_teams_title", "Sin equipos todavía"),
-                        message: tr("events.form.staff.empty_teams_message", "Agrupá a tu equipo de meseros o fotógrafos desde Personal > Equipos para asignarlos con un solo toque.")
+                        message: tr("events.form.staff.empty_teams_message", "Agrupá a tu equipo de meseros o fotógrafos desde Personal > Equipos para asignarlos con un solo toque."),
+                        iconColor: SolennixColors.primary
                     )
                 } else {
                     List {
@@ -190,11 +197,11 @@ struct Step4PersonnelPanel: View {
                                 }
                             }
                             .buttonStyle(.plain)
+                            .solennixRow()
                         }
                     }
                     .listStyle(.insetGrouped)
-                    .scrollContentBackground(.hidden)
-                    .background(SolennixColors.surfaceGrouped)
+                    .solennixListStyle()
                 }
             }
             .navigationTitle(tr("events.form.staff.add_team_short", "Agregar equipo"))
@@ -248,7 +255,8 @@ struct Step4PersonnelPanel: View {
                     EmptyStateView(
                         icon: "person.3",
                         title: tr("events.form.staff.empty_title", "Sin personal"),
-                        message: tr("events.form.staff.empty_message", "Agrega colaboradores desde el menú Personal para asignarlos a este evento")
+                        message: tr("events.form.staff.empty_message", "Agrega colaboradores desde el menú Personal para asignarlos a este evento"),
+                        iconColor: SolennixColors.primary
                     )
                 } else {
                     List {
@@ -292,11 +300,11 @@ struct Step4PersonnelPanel: View {
                                 }
                             }
                             .buttonStyle(.plain)
+                            .solennixRow()
                         }
                     }
                     .listStyle(.insetGrouped)
-                    .scrollContentBackground(.hidden)
-                    .background(SolennixColors.surfaceGrouped)
+                    .solennixListStyle()
                     .searchable(text: $staffSearch, prompt: tr("events.form.staff.search", "Buscar personal"))
                 }
             }
@@ -405,11 +413,12 @@ private struct Step4PersonnelActionButton: View {
     let icon: String
     let label: String
     let background: Color
+    var embeddedInForm: Bool = false
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: Spacing.sm) {
+            let content = HStack(spacing: Spacing.sm) {
                 Image(systemName: icon)
                     .foregroundStyle(SolennixColors.primary)
 
@@ -421,12 +430,18 @@ private struct Step4PersonnelActionButton: View {
                 Spacer()
             }
             .padding(Spacing.md)
-            .background(background)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-            .overlay(
-                RoundedRectangle(cornerRadius: CornerRadius.md)
-                    .stroke(SolennixColors.primary.opacity(0.3), lineWidth: 1)
-            )
+
+            if embeddedInForm {
+                content
+            } else {
+                content
+                    .background(background)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: CornerRadius.md)
+                            .stroke(SolennixColors.primary.opacity(0.3), lineWidth: 1)
+                    )
+            }
         }
         .buttonStyle(.plain)
     }
@@ -434,9 +449,10 @@ private struct Step4PersonnelActionButton: View {
 
 private struct Step4PersonnelCostSummary: View {
     let total: Double
+    var embeddedInForm: Bool = false
 
     var body: some View {
-        HStack {
+        let content = HStack {
             Text(tr("events.form.staff.total_cost", "Costo personal"))
                 .font(.subheadline)
                 .fontWeight(.medium)
@@ -449,8 +465,14 @@ private struct Step4PersonnelCostSummary: View {
                 .foregroundStyle(SolennixColors.text)
         }
         .padding(Spacing.md)
-        .background(SolennixColors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+
+        if embeddedInForm {
+            content
+        } else {
+            content
+                .background(SolennixColors.surface)
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+        }
     }
 }
 
@@ -480,11 +502,12 @@ private struct StaffRowView: View {
     let labelFor: (AssignmentStatus) -> String
     let colorFor: (AssignmentStatus) -> Color
     let backgroundFor: (AssignmentStatus) -> Color
+    var embeddedInForm: Bool = false
 
     @State private var feeText: String = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
+        let content = VStack(alignment: .leading, spacing: Spacing.sm) {
             HStack(spacing: Spacing.sm) {
                 Avatar(name: assignment.staffName.isEmpty ? "?" : assignment.staffName, photoURL: nil, size: 36)
 
@@ -525,14 +548,6 @@ private struct StaffRowView: View {
                     .keyboardType(.decimalPad)
                     .font(.body)
                     .foregroundStyle(SolennixColors.text)
-                    .padding(.horizontal, Spacing.sm)
-                    .padding(.vertical, 6)
-                    .background(SolennixColors.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: CornerRadius.sm)
-                            .stroke(SolennixColors.border, lineWidth: 1)
-                    )
                     .onChange(of: feeText) { _, newValue in
                         let normalized = newValue.replacingOccurrences(of: ",", with: ".")
                         if let d = Double(normalized) {
@@ -556,14 +571,6 @@ private struct StaffRowView: View {
                 )
                 .font(.body)
                 .foregroundStyle(SolennixColors.text)
-                .padding(.horizontal, Spacing.sm)
-                .padding(.vertical, 6)
-                .background(SolennixColors.surface)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
-                .overlay(
-                    RoundedRectangle(cornerRadius: CornerRadius.sm)
-                        .stroke(SolennixColors.border, lineWidth: 1)
-                )
             }
 
             // Notes
@@ -581,25 +588,21 @@ private struct StaffRowView: View {
                 )
                 .font(.body)
                 .foregroundStyle(SolennixColors.text)
-                .padding(.horizontal, Spacing.sm)
-                .padding(.vertical, 6)
-                .background(SolennixColors.surface)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
-                .overlay(
-                    RoundedRectangle(cornerRadius: CornerRadius.sm)
-                        .stroke(SolennixColors.border, lineWidth: 1)
-                )
             }
 
             shiftDisclosure
         }
-        .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: CornerRadius.md)
-                .stroke(SolennixColors.border, lineWidth: 1)
-        )
+
+        Group {
+            if embeddedInForm {
+                content
+                    .padding(Spacing.md)
+            } else {
+                content
+                    .padding(Spacing.md)
+                    .solennixCard(radius: CornerRadius.md, shadow: false)
+            }
+        }
         .onAppear { hydrate() }
         .onChange(of: assignment.id) { _, _ in hydrate() }
     }

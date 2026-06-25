@@ -504,14 +504,17 @@ public struct DashboardView: View {
 
     private var upcomingEventsSection: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text(tr("dashboard.upcoming_events", "Próximos eventos"))
+            Label(tr("dashboard.upcoming_events", "Próximos eventos"), systemImage: "calendar")
                 .font(.headline)
                 .foregroundStyle(SolennixColors.text)
 
             if let vm = viewModel, !vm.upcomingEvents.isEmpty {
-                VStack(spacing: Spacing.sm) {
-                    ForEach(vm.upcomingEvents) { event in
+                VStack(spacing: 0) {
+                    ForEach(Array(vm.upcomingEvents.enumerated()), id: \.element.id) { index, event in
                         upcomingEventCard(event: event)
+                        if index < vm.upcomingEvents.count - 1 {
+                            Divider()
+                        }
                     }
                 }
             } else if viewModel?.isLoading == false {
@@ -519,9 +522,7 @@ public struct DashboardView: View {
             }
         }
         .padding(Spacing.lg)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-        .shadowSm()
+        .solennixCard(border: false)
         .padding(.horizontal, sectionHorizontalPadding)
     }
 
@@ -568,9 +569,7 @@ public struct DashboardView: View {
 
     private func upcomingEventCard(event: Event) -> some View {
         upcomingEventRow(event: event)
-        .padding(Spacing.md)
-        .background(SolennixColors.surfaceAlt)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+            .padding(.vertical, Spacing.sm)
     }
 
     private func upcomingEventStatusMenu(event: Event) -> some View {
@@ -652,9 +651,7 @@ public struct DashboardView: View {
         // no upsell banner). Upsell surfaces live elsewhere in the app.
         if let vm = viewModel, !planLimitsManager.isBasicPlan {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                // No leading icon — Android and Web use a plain title,
-                // keeping the three dashboards visually consistent.
-                Text(tr("dashboard.revenue_last_6_months", "Ingresos — últimos 6 meses"))
+                Label(tr("dashboard.revenue_last_6_months", "Ingresos — últimos 6 meses"), systemImage: "chart.line.uptrend.xyaxis")
                     .font(.headline)
                     .foregroundStyle(SolennixColors.text)
 
@@ -696,9 +693,7 @@ public struct DashboardView: View {
                 )
             }
             .padding(Spacing.md)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-            .shadowSm()
+            .solennixCard(border: false)
             .padding(.horizontal, Spacing.md)
         }
     }

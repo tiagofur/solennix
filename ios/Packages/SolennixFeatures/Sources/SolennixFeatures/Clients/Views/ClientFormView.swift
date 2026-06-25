@@ -22,51 +22,43 @@ public struct ClientFormView: View {
     }
 
     public var body: some View {
-        ScrollView {
-            VStack(spacing: Spacing.md) {
-                photoSection
-                infoSection
-                addressSection
-                notesSection
-            }
-            .padding(Spacing.lg)
+        Form {
+            photoSection
+            infoSection
+            addressSection
+            notesSection
         }
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
+        .solennixListStyle()
         .scrollDismissesKeyboard(.interactively)
         .keyboardDoneToolbar()
         .navigationTitle(clientId != nil
             ? tr("clients.form.edit_title", "Editar cliente")
             : tr("clients.form.new_title", "Nuevo cliente"))
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button(tr("clients.action.cancel", "Cancelar")) {
+                SolennixCancelButton(title: tr("clients.action.cancel", "Cancelar")) {
                     if viewModel.isDirty {
                         showDiscardDialog = true
                     } else {
                         dismiss()
                     }
                 }
-                .foregroundStyle(SolennixColors.textSecondary)
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    Task {
-                        if let _ = await viewModel.validateAndSave() {
-                            dismiss()
+                SolennixSaveButton(
+                    title: tr("clients.action.save", "Guardar"),
+                    action: {
+                        Task {
+                            if let _ = await viewModel.validateAndSave() {
+                                dismiss()
+                            }
                         }
-                    }
-                } label: {
-                    if viewModel.isSaving {
-                        ProgressView()
-                    } else {
-                        Text(tr("clients.action.save", "Guardar"))
-                            .fontWeight(.semibold)
-                            .foregroundStyle(viewModel.isFormValid ? SolennixColors.primary : SolennixColors.textTertiary)
-                    }
-                }
-                .disabled(!viewModel.isFormValid || viewModel.isSaving)
+                    },
+                    isValid: viewModel.isFormValid,
+                    isSaving: viewModel.isSaving
+                )
             }
         }
         .interactiveDismissDisabled(viewModel.isDirty && !viewModel.isSaving)
@@ -129,143 +121,115 @@ public struct ClientFormView: View {
     // MARK: - Photo Section
 
     private var photoSection: some View {
-        HStack {
-            Spacer()
+        Section {
+            HStack {
+                Spacer()
 
-            PhotosPicker(selection: $selectedItem, matching: .images) {
-                ZStack(alignment: .bottomTrailing) {
-                    if let photoData = viewModel.selectedPhotoData,
-                       let uiImage = UIImage(data: photoData) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 80, height: 80)
+                PhotosPicker(selection: $selectedItem, matching: .images) {
+                    ZStack(alignment: .bottomTrailing) {
+                        if let photoData = viewModel.selectedPhotoData,
+                           let uiImage = UIImage(data: photoData) {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 80, height: 80)
+                                .clipShape(Circle())
+                        } else {
+                            Avatar(
+                                name: viewModel.name.isEmpty ? "?" : viewModel.name,
+                                photoURL: viewModel.photoURL,
+                                size: 80
+                            )
+                        }
+
+                        Image(systemName: "camera.fill")
+                            .font(.caption)
+                            .foregroundStyle(SolennixColors.textInverse)
+                            .frame(width: 28, height: 28)
+                            .background(SolennixColors.primary)
                             .clipShape(Circle())
-                    } else {
-                        Avatar(
-                            name: viewModel.name.isEmpty ? "?" : viewModel.name,
-                            photoURL: viewModel.photoURL,
-                            size: 80
-                        )
+                            .offset(x: 2, y: 2)
                     }
-
-                    Image(systemName: "camera.fill")
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textInverse)
-                        .frame(width: 28, height: 28)
-                        .background(SolennixColors.primary)
-                        .clipShape(Circle())
-                        .offset(x: 2, y: 2)
                 }
-            }
 
-            Spacer()
+                Spacer()
+            }
+            .padding(.vertical, Spacing.sm)
+            .solennixRow()
+            .listRowSeparator(.hidden)
         }
-        .padding(.vertical, Spacing.sm)
     }
 
     // MARK: - Info Section
 
     private var infoSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
+        Section {
+            TextField(tr("clients.form.name", "Nombre"), text: $viewModel.name,
+                      prompt: Text(tr("clients.form.name_placeholder", "Nombre del cliente")))
+                .textContentType(.name)
+                .textInputAutocapitalization(.words)
+                .solennixRow()
+
+            if !viewModel.name.isEmpty && !viewModel.isNameValid {
+                Text(tr("clients.form.validation.name_min", "Mínimo 2 caracteres"))
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .solennixRow()
+            }
+
+            TextField(tr("clients.form.phone", "Teléfono"), text: $viewModel.phone,
+                      prompt: Text(tr("clients.form.phone_placeholder", "10 dígitos")))
+                .textContentType(.telephoneNumber)
+                .keyboardType(.phonePad)
+                .solennixRow()
+
+            if !viewModel.phone.isEmpty && !viewModel.isPhoneValid {
+                Text(tr("clients.form.validation.phone_min", "Mínimo 10 dígitos"))
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .solennixRow()
+            }
+
+            TextField(tr("clients.form.email", "Email"), text: $viewModel.email,
+                      prompt: Text(tr("clients.form.email_placeholder", "correo@ejemplo.com")))
+                .textContentType(.emailAddress)
+                .keyboardType(.emailAddress)
+                .textInputAutocapitalization(.never)
+                .solennixRow()
+
+            TextField(tr("clients.form.city", "Ciudad"), text: $viewModel.city,
+                      prompt: Text(tr("clients.form.city", "Ciudad")))
+                .textContentType(.addressCity)
+                .solennixRow()
+        } header: {
             Text(tr("clients.form.info_section", "Información"))
-                .font(.headline)
-                .foregroundStyle(SolennixColors.text)
-
-            AdaptiveFormRow {
-                SolennixTextField(
-                    label: tr("clients.form.name", "Nombre"),
-                    text: $viewModel.name,
-                    placeholder: tr("clients.form.name_placeholder", "Nombre del cliente"),
-                    leftIcon: "person",
-                    errorMessage: !viewModel.name.isEmpty && !viewModel.isNameValid
-                        ? tr("clients.form.validation.name_min", "Mínimo 2 caracteres") : nil,
-                    textContentType: .name,
-                    autocapitalization: .words
-                )
-            } right: {
-                SolennixTextField(
-                    label: tr("clients.form.phone", "Teléfono"),
-                    text: $viewModel.phone,
-                    placeholder: tr("clients.form.phone_placeholder", "10 dígitos"),
-                    leftIcon: "phone",
-                    errorMessage: !viewModel.phone.isEmpty && !viewModel.isPhoneValid
-                        ? tr("clients.form.validation.phone_min", "Mínimo 10 dígitos") : nil,
-                    textContentType: .telephoneNumber,
-                    keyboardType: .phonePad
-                )
-            }
-
-            AdaptiveFormRow {
-                SolennixTextField(
-                    label: tr("clients.form.email", "Email"),
-                    text: $viewModel.email,
-                    placeholder: tr("clients.form.email_placeholder", "correo@ejemplo.com"),
-                    leftIcon: "envelope",
-                    textContentType: .emailAddress,
-                    keyboardType: .emailAddress,
-                    autocapitalization: .never
-                )
-            } right: {
-                SolennixTextField(
-                    label: tr("clients.form.city", "Ciudad"),
-                    text: $viewModel.city,
-                    placeholder: tr("clients.form.city", "Ciudad"),
-                    leftIcon: "building.2",
-                    textContentType: .addressCity
-                )
-            }
         }
-        .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
     }
 
     // MARK: - Address Section
 
     private var addressSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
+        Section {
+            TextField(tr("clients.form.address", "Dirección"), text: $viewModel.address,
+                      prompt: Text(tr("clients.form.address_placeholder", "Calle y número")))
+                .textContentType(.fullStreetAddress)
+                .solennixRow()
+        } header: {
             Text(tr("clients.form.address_section", "Dirección"))
-                .font(.headline)
-                .foregroundStyle(SolennixColors.text)
-
-            SolennixTextField(
-                label: tr("clients.form.address", "Dirección"),
-                text: $viewModel.address,
-                placeholder: tr("clients.form.address_placeholder", "Calle y número"),
-                leftIcon: "mappin.and.ellipse",
-                textContentType: .fullStreetAddress
-            )
         }
-        .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
     }
 
     // MARK: - Notes Section
 
     private var notesSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
-            Text(tr("clients.form.notes_section", "Notas"))
-                .font(.headline)
-                .foregroundStyle(SolennixColors.text)
-
+        Section {
             TextEditor(text: $viewModel.notes)
                 .frame(minHeight: 80)
-                .font(.body)
-                .foregroundStyle(SolennixColors.text)
                 .scrollContentBackground(.hidden)
-                .padding(Spacing.sm)
-                .background(SolennixColors.surface)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                .overlay(
-                    RoundedRectangle(cornerRadius: CornerRadius.md)
-                        .stroke(SolennixColors.border, lineWidth: 1)
-                )
+                .solennixRow()
+        } header: {
+            Text(tr("clients.form.notes_section", "Notas"))
         }
-        .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
     }
 
     private func tr(_ key: String, _ value: String) -> String {

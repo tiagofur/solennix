@@ -26,40 +26,35 @@ public struct StaffTeamFormView: View {
             notesSection
             membersSection
         }
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
+        .solennixListStyle()
         .scrollDismissesKeyboard(.interactively)
         .keyboardDoneToolbar()
         .navigationTitle(teamId != nil ? StaffStrings.teamEditTitle : StaffStrings.teamNewTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button(StaffStrings.cancel) {
+                SolennixCancelButton(title: StaffStrings.cancel) {
                     if viewModel.isDirty {
                         showDiscardDialog = true
                     } else {
                         dismiss()
                     }
                 }
-                .foregroundStyle(SolennixColors.textSecondary)
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    Task {
-                        if await viewModel.save() != nil {
-                            dismiss()
+                SolennixSaveButton(
+                    title: StaffStrings.save,
+                    action: {
+                        Task {
+                            if await viewModel.save() != nil {
+                                dismiss()
+                            }
                         }
-                    }
-                } label: {
-                    if viewModel.isSaving {
-                        ProgressView()
-                    } else {
-                        Text(StaffStrings.save)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(viewModel.isFormValid ? SolennixColors.primary : SolennixColors.textTertiary)
-                    }
-                }
-                .disabled(!viewModel.isFormValid || viewModel.isSaving)
+                    },
+                    isValid: viewModel.isFormValid,
+                    isSaving: viewModel.isSaving
+                )
             }
         }
         .interactiveDismissDisabled(viewModel.isDirty && !viewModel.isSaving)
@@ -105,53 +100,40 @@ public struct StaffTeamFormView: View {
     // MARK: - Info
 
     private var infoSection: some View {
-        Section(StaffStrings.sectionInfo) {
-            SolennixTextField(
-                label: StaffStrings.fieldName,
-                text: $viewModel.name,
-                placeholder: StaffStrings.teamNamePlaceholder,
-                leftIcon: "person.3",
-                errorMessage: !viewModel.name.isEmpty && !viewModel.isNameValid
-                    ? StaffStrings.teamNameError : nil,
-                autocapitalization: .sentences
-            )
-            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+        Section {
+            TextField(StaffStrings.fieldName, text: $viewModel.name,
+                      prompt: Text(StaffStrings.teamNamePlaceholder))
+                .textInputAutocapitalization(.sentences)
+                .solennixRow()
 
-            SolennixTextField(
-                label: StaffStrings.teamRoleLabel,
-                text: $viewModel.roleLabel,
-                placeholder: StaffStrings.teamRolePlaceholder,
-                leftIcon: "briefcase",
-                autocapitalization: .words
-            )
-            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+            if !viewModel.name.isEmpty && !viewModel.isNameValid {
+                Text(StaffStrings.teamNameError)
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.error)
+                    .solennixRow()
+            }
+
+            TextField(StaffStrings.teamRoleLabel, text: $viewModel.roleLabel,
+                      prompt: Text(StaffStrings.teamRolePlaceholder))
+                .textInputAutocapitalization(.words)
+                .solennixRow()
+        } header: {
+            Text(StaffStrings.sectionInfo)
         }
     }
 
     // MARK: - Notes
 
     private var notesSection: some View {
-        Section(StaffStrings.sectionNotes) {
-            VStack(alignment: .leading, spacing: Spacing.xs) {
-                Text(StaffStrings.teamNotesLabel)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundStyle(SolennixColors.text)
-
-                TextEditor(text: $viewModel.notes)
-                    .frame(minHeight: 80)
-                    .font(.body)
-                    .foregroundStyle(SolennixColors.text)
-                    .scrollContentBackground(.hidden)
-                    .padding(Spacing.sm)
-                    .background(SolennixColors.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: CornerRadius.md)
-                            .stroke(SolennixColors.border, lineWidth: 1)
-                    )
-            }
-            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+        Section {
+            TextEditor(text: $viewModel.notes)
+                .frame(minHeight: 80)
+                .font(.body)
+                .foregroundStyle(SolennixColors.text)
+                .scrollContentBackground(.hidden)
+                .solennixRow()
+        } header: {
+            Text(StaffStrings.sectionNotes)
         }
     }
 
@@ -161,6 +143,7 @@ public struct StaffTeamFormView: View {
         Section {
             ForEach(viewModel.members) { member in
                 memberRow(member)
+                    .solennixRow()
             }
             .onMove { source, destination in
                 viewModel.moveMember(from: source, to: destination)
@@ -183,7 +166,7 @@ public struct StaffTeamFormView: View {
                 }
             }
             .buttonStyle(.plain)
-            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.md, bottom: Spacing.sm, trailing: Spacing.md))
+            .solennixRow()
         } header: {
             HStack {
                 Text(StaffStrings.membersTitle)
@@ -243,7 +226,8 @@ public struct StaffTeamFormView: View {
                     EmptyStateView(
                         icon: "person.3",
                         title: StaffStrings.emptyTitle,
-                        message: StaffStrings.pickerEmptyMessage
+                        message: StaffStrings.pickerEmptyMessage,
+                        iconColor: SolennixColors.primary
                     )
                 } else {
                     MemberPickerList(
@@ -310,11 +294,11 @@ private struct MemberPickerList: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(alreadySelected.contains(item.id))
+                .solennixRow()
             }
         }
         .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        .background(SolennixColors.surfaceGrouped)
+        .solennixListStyle()
         .solennixSearchable(text: $search, prompt: StaffStrings.searchPrompt)
     }
 

@@ -41,9 +41,7 @@ struct EventDetailPhotosSummaryCard: View {
             }
             .padding(Spacing.md)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(SolennixColors.card)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-            .shadowSm()
+            .solennixCard(radius: CornerRadius.lg, border: false)
         }
         .buttonStyle(.plain)
     }

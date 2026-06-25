@@ -28,7 +28,8 @@ public struct EventFinancesDetailView: View {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
                     title: EventFinancesDetailStrings.errorTitle,
-                    message: viewModel.errorMessage ?? EventFinancesDetailStrings.errorMessage
+                    message: viewModel.errorMessage ?? EventFinancesDetailStrings.errorMessage,
+                    iconColor: SolennixColors.primary
                 )
             }
         }
@@ -65,9 +66,7 @@ public struct EventFinancesDetailView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, Spacing.xl)
-                .background(SolennixColors.card)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-                .shadowSm()
+                .solennixCard(border: false)
 
                 // Financial breakdown using the shared EventFinancials calculator.
                 // This mirrors EventFormViewModel+Profitability and QuickQuoteViewModel
@@ -156,9 +155,7 @@ public struct EventFinancesDetailView: View {
                         isBold: true
                     )
                 }
-                .background(SolennixColors.card)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-                .shadowSm()
+                .solennixCard(border: false)
 
                 // Payment progress
                 if event.totalAmount > 0 {
@@ -199,9 +196,7 @@ public struct EventFinancesDetailView: View {
                         }
                     }
                     .padding(Spacing.lg)
-                    .background(SolennixColors.card)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-                    .shadowSm()
+                    .solennixCard(border: false)
                 }
             }
             .padding(.horizontal, Spacing.md)

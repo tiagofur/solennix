@@ -21,8 +21,7 @@ public struct NotificationPreferencesView: View {
         content
             .navigationTitle(tr("settings.tab.notifications", "Notificaciones"))
             .navigationBarTitleDisplayMode(.inline)
-            .scrollContentBackground(.hidden)
-            .background(SolennixColors.surfaceGrouped)
+            .solennixListStyle()
             .task { await viewModel.loadPreferences() }
     }
 
@@ -46,8 +45,8 @@ public struct NotificationPreferencesView: View {
                     Text(error)
                         .font(.subheadline)
                         .foregroundStyle(SolennixColors.error)
+                        .solennixRow()
                 }
-                .listRowBackground(SolennixColors.card)
             }
 
             // Email preferences
@@ -94,7 +93,6 @@ public struct NotificationPreferencesView: View {
             } header: {
                 Text(tr("settings.notifications.email_section", "Correos electrónicos"))
             }
-            .listRowBackground(SolennixColors.card)
 
             // Push preferences
             Section {
@@ -128,7 +126,6 @@ public struct NotificationPreferencesView: View {
             } header: {
                 Text(tr("settings.notifications.push_section", "Notificaciones push"))
             }
-            .listRowBackground(SolennixColors.card)
         }
     }
 
@@ -160,6 +157,7 @@ public struct NotificationPreferencesView: View {
         }
         .tint(SolennixColors.primary)
         .disabled(viewModel.inFlightKeys.contains(id))
+        .solennixRow()
     }
 }
 

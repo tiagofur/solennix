@@ -129,17 +129,8 @@ public struct TeamInviteAcceptView: View {
                     .multilineTextAlignment(.center)
             }
 
-            Button {
+            PremiumButton(title: AuthStrings.teamInviteGoToApp) {
                 dismiss()
-            } label: {
-                Text(AuthStrings.teamInviteGoToApp)
-                    .font(.headline)
-                    // Navy on gold: ≥4.9:1 on both gradient ends (WCAG AA).
-                    .foregroundStyle(SolennixColors.onPrimary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Spacing.md)
-                    .background(SolennixColors.primary)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
             }
 
             Spacer(minLength: Spacing.xxxl)

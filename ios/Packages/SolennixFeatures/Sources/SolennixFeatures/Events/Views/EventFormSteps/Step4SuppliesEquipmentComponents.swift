@@ -23,11 +23,12 @@ struct Step4SuggestionChip: Identifiable {
 
 struct Step4AddButton: View {
     let label: String
+    var embeddedInForm: Bool = false
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: Spacing.sm) {
+            let content = HStack(spacing: Spacing.sm) {
                 Image(systemName: "plus.circle.fill")
                     .foregroundStyle(SolennixColors.primary)
 
@@ -39,12 +40,20 @@ struct Step4AddButton: View {
                 Spacer()
             }
             .padding(Spacing.md)
-            .background(SolennixColors.primaryLight)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-            .overlay(
-                RoundedRectangle(cornerRadius: CornerRadius.md)
-                    .stroke(SolennixColors.primary.opacity(0.3), lineWidth: 1)
-            )
+
+            // En modo `embeddedInForm` la fila del Form provee el fondo —
+            // omitimos el chrome (background/clipShape/border) del botón.
+            if embeddedInForm {
+                content
+            } else {
+                content
+                    .background(SolennixColors.primaryLight)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: CornerRadius.md)
+                            .stroke(SolennixColors.primary.opacity(0.3), lineWidth: 1)
+                    )
+            }
         }
         .buttonStyle(.plain)
     }
@@ -166,9 +175,10 @@ struct Step4EquipmentConflictsBanner: View {
 
 struct Step4SuppliesCostSummary: View {
     let total: Double
+    var embeddedInForm: Bool = false
 
     var body: some View {
-        HStack {
+        let content = HStack {
             Text(tr("events.form.inventory.supplies_cost", "Costo insumos"))
                 .font(.subheadline)
                 .fontWeight(.medium)
@@ -181,8 +191,14 @@ struct Step4SuppliesCostSummary: View {
                 .foregroundStyle(SolennixColors.primary)
         }
         .padding(Spacing.md)
-        .background(SolennixColors.surfaceAlt)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+
+        if embeddedInForm {
+            content
+        } else {
+            content
+                .background(SolennixColors.surfaceAlt)
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+        }
     }
 }
 
@@ -199,8 +215,7 @@ struct Step4PickerSheet<Content: View>: View {
                 content()
             }
             .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(SolennixColors.surfaceGrouped)
+            .solennixListStyle()
             .searchable(text: $searchText, prompt: searchPrompt)
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
@@ -293,6 +308,7 @@ struct SupplyRowView: View {
     let onQuantityChange: (Double) -> Void
     let onSourceChange: (SupplySource) -> Void
     let onExcludeCostChange: (Bool) -> Void
+    var embeddedInForm: Bool = false
 
     @State private var qtyText: String = ""
 
@@ -301,7 +317,7 @@ struct SupplyRowView: View {
     }
 
     var body: some View {
-        VStack(spacing: Spacing.sm) {
+        let content = VStack(spacing: Spacing.sm) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)
@@ -373,13 +389,17 @@ struct SupplyRowView: View {
                 .tint(SolennixColors.primary)
             }
         }
-        .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: CornerRadius.md)
-                .stroke(SolennixColors.border, lineWidth: 1)
-        )
+
+        Group {
+            if embeddedInForm {
+                content
+                    .padding(Spacing.md)
+            } else {
+                content
+                    .padding(Spacing.md)
+                    .solennixCard(radius: CornerRadius.md, shadow: false)
+            }
+        }
         .onAppear { hydrate() }
         .onChange(of: item.id) { _, _ in hydrate() }
     }
@@ -472,13 +492,14 @@ struct EquipmentRowView: View {
     let unit: String
     let onRemove: () -> Void
     let onQuantityChange: (Int) -> Void
+    var embeddedInForm: Bool = false
 
     private var overstock: Bool {
         Double(item.quantity) > stock && stock > 0
     }
 
     var body: some View {
-        HStack(spacing: Spacing.md) {
+        let content = HStack(spacing: Spacing.md) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.name)
                     .font(.body)
@@ -545,13 +566,17 @@ struct EquipmentRowView: View {
             .buttonStyle(.plain)
             .padding(.leading, Spacing.xs)
         }
-        .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: CornerRadius.md)
-                .stroke(SolennixColors.border, lineWidth: 1)
-        )
+
+        Group {
+            if embeddedInForm {
+                content
+                    .padding(Spacing.md)
+            } else {
+                content
+                    .padding(Spacing.md)
+                    .solennixCard(radius: CornerRadius.md, shadow: false)
+            }
+        }
     }
 }
 

@@ -48,16 +48,18 @@ public struct EventEquipmentDetailView: View {
                     EmptyStateView(
                         icon: "wrench.and.screwdriver",
                         title: tr("events.detail.equipment.empty.title", "Sin Equipo"),
-                        message: tr("events.detail.equipment.empty.message", "Este evento no tiene equipo asignado.")
+                        message: tr("events.detail.equipment.empty.message", "Este evento no tiene equipo asignado."),
+                        iconColor: SolennixColors.primary
                     )
                     NavigationLink(value: Route.eventForm(id: eventId, step: 4)) {
                         Text(tr("events.detail.equipment.empty.cta", "Agregar equipo"))
                             .font(.headline)
-                            .foregroundStyle(SolennixColors.onPrimary)
+                            .foregroundStyle(SolennixColors.primaryDark)
                             .padding(.horizontal, Spacing.xl)
                             .padding(.vertical, 16)
-                            .background(SolennixColors.primary)
-                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                            .background(SolennixColors.primaryLight)
+                            .clipShape(Capsule())
+                            .adaptiveGlass(in: Capsule(), fallback: .material)
                     }
                 } else {
                     HStack {
@@ -97,9 +99,7 @@ public struct EventEquipmentDetailView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
                         }
                         .padding(Spacing.md)
-                        .background(SolennixColors.card)
-                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                        .shadowSm()
+                        .solennixCard(radius: CornerRadius.md, border: false)
                     }
                 }
             }

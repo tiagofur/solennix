@@ -28,7 +28,7 @@ public struct FinancialComparisonChart: View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             // Header
             HStack {
-                Text(tr("dashboard.financial_comparison", "Comparativa financiera"))
+                Label(tr("dashboard.financial_comparison", "Comparativa financiera"), systemImage: "dollarsign.circle")
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.text)
@@ -72,9 +72,7 @@ public struct FinancialComparisonChart: View {
             .frame(height: 100)
         }
         .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-        .shadowSm()
+        .solennixCard(border: false)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(tr("dashboard.financial_comparison", "Comparativa financiera"))
         .accessibilityValue(

@@ -33,6 +33,7 @@ public struct QuickQuoteView: View {
                                 Text(err)
                                     .font(.subheadline)
                                     .foregroundStyle(SolennixColors.error)
+                                    .solennixRow()
                             }
                         }
                         Section {
@@ -50,6 +51,7 @@ public struct QuickQuoteView: View {
                                     .textContentType(.emailAddress)
                                     .textInputAutocapitalization(.never)
                             }
+                            .solennixRow()
                         }
 
                         Section(QuickQuoteStrings.basicData) {
@@ -59,6 +61,7 @@ public struct QuickQuoteView: View {
                                 TextField(QuickQuoteStrings.numPeople, value: $viewModel.numPeople, format: .number)
                                     .keyboardType(.numberPad)
                             }
+                            .solennixRow()
                         }
                         
                         Section(QuickQuoteStrings.products) {
@@ -78,9 +81,11 @@ public struct QuickQuoteView: View {
                                         }
                                     }
                                 }
+                                .solennixRow()
                             } else {
                                 ForEach($viewModel.selectedProducts) { $product in
                                     productRow(for: $product)
+                                        .solennixRow()
                                 }
                                 .onDelete(perform: viewModel.removeProduct)
                             }
@@ -89,6 +94,7 @@ public struct QuickQuoteView: View {
                                 Label(QuickQuoteStrings.addProduct, systemImage: "plus")
                             }
                             .disabled(viewModel.availableProducts.isEmpty)
+                            .solennixRow()
                         }
 
                         Section(QuickQuoteStrings.extras) {
@@ -106,9 +112,11 @@ public struct QuickQuoteView: View {
                                         }
                                     }
                                 }
+                                .solennixRow()
                             } else {
                                 ForEach($viewModel.extras) { $extra in
                                     extraRow(for: $extra)
+                                        .solennixRow()
                                 }
                                 .onDelete(perform: viewModel.removeExtra)
                             }
@@ -116,6 +124,7 @@ public struct QuickQuoteView: View {
                             Button(action: viewModel.addExtra) {
                                 Label(QuickQuoteStrings.addExtra, systemImage: "plus")
                             }
+                            .solennixRow()
                         }
                         
                         Section(QuickQuoteStrings.discountBilling) {
@@ -128,6 +137,7 @@ public struct QuickQuoteView: View {
                                 }
                                 .pickerStyle(.segmented)
                             }
+                            .solennixRow()
 
                             HStack {
                                 Text(QuickQuoteStrings.discount)
@@ -137,20 +147,25 @@ public struct QuickQuoteView: View {
                                     .multilineTextAlignment(.trailing)
                                     .frame(maxWidth: 100)
                             }
+                            .solennixRow()
                         }
                         
                         Section(QuickQuoteStrings.summary) {
                             let fin = viewModel.financials
                             SummaryRow(label: QuickQuoteStrings.subtotalProducts, value: fin.productsSubtotal)
+                                .solennixRow()
                             SummaryRow(label: QuickQuoteStrings.subtotalExtras, value: fin.extrasTotal)
+                                .solennixRow()
                             
                             if fin.discountAmount > 0 {
                                 SummaryRow(label: QuickQuoteStrings.discount, value: -fin.discountAmount)
                                     .foregroundStyle(SolennixColors.success)
+                                    .solennixRow()
                             }
                             
                             if viewModel.requiresInvoice {
                                 SummaryRow(label: QuickQuoteStrings.vat, value: fin.taxAmount)
+                                    .solennixRow()
                             }
                             
                             HStack {
@@ -161,14 +176,18 @@ public struct QuickQuoteView: View {
                                     .font(.headline)
                                     .foregroundStyle(SolennixColors.primary)
                             }
+                            .solennixRow()
                         }
 
                         if viewModel.financials.totalCost > 0 {
                             Section(QuickQuoteStrings.profitabilityMetrics) {
                                 let profitFin = viewModel.financials
                                 SummaryRow(label: QuickQuoteStrings.productCost, value: profitFin.productCost)
+                                    .solennixRow()
                                 SummaryRow(label: QuickQuoteStrings.extrasCost, value: profitFin.extrasCost)
+                                    .solennixRow()
                                 SummaryRow(label: QuickQuoteStrings.totalCost, value: profitFin.totalCost)
+                                    .solennixRow()
                                 HStack {
                                     Text(QuickQuoteStrings.netProfit)
                                         .foregroundStyle(SolennixColors.textSecondary)
@@ -176,6 +195,7 @@ public struct QuickQuoteView: View {
                                     Text(profitFin.profit.asMXN)
                                         .foregroundStyle(profitFin.profit >= 0 ? SolennixColors.success : SolennixColors.error)
                                 }
+                                .solennixRow()
                                 HStack {
                                     Text(QuickQuoteStrings.margin)
                                         .foregroundStyle(SolennixColors.textSecondary)
@@ -183,6 +203,7 @@ public struct QuickQuoteView: View {
                                     Text(String(format: "%.1f%%", profitFin.margin))
                                         .foregroundStyle(profitFin.margin >= 0 ? SolennixColors.success : SolennixColors.error)
                                 }
+                                .solennixRow()
                             }
                         }
                         
@@ -195,10 +216,10 @@ public struct QuickQuoteView: View {
                                 Label(QuickQuoteStrings.exportPDF, systemImage: "doc.text")
                             }
                             .disabled(viewModel.selectedProducts.isEmpty)
+                            .solennixRow()
                         }
                     }
-                    .scrollContentBackground(.hidden)
-                    .background(SolennixColors.surfaceGrouped)
+                    .solennixListStyle()
                     .keyboardDoneToolbar()
                     .scrollDismissesKeyboard(.interactively)
                 }

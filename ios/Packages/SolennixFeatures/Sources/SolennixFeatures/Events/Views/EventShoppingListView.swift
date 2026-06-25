@@ -67,7 +67,8 @@ public struct EventShoppingListView: View {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
                     title: "Error",
-                    message: viewModel.errorMessage ?? "No se pudo cargar"
+                    message: viewModel.errorMessage ?? "No se pudo cargar",
+                    iconColor: SolennixColors.primary
                 )
             }
         }
@@ -101,9 +102,7 @@ public struct EventShoppingListView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(Spacing.lg)
-                .background(SolennixColors.card)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-                .shadowSm()
+                .solennixCard(border: false)
 
                 // Summary stats
                 if !ingredients.isEmpty {
@@ -173,9 +172,7 @@ public struct EventShoppingListView: View {
                                     .foregroundStyle(SolennixColors.warning)
                             }
                             .padding(Spacing.md)
-                            .background(SolennixColors.card)
-                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                            .shadowSm()
+                            .solennixCard(radius: CornerRadius.md, border: false)
                         }
                     }
                 }
@@ -204,8 +201,7 @@ public struct EventShoppingListView: View {
                                     .foregroundStyle(SolennixColors.success)
                             }
                             .padding(Spacing.md)
-                            .background(SolennixColors.card)
-                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                            .solennixCard(radius: CornerRadius.md, shadow: false, border: false)
                         }
                     }
                 }
@@ -214,7 +210,8 @@ public struct EventShoppingListView: View {
                     EmptyStateView(
                         icon: "cart",
                         title: "Sin Compras",
-                        message: "Este evento no requiere compras adicionales"
+                        message: "Este evento no requiere compras adicionales",
+                        iconColor: SolennixColors.primary
                     )
                 }
             }

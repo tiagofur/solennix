@@ -104,9 +104,7 @@ struct ForecastWidgetView: View {
             }
         }
         .padding(Spacing.lg)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-        .shadowSm()
+        .solennixCard(border: false)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(tr("dashboard.widgets.forecast.title", "Pronóstico"))
         .accessibilityValue(

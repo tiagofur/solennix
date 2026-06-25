@@ -42,26 +42,7 @@ public struct CalendarView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: Spacing.sm) {
-                    // Status filter — Apple HIG: Menu attached to a toolbar
-                    // button, checkmark on the active item. Feels native vs.
-                    // a chips row (which belongs to Android's M3 vocabulary).
-                    Menu {
-                        filterMenuButton(label: CalendarStrings.filterAll, status: nil)
-                        Divider()
-                        filterMenuButton(label: CalendarStrings.filterQuoted, status: .quoted)
-                        filterMenuButton(label: CalendarStrings.filterConfirmed, status: .confirmed)
-                        filterMenuButton(label: CalendarStrings.filterCompleted, status: .completed)
-                        filterMenuButton(label: CalendarStrings.filterCancelled, status: .cancelled)
-                    } label: {
-                        Image(systemName: viewModel.statusFilter == nil
-                              ? "line.3.horizontal.decrease.circle"
-                              : "line.3.horizontal.decrease.circle.fill")
-                            .font(.body)
-                            .foregroundStyle(SolennixColors.primary)
-                            .accessibilityLabel(CalendarStrings.filterAll)
-                    }
-
-                    // New event / quick quote menu
+                    // 1. Create (new event / quick quote)
                     Menu {
                         NavigationLink(value: Route.eventForm(date: viewModel.selectedDate)) {
                             Label(
@@ -86,15 +67,7 @@ public struct CalendarView: View {
                             .accessibilityLabel(CalendarStrings.createEventAction)
                     }
 
-                    Button {
-                        showBlockedDatesSheet = true
-                    } label: {
-                        Image(systemName: "calendar.badge.minus")
-                            .font(.body)
-                            .foregroundStyle(SolennixColors.primary)
-                            .accessibilityLabel(CalendarStrings.manageBlocks)
-                    }
-
+                    // 2. Extras (today, blocked dates, iCal export)
                     Button {
                         withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.25)) {
                             viewModel.goToToday()
@@ -106,9 +79,16 @@ public struct CalendarView: View {
                             .foregroundStyle(SolennixColors.primary)
                     }
 
-                    // iCal export — fetches /api/events/ical for the current
-                    // month and opens the native share sheet. The button
-                    // switches to a spinner while the request is in-flight.
+                    Button {
+                        showBlockedDatesSheet = true
+                    } label: {
+                        Image(systemName: "calendar.badge.minus")
+                            .font(.body)
+                            .foregroundStyle(SolennixColors.primary)
+                            .accessibilityLabel(CalendarStrings.manageBlocks)
+                    }
+
+                    // iCal export
                     Button {
                         Task {
                             if let url = await viewModel.exportCalendarToFile() {
@@ -128,6 +108,23 @@ public struct CalendarView: View {
                     }
                     .disabled(viewModel.isExportingCalendar)
                     .accessibilityLabel(CalendarStrings.exportICal)
+
+                    // 3. Filter (status)
+                    Menu {
+                        filterMenuButton(label: CalendarStrings.filterAll, status: nil)
+                        Divider()
+                        filterMenuButton(label: CalendarStrings.filterQuoted, status: .quoted)
+                        filterMenuButton(label: CalendarStrings.filterConfirmed, status: .confirmed)
+                        filterMenuButton(label: CalendarStrings.filterCompleted, status: .completed)
+                        filterMenuButton(label: CalendarStrings.filterCancelled, status: .cancelled)
+                    } label: {
+                        Image(systemName: viewModel.statusFilter == nil
+                              ? "line.3.horizontal.decrease.circle"
+                              : "line.3.horizontal.decrease.circle.fill")
+                            .font(.body)
+                            .foregroundStyle(SolennixColors.primary)
+                            .accessibilityLabel(CalendarStrings.filterAll)
+                    }
                 }
             }
         }
@@ -313,69 +310,65 @@ public struct CalendarView: View {
         }
     }
 
+    @ViewBuilder
     private var eventsPane: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: Spacing.sm) {
-                if viewModel.selectedDate != nil {
-                    HStack(spacing: Spacing.xs) {
-                        Image(systemName: "calendar")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(SolennixColors.primary)
-                            .frame(width: 24, height: 24)
-                            .background(SolennixColors.primaryLight.opacity(0.5), in: Circle())
+        if viewModel.selectedDate == nil {
+            VStack(spacing: Spacing.md) {
+                Image(systemName: "hand.tap")
+                    .font(.system(.largeTitle))
+                    .imageScale(.large)
+                    .foregroundStyle(SolennixColors.textTertiary)
 
-                        Text(viewModel.formattedSelectedDate())
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(SolennixColors.text)
-                    }
-                    .padding(.horizontal, Spacing.md)
-                    .padding(.vertical, Spacing.sm)
-                        .background(SolennixColors.card)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous)
-                            .stroke(SolennixColors.borderStrong.opacity(0.55), lineWidth: 1)
-                    )
-                    .padding(.horizontal, Spacing.sm)
-                    .padding(.top, Spacing.md)
+                Text(CalendarStrings.selectDayPrompt)
+                    .font(.subheadline)
+                    .foregroundStyle(SolennixColors.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(SolennixColors.surfaceGrouped)
+        } else {
+            List {
+                let dayEvents = viewModel.eventsForSelectedDate
 
-                    let dayEvents = viewModel.eventsForSelectedDate
-
-                    if dayEvents.isEmpty {
-                        emptyDayView
-                    } else {
-                        ForEach(dayEvents) { event in
-                            NavigationLink(value: Route.eventDetail(id: event.id)) {
-                                eventCard(event)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                } else {
+                if dayEvents.isEmpty {
                     VStack(spacing: Spacing.md) {
-                        Image(systemName: "hand.tap")
-                            .font(.system(.largeTitle))
-                            .imageScale(.large)
+                        Image(systemName: "calendar")
+                            .font(.largeTitle)
                             .foregroundStyle(SolennixColors.textTertiary)
 
-                        Text(CalendarStrings.selectDayPrompt)
+                        Text(CalendarStrings.noEventsForDay)
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.textSecondary)
-                            .multilineTextAlignment(.center)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, Spacing.xxxl)
+                    .padding(.vertical, Spacing.xxl)
+                    .solennixRow()
+                    .listRowSeparator(.hidden)
+                } else {
+                    ForEach(dayEvents) { event in
+                        ZStack {
+                            eventRowContent(event)
+                            NavigationLink(value: Route.eventDetail(id: event.id)) {
+                                EmptyView()
+                            }
+                            .opacity(0)
+                        }
+                        .solennixRow()
+                        .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+                        .alignmentGuide(.listRowSeparatorLeading) { d in d[.leading] }
+                    }
                 }
             }
-            .padding(.bottom, Spacing.xxl)
+            .listStyle(.insetGrouped)
+            .solennixListStyle()
         }
     }
 
     // MARK: - Phone Calendar Mode
 
     private var calendarModeContent: some View {
-        ScrollView {
+        VStack(spacing: 0) {
+            // Fixed calendar section — doesn't scroll
             VStack(spacing: Spacing.md) {
                 monthHeader
 
@@ -389,10 +382,66 @@ public struct CalendarView: View {
                     onLongPressDate: handleLongPress
                 )
                 .padding(.horizontal, Spacing.sm)
-
-                selectedDateSection
             }
-            .padding(.bottom, Spacing.xxl)
+            .padding(.vertical, Spacing.md)
+
+            // Native List for events — same pattern as EventListView
+            calendarEventList
+        }
+    }
+
+    /// Events for the selected date, rendered in a native `List` with
+    /// `.solennixRow()` so they look identical to EventListView.
+    @ViewBuilder
+    private var calendarEventList: some View {
+        if viewModel.selectedDate == nil {
+            VStack(spacing: Spacing.md) {
+                Image(systemName: "hand.tap")
+                    .font(.system(.largeTitle))
+                    .imageScale(.large)
+                    .foregroundStyle(SolennixColors.textTertiary)
+
+                Text(CalendarStrings.selectDayPrompt)
+                    .font(.subheadline)
+                    .foregroundStyle(SolennixColors.textSecondary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(SolennixColors.surfaceGrouped)
+        } else {
+            List {
+                let dayEvents = viewModel.eventsForSelectedDate
+
+                if dayEvents.isEmpty {
+                    VStack(spacing: Spacing.md) {
+                        Image(systemName: "calendar")
+                            .font(.largeTitle)
+                            .foregroundStyle(SolennixColors.textTertiary)
+
+                        Text(CalendarStrings.noEventsForDay)
+                            .font(.subheadline)
+                            .foregroundStyle(SolennixColors.textSecondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.xxl)
+                    .solennixRow()
+                    .listRowSeparator(.hidden)
+                } else {
+                    ForEach(dayEvents) { event in
+                        ZStack {
+                            eventRowContent(event)
+                            NavigationLink(value: Route.eventDetail(id: event.id)) {
+                                EmptyView()
+                            }
+                            .opacity(0)
+                        }
+                        .solennixRow()
+                        .listRowSeparatorTint(SolennixColors.primary.opacity(0.2))
+                        .alignmentGuide(.listRowSeparatorLeading) { d in d[.leading] }
+                    }
+                }
+            }
+            .listStyle(.insetGrouped)
+            .solennixListStyle()
         }
     }
 
@@ -435,58 +484,10 @@ public struct CalendarView: View {
     }
 
     @ViewBuilder
-    private var selectedDateSection: some View {
-        if viewModel.selectedDate != nil {
-            VStack(alignment: .leading, spacing: Spacing.sm) {
-                Text(viewModel.formattedSelectedDate())
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(SolennixColors.textSecondary)
-                    .textCase(.uppercase)
-                    .padding(.horizontal, Spacing.md)
-
-                let dayEvents = viewModel.eventsForSelectedDate
-
-                if dayEvents.isEmpty {
-                    emptyDayView
-                } else {
-                    ForEach(dayEvents) { event in
-                        NavigationLink(value: Route.eventDetail(id: event.id)) {
-                            eventCard(event)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-        }
-    }
-
-    private var emptyDayView: some View {
-        VStack(spacing: Spacing.md) {
-            Image(systemName: "calendar")
-                .font(.system(.largeTitle))
-                .imageScale(.large)
-                .foregroundStyle(SolennixColors.textTertiary)
-
-            Text(CalendarStrings.noEventsForDay)
-                .font(.subheadline)
-                .foregroundStyle(SolennixColors.textSecondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, Spacing.xxl)
-        .padding(.horizontal, Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        // Align with the event card + calendar grid (both at Spacing.sm).
-        .padding(.horizontal, Spacing.sm)
-    }
-
-    /// Baseline event card shared with Android — same data density so the
-    /// user sees the same info on either phone. Layout:
-    ///   Left: status dot (iOS-native vs. Android's vertical bar)
-    ///   Middle: client name (bold) + service type + time row
-    ///   Right: status badge (top) + people count + MXN amount (bottom)
-    private func eventCard(_ event: Event) -> some View {
+    /// Flat event row content for use inside a native `List` row.
+    /// Mirrors EventListView's row layout — no card chrome, the List row
+    /// provides the background via `.solennixRow()`.
+    private func eventRowContent(_ event: Event) -> some View {
         HStack(alignment: .top, spacing: Spacing.sm) {
             Circle()
                 .fill(colorForStatus(event.status))
@@ -526,8 +527,6 @@ public struct CalendarView: View {
                     .opacity(0.85)
                     .padding(.top, 1)
 
-                // Zero-decimal MXN for list cards — same convention as the
-                // dashboard. Cents live on the event detail screen.
                 Text(Self.amountFormatter.string(
                     from: NSNumber(value: event.totalAmount)
                 ) ?? "$0")
@@ -537,18 +536,6 @@ public struct CalendarView: View {
                     .monospacedDigit()
             }
         }
-        .padding(Spacing.md)
-        .background(SolennixColors.card)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous)
-            .stroke(SolennixColors.borderStrong.opacity(0.45), lineWidth: 1)
-        )
-        .shadowSm()
-        // Match the calendar grid's horizontal inset (`Spacing.sm`) — previously
-        // the card lived at `Spacing.md`, making the event list visibly narrower
-        // than the calendar above it on iPhone.
-        .padding(.horizontal, Spacing.sm)
     }
 
     // MARK: - Helpers
