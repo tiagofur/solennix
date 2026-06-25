@@ -22,6 +22,14 @@ public struct EventListView: View {
     @State private var showQuickQuote = false
     @State private var showDateFilter = false
 
+    /// Unified Eventos view-mode toggle (ADR-7). Lives on the VIEW as `@State`
+    /// (default `.lista`), NOT `@AppStorage` — it is ephemeral and toggling it
+    /// MUST NOT reload events or drop the current selection. Both `.lista` and
+    /// `.calendario` read the SAME `viewModel`; the toggle only swaps the
+    /// rendered subtree. Phase 4.3 swaps the Calendario placeholder for the
+    /// real moved `CalendarGridView` + reused `eventCard`.
+    @State private var viewMode: EventosViewMode = .lista
+
     // TipKit tips
     private let newEventTip = NewEventTip()
     private let quickQuoteTip = QuickQuoteTip()
@@ -37,7 +45,7 @@ public struct EventListView: View {
     // MARK: - Body
 
     public var body: some View {
-        eventList
+        content
             .background(SolennixColors.surfaceGrouped)
             .softScrollEdgeEffectIfAvailable()
             // Haptic feedback when the destructive delete confirmation appears (true only).
@@ -47,13 +55,23 @@ public struct EventListView: View {
             .searchable(text: $viewModel.searchQuery, prompt: tr("events.list.search_placeholder", "Buscar eventos..."))
             .searchMinimizedIfAvailable()
             .safeAreaInset(edge: .top, spacing: 0) {
-                // Only static banners live in safeAreaInset. Nested horizontal
-                // ScrollViews (filter chips) must stay inside the primary
-                // ScrollView so they don't steal scroll-edge tracking from
-                // the large title.
-                if viewModel.isShowingCachedData {
-                    CachedDataBanner()
-                        .background(SolennixColors.surfaceGrouped)
+                VStack(spacing: 0) {
+                    // Content-header view-mode toggle (ADR-7). Visible in BOTH
+                    // modes; flipping it only switches the rendered subtree — it
+                    // never reloads events nor touches the ViewModel's
+                    // selectedDay/filters (the toggle holds only a binding).
+                    EventosViewModeToggle(viewMode: $viewMode)
+                        .padding(.horizontal, Spacing.md)
+                        .padding(.vertical, Spacing.sm)
+
+                    // Only static banners live in safeAreaInset. Nested horizontal
+                    // ScrollViews (filter chips) must stay inside the primary
+                    // ScrollView so they don't steal scroll-edge tracking from
+                    // the large title.
+                    if viewModel.isShowingCachedData {
+                        CachedDataBanner()
+                            .background(SolennixColors.surfaceGrouped)
+                    }
                 }
             }
             .refreshable {
@@ -280,6 +298,23 @@ public struct EventListView: View {
                     }
                 }
             }
+        }
+    }
+
+    // MARK: - Content (view-mode switch, ADR-7)
+
+    /// Routes the body by `viewMode`. `.lista` keeps the existing events list;
+    /// `.calendario` renders the `EventosLayoutFactory` seam (Phase 4.3 swaps the
+    /// seam placeholders for the real moved `CalendarGridView` + reused
+    /// `eventCard`). Both branches read the SAME `viewModel` — switching `viewMode`
+    /// is purely presentational and never reloads events or drops the selection.
+    @ViewBuilder
+    private var content: some View {
+        switch viewMode {
+        case .lista:
+            eventList
+        case .calendario:
+            EventosLayoutFactory.make(vm: viewModel, viewMode: viewMode, sizeClass: sizeClass)
         }
     }
 
