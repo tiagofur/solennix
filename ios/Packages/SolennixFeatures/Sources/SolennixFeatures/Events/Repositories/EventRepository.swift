@@ -33,6 +33,11 @@ public protocol EventRepository: AnyObject, Sendable {
 
     /// Deletes an event (DELETE /events/{id}); best-effort removes its system mirror.
     func delete(_ id: String) async throws
+
+    /// Migrates every previously-synced event from the current destination to `to`
+    /// (delete-old + create-new), surfacing progress 0…1. Partial-failure tolerant:
+    /// items that fail keep their old identifier and remain re-runnable (ADR-4).
+    func changeDestination(to destination: SyncDestination, progress: @Sendable (Double) -> Void) async throws
 }
 
 // MARK: - DefaultEventRepository
@@ -103,6 +108,49 @@ public final class DefaultEventRepository: EventRepository {
         // A deleted Solennix event must not retain a (now-meaningless) system mapping,
         // regardless of whether the mirror removal ran.
         await identityStore.clear(for: id)
+    }
+
+    public func changeDestination(
+        to destination: SyncDestination,
+        progress: @Sendable (Double) -> Void
+    ) async throws {
+        // ADR-4: load every synced identity, migrate each (delete-old + create-new),
+        // rewrite the identity store, and surface progress. The detached-Task wrapping
+        // is the caller's (ViewModel) concern; this method is the async work unit.
+        let items = await identityStore.all()
+        guard !items.isEmpty else {
+            progress(1.0)
+            return
+        }
+        // `destination` (the param) shadows the current-destination closure; use
+        // `self.destination()` to read the origin.
+        let origin = try await resolveDestination(self.destination())
+        let target = try await resolveDestination(destination)
+
+        let migrated = try await syncService.migrate(
+            items,
+            from: origin,
+            to: target,
+            progress: progress
+        )
+
+        // Rewrite identities: successful items get their new identifier + new
+        // destination. Items that failed are returned with their ORIGINAL identifier
+        // (the migrate contract), so we leave their stored entry untouched — they keep
+        // the old identifier AND the old destination, making the switch re-runnable.
+        let originalIdentifiers = Dictionary(
+            uniqueKeysWithValues: items.map { ($0.eventID, $0.calendarItemIdentifier) }
+        )
+        for item in migrated {
+            if item.calendarItemIdentifier == originalIdentifiers[item.eventID] {
+                continue // failed — retain old identifier + old destination
+            }
+            await identityStore.set(
+                eventID: item.eventID,
+                calendarItemIdentifier: item.calendarItemIdentifier,
+                destination: destination
+            )
+        }
     }
 
     // MARK: - Sync fan-out
