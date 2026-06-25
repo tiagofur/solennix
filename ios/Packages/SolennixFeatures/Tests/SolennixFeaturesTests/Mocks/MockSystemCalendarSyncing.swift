@@ -37,10 +37,19 @@ public actor MockSystemCalendarSyncing: SystemCalendarSyncing {
     /// Value returned by `authorizationStatus()` / `requestAccess()` (default `.fullAccess`).
     public var authorization: SyncAuthorization = .fullAccess
 
-    /// Destination returned by `resolveDestination(.solennix)` and
-    /// `ensureSolennixCalendarExists()`. `nil` forces `.calendarResolutionFailed`.
+    /// Destination returned by `resolveDestination(.solennix)`. `nil` simulates the
+    /// Solennix calendar being absent → `resolveDestination(.solennix)` throws
+    /// `.calendarResolutionFailed` (the recreate trigger, ADR-3).
     public var solennixDestination: SyncedDestination? =
         SyncedDestination(calendarIdentifier: "solennix-cal", sourceIdentifier: "solennix-src")
+
+    /// Destination returned by `ensureSolennixCalendarExists()` — the recreate path
+    /// (ADR-3). Distinct from `solennixDestination` so a test can model "resolve says
+    /// the Solennix calendar is missing, then `ensure` recreates it": set
+    /// `solennixDestination = nil` (resolve fails) and `ensuredSolennixDestination`
+    /// to the recreated handle. `nil` (default) falls back to `solennixDestination`
+    /// so existing ensure-based tests keep their prior behavior.
+    public var ensuredSolennixDestination: SyncedDestination?
 
     /// Destination returned by `resolveDestination(.personal)`. `nil` simulates the
     /// user having no default calendar for new events → throws
@@ -66,6 +75,10 @@ public actor MockSystemCalendarSyncing: SystemCalendarSyncing {
 
     public func setSolennixDestination(_ dest: SyncedDestination?) {
         self.solennixDestination = dest
+    }
+
+    public func setEnsuredSolennixDestination(_ dest: SyncedDestination?) {
+        self.ensuredSolennixDestination = dest
     }
 
     public func setPersonalDestination(_ dest: SyncedDestination?) {
@@ -150,6 +163,9 @@ public actor MockSystemCalendarSyncing: SystemCalendarSyncing {
     public func ensureSolennixCalendarExists() async throws -> SyncedDestination {
         recordedCalls.append(.ensureSolennixCalendarExists)
         if let errorToThrow { throw errorToThrow }
+        // The recreate path returns the ensured handle when configured (ADR-3);
+        // otherwise it mirrors the existing Solennix destination.
+        if let ensuredSolennixDestination { return ensuredSolennixDestination }
         guard let solennixDestination else { throw SyncError.calendarResolutionFailed }
         return solennixDestination
     }
