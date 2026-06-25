@@ -64,7 +64,7 @@ Chain strategy: feature-branch-chain
 ## Phase 3 — ViewModel rewiring & unified state
 
 - [x] **3.1** [RED→GREEN impl] Rewire `EventFormViewModel` (+`Save`/`Items`) to route its 3 mutation sites via `EventRepository` (add `init(..., eventRepository:)`; keep two-call body shape verbatim — no `EventDraft`). Local state patches stay in VM. (ADR-9 rewire)
-- [ ] **3.2** [RED→GREEN test+impl] `EventListViewModel`: inject `EventRepository`; rewire `confirmDeleteEvent` + `updateEventStatus` through it. Assert API+sync+identity still fan out from the list path.
+- [x] **3.2** [RED→GREEN test+impl] `EventListViewModel`: inject `EventRepository`; rewire `confirmDeleteEvent` + `updateEventStatus` through it. Assert API+sync+identity still fan out from the list path.
 - [ ] **3.3** [RED→GREEN test+impl] Add unified state: `EventPeriodFilter` (.today/.thisWeek/.thisMonth/.custom), `selectedDay`, `currentMonth`, `unavailableDates`, `isBlockingDate`, `calendarError`; `viewMode` stays on the VIEW. Shared-filter invariant: `selectDate(day)` sets selectedDay+dateRange=startOfDay+clears period; period-chip sets period+recomputes dateRange from `Calendar.current`+clears selectedDay. Covers: day-tap filter+selectedDay; Hoy/Semana; Personalizado range; default lista + non-persistence (viewMode). (ADR-7)
 
 ## Phase 4 — Unified EventListView UI

@@ -47,13 +47,27 @@ public final class EventListViewModel {
     // MARK: - Dependencies
 
     private let apiClient: APIClient
+    /// Single event-mutation surface (ADR-2). `confirmDeleteEvent` and
+    /// `updateEventStatus` route through this repository so every list-path
+    /// mutation fans out to the system calendar consistently. Reading the
+    /// events list (loadEvents/refresh) stays on `apiClient` — ADR-2 covers the
+    /// *mutation* sites only; reading is not a mutation.
+    public let eventRepository: any EventRepository
     private var cacheManager: CacheManager?
     private let cacheMaxAge: TimeInterval = 30 * 60
 
     // MARK: - Init
 
-    public init(apiClient: APIClient) {
+    /// - Parameters:
+    ///   - apiClient: kept for list reads (`loadEvents`/`refresh`) + cache, which
+    ///     are NOT mutations and stay on `APIClient` per ADR-2.
+    ///   - eventRepository: the mutation boundary. When `nil`, a production
+    ///     default is wired so existing `init(apiClient:)` call sites keep
+    ///     compiling AND route mutations through the repository. Tests inject a
+    ///     mock-backed repository.
+    public init(apiClient: APIClient, eventRepository: (any EventRepository)? = nil) {
         self.apiClient = apiClient
+        self.eventRepository = eventRepository ?? DefaultEventRepository.makeDefault(eventAPI: apiClient)
     }
 
     /// Set the cache manager for offline support.
@@ -260,7 +274,9 @@ public final class EventListViewModel {
     @MainActor
     public func confirmDeleteEvent(_ event: Event) async {
         do {
-            try await apiClient.delete(Endpoint.event(event.id))
+            // Route through the repository (ADR-2): the delete + system-mirror
+            // cleanup + identity clearing fan out from this single boundary.
+            try await eventRepository.delete(event.id)
         } catch {
             events.append(event)
             errorMessage = tr("events.list.error.delete_failed", "Error al eliminar el evento")
@@ -280,10 +296,10 @@ public final class EventListViewModel {
         updatingStatusEventId = event.id
         defer { updatingStatusEventId = nil }
         do {
-            let updated: Event = try await apiClient.put(
-                Endpoint.event(event.id),
-                body: ["status": newStatus.rawValue]
-            )
+            // Route through the repository (ADR-2): status change + system-mirror
+            // update fan out from this single boundary; the returned event
+            // patches the local row so the badge updates without a refetch.
+            let updated = try await eventRepository.changeStatus(event.id, to: newStatus)
             if let index = events.firstIndex(where: { $0.id == event.id }) {
                 events[index] = updated
             }
