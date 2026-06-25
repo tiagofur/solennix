@@ -84,7 +84,14 @@ public enum SyncError: Error, Sendable, Equatable {
 public protocol SystemCalendarSyncing: AnyObject, Sendable {
 
     /// Current authorization status (does not prompt).
-    func authorizationStatus() -> SyncAuthorization
+    ///
+    /// - Note: declared `async` (a refinement of ADR-1) so an actor-conforming test
+    ///   double (`MockSystemCalendarSyncing`) can record the call through its
+    ///   isolated state, and so Phase 2's `EventKitSyncService` actor serializes
+    ///   every access. `EKEventStore.authorizationStatus(for:)` is a sync static
+    ///   API; the prod impl simply awaits this wrapper. All callers (VM, repo) are
+    ///   already async.
+    func authorizationStatus() async -> SyncAuthorization
 
     /// Requests full access to events (iOS 17 `requestFullAccessToEvents`).
     /// Returns the resulting status; never throws.
