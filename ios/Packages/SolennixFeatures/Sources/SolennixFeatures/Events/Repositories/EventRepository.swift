@@ -236,3 +236,41 @@ public final class DefaultEventRepository: EventRepository {
         }
     }
 }
+
+// MARK: - Production default factory
+
+extension DefaultEventRepository {
+
+    /// `UserDefaults` keys mirrored by the app's `@AppStorage` bindings (ADR-6).
+    /// The repository reads them through closures so every mutation sees the
+    /// live toggle/destination the user last chose, without the package depending
+    /// on SwiftUI's property wrapper.
+    fileprivate static let syncEnabledKey = "calendarSyncEnabled"
+    fileprivate static let syncDestinationKey = "calendarSyncDestination"
+
+    /// Production default wiring (ADR-2/ADR-6): the real `EventKitSyncService`
+    /// + the `UserDefaults`-backed identity store, with sync defaulting OFF
+    /// until the user opts in. Used by the ViewModels' convenience inits so the
+    /// existing `init(apiClient:)` call sites keep compiling while still routing
+    /// mutations through the repository boundary.
+    public static func makeDefault(eventAPI: any EventAPI) -> DefaultEventRepository {
+        DefaultEventRepository(
+            eventAPI: eventAPI,
+            syncService: EventKitSyncService(),
+            identityStore: UserDefaultsCalendarSyncIdentityStore(),
+            syncEnabled: { Self.readSyncEnabled() },
+            destination: { Self.readSyncDestination() }
+        )
+    }
+
+    private static func readSyncEnabled() -> Bool {
+        // `object(forKey:) as? Bool` mirrors `@AppStorage` semantics: a key that
+        // was never written reads as nil → the documented default (OFF).
+        UserDefaults.standard.object(forKey: syncEnabledKey) as? Bool ?? false
+    }
+
+    private static func readSyncDestination() -> SyncDestination {
+        let raw = UserDefaults.standard.string(forKey: syncDestinationKey) ?? ""
+        return SyncDestination(rawValue: raw) ?? .solennix
+    }
+}
