@@ -14,6 +14,8 @@ let package = Package(
         .package(path: "../SolennixDesign"),
         .package(url: "https://github.com/RevenueCat/purchases-ios-spm.git", from: "5.0.0"),
         .package(url: "https://github.com/getsentry/sentry-cocoa.git", from: "8.43.0"),
+        // Snapshot testing harness for layout/UI behavior assertions (ADR-8).
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.17.0"),
     ],
     targets: [
         .target(name: "SolennixFeatures",
@@ -26,6 +28,18 @@ let package = Package(
                 ],
                 resources: [
                     .process("Resources"),
-                ])
+                ]),
+        // Unit + snapshot tests for the Features package. Depends on SolennixCore
+        // and SolennixNetwork directly so test doubles (e.g. MockEventAPI) can
+        // import their public protocols/models.
+        .testTarget(
+            name: "SolennixFeaturesTests",
+            dependencies: [
+                .target(name: "SolennixFeatures"),
+                .product(name: "SolennixCore", package: "SolennixCore"),
+                .product(name: "SolennixNetwork", package: "SolennixNetwork"),
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
+            ]
+        )
     ]
 )
