@@ -74,7 +74,7 @@ Chain strategy: feature-branch-chain
 - [x] **4.3** [RED→GREEN impl] `.calendario` body reuses moved `CalendarGridView` (status dots) + filtered list reusing the SAME `eventCard` (NOT a new row). Snapshot test asserts cell resolves to `eventCard` and `eventRowContent` type absent. Covers "reuses eventCard".
 - [x] **4.4** [impl] Wire day-tap (`onTapGesture`→`selectDate`) + long-press (`simultaneousGesture(LongPressGesture(minimumDuration:0.5))`→`onLongPressDate`→`BlockDateSheet`). Test: long-press fires WITHOUT `selectDate` (no mutual trigger). Covers day-tap + long-press scenarios.
 - [x] **4.5** [impl] Period chips `Hoy · Esta semana · Este mes · Personalizado` (custom = start+end two taps) in both modes. Covered by 3.3 VM tests + 4.1 snapshot.
-- [ ] **4.6** [impl] App bar: keep `selectedStatus` filter, REMOVE `calendar` filter button (both viewModes). Test: status present + calendar button absent. Covers app-bar scenario.
+- [x] **4.6** [impl] App bar: keep `selectedStatus` filter, REMOVE `calendar` filter button (both viewModes). Test: status present + calendar button absent. Covers app-bar scenario.
 - [ ] **4.7** [RED→GREEN test+impl] Create `EventosOnboardingTip.swift` (reuse `NewEventTip` TipKit style, single `@AppStorage("eventosOnboardingShown")`); shown once, set true on dismiss, never reappears. Covers onboarding scenario.
 
 ## Phase 5 — Settings sync preferences & navigation
