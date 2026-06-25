@@ -1,0 +1,238 @@
+import Foundation
+import SolennixCore
+import SolennixNetwork
+
+// MARK: - EventRepository
+
+/// The single event-mutation surface (ADR-2). Today there are 3 event-mutation
+/// call-sites across 2 VM classes (`EventFormViewModel.save`,
+/// `EventListViewModel.confirmDeleteEvent`, `EventListViewModel.updateEventStatus`).
+/// Routing them through one repository means every create / edit / status-change /
+/// delete mirrors to the system calendar consistently, regardless of UI path, with
+/// exactly one test seam.
+///
+/// Each mutation hits `EventAPI` (the narrow seam over the concrete `APIClient`
+/// actor — ADR-9) FIRST, then fans out to `SystemCalendarSyncing` (write-only
+/// EventKit mirror — ADR-1) guarded by `syncEnabled`, rewriting the device-local
+/// identity store (ADR-5). Sync is **implicit** on every CRUD: there is no explicit
+/// "sync now" action.
+///
+/// > Note: `list()` and `changeDestination(to:progress:)` + `syncAuthorization` are
+/// > added in subsequent Phase 2 tasks (2.3 / 2.4); `list()` itself is a Phase 3
+/// > concern (the mutation surface is what the spec scenarios cover here).
+public protocol EventRepository: AnyObject, Sendable {
+    /// Creates an event (POST /events) + its items (PUT /events/{id}/items), then
+    /// mirrors to the system calendar. Returns the API-persisted `Event`.
+    func create(eventBody: AnyCodable, itemsBody: AnyCodable) async throws -> Event
+
+    /// Updates an event (PUT /events/{id}); optionally re-PUTs its items. Mirrors.
+    func update(_ id: String, body: AnyCodable, itemsBody: AnyCodable?) async throws -> Event
+
+    /// Changes an event's status (PUT /events/{id} with `{"status": ...}`). Mirrors.
+    func changeStatus(_ id: String, to: EventStatus) async throws -> Event
+
+    /// Deletes an event (DELETE /events/{id}); best-effort removes its system mirror.
+    func delete(_ id: String) async throws
+
+    /// Migrates every previously-synced event from the current destination to `to`
+    /// (delete-old + create-new), surfacing progress 0…1. Partial-failure tolerant:
+    /// items that fail keep their old identifier and remain re-runnable (ADR-4).
+    func changeDestination(to destination: SyncDestination, progress: @Sendable (Double) -> Void) async throws
+
+    /// Current EventKit authorization status (delegates to the sync service). Surfaced
+    /// so the UI can render the correct toggle / open-Settings state (ADR-3/6).
+    var syncAuthorization: SyncAuthorization { get async }
+}
+
+// MARK: - DefaultEventRepository
+
+/// Concrete `EventRepository`. Holds the three dependencies it fans mutations across
+/// plus two `@Sendable` closures that read the live sync state (`@AppStorage`-backed
+/// in the app): whether sync is ON and the current destination.
+///
+/// All stored properties are `Sendable` (existentials of `Sendable` protocols +
+/// `@Sendable` closures) and the type is a `final class` of `let` properties, so it
+/// is `Sendable` — safe to share across the actor boundaries the ViewModels use.
+public final class DefaultEventRepository: EventRepository {
+
+    private let eventAPI: any EventAPI
+    private let syncService: any SystemCalendarSyncing
+    private let identityStore: CalendarSyncIdentityStore
+    private let syncEnabled: @Sendable () -> Bool
+    private let destination: @Sendable () -> SyncDestination
+
+    public init(
+        eventAPI: any EventAPI,
+        syncService: any SystemCalendarSyncing,
+        identityStore: CalendarSyncIdentityStore,
+        syncEnabled: @escaping @Sendable () -> Bool = { false },
+        destination: @escaping @Sendable () -> SyncDestination = { .solennix }
+    ) {
+        self.eventAPI = eventAPI
+        self.syncService = syncService
+        self.identityStore = identityStore
+        self.syncEnabled = syncEnabled
+        self.destination = destination
+    }
+
+    // MARK: - CRUD
+
+    public func create(eventBody: AnyCodable, itemsBody: AnyCodable) async throws -> Event {
+        // API first — mirrors the existing EventFormViewModel+Save two-call sequence
+        // (POST /events, then PUT /events/{id}/items) verbatim. No new EventDraft type.
+        let event: Event = try await eventAPI.post(Endpoint.events, body: eventBody)
+        let _: EmptyResponse = try await eventAPI.put(Endpoint.eventItems(event.id), body: itemsBody)
+        try await mirror(event)
+        return event
+    }
+
+    public func update(_ id: String, body: AnyCodable, itemsBody: AnyCodable?) async throws -> Event {
+        let event: Event = try await eventAPI.put(Endpoint.event(id), body: body)
+        if let itemsBody {
+            let _: EmptyResponse = try await eventAPI.put(Endpoint.eventItems(id), body: itemsBody)
+        }
+        try await mirror(event)
+        return event
+    }
+
+    public func changeStatus(_ id: String, to status: EventStatus) async throws -> Event {
+        let event: Event = try await eventAPI.put(
+            Endpoint.event(id),
+            body: AnyCodable(["status": status.rawValue] as [String: Any?])
+        )
+        try await mirror(event)
+        return event
+    }
+
+    public func delete(_ id: String) async throws {
+        try await eventAPI.delete(Endpoint.event(id))
+        if syncEnabled() {
+            // Best-effort system-mirror removal: delete always succeeds once the API
+            // delete completes (the source event is gone). Resilience errors that the
+            // user must act on are surfaced through create/update/changeStatus's mirror
+            // path; a delete's mirror-cleanup is allowed to fail silently.
+            await removeFromSystem(id)
+        }
+        // A deleted Solennix event must not retain a (now-meaningless) system mapping,
+        // regardless of whether the mirror removal ran.
+        await identityStore.clear(for: id)
+    }
+
+    // MARK: - syncAuthorization
+
+    public var syncAuthorization: SyncAuthorization {
+        get async { await syncService.authorizationStatus() }
+    }
+
+    public func changeDestination(
+        to destination: SyncDestination,
+        progress: @Sendable (Double) -> Void
+    ) async throws {
+        // ADR-4: load every synced identity, migrate each (delete-old + create-new),
+        // rewrite the identity store, and surface progress. The detached-Task wrapping
+        // is the caller's (ViewModel) concern; this method is the async work unit.
+        let items = await identityStore.all()
+        guard !items.isEmpty else {
+            progress(1.0)
+            return
+        }
+        // `destination` (the param) shadows the current-destination closure; use
+        // `self.destination()` to read the origin. Both resolve with missing-calendar
+        // resilience (ADR-3): a missing `.solennix` target is recreated; a missing
+        // `.personal` target throws `.personalCalendarUnavailable` (propagates).
+        let origin = try await resolveDestinationResilient(self.destination())
+        let target = try await resolveDestinationResilient(destination)
+
+        let migrated = try await syncService.migrate(
+            items,
+            from: origin,
+            to: target,
+            progress: progress
+        )
+
+        // Rewrite identities: successful items get their new identifier + new
+        // destination. Items that failed are returned with their ORIGINAL identifier
+        // (the migrate contract), so we leave their stored entry untouched — they keep
+        // the old identifier AND the old destination, making the switch re-runnable.
+        let originalIdentifiers = Dictionary(
+            uniqueKeysWithValues: items.map { ($0.eventID, $0.calendarItemIdentifier) }
+        )
+        for item in migrated {
+            if item.calendarItemIdentifier == originalIdentifiers[item.eventID] {
+                continue // failed — retain old identifier + old destination
+            }
+            await identityStore.set(
+                eventID: item.eventID,
+                calendarItemIdentifier: item.calendarItemIdentifier,
+                destination: destination
+            )
+        }
+    }
+
+    // MARK: - Sync fan-out
+
+    /// Mirrors `event` to the system calendar (write-only). Idempotent: an event with
+    /// a stored identity is UPDATED (never re-created); one without is CREATED. The
+    /// identity store is then rewritten with the resolved identifier, so a repeat
+    /// mutation never produces a duplicate system item (ADR-2 / ADR-5).
+    ///
+    /// Error policy (ADR-3): a missing `.personal` calendar surfaces
+    /// `.personalCalendarUnavailable` (a user-fixable config error) so the UI can prompt
+    /// re-choose; a missing `.solennix` calendar is silently recreated; all other sync
+    /// failures are swallowed (graceful degradation — the API mutation already succeeded).
+    private func mirror(_ event: Event) async throws {
+        guard syncEnabled() else { return }
+        do {
+            let dest = try await resolveDestinationResilient(destination())
+            let identifier: String
+            if let existing = await identityStore.get(for: event.id) {
+                try await syncService.update(event, identifier: existing.calendarItemIdentifier, in: dest)
+                identifier = existing.calendarItemIdentifier
+            } else {
+                let created = try await syncService.create(event, in: dest)
+                identifier = created.calendarItemIdentifier
+            }
+            await identityStore.set(
+                eventID: event.id,
+                calendarItemIdentifier: identifier,
+                destination: destination()
+            )
+        } catch let error as SyncError where error == .personalCalendarUnavailable {
+            // Surface the config error: the user must re-choose a destination.
+            throw error
+        } catch {
+            // Swallow other mirror failures (write-only; the CRUD already succeeded).
+        }
+    }
+
+    /// Best-effort removal of `id`'s system mirror. Resolves the destination the item
+    /// was written to (preferring its stored destination) and deletes it. Swallows all
+    /// failures: the API delete has already succeeded, so a mirror-removal error must
+    /// not fail the delete.
+    private func removeFromSystem(_ id: String) async {
+        guard let item = await identityStore.get(for: id) else { return }
+        let kind = (await identityStore.destination(for: id)) ?? destination()
+        do {
+            let dest = try await resolveDestinationResilient(kind)
+            try await syncService.delete(identifier: item.calendarItemIdentifier, in: dest)
+        } catch {
+            // Best-effort system cleanup (write-only); the API delete already succeeded.
+        }
+    }
+
+    /// Resolves a destination kind to its identifier handle with missing-calendar
+    /// resilience (ADR-3):
+    /// - `.solennix` missing (`.calendarResolutionFailed`) → recreate via
+    ///   `ensureSolennixCalendarExists()`, then the write proceeds.
+    /// - `.personal` missing → `resolveDestination` throws `.personalCalendarUnavailable`
+    ///   (a different error), which is NOT caught here — it propagates so the caller
+    ///   (`mirror`) can surface it.
+    private func resolveDestinationResilient(_ kind: SyncDestination) async throws -> SyncedDestination {
+        do {
+            return try await syncService.resolveDestination(kind)
+        } catch SyncError.calendarResolutionFailed {
+            guard kind == .solennix else { throw SyncError.calendarResolutionFailed }
+            return try await syncService.ensureSolennixCalendarExists()
+        }
+    }
+}
