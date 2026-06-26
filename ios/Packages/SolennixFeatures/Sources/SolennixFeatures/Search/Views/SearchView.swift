@@ -92,7 +92,6 @@ public struct SearchView: View {
                 searchContent(vm: vm)
             } else {
                 ProgressView()
-                    .tint(SolennixColors.primary)
             }
         }
         .navigationTitle(SearchStrings.title)
@@ -234,7 +233,6 @@ public struct SearchView: View {
         Section {
             HStack(spacing: Spacing.md) {
                 ProgressView()
-                    .tint(SolennixColors.primary)
                 Text(SearchStrings.loading)
                     .font(.subheadline)
                     .foregroundStyle(SolennixColors.textSecondary)

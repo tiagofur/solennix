@@ -51,6 +51,10 @@ struct KPIWidgetView: View {
     var entry: KPIEntry
     @Environment(\.widgetFamily) var family
 
+    // MARK: - @ScaledMetric sizes (Dynamic Type-safe, capped)
+    @ScaledMetric(relativeTo: .largeTitle) private var revenueFontSize: CGFloat = 28
+    private var cappedRevenueFontSize: CGFloat { min(revenueFontSize, 36) }
+
     var body: some View {
         switch family {
         case .systemSmall:
@@ -82,7 +86,7 @@ struct KPIWidgetView: View {
 
             // Revenue
             Text(entry.kpis.formattedRevenue)
-                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .font(.system(size: cappedRevenueFontSize, weight: .bold, design: .rounded))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)

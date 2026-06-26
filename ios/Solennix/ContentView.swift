@@ -236,7 +236,6 @@ struct BiometricGateView: View {
                 Task { await authenticate() }
             }
             .buttonStyle(.borderedProminent)
-            .tint(SolennixColors.primary)
             .controlSize(sizeClass == .regular ? .large : .regular)
 
             Spacer()

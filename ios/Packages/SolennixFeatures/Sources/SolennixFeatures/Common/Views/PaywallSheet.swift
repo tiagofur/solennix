@@ -9,11 +9,15 @@ struct PaywallSheet: View {
     let onUpgrade: () -> Void
     let onDismiss: () -> Void
 
+    // MARK: - @ScaledMetric sizes (Dynamic Type-safe, capped)
+    @ScaledMetric(relativeTo: .body) private var lockIconSize: CGFloat = 44
+    private var cappedLockIconSize: CGFloat { min(lockIconSize, 60) }
+
     var body: some View {
         VStack(spacing: 20) {
             // Icon
             Image(systemName: "lock.fill")
-                .font(.system(size: 44))
+                .font(.system(size: cappedLockIconSize))
                 .foregroundStyle(SolennixColors.primary)
                 .padding(.top, 8)
 

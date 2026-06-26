@@ -11,6 +11,10 @@ public struct AccountDeletionView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(ToastManager.self) private var toastManager
 
+    // MARK: - @ScaledMetric sizes (Dynamic Type-safe, capped)
+    @ScaledMetric(relativeTo: .body) private var successIconSize: CGFloat = 64
+    private var cappedSuccessIconSize: CGFloat { min(successIconSize, 80) }
+
     public init(apiClient: APIClient, authManager: AuthManager) {
         _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient, authManager: authManager))
     }
@@ -217,7 +221,7 @@ public struct AccountDeletionView: View {
 
             VStack(spacing: Spacing.lg) {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 64))
+                    .font(.system(size: cappedSuccessIconSize))
                     .foregroundStyle(SolennixColors.success)
 
                 VStack(spacing: Spacing.sm) {

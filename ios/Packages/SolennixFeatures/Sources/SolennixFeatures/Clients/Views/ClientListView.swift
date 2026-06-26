@@ -129,7 +129,6 @@ public struct ClientListView: View {
         } else if viewModel.isLoading && viewModel.clients.isEmpty {
             ProgressView()
                 .controlSize(.large)
-                .tint(SolennixColors.primary)
         } else if viewModel.filteredClients.isEmpty && !viewModel.isLoading {
             if viewModel.searchText.isEmpty {
                 // First-run: real NavigationLink CTA styled like EventListView first-run.

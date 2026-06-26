@@ -80,10 +80,14 @@ struct DashboardEmptyCardState: View {
     let icon: String
     let title: String
 
+    // MARK: - @ScaledMetric sizes (Dynamic Type-safe, capped)
+    @ScaledMetric(relativeTo: .body) private var emptyIconSize: CGFloat = 40
+    private var cappedEmptyIconSize: CGFloat { min(emptyIconSize, 56) }
+
     var body: some View {
         VStack(spacing: Spacing.md) {
             Image(systemName: icon)
-                .font(.system(size: 40))
+                .font(.system(size: cappedEmptyIconSize))
                 .foregroundStyle(SolennixColors.textTertiary)
 
             Text(title)

@@ -110,7 +110,6 @@ struct OnboardingChecklistView: View {
                 // Progress bar
                 HStack(spacing: Spacing.sm) {
                     ProgressView(value: progress)
-                        .tint(SolennixColors.primary)
                         .animation(reduceMotion ? nil : .easeInOut, value: progress)
 
                     Text("\(completedCount)/\(steps.count)")

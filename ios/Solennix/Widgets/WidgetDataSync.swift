@@ -1,6 +1,10 @@
 import Foundation
 import WidgetKit
+import os.log
 import SolennixCore
+import SolennixFeatures
+
+private let logger = Logger(subsystem: "com.solennix.app", category: "WidgetDataSync")
 
 // MARK: - Widget Data Key Constants
 
@@ -44,7 +48,8 @@ final class WidgetDataSync {
             // Reload widgets
             reloadEventWidgets()
         } catch {
-            print("Failed to sync events to widget: \(error)")
+            logger.error("Failed to sync events to widget: \(error.localizedDescription, privacy: .public)")
+            SentryHelper.capture(error: error, context: "widget_sync_events")
         }
     }
 
@@ -58,7 +63,8 @@ final class WidgetDataSync {
             // Reload widgets
             reloadKPIWidgets()
         } catch {
-            print("Failed to sync KPIs to widget: \(error)")
+            logger.error("Failed to sync KPIs to widget: \(error.localizedDescription, privacy: .public)")
+            SentryHelper.capture(error: error, context: "widget_sync_kpis")
         }
     }
 

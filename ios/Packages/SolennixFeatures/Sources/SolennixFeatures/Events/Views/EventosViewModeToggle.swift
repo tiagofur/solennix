@@ -35,7 +35,6 @@ struct EventosViewModeToggle: View {
                 .tag(EventosViewMode.calendario)
         }
         .pickerStyle(.segmented)
-        .tint(SolennixColors.primary)
         .accessibilityHint(FeatureL10n.text(
             "events.list.view_mode.accessibility_hint",
             "Cambia entre la lista y el calendario de eventos"

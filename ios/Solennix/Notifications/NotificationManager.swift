@@ -4,6 +4,7 @@ import UIKit
 import os.log
 import SolennixCore
 import SolennixNetwork
+import SolennixFeatures
 
 // MARK: - Notification Manager
 
@@ -109,7 +110,8 @@ final class NotificationManager: NSObject, ObservableObject {
 
             return granted
         } catch {
-            print("Notification authorization error: \(error)")
+            logger.error("Notification authorization error: \(error.localizedDescription, privacy: .public)")
+            SentryHelper.capture(error: error, context: "notification_request_authorization")
             return false
         }
     }

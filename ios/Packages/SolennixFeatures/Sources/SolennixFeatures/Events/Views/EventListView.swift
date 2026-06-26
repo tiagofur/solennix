@@ -312,7 +312,6 @@ public struct EventListView: View {
                 if viewModel.isLoading && !viewModel.events.isEmpty {
                     ProgressView()
                         .controlSize(.large)
-                        .tint(SolennixColors.primary)
                 }
             }
     }
@@ -352,7 +351,6 @@ public struct EventListView: View {
                             selection: $start,
                             displayedComponents: .date
                         )
-                        .tint(SolennixColors.primary)
                         .solennixRow()
                     }
                     Section {
@@ -361,7 +359,6 @@ public struct EventListView: View {
                             selection: $end,
                             displayedComponents: .date
                         )
-                        .tint(SolennixColors.primary)
                         .solennixRow()
                     }
                 }
@@ -640,7 +637,6 @@ public struct EventListView: View {
                         NavigationLink(value: Route.eventChecklist(id: event.id)) {
                             Label(tr("events.list.actions.checklist", "Checklist"), systemImage: "checklist")
                         }
-                        .tint(SolennixColors.primary)
                     }
                 }
             }
@@ -824,7 +820,6 @@ public struct EventListView: View {
                     if viewModel.updatingStatusEventId == event.id {
                         ProgressView()
                             .controlSize(.mini)
-                            .tint(SolennixColors.primary)
                     } else {
                         StatusBadge(status: event.status.rawValue)
                     }
@@ -841,7 +836,6 @@ public struct EventListView: View {
                     if viewModel.updatingStatusEventId == event.id {
                         ProgressView()
                             .controlSize(.mini)
-                            .tint(SolennixColors.primary)
                     } else {
                         StatusBadge(status: event.status.rawValue)
                     }

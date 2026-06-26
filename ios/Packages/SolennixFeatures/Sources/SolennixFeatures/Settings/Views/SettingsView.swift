@@ -43,7 +43,6 @@ public struct SettingsView: View {
 
     public var body: some View {
         settingsContent
-            .tint(SolennixColors.primary)
             .background(SolennixColors.surfaceGrouped)
             .softScrollEdgeEffectIfAvailable()
             .navigationTitle(SettingsStrings.title)

@@ -1,8 +1,11 @@
 import CoreSpotlight
 import UniformTypeIdentifiers
+import os.log
 import SolennixCore
 
 // MARK: - Spotlight Indexer
+
+private let logger = Logger(subsystem: "com.solennix.app", category: "SpotlightIndexer")
 
 /// Indexa contenido de la app en Core Spotlight para que los usuarios
 /// puedan buscar clientes, eventos y productos desde la búsqueda del sistema.
@@ -100,7 +103,8 @@ public enum SpotlightIndexer {
     public static func removeAll() {
         CSSearchableIndex.default().deleteAllSearchableItems { error in
             if let error {
-                print("[SpotlightIndexer] Error eliminando índice: \(error.localizedDescription)")
+                logger.error("Failed to delete Spotlight index: \(error.localizedDescription, privacy: .public)")
+                SentryHelper.capture(error: error, context: "spotlight_remove_all")
             }
         }
     }
@@ -113,7 +117,8 @@ public enum SpotlightIndexer {
 
         CSSearchableIndex.default().indexSearchableItems(items) { error in
             if let error {
-                print("[SpotlightIndexer] Error indexando items: \(error.localizedDescription)")
+                logger.error("Failed to index Spotlight items: \(error.localizedDescription, privacy: .public)")
+                SentryHelper.capture(error: error, context: "spotlight_index_items")
             }
         }
     }

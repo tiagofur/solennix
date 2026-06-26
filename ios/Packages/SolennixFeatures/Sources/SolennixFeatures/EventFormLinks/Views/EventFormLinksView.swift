@@ -146,7 +146,6 @@ public struct EventFormLinksView: View {
                                 ShareLink(item: link.url) {
                                     Label(EventFormLinksStrings.swipeShare, systemImage: "square.and.arrow.up")
                                 }
-                                .tint(SolennixColors.primary)
                             }
                             .contextMenu {
                                 Button {

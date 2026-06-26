@@ -1,4 +1,7 @@
 import Foundation
+import os.log
+
+private let logger = Logger(subsystem: "com.solennix.app", category: "WidgetModels")
 
 // MARK: - Widget Event
 
@@ -144,7 +147,7 @@ final class WidgetDataProvider {
             AppGroup.userDefaults?.set(data, forKey: WidgetDataKey.upcomingEvents)
             AppGroup.userDefaults?.set(Date(), forKey: WidgetDataKey.lastUpdated)
         } catch {
-            print("Failed to save widget events: \(error)")
+            logger.error("Failed to save widget events: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -153,7 +156,7 @@ final class WidgetDataProvider {
             let data = try JSONEncoder().encode(kpis)
             AppGroup.userDefaults?.set(data, forKey: WidgetDataKey.kpis)
         } catch {
-            print("Failed to save widget KPIs: \(error)")
+            logger.error("Failed to save widget KPIs: \(error.localizedDescription, privacy: .public)")
         }
     }
 }

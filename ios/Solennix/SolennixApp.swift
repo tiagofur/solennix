@@ -102,7 +102,15 @@ struct SolennixApp: App {
         // created (persistent + in-memory both fail), report to Sentry before
         // terminating so we get real diagnostics instead of an opaque crash.
         do {
-            self.modelContainer = try SolennixModelContainer.create()
+            self.modelContainer = try SolennixModelContainer.create { fallbackError in
+                // Persistent store failed but in-memory fallback succeeded: the
+                // app runs in degraded mode (data not persisted). Route to Sentry
+                // so we get real diagnostics instead of silent data loss.
+                SentryHelper.capture(
+                    error: fallbackError,
+                    context: "SwiftData persistent store failed; fell back to in-memory"
+                )
+            }
         } catch {
             SentryHelper.capture(
                 error: error,

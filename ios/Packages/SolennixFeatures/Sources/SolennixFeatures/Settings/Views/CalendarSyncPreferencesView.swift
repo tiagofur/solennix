@@ -8,7 +8,8 @@ import SolennixNetwork
 /// Settings screen for the write-only EventKit system-calendar sync (task 5.2).
 ///
 /// It replicates the `NotificationPreferencesView` pattern (`preferenceToggle` row
-/// builder, `.tint(SolennixColors.primary)`, `.solennixRow()`, `.solennixListStyle()`,
+/// builder, inherited AccentColor for the toggle knob, `.solennixRow()`,
+/// `.solennixListStyle()`,
 /// and the ViewModel `togglePreference`/`inFlightKeys` contract) to host:
 ///   • the **master sync toggle** — bound to `viewModel.togglePreference(\.syncEnabled)`
 ///     and the EventKit permission re-prompt surface (ADR-6);
@@ -145,7 +146,6 @@ public struct CalendarSyncPreferencesView: View {
                             Image(systemName: "gear")
                         }
                     }
-                    .tint(SolennixColors.primary)
                     .solennixRow()
                 }
             }
@@ -178,7 +178,6 @@ public struct CalendarSyncPreferencesView: View {
                 Image(systemName: icon)
             }
         }
-        .tint(SolennixColors.primary)
         .disabled(viewModel.inFlightKeys.contains(id))
         .solennixRow()
     }

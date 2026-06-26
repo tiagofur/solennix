@@ -368,7 +368,10 @@ public struct PricingView: View {
             HStack {
                 if subscriptionManager.isPurchasing {
                     ProgressView()
-                        .tint(isPrimary ? SolennixColors.onPrimary : SolennixColors.primary)
+                        // `isPrimary` renders on the gold gradient, so its spinner
+                        // needs the dark onPrimary; the secondary button uses the
+                        // brand AccentColor (gold) inherited via the asset catalog.
+                        .tint(isPrimary ? SolennixColors.onPrimary : Color.accentColor)
                 }
                 Text(title)
                     .font(.subheadline)

@@ -154,7 +154,6 @@ public struct StaffFormView: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
             }
-            .tint(SolennixColors.primary)
             .solennixRow()
 
             if viewModel.notificationEmailOptIn && !viewModel.isOptInConsistent {

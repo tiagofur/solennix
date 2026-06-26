@@ -125,7 +125,6 @@ public struct StaffListView: View {
             if viewModel.isLoading && viewModel.staff.isEmpty {
                 ProgressView()
                     .controlSize(.large)
-                    .tint(SolennixColors.primary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Spacing.xxxl)
             } else if viewModel.filteredStaff.isEmpty && !viewModel.isLoading {

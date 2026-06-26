@@ -386,7 +386,6 @@ struct SupplyRowView: View {
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
-                .tint(SolennixColors.primary)
             }
         }
 

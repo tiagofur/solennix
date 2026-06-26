@@ -9,6 +9,10 @@ public struct AboutView: View {
     @Environment(\.openURL) private var openURL
     @State private var legalSheetURL: IdentifiableURL?
 
+    // MARK: - @ScaledMetric sizes (Dynamic Type-safe, capped)
+    @ScaledMetric(relativeTo: .body) private var appIconSize: CGFloat = 64
+    private var cappedAppIconSize: CGFloat { min(appIconSize, 80) }
+
     public init() {}
 
     private func tr(_ key: String, _ value: String) -> String {
@@ -52,7 +56,7 @@ public struct AboutView: View {
         VStack(spacing: Spacing.md) {
             // App icon
             Image(systemName: "sparkles.rectangle.stack")
-                .font(.system(size: 64))
+                .font(.system(size: cappedAppIconSize))
                 .foregroundStyle(SolennixGradient.premium)
 
             Text("Solennix")

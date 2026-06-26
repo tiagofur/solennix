@@ -108,6 +108,12 @@ struct MonthlyRevenue {
 struct MonthlyRevenueSnippetView: View {
     let revenue: MonthlyRevenue
 
+    // MARK: - @ScaledMetric sizes (Dynamic Type-safe, capped)
+    @ScaledMetric(relativeTo: .largeTitle) private var revenueFontSize: CGFloat = 32
+    private var cappedRevenueFontSize: CGFloat { min(revenueFontSize, 40) }
+    @ScaledMetric(relativeTo: .body) private var revenueIconSize: CGFloat = 36
+    private var cappedRevenueIconSize: CGFloat { min(revenueIconSize, 52) }
+
     var body: some View {
         VStack(spacing: 16) {
             // Header
@@ -118,7 +124,7 @@ struct MonthlyRevenueSnippetView: View {
                         .foregroundStyle(.secondary)
 
                     Text(revenue.formattedTotal)
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .font(.system(size: cappedRevenueFontSize, weight: .bold, design: .rounded))
                         .foregroundStyle(.primary)
 
                     // Growth indicator
@@ -140,7 +146,7 @@ struct MonthlyRevenueSnippetView: View {
                 Spacer()
 
                 Image(systemName: "chart.line.uptrend.xyaxis")
-                    .font(.system(size: 36))
+                    .font(.system(size: cappedRevenueIconSize))
                     .foregroundStyle(.green.opacity(0.3))
             }
 
