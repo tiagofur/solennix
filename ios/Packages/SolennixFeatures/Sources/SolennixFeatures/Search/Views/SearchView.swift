@@ -169,12 +169,20 @@ public struct SearchView: View {
                 noResultsSection
             } else if let results = effectiveResults, !results.isEmpty {
                 resultsContent(results: results)
+            } else if presentationContext == .bottomNavTab,
+                      vm.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                // Bottom-nav tab with empty query: show recents or onboarding hint
+                // (spec R6 — Apple-canonical initial-search state).
+                if !vm.recentQueries.isEmpty {
+                    recentsSection(vm: vm)
+                } else {
+                    onboardingHint
+                }
             } else if presentationContext == .pushed, !vm.querySuggestions.isEmpty {
                 suggestionsSection(vm: vm)
             } else if presentationContext == .pushed, !vm.hasSearched {
                 initialStateSection
             }
-            // `.bottomNavTab` with empty query: no section renders → blank surface.
         }
         .listStyle(.insetGrouped)
         .solennixListStyle()
@@ -309,6 +317,67 @@ public struct SearchView: View {
                     .font(.caption)
                 }
             }
+        }
+    }
+
+    // MARK: - Recents Section (bottom-nav tab empty state, spec R6)
+
+    /// Renders up to 6 recent queries in a List section with a "Limpiar" affordance.
+    /// Tap a recent → `applySuggestion` + `search()` fires, replacing the empty
+    /// state with results (spec R6).
+    private func recentsSection(vm: SearchViewModel) -> some View {
+        Section {
+            ForEach(vm.recentQueries, id: \.self) { query in
+                Button {
+                    vm.applySuggestion(query)
+                    Task { await vm.search() }
+                } label: {
+                    HStack(spacing: Spacing.sm) {
+                        Image(systemName: "clock")
+                            .font(.caption)
+                            .foregroundStyle(SolennixColors.textTertiary)
+                        Text(query)
+                            .font(.subheadline)
+                            .foregroundStyle(SolennixColors.text)
+                        Spacer()
+                    }
+                }
+                .accessibilityIdentifier("recent-\(query)")
+                .solennixRow()
+            }
+        } header: {
+            HStack {
+                Text(SearchStrings.suggestionsTitle)
+                Spacer()
+                Button(SearchStrings.suggestionsClear) {
+                    vm.clearRecentQueries()
+                }
+                .font(.caption)
+                .accessibilityIdentifier("clearRecentsButton")
+            }
+        }
+    }
+
+    // MARK: - Onboarding Hint (bottom-nav tab empty state, spec R6)
+
+    /// Centered hint shown when the bottom-nav search tab has no recents and
+    /// the query is empty — the Apple-canonical "new user" initial state.
+    private var onboardingHint: some View {
+        Section {
+            VStack(spacing: Spacing.md) {
+                Image(systemName: "text.magnifyingglass")
+                    .font(.system(size: illustrationIconSize))
+                    .foregroundStyle(SolennixColors.textTertiary)
+
+                Text(SearchStrings.emptyStateHint)
+                    .font(.subheadline)
+                    .foregroundStyle(SolennixColors.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, Spacing.xxl)
+            .accessibilityIdentifier("onboardingHint")
+            .solennixRow()
         }
     }
 

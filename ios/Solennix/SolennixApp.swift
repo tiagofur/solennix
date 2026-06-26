@@ -392,6 +392,10 @@ private final class AppSignOutDelegate: SignOutDelegate, @unchecked Sendable {
     private init() {}
 
     func willClearTokens(apiClient: APIClient) async {
+        // Clear persisted search recents so the next user does not inherit them
+        // (spec: clear recents on logout).
+        SearchViewModel.clearRecentQueriesFromStorage()
+
         // Prefer the in-memory token (always set while the app is live).
         // NotificationManager is @MainActor, so read deviceToken on the main actor
         // first, then fall back to the UserDefaults key written on successful registration.

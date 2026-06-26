@@ -1,52 +1,94 @@
 import XCTest
 
-/// PR3 task 3.5 — automated verification for spec R6 (Search Empty State): an
-/// empty query MUST render a BLANK surface and MUST NOT show recents,
-/// suggestions, or history.
+/// search-empty-state -- automated verification for the MODIFIED R6 spec.
 ///
-/// This is launched under the DEBUG `SOLX_UI_TEST_BYPASS_AUTH` gate (compiled
-/// out in Release) which renders the REAL `CompactTabLayout` + the search tab.
-/// With an empty query the `.bottomNavTab` `SearchView` renders no List section
-/// → no cells. R4 (results rendering across 4 entities + detail navigation)
-/// needs a live backend with seed data and is NOT automatable here — it lives in
-/// the manual checklist (`pr3-manual-checklist.md`).
+/// R6 now requires the bottom-nav search tab to render Recent Searches when
+/// recentQueries is non-empty, and an onboarding hint when it is empty.
+///
+/// NOTE: iOS 26 Tab(role: .search) wraps content in a system-managed search
+/// presentation. Element discovery for recents (seeded via UserDefaults) is
+/// unreliable due to process isolation between XCUITest runner and app process.
+/// The onboarding-hint test (zero recents) and the unit test for
+/// clearRecentQueriesFromStorage() are fully automated. Recents-populated
+/// scenarios are covered by the manual smoke checklist.
 final class SearchTabEmptyStateTests: XCTestCase {
 
-    func testEmptyQueryRendersBlankSurface() throws {
+    private let recentsKey = "solennix.search.recentQueries"
+
+    override func setUp() {
+        super.setUp()
+        UserDefaults.standard.removeObject(forKey: recentsKey)
+    }
+
+    override func tearDown() {
+        UserDefaults.standard.removeObject(forKey: recentsKey)
+        super.tearDown()
+    }
+
+    // MARK: - 4.2 Onboarding hint visible when recentQueries is empty
+
+    func testOnboardingHintVisibleWhenEmpty() throws {
+        // No recents seeded -- setUp already cleared UserDefaults.
         let app = XCUIApplication()
         app.launchEnvironment["SOLX_UI_TEST_BYPASS_AUTH"] = "1"
         app.launch()
 
-        // Wait for the tab bar and find the search destination.
         let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 20), "Tab bar should render under the auth-bypass gate.")
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 20),
+                       "Tab bar should render under the auth-bypass gate.")
 
         let searchTab = tabBar.buttons.element(boundBy: 4)
-        XCTAssertTrue(searchTab.waitForExistence(timeout: 5), "The 5th tab (search) should exist.")
+        XCTAssertTrue(searchTab.waitForExistence(timeout: 5),
+                       "The 5th tab (search) should exist.")
         searchTab.tap()
 
-        // Give the search presentation a moment to settle.
         _ = app.wait(for: .runningForeground, timeout: 5)
 
-        // R6: with an EMPTY query, no result rows / recents / suggestions render.
-        // The List must be blank (the suggestions/recents surfaces are gated to
-        // the `.pushed` context only).
-        let cells = app.cells
-        // Allow the UI to settle, then assert no list cells exist.
-        let cellCount = cells.count
-        XCTAssertEqual(cellCount, 0,
-                       "Empty query MUST render a blank surface (no recents/suggestions/history). cells=\(cellCount)")
+        // R6: with zero recents, the onboarding hint MUST be visible.
+        // Use the text label which is more reliable than accessibility identifiers
+        // inside iOS 26's system search presentation.
+        let hintText = app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS[c] 'clientes'")
+        ).firstMatch
+        XCTAssertTrue(hintText.waitForExistence(timeout: 10),
+                       "Onboarding hint MUST be visible when recentQueries is empty.")
 
-        // Recents/suggestions are gated to `.pushed`; neither header should appear
-        // in the bottom-nav tab even if the device has stored recent queries.
-        let suggestionsHeader = app.staticTexts["Sugerencias"]
-        XCTAssertFalse(suggestionsHeader.exists,
-                       "The bottom-nav search tab must not surface recents/suggestions on empty query.")
-
-        // Retain evidence (screenshot of the blank surface).
+        // Capture evidence.
         let screenshot = XCUIScreen.main.screenshot()
         let attachment = XCTAttachment(screenshot: screenshot)
-        attachment.name = "search-empty-state-pr3"
+        attachment.name = "search-onboarding-hint"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
+    // MARK: - 4.1, 4.3, 4.4 -- Recents-populated scenarios (manual verification)
+
+    /// Verifies that the search tab renders under the auth-bypass gate without
+    /// crashing. Recents-populated scenarios (4.1, 4.3, 4.4) require manual
+    /// smoke verification because XCUITest UserDefaults seeding is unreliable
+    /// across process boundaries with iOS 26's Tab(role: .search).
+    func testSearchTabRendersWithoutCrash() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["SOLX_UI_TEST_BYPASS_AUTH"] = "1"
+        app.launch()
+
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 20),
+                       "Tab bar should render under the auth-bypass gate.")
+
+        let searchTab = tabBar.buttons.element(boundBy: 4)
+        XCTAssertTrue(searchTab.waitForExistence(timeout: 5),
+                       "The 5th tab (search) should exist.")
+        searchTab.tap()
+
+        _ = app.wait(for: .runningForeground, timeout: 5)
+
+        // Verify the app is still running and the tab bar is present.
+        XCTAssertTrue(tabBar.exists, "Tab bar must still exist after search tab tap.")
+
+        let screenshot = XCUIScreen.main.screenshot()
+        let attachment = XCTAttachment(screenshot: screenshot)
+        attachment.name = "search-tab-render-check"
         attachment.lifetime = .keepAlways
         add(attachment)
     }
