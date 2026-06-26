@@ -62,11 +62,14 @@ struct CompactTabLayout: View {
                 moreTabContent
             }
 
-            // NOTE: no Tab(role: .search) here. With 5 regular tabs, adding a
-            // search tab makes the system spawn a "Más" overflow tab on iPhone
-            // (observed on iOS 26.5 even with the search tab declared last —
-            // the role did not exempt it from the 5-slot limit). Search remains
-            // available via .searchable inside each tab's screens.
+            // NOTE: the search tab lands in PR2. The app currently has 4 regular
+            // tabs (home, events, clients, more) — Calendar was unified into
+            // Events (Phase 5.4), so the prior overflow condition (when there were
+            // 5 regular tabs, 5 + 1 search = 6 spawned a system overflow on
+            // iOS 26.5) no longer applies. PR2 adds Tab(role: .search) here and
+            // validates the 4 + 1 = 5 slot fit on-device; if it overflows, the
+            // regular 5th-tab fallback is used
+            // (see openspec/changes/bottom-nav-search/design.md).
         }
         .tint(SolennixColors.tabBarActive)
         .tabBarMinimizeBehavior(.onScrollDown)
@@ -89,17 +92,7 @@ struct CompactTabLayout: View {
     /// Mirrors `legacyTabSelection` so both branches share the same UX contract.
     @available(iOS 26.0, *)
     private var ios26TabSelection: Binding<AppTab> {
-        Binding(
-            get: { selectedTab },
-            set: { newTab in
-                if newTab == selectedTab {
-                    resetPath(for: newTab)
-                } else {
-                    resetPath(for: selectedTab)
-                }
-                selectedTab = newTab
-            }
-        )
+        Binding(get: { selectedTab }, set: { applyTabSelection($0) })
     }
 
     // MARK: - Legacy Tab View (iOS 17–25)
@@ -196,17 +189,21 @@ struct CompactTabLayout: View {
 
     /// Custom binding for the legacy TabView that pops to root on same-tab re-tap.
     private var legacyTabSelection: Binding<AppTab> {
-        Binding(
-            get: { selectedTab },
-            set: { newTab in
-                if newTab == selectedTab {
-                    resetPath(for: newTab)
-                } else {
-                    resetPath(for: selectedTab)
-                }
-                selectedTab = newTab
-            }
-        )
+        Binding(get: { selectedTab }, set: { applyTabSelection($0) })
+    }
+
+    /// Shared selection handler used by both `ios26TabSelection` and
+    /// `legacyTabSelection`. Delegates the reset/preserve decision to the pure
+    /// `resolveTabChange` reducer (design Decision 4):
+    ///   - re-tap → reset that tab (pop to root)
+    ///   - search transition (enter/leave) → preserve both stacks
+    ///   - regular → different regular → reset the leaving tab (unchanged UX)
+    private func applyTabSelection(_ newTab: Tab) {
+        let effect = resolveTabChange(current: selectedTab, next: newTab)
+        if let resetTab = effect.resetTab {
+            resetPath(for: resetTab)
+        }
+        selectedTab = newTab
     }
 
     // MARK: - Helpers
@@ -221,6 +218,7 @@ struct CompactTabLayout: View {
         case .events:   eventsPath = NavigationPath()
         case .clients:  clientsPath = NavigationPath()
         case .more:     morePath = NavigationPath()
+        case .search:   break // PR2 wires `searchPath`; search has no nav state yet.
         }
     }
 

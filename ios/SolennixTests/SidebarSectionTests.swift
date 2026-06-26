@@ -1,20 +1,22 @@
 import XCTest
 @testable import Solennix
 
-/// Navigation-surface contract tests (unify-events-calendar-ios, task 5.4).
+/// Navigation-surface contract tests (unify-events-calendar-ios, task 5.4;
+/// updated for bottom-nav-search PR1 — `Tab.search` is now the 5th tab).
 ///
 /// The calendar destination MUST NOT exist as a tab or a sidebar section: the
-/// navigation surface exposes exactly four compact tabs — `home`, `events`,
-/// `clients`, `more` — and the sidebar's main sections exclude calendar.
+/// navigation surface exposes exactly five compact tabs — `home`, `events`,
+/// `clients`, `more`, `search` — and the sidebar's main sections exclude calendar.
 /// (Previously five destinations including a `calendar` tab and section.)
 final class SidebarSectionTests: XCTestCase {
 
-    // MARK: - Compact tabs (exactly four, no Calendar)
+    // MARK: - Compact tabs (five, including search; no Calendar)
 
-    func testCompactTabsAreExactlyFourInOrder() {
-        // Spec: "the tabs MUST be exactly home, events, clients, more".
-        XCTAssertEqual(Tab.allCases.count, 4)
-        XCTAssertEqual(Tab.allCases, [.home, .events, .clients, .more])
+    func testCompactTabsAreFiveIncludingSearchInOrder() {
+        // Spec: "the tabs MUST be home, events, clients, more" + the new search
+        // destination (bottom-nav-search). Calendar MUST NOT be among them.
+        XCTAssertEqual(Tab.allCases.count, 5)
+        XCTAssertEqual(Tab.allCases, [.home, .events, .clients, .more, .search])
     }
 
     func testTabsExposeExpectedTitleAndIcon() {

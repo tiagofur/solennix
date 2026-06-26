@@ -12,6 +12,7 @@ public enum Tab: Int, Hashable, CaseIterable {
     case events
     case clients
     case more
+    case search
 
     /// The SF Symbol icon name for this tab.
     public var iconName: String {
@@ -20,6 +21,7 @@ public enum Tab: Int, Hashable, CaseIterable {
         case .events:   return "party.popper.fill"
         case .clients:  return "person.2.fill"
         case .more:     return "ellipsis"
+        case .search:   return "magnifyingglass"
         }
     }
 
@@ -30,8 +32,35 @@ public enum Tab: Int, Hashable, CaseIterable {
         case .events:   return CommonStrings.tabEvents
         case .clients:  return CommonStrings.tabClients
         case .more:     return CommonStrings.tabMore
+        case .search:   return CommonStrings.tabSearch
         }
     }
+}
+
+// MARK: - Tab Selection Reducer
+
+/// The effect of a tab-bar selection change, computed purely from the
+/// `(current, next)` tab pair.
+///
+/// `resetTab == nil`  → preserve the leaving tab's navigation stack.
+/// `resetTab != nil`  → reset that tab's `NavigationPath` (pop to root).
+struct TabSelectionEffect {
+    var resetTab: Tab?
+}
+
+/// Pure selection decision shared by the `ios26TabSelection` and
+/// `legacyTabSelection` bindings (design Decision 4).
+///
+/// - Re-tap (`current == next`): reset that tab → pop to root.
+/// - Any transition involving `.search` (entering or leaving): preserve both
+///   stacks so the system's dismiss-restore reshows the prior detail
+///   (spec: "Dismiss restores previous tab and nav state").
+/// - Regular → different regular tab: reset the leaving tab (unchanged UX,
+///   minimal blast radius).
+func resolveTabChange(current: Tab, next: Tab) -> TabSelectionEffect {
+    if current == next { return .init(resetTab: next) }
+    if next == .search || current == .search { return .init(resetTab: nil) }
+    return .init(resetTab: current)
 }
 
 // MARK: - SidebarSection
