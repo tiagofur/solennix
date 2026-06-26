@@ -122,6 +122,8 @@ struct RouteDestination: View {
             SubscriptionView(apiClient: apiClient, authManager: authManager)
         case .notificationPreferences:
             NotificationPreferencesView(apiClient: apiClient, authManager: authManager)
+        case .calendarSyncPreferences:
+            CalendarSyncPreferencesView(apiClient: apiClient)
         case .about:
             AboutView()
         case .deleteAccount:
