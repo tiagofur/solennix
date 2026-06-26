@@ -26,7 +26,6 @@ struct CompactTabLayout: View {
     @State private var clientsPath = NavigationPath()
     @State private var morePath = NavigationPath()
     @State private var searchPath = NavigationPath()
-    @State private var homeSearchText = ""
 
     /// Search view model owned by the layout so it is non-nil from the first
     /// render (avoiding SwiftUI's `@State` re-init trap) and so the shared
@@ -185,15 +184,17 @@ struct CompactTabLayout: View {
 
     @ViewBuilder
     private var homeTabContent: some View {
+        // PR3 task 3.4 — the Home (Dashboard) top `.searchable` is RETIRED. Home
+        // is a non-list surface, and global search now lives in its own bottom-nav
+        // tab (design Decision 7). Removing it eliminates the duplicate entry and
+        // the `homeSearchText`/`appendSearchRoute`/local `globalSearchPrompt`
+        // plumbing. `CommonStrings.globalSearchPrompt` is KEPT (the iPad sidebar
+        // + the search tab still use it). Spotlight search entry is unaffected:
+        // it pushes `Route.search(query:)` onto `homePath` directly.
         NavigationStack(path: $homePath) {
             HomeRootView()
                 .navigationDestination(for: Route.self) { route in
                     RouteDestination(route: route)
-                }
-                .searchable(text: $homeSearchText, prompt: globalSearchPrompt)
-                .searchMinimizedIfAvailable()
-                .onSubmit(of: .search) {
-                    appendSearchRoute(query: &homeSearchText, to: &homePath)
                 }
         }
     }
@@ -274,10 +275,6 @@ struct CompactTabLayout: View {
 
     // MARK: - Helpers
 
-    private var globalSearchPrompt: String {
-        CommonStrings.globalSearchPrompt
-    }
-
     private func resetPath(for tab: Tab) {
         switch tab {
         case .home:     homePath = NavigationPath()
@@ -286,13 +283,6 @@ struct CompactTabLayout: View {
         case .more:     morePath = NavigationPath()
         case .search:   searchPath = NavigationPath()
         }
-    }
-
-    private func appendSearchRoute(query: inout String, to path: inout NavigationPath) {
-        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedQuery.isEmpty else { return }
-        query = trimmedQuery
-        path.append(Route.search(query: trimmedQuery))
     }
 }
 
