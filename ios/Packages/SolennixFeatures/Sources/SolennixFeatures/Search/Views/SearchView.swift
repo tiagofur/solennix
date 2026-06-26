@@ -33,6 +33,12 @@ public struct SearchView: View {
     @State private var viewModel: SearchViewModel?
     @FocusState private var isSearchFocused: Bool
 
+    /// PR3 — entity-type scope for the bottom-nav search tab (spec R5). Bound to
+    /// the system `.searchScopes` bar so the user can narrow results to one
+    /// entity; `filteredResults(for:)` narrows the already-grouped results
+    /// client-side (no re-query). Defaults to `.all`.
+    @State private var scope: SearchScope = .all
+
     @ScaledMetric(relativeTo: .largeTitle) private var illustrationIconSize: CGFloat = 40
 
     /// - Parameters:
@@ -61,9 +67,20 @@ public struct SearchView: View {
             // The system `.searchable` is the input field for the bottom-nav tab
             // (spec R1/R6); the custom `searchField` is omitted (see searchContent).
             // `SearchViewModel` owns `query` (design Decision 2); typing triggers a
-            // debounced `GET /api/search?q=` via `searchTabQueryBinding`.
+            // debounced `GET /api/search?q=` via `searchTabQueryBinding`. The
+            // `.searchScopes` bar narrows results by entity (spec R5).
+            //
+            // NOTE (verified symbol): the live iOS 26.5 SDK exposes
+            // `searchScopes(_:scopes:)` (PLURAL, iOS 16.0+) tagged with `.tag()`,
+            // NOT the singular `.searchScope($scope)` referenced in design.md.
+            // It is iOS 16+, so it compiles in both branches with no #available guard.
             searchSurface
                 .searchable(text: searchTabQueryBinding, prompt: Text(CommonStrings.globalSearchPrompt))
+                .searchScopes($scope) {
+                    ForEach(SearchScope.allCases, id: \.self) { option in
+                        Text(option.title).tag(option)
+                    }
+                }
         }
     }
 
@@ -116,32 +133,41 @@ public struct SearchView: View {
         switch presentationContext {
         case .pushed:
             // Pushed route: always-visible custom search field + results/suggestions.
+            // No scope bar here — scope defaults to `.all` (unchanged behavior).
             VStack(spacing: 0) {
                 searchField(vm: vm)
-                resultList(vm: vm)
+                resultList(vm: vm, scope: .all)
             }
         case .bottomNavTab:
             // Bottom-nav tab (PR2): the system `.searchable` (wired by
             // `CompactTabLayout.searchTabContent`) is the input field, so the
             // custom `searchField` is omitted. Results reuse `SearchViewModel`
-            // → GET /api/search?q= across all four entities (spec R4/R6). An
-            // empty query renders a structured BLANK surface (no recents) so
-            // future enhancements can land without redesign (spec R6).
-            resultList(vm: vm)
+            // → GET /api/search?q= across all four entities (spec R4/R6), then
+            // narrow to the selected `scope` (spec R5). An empty query renders a
+            // structured BLANK surface (no recents) so future enhancements can
+            // land without redesign (spec R6).
+            resultList(vm: vm, scope: scope)
         }
     }
 
     /// Shared results list for both presentation contexts. The empty/suggestion
     /// surfaces are gated to `.pushed` so the bottom-nav tab stays blank until
-    /// the user types (spec R6).
+    /// the user types (spec R6). `scope` narrows the rendered results; it
+    /// defaults to `.all` for `.pushed` (no scope bar) and uses the tab's
+    /// selected scope for `.bottomNavTab`.
     @ViewBuilder
-    private func resultList(vm: SearchViewModel) -> some View {
+    private func resultList(vm: SearchViewModel, scope: SearchScope = .all) -> some View {
+        // Narrow the grouped results to the selected scope (client-side; no
+        // re-query — design Decision 5). The empty/loading/no-results decisions
+        // use the NARROWED results so e.g. a `.clients` scope with no client
+        // matches correctly shows "Sin resultados".
+        let effectiveResults = vm.filteredResults(for: scope)
         List {
             if vm.isLoading {
                 loadingSection
-            } else if vm.hasSearched && vm.isEmpty {
+            } else if vm.hasSearched && (effectiveResults?.isEmpty ?? true) {
                 noResultsSection
-            } else if let results = vm.results, !results.isEmpty {
+            } else if let results = effectiveResults, !results.isEmpty {
                 resultsContent(results: results)
             } else if presentationContext == .pushed, !vm.querySuggestions.isEmpty {
                 suggestionsSection(vm: vm)

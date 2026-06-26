@@ -40,6 +40,33 @@ public struct SearchResults {
     }
 }
 
+// MARK: - Search Scope
+
+/// Entity-type scope for the bottom-nav search tab (spec R5: "A `.searchScope`
+/// control (all, clients, events, products, inventory) MUST narrow results to
+/// the selected scope"). The filter is CLIENT-SIDE — it narrows the already-
+/// grouped `SearchResults` returned by `GET /api/search?q=` and MUST NOT
+/// re-query the backend (design Decision 5).
+public enum SearchScope: String, CaseIterable, Hashable {
+    case all
+    case clients
+    case events
+    case products
+    case inventory
+
+    /// Localized title for the scope-bar entry (spec R5). Reuses the existing
+    /// per-entity result strings; only `.all` has a dedicated key.
+    public var title: String {
+        switch self {
+        case .all:       return SearchStrings.scopeAll
+        case .clients:   return SearchStrings.resultsClients
+        case .events:    return SearchStrings.resultsEvents
+        case .products:  return SearchStrings.resultsProducts
+        case .inventory: return SearchStrings.resultsInventory
+        }
+    }
+}
+
 // MARK: - Search Response Models
 
 /// Raw search response from the API.
@@ -100,6 +127,36 @@ public final class SearchViewModel {
             return recentQueries
         }
         return recentQueries.filter { $0.localizedCaseInsensitiveContains(trimmed) }
+    }
+
+    /// Returns the current results narrowed to `scope`. Client-side filter on
+    /// the already-grouped `SearchResults` arrays — NO backend re-query (design
+    /// Decision 5). `.all` returns the full grouped results as-is; a single-
+    /// entity scope returns a `SearchResults` with only that group populated.
+    /// Returns `nil` when there are no results yet (preserves the "no search
+    /// performed" state so the empty-query blank surface stays blank).
+    public func filteredResults(for scope: SearchScope) -> SearchResults? {
+        guard let results else { return nil }
+        switch scope {
+        case .all:
+            return results
+        case .clients:
+            var narrowed = SearchResults()
+            narrowed.clients = results.clients
+            return narrowed
+        case .events:
+            var narrowed = SearchResults()
+            narrowed.events = results.events
+            return narrowed
+        case .products:
+            var narrowed = SearchResults()
+            narrowed.products = results.products
+            return narrowed
+        case .inventory:
+            var narrowed = SearchResults()
+            narrowed.inventory = results.inventory
+            return narrowed
+        }
     }
 
     // MARK: - Search

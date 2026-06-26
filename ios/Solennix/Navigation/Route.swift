@@ -80,6 +80,35 @@ func shouldClearSearchOnTabExit(current: Tab, next: Tab) -> Bool {
     current == .search && next != .search
 }
 
+// MARK: - Spotlight Transition Plan (F-1)
+
+/// The tab-transition effect a Spotlight deep-link should produce. Pure so the
+/// clear-on-exit decision is unit-testable (`SpotlightClearOnExitTests`) without
+/// a live Spotlight harness.
+struct SpotlightNavigationPlan {
+    /// The tab the Spotlight route should land on.
+    var destinationTab: Tab
+    /// Whether the search query must be cleared because the transition leaves
+    /// the `.search` tab (spec R7). F-1: the Spotlight handlers previously set
+    /// `selectedTab` directly, bypassing the `applyTabSelection` clear-on-exit
+    /// chokepoint — this plan routes them back through that leave-decision.
+    var clearSearchOnExit: Bool
+}
+
+/// PR3 F-1 — computes the tab-transition plan for a Spotlight deep-link landing
+/// on `destinationTab` from `currentTab`. The clear-on-exit decision reuses the
+/// SAME leave-decision as user tab taps (`shouldClearSearchOnTabExit`) so a
+/// search query held on the search tab is never left stale when Spotlight
+/// navigates away (spec R7). Path handling is left to the caller — Spotlight
+/// always resets `homePath` and pushes the route, which this plan does NOT
+/// change (preserves the existing Spotlight → home → push behavior).
+func planSpotlightTransition(from currentTab: Tab, to destinationTab: Tab) -> SpotlightNavigationPlan {
+    SpotlightNavigationPlan(
+        destinationTab: destinationTab,
+        clearSearchOnExit: shouldClearSearchOnTabExit(current: currentTab, next: destinationTab)
+    )
+}
+
 // MARK: - SidebarSection
 
 /// Sections shown in the iPad/Mac sidebar navigation.
