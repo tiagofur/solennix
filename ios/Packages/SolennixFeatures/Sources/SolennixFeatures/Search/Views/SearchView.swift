@@ -3,11 +3,31 @@ import SolennixCore
 import SolennixDesign
 import SolennixNetwork
 
+// MARK: - Search Presentation Context
+
+/// How `SearchView` is being presented.
+///
+/// - `.pushed`: the classic global-search route pushed onto a navigation stack
+///   (`Route.search(query:)`). Renders its own custom search field + suggestions
+///   surface; the nav bar seeds `initialQuery` only.
+/// - `.bottomNavTab`: the search destination rendered in-tab inside the bottom
+///   nav (PR2). OMITS the custom search field — the system `.searchable` (wired
+///   by `CompactTabLayout.searchTabContent`) is the input field — and renders a
+///   structured BLANK empty surface (no recents) per spec R6. `SearchViewModel`
+///   owns `query` in both contexts (design Decision 2).
+public enum SearchPresentationContext {
+    case pushed
+    case bottomNavTab
+}
+
 // MARK: - Search View
 
 public struct SearchView: View {
 
     private let initialQuery: String
+    /// The presentation context the view was constructed with. Public so callers
+    /// (and tests) can confirm which surface is in use.
+    public let presentationContext: SearchPresentationContext
     @Environment(AuthManager.self) private var authManager
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var viewModel: SearchViewModel?
@@ -15,11 +35,41 @@ public struct SearchView: View {
 
     @ScaledMetric(relativeTo: .largeTitle) private var illustrationIconSize: CGFloat = 40
 
-    public init(initialQuery: String = "") {
+    /// - Parameters:
+    ///   - initialQuery: Optional seed query (pushed route). `SearchViewModel`
+    ///     remains the text owner; this is an initial value only (spec R7).
+    ///   - context: Presentation surface. Defaults to `.pushed` so existing
+    ///     `Route.search` callers are unchanged.
+    ///   - viewModel: Optional injected view model. When provided (bottom-nav
+    ///     tab) the view uses it directly; otherwise it lazily builds one from
+    ///     the environment API client on first appear (existing pushed behavior).
+    public init(
+        initialQuery: String = "",
+        context: SearchPresentationContext = .pushed,
+        viewModel: SearchViewModel? = nil
+    ) {
         self.initialQuery = initialQuery
+        self.presentationContext = context
+        self._viewModel = State(initialValue: viewModel)
     }
 
     public var body: some View {
+        switch presentationContext {
+        case .pushed:
+            searchSurface
+        case .bottomNavTab:
+            // The system `.searchable` is the input field for the bottom-nav tab
+            // (spec R1/R6); the custom `searchField` is omitted (see searchContent).
+            // `SearchViewModel` owns `query` (design Decision 2); typing triggers a
+            // debounced `GET /api/search?q=` via `searchTabQueryBinding`.
+            searchSurface
+                .searchable(text: searchTabQueryBinding, prompt: Text(CommonStrings.globalSearchPrompt))
+        }
+    }
+
+    /// Shared chrome (title, background, lazy view-model setup) for both contexts.
+    @ViewBuilder
+    private var searchSurface: some View {
         Group {
             if let vm = viewModel {
                 searchContent(vm: vm)
@@ -47,29 +97,61 @@ public struct SearchView: View {
         }
     }
 
+    /// Binding for the bottom-nav tab's system `.searchable` field. The injected
+    /// `SearchViewModel` owns `query` (design Decision 2); each edit triggers a
+    /// debounced search (debounce lives inside `SearchViewModel.search()`).
+    private var searchTabQueryBinding: Binding<String> {
+        Binding(
+            get: { viewModel?.query ?? "" },
+            set: { newValue in
+                guard let vm = viewModel else { return }
+                vm.query = newValue
+                Task { await vm.search() }
+            }
+        )
+    }
+
     @ViewBuilder
     private func searchContent(vm: SearchViewModel) -> some View {
-        VStack(spacing: 0) {
-            // Always-visible search field
-            searchField(vm: vm)
-
-            // Results
-            List {
-                if vm.isLoading {
-                    loadingSection
-                } else if vm.hasSearched && vm.isEmpty {
-                    noResultsSection
-                } else if let results = vm.results, !results.isEmpty {
-                    resultsContent(results: results)
-                } else if !vm.querySuggestions.isEmpty {
-                    suggestionsSection(vm: vm)
-                } else if !vm.hasSearched {
-                    initialStateSection
-                }
+        switch presentationContext {
+        case .pushed:
+            // Pushed route: always-visible custom search field + results/suggestions.
+            VStack(spacing: 0) {
+                searchField(vm: vm)
+                resultList(vm: vm)
             }
-            .listStyle(.insetGrouped)
-            .solennixListStyle()
+        case .bottomNavTab:
+            // Bottom-nav tab (PR2): the system `.searchable` (wired by
+            // `CompactTabLayout.searchTabContent`) is the input field, so the
+            // custom `searchField` is omitted. Results reuse `SearchViewModel`
+            // → GET /api/search?q= across all four entities (spec R4/R6). An
+            // empty query renders a structured BLANK surface (no recents) so
+            // future enhancements can land without redesign (spec R6).
+            resultList(vm: vm)
         }
+    }
+
+    /// Shared results list for both presentation contexts. The empty/suggestion
+    /// surfaces are gated to `.pushed` so the bottom-nav tab stays blank until
+    /// the user types (spec R6).
+    @ViewBuilder
+    private func resultList(vm: SearchViewModel) -> some View {
+        List {
+            if vm.isLoading {
+                loadingSection
+            } else if vm.hasSearched && vm.isEmpty {
+                noResultsSection
+            } else if let results = vm.results, !results.isEmpty {
+                resultsContent(results: results)
+            } else if presentationContext == .pushed, !vm.querySuggestions.isEmpty {
+                suggestionsSection(vm: vm)
+            } else if presentationContext == .pushed, !vm.hasSearched {
+                initialStateSection
+            }
+            // `.bottomNavTab` with empty query: no section renders → blank surface.
+        }
+        .listStyle(.insetGrouped)
+        .solennixListStyle()
     }
 
     // MARK: - Search Field

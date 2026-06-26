@@ -78,6 +78,17 @@
                ReferencedContainer = "container:Solennix.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "38D7970DE486CE65CC049299"
+               BuildableName = "SolennixUITests.xctest"
+               BlueprintName = "SolennixUITests"
+               ReferencedContainer = "container:Solennix.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>

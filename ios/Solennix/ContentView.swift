@@ -8,6 +8,17 @@ import SolennixFeatures
 
 // MARK: - Content View
 
+/// DEBUG-only launch-arg gate used by UI tests to render the main layout without
+/// going through auth (the app is otherwise auth-gated). Compiled out in Release
+/// so it can never affect production. Set via `SOLX_UI_TEST_BYPASS_AUTH=1` in the
+/// app's launch environment.
+#if DEBUG
+private enum SolennixUITestBypass {
+    static let authBypassEnabled =
+        ProcessInfo.processInfo.environment["SOLX_UI_TEST_BYPASS_AUTH"] == "1"
+}
+#endif
+
 /// The root view of the app. Switches between auth, biometric gate,
 /// splash, and the main layout based on `AuthManager.authState`.
 struct ContentView: View {
@@ -30,30 +41,23 @@ struct ContentView: View {
             }
 
             Group {
-                switch authManager.authState {
-                case .unknown:
-                    SplashView()
-
-                case .unauthenticated:
-                    AuthFlowView(
-                        deepLinkResetToken: $deepLinkResetToken,
-                        deepLinkTeamInviteToken: $deepLinkTeamInviteToken
-                    )
-
-                case .biometricLocked:
-                    BiometricGateView()
-
-                case .authenticated:
-                    authenticatedLayout
+                #if DEBUG
+                if SolennixUITestBypass.authBypassEnabled {
+                    // UI-test bypass: render the main layout directly (no auth) so
+                    // the bottom-nav slot fit can be validated against the REAL
+                    // `CompactTabLayout`. Compiled out in Release builds.
+                    mainLayout
+                } else {
+                    authDrivenContent
                 }
+                #else
+                authDrivenContent
+                #endif
             }
             .frame(maxHeight: .infinity)
         }
         .animation(.easeInOut(duration: 0.3), value: networkMonitor.isConnected)
-        .fullScreenCover(isPresented: Binding(
-            get: { !hasSeenOnboarding },
-            set: { newValue in hasSeenOnboarding = !newValue }
-        )) {
+        .fullScreenCover(isPresented: onboardingBinding) {
             OnboardingView()
         }
         .onOpenURL { url in
@@ -102,13 +106,13 @@ struct ContentView: View {
     @ViewBuilder
     private var mainLayout: some View {
         if sizeClass == .compact {
-            CompactTabLayout(pendingSpotlightRoute: $pendingSpotlightRoute)
+            CompactTabLayout(apiClient: apiClient, pendingSpotlightRoute: $pendingSpotlightRoute)
         } else {
             GeometryReader { geo in
                 if geo.size.width > geo.size.height {
                     SidebarSplitLayout(pendingSpotlightRoute: $pendingSpotlightRoute)
                 } else {
-                    CompactTabLayout(pendingSpotlightRoute: $pendingSpotlightRoute)
+                    CompactTabLayout(apiClient: apiClient, pendingSpotlightRoute: $pendingSpotlightRoute)
                 }
             }
         }
@@ -121,6 +125,43 @@ struct ContentView: View {
         } else {
             mainLayout
         }
+    }
+
+    /// The production auth-driven content switch (bypassed only under the DEBUG
+    /// UI-test gate above).
+    @ViewBuilder
+    private var authDrivenContent: some View {
+        switch authManager.authState {
+        case .unknown:
+            SplashView()
+
+        case .unauthenticated:
+            AuthFlowView(
+                deepLinkResetToken: $deepLinkResetToken,
+                deepLinkTeamInviteToken: $deepLinkTeamInviteToken
+            )
+
+        case .biometricLocked:
+            BiometricGateView()
+
+        case .authenticated:
+            authenticatedLayout
+        }
+    }
+
+    /// Onboarding cover binding. Suppressed under the DEBUG UI-test bypass so the
+    /// real tab layout is directly inspectable.
+    private var onboardingBinding: Binding<Bool> {
+        Binding(
+            get: {
+                #if DEBUG
+                return !hasSeenOnboarding && !SolennixUITestBypass.authBypassEnabled
+                #else
+                return !hasSeenOnboarding
+                #endif
+            },
+            set: { newValue in hasSeenOnboarding = !newValue }
+        )
     }
 
     // MARK: - Deep Link Handling
