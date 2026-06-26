@@ -311,10 +311,11 @@ final class EventListViewModelUnifiedStateTests: XCTestCase {
         XCTAssertNil(vm.dateRangeEnd)
     }
 
-    /// Cambio 4 — tapping the ALREADY-SELECTED day clears it (show all). A
-    /// second `selectDate(d)` MUST leave `selectedDay` nil and the range empty.
+    /// Cambio 4 — tapping the ALREADY-SELECTED day clears it and restores the
+    /// full-month view (Apple Calendar pattern: the list follows the grid).
     func testSelectDateToggleClearsDayWhenSameDayTappedAgain() {
         let vm = vm()
+        anchorMonth(vm, 2026, 6)
         let day = date(2026, 6, 15)
 
         vm.selectDate(day)
@@ -324,9 +325,10 @@ final class EventListViewModelUnifiedStateTests: XCTestCase {
         vm.selectDate(day)
 
         XCTAssertNil(vm.selectedDay, "tapping the selected day again clears it")
-        XCTAssertNil(vm.dateRangeStart, "deselecting clears the shared range start")
-        XCTAssertNil(vm.dateRangeEnd, "deselecting clears the shared range end")
         XCTAssertNil(vm.periodFilter, "deselecting leaves no period chip")
+        // After deselect, the list is bounded to the grid's visible month.
+        XCTAssertEqual(vm.dateRangeStart, date(2026, 6, 1), "deselecting restores month start")
+        XCTAssertEqual(vm.dateRangeEnd, date(2026, 6, 30), "deselecting restores month end")
     }
 
     /// Triangulation for Cambio 4: a DIFFERENT day still selects normally.
@@ -357,10 +359,12 @@ final class EventListViewModelUnifiedStateTests: XCTestCase {
         XCTAssertNil(vm.dateRangeEnd, "entering Lista clears the day's imposed range end")
     }
 
-    /// Cambio 3 — entering `.calendario` clears any period-chip filter + its
-    /// range (the grid is the date filter in Calendario).
-    func testClearFiltersForCalendarioClearsPeriodAndItsRange() {
+    /// Cambio 3 — entering `.calendario` clears any period-chip filter and
+    /// bounds the list to the grid's visible month (Apple Calendar: list follows
+    /// grid).
+    func testClearFiltersForCalendarioClearsPeriodAndBoundsToMonth() {
         let vm = vm()
+        anchorMonth(vm, 2026, 6)
         // Establish a period chip (sets periodFilter + dateRange to the period).
         vm.setPeriodFilter(.thisMonth)
         XCTAssertEqual(vm.periodFilter, .thisMonth, "precondition")
@@ -368,8 +372,9 @@ final class EventListViewModelUnifiedStateTests: XCTestCase {
         vm.clearFiltersForViewMode(.calendario)
 
         XCTAssertNil(vm.periodFilter, "entering Calendario clears the period chip")
-        XCTAssertNil(vm.dateRangeStart, "entering Calendario clears the chip's range start")
-        XCTAssertNil(vm.dateRangeEnd, "entering Calendario clears the chip's range end")
+        // The list is bounded to the grid's month, not cleared to nil.
+        XCTAssertEqual(vm.dateRangeStart, date(2026, 6, 1), "entering Calendario bounds to month start")
+        XCTAssertEqual(vm.dateRangeEnd, date(2026, 6, 30), "entering Calendario bounds to month end")
     }
 
     /// Cambio 3 — `clearFiltersForViewMode` must NEVER touch `events`/`currentMonth`

@@ -308,6 +308,7 @@ public final class EventListViewModel {
         let calendar = Calendar.current
         currentMonth = calendar.date(byAdding: .month, value: 1, to: currentMonth) ?? currentMonth
         selectedDay = nil
+        applyCurrentMonthRange()
     }
 
     /// Go back to the previous month.
@@ -315,6 +316,7 @@ public final class EventListViewModel {
         let calendar = Calendar.current
         currentMonth = calendar.date(byAdding: .month, value: -1, to: currentMonth) ?? currentMonth
         selectedDay = nil
+        applyCurrentMonthRange()
     }
 
     /// Snap back to the current month (the "Today" affordance).
@@ -323,6 +325,7 @@ public final class EventListViewModel {
         let calendar = Calendar.current
         currentMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
         selectedDay = nil
+        applyCurrentMonthRange()
     }
 
     // MARK: - Unavailable Dates (moved from CalendarViewModel in Phase 6)
@@ -413,10 +416,12 @@ public final class EventListViewModel {
         // returning to the unfiltered "show all" baseline (the same state month
         // navigation produces). Mirrors the clearable-chip behavior.
         if selectedDay == day {
+            // Toggle-off: restore the full-month view (the grid's default),
+            // not "show all events" — Apple Calendar keeps the list bounded
+            // to the visible month when no day is selected.
             selectedDay = nil
             periodFilter = nil
-            dateRangeStart = nil
-            dateRangeEnd = nil
+            applyCurrentMonthRange()
             return
         }
         selectedDay = day
@@ -503,10 +508,13 @@ public final class EventListViewModel {
             dateRangeEnd = nil
         case .calendario:
             // The grid is the date filter in Calendario; drop any period-chip
-            // filter + the range it imposed so the grid shows the full month.
+            // filter + its imposed range so the grid shows the full month.
+            // The list is bounded to the grid's month (Apple Calendar pattern),
+            // not "show all events" — entering Calendario should immediately
+            // show the current month's events below the grid.
             periodFilter = nil
-            dateRangeStart = nil
-            dateRangeEnd = nil
+            selectedDay = nil
+            applyCurrentMonthRange()
         }
     }
 
@@ -524,6 +532,14 @@ public final class EventListViewModel {
         }
         dateRangeStart = interval.start
         dateRangeEnd = Calendar.current.date(byAdding: .day, value: -1, to: interval.end)
+    }
+
+    /// Bounds the filtered list to the month the grid is currently displaying
+    /// (Apple Calendar pattern: the list follows the grid). Used whenever
+    /// Calendario mode lands on its default "no specific day" state — entering
+    /// the mode, navigating months, or deselecting a day.
+    private func applyCurrentMonthRange() {
+        applyInclusiveDateInterval(Calendar.current.dateInterval(of: .month, for: currentMonth))
     }
 
     public var filteredEvents: [Event] {
