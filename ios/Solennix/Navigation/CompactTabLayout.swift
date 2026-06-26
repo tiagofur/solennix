@@ -94,10 +94,17 @@ struct CompactTabLayout: View {
         .tabViewSearchActivation(.searchTabSelection)
         .onChange(of: pendingSpotlightRoute) { _, newRoute in
             guard let route = newRoute else { return }
-            // Spotlight routes always land on the home tab+path — set selectedTab
-            // first so the tab switches before the navigation push, matching
-            // the legacy branch behavior.
-            selectedTab = .home
+            // F-1: route the Spotlight tab-transition through the same clear-on-
+            // exit chokepoint as user tab taps, so a search query held on the
+            // search tab is cleared (not left stale) when Spotlight navigates to
+            // home (spec R7). Spotlight always lands on the home tab+path.
+            let plan = planSpotlightTransition(from: selectedTab, to: .home)
+            if plan.clearSearchOnExit {
+                searchViewModel.clearSearch()
+            }
+            // Set selectedTab first so the tab switches before the navigation
+            // push, matching the legacy branch behavior.
+            selectedTab = plan.destinationTab
             homePath = NavigationPath()
             Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(100))
@@ -152,8 +159,15 @@ struct CompactTabLayout: View {
         .tint(SolennixColors.tabBarActive)
         .onChange(of: pendingSpotlightRoute) { _, newRoute in
             guard let route = newRoute else { return }
+            // F-1: route the Spotlight tab-transition through the same clear-on-
+            // exit chokepoint (see the ios26 branch). Keeps the search query from
+            // going stale when Spotlight navigates away from the search tab.
+            let plan = planSpotlightTransition(from: selectedTab, to: .home)
+            if plan.clearSearchOnExit {
+                searchViewModel.clearSearch()
+            }
             // Navigate from Home tab for Spotlight routes
-            selectedTab = .home
+            selectedTab = plan.destinationTab
             homePath = NavigationPath()
             Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(100))
