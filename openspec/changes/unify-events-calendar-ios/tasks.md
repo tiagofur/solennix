@@ -79,18 +79,18 @@ Chain strategy: feature-branch-chain
 
 ## Phase 5 — Settings sync preferences & navigation
 
-- [ ] **5.1** [RED→GREEN test+impl] Create `CalendarSyncPreferencesViewModel` (`togglePreference`/`inFlightKeys` parity with `NotificationPreferencesViewModel`); master toggle ON→`requestFullAccessToEvents`, denied→revert+guide to Settings+skip sync; binary destination default `.solennix`, `.personal`→warning. Covers toggle/permission (2), binary destination default+warning (2), preferences-screen inFlightKeys.
-- [ ] **5.2** [RED→GREEN impl] Create `CalendarSyncPreferencesView` (master `preferenceToggle`, binary destination selector, write-only warning, `.tint(SolennixColors.primary)`, `.solennixRow()`). Wire destination change → `EventRepository.changeDestination`.
+- [x] **5.1** [RED→GREEN test+impl] Create `CalendarSyncPreferencesViewModel` (`togglePreference`/`inFlightKeys` parity with `NotificationPreferencesViewModel`); master toggle ON→`requestFullAccessToEvents`, denied→revert+guide to Settings+skip sync; binary destination default `.solennix`, `.personal`→warning. Covers toggle/permission (2), binary destination default+warning (2), preferences-screen inFlightKeys.
+- [x] **5.2** [RED→GREEN impl] Create `CalendarSyncPreferencesView` (master `preferenceToggle`, binary destination selector, write-only warning, `.tint(SolennixColors.primary)`, `.solennixRow()`). Wire destination change → `EventRepository.changeDestination`.
 - [ ] **5.3** [RED→GREEN impl] `SolennixCore/.../Route.swift`: add `case calendarSyncPreferences`. `ios/Solennix/Navigation/Route.swift`: resolve it to `CalendarSyncPreferencesView`. Covers nav-route scenario.
 - [ ] **5.4** [RED→GREEN impl] Remove `.calendar` from `Tab` + `SidebarSection` + `mainSections` (4 destinations: home, events, clients, more). App-test assertions: compact tabs exactly 4, sidebar excludes calendar. Covers tab/sidebar (2).
 - [ ] **5.5** [impl] `SettingsView`: add calendar-sync section/link → `Route.calendarSyncPreferences` (both width layouts).
 
 ## Phase 6 — Removal, localization & cleanup
 
-- [ ] **6.1** [removal] Move `CalendarGridView`, `BlockDateSheet`, `BlockedDatesSheet` into `Events/Views/`; retype sheet `@Bindable viewModel` → `EventListViewModel`. Create `Events/Models/DateDay.swift` (+ `CalendarError` block subset) moved out of `CalendarViewModel`.
-- [ ] **6.2** [removal] Delete `CalendarView.swift` (+ `ActivityView`, `eventRowContent`, iCal button), `CalendarViewModel.swift`, `exportCalendarToFile()`. Confirm no references remain; `xcodebuild` green.
-- [ ] **6.3** [impl] `CalendarStrings.swift`: drop iCal/export keys, keep grid/block keys. `Settings/SettingsStrings.swift` + new sync strings via `FeatureL10n` (toggle, destinations, write-only warning, errors). Covers all UI strings.
-- [ ] **6.4** [docs] Update `docs/PRD/11_CURRENT_STATUS.md` (REQUIRED last task per `openspec/config.yaml` rules.tasks). Note Web already unified, Android deferred (authorized parity exception).
+- [x] **6.1** [removal] Move `CalendarGridView`, `BlockDateSheet`, `BlockedDatesSheet` into `Events/Views/`; retype sheet `@Bindable viewModel` → `EventListViewModel`. Create `Events/Models/DateDay.swift` (+ `CalendarError` block subset) moved out of `CalendarViewModel`.
+- [x] **6.2** [removal] Delete `CalendarView.swift` (+ `ActivityView`, `eventRowContent`, iCal button), `CalendarViewModel.swift`, `exportCalendarToFile()`. Confirm no references remain; `xcodebuild` green.
+- [x] **6.3** [impl] `CalendarStrings.swift`: drop iCal/export keys, keep grid/block keys. `Settings/SettingsStrings.swift` + new sync strings via `FeatureL10n` (toggle, destinations, write-only warning, errors). Covers all UI strings.
+- [x] **6.4** [docs] Update `docs/PRD/11_CURRENT_STATUS.md` (REQUIRED last task per `openspec/config.yaml` rules.tasks). Note Web already unified, Android deferred (authorized parity exception).
 
 ## Test Strategy Recap — all 25 scenarios covered
 

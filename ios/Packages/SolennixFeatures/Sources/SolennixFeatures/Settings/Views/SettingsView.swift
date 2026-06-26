@@ -237,6 +237,13 @@ public struct SettingsView: View {
                 SettingsNavRow(title: SettingsStrings.tabNotifications, systemImage: "bell.badge")
             }
             .buttonStyle(.plain)
+
+            Divider()
+
+            NavigationLink(value: Route.calendarSyncPreferences) {
+                SettingsNavRow(title: SettingsStrings.tabCalendarSync, systemImage: "arrow.triangle.2.circlepath")
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -400,6 +407,11 @@ public struct SettingsView: View {
 
         NavigationLink(value: Route.notificationPreferences) {
             Label(SettingsStrings.tabNotifications, systemImage: "bell.badge")
+        }
+        .listRowSeparator(.hidden)
+
+        NavigationLink(value: Route.calendarSyncPreferences) {
+            Label(SettingsStrings.tabCalendarSync, systemImage: "arrow.triangle.2.circlepath")
         }
         .listRowSeparator(.hidden)
     }

@@ -264,8 +264,6 @@ struct SidebarSplitLayout: View {
         switch section {
         case .dashboard:
             DashboardView()
-        case .calendar:
-            CalendarView(viewModel: CalendarViewModel(apiClient: apiClient))
         case .events:
             EventListView(apiClient: apiClient)
         case .clients:

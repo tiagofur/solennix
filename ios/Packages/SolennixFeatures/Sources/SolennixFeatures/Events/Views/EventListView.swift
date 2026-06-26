@@ -43,6 +43,12 @@ public struct EventListView: View {
     /// real moved `CalendarGridView` + reused `eventCard`.
     @State private var viewMode: EventosViewMode = .lista
 
+    /// Presents the `BlockedDatesSheet` (Phase 5, Cambio 5) — the discoverable
+    /// management surface for blocked dates. Flipped from a toolbar button that
+    /// is ONLY rendered in `.calendario` (the long-press → `BlockDateSheet`
+    /// still creates blocks; this sheet reviews/removes them).
+    @State private var showBlockedDatesSheet = false
+
     /// First-run onboarding tip (task 4.7, spec "First-Run Onboarding Tip").
     /// Gated by the SINGLE `@AppStorage` flag owned by
     /// `EventosOnboardingTipGate`: shown once on the first appearance of the
@@ -96,23 +102,18 @@ public struct EventListView: View {
                         .padding(.vertical, Spacing.sm)
 
                     // Period-filter chips `Hoy · Esta semana · Este mes ·
-                    // Personalizado` (task 4.5). Pinned in the top safe-area
-                    // inset so the active filter stays visible in BOTH modes —
-                    // INCLUDING empty / filtered-empty states (without pinning,
-                    // tapping a chip that yields no events would hide the chips
-                    // and trap the user with no way to change the filter). This
-                    // is a persistent PRIMARY content-header control alongside
-                    // the view-mode toggle, not a scrollable list row: the
-                    // earlier "chips must stay inside the primary ScrollView"
-                    // note referred to chips nested as list ROWS (which can
-                    // steal large-title edge tracking); a pinned safe-area-inset
-                    // control is rendered in a separate region and, like the
-                    // `EventosViewModeToggle` already proven in this inset, does
-                    // not compete with the primary scroll view for tracking.
-                    EventListPeriodFilterBar(viewModel: viewModel) {
-                        showCustomRangeSheet = true
+                    // Personalizado` (task 4.5). Shown ONLY in `.lista` (Phase 5
+                    // UX fix): in Calendario the grid itself is the date filter,
+                    // so the chips would be redundant and compete with the grid
+                    // for the user's attention. They stay pinned in the top
+                    // safe-area inset (in Lista) so the active filter survives an
+                    // empty / filtered-empty state without trapping the user.
+                    if viewMode == .lista {
+                        EventListPeriodFilterBar(viewModel: viewModel) {
+                            showCustomRangeSheet = true
+                        }
+                        .padding(.vertical, Spacing.xs)
                     }
-                    .padding(.vertical, Spacing.xs)
 
                     // Only static banners live in safeAreaInset below the chips.
                     if viewModel.isShowingCachedData {
@@ -127,6 +128,18 @@ public struct EventListView: View {
             .task {
                 viewModel.setCacheManager(cacheManager)
                 await viewModel.loadEvents()
+                // Load blocked/unavailable dates so the calendar grid can show
+                // them (critical bug: loadUnavailableDates existed but was never
+                // called, so blocked dates never rendered in calendar mode).
+                await viewModel.loadUnavailableDates()
+            }
+            // Phase 5 UX: switching modes clears the OTHER mode's filter residue
+            // so neither carries a stale selection across (see
+            // `EventListViewModel.clearFiltersForViewMode`). A flip is still
+            // purely presentational — it never reloads `events` or moves the grid
+            // month (asserted by `testClearFiltersForViewModeNeverTouches…`).
+            .onChange(of: viewMode) { _, newMode in
+                viewModel.clearFiltersForViewMode(newMode)
             }
             .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -196,6 +209,24 @@ public struct EventListView: View {
                             )
                         }
                     }
+
+                    // 4. Blocked-dates management (Phase 5, Cambio 5) — ONLY in
+                    // `.calendario`. A discoverable entry to review/remove blocked
+                    // dates (the long-press → `BlockDateSheet` still CREATES them).
+                    // This is a management affordance, NOT a filter, so it lives
+                    // outside `EventosAppBarFilter` (which guards the FILTER set and
+                    // is asserted by `EventListViewAppBarTests` to stay `[.status]`).
+                    if viewMode == .calendario {
+                        Button {
+                            showBlockedDatesSheet = true
+                        } label: {
+                            Image(systemName: "calendar.badge.exclamationmark")
+                                .font(.body)
+                                .foregroundStyle(SolennixColors.primary)
+                                .symbolEffect(.bounce, value: viewModel.unavailableDates.count)
+                        }
+                        .accessibilityLabel(tr("events.list.toolbar.blocked_dates", "Fechas bloqueadas"))
+                    }
                 }
             }
         }
@@ -236,6 +267,12 @@ public struct EventListView: View {
                 PeriodCustomRangeSheet(viewModel: viewModel)
                     .presentationDetents([.height(360)])
                     .presentationDragIndicator(.visible)
+            }
+            .sheet(isPresented: $showBlockedDatesSheet) {
+                // Blocked-dates management (Phase 5, Cambio 5). Reads the SAME
+                // `unavailableDates` the grid renders from, so deleting a row
+                // here updates the grid's blocked indicators on dismiss.
+                BlockedDatesSheet(viewModel: viewModel)
             }
             .confirmationDialog(
                 tr("events.list.delete_confirm.title", "Eliminar evento"),
@@ -405,12 +442,51 @@ public struct EventListView: View {
     @ViewBuilder
     private var calendarioGrid: some View {
         VStack(spacing: Spacing.sm) {
-            // Month title anchor — keeps the grid legible without wiring full
-            // month navigation (prev/next/Today), which lands with the formal
-            // CalendarViewModel migration in Phase 6.
-            Text(viewModel.monthTitle)
-                .font(.headline)
-                .foregroundStyle(SolennixColors.text)
+            // Month navigation header: prev / title / next, plus a "Hoy" button.
+            // These affordances were on the old `CalendarViewModel`; the unified
+            // VM now owns `goToNextMonth` / `goToPreviousMonth` / `goToToday`, so
+            // the calendar mode is navigable again (critical bug fix).
+            HStack {
+                Button {
+                    HapticsHelper.play(.selection)
+                    viewModel.goToPreviousMonth()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.headline)
+                        .foregroundStyle(SolennixColors.primary)
+                }
+                .accessibilityLabel(tr("events.calendar.previous_month", "Mes anterior"))
+
+                Spacer()
+
+                Text(viewModel.monthTitle)
+                    .font(.headline)
+                    .foregroundStyle(SolennixColors.text)
+
+                Spacer()
+
+                Button {
+                    HapticsHelper.play(.selection)
+                    viewModel.goToNextMonth()
+                } label: {
+                    Image(systemName: "chevron.right")
+                        .font(.headline)
+                        .foregroundStyle(SolennixColors.primary)
+                }
+                .accessibilityLabel(tr("events.calendar.next_month", "Mes siguiente"))
+            }
+
+            // "Hoy" affordance — snaps the grid back to the current month.
+            Button {
+                HapticsHelper.play(.selection)
+                viewModel.goToToday()
+            } label: {
+                Text(tr("events.calendar.today", "Hoy"))
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(SolennixColors.primary)
+            }
+            .accessibilityLabel(tr("events.calendar.today", "Hoy"))
 
             CalendarGridView(
                 days: viewModel.daysInMonth,
@@ -443,49 +519,16 @@ public struct EventListView: View {
         var id: Date { day }
     }
 
-    /// Transitional block-date sheet body (task 4.4). See the deviation note on
-    /// the `.sheet(item: $blockSheetAnchor)` modifier: the retyped
-    /// `BlockDateSheet` (bound to `EventListViewModel`) lands in Phase 6.1. Until
-    /// then this presents a faithful, localized block-date surface for the
-    /// long-pressed day with the same title + start-date label + cancel affordance
-    /// the real sheet uses, so the gesture→sheet path is exercised end-to-end.
+    /// Real block-date sheet body (Phase 6.1). `BlockDateSheet` is now retyped
+    /// to `EventListViewModel` and wired to `toggleDateBlock`.
     @ViewBuilder
     private func blockDateSheet(for day: Date) -> some View {
-        NavigationStack {
-            Form {
-                Section {
-                    Label {
-                        Text(Self.blockDayFormatter.string(from: day).capitalized)
-                    } icon: {
-                        Image(systemName: "calendar")
-                    }
-                    .foregroundStyle(SolennixColors.text)
-                    .solennixRow()
-                } header: {
-                    Text(CalendarStrings.blockStartDate)
-                }
-            }
-            .solennixListStyle()
-            .navigationTitle(CalendarStrings.blockTitle)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    SolennixCancelButton(title: CalendarStrings.actionCancel) {
-                        blockSheetAnchor = nil
-                    }
-                }
-            }
-        }
+        BlockDateSheet(
+            startDate: day,
+            viewModel: viewModel,
+            onDismiss: { blockSheetAnchor = nil }
+        )
     }
-
-    /// Device-local formatter for the long-pressed day (the grid's cell `Date` is
-    /// local-midnight). Mirrors `BlockDateSheet.displayFormatter`.
-    private static let blockDayFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = FeatureL10n.locale
-        f.setLocalizedDateFormatFromTemplate("EEEEdMMMM")
-        return f
-    }()
 
     // MARK: - Event List
 

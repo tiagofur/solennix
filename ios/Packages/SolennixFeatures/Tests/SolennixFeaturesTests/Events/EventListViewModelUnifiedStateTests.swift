@@ -168,4 +168,222 @@ final class EventListViewModelUnifiedStateTests: XCTestCase {
         XCTAssertNotEqual(vm.dateRangeStart, dayStart, "period chip rewrites the shared dateRangeStart")
         XCTAssertNotEqual(vm.dateRangeEnd, dayEnd)
     }
+
+    // MARK: - Month navigation (CalendarViewModel parity)
+
+    /// Anchor helper: pins `currentMonth` to the start of an arbitrary month so
+    /// the navigation assertions are deterministic (independent of `Date()`).
+    private func anchorMonth(_ vm: EventListViewModel, _ year: Int, _ month: Int) {
+        vm.currentMonth = date(year, month, 1)
+    }
+
+    func testGoToNextMonthAdvancesExactlyOneMonth() {
+        let vm = vm()
+        anchorMonth(vm, 2026, 6)
+
+        vm.goToNextMonth()
+
+        XCTAssertEqual(vm.currentMonth, date(2026, 7, 1), "goToNextMonth advances exactly one month, staying at month start")
+    }
+
+    func testGoToNextMonthCarriesTheYearAcrossDecember() {
+        let vm = vm()
+        anchorMonth(vm, 2026, 12)
+
+        vm.goToNextMonth()
+
+        XCTAssertEqual(vm.currentMonth, date(2027, 1, 1), "advancing from December rolls into January of the next year")
+    }
+
+    func testGoToPreviousMonthGoesBackExactlyOneMonth() {
+        let vm = vm()
+        anchorMonth(vm, 2026, 7)
+
+        vm.goToPreviousMonth()
+
+        XCTAssertEqual(vm.currentMonth, date(2026, 6, 1), "goToPreviousMonth goes back exactly one month, staying at month start")
+    }
+
+    func testGoToPreviousMonthCarriesTheYearBackFromJanuary() {
+        let vm = vm()
+        anchorMonth(vm, 2026, 1)
+
+        vm.goToPreviousMonth()
+
+        XCTAssertEqual(vm.currentMonth, date(2025, 12, 1), "going back from January rolls into December of the previous year")
+    }
+
+    func testGoToTodayResetsCurrentMonthToTheStartOfTheCurrentMonth() {
+        let vm = vm()
+        // Move the grid far away so "Today" is observably different.
+        anchorMonth(vm, 2020, 3)
+
+        vm.goToToday()
+
+        let cal = Calendar.current
+        let expected = cal.date(from: cal.dateComponents([.year, .month], from: Date())) ?? Date()
+        XCTAssertEqual(vm.currentMonth, expected, "goToToday snaps currentMonth back to the start of the real current month")
+    }
+
+    func testGoToNextMonthClearsSelectedDay() {
+        let vm = vm()
+        anchorMonth(vm, 2026, 6)
+        vm.selectDate(date(2026, 6, 15)) // establishes a non-nil selectedDay
+
+        XCTAssertNotNil(vm.selectedDay)
+
+        vm.goToNextMonth()
+
+        XCTAssertNil(vm.selectedDay, "navigating months must drop the stale day selection")
+    }
+
+    func testGoToPreviousMonthClearsSelectedDay() {
+        let vm = vm()
+        anchorMonth(vm, 2026, 6)
+        vm.selectDate(date(2026, 6, 15))
+
+        vm.goToPreviousMonth()
+
+        XCTAssertNil(vm.selectedDay, "navigating months must drop the stale day selection")
+    }
+
+    func testGoToTodayClearsSelectedDay() {
+        let vm = vm()
+        anchorMonth(vm, 2026, 6)
+        vm.selectDate(date(2026, 6, 15))
+
+        vm.goToToday()
+
+        XCTAssertNil(vm.selectedDay, "snapping to Today must drop the stale day selection")
+    }
+
+    func testRepeatedMonthNavigationIsCommutative() {
+        // next then previous returns to the origin (no drift / no skipped month).
+        let vm = vm()
+        anchorMonth(vm, 2026, 6)
+
+        vm.goToNextMonth()
+        vm.goToPreviousMonth()
+
+        XCTAssertEqual(vm.currentMonth, date(2026, 6, 1), "next-then-previous is a no-op on currentMonth")
+    }
+
+    // MARK: - Phase 5 UX: clearable chips + deselectable day + mode-switch reset
+
+    /// Cambio 2 — tapping the ALREADY-ACTIVE period chip clears it (Apple HIG
+    /// clearable chip). `setPeriodFilter(.today)` twice MUST leave `periodFilter`
+    /// nil and the shared range empty.
+    func testSetPeriodToggleClearsFilterWhenSamePeriodTappedAgain() {
+        let vm = vm()
+
+        vm.setPeriodFilter(.today)
+        XCTAssertEqual(vm.periodFilter, .today, "precondition: first tap activates the chip")
+
+        // Tap the SAME chip again → toggle off.
+        vm.setPeriodFilter(.today)
+
+        XCTAssertNil(vm.periodFilter, "tapping the active chip again clears it")
+        XCTAssertNil(vm.dateRangeStart, "toggling off clears the shared range start")
+        XCTAssertNil(vm.dateRangeEnd, "toggling off clears the shared range end")
+        XCTAssertNil(vm.selectedDay, "toggling off leaves no selected day")
+    }
+
+    /// Triangulation for Cambio 2: a DIFFERENT chip still activates normally
+    /// (the toggle only fires when re-tapping the active one).
+    func testSetPeriodToggleDoesNotFireForADifferentPeriod() {
+        let vm = vm()
+
+        vm.setPeriodFilter(.today)
+        vm.setPeriodFilter(.thisMonth)
+
+        XCTAssertEqual(vm.periodFilter, .thisMonth, "switching to a different chip activates it (no toggle-off)")
+        XCTAssertNotNil(vm.dateRangeStart, "the new chip recomputes the range")
+    }
+
+    /// Cambio 2 — the toggle works for every bounded chip (thisWeek), not just hoy.
+    func testSetPeriodToggleClearsFilterWhenSameWeekTappedAgain() {
+        let vm = vm()
+        vm.setPeriodFilter(.thisWeek)
+        vm.setPeriodFilter(.thisWeek)
+
+        XCTAssertNil(vm.periodFilter, "re-tapping Esta semana clears it")
+        XCTAssertNil(vm.dateRangeStart)
+        XCTAssertNil(vm.dateRangeEnd)
+    }
+
+    /// Cambio 4 — tapping the ALREADY-SELECTED day clears it (show all). A
+    /// second `selectDate(d)` MUST leave `selectedDay` nil and the range empty.
+    func testSelectDateToggleClearsDayWhenSameDayTappedAgain() {
+        let vm = vm()
+        let day = date(2026, 6, 15)
+
+        vm.selectDate(day)
+        XCTAssertEqual(vm.selectedDay, day, "precondition: first tap selects the day")
+
+        // Tap the SAME day again → deselect.
+        vm.selectDate(day)
+
+        XCTAssertNil(vm.selectedDay, "tapping the selected day again clears it")
+        XCTAssertNil(vm.dateRangeStart, "deselecting clears the shared range start")
+        XCTAssertNil(vm.dateRangeEnd, "deselecting clears the shared range end")
+        XCTAssertNil(vm.periodFilter, "deselecting leaves no period chip")
+    }
+
+    /// Triangulation for Cambio 4: a DIFFERENT day still selects normally.
+    func testSelectDateToggleDoesNotFireForADifferentDay() {
+        let vm = vm()
+        let first = date(2026, 6, 15)
+        let second = date(2026, 6, 20)
+
+        vm.selectDate(first)
+        vm.selectDate(second)
+
+        XCTAssertEqual(vm.selectedDay, second, "tapping a different day selects it (no toggle-off)")
+        XCTAssertEqual(vm.dateRangeStart, startOfDay(second))
+    }
+
+    /// Cambio 3 — entering `.lista` clears the calendar's day selection + the
+    /// range it imposed (so the list is not pinned on a stale day).
+    func testClearFiltersForListaClearsSelectedDayAndItsRange() {
+        let vm = vm()
+        // Establish a calendar day selection (sets selectedDay + dateRange to it).
+        vm.selectDate(date(2026, 6, 15))
+        XCTAssertEqual(vm.selectedDay, date(2026, 6, 15), "precondition")
+
+        vm.clearFiltersForViewMode(.lista)
+
+        XCTAssertNil(vm.selectedDay, "entering Lista clears the selected day")
+        XCTAssertNil(vm.dateRangeStart, "entering Lista clears the day's imposed range start")
+        XCTAssertNil(vm.dateRangeEnd, "entering Lista clears the day's imposed range end")
+    }
+
+    /// Cambio 3 — entering `.calendario` clears any period-chip filter + its
+    /// range (the grid is the date filter in Calendario).
+    func testClearFiltersForCalendarioClearsPeriodAndItsRange() {
+        let vm = vm()
+        // Establish a period chip (sets periodFilter + dateRange to the period).
+        vm.setPeriodFilter(.thisMonth)
+        XCTAssertEqual(vm.periodFilter, .thisMonth, "precondition")
+
+        vm.clearFiltersForViewMode(.calendario)
+
+        XCTAssertNil(vm.periodFilter, "entering Calendario clears the period chip")
+        XCTAssertNil(vm.dateRangeStart, "entering Calendario clears the chip's range start")
+        XCTAssertNil(vm.dateRangeEnd, "entering Calendario clears the chip's range end")
+    }
+
+    /// Cambio 3 — `clearFiltersForViewMode` must NEVER touch `events`/`currentMonth`
+    /// (switching modes is presentational only, ADR-7). Guards against a reset
+    /// that accidentally drops data.
+    func testClearFiltersForViewModeNeverTouchesEventsOrCurrentMonth() {
+        let vm = vm()
+        anchorMonth(vm, 2026, 6)
+        let monthAnchor = vm.currentMonth
+
+        vm.clearFiltersForViewMode(.lista)
+        vm.clearFiltersForViewMode(.calendario)
+
+        XCTAssertEqual(vm.currentMonth, monthAnchor, "mode-switch reset must not move the grid month")
+        XCTAssertTrue(vm.events.isEmpty, "mode-switch reset must not mutate events")
+    }
 }

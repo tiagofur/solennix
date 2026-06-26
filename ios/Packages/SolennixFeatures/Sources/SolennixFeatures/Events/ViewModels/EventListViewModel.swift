@@ -295,6 +295,106 @@ public final class EventListViewModel {
         return original.prefix(1).uppercased() + original.dropFirst()
     }
 
+    // MARK: - Month Navigation (CalendarViewModel parity)
+    //
+    // Month navigation for the `.calendario` grid. The grid anchors to the
+    // START of a month, so adding/subtracting whole months from a month-start
+    // `currentMonth` stays on a month-start boundary. Each navigation drops
+    // `selectedDay` — a day selection from a previous month is no longer valid
+    // once the grid shows a different month.
+
+    /// Advance to the next month.
+    public func goToNextMonth() {
+        let calendar = Calendar.current
+        currentMonth = calendar.date(byAdding: .month, value: 1, to: currentMonth) ?? currentMonth
+        selectedDay = nil
+    }
+
+    /// Go back to the previous month.
+    public func goToPreviousMonth() {
+        let calendar = Calendar.current
+        currentMonth = calendar.date(byAdding: .month, value: -1, to: currentMonth) ?? currentMonth
+        selectedDay = nil
+    }
+
+    /// Snap back to the current month (the "Today" affordance).
+    public func goToToday() {
+        let now = Date()
+        let calendar = Calendar.current
+        currentMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
+        selectedDay = nil
+    }
+
+    // MARK: - Unavailable Dates (moved from CalendarViewModel in Phase 6)
+
+    /// Look up the `UnavailableDate` entry that covers a given day, if any.
+    public func unavailableDateFor(_ date: Date) -> UnavailableDate? {
+        let dateStr = Self.gridApiDateFormatter.string(from: date)
+        return unavailableDates.first { $0.startDate <= dateStr && dateStr <= $0.endDate }
+    }
+
+    /// Block a date range, or unblock if it is already blocked.
+    @MainActor
+    public func toggleDateBlock(startDate: Date, endDate: Date, reason: String?) async {
+        calendarError = nil
+        isBlockingDate = true
+        let wasBlocked = unavailableDateFor(startDate) != nil
+        do {
+            if let existing = unavailableDateFor(startDate) {
+                try await apiClient.delete(Endpoint.unavailableDate(existing.id))
+            } else {
+                let startStr = Self.gridApiDateFormatter.string(from: startDate)
+                let endStr = Self.gridApiDateFormatter.string(from: endDate)
+                struct BlockRequest: Encodable {
+                    let startDate: String
+                    let endDate: String
+                    let reason: String?
+                }
+                let body = BlockRequest(startDate: startStr, endDate: endStr, reason: reason)
+                let _: UnavailableDate = try await apiClient.post(Endpoint.unavailableDates, body: body)
+            }
+            await loadUnavailableDates()
+        } catch {
+            self.calendarError = wasBlocked ? .unblockFailed : .blockFailed
+        }
+        isBlockingDate = false
+    }
+
+    /// Delete a specific blocked date entry by ID.
+    @MainActor
+    public func deleteBlock(_ entry: UnavailableDate) async {
+        isBlockingDate = true
+        do {
+            try await apiClient.delete(Endpoint.unavailableDate(entry.id))
+            await loadUnavailableDates()
+        } catch {
+            self.calendarError = .unblockFailed
+        }
+        isBlockingDate = false
+    }
+
+    @MainActor
+    public func loadUnavailableDates() async {
+        let now = Date()
+        let calendar = Calendar.current
+        guard let startDate = calendar.date(byAdding: .month, value: -6, to: now),
+              let endDate = calendar.date(byAdding: .month, value: 6, to: now)
+        else { return }
+
+        let startStr = Self.gridApiDateFormatter.string(from: startDate)
+        let endStr = Self.gridApiDateFormatter.string(from: endDate)
+
+        do {
+            let fetched: [UnavailableDate] = try await apiClient.getAll(
+                Endpoint.unavailableDates,
+                params: ["start": startStr, "end": endStr]
+            )
+            unavailableDates = fetched
+        } catch {
+            self.calendarError = .loadFailed
+        }
+    }
+
     // MARK: - Shared Filter Invariant (ADR-7)
     //
     // A day-tap and a period chip BOTH write the same `dateRange*` pair, so
@@ -309,6 +409,16 @@ public final class EventListViewModel {
     /// Day-tap: filter to a single day. Sets `selectedDay`, bounds the range to
     /// that day's start-of-day, and clears any active period chip.
     public func selectDate(_ day: Date) {
+        // Toggle-off (Phase 5 UX): tapping the ALREADY-SELECTED day clears it,
+        // returning to the unfiltered "show all" baseline (the same state month
+        // navigation produces). Mirrors the clearable-chip behavior.
+        if selectedDay == day {
+            selectedDay = nil
+            periodFilter = nil
+            dateRangeStart = nil
+            dateRangeEnd = nil
+            return
+        }
         selectedDay = day
         periodFilter = nil
         let start = Calendar.current.startOfDay(for: day)
@@ -321,6 +431,16 @@ public final class EventListViewModel {
     /// `selectedDay`. `.custom` defers to the two-tap custom-range setters
     /// (it clears any prior range so re-tapping the chip resets cleanly).
     public func setPeriodFilter(_ filter: EventPeriodFilter) {
+        // Toggle-off (Phase 5 UX): tapping the ALREADY-ACTIVE chip clears it, so
+        // the user can always recover to "show all" by re-tapping the active chip
+        // (Apple HIG clearable control). Applies to every chip incl. `.custom`.
+        if periodFilter == filter {
+            periodFilter = nil
+            selectedDay = nil
+            dateRangeStart = nil
+            dateRangeEnd = nil
+            return
+        }
         periodFilter = filter
         selectedDay = nil
         let calendar = Calendar.current
@@ -356,6 +476,38 @@ public final class EventListViewModel {
         let start = dateRangeStart ?? end
         dateRangeStart = Swift.min(start, end)
         dateRangeEnd = Swift.max(start, end)
+    }
+
+    /// Clears the filter state that belongs to the OTHER view mode, so switching
+    /// Lista ↔ Calendario never carries a stale selection across (UX fix,
+    /// Phase 5 — Apple HIG: each mode's filter surface is self-contained).
+    ///   • `.lista`     → drops the calendar's day selection + its imposed range
+    ///                     (the period chips own the list's date filter; a stale
+    ///                     calendar day must not pin the list on a single day).
+    ///   • `.calendario`→ drops any period-chip filter + its imposed range
+    ///                     (the grid is the date filter in Calendario).
+    public func clearFiltersForViewMode(_ mode: EventosViewMode) {
+        // Each branch clears the OTHER mode's filter residue against the shared
+        // `dateRange*` surface, so a mode switch always lands on a predictable
+        // "show all" slate for that mode's filter UI.
+        switch mode {
+        case .lista:
+            // The period chips own Lista's date filter; a stale calendar day must
+            // not pin the list on a single day. Clears `selectedDay` AND the range
+            // it imposed (the day-tap sets both). Deviation from the literal spec
+            // pseudocode (which cleared only `selectedDay`): leaving `dateRange*`
+            // pinned to the day would trap the list on that one day with no visible
+            // indicator — clearing it matches the `.calendario` branch for symmetry.
+            selectedDay = nil
+            dateRangeStart = nil
+            dateRangeEnd = nil
+        case .calendario:
+            // The grid is the date filter in Calendario; drop any period-chip
+            // filter + the range it imposed so the grid shows the full month.
+            periodFilter = nil
+            dateRangeStart = nil
+            dateRangeEnd = nil
+        }
     }
 
     /// Maps a `Calendar.dateInterval` (half-open `[start, end)`) onto the

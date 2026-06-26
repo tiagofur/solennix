@@ -23,7 +23,18 @@ status: active
 > - El flujo de `payment_submissions` (Sprint 7.E) es un formulario de reporte de transferencias bancarias externas — Solennix NO procesa ni mueve dinero.
 
 **Fecha:** Junio 2026
-**Version:** 1.8
+**Version:** 1.9
+
+> [!success] 2026-06-25 — iOS: Events + Calendar unified (unify-events-calendar-ios, Phase 6 complete)
+> Unificación de las pantallas de Eventos y Calendario en iOS en una sola superficie "Eventos" con toggle Lista/Calendario.
+> - **Pantalla unificada:** `EventListView` con toggle `Lista | Calendario` (ADR-7). Ambos modos comparten el mismo `EventListViewModel` con estado de filtros unificado (period chips, selectedDay, dateRange). La grilla de calendario (`CalendarGridView`) se reutiliza en modo Calendario con los mismos dots de estado y gestos (tap → filtrar día, long-press → bloquear fecha).
+> - **Sync de calendario del sistema:** EventKit write-only via `EventKitSyncService` + `EventRepository` (ADR-1/2/3/4). Preferencias en `CalendarSyncPreferencesView` (toggle maestro, selector binario Solennix/Personal, warning write-only). Auth re-prompt via `requestFullAccessToEvents`, degradación graceful si denied.
+> - **Tab Calendar eliminada:** 5→4 tabs (Inicio, Eventos, Clientes, Más). CalendarViewModel y CalendarView eliminados; funcionalidad absorbida por EventListViewModel.
+> - **Archivos clave eliminados:** `CalendarView.swift`, `CalendarViewModel.swift` (incluyendo `exportCalendarToFile`, `ActivityView`, `eventRowContent`).
+> - **Archivos movidos:** `CalendarGridView`, `BlockDateSheet`, `BlockedDatesSheet` → `Events/Views/`; `DateDay`, `CalendarError` → `Events/Models/`.
+> - **Strings:** `CalendarStrings.swift` reducida a keys de grilla/bloqueo (se eliminaron iCal, filtros, navegación, errores de Calendar legacy).
+> - **Web ya unificado.** Android diferido (excepción de paridad autorizada — Calendar en Android es una pantalla standalone diferente).
+> - **Tests:** 111/111 verdes. Build SUCCEEDED.
 
 > [!success] 2026-06-14 — Ajustes (Settings): Judgment Day → APPROVED (branch `feat/ios-settings-judgment`)
 > Revisión dual ciego (3 rondas) del cluster de Ajustes: SettingsView, EditProfile, BusinessSettings, ContractDefaults, NotificationPreferences, ChangePassword.
@@ -126,7 +137,7 @@ status: active
 > Adopción de Liquid Glass en iOS con SDK 26, gating `#available`, primitivas adaptativas y correcciones de revisión de código.
 > - **`adaptiveGlass` primitive:** modifier en `SolennixDesign/GlassSurface.swift` que aplica `glassEffect(.regular)` en iOS 26+ y fallback configurable en iOS 17–25. Nuevo enum `AdaptiveGlassFallback` con `.material` (ultraThinMaterial) y `.brightChip` (white-opacity chip para superficies navy oscuras como la sidebar).
 > - **FAB eliminado — acciones en toolbar:** `QuickActionsFAB` fue removido por ser un patrón Material, no iOS. Las acciones "Nuevo evento" y "Cotización rápida" ya vivían en el `Menu` del `ToolbarItem(.topBarTrailing)` de `DashboardView`. El toolbar recibe Liquid Glass automáticamente del sistema en iOS 26 — no requiere código adicional.
-> - **Tab bar con `tabBarMinimizeBehavior` y search tab nativo:** `CompactTabLayout` usa builder syntax de iOS 26 con `TabView(selection:)` bound (patrón WWDC25) — `Tab(_:systemImage:value:)` para las 5 tabs regulares y `Tab(_:systemImage:value:role: .search)` para la tab de búsqueda flotante nativa. `Tab.search` agregado al enum con `Tab.barTabs` para excluirlo del legacy bar. Pop-to-root en retap y Spotlight `selectedTab = .home` restaurados en ambas ramas.
+> - **Tab bar con `tabBarMinimizeBehavior` y search tab nativo:** `CompactTabLayout` usa builder syntax de iOS 26 con `TabView(selection:)` bound (patrón WWDC25) — `Tab(_:systemImage:value:)` para las 4 tabs regulares y `Tab(_:systemImage:value:role: .search)` para la tab de búsqueda flotante nativa. `Tab.search` agregado al enum con `Tab.barTabs` para excluirlo del legacy bar. Pop-to-root en retap y Spotlight `selectedTab = .home` restaurados en ambas ramas.
 > - **Scroll edge effects:** `.softScrollEdgeEffectIfAvailable()` en `DashboardView`, `CalendarView`, `EventListView`, `SettingsView`. Implementado como no-op pre-iOS 26 en `ViewModifiers.swift`.
 > - **Sheet glass:** `.sheetGlassScrollBackground()` en sheets de formularios en iOS 26 para mostrar el material Liquid Glass del sheet a través del fondo del scroll.
 > - **Symbol bounce:** `symbolEffect(.bounce)` en momentos de confirmación (checklist items, filtros). Corregido para disparar solo en transición `false→true` extrayendo filas a structs privados (`ChecklistItemRow`, `PurchaseChecklistItemRow`) con identidad estable. Filtro de eventos dispara sobre `Int activeFilterCount` directamente.
@@ -1220,7 +1231,7 @@ Primera pantalla de paridad post-Dashboard:
 ### Navegacion Web
 
 - ✅ Sidebar desktop — 6 secciones + Config abajo (sin Cotizacion/CotizacionRapida/Buscar)
-- ✅ Bottom Tab Bar mobile — 5 tabs: Inicio, Calendario, Eventos, Clientes, Mas (solo smartphones, <768px)
+- ✅ Bottom Tab Bar mobile — 4 tabs: Inicio, Eventos, Clientes, Mas (solo smartphones, <768px)
 - ✅ Menu "Mas" mobile — Productos, Inventario, Configuracion
 - ✅ QuickActionsFAB — visible solo en smartphones (<768px)
 - ✅ CommandPalette (Cmd+K/Ctrl+K) con navegacion a /events
@@ -1372,7 +1383,7 @@ Primera pantalla de paridad post-Dashboard:
 
 ### Navegacion
 
-- ✅ CompactTabLayout — 5 tabs: Inicio, Calendario, Eventos, Clientes, Mas
+- ✅ CompactTabLayout — 4 tabs: Inicio, Eventos, Clientes, Mas
 - ✅ SidebarSplitLayout — 6 secciones + Config abajo (sin Cotizacion/CotizacionRapida/Buscar)
 - ✅ MoreMenuView — 3 items: Productos, Inventario, Configuracion
 - ✅ QuickActionsFAB — FAB flotante con Nuevo Evento + Cotizacion Rapida (phones)
@@ -1533,7 +1544,7 @@ Primera pantalla de paridad post-Dashboard:
 
 ### Navegacion
 
-- ✅ Bottom navigation — 5 tabs: Inicio, Calendario, Eventos, Clientes, Mas
+- ✅ Bottom navigation — 4 tabs: Inicio, Eventos, Clientes, Mas
 - ✅ MoreMenuScreen — 3 items: Productos, Inventario, Configuracion
 - ✅ QuickActionsFAB — FAB con Nuevo Evento + Cotizacion Rapida (phones)
 - ✅ Botones contextuales en EventListScreen (tablet) — Nuevo Evento + Cotizacion Rapida
@@ -1911,7 +1922,7 @@ Refactors planificados para lograr paridad total entre las 6 plataformas (iPhone
 
 | Cambio                       | iOS | Android | Web | Descripcion                                                                  |
 | ---------------------------- | --- | ------- | --- | ---------------------------------------------------------------------------- |
-| Bottom Tab Bar: 5 tabs       | ✅  | ✅      | ✅  | Inicio, Calendario, Eventos (NUEVO), Clientes, Mas                           |
+| Bottom Tab Bar: 4 tabs       | ✅  | ✅      | ✅  | Inicio, Eventos (unificado), Clientes, Mas                                  |
 | Sidebar: 6+1 secciones       | ✅  | 🔄      | ✅  | 6 secciones + Config abajo. Removidos: Cotizacion, Cotizacion Rapida, Buscar |
 | Menu Mas: 3 items            | ✅  | ✅      | ✅  | Solo Productos, Inventario, Config                                           |
 | FAB acciones rapidas         | ✅  | ✅      | ✅  | Nuevo Evento + Cotizacion Rapida en phones                                   |

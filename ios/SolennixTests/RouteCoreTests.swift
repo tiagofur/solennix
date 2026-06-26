@@ -58,4 +58,23 @@ final class RouteCoreTests: XCTestCase {
         XCTAssertNotEqual(Route.clientDetail(id: id), Route.productDetail(id: id))
         XCTAssertNotEqual(Route.inventoryDetail(id: id), Route.staffDetail(id: id))
     }
+
+    // MARK: - Calendar Sync Preferences route (unify-events-calendar-ios, task 5.3)
+
+    func testCalendarSyncPreferencesRouteExistsAndIsHashable() {
+        // The Settings → calendar-sync entry MUST resolve to a dedicated Route
+        // case so NavigationPath/.navigationDestination can push it (spec:
+        // "Route.calendarSyncPreferences MUST exist").
+        XCTAssertEqual(Route.calendarSyncPreferences, Route.calendarSyncPreferences)
+
+        let routes: Set<Route> = [.calendarSyncPreferences, .notificationPreferences, .settings]
+        XCTAssertEqual(routes.count, 3)
+        XCTAssertTrue(routes.contains(.calendarSyncPreferences))
+    }
+
+    func testCalendarSyncPreferencesIsDistinctFromOtherSettingsRoutes() {
+        // Triangulation: it MUST NOT collide with the neighboring Settings routes.
+        XCTAssertNotEqual(Route.calendarSyncPreferences, Route.notificationPreferences)
+        XCTAssertNotEqual(Route.calendarSyncPreferences, Route.settings)
+    }
 }
