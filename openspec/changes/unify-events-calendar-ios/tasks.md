@@ -87,10 +87,10 @@ Chain strategy: feature-branch-chain
 
 ## Phase 6 — Removal, localization & cleanup
 
-- [ ] **6.1** [removal] Move `CalendarGridView`, `BlockDateSheet`, `BlockedDatesSheet` into `Events/Views/`; retype sheet `@Bindable viewModel` → `EventListViewModel`. Create `Events/Models/DateDay.swift` (+ `CalendarError` block subset) moved out of `CalendarViewModel`.
-- [ ] **6.2** [removal] Delete `CalendarView.swift` (+ `ActivityView`, `eventRowContent`, iCal button), `CalendarViewModel.swift`, `exportCalendarToFile()`. Confirm no references remain; `xcodebuild` green.
-- [ ] **6.3** [impl] `CalendarStrings.swift`: drop iCal/export keys, keep grid/block keys. `Settings/SettingsStrings.swift` + new sync strings via `FeatureL10n` (toggle, destinations, write-only warning, errors). Covers all UI strings.
-- [ ] **6.4** [docs] Update `docs/PRD/11_CURRENT_STATUS.md` (REQUIRED last task per `openspec/config.yaml` rules.tasks). Note Web already unified, Android deferred (authorized parity exception).
+- [x] **6.1** [removal] Move `CalendarGridView`, `BlockDateSheet`, `BlockedDatesSheet` into `Events/Views/`; retype sheet `@Bindable viewModel` → `EventListViewModel`. Create `Events/Models/DateDay.swift` (+ `CalendarError` block subset) moved out of `CalendarViewModel`.
+- [x] **6.2** [removal] Delete `CalendarView.swift` (+ `ActivityView`, `eventRowContent`, iCal button), `CalendarViewModel.swift`, `exportCalendarToFile()`. Confirm no references remain; `xcodebuild` green.
+- [x] **6.3** [impl] `CalendarStrings.swift`: drop iCal/export keys, keep grid/block keys. `Settings/SettingsStrings.swift` + new sync strings via `FeatureL10n` (toggle, destinations, write-only warning, errors). Covers all UI strings.
+- [x] **6.4** [docs] Update `docs/PRD/11_CURRENT_STATUS.md` (REQUIRED last task per `openspec/config.yaml` rules.tasks). Note Web already unified, Android deferred (authorized parity exception).
 
 ## Test Strategy Recap — all 25 scenarios covered
 

@@ -23,46 +23,13 @@ final class CalendarLocalizationTests: XCTestCase {
 
         // General Actions
         XCTAssertEqual(CalendarStrings.actionCancel, "Cancelar")
-        XCTAssertEqual(CalendarStrings.actionRetry, "Reintentar")
         XCTAssertEqual(CalendarStrings.actionDelete, "Eliminar")
-
-        // Header & Actions
-        XCTAssertEqual(CalendarStrings.title, "Calendario")
-        XCTAssertEqual(CalendarStrings.today, "Hoy")
-        XCTAssertEqual(CalendarStrings.newEvent, "Nuevo Evento")
-        XCTAssertEqual(CalendarStrings.quickQuote, "Cotización Rápida")
-        XCTAssertEqual(CalendarStrings.createEventAction, "Crear evento o cotización")
-        XCTAssertEqual(CalendarStrings.manageBlocks, "Bloquear fechas")
-        XCTAssertEqual(CalendarStrings.exportICal, "Exportar calendario")
-        XCTAssertEqual(CalendarStrings.selectDayPrompt, "Seleccioná un día para ver sus eventos")
-        XCTAssertEqual(CalendarStrings.previousMonth, "Mes anterior")
-        XCTAssertEqual(CalendarStrings.nextMonth, "Mes siguiente")
-        XCTAssertEqual(CalendarStrings.noEventsForDay, "No hay eventos para este día")
-        XCTAssertEqual(CalendarStrings.allDay, "Todo el día")
-
-        // Filters
-        XCTAssertEqual(CalendarStrings.filterAll, "Todos")
-        XCTAssertEqual(CalendarStrings.filterQuoted, "Cotizados")
-        XCTAssertEqual(CalendarStrings.filterConfirmed, "Confirmados")
-        XCTAssertEqual(CalendarStrings.filterCompleted, "Completados")
-        XCTAssertEqual(CalendarStrings.filterCancelled, "Cancelados")
 
         // Status Label Lookups
         XCTAssertEqual(CalendarStrings.statusQuoted, "Cotizado")
         XCTAssertEqual(CalendarStrings.statusConfirmed, "Confirmado")
         XCTAssertEqual(CalendarStrings.statusCompleted, "Completado")
         XCTAssertEqual(CalendarStrings.statusCancelled, "Cancelado")
-
-        // Error Alerts
-        XCTAssertEqual(CalendarStrings.errorLoadFailed, "No se pudieron cargar los eventos")
-        XCTAssertEqual(CalendarStrings.errorBlockFailed, "No se pudo bloquear la fecha")
-        XCTAssertEqual(CalendarStrings.errorUnblockFailed, "No se pudo desbloquear")
-
-        // Unblock Confirmation
-        XCTAssertEqual(CalendarStrings.unblockTitle, "Desbloquear fecha")
-        XCTAssertEqual(CalendarStrings.unblockConfirm, "Desbloquear")
-        XCTAssertEqual(CalendarStrings.unblockMessage, "Esta acción habilitará la fecha nuevamente.")
-        XCTAssertEqual(CalendarStrings.unblockMessageReason("Vacaciones"), "Motivo: Vacaciones\n\nEsta acción habilitará la fecha nuevamente.")
 
         // Blocked Dates List View
         XCTAssertEqual(CalendarStrings.blockedDatesTitle, "Fechas No Disponibles")
@@ -91,46 +58,13 @@ final class CalendarLocalizationTests: XCTestCase {
 
         // General Actions
         XCTAssertEqual(CalendarStrings.actionCancel, "Cancel")
-        XCTAssertEqual(CalendarStrings.actionRetry, "Retry")
         XCTAssertEqual(CalendarStrings.actionDelete, "Delete")
-
-        // Header & Actions
-        XCTAssertEqual(CalendarStrings.title, "Calendar")
-        XCTAssertEqual(CalendarStrings.today, "Today")
-        XCTAssertEqual(CalendarStrings.newEvent, "New Event")
-        XCTAssertEqual(CalendarStrings.quickQuote, "Quick Quote")
-        XCTAssertEqual(CalendarStrings.createEventAction, "Create event or quote")
-        XCTAssertEqual(CalendarStrings.manageBlocks, "Block dates")
-        XCTAssertEqual(CalendarStrings.exportICal, "Export calendar")
-        XCTAssertEqual(CalendarStrings.selectDayPrompt, "Select a day to see its events")
-        XCTAssertEqual(CalendarStrings.previousMonth, "Previous month")
-        XCTAssertEqual(CalendarStrings.nextMonth, "Next month")
-        XCTAssertEqual(CalendarStrings.noEventsForDay, "No events on this day")
-        XCTAssertEqual(CalendarStrings.allDay, "All day")
-
-        // Filters
-        XCTAssertEqual(CalendarStrings.filterAll, "All")
-        XCTAssertEqual(CalendarStrings.filterQuoted, "Quoted")
-        XCTAssertEqual(CalendarStrings.filterConfirmed, "Confirmed")
-        XCTAssertEqual(CalendarStrings.filterCompleted, "Completed")
-        XCTAssertEqual(CalendarStrings.filterCancelled, "Cancelled")
 
         // Status Label Lookups
         XCTAssertEqual(CalendarStrings.statusQuoted, "Quoted")
         XCTAssertEqual(CalendarStrings.statusConfirmed, "Confirmed")
         XCTAssertEqual(CalendarStrings.statusCompleted, "Completed")
         XCTAssertEqual(CalendarStrings.statusCancelled, "Cancelled")
-
-        // Error Alerts
-        XCTAssertEqual(CalendarStrings.errorLoadFailed, "Failed to load events")
-        XCTAssertEqual(CalendarStrings.errorBlockFailed, "Failed to block date")
-        XCTAssertEqual(CalendarStrings.errorUnblockFailed, "Failed to unblock date")
-
-        // Unblock Confirmation
-        XCTAssertEqual(CalendarStrings.unblockTitle, "Unblock date")
-        XCTAssertEqual(CalendarStrings.unblockConfirm, "Unblock")
-        XCTAssertEqual(CalendarStrings.unblockMessage, "This will make the date available again.")
-        XCTAssertEqual(CalendarStrings.unblockMessageReason("Vacation"), "Reason: Vacation\n\nThis will make the date available again.")
 
         // Blocked Dates List View
         XCTAssertEqual(CalendarStrings.blockedDatesTitle, "Unavailable Dates")
@@ -154,13 +88,13 @@ final class CalendarLocalizationTests: XCTestCase {
         XCTAssertEqual(CalendarStrings.a11yDayWithEvents(3), "3 events")
     }
 
-    // MARK: - Month and Selected Date Dynamic Formatters Tests
+    // MARK: - Month Formatter Tests
 
-    func testMonthAndSelectedDateFormatter_Spanish() {
+    func testMonthFormatter_Spanish() {
         UserDefaults.standard.set("es-MX", forKey: "preferredLocale")
 
         let client = APIClient(baseURL: URL(string: "https://example.com")!)
-        let vm = CalendarViewModel(apiClient: client)
+        let vm = EventListViewModel(apiClient: client)
 
         // Define a specific date to test: March 15, 2026
         var components = DateComponents()
@@ -171,22 +105,17 @@ final class CalendarLocalizationTests: XCTestCase {
 
         // Set current month of viewModel
         vm.currentMonth = date
-        vm.selectedDate = date
 
         // Under es-MX: Month title should capitalize only the first letter "Marzo de 2026" or "Marzo 2026"
         let title = vm.monthTitle
         XCTAssertTrue(title == "Marzo de 2026" || title == "Marzo 2026", "Expected 'Marzo de 2026' or 'Marzo 2026', but got: '\(title)'")
-
-        // Formatted selected date
-        let formattedSelected = vm.formattedSelectedDate()
-        XCTAssertTrue(formattedSelected.contains("marzo") || formattedSelected.contains("Marzo"))
     }
 
-    func testMonthAndSelectedDateFormatter_English() {
+    func testMonthFormatter_English() {
         UserDefaults.standard.set("en-US", forKey: "preferredLocale")
 
         let client = APIClient(baseURL: URL(string: "https://example.com")!)
-        let vm = CalendarViewModel(apiClient: client)
+        let vm = EventListViewModel(apiClient: client)
 
         // Define a specific date to test: March 15, 2026
         var components = DateComponents()
@@ -197,13 +126,8 @@ final class CalendarLocalizationTests: XCTestCase {
 
         // Set current month of viewModel
         vm.currentMonth = date
-        vm.selectedDate = date
 
         // Under en-US: Month title should capitalize month name "March 2026"
         XCTAssertEqual(vm.monthTitle, "March 2026")
-
-        // Formatted selected date
-        let formattedSelected = vm.formattedSelectedDate()
-        XCTAssertTrue(formattedSelected.contains("March") || formattedSelected.contains("march"))
     }
 }

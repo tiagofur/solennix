@@ -295,6 +295,76 @@ public final class EventListViewModel {
         return original.prefix(1).uppercased() + original.dropFirst()
     }
 
+    // MARK: - Unavailable Dates (moved from CalendarViewModel in Phase 6)
+
+    /// Look up the `UnavailableDate` entry that covers a given day, if any.
+    public func unavailableDateFor(_ date: Date) -> UnavailableDate? {
+        let dateStr = Self.gridApiDateFormatter.string(from: date)
+        return unavailableDates.first { $0.startDate <= dateStr && dateStr <= $0.endDate }
+    }
+
+    /// Block a date range, or unblock if it is already blocked.
+    @MainActor
+    public func toggleDateBlock(startDate: Date, endDate: Date, reason: String?) async {
+        calendarError = nil
+        isBlockingDate = true
+        let wasBlocked = unavailableDateFor(startDate) != nil
+        do {
+            if let existing = unavailableDateFor(startDate) {
+                try await apiClient.delete(Endpoint.unavailableDate(existing.id))
+            } else {
+                let startStr = Self.gridApiDateFormatter.string(from: startDate)
+                let endStr = Self.gridApiDateFormatter.string(from: endDate)
+                struct BlockRequest: Encodable {
+                    let startDate: String
+                    let endDate: String
+                    let reason: String?
+                }
+                let body = BlockRequest(startDate: startStr, endDate: endStr, reason: reason)
+                let _: UnavailableDate = try await apiClient.post(Endpoint.unavailableDates, body: body)
+            }
+            await loadUnavailableDates()
+        } catch {
+            self.calendarError = wasBlocked ? .unblockFailed : .blockFailed
+        }
+        isBlockingDate = false
+    }
+
+    /// Delete a specific blocked date entry by ID.
+    @MainActor
+    public func deleteBlock(_ entry: UnavailableDate) async {
+        isBlockingDate = true
+        do {
+            try await apiClient.delete(Endpoint.unavailableDate(entry.id))
+            await loadUnavailableDates()
+        } catch {
+            self.calendarError = .unblockFailed
+        }
+        isBlockingDate = false
+    }
+
+    @MainActor
+    public func loadUnavailableDates() async {
+        let now = Date()
+        let calendar = Calendar.current
+        guard let startDate = calendar.date(byAdding: .month, value: -6, to: now),
+              let endDate = calendar.date(byAdding: .month, value: 6, to: now)
+        else { return }
+
+        let startStr = Self.gridApiDateFormatter.string(from: startDate)
+        let endStr = Self.gridApiDateFormatter.string(from: endDate)
+
+        do {
+            let fetched: [UnavailableDate] = try await apiClient.getAll(
+                Endpoint.unavailableDates,
+                params: ["start": startStr, "end": endStr]
+            )
+            unavailableDates = fetched
+        } catch {
+            self.calendarError = .loadFailed
+        }
+    }
+
     // MARK: - Shared Filter Invariant (ADR-7)
     //
     // A day-tap and a period chip BOTH write the same `dateRange*` pair, so

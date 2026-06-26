@@ -7,13 +7,13 @@ import SolennixDesign
 /// Sheet for viewing and managing all blocked date ranges.
 public struct BlockedDatesSheet: View {
 
-    @Bindable var viewModel: CalendarViewModel
+    @Bindable var viewModel: EventListViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showAddForm = false
     // Fix #9: guard delete button against double-tap while a delete is in-flight.
     @State private var isDeletingID: String? = nil
 
-    public init(viewModel: CalendarViewModel) {
+    public init(viewModel: EventListViewModel) {
         self.viewModel = viewModel
     }
 
@@ -166,7 +166,7 @@ public struct BlockedDatesSheet: View {
 /// Inline form for adding a new blocked date range.
 struct AddBlockSheet: View {
 
-    @Bindable var viewModel: CalendarViewModel
+    @Bindable var viewModel: EventListViewModel
     @Environment(\.dismiss) private var dismiss
 
     @State private var startDate = Date()
@@ -230,7 +230,7 @@ struct AddBlockSheet: View {
                                 isSubmitting = false
                                 // Keep the form open on failure so the user doesn't
                                 // lose their range/reason; dismiss only on success.
-                                if viewModel.error == nil { dismiss() }
+                                if viewModel.calendarError == nil { dismiss() }
                             }
                         },
                         isValid: true,

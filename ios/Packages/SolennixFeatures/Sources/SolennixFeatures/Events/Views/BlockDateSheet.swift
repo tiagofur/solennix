@@ -8,7 +8,7 @@ import SolennixDesign
 struct BlockDateSheet: View {
 
     let startDate: Date
-    @Bindable var viewModel: CalendarViewModel
+    @Bindable var viewModel: EventListViewModel
     let onDismiss: () -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -16,7 +16,7 @@ struct BlockDateSheet: View {
     @State private var reason = ""
     @State private var isSubmitting = false
 
-    init(startDate: Date, viewModel: CalendarViewModel, onDismiss: @escaping () -> Void) {
+    init(startDate: Date, viewModel: EventListViewModel, onDismiss: @escaping () -> Void) {
         self.startDate = startDate
         self.viewModel = viewModel
         self.onDismiss = onDismiss
@@ -103,7 +103,7 @@ struct BlockDateSheet: View {
                                 )
                                 isSubmitting = false
                                 // Only dismiss when no error was set by the ViewModel.
-                                if viewModel.error == nil {
+                                if viewModel.calendarError == nil {
                                     onDismiss()
                                     dismiss()
                                 }

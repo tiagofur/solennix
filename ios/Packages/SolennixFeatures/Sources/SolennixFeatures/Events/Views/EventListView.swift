@@ -443,49 +443,16 @@ public struct EventListView: View {
         var id: Date { day }
     }
 
-    /// Transitional block-date sheet body (task 4.4). See the deviation note on
-    /// the `.sheet(item: $blockSheetAnchor)` modifier: the retyped
-    /// `BlockDateSheet` (bound to `EventListViewModel`) lands in Phase 6.1. Until
-    /// then this presents a faithful, localized block-date surface for the
-    /// long-pressed day with the same title + start-date label + cancel affordance
-    /// the real sheet uses, so the gesture→sheet path is exercised end-to-end.
+    /// Real block-date sheet body (Phase 6.1). `BlockDateSheet` is now retyped
+    /// to `EventListViewModel` and wired to `toggleDateBlock`.
     @ViewBuilder
     private func blockDateSheet(for day: Date) -> some View {
-        NavigationStack {
-            Form {
-                Section {
-                    Label {
-                        Text(Self.blockDayFormatter.string(from: day).capitalized)
-                    } icon: {
-                        Image(systemName: "calendar")
-                    }
-                    .foregroundStyle(SolennixColors.text)
-                    .solennixRow()
-                } header: {
-                    Text(CalendarStrings.blockStartDate)
-                }
-            }
-            .solennixListStyle()
-            .navigationTitle(CalendarStrings.blockTitle)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    SolennixCancelButton(title: CalendarStrings.actionCancel) {
-                        blockSheetAnchor = nil
-                    }
-                }
-            }
-        }
+        BlockDateSheet(
+            startDate: day,
+            viewModel: viewModel,
+            onDismiss: { blockSheetAnchor = nil }
+        )
     }
-
-    /// Device-local formatter for the long-pressed day (the grid's cell `Date` is
-    /// local-midnight). Mirrors `BlockDateSheet.displayFormatter`.
-    private static let blockDayFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = FeatureL10n.locale
-        f.setLocalizedDateFormatFromTemplate("EEEEdMMMM")
-        return f
-    }()
 
     // MARK: - Event List
 

@@ -241,12 +241,12 @@ private struct HomeRootView: View {
     }
 }
 
-/// Root view for the Calendar tab.
+/// Root view for the Calendar tab (redirects to Events — Calendar tab removed in Phase 5.4).
 private struct CalendarRootView: View {
     @Environment(\.apiClient) private var apiClient
 
     var body: some View {
-        CalendarView(viewModel: CalendarViewModel(apiClient: apiClient))
+        EventListView(apiClient: apiClient)
     }
 }
 
