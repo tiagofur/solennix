@@ -1,0 +1,1 @@
+tabBar.buttons.count=5 labels=["Inicio", "Eventos", "Clientes", "Más", "Buscar"]

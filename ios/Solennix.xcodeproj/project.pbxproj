@@ -73,6 +73,7 @@
 		AE74FD8C34B25B8AD268869C /* KeyboardShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C00F21C74E3F4FEFE8F1C50 /* KeyboardShortcuts.swift */; };
 		AEA3E0C10AF444C3D241F6FF /* EventDomainModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72F41ABD56C3074AEF875CB1 /* EventDomainModelTests.swift */; };
 		AF2A2F27420B89787CBB6237 /* SolennixCore in Frameworks */ = {isa = PBXBuildFile; productRef = 218818B9682EEA80A5555EF5 /* SolennixCore */; };
+		B22E9671915E9B32D289A8BD /* SearchTabEmptyStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8054E5E1247CCBFBF6D038A0 /* SearchTabEmptyStateTests.swift */; };
 		B58301ACDCAB10C078D350D3 /* WidgetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB69CCDF04807E01479F4939 /* WidgetModels.swift */; };
 		B92C68A6EC06ACA21048C7F5 /* KPIWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC4BED0BA0668EB3B1475A7D /* KPIWidget.swift */; };
 		BE57C9FA226ABB99B5271812 /* InteractiveWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55B62E2796D149F1C17BE7FE /* InteractiveWidget.swift */; };
@@ -207,6 +208,7 @@
 		7A8AB395AD1DA8AD3E22ACAF /* EventItemSuggestionsModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventItemSuggestionsModelsTests.swift; sourceTree = "<group>"; };
 		7BF9390361041BF9ADF3D31C /* TeamAndAvailabilityModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamAndAvailabilityModelTests.swift; sourceTree = "<group>"; };
 		7D80FA668D747F502127AF7D /* StaffInviteIngredientModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffInviteIngredientModelsTests.swift; sourceTree = "<group>"; };
+		8054E5E1247CCBFBF6D038A0 /* SearchTabEmptyStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchTabEmptyStateTests.swift; sourceTree = "<group>"; };
 		81690A3205045775059AB12D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		8997C20D264F9A47FBA3D36F /* ClientsLocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientsLocalizationTests.swift; sourceTree = "<group>"; };
 		8BD8FAF4B7299793724BA9DF /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
@@ -455,6 +457,7 @@
 		7ABDCACFC9C877BE9DA4AAD5 /* SolennixUITests */ = {
 			isa = PBXGroup;
 			children = (
+				8054E5E1247CCBFBF6D038A0 /* SearchTabEmptyStateTests.swift */,
 				1A9960185E35C14D27728A69 /* TabBarSlotFitTests.swift */,
 			);
 			path = SolennixUITests;
@@ -742,6 +745,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B22E9671915E9B32D289A8BD /* SearchTabEmptyStateTests.swift in Sources */,
 				AD0D60C610794317D1E4A740 /* TabBarSlotFitTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
