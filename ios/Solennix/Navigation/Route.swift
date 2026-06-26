@@ -9,7 +9,6 @@ import SolennixFeatures
 /// The tabs shown in the compact (iPhone) tab bar.
 public enum Tab: Int, Hashable, CaseIterable {
     case home
-    case calendar
     case events
     case clients
     case more
@@ -18,7 +17,6 @@ public enum Tab: Int, Hashable, CaseIterable {
     public var iconName: String {
         switch self {
         case .home:     return "house.fill"
-        case .calendar: return "calendar"
         case .events:   return "party.popper.fill"
         case .clients:  return "person.2.fill"
         case .more:     return "ellipsis"
@@ -29,7 +27,6 @@ public enum Tab: Int, Hashable, CaseIterable {
     public var title: String {
         switch self {
         case .home:     return CommonStrings.tabHome
-        case .calendar: return CommonStrings.tabCalendar
         case .events:   return CommonStrings.tabEvents
         case .clients:  return CommonStrings.tabClients
         case .more:     return CommonStrings.tabMore
@@ -42,7 +39,6 @@ public enum Tab: Int, Hashable, CaseIterable {
 /// Sections shown in the iPad/Mac sidebar navigation.
 public enum SidebarSection: String, Hashable, CaseIterable {
     case dashboard
-    case calendar
     case events
     case clients
     case personnel
@@ -57,7 +53,6 @@ public enum SidebarSection: String, Hashable, CaseIterable {
     public var iconName: String {
         switch self {
         case .dashboard:       return "house.fill"
-        case .calendar:        return "calendar"
         case .events:          return "party.popper.fill"
         case .clients:         return "person.2.fill"
         case .personnel:       return "person.3.fill"
@@ -74,7 +69,6 @@ public enum SidebarSection: String, Hashable, CaseIterable {
     public var title: String {
         switch self {
         case .dashboard:       return CommonStrings.tabHome
-        case .calendar:        return CommonStrings.tabCalendar
         case .events:          return CommonStrings.tabEvents
         case .clients:         return CommonStrings.tabClients
         case .personnel:       return CommonStrings.navPersonnel
@@ -93,7 +87,7 @@ public enum SidebarSection: String, Hashable, CaseIterable {
 extension SidebarSection {
     /// Main sidebar order for iPad/macOS.
     static let mainSections: [SidebarSection] = [
-        .dashboard, .calendar, .events, .clients, .personnel, .products, .inventory, .paymentInbox, .eventFormLinks, .reviews
+        .dashboard, .events, .clients, .personnel, .products, .inventory, .paymentInbox, .eventFormLinks, .reviews
     ]
 
     /// Catalog section order for the iPhone "Mas" menu.
@@ -107,8 +101,6 @@ extension SidebarSection {
     var route: Route? {
         switch self {
         case .dashboard:
-            return nil
-        case .calendar:
             return nil
         case .events:
             return nil
@@ -159,7 +151,7 @@ extension SidebarSection {
             return CommonStrings.moreMenuReviewsSubtitle
         case .settings:
             return CommonStrings.moreMenuSettingsSubtitle
-        case .dashboard, .calendar, .events, .clients:
+        case .dashboard, .events, .clients:
             return ""
         }
     }

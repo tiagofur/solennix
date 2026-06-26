@@ -21,12 +21,10 @@ struct CompactTabLayout: View {
 
     @State private var selectedTab: Tab = .home
     @State private var homePath = NavigationPath()
-    @State private var calendarPath = NavigationPath()
     @State private var eventsPath = NavigationPath()
     @State private var clientsPath = NavigationPath()
     @State private var morePath = NavigationPath()
     @State private var homeSearchText = ""
-    @State private var calendarSearchText = ""
 
     // MARK: - Body
 
@@ -50,10 +48,6 @@ struct CompactTabLayout: View {
         TabView(selection: ios26TabSelection) {
             SwiftUI.Tab(AppTab.home.title, systemImage: AppTab.home.iconName, value: AppTab.home) {
                 homeTabContent
-            }
-
-            SwiftUI.Tab(AppTab.calendar.title, systemImage: AppTab.calendar.iconName, value: AppTab.calendar) {
-                calendarTabContent
             }
 
             SwiftUI.Tab(AppTab.events.title, systemImage: AppTab.events.iconName, value: AppTab.events) {
@@ -118,11 +112,6 @@ struct CompactTabLayout: View {
                 .tabItem { Label(Tab.home.title, systemImage: Tab.home.iconName) }
                 .tag(AppTab.home)
 
-            // Calendar Tab
-            calendarTabContent
-                .tabItem { Label(Tab.calendar.title, systemImage: Tab.calendar.iconName) }
-                .tag(AppTab.calendar)
-
             // Events Tab — EventListView provides its own .searchable for
             // local filtering of the events list.
             eventsTabContent
@@ -171,21 +160,6 @@ struct CompactTabLayout: View {
                 .searchMinimizedIfAvailable()
                 .onSubmit(of: .search) {
                     appendSearchRoute(query: &homeSearchText, to: &homePath)
-                }
-        }
-    }
-
-    @ViewBuilder
-    private var calendarTabContent: some View {
-        NavigationStack(path: $calendarPath) {
-            CalendarRootView()
-                .navigationDestination(for: Route.self) { route in
-                    RouteDestination(route: route)
-                }
-                .searchable(text: $calendarSearchText, prompt: globalSearchPrompt)
-                .searchMinimizedIfAvailable()
-                .onSubmit(of: .search) {
-                    appendSearchRoute(query: &calendarSearchText, to: &calendarPath)
                 }
         }
     }
@@ -244,7 +218,6 @@ struct CompactTabLayout: View {
     private func resetPath(for tab: Tab) {
         switch tab {
         case .home:     homePath = NavigationPath()
-        case .calendar: calendarPath = NavigationPath()
         case .events:   eventsPath = NavigationPath()
         case .clients:  clientsPath = NavigationPath()
         case .more:     morePath = NavigationPath()

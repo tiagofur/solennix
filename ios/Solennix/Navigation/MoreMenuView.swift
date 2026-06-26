@@ -110,7 +110,7 @@ struct MoreMenuView: View {
             return SolennixColors.iconPlum
         case .settings:
             return SolennixColors.secondary      // slate gray, Apple gear-style
-        case .dashboard, .calendar, .events, .clients:
+        case .dashboard, .events, .clients:
             return SolennixColors.secondary      // root-tab sections never appear in More menu
         }
     }
