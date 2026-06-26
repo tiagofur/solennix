@@ -63,6 +63,23 @@ func resolveTabChange(current: Tab, next: Tab) -> TabSelectionEffect {
     return .init(resetTab: current)
 }
 
+// MARK: - Clear-on-Exit Decision
+
+/// Pure decision for PR2 task 2.4: should the search query be cleared when the
+/// tab bar transitions from `current` to `next`?
+///
+/// Clears ONLY when LEAVING the `.search` tab (`current == .search` and
+/// `next != .search`). Entering search, re-tapping search, and regular-tab
+/// switches do not clear (spec R7: "Text MUST clear on tab exit" — i.e. on the
+/// exit transition only). `CompactTabLayout` wires this onto
+/// `.onChange(of: selectedTab)` → `SearchViewModel.clearSearch()`.
+///
+/// Extracted as a pure function so the leave-decision is unit-testable
+/// (`ClearOnExitTests`); the visual clear is verified by the manual checklist.
+func shouldClearSearchOnTabExit(current: Tab, next: Tab) -> Bool {
+    current == .search && next != .search
+}
+
 // MARK: - SidebarSection
 
 /// Sections shown in the iPad/Mac sidebar navigation.
