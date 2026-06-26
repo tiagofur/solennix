@@ -245,7 +245,6 @@ struct Step1GeneralView: View {
                 displayedComponents: .date
             )
             .datePickerStyle(.graphical)
-            .tint(SolennixColors.primary)
             .labelsHidden()
             .padding()
             .navigationTitle(tr("events.form.general.event_date", "Fecha del evento"))
@@ -512,7 +511,6 @@ private struct OptionalTimePicker: View {
                     displayedComponents: .hourAndMinute
                 )
                 .datePickerStyle(.wheel)
-                .tint(SolennixColors.primary)
                 .labelsHidden()
                 .padding()
 

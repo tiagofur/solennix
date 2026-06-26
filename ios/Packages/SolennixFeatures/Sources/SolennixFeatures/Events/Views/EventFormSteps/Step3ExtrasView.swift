@@ -239,7 +239,6 @@ private struct ExtraRowView: View {
             )) {
                 Text(tr("events.form.extras.exclude_utility", "Solo cobrar costo (sin utilidad)"))
             }
-            .tint(SolennixColors.primary)
             .solennixRow()
             .onChange(of: extra.excludeUtility) { _, newValue in
                 if newValue {
@@ -259,7 +258,6 @@ private struct ExtraRowView: View {
                     Image(systemName: "checklist")
                 }
             }
-            .tint(SolennixColors.primary)
             .solennixRow()
         } header: {
             HStack {

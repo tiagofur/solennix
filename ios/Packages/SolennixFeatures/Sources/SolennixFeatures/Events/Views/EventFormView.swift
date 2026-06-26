@@ -173,7 +173,6 @@ public struct EventFormView: View {
         return VStack(spacing: Spacing.xs) {
             ProgressView(value: Double(current), total: Double(steps.count))
                 .progressViewStyle(.linear)
-                .tint(SolennixColors.primary)
 
             HStack(spacing: 0) {
                 ForEach(Array(steps.enumerated()), id: \.offset) { index, meta in

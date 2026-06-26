@@ -3,6 +3,7 @@ import SwiftUI
 import SnapshotTesting
 import SolennixCore
 import SolennixNetwork
+import SolennixDesign
 @testable import SolennixFeatures
 
 /// Task 5.2 — `CalendarSyncPreferencesView` (calendar-sync delta).
@@ -12,8 +13,8 @@ import SolennixNetwork
 ///     GIVEN the user opens calendar sync preferences from Settings
 ///     WHEN  the screen renders
 ///     THEN  it MUST use `preferenceToggle` for the master toggle, `.solennixRow()`,
-///           `.tint(SolennixColors.primary)`, and track in-flight toggles via
-///           `inFlightKeys`.
+///           inherit the brand AccentColor (gold) for accent-governed controls, and
+///           track in-flight toggles via `inFlightKeys`.
 ///   Scenario: Personal selection shows write-only warning
 ///     GIVEN sync preferences open
 ///     WHEN  the user selects "Personal"
@@ -136,12 +137,23 @@ final class CalendarSyncPreferencesViewTests: XCTestCase {
 
     // MARK: - Full view: write-only warning appears ONLY on `.personal`
 
+    /// Simulates the app's `AccentColor` asset (brand gold) on the snapshot host.
+    ///
+    /// Package tests run outside the app bundle, so they cannot read the app's
+    /// `Assets.xcassets` `AccentColor` (`#C4A265`). Accent-governed controls
+    /// (`Toggle`, segmented `Picker`, `Label` buttons) would therefore fall back
+    /// to the system default instead of the inherited brand accent. Applying the
+    /// gold tint at the host reproduces production appearance so the recorded
+    /// baselines stay faithful.
+    private static let simulatedAppAccent = SolennixColors.primary
+
     @MainActor
     func testViewShowsWriteOnlyWarningOnlyWhenDestinationIsPersonal() {
         // Default (.solennix) → the write-only warning MUST NOT appear.
         assertSnapshot(
             of: NavigationStack {
                 CalendarSyncPreferencesView(viewModel: makeViewModel(destination: .solennix))
+                    .tint(Self.simulatedAppAccent)
             },
             as: .image(layout: .fixed(width: 390, height: 720)),
             testName: "view-solennix-no-warning"
@@ -151,6 +163,7 @@ final class CalendarSyncPreferencesViewTests: XCTestCase {
         assertSnapshot(
             of: NavigationStack {
                 CalendarSyncPreferencesView(viewModel: makeViewModel(destination: .personal))
+                    .tint(Self.simulatedAppAccent)
             },
             as: .image(layout: .fixed(width: 390, height: 720)),
             testName: "view-personal-write-only-warning"

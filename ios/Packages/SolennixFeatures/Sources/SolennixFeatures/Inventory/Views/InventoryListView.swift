@@ -139,7 +139,6 @@ public struct InventoryListView: View {
             if viewModel.isLoading && viewModel.items.isEmpty {
                 ProgressView()
                     .controlSize(.large)
-                    .tint(SolennixColors.primary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Spacing.xxxl)
             } else if viewModel.filteredItems.isEmpty && !viewModel.isLoading {

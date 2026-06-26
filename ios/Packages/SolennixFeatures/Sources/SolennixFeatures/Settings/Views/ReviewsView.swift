@@ -221,7 +221,6 @@ public struct ReviewsView: View {
                 }
             }
             .buttonStyle(.borderedProminent)
-            .tint(SolennixColors.primary)
             .disabled(viewModel.savingResponseId == review.id)
         }
         .padding(.vertical, Spacing.xs)

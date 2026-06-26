@@ -155,7 +155,6 @@ public struct NotificationPreferencesView: View {
                 Image(systemName: icon)
             }
         }
-        .tint(SolennixColors.primary)
         .disabled(viewModel.inFlightKeys.contains(id))
         .solennixRow()
     }

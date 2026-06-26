@@ -88,7 +88,6 @@ struct CompactTabLayout: View {
                 searchTabContent
             }
         }
-        .tint(SolennixColors.tabBarActive)
         .tabBarMinimizeBehavior(.onScrollDown)
         .tabViewSearchActivation(.searchTabSelection)
         .onChange(of: pendingSpotlightRoute) { _, newRoute in
@@ -155,7 +154,6 @@ struct CompactTabLayout: View {
                 .tabItem { Label(Tab.search.title, systemImage: Tab.search.iconName) }
                 .tag(AppTab.search)
         }
-        .tint(SolennixColors.tabBarActive)
         .onChange(of: pendingSpotlightRoute) { _, newRoute in
             guard let route = newRoute else { return }
             // F-1: route the Spotlight tab-transition through the same clear-on-

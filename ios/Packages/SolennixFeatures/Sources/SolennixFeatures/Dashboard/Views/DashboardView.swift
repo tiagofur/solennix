@@ -161,7 +161,6 @@ public struct DashboardView: View {
             // Non-empty refresh spinner — shown only when dashboard has data
             if viewModel?.isLoading == true && viewModel?.eventsThisMonth.isEmpty == false && viewModel?.errorMessage == nil {
                 ProgressView()
-                    .tint(SolennixColors.primary)
             }
 
             PendingEventsModalView(apiClient: apiClient)
@@ -585,7 +584,6 @@ public struct DashboardView: View {
                 if isUpdating {
                     ProgressView()
                         .controlSize(.small)
-                        .tint(SolennixColors.primary)
                 }
 
                 StatusBadge(status: event.status.rawValue)

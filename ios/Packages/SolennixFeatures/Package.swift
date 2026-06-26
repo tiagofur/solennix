@@ -38,6 +38,12 @@ let package = Package(
                 .target(name: "SolennixFeatures"),
                 .product(name: "SolennixCore", package: "SolennixCore"),
                 .product(name: "SolennixNetwork", package: "SolennixNetwork"),
+                // Needed so full-view snapshots can simulate the app's AccentColor
+                // asset (brand gold) on the snapshot host — package tests cannot read
+                // the app's asset catalog, so accent-governed controls (toggles,
+                // segmented pickers, label buttons) would otherwise render the system
+                // default instead of the inherited brand accent.
+                .product(name: "SolennixDesign", package: "SolennixDesign"),
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
             ]
         )

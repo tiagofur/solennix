@@ -78,7 +78,6 @@ struct Step5FinancesView: View {
             Toggle(isOn: $viewModel.requiresInvoice) {
                 Label(tr("events.form.finances.invoice", "Requiere factura (IVA)"), systemImage: "doc.text")
             }
-            .tint(SolennixColors.primary)
             .solennixRow()
 
             if viewModel.requiresInvoice {

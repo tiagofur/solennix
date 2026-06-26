@@ -140,7 +140,6 @@ public struct ProductListView: View {
                 // iPad skeleton: ProgressView overlay (grid deferred)
                 ProgressView()
                     .controlSize(.large)
-                    .tint(SolennixColors.primary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Spacing.xxxl)
             } else if viewModel.filteredProducts.isEmpty && !viewModel.isLoading {

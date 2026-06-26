@@ -368,7 +368,6 @@ public struct ProductFormView: View {
                         .foregroundStyle(SolennixColors.textTertiary)
                 }
             }
-            .tint(SolennixColors.primary)
             .solennixRow()
         } header: {
             Text(ProductStrings.productInfo)
