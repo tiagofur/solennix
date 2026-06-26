@@ -260,6 +260,12 @@ public final class SearchViewModel {
 
     // MARK: - Clear
 
+    /// Removes all persisted recent queries from UserDefaults without requiring
+    /// a view model instance. Used during logout cleanup (AppSignOutDelegate).
+    public static func clearRecentQueriesFromStorage() {
+        UserDefaults.standard.removeObject(forKey: "solennix.search.recentQueries")
+    }
+
     public func clearSearch() {
         searchTask?.cancel()
         query = ""

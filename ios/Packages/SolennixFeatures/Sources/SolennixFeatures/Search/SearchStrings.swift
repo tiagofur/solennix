@@ -17,6 +17,7 @@ enum SearchStrings {
     /// PR3 — entity-type scope filter labels (spec R5). The per-entity labels
     /// reuse the existing results strings; only the "all" scope needs a new key.
     static var scopeAll: String { FeatureL10n.text("search.scope.all", "Todo") }
+    static var emptyStateHint: String { FeatureL10n.text("search.empty_state.hint", "Buscá clientes, eventos, productos…") }
     
     static func more(_ count: Int) -> String {
         FeatureL10n.format("search.results.more", "+ %lld más", count)
