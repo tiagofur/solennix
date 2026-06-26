@@ -12,9 +12,10 @@ private typealias AppTab = Tab
 
 /// The main tab-based layout for compact (iPhone) horizontal size class.
 ///
-/// On iOS 26+ uses the `Tab` builder syntax to unlock `tabBarMinimizeBehavior`
-/// and minimized search toolbar behavior (no search-role tab — see note in
-/// `ios26TabView`). On iOS 17–25 falls back to the standard `.tabItem {}` syntax.
+/// On iOS 26+ uses the `Tab` builder syntax with a trailing search-role tab
+/// (`Tab(role: .search)`) + `.tabViewSearchActivation`, plus
+/// `tabBarMinimizeBehavior`. On iOS 17–25 falls back to the standard
+/// `.tabItem {}` syntax with a regular 5th magnifier tab (PR2).
 struct CompactTabLayout: View {
 
     @Binding var pendingSpotlightRoute: Route?
@@ -24,7 +25,22 @@ struct CompactTabLayout: View {
     @State private var eventsPath = NavigationPath()
     @State private var clientsPath = NavigationPath()
     @State private var morePath = NavigationPath()
+    @State private var searchPath = NavigationPath()
     @State private var homeSearchText = ""
+
+    /// Search view model owned by the layout so it is non-nil from the first
+    /// render (avoiding SwiftUI's `@State` re-init trap) and so the shared
+    /// `applyTabSelection` chokepoint can clear it on leaving the search tab
+    /// (spec R7). It is injected into `SearchView(context: .bottomNavTab)`;
+    /// `SearchViewModel` remains the text owner (design Decision 2).
+    @State private var searchViewModel: SearchViewModel
+
+    init(apiClient: APIClient, pendingSpotlightRoute: Binding<Route?>) {
+        // `@State` initialValue is honored only on the first init, so the model
+        // instance is preserved across view re-creations.
+        _searchViewModel = State(initialValue: SearchViewModel(apiClient: apiClient))
+        _pendingSpotlightRoute = pendingSpotlightRoute
+    }
 
     // MARK: - Body
 
@@ -62,17 +78,20 @@ struct CompactTabLayout: View {
                 moreTabContent
             }
 
-            // NOTE: the search tab lands in PR2. The app currently has 4 regular
-            // tabs (home, events, clients, more) — Calendar was unified into
-            // Events (Phase 5.4), so the prior overflow condition (when there were
-            // 5 regular tabs, 5 + 1 search = 6 spawned a system overflow on
-            // iOS 26.5) no longer applies. PR2 adds Tab(role: .search) here and
-            // validates the 4 + 1 = 5 slot fit on-device; if it overflows, the
-            // regular 5th-tab fallback is used
-            // (see openspec/changes/bottom-nav-search/design.md).
+            // PR2: global search as a 5th bottom-nav destination. Primary path =
+            // a search-role tab (system pins it trailing, supplies the "Buscar"
+            // title); `.tabViewSearchActivation` drives native focus + the
+            // system-managed dismiss-restore. The 4-regular + 1-search-role =
+            // 5-slot fit is spike-validated on-device (see
+            // `openspec/changes/bottom-nav-search/` — `slot-fit-pr2` verdict +
+            // screenshot). The legacy fallback branch below uses a regular tab.
+            SwiftUI.Tab(value: AppTab.search, role: .search) {
+                searchTabContent
+            }
         }
         .tint(SolennixColors.tabBarActive)
         .tabBarMinimizeBehavior(.onScrollDown)
+        .tabViewSearchActivation(.searchTabSelection)
         .onChange(of: pendingSpotlightRoute) { _, newRoute in
             guard let route = newRoute else { return }
             // Spotlight routes always land on the home tab+path — set selectedTab
@@ -121,6 +140,14 @@ struct CompactTabLayout: View {
             moreTabContent
                 .tabItem { Label(Tab.more.title, systemImage: Tab.more.iconName) }
                 .tag(AppTab.more)
+
+            // PR2: search as a regular 5th magnifier tab (iOS 17–25). Search-role
+            // + `.tabViewSearchActivation` are unavailable pre-iOS 26 (design
+            // Decision 8), so this is a plain tab sharing the same
+            // `searchTabContent` builder as the iOS 26 branch (spec R1 iOS17–25).
+            searchTabContent
+                .tabItem { Label(Tab.search.title, systemImage: Tab.search.iconName) }
+                .tag(AppTab.search)
         }
         .tint(SolennixColors.tabBarActive)
         .onChange(of: pendingSpotlightRoute) { _, newRoute in
@@ -187,6 +214,22 @@ struct CompactTabLayout: View {
         }
     }
 
+    /// Search tab content, shared by the iOS 26 search-role tab and the iOS 17–25
+    /// regular 5th tab. Renders `SearchView` in the `.bottomNavTab` context, which
+    /// omits the custom search field (the system `.searchable` is the field) and
+    /// reuses `SearchViewModel` → `GET /api/search?q=` across all four entities
+    /// (spec R1/R4/R6). The view model is injected from the layout so it can be
+    /// cleared on tab exit (spec R7).
+    @ViewBuilder
+    private var searchTabContent: some View {
+        NavigationStack(path: $searchPath) {
+            SearchView(context: .bottomNavTab, viewModel: searchViewModel)
+                .navigationDestination(for: Route.self) { route in
+                    RouteDestination(route: route)
+                }
+        }
+    }
+
     /// Custom binding for the legacy TabView that pops to root on same-tab re-tap.
     private var legacyTabSelection: Binding<AppTab> {
         Binding(get: { selectedTab }, set: { applyTabSelection($0) })
@@ -199,9 +242,18 @@ struct CompactTabLayout: View {
     ///   - search transition (enter/leave) → preserve both stacks
     ///   - regular → different regular → reset the leaving tab (unchanged UX)
     private func applyTabSelection(_ newTab: Tab) {
-        let effect = resolveTabChange(current: selectedTab, next: newTab)
+        let oldTab = selectedTab
+        let effect = resolveTabChange(current: oldTab, next: newTab)
         if let resetTab = effect.resetTab {
             resetPath(for: resetTab)
+        }
+        // PR2 task 2.4 — clear the search text when LEAVING the `.search` tab
+        // (spec R7: "Text MUST clear on tab exit"). This is the single chokepoint
+        // both `ios26TabSelection` and `legacyTabSelection` route through, so the
+        // clear fires reliably for every user-initiated tab change in BOTH
+        // branches. The leave-decision is pure (`shouldClearSearchOnTabExit`).
+        if shouldClearSearchOnTabExit(current: oldTab, next: newTab) {
+            searchViewModel.clearSearch()
         }
         selectedTab = newTab
     }
@@ -218,7 +270,7 @@ struct CompactTabLayout: View {
         case .events:   eventsPath = NavigationPath()
         case .clients:  clientsPath = NavigationPath()
         case .more:     morePath = NavigationPath()
-        case .search:   break // PR2 wires `searchPath`; search has no nav state yet.
+        case .search:   searchPath = NavigationPath()
         }
     }
 
@@ -269,5 +321,5 @@ private struct ClientsRootView: View {
 // MARK: - Preview
 
 #Preview {
-    CompactTabLayout(pendingSpotlightRoute: .constant(nil))
+    CompactTabLayout(apiClient: APIClient(baseURL: URL(string: "https://example.com")!), pendingSpotlightRoute: .constant(nil))
 }

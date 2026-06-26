@@ -135,6 +135,20 @@ targets:
       - target: Solennix
       - package: SolennixCore
 
+  SolennixUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - SolennixUITests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.solennix.app.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "5.9"
+    dependencies:
+      - target: Solennix
+
 schemes:
   Solennix:
     build:
@@ -150,6 +164,7 @@ schemes:
       storeKitConfiguration: Solennix/SolennixProducts.storekit
       targets:
         - SolennixTests
+        - SolennixUITests
     profile:
       config: Release
     analyze:
