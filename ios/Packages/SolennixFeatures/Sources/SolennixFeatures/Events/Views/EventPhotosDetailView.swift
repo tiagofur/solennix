@@ -15,6 +15,10 @@ public struct EventPhotosDetailView: View {
     @State private var lightboxIndex: Int?
     @Environment(\.horizontalSizeClass) private var sizeClass
 
+    // MARK: - @ScaledMetric sizes (Dynamic Type-safe, capped)
+    @ScaledMetric(relativeTo: .body) private var emptyIconSize: CGFloat = 48
+    private var cappedEmptyIconSize: CGFloat { min(emptyIconSize, 64) }
+
     public init(eventId: String, apiClient: APIClient) {
         self.eventId = eventId
         self._viewModel = State(initialValue: EventDetailViewModel(apiClient: apiClient))
@@ -89,7 +93,7 @@ public struct EventPhotosDetailView: View {
                 if viewModel.eventPhotos.isEmpty {
                     VStack(spacing: Spacing.md) {
                         Image(systemName: "camera")
-                            .font(.system(size: 48))
+                            .font(.system(size: cappedEmptyIconSize))
                             .foregroundStyle(SolennixColors.textTertiary)
 
                         Text("Sin fotos")

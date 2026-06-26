@@ -83,10 +83,13 @@ struct IntentWidgetKPIs: Codable {
 }
 
 struct PlanRequiredSnippetView: View {
+    @ScaledMetric(relativeTo: .body) private var lockIconSize: CGFloat = 30
+    private var cappedLockIconSize: CGFloat { min(lockIconSize, 44) }
+
     var body: some View {
         VStack(spacing: 10) {
             Image(systemName: "lock.shield")
-                .font(.system(size: 30))
+                .font(.system(size: cappedLockIconSize))
                 .foregroundStyle(.orange)
 
             Text("Plan Pro requerido")

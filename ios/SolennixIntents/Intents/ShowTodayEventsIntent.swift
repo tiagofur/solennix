@@ -130,10 +130,13 @@ struct TodayEventsSnippetView: View {
 }
 
 struct NoEventsToday: View {
+    @ScaledMetric(relativeTo: .body) private var successIconSize: CGFloat = 48
+    private var cappedSuccessIconSize: CGFloat { min(successIconSize, 64) }
+
     var body: some View {
         VStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 48))
+                .font(.system(size: cappedSuccessIconSize))
                 .foregroundStyle(.green)
 
             Text("Sin eventos hoy")

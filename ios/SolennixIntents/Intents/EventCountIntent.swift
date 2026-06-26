@@ -110,6 +110,12 @@ struct EventCountSnippetView: View {
     let counts: EventCounts
     let selectedPeriod: EventPeriod
 
+    // MARK: - @ScaledMetric sizes (Dynamic Type-safe, capped)
+    @ScaledMetric(relativeTo: .largeTitle) private var countFontSize: CGFloat = 48
+    private var cappedCountFontSize: CGFloat { min(countFontSize, 64) }
+    @ScaledMetric(relativeTo: .body) private var countIconSize: CGFloat = 40
+    private var cappedCountIconSize: CGFloat { min(countIconSize, 56) }
+
     var body: some View {
         VStack(spacing: 16) {
             // Main count
@@ -120,7 +126,7 @@ struct EventCountSnippetView: View {
                         .foregroundStyle(.secondary)
 
                     Text("\(selectedCount)")
-                        .font(.system(size: 48, weight: .bold, design: .rounded))
+                        .font(.system(size: cappedCountFontSize, weight: .bold, design: .rounded))
                         .foregroundStyle(.blue)
 
                     Text(selectedCount == 1 ? "evento" : "eventos")
@@ -131,7 +137,7 @@ struct EventCountSnippetView: View {
                 Spacer()
 
                 Image(systemName: "calendar")
-                    .font(.system(size: 40))
+                    .font(.system(size: cappedCountIconSize))
                     .foregroundStyle(.blue.opacity(0.3))
             }
 

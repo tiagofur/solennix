@@ -13,6 +13,10 @@ public struct BlockedDatesSheet: View {
     // Fix #9: guard delete button against double-tap while a delete is in-flight.
     @State private var isDeletingID: String? = nil
 
+    // MARK: - @ScaledMetric sizes (Dynamic Type-safe, capped)
+    @ScaledMetric(relativeTo: .body) private var emptyIconSize: CGFloat = 48
+    private var cappedEmptyIconSize: CGFloat { min(emptyIconSize, 64) }
+
     public init(viewModel: EventListViewModel) {
         self.viewModel = viewModel
     }
@@ -109,7 +113,7 @@ public struct BlockedDatesSheet: View {
     private var emptyState: some View {
         VStack(spacing: Spacing.md) {
             Image(systemName: "calendar.badge.checkmark")
-                .font(.system(size: 48))
+                .font(.system(size: cappedEmptyIconSize))
                 .foregroundStyle(SolennixColors.textTertiary)
 
             Text(CalendarStrings.blockedDatesEmpty)

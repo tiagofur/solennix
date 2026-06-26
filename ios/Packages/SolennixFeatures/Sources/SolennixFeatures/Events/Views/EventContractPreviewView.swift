@@ -15,6 +15,10 @@ public struct EventContractPreviewView: View {
     @Environment(ToastManager.self) private var toastManager
     @Environment(\.dismiss) private var dismiss
 
+    // MARK: - @ScaledMetric sizes (Dynamic Type-safe, capped)
+    @ScaledMetric(relativeTo: .body) private var gateIconSize: CGFloat = 48
+    private var cappedGateIconSize: CGFloat { min(gateIconSize, 64) }
+
     public init(eventId: String, apiClient: APIClient) {
         self.eventId = eventId
         self.apiClient = apiClient
@@ -84,7 +88,7 @@ public struct EventContractPreviewView: View {
             Spacer()
 
             Image(systemName: "lock.fill")
-                .font(.system(size: 48))
+                .font(.system(size: cappedGateIconSize))
                 .foregroundStyle(SolennixColors.warning)
 
             Text("Anticipo Requerido")
@@ -117,7 +121,7 @@ public struct EventContractPreviewView: View {
             Spacer()
 
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 48))
+                .font(.system(size: cappedGateIconSize))
                 .foregroundStyle(SolennixColors.error)
 
             Text("Faltan datos para el contrato")
