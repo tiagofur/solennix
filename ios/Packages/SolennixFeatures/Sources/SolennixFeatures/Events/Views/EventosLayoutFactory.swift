@@ -91,8 +91,13 @@ private struct EventosCalendarioSplit<Grid: View, Cell: View>: View {
         HStack(alignment: .top, spacing: Spacing.lg) {
             grid()
                 .frame(maxWidth: .infinity, alignment: .leading)
-            EventosFilteredList(vm: vm, cell: cell)
-                .frame(maxWidth: .infinity, alignment: .trailing)
+            // The list pane scrolls independently of the grid (iPad split). At
+            // short content it renders identically; scroll only engages when the
+            // month has many events.
+            ScrollView {
+                EventosFilteredList(vm: vm, cell: cell)
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .padding()
     }
@@ -106,11 +111,17 @@ private struct EventosCalendarioStack<Grid: View, Cell: View>: View {
     let cell: (Event) -> Cell
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.lg) {
-            grid()
-            EventosFilteredList(vm: vm, cell: cell)
+        // ScrollView root so the grid + filtered list scroll together when the
+        // month has many events (critical bug: content was clipped/non-scrollable
+        // in calendar mode). Content that fits renders identically (no scroll
+        // indicators appear when nothing overflows).
+        ScrollView {
+            VStack(alignment: .leading, spacing: Spacing.lg) {
+                grid()
+                EventosFilteredList(vm: vm, cell: cell)
+            }
+            .padding()
         }
-        .padding()
     }
 }
 
@@ -138,7 +149,19 @@ struct EventosFilteredList<Cell: View>: View {
                     .padding(.vertical, Spacing.sm)
             } else {
                 ForEach(vm.filteredEvents) { event in
-                    cell(event)
+                    // Inline ZStack: the shared cell in front of an opacity-0
+                    // NavigationLink so a tap navigates to the event detail WITHOUT
+                    // painting a disclosure chevron. Mirrors the `.lista` row in
+                    // `EventListView` (same Route.eventDetail value). Without this
+                    // wrap, calendar-mode events were not tappable (critical bug).
+                    ZStack {
+                        cell(event)
+                        NavigationLink(value: Route.eventDetail(id: event.id)) {
+                            EmptyView()
+                        }
+                        .opacity(0)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }

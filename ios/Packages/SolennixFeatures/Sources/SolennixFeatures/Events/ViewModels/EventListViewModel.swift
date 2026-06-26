@@ -295,6 +295,36 @@ public final class EventListViewModel {
         return original.prefix(1).uppercased() + original.dropFirst()
     }
 
+    // MARK: - Month Navigation (CalendarViewModel parity)
+    //
+    // Month navigation for the `.calendario` grid. The grid anchors to the
+    // START of a month, so adding/subtracting whole months from a month-start
+    // `currentMonth` stays on a month-start boundary. Each navigation drops
+    // `selectedDay` — a day selection from a previous month is no longer valid
+    // once the grid shows a different month.
+
+    /// Advance to the next month.
+    public func goToNextMonth() {
+        let calendar = Calendar.current
+        currentMonth = calendar.date(byAdding: .month, value: 1, to: currentMonth) ?? currentMonth
+        selectedDay = nil
+    }
+
+    /// Go back to the previous month.
+    public func goToPreviousMonth() {
+        let calendar = Calendar.current
+        currentMonth = calendar.date(byAdding: .month, value: -1, to: currentMonth) ?? currentMonth
+        selectedDay = nil
+    }
+
+    /// Snap back to the current month (the "Today" affordance).
+    public func goToToday() {
+        let now = Date()
+        let calendar = Calendar.current
+        currentMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
+        selectedDay = nil
+    }
+
     // MARK: - Unavailable Dates (moved from CalendarViewModel in Phase 6)
 
     /// Look up the `UnavailableDate` entry that covers a given day, if any.

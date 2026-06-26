@@ -168,4 +168,103 @@ final class EventListViewModelUnifiedStateTests: XCTestCase {
         XCTAssertNotEqual(vm.dateRangeStart, dayStart, "period chip rewrites the shared dateRangeStart")
         XCTAssertNotEqual(vm.dateRangeEnd, dayEnd)
     }
+
+    // MARK: - Month navigation (CalendarViewModel parity)
+
+    /// Anchor helper: pins `currentMonth` to the start of an arbitrary month so
+    /// the navigation assertions are deterministic (independent of `Date()`).
+    private func anchorMonth(_ vm: EventListViewModel, _ year: Int, _ month: Int) {
+        vm.currentMonth = date(year, month, 1)
+    }
+
+    func testGoToNextMonthAdvancesExactlyOneMonth() {
+        let vm = vm()
+        anchorMonth(vm, 2026, 6)
+
+        vm.goToNextMonth()
+
+        XCTAssertEqual(vm.currentMonth, date(2026, 7, 1), "goToNextMonth advances exactly one month, staying at month start")
+    }
+
+    func testGoToNextMonthCarriesTheYearAcrossDecember() {
+        let vm = vm()
+        anchorMonth(vm, 2026, 12)
+
+        vm.goToNextMonth()
+
+        XCTAssertEqual(vm.currentMonth, date(2027, 1, 1), "advancing from December rolls into January of the next year")
+    }
+
+    func testGoToPreviousMonthGoesBackExactlyOneMonth() {
+        let vm = vm()
+        anchorMonth(vm, 2026, 7)
+
+        vm.goToPreviousMonth()
+
+        XCTAssertEqual(vm.currentMonth, date(2026, 6, 1), "goToPreviousMonth goes back exactly one month, staying at month start")
+    }
+
+    func testGoToPreviousMonthCarriesTheYearBackFromJanuary() {
+        let vm = vm()
+        anchorMonth(vm, 2026, 1)
+
+        vm.goToPreviousMonth()
+
+        XCTAssertEqual(vm.currentMonth, date(2025, 12, 1), "going back from January rolls into December of the previous year")
+    }
+
+    func testGoToTodayResetsCurrentMonthToTheStartOfTheCurrentMonth() {
+        let vm = vm()
+        // Move the grid far away so "Today" is observably different.
+        anchorMonth(vm, 2020, 3)
+
+        vm.goToToday()
+
+        let cal = Calendar.current
+        let expected = cal.date(from: cal.dateComponents([.year, .month], from: Date())) ?? Date()
+        XCTAssertEqual(vm.currentMonth, expected, "goToToday snaps currentMonth back to the start of the real current month")
+    }
+
+    func testGoToNextMonthClearsSelectedDay() {
+        let vm = vm()
+        anchorMonth(vm, 2026, 6)
+        vm.selectDate(date(2026, 6, 15)) // establishes a non-nil selectedDay
+
+        XCTAssertNotNil(vm.selectedDay)
+
+        vm.goToNextMonth()
+
+        XCTAssertNil(vm.selectedDay, "navigating months must drop the stale day selection")
+    }
+
+    func testGoToPreviousMonthClearsSelectedDay() {
+        let vm = vm()
+        anchorMonth(vm, 2026, 6)
+        vm.selectDate(date(2026, 6, 15))
+
+        vm.goToPreviousMonth()
+
+        XCTAssertNil(vm.selectedDay, "navigating months must drop the stale day selection")
+    }
+
+    func testGoToTodayClearsSelectedDay() {
+        let vm = vm()
+        anchorMonth(vm, 2026, 6)
+        vm.selectDate(date(2026, 6, 15))
+
+        vm.goToToday()
+
+        XCTAssertNil(vm.selectedDay, "snapping to Today must drop the stale day selection")
+    }
+
+    func testRepeatedMonthNavigationIsCommutative() {
+        // next then previous returns to the origin (no drift / no skipped month).
+        let vm = vm()
+        anchorMonth(vm, 2026, 6)
+
+        vm.goToNextMonth()
+        vm.goToPreviousMonth()
+
+        XCTAssertEqual(vm.currentMonth, date(2026, 6, 1), "next-then-previous is a no-op on currentMonth")
+    }
 }
