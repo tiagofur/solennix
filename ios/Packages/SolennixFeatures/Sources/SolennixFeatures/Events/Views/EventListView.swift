@@ -20,7 +20,6 @@ public struct EventListView: View {
     @State private var showShareSheet = false
     @State private var csvFileURL: URL?
     @State private var showQuickQuote = false
-    @State private var showDateFilter = false
 
     /// Presents the `Personalizado` start-then-end custom-range picker (task
     /// 4.5). Flipped by `EventListPeriodFilterActions.presentCustomRangePicker`
@@ -44,9 +43,19 @@ public struct EventListView: View {
     /// real moved `CalendarGridView` + reused `eventCard`.
     @State private var viewMode: EventosViewMode = .lista
 
+    /// First-run onboarding tip (task 4.7, spec "First-Run Onboarding Tip").
+    /// Gated by the SINGLE `@AppStorage` flag owned by
+    /// `EventosOnboardingTipGate`: shown once on the first appearance of the
+    /// unified Eventos screen, suppressed forever after dismissal. The flag is
+    /// the sole source of truth — NOT the view-mode toggle's state — so the tip
+    /// never reappears on a subsequent launch regardless of which mode the user
+    /// lands in. See `EventosOnboardingTipGate` for the pure gating contract.
+    @AppStorage(EventosOnboardingTipGate.storageKey) private var eventosOnboardingShown = false
+
     // TipKit tips
     private let newEventTip = NewEventTip()
     private let quickQuoteTip = QuickQuoteTip()
+    private let onboardingTip = EventosOnboardingTip()
 
     @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 40
 
@@ -75,6 +84,14 @@ public struct EventListView: View {
                     // never reloads events nor touches the ViewModel's
                     // selectedDay/filters (the toggle holds only a binding).
                     EventosViewModeToggle(viewMode: $viewMode)
+                        // First-run onboarding tip (task 4.7), anchored on the
+                        // `Lista | Calendario` toggle because the tip explains
+                        // exactly that affordance. The presenter gates the
+                        // popover on the single `@AppStorage` flag and persists
+                        // it true once TipKit reports the tip dismissed — so it
+                        // shows on the first run and never again. See
+                        // `EventosOnboardingTipPresenter`.
+                        .eventosOnboardingTip(onboardingTip, shown: $eventosOnboardingShown)
                         .padding(.horizontal, Spacing.md)
                         .padding(.vertical, Spacing.sm)
 
@@ -157,31 +174,27 @@ public struct EventListView: View {
                             .accessibilityLabel(tr("events.list.toolbar.more_actions", "Más acciones"))
                     }
 
-                    // 3. Filters
-                    Menu {
-                        Picker(tr("events.list.toolbar.status_filter", "Estado"), selection: $viewModel.selectedStatus) {
-                            ForEach(viewModel.statusFilters, id: \.label) { filter in
-                                Text("\(filter.label) (\(filter.count))")
-                                    .tag(filter.status)
-                            }
+                    // 3. Filters — status-only (task 4.6, spec "Events App Bar"
+                    // MODIFIED). The legacy `calendar` date-range filter button
+                    // (the one that opened `DateFilterSheet`) was REMOVED: the
+                    // content-header `Lista | Calendario` toggle + the period
+                    // chips (task 4.5) are the sole calendar entry, so a second
+                    // date-range button in the app bar was redundant.
+                    //
+                    // `EventosAppBarFilter.allCases` is the single source of
+                    // truth — the toolbar renders EXACTLY the filter affordances
+                    // listed there (currently just `.status`), in both `.lista`
+                    // and `.calendario` (this toolbar is shared). A calendar
+                    // filter button cannot reappear unless `.calendar` is added
+                    // back to that enum (guarded by `EventListViewAppBarTests`).
+                    ForEach(EventosAppBarFilter.allCases, id: \.self) { filter in
+                        switch filter {
+                        case .status:
+                            EventosStatusFilterMenu(
+                                selectedStatus: $viewModel.selectedStatus,
+                                statusFilters: viewModel.statusFilters
+                            )
                         }
-                        .pickerStyle(.inline)
-                    } label: {
-                        Image(systemName: viewModel.selectedStatus != nil ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
-                            .font(.body)
-                            .foregroundStyle(SolennixColors.primary)
-                            .symbolEffect(.bounce, value: viewModel.selectedStatus)
-                            .accessibilityLabel(tr("events.list.toolbar.status_filter_accessibility", "Filtrar por estado"))
-                    }
-
-                    Button {
-                        showDateFilter = true
-                    } label: {
-                        Image(systemName: viewModel.activeFilterCount > 0 ? "calendar.badge.clock" : "calendar")
-                            .font(.body)
-                            .foregroundStyle(viewModel.activeFilterCount > 0 ? SolennixColors.primary : SolennixColors.primary)
-                            .symbolEffect(.bounce, value: viewModel.activeFilterCount)
-                            .accessibilityLabel(tr("events.list.filters.title", "Filtrar por fecha"))
                     }
                 }
             }
@@ -193,15 +206,6 @@ public struct EventListView: View {
             }
             .sheet(isPresented: $showQuickQuote) {
                 QuickQuoteView(apiClient: apiClient)
-            }
-            .sheet(isPresented: $showDateFilter) {
-                DateFilterSheet(
-                    startDate: $viewModel.dateRangeStart,
-                    endDate: $viewModel.dateRangeEnd,
-                    onClear: { viewModel.clearAdvancedFilters() }
-                )
-                .presentationDetents([.height(380)])
-                .presentationDragIndicator(.visible)
             }
             .sheet(item: $blockSheetAnchor) { anchor in
                 // Long-press → BlockDateSheet (task 4.4). The anchor carries the
@@ -274,91 +278,6 @@ public struct EventListView: View {
                         .tint(SolennixColors.primary)
                 }
             }
-    }
-
-    // MARK: - Date Filter Sheet
-
-    private struct DateFilterSheet: View {
-        @Binding var startDate: Date?
-        @Binding var endDate: Date?
-        var onClear: () -> Void
-        @Environment(\.dismiss) private var dismiss
-
-        private func tr(_ key: String, _ value: String) -> String {
-            FeatureL10n.text(key, value)
-        }
-
-        // DatePicker requires non-optional Binding — use sentinel Date()
-        private var startBinding: Binding<Date> {
-            Binding(get: { startDate ?? Date() }, set: { startDate = $0 })
-        }
-        private var endBinding: Binding<Date> {
-            Binding(get: { endDate ?? Date() }, set: { endDate = $0 })
-        }
-
-        var body: some View {
-            NavigationStack {
-                Form {
-                    Section {
-                        Toggle(isOn: Binding(
-                            get: { startDate != nil },
-                            set: { if !$0 { startDate = nil } else { startDate = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date() } }
-                        )) {
-                            Text(tr("events.list.filters.from", "Desde"))
-                                .font(.body)
-                        }
-                        .tint(SolennixColors.primary)
-                        .solennixRow()
-
-                        if startDate != nil {
-                            DatePicker("", selection: startBinding, displayedComponents: .date)
-                                .datePickerStyle(.compact)
-                                .labelsHidden()
-                                .tint(SolennixColors.primary)
-                                .solennixRow()
-                        }
-                    }
-
-                    Section {
-                        Toggle(isOn: Binding(
-                            get: { endDate != nil },
-                            set: { if !$0 { endDate = nil } else { endDate = Date() } }
-                        )) {
-                            Text(tr("events.list.filters.to", "Hasta"))
-                                .font(.body)
-                        }
-                        .tint(SolennixColors.primary)
-                        .solennixRow()
-
-                        if endDate != nil {
-                            DatePicker("", selection: endBinding, displayedComponents: .date)
-                                .datePickerStyle(.compact)
-                                .labelsHidden()
-                                .tint(SolennixColors.primary)
-                                .solennixRow()
-                        }
-                    }
-                }
-                .solennixListStyle()
-                .navigationTitle(tr("events.list.filters.title", "Filtrar por fecha"))
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button(tr("events.list.filters.clear", "Limpiar")) {
-                            onClear()
-                        }
-                        .foregroundStyle(SolennixColors.error)
-                    }
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button(tr("events.list.filters.apply", "Aplicar")) {
-                            dismiss()
-                        }
-                        .fontWeight(.semibold)
-                        .foregroundStyle(SolennixColors.primary)
-                    }
-                }
-            }
-        }
     }
 
     // MARK: - Personalizado Custom-Range Sheet (task 4.5)
