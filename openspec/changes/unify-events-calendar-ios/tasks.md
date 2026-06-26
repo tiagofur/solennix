@@ -79,7 +79,7 @@ Chain strategy: feature-branch-chain
 
 ## Phase 5 — Settings sync preferences & navigation
 
-- [ ] **5.1** [RED→GREEN test+impl] Create `CalendarSyncPreferencesViewModel` (`togglePreference`/`inFlightKeys` parity with `NotificationPreferencesViewModel`); master toggle ON→`requestFullAccessToEvents`, denied→revert+guide to Settings+skip sync; binary destination default `.solennix`, `.personal`→warning. Covers toggle/permission (2), binary destination default+warning (2), preferences-screen inFlightKeys.
+- [x] **5.1** [RED→GREEN test+impl] Create `CalendarSyncPreferencesViewModel` (`togglePreference`/`inFlightKeys` parity with `NotificationPreferencesViewModel`); master toggle ON→`requestFullAccessToEvents`, denied→revert+guide to Settings+skip sync; binary destination default `.solennix`, `.personal`→warning. Covers toggle/permission (2), binary destination default+warning (2), preferences-screen inFlightKeys.
 - [ ] **5.2** [RED→GREEN impl] Create `CalendarSyncPreferencesView` (master `preferenceToggle`, binary destination selector, write-only warning, `.tint(SolennixColors.primary)`, `.solennixRow()`). Wire destination change → `EventRepository.changeDestination`.
 - [ ] **5.3** [RED→GREEN impl] `SolennixCore/.../Route.swift`: add `case calendarSyncPreferences`. `ios/Solennix/Navigation/Route.swift`: resolve it to `CalendarSyncPreferencesView`. Covers nav-route scenario.
 - [ ] **5.4** [RED→GREEN impl] Remove `.calendar` from `Tab` + `SidebarSection` + `mainSections` (4 destinations: home, events, clients, more). App-test assertions: compact tabs exactly 4, sidebar excludes calendar. Covers tab/sidebar (2).
