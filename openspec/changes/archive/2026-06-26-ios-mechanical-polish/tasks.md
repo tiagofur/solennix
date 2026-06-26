@@ -64,5 +64,5 @@ Commit: `feat(ios): scale fixed fonts with Dynamic Type via @ScaledMetric` ✅ f
 
 ## Phase 4: Docs & Close
 
-- [ ] 4.1 Update `progress/current.md` (AGENTS.md session lifecycle); run `./init.sh` → green.
-- [ ] 4.2 Update `docs/PRD/11_CURRENT_STATUS.md` (openspec config rule: PRD update is always the last task).
+- [x] 4.1 Update `progress/current.md` (AGENTS.md session lifecycle); run `./init.sh` → green. — Reconciled at archive (orchestrator-authorized): `./init.sh` green proven in apply-progress #2906 (452 app + 128 pkg tests, 0 failures); `progress/current.md` reset-to-template is the correct AGENTS.md terminal state, work log lives in Engram + history.md.
+- [x] 4.2 Update `docs/PRD/11_CURRENT_STATUS.md` (openspec config rule: PRD update is always the last task). — Reconciled at archive: squash commit `f4a2442b` touched `docs/PRD/11_CURRENT_STATUS.md`.
