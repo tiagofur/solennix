@@ -62,7 +62,7 @@ public extension View {
                 message: "Esta accion no se puede deshacer. Se eliminaran todos los datos asociados.",
                 destructiveTitle: "Eliminar"
             ) {
-                print("Confirmed deletion")
+                // No-op preview handler.
             }
         }
     }

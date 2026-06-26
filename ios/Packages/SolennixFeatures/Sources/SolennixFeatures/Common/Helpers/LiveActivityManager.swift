@@ -1,8 +1,11 @@
 #if canImport(ActivityKit)
 import ActivityKit
 import Foundation
+import os.log
 import SolennixCore
 import SolennixNetwork
+
+private let logger = Logger(subsystem: "com.solennix.app", category: "LiveActivityManager")
 
 // MARK: - Live Activity Manager
 
@@ -64,13 +67,13 @@ public final class LiveActivityManager {
     @discardableResult
     public func startEventActivity(event: Event, client: Client) -> Bool {
         guard areActivitiesEnabled else {
-            print("[LiveActivityManager] Las Live Activities no están habilitadas")
+            logger.notice("Live Activities are not enabled")
             return false
         }
 
         // Verificar que no exista ya una actividad para este evento
         guard activeActivities[event.id] == nil else {
-            print("[LiveActivityManager] Ya existe una actividad para el evento \(event.id)")
+            logger.notice("Activity already exists for event \(event.id, privacy: .public)")
             return false
         }
 
@@ -100,10 +103,10 @@ public final class LiveActivityManager {
 
             activeActivities[event.id] = activity.id
             observePushToken(for: activity, eventId: event.id)
-            print("[LiveActivityManager] Actividad iniciada para evento \(event.id): \(activity.id)")
+            logger.info("Activity started for event \(event.id, privacy: .public): \(activity.id, privacy: .public)")
             return true
         } catch {
-            print("[LiveActivityManager] Error al iniciar actividad: \(error.localizedDescription)")
+            logger.error("Failed to start activity: \(error.localizedDescription, privacy: .public)")
             return false
         }
     }
@@ -140,7 +143,8 @@ public final class LiveActivityManager {
 
     private func sendTokenToBackend(eventId: String, pushToken: String) async {
         guard let apiClient else {
-            print("[LiveActivityManager] APIClient no configurado, no se envía token")
+            logger.error("APIClient not configured; push token not sent for event \(eventId, privacy: .public)")
+            SentryHelper.capture(message: "LiveActivity push token dropped: APIClient not configured")
             return
         }
         let body: [String: String] = [
@@ -152,9 +156,10 @@ public final class LiveActivityManager {
                 Endpoint.registerLiveActivityToken,
                 body: AnyCodable(body)
             )
-            print("[LiveActivityManager] Push token registrado para evento \(eventId)")
+            logger.info("Push token registered for event \(eventId, privacy: .public)")
         } catch {
-            print("[LiveActivityManager] Error registrando push token: \(error.localizedDescription)")
+            logger.error("Failed to register push token: \(error.localizedDescription, privacy: .public)")
+            SentryHelper.capture(error: error, context: "live_activity_register_push_token")
         }
     }
 
@@ -165,9 +170,10 @@ public final class LiveActivityManager {
         guard let apiClient else { return }
         do {
             try await apiClient.delete(Endpoint.liveActivityByEvent(eventId))
-            print("[LiveActivityManager] Tokens limpiados en backend para evento \(eventId)")
+            logger.info("Backend tokens cleared for event \(eventId, privacy: .public)")
         } catch {
-            print("[LiveActivityManager] Error limpiando tokens: \(error.localizedDescription)")
+            logger.error("Failed to clear backend tokens: \(error.localizedDescription, privacy: .public)")
+            SentryHelper.capture(error: error, context: "live_activity_clear_tokens")
         }
     }
 
@@ -180,13 +186,13 @@ public final class LiveActivityManager {
     ///   - status: El nuevo estado ("setup", "in_progress", "completed").
     public func updateEventActivity(eventId: String, status: String) async {
         guard let activityId = activeActivities[eventId] else {
-            print("[LiveActivityManager] No se encontró actividad para evento \(eventId)")
+            logger.notice("No activity found to update for event \(eventId, privacy: .public)")
             return
         }
 
         // Buscar la actividad activa por ID
         guard let activity = Activity<SolennixEventAttributes>.activities.first(where: { $0.id == activityId }) else {
-            print("[LiveActivityManager] Actividad \(activityId) no encontrada en el sistema")
+            logger.notice("Activity \(activityId, privacy: .public) not found in the system")
             activeActivities.removeValue(forKey: eventId)
             return
         }
@@ -213,7 +219,7 @@ public final class LiveActivityManager {
         let updatedContent = ActivityContent(state: updatedState, staleDate: nil)
 
         await activity.update(updatedContent)
-        print("[LiveActivityManager] Actividad actualizada para evento \(eventId): \(status)")
+        logger.info("Activity updated for event \(eventId, privacy: .public): \(status, privacy: .public)")
     }
 
     // MARK: - Finalizar Actividad
@@ -223,7 +229,7 @@ public final class LiveActivityManager {
     /// - Parameter eventId: El ID del evento cuya actividad se finalizará.
     public func endEventActivity(eventId: String) async {
         guard let activityId = activeActivities[eventId] else {
-            print("[LiveActivityManager] No se encontró actividad para finalizar: \(eventId)")
+            logger.notice("No activity found to end for event \(eventId, privacy: .public)")
             return
         }
 
@@ -248,7 +254,7 @@ public final class LiveActivityManager {
         await activity.end(finalContent, dismissalPolicy: .after(.now + 60 * 5))
         activeActivities.removeValue(forKey: eventId)
         await cleanupBackendTokens(eventId: eventId)
-        print("[LiveActivityManager] Actividad finalizada para evento \(eventId)")
+        logger.info("Activity ended for event \(eventId, privacy: .public)")
     }
 
     // MARK: - Finalizar Todas las Actividades
@@ -271,7 +277,7 @@ public final class LiveActivityManager {
             await cleanupBackendTokens(eventId: eventId)
         }
         activeActivities.removeAll()
-        print("[LiveActivityManager] Todas las actividades finalizadas")
+        logger.info("All activities ended")
     }
 
     // MARK: - Consultas

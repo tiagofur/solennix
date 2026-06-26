@@ -157,7 +157,7 @@ public struct QuickClientSheet: View {
 // MARK: - Preview
 
 #Preview("Quick Client Sheet") {
-    QuickClientSheet(apiClient: APIClient()) { client in
-        print("Created: \(client.name)")
+    QuickClientSheet(apiClient: APIClient()) { _ in
+        // No-op preview handler.
     }
 }
