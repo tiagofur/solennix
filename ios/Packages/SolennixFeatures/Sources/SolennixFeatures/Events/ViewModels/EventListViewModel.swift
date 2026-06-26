@@ -409,6 +409,16 @@ public final class EventListViewModel {
     /// Day-tap: filter to a single day. Sets `selectedDay`, bounds the range to
     /// that day's start-of-day, and clears any active period chip.
     public func selectDate(_ day: Date) {
+        // Toggle-off (Phase 5 UX): tapping the ALREADY-SELECTED day clears it,
+        // returning to the unfiltered "show all" baseline (the same state month
+        // navigation produces). Mirrors the clearable-chip behavior.
+        if selectedDay == day {
+            selectedDay = nil
+            periodFilter = nil
+            dateRangeStart = nil
+            dateRangeEnd = nil
+            return
+        }
         selectedDay = day
         periodFilter = nil
         let start = Calendar.current.startOfDay(for: day)
@@ -421,6 +431,16 @@ public final class EventListViewModel {
     /// `selectedDay`. `.custom` defers to the two-tap custom-range setters
     /// (it clears any prior range so re-tapping the chip resets cleanly).
     public func setPeriodFilter(_ filter: EventPeriodFilter) {
+        // Toggle-off (Phase 5 UX): tapping the ALREADY-ACTIVE chip clears it, so
+        // the user can always recover to "show all" by re-tapping the active chip
+        // (Apple HIG clearable control). Applies to every chip incl. `.custom`.
+        if periodFilter == filter {
+            periodFilter = nil
+            selectedDay = nil
+            dateRangeStart = nil
+            dateRangeEnd = nil
+            return
+        }
         periodFilter = filter
         selectedDay = nil
         let calendar = Calendar.current
@@ -456,6 +476,38 @@ public final class EventListViewModel {
         let start = dateRangeStart ?? end
         dateRangeStart = Swift.min(start, end)
         dateRangeEnd = Swift.max(start, end)
+    }
+
+    /// Clears the filter state that belongs to the OTHER view mode, so switching
+    /// Lista ↔ Calendario never carries a stale selection across (UX fix,
+    /// Phase 5 — Apple HIG: each mode's filter surface is self-contained).
+    ///   • `.lista`     → drops the calendar's day selection + its imposed range
+    ///                     (the period chips own the list's date filter; a stale
+    ///                     calendar day must not pin the list on a single day).
+    ///   • `.calendario`→ drops any period-chip filter + its imposed range
+    ///                     (the grid is the date filter in Calendario).
+    public func clearFiltersForViewMode(_ mode: EventosViewMode) {
+        // Each branch clears the OTHER mode's filter residue against the shared
+        // `dateRange*` surface, so a mode switch always lands on a predictable
+        // "show all" slate for that mode's filter UI.
+        switch mode {
+        case .lista:
+            // The period chips own Lista's date filter; a stale calendar day must
+            // not pin the list on a single day. Clears `selectedDay` AND the range
+            // it imposed (the day-tap sets both). Deviation from the literal spec
+            // pseudocode (which cleared only `selectedDay`): leaving `dateRange*`
+            // pinned to the day would trap the list on that one day with no visible
+            // indicator — clearing it matches the `.calendario` branch for symmetry.
+            selectedDay = nil
+            dateRangeStart = nil
+            dateRangeEnd = nil
+        case .calendario:
+            // The grid is the date filter in Calendario; drop any period-chip
+            // filter + the range it imposed so the grid shows the full month.
+            periodFilter = nil
+            dateRangeStart = nil
+            dateRangeEnd = nil
+        }
     }
 
     /// Maps a `Calendar.dateInterval` (half-open `[start, end)`) onto the

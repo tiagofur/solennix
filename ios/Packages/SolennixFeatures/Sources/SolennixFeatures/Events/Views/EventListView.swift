@@ -43,6 +43,12 @@ public struct EventListView: View {
     /// real moved `CalendarGridView` + reused `eventCard`.
     @State private var viewMode: EventosViewMode = .lista
 
+    /// Presents the `BlockedDatesSheet` (Phase 5, Cambio 5) — the discoverable
+    /// management surface for blocked dates. Flipped from a toolbar button that
+    /// is ONLY rendered in `.calendario` (the long-press → `BlockDateSheet`
+    /// still creates blocks; this sheet reviews/removes them).
+    @State private var showBlockedDatesSheet = false
+
     /// First-run onboarding tip (task 4.7, spec "First-Run Onboarding Tip").
     /// Gated by the SINGLE `@AppStorage` flag owned by
     /// `EventosOnboardingTipGate`: shown once on the first appearance of the
@@ -96,23 +102,18 @@ public struct EventListView: View {
                         .padding(.vertical, Spacing.sm)
 
                     // Period-filter chips `Hoy · Esta semana · Este mes ·
-                    // Personalizado` (task 4.5). Pinned in the top safe-area
-                    // inset so the active filter stays visible in BOTH modes —
-                    // INCLUDING empty / filtered-empty states (without pinning,
-                    // tapping a chip that yields no events would hide the chips
-                    // and trap the user with no way to change the filter). This
-                    // is a persistent PRIMARY content-header control alongside
-                    // the view-mode toggle, not a scrollable list row: the
-                    // earlier "chips must stay inside the primary ScrollView"
-                    // note referred to chips nested as list ROWS (which can
-                    // steal large-title edge tracking); a pinned safe-area-inset
-                    // control is rendered in a separate region and, like the
-                    // `EventosViewModeToggle` already proven in this inset, does
-                    // not compete with the primary scroll view for tracking.
-                    EventListPeriodFilterBar(viewModel: viewModel) {
-                        showCustomRangeSheet = true
+                    // Personalizado` (task 4.5). Shown ONLY in `.lista` (Phase 5
+                    // UX fix): in Calendario the grid itself is the date filter,
+                    // so the chips would be redundant and compete with the grid
+                    // for the user's attention. They stay pinned in the top
+                    // safe-area inset (in Lista) so the active filter survives an
+                    // empty / filtered-empty state without trapping the user.
+                    if viewMode == .lista {
+                        EventListPeriodFilterBar(viewModel: viewModel) {
+                            showCustomRangeSheet = true
+                        }
+                        .padding(.vertical, Spacing.xs)
                     }
-                    .padding(.vertical, Spacing.xs)
 
                     // Only static banners live in safeAreaInset below the chips.
                     if viewModel.isShowingCachedData {
@@ -131,6 +132,14 @@ public struct EventListView: View {
                 // them (critical bug: loadUnavailableDates existed but was never
                 // called, so blocked dates never rendered in calendar mode).
                 await viewModel.loadUnavailableDates()
+            }
+            // Phase 5 UX: switching modes clears the OTHER mode's filter residue
+            // so neither carries a stale selection across (see
+            // `EventListViewModel.clearFiltersForViewMode`). A flip is still
+            // purely presentational — it never reloads `events` or moves the grid
+            // month (asserted by `testClearFiltersForViewModeNeverTouches…`).
+            .onChange(of: viewMode) { _, newMode in
+                viewModel.clearFiltersForViewMode(newMode)
             }
             .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -200,6 +209,24 @@ public struct EventListView: View {
                             )
                         }
                     }
+
+                    // 4. Blocked-dates management (Phase 5, Cambio 5) — ONLY in
+                    // `.calendario`. A discoverable entry to review/remove blocked
+                    // dates (the long-press → `BlockDateSheet` still CREATES them).
+                    // This is a management affordance, NOT a filter, so it lives
+                    // outside `EventosAppBarFilter` (which guards the FILTER set and
+                    // is asserted by `EventListViewAppBarTests` to stay `[.status]`).
+                    if viewMode == .calendario {
+                        Button {
+                            showBlockedDatesSheet = true
+                        } label: {
+                            Image(systemName: "calendar.badge.exclamationmark")
+                                .font(.body)
+                                .foregroundStyle(SolennixColors.primary)
+                                .symbolEffect(.bounce, value: viewModel.unavailableDates.count)
+                        }
+                        .accessibilityLabel(tr("events.list.toolbar.blocked_dates", "Fechas bloqueadas"))
+                    }
                 }
             }
         }
@@ -240,6 +267,12 @@ public struct EventListView: View {
                 PeriodCustomRangeSheet(viewModel: viewModel)
                     .presentationDetents([.height(360)])
                     .presentationDragIndicator(.visible)
+            }
+            .sheet(isPresented: $showBlockedDatesSheet) {
+                // Blocked-dates management (Phase 5, Cambio 5). Reads the SAME
+                // `unavailableDates` the grid renders from, so deleting a row
+                // here updates the grid's blocked indicators on dismiss.
+                BlockedDatesSheet(viewModel: viewModel)
             }
             .confirmationDialog(
                 tr("events.list.delete_confirm.title", "Eliminar evento"),
