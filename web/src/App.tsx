@@ -55,7 +55,6 @@ const InventoryList = React.lazy(() => import("@/pages/Inventory/InventoryList")
 const InventoryForm = React.lazy(() => import("@/pages/Inventory/InventoryForm").then((m) => ({ default: m.InventoryForm })));
 const InventoryDetails = React.lazy(() => import("@/pages/Inventory/InventoryDetails").then((m) => ({ default: m.InventoryDetails })));
 
-const CalendarView = React.lazy(() => import("@/pages/Calendar/CalendarView").then((m) => ({ default: m.CalendarView })));
 const QuickQuotePage = React.lazy(() => import("@/pages/QuickQuote/QuickQuotePage").then((m) => ({ default: m.QuickQuotePage })));
 const PublicEventFormPage = React.lazy(() => import("@/pages/PublicEventForm/PublicEventFormPage").then((m) => ({ default: m.PublicEventFormPage })));
 const ClientPortalPage = React.lazy(() => import("@/pages/ClientPortal/ClientPortalPage").then((m) => ({ default: m.ClientPortalPage })));
@@ -121,7 +120,7 @@ function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/search" element={<SearchPage />} />
 
-                <Route path="/calendar" element={<CalendarView />} />
+                <Route path="/calendar" element={<Navigate to="/events?view=calendar" replace />} />
                 <Route path="/cotizacion-rapida" element={<QuickQuotePage />} />
                 <Route path="/events" element={<EventList />} />
                 <Route path="/events/new" element={<EventForm />} />

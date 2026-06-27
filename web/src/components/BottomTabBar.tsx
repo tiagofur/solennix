@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
-  Calendar,
   PartyPopper,
   Users,
   MoreHorizontal,
@@ -21,7 +20,6 @@ export const BottomTabBar: React.FC = () => {
 
   const TABS = [
     { name: t('nav.dashboard'), href: '/dashboard', icon: LayoutDashboard },
-    { name: t('nav.calendar'), href: '/calendar', icon: Calendar },
     { name: t('nav.events'), href: '/events', icon: PartyPopper },
     { name: t('nav.clients'), href: '/clients', icon: Users },
   ];

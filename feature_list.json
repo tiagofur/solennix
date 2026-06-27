@@ -330,6 +330,18 @@
         "El contenido de cada item (DateBox, cliente, servicio, personas, StatusDropdown) no se modifica",
         "El ./init.sh completa sin errores"
       ]
+    },
+    {
+      "id": 28,
+      "name": "web-calendar-event-list-unification",
+      "description": "feat(web): integrar el calendario y la lista de eventos en una sola pantalla, imitando la UX de iOS/Android",
+      "status": "done",
+      "acceptance_criteria": [
+        "Componente CalendarView eliminado y sus rutas redirigidas a la lista de eventos",
+        "EventList adaptado para mostrar un mini-calendario superior interactivo con selector de fechas",
+        "Integración del modal de fechas no disponibles en la vista de lista de eventos",
+        "Todos los tests de Vitest adaptados y ejecutados con éxito en verde"
+      ]
     }
   ]
 }

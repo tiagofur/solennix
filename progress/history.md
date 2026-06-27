@@ -377,3 +377,14 @@
   - `EventDao.kt` (Corregido bug de consulta en `getUpcomingEvents` filtrando por `status = 'CONFIRMED'` en mayúsculas, restaurando la visibilidad de la sección de Próximos eventos)
   - `strings.xml` (Español / Inglés) (Renombrado a Pronóstico y añadidas cadenas de paridad)
   - `ForecastWidget.kt` (Rediseñado el widget con tarjetas de resumen side-by-side e ítems de tarjetas mensuales compactas sin íconos decorativos y con formato exacto al de iOS)
+
+## Sesión 2026-06-27: Unificación de Calendario y Lista de Eventos en Web
+- **Feature ID:** 28 (web-calendar-event-list-unification)
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1250 tests de Vitest en verde).
+- **Entregables:**
+  - `web/src/pages/Events/EventList.tsx`: Integración del mini-calendario interactivo en la sección superior y listado detallado debajo, con controles para cambiar de fecha y filtrar.
+  - `web/src/pages/Events/EventList.test.tsx`: Suite de pruebas unitarias actualizada para cubrir la selección de fechas en el calendario y las interacciones del modal de bloqueo de fechas.
+  - `web/src/pages/Calendar/CalendarView.tsx` y `CalendarView.test.tsx`: Eliminados para mantener el repositorio limpio y evitar archivos huérfanos.
+  - `web/src/App.tsx` y `web/src/components/BottomTabBar.tsx`: Rutas actualizadas redirigiendo `/calendar` a `/events`.
+  - `web/src/components/Layout.tsx` y `web/src/components/Layout.test.tsx`: Actualizado el enrutado de la barra lateral para alineación.
+

@@ -22,6 +22,16 @@
       "to_aria": "Filter to date",
       "clear_aria": "Clear date filter"
     },
+    "period": {
+      "today": "Today",
+      "week": "This week",
+      "month": "This month",
+      "custom": "Custom"
+    },
+    "view_mode": {
+      "list": "List",
+      "calendar": "Calendar"
+    },
     "empty": {
       "no_results_title": "No events found",
       "no_results_description": "No events matched. Try another status or clear the search text.",

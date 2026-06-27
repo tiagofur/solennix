@@ -22,6 +22,16 @@
       "to_aria": "Filtrar hasta fecha",
       "clear_aria": "Limpiar filtro de fechas"
     },
+    "period": {
+      "today": "Hoy",
+      "week": "Esta semana",
+      "month": "Este mes",
+      "custom": "Personalizado"
+    },
+    "view_mode": {
+      "list": "Lista",
+      "calendar": "Calendario"
+    },
     "empty": {
       "no_results_title": "No se encontraron eventos",
       "no_results_description": "No hay eventos que coincidan. Probá con otro estado o borrando el texto de búsqueda.",

@@ -3,10 +3,13 @@ import { X, Calendar as CalendarIcon, Plus, Trash2, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../hooks/useToast';
 import { unavailableDatesService, UnavailableDate } from '../../../services/unavailableDatesService';
-import clsx from 'clsx';
 import { logError } from '../../../lib/errorHandler';
 import { format, type Locale } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
+
+import { Button } from '../../../components/Button';
+import { Card } from '../../../components/Card';
+import { Input } from '../../../components/Input';
 
 const parseLocalDate = (dateStr: string): Date => {
   const [y, m, d] = dateStr.split('-').map(Number);
@@ -57,7 +60,6 @@ export const UnavailableDatesModal: React.FC<UnavailableDatesModalProps> = ({
       setBlocks(data);
     } catch (error) {
       logError('Failed to fetch unavailable date blocks', error);
-      // silently ignore — calendar still works without the list
     } finally {
       setFetchingBlocks(false);
     }
@@ -120,9 +122,12 @@ export const UnavailableDatesModal: React.FC<UnavailableDatesModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm fallback-bg">
-      <div className="bg-card w-full max-w-md rounded-2xl shadow-xl border border-border overflow-hidden fade-in flex flex-col max-h-[90vh]">
-
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm">
+      <Card
+        variant="glass"
+        padding="none"
+        className="w-full max-w-md shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border bg-surface-alt/50 shrink-0">
           <h2 className="text-xl font-bold flex items-center text-text">
@@ -132,7 +137,7 @@ export const UnavailableDatesModal: React.FC<UnavailableDatesModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="text-text-secondary hover:text-text transition-colors p-2 hover:bg-surface rounded-full"
+            className="text-text-secondary hover:text-text transition-colors p-2 hover:bg-surface rounded-full active-ios-scale"
             aria-label={t('action.cancel')}
           >
             <X className="h-5 w-5" />
@@ -141,7 +146,6 @@ export const UnavailableDatesModal: React.FC<UnavailableDatesModalProps> = ({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
-
           {/* Existing blocks list */}
           {fetchingBlocks ? (
             <div className="flex items-center justify-center py-6">
@@ -152,7 +156,7 @@ export const UnavailableDatesModal: React.FC<UnavailableDatesModalProps> = ({
               <div className="h-12 w-12 bg-surface-alt rounded-full flex items-center justify-center mx-auto mb-3">
                 <CalendarIcon className="h-6 w-6 text-text-tertiary" />
               </div>
-              <p className="text-text-secondary text-sm">{t('blocked_dates.empty')}</p>
+              <p className="text-text-secondary text-sm font-medium">{t('blocked_dates.empty')}</p>
               <p className="text-text-tertiary text-xs mt-1">{t('blocked_dates.empty_subtitle')}</p>
             </div>
           ) : (
@@ -161,10 +165,10 @@ export const UnavailableDatesModal: React.FC<UnavailableDatesModalProps> = ({
                 {blocks.map((block) => (
                   <div
                     key={block.id}
-                    className="flex items-center justify-between p-3 bg-surface rounded-xl border border-border"
+                    className="flex items-center justify-between p-3 bg-surface-alt/45 rounded-xl border border-border/80"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-text">
+                      <p className="text-sm font-bold text-text">
                         {formatBlockRange(block)}
                       </p>
                       {block.reason && (
@@ -177,7 +181,7 @@ export const UnavailableDatesModal: React.FC<UnavailableDatesModalProps> = ({
                       type="button"
                       onClick={() => handleDelete(block.id)}
                       disabled={deletingId === block.id}
-                      className="ml-3 p-1.5 text-text-tertiary hover:text-error hover:bg-error/10 rounded-lg transition-colors shrink-0 disabled:opacity-50"
+                      className="ml-3 p-1.5 text-text-tertiary hover:text-error hover:bg-error/10 rounded-lg transition-colors shrink-0 disabled:opacity-50 active-ios-scale"
                       aria-label={t('action.delete')}
                     >
                       {deletingId === block.id ? (
@@ -194,29 +198,28 @@ export const UnavailableDatesModal: React.FC<UnavailableDatesModalProps> = ({
 
           {/* Add new block form / button */}
           {showForm ? (
-            <div className="border border-border rounded-xl p-4 space-y-4 bg-surface-alt/30">
-              <h3 className="text-sm font-semibold text-text">{t('block.range_title')}</h3>
+            <Card variant="glass" padding="sm" className="border-primary/20 space-y-4 bg-surface-alt/10">
+              <h3 className="text-sm font-bold text-text">{t('block.range_title')}</h3>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-text mb-1.5">
+                    <label className="block text-xs font-semibold text-text-secondary mb-1.5">
                       {t('block.start_date')} *
                     </label>
-                    <input
+                    <Input
                       type="date"
                       required
                       value={formData.start_date}
                       onChange={(e) =>
                         setFormData({ ...formData, start_date: e.target.value })
                       }
-                      className="w-full px-3 py-2 bg-surface border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-text text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-text mb-1.5">
+                    <label className="block text-xs font-semibold text-text-secondary mb-1.5">
                       {t('block.end_date')} *
                     </label>
-                    <input
+                    <Input
                       type="date"
                       required
                       min={formData.start_date}
@@ -224,52 +227,47 @@ export const UnavailableDatesModal: React.FC<UnavailableDatesModalProps> = ({
                       onChange={(e) =>
                         setFormData({ ...formData, end_date: e.target.value })
                       }
-                      className="w-full px-3 py-2 bg-surface border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-text text-sm"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-text mb-1.5">
+                  <label className="block text-xs font-semibold text-text-secondary mb-1.5">
                     {t('block.reason_label')}
                   </label>
-                  <input
+                  <Input
                     type="text"
                     placeholder={t('block.reason_placeholder_range')}
                     value={formData.reason}
                     onChange={(e) =>
                       setFormData({ ...formData, reason: e.target.value })
                     }
-                    className="w-full px-3 py-2 bg-surface border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-text text-sm"
                   />
                 </div>
-                <div className="flex gap-2">
-                  <button
+                <div className="flex gap-3">
+                  <Button
                     type="button"
+                    variant="glass"
                     onClick={() => setShowForm(false)}
-                    className="flex-1 px-4 py-2 text-sm font-medium text-text-secondary bg-surface-alt border border-border rounded-xl hover:bg-surface transition-colors"
+                    className="flex-1 active-ios-scale"
                   >
                     {t('action.cancel')}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
+                    variant="primary"
                     disabled={loading}
-                    className={clsx(
-                      'flex-1 px-4 py-2 text-sm font-medium text-white rounded-xl transition-all flex items-center justify-center',
-                      loading
-                        ? 'bg-primary/70 cursor-not-allowed'
-                        : 'premium-gradient hover:opacity-90',
-                    )}
+                    className="flex-1 active-ios-scale font-bold text-white premium-gradient"
                   >
                     {t('block.save')}
-                  </button>
+                  </Button>
                 </div>
               </form>
-            </div>
+            </Card>
           ) : (
             <button
               type="button"
               onClick={() => setShowForm(true)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-dashed border-border text-sm font-medium text-text-secondary rounded-xl hover:border-primary hover:text-primary transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-dashed border-border text-sm font-semibold text-text-secondary rounded-xl hover:border-primary/50 hover:text-primary transition-all active-ios-scale bg-surface-alt/25"
             >
               <Plus className="h-4 w-4" />
               {t('block.add_range')}
@@ -279,15 +277,16 @@ export const UnavailableDatesModal: React.FC<UnavailableDatesModalProps> = ({
 
         {/* Footer */}
         <div className="p-4 border-t border-border bg-surface-alt/50 shrink-0">
-          <button
+          <Button
             type="button"
+            variant="glass"
             onClick={onClose}
-            className="w-full px-5 py-2.5 text-sm font-medium text-text-secondary hover:text-text bg-surface-alt hover:bg-surface border border-border rounded-xl transition-colors"
+            className="w-full active-ios-scale font-semibold text-text-secondary hover:text-text"
           >
             {t('action.cancel')}
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

@@ -215,7 +215,6 @@ describe('Layout', () => {
     renderLayout();
     const sidebar = screen.getByRole('complementary', { name: /navegación principal/i });
     expect(within(sidebar).getByText(/Dashboard|Inicio|nav\.dashboard/)).toBeInTheDocument();
-    expect(within(sidebar).getByText(/Calendario|nav\.calendar/)).toBeInTheDocument();
     expect(within(sidebar).getByText(/Eventos|nav\.events/)).toBeInTheDocument();
     expect(within(sidebar).getByText(/Clientes|nav\.clients/)).toBeInTheDocument();
     expect(within(sidebar).getByText(/Productos|nav\.products/)).toBeInTheDocument();
