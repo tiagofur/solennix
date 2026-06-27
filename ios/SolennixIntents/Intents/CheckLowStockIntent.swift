@@ -5,8 +5,8 @@ import SwiftUI
 
 struct CheckLowStockIntent: AppIntent {
 
-    static var title: LocalizedStringResource = "Revisar Stock Bajo"
-    static var description = IntentDescription("Muestra los items de inventario con stock bajo")
+    static var title: LocalizedStringResource = "intent.lowstock.title"
+    static var description = IntentDescription("intent.lowstock.desc")
 
     static var openAppWhenRun: Bool = false
 
@@ -16,7 +16,7 @@ struct CheckLowStockIntent: AppIntent {
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         guard IntentSharedDataStore.hasProAccess else {
             return .result(
-                dialog: "Plan Pro requerido para usar este atajo.",
+                dialog: IntentDialog(stringLiteral: String(localized: "intent.dialog.pro_required")),
                 view: PlanRequiredSnippetView()
             )
         }
@@ -25,14 +25,19 @@ struct CheckLowStockIntent: AppIntent {
 
         if lowStockCount == 0 {
             return .result(
-                dialog: "Todo tu inventario esta en orden. No hay items con stock bajo.",
+                dialog: IntentDialog(stringLiteral: String(localized: "intent.lowstock.dialog.ok")),
                 view: AllStockOKView()
             )
         }
 
-        let itemWord = lowStockCount == 1 ? "item" : "items"
+        if lowStockCount == 1 {
+            return .result(
+                dialog: IntentDialog(stringLiteral: String(localized: "intent.lowstock.dialog.one")),
+                view: LowStockSummarySnippetView(count: lowStockCount)
+            )
+        }
         return .result(
-            dialog: "Tienes \(lowStockCount) \(itemWord) con stock bajo que necesitan atencion.",
+            dialog: IntentDialog(stringLiteral: String(format: String(localized: "intent.lowstock.dialog.many_fmt"), lowStockCount)),
             view: LowStockSummarySnippetView(count: lowStockCount)
         )
     }
@@ -71,7 +76,7 @@ struct LowStockSummarySnippetView: View {
             HStack {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundStyle(.red)
-                Text("Stock Bajo")
+                Text("intent.lowstock.snippet.title")
                     .font(.headline)
                 Spacer()
                 Text("\(count)")
@@ -84,7 +89,7 @@ struct LowStockSummarySnippetView: View {
                     .clipShape(Capsule())
             }
 
-            Text("Abrite Inventario en Solennix para revisar el detalle por item y reponer stock.")
+            Text("intent.lowstock.snippet.detail")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -103,10 +108,10 @@ struct AllStockOKView: View {
                 .font(.system(size: cappedSuccessIconSize))
                 .foregroundStyle(.green)
 
-            Text("Inventario OK")
+            Text("intent.lowstock.snippet.ok")
                 .font(.headline)
 
-            Text("Todos los items estan por encima del minimo")
+            Text("intent.lowstock.snippet.ok_detail")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

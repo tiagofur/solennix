@@ -106,6 +106,9 @@
 		F7FEE0E325354FC58B15BE19 /* EventFormLinksLocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CD1B67C3C6CA27A85EEBA99 /* EventFormLinksLocalizationTests.swift */; };
 		FAC3704EE0586DE8CCB614D8 /* EventModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0832D220C2F81D77AA578D8A /* EventModelsTests.swift */; };
 		FAF34E5DE8553C59E4AA2E81 /* CachedModelConversionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C86D0D98819337D4F48773A9 /* CachedModelConversionTests.swift */; };
+		BEBE1001AAA00000000000A1 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = BEBE1000AAA00000000000A1 /* Localizable.xcstrings */; };
+		BEBE1031AAA00000000000A1 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = BEBE1030AAA00000000000A1 /* InfoPlist.xcstrings */; };
+		BEBE1041AAA00000000000A1 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = BEBE1040AAA00000000000A1 /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -260,6 +263,9 @@
 		FE410020AABBCC0011223344 /* DashboardFormattingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardFormattingTests.swift; sourceTree = "<group>"; };
 		FE43BE1CFDD958B8E9569442 /* IntentSharedDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentSharedDataStore.swift; sourceTree = "<group>"; };
 		FE4F3973AB70B2A338BD71DD /* EndpointTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EndpointTests.swift; sourceTree = "<group>"; };
+		BEBE1000AAA00000000000A1 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		BEBE1030AAA00000000000A1 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		BEBE1040AAA00000000000A1 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -376,6 +382,8 @@
 				A3B0FFA9AF756AB9C85E856D /* SolennixApp.swift */,
 				C2D2D2FC95DE89E91CACFC96 /* SolennixProducts.storekit */,
 				617656FFF79809CD90F3CD3B /* LanguageReporter.swift */,
+				BEBE1030AAA00000000000A1 /* InfoPlist.xcstrings */,
+				BEBE1040AAA00000000000A1 /* Localizable.xcstrings */,
 			);
 			path = Solennix;
 			sourceTree = "<group>";
@@ -447,6 +455,7 @@
 				0243D8F43F07F77468C0E894 /* Info.plist */,
 				0DB0E0FDAE4DCB607FD61386 /* SolennixWidgetExtension.entitlements */,
 				CCDE53D42FC31925A920B98C /* SolennixWidgets.swift */,
+				BEBE1000AAA00000000000A1 /* Localizable.xcstrings */,
 			);
 			path = SolennixWidgetExtension;
 			sourceTree = "<group>";
@@ -592,6 +601,7 @@
 			buildConfigurationList = B6CCD6CA107B4B9D9C46CAD8 /* Build configuration list for PBXNativeTarget "SolennixWidgetExtension" */;
 			buildPhases = (
 				D0B95EFDED292742F2A0C420 /* Sources */,
+				BEBE1002AAA00000000000A1 /* Resources */,
 				868030691E82B022703D39D7 /* Frameworks */,
 			);
 			buildRules = (
@@ -714,6 +724,16 @@
 				0C5CDA39C400A9A3F92C78C8 /* GoogleService-Info.plist in Resources */,
 				51879ACC60875F07D9A3C06D /* PrivacyInfo.xcprivacy in Resources */,
 				F3CB350892669F4A6DBD712A /* SolennixProducts.storekit in Resources */,
+				BEBE1031AAA00000000000A1 /* InfoPlist.xcstrings in Resources */,
+				BEBE1041AAA00000000000A1 /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BEBE1002AAA00000000000A1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BEBE1001AAA00000000000A1 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

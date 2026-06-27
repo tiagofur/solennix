@@ -100,7 +100,7 @@ struct UpcomingEventsWidgetView: View {
                 Image(systemName: "calendar")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
-                Text("Proximo")
+                Text("widget.upcoming.next")
                     .font(.caption2)
                     .fontWeight(.medium)
                     .foregroundStyle(.secondary)
@@ -125,7 +125,7 @@ struct UpcomingEventsWidgetView: View {
                         .foregroundStyle(.secondary)
                 }
             } else {
-                Text("Sin eventos proximos")
+                Text("widget.upcoming.no_events")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -134,7 +134,7 @@ struct UpcomingEventsWidgetView: View {
 
             // Event count
             if entry.events.count > 1 {
-                Text("+\(entry.events.count - 1) mas")
+                Text(verbatim: String(format: String(localized: "widget.upcoming.more_fmt"), entry.events.count - 1))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
@@ -150,7 +150,7 @@ struct UpcomingEventsWidgetView: View {
             // Left: Next event highlight
             if let event = entry.events.first {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Proximo")
+                    Text("widget.upcoming.next")
                         .font(.caption2)
                         .fontWeight(.medium)
                         .foregroundStyle(.secondary)
@@ -194,7 +194,7 @@ struct UpcomingEventsWidgetView: View {
                 }
 
                 if entry.events.count > 3 {
-                    Text("+\(entry.events.count - 3) mas")
+                    Text(verbatim: String(format: String(localized: "widget.upcoming.more_fmt"), entry.events.count - 3))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -215,7 +215,7 @@ struct UpcomingEventsWidgetView: View {
             HStack {
                 Image(systemName: "calendar")
                     .foregroundStyle(.blue)
-                Text("Proximos Eventos")
+                Text("widget.upcoming.config_name")
                     .font(.headline)
                 Spacer()
                 Text("\(entry.events.count)")
@@ -233,7 +233,7 @@ struct UpcomingEventsWidgetView: View {
             // Event list
             if entry.events.isEmpty {
                 Spacer()
-                Text("No hay eventos proximos")
+                Text("widget.upcoming.empty")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -249,7 +249,7 @@ struct UpcomingEventsWidgetView: View {
                 if entry.events.count > 5 {
                     HStack {
                         Spacer()
-                        Text("Ver \(entry.events.count - 5) mas")
+                        Text(verbatim: String(format: String(localized: "widget.upcoming.view_more_fmt"), entry.events.count - 5))
                             .font(.caption)
                             .foregroundStyle(.blue)
                         Spacer()
@@ -350,7 +350,7 @@ struct UpcomingEventsWidgetView: View {
     private func dayOfWeek(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEE"
-        formatter.locale = Locale(identifier: "es_MX")
+        formatter.locale = Locale.current
         return formatter.string(from: date).uppercased()
     }
 
@@ -370,8 +370,8 @@ struct UpcomingEventsWidget: Widget {
         StaticConfiguration(kind: kind, provider: UpcomingEventsProvider()) { entry in
             UpcomingEventsWidgetView(entry: entry)
         }
-        .configurationDisplayName("Proximos Eventos")
-        .description("Ve tus proximos eventos de un vistazo.")
+        .configurationDisplayName(LocalizedStringResource("widget.upcoming.config_name"))
+        .description(LocalizedStringResource("widget.upcoming.config_desc"))
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }

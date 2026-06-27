@@ -5,18 +5,18 @@ import SwiftUI
 
 struct EventCountIntent: AppIntent {
 
-    static var title: LocalizedStringResource = "Conteo de Eventos"
-    static var description = IntentDescription("Cuenta cuantos eventos tienes programados")
+    static var title: LocalizedStringResource = "intent.count.title"
+    static var description = IntentDescription("intent.count.desc")
 
     static var openAppWhenRun: Bool = false
 
-    @Parameter(title: "Periodo", default: .thisWeek)
+    @Parameter(title: "intent.count.param.period", default: .thisWeek)
     var period: EventPeriod
 
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         guard IntentSharedDataStore.hasProAccess else {
             return .result(
-                dialog: "Plan Pro requerido para usar este atajo.",
+                dialog: IntentDialog(stringLiteral: String(localized: "intent.dialog.pro_required")),
                 view: PlanRequiredSnippetView()
             )
         }
@@ -24,27 +24,27 @@ struct EventCountIntent: AppIntent {
         let counts = await fetchEventCounts()
 
         let count: Int
-        let periodText: String
+        let periodKey: String
 
         switch period {
         case .today:
             count = counts.today
-            periodText = "hoy"
+            periodKey = "today"
         case .thisWeek:
             count = counts.thisWeek
-            periodText = "esta semana"
+            periodKey = "week"
         case .thisMonth:
             count = counts.thisMonth
-            periodText = "este mes"
+            periodKey = "month"
         }
 
         let dialog: String
         if count == 0 {
-            dialog = "No tienes eventos \(periodText)."
+            dialog = NSLocalizedString("intent.count.dialog.none.\(periodKey)", comment: "")
         } else if count == 1 {
-            dialog = "Tienes 1 evento \(periodText)."
+            dialog = NSLocalizedString("intent.count.dialog.one.\(periodKey)", comment: "")
         } else {
-            dialog = "Tienes \(count) eventos \(periodText)."
+            dialog = String(format: NSLocalizedString("intent.count.dialog.many_fmt.\(periodKey)", comment: ""), count)
         }
 
         return .result(
@@ -85,12 +85,12 @@ enum EventPeriod: String, AppEnum {
     case thisWeek = "esta_semana"
     case thisMonth = "este_mes"
 
-    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Periodo")
+    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "intent.period.typename")
 
     static var caseDisplayRepresentations: [EventPeriod: DisplayRepresentation] = [
-        .today: "Hoy",
-        .thisWeek: "Esta semana",
-        .thisMonth: "Este mes"
+        .today: "intent.period.today",
+        .thisWeek: "intent.period.this_week",
+        .thisMonth: "intent.period.this_month"
     ]
 }
 
@@ -129,7 +129,7 @@ struct EventCountSnippetView: View {
                         .font(.system(size: cappedCountFontSize, weight: .bold, design: .rounded))
                         .foregroundStyle(.blue)
 
-                    Text(selectedCount == 1 ? "evento" : "eventos")
+                    Text(verbatim: selectedCount == 1 ? String(localized: "intent.count.snippet.event_singular") : String(localized: "intent.count.snippet.event_plural"))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -145,8 +145,8 @@ struct EventCountSnippetView: View {
 
             // Breakdown
             HStack(spacing: 24) {
-                countBadge(label: "Confirmados", count: counts.confirmed, color: .green)
-                countBadge(label: "Cotizados", count: counts.quoted, color: .orange)
+                countBadge(label: String(localized: "intent.count.snippet.confirmed"), count: counts.confirmed, color: .green)
+                countBadge(label: String(localized: "intent.count.snippet.quoted"), count: counts.quoted, color: .orange)
             }
         }
         .padding()
@@ -162,9 +162,9 @@ struct EventCountSnippetView: View {
 
     private var periodLabel: String {
         switch selectedPeriod {
-        case .today: return "Hoy"
-        case .thisWeek: return "Esta semana"
-        case .thisMonth: return "Este mes"
+        case .today: return String(localized: "intent.period.today")
+        case .thisWeek: return String(localized: "intent.period.this_week")
+        case .thisMonth: return String(localized: "intent.period.this_month")
         }
     }
 

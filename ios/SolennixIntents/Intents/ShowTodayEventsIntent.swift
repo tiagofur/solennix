@@ -5,8 +5,8 @@ import SwiftUI
 
 struct ShowTodayEventsIntent: AppIntent {
 
-    static var title: LocalizedStringResource = "Eventos de Hoy"
-    static var description = IntentDescription("Muestra los eventos programados para hoy")
+    static var title: LocalizedStringResource = "intent.today.title"
+    static var description = IntentDescription("intent.today.desc")
 
     static var openAppWhenRun: Bool = false
 
@@ -16,7 +16,7 @@ struct ShowTodayEventsIntent: AppIntent {
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         guard IntentSharedDataStore.hasProAccess else {
             return .result(
-                dialog: "Plan Pro requerido para usar este atajo.",
+                dialog: IntentDialog(stringLiteral: String(localized: "intent.dialog.pro_required")),
                 view: PlanRequiredSnippetView()
             )
         }
@@ -25,14 +25,19 @@ struct ShowTodayEventsIntent: AppIntent {
 
         if events.isEmpty {
             return .result(
-                dialog: "No tienes eventos hoy. Disfruta tu dia libre!",
+                dialog: IntentDialog(stringLiteral: String(localized: "intent.today.dialog.free")),
                 view: NoEventsToday()
             )
         }
 
-        let eventWord = events.count == 1 ? "evento" : "eventos"
+        if events.count == 1 {
+            return .result(
+                dialog: IntentDialog(stringLiteral: String(localized: "intent.today.dialog.one")),
+                view: TodayEventsSnippetView(events: events)
+            )
+        }
         return .result(
-            dialog: "Tienes \(events.count) \(eventWord) hoy.",
+            dialog: IntentDialog(stringLiteral: String(format: String(localized: "intent.today.dialog.many_fmt"), events.count)),
             view: TodayEventsSnippetView(events: events)
         )
     }
@@ -46,8 +51,8 @@ struct ShowTodayEventsIntent: AppIntent {
                     id: $0.id,
                     clientName: $0.clientName,
                     eventType: $0.eventType,
-                    time: $0.startTime ?? "all day",
-                    location: $0.location ?? "Sin ubicacion",
+                    time: $0.startTime ?? String(localized: "intent.today.snippet.all_day"),
+                    location: $0.location ?? String(localized: "intent.today.snippet.no_location"),
                     guestCount: $0.guestCount ?? 0,
                     status: $0.status
                 )
@@ -85,7 +90,7 @@ struct TodayEventsSnippetView: View {
             HStack {
                 Image(systemName: "sun.max.fill")
                     .foregroundStyle(.orange)
-                Text("Hoy")
+                Text("intent.period.today")
                     .font(.headline)
                 Spacer()
             }
@@ -139,10 +144,10 @@ struct NoEventsToday: View {
                 .font(.system(size: cappedSuccessIconSize))
                 .foregroundStyle(.green)
 
-            Text("Sin eventos hoy")
+            Text("intent.today.snippet.no_events")
                 .font(.headline)
 
-            Text("Disfruta tu dia!")
+            Text("intent.today.snippet.enjoy")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }

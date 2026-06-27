@@ -5,21 +5,21 @@ import SwiftUI
 
 struct ShowUpcomingEventsIntent: AppIntent {
 
-    static var title: LocalizedStringResource = "Mostrar Proximos Eventos"
-    static var description = IntentDescription("Muestra tus proximos eventos programados")
+    static var title: LocalizedStringResource = "intent.upcoming.title"
+    static var description = IntentDescription("intent.upcoming.desc")
 
     static var openAppWhenRun: Bool = false
 
     nonisolated init() {}
 
-    @Parameter(title: "Numero de eventos", default: 5)
+    @Parameter(title: "intent.upcoming.param.count", default: 5)
     var count: Int
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         guard IntentSharedDataStore.hasProAccess else {
             return .result(
-                dialog: "Plan Pro requerido para usar este atajo.",
+                dialog: IntentDialog(stringLiteral: String(localized: "intent.dialog.pro_required")),
                 view: PlanRequiredSnippetView()
             )
         }
@@ -28,7 +28,7 @@ struct ShowUpcomingEventsIntent: AppIntent {
 
         if events.isEmpty {
             return .result(
-                dialog: "No tienes eventos proximos programados.",
+                dialog: IntentDialog(stringLiteral: String(localized: "intent.upcoming.dialog.empty")),
                 view: EmptyEventsView()
             )
         }
@@ -36,7 +36,7 @@ struct ShowUpcomingEventsIntent: AppIntent {
         _ = events.map { "\($0.date): \($0.clientName) - \($0.eventType)" }.joined(separator: "\n")
 
         return .result(
-            dialog: "Tienes \(events.count) eventos proximos.",
+            dialog: IntentDialog(stringLiteral: String(format: String(localized: "intent.upcoming.dialog.count_fmt"), events.count)),
             view: UpcomingEventsSnippetView(events: events)
         )
     }
@@ -54,7 +54,7 @@ struct ShowUpcomingEventsIntent: AppIntent {
                     clientName: $0.clientName,
                     eventType: $0.eventType,
                     date: $0.formattedDate,
-                    time: $0.startTime ?? "all day"
+                    time: $0.startTime ?? String(localized: "intent.today.snippet.all_day")
                 )
             }
     }
@@ -117,7 +117,7 @@ struct EmptyEventsView: View {
                 .font(.largeTitle)
                 .foregroundStyle(.secondary)
 
-            Text("Sin eventos proximos")
+            Text("intent.upcoming.snippet.no_events")
                 .font(.headline)
         }
         .padding()
