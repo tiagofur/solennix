@@ -290,7 +290,8 @@ export const EventList: React.FC = () => {
     const filtered = statusFilter !== "all" 
       ? eventsRange.filter((e) => e.status === statusFilter)
       : eventsRange;
-    return filtered.filter((e) => selectedDate && isSameDay(parseLocalDate(e.event_date), selectedDate));
+    if (!selectedDate) return filtered;
+    return filtered.filter((e) => isSameDay(parseLocalDate(e.event_date), selectedDate));
   }, [eventsRange, selectedDate, statusFilter]);
 
   const selectedUnavailable = useMemo(() => {
@@ -1158,7 +1159,7 @@ export const EventList: React.FC = () => {
               <h2 className="text-base font-black text-text">
                 {selectedDate
                   ? format(selectedDate, "EEEE d MMMM", { locale: dfnsLocale }).replace(/^\w/, (c) => c.toUpperCase())
-                  : t("calendar:select_date")}
+                  : format(currentMonth, "MMMM yyyy", { locale: dfnsLocale }).replace(/^\w/, (c) => c.toUpperCase())}
               </h2>
               {selectedEvents.length > 0 && (
                 <span className="bg-primary/10 text-primary text-xs font-black px-2.5 py-0.5 rounded-full">
@@ -1195,15 +1196,15 @@ export const EventList: React.FC = () => {
                   <div className="h-16 w-16 bg-surface-alt/40 rounded-full flex items-center justify-center mb-4" aria-hidden="true">
                     <Calendar className="h-8 w-8 text-text-tertiary opacity-60" aria-hidden="true" />
                   </div>
-                  <p className="text-text-secondary text-sm font-medium">{t("calendar:no_events_for_day")}</p>
-                  {selectedDate && (
-                    <Link
-                      to={`/events/new?date=${format(selectedDate, "yyyy-MM-dd")}`}
-                      className="mt-4 inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors active-ios-scale"
-                    >
-                      {t("calendar:create_event_for_date")}
-                    </Link>
-                  )}
+                  <p className="text-text-secondary text-sm font-medium">
+                    {selectedDate ? t("calendar:no_events_for_day") : t("calendar:no_events_for_month")}
+                  </p>
+                  <Link
+                    to={selectedDate ? `/events/new?date=${format(selectedDate, "yyyy-MM-dd")}` : "/events/new"}
+                    className="mt-4 inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors active-ios-scale"
+                  >
+                    {selectedDate ? t("calendar:create_event_for_date") : t("calendar:new_event")}
+                  </Link>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4">
@@ -1287,14 +1288,12 @@ export const EventList: React.FC = () => {
                       </div>
                     </Card>
                   ))}
-                  {selectedDate && (
-                    <Link
-                      to={`/events/new?date=${format(selectedDate, "yyyy-MM-dd")}`}
-                      className="flex items-center justify-center pt-2 text-xs text-text-tertiary hover:text-primary transition-colors active-ios-scale font-semibold"
-                    >
-                      + {t("calendar:new_event")}
-                    </Link>
-                  )}
+                  <Link
+                    to={selectedDate ? `/events/new?date=${format(selectedDate, "yyyy-MM-dd")}` : "/events/new"}
+                    className="flex items-center justify-center pt-2 text-xs text-text-tertiary hover:text-primary transition-colors active-ios-scale font-semibold"
+                  >
+                    + {t("calendar:new_event")}
+                  </Link>
                 </div>
               )}
             </div>
