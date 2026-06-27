@@ -87,6 +87,7 @@
 		D295D991799955D364C735AD /* SolennixLiveActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F69128CE543478DD8DF13D6 /* SolennixLiveActivityView.swift */; };
 		D462A38FAE6FFA01AFBC97E3 /* AuthLocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D9C0E4EA72475F0E5777C07 /* AuthLocalizationTests.swift */; };
 		BE410010AABBCC0011223344 /* FeatureL10nTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE410010AABBCC0011223344 /* FeatureL10nTests.swift */; };
+		BE410020AABBCC0011223344 /* DashboardFormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE410020AABBCC0011223344 /* DashboardFormattingTests.swift */; };
 		D46A28C054FF61B55E6CA9B9 /* EventDetailViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A61288722D88853A7E4E119 /* EventDetailViewModelTests.swift */; };
 		D738B142D5858B5FCA5E737C /* DeepLinkHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A362069977C87D34D5E51A2 /* DeepLinkHandler.swift */; };
 		D82CBBD7D2E30D0A2EBB7A36 /* AuthFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C051B91E5F738A07F4A1E176 /* AuthFlowView.swift */; };
@@ -178,6 +179,7 @@
 		2A362069977C87D34D5E51A2 /* DeepLinkHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkHandler.swift; sourceTree = "<group>"; };
 		2D9C0E4EA72475F0E5777C07 /* AuthLocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthLocalizationTests.swift; sourceTree = "<group>"; };
 		FE410010AABBCC0011223344 /* FeatureL10nTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureL10nTests.swift; sourceTree = "<group>"; };
+		FE410020AABBCC0011223344 /* DashboardFormattingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardFormattingTests.swift; sourceTree = "<group>"; };
 		2EE23C26A264BFD15D312EA6 /* SidebarSectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarSectionTests.swift; sourceTree = "<group>"; };
 		2F2D6D80468FACBB67534CF9 /* QuickQuoteTransferDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickQuoteTransferDataTests.swift; sourceTree = "<group>"; };
 		2FB754D466BB2F2A2D614868 /* SolennixUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SolennixUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -378,6 +380,7 @@
 				0AEAC4FEC805D9B30A60DCA1 /* APIErrorTests.swift */,
 				2D9C0E4EA72475F0E5777C07 /* AuthLocalizationTests.swift */,
 				FE410010AABBCC0011223344 /* FeatureL10nTests.swift */,
+				FE410020AABBCC0011223344 /* DashboardFormattingTests.swift */,
 				C86D0D98819337D4F48773A9 /* CachedModelConversionTests.swift */,
 				24710D04D5E6B19774680BC7 /* CacheManagerTests.swift */,
 				5160A693AB3B6217988AC976 /* CalendarLocalizationTests.swift */,
@@ -780,6 +783,7 @@
 				86C7A6B6D12046E424A7CD7E /* AnyCodableTests.swift in Sources */,
 				D462A38FAE6FFA01AFBC97E3 /* AuthLocalizationTests.swift in Sources */,
 				BE410010AABBCC0011223344 /* FeatureL10nTests.swift in Sources */,
+				BE410020AABBCC0011223344 /* DashboardFormattingTests.swift in Sources */,
 				59EC2F0BF95D319B54769B07 /* CacheManagerTests.swift in Sources */,
 				FAF34E5DE8553C59E4AA2E81 /* CachedModelConversionTests.swift in Sources */,
 				31977930EB1AE0C01E08EF44 /* CalendarLocalizationTests.swift in Sources */,

@@ -485,21 +485,13 @@ public struct ProductListView: View {
             }
         }
 
-        // Fix 5: gold anchor + semibold; locale-aware via NumberFormatter (FeatureL10n)
+        // Fix 5: gold anchor + semibold. Pinned to MXN/es_MX via the shared
+        // DashboardFormatting.currencyMXN formatter (business currency).
         private var priceText: some View {
-            Text(formattedPrice(product.basePrice))
+            Text(DashboardFormatting.currencyMXN(product.basePrice))
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .foregroundStyle(SolennixColors.primary)
-        }
-
-        private func formattedPrice(_ value: Double) -> String {
-            let f = NumberFormatter()
-            f.numberStyle = .currency
-            f.locale = FeatureL10n.locale
-            f.maximumFractionDigits = 0
-            f.minimumFractionDigits = 0
-            return f.string(from: NSNumber(value: value)) ?? "$0"
         }
     }
 
@@ -507,17 +499,8 @@ public struct ProductListView: View {
 
     /// Composed ordered label: name, category, price.
     private func productAccessibilityLabel(_ product: Product) -> String {
-        let price = formattedPrice(product.basePrice)
+        let price = DashboardFormatting.currencyMXN(product.basePrice)
         return [product.name, product.category, price].joined(separator: ", ")
-    }
-
-    private func formattedPrice(_ value: Double) -> String {
-        let f = NumberFormatter()
-        f.numberStyle = .currency
-        f.locale = FeatureL10n.locale
-        f.maximumFractionDigits = 0
-        f.minimumFractionDigits = 0
-        return f.string(from: NSNumber(value: value)) ?? "$0"
     }
 
     // MARK: - Sort Menu
