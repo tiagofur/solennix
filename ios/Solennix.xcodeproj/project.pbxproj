@@ -19,6 +19,7 @@
 		14E7EC7587604698908E19B5 /* ProductInventoryModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE849CE589415FEA49B044E /* ProductInventoryModelsTests.swift */; };
 		154591E135DEEA547B558361 /* TeamAndAvailabilityModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF9390361041BF9ADF3D31C /* TeamAndAvailabilityModelTests.swift */; };
 		15E7528F838CDD7D850A5343 /* DashboardMetricsModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D1F4DAF0D7EE69A2EF0F374 /* DashboardMetricsModelsTests.swift */; };
+		16DCECC5FB92F6D2BB62030B /* LanguageReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 617656FFF79809CD90F3CD3B /* LanguageReporter.swift */; };
 		16E9F6337C857911EF79CC8E /* SpotlightClearOnExitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94B5B8DF59A621BEAC7CB54 /* SpotlightClearOnExitTests.swift */; };
 		175AB50ACB86012043B58889 /* CompactTabLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FD390257381E93F0922F9DF /* CompactTabLayout.swift */; };
 		1979577C706A875BD8CEBE54 /* RouteCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBB983F776309323E1DF8F /* RouteCoreTests.swift */; };
@@ -74,8 +75,11 @@
 		AEA3E0C10AF444C3D241F6FF /* EventDomainModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72F41ABD56C3074AEF875CB1 /* EventDomainModelTests.swift */; };
 		AF2A2F27420B89787CBB6237 /* SolennixCore in Frameworks */ = {isa = PBXBuildFile; productRef = 218818B9682EEA80A5555EF5 /* SolennixCore */; };
 		B22E9671915E9B32D289A8BD /* SearchTabEmptyStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8054E5E1247CCBFBF6D038A0 /* SearchTabEmptyStateTests.swift */; };
+		B2C3D4E5F6A7B8C9D0E1F2A3 /* SearchViewModelClearRecentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* SearchViewModelClearRecentsTests.swift */; };
 		B58301ACDCAB10C078D350D3 /* WidgetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB69CCDF04807E01479F4939 /* WidgetModels.swift */; };
 		B92C68A6EC06ACA21048C7F5 /* KPIWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC4BED0BA0668EB3B1475A7D /* KPIWidget.swift */; };
+		BE410010AABBCC0011223344 /* FeatureL10nTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE410010AABBCC0011223344 /* FeatureL10nTests.swift */; };
+		BE410020AABBCC0011223344 /* DashboardFormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE410020AABBCC0011223344 /* DashboardFormattingTests.swift */; };
 		BE57C9FA226ABB99B5271812 /* InteractiveWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55B62E2796D149F1C17BE7FE /* InteractiveWidget.swift */; };
 		BEC5A84A09F3EBD593336FE9 /* PaymentSubmissionUnavailableDateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4543FD09823B67AE40EFA089 /* PaymentSubmissionUnavailableDateTests.swift */; };
 		C10D6B3E2969262852FF6369 /* SolennixWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 68A9B9C7CCD508780816FFD3 /* SolennixWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -86,8 +90,6 @@
 		D0BDCEE4B3AEB45697F68D59 /* SubscriptionStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0807789DB6A564A88452C9BA /* SubscriptionStatusTests.swift */; };
 		D295D991799955D364C735AD /* SolennixLiveActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F69128CE543478DD8DF13D6 /* SolennixLiveActivityView.swift */; };
 		D462A38FAE6FFA01AFBC97E3 /* AuthLocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D9C0E4EA72475F0E5777C07 /* AuthLocalizationTests.swift */; };
-		BE410010AABBCC0011223344 /* FeatureL10nTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE410010AABBCC0011223344 /* FeatureL10nTests.swift */; };
-		BE410020AABBCC0011223344 /* DashboardFormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE410020AABBCC0011223344 /* DashboardFormattingTests.swift */; };
 		D46A28C054FF61B55E6CA9B9 /* EventDetailViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A61288722D88853A7E4E119 /* EventDetailViewModelTests.swift */; };
 		D738B142D5858B5FCA5E737C /* DeepLinkHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A362069977C87D34D5E51A2 /* DeepLinkHandler.swift */; };
 		D82CBBD7D2E30D0A2EBB7A36 /* AuthFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C051B91E5F738A07F4A1E176 /* AuthFlowView.swift */; };
@@ -95,9 +97,9 @@
 		DB2512D50E0D90B6D8DA687C /* SettingsLocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA57DB54D5DBF3930618AA7A /* SettingsLocalizationTests.swift */; };
 		DC5AA5EFC61BF9A75FB47CD6 /* SolennixNetwork in Frameworks */ = {isa = PBXBuildFile; productRef = 5ED55B2A557A9FD74159614F /* SolennixNetwork */; };
 		DE8093A54524BAC953A2BF2C /* SearchScopeFilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 004292179118AA2BA3F61B8A /* SearchScopeFilterTests.swift */; };
-		B2C3D4E5F6A7B8C9D0E1F2A3 /* SearchViewModelClearRecentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* SearchViewModelClearRecentsTests.swift */; };
 		E025B1C047376964E260F279 /* SolennixNotificationServiceExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B2A8EE69CBED38B58E706A88 /* SolennixNotificationServiceExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		EABBA848F8BC545C8C5B78E4 /* BackgroundTaskManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A18654763EF08D7510683BCA /* BackgroundTaskManager.swift */; };
+		F3A2E6BC237FC7FD87F76386 /* LanguageReporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29C61645E0096E11DB82A905 /* LanguageReporterTests.swift */; };
 		F3CB350892669F4A6DBD712A /* SolennixProducts.storekit in Resources */ = {isa = PBXBuildFile; fileRef = C2D2D2FC95DE89E91CACFC96 /* SolennixProducts.storekit */; };
 		F7F57BF451ABC276348AEF96 /* PaginatedResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA149AF02100DB28164D3150 /* PaginatedResponseTests.swift */; };
 		F7FEE0E325354FC58B15BE19 /* EventFormLinksLocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CD1B67C3C6CA27A85EEBA99 /* EventFormLinksLocalizationTests.swift */; };
@@ -153,7 +155,6 @@
 
 /* Begin PBXFileReference section */
 		004292179118AA2BA3F61B8A /* SearchScopeFilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchScopeFilterTests.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F6A7B8C9D0E1F2 /* SearchViewModelClearRecentsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewModelClearRecentsTests.swift; sourceTree = "<group>"; };
 		00457DB25DE18139BFA4434F /* SolennixNotificationServiceExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SolennixNotificationServiceExtension.entitlements; sourceTree = "<group>"; };
 		0243D8F43F07F77468C0E894 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		0807789DB6A564A88452C9BA /* SubscriptionStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionStatusTests.swift; sourceTree = "<group>"; };
@@ -176,10 +177,9 @@
 		2523503309E3EDE5391F898D /* StaffLocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffLocalizationTests.swift; sourceTree = "<group>"; };
 		264F2A6C440C82131EA0C8C5 /* NotificationManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManagerTests.swift; sourceTree = "<group>"; };
 		26D154F9FACF2A74B9D23331 /* SolennixShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolennixShortcuts.swift; sourceTree = "<group>"; };
+		29C61645E0096E11DB82A905 /* LanguageReporterTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LanguageReporterTests.swift; sourceTree = "<group>"; };
 		2A362069977C87D34D5E51A2 /* DeepLinkHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkHandler.swift; sourceTree = "<group>"; };
 		2D9C0E4EA72475F0E5777C07 /* AuthLocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthLocalizationTests.swift; sourceTree = "<group>"; };
-		FE410010AABBCC0011223344 /* FeatureL10nTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureL10nTests.swift; sourceTree = "<group>"; };
-		FE410020AABBCC0011223344 /* DashboardFormattingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardFormattingTests.swift; sourceTree = "<group>"; };
 		2EE23C26A264BFD15D312EA6 /* SidebarSectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarSectionTests.swift; sourceTree = "<group>"; };
 		2F2D6D80468FACBB67534CF9 /* QuickQuoteTransferDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickQuoteTransferDataTests.swift; sourceTree = "<group>"; };
 		2FB754D466BB2F2A2D614868 /* SolennixUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SolennixUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -205,6 +205,7 @@
 		5F34A685767D81C0E207E6AA /* MoreMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreMenuView.swift; sourceTree = "<group>"; };
 		5F69128CE543478DD8DF13D6 /* SolennixLiveActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolennixLiveActivityView.swift; sourceTree = "<group>"; };
 		60DEE142C81DE9C586A96B62 /* ProductListViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductListViewModelTests.swift; sourceTree = "<group>"; };
+		617656FFF79809CD90F3CD3B /* LanguageReporter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LanguageReporter.swift; sourceTree = "<group>"; };
 		63856E6F5C0F3C9413900FB5 /* SolennixFeatures */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SolennixFeatures; path = Packages/SolennixFeatures; sourceTree = SOURCE_ROOT; };
 		680873FC1C746CB314C610F0 /* ProductsInventoryLocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductsInventoryLocalizationTests.swift; sourceTree = "<group>"; };
 		68A9B9C7CCD508780816FFD3 /* SolennixWidgetExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SolennixWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -224,6 +225,7 @@
 		9610BC66E6D620756BD4FBBA /* SolennixTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SolennixTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9F958D99D18E1F682FC6DDB7 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		A18654763EF08D7510683BCA /* BackgroundTaskManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundTaskManager.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* SearchViewModelClearRecentsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewModelClearRecentsTests.swift; sourceTree = "<group>"; };
 		A3B0FFA9AF756AB9C85E856D /* SolennixApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolennixApp.swift; sourceTree = "<group>"; };
 		A6023D2EED64DFA78FD19EE2 /* AnyCodableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyCodableTests.swift; sourceTree = "<group>"; };
 		AB69CCDF04807E01479F4939 /* WidgetModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetModels.swift; sourceTree = "<group>"; };
@@ -252,6 +254,8 @@
 		F7BED9B55598FF95C3ABFD87 /* SearchLocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchLocalizationTests.swift; sourceTree = "<group>"; };
 		FA149AF02100DB28164D3150 /* PaginatedResponseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginatedResponseTests.swift; sourceTree = "<group>"; };
 		FAF3A83A3A12455DC5119536 /* SearchPresentationContextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchPresentationContextTests.swift; sourceTree = "<group>"; };
+		FE410010AABBCC0011223344 /* FeatureL10nTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureL10nTests.swift; sourceTree = "<group>"; };
+		FE410020AABBCC0011223344 /* DashboardFormattingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardFormattingTests.swift; sourceTree = "<group>"; };
 		FE43BE1CFDD958B8E9569442 /* IntentSharedDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentSharedDataStore.swift; sourceTree = "<group>"; };
 		FE4F3973AB70B2A338BD71DD /* EndpointTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EndpointTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -369,6 +373,7 @@
 				3EDE477D65F41F57F76457B4 /* Solennix.entitlements */,
 				A3B0FFA9AF756AB9C85E856D /* SolennixApp.swift */,
 				C2D2D2FC95DE89E91CACFC96 /* SolennixProducts.storekit */,
+				617656FFF79809CD90F3CD3B /* LanguageReporter.swift */,
 			);
 			path = Solennix;
 			sourceTree = "<group>";
@@ -426,6 +431,7 @@
 				7BF9390361041BF9ADF3D31C /* TeamAndAvailabilityModelTests.swift */,
 				D0272551BEA13A36CB61CD05 /* UserPlanTests.swift */,
 				E2ACB7B57F8EAC7E18D70DA6 /* WidgetDataModelsTests.swift */,
+				29C61645E0096E11DB82A905 /* LanguageReporterTests.swift */,
 			);
 			path = SolennixTests;
 			sourceTree = "<group>";
@@ -574,8 +580,6 @@
 				EB9D542482C2670F7AC3304D /* PBXTargetDependency */,
 			);
 			name = SolennixUITests;
-			packageProductDependencies = (
-			);
 			productName = SolennixUITests;
 			productReference = 2FB754D466BB2F2A2D614868 /* SolennixUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
@@ -632,8 +636,6 @@
 			dependencies = (
 			);
 			name = SolennixNotificationServiceExtension;
-			packageProductDependencies = (
-			);
 			productName = SolennixNotificationServiceExtension;
 			productReference = B2A8EE69CBED38B58E706A88 /* SolennixNotificationServiceExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -681,10 +683,10 @@
 			mainGroup = 00B3A82EFA8ECD121B573E85;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				A6C2F7E662A8160E4391E47E /* XCLocalSwiftPackageReference "Packages/SolennixCore" */,
-				69A02BF1E2CB4A997972DEFF /* XCLocalSwiftPackageReference "Packages/SolennixDesign" */,
-				E93AFF29772B74ADC5A5E97C /* XCLocalSwiftPackageReference "Packages/SolennixFeatures" */,
-				54D10EE33C2832E939E4C2DF /* XCLocalSwiftPackageReference "Packages/SolennixNetwork" */,
+				A6C2F7E662A8160E4391E47E /* XCLocalSwiftPackageReference "SolennixCore" */,
+				69A02BF1E2CB4A997972DEFF /* XCLocalSwiftPackageReference "SolennixDesign" */,
+				E93AFF29772B74ADC5A5E97C /* XCLocalSwiftPackageReference "SolennixFeatures" */,
+				54D10EE33C2832E939E4C2DF /* XCLocalSwiftPackageReference "SolennixNetwork" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9E6B3A43E92B9C5181767046 /* Products */;
@@ -748,6 +750,7 @@
 				7C31948E19EF9953FE88C597 /* SolennixApp.swift in Sources */,
 				AE5C577C51730FE91172BAEA /* SolennixShortcuts.swift in Sources */,
 				898C82163ABABB80647816C6 /* WidgetDataSync.swift in Sources */,
+				16DCECC5FB92F6D2BB62030B /* LanguageReporter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -829,6 +832,7 @@
 				154591E135DEEA547B558361 /* TeamAndAvailabilityModelTests.swift in Sources */,
 				81C081FB8AF678138D1FC9F4 /* UserPlanTests.swift in Sources */,
 				58D13FB1F28EE1F4C8905B2C /* WidgetDataModelsTests.swift in Sources */,
+				F3A2E6BC237FC7FD87F76386 /* LanguageReporterTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1251,19 +1255,19 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		54D10EE33C2832E939E4C2DF /* XCLocalSwiftPackageReference "Packages/SolennixNetwork" */ = {
+		54D10EE33C2832E939E4C2DF /* XCLocalSwiftPackageReference "SolennixNetwork" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/SolennixNetwork;
 		};
-		69A02BF1E2CB4A997972DEFF /* XCLocalSwiftPackageReference "Packages/SolennixDesign" */ = {
+		69A02BF1E2CB4A997972DEFF /* XCLocalSwiftPackageReference "SolennixDesign" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/SolennixDesign;
 		};
-		A6C2F7E662A8160E4391E47E /* XCLocalSwiftPackageReference "Packages/SolennixCore" */ = {
+		A6C2F7E662A8160E4391E47E /* XCLocalSwiftPackageReference "SolennixCore" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/SolennixCore;
 		};
-		E93AFF29772B74ADC5A5E97C /* XCLocalSwiftPackageReference "Packages/SolennixFeatures" */ = {
+		E93AFF29772B74ADC5A5E97C /* XCLocalSwiftPackageReference "SolennixFeatures" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/SolennixFeatures;
 		};

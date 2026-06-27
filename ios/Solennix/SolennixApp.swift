@@ -36,6 +36,10 @@ struct SolennixApp: App {
     /// The shared API client instance.
     private let apiClient: APIClient
 
+    /// Reports the device's system language to the backend on launch / locale change.
+    /// Throttled via `UserDefaults.lastReportedLanguage` (see `LanguageReporter`).
+    private let languageReporter: LanguageReporter
+
     // MARK: - Init
 
     init() {
@@ -60,6 +64,7 @@ struct SolennixApp: App {
         _planLimitsManager = State(initialValue: limits)
         _subscriptionManager = State(initialValue: subManager)
         self.apiClient = client
+        self.languageReporter = LanguageReporter(authManager: auth)
 
         // Wire APIClient into LiveActivityManager for push token registration.
         LiveActivityManager.shared.configure(apiClient: client)
@@ -162,6 +167,12 @@ struct SolennixApp: App {
                         }
                         await apiClient.flushQueuedMutations()
                     }
+
+                    // Report the device's system language to the backend (throttled —
+                    // only fires when it changed since the last successful report).
+                    if authManager.isAuthenticated {
+                        await languageReporter.reportIfNeeded()
+                    }
                 }
                 .task {
                     // Load RevenueCat offerings (products with prices)
@@ -186,6 +197,8 @@ struct SolennixApp: App {
                             await processPendingDeviceTokenRegistration()
                             await apiClient.flushQueuedMutations()
                             await syncUpcomingEventNotifications()
+                            // Fresh login: report the system language (throttled).
+                            await languageReporter.reportIfNeeded()
                         }
                     }
 
@@ -212,6 +225,15 @@ struct SolennixApp: App {
                           !token.isEmpty else { return }
                     Task {
                         await registerDeviceTokenWithBackend(token)
+                    }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: NSLocale.currentLocaleDidChangeNotification)) { _ in
+                    // The user changed their device language/region in Settings. Report
+                    // the new system language (throttled) so the backend stays in sync.
+                    // No point reporting for a logged-out user.
+                    guard authManager.isAuthenticated else { return }
+                    Task {
+                        await languageReporter.reportIfNeeded()
                     }
                 }
                 .onChange(of: scenePhase) { _, newPhase in

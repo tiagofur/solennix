@@ -3,10 +3,6 @@ import Observation
 import SolennixCore
 import SolennixNetwork
 
-private struct PreferredLanguagePayload: Encodable {
-    let preferredLanguage: String
-}
-
 // MARK: - Settings View Model
 
 @Observable
@@ -203,23 +199,6 @@ public final class SettingsViewModel {
         } catch {
             deleteOwnAccountError = mapError(error)
             isDeletingOwnAccount = false
-            return false
-        }
-    }
-
-    @MainActor
-    public func updatePreferredLanguage(_ language: String) async -> Bool {
-        isLoading = true
-        errorMessage = nil
-
-        do {
-            try await authManager.updateProfile(data: PreferredLanguagePayload(preferredLanguage: language))
-            user = authManager.currentUser
-            isLoading = false
-            return true
-        } catch {
-            errorMessage = mapError(error)
-            isLoading = false
             return false
         }
     }
