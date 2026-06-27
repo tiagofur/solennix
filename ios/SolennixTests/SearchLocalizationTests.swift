@@ -57,6 +57,6 @@ final class SearchLocalizationTests: XCTestCase {
     // MARK: - Results Formatted Tests
 
     func testSearchResultsMore_Resolves() {
-        XCTAssertEqual(SearchStrings.more(3), expected(spanish: "+ 3 más", english: "+ 3 more"))
+        XCTAssertEqual(SearchStrings.more(3), expected(spanish: "+3 más", english: "+3 more"))
     }
 }

@@ -33,7 +33,7 @@ final class ProductsInventoryLocalizationTests: XCTestCase {
         XCTAssertEqual(ProductStrings.upcomingEventsCount(3), expected(spanish: "Próximos 3 eventos", english: "Upcoming 3 events"))
         XCTAssertEqual(ProductStrings.quantityForPeople(quantity: 100, people: 50), expected(spanish: "Total: 100 unidades para 50 personas", english: "Total: 100 units for 50 people"))
         XCTAssertEqual(ProductStrings.inDays(4), expected(spanish: "en 4 días", english: "in 4 days"))
-        XCTAssertEqual(ProductStrings.quantityUnits(25), expected(spanish: "25 uds", english: "25 units"))
+        XCTAssertEqual(ProductStrings.quantityUnits(25), expected(spanish: "25 unidades", english: "25 units"))
         XCTAssertEqual(ProductStrings.eventCount(1), expected(spanish: "1 evento", english: "1 event"))
         XCTAssertEqual(ProductStrings.eventCount(4), expected(spanish: "4 eventos", english: "4 events"))
         XCTAssertEqual(ProductStrings.estimatedAmount("$500"), expected(spanish: "$500 est.", english: "$500 est."))

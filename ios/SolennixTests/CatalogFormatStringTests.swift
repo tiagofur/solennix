@@ -112,8 +112,13 @@ final class CatalogFormatStringTests: XCTestCase {
 
     // Keys migrated in T2 that carry format specifiers. RED before migration
     // (keys absent from catalog); GREEN after migration (en+es present, matching).
+    //
+    // NOTE: `events.photos.count` was removed from this list by `ios-l10n-polish`
+    // (B-3a): it is now a plural key (variations.plural en+es) and therefore
+    // compiles into `.stringsdict` rather than the flat `.strings` table this
+    // guard inspects. Its positional-arg alignment is still enforced — by the
+    // one/other variation values themselves (`%lld photos` / `%lld fotos`).
     private static let migratedFormatKeys = [
-        "events.photos.count",          // "%lld photos" / "%lld fotos"
         "events.shopping.qty_units",    // "%@ units" / "%@ unidades"
         "events.shopping.qty_prefix",   // "x%@" / "x%@"
         "events.shopping.required_qty", // "Needed: %1$@ %2$@" / "Necesario: %1$@ %2$@"
