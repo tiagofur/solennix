@@ -20,7 +20,7 @@ public struct EventEquipmentDetailView: View {
     public var body: some View {
         Group {
             if viewModel.isLoading && viewModel.equipment.isEmpty {
-                ProgressView(tr("events.detail.equipment.loading", "Cargando..."))
+                ProgressView(tr("common.loading", "Cargando..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 content
@@ -34,7 +34,7 @@ public struct EventEquipmentDetailView: View {
                 NavigationLink(value: Route.eventForm(id: eventId, step: 4)) {
                     Image(systemName: "pencil")
                         .foregroundStyle(SolennixColors.primary)
-                        .accessibilityLabel(tr("events.detail.equipment.edit_a11y", "Editar equipo"))
+                        .accessibilityLabel(tr("events.equipment.edit", "Editar equipo"))
                 }
             }
         }
@@ -47,12 +47,12 @@ public struct EventEquipmentDetailView: View {
                 if viewModel.equipment.isEmpty {
                     EmptyStateView(
                         icon: "wrench.and.screwdriver",
-                        title: tr("events.detail.equipment.empty.title", "Sin Equipo"),
-                        message: tr("events.detail.equipment.empty.message", "Este evento no tiene equipo asignado."),
+                        title: tr("events.equipment.empty_title", "Sin Equipo"),
+                        message: tr("events.equipment.empty_message", "Este evento no tiene equipo asignado."),
                         iconColor: SolennixColors.primary
                     )
                     NavigationLink(value: Route.eventForm(id: eventId, step: 4)) {
-                        Text(tr("events.detail.equipment.empty.cta", "Agregar equipo"))
+                        Text(tr("events.equipment.add", "Agregar equipo"))
                             .font(.headline)
                             .foregroundStyle(SolennixColors.primaryDark)
                             .padding(.horizontal, Spacing.xl)
@@ -89,7 +89,7 @@ public struct EventEquipmentDetailView: View {
 
                             Spacer()
 
-                            Text("x\(item.quantity)")
+                            Text(FeatureL10n.format("events.equipment.qty_prefix", "x%lld", item.quantity))
                                 .font(.title3)
                                 .fontWeight(.bold)
                                 .foregroundStyle(SolennixColors.success)

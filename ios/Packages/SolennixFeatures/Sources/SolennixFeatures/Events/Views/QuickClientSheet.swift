@@ -3,6 +3,10 @@ import SolennixCore
 import SolennixDesign
 import SolennixNetwork
 
+private func tr(_ key: String, _ value: String) -> String {
+    FeatureL10n.text(key, value)
+}
+
 // MARK: - Quick Client Sheet
 
 public struct QuickClientSheet: View {
@@ -31,11 +35,11 @@ public struct QuickClientSheet: View {
                         .font(.largeTitle)
                         .foregroundStyle(SolennixColors.primary)
 
-                    Text("Nuevo Cliente")
+                    Text(tr("clients.quick.title", "Nuevo Cliente"))
                         .font(.headline)
                         .foregroundStyle(SolennixColors.text)
 
-                    Text("Crea un cliente rapidamente")
+                    Text(tr("clients.quick.subtitle", "Crea un cliente rapidamente"))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
@@ -44,31 +48,31 @@ public struct QuickClientSheet: View {
                 // Fields
                 VStack(spacing: Spacing.md) {
                     SolennixTextField(
-                        label: "Nombre",
+                        label: tr("clients.form.name", "Nombre"),
                         text: $name,
-                        placeholder: "Nombre del cliente",
+                        placeholder: tr("clients.quick.name_placeholder", "Nombre del cliente"),
                         leftIcon: "person",
                         errorMessage: !name.isEmpty && name.trimmingCharacters(in: .whitespacesAndNewlines).count < 2
-                            ? "Minimo 2 caracteres" : nil,
+                            ? tr("clients.quick.name_error", "Minimo 2 caracteres") : nil,
                         textContentType: .name,
                         autocapitalization: .words
                     )
 
                     SolennixTextField(
-                        label: "Telefono",
+                        label: tr("clients.quick.phone_label", "Telefono"),
                         text: $phone,
-                        placeholder: "10 digitos",
+                        placeholder: tr("clients.quick.phone_placeholder", "10 digitos"),
                         leftIcon: "phone",
                         errorMessage: !phone.isEmpty && phone.filter({ $0.isNumber }).count < 10
-                            ? "Minimo 10 digitos" : nil,
+                            ? tr("clients.quick.phone_error", "Minimo 10 digitos") : nil,
                         textContentType: .telephoneNumber,
                         keyboardType: .phonePad
                     )
 
                     SolennixTextField(
-                        label: "Email (opcional)",
+                        label: tr("clients.quick.email_label", "Email (opcional)"),
                         text: $email,
-                        placeholder: "correo@ejemplo.com",
+                        placeholder: tr("clients.quick.email_placeholder", "correo@ejemplo.com"),
                         leftIcon: "envelope",
                         textContentType: .emailAddress,
                         keyboardType: .emailAddress,
@@ -88,7 +92,7 @@ public struct QuickClientSheet: View {
 
                 // Create button
                 PremiumButton(
-                    title: "Crear Cliente",
+                    title: tr("clients.quick.create", "Crear Cliente"),
                     isLoading: isSaving,
                     isDisabled: !isFormValid
                 ) {
@@ -101,7 +105,7 @@ public struct QuickClientSheet: View {
             .padding(.bottom, Spacing.md)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") {
+                    Button(tr("common.cancel", "Cancelar")) {
                         dismiss()
                     }
                     .foregroundStyle(SolennixColors.textSecondary)

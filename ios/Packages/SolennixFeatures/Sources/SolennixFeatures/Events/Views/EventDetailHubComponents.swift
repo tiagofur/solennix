@@ -86,10 +86,10 @@ struct EventCountdownText: View {
 
     private func accessibilityLabel(_ p: Proximity) -> String {
         switch p {
-        case .today:         return "El evento es hoy"
-        case .tomorrow:      return "Mañana es el evento"
-        case .future(let n): return "Faltan \(n) días para el evento"
-        case .past:          return "Evento finalizado"
+        case .today:         return FeatureL10n.text("events.detail.event_today", "El evento es hoy")
+        case .tomorrow:      return FeatureL10n.text("events.detail.event_tomorrow", "Mañana es el evento")
+        case .future(let n): return FeatureL10n.format("events.detail.days_until_event", "Faltan %lld días para el evento", n)
+        case .past:          return FeatureL10n.text("events.detail.event_finished", "Evento finalizado")
         }
     }
 }
@@ -170,8 +170,8 @@ struct PaymentCollectionRing: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
             isFullyPaid
-                ? "Cobrado: 100 por ciento. Evento completamente pagado."
-                : "Cobrado: \(Int(progress.rounded())) por ciento, faltan \(balanceValue)"
+                ? FeatureL10n.text("events.detail.paid_full_a11y", "Cobrado: 100 por ciento. Evento completamente pagado.")
+                : FeatureL10n.format("events.detail.paid_partial_a11y", "Cobrado: %1$lld por ciento, faltan %2$@", Int(progress.rounded()), balanceValue)
         )
         .sensoryFeedback(.success, trigger: fullyPaidCounter)
     }
@@ -275,7 +275,7 @@ struct EventDetailHeaderCard: View {
                     Button(action: onStatusTap) {
                         StatusBadge(status: event.status.rawValue)
                     }
-                    .accessibilityHint("Toca para cambiar el estado")
+                    .accessibilityHint(FeatureL10n.text("events.detail.tap_to_change_status", "Toca para cambiar el estado"))
                 }
 
                 Spacer()

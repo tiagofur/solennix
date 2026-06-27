@@ -3,6 +3,10 @@ import SolennixCore
 import SolennixDesign
 import SolennixNetwork
 
+private func tr(_ key: String, _ value: String) -> String {
+    FeatureL10n.text(key, value)
+}
+
 // MARK: - Event Checklist View
 
 public struct EventChecklistView: View {
@@ -21,13 +25,13 @@ public struct EventChecklistView: View {
     public var body: some View {
         Group {
             if viewModel.isLoading && viewModel.items.isEmpty {
-                ProgressView("Cargando checklist...")
+                ProgressView(tr("events.checklist.loading", "Cargando checklist..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if viewModel.items.isEmpty && !viewModel.isLoading {
                 EmptyStateView(
                     icon: "checklist",
-                    title: "Sin elementos",
-                    message: "Este evento no tiene elementos para el checklist",
+                    title: tr("events.checklist.empty_title", "Sin elementos"),
+                    message: tr("events.checklist.empty_message", "Este evento no tiene elementos para el checklist"),
                     iconColor: SolennixColors.primary
                 )
             } else {
@@ -35,7 +39,7 @@ public struct EventChecklistView: View {
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Checklist de Carga")
+        .navigationTitle(tr("events.checklist.title", "Checklist de Carga"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await viewModel.loadChecklist(eventId: eventId) }
     }
@@ -66,7 +70,7 @@ public struct EventChecklistView: View {
                         VStack(spacing: Spacing.lg) {
                             if !viewModel.stockItems.isEmpty {
                                 checklistSection(
-                                    title: "INSUMOS DE ALMACEN",
+                                    title: tr("events.checklist.storage_header", "INSUMOS DE ALMACEN"),
                                     icon: "archivebox",
                                     items: viewModel.stockItems
                                 )
@@ -74,7 +78,7 @@ public struct EventChecklistView: View {
 
                             if !viewModel.purchaseItems.isEmpty {
                                 checklistSection(
-                                    title: "INSUMOS A COMPRAR",
+                                    title: tr("events.purchase.items_header", "INSUMOS A COMPRAR"),
                                     icon: "cart",
                                     items: viewModel.purchaseItems
                                 )
@@ -94,7 +98,7 @@ public struct EventChecklistView: View {
 
                     if !viewModel.stockItems.isEmpty {
                         checklistSection(
-                            title: "INSUMOS DE ALMACEN",
+                            title: tr("events.checklist.storage_header", "INSUMOS DE ALMACEN"),
                             icon: "archivebox",
                             items: viewModel.stockItems
                         )
@@ -102,7 +106,7 @@ public struct EventChecklistView: View {
 
                     if !viewModel.purchaseItems.isEmpty {
                         checklistSection(
-                            title: "INSUMOS A COMPRAR",
+                            title: tr("events.purchase.items_header", "INSUMOS A COMPRAR"),
                             icon: "cart",
                             items: viewModel.purchaseItems
                         )
@@ -126,7 +130,7 @@ public struct EventChecklistView: View {
                 .background(SolennixColors.primaryLight)
                 .clipShape(Circle())
 
-            Text("Checklist de Carga")
+            Text(tr("events.checklist.title", "Checklist de Carga"))
                 .font(.title3)
                 .fontWeight(.bold)
                 .foregroundStyle(SolennixColors.text)
@@ -134,7 +138,7 @@ public struct EventChecklistView: View {
             let checkedCount = viewModel.checkedIds.intersection(Set(viewModel.items.map(\.id))).count
             let totalCount = viewModel.items.count
 
-            Text("\(checkedCount) de \(totalCount)")
+            Text(FeatureL10n.format("common.count_of_count", "%1$lld de %2$lld", checkedCount, totalCount))
                 .font(.subheadline)
                 .foregroundStyle(SolennixColors.textSecondary)
 

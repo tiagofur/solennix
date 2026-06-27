@@ -3,6 +3,10 @@ import SolennixCore
 import SolennixDesign
 import SolennixNetwork
 
+private func tr(_ key: String, _ value: String) -> String {
+    FeatureL10n.text(key, value)
+}
+
 // MARK: - Event Contract Preview View
 
 public struct EventContractPreviewView: View {
@@ -46,21 +50,21 @@ public struct EventContractPreviewView: View {
     public var body: some View {
         Group {
             if viewModel.isLoading && viewModel.event == nil {
-                ProgressView("Cargando...")
+                ProgressView(tr("common.loading", "Cargando..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let event = viewModel.event {
                 contractContent(event)
             } else {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
-                    title: "Error",
-                    message: viewModel.errorMessage ?? "No se pudo cargar el evento",
+                    title: tr("common.error", "Error"),
+                    message: viewModel.errorMessage ?? tr("events.contract.load_error_fallback", "No se pudo cargar el evento"),
                     iconColor: SolennixColors.primary
                 )
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Contrato")
+        .navigationTitle(tr("events.detail.documents.contract", "Contrato"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await viewModel.loadData(eventId: eventId) }
     }
@@ -91,20 +95,20 @@ public struct EventContractPreviewView: View {
                 .font(.system(size: cappedGateIconSize))
                 .foregroundStyle(SolennixColors.warning)
 
-            Text("Anticipo Requerido")
+            Text(tr("events.contract.deposit_required", "Anticipo Requerido"))
                 .font(.title2)
                 .fontWeight(.black)
                 .foregroundStyle(SolennixColors.text)
                 .textCase(.uppercase)
 
-            Text("Para visualizar y generar el contrato, es necesario cubrir el anticipo mínimo del **\(Int(depositPercent))%**")
+            Text(FeatureL10n.format("events.contract.deposit_gate_message", "Para visualizar y generar el contrato, es necesario cubrir el anticipo mínimo del **%lld%%**", Int(depositPercent)))
                 .font(.body)
                 .foregroundStyle(SolennixColors.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, Spacing.xl)
 
             let remaining = max(depositAmount - totalPaid, 0)
-            Text("Faltan \(remaining.asMXN) por cobrar.")
+            Text(FeatureL10n.format("events.contract.remaining_to_collect", "Faltan %@ por cobrar.", remaining.asMXN))
                 .font(.callout)
                 .fontWeight(.bold)
                 .foregroundStyle(SolennixColors.warning)
@@ -124,12 +128,12 @@ public struct EventContractPreviewView: View {
                 .font(.system(size: cappedGateIconSize))
                 .foregroundStyle(SolennixColors.error)
 
-            Text("Faltan datos para el contrato")
+            Text(tr("events.contract.missing_fields_title", "Faltan datos para el contrato"))
                 .font(.title3)
                 .fontWeight(.bold)
                 .foregroundStyle(SolennixColors.text)
 
-            Text("Completa estos campos en el evento o cliente:")
+            Text(tr("events.contract.missing_fields_message", "Completa estos campos en el evento o cliente:"))
                 .font(.body)
                 .foregroundStyle(SolennixColors.textSecondary)
                 .multilineTextAlignment(.center)
@@ -210,11 +214,11 @@ public struct EventContractPreviewView: View {
             VStack(spacing: Spacing.sm) {
                 Spacer().frame(height: 40)
                 Divider()
-                Text(profile?.businessName ?? profile?.name ?? "EL PROVEEDOR")
+                Text(profile?.businessName ?? profile?.name ?? tr("events.contract.provider_fallback", "EL PROVEEDOR"))
                     .font(.caption)
                     .fontWeight(.bold)
                     .foregroundStyle(SolennixColors.text)
-                Text("Firma")
+                Text(tr("events.contract.signature", "Firma"))
                     .font(.caption2)
                     .foregroundStyle(SolennixColors.textTertiary)
             }
@@ -223,11 +227,11 @@ public struct EventContractPreviewView: View {
             VStack(spacing: Spacing.sm) {
                 Spacer().frame(height: 40)
                 Divider()
-                Text(viewModel.client?.name ?? "EL CLIENTE")
+                Text(viewModel.client?.name ?? tr("events.contract.client_fallback", "EL CLIENTE"))
                     .font(.caption)
                     .fontWeight(.bold)
                     .foregroundStyle(SolennixColors.text)
-                Text("Firma de EL CLIENTE")
+                Text(tr("events.contract.client_signature", "Firma de EL CLIENTE"))
                     .font(.caption2)
                     .foregroundStyle(SolennixColors.textTertiary)
             }
@@ -364,7 +368,7 @@ public struct EventContractPreviewView: View {
     static let defaultTemplate = """
     CONTRATO DE PRESTACIÓN DE SERVICIOS
 
-    En la ciudad de [Ciudad del evento], a [Fecha actual], comparecen por una parte [Nombre del negocio], en lo sucesivo "EL PROVEEDOR", y por otra parte [Nombre del cliente], en lo sucesivo "EL CLIENTE".
+    En la ciudad de [Ciudad del evento], a [Fecha actual], comparecen por una parte [Nombre del negocio], en lo sucesivo tr("events.contract.provider_fallback", "EL PROVEEDOR"), y por otra parte [Nombre del cliente], en lo sucesivo tr("events.contract.client_fallback", "EL CLIENTE").
 
     DECLARACIONES
 
