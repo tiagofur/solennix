@@ -28,12 +28,9 @@ public struct SettingsView: View {
     @State private var viewModel: SettingsViewModel
     @State private var showLogoutConfirm: Bool = false
     @State private var legalSheetURL: IdentifiableURL?
-    @State private var selectedLanguage: String = "es"
 
     @AppStorage("appearance") private var appearance: String = "system"
-    @AppStorage("preferredLocale") private var preferredLocale: String = ""
     @Environment(\.horizontalSizeClass) private var sizeClass
-    @Environment(ToastManager.self) private var toastManager
     private var isRegularWidth: Bool { sizeClass == .regular }
     private var sectionHorizontalPadding: CGFloat { isRegularWidth ? Spacing.xl : Spacing.md }
 
@@ -60,18 +57,9 @@ public struct SettingsView: View {
             }
             .refreshable {
                 await viewModel.loadUser()
-                syncSelectedLanguage()
             }
             .task {
                 await viewModel.loadUser()
-                syncSelectedLanguage()
-            }
-            .onChange(of: viewModel.user?.preferredLanguage) { _, _ in
-                syncSelectedLanguage()
-            }
-            .onChange(of: selectedLanguage) { oldValue, newValue in
-                guard oldValue != newValue else { return }
-                Task { await persistLanguageChange(from: oldValue, to: newValue) }
             }
             .sheet(item: $legalSheetURL) { wrapper in
                 SafariView(url: wrapper.url)
@@ -196,19 +184,6 @@ public struct SettingsView: View {
                     ForEach(AppearanceTheme.allCases) { theme in
                         Text(theme.displayName).tag(theme.rawValue)
                     }
-                }
-                .pickerStyle(.menu)
-                .labelsHidden()
-            }
-
-            Divider()
-
-            HStack(spacing: Spacing.sm) {
-                Label(SettingsStrings.profileLanguage, systemImage: "globe")
-                Spacer()
-                Picker("", selection: $selectedLanguage) {
-                    Text(SettingsStrings.languageOptionEs).tag("es")
-                    Text(SettingsStrings.languageOptionEn).tag("en")
                 }
                 .pickerStyle(.menu)
                 .labelsHidden()
@@ -385,11 +360,6 @@ public struct SettingsView: View {
                 Text(theme.displayName).tag(theme.rawValue)
             }
         }
-
-        Picker(selection: $selectedLanguage, label: Label(SettingsStrings.profileLanguage, systemImage: "globe")) {
-            Text(SettingsStrings.languageOptionEs).tag("es")
-            Text(SettingsStrings.languageOptionEn).tag("en")
-        }
     }
 
     @ViewBuilder
@@ -534,33 +504,6 @@ public struct SettingsView: View {
             if let user = viewModel.user {
                 PlanBadge(plan: user.plan)
             }
-        }
-    }
-
-    private func syncSelectedLanguage() {
-        let stored = normalizedLanguage(preferredLocale)
-        let userLanguage = normalizedLanguage(viewModel.user?.preferredLanguage ?? "")
-        let resolved = stored.isEmpty ? (userLanguage.isEmpty ? "es" : userLanguage) : stored
-        if selectedLanguage != resolved {
-            selectedLanguage = resolved
-        }
-    }
-
-    private func normalizedLanguage(_ value: String) -> String {
-        let code = value.split(separator: "-").first.map(String.init) ?? value
-        return ["es", "en"].contains(code) ? code : ""
-    }
-
-    @MainActor
-    private func persistLanguageChange(from oldValue: String, to newValue: String) async {
-        preferredLocale = newValue
-        let success = await viewModel.updatePreferredLanguage(newValue)
-        if success {
-            toastManager.show(message: SettingsStrings.profileLanguageUpdated, type: .success)
-        } else {
-            preferredLocale = oldValue
-            selectedLanguage = oldValue
-            toastManager.show(message: viewModel.errorMessage ?? SettingsStrings.commonErrorRetry, type: .error)
         }
     }
 }

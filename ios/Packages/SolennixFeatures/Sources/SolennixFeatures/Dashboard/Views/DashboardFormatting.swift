@@ -14,6 +14,11 @@ enum DashboardFormatting {
     // re-allocating on every cell render (30+ calls per dashboard render cycle).
     // NSCache is thread-safe; plain Dictionary is not — callers can come from
     // ViewModel background tasks as well as View body (MainActor) reads.
+    //
+    // CURRENCY is pinned to the business locale es_MX (the business always charges
+    // in MXN) — see currencyMXN/compactCurrencyMXN defaults below. DATE helpers
+    // below remain on the system locale (FeatureL10n.locale) so dates correctly
+    // follow the device language/region.
     private static let currencyFormatterCache: NSCache<NSString, NumberFormatter> = NSCache()
 
     private static func currencyFormatter(locale: Locale) -> NumberFormatter {
@@ -30,12 +35,15 @@ enum DashboardFormatting {
         return formatter
     }
 
-    static func currencyMXN(_ amount: Double, locale: Locale = FeatureL10n.locale) -> String {
+    // Default locale is the business es_MX (NOT FeatureL10n.locale) so the
+    // currency code/symbol/grouping stay MXN regardless of the device locale
+    // (es-AR device -> MXN, en-US device -> MXN). Matches CommonFormatting.currencyMXN.
+    static func currencyMXN(_ amount: Double, locale: Locale = Locale(identifier: "es_MX")) -> String {
         currencyFormatter(locale: locale).string(from: NSNumber(value: amount))
             ?? amount.formatted(.currency(code: "MXN").locale(locale).precision(.fractionLength(0)))
     }
 
-    static func compactCurrencyMXN(_ amount: Double, locale: Locale = FeatureL10n.locale) -> String {
+    static func compactCurrencyMXN(_ amount: Double, locale: Locale = Locale(identifier: "es_MX")) -> String {
         let symbol = currencyFormatter(locale: locale).currencySymbol ?? "$"
         let compactNumber = amount.formatted(
             .number

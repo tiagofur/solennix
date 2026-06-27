@@ -3,121 +3,60 @@ import XCTest
 
 // MARK: - Search Localization Tests
 
+/// Resolution smoke tests (B-1, system-locale resolution). See the contract in
+/// `AuthLocalizationTests`; these tests assert the EXPECTED value for the
+/// simulator's current system locale (no runtime override — retired in B-1).
 final class SearchLocalizationTests: XCTestCase {
 
-    override func tearDown() {
-        super.tearDown()
-        UserDefaults.standard.removeObject(forKey: "preferredLocale")
-    }
-
-    // MARK: - Helpers
-
-    private func setLocale(_ identifier: String) {
-        UserDefaults.standard.set(identifier, forKey: "preferredLocale")
+    private func expected(spanish: String, english: String) -> String {
+        FeatureL10n.languageCode == "en" ? english : spanish
     }
 
     // MARK: - General Tests
 
-    func testSearchTitle_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(SearchStrings.title, "Buscar")
+    func testSearchTitle_Resolves() {
+        XCTAssertEqual(SearchStrings.title, expected(spanish: "Buscar", english: "Search"))
     }
 
-    func testSearchTitle_English() {
-        setLocale("en")
-        XCTAssertEqual(SearchStrings.title, "Search")
+    func testSearchPlaceholder_Resolves() {
+        XCTAssertEqual(SearchStrings.placeholder, expected(spanish: "Clientes, eventos, productos...", english: "Clients, events, products..."))
     }
 
-    func testSearchPlaceholder_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(SearchStrings.placeholder, "Clientes, eventos, productos...")
+    func testSearchLoading_Resolves() {
+        XCTAssertEqual(SearchStrings.loading, expected(spanish: "Buscando...", english: "Searching..."))
     }
 
-    func testSearchPlaceholder_English() {
-        setLocale("en")
-        XCTAssertEqual(SearchStrings.placeholder, "Clients, events, products...")
+    func testSearchNoResultsTitle_Resolves() {
+        XCTAssertEqual(SearchStrings.noResultsTitle, expected(spanish: "Sin resultados", english: "No results"))
     }
 
-    func testSearchLoading_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(SearchStrings.loading, "Buscando...")
+    func testSearchNoResultsSubtitle_Resolves() {
+        XCTAssertEqual(SearchStrings.noResultsSubtitle, expected(spanish: "Intenta con otro término de búsqueda", english: "Try with another search term"))
     }
 
-    func testSearchLoading_English() {
-        setLocale("en")
-        XCTAssertEqual(SearchStrings.loading, "Searching...")
-    }
-
-    func testSearchNoResultsTitle_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(SearchStrings.noResultsTitle, "Sin resultados")
-    }
-
-    func testSearchNoResultsTitle_English() {
-        setLocale("en")
-        XCTAssertEqual(SearchStrings.noResultsTitle, "No results")
-    }
-
-    func testSearchNoResultsSubtitle_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(SearchStrings.noResultsSubtitle, "Intenta con otro término de búsqueda")
-    }
-
-    func testSearchNoResultsSubtitle_English() {
-        setLocale("en")
-        XCTAssertEqual(SearchStrings.noResultsSubtitle, "Try with another search term")
-    }
-
-    func testSearchInitialStateHint_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(SearchStrings.initialStateHint, "Busca clientes, eventos, productos o inventario")
-    }
-
-    func testSearchInitialStateHint_English() {
-        setLocale("en")
-        XCTAssertEqual(SearchStrings.initialStateHint, "Search for clients, events, products or inventory")
+    func testSearchInitialStateHint_Resolves() {
+        XCTAssertEqual(
+            SearchStrings.initialStateHint,
+            expected(
+                spanish: "Busca clientes, eventos, productos o inventario",
+                english: "Search for clients, events, products or inventory"
+            )
+        )
     }
 
     // MARK: - Suggestions Tests
 
-    func testSearchSuggestionsTitle_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(SearchStrings.suggestionsTitle, "Sugerencias")
+    func testSearchSuggestionsTitle_Resolves() {
+        XCTAssertEqual(SearchStrings.suggestionsTitle, expected(spanish: "Sugerencias", english: "Suggestions"))
     }
 
-    func testSearchSuggestionsTitle_English() {
-        setLocale("en")
-        XCTAssertEqual(SearchStrings.suggestionsTitle, "Suggestions")
-    }
-
-    func testSearchSuggestionsClear_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(SearchStrings.suggestionsClear, "Limpiar")
-    }
-
-    func testSearchSuggestionsClear_English() {
-        setLocale("en")
-        XCTAssertEqual(SearchStrings.suggestionsClear, "Clear")
+    func testSearchSuggestionsClear_Resolves() {
+        XCTAssertEqual(SearchStrings.suggestionsClear, expected(spanish: "Limpiar", english: "Clear"))
     }
 
     // MARK: - Results Formatted Tests
 
-    func testSearchResultsMore_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(SearchStrings.more(3), "+ 3 más")
-    }
-
-    func testSearchResultsMore_English() {
-        setLocale("en")
-        XCTAssertEqual(SearchStrings.more(3), "+ 3 more")
-    }
-
-    // MARK: - Dynamic Switching
-
-    func testDynamicSwitching_SearchTitle() {
-        setLocale("es")
-        XCTAssertEqual(SearchStrings.title, "Buscar")
-        setLocale("en")
-        XCTAssertEqual(SearchStrings.title, "Search")
+    func testSearchResultsMore_Resolves() {
+        XCTAssertEqual(SearchStrings.more(3), expected(spanish: "+ 3 más", english: "+ 3 more"))
     }
 }

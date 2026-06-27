@@ -9,10 +9,6 @@ enum SettingsStrings {
     static var themeLight: String { FeatureL10n.text("settings.theme.light", "Claro") }
     static var themeDark: String { FeatureL10n.text("settings.theme.dark", "Oscuro") }
     static var themeLabel: String { FeatureL10n.text("settings.theme.label", "Tema") }
-    static var profileLanguage: String { FeatureL10n.text("settings.profile.language", "Idioma") }
-    static var languageOptionEs: String { FeatureL10n.text("settings.language.option.es", "Español") }
-    static var languageOptionEn: String { FeatureL10n.text("settings.language.option.en", "English") }
-    static var profileLanguageUpdated: String { FeatureL10n.text("settings.profile.language_updated", "Idioma actualizado") }
 
     // MARK: - Sections
     static var sectionAppearance: String { FeatureL10n.text("settings.section.appearance", "Apariencia") }

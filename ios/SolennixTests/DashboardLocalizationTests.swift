@@ -2,42 +2,32 @@ import XCTest
 import Foundation
 @testable import SolennixFeatures
 
+// MARK: - Dashboard Localization Tests
+
+/// Resolution smoke tests (B-1, system-locale resolution). See the contract in
+/// `AuthLocalizationTests`; these tests assert the EXPECTED value for the
+/// simulator's current system locale (no runtime override — retired in B-1).
+///
+/// These resolve directly through `FeatureL10n.text` to prove the module bundle
+/// resolution path for known dashboard keys.
 final class DashboardLocalizationTests: XCTestCase {
 
-    override func setUp() {
-        super.setUp()
-        // Save the previous preferred locale to avoid polluting user settings
-        let oldLocale = UserDefaults.standard.string(forKey: "preferredLocale")
-        addTeardownBlock {
-            if let oldLocale = oldLocale {
-                UserDefaults.standard.set(oldLocale, forKey: "preferredLocale")
-            } else {
-                UserDefaults.standard.removeObject(forKey: "preferredLocale")
-            }
-        }
+    private func expected(spanish: String, english: String) -> String {
+        FeatureL10n.languageCode == "en" ? english : spanish
     }
 
-    func testDashboardTranslationsResolveForSpanish() {
-        UserDefaults.standard.set("es-MX", forKey: "preferredLocale")
-        
+    func testDashboardTitle_Resolves() {
         let title = FeatureL10n.text("dashboard.title", "Fallback")
-        let netSales = FeatureL10n.text("dashboard.kpi.net_sales", "Fallback")
-        let welcome = FeatureL10n.text("dashboard.welcome", "Fallback")
-        
-        XCTAssertEqual(title, "Inicio")
-        XCTAssertEqual(netSales, "Ventas netas")
-        XCTAssertEqual(welcome, "Hola, %@")
+        XCTAssertEqual(title, expected(spanish: "Inicio", english: "Home"))
     }
 
-    func testDashboardTranslationsResolveForEnglish() {
-        UserDefaults.standard.set("en-US", forKey: "preferredLocale")
-        
-        let title = FeatureL10n.text("dashboard.title", "Fallback")
+    func testDashboardNetSales_Resolves() {
         let netSales = FeatureL10n.text("dashboard.kpi.net_sales", "Fallback")
+        XCTAssertEqual(netSales, expected(spanish: "Ventas netas", english: "Net sales"))
+    }
+
+    func testDashboardWelcome_Resolves() {
         let welcome = FeatureL10n.text("dashboard.welcome", "Fallback")
-        
-        XCTAssertEqual(title, "Home")
-        XCTAssertEqual(netSales, "Net sales")
-        XCTAssertEqual(welcome, "Hello, %@" )
+        XCTAssertEqual(welcome, expected(spanish: "Hola, %@", english: "Hello, %@"))
     }
 }

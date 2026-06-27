@@ -2,114 +2,75 @@ import XCTest
 import Foundation
 @testable import SolennixFeatures
 
+// MARK: - Payments Localization Tests
+
+/// Resolution smoke tests (B-1, system-locale resolution). See the contract in
+/// `AuthLocalizationTests`; these tests assert the EXPECTED value for the
+/// simulator's current system locale (no runtime override — retired in B-1).
 final class PaymentsLocalizationTests: XCTestCase {
 
-    override func setUp() {
-        super.setUp()
-        // Save the previous preferred locale to avoid polluting user settings
-        let oldLocale = UserDefaults.standard.string(forKey: "preferredLocale")
-        addTeardownBlock {
-            if let oldLocale = oldLocale {
-                UserDefaults.standard.set(oldLocale, forKey: "preferredLocale")
-            } else {
-                UserDefaults.standard.removeObject(forKey: "preferredLocale")
-            }
-        }
+    private func expected(spanish: String, english: String) -> String {
+        FeatureL10n.languageCode == "en" ? english : spanish
     }
 
-    func testPaymentsStringsResolveForSpanish() {
-        UserDefaults.standard.set("es-MX", forKey: "preferredLocale")
-
+    func testPaymentsStringsResolve() {
         // Navigation & Alerts
-        XCTAssertEqual(PaymentsStrings.title, "Pagos recibidos")
-        XCTAssertEqual(PaymentsStrings.errorTitle, "Error")
-        XCTAssertEqual(PaymentsStrings.errorOk, "OK")
+        XCTAssertEqual(PaymentsStrings.title, expected(spanish: "Pagos recibidos", english: "Received Payments"))
+        XCTAssertEqual(PaymentsStrings.errorTitle, expected(spanish: "Error", english: "Error"))
+        XCTAssertEqual(PaymentsStrings.errorOk, expected(spanish: "OK", english: "OK"))
 
         // Empty State
-        XCTAssertEqual(PaymentsStrings.emptyTitle, "Sin pagos pendientes")
-        XCTAssertEqual(PaymentsStrings.emptyMessage, "Cuando tus clientes suban comprobantes de transferencia, los verás aquí para aprobar o rechazar.")
-        XCTAssertEqual(PaymentsStrings.actionRetry, "Reintentar")
+        XCTAssertEqual(PaymentsStrings.emptyTitle, expected(spanish: "Sin pagos pendientes", english: "No Pending Payments"))
+        XCTAssertEqual(
+            PaymentsStrings.emptyMessage,
+            expected(
+                spanish: "Cuando tus clientes suban comprobantes de transferencia, los verás aquí para aprobar o rechazar.",
+                english: "When your clients submit transfer receipts, you'll see them here to approve or reject."
+            )
+        )
+        XCTAssertEqual(PaymentsStrings.actionRetry, expected(spanish: "Reintentar", english: "Retry"))
 
         // Plan Locked
-        XCTAssertEqual(PaymentsStrings.proOnlyTitle, "Función exclusiva para usuarios Pro.")
-        XCTAssertEqual(PaymentsStrings.proOnlyMessage, "Actualiza tu plan para revisar y aprobar pagos recibidos de clientes.")
+        XCTAssertEqual(PaymentsStrings.proOnlyTitle, expected(spanish: "Función exclusiva para usuarios Pro.", english: "Pro Exclusive Feature"))
+        XCTAssertEqual(
+            PaymentsStrings.proOnlyMessage,
+            expected(
+                spanish: "Actualiza tu plan para revisar y aprobar pagos recibidos de clientes.",
+                english: "Upgrade your plan to review and approve payment receipts submitted by clients."
+            )
+        )
 
         // Detail Sheet
-        XCTAssertEqual(PaymentsStrings.detailTitle, "Detalle de pago")
-        XCTAssertEqual(PaymentsStrings.clientPlaceholder, "Cliente")
-        XCTAssertEqual(PaymentsStrings.eventPlaceholder, "Evento")
-        XCTAssertEqual(PaymentsStrings.receiptHeader, "Comprobante")
-        XCTAssertEqual(PaymentsStrings.receiptFallback, "No se pudo previsualizar el archivo")
-        XCTAssertEqual(PaymentsStrings.openReceipt, "Abrir comprobante")
-        XCTAssertEqual(PaymentsStrings.rejectionReasonHeader, "Motivo del rechazo")
-        XCTAssertEqual(PaymentsStrings.actionClose, "Cerrar")
+        XCTAssertEqual(PaymentsStrings.detailTitle, expected(spanish: "Detalle de pago", english: "Payment Details"))
+        XCTAssertEqual(PaymentsStrings.clientPlaceholder, expected(spanish: "Cliente", english: "Client"))
+        XCTAssertEqual(PaymentsStrings.eventPlaceholder, expected(spanish: "Evento", english: "Event"))
+        XCTAssertEqual(PaymentsStrings.receiptHeader, expected(spanish: "Comprobante", english: "Receipt"))
+        XCTAssertEqual(PaymentsStrings.receiptFallback, expected(spanish: "No se pudo previsualizar el archivo", english: "Could not preview file"))
+        XCTAssertEqual(PaymentsStrings.openReceipt, expected(spanish: "Abrir comprobante", english: "Open receipt"))
+        XCTAssertEqual(PaymentsStrings.rejectionReasonHeader, expected(spanish: "Motivo del rechazo", english: "Rejection Reason"))
+        XCTAssertEqual(PaymentsStrings.actionClose, expected(spanish: "Cerrar", english: "Close"))
 
         // Rejection Form
-        XCTAssertEqual(PaymentsStrings.rejectTitle, "Rechazar pago")
-        XCTAssertEqual(PaymentsStrings.rejectReasonLabel, "Motivo del rechazo")
-        XCTAssertEqual(PaymentsStrings.actionCancel, "Cancelar")
-        XCTAssertEqual(PaymentsStrings.actionReject, "Rechazar")
+        XCTAssertEqual(PaymentsStrings.rejectTitle, expected(spanish: "Rechazar pago", english: "Reject Payment"))
+        XCTAssertEqual(PaymentsStrings.rejectReasonLabel, expected(spanish: "Motivo del rechazo", english: "Rejection Reason"))
+        XCTAssertEqual(PaymentsStrings.actionCancel, expected(spanish: "Cancelar", english: "Cancel"))
+        XCTAssertEqual(PaymentsStrings.actionReject, expected(spanish: "Rechazar", english: "Reject"))
 
         // Card & Actions & Badge
-        XCTAssertEqual(PaymentsStrings.cardReceiptAttached, "Comprobante adjunto")
-        XCTAssertEqual(PaymentsStrings.cardReviewPrompt, "Toca para revisar")
-        XCTAssertEqual(PaymentsStrings.cardRejectionReason("fondos insuficientes"), "Motivo: fondos insuficientes")
-        XCTAssertEqual(PaymentsStrings.statusPending, "Pendiente")
-        XCTAssertEqual(PaymentsStrings.statusApproved, "Aprobado")
-        XCTAssertEqual(PaymentsStrings.statusRejected, "Rechazado")
-        XCTAssertEqual(PaymentsStrings.actionApprove, "Aprobar")
+        XCTAssertEqual(PaymentsStrings.cardReceiptAttached, expected(spanish: "Comprobante adjunto", english: "Receipt attached"))
+        XCTAssertEqual(PaymentsStrings.cardReviewPrompt, expected(spanish: "Toca para revisar", english: "Tap to review"))
+        XCTAssertEqual(
+            PaymentsStrings.cardRejectionReason("fondos insuficientes"),
+            expected(spanish: "Motivo: fondos insuficientes", english: "Reason: insufficient funds")
+        )
+        XCTAssertEqual(PaymentsStrings.statusPending, expected(spanish: "Pendiente", english: "Pending"))
+        XCTAssertEqual(PaymentsStrings.statusApproved, expected(spanish: "Aprobado", english: "Approved"))
+        XCTAssertEqual(PaymentsStrings.statusRejected, expected(spanish: "Rechazado", english: "Rejected"))
+        XCTAssertEqual(PaymentsStrings.actionApprove, expected(spanish: "Aprobar", english: "Approve"))
 
         // Fallbacks
-        XCTAssertEqual(PaymentsStrings.decodingError, "Error procesando respuesta")
-        XCTAssertEqual(PaymentsStrings.unauthorizedError, "Sesión expirada")
-        XCTAssertEqual(PaymentsStrings.unknownError, "Error desconocido")
-    }
-
-    func testPaymentsStringsResolveForEnglish() {
-        UserDefaults.standard.set("en-US", forKey: "preferredLocale")
-
-        // Navigation & Alerts
-        XCTAssertEqual(PaymentsStrings.title, "Received Payments")
-        XCTAssertEqual(PaymentsStrings.errorTitle, "Error")
-        XCTAssertEqual(PaymentsStrings.errorOk, "OK")
-
-        // Empty State
-        XCTAssertEqual(PaymentsStrings.emptyTitle, "No Pending Payments")
-        XCTAssertEqual(PaymentsStrings.emptyMessage, "When your clients submit transfer receipts, you'll see them here to approve or reject.")
-        XCTAssertEqual(PaymentsStrings.actionRetry, "Retry")
-
-        // Plan Locked
-        XCTAssertEqual(PaymentsStrings.proOnlyTitle, "Pro Exclusive Feature")
-        XCTAssertEqual(PaymentsStrings.proOnlyMessage, "Upgrade your plan to review and approve payment receipts submitted by clients.")
-
-        // Detail Sheet
-        XCTAssertEqual(PaymentsStrings.detailTitle, "Payment Details")
-        XCTAssertEqual(PaymentsStrings.clientPlaceholder, "Client")
-        XCTAssertEqual(PaymentsStrings.eventPlaceholder, "Event")
-        XCTAssertEqual(PaymentsStrings.receiptHeader, "Receipt")
-        XCTAssertEqual(PaymentsStrings.receiptFallback, "Could not preview file")
-        XCTAssertEqual(PaymentsStrings.openReceipt, "Open receipt")
-        XCTAssertEqual(PaymentsStrings.rejectionReasonHeader, "Rejection Reason")
-        XCTAssertEqual(PaymentsStrings.actionClose, "Close")
-
-        // Rejection Form
-        XCTAssertEqual(PaymentsStrings.rejectTitle, "Reject Payment")
-        XCTAssertEqual(PaymentsStrings.rejectReasonLabel, "Rejection Reason")
-        XCTAssertEqual(PaymentsStrings.actionCancel, "Cancel")
-        XCTAssertEqual(PaymentsStrings.actionReject, "Reject")
-
-        // Card & Actions & Badge
-        XCTAssertEqual(PaymentsStrings.cardReceiptAttached, "Receipt attached")
-        XCTAssertEqual(PaymentsStrings.cardReviewPrompt, "Tap to review")
-        XCTAssertEqual(PaymentsStrings.cardRejectionReason("insufficient funds"), "Reason: insufficient funds")
-        XCTAssertEqual(PaymentsStrings.statusPending, "Pending")
-        XCTAssertEqual(PaymentsStrings.statusApproved, "Approved")
-        XCTAssertEqual(PaymentsStrings.statusRejected, "Rejected")
-        XCTAssertEqual(PaymentsStrings.actionApprove, "Approve")
-
-        // Fallbacks
-        XCTAssertEqual(PaymentsStrings.decodingError, "Error processing response")
-        XCTAssertEqual(PaymentsStrings.unauthorizedError, "Session expired")
-        XCTAssertEqual(PaymentsStrings.unknownError, "Unknown error")
+        XCTAssertEqual(PaymentsStrings.decodingError, expected(spanish: "Error procesando respuesta", english: "Error processing response"))
+        XCTAssertEqual(PaymentsStrings.unauthorizedError, expected(spanish: "Sesión expirada", english: "Session expired"))
+        XCTAssertEqual(PaymentsStrings.unknownError, expected(spanish: "Error desconocido", english: "Unknown error"))
     }
 }

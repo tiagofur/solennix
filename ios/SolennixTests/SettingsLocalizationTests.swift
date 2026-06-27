@@ -3,102 +3,46 @@ import XCTest
 
 // MARK: - Settings Localization Tests
 
+/// Resolution smoke tests (B-1, system-locale resolution). See the contract in
+/// `AuthLocalizationTests`; these tests assert the EXPECTED value for the
+/// simulator's current system locale (no runtime override — retired in B-1).
 final class SettingsLocalizationTests: XCTestCase {
 
-    override func tearDown() {
-        super.tearDown()
-        UserDefaults.standard.removeObject(forKey: "preferredLocale")
-    }
-
-    // MARK: - Helpers
-
-    private func setLocale(_ identifier: String) {
-        UserDefaults.standard.set(identifier, forKey: "preferredLocale")
+    private func expected(spanish: String, english: String) -> String {
+        FeatureL10n.languageCode == "en" ? english : spanish
     }
 
     // MARK: - General Tests
 
-    func testSettingsTitle_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(SettingsStrings.title, "Ajustes")
+    func testSettingsTitle_Resolves() {
+        XCTAssertEqual(SettingsStrings.title, expected(spanish: "Ajustes", english: "Settings"))
     }
 
-    func testSettingsTitle_English() {
-        setLocale("en")
-        XCTAssertEqual(SettingsStrings.title, "Settings")
-    }
-
-    func testThemeSystemDefault_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(SettingsStrings.themeSystemDefault, "Predeterminado del sistema")
-    }
-
-    func testThemeSystemDefault_English() {
-        setLocale("en")
-        XCTAssertEqual(SettingsStrings.themeSystemDefault, "System default")
+    func testThemeSystemDefault_Resolves() {
+        XCTAssertEqual(SettingsStrings.themeSystemDefault, expected(spanish: "Predeterminado del sistema", english: "System default"))
     }
 
     // MARK: - Sections Tests
 
-    func testSectionAppearance_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(SettingsStrings.sectionAppearance, "Apariencia")
-    }
-
-    func testSectionAppearance_English() {
-        setLocale("en")
-        XCTAssertEqual(SettingsStrings.sectionAppearance, "Appearance")
+    func testSectionAppearance_Resolves() {
+        XCTAssertEqual(SettingsStrings.sectionAppearance, expected(spanish: "Apariencia", english: "Appearance"))
     }
 
     // MARK: - Account Deletion Tests
 
-    func testDeleteAccountTitle_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(SettingsStrings.deleteAccountTitle, "Eliminar cuenta")
+    func testDeleteAccountTitle_Resolves() {
+        XCTAssertEqual(SettingsStrings.deleteAccountTitle, expected(spanish: "Eliminar cuenta", english: "Delete Account"))
     }
 
-    func testDeleteAccountTitle_English() {
-        setLocale("en")
-        XCTAssertEqual(SettingsStrings.deleteAccountTitle, "Delete Account")
-    }
-
-    func testDeleteAccountGraceWarning_Spanish() {
-        setLocale("es")
-        let expectedEs = "Tu cuenta entrará en un período de gracia de 90 días. Durante este tiempo, tu información estará resguardada de forma segura y podrás revocar esta solicitud contactándote con soporte en caso de que cambies de opinión."
-        XCTAssertEqual(SettingsStrings.deleteAccountGraceWarning, expectedEs)
-    }
-
-    func testDeleteAccountGraceWarning_English() {
-        setLocale("en")
-        let expectedEn = "Your account will enter a 90-day grace period. During this time, your information will be safely backed up and you can revoke this request by contacting support in case you change your mind."
-        XCTAssertEqual(SettingsStrings.deleteAccountGraceWarning, expectedEn)
+    func testDeleteAccountGraceWarning_Resolves() {
+        let spanish = "Tu cuenta entrará en un período de gracia de 90 días. Durante este tiempo, tu información estará resguardada de forma segura y podrás revocar esta solicitud contactándote con soporte en caso de que cambies de opinión."
+        let english = "Your account will enter a 90-day grace period. During this time, your information will be safely backed up and you can revoke this request by contacting support in case you change your mind."
+        XCTAssertEqual(SettingsStrings.deleteAccountGraceWarning, expected(spanish: spanish, english: english))
     }
 
     // MARK: - Password Tests
 
-    func testPasswordCurrentLabel_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(SettingsStrings.passwordCurrentLabel, "Contraseña actual")
-    }
-
-    func testPasswordCurrentLabel_English() {
-        setLocale("en")
-        XCTAssertEqual(SettingsStrings.passwordCurrentLabel, "Current password")
-    }
-
-    // MARK: - Dynamic Switching
-
-    func testDynamicSwitching_SettingsTitle() {
-        setLocale("es")
-        XCTAssertEqual(SettingsStrings.title, "Ajustes")
-        setLocale("en")
-        XCTAssertEqual(SettingsStrings.title, "Settings")
-    }
-
-    func testDynamicSwitching_DeleteAccountTitle() {
-        setLocale("es")
-        XCTAssertEqual(SettingsStrings.deleteAccountTitle, "Eliminar cuenta")
-        setLocale("en")
-        XCTAssertEqual(SettingsStrings.deleteAccountTitle, "Delete Account")
+    func testPasswordCurrentLabel_Resolves() {
+        XCTAssertEqual(SettingsStrings.passwordCurrentLabel, expected(spanish: "Contraseña actual", english: "Current password"))
     }
 }
