@@ -27,7 +27,6 @@ struct SolennixApp: App {
     @State private var backgroundTaskManager: BackgroundTaskManager?
 
     @AppStorage("appearance") private var appearance: String = "system"
-    @AppStorage("preferredLocale") private var preferredLocale: String = ""
     @AppStorage("hasRequestedPushAuthorization") private var hasRequestedPushAuthorization = false
     @Environment(\.scenePhase) private var scenePhase
 
@@ -143,7 +142,6 @@ struct SolennixApp: App {
                     }
                 }
                 .environment(cacheManager)
-                .environment(\.locale, preferredLocale.isEmpty ? .autoupdatingCurrent : Locale(identifier: preferredLocale))
                 .task {
                     // Wire NotificationManager's auth gate early so cold-start
                     // notification taps resolve against AuthManager.isAuthenticated.
@@ -156,7 +154,6 @@ struct SolennixApp: App {
 
                     // Login to RevenueCat with user ID so entitlements are synced
                     if let user = authManager.currentUser {
-                        preferredLocale = user.preferredLanguage ?? preferredLocale
                         await subscriptionManager.login(userID: user.id)
                         // If backend says pro but RC doesn't know yet (web purchase),
                         // force premium status locally
@@ -181,7 +178,6 @@ struct SolennixApp: App {
                     // transitions that happen AFTER launch — matching Android parity.
                     if case .authenticated(let user) = newState {
                         Task {
-                            preferredLocale = user.preferredLanguage ?? preferredLocale
                             await subscriptionManager.login(userID: user.id)
                             if user.plan != .basic {
                                 subscriptionManager.setBackendPremiumStatus(true)
@@ -358,8 +354,7 @@ struct SolennixApp: App {
         //    - hasRequestedPushAuthorization: next user should be prompted for push.
         //    - pendingDeviceToken: stale token must not be registered for the next user.
         //    - registeredDeviceToken: cleared after unregistration in willClearTokens.
-        //    NOT reset: "appearance" (device-wide preference, not user-specific),
-        //               "preferredLocale" (will be overwritten on next login).
+        //    NOT reset: "appearance" (device-wide preference, not user-specific).
         UserDefaults.standard.removeObject(forKey: "hasSeenOnboarding")
         UserDefaults.standard.removeObject(forKey: "hasRequestedPushAuthorization")
         UserDefaults.standard.removeObject(forKey: "pendingDeviceToken")
