@@ -3,20 +3,21 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  /* Brand (these don't change between light/dark) */
+  /* Brand */
   --color-primary: #C4A265;
   --color-primary-dark: #B8965A;
   --color-primary-light: #F5F0E8;
   --color-secondary: #6B7B8D;
   --color-accent: #1B2A4A;
+  --color-on-primary: #1B2A4A;
 
-  /* Legacy Brand Aliases (backward compat) */
+  /* Legacy Brand Aliases */
   --color-brand-orange: var(--color-primary);
   --color-brand-green: var(--color-success);
 
-  /* Warm Neutrals — Light defaults (overridden in :root & .dark) */
-  --color-bg: #F5F4F1;
-  --color-surface-grouped: #ffffff;
+  /* Warm Neutrals */
+  --color-bg: #FFFFFF;
+  --color-surface-grouped: #F5F4F1;
   --color-surface: #FAF9F7;
   --color-surface-alt: #F0EFEC;
   --color-card: #ffffff;
@@ -30,16 +31,35 @@
   --color-separator: rgba(60, 60, 67, 0.29);
 
   /* Semantic */
-  --color-success: #34c759;
+  --color-success: #2D6A4F;
+  --color-success-bg: #F0F7F4;
   --color-warning: #ff9500;
+  --color-warning-bg: #FFF8F0;
   --color-error: #ff3b30;
+  --color-error-bg: #FFF0F0;
   --color-info: #007aff;
+  --color-info-bg: #EEF4FF;
 
   /* Event Status */
-  --color-status-quoted: #d97706;
-  --color-status-confirmed: #007aff;
+  --color-status-quoted: #B45309;
+  --color-status-quoted-bg: #FFF8F0;
+  --color-status-confirmed: #0055CC;
+  --color-status-confirmed-bg: #EEF4FF;
   --color-status-completed: #2D6A4F;
-  --color-status-cancelled: #ff3b30;
+  --color-status-completed-bg: #F0F7F4;
+  --color-status-cancelled: #CC2929;
+  --color-status-cancelled-bg: #FFF0F0;
+
+  /* Avatar Palette */
+  --color-avatar-bg: #F0EFEC;
+  --color-avatar-initials: #7A6133;
+
+  /* Icon Square Palette */
+  --color-icon-slate: #3E5C82;
+  --color-icon-taupe: #7A6A52;
+  --color-icon-sage: #4F6B5A;
+  --color-icon-steel: #5C6B7A;
+  --color-icon-plum: #6B5B7B;
 
   /* Border Radius */
   --radius-sm: 6px;
@@ -52,71 +72,119 @@
 
 @layer base {
   :root {
-    /* Warm Neutral Surfaces */
-    --color-bg: #F5F4F1;
-    --color-surface-grouped: #ffffff;
+    /* Surfaces */
+    --color-bg: #FFFFFF;
+    --color-surface-grouped: #F5F4F1;
     --color-surface: #FAF9F7;
     --color-surface-alt: #F0EFEC;
-    --color-card: #ffffff;
+    --color-card: #FFFFFF;
 
-    /* Warm Text */
+    /* Text */
     --color-text: #1A1A1A;
     --color-text-secondary: #7A7670;
     --color-text-tertiary: #A8A29E;
 
-    /* Warm Borders */
+    /* Borders */
     --color-border: #E6E3DD;
     --color-border-strong: #D4D0C8;
     --color-separator: rgba(60, 60, 67, 0.29);
 
     /* Semantic */
-    --color-success: #34c759;
-    --color-warning: #ff9500;
-    --color-error: #ff3b30;
-    --color-info: #007aff;
+    --color-success: #2D6A4F;
+    --color-success-bg: #F0F7F4;
+    --color-warning: #FF9500;
+    --color-warning-bg: #FFF8F0;
+    --color-error: #FF3B30;
+    --color-error-bg: #FFF0F0;
+    --color-info: #007AFF;
+    --color-info-bg: #EEF4FF;
 
     /* Event Status */
-    --color-status-quoted: #d97706;
-    --color-status-confirmed: #007aff;
+    --color-status-quoted: #B45309;
+    --color-status-quoted-bg: #FFF8F0;
+    --color-status-confirmed: #0055CC;
+    --color-status-confirmed-bg: #EEF4FF;
     --color-status-completed: #2D6A4F;
-    --color-status-cancelled: #ff3b30;
+    --color-status-completed-bg: #F0F7F4;
+    --color-status-cancelled: #CC2929;
+    --color-status-cancelled-bg: #FFF0F0;
+
+    /* Avatar & Icons */
+    --color-avatar-bg: #F0EFEC;
+    --color-avatar-initials: #7A6133;
+    --color-icon-slate: #3E5C82;
+    --color-icon-taupe: #7A6A52;
+    --color-icon-sage: #4F6B5A;
+    --color-icon-steel: #5C6B7A;
+    --color-icon-plum: #6B5B7B;
+
+    /* Liquid Glass tokens - Light Mode */
+    --liquid-glass-bg: rgba(255, 255, 255, 0.45);
+    --liquid-glass-border: rgba(230, 227, 221, 0.5);
+    --liquid-glass-highlight: rgba(255, 255, 255, 0.6);
+    --liquid-glass-shadow: rgba(0, 0, 0, 0.02);
 
     color-scheme: light;
   }
 
   .dark {
-    /* Navy-tinted dark surfaces */
+    /* Surfaces */
     --color-bg: #000000;
-    --color-surface-grouped: #0A0F1A;
-    --color-surface: #111722;
-    --color-surface-alt: #1A2030;
-    --color-card: #111722;
+    --color-surface-grouped: #070D17;
+    --color-surface: #121C2A;
+    --color-surface-alt: #1B2738;
+    --color-card: #1A2740;
 
-    /* Warm cream text */
+    /* Brand Dark Overrides */
+    --color-primary-dark: #D4B87A;
+    --color-primary-light: #1B2A4A;
+    --color-accent: #2D4A7A;
+    --color-secondary: #94A3B8;
+
+    /* Text */
     --color-text: #F5F0E8;
     --color-text-secondary: #9A9590;
-    --color-text-tertiary: #8E8983;
+    --color-text-tertiary: #6B6560;
 
-    /* Navy-tinted borders (WCAG AA: border-strong ≥3:1 on surfaces) */
-    --color-border: #5A6578;
-    --color-border-strong: #647382;
+    /* Borders */
+    --color-border: #2A384D;
+    --color-border-strong: #465D7B;
     --color-separator: rgba(84, 84, 88, 0.65);
 
-    /* Semantic (brighter for dark) */
-    --color-success: #30d158;
-    --color-warning: #ff9f0a;
-    --color-error: #ff453a;
-    --color-info: #2490FF;
-    --color-secondary: #94a3b8;
+    /* Semantic */
+    --color-success: #52B788;
+    --color-success-bg: #0B1D14;
+    --color-warning: #FF9F0A;
+    --color-warning-bg: #2A1A00;
+    --color-error: #FF453A;
+    --color-error-bg: #2A0A0A;
+    --color-info: #0A84FF;
+    --color-info-bg: #001A33;
 
-    /* Event Status (brighter for dark) */
-    --color-status-quoted: #fbbf24;
-    --color-status-confirmed: #2490FF;
+    /* Event Status */
+    --color-status-quoted: #FBBF24;
+    --color-status-quoted-bg: #2A1A00;
+    --color-status-confirmed: #0A84FF;
+    --color-status-confirmed-bg: #001A33;
     --color-status-completed: #52B788;
-    --color-status-cancelled: #ff453a;
+    --color-status-completed-bg: #0B1D14;
+    --color-status-cancelled: #FF453A;
+    --color-status-cancelled-bg: #2A0A0A;
 
-    /* Navy selected container (matches Android drawer dark mode) */
-    --color-primary-light: #1B2A4A;
+    /* Avatar & Icons */
+    --color-avatar-bg: #1B2738;
+    --color-avatar-initials: #C4A265;
+    --color-icon-slate: #5A7BA8;
+    --color-icon-taupe: #9A8A72;
+    --color-icon-sage: #6B8A78;
+    --color-icon-steel: #7A8E9E;
+    --color-icon-plum: #9A82B0;
+
+    /* Liquid Glass tokens - Dark Mode */
+    --liquid-glass-bg: rgba(26, 39, 64, 0.45);
+    --liquid-glass-border: rgba(90, 101, 120, 0.35);
+    --liquid-glass-highlight: rgba(255, 255, 255, 0.15);
+    --liquid-glass-shadow: rgba(0, 0, 0, 0.3);
 
     color-scheme: dark;
   }
@@ -267,9 +335,35 @@ input, select, textarea {
 }
 
 @utility glass-card {
-  background: color-mix(in srgb, var(--color-card), transparent 20%);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--color-border);
+  background: var(--liquid-glass-bg);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  border: 1px solid var(--liquid-glass-border);
+  box-shadow: 
+    inset 0 1px 1px 0 var(--liquid-glass-highlight),
+    inset 0 -1px 1px 0 var(--liquid-glass-shadow),
+    0 4px 30px rgba(0, 0, 0, 0.03),
+    0 10px 50px rgba(0, 0, 0, 0.05);
+}
+
+@utility liquid-glass {
+  background: var(--liquid-glass-bg);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  border: 1px solid var(--liquid-glass-border);
+  box-shadow: 
+    inset 0 1px 1px 0 var(--liquid-glass-highlight),
+    inset 0 -1px 1px 0 var(--liquid-glass-shadow),
+    0 4px 30px rgba(0, 0, 0, 0.03),
+    0 10px 50px rgba(0, 0, 0, 0.05);
+}
+
+@utility active-ios-scale {
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.1s ease;
+  &:active {
+    transform: scale(0.97);
+    opacity: 0.85;
+  }
 }
 
 @utility premium-shadow {

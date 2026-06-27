@@ -5,6 +5,8 @@ import { Activity, AlertTriangle, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDashboardActivity } from "@/hooks/queries/useActivityQueries";
 import type { AuditLog } from "@/services/activityService";
+import { Card } from "./Card";
+import { ListGroup, ListItem } from "./ListGroup";
 
 /**
  * Read-only "Actividad reciente" widget for the user Dashboard.
@@ -44,9 +46,9 @@ export const RecentActivityCard: React.FC<RecentActivityCardProps> = ({ limit = 
   }
 
   return (
-    <section className="bg-card shadow-sm border border-border rounded-2xl overflow-hidden">
+    <Card variant="glass" padding="none" className="overflow-hidden">
       <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-        <h3 className="text-sm font-semibold text-text flex items-center gap-2">
+        <h3 className="text-sm font-bold text-text flex items-center gap-2">
           <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
             <Activity className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
           </span>
@@ -54,35 +56,35 @@ export const RecentActivityCard: React.FC<RecentActivityCardProps> = ({ limit = 
         </h3>
       </div>
 
-      <div className="p-4 min-h-[140px]">
+      <div className="min-h-[140px]">
         {isLoading ? (
-          <div className="space-y-3" role="status" aria-live="polite">
+          <div className="p-6 space-y-3" role="status" aria-live="polite">
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="flex items-center gap-3 animate-pulse">
-                <div className="w-8 h-8 rounded-lg bg-surface-alt shrink-0" />
+                <div className="w-8 h-8 rounded-lg bg-surface-alt/40 shrink-0" />
                 <div className="flex-1 space-y-1.5">
-                  <div className="h-3 bg-surface-alt rounded w-2/3" />
-                  <div className="h-2.5 bg-surface rounded w-1/3" />
+                  <div className="h-3 bg-surface-alt/40 rounded w-2/3" />
+                  <div className="h-2.5 bg-surface-alt/40 rounded w-1/3" />
                 </div>
               </div>
             ))}
             <span className="sr-only">{t('action.loading_activity')}</span>
           </div>
         ) : isError ? (
-          <div className="flex items-center gap-3 text-sm text-text-secondary">
+          <div className="p-6 flex items-center gap-3 text-sm text-text-secondary font-semibold">
             <AlertTriangle className="h-4 w-4 text-warning shrink-0" aria-hidden="true" />
             <span>{t('action.activity_error')}</span>
           </div>
         ) : !entries || entries.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-6 text-center">
+          <div className="p-6 flex flex-col items-center justify-center gap-2 py-8 text-center">
             <Clock className="h-8 w-8 text-text-tertiary opacity-40" aria-hidden="true" />
             <p className="text-xs text-text-secondary">{t('action.no_activity')}</p>
           </div>
         ) : (
-          <ul className="space-y-3" aria-label={t('activity.event_list_label')}>
+          <ListGroup variant="glass" className="border-0 shadow-none rounded-t-none" aria-label={t('activity.event_list_label')}>
             {entries.map((entry) => (
-              <li key={entry.id} className="flex items-start gap-3">
-                <span className="w-8 h-8 rounded-lg bg-surface-alt flex items-center justify-center shrink-0 mt-0.5">
+              <ListItem key={entry.id} className="flex items-start gap-3 py-3.5">
+                <span className="w-8 h-8 rounded-lg bg-surface-alt/60 flex items-center justify-center shrink-0 mt-0.5">
                   <Activity className="h-3.5 w-3.5 text-text-secondary" aria-hidden="true" />
                 </span>
                 <div className="flex-1 min-w-0">
@@ -96,11 +98,11 @@ export const RecentActivityCard: React.FC<RecentActivityCardProps> = ({ limit = 
                     {formatRelative(entry.created_at)}
                   </p>
                 </div>
-              </li>
+              </ListItem>
             ))}
-          </ul>
+          </ListGroup>
         )}
       </div>
-    </section>
+    </Card>
   );
 };

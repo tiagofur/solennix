@@ -68,12 +68,12 @@ export const Modal: React.FC<ModalProps> = ({
           aria-labelledby={titleId}
           aria-describedby={descriptionId}
           className={clsx(
-            "relative transform overflow-hidden rounded-2xl bg-card text-left shadow-2xl transition-all sm:my-8 w-full border border-border animate-in zoom-in-95 duration-300",
+            "relative transform overflow-hidden rounded-2xl liquid-glass text-left transition-all sm:my-8 w-full animate-in zoom-in-95 duration-300",
             maxWidthClasses[maxWidth]
           )}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="px-6 py-4 border-b border-border flex justify-between items-center bg-card">
+          <div className="px-6 py-4 border-b border-border/80 flex justify-between items-center bg-transparent">
             <h3 
               id={titleId}
               className="text-xl font-bold text-text"
