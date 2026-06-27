@@ -3,6 +3,10 @@ import SolennixCore
 import SolennixDesign
 import SolennixNetwork
 
+private func tr(_ key: String, _ value: String) -> String {
+    FeatureL10n.text(key, value)
+}
+
 // MARK: - Change Password View
 
 public struct ChangePasswordView: View {
@@ -86,17 +90,17 @@ public struct ChangePasswordView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(isDirty)
         .confirmationDialog(
-            "¿Descartar los cambios sin guardar?",
+            tr("common.discard_unsaved_confirm", "¿Descartar los cambios sin guardar?"),
             isPresented: $showDiscardConfirm,
             titleVisibility: .visible
         ) {
-            Button("Descartar cambios", role: .destructive) { dismiss() }
-            Button("Seguir editando", role: .cancel) {}
+            Button(tr("common.discard_changes", "Descartar cambios"), role: .destructive) { dismiss() }
+            Button(tr("common.keep_editing", "Seguir editando"), role: .cancel) {}
         }
         .toolbar {
             if isDirty {
                 ToolbarItem(placement: .topBarLeading) {
-                    SolennixCancelButton(title: "Atrás") {
+                    SolennixCancelButton(title: tr("common.back", "Atrás")) {
                         showDiscardConfirm = true
                     }
                 }

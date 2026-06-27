@@ -3,6 +3,10 @@ import SolennixCore
 import SolennixDesign
 import SolennixNetwork
 
+private func tr(_ key: String, _ value: String) -> String {
+    FeatureL10n.text(key, value)
+}
+
 // MARK: - Event Purchase Checklist View
 
 public struct EventPurchaseChecklistView: View {
@@ -34,13 +38,13 @@ public struct EventPurchaseChecklistView: View {
     public var body: some View {
         Group {
             if viewModel.isLoading && viewModel.items.isEmpty {
-                ProgressView("Cargando checklist de compras...")
+                ProgressView(tr("events.purchase.loading", "Cargando checklist de compras..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if purchaseItems.isEmpty {
                 EmptyStateView(
                     icon: "cart",
-                    title: "Sin compras pendientes",
-                    message: "Este evento no tiene insumos marcados para comprar",
+                    title: tr("events.purchase.empty_title", "Sin compras pendientes"),
+                    message: tr("events.purchase.empty_message", "Este evento no tiene insumos marcados para comprar"),
                     iconColor: SolennixColors.primary
                 )
             } else {
@@ -53,7 +57,7 @@ public struct EventPurchaseChecklistView: View {
                                 Image(systemName: "cart.fill")
                                     .font(.caption)
                                     .foregroundStyle(SolennixColors.warning)
-                                Text("INSUMOS A COMPRAR")
+                                Text(tr("events.purchase.items_header", "INSUMOS A COMPRAR"))
                                     .font(.caption)
                                     .fontWeight(.bold)
                                     .foregroundStyle(SolennixColors.textSecondary)
@@ -72,7 +76,7 @@ public struct EventPurchaseChecklistView: View {
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Checklist de Compras")
+        .navigationTitle(tr("events.purchase.title", "Checklist de Compras"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await viewModel.loadChecklist(eventId: eventId) }
     }
@@ -86,12 +90,12 @@ public struct EventPurchaseChecklistView: View {
                 .background(SolennixColors.warning.opacity(0.15))
                 .clipShape(Circle())
 
-            Text("Checklist de Compras")
+            Text(tr("events.purchase.title", "Checklist de Compras"))
                 .font(.title3)
                 .fontWeight(.bold)
                 .foregroundStyle(SolennixColors.text)
 
-            Text("\(checkedPurchaseCount) de \(purchaseItems.count)")
+            Text(FeatureL10n.format("common.count_of_count", "%1$lld de %2$lld", checkedPurchaseCount, purchaseItems.count))
                 .font(.subheadline)
                 .foregroundStyle(SolennixColors.textSecondary)
 
@@ -179,7 +183,7 @@ private struct PurchaseChecklistItemRow: View {
                         .strikethrough(isChecked)
 
                     if let unit = item.unit, !unit.isEmpty {
-                        Text("\(formatQuantity(item.quantity)) \(unit)")
+                        Text(FeatureL10n.format("events.purchase.quantity_unit", "%1$@ %2$@", formatQuantity(item.quantity), unit))
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textSecondary)
                     } else {

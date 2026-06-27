@@ -4,6 +4,10 @@ import SolennixCore
 import SolennixDesign
 import SolennixNetwork
 
+private func tr(_ key: String, _ value: String) -> String {
+    FeatureL10n.text(key, value)
+}
+
 public struct TeamMemberPortalView: View {
 
     private enum TeamMemberSection: String, CaseIterable, Identifiable {
@@ -44,7 +48,7 @@ public struct TeamMemberPortalView: View {
     public var body: some View {
         NavigationStack {
             content
-                .navigationTitle("Mi jornada")
+                .navigationTitle(tr("team_portal.my_day", "Mi jornada"))
                 .navigationBarTitleDisplayMode(.large)
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
@@ -53,7 +57,7 @@ public struct TeamMemberPortalView: View {
                         } label: {
                             Image(systemName: "rectangle.portrait.and.arrow.right")
                         }
-                        .accessibilityLabel("Cerrar sesion")
+                        .accessibilityLabel(tr("team_portal.close_session_a11y", "Cerrar sesion"))
                     }
 
                     ToolbarItem(placement: .topBarTrailing) {
@@ -62,7 +66,7 @@ public struct TeamMemberPortalView: View {
                         } label: {
                             Image(systemName: "arrow.clockwise")
                         }
-                        .accessibilityLabel("Recargar asignaciones")
+                        .accessibilityLabel(tr("team_portal.reload_a11y", "Recargar asignaciones"))
                     }
                 }
         }
@@ -83,7 +87,7 @@ public struct TeamMemberPortalView: View {
         if let errorMessage = viewModel.errorMessage, viewModel.assignments.isEmpty, !viewModel.isLoading {
             EmptyStateView(
                 icon: "exclamationmark.triangle.fill",
-                title: "No pudimos cargar tus asignaciones",
+                title: tr("team_portal.load_error", "No pudimos cargar tus asignaciones"),
                 message: errorMessage,
                 actionTitle: "Reintentar",
                 iconColor: SolennixColors.primary
@@ -96,16 +100,16 @@ public struct TeamMemberPortalView: View {
         } else if viewModel.assignments.isEmpty {
             EmptyStateView(
                 icon: "calendar.badge.clock",
-                title: "Todavia no tenes asignaciones",
-                message: "Cuando te asignen a un evento, va a aparecer aca con respuesta rapida.",
+                title: tr("team_portal.empty_title", "Todavia no tenes asignaciones"),
+                message: tr("team_portal.empty_message", "Cuando te asignen a un evento, va a aparecer aca con respuesta rapida."),
                 iconColor: SolennixColors.primary
             ) {}
         } else {
             ScrollView {
                 LazyVStack(spacing: Spacing.md) {
-                    Picker("Seccion", selection: $section) {
-                        Text("Mi jornada").tag(TeamMemberSection.work)
-                        Text("Calendario").tag(TeamMemberSection.calendar)
+                    Picker(tr("team_portal.section_label", "Seccion"), selection: $section) {
+                        Text(tr("team_portal.my_day", "Mi jornada")).tag(TeamMemberSection.work)
+                        Text(tr("calendar.title", "Calendario")).tag(TeamMemberSection.calendar)
                     }
                     .pickerStyle(.segmented)
 
@@ -333,7 +337,7 @@ public struct TeamMemberPortalView: View {
                     displayedMonth = Calendar.current.startOfMonth(for: today)
                     section = .calendar
                 } label: {
-                    Text("Ir a agenda de hoy")
+                    Text(tr("team_portal.go_to_today", "Ir a agenda de hoy"))
                         .font(.footnote.weight(.semibold))
                 }
                 .buttonStyle(.bordered)
@@ -342,7 +346,7 @@ public struct TeamMemberPortalView: View {
                     prioritizePendingInWork = true
                     section = .work
                 } label: {
-                    Text("Responder asignaciones")
+                    Text(tr("team_portal.respond", "Responder asignaciones"))
                         .font(.footnote.weight(.semibold))
                 }
                 .buttonStyle(.borderedProminent)
@@ -366,23 +370,23 @@ public struct TeamMemberPortalView: View {
 
     @ViewBuilder
     private var availabilitySection: some View {
-        Text("Mi disponibilidad")
+        Text(tr("team_portal.my_availability", "Mi disponibilidad"))
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(SolennixColors.textSecondary)
 
         cardContainer {
             VStack(alignment: .leading, spacing: Spacing.sm) {
-                DatePicker("Desde", selection: $availabilityStartDate, displayedComponents: .date)
-                DatePicker("Hasta", selection: $availabilityEndDate, in: availabilityStartDate..., displayedComponents: .date)
-                TextField("Hora inicio (HH:MM)", text: $availabilityStartTime)
+                DatePicker(tr("calendar.block.start_date", "Desde"), selection: $availabilityStartDate, displayedComponents: .date)
+                DatePicker(tr("calendar.block.end_date", "Hasta"), selection: $availabilityEndDate, in: availabilityStartDate..., displayedComponents: .date)
+                TextField(tr("team_portal.start_time", "Hora inicio (HH:MM)"), text: $availabilityStartTime)
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
-                TextField("Hora fin (HH:MM)", text: $availabilityEndTime)
+                TextField(tr("team_portal.end_time", "Hora fin (HH:MM)"), text: $availabilityEndTime)
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
-                TextField("Motivo (opcional)", text: $availabilityReason)
+                TextField(tr("calendar.block.reason_label", "Motivo (opcional)"), text: $availabilityReason)
                     .textFieldStyle(.roundedBorder)
 
                 Button {
@@ -415,7 +419,7 @@ public struct TeamMemberPortalView: View {
                         resetAvailabilityForm()
                     }
                 } label: {
-                    Text(isEditingAvailability ? "Guardar cambios" : "Bloquear fechas")
+                    Text(isEditingAvailability ? tr("common.save_changes", "Guardar cambios") : "Bloquear fechas")
                         .font(.footnote.weight(.semibold))
                 }
                 .buttonStyle(.borderedProminent)
@@ -425,7 +429,7 @@ public struct TeamMemberPortalView: View {
                     Button {
                         resetAvailabilityForm()
                     } label: {
-                        Text("Cancelar")
+                        Text(tr("common.cancel", "Cancelar"))
                             .font(.footnote.weight(.semibold))
                     }
                     .buttonStyle(.bordered)
@@ -433,7 +437,7 @@ public struct TeamMemberPortalView: View {
                 }
 
                 if viewModel.unavailableDates.isEmpty {
-                    Text("No tenes bloqueos cargados.")
+                    Text(tr("team_portal.no_blocks", "No tenes bloqueos cargados."))
                         .font(.subheadline)
                         .foregroundStyle(SolennixColors.textSecondary)
                 } else {
@@ -458,7 +462,7 @@ public struct TeamMemberPortalView: View {
                             Button {
                                 startEditingAvailability(item)
                             } label: {
-                                Text("Editar")
+                                Text(tr("common.edit", "Editar"))
                                     .font(.caption.weight(.semibold))
                             }
                             .buttonStyle(.bordered)
@@ -467,7 +471,7 @@ public struct TeamMemberPortalView: View {
                             Button(role: .destructive) {
                                 Task { await viewModel.deleteUnavailableDate(id: item.id) }
                             } label: {
-                                Text("Eliminar")
+                                Text(tr("common.delete", "Eliminar"))
                                     .font(.caption.weight(.semibold))
                             }
                             .buttonStyle(.bordered)
@@ -482,7 +486,7 @@ public struct TeamMemberPortalView: View {
     @ViewBuilder
     private var timelineSection: some View {
         HStack {
-            Text("Cambios recientes")
+            Text(tr("team_portal.recent_changes", "Cambios recientes"))
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(SolennixColors.textSecondary)
 
@@ -499,7 +503,7 @@ public struct TeamMemberPortalView: View {
 
         if viewModel.timeline.isEmpty {
             cardContainer {
-                Text("Sin cambios recientes en tus asignaciones.")
+                Text(tr("team_portal.no_recent_changes", "Sin cambios recientes en tus asignaciones."))
                     .font(.subheadline)
                     .foregroundStyle(SolennixColors.textSecondary)
             }
@@ -534,7 +538,7 @@ public struct TeamMemberPortalView: View {
                         Spacer()
 
                         if item.readAt == nil {
-                            Text("Nuevo")
+                            Text(tr("common.new", "Nuevo"))
                                 .font(.caption.weight(.semibold))
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
@@ -554,25 +558,25 @@ public struct TeamMemberPortalView: View {
 
     private func timelineLabel(_ changeType: String) -> String {
         switch changeType {
-        case "location_changed": return "Cambio de ubicación"
-        case "role_changed": return "Cambio de rol"
-        case "shift_changed": return "Cambio de turno"
-        case "status_changed": return "Cambio de estado"
-        case "assignment_added": return "Nueva asignación"
-        case "assignment_removed": return "Asignación removida"
-        default: return "Actualización de asignación"
+        case "location_changed": return tr("team_portal.change_location", "Cambio de ubicación")
+        case "role_changed": return tr("team_portal.change_role", "Cambio de rol")
+        case "shift_changed": return tr("team_portal.change_shift", "Cambio de turno")
+        case "status_changed": return tr("team_portal.change_status", "Cambio de estado")
+        case "assignment_added": return tr("team_portal.new_assignment", "Nueva asignación")
+        case "assignment_removed": return tr("team_portal.removed_assignment", "Asignación removida")
+        default: return tr("team_portal.updated_assignment", "Actualización de asignación")
         }
     }
 
     @ViewBuilder
     private var pendingSection: some View {
-        Text("Pendientes por responder")
+        Text(tr("team_portal.pending_response", "Pendientes por responder"))
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(SolennixColors.textSecondary)
 
         if pendingAssignments.isEmpty {
             cardContainer {
-                Text("No tenes invitaciones pendientes.")
+                Text(tr("team_portal.no_invitations", "No tenes invitaciones pendientes."))
                     .font(.subheadline)
                     .foregroundStyle(SolennixColors.textSecondary)
             }
@@ -594,13 +598,13 @@ public struct TeamMemberPortalView: View {
 
     @ViewBuilder
     private var todaySection: some View {
-        Text("Hoy")
+        Text(tr("calendar.today", "Hoy"))
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(SolennixColors.textSecondary)
 
         if todayAssignments.isEmpty {
             cardContainer {
-                Text("No tenes asignaciones para hoy.")
+                Text(tr("team_portal.no_today", "No tenes asignaciones para hoy."))
                     .font(.subheadline)
                     .foregroundStyle(SolennixColors.textSecondary)
             }
@@ -622,13 +626,13 @@ public struct TeamMemberPortalView: View {
 
     @ViewBuilder
     private var next7DaysSection: some View {
-        Text("Proximos 7 dias")
+        Text(tr("team_portal.next_7_days", "Proximos 7 dias"))
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(SolennixColors.textSecondary)
 
         if next7DaysAssignments.isEmpty {
             cardContainer {
-                Text("No hay asignaciones en los proximos 7 dias.")
+                Text(tr("team_portal.no_next_7", "No hay asignaciones en los proximos 7 dias."))
                     .font(.subheadline)
                     .foregroundStyle(SolennixColors.textSecondary)
             }
@@ -651,10 +655,10 @@ public struct TeamMemberPortalView: View {
     @ViewBuilder
     private var calendarSection: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Picker("Modo calendario", selection: $calendarMode) {
-                Text("Mes").tag(CalendarMode.month)
-                Text("Semana").tag(CalendarMode.week)
-                Text("Día").tag(CalendarMode.day)
+            Picker(tr("team_portal.calendar_mode", "Modo calendario"), selection: $calendarMode) {
+                Text(tr("team_portal.month", "Mes")).tag(CalendarMode.month)
+                Text(tr("team_portal.week", "Semana")).tag(CalendarMode.week)
+                Text(tr("team_portal.day", "Día")).tag(CalendarMode.day)
             }
             .pickerStyle(.segmented)
 
@@ -667,7 +671,7 @@ public struct TeamMemberPortalView: View {
                         } label: {
                             Image(systemName: "chevron.left")
                         }
-                        .accessibilityLabel("Mes anterior")
+                        .accessibilityLabel(tr("calendar.previous_month", "Mes anterior"))
 
                         Spacer()
 
@@ -682,7 +686,7 @@ public struct TeamMemberPortalView: View {
                         } label: {
                             Image(systemName: "chevron.right")
                         }
-                        .accessibilityLabel("Mes siguiente")
+                        .accessibilityLabel(tr("calendar.next_month", "Mes siguiente"))
                     }
 
                     HStack {
@@ -713,7 +717,7 @@ public struct TeamMemberPortalView: View {
             if calendarMode == .week {
                 cardContainer {
                     VStack(alignment: .leading, spacing: Spacing.md) {
-                        Text("Semana")
+                        Text(tr("team_portal.week", "Semana"))
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(SolennixColors.textSecondary)
 
@@ -724,7 +728,7 @@ public struct TeamMemberPortalView: View {
                                     .foregroundStyle(SolennixColors.textSecondary)
 
                                 if item.items.isEmpty {
-                                    Text("Sin asignaciones")
+                                    Text(tr("team_portal.no_assignments", "Sin asignaciones"))
                                         .font(.caption)
                                         .foregroundStyle(SolennixColors.textTertiary)
                                 } else {
@@ -752,7 +756,7 @@ public struct TeamMemberPortalView: View {
                             .foregroundStyle(SolennixColors.textSecondary)
 
                         if selectedDayAssignments.isEmpty {
-                            Text("No hay asignaciones para este día.")
+                            Text(tr("team_portal.no_assignments_day", "No hay asignaciones para este día."))
                                 .font(.subheadline)
                                 .foregroundStyle(SolennixColors.textSecondary)
                         } else {
@@ -769,13 +773,13 @@ public struct TeamMemberPortalView: View {
                 }
             }
 
-            Text("Eventos del dia")
+            Text(tr("team_portal.events_of_day", "Eventos del dia"))
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(SolennixColors.textSecondary)
 
             if selectedDayAssignments.isEmpty {
                 cardContainer {
-                    Text("No hay asignaciones para esta fecha.")
+                    Text(tr("team_portal.no_assignments_date", "No hay asignaciones para esta fecha."))
                         .font(.subheadline)
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
@@ -933,7 +937,7 @@ private struct TeamMemberAssignmentCard: View {
 
     private var statusLabel: String {
         switch assignment.status {
-        case .pending: return "Pendiente"
+        case .pending: return tr("team_portal.pending", "Pendiente")
         case .confirmed: return "Confirmada"
         case .declined: return "Rechazada"
         case .cancelled: return "Cancelada"
@@ -987,7 +991,7 @@ private struct TeamMemberAssignmentCard: View {
                     Button {
                         onDecline()
                     } label: {
-                        Text("Rechazar")
+                        Text(tr("team_portal.reject", "Rechazar"))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                             .background(SolennixColors.error.opacity(0.14))
@@ -997,7 +1001,7 @@ private struct TeamMemberAssignmentCard: View {
                     .disabled(isResponding)
 
                     PremiumButton(
-                        title: "Aceptar",
+                        title: tr("common.accept", "Aceptar"),
                         isDisabled: isResponding
                     ) {
                         onAccept()
@@ -1081,45 +1085,45 @@ private struct TeamPortalAssignmentDetailSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Evento") {
-                    detailRow("Nombre", assignment.eventName)
-                    detailRow("Fecha", assignment.eventDate)
+                Section(tr("team_portal.event_section", "Evento")) {
+                    detailRow(tr("clients.form.name", "Nombre"), assignment.eventName)
+                    detailRow(tr("team_portal.date_label", "Fecha"), assignment.eventDate)
                     if let locationLabel {
                         detailRow("Ubicacion", locationLabel)
                     }
                     if let mapsURL {
-                        Link("Abrir en mapas", destination: mapsURL)
+                        Link(tr("team_portal.open_maps", "Abrir en mapas"), destination: mapsURL)
                     }
                     if let organizerNotes = assignment.organizerNotes, !organizerNotes.isEmpty {
-                        detailRow("Notas del organizador", organizerNotes)
+                        detailRow(tr("team_portal.organizer_notes", "Notas del organizador"), organizerNotes)
                     }
                 }
 
-                Section("Asignación") {
+                Section(tr("team_portal.assignment_section", "Asignación")) {
                     detailRow("Estado", statusLabel)
                     if let role = assignment.roleOverride {
                         detailRow("Rol", role)
                     }
                     if let notes = assignment.notes {
-                        detailRow("Notas", notes)
+                        detailRow(tr("team_portal.notes_section", "Notas"), notes)
                     }
                     if let contactLabel {
-                        detailRow("Contacto operativo", contactLabel)
+                        detailRow(tr("team_portal.operational_contact", "Contacto operativo"), contactLabel)
                     }
                 }
 
-                Section("Checklist") {
-                    Toggle("Llegada y acceso confirmados", isOn: $executionState.arrivalReady)
-                    Toggle("Material y montaje listos", isOn: $executionState.materialsReady)
-                    Toggle("Cierre operativo completado", isOn: $executionState.closingDone)
+                Section(tr("events.detail.documents.checklist", "Checklist")) {
+                    Toggle(tr("team_portal.arrival_ready", "Llegada y acceso confirmados"), isOn: $executionState.arrivalReady)
+                    Toggle(tr("team_portal.material_ready", "Material y montaje listos"), isOn: $executionState.materialsReady)
+                    Toggle(tr("team_portal.closing_done", "Cierre operativo completado"), isOn: $executionState.closingDone)
                 }
 
-                Section("Notas rápidas") {
+                Section(tr("team_portal.quick_notes", "Notas rápidas")) {
                     TextEditor(text: $executionState.quickNote)
                         .frame(minHeight: 110)
                 }
             }
-            .navigationTitle("Detalle del evento")
+            .navigationTitle(tr("events.detail.title", "Detalle del evento"))
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 loadExecutionState()
@@ -1132,7 +1136,7 @@ private struct TeamPortalAssignmentDetailSheet: View {
 
     private var statusLabel: String {
         switch assignment.status {
-        case .pending: return "Pendiente"
+        case .pending: return tr("team_portal.pending", "Pendiente")
         case .confirmed: return "Confirmada"
         case .declined: return "Rechazada"
         case .cancelled: return "Cancelada"

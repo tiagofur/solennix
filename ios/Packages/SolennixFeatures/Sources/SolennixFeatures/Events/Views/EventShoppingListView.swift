@@ -3,6 +3,10 @@ import SolennixCore
 import SolennixDesign
 import SolennixNetwork
 
+private func tr(_ key: String, _ value: String) -> String {
+    FeatureL10n.text(key, value)
+}
+
 // MARK: - Aggregated Ingredient
 
 struct AggregatedIngredient: Identifiable {
@@ -59,21 +63,21 @@ public struct EventShoppingListView: View {
     public var body: some View {
         Group {
             if (viewModel.isLoading && viewModel.event == nil) || isLoadingIngredients {
-                ProgressView("Cargando lista de compras...")
+                ProgressView(tr("events.shopping.loading", "Cargando lista de compras..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let event = viewModel.event {
                 content(event)
             } else {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
-                    title: "Error",
-                    message: viewModel.errorMessage ?? "No se pudo cargar",
+                    title: tr("common.error", "Error"),
+                    message: viewModel.errorMessage ?? tr("events.shopping.load_error_fallback", "No se pudo cargar"),
                     iconColor: SolennixColors.primary
                 )
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Lista de Compras")
+        .navigationTitle(tr("events.shopping.title", "Lista de Compras"))
         .navigationBarTitleDisplayMode(.inline)
         .task {
             await viewModel.loadData(eventId: eventId)
@@ -86,7 +90,7 @@ public struct EventShoppingListView: View {
             VStack(spacing: Spacing.lg) {
                 // Header info
                 VStack(spacing: Spacing.xs) {
-                    Text("LISTA DE INSUMOS")
+                    Text(tr("events.shopping.supplies_list", "LISTA DE INSUMOS"))
                         .font(.caption)
                         .fontWeight(.black)
                         .foregroundStyle(SolennixColors.textTertiary)
@@ -112,17 +116,17 @@ public struct EventShoppingListView: View {
                     HStack(spacing: Spacing.md) {
                         statBadge(
                             value: "\(ingredients.count)",
-                            label: "Ingredientes",
+                            label: tr("events.shopping.stat_ingredients", "Ingredientes"),
                             color: SolennixColors.primary
                         )
                         statBadge(
                             value: "\(needToBuy.count)",
-                            label: "Por Comprar",
+                            label: tr("events.shopping.stat_to_buy", "Por Comprar"),
                             color: needToBuy.isEmpty ? SolennixColors.success : SolennixColors.error
                         )
                         statBadge(
                             value: totalCost.asMXN,
-                            label: "Costo Est.",
+                            label: tr("events.shopping.stat_estimated_cost", "Costo Est."),
                             color: SolennixColors.warning
                         )
                     }
@@ -131,7 +135,7 @@ public struct EventShoppingListView: View {
                 // Ingredients from products
                 if !ingredients.isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.sm) {
-                        Text("Ingredientes de Productos")
+                        Text(tr("events.shopping.ingredients_label", "Ingredientes de Productos"))
                             .font(.headline)
                             .foregroundStyle(SolennixColors.text)
                             .padding(.horizontal, Spacing.xs)
@@ -146,7 +150,7 @@ public struct EventShoppingListView: View {
                 let purchaseSupplies = viewModel.supplies.filter { $0.source == .purchase }
                 if !purchaseSupplies.isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.sm) {
-                        Text("Insumos por Evento — Compra Nueva")
+                        Text(tr("events.shopping.purchase_new", "Insumos por Evento — Compra Nueva"))
                             .font(.headline)
                             .foregroundStyle(SolennixColors.text)
                             .padding(.horizontal, Spacing.xs)
@@ -154,12 +158,12 @@ public struct EventShoppingListView: View {
                         ForEach(purchaseSupplies) { supply in
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(supply.supplyName ?? "Insumo")
+                                    Text(supply.supplyName ?? tr("events.shopping.supply_fallback", "Insumo"))
                                         .font(.body)
                                         .fontWeight(.medium)
                                         .foregroundStyle(SolennixColors.text)
 
-                                    Text("\(formatQuantity(supply.quantity)) unidades")
+                                    Text(FeatureL10n.format("events.shopping.qty_units", "%@ unidades", formatQuantity(supply.quantity)))
                                         .font(.caption)
                                         .foregroundStyle(SolennixColors.textSecondary)
                                 }
@@ -181,14 +185,14 @@ public struct EventShoppingListView: View {
                 let stockSupplies = viewModel.supplies.filter { $0.source == .stock }
                 if !stockSupplies.isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.sm) {
-                        Text("Insumos por Evento — Del Stock")
+                        Text(tr("events.shopping.from_stock", "Insumos por Evento — Del Stock"))
                             .font(.headline)
                             .foregroundStyle(SolennixColors.text)
                             .padding(.horizontal, Spacing.xs)
 
                         ForEach(stockSupplies) { supply in
                             HStack {
-                                Text(supply.supplyName ?? "Insumo")
+                                Text(supply.supplyName ?? tr("events.shopping.supply_fallback", "Insumo"))
                                     .font(.body)
                                     .fontWeight(.medium)
                                     .foregroundStyle(SolennixColors.text)
@@ -209,8 +213,8 @@ public struct EventShoppingListView: View {
                 if ingredients.isEmpty && viewModel.supplies.isEmpty {
                     EmptyStateView(
                         icon: "cart",
-                        title: "Sin Compras",
-                        message: "Este evento no requiere compras adicionales",
+                        title: tr("events.shopping.empty_title", "Sin Compras"),
+                        message: tr("events.shopping.empty_message", "Este evento no requiere compras adicionales"),
                         iconColor: SolennixColors.primary
                     )
                 }
@@ -229,11 +233,11 @@ public struct EventShoppingListView: View {
                     .foregroundStyle(SolennixColors.text)
 
                 HStack(spacing: Spacing.sm) {
-                    Text("Necesario: \(formatQuantity(ingredient.quantityRequired)) \(ingredient.unit)")
+                    Text(FeatureL10n.format("events.shopping.required_qty", "Necesario: %1$@ %2$@", formatQuantity(ingredient.quantityRequired), ingredient.unit ?? ""))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
 
-                    Text("Stock: \(formatQuantity(ingredient.currentStock))")
+                    Text(FeatureL10n.format("events.shopping.stock_qty", "Stock: %@", formatQuantity(ingredient.currentStock)))
                         .font(.caption)
                         .foregroundStyle(ingredient.needsToBuy ? SolennixColors.error : SolennixColors.success)
                 }
@@ -243,7 +247,7 @@ public struct EventShoppingListView: View {
 
             if ingredient.needsToBuy {
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("Comprar")
+                    Text(tr("events.shopping.buy", "Comprar"))
                         .font(.caption2)
                         .fontWeight(.bold)
                         .foregroundStyle(SolennixColors.error)
@@ -312,7 +316,7 @@ public struct EventShoppingListView: View {
                 guard ing.type == "ingredient" else { continue }
                 let key = ing.inventoryId
                 let qty = productQuantities[ing.productId] ?? 0
-                let name = ing.ingredientName ?? ing.inventory?.ingredientName ?? "Insumo"
+                let name = ing.ingredientName ?? ing.inventory?.ingredientName ?? tr("events.shopping.supply_fallback", "Insumo")
                 let unit = ing.unit ?? ing.inventory?.unit ?? ""
                 let unitCost = ing.unitCost ?? ing.inventory?.unitCost ?? 0
                 let stock = ing.inventory?.currentStock ?? 0

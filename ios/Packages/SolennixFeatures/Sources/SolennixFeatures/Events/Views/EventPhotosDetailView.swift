@@ -4,6 +4,10 @@ import SolennixCore
 import SolennixDesign
 import SolennixNetwork
 
+private func tr(_ key: String, _ value: String) -> String {
+    FeatureL10n.text(key, value)
+}
+
 // MARK: - Event Photos Detail View
 
 public struct EventPhotosDetailView: View {
@@ -27,14 +31,14 @@ public struct EventPhotosDetailView: View {
     public var body: some View {
         Group {
             if viewModel.isLoading && viewModel.event == nil {
-                ProgressView("Cargando...")
+                ProgressView(tr("common.loading", "Cargando..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 content
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Fotos del Evento")
+        .navigationTitle(tr("events.photos.title", "Fotos del Evento"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await viewModel.loadData(eventId: eventId) }
         .fullScreenCover(item: $lightboxIndex) { index in
@@ -56,7 +60,7 @@ public struct EventPhotosDetailView: View {
                             .font(.title3)
                             .foregroundStyle(SolennixColors.primary)
 
-                        Text("Agregar Fotos")
+                        Text(tr("events.photos.add", "Agregar Fotos"))
                             .font(.body)
                             .fontWeight(.medium)
                             .foregroundStyle(SolennixColors.primary)
@@ -96,11 +100,11 @@ public struct EventPhotosDetailView: View {
                             .font(.system(size: cappedEmptyIconSize))
                             .foregroundStyle(SolennixColors.textTertiary)
 
-                        Text("Sin fotos")
+                        Text(tr("events.photos.empty", "Sin fotos"))
                             .font(.headline)
                             .foregroundStyle(SolennixColors.textSecondary)
 
-                        Text("Agrega fotos del evento para tener un registro visual")
+                        Text(tr("events.photos.empty_message", "Agrega fotos del evento para tener un registro visual"))
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textTertiary)
                             .multilineTextAlignment(.center)
@@ -143,7 +147,7 @@ public struct EventPhotosDetailView: View {
                         }
                     }
 
-                    Text("\(viewModel.eventPhotos.count) fotos")
+                    Text(FeatureL10n.format("events.photos.count", "%lld fotos", viewModel.eventPhotos.count))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
