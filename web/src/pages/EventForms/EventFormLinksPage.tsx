@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/useToast";
 import type { EventFormLink } from "@/types/entities";
 import { useTranslation } from "react-i18next";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { Empty } from "@/components/Empty";
 
 export const EventFormLinksPage: React.FC = () => {
   const { t, i18n } = useTranslation("public");
@@ -160,22 +161,20 @@ export const EventFormLinksPage: React.FC = () => {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : !links || links.length === 0 ? (
-        <div className="text-center py-16 bg-card rounded-2xl border border-border">
-          <Link2 className="h-12 w-12 text-text-tertiary mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-text mb-2">
-            {t("admin_links.no_links")}
-          </h3>
-          <p className="text-sm text-text-secondary mb-6 max-w-sm mx-auto">
-            {t("admin_links.no_links_desc")}
-          </p>
-          <button
-            onClick={() => setShowDialog(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl premium-gradient text-white font-medium text-sm"
-          >
-            <Plus className="h-4 w-4" />
-            {t("admin_links.create_first")}
-          </button>
-        </div>
+        <Empty
+          icon={Link2}
+          title={t("admin_links.no_links")}
+          description={t("admin_links.no_links_desc")}
+          action={
+            <button
+              onClick={() => setShowDialog(true)}
+              className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg transition-all hover:scale-[1.02]"
+            >
+              <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
+              {t("admin_links.create_first")}
+            </button>
+          }
+        />
       ) : (
         <div className="space-y-3">
           {links.map((link) => (

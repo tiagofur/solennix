@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2, MessageSquare, Save } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import eventReviewService, { EventReview, ReviewVisibility } from '@/services/eventReviewService';
+import { Empty } from '@/components/Empty';
 
 const QUERY_KEY = ['reviews', 'organizer'];
 
@@ -71,9 +72,11 @@ export const ReviewsPage: React.FC = () => {
       </div>
 
       {sortedReviews.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-surface p-10 text-center text-text-secondary">
-          {t('organizer.empty')}
-        </div>
+        <Empty
+          icon={MessageSquare}
+          title={t('organizer.title')}
+          description={t('organizer.empty')}
+        />
       ) : (
         <div className="space-y-4">
           {sortedReviews.map((review) => {

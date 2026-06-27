@@ -34,7 +34,8 @@
     "activity_error": "Could not load recent activity.",
     "no_activity": "No activity recorded yet.",
     "view_plans": "View Pro Plans",
-    "view_plans_description": "View available subscription plans"
+    "view_plans_description": "View available subscription plans",
+    "complete": "Complete"
   },
   "actions": {
     "save": "Save",
@@ -342,6 +343,75 @@
         "plural": "products and inventory items",
         "metric": "Catalog items"
       }
+    }
+  },
+  "calendar": "Date",
+  "team": {
+    "title": "My Assignments",
+    "subtitle": "Accept or decline invitations to participate in events.",
+    "empty": "You have no pending assignments yet.",
+    "portal_nav": "Personal navigation",
+    "nav": {
+      "work": "My Shift",
+      "calendar": "Calendar"
+    },
+    "status": {
+      "pending": "Unconfirmed",
+      "confirmed": "Confirmed",
+      "declined": "Declined",
+      "cancelled": "Cancelled"
+    },
+    "timeline": {
+      "title": "Recent Changes",
+      "empty": "No recent changes in your assignments.",
+      "unread": "New",
+      "location_changed": "Location changed",
+      "role_changed": "Role changed",
+      "shift_changed": "Shift changed",
+      "status_changed": "Status changed",
+      "assignment_added": "New assignment",
+      "assignment_removed": "Assignment removed",
+      "updated": "Assignment updated"
+    },
+    "work_title": "My Shift",
+    "work_subtitle": "Manage your availability and respond to assignments.",
+    "load_error": "We couldn't load your events.",
+    "cta_today_agenda": "Go to today's agenda",
+    "cta_review_assignments": "Respond to assignments",
+    "today_section_title": "Today",
+    "today_empty": "You have no assignments for today.",
+    "next7_section_title": "Next 7 Days",
+    "next7_empty": "No assignments in the next 7 days.",
+    "pending_section_title": "Pending Responses",
+    "pending_empty": "You have no pending invitations.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "fee": "Fee",
+    "agenda_section_title": "My Agenda",
+    "agenda_empty": "No assignments for the current filters.",
+    "shift_from": "From {{time}}",
+    "shift_to": "To {{time}}",
+    "filter": {
+      "status": "Status",
+      "all_status": "All",
+      "from": "From",
+      "to": "To",
+      "search": "Search event",
+      "search_placeholder": "Event name"
+    },
+    "availability": {
+      "title": "My Availability",
+      "from": "From",
+      "to": "To",
+      "start_time": "Start time",
+      "end_time": "End time",
+      "reason": "Reason (optional)",
+      "reason_placeholder": "Trip, rest, etc.",
+      "save_changes": "Save changes",
+      "block_dates": "Block dates",
+      "empty": "No blocked dates loaded.",
+      "edit": "Edit",
+      "remove": "Delete"
     }
   }
 }

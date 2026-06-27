@@ -1,10 +1,11 @@
 import React from 'react';
-import { CalendarDays, CheckCircle2, Clock3, XCircle } from 'lucide-react';
+import { CalendarDays, CheckCircle2, ClipboardList, Clock3, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useMyAssignments, useRespondAssignment } from '@/hooks/queries/useStaffQueries';
 import type { AssignmentStatus } from '@/types/entities';
 import { TeamMemberPortalNav } from './components/TeamMemberPortalNav';
 import { formatEventDate, formatShiftLabel } from './teamMemberUtils';
+import { Empty } from '@/components/Empty';
 
 const STATUS_STYLES: Record<AssignmentStatus, string> = {
   pending: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
@@ -87,11 +88,11 @@ export const AssignmentsPage: React.FC = () => {
         </header>
 
         {assignments.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-card p-8 text-center">
-            <p className="text-sm text-text-secondary">
-              {t('team.empty', { defaultValue: 'Todavía no tenés asignaciones pendientes.' })}
-            </p>
-          </div>
+          <Empty
+            icon={ClipboardList}
+            title={t('team.title', { defaultValue: 'Mis asignaciones' })}
+            description={t('team.empty', { defaultValue: 'Todavía no tenés asignaciones pendientes.' })}
+          />
         ) : (
           <div className="space-y-4">
             {assignments.map((assignment) => {

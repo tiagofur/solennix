@@ -119,7 +119,7 @@ export function useRespondAssignment() {
     },
     onError: (error) => {
       logError('Error responding assignment', error);
-      addToast(getErrorMessage(error, t('error_respond_assignment')), 'error');
+      addToast(getErrorMessage(error, t('list.error_respond_assignment')), 'error');
     },
   });
 }
@@ -139,7 +139,7 @@ export function useCreateStaff() {
     },
     onError: (error) => {
       logError('Error creating staff', error);
-      addToast(getErrorMessage(error, t('error_create')), 'error');
+      addToast(getErrorMessage(error, t('list.error_create')), 'error');
     },
   });
 }
@@ -159,7 +159,7 @@ export function useUpdateStaff() {
     },
     onError: (error) => {
       logError('Error updating staff', error);
-      addToast(getErrorMessage(error, t('error_update')), 'error');
+      addToast(getErrorMessage(error, t('list.error_update')), 'error');
     },
   });
 }
@@ -174,11 +174,11 @@ export function useDeleteStaff() {
     mutationFn: (id: string) => staffService.delete(id) || staffService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.staff.all });
-      addToast(t('success_delete'), 'success');
+      addToast(t('list.success_delete'), 'success');
     },
     onError: (error) => {
       logError('Error deleting staff', error);
-      addToast(getErrorMessage(error, t('error_delete')), 'error');
+      addToast(getErrorMessage(error, t('list.error_delete')), 'error');
     },
   });
 }
@@ -213,7 +213,7 @@ export function useCreateStaffTeam() {
     },
     onError: (error) => {
       logError('Error creating staff team', error);
-      addToast(getErrorMessage(error, t('teams.error_create')), 'error');
+      addToast(getErrorMessage(error, t('teams.list.error_create')), 'error');
     },
   });
 }
@@ -233,7 +233,7 @@ export function useUpdateStaffTeam() {
     },
     onError: (error) => {
       logError('Error updating staff team', error);
-      addToast(getErrorMessage(error, t('teams.error_update')), 'error');
+      addToast(getErrorMessage(error, t('teams.list.error_update')), 'error');
     },
   });
 }
@@ -248,11 +248,11 @@ export function useDeleteStaffTeam() {
     mutationFn: (id: string) => staffService.deleteTeam(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.staff.teams });
-      addToast(t('teams.success_delete'), 'success');
+      addToast(t('teams.list.success_delete'), 'success');
     },
     onError: (error) => {
       logError('Error deleting staff team', error);
-      addToast(getErrorMessage(error, t('teams.error_delete')), 'error');
+      addToast(getErrorMessage(error, t('teams.list.error_delete')), 'error');
     },
   });
 }

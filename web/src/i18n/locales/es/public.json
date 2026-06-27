@@ -37,47 +37,6 @@
       "title": "Enlace no válido",
       "description": "No encontramos este enlace. Revisá el link o pedile al organizador que te lo vuelva a compartir."
     },
-    "admin_links": {
-      "title": "Formularios",
-      "subtitle": "Genera enlaces para que tus clientes llenen datos de su evento",
-      "new_link": "Generar enlace",
-      "create_first": "Crear primer enlace",
-      "no_links": "Sin formularios",
-      "no_links_desc": "Genera un enlace compartible para que tus clientes potenciales llenen los datos de su evento y seleccionen productos.",
-      "dialog_title": "Generar enlace",
-      "label_field": "Etiqueta (opcional)",
-      "label_placeholder": "Ej: Boda de María y Pedro",
-      "valid_for_one": "Válido por: {{count}} día",
-      "valid_for_other": "Válido por: {{count}} días",
-      "day_one": "1 día",
-      "day_plural": "{{count}} días",
-      "cancel": "Cancelar",
-      "create": "Crear",
-      "no_label": "Sin etiqueta",
-      "expires": "Expira: {{date}}",
-      "used": "Usado: {{date}}",
-      "copy": "Copiar",
-      "share": "Compartir",
-      "revoke": "Revocar",
-      "view_event": "Ver evento",
-      "status": {
-        "active": "Activo",
-        "used": "Usado",
-        "expired": "Expirado"
-      },
-      "confirm_revoke": "¿Revocar este enlace? Ya no podrá ser utilizado.",
-      "share_title": "Formulario de evento",
-      "share_text_with_label": "Formulario: {{label}}",
-      "share_text_default": "Llena los datos de tu evento",
-      "toast": {
-        "created": "Enlace creado",
-        "error_create": "Error al crear enlace",
-        "copied": "Enlace copiado",
-        "error_copy": "No se pudo copiar",
-        "revoked": "Enlace revocado",
-        "error_revoke": "Error al revocar"
-      }
-    },
     "errors": {
       "name_required": "El nombre es requerido",
       "phone_required": "El teléfono es requerido",
@@ -87,6 +46,47 @@
       "num_people_min": "Mínimo 1 persona",
       "submit_failed": "Hubo un error al enviar. Intenta de nuevo.",
       "connection_error": "Error de conexión. Verifica tu internet e intenta de nuevo."
+    }
+  },
+  "admin_links": {
+    "title": "Formularios",
+    "subtitle": "Genera enlaces para que tus clientes llenen datos de su evento",
+    "new_link": "Generar enlace",
+    "create_first": "Crear primer enlace",
+    "no_links": "Sin formularios",
+    "no_links_desc": "Genera un enlace compartible para que tus clientes potenciales llenen los datos de su evento y seleccionen productos.",
+    "dialog_title": "Generar enlace",
+    "label_field": "Etiqueta (opcional)",
+    "label_placeholder": "Ej: Boda de María y Pedro",
+    "valid_for_one": "Válido por: {{count}} día",
+    "valid_for_other": "Válido por: {{count}} días",
+    "day_one": "1 día",
+    "day_plural": "{{count}} días",
+    "cancel": "Cancelar",
+    "create": "Crear",
+    "no_label": "Sin etiqueta",
+    "expires": "Expira: {{date}}",
+    "used": "Usado: {{date}}",
+    "copy": "Copiar",
+    "share": "Compartir",
+    "revoke": "Revocar",
+    "view_event": "Ver evento",
+    "status": {
+      "active": "Activo",
+      "used": "Usado",
+      "expired": "Expirado"
+    },
+    "confirm_revoke": "¿Revocar este enlace? Ya no podrá ser utilizado.",
+    "share_title": "Formulario de evento",
+    "share_text_with_label": "Formulario: {{label}}",
+    "share_text_default": "Llena los datos de tu evento",
+    "toast": {
+      "created": "Enlace creado",
+      "error_create": "Error al crear enlace",
+      "copied": "Enlace copiado",
+      "error_copy": "No se pudo copiar",
+      "revoked": "Enlace revocado",
+      "error_revoke": "Error al revocar"
     }
   },
   "portal": {

@@ -34,7 +34,8 @@
     "activity_error": "No se pudo cargar la actividad reciente.",
     "no_activity": "Sin actividad registrada todavía.",
     "view_plans": "Ver Planes Pro",
-    "view_plans_description": "Ver planes de suscripción disponibles"
+    "view_plans_description": "Ver planes de suscripción disponibles",
+    "complete": "Completar"
   },
   "actions": {
     "save": "Guardar",
@@ -305,7 +306,9 @@
     "about": "Acerca de Solennix",
     "terms": "Términos de Uso",
     "privacy": "Política de Privacidad",
-    "delete_account": "Eliminación de Datos"
+    "delete_account": "Eliminación de Datos",
+    "view_plans": "Ver Planes Pro",
+    "view_plans_description": "Ver planes de suscripción disponibles"
   },
   "entities": {
     "product": "Producto",
@@ -342,6 +345,75 @@
         "plural": "productos e ítems de inventario",
         "metric": "Ítems en catálogo"
       }
+    }
+  },
+  "calendar": "Fecha",
+  "team": {
+    "title": "Mis asignaciones",
+    "subtitle": "Aceptá o rechazá invitaciones para participar en eventos.",
+    "empty": "Todavía no tenés asignaciones pendientes.",
+    "portal_nav": "Navegación personal",
+    "nav": {
+      "work": "Mi jornada",
+      "calendar": "Calendario"
+    },
+    "status": {
+      "pending": "Sin confirmar",
+      "confirmed": "Confirmado",
+      "declined": "Rechazó",
+      "cancelled": "Cancelado"
+    },
+    "timeline": {
+      "title": "Cambios recientes",
+      "empty": "Sin cambios recientes en tus asignaciones.",
+      "unread": "Nuevo",
+      "location_changed": "Cambio de ubicación",
+      "role_changed": "Cambio de rol",
+      "shift_changed": "Cambio de turno",
+      "status_changed": "Cambio de estado",
+      "assignment_added": "Nueva asignación",
+      "assignment_removed": "Asignación removida",
+      "updated": "Actualización de asignación"
+    },
+    "work_title": "Mi jornada",
+    "work_subtitle": "Gestioná tu disponibilidad y responde asignaciones.",
+    "load_error": "No pudimos cargar tus eventos.",
+    "cta_today_agenda": "Ir a agenda de hoy",
+    "cta_review_assignments": "Responder asignaciones",
+    "today_section_title": "Hoy",
+    "today_empty": "No tenés asignaciones para hoy.",
+    "next7_section_title": "Próximos 7 días",
+    "next7_empty": "No hay asignaciones en los próximos 7 días.",
+    "pending_section_title": "Pendientes por responder",
+    "pending_empty": "No tenés invitaciones pendientes.",
+    "accept": "Aceptar",
+    "decline": "Rechazar",
+    "fee": "Pago",
+    "agenda_section_title": "Mi agenda",
+    "agenda_empty": "No hay asignaciones para los filtros actuales.",
+    "shift_from": "Desde {{time}}",
+    "shift_to": "Hasta {{time}}",
+    "filter": {
+      "status": "Estado",
+      "all_status": "Todos",
+      "from": "Desde",
+      "to": "Hasta",
+      "search": "Buscar evento",
+      "search_placeholder": "Nombre del evento"
+    },
+    "availability": {
+      "title": "Mi disponibilidad",
+      "from": "Desde",
+      "to": "Hasta",
+      "start_time": "Hora inicio",
+      "end_time": "Hora fin",
+      "reason": "Motivo (opcional)",
+      "reason_placeholder": "Viaje, descanso, etc.",
+      "save_changes": "Guardar cambios",
+      "block_dates": "Bloquear fechas",
+      "empty": "No tenés bloqueos cargados.",
+      "edit": "Editar",
+      "remove": "Eliminar"
     }
   }
 }
