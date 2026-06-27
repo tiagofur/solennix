@@ -5,7 +5,7 @@ import { useMyAssignments, useRespondAssignment } from '@/hooks/queries/useStaff
 import type { AssignmentStatus } from '@/types/entities';
 import { TeamMemberPortalNav } from './components/TeamMemberPortalNav';
 import { formatEventDate, formatShiftLabel } from './teamMemberUtils';
-import { Empty } from '@/components/Empty';
+import Empty from '@/components/Empty';
 
 const STATUS_STYLES: Record<AssignmentStatus, string> = {
   pending: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',

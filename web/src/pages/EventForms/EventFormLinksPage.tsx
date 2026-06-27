@@ -23,7 +23,7 @@ import { useToast } from "@/hooks/useToast";
 import type { EventFormLink } from "@/types/entities";
 import { useTranslation } from "react-i18next";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { Empty } from "@/components/Empty";
+import Empty from "@/components/Empty";
 
 export const EventFormLinksPage: React.FC = () => {
   const { t, i18n } = useTranslation("public");

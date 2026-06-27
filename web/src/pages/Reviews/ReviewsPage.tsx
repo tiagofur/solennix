@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2, MessageSquare, Save } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import eventReviewService, { EventReview, ReviewVisibility } from '@/services/eventReviewService';
-import { Empty } from '@/components/Empty';
+import Empty from '@/components/Empty';
 
 const QUERY_KEY = ['reviews', 'organizer'];
 
