@@ -52,7 +52,7 @@ export const BottomTabBar: React.FC = () => {
 
       {/* "Más" drawer */}
       {moreOpen && (
-        <div className="fixed bottom-[4.5rem] left-4 right-4 z-50 bg-card rounded-2xl border border-border shadow-2xl p-2 md:hidden">
+        <div className="fixed bottom-[4.5rem] left-4 right-4 z-50 liquid-glass rounded-2xl shadow-2xl p-2 md:hidden">
           <div className="flex items-center justify-between px-3 py-2 mb-1">
             <span className="text-xs font-medium text-text-secondary">
               {t('action.more_options')}
@@ -60,7 +60,7 @@ export const BottomTabBar: React.FC = () => {
             <button
               type="button"
               onClick={() => setMoreOpen(false)}
-              className="p-1 text-text-secondary hover:text-text rounded-lg transition-colors"
+              className="p-1 text-text-secondary hover:text-text rounded-lg transition-colors active-ios-scale"
               aria-label={t('nav.close_nav')}
             >
               <X className="h-4 w-4" aria-hidden="true" />
@@ -75,10 +75,10 @@ export const BottomTabBar: React.FC = () => {
                 to={item.href}
                 onClick={() => setMoreOpen(false)}
                 className={clsx(
-                  'flex items-center gap-3 px-3 py-3 rounded-xl transition-colors',
+                  'flex items-center gap-3 px-3 py-3 rounded-xl transition-colors active-ios-scale',
                   active
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-text hover:bg-surface-alt',
+                    ? 'bg-primary-light/80 text-primary'
+                    : 'text-text hover:bg-surface-alt/50',
                 )}
               >
                 <Icon className="h-5 w-5" aria-hidden="true" />
@@ -91,7 +91,7 @@ export const BottomTabBar: React.FC = () => {
 
       {/* Bottom tab bar */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-40 bg-surface-grouped border-t border-border md:hidden safe-area-bottom"
+        className="fixed bottom-0 left-0 right-0 z-40 liquid-glass border-t border-border/65 md:hidden safe-area-bottom"
         aria-label={t('nav.main_nav')}
       >
         <div className="flex items-center justify-around h-[4.5rem] px-2">
@@ -103,12 +103,12 @@ export const BottomTabBar: React.FC = () => {
                 key={tab.name}
                 to={tab.href}
                 className={clsx(
-                  'flex flex-col items-center justify-center flex-1 py-2 transition-colors',
+                  'flex flex-col items-center justify-center flex-1 py-2 transition-colors active-ios-scale',
                   active ? 'text-primary' : 'text-text-secondary',
                 )}
               >
                 <Icon
-                  className={clsx('h-5 w-5 mb-1', active && 'drop-shadow-sm')}
+                  className={clsx('h-5 w-5 mb-1', active && 'drop-shadow-xs')}
                   aria-hidden="true"
                 />
                 <span className={clsx('text-xs font-semibold', active && 'font-bold')}>
@@ -123,13 +123,13 @@ export const BottomTabBar: React.FC = () => {
             type="button"
             onClick={() => setMoreOpen(!moreOpen)}
             className={clsx(
-              'flex flex-col items-center justify-center flex-1 py-2 transition-colors',
+              'flex flex-col items-center justify-center flex-1 py-2 transition-colors active-ios-scale',
               moreOpen || isMoreActive ? 'text-primary' : 'text-text-secondary',
             )}
             aria-label={t('action.more_options')}
           >
             <MoreHorizontal
-              className={clsx('h-5 w-5 mb-1', (moreOpen || isMoreActive) && 'drop-shadow-sm')}
+              className={clsx('h-5 w-5 mb-1', (moreOpen || isMoreActive) && 'drop-shadow-xs')}
               aria-hidden="true"
             />
             <span

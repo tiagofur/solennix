@@ -35,6 +35,8 @@ import type { DashboardRevenuePoint } from "../types/dashboard";
 import { queryKeys } from "../hooks/queries/queryKeys";
 import { eventService } from "../services/eventService";
 import { Modal } from "../components/Modal";
+import { Card } from "../components/Card";
+import { Button } from "../components/Button";
 import { PaymentFormFields, PaymentFormData } from "../components/PaymentFormFields";
 import { useToast } from "../hooks/useToast";
 import { getEventTotalCharged } from "../lib/finance";
@@ -130,26 +132,26 @@ function formatCompactCurrency(value: number, locale: string) {
 function SkeletonKpi({ compact = false }: { compact?: boolean }) {
   if (compact) {
     return (
-      <div className="bg-surface border border-border rounded-xl px-4 py-3 flex items-center gap-3 animate-pulse">
-        <div className="w-7 h-7 rounded-lg bg-surface-alt shrink-0" />
+      <div className="bg-surface/50 backdrop-blur-xs border border-border rounded-xl px-4 py-3 flex items-center gap-3 animate-pulse">
+        <div className="w-7 h-7 rounded-lg bg-surface-alt/40 shrink-0" />
         <div className="flex-1 space-y-1.5">
-          <div className="h-2.5 bg-surface-alt rounded w-2/3" />
-          <div className="h-4 bg-surface-alt rounded w-1/3" />
+          <div className="h-2.5 bg-surface-alt/40 rounded w-2/3" />
+          <div className="h-4 bg-surface-alt/40 rounded w-1/3" />
         </div>
       </div>
     );
   }
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 animate-pulse">
+    <Card variant="glass" padding="md" className="animate-pulse">
       <div className="flex items-start gap-4">
-        <div className="w-10 h-10 rounded-xl bg-surface-alt shrink-0" />
+        <div className="w-10 h-10 rounded-xl bg-surface-alt/40 shrink-0" />
         <div className="flex-1 space-y-2 pt-1">
-          <div className="h-3 bg-surface-alt rounded w-2/3" />
-          <div className="h-6 bg-surface-alt rounded w-1/2" />
-          <div className="h-3 bg-surface rounded w-3/4" />
+          <div className="h-3 bg-surface-alt/40 rounded w-2/3" />
+          <div className="h-6 bg-surface-alt/40 rounded w-1/2" />
+          <div className="h-3 bg-surface-alt/40 rounded w-3/4" />
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -166,32 +168,32 @@ interface KpiCardProps {
 function KpiCard({ icon: Icon, iconBg, iconColor, label, value, sub, compact = false }: KpiCardProps) {
   if (compact) {
     return (
-      <div className="bg-surface border border-border rounded-xl px-4 py-3 flex items-center gap-3">
+      <div className="bg-surface/50 backdrop-blur-xs border border-border rounded-xl px-4 py-3 flex items-center gap-3">
         <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${iconBg}`}>
           <Icon className={`h-3.5 w-3.5 ${iconColor}`} aria-hidden="true" />
         </div>
         <div className="flex-1 min-w-0">
-          <dt className="text-xs font-medium text-text-secondary leading-none mb-1 truncate">{label}</dt>
+          <dt className="text-xs font-semibold text-text-secondary leading-none mb-1 truncate">{label}</dt>
           <dd className="text-sm font-bold text-text truncate">{value}</dd>
         </div>
       </div>
     );
   }
   return (
-    <div className="bg-card shadow-sm hover:shadow-md border border-border rounded-2xl p-5 transition-all duration-200 hover:-translate-y-0.5 flex flex-col gap-4">
+    <Card variant="glass" padding="md" className="hover:-translate-y-0.5 flex flex-col gap-4">
       <div className="flex items-start gap-4">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
           <Icon className={`h-5 w-5 ${iconColor}`} aria-hidden="true" />
         </div>
         <div className="flex-1 min-w-0">
-          <dt className="text-xs font-medium text-text-secondary leading-tight mb-1 truncate">
+          <dt className="text-xs font-bold text-text-secondary leading-tight mb-1 truncate">
             {label}
           </dt>
-          <dd className="text-base sm:text-xl font-bold text-text tracking-tight truncate">{value}</dd>
+          <dd className="text-base sm:text-xl font-black text-text tracking-tight truncate">{value}</dd>
         </div>
       </div>
-      {sub && <div className="text-xs text-text-tertiary border-t border-border pt-3">{sub}</div>}
-    </div>
+      {sub && <div className="text-xs text-text-tertiary border-t border-border/60 pt-3">{sub}</div>}
+    </Card>
   );
 }
 
@@ -205,18 +207,15 @@ interface QuickActionLinkProps {
 }
 
 function QuickActionLink({ icon: Icon, label, primary = false, onClick, to }: QuickActionLinkProps) {
+  const variant = primary ? 'primary' : 'glass';
   const inner = (
-    <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all duration-150 cursor-pointer whitespace-nowrap
-      ${primary
-        ? "bg-primary text-white border-primary hover:bg-primary-dark"
-        : "bg-card border-border text-text hover:bg-surface-alt hover:border-primary/30"
-      }`}>
-    <Icon className={`h-4 w-4 shrink-0 ${primary ? "text-white" : "text-primary"}`} aria-hidden="true" />
-    <span className="text-sm font-semibold">{label}</span>
-    </div>
+    <Button variant={variant} size="md" className="w-full justify-start whitespace-nowrap active-ios-scale">
+      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+      <span>{label}</span>
+    </Button>
   );
-  if (to) return <Link to={to}>{inner}</Link>;
-  return <button type="button" onClick={onClick} className="text-left">{inner}</button>;
+  if (to) return <Link to={to} className="block">{inner}</Link>;
+  return <div onClick={onClick} className="block">{inner}</div>;
 }
 
 // ── Event Status Bar ────────────────────────────────────────────
@@ -276,34 +275,34 @@ function UpcomingEventCard({ event }: { event: DashboardEvent }) {
   const dateLocale = i18n.language === 'en' ? enUS : es;
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:border-primary/30 hover:shadow-sm transition-all duration-200"
+    <Card variant="glass" padding="sm" className="flex items-center gap-4 cursor-pointer hover:border-primary/50 transition-all duration-200"
       onClick={() => navigate(`/events/${event.id}/summary`)} role="button" tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/events/${event.id}/summary`); }}>
       <div className="w-11 h-11 rounded-xl flex flex-col items-center justify-center shrink-0"
         style={{ backgroundColor: "var(--color-primary-light)" }}>
-        <span className="text-xs font-semibold uppercase text-primary leading-none">{format(dateObj, "MMM", { locale: dateLocale })}</span>
-        <span className="text-lg font-bold text-primary leading-tight">{format(dateObj, "d")}</span>
+        <span className="text-xs font-bold uppercase text-primary leading-none">{format(dateObj, "MMM", { locale: dateLocale })}</span>
+        <span className="text-lg font-black text-primary leading-tight">{format(dateObj, "d")}</span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-text truncate">{event.client?.name ?? t('dashboard:event.no_client')}</p>
+        <p className="text-sm font-bold text-text truncate">{event.client?.name ?? t('dashboard:event.no_client')}</p>
         <p className="text-xs text-text-secondary truncate mt-0.5">{event.service_type} · {event.num_people} {t('dashboard:event.pax')}</p>
       </div>
       <div onClick={(e) => e.stopPropagation()}>
         <StatusDropdown eventId={event.id} currentStatus={event.status as EventStatus} />
       </div>
-    </div>
+    </Card>
   );
 }
 
 // ── Low Stock Card ──────────────────────────────────────────────
 function LowStockCard({ item }: { item: InventoryItem }) {
   return (
-    <div className="bg-surface border border-border rounded-xl p-3.5 flex items-center gap-3">
+    <div className="bg-surface/50 border border-border rounded-xl p-3.5 flex items-center gap-3">
       <div className="w-8 h-8 rounded-lg bg-error/10 flex items-center justify-center shrink-0">
         <AlertTriangle className="h-4 w-4 text-error" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-text truncate">{item.ingredient_name}</p>
+        <p className="text-sm font-bold text-text truncate">{item.ingredient_name}</p>
         <p className="text-xs text-text-secondary mt-0.5">
           <span className="font-bold text-error">{item.current_stock}</span>
           <span className="text-text-tertiary">/{item.minimum_stock}</span> {item.unit}
@@ -443,21 +442,21 @@ function DashboardAttentionSection({
   const totalAlerts = alerts.reduce((sum, alert) => sum + alert.items.length, 0);
 
   return (
-    <section className="bg-card shadow-sm border border-warning/30 rounded-2xl overflow-hidden">
+    <Card variant="glass" padding="none" className="border-warning/35 overflow-hidden">
       <div className="flex items-start justify-between gap-4 px-6 py-5 border-b border-border">
         <div className="flex items-start gap-3 min-w-0">
           <span className="w-9 h-9 rounded-xl bg-warning/10 flex items-center justify-center shrink-0">
             <AlertTriangle className="h-4.5 w-4.5 text-warning" aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <h2 className="text-sm font-semibold text-text">{t('dashboard:attention.title')}</h2>
+            <h2 className="text-sm font-bold text-text">{t('dashboard:attention.title')}</h2>
             <p className="text-xs text-text-secondary mt-0.5">
               {t('dashboard:attention.description')}
             </p>
           </div>
         </div>
-        <span className="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-warning/10 text-warning">
-          {t('dashboard:attention.alerts_count', { count: totalAlerts })}
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-warning/10 text-warning shrink-0">
+          {totalAlerts} {t('dashboard:attention.alert_count', { count: totalAlerts })}
         </span>
       </div>
 
@@ -501,7 +500,7 @@ function DashboardAttentionSection({
           );
         })}
       </div>
-    </section>
+    </Card>
   );
 }
 
@@ -529,9 +528,9 @@ function MonthlyRevenueTrendCard({ points }: { points: DashboardRevenuePoint[] }
   const moneyLocale = localeCode;
 
   return (
-    <div className="bg-card shadow-sm border border-border rounded-2xl p-6 flex flex-col">
+    <Card variant="glass" padding="md" className="flex flex-col">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-sm font-semibold text-text">{t('dashboard:revenue_chart.title')}</h3>
+        <h3 className="text-sm font-bold text-text">{t('dashboard:revenue_chart.title')}</h3>
       </div>
       <div className="h-60 w-full min-h-[240px]" role="img" aria-label={t('dashboard:revenue_chart.aria_label')}>
         <ResponsiveContainer width="100%" height={240} minWidth={1} minHeight={1}>
@@ -564,7 +563,7 @@ function MonthlyRevenueTrendCard({ points }: { points: DashboardRevenuePoint[] }
           </BarChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -901,20 +900,20 @@ export const Dashboard: React.FC = () => {
         {/* Left Column: Charts */}
         <div className="lg:col-span-2 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-card shadow-sm border border-border rounded-2xl p-6 flex flex-col h-100">
-              <h3 className="text-sm font-semibold text-text mb-6">{t('dashboard:status_chart.title')}</h3>
+            <Card variant="glass" padding="md" className="flex flex-col h-100">
+              <h3 className="text-sm font-bold text-text mb-6">{t('dashboard:status_chart.title')}</h3>
               <EventStatusBar data={statusChartData} loading={loadingMonth} />
-            </div>
+            </Card>
 
             {revenueChartData && <MonthlyRevenueTrendCard points={revenueChartData} />}
             {!revenueChartData && !isBasicPlan && (
-               <div className="bg-card shadow-sm border border-border rounded-2xl p-6 flex items-center justify-center h-100">
+               <Card variant="glass" padding="md" className="flex items-center justify-center h-100">
                  <RefreshCw className="h-6 w-6 animate-spin text-border" />
-               </div>
+               </Card>
             )}
             {isBasicPlan && (
-               <div className="bg-card shadow-sm border border-border border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center gap-4 h-100">
-                 <div className="w-12 h-12 rounded-full bg-surface-alt flex items-center justify-center">
+               <Card variant="glass" padding="lg" className="border-dashed flex flex-col items-center justify-center text-center gap-4 h-100">
+                 <div className="w-12 h-12 rounded-full bg-surface-alt/60 flex items-center justify-center">
                    <TrendingUp className="h-6 w-6 text-text-tertiary" />
                  </div>
                   <div className="max-w-50">
@@ -923,8 +922,8 @@ export const Dashboard: React.FC = () => {
                       {t('dashboard:revenue_chart.pro_description')}
                     </p>
                   </div>
-                  <button onClick={() => navigate("/profile/pricing")} className="text-xs font-bold text-primary hover:underline">{t('dashboard:revenue_chart.view_plans')}</button>
-                </div>
+                  <button onClick={() => navigate("/profile/pricing")} className="text-xs font-bold text-primary hover:underline active-ios-scale">{t('dashboard:revenue_chart.view_plans')}</button>
+                </Card>
              )}
           </div>
 
@@ -942,13 +941,13 @@ export const Dashboard: React.FC = () => {
         {/* Right Column: Sideboards */}
         <div className="space-y-8">
           {/* Upcoming Events Sidebar */}
-          <section className="bg-card shadow-sm border border-border rounded-2xl p-6">
+          <Card variant="glass" padding="md" className="flex flex-col">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-sm font-bold text-text flex items-center gap-2">
                 <Clock className="h-4 w-4 text-primary" />
                 {t('common:upcoming_events')}
               </h3>
-              <Link to="/calendar" className="text-xs font-bold text-primary hover:underline">
+              <Link to="/calendar" className="text-xs font-bold text-primary hover:underline active-ios-scale">
                 {t('common:action.view')}
               </Link>
             </div>
@@ -956,29 +955,29 @@ export const Dashboard: React.FC = () => {
             <div className="space-y-3">
               {loadingUpcoming ? (
                 Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-20 bg-surface-alt rounded-xl animate-pulse" />
+                  <div key={i} className="h-20 bg-surface-alt/40 rounded-xl animate-pulse" />
                 ))
               ) : upcomingEvents.length > 0 ? (
                 upcomingEvents.map((event) => (
                   <UpcomingEventCard key={event.id} event={event as DashboardEvent} />
                 ))
               ) : (
-                <div className="py-8 text-center bg-surface-alt rounded-2xl border border-dashed border-border">
+                <div className="py-8 text-center bg-surface-alt/30 rounded-2xl border border-dashed border-border">
                   <Calendar className="h-8 w-8 text-text-tertiary mx-auto mb-2 opacity-50" />
                   <p className="text-xs text-text-secondary">{t('dashboard:upcoming.no_events')}</p>
                 </div>
               )}
             </div>
-          </section>
+          </Card>
 
           {/* Low Stock Sidebar */}
-          <section className="bg-card shadow-sm border border-border rounded-2xl p-6">
+          <Card variant="glass" padding="md" className="flex flex-col">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-sm font-bold text-text flex items-center gap-2">
                 <Package className="h-4 w-4 text-error" />
                 {t('common:critical_inventory')}
               </h3>
-              <Link to="/inventory" className="text-xs font-bold text-primary hover:underline">
+              <Link to="/inventory" className="text-xs font-bold text-primary hover:underline active-ios-scale">
                 {t('common:action.view')}
               </Link>
             </div>
@@ -986,20 +985,20 @@ export const Dashboard: React.FC = () => {
             <div className="space-y-3">
               {loadingInventory ? (
                 Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-16 bg-surface-alt rounded-xl animate-pulse" />
+                  <div key={i} className="h-16 bg-surface-alt/40 rounded-xl animate-pulse" />
                 ))
               ) : lowStockItems.length > 0 ? (
                 lowStockItems.slice(0, 5).map((item) => (
                   <LowStockCard key={item.id} item={item} />
                 ))
               ) : (
-                <div className="py-8 text-center bg-surface-alt rounded-2xl border border-dashed border-border">
+                <div className="py-8 text-center bg-surface-alt/30 rounded-2xl border border-dashed border-border">
                   <FileCheck className="h-8 w-8 text-success mx-auto mb-2 opacity-50" />
                   <p className="text-xs text-text-secondary">{t('dashboard:inventory.no_items')}</p>
                 </div>
               )}
             </div>
-          </section>
+          </Card>
 
           {/* Business Stats mini-grid */}
           <div className="grid grid-cols-1 gap-4">

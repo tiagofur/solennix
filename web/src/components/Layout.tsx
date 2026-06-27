@@ -129,6 +129,12 @@ export const Layout: React.FC = () => {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-999 focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-xl focus:text-sm focus:font-bold">
         {t('nav.skip_to_content')}
       </a>
+
+      {/* Dynamic iOS-style ambient mesh gradient blobs for liquid glass refraction */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[120px] pointer-events-none z-0 dark:bg-primary/5" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-accent/20 blur-[150px] pointer-events-none z-0 dark:bg-accent/5" />
+      <div className="absolute top-[40%] right-[20%] w-[35%] h-[35%] rounded-full bg-primary-light/30 blur-[100px] pointer-events-none z-0 dark:bg-primary-light/5" />
+
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div
@@ -148,16 +154,16 @@ export const Layout: React.FC = () => {
       {/* Sidebar */}
       <aside
         className={clsx(
-          "fixed inset-y-0 left-0 z-50 lg:z-auto bg-bg lg:bg-transparent transform transition-all duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
+          "fixed inset-y-0 left-0 z-50 lg:z-auto liquid-glass transform transition-all duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
           // Mobile: always w-64
           "w-64",
           // Desktop: collapsible
-          isCollapsed ? "lg:w-20" : "lg:w-64",
+          isCollapsed ? "lg:w-20 lg:border-r lg:border-border" : "lg:w-64 lg:border-r lg:border-border",
           isSidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         )}
         aria-label={t('nav.main_nav')}
       >
-        <div className="flex flex-col h-full lg:px-4 lg:py-4">
+        <div className="flex flex-col h-full lg:px-4 lg:py-4 relative z-10">
           {/* Logo / Header */}
           <div className={clsx(
             "flex items-center justify-between h-16 px-6 mb-4 border-b border-border lg:border-transparent",
@@ -185,13 +191,13 @@ export const Layout: React.FC = () => {
                     key={item.name}
                     to={item.href}
                     className={clsx(
-                      "flex items-center text-sm font-semibold transition-all duration-200",
+                      "flex items-center text-sm font-semibold transition-all duration-200 active-ios-scale",
                       isCollapsed
                         ? "lg:w-11 lg:h-11 lg:rounded-xl lg:justify-center px-4 py-3 rounded-2xl w-full"
                         : "justify-start px-4 py-3 rounded-2xl w-full",
                       isActive
-                        ? "bg-primary-light text-primary"
-                        : "text-text-secondary hover:bg-surface-alt hover:text-text"
+                        ? "bg-primary-light/80 text-primary border-l-3 border-primary"
+                        : "text-text-secondary hover:bg-surface-alt/50 hover:text-text border-l-3 border-transparent"
                     )}
                     onClick={() => setIsSidebarOpen(false)}
                     title={isCollapsed ? item.name : undefined}
@@ -210,7 +216,7 @@ export const Layout: React.FC = () => {
               type="button"
               onClick={() => setIsCollapsed(!isCollapsed)}
               className={clsx(
-                "flex items-center w-full py-2 text-text-secondary hover:text-text hover:bg-surface-alt rounded-xl transition-colors",
+                "flex items-center w-full py-2 text-text-secondary hover:text-text hover:bg-surface-alt rounded-xl transition-colors active-ios-scale",
                 isCollapsed ? "justify-center px-2" : "px-4"
               )}
               aria-label={isCollapsed ? t('nav.expand_menu') : t('nav.collapse_menu')}
@@ -224,7 +230,7 @@ export const Layout: React.FC = () => {
           <div className={clsx("border-t border-border lg:border-transparent", isCollapsed ? "lg:p-1 p-4" : "p-4 lg:p-2")}>
             {/* User Profile Mini */}
             <div className={clsx(
-              "flex items-center mb-4 bg-surface-alt/50 rounded-2xl border border-border",
+              "flex items-center mb-4 bg-surface-alt/40 rounded-2xl border border-border/60 backdrop-blur-sm",
               isCollapsed ? "lg:justify-center lg:px-0 lg:py-2 px-3 py-2 pl-2" : "px-3 py-2 pl-2"
             )}>
               <div className="h-9 w-9 rounded-xl bg-linear-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold shadow-sm shrink-0" aria-hidden="true">
@@ -241,7 +247,7 @@ export const Layout: React.FC = () => {
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="w-full flex items-center justify-center px-3 py-2.5 text-sm font-semibold rounded-xl bg-surface hover:bg-error/10 hover:text-error hover:border-error/30 transition-colors border border-border text-text shadow-sm"
+                className="w-full flex items-center justify-center px-3 py-2.5 text-sm font-semibold rounded-xl bg-surface/55 hover:bg-error/10 hover:text-error hover:border-error/30 transition-colors border border-border text-text shadow-xs active-ios-scale"
                 aria-label={t('nav.logout')}
               >
                 <LogOut className="h-4 w-4" aria-hidden="true" />
@@ -252,9 +258,9 @@ export const Layout: React.FC = () => {
       </aside>
 
       {/* Main Content Area (Layered Panel) */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden lg:pl-0 lg:py-2 lg:pr-2">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden lg:pl-0 lg:py-2 lg:pr-2 relative z-10">
         {/* Mobile Header */}
-        <header className="bg-surface-grouped shadow-sm lg:hidden border-b border-border shrink-0">
+        <header className="bg-surface-grouped/80 backdrop-blur-md shadow-xs lg:hidden border-b border-border shrink-0">
           <div className="flex items-center justify-between h-16 px-4">
             <button
               type="button"
@@ -270,7 +276,7 @@ export const Layout: React.FC = () => {
         </header>
 
         {/* The Panel Container */}
-        <div className="flex-1 overflow-hidden flex flex-col bg-surface-grouped lg:rounded-[3rem] lg:border border-border lg:shadow-xl relative z-10">
+        <div className="flex-1 overflow-hidden flex flex-col bg-surface-grouped/80 backdrop-blur-xl lg:rounded-[2.5rem] lg:border border-border lg:shadow-xl relative z-10">
 
           {/* Topbar inside panel */}
           <div className="shrink-0 px-6 lg:px-10 py-4 lg:py-6 flex items-center justify-between gap-4">
