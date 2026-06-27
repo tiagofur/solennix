@@ -32,4 +32,25 @@ public enum FeatureL10n {
         let template = text(key, defaultValue)
         return String(format: template, locale: locale, arguments: arguments)
     }
+
+    /// Returns a localized, **plural-aware** string for `key`, where `count`
+    /// drives CLDR plural selection against the key's `.xcstrings`
+    /// `variations.plural` (e.g. `one` for 1, `other` for 0 and 5 in en/es).
+    ///
+    /// This is the plural counterpart of ``format``. Unlike ``format`` — which
+    /// routes through plain `String(format:)` and therefore **silently ignores**
+    /// `variations.plural` (the root cause of the "1 eventos" bug) — this method
+    /// resolves the template from the module bundle and formats it through
+    /// `String.localizedStringWithFormat`, which honors plural variations per
+    /// the system locale.
+    ///
+    /// `count` is both the plural-discriminating argument (CLDR rules select the
+    /// `one`/`other` form from it) and the value substituted into the template's
+    /// `%lld` slot. Call sites that need more than one interpolated count
+    /// (nested double-plurals) should format those templates directly with
+    /// `String.localizedStringWithFormat`.
+    public static func plural(_ key: String, _ defaultValue: String, count: Int) -> String {
+        let template = text(key, defaultValue)
+        return String.localizedStringWithFormat(template, count)
+    }
 }
