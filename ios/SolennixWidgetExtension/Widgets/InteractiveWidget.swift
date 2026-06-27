@@ -9,10 +9,10 @@ import AppIntents
 // MARK: - Mark Event Complete Intent
 
 struct MarkEventCompleteIntent: AppIntent {
-    static var title: LocalizedStringResource = "Marcar Evento Completado"
-    static var description = IntentDescription("Marca un evento como completado")
+    static var title: LocalizedStringResource = "widget.interactive.mark_complete.title"
+    static var description = IntentDescription("widget.interactive.mark_complete.desc")
 
-    @Parameter(title: "Event ID")
+    @Parameter(title: "widget.interactive.param.event_id")
     var eventId: String
 
     init() {}
@@ -40,10 +40,10 @@ struct MarkEventCompleteIntent: AppIntent {
 
 @available(iOS 18.0, *)
 struct QuickAddPaymentIntent: AppIntent {
-    static var title: LocalizedStringResource = "Agregar Pago Rapido"
-    static var description = IntentDescription("Abre la app para agregar un pago")
+    static var title: LocalizedStringResource = "widget.interactive.quick_payment.title"
+    static var description = IntentDescription("widget.interactive.quick_payment.desc")
 
-    @Parameter(title: "Event ID")
+    @Parameter(title: "widget.interactive.param.event_id")
     var eventId: String
 
     init() {}
@@ -133,7 +133,7 @@ struct InteractiveEventWidgetView: View {
             VStack(alignment: .leading, spacing: 8) {
                 // Header
                 HStack {
-                    Text("Evento de Hoy")
+                    Text("widget.interactive.event_today")
                         .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundStyle(.secondary)
@@ -172,7 +172,7 @@ struct InteractiveEventWidgetView: View {
                         HStack(spacing: 2) {
                             Image(systemName: "person.2")
                                 .font(.caption2)
-                            Text("\(guests) invitados")
+                            Text(verbatim: String(format: String(localized: "widget.interactive.guests_fmt"), guests))
                                 .font(.caption)
                         }
                         .foregroundStyle(.secondary)
@@ -189,7 +189,7 @@ struct InteractiveEventWidgetView: View {
                             HStack(spacing: 4) {
                                 Image(systemName: "checkmark")
                                     .font(.caption2)
-                                Text("Completar")
+                                Text("widget.interactive.complete")
                                     .font(.caption)
                                     .fontWeight(.medium)
                             }
@@ -204,7 +204,7 @@ struct InteractiveEventWidgetView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.caption2)
-                            Text("Completado")
+                            Text("widget.interactive.completed")
                                 .font(.caption)
                                 .fontWeight(.medium)
                         }
@@ -223,7 +223,7 @@ struct InteractiveEventWidgetView: View {
                             HStack(spacing: 4) {
                                 Image(systemName: "dollarsign")
                                     .font(.caption2)
-                                Text("Pago")
+                                Text("widget.interactive.payment")
                                     .font(.caption)
                                     .fontWeight(.medium)
                             }
@@ -246,7 +246,7 @@ struct InteractiveEventWidgetView: View {
                     .font(.largeTitle)
                     .foregroundStyle(.secondary)
 
-                Text("Sin eventos hoy")
+                Text("widget.interactive.no_events_today")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -265,8 +265,8 @@ struct InteractiveEventWidget: Widget {
         StaticConfiguration(kind: kind, provider: InteractiveEventProvider()) { entry in
             InteractiveEventWidgetView(entry: entry)
         }
-        .configurationDisplayName("Evento Activo")
-        .description("Interactua con tu evento del dia directamente desde el widget.")
+        .configurationDisplayName(LocalizedStringResource("widget.interactive.config_name"))
+        .description(LocalizedStringResource("widget.interactive.config_desc"))
         .supportedFamilies([.systemMedium])
     }
 }

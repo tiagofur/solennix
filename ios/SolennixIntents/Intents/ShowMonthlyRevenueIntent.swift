@@ -5,8 +5,8 @@ import SwiftUI
 
 struct ShowMonthlyRevenueIntent: AppIntent {
 
-    static var title: LocalizedStringResource = "Ingresos del Mes"
-    static var description = IntentDescription("Muestra los ingresos totales del mes actual")
+    static var title: LocalizedStringResource = "intent.revenue.title"
+    static var description = IntentDescription("intent.revenue.desc")
 
     static var openAppWhenRun: Bool = false
 
@@ -16,7 +16,7 @@ struct ShowMonthlyRevenueIntent: AppIntent {
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         guard IntentSharedDataStore.hasProAccess else {
             return .result(
-                dialog: "Plan Pro requerido para usar este atajo.",
+                dialog: IntentDialog(stringLiteral: String(localized: "intent.dialog.pro_required")),
                 view: PlanRequiredSnippetView()
             )
         }
@@ -31,9 +31,9 @@ struct ShowMonthlyRevenueIntent: AppIntent {
         let formattedRevenue = formatter.string(from: NSNumber(value: revenue.total)) ?? "$0"
         let formattedPending = formatter.string(from: NSNumber(value: revenue.pending)) ?? "$0"
 
-        var dialog = "Este mes has generado \(formattedRevenue)."
+        var dialog = String(format: String(localized: "intent.revenue.dialog.generated_fmt"), formattedRevenue)
         if revenue.pending > 0 {
-            dialog += " Tienes \(formattedPending) pendientes de cobro."
+            dialog += String(format: String(localized: "intent.revenue.dialog.pending_suffix_fmt"), formattedPending)
         }
 
         return .result(
@@ -119,7 +119,7 @@ struct MonthlyRevenueSnippetView: View {
             // Header
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Ingresos de \(currentMonthName)")
+                    Text(verbatim: String(format: String(localized: "intent.revenue.snippet.revenue_month_fmt"), currentMonthName))
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
@@ -136,7 +136,7 @@ struct MonthlyRevenueSnippetView: View {
                             .font(.caption)
                             .fontWeight(.medium)
 
-                        Text("vs mes anterior")
+                        Text("intent.revenue.snippet.vs_prev")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
@@ -159,7 +159,7 @@ struct MonthlyRevenueSnippetView: View {
                         Circle()
                             .fill(.green)
                             .frame(width: 8, height: 8)
-                        Text("Cobrado")
+                        Text("intent.revenue.snippet.collected")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -173,7 +173,7 @@ struct MonthlyRevenueSnippetView: View {
                         Circle()
                             .fill(.orange)
                             .frame(width: 8, height: 8)
-                        Text("Pendiente")
+                        Text("intent.revenue.snippet.pending")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -189,7 +189,7 @@ struct MonthlyRevenueSnippetView: View {
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundStyle(.blue)
-                    Text("eventos")
+                    Text("intent.revenue.snippet.events")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -201,7 +201,7 @@ struct MonthlyRevenueSnippetView: View {
     private var currentMonthName: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM"
-        formatter.locale = Locale(identifier: "es_MX")
+        formatter.locale = Locale.current
         return formatter.string(from: Date()).capitalized
     }
 }

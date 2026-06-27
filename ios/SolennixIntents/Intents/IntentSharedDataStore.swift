@@ -59,15 +59,15 @@ struct IntentWidgetEvent: Codable, Identifiable {
 
     var formattedDate: String {
         if Calendar.current.isDateInToday(eventDate) {
-            return "Hoy"
+            return String(localized: "intent.period.today")
         }
         if Calendar.current.isDateInTomorrow(eventDate) {
-            return "Manana"
+            return String(localized: "intent.shared.tomorrow")
         }
 
         let formatter = DateFormatter()
         formatter.dateFormat = "d MMM"
-        formatter.locale = Locale(identifier: "es_MX")
+        formatter.locale = Locale.current
         return formatter.string(from: eventDate)
     }
 }
@@ -92,10 +92,10 @@ struct PlanRequiredSnippetView: View {
                 .font(.system(size: cappedLockIconSize))
                 .foregroundStyle(.orange)
 
-            Text("Plan Pro requerido")
+            Text("intent.snippet.plan_required.title")
                 .font(.headline)
 
-            Text("Actualiza tu plan para usar este atajo de voz.")
+            Text("intent.snippet.plan_required.desc")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

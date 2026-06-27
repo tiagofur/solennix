@@ -108,14 +108,14 @@ struct LockScreenWidgetView: View {
                     Text("\(entry.eventsToday)")
                         .font(.system(size: 22, weight: .bold, design: .rounded))
 
-                    Text("hoy")
+                    Text("widget.lockscreen.today")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 } else if let event = entry.nextEvent {
                     Text("\(event.daysUntil)")
                         .font(.system(size: 22, weight: .bold, design: .rounded))
 
-                    Text("dias")
+                    Text("widget.lockscreen.days")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 } else {
@@ -170,10 +170,10 @@ struct LockScreenWidgetView: View {
                             .fontWeight(.semibold)
                     }
 
-                    Text("Sin eventos")
+                    Text("widget.lockscreen.no_events")
                         .font(.headline)
 
-                    Text("proximos")
+                    Text("widget.lockscreen.upcoming")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -194,7 +194,7 @@ struct LockScreenWidgetView: View {
                 Image(systemName: "calendar")
             }
         } else {
-            Label("Sin eventos proximos", systemImage: "calendar")
+            Label("widget.lockscreen.no_upcoming_inline", systemImage: "calendar")
         }
     }
 }
@@ -208,8 +208,8 @@ struct LockScreenWidget: Widget {
         StaticConfiguration(kind: kind, provider: LockScreenProvider()) { entry in
             LockScreenWidgetView(entry: entry)
         }
-        .configurationDisplayName("Eventos en Lock Screen")
-        .description("Ve tu proximo evento desde la pantalla de bloqueo.")
+        .configurationDisplayName(LocalizedStringResource("widget.lockscreen.config_name"))
+        .description(LocalizedStringResource("widget.lockscreen.config_desc"))
         .supportedFamilies([
             .accessoryCircular,
             .accessoryRectangular,

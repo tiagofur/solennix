@@ -75,7 +75,7 @@ struct KPIWidgetView: View {
                 Image(systemName: "chart.bar.fill")
                     .font(.caption2)
                     .foregroundStyle(.green)
-                Text("Este mes")
+                Text("widget.kpi.this_month")
                     .font(.caption2)
                     .fontWeight(.medium)
                     .foregroundStyle(.secondary)
@@ -95,7 +95,7 @@ struct KPIWidgetView: View {
             HStack(spacing: 4) {
                 Image(systemName: "calendar")
                     .font(.caption2)
-                Text("\(entry.kpis.eventsThisMonth) eventos")
+                Text(verbatim: String(format: String(localized: "widget.kpi.events_count_fmt"), entry.kpis.eventsThisMonth))
                     .font(.caption)
             }
             .foregroundStyle(.secondary)
@@ -126,7 +126,7 @@ struct KPIWidgetView: View {
                 HStack {
                     Image(systemName: "dollarsign.circle.fill")
                         .foregroundStyle(.green)
-                    Text("Ingresos")
+                    Text("widget.kpi.revenue")
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundStyle(.secondary)
@@ -140,7 +140,7 @@ struct KPIWidgetView: View {
 
                 // Pending payments
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Por cobrar")
+                    Text("widget.kpi.pending")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                     Text(entry.kpis.formattedPendingPayments)
@@ -159,15 +159,15 @@ struct KPIWidgetView: View {
                 kpiRow(
                     icon: "calendar",
                     iconColor: .blue,
-                    label: "Eventos",
-                    value: "\(entry.kpis.eventsThisWeek) esta semana"
+                    label: String(localized: "widget.kpi.events"),
+                    value: String(format: String(localized: "widget.kpi.this_week_fmt"), entry.kpis.eventsThisWeek)
                 )
 
                 // Confirmed
                 kpiRow(
                     icon: "checkmark.circle.fill",
                     iconColor: .green,
-                    label: "Confirmados",
+                    label: String(localized: "widget.kpi.confirmed"),
                     value: "\(entry.kpis.confirmedEvents)"
                 )
 
@@ -176,15 +176,15 @@ struct KPIWidgetView: View {
                     kpiRow(
                         icon: "exclamationmark.triangle.fill",
                         iconColor: .red,
-                        label: "Stock bajo",
-                        value: "\(entry.kpis.lowStockCount) items"
+                        label: String(localized: "widget.kpi.low_stock"),
+                        value: String(format: String(localized: "widget.kpi.items_fmt"), entry.kpis.lowStockCount)
                     )
                 } else {
                     kpiRow(
                         icon: "checkmark.seal.fill",
                         iconColor: .green,
-                        label: "Inventario",
-                        value: "OK"
+                        label: String(localized: "widget.kpi.inventory"),
+                        value: String(localized: "widget.kpi.inventory_ok")
                     )
                 }
             }
@@ -224,8 +224,8 @@ struct KPIWidget: Widget {
         StaticConfiguration(kind: kind, provider: KPIProvider()) { entry in
             KPIWidgetView(entry: entry)
         }
-        .configurationDisplayName("KPIs del Negocio")
-        .description("Monitorea ingresos, eventos y alertas importantes.")
+        .configurationDisplayName(LocalizedStringResource("widget.kpi.config_name"))
+        .description(LocalizedStringResource("widget.kpi.config_desc"))
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
