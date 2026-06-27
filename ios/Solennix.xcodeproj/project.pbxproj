@@ -673,7 +673,7 @@
 				};
 			};
 			buildConfigurationList = 70310F7E6A776E4EB5633230 /* Build configuration list for PBXProject "Solennix" */;
-			developmentRegion = es;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				Base,
