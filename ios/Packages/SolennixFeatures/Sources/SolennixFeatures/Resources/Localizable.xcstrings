@@ -1,9 +1,6 @@
 {
-  "sourceLanguage" : "es",
+  "sourceLanguage" : "en",
   "strings" : {
-    "" : {
-
-    },
     "¿Descartar los cambios sin guardar?" : {
 
     },
@@ -21205,38 +21202,6 @@
         }
       }
     },
-    "settings.language.option.en" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "English"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "English"
-          }
-        }
-      }
-    },
-    "settings.language.option.es" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Spanish"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Español"
-          }
-        }
-      }
-    },
     "settings.legal.delete_hint" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -21794,38 +21759,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Correo electrónico"
-          }
-        }
-      }
-    },
-    "settings.profile.language" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Language"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Idioma"
-          }
-        }
-      }
-    },
-    "settings.profile.language_updated" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Language updated"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Idioma actualizado"
           }
         }
       }
