@@ -40,8 +40,8 @@
   "attention": {
     "title": "Need attention",
     "description": "Upcoming or overdue events with pending follow-up.",
-    "alerts_count_one": "1 alert",
-    "alerts_count_other": "{{count}} alerts",
+    "alert_count_one": "1 alert",
+    "alert_count_other": "{{count}} alerts",
     "pending_balance": "Pending balance {{pending}} of {{total}}",
     "pending_balance_label": "Pending balance",
     "past_confirmed": "Past event still confirmed",

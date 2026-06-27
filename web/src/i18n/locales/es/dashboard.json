@@ -40,8 +40,8 @@
   "attention": {
     "title": "Requieren atención",
     "description": "Eventos próximos o vencidos con seguimiento pendiente.",
-    "alerts_count_one": "1 alerta",
-    "alerts_count_other": "{{count}} alertas",
+    "alert_count_one": "1 alerta",
+    "alert_count_other": "{{count}} alertas",
     "pending_balance": "Saldo pendiente {{pending}} de {{total}}",
     "pending_balance_label": "Saldo pendiente",
     "past_confirmed": "Evento pasado aún confirmado",

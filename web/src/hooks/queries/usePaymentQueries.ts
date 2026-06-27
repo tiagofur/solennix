@@ -51,11 +51,11 @@ export function useCreatePayment() {
       // Required because the dashboard's saldo pendiente reads from this
       // aggregated cache and per-event invalidation alone leaves it stale.
       queryClient.invalidateQueries({ queryKey: queryKeys.payments.byEventIdsPrefix });
-      addToast(t('payments.success_create'), 'success');
+      addToast(t('summary.payments.success_create'), 'success');
     },
     onError: (error) => {
       logError('Error creating payment', error);
-      addToast(getErrorMessage(error, t('payments.error_create')), 'error');
+      addToast(getErrorMessage(error, t('summary.payments.error_create')), 'error');
     },
   });
 }
@@ -75,11 +75,11 @@ export function useDeletePayment() {
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.payments.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.payments.byEventIdsPrefix });
-      addToast(t('payments.success_delete'), 'success');
+      addToast(t('summary.payments.success_delete'), 'success');
     },
     onError: (error) => {
       logError('Error deleting payment', error);
-      addToast(getErrorMessage(error, t('payments.error_delete')), 'error');
+      addToast(getErrorMessage(error, t('summary.payments.error_delete')), 'error');
     },
   });
 }

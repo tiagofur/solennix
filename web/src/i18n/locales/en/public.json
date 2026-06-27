@@ -37,47 +37,6 @@
       "title": "Invalid link",
       "description": "We couldn't find this link. Check the link or ask the organizer to share it with you again."
     },
-    "admin_links": {
-      "title": "Forms",
-      "subtitle": "Generate links for your clients to fill in their event details",
-      "new_link": "Generate link",
-      "create_first": "Create first link",
-      "no_links": "No forms",
-      "no_links_desc": "Generate a shareable link for your potential clients to fill in their event details and select products.",
-      "dialog_title": "Generate link",
-      "label_field": "Label (optional)",
-      "label_placeholder": "e.g. Wedding of Maria and Pedro",
-      "valid_for_one": "Valid for: {{count}} day",
-      "valid_for_other": "Valid for: {{count}} days",
-      "day_one": "1 day",
-      "day_plural": "{{count}} days",
-      "cancel": "Cancel",
-      "create": "Create",
-      "no_label": "No label",
-      "expires": "Expires: {{date}}",
-      "used": "Used: {{date}}",
-      "copy": "Copy",
-      "share": "Share",
-      "revoke": "Revoke",
-      "view_event": "View event",
-      "status": {
-        "active": "Active",
-        "used": "Used",
-        "expired": "Expired"
-      },
-      "confirm_revoke": "Revoke this link? It can no longer be used.",
-      "share_title": "Event form",
-      "share_text_with_label": "Form: {{label}}",
-      "share_text_default": "Fill in your event details",
-      "toast": {
-        "created": "Link created",
-        "error_create": "Error creating link",
-        "copied": "Link copied",
-        "error_copy": "Could not copy",
-        "revoked": "Link revoked",
-        "error_revoke": "Error revoking"
-      }
-    },
     "errors": {
       "name_required": "Name is required",
       "phone_required": "Phone is required",
@@ -87,6 +46,47 @@
       "num_people_min": "Minimum 1 person",
       "submit_failed": "There was an error sending. Try again.",
       "connection_error": "Connection error. Check your internet and try again."
+    }
+  },
+  "admin_links": {
+    "title": "Forms",
+    "subtitle": "Generate links for your clients to fill in their event details",
+    "new_link": "Generate link",
+    "create_first": "Create first link",
+    "no_links": "No forms",
+    "no_links_desc": "Generate a shareable link for your potential clients to fill in their event details and select products.",
+    "dialog_title": "Generate link",
+    "label_field": "Label (optional)",
+    "label_placeholder": "e.g. Wedding of Maria and Pedro",
+    "valid_for_one": "Valid for: {{count}} day",
+    "valid_for_other": "Valid for: {{count}} days",
+    "day_one": "1 day",
+    "day_plural": "{{count}} days",
+    "cancel": "Cancel",
+    "create": "Create",
+    "no_label": "No label",
+    "expires": "Expires: {{date}}",
+    "used": "Used: {{date}}",
+    "copy": "Copy",
+    "share": "Share",
+    "revoke": "Revoke",
+    "view_event": "View event",
+    "status": {
+      "active": "Active",
+      "used": "Used",
+      "expired": "Expired"
+    },
+    "confirm_revoke": "Revoke this link? It can no longer be used.",
+    "share_title": "Event form",
+    "share_text_with_label": "Form: {{label}}",
+    "share_text_default": "Fill in your event details",
+    "toast": {
+      "created": "Link created",
+      "error_create": "Error creating link",
+      "copied": "Link copied",
+      "error_copy": "Could not copy",
+      "revoked": "Link revoked",
+      "error_revoke": "Error revoking"
     }
   },
   "portal": {

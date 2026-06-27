@@ -192,7 +192,7 @@ describe('useStaffQueries', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(mockLogError).toHaveBeenCalledWith('Error responding assignment', expect.any(Error));
-    expect(mockAddToast).toHaveBeenCalledWith('error_respond_assignment', 'error');
+    expect(mockAddToast).toHaveBeenCalledWith('list.error_respond_assignment', 'error');
   });
 
   it('create/update/delete staff mutations call service', async () => {
@@ -217,7 +217,7 @@ describe('useStaffQueries', () => {
     expect(mockCreate).toHaveBeenCalled();
     expect(mockUpdate).toHaveBeenCalledWith('staff-1', { name: 'B' });
     expect(mockDelete).toHaveBeenCalledWith('staff-1');
-    expect(mockAddToast).toHaveBeenCalledWith('success_delete', 'success');
+    expect(mockAddToast).toHaveBeenCalledWith('list.success_delete', 'success');
   });
 
   it('staff team queries and mutations call service', async () => {
@@ -251,7 +251,7 @@ describe('useStaffQueries', () => {
     expect(mockCreateTeam).toHaveBeenCalledWith({ name: 'Foto' });
     expect(mockUpdateTeam).toHaveBeenCalledWith('team-1', { notes: 'updated' });
     expect(mockDeleteTeam).toHaveBeenCalledWith('team-1');
-    expect(mockAddToast).toHaveBeenCalledWith('teams.success_delete', 'success');
+    expect(mockAddToast).toHaveBeenCalledWith('teams.list.success_delete', 'success');
   });
 
   it('staff team detail stays idle when id is undefined', () => {
