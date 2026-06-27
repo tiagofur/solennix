@@ -3,257 +3,131 @@ import XCTest
 
 // MARK: - Common Localization Tests
 
+/// Resolution smoke tests (B-1, system-locale resolution). See the contract in
+/// `AuthLocalizationTests`; these tests assert the EXPECTED value for the
+/// simulator's current system locale (no runtime override — retired in B-1).
 final class CommonLocalizationTests: XCTestCase {
 
-    override func tearDown() {
-        super.tearDown()
-        UserDefaults.standard.removeObject(forKey: "preferredLocale")
-    }
-
-    // MARK: - Helpers
-
-    private func setLocale(_ identifier: String) {
-        UserDefaults.standard.set(identifier, forKey: "preferredLocale")
+    private func expected(spanish: String, english: String) -> String {
+        FeatureL10n.languageCode == "en" ? english : spanish
     }
 
     // MARK: - Onboarding Tips Tests
 
-    func testNewEventTipTitle_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.newEventTipTitle, "Crear un Evento")
+    func testNewEventTipTitle_Resolves() {
+        XCTAssertEqual(CommonStrings.newEventTipTitle, expected(spanish: "Crear un Evento", english: "Create an Event"))
     }
 
-    func testNewEventTipTitle_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.newEventTipTitle, "Create an Event")
+    func testNewEventTipMessage_Resolves() {
+        XCTAssertEqual(
+            CommonStrings.newEventTipMessage,
+            expected(
+                spanish: "Toca aquí para iniciar la creación de un nuevo evento, cotización o contrato.",
+                english: "Tap here to start creating a new event, quote, or contract."
+            )
+        )
     }
 
-    func testNewEventTipMessage_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.newEventTipMessage, "Toca aquí para iniciar la creación de un nuevo evento, cotización o contrato.")
+    func testQuickQuoteTipMessage_Resolves() {
+        XCTAssertEqual(
+            CommonStrings.quickQuoteTipMessage,
+            expected(
+                spanish: "Usa esta herramienta para generar un presupuesto en el momento sin necesidad de crear el cliente primero.",
+                english: "Use this tool to create a quote instantly without creating the client first."
+            )
+        )
     }
 
-    func testNewEventTipMessage_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.newEventTipMessage, "Tap here to start creating a new event, quote, or contract.")
+    func testSwipeActionTipTitle_Resolves() {
+        XCTAssertEqual(CommonStrings.swipeActionTipTitle, expected(spanish: "Acciones Rápidas", english: "Quick Actions"))
     }
 
-    func testQuickQuoteTipMessage_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.quickQuoteTipMessage, "Usa esta herramienta para generar un presupuesto en el momento sin necesidad de crear el cliente primero.")
-    }
-
-    func testQuickQuoteTipMessage_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.quickQuoteTipMessage, "Use this tool to create a quote instantly without creating the client first.")
-    }
-
-    func testSwipeActionTipTitle_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.swipeActionTipTitle, "Acciones Rápidas")
-    }
-
-    func testSwipeActionTipTitle_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.swipeActionTipTitle, "Quick Actions")
-    }
-
-    func testSwipeActionTipMessage_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.swipeActionTipMessage, "Desliza los elementos de la lista hacia la izquierda o derecha para ver más opciones como editar, eliminar o llamar.")
-    }
-
-    func testSwipeActionTipMessage_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.swipeActionTipMessage, "Swipe list items left or right to see more options like edit, delete, or call.")
+    func testSwipeActionTipMessage_Resolves() {
+        XCTAssertEqual(
+            CommonStrings.swipeActionTipMessage,
+            expected(
+                spanish: "Desliza los elementos de la lista hacia la izquierda o derecha para ver más opciones como editar, eliminar o llamar.",
+                english: "Swipe list items left or right to see more options like edit, delete, or call."
+            )
+        )
     }
 
     // MARK: - Paywall Tests
 
-    func testPaywallTitle_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.paywallTitle, "Límite alcanzado")
+    func testPaywallTitle_Resolves() {
+        XCTAssertEqual(CommonStrings.paywallTitle, expected(spanish: "Límite alcanzado", english: "Limit reached"))
     }
 
-    func testPaywallTitle_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.paywallTitle, "Limit reached")
+    func testPaywallUpgradeButton_Resolves() {
+        XCTAssertEqual(CommonStrings.paywallUpgradeButton, expected(spanish: "Ver planes", english: "View plans"))
     }
 
-    func testPaywallUpgradeButton_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.paywallUpgradeButton, "Ver planes")
-    }
-
-    func testPaywallUpgradeButton_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.paywallUpgradeButton, "View plans")
-    }
-
-    func testPaywallDismissButton_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.paywallDismissButton, "Cerrar")
-    }
-
-    func testPaywallDismissButton_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.paywallDismissButton, "Close")
+    func testPaywallDismissButton_Resolves() {
+        XCTAssertEqual(CommonStrings.paywallDismissButton, expected(spanish: "Cerrar", english: "Close"))
     }
 
     // MARK: - Payment Entry Sheet Tests
 
-    func testPaymentEntryDefaultTitle_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.paymentEntryDefaultTitle, "Registrar Pago")
+    func testPaymentEntryDefaultTitle_Resolves() {
+        XCTAssertEqual(CommonStrings.paymentEntryDefaultTitle, expected(spanish: "Registrar Pago", english: "Register Payment"))
     }
 
-    func testPaymentEntryDefaultTitle_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.paymentEntryDefaultTitle, "Register Payment")
+    func testPaymentEntryDefaultConfirm_Resolves() {
+        XCTAssertEqual(CommonStrings.paymentEntryDefaultConfirm, expected(spanish: "Guardar Pago", english: "Save Payment"))
     }
 
-    func testPaymentEntryDefaultConfirm_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.paymentEntryDefaultConfirm, "Guardar Pago")
+    func testPaymentEntryAmountLabel_Resolves() {
+        XCTAssertEqual(CommonStrings.paymentEntryAmountLabel, expected(spanish: "Monto", english: "Amount"))
     }
 
-    func testPaymentEntryDefaultConfirm_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.paymentEntryDefaultConfirm, "Save Payment")
+    func testPaymentEntryMethodLabel_Resolves() {
+        XCTAssertEqual(CommonStrings.paymentEntryMethodLabel, expected(spanish: "Método de pago", english: "Payment method"))
     }
 
-    func testPaymentEntryAmountLabel_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.paymentEntryAmountLabel, "Monto")
+    func testPaymentEntryNotesLabel_Resolves() {
+        XCTAssertEqual(CommonStrings.paymentEntryNotesLabel, expected(spanish: "Notas (opcional)", english: "Notes (optional)"))
     }
 
-    func testPaymentEntryAmountLabel_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.paymentEntryAmountLabel, "Amount")
+    func testPaymentEntryNotesPlaceholder_Resolves() {
+        XCTAssertEqual(CommonStrings.paymentEntryNotesPlaceholder, expected(spanish: "Notas del pago", english: "Payment notes"))
     }
 
-    func testPaymentEntryMethodLabel_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.paymentEntryMethodLabel, "Método de pago")
-    }
-
-    func testPaymentEntryMethodLabel_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.paymentEntryMethodLabel, "Payment method")
-    }
-
-    func testPaymentEntryNotesLabel_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.paymentEntryNotesLabel, "Notas (opcional)")
-    }
-
-    func testPaymentEntryNotesLabel_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.paymentEntryNotesLabel, "Notes (optional)")
-    }
-
-    func testPaymentEntryNotesPlaceholder_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.paymentEntryNotesPlaceholder, "Notas del pago")
-    }
-
-    func testPaymentEntryNotesPlaceholder_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.paymentEntryNotesPlaceholder, "Payment notes")
-    }
-
-    func testPaymentEntryCancelButton_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.paymentEntryCancelButton, "Cancelar")
-    }
-
-    func testPaymentEntryCancelButton_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.paymentEntryCancelButton, "Cancel")
+    func testPaymentEntryCancelButton_Resolves() {
+        XCTAssertEqual(CommonStrings.paymentEntryCancelButton, expected(spanish: "Cancelar", english: "Cancel"))
     }
 
     // MARK: - Payment Methods Tests
 
-    func testPaymentMethodCash_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.paymentMethodCash, "Efectivo")
+    func testPaymentMethodCash_Resolves() {
+        XCTAssertEqual(CommonStrings.paymentMethodCash, expected(spanish: "Efectivo", english: "Cash"))
     }
 
-    func testPaymentMethodCash_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.paymentMethodCash, "Cash")
+    func testPaymentMethodTransfer_Resolves() {
+        XCTAssertEqual(CommonStrings.paymentMethodTransfer, expected(spanish: "Transferencia", english: "Transfer"))
     }
 
-    func testPaymentMethodTransfer_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.paymentMethodTransfer, "Transferencia")
+    func testPaymentMethodCard_Resolves() {
+        XCTAssertEqual(CommonStrings.paymentMethodCard, expected(spanish: "Tarjeta", english: "Card"))
     }
 
-    func testPaymentMethodTransfer_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.paymentMethodTransfer, "Transfer")
+    func testPaymentMethodCheck_Resolves() {
+        XCTAssertEqual(CommonStrings.paymentMethodCheck, expected(spanish: "Cheque", english: "Check"))
     }
 
-    func testPaymentMethodCard_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.paymentMethodCard, "Tarjeta")
-    }
-
-    func testPaymentMethodCard_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.paymentMethodCard, "Card")
-    }
-
-    func testPaymentMethodCheck_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.paymentMethodCheck, "Cheque")
-    }
-
-    func testPaymentMethodCheck_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.paymentMethodCheck, "Check")
-    }
-
-    // MARK: - Dynamic Switching
-
-    func testDynamicSwitching_NewEventTipTitle() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.newEventTipTitle, "Crear un Evento")
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.newEventTipTitle, "Create an Event")
-    }
-    
     // MARK: - Navigation, Tabs & Menu Tests
-    
-    func testNavigationTabs_Spanish() {
-        setLocale("es")
-        XCTAssertEqual(CommonStrings.tabHome, "Inicio")
-        XCTAssertEqual(CommonStrings.tabCalendar, "Calendario")
-        XCTAssertEqual(CommonStrings.tabEvents, "Eventos")
-        XCTAssertEqual(CommonStrings.tabClients, "Clientes")
-        XCTAssertEqual(CommonStrings.tabMore, "Más")
-        
-        XCTAssertEqual(CommonStrings.navPersonnel, "Personal")
-        XCTAssertEqual(CommonStrings.navProducts, "Productos")
-        XCTAssertEqual(CommonStrings.navInventory, "Inventario")
-        
-        XCTAssertEqual(CommonStrings.moreMenuProductsSubtitle, "Catálogo y recetas")
-        XCTAssertEqual(CommonStrings.navHeaderConfiguracion, "Configuración")
-    }
-    
-    func testNavigationTabs_English() {
-        setLocale("en")
-        XCTAssertEqual(CommonStrings.tabHome, "Home")
-        XCTAssertEqual(CommonStrings.tabCalendar, "Calendar")
-        XCTAssertEqual(CommonStrings.tabEvents, "Events")
-        XCTAssertEqual(CommonStrings.tabClients, "Clients")
-        XCTAssertEqual(CommonStrings.tabMore, "More")
-        
-        XCTAssertEqual(CommonStrings.navPersonnel, "Staff")
-        XCTAssertEqual(CommonStrings.navProducts, "Products")
-        XCTAssertEqual(CommonStrings.navInventory, "Inventory")
-        
-        XCTAssertEqual(CommonStrings.moreMenuProductsSubtitle, "Catalog and recipes")
-        XCTAssertEqual(CommonStrings.navHeaderConfiguracion, "Settings")
+
+    func testNavigationTabs_Resolves() {
+        XCTAssertEqual(CommonStrings.tabHome, expected(spanish: "Inicio", english: "Home"))
+        XCTAssertEqual(CommonStrings.tabCalendar, expected(spanish: "Calendario", english: "Calendar"))
+        XCTAssertEqual(CommonStrings.tabEvents, expected(spanish: "Eventos", english: "Events"))
+        XCTAssertEqual(CommonStrings.tabClients, expected(spanish: "Clientes", english: "Clients"))
+        XCTAssertEqual(CommonStrings.tabMore, expected(spanish: "Más", english: "More"))
+
+        XCTAssertEqual(CommonStrings.navPersonnel, expected(spanish: "Personal", english: "Staff"))
+        XCTAssertEqual(CommonStrings.navProducts, expected(spanish: "Productos", english: "Products"))
+        XCTAssertEqual(CommonStrings.navInventory, expected(spanish: "Inventario", english: "Inventory"))
+
+        XCTAssertEqual(CommonStrings.moreMenuProductsSubtitle, expected(spanish: "Catálogo y recetas", english: "Catalog and recipes"))
+        XCTAssertEqual(CommonStrings.navHeaderConfiguracion, expected(spanish: "Configuración", english: "Settings"))
     }
 }
