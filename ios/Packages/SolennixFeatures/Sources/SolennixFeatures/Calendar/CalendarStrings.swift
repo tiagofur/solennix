@@ -35,13 +35,13 @@ enum CalendarStrings {
     // MARK: - Dynamic Formats (used by CalendarGridView)
 
     static func overflowMore(_ count: Int) -> String {
-        FeatureL10n.format("calendar.overflow_more", "+%lld más", count)
+        FeatureL10n.plural("calendar.overflow_more", "+%lld más", count: count)
     }
 
     static var a11yDayBlocked: String { FeatureL10n.text("calendar.a11y.day_blocked", "Día bloqueado") }
     static var a11yDayNoEvents: String { FeatureL10n.text("calendar.a11y.day_no_events", "Sin eventos") }
 
     static func a11yDayWithEvents(_ count: Int) -> String {
-        FeatureL10n.format("calendar.a11y.day_with_events", "%lld eventos", count)
+        FeatureL10n.plural("calendar.a11y.day_with_events", "%lld eventos", count: count)
     }
 }

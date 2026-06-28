@@ -158,7 +158,7 @@ public struct ClientDetailView: View {
             // MARK: Event history section
             Section(
                 header: Text(
-                    trf("clients.events.history_count", "Historial de eventos (%lld)", events.count)
+                    FeatureL10n.plural("clients.events.history_count", "Historial de eventos (%lld)", count: events.count)
                 )
                 .font(.caption)
                 .foregroundStyle(SolennixColors.textSecondary)
@@ -293,7 +293,7 @@ public struct ClientDetailView: View {
                         icon: "calendar",
                         value: "\(client.totalEvents ?? 0)",
                         label: tr("clients.stats.events", "Eventos"),
-                        a11yLabel: trf("clients.detail.a11y.stat_events", "Eventos: %lld", client.totalEvents ?? 0)
+                        a11yLabel: FeatureL10n.plural("clients.detail.a11y.stat_events", "Eventos: %lld", count: client.totalEvents ?? 0)
                     )
 
                     statBox(
@@ -343,7 +343,7 @@ public struct ClientDetailView: View {
                         icon: "calendar",
                         value: "\(client.totalEvents ?? 0)",
                         label: tr("clients.stats.events", "Eventos"),
-                        a11yLabel: trf("clients.detail.a11y.stat_events", "Eventos: %lld", client.totalEvents ?? 0)
+                        a11yLabel: FeatureL10n.plural("clients.detail.a11y.stat_events", "Eventos: %lld", count: client.totalEvents ?? 0)
                     )
 
                     statBox(

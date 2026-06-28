@@ -60,7 +60,7 @@ struct EventCountdownText: View {
         case .tomorrow:
             return FeatureL10n.text("events.detail.countdown.tomorrow", "MAÑANA").uppercased()
         case .future(let n):
-            return String(format: FeatureL10n.text("events.detail.countdown.future", "FALTAN %d DÍAS"), n).uppercased()
+            return FeatureL10n.plural("events.detail.countdown.future", "FALTAN %d DÍAS", count: n).uppercased()
         case .past:
             return FeatureL10n.text("events.detail.countdown.past", "FINALIZADO").uppercased()
         }
@@ -88,7 +88,7 @@ struct EventCountdownText: View {
         switch p {
         case .today:         return FeatureL10n.text("events.detail.event_today", "El evento es hoy")
         case .tomorrow:      return FeatureL10n.text("events.detail.event_tomorrow", "Mañana es el evento")
-        case .future(let n): return FeatureL10n.format("events.detail.days_until_event", "Faltan %lld días para el evento", n)
+        case .future(let n): return FeatureL10n.plural("events.detail.days_until_event", "Faltan %lld días para el evento", count: n)
         case .past:          return FeatureL10n.text("events.detail.event_finished", "Evento finalizado")
         }
     }
@@ -171,7 +171,11 @@ struct PaymentCollectionRing: View {
         .accessibilityLabel(
             isFullyPaid
                 ? FeatureL10n.text("events.detail.paid_full_a11y", "Cobrado: 100 por ciento. Evento completamente pagado.")
-                : FeatureL10n.format("events.detail.paid_partial_a11y", "Cobrado: %1$lld por ciento, faltan %2$@", Int(progress.rounded()), balanceValue)
+                : String.localizedStringWithFormat(
+                    FeatureL10n.text("events.detail.paid_partial_a11y", "Cobrado: %1$lld por ciento, faltan %2$@"),
+                    Int(progress.rounded()),
+                    balanceValue
+                )
         )
         .sensoryFeedback(.success, trigger: fullyPaidCounter)
     }

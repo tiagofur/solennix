@@ -172,7 +172,7 @@ struct InteractiveEventWidgetView: View {
                         HStack(spacing: 2) {
                             Image(systemName: "person.2")
                                 .font(.caption2)
-                            Text(verbatim: String(format: String(localized: "widget.interactive.guests_fmt"), guests))
+                            Text(verbatim: String.localizedStringWithFormat(String(localized: "widget.interactive.guests_fmt"), guests))
                                 .font(.caption)
                         }
                         .foregroundStyle(.secondary)

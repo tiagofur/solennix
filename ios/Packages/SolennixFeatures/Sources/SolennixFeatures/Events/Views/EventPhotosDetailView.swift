@@ -147,7 +147,7 @@ public struct EventPhotosDetailView: View {
                         }
                     }
 
-                    Text(FeatureL10n.format("events.photos.count", "%lld fotos", viewModel.eventPhotos.count))
+                    Text(FeatureL10n.plural("events.photos.count", "%lld fotos", count: viewModel.eventPhotos.count))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                 }

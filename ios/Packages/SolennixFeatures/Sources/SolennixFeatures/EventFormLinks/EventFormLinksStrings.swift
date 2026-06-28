@@ -54,7 +54,7 @@ enum EventFormLinksStrings {
         if count == 1 {
             return FeatureL10n.text("event_form_links.sheet.ttl_day_single", "1 día")
         } else {
-            return FeatureL10n.format("event_form_links.sheet.ttl_days_plural", "%lld días", count)
+            return FeatureL10n.plural("event_form_links.sheet.ttl_days_plural", "%lld días", count: count)
         }
     }
 }

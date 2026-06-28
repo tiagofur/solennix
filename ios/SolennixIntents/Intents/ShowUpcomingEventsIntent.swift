@@ -36,7 +36,7 @@ struct ShowUpcomingEventsIntent: AppIntent {
         _ = events.map { "\($0.date): \($0.clientName) - \($0.eventType)" }.joined(separator: "\n")
 
         return .result(
-            dialog: IntentDialog(stringLiteral: String(format: String(localized: "intent.upcoming.dialog.count_fmt"), events.count)),
+            dialog: IntentDialog(stringLiteral: String.localizedStringWithFormat(String(localized: "intent.upcoming.dialog.count_fmt"), events.count)),
             view: UpcomingEventsSnippetView(events: events)
         )
     }

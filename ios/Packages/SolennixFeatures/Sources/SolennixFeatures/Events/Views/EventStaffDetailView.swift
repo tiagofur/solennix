@@ -79,7 +79,7 @@ public struct EventStaffDetailView: View {
                     }
                 } else {
                     HStack {
-                        Text(String(format: tr("events.detail.staff.assigned_count", "%d colaboradores asignados"), assignments.count))
+                        Text(FeatureL10n.plural("events.detail.staff.assigned_count", "%d colaboradores asignados", count: assignments.count))
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.textSecondary)
                         Spacer()

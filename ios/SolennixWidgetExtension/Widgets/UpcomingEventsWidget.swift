@@ -134,7 +134,7 @@ struct UpcomingEventsWidgetView: View {
 
             // Event count
             if entry.events.count > 1 {
-                Text(verbatim: String(format: String(localized: "widget.upcoming.more_fmt"), entry.events.count - 1))
+                Text(verbatim: String.localizedStringWithFormat(String(localized: "widget.upcoming.more_fmt"), entry.events.count - 1))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
@@ -194,7 +194,7 @@ struct UpcomingEventsWidgetView: View {
                 }
 
                 if entry.events.count > 3 {
-                    Text(verbatim: String(format: String(localized: "widget.upcoming.more_fmt"), entry.events.count - 3))
+                    Text(verbatim: String.localizedStringWithFormat(String(localized: "widget.upcoming.more_fmt"), entry.events.count - 3))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -249,7 +249,7 @@ struct UpcomingEventsWidgetView: View {
                 if entry.events.count > 5 {
                     HStack {
                         Spacer()
-                        Text(verbatim: String(format: String(localized: "widget.upcoming.view_more_fmt"), entry.events.count - 5))
+                        Text(verbatim: String.localizedStringWithFormat(String(localized: "widget.upcoming.view_more_fmt"), entry.events.count - 5))
                             .font(.caption)
                             .foregroundStyle(.blue)
                         Spacer()
