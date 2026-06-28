@@ -388,3 +388,15 @@
   - `web/src/App.tsx` y `web/src/components/BottomTabBar.tsx`: Rutas actualizadas redirigiendo `/calendar` a `/events`.
   - `web/src/components/Layout.tsx` y `web/src/components/Layout.test.tsx`: Actualizado el enrutado de la barra lateral para alineación.
 
+## Sesión 2026-06-28: Redireccionamientos y Paridad de Filtros de Calendario en Web
+- **Feature ID:** 28 (web-calendar-event-list-unification) — Extensión y Limpieza final
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1234 tests en verde).
+- **Entregables:**
+  - `web/src/hooks/useKeyboardShortcuts.ts` y `.test.ts`: Actualizados los atajos globales de `g k` a `/events?view=calendar`.
+  - `web/src/components/CommandPalette.tsx`: Redirección directa del Calendario a `/events?view=calendar`.
+  - `web/src/pages/Dashboard.tsx`: Enlaces del Dashboard (alertas y próximos eventos) actualizados a `/events?view=calendar`.
+  - `web/src/pages/Events/EventForm.tsx` y `.test.tsx`: El botón de retorno ahora navega a `/events?view=calendar`.
+  - `web/src/pages/Events/EventList.tsx` y `.test.tsx`: Limpieza completa y adición de pruebas unitarias para segmented control, period chips y view parameter en URL.
+  - `feature_list.json`: Criterios de aceptación detallados y actualizados.
+
+
