@@ -336,4 +336,18 @@ describe('EventList', () => {
 
     expect(mockDeleteMutate).toHaveBeenCalledWith('ev1');
   });
+
+  it('renders segmented control view toggle and respects view parameter', () => {
+    renderPage(['/events?view=calendar']);
+
+    // Should show Export .ics button in calendar view mode
+    expect(screen.getByText('Exportar .ics', { exact: false })).toBeInTheDocument();
+  });
+
+  it('handles period chips in list mode', () => {
+    renderPage(['/events?view=list']);
+
+    // Check if period chips like 'Hoy' are present
+    expect(screen.getByRole('button', { name: /Hoy/i })).toBeInTheDocument();
+  });
 });

@@ -1107,7 +1107,7 @@ export const EventForm: React.FC = () => {
         <div className="flex items-center">
           <button
             type="button"
-            onClick={() => navigate("/calendar")}
+            onClick={() => navigate("/events?view=calendar")}
             className="mr-4 p-2 rounded-full hover:bg-surface-alt text-text-secondary"
             aria-label={t("events:form.back_to_calendar_aria")}
           >

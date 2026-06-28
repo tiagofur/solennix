@@ -694,7 +694,7 @@ describe('EventForm', () => {
 
   // ---------- NEW TESTS FOR COVERAGE ----------
 
-  it('navigates to /calendar when clicking the back arrow button (line 460)', async () => {
+  it('navigates to /events?view=calendar when clicking the back arrow button (line 460)', async () => {
     render(<EventForm />);
     await waitFor(() => {
       expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument();
@@ -705,7 +705,7 @@ describe('EventForm', () => {
       fireEvent.click(backButton);
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith('/calendar');
+    expect(mockNavigate).toHaveBeenCalledWith('/events?view=calendar');
   });
 
   it('navigates to event summary when clicking Ver Resumen button (line 473)', async () => {
