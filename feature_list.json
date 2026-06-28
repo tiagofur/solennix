@@ -330,6 +330,21 @@
         "El contenido de cada item (DateBox, cliente, servicio, personas, StatusDropdown) no se modifica",
         "El ./init.sh completa sin errores"
       ]
+    },
+    {
+      "id": 28,
+      "name": "web-calendar-event-list-unification",
+      "description": "feat(web): integrar el calendario y la lista de eventos en una sola pantalla con paridad total de redireccionamientos y filtros con iOS/Android",
+      "status": "done",
+      "acceptance_criteria": [
+        "Componente CalendarView y pruebas correspondientes eliminados",
+        "Ruta /calendar redirigida de manera segura a /events?view=calendar",
+        "EventList unificado con mini-calendario superior, control de vista segmented control y panel de eventos del día/mes",
+        "Deselección de día en el calendario filtra y muestra todos los eventos del mes visible (paridad iOS)",
+        "Modal de gestión de fechas bloqueadas integrado en la vista de eventos",
+        "Navegación al calendario desde Dashboard, atajos de teclado, paleta de comandos y formulario actualizada a /events?view=calendar",
+        "Todos los tests unitarios de Vitest adaptados, cobertura incrementada y ejecutados exitosamente al 100% en verde"
+      ]
     }
   ]
 }

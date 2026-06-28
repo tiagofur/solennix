@@ -33,7 +33,7 @@ export function useKeyboardShortcuts() {
     { key: 'g c', label: 'G C', description: 'Ir a Clientes', action: () => navigate('/clients') },
     { key: 'g p', label: 'G P', description: 'Ir a Productos', action: () => navigate('/products') },
     { key: 'g i', label: 'G I', description: 'Ir a Inventario', action: () => navigate('/inventory') },
-    { key: 'g k', label: 'G K', description: 'Ir a Calendario', action: () => navigate('/calendar') },
+    { key: 'g k', label: 'G K', description: 'Ir a Calendario', action: () => navigate('/events?view=calendar') },
 
     // Contextual "new" — depends on current section
     {

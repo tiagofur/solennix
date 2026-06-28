@@ -9,6 +9,7 @@
   "select_date": "Select a date",
   "no_events_scheduled": "No events scheduled",
   "no_events_for_day": "No events on this day",
+  "no_events_for_month": "No events on this month",
   "overflow_more": "+{{count}} more",
   "create_event_for_date": "Create event on this date",
   "create_new": "New",

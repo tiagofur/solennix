@@ -491,7 +491,7 @@ function DashboardAttentionSection({
                 ))}
 
                 {alert.items.length > 3 && (
-                  <Link to="/calendar" className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+                  <Link to="/events?view=calendar" className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
                     {t('common:action.view')} {alert.items.length - 3} {t('common:action.more')} <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 )}
@@ -947,7 +947,7 @@ export const Dashboard: React.FC = () => {
                 <Clock className="h-4 w-4 text-primary" />
                 {t('common:upcoming_events')}
               </h3>
-              <Link to="/calendar" className="text-xs font-bold text-primary hover:underline active-ios-scale">
+              <Link to="/events?view=calendar" className="text-xs font-bold text-primary hover:underline active-ios-scale">
                 {t('common:action.view')}
               </Link>
             </div>

@@ -58,7 +58,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
   const navItems: CommandItem[] = useMemo(
     () => [
       { label: t('nav.dashboard'), icon: LayoutDashboard, action: () => navigate('/dashboard'), group: t('command_palette.navigation_group') },
-      { label: t('nav.calendar'), icon: Calendar, action: () => navigate('/calendar'), group: t('command_palette.navigation_group') },
+      { label: t('nav.calendar'), icon: Calendar, action: () => navigate('/events?view=calendar'), group: t('command_palette.navigation_group') },
       { label: t('nav.events'), icon: PartyPopper, action: () => navigate('/events'), group: t('command_palette.navigation_group') },
       { label: t('nav.clients'), icon: Users, action: () => navigate('/clients'), group: t('command_palette.navigation_group') },
       { label: t('nav.products'), icon: Package, action: () => navigate('/products'), group: t('command_palette.navigation_group') },

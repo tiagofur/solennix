@@ -12,6 +12,11 @@ const mockUseEventSearch = vi.fn();
 const mockUsePagination = vi.fn();
 const mockExportToCsv = vi.fn();
 
+const mockUseEventsByDateRange = vi.fn();
+const mockUseUnavailableDatesByRange = vi.fn();
+const mockUseCreateUnavailableDates = vi.fn();
+const mockUseDeleteUnavailableDate = vi.fn();
+
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<any>('react-router-dom');
   return {
@@ -25,6 +30,13 @@ vi.mock('../../hooks/queries/useEventQueries', () => ({
   useEventsPaginated: (params: any) => mockUseEventsPaginated(params),
   useEventSearch: (filters: any) => mockUseEventSearch(filters),
   useDeleteEvent: () => ({ mutate: mockDeleteMutate }),
+  useEventsByDateRange: (start: string, end: string) => mockUseEventsByDateRange(start, end),
+}));
+
+vi.mock('../../hooks/queries/useUnavailableDatesQueries', () => ({
+  useCreateUnavailableDates: () => mockUseCreateUnavailableDates(),
+  useDeleteUnavailableDate: () => mockUseDeleteUnavailableDate(),
+  useUnavailableDatesByRange: (start: string, end: string) => mockUseUnavailableDatesByRange(start, end),
 }));
 
 vi.mock('../../hooks/usePagination', () => ({
@@ -172,12 +184,37 @@ describe('EventList', () => {
       handlePageChange: vi.fn(),
       handleSort: vi.fn(),
     });
+
+    mockUseEventsByDateRange.mockReturnValue({
+      data: mockEvents,
+      isLoading: false,
+      isFetching: false,
+      error: null,
+    });
+
+    mockUseUnavailableDatesByRange.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isFetching: false,
+      error: null,
+    });
+
+    mockUseCreateUnavailableDates.mockReturnValue({
+      mutate: vi.fn(),
+      mutateAsync: vi.fn(),
+    });
+
+    mockUseDeleteUnavailableDate.mockReturnValue({
+      mutate: vi.fn(),
+      mutateAsync: vi.fn(),
+    });
   });
 
   it('renders title and header count', () => {
     renderPage();
 
-    expect(screen.getByText(/Eventos/)).toBeInTheDocument();
+    const heading = screen.getByRole('heading', { level: 1 });
+    expect(heading.textContent).toContain('Eventos');
     expect(screen.getByText('(2)')).toBeInTheDocument();
   });
 
@@ -298,5 +335,19 @@ describe('EventList', () => {
     fireEvent.click(screen.getByTestId('confirm-delete'));
 
     expect(mockDeleteMutate).toHaveBeenCalledWith('ev1');
+  });
+
+  it('renders segmented control view toggle and respects view parameter', () => {
+    renderPage(['/events?view=calendar']);
+
+    // Should show Export .ics button in calendar view mode
+    expect(screen.getByText('Exportar .ics', { exact: false })).toBeInTheDocument();
+  });
+
+  it('handles period chips in list mode', () => {
+    renderPage(['/events?view=list']);
+
+    // Check if period chips like 'Hoy' are present
+    expect(screen.getByRole('button', { name: /Hoy/i })).toBeInTheDocument();
   });
 });

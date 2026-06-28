@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard,
-  Calendar,
   PartyPopper,
   Users,
   Package,
@@ -95,7 +94,6 @@ export const Layout: React.FC = () => {
 
   const navigation = [
     { name: t('nav.dashboard'), href: '/dashboard', icon: LayoutDashboard },
-    { name: t('nav.calendar'), href: '/calendar', icon: Calendar },
     { name: t('nav.events'), href: '/events', icon: PartyPopper },
     { name: t('nav.clients'), href: '/clients', icon: Users },
     { name: t('nav.staff'), href: '/staff', icon: UserCog },
