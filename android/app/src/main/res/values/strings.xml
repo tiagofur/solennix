@@ -13,6 +13,7 @@
     <string name="nav_calendar">Calendario</string>
     <string name="nav_events">Eventos</string>
     <string name="nav_clients">Clientes</string>
+    <string name="nav_search">Buscar</string>
     <string name="nav_more">Más</string>
     
     <!-- Google Sign-In: Web Client ID from Firebase project solennix-c193f (606927500645).
@@ -67,6 +68,8 @@
     <string name="cd_savings">Precio</string>
 
     <!-- Navigation -->
+    <string name="nav_header_catalog">Catálogo</string>
+    <string name="nav_header_settings">Configuración</string>
     <string name="nav_products">Productos</string>
     <string name="nav_inventory">Inventario</string>
     <string name="nav_settings">Configuración</string>

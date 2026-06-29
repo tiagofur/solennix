@@ -53,6 +53,11 @@ class ChangePasswordViewModel @Inject constructor(
                 newPassword.length >= 8 &&
                 confirmPassword == newPassword
 
+    val hasContent: Boolean
+        get() = currentPassword.isNotBlank() ||
+                newPassword.isNotBlank() ||
+                confirmPassword.isNotBlank()
+
     fun changePassword() {
         hasAttemptedSubmit = true
         if (!isFormValid) return

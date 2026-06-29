@@ -10,6 +10,11 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -29,6 +34,11 @@ fun ChangePasswordScreen(
     onNavigateBack: () -> Unit
 ) {
     val scrollState = rememberScrollState()
+    var showDiscardDialog by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = viewModel.hasContent) {
+        showDiscardDialog = true
+    }
 
     LaunchedEffect(viewModel.saveSuccess) {
         if (viewModel.saveSuccess) {
@@ -41,7 +51,13 @@ fun ChangePasswordScreen(
             SolennixTopAppBar(
                 title = { Text(stringResource(R.string.settings_change_password_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = {
+                        if (viewModel.hasContent) {
+                            showDiscardDialog = true
+                        } else {
+                            onNavigateBack()
+                        }
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(DesignSystemR.string.cd_back))
                     }
                 }
@@ -130,5 +146,28 @@ fun ChangePasswordScreen(
             )
         }
         }
+    }
+
+    if (showDiscardDialog) {
+        AlertDialog(
+            onDismissRequest = { showDiscardDialog = false },
+            title = { Text(stringResource(R.string.password_form_discard_title)) },
+            text = { Text(stringResource(R.string.password_form_discard_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDiscardDialog = false
+                        onNavigateBack()
+                    }
+                ) {
+                    Text(stringResource(R.string.password_form_discard_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDiscardDialog = false }) {
+                    Text(stringResource(R.string.password_form_discard_cancel))
+                }
+            }
+        )
     }
 }

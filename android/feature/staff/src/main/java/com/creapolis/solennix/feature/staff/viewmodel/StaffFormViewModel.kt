@@ -22,6 +22,8 @@ class StaffFormViewModel @Inject constructor(
     private val staffId: String? = savedStateHandle.get<String>("staffId")?.takeIf { it.isNotBlank() }
     val isEditMode: Boolean = staffId != null
 
+    private val originalState = mutableStateOf<Staff?>(null)
+
     // Form state
     var name by mutableStateOf("")
     var roleLabel by mutableStateOf("")
@@ -49,6 +51,16 @@ class StaffFormViewModel @Inject constructor(
     val isFormValid: Boolean
         get() = name.isNotBlank() && (email.isBlank() || isValidEmail(email))
 
+    val isDirty: Boolean
+        get() = originalState.value?.let { original ->
+            original.name != name ||
+            original.roleLabel != roleLabel.trim().takeIf { it.isNotBlank() } ||
+            original.phone != phone.trim().takeIf { it.isNotBlank() } ||
+            original.email != email.trim().takeIf { it.isNotBlank() } ||
+            original.notes != notes.trim().takeIf { it.isNotBlank() } ||
+            original.notificationEmailOptIn != notificationEmailOptIn
+        } ?: (name.isNotBlank() || roleLabel.isNotBlank() || phone.isNotBlank() || email.isNotBlank() || notes.isNotBlank())
+
     private fun isValidEmail(email: String): Boolean {
         return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
@@ -71,6 +83,7 @@ class StaffFormViewModel @Inject constructor(
                     email = staff.email ?: ""
                     notes = staff.notes ?: ""
                     notificationEmailOptIn = staff.notificationEmailOptIn
+                    originalState.value = staff.copy()
                 }
             } catch (e: Exception) {
                 errorMessage = "Error al cargar colaborador: ${e.message}"

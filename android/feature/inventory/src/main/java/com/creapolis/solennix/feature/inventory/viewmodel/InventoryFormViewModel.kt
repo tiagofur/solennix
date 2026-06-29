@@ -30,6 +30,8 @@ class InventoryFormViewModel @Inject constructor(
 
     private val itemId: String? = savedStateHandle["itemId"]
 
+    private val originalState = mutableStateOf<InventoryItem?>(null)
+
     var ingredientName by mutableStateOf("")
     var currentStock by mutableStateOf("")
     var minimumStock by mutableStateOf("")
@@ -50,6 +52,16 @@ class InventoryFormViewModel @Inject constructor(
 
     val isFormValid: Boolean
         get() = ingredientName.isNotBlank() && currentStock.toDoubleOrNull() != null && minimumStock.toDoubleOrNull() != null && unit.isNotBlank()
+
+    val isDirty: Boolean
+        get() = originalState.value?.let { original ->
+            original.ingredientName != ingredientName ||
+            original.currentStock != currentStock.toDoubleOrNull() ||
+            original.minimumStock != minimumStock.toDoubleOrNull() ||
+            original.unit != unit ||
+            original.unitCost != unitCost.toDoubleOrNull() ||
+            original.type != type
+        } ?: (ingredientName.isNotBlank() || currentStock.isNotBlank() || minimumStock.isNotBlank() || unit.isNotBlank() || unitCost.isNotBlank())
 
     init {
         if (itemId != null) {
@@ -102,6 +114,7 @@ class InventoryFormViewModel @Inject constructor(
                     unit = item.unit
                     unitCost = item.unitCost?.toString() ?: ""
                     type = item.type
+                    originalState.value = item.copy()
                 }
             } catch (e: Exception) {
                 errorMessage = InventoryStrings.loadItemError(e.message)

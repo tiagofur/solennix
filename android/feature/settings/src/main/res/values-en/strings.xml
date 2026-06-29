@@ -320,4 +320,21 @@ hola@creapolis.dev</string>
     <string name="reviews_visibility_public">Public</string>
     <string name="reviews_response_placeholder">Organizer response</string>
     <string name="reviews_save_response">Save</string>
+
+    <!-- Dirty state dialogs -->
+    <string name="settings_contract_discard_title">Discard changes?</string>
+    <string name="settings_contract_discard_message">You have unsaved changes. If you leave, they will be lost.</string>
+    <string name="settings_contract_discard_confirm">Discard</string>
+    <string name="profile_form_discard_title">Discard changes?</string>
+    <string name="profile_form_discard_message">You have unsaved changes to your profile. If you leave, they will be lost.</string>
+    <string name="profile_form_discard_confirm">Discard</string>
+    <string name="profile_form_discard_cancel">Keep editing</string>
+    <string name="password_form_discard_title">Discard changes?</string>
+    <string name="password_form_discard_message">You have unsaved changes to your password. If you leave, they will be lost.</string>
+    <string name="password_form_discard_confirm">Discard</string>
+    <string name="password_form_discard_cancel">Keep editing</string>
+    <string name="notifications_discard_title">Discard changes?</string>
+    <string name="notifications_discard_message">You have unsaved changes to your notification preferences. If you leave, they will be lost.</string>
+    <string name="notifications_discard_confirm">Discard</string>
+    <string name="notifications_discard_cancel">Keep editing</string>
 </resources>

@@ -14,9 +14,14 @@ import com.creapolis.solennix.core.data.repository.EventRepository
 import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.EventStatus
+import com.creapolis.solennix.core.model.UnavailableDate
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
+import com.creapolis.solennix.core.network.ApiService
+import com.creapolis.solennix.core.network.Endpoints
 import com.creapolis.solennix.core.network.toApiError
+import com.creapolis.solennix.core.network.get
+import com.creapolis.solennix.core.network.post
 import com.creapolis.solennix.feature.events.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -73,7 +78,8 @@ data class EventStatusFilter(
 class EventListViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context,
     private val eventRepository: EventRepository,
-    private val clientRepository: ClientRepository
+    private val clientRepository: ClientRepository,
+    private val apiService: ApiService
 ) : ViewModel() {
 
     private fun tr(@StringRes id: Int, vararg args: Any): String = appContext.getString(id, *args)
@@ -427,6 +433,125 @@ class EventListViewModel @Inject constructor(
 
     fun clearError() {
         _error.value = null
+    }
+
+    /**
+     * Check if a date is blocked by an unavailable date entry.
+     */
+    fun isDateBlocked(date: LocalDate): Boolean {
+        val dateStr = date.toString()
+        return _unavailableDates.value.any { ud ->
+            dateStr >= ud.startDate && dateStr <= ud.endDate
+        }
+    }
+
+    /**
+     * Get the unavailable date entry for a specific date, if any.
+     */
+    fun getUnavailableDateFor(date: LocalDate): UnavailableDate? {
+        val dateStr = date.toString()
+        return _unavailableDates.value.firstOrNull { ud ->
+            dateStr >= ud.startDate && dateStr <= ud.endDate
+        }
+    }
+
+    /**
+     * Toggle a date block - removes existing block or creates a new single-day block.
+     * Matches CalendarViewModel's toggleDateBlock behavior.
+     */
+    fun toggleDateBlock(date: LocalDate, reason: String? = null) {
+        viewModelScope.launch {
+            try {
+                val dateStr = date.toString()
+                val existing = _unavailableDates.value.find { ud ->
+                    dateStr >= ud.startDate && dateStr <= ud.endDate
+                }
+                if (existing != null) {
+                    apiService.delete(Endpoints.unavailableDate(existing.id))
+                } else {
+                    val payload = buildMap<String, String> {
+                        put("start_date", dateStr)
+                        put("end_date", dateStr)
+                        if (!reason.isNullOrBlank()) {
+                            put("reason", reason)
+                        }
+                    }
+                    apiService.post<UnavailableDate>(Endpoints.UNAVAILABLE_DATES, payload)
+                }
+                // Reload unavailable dates after toggle
+                loadUnavailableDatesForCurrentMonth()
+            } catch (e: Exception) {
+                Log.w(TAG, "toggleDateBlock failed for $date", e)
+                val dateStr = date.toString()
+                val wasExisting = _unavailableDates.value.any { ud ->
+                    dateStr >= ud.startDate && dateStr <= ud.endDate
+                }
+                _error.value = if (wasExisting) {
+                    appContext.getString(R.string.events_list_error_unblock_date)
+                } else {
+                    appContext.getString(R.string.events_list_error_block_date)
+                }
+            }
+        }
+    }
+
+    /**
+     * Delete an unavailable date entry by ID.
+     */
+    fun deleteUnavailableDate(id: String) {
+        viewModelScope.launch {
+            try {
+                apiService.delete(Endpoints.unavailableDate(id))
+                loadUnavailableDatesForCurrentMonth()
+            } catch (e: Exception) {
+                Log.w(TAG, "deleteUnavailableDate $id failed", e)
+                _error.value = appContext.getString(R.string.events_list_error_unblock_date)
+            }
+        }
+    }
+
+    /**
+     * Block a range of dates with an optional reason.
+     */
+    fun blockDateRange(startDate: LocalDate, endDate: LocalDate, reason: String?) {
+        viewModelScope.launch {
+            try {
+                val payload = buildMap<String, String> {
+                    put("start_date", startDate.toString())
+                    put("end_date", endDate.toString())
+                    if (!reason.isNullOrBlank()) {
+                        put("reason", reason)
+                    }
+                }
+                apiService.post<UnavailableDate>(Endpoints.UNAVAILABLE_DATES, payload)
+                loadUnavailableDatesForCurrentMonth()
+            } catch (e: Exception) {
+                Log.w(TAG, "blockDateRange $startDate..$endDate failed", e)
+                _error.value = appContext.getString(R.string.events_list_error_block_date)
+            }
+        }
+    }
+
+    /**
+     * Load unavailable dates for the current month context.
+     * Uses a reasonable range around today to cover typical viewing patterns.
+     */
+    private fun loadUnavailableDatesForCurrentMonth() {
+        viewModelScope.launch {
+            try {
+                val now = LocalDate.now()
+                val start = now.minusMonths(1).toString()
+                val end = now.plusMonths(3).toString()
+                val dates: List<UnavailableDate> = apiService.get(
+                    Endpoints.UNAVAILABLE_DATES,
+                    mapOf("start" to start, "end" to end)
+                )
+                _unavailableDates.value = dates
+            } catch (e: Exception) {
+                Log.w(TAG, "unavailable-dates load failed", e)
+                _error.value = appContext.getString(R.string.events_list_error_sync)
+            }
+        }
     }
 
     private fun Throwable.toEventsSyncMessage(): String {

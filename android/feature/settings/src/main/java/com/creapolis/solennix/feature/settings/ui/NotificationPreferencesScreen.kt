@@ -9,6 +9,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
@@ -25,12 +26,24 @@ fun NotificationPreferencesScreen(
     viewModel: NotificationPreferencesViewModel,
     onNavigateBack: () -> Unit
 ) {
+    var showDiscardDialog by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = viewModel.isDirty) {
+        showDiscardDialog = true
+    }
+
     Scaffold(
         topBar = {
             SolennixTopAppBar(
                 title = { Text(stringResource(R.string.settings_notifications_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = {
+                        if (viewModel.isDirty) {
+                            showDiscardDialog = true
+                        } else {
+                            onNavigateBack()
+                        }
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(DesignSystemR.string.cd_back)
@@ -132,6 +145,29 @@ fun NotificationPreferencesScreen(
             }
         }
         }
+    }
+
+    if (showDiscardDialog) {
+        AlertDialog(
+            onDismissRequest = { showDiscardDialog = false },
+            title = { Text(stringResource(R.string.notifications_discard_title)) },
+            text = { Text(stringResource(R.string.notifications_discard_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDiscardDialog = false
+                        onNavigateBack()
+                    }
+                ) {
+                    Text(stringResource(R.string.notifications_discard_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDiscardDialog = false }) {
+                    Text(stringResource(R.string.notifications_discard_cancel))
+                }
+            }
+        )
     }
 }
 

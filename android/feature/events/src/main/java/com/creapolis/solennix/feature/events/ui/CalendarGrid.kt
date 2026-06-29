@@ -70,7 +70,7 @@ import java.util.Locale
 @Composable
 fun CalendarGrid(
     currentMonth: YearMonth,
-    selectedDate: LocalDate,
+    selectedDate: LocalDate?,
     onDateSelected: (LocalDate) -> Unit,
     events: List<Event>,
     unavailableDates: List<UnavailableDate> = emptyList(),

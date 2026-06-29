@@ -10,4 +10,11 @@
     <string name="search_no_results">No se encontraron resultados</string>
     <string name="search_inventory_stock">Stock: %1$s %2$s</string>
     <string name="search_low_stock">Bajo</string>
+    <string name="search_scope_all">Todo</string>
+    <string name="search_scope_clients">Clientes</string>
+    <string name="search_scope_events">Eventos</string>
+    <string name="search_scope_products">Productos</string>
+    <string name="search_scope_inventory">Inventario</string>
+    <string name="search_recent_title">Búsquedas recientes</string>
+    <string name="search_recent_clear">Limpiar</string>
 </resources>

@@ -326,4 +326,14 @@ class ProductFormViewModel @Inject constructor(
         }
         return name
     }
+
+    val isDirty: Boolean
+        get() = name.isNotBlank() ||
+                category.isNotBlank() ||
+                basePrice.isNotBlank() ||
+                imageUrl.isNotBlank() ||
+                ingredients.isNotEmpty() ||
+                equipment.isNotEmpty() ||
+                supplies.isNotEmpty() ||
+                staffTeamId != null
 }

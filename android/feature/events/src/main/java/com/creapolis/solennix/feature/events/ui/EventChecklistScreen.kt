@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.EmptyState
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
+import com.creapolis.solennix.core.designsystem.component.SwipeToCompleteBox
 import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.extensions.asMXN
@@ -42,6 +43,7 @@ fun EventChecklistScreen(
     var showResetDialog by remember { mutableStateOf(false) }
 
     Scaffold(
+        containerColor = SolennixTheme.colors.surfaceGrouped,
         topBar = {
             SolennixTopAppBar(
                 title = { Text(stringResource(R.string.events_checklist_title)) },
@@ -115,8 +117,8 @@ fun EventChecklistScreen(
                     // Phone: single column
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         checklistEquipmentSection(uiState, viewModel)
                         checklistStockSection(uiState, viewModel)
@@ -167,11 +169,19 @@ private fun LazyListScope.checklistEquipmentSection(
             )
         }
         items(uiState.equipmentItems, key = { it.id }) { item ->
-            ChecklistItemCard(
-                item = item,
-                isChecked = uiState.checkedIds.contains(item.id),
-                onToggle = { viewModel.toggleItem(item.id) }
-            )
+            val isChecked = uiState.checkedIds.contains(item.id)
+            SwipeToCompleteBox(
+                isCompleted = isChecked,
+                onComplete = { viewModel.toggleItem(item.id) },
+                onIncomplete = { viewModel.toggleItem(item.id) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                ChecklistItemCard(
+                    item = item,
+                    isChecked = isChecked,
+                    onToggle = { viewModel.toggleItem(item.id) }
+                )
+            }
         }
     }
 }
@@ -194,11 +204,19 @@ private fun LazyListScope.checklistStockSection(
             )
         }
         items(uiState.stockItems, key = { it.id }) { item ->
-            ChecklistItemCard(
-                item = item,
-                isChecked = uiState.checkedIds.contains(item.id),
-                onToggle = { viewModel.toggleItem(item.id) }
-            )
+            val isChecked = uiState.checkedIds.contains(item.id)
+            SwipeToCompleteBox(
+                isCompleted = isChecked,
+                onComplete = { viewModel.toggleItem(item.id) },
+                onIncomplete = { viewModel.toggleItem(item.id) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                ChecklistItemCard(
+                    item = item,
+                    isChecked = isChecked,
+                    onToggle = { viewModel.toggleItem(item.id) }
+                )
+            }
         }
     }
 }
@@ -220,12 +238,20 @@ private fun LazyListScope.checklistPurchaseSection(
             )
         }
         items(uiState.purchaseItems, key = { it.id }) { item ->
-            ChecklistItemCard(
-                item = item,
-                isChecked = uiState.checkedIds.contains(item.id),
-                onToggle = { viewModel.toggleItem(item.id) },
-                showCost = true
-            )
+            val isChecked = uiState.checkedIds.contains(item.id)
+            SwipeToCompleteBox(
+                isCompleted = isChecked,
+                onComplete = { viewModel.toggleItem(item.id) },
+                onIncomplete = { viewModel.toggleItem(item.id) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                ChecklistItemCard(
+                    item = item,
+                    isChecked = isChecked,
+                    onToggle = { viewModel.toggleItem(item.id) },
+                    showCost = true
+                )
+            }
         }
 
         // Total cost for purchases

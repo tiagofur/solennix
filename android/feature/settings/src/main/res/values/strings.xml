@@ -320,4 +320,21 @@ hola@creapolis.dev</string>
     <string name="reviews_visibility_public">Pública</string>
     <string name="reviews_response_placeholder">Respuesta del organizador</string>
     <string name="reviews_save_response">Guardar</string>
+
+    <!-- Dirty state dialogs -->
+    <string name="settings_contract_discard_title">¿Descartar cambios?</string>
+    <string name="settings_contract_discard_message">Tenés cambios sin guardar. Si salís, se perderán.</string>
+    <string name="settings_contract_discard_confirm">Descartar</string>
+    <string name="profile_form_discard_title">¿Descartar cambios?</string>
+    <string name="profile_form_discard_message">Tenés cambios sin guardar en tu perfil. Si salís, se perderán.</string>
+    <string name="profile_form_discard_confirm">Descartar</string>
+    <string name="profile_form_discard_cancel">Seguir editando</string>
+    <string name="password_form_discard_title">¿Descartar cambios?</string>
+    <string name="password_form_discard_message">Tenés cambios sin guardar en tu contraseña. Si salís, se perderán.</string>
+    <string name="password_form_discard_confirm">Descartar</string>
+    <string name="password_form_discard_cancel">Seguir editando</string>
+    <string name="notifications_discard_title">¿Descartar cambios?</string>
+    <string name="notifications_discard_message">Tenés cambios sin guardar en tus preferencias de notificación. Si salís, se perderán.</string>
+    <string name="notifications_discard_confirm">Descartar</string>
+    <string name="notifications_discard_cancel">Seguir editando</string>
 </resources>

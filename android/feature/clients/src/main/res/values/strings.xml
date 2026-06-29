@@ -155,4 +155,7 @@
     <string name="clients_empty_action">Agregar cliente</string>
     <string name="clients_empty_search_title">Sin resultados</string>
     <string name="clients_empty_search_message">No encontramos clientes que coincidan con tu búsqueda.</string>
+    <string name="clients_form_discard_title">¿Salir sin guardar?</string>
+    <string name="clients_form_discard_message">Tienes cambios sin guardar. ¿Seguro que deseas salir?</string>
+    <string name="clients_form_discard_confirm">Salir</string>
 </resources>

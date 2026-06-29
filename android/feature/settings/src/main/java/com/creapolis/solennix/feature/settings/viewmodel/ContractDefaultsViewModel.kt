@@ -57,6 +57,13 @@ Firmas:
 Proveedor: [Nombre del proveedor]
 Cliente: [Nombre del cliente]"""
 
+private data class ContractDefaultsState(
+    val depositPercent: Float,
+    val cancellationDays: Float,
+    val refundPercent: Float,
+    val contractTemplate: String
+)
+
 @Serializable
 private data class ContractDefaultsPayload(
     @SerialName("default_deposit_percent") val defaultDepositPercent: Double,
@@ -72,6 +79,15 @@ class ContractDefaultsViewModel @Inject constructor(
     private val apiService: ApiService
 ) : ViewModel() {
 
+    private val originalState = mutableStateOf(
+        ContractDefaultsState(
+            depositPercent = 50f,
+            cancellationDays = 7f,
+            refundPercent = 50f,
+            contractTemplate = ""
+        )
+    )
+
     var depositPercent by mutableStateOf(50f)
     var cancellationDays by mutableStateOf(7f)
     var refundPercent by mutableStateOf(50f)
@@ -83,6 +99,14 @@ class ContractDefaultsViewModel @Inject constructor(
     var isSaving by mutableStateOf(false)
     var saveSuccess by mutableStateOf(false)
     var errorMessage by mutableStateOf<String?>(null)
+
+    val isDirty: Boolean
+        get() = originalState.value.let { original ->
+            original.depositPercent != depositPercent ||
+            original.cancellationDays != cancellationDays ||
+            original.refundPercent != refundPercent ||
+            original.contractTemplate != contractTemplate.trim()
+        }
 
     init {
         loadContractDefaults()
@@ -118,6 +142,12 @@ class ContractDefaultsViewModel @Inject constructor(
         } else {
             DEFAULT_CONTRACT_TEMPLATE
         }
+        originalState.value = ContractDefaultsState(
+            depositPercent = depositPercent,
+            cancellationDays = cancellationDays,
+            refundPercent = refundPercent,
+            contractTemplate = contractTemplate
+        )
     }
 
     fun saveContractDefaults() {

@@ -6,14 +6,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -30,6 +36,7 @@ import com.creapolis.solennix.core.model.Product
 import com.creapolis.solennix.feature.clients.ui.ClientListItem
 import com.creapolis.solennix.feature.search.R
 import com.creapolis.solennix.feature.search.viewmodel.SearchViewModel
+import com.creapolis.solennix.feature.search.viewmodel.SearchScope
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,10 +47,40 @@ fun SearchScreen(
     onClientClick: (String) -> Unit,
     onEventClick: (String) -> Unit,
     onProductClick: (String) -> Unit,
-    onInventoryClick: (String) -> Unit
+    onInventoryClick: (String) -> Unit,
+    showBackButton: Boolean = true
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val selectedScope by viewModel.selectedScope.collectAsStateWithLifecycle()
+    val recentQueries by viewModel.recentQueries.collectAsStateWithLifecycle()
     val isWideScreen = LocalIsWideScreen.current
+
+    val handleClientClick = { id: String ->
+        if (uiState.query.isNotBlank()) {
+            viewModel.saveRecentQuery(uiState.query.trim())
+        }
+        onClientClick(id)
+    }
+    val handleEventClick = { id: String ->
+        if (uiState.query.isNotBlank()) {
+            viewModel.saveRecentQuery(uiState.query.trim())
+        }
+        onEventClick(id)
+    }
+    val handleProductClick = { id: String ->
+        if (uiState.query.isNotBlank()) {
+            viewModel.saveRecentQuery(uiState.query.trim())
+        }
+        onProductClick(id)
+    }
+    val handleInventoryClick = { id: String ->
+        if (uiState.query.isNotBlank()) {
+            viewModel.saveRecentQuery(uiState.query.trim())
+        }
+        onInventoryClick(id)
+    }
+
+    val filteredState = viewModel.getFilteredResults()
 
     LaunchedEffect(Unit) {
         if (!initialQuery.isNullOrBlank()) {
@@ -51,21 +88,23 @@ fun SearchScreen(
         }
     }
 
-    val hasNoResults = uiState.query.isNotBlank() &&
-        !uiState.isLoading &&
-        uiState.clients.isEmpty() &&
-        uiState.events.isEmpty() &&
-        uiState.products.isEmpty() &&
-        uiState.inventory.isEmpty() &&
-        uiState.error == null
+    val hasNoResults = filteredState.query.isNotBlank() &&
+        !filteredState.isLoading &&
+        filteredState.clients.isEmpty() &&
+        filteredState.events.isEmpty() &&
+        filteredState.products.isEmpty() &&
+        filteredState.inventory.isEmpty() &&
+        filteredState.error == null
 
     Scaffold(
         topBar = {
             SolennixTopAppBar(
                 title = { Text(stringResource(R.string.search_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.search_back))
+                    if (showBackButton) {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.search_back))
+                        }
                     }
                 }
             )
@@ -75,7 +114,7 @@ fun SearchScreen(
             modifier = Modifier.padding(padding),
             maxWidth = 800.dp
         ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxSize()) {
             OutlinedTextField(
                 value = uiState.query,
                 onValueChange = { viewModel.onQueryChange(it) },
@@ -85,8 +124,89 @@ fun SearchScreen(
                 placeholder = { Text(stringResource(R.string.search_placeholder)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 shape = MaterialTheme.shapes.medium,
-                singleLine = true
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        if (uiState.query.isNotBlank()) {
+                            viewModel.saveRecentQuery(uiState.query.trim())
+                        }
+                    }
+                )
             )
+
+            // Scope filters
+            val scopeOptions = listOf(
+                SearchScope.ALL to stringResource(R.string.search_scope_all),
+                SearchScope.CLIENTS to stringResource(R.string.search_scope_clients),
+                SearchScope.EVENTS to stringResource(R.string.search_scope_events),
+                SearchScope.PRODUCTS to stringResource(R.string.search_scope_products),
+                SearchScope.INVENTORY to stringResource(R.string.search_scope_inventory)
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                scopeOptions.forEach { (scope, label) ->
+                    FilterChip(
+                        selected = selectedScope == scope,
+                        onClick = { viewModel.updateScope(scope) },
+                        label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            // Recent queries section (show only when query is empty)
+            if (filteredState.query.isBlank() && recentQueries.isNotEmpty()) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.search_recent_title),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = SolennixTheme.colors.secondaryText
+                        )
+                        TextButton(onClick = { viewModel.clearRecentQueries() }) {
+                            Text(
+                                text = stringResource(R.string.search_recent_clear),
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                    }
+                    FlowRow(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        recentQueries.forEach { query ->
+                            FilterChip(
+                                selected = false,
+                                onClick = {
+                                    viewModel.onQueryChange(query)
+                                    viewModel.saveRecentQuery(query)
+                                },
+                                label = { Text(query, style = MaterialTheme.typography.bodySmall) },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.History,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+            }
 
             if (uiState.isLoading) {
                 Box(
@@ -110,7 +230,8 @@ fun SearchScreen(
                 // Tablet: 2x2 grid of category sections
                 Column(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth()
+                        .weight(1f)
                         .verticalScroll(rememberScrollState())
                 ) {
                     Row(
@@ -119,59 +240,59 @@ fun SearchScreen(
                     ) {
                         // Left column: Clientes + Productos
                         Column(modifier = Modifier.weight(1f)) {
-                            if (uiState.clients.isNotEmpty()) {
+                            if (filteredState.clients.isNotEmpty()) {
                                 Text(
                                     text = stringResource(R.string.search_section_clients),
                                     modifier = Modifier.padding(16.dp),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = SolennixTheme.colors.primary
                                 )
-                                uiState.clients.forEach { client ->
-                                    ClientListItem(client = client, onClick = { onClientClick(client.id) })
+                                filteredState.clients.forEach { client ->
+                                    ClientListItem(client = client, onClick = { handleClientClick(client.id) })
                                 }
                             }
-                            if (uiState.products.isNotEmpty()) {
+                            if (filteredState.products.isNotEmpty()) {
                                 Text(
                                     text = stringResource(R.string.search_section_products),
                                     modifier = Modifier.padding(16.dp),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = SolennixTheme.colors.primary
                                 )
-                                uiState.products.forEach { product ->
+                                filteredState.products.forEach { product ->
                                     SearchProductListItem(
                                         product = product,
-                                        onClick = { onProductClick(product.id) }
+                                        onClick = { handleProductClick(product.id) }
                                     )
                                 }
                             }
                         }
                         // Right column: Eventos + Inventario
                         Column(modifier = Modifier.weight(1f)) {
-                            if (uiState.events.isNotEmpty()) {
+                            if (filteredState.events.isNotEmpty()) {
                                 Text(
                                     text = stringResource(R.string.search_section_events),
                                     modifier = Modifier.padding(16.dp),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = SolennixTheme.colors.primary
                                 )
-                                uiState.events.forEach { event ->
+                                filteredState.events.forEach { event ->
                                     SearchEventListItem(
                                         event = event,
-                                        onClick = { onEventClick(event.id) }
+                                        onClick = { handleEventClick(event.id) }
                                     )
                                 }
                             }
-                            if (uiState.inventory.isNotEmpty()) {
+                            if (filteredState.inventory.isNotEmpty()) {
                                 Text(
                                     text = stringResource(R.string.search_section_inventory),
                                     modifier = Modifier.padding(16.dp),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = SolennixTheme.colors.primary
                                 )
-                                uiState.inventory.forEach { item ->
+                                filteredState.inventory.forEach { item ->
                                     SearchInventoryListItem(
                                         item = item,
-                                        onClick = { onInventoryClick(item.id) }
+                                        onClick = { handleInventoryClick(item.id) }
                                     )
                                 }
                             }
@@ -193,9 +314,9 @@ fun SearchScreen(
                 }
             } else {
                 // Phone: single column list
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
                     // Clientes
-                    if (uiState.clients.isNotEmpty()) {
+                    if (filteredState.clients.isNotEmpty()) {
                         item {
                             Text(
                                 text = stringResource(R.string.search_section_clients),
@@ -204,13 +325,13 @@ fun SearchScreen(
                                 color = SolennixTheme.colors.primary
                             )
                         }
-                        items(uiState.clients) { client ->
-                            ClientListItem(client = client, onClick = { onClientClick(client.id) })
+                        items(filteredState.clients) { client ->
+                            ClientListItem(client = client, onClick = { handleClientClick(client.id) })
                         }
                     }
 
                     // Eventos
-                    if (uiState.events.isNotEmpty()) {
+                    if (filteredState.events.isNotEmpty()) {
                         item {
                             Text(
                                 text = stringResource(R.string.search_section_events),
@@ -219,16 +340,16 @@ fun SearchScreen(
                                 color = SolennixTheme.colors.primary
                             )
                         }
-                        items(uiState.events) { event ->
+                        items(filteredState.events) { event ->
                             SearchEventListItem(
                                 event = event,
-                                onClick = { onEventClick(event.id) }
+                                onClick = { handleEventClick(event.id) }
                             )
                         }
                     }
 
                     // Productos
-                    if (uiState.products.isNotEmpty()) {
+                    if (filteredState.products.isNotEmpty()) {
                         item {
                             Text(
                                 text = stringResource(R.string.search_section_products),
@@ -237,16 +358,16 @@ fun SearchScreen(
                                 color = SolennixTheme.colors.primary
                             )
                         }
-                        items(uiState.products) { product ->
+                        items(filteredState.products) { product ->
                             SearchProductListItem(
                                 product = product,
-                                onClick = { onProductClick(product.id) }
+                                onClick = { handleProductClick(product.id) }
                             )
                         }
                     }
 
                     // Inventario
-                    if (uiState.inventory.isNotEmpty()) {
+                    if (filteredState.inventory.isNotEmpty()) {
                         item {
                             Text(
                                 text = stringResource(R.string.search_section_inventory),
@@ -255,10 +376,10 @@ fun SearchScreen(
                                 color = SolennixTheme.colors.primary
                             )
                         }
-                        items(uiState.inventory) { item ->
+                        items(filteredState.inventory) { item ->
                             SearchInventoryListItem(
                                 item = item,
-                                onClick = { onInventoryClick(item.id) }
+                                onClick = { handleInventoryClick(item.id) }
                             )
                         }
                     }
@@ -302,8 +423,16 @@ fun SearchEventListItem(event: Event, onClick: () -> Unit) {
                     style = MaterialTheme.typography.titleSmall,
                     color = SolennixTheme.colors.primaryText
                 )
+                val formattedDate = remember(event.eventDate) {
+                    try {
+                        val parsed = java.time.LocalDate.parse(event.eventDate)
+                        parsed.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", java.util.Locale("es", "MX")))
+                    } catch (e: Exception) {
+                        event.eventDate
+                    }
+                }
                 Text(
-                    text = event.eventDate,
+                    text = formattedDate,
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText
                 )

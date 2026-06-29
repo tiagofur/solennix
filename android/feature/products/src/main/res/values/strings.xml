@@ -118,4 +118,7 @@
     <string name="products_empty_action">Agregar producto</string>
     <string name="products_empty_search_title">Sin resultados</string>
     <string name="products_empty_search_message">No encontramos productos que coincidan con el filtro actual.</string>
+    <string name="products_form_discard_title">¿Salir sin guardar?</string>
+    <string name="products_form_discard_message">Tienes cambios sin guardar. ¿Seguro que deseas salir?</string>
+    <string name="products_form_discard_confirm">Salir</string>
 </resources>

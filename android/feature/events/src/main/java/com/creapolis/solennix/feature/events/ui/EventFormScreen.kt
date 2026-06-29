@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,6 +59,12 @@ fun EventFormScreen(
     val pagerState = rememberPagerState(pageCount = { 5 })
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    var showDiscardDialog by remember { mutableStateOf(false) }
+
+    // Back handler for dirty state
+    BackHandler(enabled = viewModel.isDirty) {
+        showDiscardDialog = true
+    }
 
     UiEventSnackbarHandler(
         events = viewModel.uiEvents,
@@ -80,7 +87,13 @@ fun EventFormScreen(
                 title = { Text(stringResource(if (viewModel.isEditMode) R.string.events_form_title_edit else R.string.events_form_title_new)) },
                 onSearchClick = onSearchClick,
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = {
+                        if (viewModel.isDirty) {
+                            showDiscardDialog = true
+                        } else {
+                            onNavigateBack()
+                        }
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.events_form_back))
                     }
                 }
@@ -183,6 +196,30 @@ fun EventFormScreen(
                 onNavigateBack()
             },
             onDismiss = { viewModel.planLimitMessage = null }
+        )
+    }
+
+    // Discard changes dialog
+    if (showDiscardDialog) {
+        AlertDialog(
+            onDismissRequest = { showDiscardDialog = false },
+            title = { Text(stringResource(R.string.events_form_discard_title)) },
+            text = { Text(stringResource(R.string.events_form_discard_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDiscardDialog = false
+                        onNavigateBack()
+                    }
+                ) {
+                    Text(stringResource(R.string.events_form_discard_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDiscardDialog = false }) {
+                    Text(stringResource(R.string.events_common_cancel))
+                }
+            }
         )
     }
 }

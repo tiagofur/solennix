@@ -16,5 +16,6 @@ enum class TopLevelDestination(
     CALENDAR(R.string.nav_calendar, Icons.Default.DateRange, Icons.Filled.DateRange, "calendar"),
     EVENTS(R.string.nav_events, Icons.Default.Celebration, Icons.Filled.Celebration, "events"),
     CLIENTS(R.string.nav_clients, Icons.Default.Person, Icons.Filled.Person, "clients"),
+    SEARCH(R.string.nav_search, Icons.Default.Search, Icons.Filled.Search, "search"),
     MORE(R.string.nav_more, Icons.Default.Menu, Icons.Filled.Menu, "more")
 }

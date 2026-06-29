@@ -35,6 +35,13 @@ class EditProfileViewModel @Inject constructor(
 
     var hasAttemptedSubmit by mutableStateOf(false)
 
+    // Initial values for dirty state tracking
+    private var initialName = ""
+    private var initialEmail = ""
+
+    val isDirty: Boolean
+        get() = name != initialName || email != initialEmail
+
     val nameError: String?
         get() = if (hasAttemptedSubmit && name.isBlank()) context.getString(R.string.settings_profile_name_required) else null
 
@@ -80,6 +87,9 @@ class EditProfileViewModel @Inject constructor(
     private fun populateFromUser(user: User) {
         name = user.name
         email = user.email
+        // Store initial values for dirty state tracking
+        initialName = user.name
+        initialEmail = user.email
     }
 
     fun saveProfile() {
