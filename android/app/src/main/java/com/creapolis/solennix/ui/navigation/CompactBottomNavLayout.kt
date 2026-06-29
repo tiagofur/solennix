@@ -60,7 +60,6 @@ import com.creapolis.solennix.R
 import com.creapolis.solennix.core.designsystem.component.QuickActionsFAB
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
-import com.creapolis.solennix.feature.calendar.ui.CalendarScreen
 import com.creapolis.solennix.feature.clients.ui.ClientDetailScreen
 import com.creapolis.solennix.feature.clients.ui.ClientFormScreen
 import com.creapolis.solennix.feature.clients.ui.ClientListScreen
@@ -73,7 +72,7 @@ import com.creapolis.solennix.feature.events.ui.EventEquipmentScreen
 import com.creapolis.solennix.feature.events.ui.EventExtrasScreen
 import com.creapolis.solennix.feature.events.ui.EventFinancesScreen
 import com.creapolis.solennix.feature.events.ui.EventFormScreen
-import com.creapolis.solennix.feature.events.ui.EventListScreen
+import com.creapolis.solennix.feature.events.ui.EventsScreen
 import com.creapolis.solennix.feature.events.ui.EventPaymentsScreen
 import com.creapolis.solennix.feature.events.ui.EventPhotosScreen
 import com.creapolis.solennix.feature.events.ui.EventProductsScreen
@@ -197,22 +196,14 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 )
             }
 
-            composable(TopLevelDestination.CALENDAR.route) {
-                CalendarScreen(
-                    viewModel = hiltViewModel(),
-                    onEventClick = { id -> navController.navigate("event_detail/$id") },
-                    onCreateEventClick = { date -> navController.navigate("event_form?eventId=&date=${date}") },
-                    onSearchClick = { navController.navigate(buildSearchRoute()) }
-                )
-            }
-
             composable(TopLevelDestination.EVENTS.route) {
-                EventListScreen(
+                EventsScreen(
                     viewModel = hiltViewModel(),
                     onEventClick = { id -> navController.navigate("event_detail/$id") },
                     onEventEdit = { id -> navController.navigate("event_form?eventId=$id") },
                     onNavigateBack = { navController.popBackStack() },
                     onSearchClick = { navController.navigate(buildSearchRoute()) },
+                    onCreateEventClick = { date -> navController.navigate("event_form?eventId=&date=${date}") },
                     showBackButton = false
                 )
             }
