@@ -545,6 +545,17 @@ func (r *UserRepo) UpdateLastActiveAt(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+// UpdateRegistrationPlatform updates the user's registration platform retroactively.
+func (r *UserRepo) UpdateRegistrationPlatform(ctx context.Context, id uuid.UUID, platform string) error {
+	query := `
+		UPDATE users
+		SET registration_platform = $2,
+			updated_at = NOW()
+		WHERE id = $1 AND (registration_platform = '' OR registration_platform IS NULL)`
+	_, err := r.pool.Exec(ctx, query, id, platform)
+	return err
+}
+
 // DeleteOwnAccount flags a user account for self-deletion under a 90-day grace period.
 func (r *UserRepo) DeleteOwnAccount(ctx context.Context, id uuid.UUID) error {
 	query := `
