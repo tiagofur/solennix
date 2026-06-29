@@ -64,7 +64,9 @@ data class EventListUiState(
     val error: String? = null,
     val statusFilters: List<EventStatusFilter> = emptyList(),
     /** Event whose status mutation is in flight — shows a spinner on that row. */
-    val updatingStatusEventId: String? = null
+    val updatingStatusEventId: String? = null,
+    /** Unavailable dates for calendar view (blocked dates). */
+    val unavailableDates: List<com.creapolis.solennix.core.model.UnavailableDate> = emptyList()
 )
 
 data class EventStatusFilter(
@@ -93,6 +95,7 @@ class EventListViewModel @Inject constructor(
     private val _isRefreshing = MutableStateFlow(false)
     private val _error = MutableStateFlow<String?>(null)
     private val _updatingStatusEventId = MutableStateFlow<String?>(null)
+    private val _unavailableDates = MutableStateFlow<List<com.creapolis.solennix.core.model.UnavailableDate>>(emptyList())
     /** Local events list for soft-delete modifications. */
     private val _localEvents = MutableStateFlow<List<Event>>(emptyList())
     /** Cached unavailable date ranges for the current month context. */
@@ -170,7 +173,8 @@ class EventListViewModel @Inject constructor(
             isRefreshing = filters.refreshing,
             error = filters.error,
             statusFilters = statusFilters,
-            updatingStatusEventId = updatingId
+            updatingStatusEventId = updatingId,
+            unavailableDates = _unavailableDates.value
         )
     }.distinctUntilChanged().stateIn(
         scope = viewModelScope,

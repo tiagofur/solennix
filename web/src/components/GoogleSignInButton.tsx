@@ -41,11 +41,12 @@ export const GoogleSignInButton: React.FC<Props> = ({ onError }) => {
 
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
+    let timerId: NodeJS.Timeout | null = null;
 
     const initializeGsi = () => {
       if (typeof google === "undefined" || !google.accounts?.id) {
-        const timer = setTimeout(initializeGsi, 200);
-        return () => clearTimeout(timer);
+        timerId = setTimeout(initializeGsi, 200);
+        return;
       }
 
       if (initializedRef.current) {
@@ -66,6 +67,10 @@ export const GoogleSignInButton: React.FC<Props> = ({ onError }) => {
     };
 
     initializeGsi();
+
+    return () => {
+      if (timerId) clearTimeout(timerId);
+    };
   }, [handleCredentialResponse]);
 
   const renderButton = useCallback(() => {

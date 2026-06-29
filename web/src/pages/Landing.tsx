@@ -1,11 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import {
   Calendar,
   Users,
   Package,
-  TrendingUp,
   Moon,
   Sun,
   CheckCircle,
@@ -18,7 +17,6 @@ import {
   Menu,
   X,
   MapPin,
-  DollarSign,
   Bell,
   ArrowUp,
   Clock,
@@ -26,15 +24,12 @@ import {
   Fingerprint,
   LayoutGrid,
   RefreshCw,
-  Receipt,
   CreditCard,
   Building,
   Send,
   ClipboardList,
   FileText,
-  CheckSquare,
   UsersRound,
-  Warehouse,
 } from "lucide-react";
 
 const APP_STORE_URL =

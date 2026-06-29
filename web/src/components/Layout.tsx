@@ -82,14 +82,18 @@ export const Layout: React.FC = () => {
   // instead of the action they tried to perform. Already-on-/pricing users
   // stay put — no point re-routing.
   useEffect(() => {
+    let timerId: number | null = null;
     const handlePlanLimit = () => {
       if (location.pathname !== '/pricing') {
         // Short delay so the user reads the toast before the route change.
-        window.setTimeout(() => navigate('/pricing'), 800);
+        timerId = window.setTimeout(() => navigate('/pricing'), 800);
       }
     };
     window.addEventListener('plan:limit-exceeded', handlePlanLimit);
-    return () => window.removeEventListener('plan:limit-exceeded', handlePlanLimit);
+    return () => {
+      window.removeEventListener('plan:limit-exceeded', handlePlanLimit);
+      if (timerId !== null) window.clearTimeout(timerId);
+    };
   }, [location.pathname, navigate]);
 
   const navigation = [

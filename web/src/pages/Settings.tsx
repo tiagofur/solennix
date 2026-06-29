@@ -30,7 +30,6 @@ import { useToast } from "@/hooks/useToast";
 import { useTheme } from "@/hooks/useTheme";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
-import { Input } from "@/components/Input";
 import {
   DEFAULT_CONTRACT_TEMPLATE,
   validateContractTemplate,

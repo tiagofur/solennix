@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
 import { useEventsByDateRange } from './queries/useEventQueries';

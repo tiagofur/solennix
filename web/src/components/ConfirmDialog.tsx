@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal } from './Modal';
+import { Button } from './Button';
 
 type ConfirmDialogProps = {
   open: boolean;
@@ -9,6 +10,7 @@ type ConfirmDialogProps = {
   cancelText?: string;
   onConfirm: () => void;
   onCancel: () => void;
+  variant?: 'danger' | 'primary';
 };
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
@@ -19,6 +21,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   cancelText = 'Cancelar',
   onConfirm,
   onCancel,
+  variant = 'danger',
 }) => {
   return (
     <Modal
@@ -37,20 +40,22 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         )}
         
         <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={onCancel}
-            className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-surface-alt text-text border border-border hover:bg-surface transition-colors font-medium"
+            className="w-full sm:w-auto"
           >
             {cancelText}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant={variant}
             onClick={onConfirm}
-            className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-error text-white hover:opacity-90 transition-opacity font-bold shadow-md shadow-error/20"
+            className="w-full sm:w-auto"
           >
             {confirmText}
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

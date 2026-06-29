@@ -13,7 +13,6 @@ enum class TopLevelDestination(
     val route: String
 ) {
     HOME(R.string.nav_home, Icons.Default.Home, Icons.Filled.Home, "home"),
-    CALENDAR(R.string.nav_calendar, Icons.Default.DateRange, Icons.Filled.DateRange, "calendar"),
     EVENTS(R.string.nav_events, Icons.Default.Celebration, Icons.Filled.Celebration, "events"),
     CLIENTS(R.string.nav_clients, Icons.Default.Person, Icons.Filled.Person, "clients"),
     SEARCH(R.string.nav_search, Icons.Default.Search, Icons.Filled.Search, "search"),

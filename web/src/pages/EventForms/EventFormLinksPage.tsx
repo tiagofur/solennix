@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Link2,
@@ -54,12 +54,21 @@ export const EventFormLinksPage: React.FC = () => {
     }
   };
 
+  const copyTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
+
   const handleCopy = async (url: string, id: string) => {
     try {
       await navigator.clipboard.writeText(url);
       setCopiedId(id);
       addToast(t("admin_links.toast.copied"), "success");
-      setTimeout(() => setCopiedId(null), 2000);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopiedId(null), 2000);
     } catch {
       addToast(t("admin_links.toast.error_copy"), "error");
     }
