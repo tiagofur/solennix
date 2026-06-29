@@ -357,4 +357,12 @@ describe('EventList', () => {
     // Check if period chips like 'Hoy' are NOT present
     expect(screen.queryByRole('button', { name: /Hoy/i })).not.toBeInTheDocument();
   });
+
+  it('renders all events for the month by default in calendar mode', () => {
+    renderPage(['/events?view=calendar']);
+
+    // Since selectedDate is undefined by default, both events for the range/month should render in the side panel
+    expect(screen.getByText('Maria Garcia')).toBeInTheDocument();
+    expect(screen.getByText('Boda')).toBeInTheDocument();
+  });
 });
