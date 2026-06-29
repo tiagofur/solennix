@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import com.creapolis.solennix.core.designsystem.theme.Spacing
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -92,8 +93,8 @@ fun InventoryListScreen(
             containerColor = SolennixTheme.colors.card
         ) {
             Column(
-                modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 40.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier.padding(start = Spacing.xxxl, end = Spacing.xxxl, bottom = Spacing.xxxl),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
             ) {
                 Text(InventoryStrings.adjustStock, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text(
@@ -101,7 +102,7 @@ fun InventoryListScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = SolennixTheme.colors.secondaryText
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm), modifier = Modifier.fillMaxWidth()) {
                     listOf(-10.0, -1.0, 1.0, 10.0).forEach { delta ->
                         OutlinedButton(
                             onClick = {
@@ -208,7 +209,7 @@ fun InventoryListScreen(
                     onValueChange = { viewModel.onSearchQueryChange(it) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(Spacing.md),
                     placeholder = { Text(InventoryStrings.searchPlaceholder) },
                     leadingIcon = {
                         Icon(
@@ -225,9 +226,9 @@ fun InventoryListScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                        .padding(horizontal = Spacing.md, vertical = Spacing.xs)
                         .semantics { contentDescription = InventoryStrings.cdScopeFilter },
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     InventoryScope.entries.forEach { scope ->
@@ -269,8 +270,8 @@ fun InventoryListScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        .padding(horizontal = Spacing.md, vertical = Spacing.xs),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
@@ -344,7 +345,7 @@ fun InventoryListScreen(
                                 )
                             }
                             item(span = { GridItemSpan(maxLineSpan) }) {
-                                Spacer(modifier = Modifier.height(80.dp))
+                                Spacer(modifier = Modifier.height(Spacing.xxxl))
                             }
                         },
                         listContent = {
@@ -381,7 +382,7 @@ fun InventoryListScreen(
                                             }
                                             if (index < uiState.items.lastIndex) {
                                                 HorizontalDivider(
-                                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                                    modifier = Modifier.padding(horizontal = Spacing.md),
                                                     color = SolennixTheme.colors.divider.copy(alpha = 0.2f)
                                                 )
                                             }
@@ -389,7 +390,7 @@ fun InventoryListScreen(
                                     }
                                 }
                             }
-                            item { Spacer(modifier = Modifier.height(80.dp)) }
+                            item { Spacer(modifier = Modifier.height(Spacing.xxxl)) }
                         }
                     )
                 }
@@ -429,8 +430,8 @@ private fun InventorySkeletonList() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(Spacing.xxl)
     ) {
         Surface(
             shape = MaterialTheme.shapes.medium,
@@ -442,7 +443,7 @@ private fun InventorySkeletonList() {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                            .padding(horizontal = Spacing.md, vertical = 14.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -468,7 +469,7 @@ private fun InventorySkeletonList() {
                     }
                     if (index < 4) {
                         HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 16.dp),
+                            modifier = Modifier.padding(horizontal = Spacing.md),
                             color = SolennixTheme.colors.divider.copy(alpha = 0.2f)
                         )
                     }
@@ -510,7 +511,7 @@ private fun InventoryTypeBadge(
         Row(
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
         ) {
             Icon(
                 imageVector = icon,
@@ -545,13 +546,13 @@ private fun InventoryListItem(
                 onLongClick = onLongClick
             )
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = Spacing.md, vertical = Spacing.xxl),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
             ) {
                 Text(
                     text = item.ingredientName,
@@ -570,7 +571,7 @@ private fun InventoryListItem(
             )
         }
         if (item.unitCost != null && item.unitCost!! > 0) {
-            Text(text = item.unitCost!!.asMXN(), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText, modifier = Modifier.padding(end = 8.dp))
+            Text(text = item.unitCost!!.asMXN(), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText, modifier = Modifier.padding(end = Spacing.sm))
         }
         if (isLowStock) {
             Surface(color = SolennixTheme.colors.warning.copy(alpha = 0.10f), shape = MaterialTheme.shapes.extraSmall) {
@@ -620,10 +621,10 @@ private fun InventoryGridCard(
         color = SolennixTheme.colors.card,
         tonalElevation = 1.dp
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(Spacing.md)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
             ) {
                 Text(
                     text = item.ingredientName,
@@ -635,7 +636,7 @@ private fun InventoryGridCard(
                     InventoryTypeBadge(type = item.type)
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Spacing.sm))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,

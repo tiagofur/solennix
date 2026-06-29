@@ -60,6 +60,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import com.creapolis.solennix.core.designsystem.theme.Spacing
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.Avatar
 import com.creapolis.solennix.core.designsystem.component.SkeletonLoading
@@ -123,7 +124,7 @@ fun StaffListScreen(
                     onValueChange = { viewModel.onSearchQueryChange(it) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(Spacing.md),
                     placeholder = { Text(stringResource(R.string.staff_list_search_placeholder)) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     shape = MaterialTheme.shapes.medium,
@@ -134,14 +135,14 @@ fun StaffListScreen(
                     onClick = onTeamsClick,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = Spacing.md),
                     colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
                     shape = MaterialTheme.shapes.medium
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                            .padding(horizontal = Spacing.md, vertical = 14.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
@@ -149,7 +150,7 @@ fun StaffListScreen(
                             contentDescription = null,
                             tint = SolennixTheme.colors.primary
                         )
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(Spacing.lg))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 stringResource(R.string.staff_team_list_title),
@@ -169,14 +170,14 @@ fun StaffListScreen(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Spacing.sm))
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(horizontal = Spacing.md, vertical = Spacing.xs),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                 ) {
                     StaffSortOption.entries.forEach { option ->
                         FilterChip(
@@ -195,8 +196,8 @@ fun StaffListScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                            .padding(horizontal = Spacing.md),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                     ) {
                         repeat(4) {
                             Card(
@@ -207,7 +208,7 @@ fun StaffListScreen(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(16.dp),
+                                        .padding(Spacing.md),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     // Skeleton avatar
@@ -216,7 +217,7 @@ fun StaffListScreen(
                                             .size(48.dp)
                                             .clip(CircleShape)
                                     )
-                                    Spacer(modifier = Modifier.width(16.dp))
+                                    Spacer(modifier = Modifier.width(Spacing.md))
                                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                         SkeletonLoading(
                                             modifier = Modifier
@@ -245,7 +246,7 @@ fun StaffListScreen(
                     Box(
                         Modifier
                             .fillMaxSize()
-                            .padding(24.dp),
+                            .padding(Spacing.xxxl),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -254,7 +255,7 @@ fun StaffListScreen(
                                 style = MaterialTheme.typography.titleMedium,
                                 color = SolennixTheme.colors.primaryText
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(Spacing.sm))
                             Text(
                                 stringResource(R.string.staff_list_empty_description),
                                 style = MaterialTheme.typography.bodyMedium,
@@ -296,7 +297,7 @@ fun StaffListScreen(
                                     }
                                 )
                                 HorizontalDivider(
-                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    modifier = Modifier.padding(horizontal = Spacing.md),
                                     color = SolennixTheme.colors.divider.copy(alpha = 0.5f)
                                 )
                             }
@@ -389,11 +390,11 @@ fun StaffListItem(
                 onClick = onClick,
                 onLongClick = onLongClick
             )
-            .padding(16.dp),
+            .padding(Spacing.md),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Avatar(name = staff.name, photoUrl = null, size = 48.dp)
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(Spacing.md))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = staff.name,

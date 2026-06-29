@@ -42,6 +42,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import com.creapolis.solennix.core.designsystem.theme.Spacing
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -161,7 +162,7 @@ fun ProductListScreen(
                     onValueChange = { viewModel.onSearchQueryChange(it) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(Spacing.md),
                     placeholder = { Text(ProductStrings.searchPlaceholder) },
                     leadingIcon = {
                         Icon(
@@ -186,8 +187,8 @@ fun ProductListScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .horizontalScroll(rememberScrollState())
-                            .padding(horizontal = 16.dp, vertical = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            .padding(horizontal = Spacing.md, vertical = Spacing.xs),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                     ) {
                         FilterChip(
                             selected = uiState.selectedCategory == null,
@@ -225,7 +226,7 @@ fun ProductListScreen(
                     )
                 } else {
                     AdaptiveCardGrid(
-                        contentPadding = PaddingValues(bottom = 80.dp),
+                        contentPadding = PaddingValues(bottom = Spacing.xxxl),
                         gridContent = {
                             items(uiState.products, key = { it.id }) { product ->
                                 ProductGridItem(
@@ -259,7 +260,7 @@ fun ProductListScreen(
                                     }
                                 }
                                 HorizontalDivider(
-                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    modifier = Modifier.padding(horizontal = Spacing.md),
                                     color = SolennixTheme.colors.divider.copy(alpha = 0.5f)
                                 )
                             }
@@ -330,7 +331,7 @@ private fun ProductSkeletonList() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = Spacing.md, vertical = Spacing.sm)
     ) {
         Surface(
             shape = MaterialTheme.shapes.medium,
@@ -341,7 +342,7 @@ private fun ProductSkeletonList() {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(Spacing.md),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         SkeletonLoading(
@@ -349,7 +350,7 @@ private fun ProductSkeletonList() {
                                 .size(60.dp)
                                 .clip(MaterialTheme.shapes.medium)
                         )
-                        Spacer(modifier = Modifier.width(16.dp))
+                        Spacer(modifier = Modifier.width(Spacing.md))
                         Column(modifier = Modifier.weight(1f)) {
                             SkeletonLoading(
                                 modifier = Modifier
@@ -357,7 +358,7 @@ private fun ProductSkeletonList() {
                                     .fillMaxWidth(0.5f)
                                     .clip(MaterialTheme.shapes.small)
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(Spacing.xs))
                             SkeletonLoading(
                                 modifier = Modifier
                                     .height(11.dp)
@@ -374,7 +375,7 @@ private fun ProductSkeletonList() {
                     }
                     if (index < 4) {
                         HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 16.dp),
+                            modifier = Modifier.padding(horizontal = Spacing.md),
                             color = SolennixTheme.colors.divider.copy(alpha = 0.3f)
                         )
                     }
@@ -424,7 +425,7 @@ fun ProductGridItem(
                     )
                 }
             }
-            Column(modifier = Modifier.padding(12.dp)) {
+            Column(modifier = Modifier.padding(Spacing.xxl)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -438,7 +439,7 @@ fun ProductGridItem(
                         modifier = Modifier.weight(1f)
                     )
                     if (!product.isActive) {
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(Spacing.xs))
                         Box(
                             modifier = Modifier.background(
                                 color = SolennixTheme.colors.error.copy(alpha = 0.1f),
@@ -485,7 +486,7 @@ fun ProductListItem(
                 onClick = onClick,
                 onLongClick = onLongClick
             )
-            .padding(16.dp)
+            .padding(Spacing.md)
             .alpha(if (product.isActive) 1f else 0.5f),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -507,7 +508,7 @@ fun ProductListItem(
             }
         }
 
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(Spacing.md))
 
         Column(modifier = Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -518,7 +519,7 @@ fun ProductListItem(
                     modifier = Modifier.weight(1f, fill = false)
                 )
                 if (!product.isActive) {
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(Spacing.sm))
                     Box(
                         modifier = Modifier.background(
                             color = SolennixTheme.colors.error.copy(alpha = 0.1f),

@@ -17,6 +17,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.creapolis.solennix.core.designsystem.theme.Spacing
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.designsystem.component.Avatar
@@ -122,7 +123,7 @@ fun ClientDetailScreen(
                     .fillMaxSize()
                     .padding(padding)
                     .verticalScroll(scrollState)
-                    .padding(16.dp)
+                    .padding(Spacing.md)
             ) {
                 // --- Header: Avatar + Name ---
                 val isWide = LocalIsWideScreen.current
@@ -133,7 +134,7 @@ fun ClientDetailScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Avatar(name = client.name, photoUrl = UrlResolver.resolve(client.photoUrl), size = 80.dp)
-                        Spacer(modifier = Modifier.width(20.dp))
+                        Spacer(modifier = Modifier.width(Spacing.lg))
                         Text(
                             text = client.name,
                             style = MaterialTheme.typography.headlineMedium,
@@ -146,12 +147,12 @@ fun ClientDetailScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Avatar(name = client.name, photoUrl = UrlResolver.resolve(client.photoUrl), size = 100.dp)
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(Spacing.xxl))
                         Text(text = client.name, style = MaterialTheme.typography.headlineMedium, color = SolennixTheme.colors.primaryText)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(Spacing.xl))
 
                 // --- Contact Info + Stats: side by side on tablet ---
                 AdaptiveDetailLayout(
@@ -162,20 +163,20 @@ fun ClientDetailScreen(
                             colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
                             shape = MaterialTheme.shapes.medium
                         ) {
-                            Column(modifier = Modifier.padding(20.dp)) {
+                            Column(modifier = Modifier.padding(Spacing.lg)) {
                                 Text(text = stringResource(R.string.clients_contact_info), style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
-                                Spacer(modifier = Modifier.height(16.dp))
+                                Spacer(modifier = Modifier.height(Spacing.md))
                                 InfoRow(icon = Icons.Default.Phone, label = stringResource(R.string.clients_label_phone), value = client.phone)
-                                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                                HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.xxlg))
                                 InfoRow(icon = Icons.Default.Email, label = stringResource(R.string.clients_label_email), value = client.email ?: stringResource(R.string.clients_not_provided))
                                 val addr = client.address
                                 if (!addr.isNullOrBlank()) {
-                                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.xxlg))
                                     InfoRow(icon = Icons.Default.LocationOn, label = stringResource(R.string.clients_label_address), value = addr)
                                 }
                                 val cCity = client.city
                                 if (!cCity.isNullOrBlank()) {
-                                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.xxlg))
                                     InfoRow(icon = Icons.Default.LocationCity, label = stringResource(R.string.clients_label_city), value = cCity)
                                 }
                             }
@@ -188,9 +189,9 @@ fun ClientDetailScreen(
                                 colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
                                 shape = MaterialTheme.shapes.medium
                             ) {
-                                Column(modifier = Modifier.padding(20.dp)) {
+                                Column(modifier = Modifier.padding(Spacing.lg)) {
                                     Text(text = stringResource(R.string.clients_notes), style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
-                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Spacer(modifier = Modifier.height(Spacing.sm))
                                     Text(text = cNotes, style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText)
                                 }
                             }
@@ -201,15 +202,15 @@ fun ClientDetailScreen(
                         Text(text = stringResource(R.string.clients_stats_title), style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
 
                         if (uiState.isEventsLoading) {
-                            Box(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
+                            Box(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.md), contentAlignment = Alignment.Center) {
                                 CircularProgressIndicator(modifier = Modifier.size(24.dp))
                             }
                         } else {
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.xxlg)) {
                                 KPICard(title = stringResource(R.string.clients_csv_header_events), value = uiState.totalEvents.toString(), icon = Icons.Default.Event, iconColor = SolennixTheme.colors.kpiBlue, modifier = Modifier.weight(1f))
                                 KPICard(title = stringResource(R.string.clients_stats_total_spent), value = uiState.totalSpent.asMXN(), icon = Icons.Default.AttachMoney, iconColor = SolennixTheme.colors.kpiGreen, modifier = Modifier.weight(1f))
                             }
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.xxlg)) {
                                 KPICard(title = stringResource(R.string.clients_stats_average), value = uiState.averagePerEvent.asMXN(), icon = Icons.AutoMirrored.Filled.TrendingUp, iconColor = SolennixTheme.colors.kpiOrange, modifier = Modifier.weight(1f))
                                 val balance = uiState.pendingBalance
                                 if (balance != null) {
@@ -239,7 +240,7 @@ fun ClientDetailScreen(
                     }
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(Spacing.xl))
 
                 // --- Event History Section ---
                 Text(
@@ -247,11 +248,11 @@ fun ClientDetailScreen(
                     style = MaterialTheme.typography.titleMedium,
                     color = SolennixTheme.colors.primaryText
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Spacing.sm))
 
                 if (uiState.isEventsLoading) {
                     Box(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.md),
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp))
@@ -262,7 +263,7 @@ fun ClientDetailScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp),
+                            .padding(vertical = Spacing.sm),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -284,7 +285,7 @@ fun ClientDetailScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(32.dp),
+                                .padding(Spacing.xxxl),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Icon(
@@ -293,7 +294,7 @@ fun ClientDetailScreen(
                                 modifier = Modifier.size(48.dp),
                                 tint = SolennixTheme.colors.secondaryText.copy(alpha = 0.5f)
                             )
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(Spacing.xxlg))
                             Text(
                                 text = stringResource(R.string.clients_no_events),
                                 style = MaterialTheme.typography.bodyMedium,
@@ -307,11 +308,11 @@ fun ClientDetailScreen(
                             event = event,
                             onClick = { onEventClick(event.id) }
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(Spacing.sm))
                     }
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(Spacing.xxxl))
             }
 
             // Delete confirmation dialog
@@ -354,7 +355,7 @@ private fun EventHistoryItem(
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
         shape = MaterialTheme.shapes.medium
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(Spacing.md)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -367,14 +368,14 @@ private fun EventHistoryItem(
                     color = SolennixTheme.colors.secondaryText
                 )
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Spacing.sm))
             Text(
                 text = event.serviceType,
                 style = MaterialTheme.typography.titleSmall,
                 color = SolennixTheme.colors.primaryText,
                 fontWeight = FontWeight.SemiBold
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(Spacing.xs))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -403,7 +404,7 @@ fun InfoRow(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(imageVector = icon, contentDescription = null, tint = SolennixTheme.colors.primary)
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(Spacing.md))
         Column {
             Text(text = label, style = MaterialTheme.typography.labelSmall, color = SolennixTheme.colors.secondaryText)
             Text(text = value, style = MaterialTheme.typography.bodyLarge, color = SolennixTheme.colors.primaryText)
