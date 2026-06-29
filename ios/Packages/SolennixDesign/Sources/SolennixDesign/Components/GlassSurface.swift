@@ -36,8 +36,18 @@ public struct AdaptiveGlassModifier<S: Shape>: ViewModifier {
     let shape: S
     let fallback: AdaptiveGlassFallback
 
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
     public func body(content: Content) -> some View {
-        if #available(iOS 26.0, *) {
+        if reduceTransparency {
+            // Accessibility first: when Reduce Transparency is ON, a translucent
+            // material/glassEffect is an illegible blur. Replace it with a solid
+            // opaque surface fill. This branch wins on EVERY OS — checked first so
+            // it also short-circuits the iOS 26+ glassEffect (whose implicit morph
+            // would otherwise fight the opaque fallback).
+            content
+                .background(shape.fill(SolennixColors.surface))
+        } else if #available(iOS 26.0, *) {
             content
                 .glassEffect(.regular, in: shape)
         } else {
