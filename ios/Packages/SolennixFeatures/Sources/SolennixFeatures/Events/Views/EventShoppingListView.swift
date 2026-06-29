@@ -68,12 +68,11 @@ public struct EventShoppingListView: View {
             } else if let event = viewModel.event {
                 content(event)
             } else {
-                EmptyStateView(
-                    icon: "exclamationmark.triangle",
-                    title: tr("common.error", "Error"),
-                    message: viewModel.errorMessage ?? tr("events.shopping.load_error_fallback", "No se pudo cargar"),
-                    iconColor: SolennixColors.primary
-                )
+                ContentUnavailableView {
+                    Label(tr("common.error", "Error"), systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(viewModel.errorMessage ?? tr("events.shopping.load_error_fallback", "No se pudo cargar"))
+                }
             }
         }
         .background(SolennixColors.surfaceGrouped)

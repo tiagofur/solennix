@@ -76,14 +76,14 @@ public struct EventFormLinksView: View {
     @ViewBuilder
     private var content: some View {
         if let error = viewModel.errorMessage, viewModel.links.isEmpty, !viewModel.isLoading {
-            EmptyStateView(
-                icon: "wifi.exclamationmark",
-                title: EventFormLinksStrings.errorLoading,
-                message: error,
-                actionTitle: EventFormLinksStrings.retry,
-                iconColor: SolennixColors.primary
-            ) {
-                Task { await viewModel.loadLinks() }
+            ContentUnavailableView {
+                Label(EventFormLinksStrings.errorLoading, systemImage: "network")
+            } description: {
+                Text(error)
+            } actions: {
+                Button(EventFormLinksStrings.retry) {
+                    Task { await viewModel.loadLinks() }
+                }
             }
         } else if viewModel.links.isEmpty && !viewModel.isLoading {
             ContentUnavailableView {

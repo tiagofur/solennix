@@ -40,12 +40,11 @@ public struct EventDetailView: View {
             } else if let event = viewModel.event {
                 hubList(event)
             } else {
-                EmptyStateView(
-                    icon: "exclamationmark.triangle",
-                    title: tr("events.detail.error.title", "Error"),
-                    message: viewModel.errorMessage ?? tr("events.detail.error.load_fallback", "No se pudo cargar el evento"),
-                    iconColor: SolennixColors.primary
-                )
+                ContentUnavailableView {
+                    Label(tr("events.detail.error.title", "Error"), systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(viewModel.errorMessage ?? tr("events.detail.error.load_fallback", "No se pudo cargar el evento"))
+                }
             }
         }
         .background(SolennixColors.surfaceGrouped)

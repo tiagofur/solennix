@@ -252,12 +252,11 @@ public struct ProductDetailView: View {
             } else if let product = viewModel.product {
                 hubScrollView(product)
             } else {
-                EmptyStateView(
-                    icon: "exclamationmark.triangle",
-                    title: ProductStrings.errorTitle,
-                    message: viewModel.errorMessage ?? ProductStrings.notFoundMessage,
-                    iconColor: SolennixColors.primary
-                )
+                ContentUnavailableView {
+                    Label(ProductStrings.errorTitle, systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(viewModel.errorMessage ?? ProductStrings.notFoundMessage)
+                }
             }
         }
         .background(SolennixColors.surfaceGrouped)

@@ -85,14 +85,14 @@ public struct TeamMemberPortalView: View {
     @ViewBuilder
     private var content: some View {
         if let errorMessage = viewModel.errorMessage, viewModel.assignments.isEmpty, !viewModel.isLoading {
-            EmptyStateView(
-                icon: "exclamationmark.triangle.fill",
-                title: tr("team_portal.load_error", "No pudimos cargar tus asignaciones"),
-                message: errorMessage,
-                actionTitle: "Reintentar",
-                iconColor: SolennixColors.primary
-            ) {
-                Task { await viewModel.loadAssignments() }
+            ContentUnavailableView {
+                Label(tr("team_portal.load_error", "No pudimos cargar tus asignaciones"), systemImage: "exclamationmark.triangle")
+            } description: {
+                Text(errorMessage)
+            } actions: {
+                Button("Reintentar") {
+                    Task { await viewModel.loadAssignments() }
+                }
             }
         } else if viewModel.isLoading && viewModel.assignments.isEmpty {
             ProgressView()

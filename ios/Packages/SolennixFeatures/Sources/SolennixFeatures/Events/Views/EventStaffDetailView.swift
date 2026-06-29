@@ -51,14 +51,14 @@ public struct EventStaffDetailView: View {
         ScrollView {
             VStack(spacing: Spacing.md) {
                 if let errorMessage {
-                    EmptyStateView(
-                        icon: "wifi.exclamationmark",
-                        title: tr("events.detail.staff.error.title", "Error al cargar"),
-                        message: errorMessage,
-                        actionTitle: tr("events.detail.staff.retry", "Reintentar"),
-                        iconColor: SolennixColors.primary
-                    ) {
-                        Task { await loadData() }
+                    ContentUnavailableView {
+                        Label(tr("events.detail.staff.error.title", "Error al cargar"), systemImage: "network")
+                    } description: {
+                        Text(errorMessage)
+                    } actions: {
+                        Button(tr("events.detail.staff.retry", "Reintentar")) {
+                            Task { await loadData() }
+                        }
                     }
                 } else if assignments.isEmpty {
                     ContentUnavailableView {

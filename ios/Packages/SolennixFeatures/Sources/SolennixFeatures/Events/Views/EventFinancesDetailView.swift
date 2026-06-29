@@ -25,12 +25,11 @@ public struct EventFinancesDetailView: View {
             } else if let event = viewModel.event {
                 content(event)
             } else {
-                EmptyStateView(
-                    icon: "exclamationmark.triangle",
-                    title: EventFinancesDetailStrings.errorTitle,
-                    message: viewModel.errorMessage ?? EventFinancesDetailStrings.errorMessage,
-                    iconColor: SolennixColors.primary
-                )
+                ContentUnavailableView {
+                    Label(EventFinancesDetailStrings.errorTitle, systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(viewModel.errorMessage ?? EventFinancesDetailStrings.errorMessage)
+                }
             }
         }
         .background(SolennixColors.surfaceGrouped)

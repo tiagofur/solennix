@@ -310,12 +310,11 @@ public struct InventoryDetailView: View {
             } else if let item = viewModel.item {
                 hubList(item)
             } else {
-                EmptyStateView(
-                    icon: "exclamationmark.triangle",
-                    title: InventoryStrings.errorTitle,
-                    message: viewModel.errorMessage ?? InventoryStrings.errorLoadingTitle,
-                    iconColor: SolennixColors.primary
-                )
+                ContentUnavailableView {
+                    Label(InventoryStrings.errorTitle, systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(viewModel.errorMessage ?? InventoryStrings.errorLoadingTitle)
+                }
             }
         }
         .background(SolennixColors.surfaceGrouped)

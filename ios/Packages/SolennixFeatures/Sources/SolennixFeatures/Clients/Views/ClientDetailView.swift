@@ -38,12 +38,11 @@ public struct ClientDetailView: View {
             } else if let client {
                 hubList(client)
             } else {
-                EmptyStateView(
-                    icon: "exclamationmark.triangle",
-                    title: tr("clients.error.title", "Error"),
-                    message: errorMessage ?? tr("clients.error.load", "No se pudo cargar el cliente"),
-                    iconColor: SolennixColors.primary
-                )
+                ContentUnavailableView {
+                    Label(tr("clients.error.title", "Error"), systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(errorMessage ?? tr("clients.error.load", "No se pudo cargar el cliente"))
+                }
             }
         }
         .background(SolennixColors.surfaceGrouped)
