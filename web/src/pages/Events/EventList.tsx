@@ -169,7 +169,7 @@ export const EventList: React.FC = () => {
   };
 
   // State for Calendar Mode
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(normalizedToday);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [currentMonth, setCurrentMonth] = useState<Date>(startOfMonth(normalizedToday));
   const [isManagingBlocks, setIsManagingBlocks] = useState(false);
   const [isExportingIcal, setIsExportingIcal] = useState(false);
