@@ -417,14 +417,14 @@
 
 ## Sesión 2026-06-29: Métricas de Plataforma (Registro y Uso Activo) en Admin Dashboard
 - **Feature ID:** 29 (platform-metrics-analytics)
-- **Resultado:** COMPLETO y Validado con `./init.sh` (1235 tests de Vitest en verde, tests unitarios y de integración de backend en verde, y typecheck del front en verde).
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1236 tests de Vitest en verde, tests unitarios y de integración de backend en verde, y typecheck del front en verde).
 - **Entregables:**
   - `060_add_user_platform_metrics.up.sql` / `.down.sql` (Migración de DB agregando `users.registration_platform` e infiriendo retroactivamente la plataforma desde `device_tokens`, y creando `user_platforms`)
   - `models.go` (Agregados campos `RegistrationPlatform` y `UserPlatform` para mapeo de datos)
-  - `user_repo.go` (SQL Scans actualizados para soportar `registration_platform` e implementación de `UpsertUserPlatforms` para inserciones masivas)
+  - `user_repo.go` (SQL Scans actualizados para soportar `registration_platform`, implementación de `UpsertUserPlatforms` e implementación de `UpdateRegistrationPlatform` para actualizaciones retroactivas)
   - `admin_repo.go` (Consultas optimizadas sin N+1 para obtener `RegistrationsByPlatform`, `ActiveUsersByPlatform`, `InteractionsByPlatform` e historial individual de plataformas de usuario)
-  - `auth.go` (Filtro middleware asíncrono con buffer `ActivityBuffer` thread-safe que vuelca interacciones a la base de datos en lote cada 60s)
-  - `auth_test.go` (Suite completa de pruebas unitarias para heurísticas de UA/X-Client-Platform y de integración concurrente/flushing para el buffer)
+  - `auth.go` (Middleware `ActivityTracker` con buffer en RAM thread-safe, exclusión de administradores de las estadísticas, autoregistro retroactivo asíncrono para usuarios existentes en su siguiente petición, y caché `userCache` en memoria para evitar consultas redundantes de base de datos)
+  - `auth_test.go` (Suite completa de pruebas unitarias cubriendo parseos de UA, concurrencia, flushing, caché, exclusión de rol "admin" e inicio retroactivo asíncrono)
   - `admin_handler_test.go` (Pruebas unitarias de serialización del endpoint del handler de admin)
   - `adminService.ts` (Modelos y llamadas de endpoints del front actualizados para metrics)
   - `AdminDashboard.tsx` (Renglón de gráficos de plataforma Recharts: Registros, MAU e Intensidad de Uso)

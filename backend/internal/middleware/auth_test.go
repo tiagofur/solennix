@@ -546,3 +546,180 @@ func TestActivityWorkerFlush(t *testing.T) {
 	}
 }
 
+type mockUserActivityRepo struct {
+	GetByIDCalls                 int
+	UpdateRegistrationCalls      int
+	UpdateLastActiveCalls        int
+	mu                           sync.Mutex
+	MockUser                     *models.User
+	LastRegistrationPlatformSeen string
+}
+
+func (m *mockUserActivityRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.GetByIDCalls++
+	return m.MockUser, nil
+}
+
+func (m *mockUserActivityRepo) UpdateRegistrationPlatform(ctx context.Context, id uuid.UUID, platform string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.UpdateRegistrationCalls++
+	m.LastRegistrationPlatformSeen = platform
+	return nil
+}
+
+func (m *mockUserActivityRepo) UpdateLastActiveAt(ctx context.Context, id uuid.UUID) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.UpdateLastActiveCalls++
+	return nil
+}
+
+func clearUserCache() {
+	userCache.Range(func(key, value any) bool {
+		userCache.Delete(key)
+		return true
+	})
+}
+
+func TestActivityTracker_GivenAdminUser_WhenRequest_ThenExcludesFromActivityBuffer(t *testing.T) {
+	clearUserCache()
+	buf := GetActivityBuffer()
+	buf.Flush() // Clear buffer
+
+	userID := uuid.New()
+	mockRepo := &mockUserActivityRepo{
+		MockUser: &models.User{
+			ID:                   userID,
+			Role:                 "admin",
+			RegistrationPlatform: "web",
+		},
+	}
+
+	handler := ActivityTracker(mockRepo)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/api/test", nil)
+	// Authenticate the request via context (done by Auth middleware)
+	ctx := context.WithValue(req.Context(), UserIDKey, userID)
+	req = req.WithContext(ctx)
+	req.Header.Set("X-Client-Platform", "web")
+
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	// Admin must be queried from repo and cached
+	mockRepo.mu.Lock()
+	calls := mockRepo.GetByIDCalls
+	mockRepo.mu.Unlock()
+	if calls != 1 {
+		t.Fatalf("expected 1 GetByID call, got %d", calls)
+	}
+
+	// Verify activity was NOT counted for admin
+	flushed := buf.Flush()
+	if count := flushed[userID]["web"]; count != 0 {
+		t.Fatalf("expected 0 interactions counted for admin user, got %d", count)
+	}
+}
+
+func TestActivityTracker_GivenUserMissingPlatform_WhenRequest_ThenUpdatesRegistrationPlatformRetroactively(t *testing.T) {
+	clearUserCache()
+	buf := GetActivityBuffer()
+	buf.Flush() // Clear buffer
+
+	userID := uuid.New()
+	mockRepo := &mockUserActivityRepo{
+		MockUser: &models.User{
+			ID:                   userID,
+			Role:                 "user",
+			RegistrationPlatform: "", // Missing platform
+		},
+	}
+
+	handler := ActivityTracker(mockRepo)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/api/test", nil)
+	ctx := context.WithValue(req.Context(), UserIDKey, userID)
+	req = req.WithContext(ctx)
+	req.Header.Set("X-Client-Platform", "ios")
+
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	// Wait briefly for the async goroutine to execute the DB update
+	time.Sleep(10 * time.Millisecond)
+
+	mockRepo.mu.Lock()
+	regCalls := mockRepo.UpdateRegistrationCalls
+	seenPlatform := mockRepo.LastRegistrationPlatformSeen
+	mockRepo.mu.Unlock()
+
+	if regCalls != 1 {
+		t.Fatalf("expected 1 UpdateRegistrationPlatform call, got %d", regCalls)
+	}
+	if seenPlatform != "ios" {
+		t.Fatalf("expected platform 'ios' to be passed to updater, got %q", seenPlatform)
+	}
+
+	// Check that the cache was updated so it won't trigger another DB update on next request
+	if val, found := userCache.Load(userID); found {
+		entry := val.(userCacheEntry)
+		if entry.RegistrationPlatform != "ios" {
+			t.Fatalf("expected cached registration platform to be 'ios', got %q", entry.RegistrationPlatform)
+		}
+	} else {
+		t.Fatal("expected user to be cached")
+	}
+
+	// Verify standard user activity WAS counted
+	flushed := buf.Flush()
+	if count := flushed[userID]["ios"]; count != 1 {
+		t.Fatalf("expected 1 interaction counted for user, got %d", count)
+	}
+}
+
+func TestActivityTracker_GivenCachedUser_WhenRequest_ThenDoesNotQueryRepoAgain(t *testing.T) {
+	clearUserCache()
+	buf := GetActivityBuffer()
+	buf.Flush()
+
+	userID := uuid.New()
+	mockRepo := &mockUserActivityRepo{
+		MockUser: &models.User{
+			ID:                   userID,
+			Role:                 "user",
+			RegistrationPlatform: "android",
+		},
+	}
+
+	handler := ActivityTracker(mockRepo)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	// Request 1: Must query the repository
+	req1 := httptest.NewRequest(http.MethodGet, "/api/test", nil)
+	req1 = req1.WithContext(context.WithValue(req1.Context(), UserIDKey, userID))
+	req1.Header.Set("X-Client-Platform", "android")
+	handler.ServeHTTP(httptest.NewRecorder(), req1)
+
+	// Request 2: Must be fully cached (no DB query)
+	req2 := httptest.NewRequest(http.MethodGet, "/api/test", nil)
+	req2 = req2.WithContext(context.WithValue(req2.Context(), UserIDKey, userID))
+	req2.Header.Set("X-Client-Platform", "android")
+	handler.ServeHTTP(httptest.NewRecorder(), req2)
+
+	mockRepo.mu.Lock()
+	dbCalls := mockRepo.GetByIDCalls
+	mockRepo.mu.Unlock()
+
+	if dbCalls != 1 {
+		t.Fatalf("expected exactly 1 repository query, got %d", dbCalls)
+	}
+}
+

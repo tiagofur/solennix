@@ -270,6 +270,13 @@ func flushData(repo interface {
 	}
 }
 
+type userCacheEntry struct {
+	Role                 string
+	RegistrationPlatform string
+}
+
+var userCache sync.Map // Map[uuid.UUID]userCacheEntry
+
 // ActivityTracker creates a middleware that asynchronously updates user's last active timestamp (throttled) and logs platform activity.
 func ActivityTracker(repo ActivityTrackerRepo) func(http.Handler) http.Handler {
 	startActivityWorker(repo)
@@ -279,7 +286,60 @@ func ActivityTracker(repo ActivityTrackerRepo) func(http.Handler) http.Handler {
 			userID := GetUserID(r.Context())
 			if userID != uuid.Nil {
 				platform := ParsePlatform(r)
-				GetActivityBuffer().Increment(userID, platform)
+
+				var role string
+				var regPlatform string
+				var cached bool
+
+				if val, found := userCache.Load(userID); found {
+					entry := val.(userCacheEntry)
+					role = entry.Role
+					regPlatform = entry.RegistrationPlatform
+					cached = true
+				} else {
+					// Query repository dynamically if it supports GetByID to avoid circular dependency
+					if userRepo, ok := repo.(interface {
+						GetByID(ctx context.Context, id uuid.UUID) (*models.User, error)
+					}); ok {
+						user, err := userRepo.GetByID(r.Context(), userID)
+						if err == nil && user != nil {
+							role = user.Role
+							regPlatform = user.RegistrationPlatform
+							userCache.Store(userID, userCacheEntry{
+								Role:                 role,
+								RegistrationPlatform: regPlatform,
+							})
+							cached = true
+						}
+					}
+				}
+
+				if cached {
+					// Exclude administrators from activity statistics
+					if role != "admin" {
+						GetActivityBuffer().Increment(userID, platform)
+					}
+
+					// Retroactively set registration platform on next login if it was missing
+					if regPlatform == "" && platform != "unknown" {
+						if updater, ok := repo.(interface {
+							UpdateRegistrationPlatform(ctx context.Context, id uuid.UUID, platform string) error
+						}); ok {
+							go func() {
+								err := updater.UpdateRegistrationPlatform(context.Background(), userID, platform)
+								if err == nil {
+									userCache.Store(userID, userCacheEntry{
+										Role:                 role,
+										RegistrationPlatform: platform,
+									})
+								}
+							}()
+						}
+					}
+				} else {
+					// Safe fallback for tests / mock repos that do not implement user fetching
+					GetActivityBuffer().Increment(userID, platform)
+				}
 
 				go func() {
 					_ = repo.UpdateLastActiveAt(context.Background(), userID)
