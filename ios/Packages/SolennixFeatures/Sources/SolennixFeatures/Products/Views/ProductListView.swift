@@ -246,14 +246,14 @@ public struct ProductListView: View {
     private var productListCompact: some View {
         if let error = viewModel.errorMessage, viewModel.products.isEmpty, !viewModel.isLoading {
             // Error state — outside List for proper centering
-            EmptyStateView(
-                icon: "wifi.exclamationmark",
-                title: ProductStrings.errorLoadingTitle,
-                message: error,
-                actionTitle: ProductStrings.retry,
-                iconColor: SolennixColors.primary
-            ) {
-                Task { await viewModel.loadProducts() }
+            ContentUnavailableView {
+                Label(ProductStrings.errorLoadingTitle, systemImage: "network")
+            } description: {
+                Text(error)
+            } actions: {
+                Button(ProductStrings.retry) {
+                    Task { await viewModel.loadProducts() }
+                }
             }
         } else if viewModel.isLoading && viewModel.products.isEmpty {
             // Fix 3: skeleton rows inside the same List — no jump

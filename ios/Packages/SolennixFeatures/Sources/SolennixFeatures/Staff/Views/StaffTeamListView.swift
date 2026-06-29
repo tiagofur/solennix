@@ -68,14 +68,14 @@ public struct StaffTeamListView: View {
     @ViewBuilder
     private var content: some View {
         if let error = viewModel.errorMessage, viewModel.teams.isEmpty, !viewModel.isLoading {
-            EmptyStateView(
-                icon: "wifi.exclamationmark",
-                title: StaffStrings.errorLoadingTitle,
-                message: error,
-                actionTitle: StaffStrings.retry,
-                iconColor: SolennixColors.primary
-            ) {
-                Task { await viewModel.load() }
+            ContentUnavailableView {
+                Label(StaffStrings.errorLoadingTitle, systemImage: "network")
+            } description: {
+                Text(error)
+            } actions: {
+                Button(StaffStrings.retry) {
+                    Task { await viewModel.load() }
+                }
             }
         } else if viewModel.isLoading && viewModel.teams.isEmpty {
             // Fix 12: in-List skeleton rows instead of bare ProgressView

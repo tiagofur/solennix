@@ -557,14 +557,14 @@ public struct EventListView: View {
             .solennixListStyle()
         } else if let error = viewModel.errorMessage, filtered.isEmpty, !viewModel.isLoading {
             // Error state — outside List for proper centering
-            EmptyStateView(
-                icon: "wifi.exclamationmark",
-                title: tr("events.list.error.load_title", "Error al cargar"),
-                message: error,
-                actionTitle: tr("events.list.error.retry", "Reintentar"),
-                iconColor: SolennixColors.primary
-            ) {
-                Task { await viewModel.loadEvents() }
+            ContentUnavailableView {
+                Label(tr("events.list.error.load_title", "Error al cargar"), systemImage: "network")
+            } description: {
+                Text(error)
+            } actions: {
+                Button(tr("events.list.error.retry", "Reintentar")) {
+                    Task { await viewModel.loadEvents() }
+                }
             }
             .padding(.top, Spacing.xl)
         } else if filtered.isEmpty && !viewModel.isLoading {
@@ -680,14 +680,14 @@ public struct EventListView: View {
         if viewModel.isLoading && viewModel.events.isEmpty {
             skeletonCards
         } else if let error = viewModel.errorMessage, filtered.isEmpty, !viewModel.isLoading {
-            EmptyStateView(
-                icon: "wifi.exclamationmark",
-                title: tr("events.list.error.load_title", "Error al cargar"),
-                message: error,
-                actionTitle: tr("events.list.error.retry", "Reintentar"),
-                iconColor: SolennixColors.primary
-            ) {
-                Task { await viewModel.loadEvents() }
+            ContentUnavailableView {
+                Label(tr("events.list.error.load_title", "Error al cargar"), systemImage: "network")
+            } description: {
+                Text(error)
+            } actions: {
+                Button(tr("events.list.error.retry", "Reintentar")) {
+                    Task { await viewModel.loadEvents() }
+                }
             }
             .padding(.top, Spacing.xl)
         } else if filtered.isEmpty && !viewModel.isLoading {

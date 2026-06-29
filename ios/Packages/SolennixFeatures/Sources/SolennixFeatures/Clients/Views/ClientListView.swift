@@ -116,14 +116,14 @@ public struct ClientListView: View {
     @ViewBuilder
     private var stateOverlay: some View {
         if let error = viewModel.errorMessage, viewModel.clients.isEmpty, !viewModel.isLoading {
-            EmptyStateView(
-                icon: "wifi.exclamationmark",
-                title: tr("clients.error.load_title", "Error al cargar"),
-                message: error,
-                actionTitle: tr("clients.action.retry", "Reintentar"),
-                iconColor: SolennixColors.primary
-            ) {
-                Task { await viewModel.loadClients() }
+            ContentUnavailableView {
+                Label(tr("clients.error.load_title", "Error al cargar"), systemImage: "network")
+            } description: {
+                Text(error)
+            } actions: {
+                Button(tr("clients.action.retry", "Reintentar")) {
+                    Task { await viewModel.loadClients() }
+                }
             }
             .background(SolennixColors.surfaceGrouped)
         } else if viewModel.isLoading && viewModel.clients.isEmpty {
@@ -252,14 +252,14 @@ public struct ClientListView: View {
     private var clientListCompact: some View {
         if let error = viewModel.errorMessage, viewModel.clients.isEmpty, !viewModel.isLoading {
             // Error state — outside List for proper centering
-            EmptyStateView(
-                icon: "wifi.exclamationmark",
-                title: tr("clients.error.load_title", "Error al cargar"),
-                message: error,
-                actionTitle: tr("clients.action.retry", "Reintentar"),
-                iconColor: SolennixColors.primary
-            ) {
-                Task { await viewModel.loadClients() }
+            ContentUnavailableView {
+                Label(tr("clients.error.load_title", "Error al cargar"), systemImage: "network")
+            } description: {
+                Text(error)
+            } actions: {
+                Button(tr("clients.action.retry", "Reintentar")) {
+                    Task { await viewModel.loadClients() }
+                }
             }
         } else if viewModel.isLoading && viewModel.clients.isEmpty {
             List {

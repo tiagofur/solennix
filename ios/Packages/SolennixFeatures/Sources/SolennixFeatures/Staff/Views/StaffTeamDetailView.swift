@@ -31,12 +31,11 @@ public struct StaffTeamDetailView: View {
             } else if let team {
                 scrollContent(team)
             } else {
-                EmptyStateView(
-                    icon: "exclamationmark.triangle",
-                    title: StaffStrings.errorTitle,
-                    message: errorMessage ?? StaffStrings.teamNotFoundMessage,
-                    iconColor: SolennixColors.primary
-                )
+                ContentUnavailableView {
+                    Label(StaffStrings.errorTitle, systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(errorMessage ?? StaffStrings.teamNotFoundMessage)
+                }
             }
         }
         .background(SolennixColors.surfaceGrouped)

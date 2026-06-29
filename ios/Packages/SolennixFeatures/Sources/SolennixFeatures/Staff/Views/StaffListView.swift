@@ -236,14 +236,14 @@ public struct StaffListView: View {
     private var staffListCompact: some View {
         if let error = viewModel.errorMessage, viewModel.staff.isEmpty, !viewModel.isLoading {
             // Error state — outside List for proper centering
-            EmptyStateView(
-                icon: "wifi.exclamationmark",
-                title: StaffStrings.errorLoadingTitle,
-                message: error,
-                actionTitle: StaffStrings.retry,
-                iconColor: SolennixColors.primary
-            ) {
-                Task { await viewModel.loadStaff() }
+            ContentUnavailableView {
+                Label(StaffStrings.errorLoadingTitle, systemImage: "network")
+            } description: {
+                Text(error)
+            } actions: {
+                Button(StaffStrings.retry) {
+                    Task { await viewModel.loadStaff() }
+                }
             }
         } else if viewModel.isLoading && viewModel.staff.isEmpty {
             List {

@@ -43,12 +43,11 @@ public struct StaffDetailView: View {
             } else if let item = staff {
                 scrollContent(item)
             } else {
-                EmptyStateView(
-                    icon: "exclamationmark.triangle",
-                    title: StaffStrings.errorTitle,
-                    message: errorMessage ?? StaffStrings.notFoundMessage,
-                    iconColor: SolennixColors.primary
-                )
+                ContentUnavailableView {
+                    Label(StaffStrings.errorTitle, systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(errorMessage ?? StaffStrings.notFoundMessage)
+                }
             }
         }
         .background(SolennixColors.surfaceGrouped)

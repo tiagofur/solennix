@@ -88,14 +88,14 @@ public struct PaymentInboxView: View {
     @ViewBuilder
     private var iPhoneListContent: some View {
         if let error = viewModel.errorMessage, viewModel.submissions.isEmpty, !viewModel.isLoading {
-            EmptyStateView(
-                icon: "wifi.exclamationmark",
-                title: PaymentsStrings.errorLoadingTitle,
-                message: error,
-                actionTitle: PaymentsStrings.actionRetry,
-                iconColor: SolennixColors.primary
-            ) {
-                Task { await viewModel.fetchSubmissions() }
+            ContentUnavailableView {
+                Label(PaymentsStrings.errorLoadingTitle, systemImage: "network")
+            } description: {
+                Text(error)
+            } actions: {
+                Button(PaymentsStrings.actionRetry) {
+                    Task { await viewModel.fetchSubmissions() }
+                }
             }
         } else if viewModel.isLoading && viewModel.submissions.isEmpty {
             List {
@@ -186,14 +186,14 @@ public struct PaymentInboxView: View {
                 planLockedContent
             } else if let error = viewModel.errorMessage, viewModel.submissions.isEmpty {
                 // Fix 10: error state on iPad too
-                EmptyStateView(
-                    icon: "wifi.exclamationmark",
-                    title: PaymentsStrings.errorLoadingTitle,
-                    message: error,
-                    actionTitle: PaymentsStrings.actionRetry,
-                    iconColor: SolennixColors.primary
-                ) {
-                    Task { await viewModel.fetchSubmissions() }
+                ContentUnavailableView {
+                    Label(PaymentsStrings.errorLoadingTitle, systemImage: "network")
+                } description: {
+                    Text(error)
+                } actions: {
+                    Button(PaymentsStrings.actionRetry) {
+                        Task { await viewModel.fetchSubmissions() }
+                    }
                 }
             } else if viewModel.submissions.isEmpty {
                 emptyContent

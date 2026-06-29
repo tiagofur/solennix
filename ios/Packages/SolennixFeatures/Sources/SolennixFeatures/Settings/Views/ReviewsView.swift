@@ -65,14 +65,14 @@ public struct ReviewsView: View {
     @ViewBuilder
     private var emptyStateContent: some View {
         if let error = viewModel.errorMessage {
-            EmptyStateView(
-                icon: "wifi.exclamationmark",
-                title: tr("reviews.organizer.empty_title", "Sin reseñas todavía"),
-                message: error,
-                actionTitle: tr("event_form_links.shared.retry", "Reintentar"),
-                iconColor: SolennixColors.primary
-            ) {
-                Task { await viewModel.fetchReviews() }
+            ContentUnavailableView {
+                Label(tr("reviews.organizer.empty_title", "Sin reseñas todavía"), systemImage: "network")
+            } description: {
+                Text(error)
+            } actions: {
+                Button(tr("event_form_links.shared.retry", "Reintentar")) {
+                    Task { await viewModel.fetchReviews() }
+                }
             }
         } else if viewModel.filteredReviews.isEmpty && !viewModel.searchText.isEmpty {
             ContentUnavailableView.search(text: viewModel.searchText)
