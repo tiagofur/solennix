@@ -9,7 +9,7 @@ class TopLevelDestinationTest {
     @Test
     fun `top level destinations keep the expected route order`() {
         assertEquals(
-            listOf("home", "calendar", "events", "clients", "more"),
+            listOf("home", "calendar", "events", "clients", "search", "more"),
             TopLevelDestination.entries.map { it.route }
         )
     }
@@ -22,6 +22,7 @@ class TopLevelDestinationTest {
                 R.string.nav_calendar,
                 R.string.nav_events,
                 R.string.nav_clients,
+                R.string.nav_search,
                 R.string.nav_more
             ),
             TopLevelDestination.entries.map { it.labelRes }
