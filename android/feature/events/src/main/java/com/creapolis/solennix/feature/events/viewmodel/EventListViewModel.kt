@@ -14,16 +14,10 @@ import com.creapolis.solennix.core.data.repository.EventRepository
 import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.EventStatus
-import com.creapolis.solennix.core.model.UnavailableDate
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
-import com.creapolis.solennix.core.network.ApiService
-import com.creapolis.solennix.core.network.Endpoints
-import com.creapolis.solennix.core.network.get
-import com.creapolis.solennix.core.network.post
 import com.creapolis.solennix.core.network.toApiError
 import com.creapolis.solennix.feature.events.R
-import com.creapolis.solennix.feature.events.model.EventViewMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.FlowPreview
@@ -35,7 +29,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import java.time.LocalDate
-import java.time.YearMonth
 
 private const val TAG = "EventListVM"
 
@@ -66,21 +59,7 @@ data class EventListUiState(
     val error: String? = null,
     val statusFilters: List<EventStatusFilter> = emptyList(),
     /** Event whose status mutation is in flight — shows a spinner on that row. */
-    val updatingStatusEventId: String? = null,
-
-    // Calendar-specific state for unified Events/Calendar view
-    /** Current view mode - list or calendar */
-    val viewMode: EventViewMode = EventViewMode.LIST,
-    /** Selected date in calendar view */
-    val calendarSelectedDate: LocalDate = LocalDate.now(),
-    /** Current month displayed in calendar grid */
-    val calendarCurrentMonth: YearMonth = YearMonth.now(),
-    /** List of unavailable/blocked dates */
-    val unavailableDates: List<UnavailableDate> = emptyList(),
-    /** Optional status filter for calendar view (null = show all) */
-    val calendarStatusFilter: EventStatus? = null,
-    /** iCal export in progress flag */
-    val isExportingIcal: Boolean = false
+    val updatingStatusEventId: String? = null
 )
 
 data class EventStatusFilter(
@@ -94,8 +73,7 @@ data class EventStatusFilter(
 class EventListViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context,
     private val eventRepository: EventRepository,
-    private val clientRepository: ClientRepository,
-    private val apiService: ApiService
+    private val clientRepository: ClientRepository
 ) : ViewModel() {
 
     private fun tr(@StringRes id: Int, vararg args: Any): String = appContext.getString(id, *args)
@@ -112,15 +90,6 @@ class EventListViewModel @Inject constructor(
     /** Local events list for soft-delete modifications. */
     private val _localEvents = MutableStateFlow<List<Event>>(emptyList())
     private var refreshJob: Job? = null
-
-    // Calendar-specific state flows
-    private val _viewMode = MutableStateFlow(EventViewMode.LIST)
-    private val _calendarSelectedDate = MutableStateFlow(LocalDate.now())
-    private val _calendarCurrentMonth = MutableStateFlow(YearMonth.now())
-    private val _unavailableDates = MutableStateFlow<List<UnavailableDate>>(emptyList())
-    private val _calendarStatusFilter = MutableStateFlow<EventStatus?>(null)
-    private val _isExportingIcal = MutableStateFlow(false)
-    private val _exportIcalResult = MutableSharedFlow<String>()
 
     private data class FilterState(
         val query: String,
@@ -153,50 +122,13 @@ class EventListViewModel @Inject constructor(
         Triple(field, ascending, updatingId)
     }
 
-    /// Bundle calendar-specific state into a single flow
-    /// Using nested combines to stay under Kotlin's 5-arg limit
-    private data class CalendarTuple(
-        val viewMode: EventViewMode,
-        val selectedDate: LocalDate,
-        val currentMonth: YearMonth
-    )
-
-    private data class CalendarState(
-        val viewMode: EventViewMode,
-        val selectedDate: LocalDate,
-        val currentMonth: YearMonth,
-        val unavailableDates: List<UnavailableDate>,
-        val statusFilter: EventStatus?,
-        val isExporting: Boolean
-    )
-
-    private val calendarTupleFlow = combine(
-        _viewMode, _calendarSelectedDate, _calendarCurrentMonth
-    ) { viewMode, selectedDate, currentMonth ->
-        CalendarTuple(viewMode, selectedDate, currentMonth)
-    }
-
-    private val calendarStateFlow = combine(
-        calendarTupleFlow, _unavailableDates, _calendarStatusFilter, _isExportingIcal
-    ) { calendarTuple, unavailableDates, statusFilter, isExporting ->
-        CalendarState(
-            calendarTuple.viewMode,
-            calendarTuple.selectedDate,
-            calendarTuple.currentMonth,
-            unavailableDates,
-            statusFilter,
-            isExporting
-        )
-    }
-
     val uiState: StateFlow<EventListUiState> = combine(
         _localEvents,
         eventRepository.getEvents(),
         clientRepository.getClients(),
         filterState,
-        sortAndStatusFlow,
-        calendarStateFlow
-    ) { localEvents, repoEvents, clients, filters, sortTriple, calendarState ->
+        sortAndStatusFlow
+    ) { localEvents, repoEvents, clients, filters, sortTriple ->
         // Merge local modifications with repo events - local overrides take precedence
         // but new repo updates are still visible (except for soft-deleted IDs)
         val softDeletedIds = localEvents.map { it.id }.toSet()
@@ -230,14 +162,7 @@ class EventListViewModel @Inject constructor(
             isRefreshing = filters.refreshing,
             error = filters.error,
             statusFilters = statusFilters,
-            updatingStatusEventId = updatingId,
-            // Calendar state
-            viewMode = calendarState.viewMode,
-            calendarSelectedDate = calendarState.selectedDate,
-            calendarCurrentMonth = calendarState.currentMonth,
-            unavailableDates = calendarState.unavailableDates,
-            calendarStatusFilter = calendarState.statusFilter,
-            isExportingIcal = calendarState.isExporting
+            updatingStatusEventId = updatingId
         )
     }.distinctUntilChanged().stateIn(
         scope = viewModelScope,
@@ -511,213 +436,6 @@ class EventListViewModel @Inject constructor(
             is ApiError.ServerError -> tr(R.string.events_list_error_server)
             ApiError.Unauthorized -> tr(R.string.events_list_error_session_expired)
             else -> message ?: tr(R.string.events_list_error_sync)
-        }
-    }
-
-    // ========== Calendar-specific methods ==========
-
-    /**
-     * Expose iCal export result flow for UI to collect
-     */
-    val exportIcalResult: SharedFlow<String> = _exportIcalResult.asSharedFlow()
-
-    /**
-     * Change view mode between LIST and CALENDAR
-     * Does not trigger API call - uses already-loaded event data
-     */
-    fun onViewModeChanged(mode: EventViewMode) {
-        _viewMode.value = mode
-    }
-
-    /**
-     * Handle date selection in calendar view
-     */
-    fun onDateSelected(date: LocalDate) {
-        _calendarSelectedDate.value = date
-    }
-
-    /**
-     * Handle month navigation in calendar view
-     * Loads unavailable dates for the new month
-     */
-    fun onMonthChanged(month: YearMonth) {
-        _calendarCurrentMonth.value = month
-        loadUnavailableDates(month)
-    }
-
-    /**
-     * Jump to today's date in calendar view
-     */
-    fun goToToday() {
-        val today = LocalDate.now()
-        _calendarSelectedDate.value = today
-        _calendarCurrentMonth.value = YearMonth.from(today)
-        loadUnavailableDates(YearMonth.from(today))
-    }
-
-    /**
-     * Change calendar-specific status filter
-     * Unlike main filter, this only affects calendar view
-     */
-    fun onCalendarStatusFilterChange(status: EventStatus?) {
-        _calendarStatusFilter.value = status
-    }
-
-    /**
-     * Load unavailable dates for a specific month
-     */
-    private fun loadUnavailableDates(yearMonth: YearMonth) {
-        viewModelScope.launch {
-            try {
-                val start = yearMonth.atDay(1).toString()
-                val end = yearMonth.atEndOfMonth().toString()
-                val dates: List<UnavailableDate> = apiService.get(
-                    Endpoints.UNAVAILABLE_DATES,
-                    mapOf("start" to start, "end" to end)
-                )
-                _unavailableDates.value = dates
-            } catch (e: Exception) {
-                Log.w(TAG, "unavailable-dates load failed for $yearMonth", e)
-                // Don't show error for unavailable dates failure - non-critical
-            }
-        }
-    }
-
-    /**
-     * Load all unavailable dates (wide range) for management sheet
-     */
-    fun loadAllUnavailableDates() {
-        viewModelScope.launch {
-            try {
-                val now = LocalDate.now()
-                val start = now.minusMonths(6).toString()
-                val end = now.plusMonths(12).toString()
-                val dates: List<UnavailableDate> = apiService.get(
-                    Endpoints.UNAVAILABLE_DATES,
-                    mapOf("start" to start, "end" to end)
-                )
-                _unavailableDates.value = dates
-            } catch (e: Exception) {
-                Log.w(TAG, "all-unavailable-dates load failed", e)
-                // Non-critical - don't block UI
-            }
-        }
-    }
-
-    /**
-     * Toggle date block status (block if available, unblock if unavailable)
-     */
-    fun toggleDateBlock(date: LocalDate, reason: String? = null) {
-        viewModelScope.launch {
-            try {
-                val dateStr = date.toString()
-                val existing = _unavailableDates.value.find { ud ->
-                    dateStr >= ud.startDate && dateStr <= ud.endDate
-                }
-                if (existing != null) {
-                    apiService.delete(Endpoints.unavailableDate(existing.id))
-                } else {
-                    val payload = buildMap<String, String> {
-                        put("start_date", dateStr)
-                        put("end_date", dateStr)
-                        if (!reason.isNullOrBlank()) {
-                            put("reason", reason)
-                        }
-                    }
-                    apiService.post<UnavailableDate>(Endpoints.UNAVAILABLE_DATES, payload)
-                }
-                loadUnavailableDates(_calendarCurrentMonth.value)
-            } catch (e: Exception) {
-                Log.w(TAG, "toggleDateBlock failed for $date", e)
-                _error.value = if (existingBlockFor(date) != null) {
-                    "Failed to unblock date"
-                } else {
-                    "Failed to block date"
-                }
-            }
-        }
-    }
-
-    /**
-     * Block a date range
-     */
-    fun blockDateRange(startDate: LocalDate, endDate: LocalDate, reason: String?) {
-        viewModelScope.launch {
-            try {
-                val payload = buildMap<String, String> {
-                    put("start_date", startDate.toString())
-                    put("end_date", endDate.toString())
-                    if (!reason.isNullOrBlank()) {
-                        put("reason", reason)
-                    }
-                }
-                apiService.post<UnavailableDate>(Endpoints.UNAVAILABLE_DATES, payload)
-                loadUnavailableDates(_calendarCurrentMonth.value)
-                loadAllUnavailableDates()
-            } catch (e: Exception) {
-                Log.w(TAG, "blockDateRange $startDate..$endDate failed", e)
-                _error.value = "Failed to block date range"
-            }
-        }
-    }
-
-    /**
-     * Delete a specific unavailable date by ID
-     */
-    fun deleteUnavailableDate(id: String) {
-        viewModelScope.launch {
-            try {
-                apiService.delete(Endpoints.unavailableDate(id))
-                loadUnavailableDates(_calendarCurrentMonth.value)
-                loadAllUnavailableDates()
-            } catch (e: Exception) {
-                Log.w(TAG, "deleteUnavailableDate $id failed", e)
-                _error.value = "Failed to unblock date"
-            }
-        }
-    }
-
-    /**
-     * Check if a specific date is blocked
-     */
-    fun isDateBlocked(date: LocalDate): Boolean = existingBlockFor(date) != null
-
-    /**
-     * Get the UnavailableDate entry for a specific date
-     */
-    fun getUnavailableDateFor(date: LocalDate): UnavailableDate? = existingBlockFor(date)
-
-    /**
-     * Export calendar as iCal format for current month
-     */
-    fun exportCalendarIcal() {
-        viewModelScope.launch {
-            _isExportingIcal.value = true
-            try {
-                val month = _calendarCurrentMonth.value
-                val start = month.atDay(1).toString()
-                val end = month.atEndOfMonth().toString()
-                val content = apiService.getRawText(
-                    Endpoints.EVENTS_ICAL,
-                    mapOf("start" to start, "end" to end)
-                )
-                _exportIcalResult.emit(content)
-            } catch (e: Exception) {
-                Log.e(TAG, "exportCalendarIcal failed", e)
-                _error.value = "Failed to export calendar"
-            } finally {
-                _isExportingIcal.value = false
-            }
-        }
-    }
-
-    /**
-     * Find existing unavailable date entry for a given date
-     */
-    private fun existingBlockFor(date: LocalDate): UnavailableDate? {
-        val dateStr = date.toString()
-        return _unavailableDates.value.find { ud ->
-            dateStr >= ud.startDate && dateStr <= ud.endDate
         }
     }
 }
