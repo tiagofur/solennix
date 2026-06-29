@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.theme.SolennixElevation
+import com.creapolis.solennix.core.designsystem.theme.Spacing
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 
 @Composable
@@ -53,7 +54,7 @@ fun QuickActionsFAB(
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(Spacing.xxlg)
     ) {
         AnimatedVisibility(
             visible = expanded,
@@ -62,21 +63,21 @@ fun QuickActionsFAB(
         ) {
             Column(
                 horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(Spacing.xxlg)
             ) {
                 // Quick Quote option
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                 ) {
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(Spacing.sm),
                         color = SolennixTheme.colors.card,
                         shadowElevation = 2.dp
                     ) {
                         Text(
                             stringResource(R.string.quick_actions_quote),
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            modifier = Modifier.padding(horizontal = Spacing.xl, vertical = Spacing.xxs),
                             style = MaterialTheme.typography.labelMedium,
                             color = SolennixTheme.colors.primaryText
                         )
@@ -102,16 +103,16 @@ fun QuickActionsFAB(
                 // New Event option
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                 ) {
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(Spacing.sm),
                         color = SolennixTheme.colors.card,
                         shadowElevation = 2.dp
                     ) {
                         Text(
                             stringResource(R.string.quick_actions_new_event),
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            modifier = Modifier.padding(horizontal = Spacing.xl, vertical = Spacing.xxs),
                             style = MaterialTheme.typography.labelMedium,
                             color = SolennixTheme.colors.primaryText
                         )

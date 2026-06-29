@@ -35,7 +35,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.creapolis.solennix.core.designsystem.theme.Spacing
 import com.creapolis.solennix.core.designsystem.R
+import com.creapolis.solennix.core.designsystem.util.adaptiveSheetPadding
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -90,11 +92,11 @@ fun PaymentModal(
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(adaptiveSheetPadding())
                 .fillMaxWidth()
         ) {
             Text(modalTitle, style = MaterialTheme.typography.titleLarge)
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Spacing.md))
 
             OutlinedTextField(
                 value = amount,
@@ -107,7 +109,7 @@ fun PaymentModal(
                 keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Spacing.md))
 
             OutlinedTextField(
                 value = paymentDate,
@@ -123,14 +125,14 @@ fun PaymentModal(
                     .fillMaxWidth()
                     .clickable { showDatePicker = true }
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Spacing.md))
 
             Text(stringResource(R.string.payment_modal_method), style = MaterialTheme.typography.labelMedium)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(vertical = Spacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
             ) {
                 listOf(
                     "cash" to stringResource(R.string.payment_method_cash),
@@ -147,8 +149,8 @@ fun PaymentModal(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(bottom = Spacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
             ) {
                 listOf(
                     "check" to stringResource(R.string.payment_method_check),
@@ -168,7 +170,7 @@ fun PaymentModal(
                 label = { Text(stringResource(R.string.payment_modal_notes_optional)) },
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(Spacing.xl))
 
             PremiumButton(
                 text = modalConfirmLabel,
@@ -180,7 +182,7 @@ fun PaymentModal(
                 },
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(Spacing.xxl))
         }
     }
 }

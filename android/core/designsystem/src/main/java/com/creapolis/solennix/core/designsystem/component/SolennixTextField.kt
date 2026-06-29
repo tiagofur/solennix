@@ -23,6 +23,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
+import com.creapolis.solennix.core.designsystem.theme.Spacing
 
 @Composable
 fun SolennixTextField(
@@ -84,7 +85,7 @@ fun SolennixTextField(
                 text = errorMessage,
                 color = SolennixTheme.colors.error,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                modifier = Modifier.padding(start = Spacing.md, top = Spacing.xs)
             )
         }
     }

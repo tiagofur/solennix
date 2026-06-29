@@ -22,6 +22,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
+import com.creapolis.solennix.core.designsystem.util.adaptiveSheetPadding
+import com.creapolis.solennix.core.designsystem.util.shouldSkipPartiallyExpanded
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,7 +46,7 @@ fun SortBottomSheet(
     onPick: (EventSortField) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = shouldSkipPartiallyExpanded())
     val options = listOf(
         EventSortField.EVENT_DATE to R.string.events_list_sort_date,
         EventSortField.SERVICE_TYPE to R.string.events_list_sort_service,
@@ -59,7 +61,7 @@ fun SortBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = adaptiveSheetPadding())
                 .padding(bottom = 32.dp)
         ) {
             Text(
@@ -109,7 +111,7 @@ fun RowActionsBottomSheet(
     onDelete: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = shouldSkipPartiallyExpanded())
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -182,7 +184,7 @@ fun StatusChangeBottomSheet(
     onPick: (EventStatus) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = shouldSkipPartiallyExpanded())
     val options = listOf(
         EventStatus.QUOTED to R.string.events_list_status_quoted,
         EventStatus.CONFIRMED to R.string.events_list_status_confirmed,
@@ -197,7 +199,7 @@ fun StatusChangeBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = adaptiveSheetPadding())
                 .padding(bottom = 32.dp)
         ) {
             Text(

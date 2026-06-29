@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
+import com.creapolis.solennix.core.designsystem.theme.Spacing
 
 @Composable
 fun EmptyState(
@@ -24,24 +25,24 @@ fun EmptyState(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(32.dp),
+            .padding(Spacing.xxxl),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            modifier = Modifier.size(80.dp),
+            modifier = Modifier.size(Spacing.xxxl + Spacing.xxl),
             tint = SolennixTheme.colors.secondaryText.copy(alpha = 0.78f)
         )
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(Spacing.xl))
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge,
             color = SolennixTheme.colors.primaryText,
             textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(Spacing.sm))
         Text(
             text = message,
             style = MaterialTheme.typography.bodyMedium,
@@ -49,11 +50,11 @@ fun EmptyState(
             textAlign = TextAlign.Center
         )
         if (actionText != null && onAction != null) {
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(Spacing.xxl))
             PremiumButton(
                 text = actionText,
                 onClick = onAction,
-                modifier = Modifier.widthIn(min = 200.dp)
+                modifier = Modifier.widthIn(min = Spacing.xxxl + Spacing.xxxl)
             )
         }
     }

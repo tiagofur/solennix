@@ -39,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import com.creapolis.solennix.core.designsystem.theme.Spacing
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.*
 import com.creapolis.solennix.core.designsystem.component.SolennixSectionTopAppBar
@@ -121,7 +122,7 @@ fun DashboardScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .testTag("dashboard_content")
-                        .padding(horizontal = 16.dp)
+                        .padding(horizontal = Spacing.md)
                 ) {
                 item {
                     DashboardGreetingHeader(
@@ -159,20 +160,20 @@ fun DashboardScreen(
                 // Pending Events Banner
                 if (uiState.pendingEvents.isNotEmpty()) {
                     item {
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(Spacing.sm))
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.warning.copy(alpha = 0.1f)),
                             shape = MaterialTheme.shapes.medium
                         ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
+                            Column(modifier = Modifier.padding(Spacing.md)) {
                                 Text(
                                     text = stringResource(R.string.dashboard_attention_title_with_count, uiState.pendingEvents.size),
                                     style = MaterialTheme.typography.titleSmall,
                                     color = SolennixTheme.colors.warning,
                                     fontWeight = FontWeight.SemiBold
                                 )
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(Spacing.sm))
                                 uiState.pendingEvents.forEach { pendingEvent ->
                                     PendingEventItem(
                                         pendingEvent = pendingEvent,
@@ -207,11 +208,11 @@ fun DashboardScreen(
                             Triple(stringResource(R.string.dashboard_kpi_clients), uiState.totalClients.toString(), Triple(Icons.Default.People, SolennixTheme.colors.kpiBlue, stringResource(R.string.dashboard_kpi_total))),
                             Triple(stringResource(R.string.dashboard_kpi_quotes), uiState.pendingQuotes.toString(), Triple(Icons.Default.RequestQuote, SolennixTheme.colors.kpiOrange, null))
                         )
-                        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                        Column(modifier = Modifier.padding(vertical = Spacing.sm)) {
                             kpiItems.chunked(4).forEach { rowItems ->
                                 Row(
                                     modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.xl)
                                 ) {
                                     rowItems.forEach { (title, value, iconInfo) ->
                                         val (icon, color, subtitle) = iconInfo
@@ -228,7 +229,7 @@ fun DashboardScreen(
                                         Spacer(modifier = Modifier.weight(1f))
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(12.dp))
+                                Spacer(modifier = Modifier.height(Spacing.xl))
                             }
                         }
                     } else {
@@ -244,9 +245,9 @@ fun DashboardScreen(
                             modifier = Modifier
                                 .horizontalScroll(rememberScrollState())
                                 .padding(vertical = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.xl)
                         ) {
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(Spacing.xs))
                             KPICard(title = stringResource(R.string.dashboard_kpi_net_sales), value = uiState.revenueThisMonth.asMXNCompact(), icon = Icons.Default.AttachMoney, iconColor = SolennixTheme.colors.kpiGreen, subtitle = stringResource(R.string.dashboard_kpi_confirmed_completed), modifier = cardModifier)
                             KPICard(title = stringResource(R.string.dashboard_kpi_collected), value = uiState.cashCollected.asMXNCompact(), icon = Icons.Default.Payments, iconColor = SolennixTheme.colors.kpiOrange, subtitle = stringResource(R.string.dashboard_kpi_this_month), modifier = cardModifier)
                             KPICard(title = stringResource(R.string.dashboard_kpi_vat_collected), value = uiState.vatCollected.asMXNCompact(), icon = Icons.Default.Receipt, iconColor = SolennixTheme.colors.kpiBlue, subtitle = stringResource(R.string.dashboard_kpi_this_month), modifier = cardModifier)
@@ -255,15 +256,15 @@ fun DashboardScreen(
                             KPICard(title = stringResource(R.string.dashboard_kpi_low_stock), value = uiState.lowStockCount.toString(), icon = Icons.Default.Inventory2, iconColor = if (uiState.lowStockCount > 0) SolennixTheme.colors.kpiOrange else SolennixTheme.colors.kpiGreen, modifier = cardModifier)
                             KPICard(title = stringResource(R.string.dashboard_kpi_clients), value = uiState.totalClients.toString(), icon = Icons.Default.People, iconColor = SolennixTheme.colors.kpiBlue, subtitle = stringResource(R.string.dashboard_kpi_total), modifier = cardModifier)
                             KPICard(title = stringResource(R.string.dashboard_kpi_quotes), value = uiState.pendingQuotes.toString(), icon = Icons.Default.RequestQuote, iconColor = SolennixTheme.colors.kpiOrange, modifier = cardModifier)
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(Spacing.xs))
                         }
                     }
                 }
 
                 // Quick Action Buttons
                 item {
-                    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.sm),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xl)) {
                         QuickActionButton(stringResource(R.string.dashboard_quick_new_event), Icons.Default.Event, SolennixTheme.colors.primary, onNewEventClick, Modifier.weight(1f))
                         QuickActionButton(stringResource(R.string.dashboard_quick_new_client), Icons.Default.PersonAdd, SolennixTheme.colors.kpiBlue, onNewClientClick, Modifier.weight(1f))
                     }
@@ -272,7 +273,7 @@ fun DashboardScreen(
                 // Status Distribution + Financial Comparison
                 if (uiState.statusDistribution.isNotEmpty()) {
                     item {
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(Spacing.xl))
                         val detailCardModifier = if (isWideScreen) Modifier.fillMaxHeight() else Modifier
                         AdaptiveDetailLayout(
                             left = {
@@ -298,13 +299,13 @@ fun DashboardScreen(
                 // upsell here — upsell surfaces live elsewhere in the app.
                 if (!uiState.isBasicPlan && uiState.monthlyRevenueTrend.isNotEmpty()) {
                     item {
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(Spacing.xl))
                         MonthlyRevenueTrendCard(points = uiState.monthlyRevenueTrend)
                     }
                 }
 
                 item {
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(Spacing.xl))
                     ForecastWidget(
                         forecast = uiState.forecast,
                         isLoading = uiState.isRefreshing,
@@ -315,7 +316,7 @@ fun DashboardScreen(
                 // Low Stock Alerts
                 if (uiState.lowStockItems.isNotEmpty()) {
                     item {
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(Spacing.xl))
                         Text(
                             text = stringResource(R.string.dashboard_inventory_alerts),
                             modifier = Modifier.semantics { heading() },
@@ -334,7 +335,7 @@ fun DashboardScreen(
                 // Upcoming Events
                 if (uiState.upcomingEvents.isNotEmpty()) {
                     item {
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(Spacing.xl))
                         Text(
                             text = stringResource(R.string.dashboard_upcoming_events),
                             modifier = Modifier.semantics { heading() },
@@ -356,7 +357,7 @@ fun DashboardScreen(
 
                 // Analytics Widgets
                 item {
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(Spacing.xl))
                     TopClientsWidget(
                         clients = uiState.topClients,
                         isLoading = uiState.isRefreshing,
@@ -366,7 +367,7 @@ fun DashboardScreen(
                 }
 
                 item {
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(Spacing.xl))
                     ProductDemandWidget(
                         products = uiState.productDemand,
                         isLoading = uiState.isRefreshing,
@@ -533,7 +534,7 @@ fun PendingEventItem(
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
         shape = MaterialTheme.shapes.medium
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(Spacing.md)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -571,7 +572,7 @@ fun PendingEventItem(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Spacing.sm))
 
             PendingEventActions(
                 reason = pendingEvent.reason,
@@ -642,7 +643,7 @@ private fun PendingEventActions(
         }
 
         if (isUpdating) {
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(Spacing.xs))
             CircularProgressIndicator(
                 modifier = Modifier.size(16.dp),
                 strokeWidth = 2.dp,
@@ -832,7 +833,7 @@ private fun MonthlyRevenueTrendCard(points: List<com.creapolis.solennix.core.mod
                         )
                     }
                 }
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(Spacing.xs))
                 // Bars column — each bar fills its weight slot and stacks
                 // from bottom, matching the iOS BarMark(y:) behavior.
                 Row(
@@ -1008,32 +1009,32 @@ private fun DashboardSkeleton() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = Spacing.md)
     ) {
         // Greeting placeholder
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(Spacing.xl))
         SkeletonLoading(
             modifier = Modifier
                 .height(28.dp)
                 .fillMaxWidth(0.55f)
                 .clip(MaterialTheme.shapes.small)
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(Spacing.sm))
         SkeletonLoading(
             modifier = Modifier
                 .height(14.dp)
                 .fillMaxWidth(0.35f)
                 .clip(MaterialTheme.shapes.small)
         )
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(Spacing.xl))
         // KPI cards strip skeleton
         Row(
             modifier = Modifier
                 .horizontalScroll(rememberScrollState())
                 .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(Spacing.xl)
         ) {
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(Spacing.xs))
             repeat(5) {
                 Card(
                     modifier = Modifier.width(cardWidth),
@@ -1062,13 +1063,13 @@ private fun DashboardSkeleton() {
                     }
                 }
             }
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(Spacing.xs))
         }
         Spacer(modifier = Modifier.height(16.dp))
         // Quick actions placeholder
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(Spacing.xl)
         ) {
             SkeletonLoading(
                 modifier = Modifier

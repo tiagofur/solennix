@@ -55,4 +55,22 @@
     <string name="tooltip_quick_quote_body">Generate a quote instantly, without creating an event.</string>
     <string name="tooltip_dismiss">Got it</string>
 
+    <!-- Dirty state dialogs (generic) -->
+    <string name="common_discard_title">Discard changes?</string>
+    <string name="common_discard_message">You have unsaved changes. If you leave, they will be lost.</string>
+    <string name="common_discard_confirm">Discard</string>
+
+    <!-- Cached Data Banner -->
+    <string name="cached_data">Stale data</string>
+    <string name="cached_data_with_time">Updated: %1$s</string>
+    <string name="cached_data_short">Offline</string>
+    <string name="cd_cached_data">Cached data</string>
+
+    <!-- Inline Error Banner -->
+    <string name="error_banner_no_connection">No connection</string>
+    <string name="error_banner_network_message">Check your internet connection and try again.</string>
+    <string name="error_banner_load_failed">Load failed</string>
+    <string name="error_banner_load_message">Could not load data. Please retry.</string>
+    <string name="cd_error_banner">Error banner</string>
+
 </resources>

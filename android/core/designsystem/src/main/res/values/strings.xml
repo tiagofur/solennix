@@ -61,4 +61,17 @@
     <string name="common_discard_message">Tenés cambios sin guardar. Si salís, se perderán.</string>
     <string name="common_discard_confirm">Descartar</string>
 
+    <!-- Cached Data Banner -->
+    <string name="cached_data">Datos desactualizados</string>
+    <string name="cached_data_with_time">Actualizado: %1$s</string>
+    <string name="cached_data_short">Sin conexión</string>
+    <string name="cd_cached_data">Datos en caché</string>
+
+    <!-- Inline Error Banner -->
+    <string name="error_banner_no_connection">Sin conexión</string>
+    <string name="error_banner_network_message">Verificá tu conexión a internet y reintentá.</string>
+    <string name="error_banner_load_failed">Error al cargar</string>
+    <string name="error_banner_load_message">No se pudieron cargar los datos. Reintentá.</string>
+    <string name="cd_error_banner">Banner de error</string>
+
 </resources>

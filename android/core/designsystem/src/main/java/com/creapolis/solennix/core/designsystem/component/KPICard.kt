@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.creapolis.solennix.core.designsystem.theme.SolennixElevation
+import com.creapolis.solennix.core.designsystem.theme.Spacing
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 
 import androidx.compose.ui.semantics.semantics
@@ -34,7 +35,7 @@ fun KPICard(
     val isLargeFontScale = LocalDensity.current.fontScale >= 1.3f
     Card(
         modifier = modifier
-            .defaultMinSize(minWidth = if (isLargeFontScale) 180.dp else 155.dp)
+            .defaultMinSize(minWidth = if (isLargeFontScale) Spacing.xxxl else 155.dp)
             .semantics(mergeDescendants = true) {
                 contentDescription = "$title: $value" + (subtitle?.let { ". $it" } ?: "")
             },
@@ -49,25 +50,25 @@ fun KPICard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 8.dp),
+                .padding(vertical = Spacing.xl, horizontal = Spacing.sm),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Surface(
                 color = iconColor.copy(alpha = 0.1f),
                 shape = CircleShape,
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(Spacing.xxl)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
                         tint = iconColor,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(Spacing.xl)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Spacing.sm))
 
             Text(
                 text = value,

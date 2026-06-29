@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.theme.SolennixGradient
+import com.creapolis.solennix.core.designsystem.theme.Spacing
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 
 enum class ButtonStyle {
@@ -90,7 +91,7 @@ fun PremiumButton(
                     contentColor = SolennixTheme.colors.primary
                 ),
                 border = BorderStroke(
-                    width = 1.dp,
+                    width = Spacing.xs,
                     brush = if (enabled) SolennixGradient.premiumBrush else SolidColor(SolennixTheme.colors.border)
                 )
             ) {
@@ -128,9 +129,9 @@ private fun ButtonContent(
     ) {
         if (isLoading) {
             CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(Spacing.xl),
                 color = contentColor,
-                strokeWidth = 2.dp
+                strokeWidth = Spacing.xs
             )
         } else {
             if (icon != null) {
@@ -139,7 +140,7 @@ private fun ButtonContent(
                     contentDescription = null,
                     modifier = Modifier.size(20.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(Spacing.sm))
             }
             Text(
                 text = text,

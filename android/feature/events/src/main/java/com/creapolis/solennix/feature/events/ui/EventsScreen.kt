@@ -38,6 +38,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.contentDescription
+import com.creapolis.solennix.core.designsystem.theme.Spacing
 import androidx.compose.ui.semantics.semantics
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -214,8 +215,8 @@ fun EventsScreen(
                         ) {
                             if (isExportingCalendar) {
                                 CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    strokeWidth = 2.dp
+                                    modifier = Modifier.size(Spacing.xl),
+                                    strokeWidth = Spacing.xs
                                 )
                             } else {
                                 Icon(
@@ -456,7 +457,7 @@ private fun ViewModeToggle(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = Spacing.md, vertical = Spacing.sm)
     ) {
         SingleChoiceSegmentedButtonRow {
             SegmentedButton(
@@ -513,7 +514,7 @@ private fun EventListContent(
                     stringResource(R.string.events_list_empty_events_message)
             )
             else -> AdaptiveCardGrid(
-                contentPadding = PaddingValues(vertical = 8.dp),
+                contentPadding = PaddingValues(vertical = Spacing.sm),
                 gridContent = {
                     gridItemsIndexed(
                         items = sortedEvents,
@@ -578,15 +579,15 @@ private fun CalendarViewContent(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        contentPadding = PaddingValues(horizontal = Spacing.xl, vertical = Spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(Spacing.sm)
     ) {
         item {
             Surface(
                 color = SolennixTheme.colors.card,
                 shape = MaterialTheme.shapes.large
             ) {
-                Column(modifier = Modifier.padding(bottom = 8.dp)) {
+                Column(modifier = Modifier.padding(bottom = Spacing.sm)) {
                     CalendarHeader(
                         currentMonth = currentMonth,
                         onPreviousMonth = { onMonthChange(currentMonth.minusMonths(1)) },
@@ -608,7 +609,7 @@ private fun CalendarViewContent(
         item {
             Text(
                 text = selectedDate.format(dateFormatter).replaceFirstChar { it.uppercase() },
-                modifier = Modifier.padding(horizontal = 4.dp),
+                modifier = Modifier.padding(horizontal = Spacing.xs),
                 style = MaterialTheme.typography.titleMedium,
                 color = SolennixTheme.colors.primaryText
             )
@@ -619,17 +620,17 @@ private fun CalendarViewContent(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 48.dp),
+                        .padding(vertical = Spacing.xxxl),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
                             Icons.Default.CalendarMonth,
                             contentDescription = null,
-                            modifier = Modifier.size(48.dp),
+                            modifier = Modifier.size(Spacing.xxxl),
                             tint = SolennixTheme.colors.secondaryText
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(Spacing.xl))
                         Text(
                             text = "No hay eventos programados",
                             color = SolennixTheme.colors.secondaryText

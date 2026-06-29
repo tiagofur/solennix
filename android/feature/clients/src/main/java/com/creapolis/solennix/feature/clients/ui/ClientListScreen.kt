@@ -41,6 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import com.creapolis.solennix.core.designsystem.theme.Spacing
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.Avatar
@@ -171,7 +172,7 @@ fun ClientListScreen(
                     onValueChange = { viewModel.onSearchQueryChange(it) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(Spacing.md),
                     placeholder = { Text(stringResource(R.string.clients_search_placeholder)) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     shape = MaterialTheme.shapes.medium,
@@ -183,8 +184,8 @@ fun ClientListScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(horizontal = Spacing.md, vertical = Spacing.xs),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                 ) {
                     ClientSortOption.entries.forEach { option ->
                         FilterChip(
@@ -256,7 +257,7 @@ fun ClientListScreen(
                                     }
                                 }
                                 HorizontalDivider(
-                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    modifier = Modifier.padding(horizontal = Spacing.md),
                                     color = SolennixTheme.colors.divider.copy(alpha = 0.5f)
                                 )
                             }
@@ -342,7 +343,7 @@ private fun ClientListSkeleton() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = Spacing.md, vertical = Spacing.sm)
             .semantics {
                 contentDescription = "Cargando clientes..."
                 liveRegion = LiveRegionMode.Polite
@@ -357,27 +358,27 @@ private fun ClientListSkeleton() {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(Spacing.md),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Avatar placeholder
                         SkeletonLoading(
                             modifier = Modifier
-                                .size(48.dp)
+                                .size(Spacing.xxxl)
                                 .clip(MaterialTheme.shapes.medium)
                         )
-                        Spacer(modifier = Modifier.width(16.dp))
+                        Spacer(modifier = Modifier.width(Spacing.md))
                         Column(modifier = Modifier.weight(1f)) {
                             SkeletonLoading(
                                 modifier = Modifier
-                                    .height(16.dp)
+                                    .height(Spacing.md)
                                     .fillMaxWidth(0.5f)
                                     .clip(MaterialTheme.shapes.small)
                             )
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(Spacing.xxs))
                             SkeletonLoading(
                                 modifier = Modifier
-                                    .height(12.dp)
+                                    .height(Spacing.xl)
                                     .fillMaxWidth(0.35f)
                                     .clip(MaterialTheme.shapes.small)
                             )
@@ -385,7 +386,7 @@ private fun ClientListSkeleton() {
                     }
                     if (index < 5) {
                         HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 16.dp),
+                            modifier = Modifier.padding(horizontal = Spacing.md),
                             color = SolennixTheme.colors.divider.copy(alpha = 0.3f)
                         )
                     }
@@ -409,11 +410,11 @@ fun ClientListItem(
                 onClick = onClick,
                 onLongClick = onLongClick
             )
-            .padding(16.dp),
+            .padding(Spacing.md),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Avatar(name = client.name, photoUrl = UrlResolver.resolve(client.photoUrl), size = 48.dp)
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(Spacing.md))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = client.name,

@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.R
+import com.creapolis.solennix.core.designsystem.theme.Spacing
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 
 /**
@@ -69,30 +70,30 @@ fun UpgradeBanner(
         Card(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = Spacing.md, vertical = Spacing.sm),
             colors = CardDefaults.cardColors(containerColor = backgroundColor),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(Spacing.xl)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(Spacing.md),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     tint = iconColor,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(Spacing.xl)
                 )
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(Spacing.xl))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = message,
                         style = MaterialTheme.typography.bodyMedium,
                         color = SolennixTheme.colors.primaryText
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(Spacing.sm))
                     TextButton(
                         onClick = onUpgradeClick,
                         colors = ButtonDefaults.textButtonColors(
@@ -100,11 +101,11 @@ fun UpgradeBanner(
                         )
                     ) {
                         Text(stringResource(R.string.upgrade_view_plans), fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(Spacing.xs))
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(Spacing.md)
                         )
                     }
                 }
@@ -132,12 +133,12 @@ fun PremiumFeatureBadge(
 ) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(4.dp),
+        shape = RoundedCornerShape(Spacing.xs),
         color = SolennixTheme.colors.primary.copy(alpha = 0.1f),
         onClick = onClick
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xs),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -180,15 +181,15 @@ fun UsageLimitCard(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(Spacing.md)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     tint = SolennixTheme.colors.secondaryText,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(Spacing.lg)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(Spacing.sm))
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleSmall,
@@ -203,19 +204,19 @@ fun UsageLimitCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Spacing.xl))
 
             LinearProgressIndicator(
                 progress = { progress.coerceAtMost(1f) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(6.dp),
+                    .height(Spacing.xxs),
                 color = progressColor,
                 trackColor = SolennixTheme.colors.divider
             )
 
             if (progress >= 0.8f) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Spacing.sm))
                 TextButton(
                     onClick = onUpgradeClick,
                     colors = ButtonDefaults.textButtonColors(

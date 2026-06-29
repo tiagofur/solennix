@@ -140,4 +140,8 @@ dependencies {
     // Coil for Avatar component
     implementation(libs.coil.compose)
     implementation(libs.coil.network.ktor)
+
+    // Window for adaptive layouts
+    implementation(libs.androidx.window)
+    implementation(libs.compose.material3.windowsizeclass)
 }

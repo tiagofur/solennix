@@ -14,6 +14,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.creapolis.solennix.core.designsystem.theme.Spacing
 import com.creapolis.solennix.core.designsystem.R
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 
@@ -31,11 +32,11 @@ fun StatusBadge(
             contentDescription = statusContentDescription
         },
         color = statusColor.copy(alpha = 0.18f),
-        shape = RoundedCornerShape(6.dp)
+        shape = RoundedCornerShape(Spacing.sm)
     ) {
         Text(
             text = statusLabel,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xs),
             color = statusColor,
             style = MaterialTheme.typography.labelSmall.copy(
                 fontWeight = FontWeight.Bold,
