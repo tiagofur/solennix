@@ -14,7 +14,15 @@
 > Widget/Intents/InfoPlist catalogs completed. Implemented + merged: PRs #625 / #627 / #631,
 > CI green (378/378 tests). Audit trail: `openspec/changes/archive/2026-06-27-ios-catalog-english/`.
 >
-> Decisions locked in Engram #2909 / #2910 (B-1), #2920–#2924 (B-2).
+> **Phase 3 (B-3, `ios-l10n-polish`):** **True CLDR pluralization** via `.xcstrings`
+> `variations.plural` (`one`/`other`, en+es). New `FeatureL10n.plural(_:defaultValue:count:)`
+> helper routes through `String.localizedStringWithFormat`; 38 count-bearing keys varied
+> (31 package + 6 Widget + 1 App-Intent); ~40 call sites migrated; 2 double-plural keys
+> split into 4 flat siblings each (Xcode rejects nested plural variations). Retires the
+> "True pluralization" Non-Goal from B-2. Implemented + merged: PRs #635 / #639 / #641,
+> CI green (387/387 tests, 1 skipped locale-guard). B-3c (defaultValue cleanup) stays deferred.
+>
+> Decisions locked in Engram #2909 / #2910 (B-1), #2920–#2924 (B-2), #2946–#2949 (B-3).
 
 ## Requirements
 
@@ -214,12 +222,115 @@ The localization test suite SHALL assert system-locale resolution. No test MAY d
 - WHEN `xcodebuild test` runs
 - THEN every test asserts resolution from the system locale and the full suite is green
 
+### Requirement: Plural-Aware String Resolution
+
+A count-bearing string SHALL be resolved through `FeatureL10n.plural(_:defaultValue:count:)`, which loads the
+template from `Bundle.module` and formats it via `String.localizedStringWithFormat`. Plain `String(format:)`
+MUST NOT be used for plural-eligible templates — it **silently ignores** `variations.plural` and renders the
+`other` form unconditionally (root cause of the historical "1 eventos"/"1 events" bug). `count` is both the
+CLDR plural-discriminator (selects `one`/`other`) and the value substituted into the template's `%lld` slot.
+
+> Note: keys with MORE than one interpolated count (nested double-plurals, see *Nested Double-Plural Keys*) are
+> formatted via direct `String.localizedStringWithFormat(template, countA, countB)` because
+> `FeatureL10n.plural` carries a single count.
+
+#### Scenario: count=1 renders the one-form
+
+- GIVEN a count-bearing key with `variations.plural.one` + `variations.plural.other` in en+es
+- WHEN `FeatureL10n.plural(k, default, count: 1)` is called
+- THEN it returns the `one` form (e.g. "1 evento"/"1 event"), never the `other` form
+
+#### Scenario: plain String(format:) is the anti-pattern (RED)
+
+- GIVEN a plural-eligible template loaded via `FeatureL10n.text(k)`
+- WHEN it is formatted with plain `String(format: template, 1)`
+- THEN the `other` form is returned regardless of count (bug) — hence `plural` MUST route through
+  `String.localizedStringWithFormat`
+
+#### Scenario: en+es share the CLDR one/other rule (no zero variant)
+
+- GIVEN any count-bearing key and count `0`
+- WHEN `FeatureL10n.plural(k, default, count: 0)` is called
+- THEN it returns the `other` form — en+es have no CLDR `zero`/`many`/`few` variants
+
+### Requirement: Plural Variation Catalog
+
+Every count-bearing catalog key SHALL declare `variations.plural.one` + `variations.plural.other` in BOTH
+`en` and `es`. Single-count call sites resolve via `FeatureL10n.plural`; separate-bundle sites (Widget
+extension, App-Intent target — no `FeatureL10n` access) resolve via native
+`String.localizedStringWithFormat(String(localized:), count)` against their own `.xcstrings`. The catalog
+contains 38 varied keys total: 31 package + 6 Widget + 1 App-Intent.
+
+#### Scenario: count=1 gate per migrated key
+
+- GIVEN every count-bearing key migrated in B-3
+- WHEN the sweep test asserts `FeatureL10n.plural(k, count: 1)` against the `one` catalog value
+- THEN each key passes (19 inflecting keys in the strict sweep)
+
+#### Scenario: multi-positional-arg key uses native format
+
+- GIVEN a key with two positional args (e.g. `events.detail.paid_partial_a11y` with `%1$lld`/`%2$@`)
+- WHEN rendered
+- THEN it is formatted via `String.localizedStringWithFormat(template, pct, balance)`, not
+  `FeatureL10n.plural` (single-count only)
+
+#### Scenario: locale-invariant key excluded from strict sweep
+
+- GIVEN `events.detail.equipment.assigned_count` (inflects ONLY in es: `equipo`/`equipos`; en invariant
+  `equipment`/`equipment`)
+- WHEN the locale-agnostic inflecting sweep runs
+- THEN it is excluded from the strict sweep (covered by call-site migration only)
+
+### Requirement: Nested Double-Plural Keys
+
+A key whose template interpolates TWO counts that BOTH inflect (e.g. "X units for Y people") SHALL be split
+into four flat sibling keys — `<base>.one_one`, `<base>.one_other`, `<base>.other_one`,
+`<base>.other_other` — each resolved via `FeatureL10n.plural`/`String.localizedStringWithFormat`. Xcode
+REJECTS nested `variations.plural` blocks, so the flat-sibling pattern is the only valid mechanism. Applies
+to `products.quantity_for_people` and `products.demand_summary.*`.
+
+#### Scenario: four siblings cover the count×count matrix
+
+- GIVEN the four `products.quantity_for_people.*` sibling keys
+- WHEN rendered for (count_a, count_b) ∈ {(1,1), (1,5), (5,1), (5,5)}
+- THEN each tuple resolves to its dedicated sibling (one_one / one_other / other_one / other_other)
+
+#### Scenario: nested variations.plural rejected by Xcode
+
+- GIVEN an attempt to nest `variations.plural` inside `variations.plural` in one key
+- WHEN Xcode compiles the catalog
+- THEN it is rejected — hence the flat-sibling split is MANDATORY for double-plurals
+
+### Requirement: Translation Consistency Pass
+
+The B-3 migration SHALL apply LIGHT terminology consistency (NOT full translator review) across the affected
+keys, in parallel en+es values: package "collaborators"→"staff"; package "uds"→"unidades"; the literal
+percent word → `%`; inter-token spacing normalized; ALL-CAPS preserved where stylistically intended. The
+Widget catalog KEEPS the abbreviated "uds" form (space-constrained surface).
+
+#### Scenario: collaborators normalized to staff in package catalog
+
+- GIVEN `staff.assigned_count` (previously "colaboradores")
+- WHEN migrated
+- THEN the es value reads "staff"/"personal" consistent with the rest of the package, in both en+es
+
+#### Scenario: widget keeps uds abbreviation
+
+- GIVEN a space-constrained Widget count-bearing key
+- WHEN migrated
+- THEN the es `other` value keeps "uds" (not "unidades"), while package equivalents expand to "unidades"
+
+#### Scenario: ALL-CAPS preserved
+
+- GIVEN a value authored in ALL-CAPS for stylistic intent (e.g. KPI chip)
+- WHEN the consistency pass runs
+- THEN the casing is preserved in en+es
+
 ## Non-Goals
 
-- **True pluralization** (`.xcstrings` variations) — format-string approach retained; deferred to B-3.
-- **defaultValue cleanup** (~1,865 cosmetic Spanish 2nd-args) — keys resolve via `Bundle.module`; defaults never fire.
-- **B-3/B-4 harness:** catalog-coverage-at-scale test, CI anti-literal lint, `test` step in `ios-ci.yml`.
-- **Android / Web** replication (deferred; same backend contract).
+- **defaultValue cleanup** (~1,865 cosmetic Spanish 2nd-args) — keys resolve via `Bundle.module`; defaults never fire. (B-3c, deferred.)
+- **B-3/B-4 harness:** catalog-coverage-at-scale test, CI anti-literal lint, `test` step in `ios-ci.yml`. (B-4, deferred.)
+- **Android / Web** replication (deferred; the `.xcstrings` mechanism is not portable to Android `plurals.xml`/web i18next — concept tracked, impl deferred).
 
 ## Acceptance & Validation
 
@@ -238,3 +349,9 @@ The localization test suite SHALL assert system-locale resolution. No test MAY d
 | B-2 InfoPlist + toggle | `InfoPlist.xcstrings` (3 permissions) + `EventosViewModeToggle` keys, all en+es | ✅ PR #631 |
 | B-2 suite green | `xcodebuild test -scheme Solennix` → 378/378 (375 unit + 3 UI) | ✅ PR #631 |
 | B-2 cross-locale manual device | `fr-FR`→en, `es-MX`→es, `en-US`→en | pending QA (task 4.3) |
+| B-3 plural helper | `FeatureL10n.plural` routes via `String.localizedStringWithFormat`; count=1 RED→GREEN gate | ✅ PR #635 |
+| B-3 catalog variations | 38 keys carry `variations.plural.one`+`other` en+es (31 pkg + 6 widget + 1 app) | ✅ PR #639 |
+| B-3 call-site migration | ~40 sites on `FeatureL10n.plural`; widget/intent on native `localizedStringWithFormat`; zero varied keys on `format`/`trf` | ✅ PR #641 |
+| B-3 double-plural siblings | `products.quantity_for_people` split into 4 siblings; flat key removed | ✅ PR #641 |
+| B-3 consistency pass | collaborators→staff, package uds→unidades, widget keeps uds, percent→%, ALL-CAPS preserved | ✅ PR #639 |
+| B-3 suite green | `xcodebuild test -scheme Solennix` → 387 executed, 1 skipped, 0 failures | ✅ PR #641 |
