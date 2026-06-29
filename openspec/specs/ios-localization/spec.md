@@ -22,7 +22,20 @@
 > "True pluralization" Non-Goal from B-2. Implemented + merged: PRs #635 / #639 / #641,
 > CI green (387/387 tests, 1 skipped locale-guard). B-3c (defaultValue cleanup) stays deferred.
 >
-> Decisions locked in Engram #2909 / #2910 (B-1), #2920–#2924 (B-2), #2946–#2949 (B-3).
+> **Phase 4 (B-4, `ios-l10n-harness`):** **Permanent verification harness.** An XCTest
+> (`L10nCatalogCoverageTests`) asserts every **symbolic** (dotted) catalog key carries
+> `en`+`es` (1674 keys, 0 gap, GREEN today). An anti-literal lint
+> (`scripts/l10n/lint_literals.py` — accent ∪ denylist minus cognates, `#Preview`-skipped,
+> 28 fixtures) gates raw Spanish UI literals. `ios-ci.yml` `ios-validation` runs the lint
+> AND `xcodebuild test` (not build-only) on every PR (timeout 60 min). 7 user-facing
+> literals migrated to `LocalizedStringKey` against the app-target catalog (Option A:
+> `SolennixDesign` is a leaf that cannot import `FeatureL10n` — circular). The new CI
+> `test` step surfaced 4 locale-fragile tests, fixed to branch on
+> `FeatureL10n.languageCode`. Retires the "B-3/B-4 harness" Non-Goal. Implemented +
+> merged: PR #653 (Closes #652), CI green (398/398 tests, 0 skipped, en-US).
+>
+> Decisions locked in Engram #2909 / #2910 (B-1), #2920–#2924 (B-2), #2946–#2949 (B-3),
+> #2981 / #2983 / #2985 (B-4).
 
 ## Requirements
 
@@ -326,10 +339,114 @@ Widget catalog KEEPS the abbreviated "uds" form (space-constrained surface).
 - WHEN the consistency pass runs
 - THEN the casing is preserved in en+es
 
+### Requirement: Catalog Coverage Test
+
+A permanent XCTest (`ios/SolennixTests/L10nCatalogCoverageTests.swift`) SHALL assert that
+every **symbolic** (dotted, regex `^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)+$`) catalog key
+carries BOTH `en` and `es`. "Present" = a `stringUnit.value` OR a
+`variations.plural.{one,other}` block (mirrors the B-3 plural mechanism). The test MUST
+iterate the symbolic-key sets of the `SolennixFeatures`, Widget, and App-Intent catalogs
+and FAIL the build on any gap. It MUST pass green today (zero gap) so it guards future
+drift, not current debt. Orphan/stale prose keys (no dot) are out of scope (B-5). Today:
+1674 symbolic keys, 0 gap, GREEN.
+
+#### Scenario: green today
+
+- GIVEN the merged B-1/B-2/B-3/B-4 catalog
+- WHEN the coverage test runs
+- THEN every symbolic key resolves to en+es (0 gap) and the test passes
+
+#### Scenario: fails on a deliberately-missing translation (RED→GREEN fixture)
+
+- GIVEN a symbolic key whose `es` value is removed
+- WHEN the coverage test runs
+- THEN it FAILS reporting the key + missing locale
+- AND restoring the value turns it GREEN
+
+#### Scenario: plural keys count via variations
+
+- GIVEN a count-bearing key with no `stringUnit` but `variations.plural.one`+`other` en+es
+- WHEN the coverage test evaluates it
+- THEN it is counted as present (parity holds)
+
+### Requirement: Anti-Literal Lint
+
+A lint script at `scripts/l10n/lint_literals.py` SHALL scan `.swift` sources for raw Spanish
+UI literals in `Text(...)`, `Button(...)`, `Label(...)`, and `.navigationTitle(...)`
+positions. A literal MUST be flagged when it contains an accent char
+(`áéíóúñü¿¡ÁÉÍÓÚÑÜ`) OR matches the unambiguous-Spanish-word denylist (`Buscar`,
+`Actualizar`, `Cancelar`, `Guardar`, `Eliminar`, `Editar`, `Cerrar`, `Agregar`, `Aceptar`,
+`Continuar`, `Configuración`, `Listo`, `Volver`, `Quitar`, `Añadir`, `Seleccionar`,
+`Ajustes`, `Cuenta`, `Ayuda`, `Soporte`, `Información`). Cognates (`Error`, `Perfil`,
+`Normal`, `Radio`, `Visa`) MUST be excluded to keep false positives ~0. The script MUST
+skip `#Preview` macro bodies (brace-depth tracking from the `#Preview` line) and test
+sources, MUST exit non-zero on the first violation, and SHALL be unit-tested with good/bad
+fixtures (`scripts/l10n/test_lint_literals.py`, 28 fixtures) like the sibling
+`prune_orphan_keys.py`.
+
+#### Scenario: lint exits 0 after migration
+
+- GIVEN the codebase after the flagged literals are migrated
+- WHEN `scripts/l10n/lint_literals.py` runs
+- THEN it exits 0
+
+#### Scenario: lint flags a new raw Spanish literal
+
+- GIVEN a source file introducing a new `Button("Cancelar")`
+- WHEN the lint runs
+- THEN it exits non-zero reporting the file, line, and matched token
+
+#### Scenario: cognate stays literal (proof point)
+
+- GIVEN `Button("Error")` (a valid EN/ES cognate)
+- WHEN the lint runs
+- THEN it is NOT flagged (cognate exclusion)
+
+### Requirement: CI Lint + Test Step
+
+The `ios-ci.yml` `ios-validation` job SHALL run the anti-literal lint AND `xcodebuild test`
+(not build-only) on every PR. The lint step runs at repo root (`.`) before the build; the
+build step is renamed "Build and test" and invokes `xcodebuild test`. The job timeout MUST
+be 60 minutes.
+
+#### Scenario: CI runs both lint and test
+
+- GIVEN a PR opening against the default branch
+- WHEN `ios-validation` executes
+- THEN it runs the `l10n lint` step AND the `xcodebuild test` step, both gating merge
+
+#### Scenario: lint failure blocks CI
+
+- GIVEN a PR introducing a flagged raw Spanish literal
+- WHEN the lint step runs
+- THEN the job fails before the test step
+
+### Requirement: Literal Migration
+
+Flagged raw Spanish UI literals SHALL migrate to `LocalizedStringKey` resolved against the
+app-target catalog (`ios/Solennix/Localizable.xcstrings`), each carrying `en`+`es` (Option
+A from the B-4 design: `SolennixDesign` is a leaf package that `SolennixFeatures` depends
+on, so it cannot import `FeatureL10n` without a cycle — therefore `LocalizedStringKey`
+against the main bundle, not `FeatureL10n`). Delivered keys: `auth.unlock.prompt`,
+`common.action.cancel`, `common.action.done`, `keyboard.menu.help`,
+`keyboard.menu.refresh`, `keyboard.menu.search`, `keyboard.menu.settings`. Sites:
+`KeyboardShortcuts.swift` (4), `ConfirmDialog.swift:17`, `ViewModifiers.swift:26`,
+`ContentView:225`. The `Button("Error")` cognate at `ToastOverlay.swift:196` MUST stay
+literal as the cognate proof point. `#Preview` macro bodies are skipped by the lint and NOT
+migrated. No raw `Buscar`/`Actualizar`/`Cancelar`/`Listo` literal MAY remain in production
+sources after migration.
+
+#### Scenario: flagged literals routed through LocalizedStringKey
+
+- GIVEN the flagged source sites
+- WHEN migrated
+- THEN each renders via a `LocalizedStringKey` with a symbolic key carrying en+es
+- AND `Error` stays a literal
+- AND `#Preview` bodies are untouched
+
 ## Non-Goals
 
 - **defaultValue cleanup** (~1,865 cosmetic Spanish 2nd-args) — keys resolve via `Bundle.module`; defaults never fire. (B-3c, deferred.)
-- **B-3/B-4 harness:** catalog-coverage-at-scale test, CI anti-literal lint, `test` step in `ios-ci.yml`. (B-4, deferred.)
 - **Android / Web** replication (deferred; the `.xcstrings` mechanism is not portable to Android `plurals.xml`/web i18next — concept tracked, impl deferred).
 
 ## Acceptance & Validation
@@ -355,3 +472,9 @@ Widget catalog KEEPS the abbreviated "uds" form (space-constrained surface).
 | B-3 double-plural siblings | `products.quantity_for_people` split into 4 siblings; flat key removed | ✅ PR #641 |
 | B-3 consistency pass | collaborators→staff, package uds→unidades, widget keeps uds, percent→%, ALL-CAPS preserved | ✅ PR #639 |
 | B-3 suite green | `xcodebuild test -scheme Solennix` → 387 executed, 1 skipped, 0 failures | ✅ PR #641 |
+| B-4 coverage test | `L10nCatalogCoverageTests` symbolic-key en+es guard; 1674 keys, 0 gap, GREEN | ✅ PR #653 |
+| B-4 anti-literal lint | `scripts/l10n/lint_literals.py` (accent ∪ denylist minus cognates, `#Preview`-skip); `test_lint_literals.py` 28/28 green; lint exit 0 | ✅ PR #653 |
+| B-4 CI lint + test | `ios-ci.yml` `ios-validation` runs `l10n lint` + `xcodebuild test`; timeout 60 | ✅ PR #653 |
+| B-4 literal migration | 7 user-facing literals → `LocalizedStringKey` (app catalog); `Error` stays literal; `#Preview` skipped | ✅ PR #653 |
+| B-4 locale-fragile fix | 4 test files branched on `FeatureL10n.languageCode` (surfaced by the new CI `test` step) | ✅ PR #653 |
+| B-4 suite green | `xcodebuild test -scheme Solennix` → 398 executed, 0 failures, 0 skipped (en-US) | ✅ PR #653 |

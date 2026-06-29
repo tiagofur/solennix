@@ -65,38 +65,38 @@ resolves against the **main bundle** (see `ViewModifiers.swift:22` comment).
       bundle-lookup; iterate symbolic (dotted) keys of **Features + App + Widget** catalogs; assert
       en+es present = `stringUnit.value` ∪ `variations.plural.{one,other}`. EXCLUDE `InfoPlist.xcstrings`.
 - [x] 1.2 RED→GREEN: drop `es` from one symbolic key → FAILS reporting key+locale; restore → GREEN (0 gap today).
-- [ ] 1.3 Create `scripts/l10n/lint_literals.py`: pure `classify(line)` + CLI; flag when a literal in a
+- [x]1.3 Create `scripts/l10n/lint_literals.py`: pure `classify(line)` + CLI; flag when a literal in a
       `Text/Button/Label/.navigationTitle` position contains accent `[áéíóúñü¿¡ÁÉÍÓÚÑÜ]` OR matches denylist
       (Buscar, Actualizar, Cancelar, Guardar, Eliminar, Editar, Cerrar, Agregar, Aceptar, Continuar,
       Configuración, Listo, Volver, Quitar, Añadir, Seleccionar, Ajustes, Cuenta, Ayuda, Soporte,
       Información); EXCLUDE cognates (Error, Perfil, Normal, Radio, Visa). Exit non-zero on first hit.
-- [ ] 1.4 Create `scripts/l10n/test_lint_literals.py` mirroring `test_prune_orphan_keys.py`: good/bad
+- [x]1.4 Create `scripts/l10n/test_lint_literals.py` mirroring `test_prune_orphan_keys.py`: good/bad
       fixtures, cognate-not-flagged case; `python3 -m pytest scripts/l10n/` green.
 
 ## Phase 2: Literal Migration
 
-- [ ] 2.1 Add 4 symbolic keys (en+es) to the catalog chosen above (Option A → `ios/Solennix/Localizable.xcstrings`).
-- [ ] 2.2 `KeyboardShortcuts.swift:91` `Button("Buscar")` and `:96` `Button("Actualizar")` → symbolic keys.
-- [ ] 2.3 `ConfirmDialog.swift:17` `Button("Cancelar", role: .cancel)` → symbolic key (or injected param, Option B).
-- [ ] 2.4 `ViewModifiers.swift:26` `Text("Listo")` → symbolic key (or injected param, Option B).
-- [ ] 2.5 Leave `ToastOverlay.swift:196` `Button("Error")` literal (cognate proof point). Leave
+- [x]2.1 Add 4 symbolic keys (en+es) to the catalog chosen above (Option A → `ios/Solennix/Localizable.xcstrings`).
+- [x]2.2 `KeyboardShortcuts.swift:91` `Button("Buscar")` and `:96` `Button("Actualizar")` → symbolic keys.
+- [x]2.3 `ConfirmDialog.swift:17` `Button("Cancelar", role: .cancel)` → symbolic key (or injected param, Option B).
+- [x]2.4 `ViewModifiers.swift:26` `Text("Listo")` → symbolic key (or injected param, Option B).
+- [x]2.5 Leave `ToastOverlay.swift:196` `Button("Error")` literal (cognate proof point). Leave
       `shortcutRow(... description: "Buscar"/"Actualizar")` L224/225 as-is (helper arg → out of lint
       position-scope; log as **follow-up**, not a regression).
 
 ## Phase 3: CI Wiring
 
-- [ ] 3.1 `.github/workflows/ios-ci.yml`: add `L10n lint` step (`working-directory: .`,
+- [x]3.1 `.github/workflows/ios-ci.yml`: add `L10n lint` step (`working-directory: .`,
       `python3 scripts/l10n/lint_literals.py`) **before** Build, fast-fail.
-- [ ] 3.2 Change Build step `build` → `test` (reuse existing simulator lookup + flags);
+- [x]3.2 Change Build step `build` → `test` (reuse existing simulator lookup + flags);
       bump `timeout-minutes: 45 → 60` (L23).
 
 ## Phase 4: Verification Gate
 
-- [ ] 4.1 `xcodebuild test -scheme Solennix -destination 'platform=iOS Simulator,...'` green
+- [x]4.1 `xcodebuild test -scheme Solennix -destination 'platform=iOS Simulator,...'` green
       (coverage test + full 515+ suite).
-- [ ] 4.2 `python3 scripts/l10n/lint_literals.py` exits 0; `python3 -m pytest scripts/l10n/` green.
-- [ ] 4.3 Grep gate: zero `Button/Text("Buscar"|"Actualizar"|"Cancelar"|"Listo")` literals; `Error` still literal.
-- [ ] 4.4 `actionlint .github/workflows/ios-ci.yml` (or `gh workflow view`) validates the YAML.
+- [x]4.2 `python3 scripts/l10n/lint_literals.py` exits 0; `python3 -m pytest scripts/l10n/` green.
+- [x]4.3 Grep gate: zero `Button/Text("Buscar"|"Actualizar"|"Cancelar"|"Listo")` literals; `Error` still literal.
+- [x]4.4 `actionlint .github/workflows/ios-ci.yml` (or `gh workflow view`) validates the YAML.
 
 ## Rollback
 

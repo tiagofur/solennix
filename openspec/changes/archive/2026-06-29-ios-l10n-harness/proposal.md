@@ -86,12 +86,12 @@ Fully additive: revert the single PR. New test/lint/CI steps + the 4 migrated li
 
 ## Success Criteria
 
-- [ ] `xcodebuild test -scheme Solennix` green; coverage test passes (0 symbolic gap)
-- [ ] `scripts/l10n/lint_literals.py` exits 0 on the migrated codebase
-- [ ] `ios-ci.yml` `ios-validation` runs BOTH `l10n lint` and `xcodebuild test` on PRs
-- [ ] Zero `Button/Text("Buscar|Actualizar|Cancelar|Listo")` literals remain (grep gate)
-- [ ] "B-3/B-4 harness" Non-Goal retired from canonical spec on archive
-- [ ] CI time within the 60-min budget
+- [x] `xcodebuild test -scheme Solennix` green; coverage test passes (0 symbolic gap)
+- [x] `scripts/l10n/lint_literals.py` exits 0 on the migrated codebase
+- [x] `ios-ci.yml` `ios-validation` runs BOTH `l10n lint` and `xcodebuild test` on PRs
+- [x] Zero `Button/Text("Buscar|Actualizar|Cancelar|Listo")` literals remain (grep gate)
+- [x] "B-3/B-4 harness" Non-Goal retired from canonical spec on archive
+- [x] CI time within the 60-min budget
 
 ## Non-Goal Fulfillment (for archive)
 
