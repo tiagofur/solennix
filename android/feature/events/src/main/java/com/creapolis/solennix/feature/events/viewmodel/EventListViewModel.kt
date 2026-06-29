@@ -95,7 +95,6 @@ class EventListViewModel @Inject constructor(
     private val _isRefreshing = MutableStateFlow(false)
     private val _error = MutableStateFlow<String?>(null)
     private val _updatingStatusEventId = MutableStateFlow<String?>(null)
-    private val _unavailableDates = MutableStateFlow<List<com.creapolis.solennix.core.model.UnavailableDate>>(emptyList())
     /** Local events list for soft-delete modifications. */
     private val _localEvents = MutableStateFlow<List<Event>>(emptyList())
     /** Cached unavailable date ranges for the current month context. */
