@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Share2, Copy, CheckCircle2, RefreshCw, Link2Off, Loader2, ExternalLink } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
@@ -77,12 +77,21 @@ export const ClientPortalShareCard: React.FC<Props> = ({ eventId }) => {
     }
   };
 
+  const copyTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current !== null) window.clearTimeout(copyTimerRef.current);
+    };
+  }, []);
+
   const handleCopy = async () => {
     if (!link) return;
     try {
       await navigator.clipboard.writeText(link.url);
       setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
+      if (copyTimerRef.current !== null) window.clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = window.setTimeout(() => setCopied(false), 2000);
       addToast(t("client_portal_share.toast_copy"), "success");
     } catch (err) {
       logError("ClientPortalShareCard:copy", err);

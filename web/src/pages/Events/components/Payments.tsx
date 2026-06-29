@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import { paymentService } from "../../../services/paymentService";
 import { Payment } from "../../../types/entities";
 import { Trash2, DollarSign, CheckCircle, AlertCircle, Calendar, CreditCard, Banknote } from "lucide-react";
@@ -115,6 +115,14 @@ export const Payments: React.FC<PaymentsProps> = ({
     loadPayments();
   }, [loadPayments]);
 
+  const statusTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (statusTimerRef.current) clearTimeout(statusTimerRef.current);
+    };
+  }, []);
+
   const onSubmit = async (data: PaymentFormData) => {
     setIsSavingPayment(true);
     try {
@@ -132,7 +140,8 @@ export const Payments: React.FC<PaymentsProps> = ({
       if (newPaymentAmount > 0 && eventStatus === "quoted" && onStatusChange) {
         onStatusChange("confirmed");
         setStatusMessage(t("events:summary.payments.status_confirmed_message"));
-        setTimeout(() => setStatusMessage(null), 5000);
+        if (statusTimerRef.current) clearTimeout(statusTimerRef.current);
+        statusTimerRef.current = setTimeout(() => setStatusMessage(null), 5000);
       }
 
       setIsAdding(false);

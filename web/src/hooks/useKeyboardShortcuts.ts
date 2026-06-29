@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useMemo, useState } from 'react';
+import { useEffect, useCallback, useMemo, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface Shortcut {
@@ -21,6 +21,8 @@ export function useKeyboardShortcuts() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [helpOpen, setHelpOpen] = useState(false);
+  const gPressedRef = useRef(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const currentSection = Object.entries(SECTION_MAP).find(([prefix]) =>
     pathname.startsWith(prefix),
@@ -72,22 +74,32 @@ export function useKeyboardShortcuts() {
 
     const key = e.key.toLowerCase();
 
-    // Handle two-key sequences (g+letter)
+    // If 'g' was pressed previously, try to match the "g <key>" combo
+    if (gPressedRef.current) {
+      gPressedRef.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      const combo = `g ${key}`;
+      const shortcut = shortcuts.find((s) => s.key === combo);
+      if (shortcut) {
+        e.preventDefault();
+        shortcut.action();
+        return;
+      }
+      // If no combo matched, fall through to handle single-key shortcuts
+    }
+
+    // Handle two-key sequences (g+letter) start
     if (key === 'g') {
       e.preventDefault();
-      const handleSecondKey = (e2: KeyboardEvent) => {
-        const k2 = e2.key.toLowerCase();
-        const combo = `g ${k2}`;
-        const shortcut = shortcuts.find((s) => s.key === combo);
-        if (shortcut) {
-          e2.preventDefault();
-          shortcut.action();
-        }
-        document.removeEventListener('keydown', handleSecondKey);
-      };
-      document.addEventListener('keydown', handleSecondKey, { once: true });
-      // Auto-cleanup after 1 second if no second key
-      setTimeout(() => document.removeEventListener('keydown', handleSecondKey), 1000);
+      gPressedRef.current = true;
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        gPressedRef.current = false;
+        timeoutRef.current = null;
+      }, 1000);
       return;
     }
 
@@ -101,7 +113,10 @@ export function useKeyboardShortcuts() {
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, [handleKeyDown]);
 
   return {
