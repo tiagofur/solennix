@@ -222,7 +222,7 @@ struct BiometricGateView: View {
                 .font(sizeClass == .regular ? .largeTitle : .title)
                 .fontWeight(.bold)
 
-            Text("Desbloquea para continuar")
+            Text(LocalizedStringKey("auth.unlock.prompt"))
                 .font(sizeClass == .regular ? .body : .subheadline)
                 .foregroundStyle(SolennixColors.textSecondary)
 

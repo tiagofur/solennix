@@ -65,7 +65,10 @@ final class EventDetailViewModelTests: XCTestCase {
         vm.payDeposit()
 
         XCTAssertEqual(vm.paymentAmount, "300.00")
-        XCTAssertEqual(vm.paymentNotes, "Anticipo")
+        // The note is a localized deposit label resolved from the system locale
+        // (es "Anticipo" / en "Deposit"). Assert the resolved value for whatever
+        // locale the simulator reports — never a hardcoded word.
+        XCTAssertEqual(vm.paymentNotes, FeatureL10n.languageCode == "en" ? "Deposit" : "Anticipo")
         XCTAssertTrue(vm.showPaymentSheet)
     }
 
@@ -77,7 +80,7 @@ final class EventDetailViewModelTests: XCTestCase {
         vm.payDeposit()
 
         XCTAssertEqual(vm.paymentAmount, "200.00")
-        XCTAssertEqual(vm.paymentNotes, "Anticipo")
+        XCTAssertEqual(vm.paymentNotes, FeatureL10n.languageCode == "en" ? "Deposit" : "Anticipo")
         XCTAssertTrue(vm.showPaymentSheet)
     }
 

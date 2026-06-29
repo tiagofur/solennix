@@ -14,7 +14,7 @@ public struct ConfirmDialogModifier: ViewModifier {
                 Button(destructiveTitle, role: .destructive) {
                     onConfirm()
                 }
-                Button("Cancelar", role: .cancel) {}
+                Button(LocalizedStringKey("common.action.cancel"), role: .cancel) {}
             } message: {
                 Text(message)
             }

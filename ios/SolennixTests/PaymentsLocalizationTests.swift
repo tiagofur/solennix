@@ -59,8 +59,12 @@ final class PaymentsLocalizationTests: XCTestCase {
         // Card & Actions & Badge
         XCTAssertEqual(PaymentsStrings.cardReceiptAttached, expected(spanish: "Comprobante adjunto", english: "Receipt attached"))
         XCTAssertEqual(PaymentsStrings.cardReviewPrompt, expected(spanish: "Toca para revisar", english: "Tap to review"))
+        // The reason is echoed into the localized template, so it must track the
+        // resolved locale — otherwise the en template wraps a Spanish noun
+        // ("Reason: fondos insuficientes") and mismatches the en expectation.
+        let rejectionReason = expected(spanish: "fondos insuficientes", english: "insufficient funds")
         XCTAssertEqual(
-            PaymentsStrings.cardRejectionReason("fondos insuficientes"),
+            PaymentsStrings.cardRejectionReason(rejectionReason),
             expected(spanish: "Motivo: fondos insuficientes", english: "Reason: insufficient funds")
         )
         XCTAssertEqual(PaymentsStrings.statusPending, expected(spanish: "Pendiente", english: "Pending"))

@@ -1,4 +1,5 @@
 import XCTest
+import SolennixFeatures
 @testable import Solennix
 
 /// Navigation-surface contract tests (unify-events-calendar-ios, task 5.4;
@@ -20,9 +21,12 @@ final class SidebarSectionTests: XCTestCase {
     }
 
     func testTabsExposeExpectedTitleAndIcon() {
-        XCTAssertEqual(Tab.home.title, "Inicio")
+        // Titles resolve from the system locale (es "Inicio"/"Más", en
+        // "Home"/"More"); assert the resolved word for whatever locale the
+        // simulator reports — never a hardcoded one.
+        XCTAssertEqual(Tab.home.title, FeatureL10n.languageCode == "en" ? "Home" : "Inicio")
         XCTAssertEqual(Tab.home.iconName, "house.fill")
-        XCTAssertEqual(Tab.more.title, "Más")
+        XCTAssertEqual(Tab.more.title, FeatureL10n.languageCode == "en" ? "More" : "Más")
         XCTAssertEqual(Tab.more.iconName, "ellipsis")
     }
 
@@ -80,6 +84,12 @@ final class SidebarSectionTests: XCTestCase {
     }
 
     func testSettingsSectionHasExpectedSubtitle() {
-        XCTAssertEqual(SidebarSection.settings.moreMenuSubtitle, "Perfil, negocio, cuenta")
+        // Subtitle resolves from the system locale (es "Perfil, negocio, cuenta",
+        // en "Profile, business, account"); assert the resolved value rather
+        // than a hardcoded locale.
+        XCTAssertEqual(
+            SidebarSection.settings.moreMenuSubtitle,
+            FeatureL10n.languageCode == "en" ? "Profile, business, account" : "Perfil, negocio, cuenta"
+        )
     }
 }
