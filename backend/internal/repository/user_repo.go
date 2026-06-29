@@ -36,14 +36,17 @@ func normalizePlan(plan string) string {
 
 func (r *UserRepo) Create(ctx context.Context, user *models.User) error {
 	query := `
-		INSERT INTO users (email, password_hash, name, business_name, logo_url, brand_color, show_business_name_in_pdf, plan, role)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO users (email, password_hash, name, business_name, logo_url, brand_color, show_business_name_in_pdf, plan, role, registration_platform)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		RETURNING id, created_at, updated_at`
 	if user.Role == "" {
 		user.Role = "user"
 	}
+	if user.RegistrationPlatform == "" {
+		user.RegistrationPlatform = "unknown"
+	}
 	return r.pool.QueryRow(ctx, query,
-		user.Email, user.PasswordHash, user.Name, user.BusinessName, user.LogoURL, user.BrandColor, user.ShowBusinessNameInPdf, user.Plan, user.Role,
+		user.Email, user.PasswordHash, user.Name, user.BusinessName, user.LogoURL, user.BrandColor, user.ShowBusinessNameInPdf, user.Plan, user.Role, user.RegistrationPlatform,
 	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 }
 
@@ -59,7 +62,7 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, 
 		plan, role,
 		COALESCE(account_status, 'active') AS account_status,
 		blocked_at, blocked_reason, blocked_by, deletion_eligible_at, deleted_at,
-		stripe_customer_id, last_active_at, created_at, updated_at
+		stripe_customer_id, last_active_at, registration_platform, created_at, updated_at
 		FROM users WHERE email = $1`
 	err := r.pool.QueryRow(ctx, query, email).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
@@ -71,7 +74,7 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, 
 		&user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
 		&user.Plan, &user.Role,
 		&user.AccountStatus, &user.BlockedAt, &user.BlockedReason, &user.BlockedBy, &user.DeletionEligibleAt, &user.DeletedAt,
-		&user.StripeCustomerID, &user.LastActiveAt, &user.CreatedAt, &user.UpdatedAt,
+		&user.StripeCustomerID, &user.LastActiveAt, &user.RegistrationPlatform, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("user not found: %w", err)
@@ -91,7 +94,7 @@ func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, err
 		plan, role,
 		COALESCE(account_status, 'active') AS account_status,
 		blocked_at, blocked_reason, blocked_by, deletion_eligible_at, deleted_at,
-		stripe_customer_id, last_active_at, created_at, updated_at
+		stripe_customer_id, last_active_at, registration_platform, created_at, updated_at
 		FROM users WHERE id = $1`
 	err := r.pool.QueryRow(ctx, query, id).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
@@ -103,7 +106,7 @@ func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, err
 		&user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
 		&user.Plan, &user.Role,
 		&user.AccountStatus, &user.BlockedAt, &user.BlockedReason, &user.BlockedBy, &user.DeletionEligibleAt, &user.DeletedAt,
-		&user.StripeCustomerID, &user.LastActiveAt, &user.CreatedAt, &user.UpdatedAt,
+		&user.StripeCustomerID, &user.LastActiveAt, &user.RegistrationPlatform, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("user not found: %w", err)
@@ -225,7 +228,7 @@ func (r *UserRepo) GetByStripeCustomerID(ctx context.Context, stripeCustomerID s
 		plan, role,
 		COALESCE(account_status, 'active') AS account_status,
 		blocked_at, blocked_reason, blocked_by, deletion_eligible_at, deleted_at,
-		stripe_customer_id, created_at, updated_at
+		stripe_customer_id, registration_platform, created_at, updated_at
 		FROM users WHERE stripe_customer_id = $1`
 	err := r.pool.QueryRow(ctx, query, stripeCustomerID).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
@@ -237,7 +240,7 @@ func (r *UserRepo) GetByStripeCustomerID(ctx context.Context, stripeCustomerID s
 		&user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
 		&user.Plan, &user.Role,
 		&user.AccountStatus, &user.BlockedAt, &user.BlockedReason, &user.BlockedBy, &user.DeletionEligibleAt, &user.DeletedAt,
-		&user.StripeCustomerID, &user.CreatedAt, &user.UpdatedAt,
+		&user.StripeCustomerID, &user.RegistrationPlatform, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("user not found by stripe_customer_id: %w", err)
@@ -437,7 +440,7 @@ func (r *UserRepo) GetByGoogleUserID(ctx context.Context, googleUserID string) (
 		email_payment_receipt, email_event_reminder, email_subscription_updates,
 		email_weekly_summary, email_marketing, push_enabled, push_event_reminder, push_payment_received,
 		preferred_language, email_verified_at, email_verification_token_hash, email_verification_sent_at, email_verification_expires_at,
-		plan, role, stripe_customer_id, google_user_id, apple_user_id, created_at, updated_at
+		plan, role, stripe_customer_id, google_user_id, apple_user_id, registration_platform, created_at, updated_at
 		FROM users WHERE google_user_id = $1`
 	err := r.pool.QueryRow(ctx, query, googleUserID).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
@@ -446,7 +449,7 @@ func (r *UserRepo) GetByGoogleUserID(ctx context.Context, googleUserID string) (
 		&user.EmailPaymentReceipt, &user.EmailEventReminder, &user.EmailSubscriptionUpdates,
 		&user.EmailWeeklySummary, &user.EmailMarketing, &user.PushEnabled, &user.PushEventReminder, &user.PushPaymentReceived,
 		&user.PreferredLanguage, &user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
-		&user.Plan, &user.Role, &user.StripeCustomerID, &user.GoogleUserID, &user.AppleUserID, &user.CreatedAt, &user.UpdatedAt,
+		&user.Plan, &user.Role, &user.StripeCustomerID, &user.GoogleUserID, &user.AppleUserID, &user.RegistrationPlatform, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("user not found: %w", err)
@@ -463,7 +466,7 @@ func (r *UserRepo) GetByAppleUserID(ctx context.Context, appleUserID string) (*m
 		email_payment_receipt, email_event_reminder, email_subscription_updates,
 		email_weekly_summary, email_marketing, push_enabled, push_event_reminder, push_payment_received,
 		preferred_language, email_verified_at, email_verification_token_hash, email_verification_sent_at, email_verification_expires_at,
-		plan, role, stripe_customer_id, google_user_id, apple_user_id, created_at, updated_at
+		plan, role, stripe_customer_id, google_user_id, apple_user_id, registration_platform, created_at, updated_at
 		FROM users WHERE apple_user_id = $1`
 	err := r.pool.QueryRow(ctx, query, appleUserID).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
@@ -472,7 +475,7 @@ func (r *UserRepo) GetByAppleUserID(ctx context.Context, appleUserID string) (*m
 		&user.EmailPaymentReceipt, &user.EmailEventReminder, &user.EmailSubscriptionUpdates,
 		&user.EmailWeeklySummary, &user.EmailMarketing, &user.PushEnabled, &user.PushEventReminder, &user.PushPaymentReceived,
 		&user.PreferredLanguage, &user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
-		&user.Plan, &user.Role, &user.StripeCustomerID, &user.GoogleUserID, &user.AppleUserID, &user.CreatedAt, &user.UpdatedAt,
+		&user.Plan, &user.Role, &user.StripeCustomerID, &user.GoogleUserID, &user.AppleUserID, &user.RegistrationPlatform, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("user not found: %w", err)
@@ -581,4 +584,34 @@ func (r *UserRepo) CancelPendingDeletion(ctx context.Context, id uuid.UUID) erro
 		return fmt.Errorf("user not found")
 	}
 	return nil
+}
+
+// UpsertUserPlatforms updates the aggregated platform interaction count for a user in bulk
+func (r *UserRepo) UpsertUserPlatforms(ctx context.Context, records []models.UserPlatform) error {
+	if len(records) == 0 {
+		return nil
+	}
+
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	query := `
+		INSERT INTO user_platforms (user_id, platform, interaction_count, last_used_at)
+		VALUES ($1, $2, $3, NOW())
+		ON CONFLICT (user_id, platform)
+		DO UPDATE SET
+			interaction_count = user_platforms.interaction_count + EXCLUDED.interaction_count,
+			last_used_at = NOW()`
+
+	for _, rec := range records {
+		_, err := tx.Exec(ctx, query, rec.UserID, rec.Platform, rec.InteractionCount)
+		if err != nil {
+			return fmt.Errorf("failed to upsert platform record: %w", err)
+		}
+	}
+
+	return tx.Commit(ctx)
 }

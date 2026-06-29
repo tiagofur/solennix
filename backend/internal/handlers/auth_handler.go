@@ -368,10 +368,11 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	// Create user
 	user := &models.User{
-		Email:        req.Email,
-		PasswordHash: hash,
-		Name:         req.Name,
-		Plan:         "basic",
+		Email:                req.Email,
+		PasswordHash:         hash,
+		Name:                 req.Name,
+		Plan:                 "basic",
+		RegistrationPlatform: middleware.ParsePlatform(r),
 	}
 
 	if err := h.userRepo.Create(r.Context(), user); err != nil {

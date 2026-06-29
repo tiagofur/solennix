@@ -7,10 +7,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/tiagofur/solennix-backend/internal/models"
 	"github.com/tiagofur/solennix-backend/internal/services"
 )
 
@@ -338,3 +340,209 @@ func TestAuthMiddleware_GivenValidToken_WhenBlacklistReturnsFalse_ThenForwards(t
 		t.Fatal("next handler must be called for valid non-revoked token")
 	}
 }
+
+func TestParsePlatform(t *testing.T) {
+	tests := []struct {
+		name       string
+		headers    map[string]string
+		userAgent  string
+		expected   string
+	}{
+		{
+			name:     "GivenXPlatformHeaderWeb_ThenWeb",
+			headers:  map[string]string{"X-Client-Platform": "web"},
+			expected: "web",
+		},
+		{
+			name:     "GivenXPlatformHeaderIOS_ThenIOS",
+			headers:  map[string]string{"X-Client-Platform": "ios"},
+			expected: "ios",
+		},
+		{
+			name:     "GivenXPlatformHeaderAndroid_ThenAndroid",
+			headers:  map[string]string{"X-Client-Platform": "android"},
+			expected: "android",
+		},
+		{
+			name:     "GivenXPlatformHeaderUppercase_ThenLowercase",
+			headers:  map[string]string{"X-Client-Platform": "iOS"},
+			expected: "ios",
+		},
+		{
+			name:     "GivenXPlatformHeaderInvalid_ThenUnknown",
+			headers:  map[string]string{"X-Client-Platform": "nintendo-switch"},
+			expected: "unknown",
+		},
+		{
+			name:      "GivenUserAgentIPhone_ThenIOS",
+			userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1",
+			expected:  "ios",
+		},
+		{
+			name:      "GivenUserAgentAndroidPhone_ThenAndroid",
+			userAgent: "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36",
+			expected:  "android",
+		},
+		{
+			name:      "GivenUserAgentDartIOS_ThenIOS",
+			userAgent: "Dart/3.0 (dart:io) - iOS Client",
+			expected:  "ios",
+		},
+		{
+			name:      "GivenUserAgentDartAndroid_ThenAndroid",
+			userAgent: "Dart/3.0 (dart:io) - Android Client",
+			expected:  "android",
+		},
+		{
+			name:      "GivenUserAgentWebMozilla_ThenWeb",
+			userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+			expected:  "web",
+		},
+		{
+			name:      "GivenUserAgentUnknown_ThenUnknown",
+			userAgent: "MyCustomAppBot/1.0",
+			expected:  "unknown",
+		},
+		{
+			name:     "GivenNoHeadersOrUA_ThenUnknown",
+			expected: "unknown",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, "/api/test", nil)
+			if err != nil {
+				t.Fatalf("failed to create request: %v", err)
+			}
+			for k, v := range tc.headers {
+				req.Header.Set(k, v)
+			}
+			if tc.userAgent != "" {
+				req.Header.Set("User-Agent", tc.userAgent)
+			}
+
+			got := ParsePlatform(req)
+			if got != tc.expected {
+				t.Errorf("ParsePlatform() = %q, want %q", got, tc.expected)
+			}
+		})
+	}
+}
+
+func TestActivityBufferConcurrency(t *testing.T) {
+	buf := &ActivityBuffer{
+		data: make(map[uuid.UUID]map[string]int),
+	}
+
+	userID := uuid.New()
+	userID2 := uuid.New()
+	platforms := []string{"web", "ios", "android"}
+
+	const goroutines = 50
+	const incrementsPerGoroutine = 100
+
+	var wg sync.WaitGroup
+	wg.Add(goroutines)
+
+	for i := 0; i < goroutines; i++ {
+		go func(gIdx int) {
+			defer wg.Done()
+			u := userID
+			if gIdx%2 == 0 {
+				u = userID2
+			}
+			plat := platforms[gIdx%len(platforms)]
+
+			for j := 0; j < incrementsPerGoroutine; j++ {
+				buf.Increment(u, plat)
+			}
+		}(i)
+	}
+
+	wg.Wait()
+
+	buf.mu.Lock()
+	defer buf.mu.Unlock()
+
+	totalRecorded := 0
+	for _, plats := range buf.data {
+		for _, count := range plats {
+			totalRecorded += count
+		}
+	}
+
+	expectedTotal := goroutines * incrementsPerGoroutine
+	if totalRecorded != expectedTotal {
+		t.Fatalf("concurrency count mismatch: recorded %d, want %d", totalRecorded, expectedTotal)
+	}
+}
+
+type mockPlatformRepo struct {
+	records []models.UserPlatform
+	mu      sync.Mutex
+}
+
+func (m *mockPlatformRepo) UpsertUserPlatforms(ctx context.Context, records []models.UserPlatform) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.records = append(m.records, records...)
+	return nil
+}
+
+func TestActivityWorkerFlush(t *testing.T) {
+	buf := &ActivityBuffer{
+		data: make(map[uuid.UUID]map[string]int),
+	}
+
+	userID := uuid.New()
+	buf.Increment(userID, "ios")
+	buf.Increment(userID, "ios")
+	buf.Increment(userID, "web")
+
+	repo := &mockPlatformRepo{}
+
+	dataToFlush := buf.Flush()
+	if len(dataToFlush) != 1 {
+		t.Fatalf("expected 1 user in swap data, got %d", len(dataToFlush))
+	}
+
+	var records []models.UserPlatform
+	for uID, plats := range dataToFlush {
+		for plat, count := range plats {
+			records = append(records, models.UserPlatform{
+				UserID:           uID,
+				Platform:         plat,
+				InteractionCount: count,
+				LastUsedAt:       time.Now(),
+			})
+		}
+	}
+
+	if len(records) != 2 {
+		t.Fatalf("expected 2 records (ios and web), got %d", len(records))
+	}
+
+	err := repo.UpsertUserPlatforms(context.Background(), records)
+	if err != nil {
+		t.Fatalf("failed to upsert: %v", err)
+	}
+
+	if len(repo.records) != 2 {
+		t.Fatalf("expected 2 records flushed to database, got %d", len(repo.records))
+	}
+
+	var iosCount, webCount int
+	for _, r := range repo.records {
+		if r.Platform == "ios" {
+			iosCount = r.InteractionCount
+		} else if r.Platform == "web" {
+			webCount = r.InteractionCount
+		}
+	}
+
+	if iosCount != 2 || webCount != 1 {
+		t.Fatalf("counts mismatch: ios=%d (want 2), web=%d (want 1)", iosCount, webCount)
+	}
+}
+
