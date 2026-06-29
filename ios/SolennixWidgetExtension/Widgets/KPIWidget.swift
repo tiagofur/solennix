@@ -125,7 +125,8 @@ struct KPIWidgetView: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Image(systemName: "dollarsign.circle.fill")
-                        .foregroundStyle(.green)
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.green, .white)
                     Text("widget.kpi.revenue")
                         .font(.caption)
                         .fontWeight(.medium)

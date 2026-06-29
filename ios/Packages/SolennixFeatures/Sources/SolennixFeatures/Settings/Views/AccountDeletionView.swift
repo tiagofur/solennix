@@ -223,6 +223,7 @@ public struct AccountDeletionView: View {
             VStack(spacing: Spacing.lg) {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: cappedSuccessIconSize))
+                    .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(SolennixColors.success)
 
                 VStack(spacing: Spacing.sm) {

@@ -34,6 +34,7 @@ public struct EmptyStateView: View {
         VStack(spacing: Spacing.md) {
             Image(systemName: icon)
                 .font(.system(size: iconSize))
+                .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(iconColor ?? SolennixColors.textTertiary)
 
             Text(title)

@@ -75,7 +75,8 @@ struct LowStockSummarySnippetView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.red)
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(.red, .white)
                 Text("intent.lowstock.snippet.title")
                     .font(.headline)
                 Spacer()

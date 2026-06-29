@@ -216,6 +216,7 @@ struct BiometricGateView: View {
 
             Image(systemName: "faceid")
                 .font(.system(size: sizeClass == .regular ? 96 : 64))
+                .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(SolennixColors.primary)
 
             Text("SOLENNIX")
