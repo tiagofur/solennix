@@ -55,6 +55,7 @@ struct ContentView: View {
                 #endif
             }
             .frame(maxHeight: .infinity)
+            .animation(.smooth, value: authManager.authState)
         }
         .animation(.easeInOut(duration: 0.3), value: networkMonitor.isConnected)
         .fullScreenCover(isPresented: onboardingBinding) {
@@ -128,24 +129,32 @@ struct ContentView: View {
     }
 
     /// The production auth-driven content switch (bypassed only under the DEBUG
-    /// UI-test gate above).
+    /// UI-test gate above). Each branch carries `.transition(.opacity)` so that
+    /// when `authState` resolves out of `.unknown`, the splash fades into the
+    /// real content instead of hard-swapping. The cross-fade is driven by the
+    /// `.animation(.smooth, value: authManager.authState)` on the container in
+    /// `body` — it is gated on the auth state, never on a timer.
     @ViewBuilder
     private var authDrivenContent: some View {
         switch authManager.authState {
         case .unknown:
             SplashView()
+                .transition(.opacity)
 
         case .unauthenticated:
             AuthFlowView(
                 deepLinkResetToken: $deepLinkResetToken,
                 deepLinkTeamInviteToken: $deepLinkTeamInviteToken
             )
+            .transition(.opacity)
 
         case .biometricLocked:
             BiometricGateView()
+                .transition(.opacity)
 
         case .authenticated:
             authenticatedLayout
+                .transition(.opacity)
         }
     }
 
@@ -181,16 +190,30 @@ struct ContentView: View {
 // MARK: - Splash View
 
 /// A minimal splash screen shown while the auth state is being determined.
+///
+/// Mirrors the `UILaunchScreen` storyboard (Info.plist `UIImageName=SolennixLogoIcon`
+/// + `UIColorName=Background`) so the launch frame and the first SwiftUI frame are
+/// pixel-identical: the brand logo centered on `Background`. The logo is rendered
+/// at its natural device-scaled size (no forced frame) to match the launch screen's
+/// intrinsic rendering of the shared `SolennixLogoIcon` asset. A subtle
+/// `ProgressView` sits beneath the logo to keep the "determining auth state"
+/// affordance while auth resolves, then the whole splash fades out (see the
+/// `.transition(.opacity)` + `.animation(value: authManager.authState)` in
+/// `authDrivenContent`).
 struct SplashView: View {
     var body: some View {
-        VStack(spacing: 20) {
-            ProgressView()
-                .controlSize(.large)
+        VStack(spacing: 24) {
+            Spacer()
 
-            Text("SOLENNIX")
-                .font(.title)
-                .fontWeight(.bold)
-                .foregroundStyle(SolennixColors.primary)
+            // Hero: same asset + background as UILaunchScreen → no visible swap.
+            Image("SolennixLogoIcon")
+                .accessibilityHidden(true)
+
+            ProgressView()
+                .controlSize(.regular)
+                .tint(SolennixColors.primary)
+
+            Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(SolennixColors.background)

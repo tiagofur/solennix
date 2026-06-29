@@ -1,0 +1,46 @@
+{
+  "colors" : [
+    {
+      "color" : {
+        "color-space" : "srgb",
+        "components" : {
+          "alpha" : "1.000",
+          "blue" : "0xFF",
+          "green" : "0xFF",
+          "red" : "0xFF"
+        }
+      },
+      "idiom" : "universal"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "color" : {
+        "color-space" : "srgb",
+        "components" : {
+          "alpha" : "1.000",
+          "blue" : "0x00",
+          "green" : "0x00",
+          "red" : "0x00"
+        }
+      },
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  },
+  "solennix" : {
+    "source_of_truth" : "SolennixColors.background — ios/Packages/SolennixDesign/Sources/SolennixDesign/Colors.swift:139-149",
+    "values" : {
+      "dark" : "#000000",
+      "light" : "#FFFFFF"
+    },
+    "note" : "Single source of truth is the Swift token. Keep this colorset in sync when Colors.swift changes."
+  }
+}
