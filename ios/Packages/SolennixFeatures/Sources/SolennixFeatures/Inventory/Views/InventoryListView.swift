@@ -146,12 +146,11 @@ public struct InventoryListView: View {
                     if viewModel.scope == .all {
                         ipadFirstRunEmptyState
                     } else {
-                        EmptyStateView(
-                            icon: "archivebox",
-                            title: viewModel.scopedEmptyTitle,
-                            message: viewModel.scopedEmptyMessage,
-                            iconColor: SolennixColors.primary
-                        )
+                        ContentUnavailableView {
+                            Label(viewModel.scopedEmptyTitle, systemImage: "archivebox")
+                        } description: {
+                            Text(viewModel.scopedEmptyMessage)
+                        }
                     }
                 } else {
                     inventoryFilteredEmptyState
@@ -302,13 +301,11 @@ public struct InventoryListView: View {
 
     // Fix 4: first-run CTA for iPad grid
     private var ipadFirstRunEmptyState: some View {
-        VStack(spacing: 0) {
-            EmptyStateView(
-                icon: "archivebox",
-                title: InventoryStrings.emptyTitle,
-                message: InventoryStrings.emptyMessage,
-                iconColor: SolennixColors.primary
-            )
+        ContentUnavailableView {
+            Label(InventoryStrings.emptyTitle, systemImage: "archivebox")
+        } description: {
+            Text(InventoryStrings.emptyMessage)
+        } actions: {
             NavigationLink(value: Route.inventoryForm()) {
                 Text(InventoryStrings.emptyAction)
                     .font(.headline)
@@ -319,8 +316,9 @@ public struct InventoryListView: View {
                     .clipShape(Capsule())
                     .adaptiveGlass(in: Capsule(), fallback: .material)
             }
-            .padding(.bottom, Spacing.xxl)
         }
+        .tint(SolennixColors.primary)
+        .symbolRenderingMode(.hierarchical)
         .frame(maxWidth: .infinity)
     }
 
@@ -352,12 +350,11 @@ public struct InventoryListView: View {
                 if viewModel.scope == .all {
                     inventoryFirstRunEmptyState
                 } else {
-                    EmptyStateView(
-                        icon: "archivebox",
-                        title: viewModel.scopedEmptyTitle,
-                        message: viewModel.scopedEmptyMessage,
-                        iconColor: SolennixColors.primary
-                    )
+                    ContentUnavailableView {
+                        Label(viewModel.scopedEmptyTitle, systemImage: "archivebox")
+                    } description: {
+                        Text(viewModel.scopedEmptyMessage)
+                    }
                 }
             } else {
                 inventoryFilteredEmptyState
@@ -392,13 +389,11 @@ public struct InventoryListView: View {
 
     /// Working NavigationLink CTA for the truly-empty state.
     private var inventoryFirstRunEmptyState: some View {
-        VStack(spacing: 0) {
-            EmptyStateView(
-                icon: "archivebox",
-                title: InventoryStrings.emptyTitle,
-                message: InventoryStrings.emptyMessage,
-                iconColor: SolennixColors.primary
-            )
+        ContentUnavailableView {
+            Label(InventoryStrings.emptyTitle, systemImage: "archivebox")
+        } description: {
+            Text(InventoryStrings.emptyMessage)
+        } actions: {
             NavigationLink(value: Route.inventoryForm()) {
                 Text(InventoryStrings.emptyAction)
                     .font(.headline)
@@ -409,8 +404,9 @@ public struct InventoryListView: View {
                     .clipShape(Capsule())
                     .adaptiveGlass(in: Capsule(), fallback: .material)
             }
-            .padding(.bottom, Spacing.xxl)
         }
+        .tint(SolennixColors.primary)
+        .symbolRenderingMode(.hierarchical)
         .frame(maxWidth: .infinity)
     }
 

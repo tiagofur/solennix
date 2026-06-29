@@ -44,21 +44,21 @@ public struct EventExtrasDetailView: View {
         ScrollView {
             VStack(spacing: Spacing.md) {
                 if viewModel.extras.isEmpty {
-                    EmptyStateView(
-                        icon: "sparkles",
-                        title: tr("events.detail.extras.empty.title", "Sin Extras"),
-                        message: tr("events.detail.extras.empty.message", "Este evento no tiene extras asignados."),
-                        iconColor: SolennixColors.primary
-                    )
-                    NavigationLink(value: Route.eventForm(id: eventId, step: 3)) {
-                        Text(tr("events.detail.extras.empty.cta", "Agregar extras"))
-                            .font(.headline)
-                            .foregroundStyle(SolennixColors.primaryDark)
-                            .padding(.horizontal, Spacing.xl)
-                            .padding(.vertical, 16)
-                            .background(SolennixColors.primaryLight)
-                            .clipShape(Capsule())
-                            .adaptiveGlass(in: Capsule(), fallback: .material)
+                    ContentUnavailableView {
+                        Label(tr("events.detail.extras.empty.title", "Sin Extras"), systemImage: "sparkles")
+                    } description: {
+                        Text(tr("events.detail.extras.empty.message", "Este evento no tiene extras asignados."))
+                    } actions: {
+                        NavigationLink(value: Route.eventForm(id: eventId, step: 3)) {
+                            Text(tr("events.detail.extras.empty.cta", "Agregar extras"))
+                                .font(.headline)
+                                .foregroundStyle(SolennixColors.primaryDark)
+                                .padding(.horizontal, Spacing.xl)
+                                .padding(.vertical, 16)
+                                .background(SolennixColors.primaryLight)
+                                .clipShape(Capsule())
+                                .adaptiveGlass(in: Capsule(), fallback: .material)
+                        }
                     }
                 } else {
                     let subtotal = viewModel.extras.reduce(0.0) { $0 + $1.price }

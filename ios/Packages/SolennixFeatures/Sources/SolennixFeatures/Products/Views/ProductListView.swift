@@ -198,13 +198,11 @@ public struct ProductListView: View {
 
     // Fix 2: first-run CTA for iPad grid
     private var ipadFirstRunEmptyState: some View {
-        VStack(spacing: 0) {
-            EmptyStateView(
-                icon: "shippingbox",
-                title: ProductStrings.emptyTitle,
-                message: ProductStrings.emptyMessage,
-                iconColor: SolennixColors.primary
-            )
+        ContentUnavailableView {
+            Label(ProductStrings.emptyTitle, systemImage: "shippingbox")
+        } description: {
+            Text(ProductStrings.emptyMessage)
+        } actions: {
             NavigationLink(value: Route.productForm()) {
                 Text(ProductStrings.emptyAction)
                     .font(.headline)
@@ -215,8 +213,9 @@ public struct ProductListView: View {
                     .clipShape(Capsule())
                     .adaptiveGlass(in: Capsule(), fallback: .material)
             }
-            .padding(.bottom, Spacing.xxl)
         }
+        .tint(SolennixColors.primary)
+        .symbolRenderingMode(.hierarchical)
         .frame(maxWidth: .infinity)
     }
 
@@ -358,13 +357,11 @@ public struct ProductListView: View {
 
     /// Working NavigationLink CTA for the truly-empty state — mirrors ClientListView/EventListView.
     private var productFirstRunEmptyState: some View {
-        VStack(spacing: 0) {
-            EmptyStateView(
-                icon: "shippingbox",
-                title: ProductStrings.emptyTitle,
-                message: ProductStrings.emptyMessage,
-                iconColor: SolennixColors.primary
-            )
+        ContentUnavailableView {
+            Label(ProductStrings.emptyTitle, systemImage: "shippingbox")
+        } description: {
+            Text(ProductStrings.emptyMessage)
+        } actions: {
             NavigationLink(value: Route.productForm()) {
                 Text(ProductStrings.emptyAction)
                     .font(.headline)
@@ -375,8 +372,9 @@ public struct ProductListView: View {
                     .clipShape(Capsule())
                     .adaptiveGlass(in: Capsule(), fallback: .material)
             }
-            .padding(.bottom, Spacing.xxl)
         }
+        .tint(SolennixColors.primary)
+        .symbolRenderingMode(.hierarchical)
         .frame(maxWidth: .infinity)
     }
 

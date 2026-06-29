@@ -45,21 +45,21 @@ public struct EventEquipmentDetailView: View {
         ScrollView {
             VStack(spacing: Spacing.md) {
                 if viewModel.equipment.isEmpty {
-                    EmptyStateView(
-                        icon: "wrench.and.screwdriver",
-                        title: tr("events.equipment.empty_title", "Sin Equipo"),
-                        message: tr("events.equipment.empty_message", "Este evento no tiene equipo asignado."),
-                        iconColor: SolennixColors.primary
-                    )
-                    NavigationLink(value: Route.eventForm(id: eventId, step: 4)) {
-                        Text(tr("events.equipment.add", "Agregar equipo"))
-                            .font(.headline)
-                            .foregroundStyle(SolennixColors.primaryDark)
-                            .padding(.horizontal, Spacing.xl)
-                            .padding(.vertical, 16)
-                            .background(SolennixColors.primaryLight)
-                            .clipShape(Capsule())
-                            .adaptiveGlass(in: Capsule(), fallback: .material)
+                    ContentUnavailableView {
+                        Label(tr("events.equipment.empty_title", "Sin Equipo"), systemImage: "wrench.and.screwdriver")
+                    } description: {
+                        Text(tr("events.equipment.empty_message", "Este evento no tiene equipo asignado."))
+                    } actions: {
+                        NavigationLink(value: Route.eventForm(id: eventId, step: 4)) {
+                            Text(tr("events.equipment.add", "Agregar equipo"))
+                                .font(.headline)
+                                .foregroundStyle(SolennixColors.primaryDark)
+                                .padding(.horizontal, Spacing.xl)
+                                .padding(.vertical, 16)
+                                .background(SolennixColors.primaryLight)
+                                .clipShape(Capsule())
+                                .adaptiveGlass(in: Capsule(), fallback: .material)
+                        }
                     }
                 } else {
                     HStack {

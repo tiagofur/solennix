@@ -211,12 +211,11 @@ public struct EventShoppingListView: View {
                 }
 
                 if ingredients.isEmpty && viewModel.supplies.isEmpty {
-                    EmptyStateView(
-                        icon: "cart",
-                        title: tr("events.shopping.empty_title", "Sin Compras"),
-                        message: tr("events.shopping.empty_message", "Este evento no requiere compras adicionales"),
-                        iconColor: SolennixColors.primary
-                    )
+                    ContentUnavailableView {
+                        Label(tr("events.shopping.empty_title", "Sin Compras"), systemImage: "cart")
+                    } description: {
+                        Text(tr("events.shopping.empty_message", "Este evento no requiere compras adicionales"))
+                    }
                 }
             }
             .padding(.horizontal, Spacing.md)

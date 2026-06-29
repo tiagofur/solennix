@@ -139,12 +139,11 @@ struct Step4PersonnelPanel: View {
                     ProgressView(tr("events.form.staff.loading_teams", "Cargando equipos..."))
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if teams.isEmpty {
-                    EmptyStateView(
-                        icon: "person.3.sequence",
-                        title: tr("events.form.staff.empty_teams_title", "Sin equipos todavía"),
-                        message: tr("events.form.staff.empty_teams_message", "Agrupá a tu equipo de meseros o fotógrafos desde Personal > Equipos para asignarlos con un solo toque."),
-                        iconColor: SolennixColors.primary
-                    )
+                    ContentUnavailableView {
+                        Label(tr("events.form.staff.empty_teams_title", "Sin equipos todavía"), systemImage: "person.3.sequence")
+                    } description: {
+                        Text(tr("events.form.staff.empty_teams_message", "Agrupá a tu equipo de meseros o fotógrafos desde Personal > Equipos para asignarlos con un solo toque."))
+                    }
                 } else {
                     List {
                         Section {
@@ -254,12 +253,11 @@ struct Step4PersonnelPanel: View {
         NavigationStack {
             Group {
                 if viewModel.staff.isEmpty {
-                    EmptyStateView(
-                        icon: "person.3",
-                        title: tr("events.form.staff.empty_title", "Sin personal"),
-                        message: tr("events.form.staff.empty_message", "Agrega colaboradores desde el menú Personal para asignarlos a este evento"),
-                        iconColor: SolennixColors.primary
-                    )
+                    ContentUnavailableView {
+                        Label(tr("events.form.staff.empty_title", "Sin personal"), systemImage: "person.3")
+                    } description: {
+                        Text(tr("events.form.staff.empty_message", "Agrega colaboradores desde el menú Personal para asignarlos a este evento"))
+                    }
                 } else {
                     List {
                         ForEach(filteredStaff) { item in

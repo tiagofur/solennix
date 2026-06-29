@@ -86,14 +86,14 @@ public struct EventFormLinksView: View {
                 Task { await viewModel.loadLinks() }
             }
         } else if viewModel.links.isEmpty && !viewModel.isLoading {
-            EmptyStateView(
-                icon: "link.badge.plus",
-                title: EventFormLinksStrings.emptyTitle,
-                message: EventFormLinksStrings.emptyMessage,
-                actionTitle: EventFormLinksStrings.emptyAction,
-                iconColor: SolennixColors.primary
-            ) {
-                showGenerateSheet = true
+            ContentUnavailableView {
+                Label(EventFormLinksStrings.emptyTitle, systemImage: "link.badge.plus")
+            } description: {
+                Text(EventFormLinksStrings.emptyMessage)
+            } actions: {
+                Button(EventFormLinksStrings.emptyAction) {
+                    showGenerateSheet = true
+                }
             }
         } else {
             // B1 (A1): single List containing both skeleton rows and real rows

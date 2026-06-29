@@ -760,17 +760,12 @@ public struct EventListView: View {
             }
         } else {
             // Truly empty — first-run teaching state.
-            // EmptyStateView renders icon/title/message; the NavigationLink
-            // below it drives the same Route.eventForm() push used by the
-            // toolbar "+" menu, styled identically to PremiumButton.
-            VStack(spacing: 0) {
-                EmptyStateView(
-                    icon: "calendar.badge.plus",
-                    title: tr("events.list.empty.first_run_title", "Crea tu primer evento"),
-                    message: tr("events.list.empty.first_run_message", "Registra tus eventos para llevar el control de fechas, clientes y pagos en un solo lugar."),
-                    iconColor: SolennixColors.primary
-                )
-
+            // ContentUnavailableView with CTA action — hero brand gold tint.
+            ContentUnavailableView {
+                Label(tr("events.list.empty.first_run_title", "Crea tu primer evento"), systemImage: "calendar.badge.plus")
+            } description: {
+                Text(tr("events.list.empty.first_run_message", "Registra tus eventos para llevar el control de fechas, clientes y pagos en un solo lugar."))
+            } actions: {
                 NavigationLink(value: Route.eventForm()) {
                     Text(tr("events.list.empty.first_run_cta", "Crear evento"))
                         .font(.headline)
@@ -781,8 +776,9 @@ public struct EventListView: View {
                         .clipShape(Capsule())
                         .adaptiveGlass(in: Capsule(), fallback: .material)
                 }
-                .padding(.bottom, Spacing.xxl)
             }
+            .tint(SolennixColors.primary)
+            .symbolRenderingMode(.hierarchical)
         }
     }
 

@@ -28,12 +28,11 @@ public struct EventChecklistView: View {
                 ProgressView(tr("events.checklist.loading", "Cargando checklist..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if viewModel.items.isEmpty && !viewModel.isLoading {
-                EmptyStateView(
-                    icon: "checklist",
-                    title: tr("events.checklist.empty_title", "Sin elementos"),
-                    message: tr("events.checklist.empty_message", "Este evento no tiene elementos para el checklist"),
-                    iconColor: SolennixColors.primary
-                )
+                ContentUnavailableView {
+                    Label(tr("events.checklist.empty_title", "Sin elementos"), systemImage: "checklist")
+                } description: {
+                    Text(tr("events.checklist.empty_message", "Este evento no tiene elementos para el checklist"))
+                }
             } else {
                 scrollContent
             }

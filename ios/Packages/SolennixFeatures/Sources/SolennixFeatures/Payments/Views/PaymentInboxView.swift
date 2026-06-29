@@ -223,22 +223,20 @@ public struct PaymentInboxView: View {
     }
 
     private var planLockedContent: some View {
-        EmptyStateView(
-            icon: "lock.fill",
-            title: PaymentsStrings.proOnlyTitle,
-            message: PaymentsStrings.proOnlyMessage,
-            iconColor: SolennixColors.primary
-        )
+        ContentUnavailableView {
+            Label(PaymentsStrings.proOnlyTitle, systemImage: "lock.fill")
+        } description: {
+            Text(PaymentsStrings.proOnlyMessage)
+        }
     }
 
     // Fix 11: no "Actualizar" CTA — pull-to-refresh exists
     private var emptyContent: some View {
-        EmptyStateView(
-            icon: "checkmark.seal",
-            title: PaymentsStrings.emptyTitle,
-            message: PaymentsStrings.emptyMessage,
-            iconColor: SolennixColors.primary
-        )
+        ContentUnavailableView {
+            Label(PaymentsStrings.emptyTitle, systemImage: "checkmark.seal")
+        } description: {
+            Text(PaymentsStrings.emptyMessage)
+        }
     }
 
     // MARK: - Actions
