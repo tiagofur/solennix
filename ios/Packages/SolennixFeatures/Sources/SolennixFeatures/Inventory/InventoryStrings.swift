@@ -21,6 +21,7 @@ enum InventoryStrings {
     static var filteredEmptyTitle: String { FeatureL10n.text("inventory.filtered_empty_title", "Sin resultados") }
     static var lowStockEmptyMessage: String { FeatureL10n.text("inventory.low_stock_empty_message", "No hay items con stock bajo") }
     static var filteredEmptyMessage: String { FeatureL10n.text("inventory.filtered_empty_message", "No se encontraron items que coincidan con la búsqueda") }
+    static var clearFilters: String { FeatureL10n.text("inventory.clear_filters", "Limpiar filtros") }
     static var ingredients: String { FeatureL10n.text("inventory.ingredients", "Ingredientes") }
     static var equipment: String { FeatureL10n.text("inventory.equipment", "Equipo") }
     static var supplies: String { FeatureL10n.text("inventory.supplies", "Insumos") }

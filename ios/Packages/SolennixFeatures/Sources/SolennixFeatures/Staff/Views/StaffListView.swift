@@ -132,12 +132,7 @@ public struct StaffListView: View {
                     // Fix 4: iPad first-run CTA
                     ipadFirstRunEmptyState
                 } else {
-                    EmptyStateView(
-                        icon: "magnifyingglass",
-                        title: StaffStrings.filteredEmptyTitle,
-                        message: StaffStrings.filteredEmptyMessage,
-                        iconColor: SolennixColors.primary
-                    )
+                    ContentUnavailableView.search(text: viewModel.searchText)
                 }
             } else {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 300))], spacing: Spacing.sm) {
@@ -309,12 +304,7 @@ public struct StaffListView: View {
         if viewModel.searchText.isEmpty {
             staffFirstRunEmptyState
         } else {
-            EmptyStateView(
-                icon: "magnifyingglass",
-                title: StaffStrings.filteredEmptyTitle,
-                message: StaffStrings.filteredEmptyMessage,
-                iconColor: SolennixColors.primary
-            )
+            ContentUnavailableView.search(text: viewModel.searchText)
         }
     }
 

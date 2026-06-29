@@ -146,12 +146,7 @@ public struct ProductListView: View {
                 if viewModel.searchText.isEmpty && viewModel.selectedCategory == nil {
                     ipadFirstRunEmptyState
                 } else {
-                    EmptyStateView(
-                        icon: "magnifyingglass",
-                        title: ProductStrings.filteredEmptyTitle,
-                        message: ProductStrings.filteredEmptyMessage,
-                        iconColor: SolennixColors.primary
-                    )
+                    productFilteredEmptyState
                 }
             } else {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 250))], spacing: Spacing.sm) {
@@ -225,6 +220,27 @@ public struct ProductListView: View {
         .frame(maxWidth: .infinity)
     }
 
+    // MARK: - Filtered Empty State (PR1 migration)
+    // Mixed source: text search OR category filter. Pure text search uses the
+    // system `.search` affordance; a category-only filter shows a plain
+    // ContentUnavailableView with a clear-filters action.
+    @ViewBuilder
+    private var productFilteredEmptyState: some View {
+        if !viewModel.searchText.isEmpty {
+            ContentUnavailableView.search(text: viewModel.searchText)
+        } else {
+            ContentUnavailableView {
+                Label(ProductStrings.filteredEmptyTitle, systemImage: "magnifyingglass")
+            } description: {
+                Text(ProductStrings.filteredEmptyMessage)
+            } actions: {
+                Button(ProductStrings.clearFilters) {
+                    viewModel.selectedCategory = nil
+                }
+            }
+        }
+    }
+
     // MARK: - iPhone Compact List (Fix 1, 2, 3, 4)
 
     @ViewBuilder
@@ -256,12 +272,7 @@ public struct ProductListView: View {
                 // Fix 2: working first-run CTA with real NavigationLink
                 productFirstRunEmptyState
             } else {
-                EmptyStateView(
-                    icon: "magnifyingglass",
-                    title: ProductStrings.filteredEmptyTitle,
-                    message: ProductStrings.filteredEmptyMessage,
-                    iconColor: SolennixColors.primary
-                )
+                productFilteredEmptyState
             }
         } else {
             List {

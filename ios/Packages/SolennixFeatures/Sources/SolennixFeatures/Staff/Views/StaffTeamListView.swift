@@ -85,12 +85,7 @@ public struct StaffTeamListView: View {
                 // Fix 13: real NavigationLink CTA
                 teamsFirstRunView
             } else {
-                EmptyStateView(
-                    icon: "magnifyingglass",
-                    title: StaffStrings.filteredEmptyTitle,
-                    message: StaffStrings.teamsFilteredEmptyMessage,
-                    iconColor: SolennixColors.primary
-                )
+                ContentUnavailableView.search(text: viewModel.searchText)
             }
         } else {
             teamList

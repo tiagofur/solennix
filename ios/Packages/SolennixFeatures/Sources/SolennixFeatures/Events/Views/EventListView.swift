@@ -64,8 +64,6 @@ public struct EventListView: View {
     private let quickQuoteTip = QuickQuoteTip()
     private let onboardingTip = EventosOnboardingTip()
 
-    @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 40
-
     // MARK: - Init
 
     public init(apiClient: APIClient) {
@@ -747,29 +745,19 @@ public struct EventListView: View {
             || viewModel.activeFilterCount > 0
 
         if hasActiveFilters {
-            // Filtered/search empty — keep lean "no results" treatment
-            VStack(spacing: Spacing.md) {
-                Image(systemName: "doc.text.magnifyingglass")
-                    .font(.system(size: emptyIconSize))
-                    .foregroundStyle(SolennixColors.textTertiary)
-
-                Text(tr("events.list.empty.no_results_title", "No se encontraron eventos"))
-                    .font(.subheadline)
-                    .foregroundStyle(SolennixColors.textSecondary)
-
-                Button {
+            // Filtered/search empty — system ContentUnavailableView + clear-filters.
+            ContentUnavailableView {
+                Label(
+                    tr("events.list.empty.no_results_title", "No se encontraron eventos"),
+                    systemImage: "doc.text.magnifyingglass"
+                )
+            } actions: {
+                Button(tr("events.list.filters.clear_all", "Limpiar filtros")) {
                     viewModel.selectedStatus = nil
                     viewModel.searchQuery = ""
                     viewModel.clearAdvancedFilters()
-                } label: {
-                    Text(tr("events.list.filters.clear_all", "Limpiar filtros"))
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(SolennixColors.primary)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.vertical, Spacing.xxxl)
         } else {
             // Truly empty — first-run teaching state.
             // EmptyStateView renders icon/title/message; the NavigationLink

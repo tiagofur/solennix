@@ -75,12 +75,7 @@ public struct ReviewsView: View {
                 Task { await viewModel.fetchReviews() }
             }
         } else if viewModel.filteredReviews.isEmpty && !viewModel.searchText.isEmpty {
-            EmptyStateView(
-                icon: "magnifyingglass",
-                title: tr("reviews.organizer.search.empty_title", "Sin resultados"),
-                message: tr("reviews.organizer.search.empty_message", "No se encontraron reseñas que coincidan con tu búsqueda"),
-                iconColor: SolennixColors.primary
-            )
+            ContentUnavailableView.search(text: viewModel.searchText)
         } else {
             EmptyStateView(
                 icon: "star.bubble",
