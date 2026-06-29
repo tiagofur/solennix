@@ -25,8 +25,19 @@ struct SidebarSplitLayout: View {
 
     @Binding var pendingSpotlightRoute: Route?
 
+    // MARK: - Restorable Navigation State (ios-lifecycle PR-B / B3)
+    //
+    // The selected sidebar section and the content column's NavigationPath are
+    // persisted to `@SceneStorage` as epoch-stamped JSON `Data` (see
+    // Navigation/Route.swift) so the user lands back on the same section/screen
+    // after a relaunch.
+
     @State private var selectedSection: SidebarSection? = .dashboard
+    @SceneStorage(NavSceneStorage.selectedSection) private var selectedSectionData: Data?
+
     @State private var contentPath = NavigationPath()
+    @SceneStorage(NavSceneStorage.contentPath) private var contentPathData: Data?
+
     @State private var searchText = ""
     @Environment(\.apiClient) private var apiClient
     @Environment(AuthManager.self) private var authManager
@@ -70,7 +81,9 @@ struct SidebarSplitLayout: View {
                     contentPath.append(Route.search(query: query))
                 }
             }
+            .persistableNavigationPath(path: $contentPath, data: $contentPathData)
         }
+        .persistable($selectedSection, data: $selectedSectionData)
         .onChange(of: selectedSection) { _, _ in
             contentPath = NavigationPath()
         }

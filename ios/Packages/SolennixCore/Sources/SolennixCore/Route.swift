@@ -3,7 +3,12 @@ import Foundation
 // MARK: - Route
 
 /// All navigable destinations in the app. Used with NavigationPath / .navigationDestination(for:).
-public enum Route: Hashable {
+///
+/// `Codable` is synthesized (every associated value is `String` / `String?` /
+/// `Date?` / `Int?`, all Codable) so a `NavigationPath` containing these routes
+/// can be persisted to `@SceneStorage` via `NavigationPath.CodableRepresentation`
+/// for relaunch state restoration (Sprint 3 — `ios-lifecycle` PR-B).
+public enum Route: Hashable, Codable {
 
     // MARK: Events
     case eventList

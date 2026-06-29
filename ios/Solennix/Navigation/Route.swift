@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import SolennixCore
 import SolennixFeatures
 
@@ -7,7 +8,11 @@ import SolennixFeatures
 // MARK: - Tab
 
 /// The tabs shown in the compact (iPhone) tab bar.
-public enum Tab: Int, Hashable, CaseIterable {
+///
+/// `Codable` so the selected tab can be persisted to `@SceneStorage` via an
+/// epoch-stamped `NavPersistedValue<Tab>` envelope for relaunch state
+/// restoration (ios-lifecycle PR-B). Auto-synthesized (Int raw value).
+public enum Tab: Int, Hashable, CaseIterable, Codable {
     case home
     case events
     case clients
@@ -112,7 +117,11 @@ func planSpotlightTransition(from currentTab: Tab, to destinationTab: Tab) -> Sp
 // MARK: - SidebarSection
 
 /// Sections shown in the iPad/Mac sidebar navigation.
-public enum SidebarSection: String, Hashable, CaseIterable {
+///
+/// `Codable` so the selected section can be persisted to `@SceneStorage` via an
+/// epoch-stamped `NavPersistedValue<SidebarSection?>` envelope for relaunch
+/// state restoration (ios-lifecycle PR-B). Auto-synthesized (String raw value).
+public enum SidebarSection: String, Hashable, CaseIterable, Codable {
     case dashboard
     case events
     case clients
@@ -229,5 +238,152 @@ extension SidebarSection {
         case .dashboard, .events, .clients:
             return ""
         }
+    }
+}
+
+// MARK: - Navigation SceneStorage Restoration (ios-lifecycle PR-B)
+//
+// State-restoration plumbing shared by `CompactTabLayout` (B2) and
+// `SidebarSplitLayout` (B3). Navigation state is persisted to `@SceneStorage`
+// as JSON-encoded `Data` so it survives relaunch, and stamped with a session
+// epoch so that state left behind by a logged-out user is deterministically
+// discarded on the next user's launch (B4 security invariant).
+
+/// `@SceneStorage` keys that hold per-user navigation state across relaunches.
+enum NavSceneStorage {
+    static let selectedTab     = "nav.selectedTab"
+    static let homePath        = "nav.homePath"
+    static let eventsPath      = "nav.eventsPath"
+    static let clientsPath     = "nav.clientsPath"
+    static let morePath        = "nav.morePath"
+    static let searchPath      = "nav.searchPath"
+    static let selectedSection = "nav.selectedSection"
+    static let contentPath     = "nav.contentPath"
+
+    /// Every per-user navigation SceneStorage key. `performSessionCleanup` clears
+    /// these best-effort on logout; the deterministic guard, however, is the
+    /// session epoch (see `NavSession`) stamped into every persisted envelope.
+    static let allKeys: [String] = [
+        selectedTab, homePath, eventsPath, clientsPath, morePath, searchPath,
+        selectedSection, contentPath
+    ]
+}
+
+/// The session-identity epoch, stored via `@AppStorage` (backed by
+/// `UserDefaults.standard`, whose keys are NOT scene-mangled, so it is reliably
+/// writable from `performSessionCleanup`).
+///
+/// `performSessionCleanup` increments this on every logout / account deletion.
+/// The nav layouts stamp the current epoch into every persisted navigation
+/// value; on restore, an envelope whose epoch differs from the current one is
+/// discarded. This is the deterministic logout-clear signal: it survives view
+/// teardown and does not depend on SceneStorage key mangling, which has no
+/// reliable public API to clear from outside the owning view.
+enum NavSession {
+    static let resetEpoch = "session.resetEpoch"
+}
+
+/// Pure decision used by every restoration modifier: a persisted value may be
+/// restored ONLY if it was stamped with the current session epoch. Extracted as
+/// a free function so the security invariant is unit-testable without a view.
+enum NavPersistence {
+    static func shouldRestore(persistedEpoch: Int, currentEpoch: Int) -> Bool {
+        persistedEpoch == currentEpoch
+    }
+}
+
+/// Epoch-stamped container for a persisted `NavigationPath`. Codable so it can be
+/// JSON-encoded into a `@SceneStorage(Data?)`.
+struct PersistedPathEnvelope: Codable {
+    let epoch: Int
+    let representation: NavigationPath.CodableRepresentation
+}
+
+/// Epoch-stamped container for any persisted Codable navigation value
+/// (e.g. `Tab`, `SidebarSection?`).
+struct NavPersistedValue<C: Codable>: Codable {
+    let epoch: Int
+    let value: C
+}
+
+// MARK: - Restoration Modifiers
+
+/// Restores a `NavigationPath` from epoch-stamped `@SceneStorage(Data?)` on first
+/// appear, and persists it back on every change. Discards state whose epoch does
+/// not match the current session (logout-clear invariant, B4).
+private struct PersistableNavigationPathModifier: ViewModifier {
+    @Binding var path: NavigationPath
+    @Binding var data: Data?
+    @AppStorage(NavSession.resetEpoch) private var sessionEpoch: Int = 0
+    @State private var didRestore = false
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear(perform: restore)
+            .onChange(of: path) { _, newValue in persist(newValue) }
+    }
+
+    private func restore() {
+        guard !didRestore else { return }
+        didRestore = true
+        guard path.isEmpty, let data else { return }
+        guard let envelope = try? JSONDecoder().decode(PersistedPathEnvelope.self, from: data) else { return }
+        // Security guard: never restore navigation persisted under a previous
+        // (logged-out) session — that would land a new user on the prior user's
+        // restored nav. The epoch advances on every logout.
+        guard NavPersistence.shouldRestore(persistedEpoch: envelope.epoch, currentEpoch: sessionEpoch) else { return }
+        path = NavigationPath(envelope.representation)
+    }
+
+    private func persist(_ newValue: NavigationPath) {
+        guard let representation = newValue.codable else {
+            data = nil
+            return
+        }
+        let envelope = PersistedPathEnvelope(epoch: sessionEpoch, representation: representation)
+        data = try? JSONEncoder().encode(envelope)
+    }
+}
+
+/// Restores an arbitrary Codable & Equatable value from epoch-stamped
+/// `@SceneStorage(Data?)` — mirrors `PersistableNavigationPathModifier` for
+/// scalars such as `Tab` / `SidebarSection?`.
+private struct PersistableValueModifier<T: Codable & Equatable>: ViewModifier {
+    @Binding var value: T
+    @Binding var data: Data?
+    @AppStorage(NavSession.resetEpoch) private var sessionEpoch: Int = 0
+    @State private var didRestore = false
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear(perform: restore)
+            .onChange(of: value) { _, newValue in persist(newValue) }
+    }
+
+    private func restore() {
+        guard !didRestore else { return }
+        didRestore = true
+        guard let data, let envelope = try? JSONDecoder().decode(NavPersistedValue<T>.self, from: data) else { return }
+        guard NavPersistence.shouldRestore(persistedEpoch: envelope.epoch, currentEpoch: sessionEpoch) else { return }
+        value = envelope.value
+    }
+
+    private func persist(_ newValue: T) {
+        let envelope = NavPersistedValue(epoch: sessionEpoch, value: newValue)
+        data = try? JSONEncoder().encode(envelope)
+    }
+}
+
+extension View {
+    /// Persists `path` to `@SceneStorage(Data?)` (epoch-stamped) and restores it
+    /// on first appear. See `PersistableNavigationPathModifier`.
+    func persistableNavigationPath(path: Binding<NavigationPath>, data: Binding<Data?>) -> some View {
+        modifier(PersistableNavigationPathModifier(path: path, data: data))
+    }
+
+    /// Persists `value` to `@SceneStorage(Data?)` (epoch-stamped) and restores it
+    /// on first appear. See `PersistableValueModifier`.
+    func persistable<T: Codable & Equatable>(_ value: Binding<T>, data: Binding<Data?>) -> some View {
+        modifier(PersistableValueModifier<T>(value: value, data: data))
     }
 }

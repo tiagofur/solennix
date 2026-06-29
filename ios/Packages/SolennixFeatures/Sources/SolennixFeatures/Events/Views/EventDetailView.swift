@@ -109,6 +109,11 @@ public struct EventDetailView: View {
             paymentSheet
         }
         .task { await viewModel.loadData(eventId: eventId) }
+        // B5: if the restored/deep-linked event no longer exists (404), pop
+        // silently back to root instead of stranding on the error screen.
+        .onChange(of: viewModel.entityNotFound) { _, isGone in
+            if isGone { dismiss() }
+        }
         .sheet(isPresented: $showDuplicateSheet) {
             if let vm = duplicateViewModel {
                 NavigationStack {
