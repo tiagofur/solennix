@@ -1,11 +1,13 @@
 package com.creapolis.solennix.feature.search.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
@@ -121,7 +123,13 @@ fun SearchScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                placeholder = { Text(stringResource(R.string.search_placeholder)) },
+                placeholder = {
+                    Text(
+                        text = stringResource(R.string.search_placeholder),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 shape = MaterialTheme.shapes.medium,
                 singleLine = true,
@@ -147,6 +155,7 @@ fun SearchScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -155,7 +164,10 @@ fun SearchScreen(
                         selected = selectedScope == scope,
                         onClick = { viewModel.updateScope(scope) },
                         label = { Text(label, style = MaterialTheme.typography.labelSmall) },
-                        modifier = Modifier.weight(1f)
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = SolennixTheme.colors.primaryLight,
+                            selectedLabelColor = SolennixTheme.colors.primary
+                        )
                     )
                 }
             }

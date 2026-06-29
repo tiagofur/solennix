@@ -39,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.creapolis.solennix.core.designsystem.theme.Spacing
@@ -173,7 +174,13 @@ fun ClientListScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(Spacing.md),
-                    placeholder = { Text(stringResource(R.string.clients_search_placeholder)) },
+                    placeholder = {
+                        Text(
+                            text = stringResource(R.string.clients_search_placeholder),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     shape = MaterialTheme.shapes.medium,
                     singleLine = true

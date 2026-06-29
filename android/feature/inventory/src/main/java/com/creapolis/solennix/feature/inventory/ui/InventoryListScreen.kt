@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.text.style.TextOverflow
 import com.creapolis.solennix.core.designsystem.theme.Spacing
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -210,7 +211,13 @@ fun InventoryListScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(Spacing.md),
-                    placeholder = { Text(InventoryStrings.searchPlaceholder) },
+                    placeholder = {
+                        Text(
+                            text = InventoryStrings.searchPlaceholder,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
                     leadingIcon = {
                         Icon(
                             Icons.Default.Search,

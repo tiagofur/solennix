@@ -22,6 +22,10 @@ class SolennixColorSchemeTest {
         assertEquals(LightSolennixColors.surface, scheme.surface)
         assertEquals(LightSolennixColors.primaryText, scheme.onBackground)
         assertEquals(LightSolennixColors.primaryText, scheme.onSurface)
+        assertEquals(LightSolennixColors.primaryLight, scheme.primaryContainer)
+        assertEquals(SolennixGold, scheme.onPrimaryContainer)
+        assertEquals(LightSolennixColors.primaryLight, scheme.secondaryContainer)
+        assertEquals(SolennixGold, scheme.onSecondaryContainer)
     }
 
     @Test
@@ -38,6 +42,10 @@ class SolennixColorSchemeTest {
         assertEquals(DarkSolennixColors.surface, scheme.surface)
         assertEquals(DarkSolennixColors.primaryText, scheme.onBackground)
         assertEquals(DarkSolennixColors.primaryText, scheme.onSurface)
+        assertEquals(DarkSolennixColors.primaryLight, scheme.primaryContainer)
+        assertEquals(SolennixGold, scheme.onPrimaryContainer)
+        assertEquals(DarkSolennixColors.primaryLight, scheme.secondaryContainer)
+        assertEquals(SolennixGold, scheme.onSecondaryContainer)
     }
 
     @Test

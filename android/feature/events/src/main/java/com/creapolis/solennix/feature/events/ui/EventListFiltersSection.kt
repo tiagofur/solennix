@@ -160,7 +160,11 @@ fun EventListFiltersSection(
                     selected = true,
                     onClick = { onDateRangeChange(null, null) },
                     label = { Text(label) },
-                    trailingIcon = { Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                    trailingIcon = { Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = SolennixTheme.colors.primaryLight,
+                        selectedLabelColor = SolennixTheme.colors.primary
+                    )
                 )
             }
 

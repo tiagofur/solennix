@@ -282,7 +282,11 @@ private fun StatusFilterChips(
             FilterChip(
                 selected = selected == status,
                 onClick = { onSelect(status) },
-                label = { Text(stringResource(labelRes)) }
+                label = { Text(stringResource(labelRes)) },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = SolennixTheme.colors.primaryLight,
+                    selectedLabelColor = SolennixTheme.colors.primary
+                )
             )
         }
     }

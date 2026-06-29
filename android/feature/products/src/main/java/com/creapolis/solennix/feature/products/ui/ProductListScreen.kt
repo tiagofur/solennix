@@ -42,6 +42,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.text.style.TextOverflow
 import com.creapolis.solennix.core.designsystem.theme.Spacing
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -157,13 +158,19 @@ fun ProductListScreen(
                     )
                 }
 
-                OutlinedTextField(
+                 OutlinedTextField(
                     value = uiState.searchQuery,
                     onValueChange = { viewModel.onSearchQueryChange(it) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(Spacing.md),
-                    placeholder = { Text(ProductStrings.searchPlaceholder) },
+                    placeholder = {
+                        Text(
+                            text = ProductStrings.searchPlaceholder,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
                     leadingIcon = {
                         Icon(
                             Icons.Default.Search,
