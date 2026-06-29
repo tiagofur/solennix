@@ -23,6 +23,8 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { SkeletonCard } from "@/components/Skeleton";
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
 import { getAssetUrl } from "@/lib/api";
 import clsx from "clsx";
 import { useProduct, useProductIngredients, useDeleteProduct } from "@/hooks/queries/useProductQueries";
@@ -233,24 +235,23 @@ export const ProductDetails: React.FC = () => {
         <div className="flex gap-2">
           <Link
             to={`/products/${id}/edit`}
-            className="inline-flex items-center px-4 py-2 border border-border rounded-xl bg-card text-sm font-medium text-text-secondary hover:bg-surface-alt transition-colors"
+            className="inline-flex items-center justify-center font-semibold transition-all active-ios-scale disabled:opacity-50 disabled:pointer-events-none cursor-pointer liquid-glass text-text hover:bg-surface/60 px-5 py-2.5 text-sm rounded-xl gap-2"
           >
             <Edit className="h-4 w-4 mr-2" />
             {t("common:action.edit")}
           </Link>
-          <button
-            type="button"
+          <Button
+            variant="danger"
             onClick={() => setConfirmDeleteOpen(true)}
-            className="inline-flex items-center px-4 py-2 border border-error/20 rounded-xl bg-error/5 text-sm font-medium text-error hover:bg-error/10 transition-colors"
           >
             <Trash2 className="h-4 w-4 mr-2" />
             {t("common:action.delete")}
-          </button>
+          </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+        <Card variant="glass" padding="sm" className="shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <DollarSign className="h-4 w-4 text-primary" />
             <p className="text-xs text-text-secondary uppercase tracking-wide">
@@ -264,9 +265,9 @@ export const ProductDetails: React.FC = () => {
             })}
           </p>
           <p className="text-xs text-text-secondary mt-1">{t("products:details.per_unit")}</p>
-        </div>
+        </Card>
 
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+        <Card variant="glass" padding="sm" className="shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <Layers className="h-4 w-4 text-text-secondary" />
             <p className="text-xs text-text-secondary uppercase tracking-wide">
@@ -277,16 +278,18 @@ export const ProductDetails: React.FC = () => {
             ${unitCost.toLocaleString(moneyLocale, { minimumFractionDigits: 2 })}
           </p>
           <p className="text-xs text-text-secondary mt-1">{t("products:details.in_supplies")}</p>
-        </div>
+        </Card>
 
-        <div
+        <Card
+          variant={margin >= 20 && margin < 50 ? "glass" : "default"}
+          padding="sm"
           className={clsx(
-            "rounded-2xl border p-5 shadow-sm",
+            "border shadow-sm",
             margin >= 50
               ? "bg-success/5 border-success/20"
-              : margin >= 20
-                ? "bg-card border-border"
-                : "bg-warning/5 border-warning/20",
+              : margin < 20
+                ? "bg-warning/5 border-warning/20"
+                : ""
           )}
         >
           <div className="flex items-center gap-2 mb-2">
@@ -317,9 +320,9 @@ export const ProductDetails: React.FC = () => {
             {margin.toFixed(1)}%
           </p>
           <p className="text-xs text-text-secondary mt-1">{t("products:details.margin_desc")}</p>
-        </div>
+        </Card>
 
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+        <Card variant="glass" padding="sm" className="shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <Calendar className="h-4 w-4 text-primary" />
             <p className="text-xs text-text-secondary uppercase tracking-wide">
@@ -334,12 +337,12 @@ export const ProductDetails: React.FC = () => {
             </p>
           )}
           <p className="text-xs text-text-secondary mt-1">{t("common:status.confirmed")}</p>
-        </div>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-6">
-          <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
+          <Card variant="glass" padding="md" className="shadow-sm">
             <div className="mb-4 rounded-2xl border border-border bg-surface-alt/30 p-2">
               {productImageSrc ? (
                 <OptimizedImage
@@ -400,17 +403,17 @@ export const ProductDetails: React.FC = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
 
           {!demandLoading && (
-            <div
+            <Card
+              variant={demand7Days > 0 ? "default" : "glass"}
+              padding="sm"
               className={clsx(
-                "rounded-2xl border p-5 shadow-sm",
+                "border shadow-sm",
                 demand7Days > 0
                   ? "bg-primary/5 border-primary/20"
-                  : demandForecast.length > 0
-                    ? "bg-card border-border"
-                    : "bg-card border-border",
+                  : "",
               )}
             >
               <div className="flex items-start gap-3">
@@ -462,12 +465,12 @@ export const ProductDetails: React.FC = () => {
                   </p>
                 </div>
               </div>
-            </div>
+            </Card>
           )}
         </div>
 
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
+          <Card variant="glass" padding="md" className="shadow-sm">
             <div className="flex items-center gap-2 mb-4 pb-4 border-b border-border">
               <Calendar className="h-5 w-5 text-primary" />
               <h2 className="text-sm font-semibold text-text">
@@ -604,9 +607,9 @@ export const ProductDetails: React.FC = () => {
                 )}
               </div>
             )}
-          </div>
+          </Card>
 
-          <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+          <Card variant="glass" padding="none" className="overflow-hidden shadow-sm">
             <div className="p-6 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <Layers className="h-5 w-5 text-primary" />
@@ -688,10 +691,10 @@ export const ProductDetails: React.FC = () => {
                 </div>
               </>
             )}
-          </div>
+          </Card>
 
           {ingredients.filter((i: ProductIngredientRow) => i.type === "supply").length > 0 && (
-            <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+            <Card variant="glass" padding="none" className="overflow-hidden shadow-sm">
               <div className="p-6 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                   <Fuel className="h-5 w-5 text-warning" />
@@ -765,12 +768,12 @@ export const ProductDetails: React.FC = () => {
                     .toLocaleString(moneyLocale, { minimumFractionDigits: 2 })}
                 </span>
               </div>
-            </div>
+            </Card>
           )}
 
           {ingredients.filter((i: ProductIngredientRow) => i.type === "equipment").length >
             0 && (
-            <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+            <Card variant="glass" padding="none" className="overflow-hidden shadow-sm">
               <div className="p-6 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                   <Wrench className="h-5 w-5 text-info" />
@@ -828,7 +831,7 @@ export const ProductDetails: React.FC = () => {
                     ))}
                 </tbody>
               </table>
-            </div>
+            </Card>
           )}
         </div>
       </div>

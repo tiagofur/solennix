@@ -22,6 +22,9 @@ import { logError } from "../../lib/errorHandler";
 import { Breadcrumb } from "../../components/Breadcrumb";
 import { usePlanLimits } from "../../hooks/usePlanLimits";
 import { UpgradeBanner } from "../../components/UpgradeBanner";
+import { Button } from "../../components/Button";
+import { Card } from "../../components/Card";
+import { Input } from "../../components/Input";
 import { useProduct, useProductIngredients, useCreateProduct, useUpdateProduct, useUploadProductImage } from "../../hooks/queries/useProductQueries";
 import { useInventoryItems } from "../../hooks/queries/useInventoryQueries";
 import { useStaffTeams } from "../../hooks/queries/useStaffQueries";
@@ -368,7 +371,7 @@ export const ProductForm: React.FC = () => {
       </div>
 
       <div className="space-y-6">
-        <div className="bg-card shadow-sm border border-border px-4 py-8 rounded-2xl sm:p-10">
+        <Card variant="glass" padding="lg">
           <form
             id="product-form"
             onSubmit={handleSubmit(onSubmit)}
@@ -438,62 +441,39 @@ export const ProductForm: React.FC = () => {
               </div>
 
               <div className="sm:col-span-6">
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-text-secondary mb-2"
-                >
-                  {t("products:form.name")} *
-                </label>
-                <input
+                <Input
                   id="name"
-                  type="text"
+                  label={t("products:form.name") + " *"}
+                  placeholder={t("products:form.name")}
+                  error={errors.name?.message}
                   {...register("name")}
-                  className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
                 />
-                {errors.name && (
-                  <p className="mt-2 text-sm text-error">{errors.name.message}</p>
-                )}
               </div>
 
               <div className="sm:col-span-3">
-                <label
-                  htmlFor="category"
-                  className="block text-sm font-medium text-text-secondary mb-2"
-                >
-                  {t("products:form.category")} *
-                </label>
-                <input
+                <Input
                   id="category"
-                  type="text"
+                  label={t("products:form.category") + " *"}
+                  placeholder={t("products:form.category")}
+                  error={errors.category?.message}
                   {...register("category")}
-                  className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
                 />
-                {errors.category && (
-                  <p className="mt-2 text-sm text-error">{errors.category.message}</p>
-                )}
               </div>
 
               <div className="sm:col-span-3">
-                <label
-                  htmlFor="base_price"
-                  className="block text-sm font-medium text-text-secondary mb-2"
-                >
-                  {t("products:form.base_price")} ($) *
-                </label>
-                <input
+                <Input
                   id="base_price"
                   type="number"
                   step="0.01"
+                  label={t("products:form.base_price") + " ($) *"}
+                  placeholder="0.00"
+                  error={errors.base_price?.message}
                   {...register("base_price")}
-                  className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
                 />
-                {errors.base_price && (
-                  <p className="mt-2 text-sm text-error">{errors.base_price.message}</p>
-                )}
               </div>
 
               <div className="sm:col-span-6">
-                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-surface-alt">
+                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-surface-alt/50">
                   <div>
                     <p className="text-sm font-medium text-text">
                       {t("products:form.is_active")}
@@ -517,9 +497,9 @@ export const ProductForm: React.FC = () => {
               </div>
             </div>
           </form>
-        </div>
+        </Card>
 
-        <div className="bg-card shadow-sm border border-border px-4 py-8 rounded-2xl sm:p-10 flex flex-col">
+        <Card variant="glass" padding="lg" className="flex flex-col">
           <h3 className="text-lg leading-6 font-medium text-text mb-4 flex items-center">
             <Layers className="h-5 w-5 mr-2 text-primary" aria-hidden="true" />
             {t("products:form.composition")}
@@ -641,9 +621,9 @@ export const ProductForm: React.FC = () => {
               </span>
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-card shadow-sm border border-border px-4 py-8 rounded-2xl sm:p-10 flex flex-col">
+        <Card variant="glass" padding="lg" className="flex flex-col">
           <h3 className="text-lg leading-6 font-medium text-text mb-4 flex items-center">
             <Wrench className="h-5 w-5 mr-2 text-info" aria-hidden="true" />
             {t("products:form.equipment")}
@@ -741,9 +721,9 @@ export const ProductForm: React.FC = () => {
               <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> {t("products:form.add_equipment")}
             </button>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-card shadow-sm border border-border px-4 py-8 rounded-2xl sm:p-10 flex flex-col">
+        <Card variant="glass" padding="lg" className="flex flex-col">
           <h3 className="text-lg leading-6 font-medium text-text mb-4 flex items-center">
             <Fuel className="h-5 w-5 mr-2 text-warning" aria-hidden="true" />
             {t("products:form.event_supplies")}
@@ -848,9 +828,9 @@ export const ProductForm: React.FC = () => {
               </span>
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-card shadow-sm border border-border px-4 py-8 rounded-2xl sm:p-10 flex flex-col">
+        <Card variant="glass" padding="lg" className="flex flex-col">
           <h3 className="text-lg leading-6 font-medium text-text mb-4 flex items-center">
             <Users className="h-5 w-5 mr-2 text-primary" aria-hidden="true" />
             {t("products:form.staff_team")}
@@ -882,29 +862,29 @@ export const ProductForm: React.FC = () => {
               ))}
             </select>
           </div>
-        </div>
+        </Card>
 
         {/* Botones de acción */}
         <div className="flex justify-end gap-3">
-          <button
+          <Button
             type="button"
+            variant="glass"
             onClick={() => navigate("/products")}
-            className="bg-card py-2.5 px-6 border border-border rounded-xl shadow-sm text-sm font-medium text-text-secondary hover:bg-surface-alt transition-colors"
           >
             {t("common:action.cancel")}
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
             form="product-form"
-            disabled={isLoading}
-            className="inline-flex justify-center py-2.5 px-8 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white premium-gradient hover:opacity-90 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 transition-opacity"
+            variant="primary"
+            loading={isLoading}
             aria-label={
               isLoading ? t("products:form.saving_product") : t("products:form.save_product")
             }
           >
             <Save className="h-5 w-5 mr-2" aria-hidden="true" />
             {isLoading ? t("common:action.saving") : t("products:form.save_product")}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -22,6 +22,9 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import Empty from "@/components/Empty";
 import { Pagination } from "@/components/Pagination";
 import { SkeletonTable } from "@/components/Skeleton";
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
+import { Input } from "@/components/Input";
 import {
   useClients,
   useClientsPaginated,
@@ -183,8 +186,8 @@ export const ClientList: React.FC = () => {
         </h1>
         <div className="flex flex-wrap items-center gap-2">
           {hasAnyClients && (
-            <button
-              type="button"
+            <Button
+              variant="glass"
               onClick={() =>
                 exportToCsv(
                   t("clients:export_file_name"),
@@ -210,19 +213,18 @@ export const ClientList: React.FC = () => {
                   ]),
                 )
               }
-              className="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
             >
               <Download className="h-4 w-4 mr-2" aria-hidden="true" />
               CSV
-            </button>
+            </Button>
           )}
-          <Link
-            to="/clients/new"
-            className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
+          <Button
+            variant="primary"
+            onClick={() => navigate("/clients/new")}
           >
             <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
             {t("clients:new_client")}
-          </Link>
+          </Button>
         </div>
       </div>
 
@@ -230,13 +232,11 @@ export const ClientList: React.FC = () => {
         <label htmlFor="client-search" className="sr-only">
           {t("common:action.search")}
         </label>
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-text-secondary" aria-hidden="true" />
-        </div>
-        <input
+        <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-secondary pointer-events-none z-10" aria-hidden="true" />
+        <Input
           id="client-search"
           type="search"
-          className="block w-full pl-10 pr-3 py-2 border border-border rounded-xl leading-5 bg-card text-text placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary sm:text-sm transition duration-150 ease-in-out"
+          className="pl-11 bg-card/60 hover:bg-surface-alt/40 focus:bg-card focus:border-primary"
           placeholder={t("clients:search_placeholder")}
           value={searchTerm}
           onChange={(e) => {
@@ -246,7 +246,7 @@ export const ClientList: React.FC = () => {
         />
       </div>
 
-      <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
+      <Card variant="glass" padding="none" className="overflow-hidden">
         {loading ? (
           <SkeletonTable
             rows={6}
@@ -428,7 +428,7 @@ export const ClientList: React.FC = () => {
             onPageChange={handlePageChange}
           />
         )}
-      </div>
+      </Card>
     </div>
   );
 };

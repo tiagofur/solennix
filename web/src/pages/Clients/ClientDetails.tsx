@@ -19,6 +19,8 @@ import { Breadcrumb } from "@/components/Breadcrumb";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { StatusDropdown, EventStatus } from "@/components/StatusDropdown";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
 import { useClient, useDeleteClient } from "@/hooks/queries/useClientQueries";
 import { useEventsByClient } from "@/hooks/queries/useEventQueries";
 
@@ -118,23 +120,22 @@ export const ClientDetails: React.FC = () => {
         <div className="flex items-center space-x-2">
           <Link
             to={`/clients/${client.id}/edit`}
-            className="inline-flex items-center px-4 py-2 border border-border rounded-xl shadow-sm text-sm font-medium text-text-secondary bg-card hover:bg-surface-alt transition-colors"
+            className="inline-flex items-center justify-center font-semibold transition-all active-ios-scale disabled:opacity-50 disabled:pointer-events-none cursor-pointer liquid-glass text-text hover:bg-surface/60 px-5 py-2.5 text-sm rounded-xl gap-2"
           >
             <Edit className="h-5 w-5 mr-2" aria-hidden="true" />
             {t("common:action.edit")}
           </Link>
-          <button
-            type="button"
+          <Button
+            variant="danger"
             onClick={() => setConfirmDeleteOpen(true)}
-            className="inline-flex items-center px-4 py-2 border border-error/20 text-sm font-medium rounded-xl text-error bg-error/5 hover:bg-error/10 transition-colors"
           >
             <Trash2 className="h-5 w-5 mr-2" aria-hidden="true" />
             {t("common:action.delete")}
-          </button>
+          </Button>
         </div>
       </div>
 
-      <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
+      <Card variant="glass" padding="none" className="overflow-hidden">
         <div className="px-4 py-5 sm:px-6">
           <h3 className="text-lg leading-6 font-semibold text-text">
             {t("clients:form.personal_info")}
@@ -281,9 +282,9 @@ export const ClientDetails: React.FC = () => {
             </div>
           </dl>
         </div>
-      </div>
+      </Card>
 
-      <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
+      <Card variant="glass" padding="none" className="overflow-hidden">
         <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h3 className="text-lg leading-6 font-semibold text-text">
@@ -295,7 +296,7 @@ export const ClientDetails: React.FC = () => {
           </div>
           <Link
             to={`/events/new?clientId=${client.id}`}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-bold rounded-xl text-white premium-gradient shadow-sm transition-colors"
+            className="inline-flex items-center justify-center font-semibold transition-all active-ios-scale px-5 py-2.5 text-sm rounded-xl gap-2 bg-linear-to-br from-primary to-primary-dark text-on-primary shadow-xs hover:shadow-sm active:opacity-90"
           >
             {t("clients:details.create_event")}
           </Link>
@@ -407,7 +408,7 @@ export const ClientDetails: React.FC = () => {
             </div>
           )}
         </div>
-      </div>
+      </Card>
       <ConfirmDialog
         open={confirmDeleteOpen}
         title={t("common:action.delete")}

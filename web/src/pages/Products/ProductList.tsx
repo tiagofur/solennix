@@ -24,6 +24,9 @@ import Empty from "@/components/Empty";
 import { usePagination } from "@/hooks/usePagination";
 import { Pagination } from "@/components/Pagination";
 import { SkeletonTable } from "@/components/Skeleton";
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
+import { Input } from "@/components/Input";
 import { useProducts, useDeleteProduct } from "@/hooks/queries/useProductQueries";
 
 export const ProductList: React.FC = () => {
@@ -119,8 +122,8 @@ export const ProductList: React.FC = () => {
         </h1>
         <div className="flex flex-wrap items-center gap-2">
           {products.length > 0 && (
-            <button
-              type="button"
+            <Button
+              variant="glass"
               onClick={() =>
                 exportToCsv(
                   t("products:list.csv_filename"),
@@ -133,15 +136,14 @@ export const ProductList: React.FC = () => {
                   ]),
                 )
               }
-              className="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
             >
               <Download className="h-4 w-4 mr-2" aria-hidden="true" />
               {t("products:list.export_csv")}
-            </button>
+            </Button>
           )}
           <Link
             to="/products/new"
-            className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white premium-gradient shadow-xs transition-opacity hover:opacity-90"
+            className="inline-flex items-center justify-center font-semibold transition-all active-ios-scale px-5 py-2.5 text-sm rounded-xl gap-2 bg-linear-to-br from-primary to-primary-dark text-on-primary shadow-xs hover:shadow-sm active:opacity-90"
           >
             <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
             {t("products:new_product")}
@@ -153,13 +155,11 @@ export const ProductList: React.FC = () => {
         <label htmlFor="product-search" className="sr-only">
           {t("common:action.search")}
         </label>
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-text-secondary" aria-hidden="true" />
-        </div>
-        <input
+        <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-secondary pointer-events-none z-10" aria-hidden="true" />
+        <Input
           id="product-search"
           type="search"
-          className="block w-full pl-10 pr-8 py-2 border border-border rounded-xl leading-5 bg-card text-text placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary sm:text-sm transition duration-150 ease-in-out"
+          className="pl-11 pr-10 bg-card/60 hover:bg-surface-alt/40 focus:bg-card focus:border-primary"
           placeholder={t("products:search_by_name_or_category")}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -168,7 +168,7 @@ export const ProductList: React.FC = () => {
           <button
             type="button"
             onClick={() => setSearchTerm("")}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-secondary hover:text-text transition-colors"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-secondary hover:text-text transition-colors z-20"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -184,10 +184,10 @@ export const ProductList: React.FC = () => {
               onClick={() =>
                 setSelectedCategory(selectedCategory === cat ? null : cat)
               }
-              className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 active-ios-scale ${
                 selectedCategory === cat
-                  ? "bg-primary text-white border-primary"
-                  : "bg-card text-text-secondary border-border hover:border-primary/50 hover:text-primary"
+                  ? "bg-primary text-on-primary border-primary shadow-xs"
+                  : "bg-surface-alt/70 text-text-secondary border-border hover:border-border-strong hover:bg-surface-alt"
               }`}
             >
               {cat}
@@ -196,7 +196,7 @@ export const ProductList: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
+      <Card variant="glass" padding="none" className="overflow-hidden">
         {loading ? (
           <SkeletonTable
             rows={6}
@@ -348,7 +348,7 @@ export const ProductList: React.FC = () => {
             onPageChange={handlePageChange}
           />
         )}
-      </div>
+      </Card>
     </div>
   );
 };
