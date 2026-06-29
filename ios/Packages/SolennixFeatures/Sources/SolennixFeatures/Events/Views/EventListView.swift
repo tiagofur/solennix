@@ -891,10 +891,7 @@ public struct EventListView: View {
             }
 
             Label(
-                String.localizedStringWithFormat(
-                    tr("events.list.people_count", "%lld people"),
-                    event.numPeople
-                ),
+                FeatureL10n.plural("events.list.people_count", "%lld people", count: event.numPeople),
                 systemImage: "person.2"
             )
             .font(.caption)
@@ -1003,10 +1000,7 @@ public struct EventListView: View {
             // dayDiff==1 (Mañana) is handled in the case above, so the minimum
             // here is 2 — "En 1 día" (singular) will never render here.
             let shortDate = formattedShortDate(date)
-            let inDays = String.localizedStringWithFormat(
-                tr("events.list.date.in_days", "In %lld days"),
-                dayDiff
-            )
+            let inDays = FeatureL10n.plural("events.list.date.in_days", "In %lld days", count: dayDiff)
             return "\(inDays) · \(shortDate)"
         default:
             // Absolute date + time

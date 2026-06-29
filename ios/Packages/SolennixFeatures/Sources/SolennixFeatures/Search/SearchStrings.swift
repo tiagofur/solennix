@@ -20,6 +20,6 @@ enum SearchStrings {
     static var emptyStateHint: String { FeatureL10n.text("search.empty_state.hint", "Buscá clientes, eventos, productos…") }
     
     static func more(_ count: Int) -> String {
-        FeatureL10n.format("search.results.more", "+ %lld más", count)
+        FeatureL10n.plural("search.results.more", "+ %lld más", count: count)
     }
 }

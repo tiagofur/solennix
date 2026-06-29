@@ -18407,7 +18407,55 @@
         }
       }
     },
-    "products.quantity_for_people" : {
+    "products.quantity_for_people.one_one" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total: %lld unit for %lld person"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total: %lld unidad para %lld persona"
+          }
+        }
+      }
+    },
+    "products.quantity_for_people.one_other" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total: %lld unit for %lld people"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total: %lld unidad para %lld personas"
+          }
+        }
+      }
+    },
+    "products.quantity_for_people.other_one" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total: %lld units for %lld person"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total: %lld unidades para %lld persona"
+          }
+        }
+      }
+    },
+    "products.quantity_for_people.other_other" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {

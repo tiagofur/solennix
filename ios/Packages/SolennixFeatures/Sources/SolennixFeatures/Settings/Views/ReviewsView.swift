@@ -294,10 +294,10 @@ public struct ReviewsView: View {
     private func starsAccessibilityLabel(_ value: Int) -> String {
         let clamped = max(1, min(5, value))
         // B8: "N de 5 estrellas" — invariant singular works for all N≥1
-        return FeatureL10n.format(
+        return FeatureL10n.plural(
             "reviews.organizer.stars_label",
             "%lld de 5 estrellas",
-            clamped
+            count: clamped
         )
     }
 

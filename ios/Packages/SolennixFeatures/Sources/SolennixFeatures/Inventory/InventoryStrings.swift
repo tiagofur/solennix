@@ -37,10 +37,7 @@ enum InventoryStrings {
     // Fix 10: low-stock toggle a11y value — plural-aware
     static var lowStockToggleInactive: String { FeatureL10n.text("inventory.low_stock_toggle_inactive", "desactivado") }
     static func lowStockToggleActive(_ count: Int) -> String {
-        String.localizedStringWithFormat(
-            FeatureL10n.text("inventory.low_stock_toggle_active", "activado, %lld artículos"),
-            count
-        )
+        FeatureL10n.plural("inventory.low_stock_toggle_active", "activado, %lld artículos", count: count)
     }
     static var loading: String { FeatureL10n.text("inventory.loading", "Cargando...") }
     static var errorTitle: String { FeatureL10n.text("inventory.error_title", "Error") }
@@ -164,7 +161,7 @@ enum InventoryStrings {
     }
 
     static func inDays(_ days: Int) -> String {
-        FeatureL10n.format("inventory.in_days", "en %lld días", days)
+        FeatureL10n.plural("inventory.in_days", "en %lld días", count: days)
     }
 
     static func stockStatusA11y(stock: String, unit: String, isLow: Bool, minimum: Int?) -> String {
@@ -197,7 +194,7 @@ enum InventoryStrings {
         } else if diffDays == 1 {
             label += ". \(FeatureL10n.text("inventory.tomorrow", "Mañana"))"
         } else if diffDays > 1 && diffDays <= 7 {
-            label += ". " + FeatureL10n.format("inventory.in_days", "en %lld días", diffDays)
+            label += ". " + FeatureL10n.plural("inventory.in_days", "en %lld días", count: diffDays)
         }
         if isInsufficient {
             label += ". \(FeatureL10n.text("inventory.stock_insufficient_a11y", "Stock insuficiente"))"

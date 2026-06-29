@@ -458,10 +458,7 @@ public struct ClientListView: View {
                     .foregroundStyle(SolennixColors.primary)
             }
             if hasEvents {
-                Text(String.localizedStringWithFormat(
-                    tr("clients.list.events_count", "%lld eventos"),
-                    client.totalEvents ?? 0
-                ))
+                Text(FeatureL10n.plural("clients.list.events_count", "%lld eventos", count: client.totalEvents ?? 0))
                 .font(.caption2)
                 .foregroundStyle(SolennixColors.textSecondary)
             }
@@ -504,10 +501,7 @@ public struct ClientListView: View {
             parts.append(city)
         }
         if let events = client.totalEvents, events > 0 {
-            parts.append(String.localizedStringWithFormat(
-                tr("clients.list.events_count", "%lld eventos"),
-                events
-            ))
+            parts.append(FeatureL10n.plural("clients.list.events_count", "%lld eventos", count: events))
         }
         if let spent = client.totalSpent, spent > 0 {
             parts.append(formattedAmount(spent))

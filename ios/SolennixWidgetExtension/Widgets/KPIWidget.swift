@@ -95,7 +95,7 @@ struct KPIWidgetView: View {
             HStack(spacing: 4) {
                 Image(systemName: "calendar")
                     .font(.caption2)
-                Text(verbatim: String(format: String(localized: "widget.kpi.events_count_fmt"), entry.kpis.eventsThisMonth))
+                Text(verbatim: String.localizedStringWithFormat(String(localized: "widget.kpi.events_count_fmt"), entry.kpis.eventsThisMonth))
                     .font(.caption)
             }
             .foregroundStyle(.secondary)
@@ -160,7 +160,7 @@ struct KPIWidgetView: View {
                     icon: "calendar",
                     iconColor: .blue,
                     label: String(localized: "widget.kpi.events"),
-                    value: String(format: String(localized: "widget.kpi.this_week_fmt"), entry.kpis.eventsThisWeek)
+                    value: String.localizedStringWithFormat(String(localized: "widget.kpi.this_week_fmt"), entry.kpis.eventsThisWeek)
                 )
 
                 // Confirmed
@@ -177,7 +177,7 @@ struct KPIWidgetView: View {
                         icon: "exclamationmark.triangle.fill",
                         iconColor: .red,
                         label: String(localized: "widget.kpi.low_stock"),
-                        value: String(format: String(localized: "widget.kpi.items_fmt"), entry.kpis.lowStockCount)
+                        value: String.localizedStringWithFormat(String(localized: "widget.kpi.items_fmt"), entry.kpis.lowStockCount)
                     )
                 } else {
                     kpiRow(

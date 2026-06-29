@@ -111,7 +111,7 @@ enum ProductStrings {
     }
 
     static func unitsNext7Days(_ count: Int) -> String {
-        FeatureL10n.format("products.units_next_7_days", "%lld unidades en los próximos 7 días", count)
+        FeatureL10n.plural("products.units_next_7_days", "%lld unidades en los próximos 7 días", count: count)
     }
 
     static func revenueMessage(_ amount: String) -> String {
@@ -148,19 +148,39 @@ enum ProductStrings {
     }
 
     static func upcomingEventsCount(_ count: Int) -> String {
-        FeatureL10n.format("products.upcoming_events_count", "Próximos %lld eventos", count)
+        FeatureL10n.plural("products.upcoming_events_count", "Próximos %lld eventos", count: count)
     }
 
+    /// Renders "Total: <units> for <people>" with BOTH counts declining
+    /// independently. `.xcstrings` cannot express nested plural variations, so
+    /// the four one/other combinations are exposed as sibling keys — mirroring
+    /// ``demandSummary(units:events:)`` and `products.demand_summary.*`.
     static func quantityForPeople(quantity: Int, people: Int) -> String {
-        FeatureL10n.format("products.quantity_for_people", "Total: %lld unidades para %lld personas", quantity, people)
+        let key: String
+        let fallback: String
+        if quantity == 1 && people == 1 {
+            key = "products.quantity_for_people.one_one"
+            fallback = "Total: %lld unidad para %lld persona"
+        } else if quantity == 1 {
+            key = "products.quantity_for_people.one_other"
+            fallback = "Total: %lld unidad para %lld personas"
+        } else if people == 1 {
+            key = "products.quantity_for_people.other_one"
+            fallback = "Total: %lld unidades para %lld persona"
+        } else {
+            key = "products.quantity_for_people.other_other"
+            fallback = "Total: %lld unidades para %lld personas"
+        }
+        let template = FeatureL10n.text(key, fallback)
+        return String(format: template, locale: FeatureL10n.locale, quantity, people)
     }
 
     static func inDays(_ days: Int) -> String {
-        FeatureL10n.format("products.in_days", "en %lld días", days)
+        FeatureL10n.plural("products.in_days", "en %lld días", count: days)
     }
 
     static func quantityUnits(_ quantity: Int) -> String {
-        FeatureL10n.format("products.quantity_units", "%lld uds", quantity)
+        FeatureL10n.plural("products.quantity_units", "%lld uds", count: quantity)
     }
 
     static func eventCount(_ count: Int) -> String {
@@ -176,7 +196,7 @@ enum ProductStrings {
     static var chartAxisQuantity: String { FeatureL10n.text("products.chart.axis_quantity", "Cantidad") }
 
     static func chartA11yLabel(_ count: Int) -> String {
-        FeatureL10n.format("products.chart.a11y_label", "Demanda: %lld eventos próximos", count)
+        FeatureL10n.plural("products.chart.a11y_label", "Demanda: %lld eventos próximos", count: count)
     }
 
     static func removeIngredient(_ name: String) -> String {

@@ -128,7 +128,7 @@ public struct ContractDefaultsView: View {
                     HStack {
                         Text(tr("settings.contract.cancellation_days", "Días de anticipación"))
                         Spacer()
-                        Text(FeatureL10n.format("settings.contract.cancellation_days_value", "%d días", Int(viewModel.cancellationDays)))
+                        Text(FeatureL10n.plural("settings.contract.cancellation_days_value", "%d días", count: Int(viewModel.cancellationDays)))
                             .font(.headline)
                             .foregroundStyle(SolennixColors.primary)
                     }
@@ -233,7 +233,7 @@ public struct ContractDefaultsView: View {
 
                     VStack(alignment: .leading, spacing: Spacing.sm) {
                         previewRow(label: tr("settings.contract.preview.deposit_required", "Anticipo requerido"), value: FeatureL10n.format("settings.contract.preview.deposit_percent_value", "%d%% del total", Int(viewModel.depositPercent)))
-                        previewRow(label: tr("settings.contract.preview.cancellation", "Cancelación sin penalización"), value: FeatureL10n.format("settings.contract.preview.cancellation_days_value", "%d días antes", Int(viewModel.cancellationDays)))
+                        previewRow(label: tr("settings.contract.preview.cancellation", "Cancelación sin penalización"), value: FeatureL10n.plural("settings.contract.preview.cancellation_days_value", "%d días antes", count: Int(viewModel.cancellationDays)))
                         previewRow(label: tr("settings.contract.preview.refund", "Reembolso por cancelación"), value: FeatureL10n.format("settings.contract.preview.refund_percent_value", "%d%% del anticipo", Int(viewModel.refundPercent)))
                     }
                     .padding(Spacing.md)

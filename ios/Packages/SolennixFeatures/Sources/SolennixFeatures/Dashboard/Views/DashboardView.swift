@@ -545,11 +545,7 @@ public struct DashboardView: View {
                                 .foregroundStyle(SolennixColors.textSecondary)
 
                             Text(
-                                String(
-                                    format: tr("dashboard.event.people", "%lld personas"),
-                                    locale: FeatureL10n.locale,
-                                    event.numPeople
-                                )
+                                FeatureL10n.plural("dashboard.event.people", "%lld personas", count: event.numPeople)
                             )
                                 .font(.caption)
                                 .foregroundStyle(SolennixColors.textTertiary)

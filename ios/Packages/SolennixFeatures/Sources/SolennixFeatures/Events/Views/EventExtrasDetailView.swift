@@ -63,7 +63,7 @@ public struct EventExtrasDetailView: View {
                 } else {
                     let subtotal = viewModel.extras.reduce(0.0) { $0 + $1.price }
                     HStack {
-                        Text(String(format: tr("events.detail.extras.count", "%d extras"), viewModel.extras.count))
+                        Text(FeatureL10n.plural("events.detail.extras.count", "%d extras", count: viewModel.extras.count))
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.textSecondary)
                         Spacer()
