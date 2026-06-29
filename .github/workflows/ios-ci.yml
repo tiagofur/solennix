@@ -20,7 +20,7 @@ jobs:
   ios-validation:
     name: iOS Validation
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: 60
     defaults:
       run:
         working-directory: ./ios
@@ -56,10 +56,14 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
+      - name: Run l10n lint
+        working-directory: .
+        run: python3 scripts/l10n/lint_literals.py
+
       - name: Resolve Swift packages
         run: xcodebuild -resolvePackageDependencies -project Solennix.xcodeproj -scheme Solennix
 
-      - name: Build for iOS Simulator (no signing)
+      - name: Build and test for iOS Simulator (no signing)
         run: |
           SIMULATOR_ID="$(xcrun simctl list devices available | awk -F '[()]' '/iPhone 16/ { print $2; exit }')"
           if [ -z "$SIMULATOR_ID" ]; then
@@ -83,4 +87,4 @@ jobs:
             CLANG_ENABLE_EXPLICIT_MODULES=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
             -jobs 1 \
-            build
+            test
