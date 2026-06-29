@@ -249,6 +249,7 @@ public struct SearchView: View {
             VStack(spacing: Spacing.md) {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: illustrationIconSize))
+                    .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(SolennixColors.textTertiary)
 
                 Text(SearchStrings.noResultsTitle)
@@ -272,6 +273,7 @@ public struct SearchView: View {
             VStack(spacing: Spacing.md) {
                 Image(systemName: "text.magnifyingglass")
                     .font(.system(size: illustrationIconSize))
+                    .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(SolennixColors.textTertiary)
 
                 Text(SearchStrings.initialStateHint)
@@ -365,6 +367,7 @@ public struct SearchView: View {
             VStack(spacing: Spacing.md) {
                 Image(systemName: "text.magnifyingglass")
                     .font(.system(size: illustrationIconSize))
+                    .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(SolennixColors.textTertiary)
 
                 Text(SearchStrings.emptyStateHint)

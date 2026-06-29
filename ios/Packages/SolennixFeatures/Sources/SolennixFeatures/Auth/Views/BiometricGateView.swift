@@ -52,6 +52,7 @@ public struct BiometricGateView: View {
             VStack(spacing: Spacing.lg) {
                 Image(systemName: biometricIconName)
                     .font(.system(size: iconSize))
+                    .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(SolennixColors.primary)
 
                 Text(AuthStrings.biometricUnlockTitle)

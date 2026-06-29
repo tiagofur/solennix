@@ -50,6 +50,7 @@ public struct TeamInviteAcceptView: View {
             VStack(spacing: Spacing.sm) {
                 Image(systemName: "person.badge.key.fill")
                     .font(.system(size: formIconSize))
+                    .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(SolennixColors.primary)
 
                 Text(AuthStrings.teamInviteSubtitle)
@@ -115,6 +116,7 @@ public struct TeamInviteAcceptView: View {
 
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: successIconSize))
+                .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(SolennixColors.success)
 
             VStack(spacing: Spacing.sm) {

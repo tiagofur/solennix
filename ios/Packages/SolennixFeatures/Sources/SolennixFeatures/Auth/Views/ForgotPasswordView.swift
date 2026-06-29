@@ -142,6 +142,7 @@ public struct ForgotPasswordView: View {
             VStack(spacing: Spacing.sm) {
                 Image(systemName: "envelope.open.fill")
                     .font(.system(size: formIconSize))
+                    .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(SolennixColors.primary)
 
                 Text(AuthStrings.forgotPasswordSubtitle)
@@ -195,6 +196,7 @@ public struct ForgotPasswordView: View {
 
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: successIconSize))
+                .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(SolennixColors.success)
 
             VStack(spacing: Spacing.sm) {

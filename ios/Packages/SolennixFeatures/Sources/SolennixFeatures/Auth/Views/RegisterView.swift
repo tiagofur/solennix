@@ -169,6 +169,7 @@ public struct RegisterView: View {
 
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: successIconSize))
+                .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(SolennixColors.success)
 
             VStack(spacing: Spacing.sm) {
