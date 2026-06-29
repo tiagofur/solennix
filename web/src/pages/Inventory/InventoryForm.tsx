@@ -9,6 +9,9 @@ import { Breadcrumb } from "../../components/Breadcrumb";
 import { usePlanLimits } from "../../hooks/usePlanLimits";
 import { UpgradeBanner } from "../../components/UpgradeBanner";
 import { useInventoryItem, useCreateInventoryItem, useUpdateInventoryItem } from "../../hooks/queries/useInventoryQueries";
+import { Button } from "../../components/Button";
+import { Card } from "../../components/Card";
+import { Input } from "../../components/Input";
 
 import { useTranslation } from "react-i18next";
 import { useMemo } from "react";
@@ -193,7 +196,7 @@ export const InventoryForm: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-card shadow-sm border border-border px-4 py-8 rounded-2xl sm:p-10">
+      <Card variant="glass" padding="lg">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {error && (
             <div
@@ -210,42 +213,29 @@ export const InventoryForm: React.FC = () => {
 
           <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
             <div className="sm:col-span-4">
-              <label
-                htmlFor="ingredient_name"
-                className="block text-sm font-medium text-text-secondary mb-2"
-              >
-                {t("inventory:form.name")} *
-              </label>
-              <input
+              <Input
                 id="ingredient_name"
-                type="text"
+                label={t("inventory:form.name") + " *"}
+                placeholder={t("inventory:form.name")}
+                error={errors.ingredient_name?.message}
                 {...register("ingredient_name")}
-                className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
                 aria-label={t("inventory:form.name_accessible")}
                 aria-required="true"
                 aria-invalid={errors.ingredient_name ? "true" : "false"}
               />
-              {errors.ingredient_name && (
-                <p
-                  className="mt-2 text-sm text-error"
-                  role="alert"
-                >
-                  {errors.ingredient_name.message}
-                </p>
-              )}
             </div>
 
-            <div className="sm:col-span-2">
+            <div className="sm:col-span-2 flex flex-col gap-1.5">
               <label
                 htmlFor="type"
-                className="block text-sm font-medium text-text-secondary mb-2"
+                className="text-xs font-bold text-text-secondary px-1 uppercase tracking-wider"
               >
                 {t("inventory:form.type")} *
               </label>
               <select
                 id="type"
                 {...register("type")}
-                className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
+                className="w-full px-4 py-3 rounded-xl border border-border bg-surface hover:border-border-strong focus:border-primary focus:bg-surface focus:outline-hidden focus:ring-4 focus:ring-primary/10 text-sm text-text placeholder-text-tertiary transition-all cursor-pointer"
                 aria-required="true"
               >
                 <option value="ingredient">{t("inventory:form.type_ingredient")}</option>
@@ -264,10 +254,10 @@ export const InventoryForm: React.FC = () => {
               )}
             </div>
 
-            <div className="sm:col-span-2">
+            <div className="sm:col-span-2 flex flex-col gap-1.5">
               <label
                 htmlFor="unit"
-                className="block text-sm font-medium text-text-secondary mb-2"
+                className="text-xs font-bold text-text-secondary px-1 uppercase tracking-wider"
               >
                 {t("inventory:form.unit")} *
               </label>
@@ -282,7 +272,7 @@ export const InventoryForm: React.FC = () => {
                       }
                     },
                   })}
-                  className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-surface hover:border-border-strong focus:border-primary focus:bg-surface focus:outline-hidden focus:ring-4 focus:ring-primary/10 text-sm text-text placeholder-text-tertiary transition-all cursor-pointer"
                   aria-required="true"
                 >
                   <option value="" disabled>
@@ -301,7 +291,7 @@ export const InventoryForm: React.FC = () => {
                     id="unit"
                     type="text"
                     {...register("unit")}
-                    className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-surface hover:border-border-strong focus:border-primary focus:bg-surface focus:outline-hidden focus:ring-4 focus:ring-primary/10 text-sm text-text placeholder-text-tertiary transition-all"
                     placeholder={t("inventory:form.unit_placeholder")}
                     aria-required="true"
                     autoFocus
@@ -329,100 +319,61 @@ export const InventoryForm: React.FC = () => {
             </div>
 
             <div className="sm:col-span-2">
-              <label
-                htmlFor="current_stock"
-                className="block text-sm font-medium text-text-secondary mb-2"
-              >
-                {t("inventory:form.current_stock")} *
-              </label>
-              <input
+              <Input
                 id="current_stock"
                 type="number"
                 step="0.01"
+                label={t("inventory:form.current_stock") + " *"}
+                error={errors.current_stock?.message}
                 {...register("current_stock")}
-                className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
                 aria-required="true"
               />
-              {errors.current_stock && (
-                <p
-                  className="mt-2 text-sm text-error"
-                  role="alert"
-                >
-                  {errors.current_stock.message}
-                </p>
-              )}
             </div>
 
             <div className="sm:col-span-2">
-              <label
-                htmlFor="minimum_stock"
-                className="block text-sm font-medium text-text-secondary mb-2"
-              >
-                {t("inventory:form.minimum_stock")} *
-              </label>
-              <input
+              <Input
                 id="minimum_stock"
                 type="number"
                 step="0.01"
+                label={t("inventory:form.minimum_stock") + " *"}
+                error={errors.minimum_stock?.message}
                 {...register("minimum_stock")}
-                className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
                 aria-required="true"
               />
-              {errors.minimum_stock && (
-                <p
-                  className="mt-2 text-sm text-error"
-                  role="alert"
-                >
-                  {errors.minimum_stock.message}
-                </p>
-              )}
             </div>
 
             <div className="sm:col-span-2">
-              <label
-                htmlFor="unit_cost"
-                className="block text-sm font-medium text-text-secondary mb-2"
-              >
-                {t("inventory:form.cost")}
-              </label>
-              <input
+              <Input
                 id="unit_cost"
                 type="number"
                 step="0.01"
+                label={t("inventory:form.cost")}
+                error={errors.unit_cost?.message}
                 {...register("unit_cost")}
-                className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
               />
-              {errors.unit_cost && (
-                <p
-                  className="mt-2 text-sm text-error"
-                  role="alert"
-                >
-                  {errors.unit_cost.message}
-                </p>
-              )}
             </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-6 border-t border-border">
-            <button
+            <Button
               type="button"
+              variant="glass"
               onClick={() => navigate("/inventory")}
-              className="bg-card py-2.5 px-6 border border-border rounded-xl shadow-sm text-sm font-medium text-text-secondary hover:bg-surface-alt transition-colors"
             >
               {t("common:action.cancel")}
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={isLoading}
+              variant="primary"
+              loading={isLoading}
               aria-label={isLoading ? t("common:action.saving") : t("common:action.save")}
-              className="inline-flex justify-center py-2.5 px-8 border border-transparent shadow-sm text-sm font-medium rounded-xl text-white premium-gradient hover:opacity-90 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-primary/40 disabled:opacity-50 transition-opacity"
             >
               <Save className="h-5 w-5 mr-2" aria-hidden="true" />
               {isLoading ? t("common:action.saving") : t("common:action.save")}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 };

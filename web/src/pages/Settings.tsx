@@ -28,6 +28,9 @@ import { useSubscriptionStatus } from "@/hooks/queries/useSubscriptionQueries";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { useToast } from "@/hooks/useToast";
 import { useTheme } from "@/hooks/useTheme";
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
+import { Input } from "@/components/Input";
 import {
   DEFAULT_CONTRACT_TEMPLATE,
   validateContractTemplate,
@@ -364,39 +367,40 @@ export const Settings: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex justify-center w-full">
-        <div className="inline-flex bg-surface-alt rounded-2xl p-1 overflow-x-auto border border-border" role="tablist">
-          {[
-            { id: "profile", label: t("settings:tabs.profile"), icon: User },
-            { id: "business", label: t("settings:tabs.business"), icon: Building },
-            { id: "contracts", label: t("settings:tabs.contracts"), icon: FileText },
-            { id: "notifications", label: t("settings:tabs.notifications"), icon: Bell },
-            { id: "subscription", label: t("settings:tabs.subscription"), icon: CreditCard },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={clsx(
-                "px-6 py-2.5 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
-                activeTab === tab.id
-                  ? "bg-card text-primary shadow-sm border border-border/50"
-                  : "text-text-secondary hover:text-text hover:bg-surface-alt"
-              )}
-              role="tab"
-              aria-selected={activeTab === tab.id}
-            >
-              <tab.icon className="h-4 w-4 mr-2" />
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <div className="flex flex-col md:flex-row gap-8 items-stretch">
+        {/* Sidebar resembling macOS System Settings */}
+        <aside className="w-full md:w-64 shrink-0">
+          <div className="flex flex-row md:flex-col gap-1 p-1 bg-surface-alt/40 backdrop-blur-md rounded-2xl border border-border md:p-2 overflow-x-auto md:overflow-x-visible md:sticky md:top-24" role="tablist">
+            {[
+              { id: "profile", label: t("settings:tabs.profile"), icon: User },
+              { id: "business", label: t("settings:tabs.business"), icon: Building },
+              { id: "contracts", label: t("settings:tabs.contracts"), icon: FileText },
+              { id: "notifications", label: t("settings:tabs.notifications"), icon: Bell },
+              { id: "subscription", label: t("settings:tabs.subscription"), icon: CreditCard },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                className={clsx(
+                  "w-auto md:w-full px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-3 transition-all whitespace-nowrap text-left cursor-pointer",
+                  activeTab === tab.id
+                    ? "bg-primary text-on-primary shadow-xs"
+                    : "text-text-secondary hover:text-text hover:bg-surface-alt/70"
+                )}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+              >
+                <tab.icon className="h-4.5 w-4.5 shrink-0" />
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </aside>
 
-      <div className="space-y-6">
         {/* ── CONTENT AREA ── */}
-        <div className="w-full">
+        <div className="flex-1 min-w-0">
           {activeTab === "profile" && (
-            <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 space-y-8 border border-border">
+            <Card variant="glass" padding="lg" className="space-y-8">
               <div>
                 <h3 className="text-lg font-bold text-text mb-1">
                   {t("settings:profile.title")}
@@ -422,24 +426,25 @@ export const Settings: React.FC = () => {
                         aria-label={t("settings:profile.name")}
                       />
                       <div className="flex gap-2">
-                        <button
+                        <Button
                           type="button"
+                          variant="primary"
                           onClick={handleUpdateProfileName}
-                          disabled={isUpdatingProfileName || profileName.trim() === profile.name}
-                          className="bg-primary text-white font-medium px-4 py-2 rounded-md hover:bg-primary-dark transition-colors shadow-sm disabled:opacity-50"
+                          loading={isUpdatingProfileName}
+                          disabled={profileName.trim() === profile.name}
                         >
-                          {isUpdatingProfileName ? t("common:action.saving") : t("common:action.save")}
-                        </button>
-                        <button
+                          {t("common:action.save")}
+                        </Button>
+                        <Button
                           type="button"
+                          variant="glass"
                           onClick={() => {
                             setProfileName(profile.name || "");
                             setIsEditingProfileName(false);
                           }}
-                          className="bg-surface-alt text-text font-bold px-4 py-2 rounded-xl border border-border hover:bg-border transition-all"
                         >
                           {t("common:action.cancel")}
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   ) : (
@@ -512,24 +517,24 @@ export const Settings: React.FC = () => {
                       )}
                     </div>
                     <div className="flex gap-3">
-                      <button
+                      <Button
                         type="button"
+                        variant="primary"
                         onClick={handleChangePassword}
-                        disabled={isChangingPassword}
-                        className="bg-primary text-white font-medium px-4 py-2 rounded-md hover:bg-primary-dark transition-colors shadow-sm disabled:opacity-50"
+                        loading={isChangingPassword}
                       >
-                        {isChangingPassword ? t("common:action.saving") : t("common:action.save")}
-                      </button>
-                      <button
+                        {t("common:action.save")}
+                      </Button>
+                      <Button
                         type="button"
+                        variant="glass"
                         onClick={() => {
                           setShowPasswordForm(false);
                           resetPassword();
                         }}
-                        className="bg-surface-alt text-text font-bold px-4 py-2 rounded-xl border border-border hover:bg-border transition-all"
                       >
                         {t("common:action.cancel")}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -611,11 +616,11 @@ export const Settings: React.FC = () => {
                   </p>
                 </div>
               </div>
-            </div>
+            </Card>
           )}
 
           {activeTab === "business" && (
-            <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 space-y-8 border border-border">
+            <Card variant="glass" padding="lg" className="space-y-8">
               <div>
                 <h3 className="text-lg font-bold text-text mb-1">{t("settings:business.title")}</h3>
                 <p className="text-sm text-text-secondary">{t("settings:business.description")}</p>
@@ -634,20 +639,20 @@ export const Settings: React.FC = () => {
                       placeholder={t("settings:business.name_placeholder")}
                     />
                     <div className="flex gap-2">
-                      <button
+                      <Button
                         type="button"
+                        variant="primary"
                         onClick={handleUpdateBusinessName}
-                        className="bg-primary text-white font-medium px-4 py-2 rounded-md hover:bg-primary-dark transition-colors shadow-sm"
                       >
                         {t("common:action.save")}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        variant="glass"
                         onClick={() => setIsEditingBusiness(false)}
-                        className="bg-surface-alt text-text font-bold px-6 py-3 rounded-xl border border-border hover:bg-border transition-all"
                       >
                         {t("common:action.cancel")}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ) : (
@@ -741,11 +746,11 @@ export const Settings: React.FC = () => {
                   {t("settings:business.brand_color_help")}
                 </p>
               </div>
-            </div>
+            </Card>
           )}
 
           {activeTab === "contracts" && (
-            <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 space-y-8 border border-border">
+            <Card variant="glass" padding="lg" className="space-y-8">
               <div>
                 <h3 className="text-lg font-bold text-text mb-1">{t("settings:contracts.title")}</h3>
                 <p className="text-sm text-text-secondary">{t("settings:contracts.description")}</p>
@@ -798,11 +803,11 @@ export const Settings: React.FC = () => {
                   isBasicPlan={isBasicPlan}
                 />
               </div>
-            </div>
+            </Card>
           )}
 
           {activeTab === "notifications" && (
-            <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 space-y-8 border border-border">
+            <Card variant="glass" padding="lg" className="space-y-8">
               <div>
                 <h3 className="text-lg font-bold text-text mb-1">{t("settings:notifications.title")}</h3>
                 <p className="text-sm text-text-secondary">{t("settings:notifications.description")}</p>
@@ -904,11 +909,11 @@ export const Settings: React.FC = () => {
                   ))}
                 </div>
               </div>
-            </div>
+            </Card>
           )}
 
           {activeTab === "subscription" && (
-            <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 space-y-8 border border-border">
+            <Card variant="glass" padding="lg" className="space-y-8">
               <div>
                 <h3 className="text-lg font-bold text-text mb-1">
                   {t("settings:subscription.title")}
@@ -1086,12 +1091,13 @@ export const Settings: React.FC = () => {
                   )}
                 </div>
               </div>
-            </div>
+            </Card>
           )}
         </div>
+      </div>
 
         {/* ── LEGAL LINKS ── */}
-        <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 border border-border">
+        <Card variant="glass" padding="lg">
           <h3 className="text-lg font-bold text-text mb-1">
             {t("common:legal.title")}
           </h3>
@@ -1128,8 +1134,7 @@ export const Settings: React.FC = () => {
               {t("common:legal.delete_account")}
             </Link>
           </div>
-        </div>
+        </Card>
       </div>
-    </div>
   );
 };

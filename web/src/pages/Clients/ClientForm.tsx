@@ -10,6 +10,9 @@ import { Breadcrumb } from "../../components/Breadcrumb";
 import { logError } from "../../lib/errorHandler";
 import { usePlanLimits } from "../../hooks/usePlanLimits";
 import { UpgradeBanner } from "../../components/UpgradeBanner";
+import { Button } from "../../components/Button";
+import { Card } from "../../components/Card";
+import { Input } from "../../components/Input";
 import { useClient, useCreateClient, useUpdateClient, useUploadClientPhoto } from "../../hooks/queries/useClientQueries";
 
 export const ClientForm: React.FC = () => {
@@ -169,10 +172,10 @@ export const ClientForm: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-card shadow-sm border border-border px-4 py-8 rounded-2xl sm:p-10">
+      <Card variant="glass" padding="lg">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {error && (
-            <div className="bg-error/5 border-l-4 border-error p-4" role="alert">
+            <div className="bg-error/5 border-l-4 border-error p-4 rounded-r-xl" role="alert">
               <div className="flex">
                 <div className="ml-3">
                   <p className="text-sm text-error">{error}</p>
@@ -223,121 +226,89 @@ export const ClientForm: React.FC = () => {
             </div>
 
             <div className="sm:col-span-6">
-              <label htmlFor="name" className="block text-sm font-medium text-text-secondary mb-2">
-                {t("clients:form.name")} *
-              </label>
-              <input
+              <Input
                 id="name"
-                type="text"
-                {...register("name")}
-                className="w-full shadow-sm rounded-xl p-3 border border-border bg-card text-text transition-shadow focus:ring-2 focus:ring-primary/20"
+                label={t("clients:form.name") + " *"}
                 placeholder={t("clients:form.name")}
-                aria-invalid={errors.name ? "true" : "false"}
+                error={errors.name?.message}
+                {...register("name")}
               />
-              {errors.name && (
-                <p className="mt-2 text-sm text-error" role="alert">
-                  {errors.name.message}
-                </p>
-              )}
             </div>
 
             <div className="sm:col-span-3">
-              <label htmlFor="email" className="block text-sm font-medium text-text-secondary mb-2">
-                {t("clients:form.email")}
-              </label>
-              <input
+              <Input
                 id="email"
                 type="email"
-                {...register("email")}
-                className="w-full shadow-sm rounded-xl p-3 border border-border bg-card text-text transition-shadow focus:ring-2 focus:ring-primary/20"
+                label={t("clients:form.email")}
                 placeholder="example@mail.com"
-                aria-invalid={errors.email ? "true" : "false"}
+                error={errors.email?.message}
+                {...register("email")}
               />
-              {errors.email && (
-                <p className="mt-2 text-sm text-error" role="alert">
-                  {errors.email.message}
-                </p>
-              )}
             </div>
 
             <div className="sm:col-span-3">
-              <label htmlFor="phone" className="block text-sm font-medium text-text-secondary mb-2">
-                {t("clients:form.phone")} *
-              </label>
-              <input
+              <Input
                 id="phone"
-                type="text"
-                {...register("phone")}
-                className="w-full shadow-sm rounded-xl p-3 border border-border bg-card text-text transition-shadow focus:ring-2 focus:ring-primary/20"
+                label={t("clients:form.phone") + " *"}
                 placeholder="00 0000 0000"
-                aria-invalid={errors.phone ? "true" : "false"}
+                error={errors.phone?.message}
+                {...register("phone")}
               />
-              {errors.phone && (
-                <p className="mt-2 text-sm text-error" role="alert">
-                  {errors.phone.message}
-                </p>
-              )}
             </div>
 
             <div className="sm:col-span-4">
-              <label htmlFor="address" className="block text-sm font-medium text-text-secondary mb-2">
-                {t("clients:form.address")}
-              </label>
-              <input
+              <Input
                 id="address"
-                type="text"
-                {...register("address")}
-                className="w-full shadow-sm rounded-xl p-3 border border-border bg-card text-text transition-shadow focus:ring-2 focus:ring-primary/20"
+                label={t("clients:form.address")}
                 placeholder={t("clients:form.address")}
+                {...register("address")}
               />
             </div>
 
             <div className="sm:col-span-2">
-              <label htmlFor="city" className="block text-sm font-medium text-text-secondary mb-2">
-                {t("clients:form.city")}
-              </label>
-              <input
+              <Input
                 id="city"
-                type="text"
-                {...register("city")}
-                className="w-full shadow-sm rounded-xl p-3 border border-border bg-card text-text transition-shadow focus:ring-2 focus:ring-primary/20"
+                label={t("clients:form.city")}
                 placeholder={t("clients:form.city")}
+                {...register("city")}
               />
             </div>
 
-            <div className="sm:col-span-6">
-              <label htmlFor="notes" className="block text-sm font-medium text-text-secondary mb-2">
+            <div className="sm:col-span-6 flex flex-col gap-1.5">
+              <label htmlFor="notes" className="text-xs font-bold text-text-secondary px-1 uppercase tracking-wider">
                 {t("clients:form.notes")}
               </label>
               <textarea
                 id="notes"
                 {...register("notes")}
                 rows={4}
-                className="w-full shadow-sm rounded-xl p-3 border border-border bg-card text-text transition-shadow focus:ring-2 focus:ring-primary/20"
+                className="w-full px-4 py-3 rounded-xl border border-border bg-surface hover:border-border-strong focus:border-primary focus:bg-surface focus:outline-hidden focus:ring-4 focus:ring-primary/10 text-sm text-text placeholder-text-tertiary transition-all"
                 placeholder={t("clients:form.notes_placeholder")}
               />
             </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-6 border-t border-border">
-            <button
+            <Button
               type="button"
+              variant="glass"
               onClick={() => navigate("/clients")}
-              className="bg-card py-2.5 px-6 border border-border rounded-xl shadow-sm text-sm font-medium text-text-secondary hover:bg-surface-alt transition-colors"
             >
               {t("common:action.cancel")}
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={isLoading}
-              className="inline-flex justify-center py-2.5 px-8 border border-transparent shadow-sm text-sm font-medium rounded-xl text-white premium-gradient hover:opacity-90 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-primary/40 disabled:opacity-50 transition-opacity"
+              variant="primary"
+              loading={isLoading}
             >
               <Save className="h-5 w-5 mr-2" aria-hidden="true" />
               {isLoading ? t("common:action.saving") : t("common:action.save")}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
+      </Card>
+
+
     </div>
   );
 };

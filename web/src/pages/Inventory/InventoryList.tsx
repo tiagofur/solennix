@@ -25,6 +25,9 @@ import Empty from "../../components/Empty";
 import { useToast } from "../../hooks/useToast";
 import { SkeletonTable } from "../../components/Skeleton";
 import { Modal } from "../../components/Modal";
+import { Button } from "../../components/Button";
+import { Card } from "../../components/Card";
+import { Input } from "../../components/Input";
 import { useInventoryItems, useDeleteInventoryItem, useUpdateInventoryItem } from "../../hooks/queries/useInventoryQueries";
 
 type SortKey =
@@ -321,7 +324,7 @@ export const InventoryList: React.FC = () => {
         className="min-w-full divide-y divide-border"
         aria-label={tableLabel}
       >
-        <thead className="bg-surface-alt">
+        <thead className="bg-surface-alt/45 backdrop-blur-xs border-b border-border">
           <tr>
             <th
               scope="col"
@@ -360,7 +363,7 @@ export const InventoryList: React.FC = () => {
             </th>
           </tr>
         </thead>
-        <tbody className="bg-card divide-y divide-border">
+        <tbody className="divide-y divide-border">
           {sectionItems.map((item) => {
             const isLowStock =
               item.minimum_stock > 0 &&
@@ -441,8 +444,8 @@ export const InventoryList: React.FC = () => {
         <h1 className="text-2xl font-bold text-text tracking-tight">{t("inventory:title")}</h1>
         <div className="flex flex-wrap items-center gap-2">
           {items.length > 0 && (
-            <button
-              type="button"
+            <Button
+              variant="glass"
               onClick={() =>
                 exportToCsv(
                   t("inventory:list.csv_filename"),
@@ -468,15 +471,14 @@ export const InventoryList: React.FC = () => {
                   ]),
                 )
               }
-              className="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
             >
               <Download className="h-4 w-4 mr-2" aria-hidden="true" />
               {t("inventory:list.export_csv")}
-            </button>
+            </Button>
           )}
           <Link
             to="/inventory/new"
-            className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
+            className="inline-flex items-center justify-center font-semibold transition-all active-ios-scale px-5 py-2.5 text-sm rounded-xl gap-2 bg-linear-to-br from-primary to-primary-dark text-on-primary shadow-xs hover:shadow-sm active:opacity-90"
           >
             <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
             {t("inventory:new_item")}
@@ -488,7 +490,7 @@ export const InventoryList: React.FC = () => {
         <button
           type="button"
           onClick={() => setShowLowStockOnly((v) => !v)}
-          className="w-full flex items-center gap-3 bg-error/5 border border-error/30 text-error rounded-2xl p-4 hover:bg-error/10 transition-colors text-left"
+          className="w-full flex items-center gap-3 bg-error/5 border border-error/20 text-error rounded-2xl p-4 hover:bg-error/10 transition-colors text-left"
           aria-pressed={showLowStockOnly}
         >
           <AlertTriangle
@@ -506,13 +508,11 @@ export const InventoryList: React.FC = () => {
       )}
 
       <div className="relative max-w-md">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-text-secondary" aria-hidden="true" />
-        </div>
-        <input
+        <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-secondary pointer-events-none z-10" aria-hidden="true" />
+        <Input
           id="inventory-search"
           type="search"
-          className="block w-full pl-10 pr-3 py-2 border border-border rounded-xl leading-5 bg-card text-text placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary sm:text-sm transition duration-150 ease-in-out"
+          className="pl-11 pr-10 bg-card/60 hover:bg-surface-alt/40 focus:bg-card focus:border-primary"
           placeholder={t("inventory:list.search_placeholder")}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -527,10 +527,10 @@ export const InventoryList: React.FC = () => {
               type="button"
               onClick={() => setActiveScope(chip.value as any)}
               className={clsx(
-                "px-3 py-1 rounded-full text-xs font-semibold border transition-colors",
+                "px-4 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 active-ios-scale",
                 activeScope === chip.value
-                  ? "bg-primary text-white border-primary"
-                  : "bg-card text-text-secondary border-border hover:border-primary/50 hover:text-primary"
+                  ? "bg-primary text-on-primary border-primary shadow-xs"
+                  : "bg-surface-alt/70 text-text-secondary border-border hover:border-border-strong hover:bg-surface-alt"
               )}
             >
               {chip.label}
@@ -540,7 +540,7 @@ export const InventoryList: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
+        <Card variant="glass" padding="none" className="overflow-hidden">
           <SkeletonTable
             rows={6}
             columns={[
@@ -551,9 +551,9 @@ export const InventoryList: React.FC = () => {
               { width: "w-20" },
             ]}
           />
-        </div>
+        </Card>
       ) : filteredItems.length === 0 ? (
-        <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
+        <Card variant="glass" padding="none" className="overflow-hidden">
           <Empty
             icon={Package}
             title={
@@ -595,7 +595,7 @@ export const InventoryList: React.FC = () => {
               ) : undefined
             }
           />
-        </div>
+        </Card>
       ) : (
         <div className="space-y-8">
           {(activeScope === "all" || activeScope === "ingredient") && (
@@ -615,7 +615,7 @@ export const InventoryList: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
+              <Card variant="glass" padding="none" className="overflow-hidden shadow-sm">
                 {ingredients.length === 0 ? (
                   <div className="px-6 py-8 text-center text-sm text-text-secondary">
                      {t("inventory:list.section_empty")}
@@ -626,7 +626,7 @@ export const InventoryList: React.FC = () => {
                     {renderTable(ingredients, ingredientSort, handleIngredientSort, t("inventory:list.type_ingredient"))}
                   </>
                 )}
-              </div>
+              </Card>
             </section>
           )}
 
@@ -646,7 +646,7 @@ export const InventoryList: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
+              <Card variant="glass" padding="none" className="overflow-hidden shadow-sm">
                 {supplies.length === 0 ? (
                   <div className="px-6 py-8 text-center text-sm text-text-secondary">
                      {t("inventory:list.section_empty")}
@@ -657,7 +657,7 @@ export const InventoryList: React.FC = () => {
                     {renderTable(supplies, supplySort, handleSupplySort, t("inventory:list.type_supply"))}
                   </>
                 )}
-              </div>
+              </Card>
             </section>
           )}
 
@@ -678,7 +678,7 @@ export const InventoryList: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
+              <Card variant="glass" padding="none" className="overflow-hidden shadow-sm">
                 {equipment.length === 0 ? (
                   <div className="px-6 py-8 text-center text-sm text-text-secondary">
                      {t("inventory:list.section_empty")}
@@ -689,7 +689,7 @@ export const InventoryList: React.FC = () => {
                     {renderTable(equipment, equipmentSort, handleEquipmentSort, t("inventory:list.type_equipment"))}
                   </>
                 )}
-              </div>
+              </Card>
             </section>
           )}
         </div>
