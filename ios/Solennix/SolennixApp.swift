@@ -28,6 +28,12 @@ struct SolennixApp: App {
 
     @AppStorage("appearance") private var appearance: String = "system"
     @AppStorage("hasRequestedPushAuthorization") private var hasRequestedPushAuthorization = false
+    /// Session-identity epoch for nav state restoration (ios-lifecycle PR-B / B4).
+    /// Incremented in `performSessionCleanup`; the nav layouts discard any
+    /// persisted navigation whose epoch no longer matches, so a second user can
+    /// never land on the first user's restored navigation. Stored via
+    /// `@AppStorage` (UserDefaults.standard — reliably writable, not scene-mangled).
+    @AppStorage(NavSession.resetEpoch) private var sessionEpoch: Int = 0
     @Environment(\.scenePhase) private var scenePhase
 
     /// The SwiftData model container for offline caching.
@@ -385,6 +391,19 @@ struct SolennixApp: App {
         // 5. Clear Core Spotlight index so the next user cannot search previous
         //    user's events, clients, or products from the system search.
         SpotlightIndexer.removeAll()
+
+        // 6. Invalidate persisted navigation state (ios-lifecycle PR-B / B4).
+        //    @SceneStorage survives cold launches AND view teardown, so without
+        //    an active clear the next user would land on the previous user's
+        //    restored tab/section/screens. The deterministic guard is the session
+        //    epoch: bumping it makes every nav-restoration modifier discard any
+        //    envelope stamped with the old (previous user's) epoch. The
+        //    UserDefaults removal below is defense-in-depth (SceneStorage keys
+        //    may be scene-mangled, so this is best-effort, not load-bearing).
+        sessionEpoch &+= 1
+        for key in NavSceneStorage.allKeys {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
 
         // Mirror the @AppStorage-backed properties so they take effect immediately
         // (UserDefaults.standard and @AppStorage share the same store, but the

@@ -35,6 +35,12 @@ public final class EventDetailViewModel {
     public var errorMessage: String?
     public var isLiveActivityActive: Bool = false
 
+    /// True when the event fetch returned 404 (the event no longer exists for
+    /// this user). Set during `loadData`; the detail view reacts by popping
+    /// itself silently so a restored/deep-linked route to a deleted entity does
+    /// not strand the user on an error screen (ios-lifecycle PR-B / B5).
+    public var entityNotFound: Bool = false
+
     /// Map of product ID -> Product for resolving product names.
     public var productMap: [String: Product] = [:]
 
@@ -174,7 +180,14 @@ public final class EventDetailViewModel {
                 }
             }
         } catch {
-            if let apiError = error as? APIError {
+            // B5: a 404 on the primary event fetch means the entity no longer
+            // exists for this user (deleted on another device, or a restored
+            // route that points at a stale ID). Signal the view to pop silently
+            // instead of stranding on the generic error screen. Falls through to
+            // `isLoading = false` below (no early return).
+            if case .serverError(let statusCode, _) = (error as? APIError), statusCode == 404 {
+                entityNotFound = true
+            } else if let apiError = error as? APIError {
                 errorMessage = apiError.errorDescription ?? tr("events.detail.error.load", "Error cargando el evento")
             } else {
                 errorMessage = tr("events.detail.error.load", "Error cargando el evento")

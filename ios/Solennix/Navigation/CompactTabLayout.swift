@@ -20,12 +20,28 @@ struct CompactTabLayout: View {
 
     @Binding var pendingSpotlightRoute: Route?
 
+    // MARK: - Restorable Navigation State (ios-lifecycle PR-B / B2)
+    //
+    // The selected tab and each tab's NavigationPath are persisted to
+    // `@SceneStorage` as epoch-stamped JSON `Data` (see Navigation/Route.swift)
+    // so the user lands back on the same tab/screen after a relaunch. Both the
+    // iOS 26 and legacy branches read/write the SAME SceneStorage keys, so
+    // whichever renders restores the same state.
+
     @State private var selectedTab: Tab = .home
+    @SceneStorage(NavSceneStorage.selectedTab) private var selectedTabData: Data?
+
     @State private var homePath = NavigationPath()
     @State private var eventsPath = NavigationPath()
     @State private var clientsPath = NavigationPath()
     @State private var morePath = NavigationPath()
     @State private var searchPath = NavigationPath()
+
+    @SceneStorage(NavSceneStorage.homePath) private var homePathData: Data?
+    @SceneStorage(NavSceneStorage.eventsPath) private var eventsPathData: Data?
+    @SceneStorage(NavSceneStorage.clientsPath) private var clientsPathData: Data?
+    @SceneStorage(NavSceneStorage.morePath) private var morePathData: Data?
+    @SceneStorage(NavSceneStorage.searchPath) private var searchPathData: Data?
 
     /// Search view model owned by the layout so it is non-nil from the first
     /// render (avoiding SwiftUI's `@State` re-init trap) and so the shared
@@ -90,6 +106,7 @@ struct CompactTabLayout: View {
         }
         .tabBarMinimizeBehavior(.onScrollDown)
         .tabViewSearchActivation(.searchTabSelection)
+        .persistable($selectedTab, data: $selectedTabData)
         .onChange(of: pendingSpotlightRoute) { _, newRoute in
             guard let route = newRoute else { return }
             // F-1: route the Spotlight tab-transition through the same clear-on-
@@ -154,6 +171,7 @@ struct CompactTabLayout: View {
                 .tabItem { Label(Tab.search.title, systemImage: Tab.search.iconName) }
                 .tag(AppTab.search)
         }
+        .persistable($selectedTab, data: $selectedTabData)
         .onChange(of: pendingSpotlightRoute) { _, newRoute in
             guard let route = newRoute else { return }
             // F-1: route the Spotlight tab-transition through the same clear-on-
@@ -195,6 +213,7 @@ struct CompactTabLayout: View {
                     RouteDestination(route: route)
                 }
         }
+        .persistableNavigationPath(path: $homePath, data: $homePathData)
     }
 
     @ViewBuilder
@@ -205,6 +224,7 @@ struct CompactTabLayout: View {
                     RouteDestination(route: route)
                 }
         }
+        .persistableNavigationPath(path: $eventsPath, data: $eventsPathData)
     }
 
     @ViewBuilder
@@ -215,6 +235,7 @@ struct CompactTabLayout: View {
                     RouteDestination(route: route)
                 }
         }
+        .persistableNavigationPath(path: $clientsPath, data: $clientsPathData)
     }
 
     @ViewBuilder
@@ -225,6 +246,7 @@ struct CompactTabLayout: View {
                     RouteDestination(route: route)
                 }
         }
+        .persistableNavigationPath(path: $morePath, data: $morePathData)
     }
 
     /// Search tab content, shared by the iOS 26 search-role tab and the iOS 17–25
@@ -241,6 +263,7 @@ struct CompactTabLayout: View {
                     RouteDestination(route: route)
                 }
         }
+        .persistableNavigationPath(path: $searchPath, data: $searchPathData)
     }
 
     /// Custom binding for the legacy TabView that pops to root on same-tab re-tap.

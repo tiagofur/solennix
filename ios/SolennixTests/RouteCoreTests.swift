@@ -1,5 +1,6 @@
 import XCTest
 import Foundation
+import SwiftUI
 import SolennixCore
 
 final class RouteCoreTests: XCTestCase {
@@ -76,5 +77,121 @@ final class RouteCoreTests: XCTestCase {
         // Triangulation: it MUST NOT collide with the neighboring Settings routes.
         XCTAssertNotEqual(Route.calendarSyncPreferences, Route.notificationPreferences)
         XCTAssertNotEqual(Route.calendarSyncPreferences, Route.settings)
+    }
+
+    // MARK: - Codable round-trip (ios-lifecycle PR-B / B1 — SceneStorage GATE)
+    //
+    // Route MUST be Codable so a NavigationPath holding Route values can be
+    // persisted via NavigationPath.CodableRepresentation (JSON-encoded into
+    // @SceneStorage) and restored verbatim on relaunch. This test is the RED→GREEN
+    // gate for the whole state-restoration work unit: it MUST be green before any
+    // @SceneStorage wiring (B2/B3) is added.
+
+    private func assertRoundTrip(_ route: Route, file: StaticString = #filePath, line: UInt = #line) {
+        let encoder = JSONEncoder()
+        let decoder = JSONDecoder()
+        do {
+            let data = try encoder.encode(route)
+            let decoded = try decoder.decode(Route.self, from: data)
+            XCTAssertEqual(route, decoded, "Route did not survive Codable round-trip", file: file, line: line)
+        } catch {
+            XCTFail("Route Codable round-trip threw for \(route): \(error)", file: file, line: line)
+        }
+    }
+
+    func testRouteCodableRoundTripSimpleCases() {
+        assertRoundTrip(.eventList)
+        assertRoundTrip(.clientList)
+        assertRoundTrip(.staffList)
+        assertRoundTrip(.productList)
+        assertRoundTrip(.inventoryList)
+        assertRoundTrip(.settings)
+        assertRoundTrip(.quickQuote)
+        assertRoundTrip(.paymentInbox)
+        assertRoundTrip(.reviews)
+        assertRoundTrip(.eventFormLinks)
+        assertRoundTrip(.editProfile)
+        assertRoundTrip(.changePassword)
+        assertRoundTrip(.businessSettings)
+        assertRoundTrip(.contractDefaults)
+        assertRoundTrip(.pricing)
+        assertRoundTrip(.subscription)
+        assertRoundTrip(.notificationPreferences)
+        assertRoundTrip(.calendarSyncPreferences)
+        assertRoundTrip(.about)
+        assertRoundTrip(.deleteAccount)
+    }
+
+    func testRouteCodableRoundTripIdentifiers() {
+        assertRoundTrip(.eventDetail(id: "evt-123"))
+        assertRoundTrip(.clientDetail(id: "cli-456"))
+        assertRoundTrip(.staffDetail(id: "stf-789"))
+        assertRoundTrip(.staffTeamDetail(id: "team-1"))
+        assertRoundTrip(.productDetail(id: "prd-1"))
+        assertRoundTrip(.inventoryDetail(id: "inv-1"))
+        assertRoundTrip(.eventChecklist(id: "evt-1"))
+        assertRoundTrip(.eventFinances(id: "evt-1"))
+        assertRoundTrip(.eventPayments(id: "evt-1"))
+        assertRoundTrip(.eventProducts(id: "evt-1"))
+        assertRoundTrip(.eventExtras(id: "evt-1"))
+        assertRoundTrip(.eventSupplies(id: "evt-1"))
+        assertRoundTrip(.eventEquipment(id: "evt-1"))
+        assertRoundTrip(.eventShoppingList(id: "evt-1"))
+        assertRoundTrip(.eventPurchaseChecklist(id: "evt-1"))
+        assertRoundTrip(.eventPhotos(id: "evt-1"))
+        assertRoundTrip(.eventContractPreview(id: "evt-1"))
+        assertRoundTrip(.eventStaff(id: "evt-1"))
+    }
+
+    func testRouteCodableRoundTripOptionals() {
+        // Every optional payload shape (String?/Date?/Int?) — incl. all-nil and mixed.
+        assertRoundTrip(.eventForm())
+        assertRoundTrip(.eventForm(id: "evt-1"))
+        assertRoundTrip(.eventForm(id: "evt-1", clientId: "cli-1"))
+        assertRoundTrip(.eventForm(id: "evt-1", clientId: "cli-1", date: Date(timeIntervalSince1970: 1_700_000_000)))
+        assertRoundTrip(.eventForm(id: "evt-1", clientId: "cli-1", date: Date(timeIntervalSince1970: 1_700_000_000), step: 3))
+        assertRoundTrip(.eventForm(step: 5))
+        assertRoundTrip(.clientForm())
+        assertRoundTrip(.clientForm(id: "cli-1"))
+        assertRoundTrip(.staffForm())
+        assertRoundTrip(.staffForm(id: "stf-1"))
+        assertRoundTrip(.staffTeamForm())
+        assertRoundTrip(.staffTeamForm(id: "team-1"))
+        assertRoundTrip(.productForm())
+        assertRoundTrip(.productForm(id: "prd-1"))
+        assertRoundTrip(.inventoryForm())
+        assertRoundTrip(.inventoryForm(id: "inv-1"))
+    }
+
+    func testRouteCodableRoundTripSearchQuery() {
+        assertRoundTrip(.search())
+        assertRoundTrip(.search(query: ""))
+        assertRoundTrip(.search(query: "ana martínez"))
+        assertRoundTrip(.search(query: "unicode-émoji-🚀-naïve"))
+    }
+
+    func testRouteCodableDecodedIntoNavigationPathRepresentation() {
+        // End-to-end: the exact path used by the layouts — a NavigationPath built
+        // from Route values must encode/decode through CodableRepresentation and
+        // reproduce an equal path. This is the contract @SceneStorage relies on.
+        var path = NavigationPath()
+        path.append(Route.eventList)
+        path.append(Route.eventDetail(id: "evt-1"))
+        path.append(Route.eventFinances(id: "evt-1"))
+
+        guard let codable = path.codable else {
+            return XCTFail("path.codable must be non-nil now that Route is Codable")
+        }
+        let data = try! JSONEncoder().encode(codable)
+        let decoded = try! JSONDecoder().decode(NavigationPath.CodableRepresentation.self, from: data)
+        let restored = NavigationPath(decoded)
+
+        // The restored path must hold the same number of destinations. (We do NOT
+        // compare with == here: NavigationPath's Equatable is sensitive to its
+        // internal eager-vs-lazy representation, so a decoded path is never ==
+        // an in-memory one even with identical contents. Count + the per-Route
+        // round-trip tests above fully prove the values survive.)
+        XCTAssertEqual(restored.count, path.count)
+        XCTAssertEqual(restored.count, 3)
     }
 }
