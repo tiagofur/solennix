@@ -56,4 +56,9 @@
     <string name="tooltip_quick_quote_body">Generá un presupuesto al instante, sin crear un evento.</string>
     <string name="tooltip_dismiss">Entendido</string>
 
+    <!-- Dirty state dialogs (generic) -->
+    <string name="common_discard_title">¿Descartar cambios?</string>
+    <string name="common_discard_message">Tenés cambios sin guardar. Si salís, se perderán.</string>
+    <string name="common_discard_confirm">Descartar</string>
+
 </resources>

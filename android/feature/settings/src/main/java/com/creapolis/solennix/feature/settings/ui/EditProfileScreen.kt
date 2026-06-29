@@ -11,9 +11,18 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.R as DesignSystemR
@@ -32,6 +41,11 @@ fun EditProfileScreen(
     onNavigateBack: () -> Unit
 ) {
     val scrollState = rememberScrollState()
+    var showDiscardDialog by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = viewModel.isDirty) {
+        showDiscardDialog = true
+    }
 
     LaunchedEffect(viewModel.saveSuccess) {
         if (viewModel.saveSuccess) {
@@ -44,7 +58,13 @@ fun EditProfileScreen(
             SolennixTopAppBar(
                 title = { Text(stringResource(R.string.settings_edit_profile_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = {
+                        if (viewModel.isDirty) {
+                            showDiscardDialog = true
+                        } else {
+                            onNavigateBack()
+                        }
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(DesignSystemR.string.cd_back))
                     }
                 }
@@ -58,7 +78,13 @@ fun EditProfileScreen(
                     .padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = SolennixTheme.colors.primary)
+                CircularProgressIndicator(
+                    color = SolennixTheme.colors.primary,
+                    modifier = Modifier.semantics {
+                        contentDescription = "Cargando..."
+                        liveRegion = LiveRegionMode.Polite
+                    }
+                )
             }
         } else {
             AdaptiveCenteredContent(maxWidth = 700.dp) {
@@ -136,5 +162,28 @@ fun EditProfileScreen(
             }
             }
         }
+    }
+
+    if (showDiscardDialog) {
+        AlertDialog(
+            onDismissRequest = { showDiscardDialog = false },
+            title = { Text(stringResource(R.string.profile_form_discard_title)) },
+            text = { Text(stringResource(R.string.profile_form_discard_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDiscardDialog = false
+                        onNavigateBack()
+                    }
+                ) {
+                    Text(stringResource(R.string.profile_form_discard_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDiscardDialog = false }) {
+                    Text(stringResource(R.string.profile_form_discard_cancel))
+                }
+            }
+        )
     }
 }

@@ -54,6 +54,26 @@ class NotificationPreferencesViewModel @Inject constructor(
     var isLoading by mutableStateOf(true)
     var errorMessage by mutableStateOf<String?>(null)
 
+    // Initial values for dirty state tracking
+    private var initialEmailPaymentReceipt = true
+    private var initialEmailEventReminder = true
+    private var initialEmailSubscriptionUpdates = true
+    private var initialEmailWeeklySummary = false
+    private var initialEmailMarketing = false
+    private var initialPushEnabled = true
+    private var initialPushEventReminder = true
+    private var initialPushPaymentReceived = true
+
+    val isDirty: Boolean
+        get() = emailPaymentReceipt != initialEmailPaymentReceipt ||
+                emailEventReminder != initialEmailEventReminder ||
+                emailSubscriptionUpdates != initialEmailSubscriptionUpdates ||
+                emailWeeklySummary != initialEmailWeeklySummary ||
+                emailMarketing != initialEmailMarketing ||
+                pushEnabled != initialPushEnabled ||
+                pushEventReminder != initialPushEventReminder ||
+                pushPaymentReceived != initialPushPaymentReceived
+
     init {
         loadPreferences()
     }
@@ -85,6 +105,16 @@ class NotificationPreferencesViewModel @Inject constructor(
         pushEnabled = user.pushEnabled ?: true
         pushEventReminder = user.pushEventReminder ?: true
         pushPaymentReceived = user.pushPaymentReceived ?: true
+
+        // Store initial values for dirty state tracking
+        initialEmailPaymentReceipt = emailPaymentReceipt
+        initialEmailEventReminder = emailEventReminder
+        initialEmailSubscriptionUpdates = emailSubscriptionUpdates
+        initialEmailWeeklySummary = emailWeeklySummary
+        initialEmailMarketing = emailMarketing
+        initialPushEnabled = pushEnabled
+        initialPushEventReminder = pushEventReminder
+        initialPushPaymentReceived = pushPaymentReceived
     }
 
     fun togglePreference(setter: () -> Unit) {

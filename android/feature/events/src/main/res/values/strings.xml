@@ -54,6 +54,8 @@
     <string name="events_list_error_network">Error de conexión. Verificá tu internet.</string>
     <string name="events_list_error_server">Error del servidor. Intentá más tarde.</string>
     <string name="events_list_error_session_expired">Sesión expirada. Iniciá sesión de nuevo.</string>
+    <string name="events_list_error_block_date">No se pudo bloquear la fecha</string>
+    <string name="events_list_error_unblock_date">No se pudo desbloquear la fecha</string>
     <string name="events_list_csv_header_name">Nombre</string>
     <string name="events_list_csv_header_date">Fecha</string>
     <string name="events_list_csv_header_client">Cliente</string>
@@ -479,5 +481,8 @@
     </plurals>
     <string name="events_summary_photos_title">Fotos</string>
     <string name="events_summary_staff_title">Personal</string>
+    <string name="events_form_discard_title">¿Salir sin guardar?</string>
+    <string name="events_form_discard_message">Tienes cambios sin guardar. ¿Seguro que deseas salir?</string>
+    <string name="events_form_discard_confirm">Salir</string>
 
 </resources>

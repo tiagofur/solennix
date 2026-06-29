@@ -893,6 +893,18 @@ class EventFormViewModel @Inject constructor(
             }
         }
     }
+
+    val isDirty: Boolean
+        get() = selectedClient != null ||
+                selectedProducts.isNotEmpty() ||
+                eventExtras.isNotEmpty() ||
+                selectedEquipment.isNotEmpty() ||
+                selectedSupplies.isNotEmpty() ||
+                selectedStaff.isNotEmpty() ||
+                serviceType.isNotBlank() ||
+                location.isNotBlank() ||
+                city.isNotBlank() ||
+                notes.isNotBlank()
 }
 
 /**

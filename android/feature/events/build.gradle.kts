@@ -74,6 +74,9 @@ dependencies {
     // EncryptedSharedPreferences for checklist progress (event IDs are keys)
     implementation(libs.security.crypto)
 
+    // DataStore for view mode persistence
+    implementation(libs.datastore.preferences)
+
     // Testing
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)

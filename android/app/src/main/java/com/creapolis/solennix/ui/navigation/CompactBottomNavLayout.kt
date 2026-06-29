@@ -3,6 +3,8 @@ package com.creapolis.solennix.ui.navigation
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -158,7 +160,8 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
         floatingActionButton = {
             val showQuickActions = isAtTopLevel &&
                 currentRoute != TopLevelDestination.MORE.route &&
-                currentRoute != TopLevelDestination.CLIENTS.route
+                currentRoute != TopLevelDestination.CLIENTS.route &&
+                currentRoute != TopLevelDestination.SEARCH.route
             if (showQuickActions) {
                 QuickActionsFAB(
                     onNewEventClick = { navController.navigate("event_form?eventId=") },
@@ -224,6 +227,20 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 )
             }
 
+            composable(TopLevelDestination.SEARCH.route) {
+                SearchScreen(
+                    viewModel = hiltViewModel(),
+                    showBackButton = false,
+                    onClientClick = { id -> navController.navigate("client_detail/$id") },
+                    onEventClick = { id -> navController.navigate("event_detail/$id") },
+                    onProductClick = { id -> navController.navigate("product_detail/$id") },
+                    onInventoryClick = { id -> navController.navigate("inventory_detail/$id") },
+                    onNavigateBack = {
+                        // No-op for tab navigation: back button does nothing
+                    }
+                )
+            }
+
             composable(TopLevelDestination.MORE.route) {
                 MoreMenuScreen(
                     onProductsClick = { navController.navigate("products") },
@@ -258,6 +275,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 SearchScreen(
                     viewModel = hiltViewModel(),
                     initialQuery = backStackEntry.arguments?.getString("query")?.let(Uri::decode),
+                    showBackButton = true,
                     onClientClick = { id -> navController.navigate("client_detail/$id") },
                     onEventClick = { id -> navController.navigate("event_detail/$id") },
                     onProductClick = { id -> navController.navigate("product_detail/$id") },
@@ -589,8 +607,17 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 .fillMaxSize()
                 .padding(padding)
                 .padding(horizontal = 16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             Spacer(modifier = Modifier.height(12.dp))
+
+            // Sección: Catálogo
+            Text(
+                text = stringResource(R.string.nav_header_catalog),
+                modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 4.dp),
+                style = MaterialTheme.typography.labelLarge,
+                color = SolennixTheme.colors.primary
+            )
             MenuOptionItem(
                 title = stringResource(R.string.nav_products),
                 subtitle = stringResource(R.string.nav_catalog_costs),
@@ -633,6 +660,16 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 iconColor = SolennixTheme.colors.iconPlum,
                 onClick = onReviewsClick
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Sección: Configuración
+            Text(
+                text = stringResource(R.string.nav_header_settings),
+                modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 4.dp),
+                style = MaterialTheme.typography.labelLarge,
+                color = SolennixTheme.colors.primary
+            )
             MenuOptionItem(
                 title = stringResource(R.string.nav_settings),
                 subtitle = stringResource(R.string.nav_profile),
@@ -640,6 +677,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 iconColor = SolennixTheme.colors.secondary,
                 onClick = onSettingsClick
             )
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

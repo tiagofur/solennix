@@ -22,8 +22,13 @@ import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.focus.FocusDirection
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -58,6 +63,12 @@ fun ClientFormScreen(
     val scrollState = rememberScrollState()
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
+    var showDiscardDialog by remember { mutableStateOf(false) }
+
+    // Back handler for dirty state
+    BackHandler(enabled = viewModel.isDirty) {
+        showDiscardDialog = true
+    }
 
     LaunchedEffect(viewModel.saveSuccess) {
         if (viewModel.saveSuccess) {
@@ -83,7 +94,13 @@ fun ClientFormScreen(
                 },
                 onSearchClick = onSearchClick,
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = {
+                        if (viewModel.isDirty) {
+                            showDiscardDialog = true
+                        } else {
+                            onNavigateBack()
+                        }
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(DesignSystemR.string.cd_back))
                     }
                 }
@@ -274,6 +291,30 @@ fun ClientFormScreen(
                 onNavigateBack()
             },
             onDismiss = { viewModel.planLimitMessage = null }
+        )
+    }
+
+    // Discard changes dialog
+    if (showDiscardDialog) {
+        AlertDialog(
+            onDismissRequest = { showDiscardDialog = false },
+            title = { Text(stringResource(R.string.clients_form_discard_title)) },
+            text = { Text(stringResource(R.string.clients_form_discard_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDiscardDialog = false
+                        onNavigateBack()
+                    }
+                ) {
+                    Text(stringResource(R.string.clients_form_discard_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDiscardDialog = false }) {
+                    Text(stringResource(R.string.clients_delete_cancel))
+                }
+            }
         )
     }
 }

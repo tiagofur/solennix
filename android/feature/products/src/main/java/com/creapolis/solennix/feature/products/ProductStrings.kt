@@ -185,4 +185,8 @@ object ProductStrings {
     fun longDateFormatter(): DateTimeFormatter =
         if (isEnglish) DateTimeFormatter.ofPattern("MMMM d", Locale.ENGLISH)
         else DateTimeFormatter.ofPattern("d 'de' MMMM", Locale.forLanguageTag("es"))
+
+    val formDiscardTitle: String get() = getString(R.string.products_form_discard_title)
+    val formDiscardMessage: String get() = getString(R.string.products_form_discard_message)
+    val formDiscardConfirm: String get() = getString(R.string.products_form_discard_confirm)
 }

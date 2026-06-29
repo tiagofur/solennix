@@ -225,4 +225,13 @@ class ClientFormViewModel @Inject constructor(
         }
         return name
     }
+
+    val isDirty: Boolean
+        get() = name.isNotBlank() ||
+                email.isNotBlank() ||
+                phone.isNotBlank() ||
+                address.isNotBlank() ||
+                city.isNotBlank() ||
+                notes.isNotBlank() ||
+                photoUrl.isNotBlank()
 }

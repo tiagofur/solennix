@@ -41,6 +41,8 @@ class StaffTeamFormViewModel @Inject constructor(
     private val teamId: String? = savedStateHandle.get<String>("teamId")?.takeIf { it.isNotBlank() }
     val isEditMode: Boolean = teamId != null
 
+    private val originalState = mutableStateOf<StaffTeam?>(null)
+
     var name by mutableStateOf("")
     var roleLabel by mutableStateOf("")
     var notes by mutableStateOf("")
@@ -61,6 +63,14 @@ class StaffTeamFormViewModel @Inject constructor(
 
     val isFormValid: Boolean
         get() = name.isNotBlank()
+
+    val isDirty: Boolean
+        get() = originalState.value?.let { original ->
+            original.name != name ||
+            original.roleLabel != roleLabel.trim().takeIf { it.isNotBlank() } ||
+            original.notes != notes.trim().takeIf { it.isNotBlank() } ||
+            original.members?.map { it.staffId to it.isLead } != members.map { it.staffId to it.isLead }
+        } ?: (name.isNotBlank() || roleLabel.isNotBlank() || notes.isNotBlank() || members.isNotEmpty())
 
     init {
         loadStaffCatalog()
@@ -89,6 +99,9 @@ class StaffTeamFormViewModel @Inject constructor(
             isLoading = true
             try {
                 val team = teamRepository.getTeam(id)
+                originalState.value = team.copy(
+                    members = team.members?.sortedBy { it.position }?.map { it.copy() }?.toList()
+                )
                 name = team.name
                 roleLabel = team.roleLabel ?: ""
                 notes = team.notes ?: ""
