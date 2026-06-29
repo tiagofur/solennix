@@ -350,4 +350,11 @@ describe('EventList', () => {
     // Check if period chips like 'Hoy' are present
     expect(screen.getByRole('button', { name: /Hoy/i })).toBeInTheDocument();
   });
+
+  it('hides period chips in calendar mode', () => {
+    renderPage(['/events?view=calendar']);
+
+    // Check if period chips like 'Hoy' are NOT present
+    expect(screen.queryByRole('button', { name: /Hoy/i })).not.toBeInTheDocument();
+  });
 });

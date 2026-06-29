@@ -622,7 +622,16 @@ export const EventList: React.FC = () => {
             </button>
             <button
               type="button"
-              onClick={() => updateFilter("view", "calendar")}
+              onClick={() => {
+                setSearchParams((prev) => {
+                  const next = new URLSearchParams(prev);
+                  next.set("view", "calendar");
+                  next.delete("from");
+                  next.delete("to");
+                  next.delete("page");
+                  return next;
+                }, { replace: true });
+              }}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all active-ios-scale ${
                 viewMode === "calendar"
                   ? "bg-card text-text shadow-sm border border-border/30"
@@ -759,92 +768,94 @@ export const EventList: React.FC = () => {
         </div>
 
         {/* Period Chips & Date Inputs */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Period Chips */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            {([
-              { label: t("events:list.period.today"), value: "today" },
-              { label: t("events:list.period.week"), value: "week" },
-              { label: t("events:list.period.month"), value: "month" },
-              { label: t("events:list.period.custom"), value: "custom" },
-            ] as const).map((chip) => {
-              const active = getActivePeriod(dateFrom, dateTo) === chip.value;
-              return (
+        {viewMode === "list" && (
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Period Chips */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {([
+                { label: t("events:list.period.today"), value: "today" },
+                { label: t("events:list.period.week"), value: "week" },
+                { label: t("events:list.period.month"), value: "month" },
+                { label: t("events:list.period.custom"), value: "custom" },
+              ] as const).map((chip) => {
+                const active = getActivePeriod(dateFrom, dateTo) === chip.value;
+                return (
+                  <button
+                    key={chip.value}
+                    type="button"
+                    onClick={() => {
+                      if (chip.value === "custom") {
+                        if (!dateFrom && !dateTo) {
+                          const todayStr = format(new Date(), "yyyy-MM-dd");
+                          updateFilter("from", todayStr);
+                          updateFilter("to", todayStr);
+                        }
+                      } else {
+                        const range = getPeriodRange(chip.value);
+                        setSearchParams((prev) => {
+                          const next = new URLSearchParams(prev);
+                          next.set("from", range.from);
+                          next.set("to", range.to);
+                          next.delete("page");
+                          return next;
+                        }, { replace: true });
+                      }
+                    }}
+                    className={`px-3 py-1 rounded-full text-xs font-bold border transition-all active-ios-scale ${
+                      active
+                        ? "bg-primary text-white border-primary"
+                        : "bg-card text-text-secondary border-border hover:border-primary/50 hover:text-primary"
+                    }`}
+                  >
+                    {chip.label}
+                  </button>
+                );
+              })}
+              {getActivePeriod(dateFrom, dateTo) !== "all" && (
                 <button
-                  key={chip.value}
                   type="button"
                   onClick={() => {
-                    if (chip.value === "custom") {
-                      if (!dateFrom && !dateTo) {
-                        const todayStr = format(new Date(), "yyyy-MM-dd");
-                        updateFilter("from", todayStr);
-                        updateFilter("to", todayStr);
-                      }
-                    } else {
-                      const range = getPeriodRange(chip.value);
-                      setSearchParams((prev) => {
-                        const next = new URLSearchParams(prev);
-                        next.set("from", range.from);
-                        next.set("to", range.to);
-                        next.delete("page");
-                        return next;
-                      }, { replace: true });
-                    }
+                    setSearchParams((prev) => {
+                      const next = new URLSearchParams(prev);
+                      next.delete("from");
+                      next.delete("to");
+                      next.delete("page");
+                      return next;
+                    }, { replace: true });
                   }}
-                  className={`px-3 py-1 rounded-full text-xs font-bold border transition-all active-ios-scale ${
-                    active
-                      ? "bg-primary text-white border-primary"
-                      : "bg-card text-text-secondary border-border hover:border-primary/50 hover:text-primary"
-                  }`}
+                  className="text-xs text-text-tertiary hover:text-error transition-colors ml-1 font-semibold"
                 >
-                  {chip.label}
+                  {t("common:action.clear", { defaultValue: "Limpiar" })}
                 </button>
-              );
-            })}
-            {getActivePeriod(dateFrom, dateTo) !== "all" && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchParams((prev) => {
-                    const next = new URLSearchParams(prev);
-                    next.delete("from");
-                    next.delete("to");
-                    next.delete("page");
-                    return next;
-                  }, { replace: true });
-                }}
-                className="text-xs text-text-tertiary hover:text-error transition-colors ml-1 font-semibold"
-              >
-                {t("common:action.clear", { defaultValue: "Limpiar" })}
-              </button>
+              )}
+            </div>
+
+            {/* Custom picker inputs (shown only when 'custom' is active) */}
+            {getActivePeriod(dateFrom, dateTo) === "custom" && (
+              <div className="flex items-center gap-1.5 animate-fade-in">
+                <label htmlFor="date-from" className="sr-only">{t("events:list.date_filter.from")}</label>
+                <input
+                  id="date-from"
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => updateFilter("from", e.target.value)}
+                  className="text-xs border border-border rounded-lg px-2 py-1 bg-card text-text focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  aria-label={t("events:list.date_filter.from_aria")}
+                />
+                <span className="text-xs text-text-secondary">—</span>
+                <label htmlFor="date-to" className="sr-only">{t("events:list.date_filter.to")}</label>
+                <input
+                  id="date-to"
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => updateFilter("to", e.target.value)}
+                  className="text-xs border border-border rounded-lg px-2 py-1 bg-card text-text focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  aria-label={t("events:list.date_filter.to_aria")}
+                />
+              </div>
             )}
           </div>
-
-          {/* Custom picker inputs (shown only when 'custom' is active) */}
-          {getActivePeriod(dateFrom, dateTo) === "custom" && (
-            <div className="flex items-center gap-1.5 animate-fade-in">
-              <label htmlFor="date-from" className="sr-only">{t("events:list.date_filter.from")}</label>
-              <input
-                id="date-from"
-                type="date"
-                value={dateFrom}
-                onChange={(e) => updateFilter("from", e.target.value)}
-                className="text-xs border border-border rounded-lg px-2 py-1 bg-card text-text focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                aria-label={t("events:list.date_filter.from_aria")}
-              />
-              <span className="text-xs text-text-secondary">—</span>
-              <label htmlFor="date-to" className="sr-only">{t("events:list.date_filter.to")}</label>
-              <input
-                id="date-to"
-                type="date"
-                value={dateTo}
-                onChange={(e) => updateFilter("to", e.target.value)}
-                className="text-xs border border-border rounded-lg px-2 py-1 bg-card text-text focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                aria-label={t("events:list.date_filter.to_aria")}
-              />
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Status Chips */}

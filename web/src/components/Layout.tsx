@@ -152,7 +152,7 @@ export const Layout: React.FC = () => {
       {/* Sidebar */}
       <aside
         className={clsx(
-          "fixed inset-y-0 left-0 z-50 lg:z-auto liquid-glass transform transition-all duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
+          "fixed inset-y-0 left-0 z-50 lg:z-20 liquid-glass transform transition-all duration-200 ease-in-out lg:translate-x-0 lg:relative lg:inset-0",
           // Mobile: always w-64
           "w-64",
           // Desktop: collapsible
@@ -161,7 +161,10 @@ export const Layout: React.FC = () => {
         )}
         aria-label={t('nav.main_nav')}
       >
-        <div className="flex flex-col h-full lg:px-4 lg:py-4 relative z-10">
+        <div className={clsx(
+          "flex flex-col h-full lg:py-4 relative z-10",
+          isCollapsed ? "lg:px-2.5" : "lg:px-4"
+        )}>
           {/* Logo / Header */}
           <div className={clsx(
             "flex items-center justify-between h-16 px-6 mb-4 border-b border-border lg:border-transparent",
@@ -191,7 +194,7 @@ export const Layout: React.FC = () => {
                     className={clsx(
                       "flex items-center text-sm font-semibold transition-all duration-200 active-ios-scale",
                       isCollapsed
-                        ? "lg:w-11 lg:h-11 lg:rounded-xl lg:justify-center px-4 py-3 rounded-2xl w-full"
+                        ? "lg:w-12 lg:h-12 lg:rounded-xl lg:justify-center px-4 py-3 rounded-2xl w-full"
                         : "justify-start px-4 py-3 rounded-2xl w-full",
                       isActive
                         ? "bg-primary-light/80 text-primary border-l-3 border-primary"
@@ -241,11 +244,16 @@ export const Layout: React.FC = () => {
             </div>
 
             {/* Sign out button */}
-            <div className="mb-2">
+            <div className="mb-2 flex lg:justify-center">
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="w-full flex items-center justify-center px-3 py-2.5 text-sm font-semibold rounded-xl bg-surface/55 hover:bg-error/10 hover:text-error hover:border-error/30 transition-colors border border-border text-text shadow-xs active-ios-scale"
+                className={clsx(
+                  "flex items-center justify-center text-sm font-semibold rounded-xl bg-surface/55 hover:bg-error/10 hover:text-error hover:border-error/30 transition-colors border border-border text-text shadow-xs active-ios-scale",
+                  isCollapsed
+                    ? "lg:w-12 lg:h-12 lg:p-0"
+                    : "w-full px-3 py-2.5"
+                )}
                 aria-label={t('nav.logout')}
               >
                 <LogOut className="h-4 w-4" aria-hidden="true" />
