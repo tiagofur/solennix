@@ -16,9 +16,14 @@ final class ProductsInventoryLocalizationTests: XCTestCase {
     func testProductStringsResolve() {
         XCTAssertEqual(ProductStrings.title, expected(spanish: "Productos", english: "Products"))
         XCTAssertEqual(ProductStrings.searchPrompt, expected(spanish: "Buscar productos", english: "Search products"))
-        XCTAssertEqual(ProductStrings.deletedMessage("Hamburguesa"), expected(spanish: "Hamburguesa eliminado", english: "Burger deleted"))
+        // The product name is echoed into the localized template; it must track
+        // the resolved locale so the en template doesn't wrap a Spanish noun
+        // ("Hamburguesa deleted") and mismatch the en expectation.
+        let burger = expected(spanish: "Hamburguesa", english: "Burger")
+        XCTAssertEqual(ProductStrings.deletedMessage(burger), expected(spanish: "Hamburguesa eliminado", english: "Burger deleted"))
+        let soup = expected(spanish: "Cazuela", english: "Soup")
         XCTAssertEqual(
-            ProductStrings.deletePrompt("Cazuela"),
+            ProductStrings.deletePrompt(soup),
             expected(
                 spanish: "Se eliminará \"Cazuela\". Podrás deshacer durante unos segundos.",
                 english: "Are you sure you want to delete \"Soup\"? You can undo for a few seconds."
@@ -44,16 +49,22 @@ final class ProductsInventoryLocalizationTests: XCTestCase {
     func testInventoryStringsResolve() {
         XCTAssertEqual(InventoryStrings.title, expected(spanish: "Inventario", english: "Inventory"))
         XCTAssertEqual(InventoryStrings.searchPrompt, expected(spanish: "Buscar inventario", english: "Search inventory"))
-        XCTAssertEqual(InventoryStrings.deletedMessage("Carne"), expected(spanish: "Carne eliminado", english: "Meat deleted"))
+        // Names are echoed into the localized templates, so they must track the
+        // resolved locale — otherwise the en template wraps a Spanish noun
+        // ("Carne deleted") and mismatches the en expectation.
+        let meat = expected(spanish: "Carne", english: "Meat")
+        XCTAssertEqual(InventoryStrings.deletedMessage(meat), expected(spanish: "Carne eliminado", english: "Meat deleted"))
+        let bread = expected(spanish: "Pan", english: "Bread")
         XCTAssertEqual(
-            InventoryStrings.deletePrompt("Pan"),
+            InventoryStrings.deletePrompt(bread),
             expected(
                 spanish: "Se eliminará \"Pan\". Podrás deshacer durante unos segundos.",
                 english: "Are you sure you want to delete \"Bread\"? You can undo for a few seconds."
             )
         )
+        let cheese = expected(spanish: "Queso", english: "Cheese")
         XCTAssertEqual(
-            InventoryStrings.permanentDeletePrompt("Queso"),
+            InventoryStrings.permanentDeletePrompt(cheese),
             expected(
                 spanish: "¿Estás seguro de que quieres eliminar \"Queso\"? Esta acción no se puede deshacer.",
                 english: "Are you sure you want to delete \"Cheese\"? This action cannot be undone."
@@ -65,7 +76,10 @@ final class ProductsInventoryLocalizationTests: XCTestCase {
         XCTAssertEqual(InventoryStrings.perUnit("kg"), expected(spanish: "por kg", english: "per kg"))
         XCTAssertEqual(InventoryStrings.quantityWithUnit(100, unit: "und"), expected(spanish: "100 und", english: "100 und"))
         XCTAssertEqual(InventoryStrings.defaultEventName(serviceType: nil), expected(spanish: "Evento", english: "Event"))
-        XCTAssertEqual(InventoryStrings.defaultEventName(serviceType: "Boda"), expected(spanish: "Boda", english: "Wedding"))
+        // A provided serviceType is echoed verbatim through the passthrough
+        // format ("%@"), not translated — assert the echo is locale-independent
+        // rather than assuming "Boda" becomes "Wedding" under an en locale.
+        XCTAssertEqual(InventoryStrings.defaultEventName(serviceType: "Boda"), "Boda")
         XCTAssertEqual(InventoryStrings.eventWithClient("Tiago"), expected(spanish: "Evento - Tiago", english: "Event - Tiago"))
         XCTAssertEqual(
             InventoryStrings.shortageMessage(demand: 100, stock: 40, missing: 60, unit: "kg"),
