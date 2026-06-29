@@ -150,7 +150,7 @@ public struct EventFormView: View {
                     .tag(5)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: viewModel.currentStep)
+            .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: viewModel.currentStep)
 
             Divider()
                 .foregroundStyle(SolennixColors.border)

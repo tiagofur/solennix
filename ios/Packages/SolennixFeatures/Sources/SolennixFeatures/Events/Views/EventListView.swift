@@ -16,6 +16,7 @@ public struct EventListView: View {
     @Environment(\.apiClient) private var apiClient
     @Environment(CacheManager.self) private var cacheManager: CacheManager?
     @Environment(ToastManager.self) private var toastManager
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var viewModel: EventListViewModel
     @State private var showShareSheet = false
     @State private var csvFileURL: URL?
@@ -930,7 +931,7 @@ public struct EventListView: View {
     @ViewBuilder
     private func sortMenuButton(field: EventSortField, label: String) -> some View {
         Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
+            withAnimation(reduceMotion ? nil : .snappy) {
                 viewModel.applySort(field)
             }
             HapticsHelper.play(.success)

@@ -7,6 +7,8 @@ import SolennixDesign
 /// Reusable 7-column calendar grid component that renders day cells with event dots.
 public struct CalendarGridView: View {
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     // MARK: - Properties
 
     let days: [DateDay]
@@ -85,7 +87,7 @@ public struct CalendarGridView: View {
                     )
                     .onTapGesture {
                         guard day.isCurrentMonth else { return }
-                        withAnimation(.easeInOut(duration: 0.2)) {
+                        withAnimation(reduceMotion ? nil : .snappy) {
                             onSelectDate(day.date)
                         }
                     }

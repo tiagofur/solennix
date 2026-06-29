@@ -32,6 +32,7 @@ public struct ClientPortalShareSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(ToastManager.self) private var toastManager
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // MARK: - Init
 
@@ -310,12 +311,12 @@ public struct ClientPortalShareSheet: View {
 
     private func handleCopy(_ url: String) {
         UIPasteboard.general.string = url
-        withAnimation(.easeInOut(duration: 0.2)) { copied = true }
+        withAnimation(reduceMotion ? nil : .bouncy) { copied = true }
         toastManager.show(message: ClientPortalShareStrings.copyToast, type: .success)
         Task {
             try? await Task.sleep(nanoseconds: 2_000_000_000)
             await MainActor.run {
-                withAnimation(.easeInOut(duration: 0.2)) { copied = false }
+                withAnimation(reduceMotion ? nil : .bouncy) { copied = false }
             }
         }
     }

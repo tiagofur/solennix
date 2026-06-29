@@ -111,7 +111,7 @@ public struct OnboardingView: View {
                 .tag(3)
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: currentPage)
+        .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: currentPage)
     }
 
     private var pageIndicatorAndNavigation: some View {
@@ -125,14 +125,14 @@ public struct OnboardingView: View {
                               : SolennixColors.border)
                         .frame(width: index == currentPage ? 10 : 8,
                                height: index == currentPage ? 10 : 8)
-                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: currentPage)
+                        .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: currentPage)
                 }
             }
 
             // Navigation button
             if currentPage < totalPages - 1 {
                 Button {
-                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) {
+                    withAnimation(reduceMotion ? nil : .bouncy) {
                         currentPage += 1
                     }
                 } label: {
@@ -310,7 +310,7 @@ public struct OnboardingView: View {
     // MARK: - Actions
 
     private func completeOnboarding() {
-        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) {
+        withAnimation(reduceMotion ? nil : .bouncy) {
             hasSeenOnboarding = true
         }
         dismiss()
