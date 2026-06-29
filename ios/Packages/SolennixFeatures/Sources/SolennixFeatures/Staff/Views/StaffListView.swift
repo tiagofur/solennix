@@ -209,13 +209,11 @@ public struct StaffListView: View {
 
     // Fix 4: iPad first-run empty state with real NavigationLink CTA
     private var ipadFirstRunEmptyState: some View {
-        VStack(spacing: 0) {
-            EmptyStateView(
-                icon: "person.3",
-                title: StaffStrings.emptyTitle,
-                message: StaffStrings.emptyMessage,
-                iconColor: SolennixColors.primary
-            )
+        ContentUnavailableView {
+            Label(StaffStrings.emptyTitle, systemImage: "person.3")
+        } description: {
+            Text(StaffStrings.emptyMessage)
+        } actions: {
             NavigationLink(value: Route.staffForm()) {
                 Text(StaffStrings.emptyAction)
                     .font(.headline)
@@ -226,8 +224,9 @@ public struct StaffListView: View {
                     .clipShape(Capsule())
                     .adaptiveGlass(in: Capsule(), fallback: .material)
             }
-            .padding(.bottom, Spacing.xxl)
         }
+        .tint(SolennixColors.primary)
+        .symbolRenderingMode(.hierarchical)
         .frame(maxWidth: .infinity)
     }
 
@@ -311,13 +310,11 @@ public struct StaffListView: View {
     // MARK: - First-Run Empty State (Fix 4) — outside List for proper centering
 
     private var staffFirstRunEmptyState: some View {
-        VStack(spacing: 0) {
-            EmptyStateView(
-                icon: "person.3",
-                title: StaffStrings.emptyTitle,
-                message: StaffStrings.emptyMessage,
-                iconColor: SolennixColors.primary
-            )
+        ContentUnavailableView {
+            Label(StaffStrings.emptyTitle, systemImage: "person.3")
+        } description: {
+            Text(StaffStrings.emptyMessage)
+        } actions: {
             NavigationLink(value: Route.staffForm()) {
                 Text(StaffStrings.emptyAction)
                     .font(.headline)
@@ -328,8 +325,9 @@ public struct StaffListView: View {
                     .clipShape(Capsule())
                     .adaptiveGlass(in: Capsule(), fallback: .material)
             }
-            .padding(.bottom, Spacing.xxl)
         }
+        .tint(SolennixColors.primary)
+        .symbolRenderingMode(.hierarchical)
         .frame(maxWidth: .infinity)
     }
 

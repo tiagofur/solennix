@@ -61,21 +61,21 @@ public struct EventStaffDetailView: View {
                         Task { await loadData() }
                     }
                 } else if assignments.isEmpty {
-                    EmptyStateView(
-                        icon: "person.3",
-                        title: tr("events.detail.staff.empty.title", "Sin personal"),
-                        message: tr("events.detail.staff.empty.message", "Este evento no tiene colaboradores asignados."),
-                        iconColor: SolennixColors.primary
-                    )
-                    NavigationLink(value: Route.eventForm(id: eventId, step: 4)) {
-                        Text(tr("events.detail.staff.empty.cta", "Agregar personal"))
-                            .font(.headline)
-                            .foregroundStyle(SolennixColors.primaryDark)
-                            .padding(.horizontal, Spacing.xl)
-                            .padding(.vertical, 16)
-                            .background(SolennixColors.primaryLight)
-                            .clipShape(Capsule())
-                            .adaptiveGlass(in: Capsule(), fallback: .material)
+                    ContentUnavailableView {
+                        Label(tr("events.detail.staff.empty.title", "Sin personal"), systemImage: "person.3")
+                    } description: {
+                        Text(tr("events.detail.staff.empty.message", "Este evento no tiene colaboradores asignados."))
+                    } actions: {
+                        NavigationLink(value: Route.eventForm(id: eventId, step: 4)) {
+                            Text(tr("events.detail.staff.empty.cta", "Agregar personal"))
+                                .font(.headline)
+                                .foregroundStyle(SolennixColors.primaryDark)
+                                .padding(.horizontal, Spacing.xl)
+                                .padding(.vertical, 16)
+                                .background(SolennixColors.primaryLight)
+                                .clipShape(Capsule())
+                                .adaptiveGlass(in: Capsule(), fallback: .material)
+                        }
                     }
                 } else {
                     HStack {

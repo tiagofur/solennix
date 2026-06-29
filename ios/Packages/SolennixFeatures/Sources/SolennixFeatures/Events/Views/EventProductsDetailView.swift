@@ -44,21 +44,21 @@ public struct EventProductsDetailView: View {
         ScrollView {
             VStack(spacing: Spacing.md) {
                 if viewModel.products.isEmpty {
-                    EmptyStateView(
-                        icon: "bag",
-                        title: tr("events.detail.products.empty.title", "Sin Productos"),
-                        message: tr("events.detail.products.empty.message", "Este evento no tiene productos asignados."),
-                        iconColor: SolennixColors.primary
-                    )
-                    NavigationLink(value: Route.eventForm(id: eventId, step: 2)) {
-                        Text(tr("events.detail.products.empty.cta", "Agregar productos"))
-                            .font(.headline)
-                            .foregroundStyle(SolennixColors.primaryDark)
-                            .padding(.horizontal, Spacing.xl)
-                            .padding(.vertical, 16)
-                            .background(SolennixColors.primaryLight)
-                            .clipShape(Capsule())
-                            .adaptiveGlass(in: Capsule(), fallback: .material)
+                    ContentUnavailableView {
+                        Label(tr("events.detail.products.empty.title", "Sin Productos"), systemImage: "bag")
+                    } description: {
+                        Text(tr("events.detail.products.empty.message", "Este evento no tiene productos asignados."))
+                    } actions: {
+                        NavigationLink(value: Route.eventForm(id: eventId, step: 2)) {
+                            Text(tr("events.detail.products.empty.cta", "Agregar productos"))
+                                .font(.headline)
+                                .foregroundStyle(SolennixColors.primaryDark)
+                                .padding(.horizontal, Spacing.xl)
+                                .padding(.vertical, 16)
+                                .background(SolennixColors.primaryLight)
+                                .clipShape(Capsule())
+                                .adaptiveGlass(in: Capsule(), fallback: .material)
+                        }
                     }
                 } else {
                     // Summary

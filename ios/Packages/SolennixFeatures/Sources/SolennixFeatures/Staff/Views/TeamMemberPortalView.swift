@@ -98,12 +98,11 @@ public struct TeamMemberPortalView: View {
             ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if viewModel.assignments.isEmpty {
-            EmptyStateView(
-                icon: "calendar.badge.clock",
-                title: tr("team_portal.empty_title", "Todavia no tenes asignaciones"),
-                message: tr("team_portal.empty_message", "Cuando te asignen a un evento, va a aparecer aca con respuesta rapida."),
-                iconColor: SolennixColors.primary
-            ) {}
+            ContentUnavailableView {
+                Label(tr("team_portal.empty_title", "Todavia no tenes asignaciones"), systemImage: "calendar.badge.clock")
+            } description: {
+                Text(tr("team_portal.empty_message", "Cuando te asignen a un evento, va a aparecer aca con respuesta rapida."))
+            }
         } else {
             ScrollView {
                 LazyVStack(spacing: Spacing.md) {

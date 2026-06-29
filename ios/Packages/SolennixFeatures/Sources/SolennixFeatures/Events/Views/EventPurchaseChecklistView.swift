@@ -41,12 +41,11 @@ public struct EventPurchaseChecklistView: View {
                 ProgressView(tr("events.purchase.loading", "Cargando checklist de compras..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if purchaseItems.isEmpty {
-                EmptyStateView(
-                    icon: "cart",
-                    title: tr("events.purchase.empty_title", "Sin compras pendientes"),
-                    message: tr("events.purchase.empty_message", "Este evento no tiene insumos marcados para comprar"),
-                    iconColor: SolennixColors.primary
-                )
+                ContentUnavailableView {
+                    Label(tr("events.purchase.empty_title", "Sin compras pendientes"), systemImage: "cart")
+                } description: {
+                    Text(tr("events.purchase.empty_message", "Este evento no tiene insumos marcados para comprar"))
+                }
             } else {
                 ScrollView {
                     VStack(spacing: Spacing.lg) {

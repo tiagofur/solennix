@@ -156,13 +156,11 @@ public struct StaffTeamListView: View {
     // MARK: - First-Run Empty (Fix 13)
 
     private var teamsFirstRunView: some View {
-        VStack(spacing: 0) {
-            EmptyStateView(
-                icon: "person.3.sequence",
-                title: StaffStrings.teamsEmptyTitle,
-                message: StaffStrings.teamsEmptyMessage,
-                iconColor: SolennixColors.primary
-            )
+        ContentUnavailableView {
+            Label(StaffStrings.teamsEmptyTitle, systemImage: "person.3.sequence")
+        } description: {
+            Text(StaffStrings.teamsEmptyMessage)
+        } actions: {
             NavigationLink(value: Route.staffTeamForm()) {
                 Text(StaffStrings.teamsEmptyAction)
                     .font(.headline)
@@ -173,8 +171,9 @@ public struct StaffTeamListView: View {
                     .clipShape(Capsule())
                     .adaptiveGlass(in: Capsule(), fallback: .material)
             }
-            .padding(.bottom, Spacing.xxl)
         }
+        .tint(SolennixColors.primary)
+        .symbolRenderingMode(.hierarchical)
         .frame(maxWidth: .infinity)
     }
 

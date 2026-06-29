@@ -131,14 +131,12 @@ public struct ClientListView: View {
                 .controlSize(.large)
         } else if viewModel.filteredClients.isEmpty && !viewModel.isLoading {
             if viewModel.searchText.isEmpty {
-                // First-run: real NavigationLink CTA styled like EventListView first-run.
-                VStack(spacing: 0) {
-                    EmptyStateView(
-                        icon: "person.2",
-                        title: tr("clients.empty.title", "Sin clientes"),
-                        message: tr("clients.empty.message", "Agregá tu primer cliente para empezar"),
-                        iconColor: SolennixColors.primary
-                    )
+                // First-run: CUV with CTA action — hero brand gold tint.
+                ContentUnavailableView {
+                    Label(tr("clients.empty.title", "Sin clientes"), systemImage: "person.2")
+                } description: {
+                    Text(tr("clients.empty.message", "Agregá tu primer cliente para empezar"))
+                } actions: {
                     NavigationLink(value: Route.clientForm()) {
                         Text(tr("clients.empty.cta", "Agregar cliente"))
                             .font(.headline)
@@ -149,8 +147,9 @@ public struct ClientListView: View {
                             .clipShape(Capsule())
                             .adaptiveGlass(in: Capsule(), fallback: .material)
                     }
-                    .padding(.bottom, Spacing.xxl)
                 }
+                .tint(SolennixColors.primary)
+                .symbolRenderingMode(.hierarchical)
                 .background(SolennixColors.surfaceGrouped)
             } else {
                 ContentUnavailableView.search(text: viewModel.searchText)
@@ -163,13 +162,11 @@ public struct ClientListView: View {
     /// Mirrors EventListView's first-run empty state pattern.
     /// Outside List for proper vertical centering.
     private var clientFirstRunEmptyState: some View {
-        VStack(spacing: 0) {
-            EmptyStateView(
-                icon: "person.2",
-                title: tr("clients.empty.title", "Sin clientes"),
-                message: tr("clients.empty.message", "Agregá tu primer cliente para empezar"),
-                iconColor: SolennixColors.primary
-            )
+        ContentUnavailableView {
+            Label(tr("clients.empty.title", "Sin clientes"), systemImage: "person.2")
+        } description: {
+            Text(tr("clients.empty.message", "Agregá tu primer cliente para empezar"))
+        } actions: {
             NavigationLink(value: Route.clientForm()) {
                 Text(tr("clients.empty.cta", "Agregar cliente"))
                     .font(.headline)
@@ -180,8 +177,9 @@ public struct ClientListView: View {
                     .clipShape(Capsule())
                     .adaptiveGlass(in: Capsule(), fallback: .material)
             }
-            .padding(.bottom, Spacing.xxl)
         }
+        .tint(SolennixColors.primary)
+        .symbolRenderingMode(.hierarchical)
         .frame(maxWidth: .infinity)
     }
 

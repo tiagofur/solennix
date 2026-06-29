@@ -223,12 +223,11 @@ public struct StaffTeamFormView: View {
         NavigationStack {
             Group {
                 if viewModel.staffCatalog.isEmpty {
-                    EmptyStateView(
-                        icon: "person.3",
-                        title: StaffStrings.emptyTitle,
-                        message: StaffStrings.pickerEmptyMessage,
-                        iconColor: SolennixColors.primary
-                    )
+                    ContentUnavailableView {
+                        Label(StaffStrings.emptyTitle, systemImage: "person.3")
+                    } description: {
+                        Text(StaffStrings.pickerEmptyMessage)
+                    }
                 } else {
                     MemberPickerList(
                         catalog: viewModel.staffCatalog,

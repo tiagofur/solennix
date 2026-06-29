@@ -77,12 +77,11 @@ public struct ReviewsView: View {
         } else if viewModel.filteredReviews.isEmpty && !viewModel.searchText.isEmpty {
             ContentUnavailableView.search(text: viewModel.searchText)
         } else {
-            EmptyStateView(
-                icon: "star.bubble",
-                title: tr("reviews.organizer.empty_title", "Sin reseñas todavía"),
-                message: tr("reviews.organizer.empty_hint", "Cuando tus clientes califiquen sus eventos, aparecerán aquí."),
-                iconColor: SolennixColors.primary
-            )
+            ContentUnavailableView {
+                Label(tr("reviews.organizer.empty_title", "Sin reseñas todavía"), systemImage: "star.bubble")
+            } description: {
+                Text(tr("reviews.organizer.empty_hint", "Cuando tus clientes califiquen sus eventos, aparecerán aquí."))
+            }
         }
     }
 
