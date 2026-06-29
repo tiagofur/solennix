@@ -95,6 +95,8 @@ class EventListViewModel @Inject constructor(
     private val _updatingStatusEventId = MutableStateFlow<String?>(null)
     /** Local events list for soft-delete modifications. */
     private val _localEvents = MutableStateFlow<List<Event>>(emptyList())
+    /** Cached unavailable date ranges for the current month context. */
+    private val _unavailableDates = MutableStateFlow<List<UnavailableDate>>(emptyList())
     private var refreshJob: Job? = null
 
     private data class FilterState(
