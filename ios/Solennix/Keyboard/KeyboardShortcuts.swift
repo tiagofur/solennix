@@ -88,12 +88,12 @@ struct SolennixCommands: Commands {
 
             Divider()
 
-            Button("Buscar") {
+            Button(LocalizedStringKey("keyboard.menu.search")) {
                 NotificationCenter.default.post(name: .keyboardSearch, object: nil)
             }
             .keyboardShortcut("f", modifiers: .command)
 
-            Button("Actualizar") {
+            Button(LocalizedStringKey("keyboard.menu.refresh")) {
                 NotificationCenter.default.post(name: .keyboardRefresh, object: nil)
             }
             .keyboardShortcut("r", modifiers: .command)
@@ -101,7 +101,7 @@ struct SolennixCommands: Commands {
 
         // Settings
         CommandGroup(replacing: .appSettings) {
-            Button("Ajustes...") {
+            Button(LocalizedStringKey("keyboard.menu.settings")) {
                 NotificationCenter.default.post(name: .keyboardGoToSettings, object: nil)
             }
             .keyboardShortcut(",", modifiers: .command)
@@ -109,7 +109,7 @@ struct SolennixCommands: Commands {
 
         // Help menu
         CommandGroup(replacing: .help) {
-            Button("Ayuda de Solennix") {
+            Button(LocalizedStringKey("keyboard.menu.help")) {
                 if let url = URL(string: "https://solennix.com/help") {
                     openURL(url)
                 }

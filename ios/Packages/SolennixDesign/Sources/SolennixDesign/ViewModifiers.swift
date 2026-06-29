@@ -19,11 +19,10 @@ struct KeyboardDoneToolbarModifier: ViewModifier {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
                     Button(action: dismissKeyboard) {
-                        // "Listo" is the Spanish-first label for this app.
-                        // Using a string literal so SwiftUI resolves it as a
-                        // LocalizedStringKey — the app bundle can override it
-                        // per locale via Localizable.strings if needed.
-                        Text("Listo")
+                        // "Done" toolbar label. Resolved as an explicit
+                        // LocalizedStringKey against the app catalog
+                        // (common.action.done) so it localizes per locale.
+                        Text(LocalizedStringKey("common.action.done"))
                             .fontWeight(.semibold)
                     }
                     .foregroundStyle(SolennixColors.primary)
