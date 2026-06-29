@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/tiagofur/solennix-backend/internal/models"
 )
 
 // AdminRepo provides data access for admin-only operations.
@@ -82,6 +83,9 @@ type PlatformStats struct {
 	NewUsersWeek        int `json:"new_users_week"`
 	NewUsersMonth       int `json:"new_users_month"`
 	ActiveSubscriptions int `json:"active_subscriptions"`
+	RegistrationsByPlatform map[string]int `json:"registrations_by_platform"`
+	ActiveUsersByPlatform   map[string]int `json:"active_users_by_platform"`
+	InteractionsByPlatform  map[string]int `json:"interactions_by_platform"`
 }
 
 // AdminUser represents a user with usage stats for admin views.
@@ -105,6 +109,9 @@ type AdminUser struct {
 	EventsCount        int        `json:"events_count"`
 	ClientsCount       int        `json:"clients_count"`
 	ProductsCount      int        `json:"products_count"`
+	RegistrationPlatform string               `json:"registration_platform"`
+	PlatformActivity     []models.UserPlatform `json:"platform_activity"`
+	ActivePlatforms      []string              `json:"active_platforms"`
 	CreatedAt          time.Time  `json:"created_at"`
 	UpdatedAt          time.Time  `json:"updated_at"`
 }
@@ -197,6 +204,59 @@ func (r *AdminRepo) GetPlatformStats(ctx context.Context) (*PlatformStats, error
 		return nil, fmt.Errorf("failed to count active subs: %w", err)
 	}
 
+	// Registrations by platform
+	stats.RegistrationsByPlatform = make(map[string]int)
+	rowsRegs, err := r.pool.Query(ctx, `
+		SELECT COALESCE(registration_platform, 'unknown'), COUNT(*)
+		FROM users
+		WHERE role = 'user'
+		GROUP BY registration_platform`)
+	if err == nil {
+		defer rowsRegs.Close()
+		for rowsRegs.Next() {
+			var p string
+			var count int
+			if err := rowsRegs.Scan(&p, &count); err == nil {
+				stats.RegistrationsByPlatform[p] = count
+			}
+		}
+	}
+
+	// Active users in last 30 days by platform
+	stats.ActiveUsersByPlatform = make(map[string]int)
+	rowsActive, err := r.pool.Query(ctx, `
+		SELECT platform, COUNT(DISTINCT user_id)
+		FROM user_platforms
+		WHERE last_used_at >= NOW() - INTERVAL '30 days'
+		GROUP BY platform`)
+	if err == nil {
+		defer rowsActive.Close()
+		for rowsActive.Next() {
+			var p string
+			var count int
+			if err := rowsActive.Scan(&p, &count); err == nil {
+				stats.ActiveUsersByPlatform[p] = count
+			}
+		}
+	}
+
+	// Total interactions by platform
+	stats.InteractionsByPlatform = make(map[string]int)
+	rowsInteractions, err := r.pool.Query(ctx, `
+		SELECT platform, SUM(interaction_count)
+		FROM user_platforms
+		GROUP BY platform`)
+	if err == nil {
+		defer rowsInteractions.Close()
+		for rowsInteractions.Next() {
+			var p string
+			var count int
+			if err := rowsInteractions.Scan(&p, &count); err == nil {
+				stats.InteractionsByPlatform[p] = count
+			}
+		}
+	}
+
 	return stats, nil
 }
 
@@ -236,6 +296,8 @@ func (r *AdminRepo) GetAllUsers(ctx context.Context, accountType string) ([]Admi
 			COALESCE((SELECT COUNT(*) FROM events e WHERE e.user_id = u.id), 0) AS events_count,
 			COALESCE((SELECT COUNT(*) FROM clients c WHERE c.user_id = u.id), 0) AS clients_count,
 			COALESCE((SELECT COUNT(*) FROM products p WHERE p.user_id = u.id), 0) AS products_count,
+			COALESCE(u.registration_platform, 'unknown') AS registration_platform,
+			COALESCE((SELECT string_agg(platform, ',') FROM user_platforms WHERE user_id = u.id), '') AS active_platforms_str,
 			u.created_at, u.updated_at
 		FROM users u ` + whereClause + `
 		ORDER BY u.created_at DESC`
@@ -249,6 +311,7 @@ func (r *AdminRepo) GetAllUsers(ctx context.Context, accountType string) ([]Admi
 	var users []AdminUser
 	for rows.Next() {
 		var u AdminUser
+		var activePlatsStr string
 		err := rows.Scan(
 			&u.ID, &u.Email, &u.Name, &u.BusinessName, &u.Plan, &u.Role,
 			&u.AccountStatus, &u.BlockedAt, &u.BlockedReason, &u.BlockedBy, &u.DeletionEligibleAt, &u.DeletedAt,
@@ -256,8 +319,17 @@ func (r *AdminRepo) GetAllUsers(ctx context.Context, accountType string) ([]Admi
 			&u.StripeCustomerID,
 			&u.HasPaidSub, &u.PlanExpiresAt,
 			&u.EventsCount, &u.ClientsCount, &u.ProductsCount,
+			&u.RegistrationPlatform, &activePlatsStr,
 			&u.CreatedAt, &u.UpdatedAt,
 		)
+		if err == nil {
+			u.PlatformActivity = []models.UserPlatform{}
+			if activePlatsStr != "" {
+				u.ActivePlatforms = strings.Split(activePlatsStr, ",")
+			} else {
+				u.ActivePlatforms = []string{}
+			}
+		}
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan user: %w", err)
 		}
@@ -286,6 +358,7 @@ func (r *AdminRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*AdminUser, 
 			COALESCE((SELECT COUNT(*) FROM events e WHERE e.user_id = u.id), 0) AS events_count,
 			COALESCE((SELECT COUNT(*) FROM clients c WHERE c.user_id = u.id), 0) AS clients_count,
 			COALESCE((SELECT COUNT(*) FROM products p WHERE p.user_id = u.id), 0) AS products_count,
+			COALESCE(u.registration_platform, 'unknown') AS registration_platform,
 			u.created_at, u.updated_at
 		FROM users u
 		WHERE u.id = $1`
@@ -298,10 +371,31 @@ func (r *AdminRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*AdminUser, 
 		&u.StripeCustomerID,
 		&u.HasPaidSub, &u.PlanExpiresAt,
 		&u.EventsCount, &u.ClientsCount, &u.ProductsCount,
+		&u.RegistrationPlatform,
 		&u.CreatedAt, &u.UpdatedAt,
 	)
 	if err != nil {
 		return nil, ErrAdminUserNotFound
+	}
+
+	u.PlatformActivity = []models.UserPlatform{}
+	u.ActivePlatforms = []string{}
+
+	// Load detailed platform activity metrics for this user
+	rows, err := r.pool.Query(ctx, `
+		SELECT user_id, platform, interaction_count, last_used_at
+		FROM user_platforms
+		WHERE user_id = $1
+		ORDER BY last_used_at DESC`, id)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var ap models.UserPlatform
+			if err := rows.Scan(&ap.UserID, &ap.Platform, &ap.InteractionCount, &ap.LastUsedAt); err == nil {
+				u.PlatformActivity = append(u.PlatformActivity, ap)
+				u.ActivePlatforms = append(u.ActivePlatforms, ap.Platform)
+			}
+		}
 	}
 
 	return &u, nil

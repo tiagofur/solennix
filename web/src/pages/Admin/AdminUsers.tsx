@@ -16,7 +16,9 @@ import {
   Shield, 
   CheckCircle,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Smartphone,
+  Globe
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -875,6 +877,22 @@ export const AdminUsers: React.FC = () => {
                             {user.business_name && (
                               <div className="text-xs text-text-tertiary truncate mt-1">{user.business_name}</div>
                             )}
+                            <div className="flex items-center gap-1.5 mt-1.5 text-[10px] text-text-secondary">
+                              <span className="bg-surface-alt border border-border px-1 py-0.5 rounded text-text-tertiary">
+                                Reg: <span className="font-semibold text-text uppercase">{user.registration_platform || 'web'}</span>
+                              </span>
+                              <div className="flex items-center gap-1.5" title="Plataformas con uso registrado">
+                                {(user.active_platforms?.includes('web') || user.platform_activity?.some((p: any) => p.platform === 'web')) && (
+                                  <span title="Web activa"><Globe className="h-3.5 w-3.5 text-primary" /></span>
+                                )}
+                                {(user.active_platforms?.includes('ios') || user.platform_activity?.some((p: any) => p.platform === 'ios')) && (
+                                  <span title="iOS activo"><Smartphone className="h-3.5 w-3.5 text-success" /></span>
+                                )}
+                                {(user.active_platforms?.includes('android') || user.platform_activity?.some((p: any) => p.platform === 'android')) && (
+                                  <span title="Android activo"><Smartphone className="h-3.5 w-3.5 text-info" /></span>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </td>

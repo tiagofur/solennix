@@ -407,3 +407,26 @@
   - `web/src/pages/Products/`: `ProductList.tsx`, `ProductDetails.tsx`, `ProductForm.tsx` migrados a contenedores y inputs estandarizados.
   - `web/src/pages/Inventory/`: `InventoryList.tsx`, `InventoryForm.tsx` rediseñados con estética Liquid Glass.
   - `web/src/pages/Settings.tsx`: Nuevo diseño de doble columna estilo macOS System Settings con sidebar de navegación y cards de contenido glass.
+
+## Sesión 2026-06-28: Ajustes en Menú Lateral y Filtros de Calendario en Web
+- **Feature ID:** web-sidebar-overlap-and-event-filters (Issue #644)
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1235 tests in verde), PR #645 integrada exitosamente.
+- **Entregables:**
+  - `web/src/pages/Events/EventList.tsx` y `.test.tsx`: Ocultados los chips de filtro de periodo (`Hoy`, `Semana`, `Mes`, `Personalizado`) en la vista de calendario y asegurado el borrado de estos query params al alternar a la vista de calendario.
+  - `web/src/components/Layout.tsx` y `.test.tsx`: Modificada la posición del aside en desktop de `lg:static` a `lg:relative lg:z-20` para evitar que el contenido con scroll se superponga sobre el menú, ajustado el padding horizontal a `lg:px-2.5` al estar colapsado, ampliado el tamaño de los iconos a `lg:w-12 lg:h-12` (48px) y centrado el botón de cerrar sesión con la misma dimensión cuadrada.
+
+## Sesión 2026-06-29: Métricas de Plataforma (Registro y Uso Activo) en Admin Dashboard
+- **Feature ID:** 29 (platform-metrics-analytics)
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1235 tests de Vitest en verde, tests unitarios y de integración de backend en verde, y typecheck del front en verde).
+- **Entregables:**
+  - `060_add_user_platform_metrics.up.sql` / `.down.sql` (Migración de DB agregando `users.registration_platform` e infiriendo retroactivamente la plataforma desde `device_tokens`, y creando `user_platforms`)
+  - `models.go` (Agregados campos `RegistrationPlatform` y `UserPlatform` para mapeo de datos)
+  - `user_repo.go` (SQL Scans actualizados para soportar `registration_platform` e implementación de `UpsertUserPlatforms` para inserciones masivas)
+  - `admin_repo.go` (Consultas optimizadas sin N+1 para obtener `RegistrationsByPlatform`, `ActiveUsersByPlatform`, `InteractionsByPlatform` e historial individual de plataformas de usuario)
+  - `auth.go` (Filtro middleware asíncrono con buffer `ActivityBuffer` thread-safe que vuelca interacciones a la base de datos en lote cada 60s)
+  - `auth_test.go` (Suite completa de pruebas unitarias para heurísticas de UA/X-Client-Platform y de integración concurrente/flushing para el buffer)
+  - `admin_handler_test.go` (Pruebas unitarias de serialización del endpoint del handler de admin)
+  - `adminService.ts` (Modelos y llamadas de endpoints del front actualizados para metrics)
+  - `AdminDashboard.tsx` (Renglón de gráficos de plataforma Recharts: Registros, MAU e Intensidad de Uso)
+  - `AdminUsers.tsx` (Mini-badges de registro y plataformas activas con títulos)
+  - `AdminUserDetails.tsx` (Muestra de plataforma de registro y grid de interacciones/fechas de último uso por plataforma)

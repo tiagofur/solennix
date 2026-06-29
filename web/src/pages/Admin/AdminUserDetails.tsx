@@ -9,7 +9,9 @@ import {
   CheckCircle,
   AlertTriangle,
   RefreshCw,
-  Clock
+  Clock,
+  Smartphone,
+  Globe
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAdminUser } from '@/hooks/queries/useAdminQueries';
@@ -182,6 +184,12 @@ export const AdminUserDetails: React.FC = () => {
                 {user.business_name && (
                   <div className="text-xs text-text-tertiary font-medium">{t('admin:users.details.business', { business: user.business_name })}</div>
                 )}
+                <div className="flex items-center gap-1.5 mt-1 text-xs text-text-secondary">
+                  <span className="font-semibold">{t('admin:users.details.registered_via', { defaultValue: 'Registro:' })}</span>
+                  <span className="bg-surface border border-border px-1.5 py-0.5 rounded text-text font-bold uppercase tracking-wider text-[10px]">
+                    {user.registration_platform || 'web'}
+                  </span>
+                </div>
               </div>
             </div>
             <div className="flex flex-col gap-2 shrink-0">
@@ -224,6 +232,44 @@ export const AdminUserDetails: React.FC = () => {
                       </div>
                     </div>
                     <p className="text-3xl font-extrabold text-text tracking-tight">{card.value}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Platform Usage Details */}
+          <div className="space-y-4">
+            <h2 className="text-xs font-bold text-text-secondary uppercase tracking-widest block">
+              {t('admin:users.details.platform_usage_title', { defaultValue: 'Plataformas de Uso' })}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {['web', 'ios', 'android'].map((plat) => {
+                const activity = user.platform_activity?.find((p: any) => p.platform === plat);
+                const clicks = activity?.interaction_count ?? 0;
+                const lastUsed = activity?.last_used_at 
+                  ? format(parseISO(activity.last_used_at), 'd MMM yyyy, HH:mm', { locale: dateLocale })
+                  : t('admin:users.details.never_used', { defaultValue: 'Sin registros' });
+
+                const PlatformIcon = plat === 'web' ? Globe : Smartphone;
+                const platColor = plat === 'web' 
+                  ? 'text-primary bg-primary/10 border-primary/20' 
+                  : plat === 'ios' 
+                    ? 'text-success bg-success/10 border-success/20' 
+                    : 'text-info bg-info/10 border-info/20';
+
+                return (
+                  <div key={plat} className="bg-card border border-border rounded-2xl p-5 shadow-sm flex items-center gap-4">
+                    <div className={clsx('h-12 w-12 rounded-2xl flex items-center justify-center border shrink-0', platColor)}>
+                      <PlatformIcon className="h-6 w-6" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-text-secondary uppercase tracking-wider">{plat.toUpperCase()}</p>
+                      <p className="text-lg font-black text-text mt-0.5">{clicks} {t('admin:users.details.interactions_count', { defaultValue: 'interacciones' })}</p>
+                      <p className="text-xs text-text-secondary mt-1 truncate">
+                        {t('admin:users.details.last_used', { defaultValue: 'Último uso:' })} {lastUsed}
+                      </p>
+                    </div>
                   </div>
                 );
               })}

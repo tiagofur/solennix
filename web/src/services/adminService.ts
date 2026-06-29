@@ -17,6 +17,9 @@ export interface PlatformStats {
   new_users_week: number;
   new_users_month: number;
   active_subscriptions: number;
+  registrations_by_platform?: Record<string, number>;
+  active_users_by_platform?: Record<string, number>;
+  interactions_by_platform?: Record<string, number>;
 }
 
 export interface AdminUser {
@@ -35,6 +38,14 @@ export interface AdminUser {
   events_count: number;
   clients_count: number;
   products_count: number;
+  registration_platform?: string;
+  platform_activity?: Array<{
+    user_id: string;
+    platform: string;
+    interaction_count: number;
+    last_used_at: string;
+  }>;
+  active_platforms?: string[];
   created_at: string;
   updated_at: string;
 }

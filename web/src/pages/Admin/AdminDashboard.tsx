@@ -119,6 +119,51 @@ export const AdminDashboard: React.FC = () => {
       ]
     : [];
 
+  const platformRegistrations = useMemo(() => {
+    if (!stats || !stats.registrations_by_platform) return [];
+    const colors: Record<string, string> = {
+      web: "var(--color-primary)",
+      ios: "var(--color-success)",
+      android: "var(--color-info)",
+      unknown: "var(--color-text-tertiary)",
+    };
+    return Object.entries(stats.registrations_by_platform).map(([key, val]) => ({
+      name: key.toUpperCase(),
+      value: val,
+      color: colors[key] || "var(--color-text-tertiary)",
+    }));
+  }, [stats]);
+
+  const platformActiveUsers = useMemo(() => {
+    if (!stats || !stats.active_users_by_platform) return [];
+    const colors: Record<string, string> = {
+      web: "var(--color-primary)",
+      ios: "var(--color-success)",
+      android: "var(--color-info)",
+      unknown: "var(--color-text-tertiary)",
+    };
+    return Object.entries(stats.active_users_by_platform).map(([key, val]) => ({
+      name: key.toUpperCase(),
+      value: val,
+      color: colors[key] || "var(--color-text-tertiary)",
+    }));
+  }, [stats]);
+
+  const platformUsageIntensity = useMemo(() => {
+    if (!stats || !stats.interactions_by_platform || !stats.active_users_by_platform) return [];
+    const platforms = ["web", "ios", "android"];
+    return platforms.map(plat => {
+      const active = stats.active_users_by_platform?.[plat] ?? 0;
+      const interactions = stats.interactions_by_platform?.[plat] ?? 0;
+      const intensity = active > 0 ? parseFloat((interactions / active).toFixed(1)) : 0;
+      return {
+        name: plat.toUpperCase(),
+        interactions: interactions,
+        intensity: intensity,
+      };
+    });
+  }, [stats]);
+
   const getPlanBadge = (plan: string) => {
     const styles: Record<string, string> = {
       basic: "bg-surface-alt text-text-secondary",
@@ -583,6 +628,174 @@ export const AdminDashboard: React.FC = () => {
               {t("admin:dashboard.subscriptions.no_data")}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Platform Analytics Row */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Registrations by Platform */}
+        <div className="bg-card shadow-sm border border-border rounded-2xl p-6">
+          <h3 className="text-base font-semibold text-text mb-4">
+            {t("admin:dashboard.charts.platform_registrations_title", { defaultValue: "Registros por Plataforma" })}
+          </h3>
+          <div className="h-56">
+            {loading ? (
+              <div className="h-full flex items-center justify-center">
+                <RefreshCw className="h-8 w-8 animate-spin text-text-tertiary" />
+              </div>
+            ) : platformRegistrations.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                <PieChart>
+                  <Pie
+                    data={platformRegistrations}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={85}
+                    paddingAngle={4}
+                    dataKey="value"
+                    label={({ name, value }) => `${name}: ${value}`}
+                  >
+                    {platformRegistrations.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "none",
+                      boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-text-secondary text-sm">
+                {t("admin:dashboard.charts.no_data")}
+              </div>
+            )}
+          </div>
+          <div className="flex justify-center gap-4 mt-2">
+            {platformRegistrations.map((entry) => (
+              <div
+                key={entry.name}
+                className="flex items-center gap-1.5 text-xs text-text-secondary"
+              >
+                <div
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{ backgroundColor: entry.color }}
+                />
+                {entry.name}:{" "}
+                <span className="font-semibold text-text">{entry.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* MAU (Active Users) by Platform */}
+        <div className="bg-card shadow-sm border border-border rounded-2xl p-6">
+          <h3 className="text-base font-semibold text-text mb-4">
+            {t("admin:dashboard.charts.platform_active_title", { defaultValue: "Usuarios Activos Mensuales (MAU)" })}
+          </h3>
+          <div className="h-56">
+            {loading ? (
+              <div className="h-full flex items-center justify-center">
+                <RefreshCw className="h-8 w-8 animate-spin text-text-tertiary" />
+              </div>
+            ) : platformActiveUsers.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                <BarChart data={platformActiveUsers}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "var(--color-text-tertiary)", fontSize: 12 }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "var(--color-text-tertiary)", fontSize: 12 }}
+                    allowDecimals={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "none",
+                      boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                    }}
+                  />
+                  <Bar dataKey="value" radius={[8, 8, 0, 0]} barSize={48}>
+                    {platformActiveUsers.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-text-secondary text-sm">
+                {t("admin:dashboard.charts.no_data")}
+              </div>
+            )}
+          </div>
+          <div className="flex justify-center gap-4 mt-2">
+            {platformActiveUsers.map((entry) => (
+              <div
+                key={entry.name}
+                className="flex items-center gap-1.5 text-xs text-text-secondary"
+              >
+                <div
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{ backgroundColor: entry.color }}
+                />
+                {entry.name}:{" "}
+                <span className="font-semibold text-text">{entry.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Platform Usage Intensity */}
+        <div className="bg-card shadow-sm border border-border rounded-2xl p-6">
+          <h3 className="text-base font-semibold text-text mb-4">
+            {t("admin:dashboard.charts.platform_intensity_title", { defaultValue: "Intensidad de Uso (Clics / Usuario)" })}
+          </h3>
+          <div className="h-56">
+            {loading ? (
+              <div className="h-full flex items-center justify-center">
+                <RefreshCw className="h-8 w-8 animate-spin text-text-tertiary" />
+              </div>
+            ) : platformUsageIntensity.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                <BarChart data={platformUsageIntensity}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "var(--color-text-tertiary)", fontSize: 12 }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "var(--color-text-tertiary)", fontSize: 12 }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "none",
+                      boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                    }}
+                  />
+                  <Bar dataKey="intensity" fill="var(--color-primary)" radius={[8, 8, 0, 0]} barSize={48} name="Clics Promedio" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-text-secondary text-sm">
+                {t("admin:dashboard.charts.no_data")}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

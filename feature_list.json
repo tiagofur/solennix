@@ -345,6 +345,19 @@
         "Navegación al calendario desde Dashboard, atajos de teclado, paleta de comandos y formulario actualizada a /events?view=calendar",
         "Todos los tests unitarios de Vitest adaptados, cobertura incrementada y ejecutados exitosamente al 100% en verde"
       ]
+    },
+    {
+      "id": 29,
+      "name": "platform-metrics-analytics",
+      "description": "feat(admin): agregar métricas de plataforma de registro y uso activo con buffer asíncrono en backend y gráficos Recharts en UI",
+      "status": "done",
+      "acceptance_criteria": [
+        "registration_platform en users y user_platforms en base de datos con migración histórica",
+        "ActivityBuffer asíncrono e interactivo de middleware en RAM para evitar latencia de peticiones",
+        "Plataformas de uso y registro mapeadas en listas de usuarios, detalles y stats globales",
+        "Gráficos Recharts en Admin Dashboard mostrando MAU, registros e intensidad de uso",
+        "El ./init.sh completa sin errores"
+      ]
     }
   ]
 }

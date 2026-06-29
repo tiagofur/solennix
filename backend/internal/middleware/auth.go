@@ -13,6 +13,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/tiagofur/solennix-backend/internal/i18n"
+	"github.com/tiagofur/solennix-backend/internal/models"
 	"github.com/tiagofur/solennix-backend/internal/services"
 )
 
@@ -142,12 +143,144 @@ type ActivityTrackerRepo interface {
 	UpdateLastActiveAt(ctx context.Context, id uuid.UUID) error
 }
 
-// ActivityTracker creates a middleware that asynchronously updates user's last active timestamp (throttled).
+// ParsePlatform extracts the platform ('web', 'ios', 'android', or 'unknown') from Request headers or User-Agent.
+func ParsePlatform(r *http.Request) string {
+	if platform := r.Header.Get("X-Client-Platform"); platform != "" {
+		p := strings.ToLower(strings.TrimSpace(platform))
+		if p == "ios" || p == "android" || p == "web" {
+			return p
+		}
+	}
+
+	ua := strings.ToLower(r.UserAgent())
+	if ua == "" {
+		return "unknown"
+	}
+	if strings.Contains(ua, "iphone") || strings.Contains(ua, "ipad") || strings.Contains(ua, "ios") || strings.Contains(ua, "cfnetwork") || strings.Contains(ua, "darwin") {
+		return "ios"
+	}
+	if strings.Contains(ua, "android") || strings.Contains(ua, "okhttp") {
+		return "android"
+	}
+	if strings.Contains(ua, "mozilla") || strings.Contains(ua, "webkit") || strings.Contains(ua, "gecko") || strings.Contains(ua, "chrome") || strings.Contains(ua, "safari") {
+		return "web"
+	}
+	return "unknown"
+}
+
+// ActivityBuffer maintains in-memory daily active platform interaction counts for batch UPSERTs.
+type ActivityBuffer struct {
+	mu   sync.Mutex
+	data map[uuid.UUID]map[string]int
+}
+
+func NewActivityBuffer() *ActivityBuffer {
+	return &ActivityBuffer{
+		data: make(map[uuid.UUID]map[string]int),
+	}
+}
+
+func (b *ActivityBuffer) Increment(userID uuid.UUID, platform string) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	if b.data == nil {
+		b.data = make(map[uuid.UUID]map[string]int)
+	}
+	if _, exists := b.data[userID]; !exists {
+		b.data[userID] = make(map[string]int)
+	}
+	b.data[userID][platform]++
+}
+
+func (b *ActivityBuffer) Flush() map[uuid.UUID]map[string]int {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	flushed := b.data
+	b.data = make(map[uuid.UUID]map[string]int)
+	return flushed
+}
+
+var (
+	activityBuf *ActivityBuffer
+	bufOnce     sync.Once
+	workerStarted bool
+	workerMu      sync.Mutex
+)
+
+func GetActivityBuffer() *ActivityBuffer {
+	bufOnce.Do(func() {
+		activityBuf = NewActivityBuffer()
+	})
+	return activityBuf
+}
+
+func startActivityWorker(repo ActivityTrackerRepo) {
+	workerMu.Lock()
+	defer workerMu.Unlock()
+	if workerStarted {
+		return
+	}
+
+	platformRepo, ok := repo.(interface {
+		UpsertUserPlatforms(ctx context.Context, records []models.UserPlatform) error
+	})
+	if !ok {
+		// Log warning but do not crash; allows legacy mock tests to pass without implementing the upsert interface
+		slog.Warn("platform activity tracking: repository does not implement UpsertUserPlatforms")
+		return
+	}
+
+	workerStarted = true
+	go func() {
+		ticker := time.NewTicker(60 * time.Second)
+		defer ticker.Stop()
+		for range ticker.C {
+			flushData(platformRepo)
+		}
+	}()
+}
+
+func flushData(repo interface {
+	UpsertUserPlatforms(ctx context.Context, records []models.UserPlatform) error
+}) {
+	buffer := GetActivityBuffer()
+	data := buffer.Flush()
+	if len(data) == 0 {
+		return
+	}
+
+	records := make([]models.UserPlatform, 0)
+	for userID, platforms := range data {
+		for platform, count := range platforms {
+			records = append(records, models.UserPlatform{
+				UserID:           userID,
+				Platform:         platform,
+				InteractionCount: count,
+			})
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := repo.UpsertUserPlatforms(ctx, records); err != nil {
+		slog.Error("failed to flush user platform activity metrics", "error", err)
+	}
+}
+
+// ActivityTracker creates a middleware that asynchronously updates user's last active timestamp (throttled) and logs platform activity.
 func ActivityTracker(repo ActivityTrackerRepo) func(http.Handler) http.Handler {
+	startActivityWorker(repo)
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			userID := GetUserID(r.Context())
 			if userID != uuid.Nil {
+				platform := ParsePlatform(r)
+				GetActivityBuffer().Increment(userID, platform)
+
 				go func() {
 					_ = repo.UpdateLastActiveAt(context.Background(), userID)
 				}()

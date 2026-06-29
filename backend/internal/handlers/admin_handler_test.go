@@ -935,3 +935,90 @@ func TestAdminHandler_VerifyUserEmail(t *testing.T) {
 		repo.AssertExpectations(t)
 	})
 }
+
+func TestAdminHandler_PlatformMetricsAPI(t *testing.T) {
+	t.Run("stats endpoint platform fields", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		stats := &repository.PlatformStats{
+			TotalUsers: 10,
+			RegistrationsByPlatform: map[string]int{
+				"web":     5,
+				"ios":     3,
+				"android": 2,
+			},
+			ActiveUsersByPlatform: map[string]int{
+				"web": 4,
+				"ios": 2,
+			},
+			InteractionsByPlatform: map[string]int{
+				"web": 150,
+				"ios": 50,
+			},
+		}
+		repo.On("GetPlatformStats", mock.Anything).Return(stats, nil)
+
+		req := httptest.NewRequest("GET", "/api/admin/stats", nil)
+		w := httptest.NewRecorder()
+
+		handler.GetStats(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var resp map[string]any
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+
+		regs, exists := resp["registrations_by_platform"].(map[string]any)
+		assert.True(t, exists)
+		assert.Equal(t, float64(5), regs["web"])
+
+		active, exists := resp["active_users_by_platform"].(map[string]any)
+		assert.True(t, exists)
+		assert.Equal(t, float64(2), active["ios"])
+
+		interactions, exists := resp["interactions_by_platform"].(map[string]any)
+		assert.True(t, exists)
+		assert.Equal(t, float64(150), interactions["web"])
+
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("user details endpoint platform fields", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		userID := uuid.New()
+		user := &repository.AdminUser{
+			ID:                   userID,
+			Email:                "platform@test.dev",
+			RegistrationPlatform: "ios",
+			ActivePlatforms:      []string{"ios", "web"},
+		}
+		repo.On("GetUserByID", mock.Anything, userID).Return(user, nil)
+
+		req := httptest.NewRequest("GET", "/api/admin/users/"+userID.String(), nil)
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", userID.String())
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+		w := httptest.NewRecorder()
+		handler.GetUser(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var resp map[string]any
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+
+		assert.Equal(t, "ios", resp["registration_platform"])
+
+		activePlats, exists := resp["active_platforms"].([]any)
+		assert.True(t, exists)
+		assert.Contains(t, activePlats, "ios")
+		assert.Contains(t, activePlats, "web")
+
+		repo.AssertExpectations(t)
+	})
+}

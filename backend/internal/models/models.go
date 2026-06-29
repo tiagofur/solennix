@@ -70,10 +70,11 @@ type User struct {
 	StripeCustomerID  *string    `json:"-"` // Never expose provider IDs in JSON
 	GoogleUserID      *string    `json:"-"`
 	AppleUserID       *string    `json:"-"`
-	PlanExpiresAt     *time.Time `json:"plan_expires_at,omitempty"`
-	LastActiveAt      *time.Time `json:"last_active_at,omitempty"`
-	CreatedAt         time.Time  `json:"created_at"`
-	UpdatedAt         time.Time  `json:"updated_at"`
+	PlanExpiresAt        *time.Time `json:"plan_expires_at,omitempty"`
+	LastActiveAt         *time.Time `json:"last_active_at,omitempty"`
+	RegistrationPlatform string     `json:"registration_platform"`
+	CreatedAt            time.Time  `json:"created_at"`
+	UpdatedAt            time.Time  `json:"updated_at"`
 }
 
 type Client struct {
@@ -330,6 +331,14 @@ type DeviceToken struct {
 	Platform  string    `json:"platform"` // 'ios' | 'android' | 'web'
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// UserPlatform represents the platform usage stats for a user
+type UserPlatform struct {
+	UserID           uuid.UUID `json:"user_id"`
+	Platform         string    `json:"platform"`
+	InteractionCount int       `json:"interaction_count"`
+	LastUsedAt       time.Time `json:"last_used_at"`
 }
 
 // LiveActivityToken represents an iOS Live Activity push token bound to an event.
