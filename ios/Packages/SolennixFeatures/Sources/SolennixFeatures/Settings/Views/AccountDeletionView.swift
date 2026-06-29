@@ -10,6 +10,7 @@ public struct AccountDeletionView: View {
     @State private var viewModel: SettingsViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(ToastManager.self) private var toastManager
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // MARK: - @ScaledMetric sizes (Dynamic Type-safe, capped)
     @ScaledMetric(relativeTo: .body) private var successIconSize: CGFloat = 64
@@ -156,7 +157,7 @@ public struct AccountDeletionView: View {
                 Image(systemName: viewModel.confirmDeletionConsent ? "checkmark.square.fill" : "square")
                     .font(.title3)
                     .foregroundStyle(viewModel.confirmDeletionConsent ? SolennixColors.error : SolennixColors.textTertiary)
-                    .animation(.easeInOut(duration: 0.15), value: viewModel.confirmDeletionConsent)
+                    .animation(reduceMotion ? nil : .snappy, value: viewModel.confirmDeletionConsent)
 
                 Text(SettingsStrings.deleteAccountConfirmCheckbox)
                     .font(.subheadline)
@@ -207,7 +208,7 @@ public struct AccountDeletionView: View {
                     : SolennixColors.error.opacity(0.4)
             )
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-            .animation(.easeInOut(duration: 0.2), value: viewModel.confirmDeletionConsent)
+            .animation(reduceMotion ? nil : .bouncy, value: viewModel.confirmDeletionConsent)
         }
         .disabled(!viewModel.confirmDeletionConsent || viewModel.isDeletingOwnAccount)
     }

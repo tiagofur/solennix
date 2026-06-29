@@ -123,7 +123,7 @@ public struct EventPurchaseChecklistView: View {
             item: item,
             isChecked: viewModel.checkedIds.contains(item.id),
             onToggle: {
-                withAnimation(.easeInOut(duration: 0.2)) {
+                withAnimation(reduceMotion ? nil : .snappy) {
                     viewModel.toggleItem(id: item.id)
                 }
             }

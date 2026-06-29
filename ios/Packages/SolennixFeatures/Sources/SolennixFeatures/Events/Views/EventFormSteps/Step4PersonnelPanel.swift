@@ -21,6 +21,8 @@ struct Step4PersonnelPanel: View {
     @Bindable var viewModel: EventFormViewModel
     var embeddedInForm: Bool = false
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     @State private var showStaffPicker = false
     @State private var showTeamPicker = false
     @State private var staffSearch = ""
@@ -79,7 +81,7 @@ struct Step4PersonnelPanel: View {
                         viewModel.selectedStaff[index].shiftEnd = newDate
                     },
                     onShiftExpandToggle: {
-                        withAnimation(.easeInOut(duration: 0.15)) {
+                        withAnimation(reduceMotion ? nil : .smooth(duration: 0.3)) {
                             expandedShiftRow = isExpanded ? nil : assignment.id
                         }
                     },
