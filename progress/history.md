@@ -398,5 +398,12 @@
   - `web/src/pages/Events/EventForm.tsx` y `.test.tsx`: El botón de retorno ahora navega a `/events?view=calendar`.
   - `web/src/pages/Events/EventList.tsx` y `.test.tsx`: Limpieza completa y adición de pruebas unitarias para segmented control, period chips y view parameter en URL.
   - `feature_list.json`: Criterios de aceptación detallados y actualizados.
-
-
+## Sesión 2026-06-28: Rediseño Premium de la Interfaz Web (Liquid Glass & macOS Style)
+- **Feature ID:** web-liquid-glass-redesign (Issue #642)
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1234 tests en verde), PR #643 integrada exitosamente.
+- **Entregables:**
+  - `web/src/components/Input.tsx`: Corrección de desestructuración del `id` para evitar IDs desalineados en labels y inputs.
+  - `web/src/pages/Clients/`: `ClientList.tsx`, `ClientDetails.tsx`, `ClientForm.tsx` refactorizados con cards glass premium y layouts responsivos de alta fidelidad.
+  - `web/src/pages/Products/`: `ProductList.tsx`, `ProductDetails.tsx`, `ProductForm.tsx` migrados a contenedores y inputs estandarizados.
+  - `web/src/pages/Inventory/`: `InventoryList.tsx`, `InventoryForm.tsx` rediseñados con estética Liquid Glass.
+  - `web/src/pages/Settings.tsx`: Nuevo diseño de doble columna estilo macOS System Settings con sidebar de navegación y cards de contenido glass.
