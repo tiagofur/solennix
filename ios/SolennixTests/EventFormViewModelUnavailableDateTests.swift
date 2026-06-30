@@ -225,4 +225,103 @@ final class EventFormViewModelUnavailableDateTests: XCTestCase {
         XCTAssertEqual(Date.utcDayFormatter.string(from: vm.eventDate), originalStr,
                        "nav must mutate currentMonth only — never eventDate (ADR-5)")
     }
+
+    // MARK: - 6. New-event default auto-skip (Android #696 parity)
+
+    @MainActor
+    func testAutoSkip_newEventBlockedDefault_advancesToFirstNonBlockedDay() {
+        // Create mode: eventDate defaults to today. If today is blocked, the
+        // load path advances day-by-day to the first non-blocked day.
+        let vm = makeVM()
+        XCTAssertFalse(vm.isEdit, "precondition: create mode")
+
+        var utcCal = Calendar(identifier: .gregorian)
+        utcCal.timeZone = TimeZone(secondsFromGMT: 0)!
+        let today = vm.eventDate
+        let tomorrow = utcCal.date(byAdding: .day, value: 1, to: today)!
+        let dayAfter = utcCal.date(byAdding: .day, value: 2, to: today)!
+
+        // Block today + tomorrow; leave the day after open.
+        vm.unavailableDates = [
+            UnavailableDate(id: "a", userId: "u",
+                            startDate: Date.utcDayFormatter.string(from: today),
+                            endDate: Date.utcDayFormatter.string(from: today)),
+            UnavailableDate(id: "b", userId: "u",
+                            startDate: Date.utcDayFormatter.string(from: tomorrow),
+                            endDate: Date.utcDayFormatter.string(from: tomorrow))
+        ]
+        let expected = Date.utcDayFormatter.string(from: dayAfter)
+
+        // Mirror the post-fetch load-path sequence (loadInitialData).
+        vm.advancePastBlockedDefaultIfNeeded()
+
+        XCTAssertEqual(Date.utcDayFormatter.string(from: vm.eventDate), expected,
+                       "new event on a blocked default must auto-skip to the first non-blocked day")
+        XCTAssertNil(vm.unavailableDateFor(vm.eventDate),
+                     "auto-skipped day must not itself be blocked")
+    }
+
+    @MainActor
+    func testAutoSkip_editModeKeepsBlockedEventDate() {
+        // Edit mode MUST NOT auto-skip: an existing event keeps its date even
+        // when blocked (the inline warning + save guard still defend).
+        let vm = makeVM()
+        vm.isEdit = true
+        vm.editId = "existing-event-id"
+
+        var utcCal = Calendar(identifier: .gregorian)
+        utcCal.timeZone = TimeZone(secondsFromGMT: 0)!
+        var dc = DateComponents()
+        dc.year = 2026
+        dc.month = 6
+        dc.day = 15
+        let blocked = utcCal.date(from: dc)!
+        vm.eventDate = blocked
+        let blockedStr = Date.utcDayFormatter.string(from: blocked)
+        vm.unavailableDates = [
+            UnavailableDate(id: "u", userId: "u", startDate: blockedStr, endDate: blockedStr)
+        ]
+
+        vm.advancePastBlockedDefaultIfNeeded()
+
+        XCTAssertEqual(Date.utcDayFormatter.string(from: vm.eventDate), blockedStr,
+                       "edit mode must NOT auto-skip — keep the existing event's date")
+    }
+
+    @MainActor
+    func testAutoSkip_cleanDefault_isNoOp() {
+        // A clean default (today not blocked) must not move eventDate.
+        let vm = makeVM()
+        let originalStr = Date.utcDayFormatter.string(from: vm.eventDate)
+
+        vm.advancePastBlockedDefaultIfNeeded()
+
+        XCTAssertEqual(Date.utcDayFormatter.string(from: vm.eventDate), originalStr)
+    }
+
+    // MARK: - 7. Disable-select in the form picker (Android #696 parity)
+
+    @MainActor
+    func testSelectPickerDay_blockedDay_isNotSelectable() {
+        // Tapping a blocked cell must NOT change eventDate / the grid highlight.
+        let vm = makeVM()
+        let originalStr = Date.utcDayFormatter.string(from: vm.eventDate)
+        vm.unavailableDates = [
+            UnavailableDate(id: "u", userId: "u", startDate: originalStr, endDate: originalStr)
+        ]
+        // The grid passes the cell's local-midnight; pickerSelectedDay is
+        // exactly that for the selected eventDate.
+        let blockedCell = vm.pickerSelectedDay
+        XCTAssertTrue(vm.isDateBlocked(blockedCell), "precondition: cell renders blocked")
+
+        let accepted = vm.selectPickerDay(blockedCell)
+
+        XCTAssertFalse(accepted, "blocked day must be rejected (not selectable)")
+        XCTAssertEqual(Date.utcDayFormatter.string(from: vm.eventDate), originalStr,
+                       "blocked tap must leave eventDate unchanged")
+        XCTAssertEqual(vm.pickerSelectedDay, blockedCell,
+                       "blocked tap must leave the grid highlight unchanged")
+        XCTAssertNil(vm.dateUnavailableWarning,
+                     "an ignored blocked tap must not set a warning")
+    }
 }

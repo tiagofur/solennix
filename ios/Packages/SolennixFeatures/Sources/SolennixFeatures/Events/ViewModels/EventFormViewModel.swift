@@ -564,18 +564,64 @@ public final class EventFormViewModel {
         }
     }
 
-    /// Maps a tapped grid cell to `eventDate` via the day-string roundtrip
-    /// (ADR-1) and refreshes the inline warning. The grid only fires this for
-    /// current-month cells; tapping a blocked day is ALLOWED (Android parity) —
-    /// selection updates and the inline warning shows; the hard block is at
-    /// `save()`.
+    /// Disable-select + maps a tapped grid cell to `eventDate` (Android #696
+    /// parity). Blocked days are NOT selectable in the FORM picker: if the
+    /// tapped cell is blocked (`isDateBlocked`, LOCAL day string — symmetric
+    /// with the grid's red-tint/strikethrough rendering), this is a NO-OP and
+    /// returns `false`; the caller (`EventFormDatePickerSheet.onSelectDate`)
+    /// plays an error haptic and leaves `eventDate`/`pickerSelectedDay`
+    /// unchanged. The shared `CalendarGridView` itself is NOT modified — only
+    /// the form picker's handler decides selectability (the events list still
+    /// taps blocked days to manage them). The inline warning + the `save()`
+    /// guard remain as secondary defense.
+    ///
+    /// Non-blocked taps map via the day-string roundtrip (ADR-1) and refresh
+    /// the inline warning. `@discardableResult` keeps existing call sites that
+    /// ignore the outcome compiling.
+    @discardableResult
     @MainActor
-    public func selectPickerDay(_ day: Date) {
+    public func selectPickerDay(_ day: Date) -> Bool {
+        // Disable-select: blocked day is not selectable in the form picker.
+        if isDateBlocked(day) {
+            return false
+        }
         let dayStr = Self.pickerGridApiDateFormatter.string(from: day)
         if let mapped = Date.fromServerDay(dayStr) {
             eventDate = mapped
         }
         checkDateAvailability(eventDate)
+        return true
+    }
+
+    /// New-event default auto-skip (Android #696 parity). After
+    /// `loadUnavailableDates()` resolves in CREATE mode, if the default
+    /// `eventDate` (today) is blocked, advance day-by-day (cap 365) to the
+    /// first non-blocked day. EDIT mode is exempt — an existing event keeps
+    /// its date even when blocked (the inline warning + save guard still
+    /// defend). Comparison uses the UTC day string (`unavailableDateFor`,
+    /// ADR-4) so the skip stays in sync with the save guard; the day step
+    /// uses a UTC-pinned calendar so `eventDate` stays on UTC-midnight
+    /// boundaries (no DST drift — a local calendar could add 23/25h across a
+    /// DST boundary and silently shift the day string). If the whole 365-day
+    /// window is blocked (or a fetch gap), `eventDate` is left unchanged and
+    /// the secondary defenses (warning + save guard) apply.
+    @MainActor
+    func advancePastBlockedDefaultIfNeeded() {
+        guard !isEdit else { return }
+        guard unavailableDateFor(eventDate) != nil else { return }
+
+        var utcCal = Calendar(identifier: .gregorian)
+        utcCal.timeZone = TimeZone(secondsFromGMT: 0)!
+        var candidate = eventDate
+        for _ in 0..<365 {
+            guard let next = utcCal.date(byAdding: .day, value: 1, to: candidate) else { break }
+            candidate = next
+            if unavailableDateFor(candidate) == nil {
+                eventDate = candidate
+                return
+            }
+        }
+        // 365-day window exhausted: keep eventDate; secondary defenses apply.
     }
 
     /// Month navigation for the picker (ADR-5): mutates `currentMonth` ONLY.
