@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.ProductDemandItem
+import com.creapolis.solennix.core.model.extensions.asMXNCompact
 import com.creapolis.solennix.feature.dashboard.R
 
 @Composable
@@ -120,9 +121,9 @@ fun ProductDemandWidget(
                                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     Text(
-                                        "${(product.timesUsed * 100 / maxOf(product.timesUsed, 1))}%",
+                                        product.totalRevenue.asMXNCompact(),
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = SolennixTheme.colors.kpiOrange,
+                                        color = SolennixTheme.colors.primary,
                                         fontWeight = FontWeight.SemiBold
                                     )
                                     Icon(
