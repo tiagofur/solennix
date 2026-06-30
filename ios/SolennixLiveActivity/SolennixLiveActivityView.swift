@@ -220,7 +220,7 @@ struct SolennixLiveActivity: Widget {
         switch status {
         case "setup":       return .orange
         case "in_progress": return .green
-        case "completed":   return .blue
+        case "completed":   return .green
         default:            return .gray
         }
     }
