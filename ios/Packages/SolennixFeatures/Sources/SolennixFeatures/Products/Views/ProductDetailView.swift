@@ -401,11 +401,11 @@ public struct ProductDetailView: View {
                         compositionSection(
                             title: ProductStrings.equipmentTitle,
                             icon: "wrench.and.screwdriver.fill",
-                            iconColor: .blue,
+                            iconColor: SolennixColors.primary,
                             items: viewModel.equipmentItems,
                             showCost: false,
                             badge: ProductStrings.reusableNoCost,
-                            badgeColor: .blue
+                            badgeColor: SolennixColors.info
                         )
                     }
 

@@ -1,5 +1,6 @@
 import WidgetKit
 import SwiftUI
+import SolennixDesign
 
 // MARK: - Timeline Provider
 
@@ -214,7 +215,7 @@ struct UpcomingEventsWidgetView: View {
             // Header
             HStack {
                 Image(systemName: "calendar")
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(SolennixColors.primary)
                 Text("widget.upcoming.config_name")
                     .font(.headline)
                 Spacer()
@@ -224,7 +225,7 @@ struct UpcomingEventsWidgetView: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 2)
-                    .background(Color.blue)
+                    .background(SolennixColors.primary)
                     .clipShape(Capsule())
             }
 
@@ -251,7 +252,7 @@ struct UpcomingEventsWidgetView: View {
                         Spacer()
                         Text(verbatim: String.localizedStringWithFormat(String(localized: "widget.upcoming.view_more_fmt"), entry.events.count - 5))
                             .font(.caption)
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(SolennixColors.primary)
                         Spacer()
                     }
                 }
@@ -343,7 +344,7 @@ struct UpcomingEventsWidgetView: View {
         case "quoted": return .orange
         case "completed": return .gray
         case "cancelled": return .red
-        default: return .blue
+        default: return SolennixColors.primary
         }
     }
 

@@ -1,5 +1,6 @@
 import AppIntents
 import SwiftUI
+import SolennixDesign
 
 // MARK: - Show Monthly Revenue Intent
 
@@ -188,7 +189,7 @@ struct MonthlyRevenueSnippetView: View {
                     Text("\(revenue.eventsCount)")
                         .font(.title2)
                         .fontWeight(.bold)
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(SolennixColors.primary)
                     Text("intent.revenue.snippet.events")
                         .font(.caption)
                         .foregroundStyle(.secondary)

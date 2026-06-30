@@ -1,5 +1,6 @@
 import WidgetKit
 import SwiftUI
+import SolennixDesign
 import AppIntents
 
 // MARK: - Interactive Event Widget (iOS 17+)
@@ -227,10 +228,10 @@ struct InteractiveEventWidgetView: View {
                                     .font(.caption)
                                     .fontWeight(.medium)
                             }
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(SolennixColors.primary)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .background(Color.blue.opacity(0.15))
+                            .background(SolennixColors.primary.opacity(0.15))
                             .clipShape(Capsule())
                         }
                         .buttonStyle(.plain)

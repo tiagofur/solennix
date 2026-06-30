@@ -1,5 +1,6 @@
 import AppIntents
 import SwiftUI
+import SolennixDesign
 
 // MARK: - Event Count Intent
 
@@ -127,7 +128,7 @@ struct EventCountSnippetView: View {
 
                     Text("\(selectedCount)")
                         .font(.system(size: cappedCountFontSize, weight: .bold, design: .rounded))
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(SolennixColors.primary)
 
                     Text(verbatim: selectedCount == 1 ? String(localized: "intent.count.snippet.event_singular") : String(localized: "intent.count.snippet.event_plural"))
                         .font(.subheadline)
@@ -138,7 +139,7 @@ struct EventCountSnippetView: View {
 
                 Image(systemName: "calendar")
                     .font(.system(size: cappedCountIconSize))
-                    .foregroundStyle(.blue.opacity(0.3))
+                    .foregroundStyle(SolennixColors.primary.opacity(0.3))
             }
 
             Divider()

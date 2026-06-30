@@ -14,7 +14,7 @@ public struct BusinessSettingsView: View {
 
     @State private var initialBusinessName: String = ""
     @State private var initialShowInPdf: Bool = true
-    @State private var initialBrandColor: Color = .blue
+    @State private var initialBrandColor: Color = SolennixColors.primary
     @State private var showDiscardConfirm = false
 
     private var isDirty: Bool {
