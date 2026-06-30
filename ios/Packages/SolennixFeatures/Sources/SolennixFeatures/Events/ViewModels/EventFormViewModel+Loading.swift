@@ -46,6 +46,14 @@ extension EventFormViewModel {
             }
         }
 
+        // Blocked-date parity (ADR): fetch unavailable dates so the picker and
+        // save guard can surface/intercept them. Fault-isolated — a failure
+        // leaves the form usable (loadUnavailableDates swallows errors).
+        await loadUnavailableDates()
+        // New events default to today; still check it so an already-blocked
+        // day shows the inline warning immediately.
+        checkDateAvailability(eventDate)
+
         isLoading = false
         // Snapshot the post-load state so isDirty can compare against it.
         takeSnapshot()
@@ -98,6 +106,12 @@ extension EventFormViewModel {
             // across device timezones when pre-populating the date picker.
             if let date = Date.fromServerDay(event.eventDate) {
                 eventDate = date
+                // Open the picker on the edited event's month so the blocked
+                // status of that month is immediately visible. (currentMonth is
+                // otherwise anchored to today; nav mutates ONLY currentMonth.)
+                currentMonth = Calendar.current.date(
+                    from: Calendar.current.dateComponents([.year, .month], from: date)
+                ) ?? currentMonth
             }
 
             serviceType = event.serviceType
@@ -197,6 +211,13 @@ extension EventFormViewModel {
         } catch {
             errorMessage = mapError(error)
         }
+
+        // Blocked-date parity (ADR): fetch unavailable dates so the picker and
+        // save guard can surface/intercept them. Fault-isolated. Also checks
+        // the loaded eventDate so an already-blocked edited event shows the
+        // inline warning immediately (reviewer warning: edit-mode MUST check).
+        await loadUnavailableDates()
+        checkDateAvailability(eventDate)
 
         isLoading = false
         // Snapshot the post-load state so isDirty can compare against it.

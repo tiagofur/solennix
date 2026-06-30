@@ -416,6 +416,184 @@ public final class EventFormViewModel {
         pendingTasks.forEach { $0.cancel() }
     }
 
+    // MARK: - Blocked-Date Picker (unavailable dates)
+    //
+    // Cross-platform parity (Android `EventFormViewModel.kt` / Web `EventForm.tsx`):
+    // surface blocked/unavailable dates DURING selection and intercept invalid
+    // saves client-side. Reuses the events-list grid infra
+    // (`CalendarMonthBuilder` + `CalendarGridView`'s blocked-cell rendering).
+    //
+    // Timezone contract (ADR-1): `eventDate` is UTC-midnight (parsed via
+    // `Date.fromServerDay`, saved via a UTC-pinned formatter). Grid cells are
+    // LOCAL-midnight. The grid↔eventDate mapping uses a DAY-STRING ROUNDTRIP
+    // (local POSIX "yyyy-MM-dd" → `fromServerDay` UTC), NEVER
+    // `±secondsFromGMT` arithmetic (DST-unsafe, asymmetric with
+    // `isDateBlocked`). The save guard compares `Date.utcDayFormatter` on
+    // `eventDate` against the server ranges (ADR-4) so the guard and the grid
+    // always agree on the same calendar day.
+
+    /// Blocked/unavailable date ranges for the picker + save guard. Populated
+    /// by `loadUnavailableDates()` (window -1/+12 months, mirrors Android).
+    public var unavailableDates: [UnavailableDate] = []
+
+    /// Inline warning shown below the date button when the selected day falls
+    /// inside a blocked range. `nil` when the day is clean.
+    public var dateUnavailableWarning: String?
+
+    /// The month the picker grid is showing (anchored to month start). Month
+    /// navigation mutates ONLY this (ADR-5) — it must NOT clear `eventDate`.
+    public var currentMonth: Date = {
+        let now = Date()
+        return Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: now)) ?? now
+    }()
+
+    /// DEVICE-local POSIX formatter (NO UTC pin). Mirrors
+    /// `EventListViewModel.gridApiDateFormatter`: every grid cell `Date` is
+    /// LOCAL-midnight, so a local formatter yields the correct yyyy-MM-dd key
+    /// in every timezone. Used by `isDateBlocked` and `selectPickerDay` so the
+    /// grid and the TZ roundtrip stay symmetric.
+    private static let pickerGridApiDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
+    private static let pickerMonthFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = FeatureL10n.locale
+        f.setLocalizedDateFormatFromTemplate("MMMM yyyy")
+        return f
+    }()
+
+    /// The LOCAL-midnight `Date` the picker grid should highlight, derived from
+    /// `eventDate` via the UTC day string (ADR-1 reverse map). Named
+    /// `pickerSelectedDay` (NOT `selectedDay`) to avoid any collision with
+    /// `EventListViewModel.selectedDay`.
+    public var pickerSelectedDay: Date {
+        // eventDate is UTC-midnight; take its UTC yyyy-MM-dd and rebuild a
+        // LOCAL-midnight Date so it matches the grid's local-midnight cells.
+        let dayStr = Date.utcDayFormatter.string(from: eventDate)
+        let parts = dayStr.split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 3 else {
+            return Calendar.current.startOfDay(for: eventDate)
+        }
+        var dc = DateComponents()
+        dc.year = parts[0]
+        dc.month = parts[1]
+        dc.day = parts[2]
+        return Calendar.current.date(from: dc) ?? Calendar.current.startOfDay(for: eventDate)
+    }
+
+    /// Day cells for the picker grid, built by the shared
+    /// `CalendarMonthBuilder` (DRY with the events list).
+    public var pickerDaysInMonth: [DateDay] {
+        CalendarMonthBuilder.daysInMonth(month: currentMonth, selected: pickerSelectedDay)
+    }
+
+    /// Localized month title for the picker header, e.g. "Marzo de 2026".
+    public var pickerMonthTitle: String {
+        let formatter = Self.pickerMonthFormatter
+        if formatter.locale != FeatureL10n.locale {
+            formatter.locale = FeatureL10n.locale
+        }
+        let original = formatter.string(from: currentMonth)
+        guard !original.isEmpty else { return "" }
+        return original.prefix(1).uppercased() + original.dropFirst()
+    }
+
+    /// True when a LOCAL grid cell falls inside any `UnavailableDate` range.
+    /// Uses the LOCAL POSIX formatter because grid cells are local-midnight
+    /// (same contract as `EventListViewModel.isDateBlocked`).
+    public func isDateBlocked(_ date: Date) -> Bool {
+        let dateStr = Self.pickerGridApiDateFormatter.string(from: date)
+        return unavailableDates.contains { $0.startDate <= dateStr && dateStr <= $0.endDate }
+    }
+
+    /// The `UnavailableDate` entry covering a given day, if any. Compares the
+    /// UTC day string of `eventDate` (ADR-4) — `eventDate` is UTC-midnight, so
+    /// a UTC formatter is the correct key. Used by the save guard.
+    public func unavailableDateFor(_ date: Date) -> UnavailableDate? {
+        let dateStr = Date.utcDayFormatter.string(from: date)
+        return unavailableDates.first { $0.startDate <= dateStr && dateStr <= $0.endDate }
+    }
+
+    /// Fetches unavailable dates with a -1/+12 month window (mirrors Android;
+    /// wider than the list's -6/+6 so far-future blocked dates show in the
+    /// picker). Fault-isolated: a fetch failure leaves `unavailableDates`
+    /// empty and the form fully usable (spec: non-critical).
+    @MainActor
+    public func loadUnavailableDates() async {
+        let now = Date()
+        let calendar = Calendar.current
+        guard let startDate = calendar.date(byAdding: .month, value: -1, to: now),
+              let endDate = calendar.date(byAdding: .month, value: 12, to: now)
+        else { return }
+
+        let startStr = Self.pickerGridApiDateFormatter.string(from: startDate)
+        let endStr = Self.pickerGridApiDateFormatter.string(from: endDate)
+
+        if let fetched: [UnavailableDate] = try? await apiClient.getAll(
+            Endpoint.unavailableDates,
+            params: ["start": startStr, "end": endStr]
+        ) {
+            unavailableDates = fetched
+        }
+    }
+
+    /// Sets/clears the inline `dateUnavailableWarning` for a given day (passed
+    /// as `eventDate` — UTC-midnight). With a reason → reason variant; without
+    /// → plain variant. Mirrors Android's `checkDateAvailability`.
+    @MainActor
+    public func checkDateAvailability(_ date: Date) {
+        guard let entry = unavailableDateFor(date) else {
+            dateUnavailableWarning = nil
+            return
+        }
+        if let reason = entry.reason, !reason.isEmpty {
+            let template = tr(
+                "events.form.general.date_blocked_warning_reason",
+                "Esta fecha está marcada como no disponible (%@)."
+            )
+            dateUnavailableWarning = String(format: template, reason)
+        } else {
+            dateUnavailableWarning = tr(
+                "events.form.general.date_blocked_warning",
+                "Esta fecha está marcada como no disponible."
+            )
+        }
+    }
+
+    /// Maps a tapped grid cell to `eventDate` via the day-string roundtrip
+    /// (ADR-1) and refreshes the inline warning. The grid only fires this for
+    /// current-month cells; tapping a blocked day is ALLOWED (Android parity) —
+    /// selection updates and the inline warning shows; the hard block is at
+    /// `save()`.
+    @MainActor
+    public func selectPickerDay(_ day: Date) {
+        let dayStr = Self.pickerGridApiDateFormatter.string(from: day)
+        if let mapped = Date.fromServerDay(dayStr) {
+            eventDate = mapped
+        }
+        checkDateAvailability(eventDate)
+    }
+
+    /// Month navigation for the picker (ADR-5): mutates `currentMonth` ONLY.
+    /// Unlike `EventListViewModel`'s nav, this must NOT clear `eventDate` —
+    /// the form's selected date is independent of which month is visible.
+    public func goToPreviousMonth() {
+        currentMonth = Calendar.current.date(byAdding: .month, value: -1, to: currentMonth) ?? currentMonth
+    }
+
+    public func goToNextMonth() {
+        currentMonth = Calendar.current.date(byAdding: .month, value: 1, to: currentMonth) ?? currentMonth
+    }
+
+    public func goToToday() {
+        let now = Date()
+        currentMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: now)) ?? now
+    }
+
     // MARK: - Computed Properties
 
     public var productsSubtotal: Double {
