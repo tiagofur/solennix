@@ -162,7 +162,8 @@ struct Step1GeneralView: View {
 
     private var scheduleSection: some View {
         Section {
-            // Fecha — botón full-width que abre la sheet con DatePicker .graphical.
+            // Fecha — botón full-width que abre la sheet con el grid de calendario
+            // (CalendarGridView) que marca los días bloqueados durante la selección.
             Button {
                 showDatePickerSheet = true
             } label: {
@@ -179,6 +180,16 @@ struct Step1GeneralView: View {
             }
             .buttonStyle(.plain)
             .solennixRow()
+
+            // Inline warning when the selected day falls inside a blocked range.
+            // Selection is still allowed (Android parity); the hard block is at
+            // save() (T6). Binds to the form VM's localized warning string.
+            if let warning = viewModel.dateUnavailableWarning {
+                Label(warning, systemImage: "exclamationmark.circle")
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.error)
+                    .solennixRow()
+            }
 
             // Hora inicio / Hora fin — filas nativas con label a la izquierda.
             OptionalTimePicker(
@@ -211,53 +222,14 @@ struct Step1GeneralView: View {
 
     // MARK: - Date Picker Sheet
 
-    /// UTC-calendar proxy binding for the graphical DatePicker.
-    ///
-    /// eventDate is stored as UTC-midnight. The graphical DatePicker renders
-    /// using the device calendar (local timezone), so for a UTC-6 user it
-    /// would display the prior day. This proxy offsets the Date by the device
-    /// UTC-offset delta so the picker's local-calendar view aligns with the
-    /// intended UTC calendar day, and reverses the offset on write.
-    private var utcEventDateBinding: Binding<Date> {
-        Binding(
-            get: {
-                // eventDate is UTC-midnight; the picker renders in local tz.
-                // Counter the local offset so the local-calendar picker lands on
-                // the intended UTC day: a UTC-6 device needs +6h so that
-                // 2026-06-15T00:00Z displays as June 15 (not June 14) locally.
-                let secondsFromGMT = TimeInterval(TimeZone.current.secondsFromGMT(for: viewModel.eventDate))
-                return viewModel.eventDate.addingTimeInterval(-secondsFromGMT)
-            },
-            set: { localPickerDate in
-                // Reverse the shift to recover the UTC-midnight instant for the
-                // selected local calendar day.
-                let secondsFromGMT = TimeInterval(TimeZone.current.secondsFromGMT(for: localPickerDate))
-                viewModel.eventDate = localPickerDate.addingTimeInterval(secondsFromGMT)
-            }
-        )
-    }
-
+    /// Grid-based date picker (CalendarGridView). Replaces the old native
+    /// `DatePicker(.graphical)` + its `utcEventDateBinding` TZ proxy. The
+    /// grid↔eventDate mapping is now a day-string roundtrip handled inside the
+    /// form VM (`selectPickerDay` / `pickerSelectedDay`, ADR-1) — DST-safe and
+    /// symmetric with `isDateBlocked`. Blocked days are marked in-grid; tapping
+    /// one is allowed and surfaces the inline warning above; `save()` hard-blocks.
     private var datePickerSheet: some View {
-        NavigationStack {
-            DatePicker(
-                tr("events.form.general.event_date", "Fecha del evento"),
-                selection: utcEventDateBinding,
-                displayedComponents: .date
-            )
-            .datePickerStyle(.graphical)
-            .labelsHidden()
-            .padding()
-            .navigationTitle(tr("events.form.general.event_date", "Fecha del evento"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(tr("events.form.general.done", "Listo")) { showDatePickerSheet = false }
-                        .fontWeight(.semibold)
-                }
-            }
-        }
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
+        EventFormDatePickerSheet(viewModel: viewModel)
     }
 
     // MARK: - Details Section (service type + people + location + city + status)

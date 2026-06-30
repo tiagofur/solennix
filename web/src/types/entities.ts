@@ -54,7 +54,7 @@ export type ClientUpdate = Partial<Omit<Client, 'id' | 'user_id' | 'created_at' 
 export type Event = components['schemas']['Event']
 
 export type EventInsert =
-    Omit<Event, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'client' | 'start_time' | 'end_time' | 'location' | 'city' | 'deposit_percent' | 'cancellation_days' | 'refund_percent' | 'notes' | 'photos'> & {
+    Omit<Event, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'client' | 'start_time' | 'end_time' | 'location' | 'city' | 'deposit_percent' | 'cancellation_days' | 'refund_percent' | 'notes' | 'photos' | 'currency'> & {
         start_time?: string | null
         end_time?: string | null
         location?: string | null
@@ -64,6 +64,7 @@ export type EventInsert =
         refund_percent?: number | null
         notes?: string | null
         photos?: string | null
+        currency?: string | null
     }
 export type EventUpdate = Partial<Omit<Event, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'client'>>
 

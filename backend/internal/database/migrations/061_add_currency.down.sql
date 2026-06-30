@@ -1,0 +1,2 @@
+ALTER TABLE events DROP COLUMN IF EXISTS currency;
+ALTER TABLE users DROP COLUMN IF EXISTS default_currency;

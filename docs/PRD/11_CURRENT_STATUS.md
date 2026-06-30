@@ -25,6 +25,14 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.9
 
+> [!success] 2026-06-29 — Localización de Moneda Dinámica (currency-localization, Phase 5 complete)
+> Soporte completo para múltiples monedas (USD, COP, MXN, etc.) a nivel de presentación en todo el ecosistema de Solennix.
+> - **Base de Datos y Backend (Go)**: Agregado `default_currency` a `users` y `currency` a `events` (por defecto `MXN`) en la migración `061_add_currency`. Actualizados modelos, repositorios, y `FormatCurrency` (variádico para evitar breaking changes) en el generador de PDF.
+> - **Web (React)**: Soporte dinámico en `formatCurrency` vía `Intl.NumberFormat`. Agregado selector de moneda por defecto en el perfil de Ajustes y visualización dinámica en listados y resúmenes de eventos.
+> - **iOS & Android**: Actualizadas extensiones `CurrencyFormatting.swift` y `CurrencyFormatting.kt` para formatear valores dinámicamente con el código de moneda del evento (`.formattedCurrency(code:)` y `.asCurrency(currencyCode:)`).
+> - **Sugerencia de Moneda**: Modificado el reporte de idioma del dispositivo (`LanguageReporter.swift` y `LanguageReporter.kt`) para sugerir y reportar también el código de moneda por defecto basado en la región/locale del sistema al backend de manera throttled.
+> - **Pruebas y Validación**: Todos los unit tests en Go, React, iOS (`LanguageReporterTests`) y Android (`LanguageReporterTest`) pasan correctamente (100% verde).
+
 > [!success] 2026-06-26 — iOS: Búsqueda global como 5° tab del bottom-nav (bottom-nav-search)
 > La búsqueda global deja de ser un overlay/push y se convierte en un **destino nativo de primer nivel** del bottom-nav en iPhone (compact). Entregado en 3 PRs encadenados stacked-to-main (#613, #615 + PR3 local).
 > - **iOS 26 (Primary, spike-validated):** `Tab(role: .search)` + `.tabViewSearchActivation(.searchTabSelection)` — el sistema pina el magnifier al final, maneja focus y dismiss-restore. 4 tabs regulares + 1 search-role = **exactamente 5 slots, sin overflow** (validado on-device; el "Más" legit es uno de los 5, no un overflow). iOS 17–25: 5° tab regular de magnifier (Fallback, mismo `searchTabContent`).

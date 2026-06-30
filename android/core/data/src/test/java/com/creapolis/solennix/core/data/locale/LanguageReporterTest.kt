@@ -46,9 +46,11 @@ class LanguageReporterTest {
     }
 
     @Test
-    fun `reportIfNeeded does not report if language is identical to last reported`() = runTest {
+    fun `reportIfNeeded does not report if language and currency are identical to last reported`() = runTest {
         reporter.currentLanguageProvider = { "en" }
+        reporter.currentCurrencyProvider = { "USD" }
         every { mockStore.getLastReportedLanguage() } returns "en"
+        every { mockStore.getLastReportedCurrency() } returns "USD"
 
         val reported = reporter.reportIfNeeded()
 
@@ -57,9 +59,11 @@ class LanguageReporterTest {
     }
 
     @Test
-    fun `reportIfNeeded reports and updates store on success`() = runTest {
+    fun `reportIfNeeded reports and updates store on language change`() = runTest {
         reporter.currentLanguageProvider = { "en" }
+        reporter.currentCurrencyProvider = { "USD" }
         every { mockStore.getLastReportedLanguage() } returns "es"
+        every { mockStore.getLastReportedCurrency() } returns "USD"
 
         val updatedUser = User(id = "1", email = "test@example.com", name = "Test", preferredLanguage = "en")
         coEvery { mockApiService.put<User>(any(), any()) } returns updatedUser
@@ -70,12 +74,34 @@ class LanguageReporterTest {
         coVerify(exactly = 1) { mockApiService.put<User>(any(), any()) }
         coVerify(exactly = 1) { mockAuthManager.storeUser(updatedUser) }
         verify(exactly = 1) { mockStore.setLastReportedLanguage("en") }
+        verify(exactly = 1) { mockStore.setLastReportedCurrency("USD") }
+    }
+
+    @Test
+    fun `reportIfNeeded reports and updates store on currency change`() = runTest {
+        reporter.currentLanguageProvider = { "en" }
+        reporter.currentCurrencyProvider = { "COP" }
+        every { mockStore.getLastReportedLanguage() } returns "en"
+        every { mockStore.getLastReportedCurrency() } returns "USD"
+
+        val updatedUser = User(id = "1", email = "test@example.com", name = "Test", preferredLanguage = "en")
+        coEvery { mockApiService.put<User>(any(), any()) } returns updatedUser
+
+        val reported = reporter.reportIfNeeded()
+
+        assertTrue(reported)
+        coVerify(exactly = 1) { mockApiService.put<User>(any(), any()) }
+        coVerify(exactly = 1) { mockAuthManager.storeUser(updatedUser) }
+        verify(exactly = 1) { mockStore.setLastReportedLanguage("en") }
+        verify(exactly = 1) { mockStore.setLastReportedCurrency("COP") }
     }
 
     @Test
     fun `reportIfNeeded returns false and does not update store on network failure`() = runTest {
         reporter.currentLanguageProvider = { "en" }
+        reporter.currentCurrencyProvider = { "USD" }
         every { mockStore.getLastReportedLanguage() } returns "es"
+        every { mockStore.getLastReportedCurrency() } returns "USD"
 
         coEvery { mockApiService.put<User>(any(), any()) } throws RuntimeException("Network Error")
 
@@ -85,5 +111,6 @@ class LanguageReporterTest {
         coVerify(exactly = 1) { mockApiService.put<User>(any(), any()) }
         coVerify(exactly = 0) { mockAuthManager.storeUser(any()) }
         verify(exactly = 0) { mockStore.setLastReportedLanguage(any()) }
+        verify(exactly = 0) { mockStore.setLastReportedCurrency(any()) }
     }
 }

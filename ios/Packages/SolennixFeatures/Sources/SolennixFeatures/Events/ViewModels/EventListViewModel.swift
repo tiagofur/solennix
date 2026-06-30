@@ -183,66 +183,13 @@ public final class EventListViewModel {
     /// Array of `DateDay` structs for the current-month grid, with leading
     /// empty slots so the first day aligns to the correct weekday column.
     /// Locale-aware offset matches `CalendarGridView`'s header rotation.
+    ///
+    /// Delegates to the shared `CalendarMonthBuilder` (DRY — the event form's
+    /// date picker reuses the exact same layout). Behavior is byte-identical to
+    /// the pre-extraction inlined implementation; verified by
+    /// `CalendarMonthBuilderTests`.
     public var daysInMonth: [DateDay] {
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.year, .month], from: currentMonth)
-        guard let firstOfMonth = calendar.date(from: components),
-              let range = calendar.range(of: .day, in: .month, for: firstOfMonth)
-        else { return [] }
-
-        let rawWeekday = calendar.component(.weekday, from: firstOfMonth)
-        let leadingBlanks = (rawWeekday - calendar.firstWeekday + 7) % 7
-
-        let today = Date()
-        let todayComponents = calendar.dateComponents([.year, .month, .day], from: today)
-        let selectedComponents: DateComponents? = selectedDay.map {
-            calendar.dateComponents([.year, .month, .day], from: $0)
-        }
-
-        var days: [DateDay] = []
-
-        if leadingBlanks > 0 {
-            guard let lastDayPrev = calendar.date(byAdding: .day, value: -1, to: firstOfMonth),
-                  let prevMonthRange = calendar.range(of: .day, in: .month, for: lastDayPrev)
-            else { return [] }
-            for i in 0..<leadingBlanks {
-                let dayNum = prevMonthRange.upperBound - leadingBlanks + i
-                if let date = calendar.date(byAdding: .day, value: -(leadingBlanks - i), to: firstOfMonth) {
-                    days.append(DateDay(
-                        date: date,
-                        dayNumber: dayNum,
-                        isCurrentMonth: false,
-                        isToday: false,
-                        isSelected: false
-                    ))
-                }
-            }
-        }
-
-        for day in range {
-            var dayComponents = components
-            dayComponents.day = day
-            guard let date = calendar.date(from: dayComponents) else { continue }
-
-            let dc = calendar.dateComponents([.year, .month, .day], from: date)
-            let isToday = dc.year == todayComponents.year
-                && dc.month == todayComponents.month
-                && dc.day == todayComponents.day
-            let isSelected: Bool = {
-                guard let sc = selectedComponents else { return false }
-                return dc.year == sc.year && dc.month == sc.month && dc.day == sc.day
-            }()
-
-            days.append(DateDay(
-                date: date,
-                dayNumber: day,
-                isCurrentMonth: true,
-                isToday: isToday,
-                isSelected: isSelected
-            ))
-        }
-
-        return days
+        CalendarMonthBuilder.daysInMonth(month: currentMonth, selected: selectedDay)
     }
 
     /// Up to 3 status-colored dots for a given day. Each dot represents ONE

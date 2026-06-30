@@ -442,47 +442,26 @@ public struct EventListView: View {
             // These affordances were on the old `CalendarViewModel`; the unified
             // VM now owns `goToNextMonth` / `goToPreviousMonth` / `goToToday`, so
             // the calendar mode is navigable again (critical bug fix).
-            HStack {
-                Button {
+            // Month navigation header: prev / title / next, plus a "Hoy" button.
+            // Extracted into the shared closure-driven `MonthNavigatorView`
+            // (also consumed by the event-form date picker — DRY). The closures
+            // keep the selection haptic + the VM navigation that lived here
+            // inline, so look/feel/a11y are byte-identical.
+            MonthNavigatorView(
+                title: viewModel.monthTitle,
+                onPrev: {
                     HapticsHelper.play(.selection)
                     viewModel.goToPreviousMonth()
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.headline)
-                        .foregroundStyle(SolennixColors.primary)
-                }
-                .accessibilityLabel(tr("events.calendar.previous_month", "Mes anterior"))
-
-                Spacer()
-
-                Text(viewModel.monthTitle)
-                    .font(.headline)
-                    .foregroundStyle(SolennixColors.text)
-
-                Spacer()
-
-                Button {
+                },
+                onNext: {
                     HapticsHelper.play(.selection)
                     viewModel.goToNextMonth()
-                } label: {
-                    Image(systemName: "chevron.right")
-                        .font(.headline)
-                        .foregroundStyle(SolennixColors.primary)
+                },
+                onToday: {
+                    HapticsHelper.play(.selection)
+                    viewModel.goToToday()
                 }
-                .accessibilityLabel(tr("events.calendar.next_month", "Mes siguiente"))
-            }
-
-            // "Hoy" affordance — snaps the grid back to the current month.
-            Button {
-                HapticsHelper.play(.selection)
-                viewModel.goToToday()
-            } label: {
-                Text(tr("events.calendar.today", "Hoy"))
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(SolennixColors.primary)
-            }
-            .accessibilityLabel(tr("events.calendar.today", "Hoy"))
+            )
 
             CalendarGridView(
                 days: viewModel.daysInMonth,

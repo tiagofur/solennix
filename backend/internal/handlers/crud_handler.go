@@ -653,6 +653,12 @@ func (h *CRUDHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	event.UserID = userID
+	if event.Currency == "" {
+		event.Currency = user.DefaultCurrency
+	}
+	if event.Currency == "" {
+		event.Currency = "MXN"
+	}
 
 	// Prepare time fields the same way EventRepo.Create does.
 	var evStartTime, evEndTime *string
@@ -677,13 +683,13 @@ func (h *CRUDHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 					`INSERT INTO events (user_id, client_id, event_date, start_time, end_time,
 					service_type, num_people, status, discount, discount_type, requires_invoice,
 					tax_rate, tax_amount, total_amount, location, city,
-					deposit_percent, cancellation_days, refund_percent, notes, photos)
-					VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
+					deposit_percent, cancellation_days, refund_percent, notes, photos, currency)
+					VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
 					RETURNING id, created_at, updated_at`,
 					event.UserID, event.ClientID, event.EventDate, evStartTime, evEndTime,
 					event.ServiceType, event.NumPeople, event.Status, event.Discount, event.DiscountType, event.RequiresInvoice,
 					event.TaxRate, event.TaxAmount, event.TotalAmount, event.Location, event.City,
-					event.DepositPercent, event.CancellationDays, event.RefundPercent, event.Notes, event.Photos,
+					event.DepositPercent, event.CancellationDays, event.RefundPercent, event.Notes, event.Photos, event.Currency,
 				).Scan(&event.ID, &event.CreatedAt, &event.UpdatedAt)
 			},
 		)

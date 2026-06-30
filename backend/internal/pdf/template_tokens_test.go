@@ -69,19 +69,26 @@ func sampleTokenData() TokenData {
 func TestFormatCurrency(t *testing.T) {
 	tests := []struct {
 		amount   float64
+		currency string
 		expected string
 	}{
-		{0, "$0.00"},
-		{1, "$1.00"},
-		{100, "$100.00"},
-		{1000, "$1,000.00"},
-		{25000, "$25,000.00"},
-		{1234567.89, "$1,234,567.89"},
-		{45000, "$45,000.00"},
+		{0, "MXN", "$0.00"},
+		{1, "MXN", "$1.00"},
+		{1000, "MXN", "$1,000.00"},
+		{25000, "MXN", "$25,000.00"},
+		{1234567.89, "MXN", "$1,234,567.89"},
+		{0, "USD", "$0.00 USD"},
+		{1234.56, "USD", "$1,234.56 USD"},
+		{45000, "COP", "$45,000.00 COP"},
 	}
 	for _, tt := range tests {
-		result := FormatCurrency(tt.amount)
-		assert.Equal(t, tt.expected, result, "FormatCurrency(%v)", tt.amount)
+		var result string
+		if tt.currency == "MXN" {
+			result = FormatCurrency(tt.amount)
+		} else {
+			result = FormatCurrency(tt.amount, tt.currency)
+		}
+		assert.Equal(t, tt.expected, result, "FormatCurrency(%v, %q)", tt.amount, tt.currency)
 	}
 }
 

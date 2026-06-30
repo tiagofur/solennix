@@ -65,6 +65,7 @@ type User struct {
 	PushPaymentReceived      *bool `json:"push_payment_received,omitempty"`
 	// i18n: user's preferred language for emails and notifications ('es' | 'en')
 	PreferredLanguage string     `json:"preferred_language"`
+	DefaultCurrency   string     `json:"default_currency"`
 	Plan              string     `json:"plan"`
 	Role              string     `json:"role"`
 	StripeCustomerID  *string    `json:"-"` // Never expose provider IDs in JSON
@@ -117,6 +118,7 @@ type Event struct {
 	RefundPercent    *float64  `json:"refund_percent,omitempty"`
 	Notes            *string   `json:"notes,omitempty"`
 	Photos           *string   `json:"photos,omitempty"` // JSONB stored as string (array of URLs)
+	Currency         string    `json:"currency"`
 	CreatedAt        time.Time `json:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at"`
 

@@ -112,11 +112,19 @@ type TokenData struct {
 	Payments []models.Payment
 }
 
-// FormatCurrency formats an amount as MXN currency string.
-// Produces "$25,000.00" format consistent with all frontends.
-func FormatCurrency(amount float64) string {
+// FormatCurrency formats an amount as localized currency string.
+// Produces "$25,000.00 COP" or "$25,000.00" (if MXN) format.
+func FormatCurrency(amount float64, currency ...string) string {
+	currencyCode := "MXN"
+	if len(currency) > 0 && currency[0] != "" {
+		currencyCode = currency[0]
+	}
+
 	if amount == 0 {
-		return "$0.00"
+		if currencyCode == "MXN" {
+			return "$0.00"
+		}
+		return fmt.Sprintf("$0.00 %s", currencyCode)
 	}
 	formatted := fmt.Sprintf("%.2f", amount)
 	parts := strings.Split(formatted, ".")
@@ -130,8 +138,13 @@ func FormatCurrency(amount float64) string {
 		}
 		result += string(c)
 	}
-	return "$" + result + "." + decPart
+	
+	if currencyCode == "MXN" {
+		return "$" + result + "." + decPart
+	}
+	return "$" + result + "." + decPart + " " + currencyCode
 }
+
 
 // FormatDate formats a "2006-01-02" date string to "15 de junio de 2026" (es-MX).
 func FormatDate(dateStr string) string {

@@ -10,22 +10,25 @@ import SolennixFeatures
 // LANGUAGE CODE ("es"/"en") — NOT the full locale ("es-MX") — keeps the backend
 // contract identical to today; the fine locale is only used internally for MXN
 // currency formatting (see WU2 / DashboardFormatting).
-private struct PreferredLanguagePayload: Encodable {
+private struct ProfileUpdatePayload: Encodable {
     let preferredLanguage: String
+    let defaultCurrency: String
 }
 
 // MARK: - Persistence abstraction (throttle store)
 
-/// Read/write window over the `lastReportedLanguage` value used to throttle reports.
+/// Read/write window over the language and currency values used to throttle reports.
 /// `@objc protocol`-free; the production adapter wraps `UserDefaults`.
 protocol LanguageReportStoring: AnyObject {
     var lastReportedLanguage: String? { get set }
+    var lastReportedCurrency: String? { get set }
 }
 
 /// `UserDefaults`-backed adapter. Defaults to the standard suite (the same store
 /// `SolennixApp` uses for other per-device keys).
 final class UserDefaultsLanguageStore: LanguageReportStoring {
     static let key = "lastReportedLanguage"
+    static let currencyKey = "lastReportedCurrency"
 
     private let defaults: UserDefaults
 
@@ -43,11 +46,22 @@ final class UserDefaultsLanguageStore: LanguageReportStoring {
             }
         }
     }
+
+    var lastReportedCurrency: String? {
+        get { defaults.string(forKey: Self.currencyKey) }
+        set {
+            if let newValue {
+                defaults.set(newValue, forKey: Self.currencyKey)
+            } else {
+                defaults.removeObject(forKey: Self.currencyKey)
+            }
+        }
+    }
 }
 
 // MARK: - LanguageReporter
 //
-// Reports the device's SYSTEM language to the backend (`preferredLanguage`).
+// Reports the device's SYSTEM language to the backend (`preferredLanguage`) and suggested currency.
 // Replaces the in-app picker's report path (removed in WU3). After WU3 the app had
 // no language-report path at all; this re-adds it on a throttled, launch/locale-change
 // schedule — without flashing the Settings spinner on launch (the reason the old
@@ -61,41 +75,43 @@ final class LanguageReporter {
 
     private let store: LanguageReportStoring
     private let currentLanguageProvider: () -> String
-    private let report: (String) async throws -> Void
+    private let currentCurrencyProvider: () -> String
+    private let report: (String, String) async throws -> Void
 
-    /// Testable initializer: inject the store, the "current language" provider, and the
-    /// backend call (as a closure) so the throttle contract can be exercised with no
-    /// Locale/device dependency.
+    /// Testable initializer: inject the store, providers, and backend call
     init(
         store: LanguageReportStoring,
         currentLanguageProvider: @escaping () -> String,
-        report: @escaping (String) async throws -> Void
+        currentCurrencyProvider: @escaping () -> String,
+        report: @escaping (String, String) async throws -> Void
     ) {
         self.store = store
         self.currentLanguageProvider = currentLanguageProvider
+        self.currentCurrencyProvider = currentCurrencyProvider
         self.report = report
     }
 
     /// Production convenience: wires the real `UserDefaults` store, the system language
-    /// CODE reader (`Locale.current.language.languageCode?.identifier`, defaulting to
-    /// "es"), and the backend call — which replicates the old picker's underlying call,
-    /// `authManager.updateProfile(PreferredLanguagePayload(...))`, directly.
+    /// CODE reader, and the backend call.
     convenience init(authManager: AuthManager) {
         self.init(
             store: UserDefaultsLanguageStore(),
             currentLanguageProvider: {
                 Locale.current.language.languageCode?.identifier ?? "es"
             },
-            report: { code in
+            currentCurrencyProvider: {
+                Locale.current.currencyCode ?? "MXN"
+            },
+            report: { lang, currency in
                 try await authManager.updateProfile(
-                    data: PreferredLanguagePayload(preferredLanguage: code)
+                    data: ProfileUpdatePayload(preferredLanguage: lang, defaultCurrency: currency)
                 )
             }
         )
     }
 
-    /// Reports the current system language to the backend IF it differs from the last
-    /// reported value.
+    /// Reports the current system language and currency to the backend IF they differ from the last
+    /// reported values.
     ///
     /// - Returns: `true` when a report was made; `false` when throttled (no change) or
     ///   when the backend call failed. On success the new value is persisted so
@@ -103,11 +119,13 @@ final class LanguageReporter {
     ///   fire retries.
     @discardableResult
     func reportIfNeeded() async -> Bool {
-        let current = currentLanguageProvider()
-        guard current != store.lastReportedLanguage else { return false }
+        let currentLang = currentLanguageProvider()
+        let currentCurrency = currentCurrencyProvider()
+        guard currentLang != store.lastReportedLanguage || currentCurrency != store.lastReportedCurrency else { return false }
         do {
-            try await report(current)
-            store.lastReportedLanguage = current
+            try await report(currentLang, currentCurrency)
+            store.lastReportedLanguage = currentLang
+            store.lastReportedCurrency = currentCurrency
             return true
         } catch {
             // Best-effort diagnostics. Non-fatal: a missed report simply retries on the

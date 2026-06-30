@@ -1061,6 +1061,7 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		PushEventReminder        *bool   `json:"push_event_reminder"`
 		PushPaymentReceived      *bool   `json:"push_payment_received"`
 		PreferredLanguage        *string `json:"preferred_language"`
+		DefaultCurrency         *string `json:"default_currency"`
 	}
 
 	if err := decodeJSON(r, &req); err != nil {
@@ -1096,7 +1097,7 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		req.DefaultDepositPercent, req.DefaultCancellationDays, req.DefaultRefundPercent, req.ContractTemplate,
 		req.EmailPaymentReceipt, req.EmailEventReminder, req.EmailSubscriptionUpdates,
 		req.EmailWeeklySummary, req.EmailMarketing, req.PushEnabled, req.PushEventReminder, req.PushPaymentReceived,
-		req.PreferredLanguage,
+		req.PreferredLanguage, req.DefaultCurrency,
 	)
 	if err != nil {
 		slog.Error("Failed to update profile", "error", err)

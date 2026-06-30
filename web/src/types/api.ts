@@ -1316,6 +1316,8 @@ export interface components {
             /** @enum {string} */
             role: "user" | "admin" | "team_member" | "assistant";
             preferred_language: string;
+            /** @default MXN */
+            default_currency: string;
             /** Format: date-time */
             plan_expires_at?: string | null;
             /** Format: date-time */
@@ -1469,6 +1471,8 @@ export interface components {
             refund_percent?: number | null;
             notes?: string | null;
             photos?: string | null;
+            /** @default MXN */
+            currency: string;
             client?: components["schemas"]["Client"];
             /** Format: date-time */
             created_at: string;
@@ -1506,6 +1510,7 @@ export interface components {
             /** Format: double */
             refund_percent?: number | null;
             notes?: string | null;
+            currency?: string | null;
         };
         Client: {
             /** Format: uuid */

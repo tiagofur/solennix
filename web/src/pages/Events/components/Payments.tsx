@@ -10,6 +10,7 @@ import { useToast } from "../../../hooks/useToast";
 import clsx from "clsx";
 import { useTranslation } from "react-i18next";
 import { parseEventDate } from "../../../lib/dateUtils";
+import { formatCurrency as libFormatCurrency } from "../../../lib/finance";
 
 interface PaymentsProps {
   eventId: string;
@@ -22,6 +23,7 @@ interface PaymentsProps {
   autoOpenAdd?: boolean;
   onPaymentAdded?: () => void;
   onAutoOpenConsumed?: () => void;
+  currency?: string;
 }
 
 export const Payments: React.FC<PaymentsProps> = ({
@@ -34,6 +36,7 @@ export const Payments: React.FC<PaymentsProps> = ({
   autoOpenAdd,
   onPaymentAdded,
   onAutoOpenConsumed,
+  currency,
 }) => {
   const { t, i18n } = useTranslation(["events"]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -47,14 +50,8 @@ export const Payments: React.FC<PaymentsProps> = ({
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const { addToast } = useToast();
-  const currencyFormatter = new Intl.NumberFormat(i18n.language === "en" ? "en-US" : "es-MX", {
-    style: "currency",
-    currency: "MXN",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
 
-  const formatCurrency = (amount: number) => currencyFormatter.format(amount);
+  const formatCurrency = (amount: number) => libFormatCurrency(amount, currency);
   const formatDate = (value: string) => parseEventDate(value).toLocaleDateString(i18n.language === "en" ? "en-US" : "es-MX");
 
   const getMethodLabel = (method: string) => {
