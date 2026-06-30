@@ -164,6 +164,7 @@ public extension View {
         self
             .scrollContentBackground(.hidden)
             .background(SolennixColors.surfaceGrouped)
+            .tint(SolennixColors.primary)
     }
 
     /// Standard Solennix card for standalone content in `ScrollView`s and

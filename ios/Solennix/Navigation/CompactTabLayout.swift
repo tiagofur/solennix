@@ -104,6 +104,7 @@ struct CompactTabLayout: View {
                 searchTabContent
             }
         }
+        .tint(SolennixColors.tabBarActive)
         .tabBarMinimizeBehavior(.onScrollDown)
         .tabViewSearchActivation(.searchTabSelection)
         .persistable($selectedTab, data: $selectedTabData)
@@ -171,6 +172,7 @@ struct CompactTabLayout: View {
                 .tabItem { Label(Tab.search.title, systemImage: Tab.search.iconName) }
                 .tag(AppTab.search)
         }
+        .tint(SolennixColors.tabBarActive)
         .persistable($selectedTab, data: $selectedTabData)
         .onChange(of: pendingSpotlightRoute) { _, newRoute in
             guard let route = newRoute else { return }
