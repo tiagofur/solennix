@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { format } from 'date-fns';
-import { buildBlockedDateList, isDateBlocked } from './blockedDates';
+import { buildBlockedDateList, isDateBlocked, advancePastBlockedDate } from './blockedDates';
 import { parseLocalDate } from './dateUtils';
 
 const toIso = (d: Date) => format(d, 'yyyy-MM-dd');
@@ -72,5 +72,56 @@ describe('isDateBlocked', () => {
   it('agrees on the boundary days (start and end inclusive)', () => {
     expect(isDateBlocked(parseLocalDate('2026-07-10'), list)).toBe(true);
     expect(isDateBlocked(parseLocalDate('2026-07-12'), list)).toBe(true);
+  });
+});
+
+describe('advancePastBlockedDate (auto-skip math, REQ-3)', () => {
+  const block = (start: string, end: string) => buildBlockedDateList([{ start_date: start, end_date: end }]);
+
+  it('keeps today when it is NOT blocked (no-op)', () => {
+    expect(advancePastBlockedDate('2026-07-10', [])).toBe('2026-07-10');
+  });
+
+  it('advances a single blocked day to the next free day', () => {
+    expect(advancePastBlockedDate('2026-07-10', block('2026-07-10', '2026-07-10'))).toBe('2026-07-11');
+  });
+
+  it('advances past a run of consecutive blocked days', () => {
+    expect(advancePastBlockedDate('2026-07-10', block('2026-07-10', '2026-07-12'))).toBe('2026-07-13');
+  });
+
+  it('keeps the original date on cap-exhaust (>365 consecutive blocked days, REQ-3 cap)', () => {
+    // Cap is 365 iterations; blocking MORE than 365 days means the loop
+    // exhausts before finding a free day -> keep original (save guard backstops).
+    const start = parseLocalDate('2026-01-01');
+    const list: Date[] = [];
+    for (let i = 0; i < 400; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      list.push(d);
+    }
+    expect(advancePastBlockedDate('2026-01-01', list)).toBe('2026-01-01');
+  });
+
+  it('steps from the LOCAL day regardless of host TZ (pinned-TZ by input, REQ-3/REQ-5)', () => {
+    // Simulates the UTC-6 @23:00 and UTC+8 morning scenarios deterministically:
+    // the caller passes the already-formatted LOCAL today string, so the helper
+    // always steps from the LOCAL calendar day, never the UTC day.
+    expect(advancePastBlockedDate('2026-07-10', block('2026-07-10', '2026-07-10'))).toBe('2026-07-11');
+    expect(advancePastBlockedDate('2026-12-31', block('2026-12-31', '2026-12-31'))).toBe('2027-01-01');
+  });
+
+  it('is DST-safe when stepping across a spring-forward boundary', () => {
+    // 2026-03-29 is the EU DST spring-forward (02:00 -> 03:00 local). Stepping
+    // from 2026-03-27 across the gap must land on 2026-03-30, proving the
+    // local setDate(+1) advances exactly one calendar day.
+    expect(advancePastBlockedDate('2026-03-27', block('2026-03-27', '2026-03-29'))).toBe('2026-03-30');
+  });
+
+  it('returns a valid yyyy-MM-dd string', () => {
+    const out = advancePastBlockedDate('2026-07-10', block('2026-07-10', '2026-07-10'));
+    expect(out).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    // Round-trips through parseLocalDate + format.
+    expect(format(parseLocalDate(out), 'yyyy-MM-dd')).toBe(out);
   });
 });

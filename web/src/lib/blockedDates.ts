@@ -50,3 +50,35 @@ export function isDateBlocked(date: Date, blockedDateList: readonly Date[]): boo
   const key = format(date, "yyyy-MM-dd");
   return blockedDateList.some((d) => format(d, "yyyy-MM-dd") === key);
 }
+
+/**
+ * Pure, TZ-pinned-by-input auto-skip helper (REQ-3).
+ *
+ * Given a LOCAL `yyyy-MM-dd` `today` and a blocked list, advance day-by-day
+ * using a DST-safe local `setDate(+1)` step until a free day is found, capped
+ * at 365 iterations. Returns the advanced `yyyy-MM-dd`, or the original
+ * `today` on cap-exhaust (the save guard backstops it, REQ-7).
+ *
+ * Extracted from the create-only effect in `EventForm.tsx` so the day-stepping
+ * math is unit-testable with explicit inputs (Node caches the timezone at
+ * startup, so pinned-TZ behavior is verified by passing the LOCAL `today`
+ * string directly rather than by controlling the host clock).
+ */
+export function advancePastBlockedDate(
+  today: string,
+  blockedDateList: readonly Date[],
+): string {
+  const blocked = new Set(blockedDateList.map((d) => format(d, "yyyy-MM-dd")));
+  const cursor = parseLocalDate(today);
+  const cap = 365;
+  let steps = 0;
+  while (blocked.has(format(cursor, "yyyy-MM-dd")) && steps < cap) {
+    cursor.setDate(cursor.getDate() + 1);
+    steps += 1;
+  }
+  // cap-exhaust -> keep original date; save guard backstops (REQ-3, REQ-7)
+  if (blocked.has(format(cursor, "yyyy-MM-dd"))) {
+    return today;
+  }
+  return format(cursor, "yyyy-MM-dd");
+}

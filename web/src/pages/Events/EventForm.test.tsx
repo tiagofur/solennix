@@ -7,6 +7,8 @@ import { clientService } from '../../services/clientService';
 import { productService } from '../../services/productService';
 import { inventoryService } from '../../services/inventoryService';
 import { logError } from '../../lib/errorHandler';
+import { addDays, format } from 'date-fns';
+import { localToday, parseLocalDate } from '../../lib/dateUtils';
 
 let mockTriggerFetchCosts = () => {};
 
@@ -224,9 +226,12 @@ vi.mock('../../lib/errorHandler', () => ({
   getErrorMessage: vi.fn((err: any, fallback: string) => (err instanceof Error ? err.message : fallback)),
 }));
 
+// Hoisted holder so the (hoisted) vi.mock factory can reference a mutable
+// unavailable-dates list. Reset to [] in beforeEach; set per test.
+const unavailableMock = vi.hoisted(() => ({ dates: [] as any[] }));
 vi.mock('../../services/unavailableDatesService', () => ({
   unavailableDatesService: {
-    getDates: vi.fn().mockResolvedValue([]),
+    getDates: vi.fn(async () => unavailableMock.dates),
   },
 }));
 
@@ -276,6 +281,7 @@ describe('EventForm', () => {
     mockNavigate.mockClear();
     mockParams = {};
     mockSearchParams = new URLSearchParams();
+    unavailableMock.dates = [];
     mockTrigger.mockClear().mockResolvedValue(true);
     mockProductsBehavior = 'passive';
     mockExtrasBehavior = 'passive';
@@ -1133,5 +1139,102 @@ describe('EventForm', () => {
       expect(screen.getByText('Editar Evento')).toBeInTheDocument();
     });
     expect(screen.queryByText(/Límite de Eventos Alcanzado/i)).not.toBeInTheDocument();
+  });
+
+  // ---------------------------------------------------------------------------
+  // Auto-skip of a blocked local-today default (REQ-3, REQ-4, REQ-5, Fix 1)
+  // ---------------------------------------------------------------------------
+
+  const flushEffects = () => act(async () => { await new Promise((r) => setTimeout(r, 100)); });
+  // All event_date values written via setValue (the mocked setValue always
+  // passes 3 args, so assert on the recorded values rather than arg shape).
+  const eventDateWrites = () =>
+    mockSetValueMock.mock.calls.filter((c: any[]) => c[0] === 'event_date').map((c: any[]) => c[1]);
+
+  it('auto-skips a blocked local-today once data resolves (Fix 1 data-ready gate, REQ-3, REQ-5)', async () => {
+    const today = localToday();
+    const tomorrow = format(addDays(parseLocalDate(today), 1), 'yyyy-MM-dd');
+    unavailableMock.dates = [{ id: 'b1', start_date: today, end_date: today, reason: '' }];
+
+    render(<EventForm />);
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument();
+    });
+
+    // react-query yields [] on the first render; the gate returns WITHOUT
+    // latching, so the skip fires only after blocked data resolves.
+    await waitFor(() => {
+      expect(eventDateWrites()).toContain(tomorrow);
+    });
+  });
+
+  it('does NOT latch on the empty first render — keeps advancing after async load (Fix 1)', async () => {
+    // If the ref latched on the empty-data first render, the skip would never
+    // fire. Re-asserting the advance (with a different blocked window) proves
+    // the latch only happens with real data present.
+    const today = localToday();
+    const twoDaysAhead = format(addDays(parseLocalDate(today), 2), 'yyyy-MM-dd');
+    unavailableMock.dates = [
+      { id: 'b1', start_date: today, end_date: today, reason: '' },
+      { id: 'b2', start_date: format(addDays(parseLocalDate(today), 1), 'yyyy-MM-dd'), end_date: format(addDays(parseLocalDate(today), 1), 'yyyy-MM-dd'), reason: '' },
+    ];
+
+    render(<EventForm />);
+    await waitFor(() => {
+      expect(eventDateWrites()).toContain(twoDaysAhead);
+    });
+  });
+
+  it('does NOT auto-skip in edit mode (REQ-4)', async () => {
+    const today = localToday();
+    const tomorrow = format(addDays(parseLocalDate(today), 1), 'yyyy-MM-dd');
+    unavailableMock.dates = [{ id: 'b1', start_date: today, end_date: today, reason: '' }];
+    mockParams = { id: 'event-1' };
+    (eventService.getById as any).mockResolvedValue({
+      id: 'event-1', client_id: 'c1', event_date: '2024-01-02',
+      service_type: 'Boda', num_people: 100, status: 'quoted',
+    });
+
+    render(<EventForm />);
+    await waitFor(() => expect(screen.getByText('Editar Evento')).toBeInTheDocument());
+    await flushEffects();
+
+    // The edit-mode gate (`if (id) return`) prevents any skip.
+    expect(eventDateWrites()).not.toContain(tomorrow);
+  });
+
+  it('does NOT auto-skip an explicit ?date= prefill even when blocked (REQ-4)', async () => {
+    const today = localToday();
+    const tomorrow = format(addDays(parseLocalDate(today), 1), 'yyyy-MM-dd');
+    unavailableMock.dates = [{ id: 'b1', start_date: today, end_date: today, reason: '' }];
+    mockSearchParams = new URLSearchParams(`date=${today}`);
+
+    render(<EventForm />);
+    await waitFor(() => expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument());
+    await flushEffects();
+
+    // The prefill gate (`if (searchParams.get('date')) return`) preserves the
+    // intentional quick-quote date.
+    expect(eventDateWrites()).not.toContain(tomorrow);
+  });
+
+  it('keeps the original date when the next 365 days are blocked (cap-exhaust, REQ-3)', async () => {
+    // Cap-exhaust: the effect terminates (no infinite loop) and keeps the
+    // original default day. The pure helper proves the stepping; here we verify
+    // the effect wiring terminates and preserves today.
+    const today = localToday();
+    const start = parseLocalDate(today);
+    const blocked: any[] = [];
+    for (let i = 0; i < 400; i++) {
+      const d = format(addDays(start, i), 'yyyy-MM-dd');
+      blocked.push({ id: `b${i}`, start_date: d, end_date: d, reason: '' });
+    }
+    unavailableMock.dates = blocked;
+
+    render(<EventForm />);
+    await waitFor(() => expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument());
+    await flushEffects();
+
+    expect(eventDateWrites()).toContain(today);
   });
 });
