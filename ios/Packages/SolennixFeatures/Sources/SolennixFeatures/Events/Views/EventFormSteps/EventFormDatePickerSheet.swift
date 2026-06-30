@@ -16,9 +16,14 @@ import SolennixNetwork
 /// - Selection highlight comes from `DateDay.isSelected`, which the builder
 ///   derives from `pickerSelectedDay` — so the grid highlights the day that
 ///   matches `eventDate` (ADR-1 reverse map).
-/// - Tapping a blocked day is ALLOWED (Android parity): the grid fires
-///   `onSelectDate` for every current-month cell; `selectPickerDay` updates
-///   `eventDate` and shows the inline warning; the hard block is at `save()`.
+/// - Tapping a blocked day is NOT selectable (Android #696 parity): the grid
+///   fires `onSelectDate` for every current-month cell, but this handler
+///   ignores taps on blocked cells (the cell already renders red/strikethrough
+///   + a11y "blocked") and plays an error haptic — `eventDate` and the grid
+///   highlight stay unchanged. The shared `CalendarGridView`'s global tap
+///   behavior is NOT modified (the events list still taps blocked days to
+///   manage them). The inline warning + the `save()` guard remain as a
+///   secondary defense.
 struct EventFormDatePickerSheet: View {
 
     @Bindable var viewModel: EventFormViewModel
@@ -50,7 +55,14 @@ struct EventFormDatePickerSheet: View {
                         eventOverflowForDay: { _ in 0 },
                         isDateBlocked: { viewModel.isDateBlocked($0) },
                         selectedDate: viewModel.eventDate,
-                        onSelectDate: { viewModel.selectPickerDay($0) }
+                        // Disable-select lives here (NOT in the shared grid):
+                        // a blocked cell is ignored + error haptic; the grid's
+                        // global tap behavior is unchanged.
+                        onSelectDate: { day in
+                            if !viewModel.selectPickerDay(day) {
+                                HapticsHelper.play(.error)
+                            }
+                        }
                     )
                 }
                 .padding(.horizontal)

@@ -50,8 +50,12 @@ extension EventFormViewModel {
         // save guard can surface/intercept them. Fault-isolated — a failure
         // leaves the form usable (loadUnavailableDates swallows errors).
         await loadUnavailableDates()
-        // New events default to today; still check it so an already-blocked
-        // day shows the inline warning immediately.
+        // New-event default auto-skip (Android #696 parity): create mode only.
+        // If today (the default eventDate) is blocked, advance to the first
+        // non-blocked day. Edit mode is exempt — see the helper.
+        advancePastBlockedDefaultIfNeeded()
+        // Re-check the (possibly auto-skipped) eventDate so a still-blocked
+        // default shows the inline warning immediately.
         checkDateAvailability(eventDate)
 
         isLoading = false
