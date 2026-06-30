@@ -42,6 +42,7 @@ import { RowActionMenu } from "../../components/RowActionMenu";
 import { exportToCsv } from "../../lib/exportCsv";
 import { formatCurrency as libFormatCurrency } from "../../lib/finance";
 import { parseLocalDate } from "../../lib/dateUtils";
+import { buildBlockedDateList } from "../../lib/blockedDates";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import Empty from "../../components/Empty";
 import { usePagination } from "../../hooks/usePagination";
@@ -252,23 +253,10 @@ export const EventList: React.FC = () => {
   };
 
   // Blocked dates calculation
-  const { blockedDateList } = useMemo(() => {
-    const set = new Set<string>();
-    const list: Date[] = [];
-    for (const d of unavailableDates) {
-      const current = parseLocalDate(d.start_date);
-      const end = parseLocalDate(d.end_date);
-      while (current <= end) {
-        const key = format(current, "yyyy-MM-dd");
-        if (!set.has(key)) {
-          set.add(key);
-          list.push(new Date(current));
-        }
-        current.setDate(current.getDate() + 1);
-      }
-    }
-    return { blockedDateList: list };
-  }, [unavailableDates]);
+  const { blockedDateList } = useMemo(
+    () => ({ blockedDateList: buildBlockedDateList(unavailableDates) }),
+    [unavailableDates],
+  );
 
   const modifiers: { unavailable: Date[] } = { unavailable: blockedDateList };
 
