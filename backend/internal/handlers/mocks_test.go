@@ -68,8 +68,8 @@ func (m *MockFullUserRepo) AcceptStaffInvite(ctx context.Context, tokenHash, pas
 	return args.Get(0).(*models.User), args.Error(1)
 }
 
-func (m *MockFullUserRepo) Update(ctx context.Context, id uuid.UUID, name, businessName, logoURL, brandColor *string, showBusinessNameInPdf *bool, depositPercent, cancellationDays, refundPercent *float64, contractTemplate *string, emailPaymentReceipt, emailEventReminder, emailSubscriptionUpdates, emailWeeklySummary, emailMarketing, pushEnabled, pushEventReminder, pushPaymentReceived *bool, preferredLanguage *string) (*models.User, error) {
-	args := m.Called(ctx, id, name, businessName, logoURL, brandColor, showBusinessNameInPdf, depositPercent, cancellationDays, refundPercent, contractTemplate, emailPaymentReceipt, emailEventReminder, emailSubscriptionUpdates, emailWeeklySummary, emailMarketing, pushEnabled, pushEventReminder, pushPaymentReceived)
+func (m *MockFullUserRepo) Update(ctx context.Context, id uuid.UUID, name, businessName, logoURL, brandColor *string, showBusinessNameInPdf *bool, depositPercent, cancellationDays, refundPercent *float64, contractTemplate *string, emailPaymentReceipt, emailEventReminder, emailSubscriptionUpdates, emailWeeklySummary, emailMarketing, pushEnabled, pushEventReminder, pushPaymentReceived *bool, preferredLanguage, defaultCurrency *string) (*models.User, error) {
+	args := m.Called(ctx, id, name, businessName, logoURL, brandColor, showBusinessNameInPdf, depositPercent, cancellationDays, refundPercent, contractTemplate, emailPaymentReceipt, emailEventReminder, emailSubscriptionUpdates, emailWeeklySummary, emailMarketing, pushEnabled, pushEventReminder, pushPaymentReceived, preferredLanguage, defaultCurrency)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

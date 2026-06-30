@@ -6,6 +6,7 @@ import { AuthContext } from './AuthContextInstance';
 import { useAuth } from '@/hooks/useAuth';
 import i18n from '@/i18n/config';
 import { queryClient } from '@/lib/queryClient';
+import { setDefaultCurrency } from '@/lib/finance';
 
 // eslint-disable-next-line react-refresh/only-export-components
 export { AuthContext, useAuth };
@@ -65,6 +66,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       i18n.changeLanguage(user.preferred_language);
     }
   }, [user?.preferred_language]);
+
+  useEffect(() => {
+    if (user?.default_currency) {
+      setDefaultCurrency(user.default_currency);
+    }
+  }, [user?.default_currency]);
 
   const signOut = async () => {
     try {

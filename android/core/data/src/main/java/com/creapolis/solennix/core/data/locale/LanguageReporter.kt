@@ -18,13 +18,16 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Serializable
-private data class PreferredLanguagePayload(
-    @SerialName("preferred_language") val preferredLanguage: String
+private data class ProfileUpdatePayload(
+    @SerialName("preferred_language") val preferredLanguage: String,
+    @SerialName("default_currency") val defaultCurrency: String
 )
 
 interface LanguageReportStoring {
     fun getLastReportedLanguage(): String?
     fun setLastReportedLanguage(language: String?)
+    fun getLastReportedCurrency(): String?
+    fun setLastReportedCurrency(currency: String?)
 }
 
 @Singleton
@@ -40,6 +43,14 @@ class SharedPreferencesLanguageStore @Inject constructor(
     override fun setLastReportedLanguage(language: String?) {
         prefs.edit().putString("lastReportedLanguage", language).apply()
     }
+
+    override fun getLastReportedCurrency(): String? {
+        return prefs.getString("lastReportedCurrency", null)
+    }
+
+    override fun setLastReportedCurrency(currency: String?) {
+        prefs.edit().putString("lastReportedCurrency", currency).apply()
+    }
 }
 
 @Singleton
@@ -53,24 +64,35 @@ class LanguageReporter @Inject constructor(
         Locale.getDefault().language.takeIf { it == "es" || it == "en" } ?: "es"
     }
 
-    suspend fun reportIfNeeded(): Boolean = withContext(Dispatchers.IO) {
-        val current = currentLanguageProvider()
-        val lastReported = store.getLastReportedLanguage()
+    var currentCurrencyProvider: () -> String = {
+        try {
+            java.util.Currency.getInstance(Locale.getDefault()).currencyCode
+        } catch (e: Exception) {
+            "MXN"
+        }
+    }
 
-        if (current == lastReported) {
+    suspend fun reportIfNeeded(): Boolean = withContext(Dispatchers.IO) {
+        val currentLang = currentLanguageProvider()
+        val currentCurrency = currentCurrencyProvider()
+        val lastReportedLang = store.getLastReportedLanguage()
+        val lastReportedCurrency = store.getLastReportedCurrency()
+
+        if (currentLang == lastReportedLang && currentCurrency == lastReportedCurrency) {
             return@withContext false
         }
 
         try {
             val updatedUser: User = apiService.put(
                 Endpoints.UPDATE_PROFILE,
-                PreferredLanguagePayload(preferredLanguage = current)
+                ProfileUpdatePayload(preferredLanguage = currentLang, defaultCurrency = currentCurrency)
             )
             authManager.storeUser(updatedUser)
-            store.setLastReportedLanguage(current)
+            store.setLastReportedLanguage(currentLang)
+            store.setLastReportedCurrency(currentCurrency)
             true
         } catch (e: Exception) {
-            Log.e("LanguageReporter", "Failed to report preferred language: $current", e)
+            Log.e("LanguageReporter", "Failed to report preferred language and currency: $currentLang, $currentCurrency", e)
             false
         }
     }

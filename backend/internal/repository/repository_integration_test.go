@@ -51,7 +51,7 @@ func TestUserRepoIntegration(t *testing.T) {
 	}
 
 	newName := "Updated Name"
-	updatedUser, err := repo.Update(context.Background(), user.ID, &newName, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	updatedUser, err := repo.Update(context.Background(), user.ID, &newName, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("Update() error = %v", err)
 	}

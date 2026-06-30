@@ -97,6 +97,9 @@ components:
           enum: [user, admin, team_member, assistant]
         preferred_language:
           type: string
+        default_currency:
+          type: string
+          default: MXN
         plan_expires_at:
           type: string
           format: date-time
@@ -453,6 +456,9 @@ components:
         photos:
           type: string
           nullable: true
+        currency:
+          type: string
+          default: MXN
         client:
           $ref: "#/components/schemas/Client"
         created_at:
@@ -531,6 +537,9 @@ components:
           format: double
           nullable: true
         notes:
+          type: string
+          nullable: true
+        currency:
           type: string
           nullable: true
     Client:

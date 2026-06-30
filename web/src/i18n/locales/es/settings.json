@@ -18,6 +18,8 @@
     "dark_mode_desc": "Apariencia de la aplicación",
     "language": "Idioma",
     "language_desc": "Idioma de la interfaz",
+    "default_currency": "Moneda por Defecto",
+    "default_currency_desc": "Moneda utilizada para tus eventos y cotizaciones",
     "help_center": "Centro de ayuda",
     "help_center_desc": "Guías, respuestas frecuentes y novedades del producto.",
     "delete_account": "Eliminar mi cuenta",
@@ -129,6 +131,7 @@
     "business": "Business"
   },
   "messages": {
-    "language_updated": "Idioma actualizado correctamente"
+    "language_updated": "Idioma actualizado correctamente",
+    "currency_updated": "Moneda por defecto actualizada correctamente"
   }
 }

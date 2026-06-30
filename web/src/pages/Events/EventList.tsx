@@ -40,6 +40,7 @@ import {
 
 import { RowActionMenu } from "../../components/RowActionMenu";
 import { exportToCsv } from "../../lib/exportCsv";
+import { formatCurrency as libFormatCurrency } from "../../lib/finance";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import Empty from "../../components/Empty";
 import { usePagination } from "../../hooks/usePagination";
@@ -488,16 +489,7 @@ export const EventList: React.FC = () => {
   const csvRows = hasFilters ? filteredEvents : allEvents;
   const hasActiveFilters = !!(searchTerm || statusFilter !== "all" || dateFrom || dateTo);
 
-  const currencyFormatter = useMemo(
-    () =>
-      new Intl.NumberFormat(i18n.language === "en" ? "en-US" : "es-MX", {
-        style: "currency",
-        currency: "MXN",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }),
-    [i18n.language],
-  );
+
 
   const handlePageChange = useCallback((page: number) => {
     if (hasFilters) {
@@ -546,7 +538,7 @@ export const EventList: React.FC = () => {
     }
   };
 
-  const formatCurrency = (value: number) => currencyFormatter.format(value);
+  const formatCurrency = (value: number, currency?: string) => libFormatCurrency(value, currency);
 
   const handleRetry = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: queryKeys.events.all });
@@ -700,7 +692,7 @@ export const EventList: React.FC = () => {
                     e.service_type,
                     e.num_people,
                     t(`events:list.status.${e.status as EventStatus}`),
-                    formatCurrency(e.total_amount),
+                    formatCurrency(e.total_amount, e.currency),
                     e.city ?? "",
                   ]),
                 )
@@ -981,7 +973,7 @@ export const EventList: React.FC = () => {
                         <StatusDropdown eventId={event.id} currentStatus={event.status as EventStatus} />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">
-                        {formatCurrency(event.total_amount)}
+                        {formatCurrency(event.total_amount, event.currency)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">

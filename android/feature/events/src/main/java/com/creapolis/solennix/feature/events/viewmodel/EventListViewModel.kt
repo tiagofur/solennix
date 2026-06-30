@@ -124,12 +124,19 @@ class EventListViewModel @Inject constructor(
         )
     }
 
-    /// Bundle sort axis state with the ongoing updatingStatusEventId into a
+    private data class SortStatusAndUnavailable(
+        val sortField: EventSortField,
+        val sortAscending: Boolean,
+        val updatingStatusEventId: String?,
+        val unavailableDates: List<UnavailableDate>
+    )
+
+    /// Bundle sort axis state, updatingStatusEventId, and unavailableDates into a
     /// single upstream so the main `combine` stays under the 5-arg ceiling.
-    private val sortAndStatusFlow = combine(
-        _sortField, _sortAscending, _updatingStatusEventId
-    ) { field, ascending, updatingId ->
-        Triple(field, ascending, updatingId)
+    private val sortStatusAndUnavailableFlow = combine(
+        _sortField, _sortAscending, _updatingStatusEventId, _unavailableDates
+    ) { field, ascending, updatingId, unavailable ->
+        SortStatusAndUnavailable(field, ascending, updatingId, unavailable)
     }
 
     val uiState: StateFlow<EventListUiState> = combine(
@@ -137,14 +144,13 @@ class EventListViewModel @Inject constructor(
         eventRepository.getEvents(),
         clientRepository.getClients(),
         filterState,
-        sortAndStatusFlow
-    ) { localEvents, repoEvents, clients, filters, sortTriple ->
+        sortStatusAndUnavailableFlow
+    ) { localEvents, repoEvents, clients, filters, sortInfo ->
         // Merge local modifications with repo events - local overrides take precedence
         // but new repo updates are still visible (except for soft-deleted IDs)
         val softDeletedIds = localEvents.map { it.id }.toSet()
         val mergedRepo = repoEvents.filter { it.id !in softDeletedIds }
         val events = localEvents + mergedRepo
-        val (sortField, sortAscending, updatingId) = sortTriple
         val clientMap = clients.associateBy { it.id }
         val statusFilters = buildStatusFilters(events)
         val sorted = applyFiltersAndSort(
@@ -154,8 +160,8 @@ class EventListViewModel @Inject constructor(
             status = filters.status,
             startDate = filters.startDate,
             endDate = filters.endDate,
-            sortField = sortField,
-            sortAscending = sortAscending
+            sortField = sortInfo.sortField,
+            sortAscending = sortInfo.sortAscending
         )
 
         EventListUiState(
@@ -166,14 +172,14 @@ class EventListViewModel @Inject constructor(
             selectedStatus = filters.status,
             startDate = filters.startDate,
             endDate = filters.endDate,
-            sortField = sortField,
-            sortAscending = sortAscending,
+            sortField = sortInfo.sortField,
+            sortAscending = sortInfo.sortAscending,
             isLoading = false,
             isRefreshing = filters.refreshing,
             error = filters.error,
             statusFilters = statusFilters,
-            updatingStatusEventId = updatingId,
-            unavailableDates = _unavailableDates.value
+            updatingStatusEventId = sortInfo.updatingStatusEventId,
+            unavailableDates = sortInfo.unavailableDates
         )
     }.distinctUntilChanged().stateIn(
         scope = viewModelScope,
@@ -425,6 +431,7 @@ class EventListViewModel @Inject constructor(
             try {
                 eventRepository.syncEvents()
                 clientRepository.syncClients()
+                loadUnavailableDatesForCurrentMonth()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

@@ -583,8 +583,36 @@ export const Settings: React.FC = () => {
                   >
                     <option value="es">Español</option>
                     <option value="en">English</option>
-                    </select>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between sm:justify-end gap-4 mt-6">
+                  <div>
+                    <p className="font-bold text-text">{t("settings:profile.default_currency")}</p>
+                    <p className="text-xs text-text-secondary">{t("settings:profile.default_currency_desc")}</p>
                   </div>
+                  <select
+                    value={profile?.default_currency || "MXN"}
+                    onChange={async (e) => {
+                      const currency = e.target.value;
+                      try {
+                        await updateProfile({ default_currency: currency });
+                        addToast(t("settings:messages.currency_updated"), "success");
+                      } catch (err) {
+                        logError("Error persisting default currency", err);
+                      }
+                    }}
+                    className="bg-surface-alt text-text font-bold text-sm px-4 py-2 rounded-xl border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                  >
+                    <option value="MXN">MXN ($)</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="COP">COP ($)</option>
+                    <option value="CLP">CLP ($)</option>
+                    <option value="ARS">ARS ($)</option>
+                    <option value="PEN">PEN (S/.)</option>
+                    <option value="EUR">EUR (€)</option>
+                  </select>
+                </div>
 
                 <div className="pt-6 border-t border-border">
                   <Link

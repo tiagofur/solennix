@@ -371,6 +371,19 @@
         "La app de Android inicia y respeta el idioma del sistema eliminando cualquier override local",
         "La suite completa de compilación y pruebas de Android finaliza en verde"
       ]
+    },
+    {
+      "id": 31,
+      "name": "currency-localization",
+      "description": "Dynamic currency localization across backend, web, iOS, and Android including dynamic language and locale reporting",
+      "status": "done",
+      "acceptance_criteria": [
+        "Go backend supports default_currency for users and currency for events with database migration 061",
+        "React web client formats money dynamically and allows changing default currency in Settings",
+        "iOS and Android format currency dynamically using event currency code",
+        "iOS and Android LanguageReporter suggests default currency based on system locale to backend",
+        "All unit tests pass 100% green and project init.sh validation is green"
+      ]
     }
   ]
 }

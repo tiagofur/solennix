@@ -36,8 +36,8 @@ func normalizePlan(plan string) string {
 
 func (r *UserRepo) Create(ctx context.Context, user *models.User) error {
 	query := `
-		INSERT INTO users (email, password_hash, name, business_name, logo_url, brand_color, show_business_name_in_pdf, plan, role, registration_platform)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		INSERT INTO users (email, password_hash, name, business_name, logo_url, brand_color, show_business_name_in_pdf, plan, role, registration_platform, default_currency)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		RETURNING id, created_at, updated_at`
 	if user.Role == "" {
 		user.Role = "user"
@@ -45,8 +45,11 @@ func (r *UserRepo) Create(ctx context.Context, user *models.User) error {
 	if user.RegistrationPlatform == "" {
 		user.RegistrationPlatform = "unknown"
 	}
+	if user.DefaultCurrency == "" {
+		user.DefaultCurrency = "MXN"
+	}
 	return r.pool.QueryRow(ctx, query,
-		user.Email, user.PasswordHash, user.Name, user.BusinessName, user.LogoURL, user.BrandColor, user.ShowBusinessNameInPdf, user.Plan, user.Role, user.RegistrationPlatform,
+		user.Email, user.PasswordHash, user.Name, user.BusinessName, user.LogoURL, user.BrandColor, user.ShowBusinessNameInPdf, user.Plan, user.Role, user.RegistrationPlatform, user.DefaultCurrency,
 	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 }
 
@@ -57,7 +60,7 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, 
 		contract_template,
 		email_payment_receipt, email_event_reminder, email_subscription_updates,
 		email_weekly_summary, email_marketing, push_enabled, push_event_reminder, push_payment_received,
-		preferred_language,
+		preferred_language, default_currency,
 		email_verified_at, email_verification_token_hash, email_verification_sent_at, email_verification_expires_at,
 		plan, role,
 		COALESCE(account_status, 'active') AS account_status,
@@ -70,7 +73,7 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, 
 		&user.ContractTemplate,
 		&user.EmailPaymentReceipt, &user.EmailEventReminder, &user.EmailSubscriptionUpdates,
 		&user.EmailWeeklySummary, &user.EmailMarketing, &user.PushEnabled, &user.PushEventReminder, &user.PushPaymentReceived,
-		&user.PreferredLanguage,
+		&user.PreferredLanguage, &user.DefaultCurrency,
 		&user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
 		&user.Plan, &user.Role,
 		&user.AccountStatus, &user.BlockedAt, &user.BlockedReason, &user.BlockedBy, &user.DeletionEligibleAt, &user.DeletedAt,
@@ -89,7 +92,7 @@ func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, err
 		contract_template,
 		email_payment_receipt, email_event_reminder, email_subscription_updates,
 		email_weekly_summary, email_marketing, push_enabled, push_event_reminder, push_payment_received,
-		preferred_language,
+		preferred_language, default_currency,
 		email_verified_at, email_verification_token_hash, email_verification_sent_at, email_verification_expires_at,
 		plan, role,
 		COALESCE(account_status, 'active') AS account_status,
@@ -102,7 +105,7 @@ func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, err
 		&user.ContractTemplate,
 		&user.EmailPaymentReceipt, &user.EmailEventReminder, &user.EmailSubscriptionUpdates,
 		&user.EmailWeeklySummary, &user.EmailMarketing, &user.PushEnabled, &user.PushEventReminder, &user.PushPaymentReceived,
-		&user.PreferredLanguage,
+		&user.PreferredLanguage, &user.DefaultCurrency,
 		&user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
 		&user.Plan, &user.Role,
 		&user.AccountStatus, &user.BlockedAt, &user.BlockedReason, &user.BlockedBy, &user.DeletionEligibleAt, &user.DeletedAt,
@@ -117,7 +120,7 @@ func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, err
 func (r *UserRepo) Update(ctx context.Context, id uuid.UUID, name, businessName, logoURL, brandColor *string, showBusinessNameInPdf *bool,
 	depositPercent, cancellationDays, refundPercent *float64, contractTemplate *string,
 	emailPaymentReceipt, emailEventReminder, emailSubscriptionUpdates, emailWeeklySummary, emailMarketing, pushEnabled, pushEventReminder, pushPaymentReceived *bool,
-	preferredLanguage *string) (*models.User, error) {
+	preferredLanguage, defaultCurrency *string) (*models.User, error) {
 	query := `
 		UPDATE users SET
 			name = COALESCE($2, name),
@@ -138,6 +141,7 @@ func (r *UserRepo) Update(ctx context.Context, id uuid.UUID, name, businessName,
 			push_event_reminder = COALESCE($17, push_event_reminder),
 			push_payment_received = COALESCE($18, push_payment_received),
 			preferred_language = COALESCE($19, preferred_language),
+			default_currency = COALESCE($20, default_currency),
 			updated_at = NOW()
 		WHERE id = $1
 		RETURNING id, email, password_hash, name, business_name, logo_url, brand_color, show_business_name_in_pdf,
@@ -145,7 +149,7 @@ func (r *UserRepo) Update(ctx context.Context, id uuid.UUID, name, businessName,
 			contract_template,
 			email_payment_receipt, email_event_reminder, email_subscription_updates,
 			email_weekly_summary, email_marketing, push_enabled, push_event_reminder, push_payment_received,
-			preferred_language,
+			preferred_language, default_currency,
 			email_verified_at, email_verification_token_hash, email_verification_sent_at, email_verification_expires_at,
 			plan, role,
 			COALESCE(account_status, 'active') AS account_status,
@@ -155,13 +159,13 @@ func (r *UserRepo) Update(ctx context.Context, id uuid.UUID, name, businessName,
 	err := r.pool.QueryRow(ctx, query, id, name, businessName, logoURL, brandColor, showBusinessNameInPdf,
 		depositPercent, cancellationDays, refundPercent, contractTemplate,
 		emailPaymentReceipt, emailEventReminder, emailSubscriptionUpdates, emailWeeklySummary, emailMarketing, pushEnabled, pushEventReminder, pushPaymentReceived,
-		preferredLanguage).Scan(
+		preferredLanguage, defaultCurrency).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
 		&user.DefaultDepositPercent, &user.DefaultCancellationDays, &user.DefaultRefundPercent,
 		&user.ContractTemplate,
 		&user.EmailPaymentReceipt, &user.EmailEventReminder, &user.EmailSubscriptionUpdates,
 		&user.EmailWeeklySummary, &user.EmailMarketing, &user.PushEnabled, &user.PushEventReminder, &user.PushPaymentReceived,
-		&user.PreferredLanguage,
+		&user.PreferredLanguage, &user.DefaultCurrency,
 		&user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
 		&user.Plan, &user.Role,
 		&user.AccountStatus, &user.BlockedAt, &user.BlockedReason, &user.BlockedBy, &user.DeletionEligibleAt, &user.DeletedAt,
@@ -223,7 +227,7 @@ func (r *UserRepo) GetByStripeCustomerID(ctx context.Context, stripeCustomerID s
 		contract_template,
 		email_payment_receipt, email_event_reminder, email_subscription_updates,
 		email_weekly_summary, email_marketing, push_enabled, push_event_reminder, push_payment_received,
-		preferred_language,
+		preferred_language, default_currency,
 		email_verified_at, email_verification_token_hash, email_verification_sent_at, email_verification_expires_at,
 		plan, role,
 		COALESCE(account_status, 'active') AS account_status,
@@ -236,7 +240,7 @@ func (r *UserRepo) GetByStripeCustomerID(ctx context.Context, stripeCustomerID s
 		&user.ContractTemplate,
 		&user.EmailPaymentReceipt, &user.EmailEventReminder, &user.EmailSubscriptionUpdates,
 		&user.EmailWeeklySummary, &user.EmailMarketing, &user.PushEnabled, &user.PushEventReminder, &user.PushPaymentReceived,
-		&user.PreferredLanguage,
+		&user.PreferredLanguage, &user.DefaultCurrency,
 		&user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
 		&user.Plan, &user.Role,
 		&user.AccountStatus, &user.BlockedAt, &user.BlockedReason, &user.BlockedBy, &user.DeletionEligibleAt, &user.DeletedAt,
@@ -302,7 +306,7 @@ func (r *UserRepo) VerifyEmailByTokenHash(ctx context.Context, tokenHash string)
 			contract_template,
 			email_payment_receipt, email_event_reminder, email_subscription_updates,
 			email_weekly_summary, email_marketing, push_enabled, push_event_reminder, push_payment_received,
-			preferred_language, email_verified_at, email_verification_token_hash, email_verification_sent_at, email_verification_expires_at,
+			preferred_language, default_currency, email_verified_at, email_verification_token_hash, email_verification_sent_at, email_verification_expires_at,
 			plan, role, stripe_customer_id, created_at, updated_at`
 	err := r.pool.QueryRow(ctx, query, tokenHash).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
@@ -310,7 +314,7 @@ func (r *UserRepo) VerifyEmailByTokenHash(ctx context.Context, tokenHash string)
 		&user.ContractTemplate,
 		&user.EmailPaymentReceipt, &user.EmailEventReminder, &user.EmailSubscriptionUpdates,
 		&user.EmailWeeklySummary, &user.EmailMarketing, &user.PushEnabled, &user.PushEventReminder, &user.PushPaymentReceived,
-		&user.PreferredLanguage, &user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
+		&user.PreferredLanguage, &user.DefaultCurrency, &user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
 		&user.Plan, &user.Role, &user.StripeCustomerID, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
@@ -439,7 +443,7 @@ func (r *UserRepo) GetByGoogleUserID(ctx context.Context, googleUserID string) (
 		contract_template,
 		email_payment_receipt, email_event_reminder, email_subscription_updates,
 		email_weekly_summary, email_marketing, push_enabled, push_event_reminder, push_payment_received,
-		preferred_language, email_verified_at, email_verification_token_hash, email_verification_sent_at, email_verification_expires_at,
+		preferred_language, default_currency, email_verified_at, email_verification_token_hash, email_verification_sent_at, email_verification_expires_at,
 		plan, role, stripe_customer_id, google_user_id, apple_user_id, registration_platform, created_at, updated_at
 		FROM users WHERE google_user_id = $1`
 	err := r.pool.QueryRow(ctx, query, googleUserID).Scan(
@@ -448,7 +452,7 @@ func (r *UserRepo) GetByGoogleUserID(ctx context.Context, googleUserID string) (
 		&user.ContractTemplate,
 		&user.EmailPaymentReceipt, &user.EmailEventReminder, &user.EmailSubscriptionUpdates,
 		&user.EmailWeeklySummary, &user.EmailMarketing, &user.PushEnabled, &user.PushEventReminder, &user.PushPaymentReceived,
-		&user.PreferredLanguage, &user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
+		&user.PreferredLanguage, &user.DefaultCurrency, &user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
 		&user.Plan, &user.Role, &user.StripeCustomerID, &user.GoogleUserID, &user.AppleUserID, &user.RegistrationPlatform, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
@@ -465,7 +469,7 @@ func (r *UserRepo) GetByAppleUserID(ctx context.Context, appleUserID string) (*m
 		contract_template,
 		email_payment_receipt, email_event_reminder, email_subscription_updates,
 		email_weekly_summary, email_marketing, push_enabled, push_event_reminder, push_payment_received,
-		preferred_language, email_verified_at, email_verification_token_hash, email_verification_sent_at, email_verification_expires_at,
+		preferred_language, default_currency, email_verified_at, email_verification_token_hash, email_verification_sent_at, email_verification_expires_at,
 		plan, role, stripe_customer_id, google_user_id, apple_user_id, registration_platform, created_at, updated_at
 		FROM users WHERE apple_user_id = $1`
 	err := r.pool.QueryRow(ctx, query, appleUserID).Scan(
@@ -474,7 +478,7 @@ func (r *UserRepo) GetByAppleUserID(ctx context.Context, appleUserID string) (*m
 		&user.ContractTemplate,
 		&user.EmailPaymentReceipt, &user.EmailEventReminder, &user.EmailSubscriptionUpdates,
 		&user.EmailWeeklySummary, &user.EmailMarketing, &user.PushEnabled, &user.PushEventReminder, &user.PushPaymentReceived,
-		&user.PreferredLanguage, &user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
+		&user.PreferredLanguage, &user.DefaultCurrency, &user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
 		&user.Plan, &user.Role, &user.StripeCustomerID, &user.GoogleUserID, &user.AppleUserID, &user.RegistrationPlatform, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
@@ -486,8 +490,8 @@ func (r *UserRepo) GetByAppleUserID(ctx context.Context, appleUserID string) (*m
 // CreateWithOAuth creates a new user with OAuth provider ID (no password)
 func (r *UserRepo) CreateWithOAuth(ctx context.Context, user *models.User) error {
 	query := `
-		INSERT INTO users (email, name, plan, role, google_user_id, apple_user_id, email_verified_at)
-		VALUES ($1, $2, $3, $4, $5, $6, NOW())
+		INSERT INTO users (email, name, plan, role, google_user_id, apple_user_id, email_verified_at, default_currency)
+		VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7)
 		RETURNING id, created_at, updated_at`
 	if user.Role == "" {
 		user.Role = "user"
@@ -495,8 +499,11 @@ func (r *UserRepo) CreateWithOAuth(ctx context.Context, user *models.User) error
 	if user.Plan == "" {
 		user.Plan = "basic"
 	}
+	if user.DefaultCurrency == "" {
+		user.DefaultCurrency = "MXN"
+	}
 	return r.pool.QueryRow(ctx, query,
-		user.Email, user.Name, user.Plan, user.Role, user.GoogleUserID, user.AppleUserID,
+		user.Email, user.Name, user.Plan, user.Role, user.GoogleUserID, user.AppleUserID, user.DefaultCurrency,
 	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 }
 

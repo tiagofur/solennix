@@ -18,6 +18,8 @@
     "dark_mode_desc": "Application appearance",
     "language": "Language",
     "language_desc": "Interface language",
+    "default_currency": "Default Currency",
+    "default_currency_desc": "Default currency used for your events and quotes",
     "help_center": "Help Center",
     "help_center_desc": "Guides, frequent answers, and product updates.",
     "delete_account": "Delete my account",
@@ -129,6 +131,7 @@
     "business": "Business"
   },
   "messages": {
-    "language_updated": "Language updated successfully"
+    "language_updated": "Language updated successfully",
+    "currency_updated": "Default currency updated successfully"
   }
 }
