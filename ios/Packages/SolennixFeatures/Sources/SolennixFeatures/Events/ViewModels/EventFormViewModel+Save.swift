@@ -13,6 +13,19 @@ extension EventFormViewModel {
 
         defer { isSaving = false }
 
+        // Blocked-date save guard (ADR-4): short-circuit BEFORE building the
+        // request body or hitting the network when the selected eventDate falls
+        // inside an unavailable range. `unavailableDateFor` compares
+        // `Date.utcDayFormatter.string(from: eventDate)` against the server
+        // ranges — eventDate is UTC-midnight, so a UTC formatter is the correct
+        // key and stays in sync with the grid's `isDateBlocked` (LOCAL string
+        // of the matching cell). Mirrors Android/Web client-side interception.
+        if unavailableDateFor(eventDate) != nil {
+            errorMessage = tr("events.form.error.unavailable_date", "La fecha seleccionada no está disponible.")
+            HapticsHelper.play(.error)
+            return
+        }
+
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "yyyy-MM-dd"
