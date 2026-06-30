@@ -24,10 +24,11 @@ struct MarkEventCompleteIntent: AppIntent {
 
     func perform() async throws -> some IntentResult {
         // Update local state in App Group
-        var completedEvents = AppGroup.userDefaults?.stringArray(forKey: "completed_events") ?? []
+        var completedEvents = AppGroup.userDefaults.stringArray(forKey: "completed_events") ?? []
         if !completedEvents.contains(eventId) {
             completedEvents.append(eventId)
-            AppGroup.userDefaults?.set(completedEvents, forKey: "completed_events")
+            AppGroup.userDefaults.set(completedEvents, forKey: "completed_events")
+            AppGroup.userDefaults.synchronize()
         }
 
         // Reload widget timeline
@@ -73,7 +74,7 @@ struct InteractiveEventProvider: TimelineProvider {
     func getSnapshot(in context: Context, completion: @escaping (InteractiveEventEntry) -> Void) {
         let events = WidgetDataProvider.shared.getUpcomingEvents()
         let todayEvent = events.first { $0.isToday }
-        let completedEvents = AppGroup.userDefaults?.stringArray(forKey: "completed_events") ?? []
+        let completedEvents = AppGroup.userDefaults.stringArray(forKey: "completed_events") ?? []
         let isCompleted = todayEvent.map { completedEvents.contains($0.id) } ?? false
 
         let entry = InteractiveEventEntry(
@@ -87,7 +88,7 @@ struct InteractiveEventProvider: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<InteractiveEventEntry>) -> Void) {
         let events = WidgetDataProvider.shared.getUpcomingEvents()
         let todayEvent = events.first { $0.isToday }
-        let completedEvents = AppGroup.userDefaults?.stringArray(forKey: "completed_events") ?? []
+        let completedEvents = AppGroup.userDefaults.stringArray(forKey: "completed_events") ?? []
         let isCompleted = todayEvent.map { completedEvents.contains($0.id) } ?? false
 
         let entry = InteractiveEventEntry(

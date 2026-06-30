@@ -92,21 +92,26 @@ final class WidgetDataProvider {
     // MARK: - Read Data
 
     func getUpcomingEvents() -> [WidgetEvent] {
-        guard let data = AppGroup.userDefaults?.data(forKey: WidgetDataKey.upcomingEvents) else {
+        guard let data = AppGroup.userDefaults.data(forKey: WidgetDataKey.upcomingEvents) else {
+            logger.debug("No upcoming events data found in App Group")
             return []
         }
 
         do {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
-            return try decoder.decode([WidgetEvent].self, from: data)
+            let events = try decoder.decode([WidgetEvent].self, from: data)
+            logger.debug("Successfully decoded \(events.count) upcoming events from App Group")
+            return events
         } catch {
+            logger.error("Failed to decode upcoming events: \(error.localizedDescription, privacy: .public)")
             return []
         }
     }
 
     func getKPIs() -> WidgetKPIs {
-        guard let data = AppGroup.userDefaults?.data(forKey: WidgetDataKey.kpis) else {
+        guard let data = AppGroup.userDefaults.data(forKey: WidgetDataKey.kpis) else {
+            logger.debug("No KPIs data found in App Group, returning zeros")
             return WidgetKPIs(
                 monthlyRevenue: 0,
                 eventsThisMonth: 0,
@@ -119,8 +124,11 @@ final class WidgetDataProvider {
         }
 
         do {
-            return try JSONDecoder().decode(WidgetKPIs.self, from: data)
+            let kpis = try JSONDecoder().decode(WidgetKPIs.self, from: data)
+            logger.debug("Successfully decoded KPIs from App Group: revenue=\(kpis.monthlyRevenue), pending=\(kpis.pendingPayments)")
+            return kpis
         } catch {
+            logger.error("Failed to decode KPIs: \(error.localizedDescription, privacy: .public)")
             return WidgetKPIs(
                 monthlyRevenue: 0,
                 eventsThisMonth: 0,
@@ -134,7 +142,7 @@ final class WidgetDataProvider {
     }
 
     func getLastUpdated() -> Date? {
-        AppGroup.userDefaults?.object(forKey: WidgetDataKey.lastUpdated) as? Date
+        AppGroup.userDefaults.object(forKey: WidgetDataKey.lastUpdated) as? Date
     }
 
     // MARK: - Write Data (Called from main app)
@@ -144,8 +152,9 @@ final class WidgetDataProvider {
             let encoder = JSONEncoder()
             encoder.dateEncodingStrategy = .iso8601
             let data = try encoder.encode(events)
-            AppGroup.userDefaults?.set(data, forKey: WidgetDataKey.upcomingEvents)
-            AppGroup.userDefaults?.set(Date(), forKey: WidgetDataKey.lastUpdated)
+            AppGroup.userDefaults.set(data, forKey: WidgetDataKey.upcomingEvents)
+            AppGroup.userDefaults.set(Date(), forKey: WidgetDataKey.lastUpdated)
+            AppGroup.userDefaults.synchronize()
         } catch {
             logger.error("Failed to save widget events: \(error.localizedDescription, privacy: .public)")
         }
@@ -154,7 +163,8 @@ final class WidgetDataProvider {
     func saveKPIs(_ kpis: WidgetKPIs) {
         do {
             let data = try JSONEncoder().encode(kpis)
-            AppGroup.userDefaults?.set(data, forKey: WidgetDataKey.kpis)
+            AppGroup.userDefaults.set(data, forKey: WidgetDataKey.kpis)
+            AppGroup.userDefaults.synchronize()
         } catch {
             logger.error("Failed to save widget KPIs: \(error.localizedDescription, privacy: .public)")
         }

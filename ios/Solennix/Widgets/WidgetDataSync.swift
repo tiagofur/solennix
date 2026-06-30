@@ -27,11 +27,12 @@ final class WidgetDataSync {
 
     static let shared = WidgetDataSync()
 
-    private let appGroupId = "group.com.solennix.app"
-
-    private var userDefaults: UserDefaults? {
-        UserDefaults(suiteName: appGroupId)
-    }
+    private let appGroup: UserDefaults = {
+        guard let suite = UserDefaults(suiteName: "group.com.solennix.app") else {
+            fatalError("App Group 'group.com.solennix.app' not configured. Enable it in Signing & Capabilities.")
+        }
+        return suite
+    }()
 
     private init() {}
 
@@ -42,8 +43,9 @@ final class WidgetDataSync {
             let encoder = JSONEncoder()
             encoder.dateEncodingStrategy = .iso8601
             let data = try encoder.encode(events)
-            userDefaults?.set(data, forKey: WidgetKey.upcomingEvents)
-            userDefaults?.set(Date(), forKey: WidgetKey.lastUpdated)
+            appGroup.set(data, forKey: WidgetKey.upcomingEvents)
+            appGroup.set(Date(), forKey: WidgetKey.lastUpdated)
+            appGroup.synchronize()
 
             // Reload widgets
             reloadEventWidgets()
@@ -58,7 +60,8 @@ final class WidgetDataSync {
     func syncKPIs(_ kpis: WidgetKPIData) {
         do {
             let data = try JSONEncoder().encode(kpis)
-            userDefaults?.set(data, forKey: WidgetKey.kpis)
+            appGroup.set(data, forKey: WidgetKey.kpis)
+            appGroup.synchronize()
 
             // Reload widgets
             reloadKPIWidgets()
@@ -72,10 +75,11 @@ final class WidgetDataSync {
 
     func syncUserPlan(_ planRawValue: String?) {
         if let planRawValue, !planRawValue.isEmpty {
-            userDefaults?.set(planRawValue, forKey: WidgetKey.userPlan)
+            appGroup.set(planRawValue, forKey: WidgetKey.userPlan)
         } else {
-            userDefaults?.removeObject(forKey: WidgetKey.userPlan)
+            appGroup.removeObject(forKey: WidgetKey.userPlan)
         }
+        appGroup.synchronize()
     }
 
     // MARK: - Reload Widgets
@@ -97,11 +101,12 @@ final class WidgetDataSync {
     // MARK: - Clear Widget Data
 
     func clearWidgetData() {
-        userDefaults?.removeObject(forKey: WidgetKey.upcomingEvents)
-        userDefaults?.removeObject(forKey: WidgetKey.kpis)
-        userDefaults?.removeObject(forKey: WidgetKey.userPlan)
-        userDefaults?.removeObject(forKey: WidgetKey.lastUpdated)
-        userDefaults?.removeObject(forKey: WidgetKey.completedEvents)
+        appGroup.removeObject(forKey: WidgetKey.upcomingEvents)
+        appGroup.removeObject(forKey: WidgetKey.kpis)
+        appGroup.removeObject(forKey: WidgetKey.userPlan)
+        appGroup.removeObject(forKey: WidgetKey.lastUpdated)
+        appGroup.removeObject(forKey: WidgetKey.completedEvents)
+        appGroup.synchronize()
         reloadAllWidgets()
     }
 }
