@@ -326,11 +326,11 @@ public enum SolennixColors {
         #if canImport(UIKit)
         Color(uiColor: UIColor { traits in
             traits.userInterfaceStyle == .dark
-                ? UIColor(hex: "#0A84FF")
-                : UIColor(hex: "#007AFF")
+                ? UIColor(hex: "#C4A265")
+                : UIColor(hex: "#7A5C14")
         })
         #else
-        Color(hex: "#007AFF")
+        Color(hex: "#7A5C14")
         #endif
     }
 
@@ -538,11 +538,11 @@ public enum SolennixColors {
         #if canImport(UIKit)
         Color(uiColor: UIColor { traits in
             traits.userInterfaceStyle == .dark
-                ? UIColor(hex: "#0A84FF")
-                : UIColor(hex: "#007AFF")
+                ? UIColor(hex: "#5A7BA8")
+                : UIColor(hex: "#3E5C82")
         })
         #else
-        Color(hex: "#007AFF")
+        Color(hex: "#3E5C82")
         #endif
     }
 
