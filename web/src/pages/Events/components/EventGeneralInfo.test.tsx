@@ -266,8 +266,12 @@ describe('EventGeneralInfo', () => {
       { event_date: '2025-06-15', service_type: 'Coctel', num_people: 50 }
     );
 
-    // The date picker reflects the pre-filled value: day 15 is selected.
-    expect(container.querySelector('.rdp-selected')?.textContent).toContain('15');
+    // The compact trigger reflects the pre-filled value (es locale, PPP).
+    // The calendar itself is behind the on-demand modal now (UX parity iOS).
+    const dateTrigger = container.querySelector(
+      '#event_date button[aria-haspopup="dialog"]',
+    )!;
+    expect(dateTrigger).toHaveTextContent('15 de junio de 2025');
     expect(screen.getByDisplayValue('Coctel')).toBeInTheDocument();
     expect(screen.getByDisplayValue('50')).toBeInTheDocument();
   });
@@ -280,6 +284,12 @@ describe('EventGeneralInfo', () => {
       />,
       { event_date: '2025-06-15' },
     );
+    // The calendar is behind the on-demand modal — open it first.
+    const dateTrigger = container.querySelector(
+      '#event_date button[aria-haspopup="dialog"]',
+    )!;
+    fireEvent.click(dateTrigger);
+
     // The blocked day (15) must render with native `disabled` in the picker.
     const dayButtons = Array.from(
       container.querySelectorAll<HTMLButtonElement>('button'),
