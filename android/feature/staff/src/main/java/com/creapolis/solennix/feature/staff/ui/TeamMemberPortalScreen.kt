@@ -50,7 +50,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Text
 import com.creapolis.solennix.core.designsystem.component.SolennixPullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -221,7 +221,11 @@ fun TeamMemberPortalScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         item {
-                            TabRow(selectedTabIndex = selectedTab) {
+                            PrimaryTabRow(
+                                selectedTabIndex = selectedTab,
+                                containerColor = SolennixTheme.colors.card,
+                                contentColor = SolennixTheme.colors.primary
+                            ) {
                                 Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text(stringResource(R.string.staff_portal_my_day)) })
                                 Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text(stringResource(R.string.staff_portal_calendar)) })
                             }

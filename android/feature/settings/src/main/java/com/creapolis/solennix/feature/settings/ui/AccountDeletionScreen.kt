@@ -48,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.feature.settings.R
 import com.creapolis.solennix.feature.settings.viewmodel.SettingsViewModel
+import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -296,7 +297,7 @@ fun AccountDeletionScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = SolennixTheme.colors.primary)
                             Text(
                                 text = stringResource(R.string.settings_account_deletion_logging_out),
                                 style = MaterialTheme.typography.bodySmall,

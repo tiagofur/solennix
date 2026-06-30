@@ -109,7 +109,7 @@ fun ClientFormScreen(
     ) { padding ->
         if (viewModel.isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = SolennixTheme.colors.primary)
             }
         } else {
             AdaptiveCenteredContent(maxWidth = 800.dp) {

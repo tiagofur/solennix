@@ -107,7 +107,7 @@ fun ClientDetailScreen(
     ) { padding ->
         if (uiState.isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = SolennixTheme.colors.primary)
             }
         } else if (uiState.errorMessage != null && uiState.client == null) {
             // Full-screen error only on initial load failure (no client loaded yet).
@@ -203,7 +203,7 @@ fun ClientDetailScreen(
 
                         if (uiState.isEventsLoading) {
                             Box(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.md), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = SolennixTheme.colors.primary)
                             }
                         } else {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.xxlg)) {
@@ -255,7 +255,7 @@ fun ClientDetailScreen(
                         modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.md),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = SolennixTheme.colors.primary)
                     }
                 } else if (uiState.eventsLoadFailed) {
                     // Events fetch failed — surface inline error with retry so the user
