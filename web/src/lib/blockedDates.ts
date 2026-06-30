@@ -2,13 +2,14 @@ import { format } from "date-fns";
 import { parseLocalDate } from "./dateUtils";
 
 /**
- * Shape of an unavailable-date range as returned by the API / react-query cache.
- * Only the ISO date bounds matter to the picker math.
+ * Structural shape consumed by `buildBlockedDateList`. Only the ISO date bounds
+ * matter to the picker math — intentionally narrow (no index signature) so any
+ * of the project's `UnavailableDate` variants (api.ts, unavailableDatesService,
+ * EventGeneralInfo) is assignable here via TypeScript structural typing.
  */
 export interface UnavailableDateRange {
   start_date: string;
   end_date: string;
-  [key: string]: unknown;
 }
 
 /**
