@@ -323,7 +323,7 @@ public struct ClientListView: View {
                             } label: {
                                 Label(tr("clients.form.email", "Email"), systemImage: "envelope.fill")
                             }
-                            .tint(.blue)
+                            .tint(SolennixColors.primary)
                         }
 
                         if !client.phone.isEmpty,

@@ -390,7 +390,7 @@ public struct StaffListView: View {
                 } label: {
                     Label(StaffStrings.emailAction, systemImage: "envelope.fill")
                 }
-                .tint(.blue)
+                .tint(SolennixColors.primary)
             }
 
             if let phone = item.phone, !phone.isEmpty,

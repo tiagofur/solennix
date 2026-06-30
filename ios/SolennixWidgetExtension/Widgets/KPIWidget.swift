@@ -1,5 +1,6 @@
 import WidgetKit
 import SwiftUI
+import SolennixDesign
 
 // MARK: - Timeline Provider
 
@@ -159,7 +160,7 @@ struct KPIWidgetView: View {
                 // Events
                 kpiRow(
                     icon: "calendar",
-                    iconColor: .blue,
+                    iconColor: SolennixColors.primary,
                     label: String(localized: "widget.kpi.events"),
                     value: String.localizedStringWithFormat(String(localized: "widget.kpi.this_week_fmt"), entry.kpis.eventsThisWeek)
                 )

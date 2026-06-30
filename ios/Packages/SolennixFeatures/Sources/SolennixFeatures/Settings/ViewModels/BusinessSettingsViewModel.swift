@@ -3,6 +3,7 @@ import Observation
 import PhotosUI
 import SwiftUI
 import SolennixCore
+import SolennixDesign
 import SolennixNetwork
 
 // MARK: - Business Settings Request Bodies
@@ -77,7 +78,7 @@ public final class BusinessSettingsViewModel {
     // Business info
     public var businessName: String = ""
     public var showBusinessNameInPdf: Bool = true
-    public var brandColor: Color = .blue
+    public var brandColor: Color = SolennixColors.primary
 
     // Contract defaults
     public var depositPercent: Double = 50
@@ -138,7 +139,7 @@ public final class BusinessSettingsViewModel {
 
         // Parse brand color from hex
         if let hex = user.brandColor {
-            brandColor = Color(hex: hex) ?? .blue
+            brandColor = Color(hex: hex) ?? SolennixColors.primary
         }
     }
 
@@ -153,7 +154,7 @@ public final class BusinessSettingsViewModel {
             let body = BusinessInfoBody(
                 businessName: businessName.trimmingCharacters(in: .whitespacesAndNewlines),
                 showBusinessNameInPdf: showBusinessNameInPdf,
-                brandColor: brandColor.toHex() ?? "#007AFF"
+                brandColor: brandColor.toHex() ?? "#C4A265"
             )
             user = try await apiClient.put(Endpoint.updateProfile, body: body)
             isSaving = false

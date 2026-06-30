@@ -1,5 +1,6 @@
 import AppIntents
 import SwiftUI
+import SolennixDesign
 
 // MARK: - Show Today Events Intent
 
@@ -75,7 +76,7 @@ struct TodayEvent: Identifiable {
         switch status {
         case "confirmed": return .green
         case "quoted": return .orange
-        default: return .blue
+        default: return SolennixColors.primary
         }
     }
 }
@@ -101,10 +102,10 @@ struct TodayEventsSnippetView: View {
                         Text(event.time)
                             .font(.caption)
                             .fontWeight(.semibold)
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(SolennixColors.primary)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(Color.blue.opacity(0.1))
+                            .background(SolennixColors.primary.opacity(0.1))
                             .clipShape(Capsule())
 
                         Circle()
