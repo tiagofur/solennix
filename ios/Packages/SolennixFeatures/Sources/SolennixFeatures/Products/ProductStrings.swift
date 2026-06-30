@@ -19,6 +19,7 @@ enum ProductStrings {
     static var emptyAction: String { FeatureL10n.text("products.empty_action", "Nuevo Producto") }
     static var filteredEmptyTitle: String { FeatureL10n.text("products.filtered_empty_title", "Sin resultados") }
     static var filteredEmptyMessage: String { FeatureL10n.text("products.filtered_empty_message", "No se encontraron productos que coincidan con los filtros aplicados") }
+    static var clearFilters: String { FeatureL10n.text("products.clear_filters", "Limpiar filtros") }
     static var sortTitle: String { FeatureL10n.text("products.sort_title", "Ordenar por") }
     static var sortAscending: String { FeatureL10n.text("products.sort_ascending", "Ascendente") }
     static var sortDescending: String { FeatureL10n.text("products.sort_descending", "Descendente") }

@@ -219,12 +219,7 @@ public struct PaymentInboxView: View {
     // MARK: - State Views
 
     private var searchEmptyContent: some View {
-        EmptyStateView(
-            icon: "magnifyingglass",
-            title: PaymentsStrings.searchEmptyTitle,
-            message: PaymentsStrings.searchEmptyMessage,
-            iconColor: SolennixColors.primary
-        )
+        ContentUnavailableView.search(text: viewModel.searchText)
     }
 
     private var planLockedContent: some View {

@@ -153,13 +153,8 @@ public struct ClientListView: View {
                 }
                 .background(SolennixColors.surfaceGrouped)
             } else {
-                EmptyStateView(
-                    icon: "magnifyingglass",
-                    title: tr("clients.search.empty_title", "Sin resultados"),
-                    message: tr("clients.search.empty_message", "No se encontraron clientes que coincidan con tu búsqueda"),
-                    iconColor: SolennixColors.primary
-                )
-                .background(SolennixColors.surfaceGrouped)
+                ContentUnavailableView.search(text: viewModel.searchText)
+                    .background(SolennixColors.surfaceGrouped)
             }
         }
     }
@@ -281,12 +276,7 @@ public struct ClientListView: View {
                 // First-run: real NavigationLink CTA
                 clientFirstRunEmptyState
             } else {
-                EmptyStateView(
-                    icon: "magnifyingglass",
-                    title: tr("clients.search.empty_title", "Sin resultados"),
-                    message: tr("clients.search.empty_message", "No se encontraron clientes que coincidan con tu búsqueda"),
-                    iconColor: SolennixColors.primary
-                )
+                ContentUnavailableView.search(text: viewModel.searchText)
             }
         } else {
             List {

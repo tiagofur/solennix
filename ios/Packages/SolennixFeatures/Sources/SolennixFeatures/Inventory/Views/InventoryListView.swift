@@ -154,14 +154,7 @@ public struct InventoryListView: View {
                         )
                     }
                 } else {
-                    EmptyStateView(
-                        icon: "magnifyingglass",
-                        title: InventoryStrings.filteredEmptyTitle,
-                        message: viewModel.showLowStockOnly
-                            ? InventoryStrings.lowStockEmptyMessage
-                            : InventoryStrings.filteredEmptyMessage,
-                        iconColor: SolennixColors.primary
-                    )
+                    inventoryFilteredEmptyState
                 }
             } else {
                 // Single flat section — server already filtered by scope
@@ -367,14 +360,7 @@ public struct InventoryListView: View {
                     )
                 }
             } else {
-                EmptyStateView(
-                    icon: "magnifyingglass",
-                    title: InventoryStrings.filteredEmptyTitle,
-                    message: viewModel.showLowStockOnly
-                        ? InventoryStrings.lowStockEmptyMessage
-                        : InventoryStrings.filteredEmptyMessage,
-                    iconColor: SolennixColors.primary
-                )
+                inventoryFilteredEmptyState
             }
         } else {
             List {
@@ -426,6 +412,29 @@ public struct InventoryListView: View {
             .padding(.bottom, Spacing.xxl)
         }
         .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Filtered Empty State (PR1 migration)
+    // Mixed source: text search OR low-stock filter. Pure text search uses the
+    // system `.search` affordance; a low-stock-only filter shows a plain
+    // ContentUnavailableView with a clear-filters action.
+    @ViewBuilder
+    private var inventoryFilteredEmptyState: some View {
+        if !viewModel.searchText.isEmpty {
+            ContentUnavailableView.search(text: viewModel.searchText)
+        } else {
+            ContentUnavailableView {
+                Label(InventoryStrings.filteredEmptyTitle, systemImage: "magnifyingglass")
+            } description: {
+                Text(viewModel.showLowStockOnly
+                    ? InventoryStrings.lowStockEmptyMessage
+                    : InventoryStrings.filteredEmptyMessage)
+            } actions: {
+                Button(InventoryStrings.clearFilters) {
+                    viewModel.showLowStockOnly = false
+                }
+            }
+        }
     }
 
     // MARK: - Skeleton Rows (Fix 3)
