@@ -114,10 +114,10 @@ fun EventListFiltersSection(
                 confirmButton = {
                     TextButton(onClick = {
                         val start = dateRangePickerState.selectedStartDateMillis?.let {
-                            java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneOffset.UTC).toLocalDate()
+                            java.time.Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
                         }
                         val end = dateRangePickerState.selectedEndDateMillis?.let {
-                            java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneOffset.UTC).toLocalDate()
+                            java.time.Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
                         }
                         onDateRangeChange(start, end)
                         showDateRangePicker = false

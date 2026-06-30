@@ -288,7 +288,6 @@ class EventFormViewModel @Inject constructor(
     var dateUnavailableWarning by mutableStateOf<String?>(null)
 
     private val _unavailableDates = mutableStateListOf<UnavailableDate>()
-    val unavailableDates: List<UnavailableDate> get() = _unavailableDates
 
     fun checkDateAvailability(date: LocalDate) {
         val dateStr = date.toString()

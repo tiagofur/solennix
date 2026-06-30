@@ -307,23 +307,14 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
 
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = viewModel.eventDate.atStartOfDay(java.time.ZoneOffset.UTC).toInstant().toEpochMilli(),
-            selectableDates = object : SelectableDates {
-                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                    val date = java.time.Instant.ofEpochMilli(utcTimeMillis).atZone(java.time.ZoneOffset.UTC).toLocalDate()
-                    val dateStr = date.toString()
-                    return viewModel.unavailableDates.none { ud ->
-                        dateStr >= ud.startDate && dateStr <= ud.endDate
-                    }
-                }
-            }
+            initialSelectedDateMillis = viewModel.eventDate.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
         )
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let {
-                        viewModel.eventDate = java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneOffset.UTC).toLocalDate()
+                        viewModel.eventDate = java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
                     }
                     showDatePicker = false
                 }) { Text(stringResource(R.string.events_form_general_select)) }
