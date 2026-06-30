@@ -18,7 +18,7 @@ import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import com.creapolis.solennix.core.designsystem.component.SolennixPullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.creapolis.solennix.core.designsystem.theme.Spacing
@@ -151,7 +152,7 @@ fun ClientListScreen(
         },
         contentWindowInsets = WindowInsets(0)
     ) { padding ->
-        PullToRefreshBox(
+        SolennixPullToRefreshBox(
             isRefreshing = uiState.isRefreshing,
             onRefresh = { viewModel.refresh() },
             modifier = Modifier
@@ -173,7 +174,13 @@ fun ClientListScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(Spacing.md),
-                    placeholder = { Text(stringResource(R.string.clients_search_placeholder)) },
+                    placeholder = {
+                        Text(
+                            text = stringResource(R.string.clients_search_placeholder),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     shape = MaterialTheme.shapes.medium,
                     singleLine = true

@@ -18,7 +18,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import com.creapolis.solennix.core.designsystem.component.SolennixPullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.WindowInsets
@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.text.style.TextOverflow
 import com.creapolis.solennix.core.designsystem.theme.Spacing
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -196,7 +197,7 @@ fun InventoryListScreen(
         },
         contentWindowInsets = WindowInsets(0)
     ) { padding ->
-        PullToRefreshBox(
+        SolennixPullToRefreshBox(
             isRefreshing = uiState.isRefreshing,
             onRefresh = { viewModel.refresh() },
             modifier = Modifier
@@ -210,7 +211,13 @@ fun InventoryListScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(Spacing.md),
-                    placeholder = { Text(InventoryStrings.searchPlaceholder) },
+                    placeholder = {
+                        Text(
+                            text = InventoryStrings.searchPlaceholder,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
                     leadingIcon = {
                         Icon(
                             Icons.Default.Search,

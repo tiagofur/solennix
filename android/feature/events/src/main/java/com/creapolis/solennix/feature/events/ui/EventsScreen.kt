@@ -29,7 +29,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import com.creapolis.solennix.core.designsystem.component.SolennixPullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +47,7 @@ import com.creapolis.solennix.core.designsystem.component.EmptyState
 import com.creapolis.solennix.core.designsystem.component.SkeletonLoading
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.SwipeRevealActions
+import com.creapolis.solennix.core.designsystem.component.SingleChoiceSegmentedButtonRow
 import com.creapolis.solennix.core.designsystem.component.StatusBadge
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCardGrid
 import com.creapolis.solennix.core.designsystem.util.LocalNavAnimatedVisibilityScope
@@ -238,7 +239,7 @@ fun EventsScreen(
             )
         }
     ) { padding ->
-        PullToRefreshBox(
+        SolennixPullToRefreshBox(
             isRefreshing = uiState.isRefreshing,
             onRefresh = { viewModel.refresh() },
             modifier = Modifier
@@ -454,28 +455,14 @@ private fun ViewModeToggle(
     selectedMode: EventViewMode,
     onModeSelected: (EventViewMode) -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = Spacing.md, vertical = Spacing.sm)
-    ) {
-        SingleChoiceSegmentedButtonRow {
-            SegmentedButton(
-                selected = selectedMode == EventViewMode.LIST,
-                onClick = { onModeSelected(EventViewMode.LIST) },
-                shape = MaterialTheme.shapes.large
-            ) {
-                Text("Lista")
-            }
-            SegmentedButton(
-                selected = selectedMode == EventViewMode.CALENDAR,
-                onClick = { onModeSelected(EventViewMode.CALENDAR) },
-                shape = MaterialTheme.shapes.large
-            ) {
-                Text("Calendario")
-            }
-        }
-    }
+    SingleChoiceSegmentedButtonRow(
+        options = listOf("Lista", "Calendario"),
+        selectedIndex = if (selectedMode == EventViewMode.LIST) 0 else 1,
+        onOptionSelected = { index ->
+            onModeSelected(if (index == 0) EventViewMode.LIST else EventViewMode.CALENDAR)
+        },
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 
 /**

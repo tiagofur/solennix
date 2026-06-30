@@ -57,7 +57,8 @@ fun SingleChoiceSegmentedButtonRow(
                     activeContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                     inactiveContainerColor = MaterialTheme.colorScheme.surface,
                     inactiveContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                ),
+                modifier = Modifier.weight(1f)
             ) {
                 Text(option)
             }
