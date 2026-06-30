@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.creapolis.solennix.core.data.locale.AppLocaleManager
+import com.creapolis.solennix.core.data.locale.LanguageReporter
 import com.creapolis.solennix.core.data.repository.SettingsRepository
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
@@ -31,6 +32,9 @@ class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var authManager: AuthManager
+
+    @Inject
+    lateinit var languageReporter: LanguageReporter
 
     private var deepLinkIntent by mutableStateOf<Intent?>(null)
 
@@ -52,22 +56,26 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        lifecycleScope.launch {
+            // Revert per-app language overrides, returning app to system locale
+            AppLocaleManager.applyLanguage(this@MainActivity, "")
+
+            authManager.authState.collect { authState ->
+                if (authState == AuthManager.AuthState.Authenticated) {
+                    languageReporter.reportIfNeeded()
+                }
+            }
+        }
+
         enableEdgeToEdge()
         setContent {
             val themeConfig by settingsRepository.themeConfig.collectAsStateWithLifecycle(
                 initialValue = ThemeConfig.SYSTEM_DEFAULT
             )
-            val appLanguage by settingsRepository.appLanguage.collectAsStateWithLifecycle(initialValue = "")
-            val currentUser by authManager.currentUser.collectAsStateWithLifecycle()
             val darkTheme = when (themeConfig) {
                 ThemeConfig.LIGHT -> false
                 ThemeConfig.DARK -> true
                 ThemeConfig.SYSTEM_DEFAULT -> isSystemInDarkTheme()
-            }
-
-            LaunchedEffect(appLanguage, currentUser?.preferredLanguage) {
-                val resolvedLanguage = appLanguage.ifBlank { currentUser?.preferredLanguage.orEmpty() }
-                AppLocaleManager.applyLanguage(this@MainActivity, resolvedLanguage)
             }
 
             SolennixTheme(darkTheme = darkTheme) {

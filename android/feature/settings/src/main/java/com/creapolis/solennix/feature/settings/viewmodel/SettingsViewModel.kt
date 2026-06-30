@@ -2,7 +2,6 @@ package com.creapolis.solennix.feature.settings.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.creapolis.solennix.core.data.locale.AppLocaleManager
 import com.creapolis.solennix.core.data.LocalCacheManager
 import com.creapolis.solennix.core.data.repository.SettingsRepository
 import com.creapolis.solennix.core.model.ThemeConfig
@@ -10,7 +9,6 @@ import com.creapolis.solennix.core.model.User
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.Endpoints
-import com.creapolis.solennix.core.network.put
 import com.creapolis.solennix.feature.settings.billing.BillingManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -20,14 +18,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import javax.inject.Inject
-
-@Serializable
-private data class PreferredLanguagePayload(
-    @SerialName("preferred_language") val preferredLanguage: String
-)
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -48,13 +39,6 @@ class SettingsViewModel @Inject constructor(
             initialValue = ThemeConfig.SYSTEM_DEFAULT
         )
 
-    val appLanguage: StateFlow<String> = settingsRepository.appLanguage
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = ""
-        )
-
     // Account deletion state
     private val _isDeletingOwnAccount = MutableStateFlow(false)
     val isDeletingOwnAccount: StateFlow<Boolean> = _isDeletingOwnAccount.asStateFlow()
@@ -66,24 +50,6 @@ class SettingsViewModel @Inject constructor(
     val deleteOwnAccountSuccess: StateFlow<Boolean> = _deleteOwnAccountSuccess.asStateFlow()
 
     val confirmDeletionConsent = MutableStateFlow(false)
-
-    fun updateLanguage(language: String, onSuccess: (() -> Unit)? = null, onError: ((String) -> Unit)? = null) {
-        viewModelScope.launch {
-            try {
-                settingsRepository.setAppLanguage(language)
-                val updatedUser: User = apiService.put(
-                    Endpoints.UPDATE_PROFILE,
-                    PreferredLanguagePayload(preferredLanguage = language)
-                )
-                authManager.storeUser(updatedUser)
-                AppLocaleManager.applyLanguage(context, updatedUser.preferredLanguage)
-                onSuccess?.invoke()
-            } catch (e: Exception) {
-                onError?.invoke(e.message ?: "Error updating language")
-                AppLocaleManager.applyLanguage(context, authManager.currentUser.value?.preferredLanguage)
-            }
-        }
-    }
 
     fun updateTheme(config: ThemeConfig) {
         viewModelScope.launch {

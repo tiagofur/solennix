@@ -430,3 +430,15 @@
   - `AdminDashboard.tsx` (Renglón de gráficos de plataforma Recharts: Registros, MAU e Intensidad de Uso)
   - `AdminUsers.tsx` (Mini-badges de registro y plataformas activas con títulos)
   - `AdminUserDetails.tsx` (Muestra de plataforma de registro y grid de interacciones/fechas de último uso por plataforma)
+
+## Sesión 2026-06-30: Paridad de Idioma Automático de Sistema en Android
+- **Feature ID:** 30 (android-system-language)
+- **Resultado:** COMPLETO y Validado con `./init.sh` y `./gradlew testDebugUnitTest` (506/506 tareas en verde, todos los tests de Android, Backend y React en verde).
+- **Entregables:**
+  - `LanguageReporter.kt`: Nueva clase utilitaria e interfaz de persistencia en `:core:data` que maneja el throttling de reportes del idioma del sistema (`es` o `en`) al backend (`preferred_language` / `UPDATE_PROFILE`), idéntico a iOS.
+  - `DataModule.kt`: Registro del binding de Hilt para `LanguageReportStoring`.
+  - `SettingsRepository.kt` & `SettingsRepositoryImpl.kt`: Eliminación de `appLanguage` y `setAppLanguage`, y agregado de un bloque `init` para limpiar la clave heredada `app_language` del DataStore.
+  - `SettingsViewModel.kt` & `SettingsScreen.kt`: Eliminación de la opción visual de idioma, diálogos y estados locales de selección de idioma en tablet y móvil.
+  - `MainActivity.kt`: Inyección de `LanguageReporter`, restablecimiento de overrides in-app llamando a `AppLocaleManager.applyLanguage(this, "")` en `onCreate`, y observación de `authState` para sincronizar automáticamente el idioma del sistema con el servidor en la autenticación.
+  - `LanguageReporterTest.kt`: Pruebas unitarias de MockK completas que garantizan el correcto funcionamiento del throttling y la resiliencia ante errores de red.
+  - `SettingsViewModelTest.kt`: Eliminados tests unitarios obsoletos relacionados con el selector de idioma manual.

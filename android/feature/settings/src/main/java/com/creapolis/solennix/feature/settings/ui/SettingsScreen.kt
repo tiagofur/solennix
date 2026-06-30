@@ -53,14 +53,11 @@ fun SettingsScreen(
 ) {
     val user by viewModel.currentUser.collectAsStateWithLifecycle()
     val themeConfig by viewModel.themeConfig.collectAsStateWithLifecycle()
-    val appLanguage by viewModel.appLanguage.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val languageUpdatedMessage = stringResource(R.string.settings_language_updated)
 
     var showThemeDialog by remember { mutableStateOf(false) }
-    var showLanguageDialog by remember { mutableStateOf(false) }
 
     if (showThemeDialog) {
         ThemeSelectionDialog(
@@ -70,32 +67,6 @@ fun SettingsScreen(
                 showThemeDialog = false
             },
             onDismiss = { showThemeDialog = false }
-        )
-    }
-
-    if (showLanguageDialog) {
-        LanguageSelectionDialog(
-            currentLanguage = appLanguage.ifBlank { user?.preferredLanguage ?: "es" },
-            onLanguageSelected = { language ->
-                viewModel.updateLanguage(
-                    language = language,
-                    onSuccess = {
-                        showLanguageDialog = false
-                        scope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = languageUpdatedMessage
-                            )
-                        }
-                    },
-                    onError = { message ->
-                        showLanguageDialog = false
-                        scope.launch {
-                            snackbarHostState.showSnackbar(message = message)
-                        }
-                    }
-                )
-            },
-            onDismiss = { showLanguageDialog = false }
         )
     }
 
@@ -162,9 +133,7 @@ fun SettingsScreen(
                                 ThemeConfig.LIGHT -> stringResource(R.string.settings_theme_light)
                                 ThemeConfig.DARK -> stringResource(R.string.settings_theme_dark)
                             }
-                            val languageLabel = if (appLanguage.ifBlank { user?.preferredLanguage ?: "es" } == "en") stringResource(R.string.settings_language_option_en) else stringResource(R.string.settings_language_option_es)
                             SettingsItemValue(icon = Icons.Default.Palette, label = stringResource(R.string.settings_theme_label), value = themeLabel, onClick = { showThemeDialog = true })
-                            SettingsItemValue(icon = Icons.Default.Language, label = stringResource(R.string.settings_profile_language), value = languageLabel, onClick = { showLanguageDialog = true })
                         }
                         SettingsSection(title = stringResource(R.string.settings_section_account)) {
                             SettingsItem(icon = Icons.Default.Person, label = stringResource(R.string.settings_action_edit_profile), onClick = onEditProfile)
@@ -196,9 +165,7 @@ fun SettingsScreen(
                         ThemeConfig.LIGHT -> stringResource(R.string.settings_theme_light)
                         ThemeConfig.DARK -> stringResource(R.string.settings_theme_dark)
                     }
-                    val languageLabel = if (appLanguage.ifBlank { user?.preferredLanguage ?: "es" } == "en") stringResource(R.string.settings_language_option_en) else stringResource(R.string.settings_language_option_es)
                     SettingsItemValue(icon = Icons.Default.Palette, label = stringResource(R.string.settings_theme_label), value = themeLabel, onClick = { showThemeDialog = true })
-                    SettingsItemValue(icon = Icons.Default.Language, label = stringResource(R.string.settings_profile_language), value = languageLabel, onClick = { showLanguageDialog = true })
                 }
                 SettingsSection(title = stringResource(R.string.settings_section_account)) {
                     SettingsItem(icon = Icons.Default.Person, label = stringResource(R.string.settings_action_edit_profile), onClick = onEditProfile)
@@ -330,51 +297,6 @@ fun ThemeSelectionDialog(
                             text = label,
                             style = MaterialTheme.typography.bodyLarge
                         )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.common_cancel))
-            }
-        }
-    )
-}
-
-@Composable
-fun LanguageSelectionDialog(
-    currentLanguage: String,
-    onLanguageSelected: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(text = stringResource(R.string.settings_language_choose))
-        },
-        text = {
-            Column(modifier = Modifier.selectableGroup()) {
-                val languageOptions = listOf(
-                    "es" to stringResource(R.string.settings_language_option_es),
-                    "en" to stringResource(R.string.settings_language_option_en)
-                )
-
-                languageOptions.forEach { (code, label) ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .selectable(
-                                selected = (code == currentLanguage),
-                                onClick = { onLanguageSelected(code) },
-                                role = Role.RadioButton
-                            )
-                            .padding(vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(selected = (code == currentLanguage), onClick = null)
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(text = label, style = MaterialTheme.typography.bodyLarge)
                     }
                 }
             }
