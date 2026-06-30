@@ -10,11 +10,7 @@ import { es, enUS } from 'date-fns/locale';
 import { Button } from '../../../components/Button';
 import { Card } from '../../../components/Card';
 import { Input } from '../../../components/Input';
-
-const parseLocalDate = (dateStr: string): Date => {
-  const [y, m, d] = dateStr.split('-').map(Number);
-  return new Date(y, m - 1, d);
-};
+import { parseLocalDate } from '../../../lib/dateUtils';
 
 const pickDateFnsLocale = (lang: string | undefined): Locale =>
   lang?.startsWith('en') ? enUS : es;

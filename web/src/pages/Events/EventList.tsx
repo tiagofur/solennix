@@ -41,6 +41,7 @@ import {
 import { RowActionMenu } from "../../components/RowActionMenu";
 import { exportToCsv } from "../../lib/exportCsv";
 import { formatCurrency as libFormatCurrency } from "../../lib/finance";
+import { parseLocalDate } from "../../lib/dateUtils";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import Empty from "../../components/Empty";
 import { usePagination } from "../../hooks/usePagination";
@@ -75,12 +76,6 @@ import type { Event as EventType } from "../../types/entities";
 type EventWithClient = EventType & { client?: { name: string; phone: string } | null };
 type StatusFilter = "all" | EventStatus;
 const ITEMS_PER_PAGE = 10;
-
-// Parse a yyyy-MM-dd date string as LOCAL date
-const parseLocalDate = (dateStr: string): Date => {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  return startOfDay(new Date(y, m - 1, d));
-};
 
 const pickDateFnsLocale = (lang: string | undefined): Locale =>
   lang?.startsWith("en") ? enUS : es;
