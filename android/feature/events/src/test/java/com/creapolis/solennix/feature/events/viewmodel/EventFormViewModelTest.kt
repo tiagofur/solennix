@@ -203,4 +203,78 @@ class EventFormViewModelTest {
         assertNull(vm.saveError)
         assertNotNull(vm.selectedProducts.first().totalPrice)
     }
+
+    @Test
+    fun `loadUnavailableDates populates unavailableDates list and warns on blocked date`() = runTest {
+        val blockedDate = UnavailableDate(
+            id = "blocked-1",
+            startDate = "2026-07-01",
+            endDate = "2026-07-01",
+            reason = "Mantenimiento"
+        )
+        coEvery {
+            apiService.get<List<UnavailableDate>>(Endpoints.UNAVAILABLE_DATES, any(), any())
+        } returns listOf(blockedDate)
+
+        val vm = EventFormViewModel(
+            appContext,
+            eventRepository,
+            clientRepository,
+            productRepository,
+            inventoryRepository,
+            staffRepository,
+            staffTeamRepository,
+            apiService,
+            planLimitsManager,
+            authManager,
+            SavedStateHandle()
+        )
+
+        advanceUntilIdle()
+
+        assertEquals(1, vm.unavailableDates.size)
+        assertEquals(blockedDate, vm.unavailableDates.first())
+
+        // Check availability for a non-blocked date
+        vm.checkDateAvailability(java.time.LocalDate.parse("2026-07-02"))
+        assertNull(vm.dateUnavailableWarning)
+
+        // Check availability for the blocked date
+        vm.checkDateAvailability(java.time.LocalDate.parse("2026-07-01"))
+        assertNotNull(vm.dateUnavailableWarning)
+        assertEquals("Esta fecha está marcada como no disponible (Mantenimiento)", vm.dateUnavailableWarning)
+    }
+
+    @Test
+    fun `loadUnavailableDates automatically advances eventDate if initial date is blocked`() = runTest {
+        val blockedDate = UnavailableDate(
+            id = "blocked-1",
+            startDate = "2026-07-25",
+            endDate = "2026-07-25",
+            reason = "Bloqueado"
+        )
+        coEvery {
+            apiService.get<List<UnavailableDate>>(Endpoints.UNAVAILABLE_DATES, any(), any())
+        } returns listOf(blockedDate)
+
+        val vm = EventFormViewModel(
+            appContext,
+            eventRepository,
+            clientRepository,
+            productRepository,
+            inventoryRepository,
+            staffRepository,
+            staffTeamRepository,
+            apiService,
+            planLimitsManager,
+            authManager,
+            SavedStateHandle(mapOf("date" to "2026-07-25"))
+        )
+
+        advanceUntilIdle()
+
+        // It should have advanced to the next day 2026-07-26
+        assertEquals(java.time.LocalDate.parse("2026-07-26"), vm.eventDate)
+        assertNull(vm.dateUnavailableWarning)
+    }
 }

@@ -288,6 +288,7 @@ class EventFormViewModel @Inject constructor(
     var dateUnavailableWarning by mutableStateOf<String?>(null)
 
     private val _unavailableDates = mutableStateListOf<UnavailableDate>()
+    val unavailableDates: List<UnavailableDate> get() = _unavailableDates
 
     fun checkDateAvailability(date: LocalDate) {
         val dateStr = date.toString()
@@ -315,6 +316,19 @@ class EventFormViewModel @Inject constructor(
                 )
                 _unavailableDates.clear()
                 _unavailableDates.addAll(dates)
+                if (eventId == null) {
+                    var candidate = eventDate
+                    val maxTries = 365
+                    var tries = 0
+                    while (tries < maxTries && dates.any { ud ->
+                        val candidateStr = candidate.toString()
+                        candidateStr >= ud.startDate && candidateStr <= ud.endDate
+                    }) {
+                        candidate = candidate.plusDays(1)
+                        tries++
+                    }
+                    eventDate = candidate
+                }
                 checkDateAvailability(eventDate)
             } catch (e: Exception) {
                 // Ignore - non-critical feature
