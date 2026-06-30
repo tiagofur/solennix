@@ -4107,6 +4107,7 @@
       }
     },
     "clients.search.empty_message" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4123,6 +4124,7 @@
       }
     },
     "clients.search.empty_title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10978,6 +10980,22 @@
         }
       }
     },
+    "events.form.error.unavailable_date" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The selected date is not available."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La fecha seleccionada no está disponible."
+          }
+        }
+      }
+    },
     "events.form.error.unexpected" : {
       "localizations" : {
         "en" : {
@@ -11551,6 +11569,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cliente"
+          }
+        }
+      }
+    },
+    "events.form.general.date_blocked_warning" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This date is marked as unavailable."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta fecha está marcada como no disponible."
+          }
+        }
+      }
+    },
+    "events.form.general.date_blocked_warning_reason" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This date is marked as unavailable (%@)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta fecha está marcada como no disponible (%@)."
           }
         }
       }
@@ -21582,6 +21632,9 @@
     "Registrar Pago" : {
 
     },
+    "Reintentar" : {
+
+    },
     "Rentabilidad" : {
 
     },
@@ -21710,6 +21763,7 @@
       }
     },
     "reviews.organizer.search.empty_message" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -21726,6 +21780,7 @@
       }
     },
     "reviews.organizer.search.empty_title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
