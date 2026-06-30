@@ -16,11 +16,7 @@ import {
   teamStatusOptions,
 } from './teamMemberUtils';
 import { TeamMemberPortalNav } from './components/TeamMemberPortalNav';
-
-const parseLocalDate = (dateIso: string): Date => {
-  const [year, month, day] = dateIso.split('-').map(Number);
-  return startOfDay(new Date(year, month - 1, day));
-};
+import { parseLocalDate } from '@/lib/dateUtils';
 
 const pickDateFnsLocale = (lang: string | undefined): Locale =>
   lang?.startsWith('en') ? enUS : es;

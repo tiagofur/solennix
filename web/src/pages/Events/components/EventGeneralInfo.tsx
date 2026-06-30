@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Users, UserPlus } from 'lucide-react';
 import { QuickClientModal } from './QuickClientModal';
+import { EventDatePicker, pickDateFnsLocale } from '../../../components/EventDatePicker';
 
 // Local type to avoid Supabase dependency
 interface Client {
@@ -39,21 +40,9 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
 }) => {
   const { t, i18n } = useTranslation(['events', 'common']);
   const moneyLocale = i18n.language === 'en' ? 'en-US' : 'es-MX';
-  const { register, formState: { errors }, watch } = useFormContext();
+  const { register, setValue, formState: { errors }, watch } = useFormContext();
   const [isQuickClientModalOpen, setIsQuickClientModalOpen] = useState(false);
   const selectedDate = watch('event_date');
-
-  const isDateUnavailable = (date: string) => {
-    if (!unavailableDates || !date) return false;
-    const dateObj = new Date(date);
-    return unavailableDates.some(range => {
-      const start = new Date(range.start_date);
-      const end = new Date(range.end_date);
-      return dateObj >= start && dateObj <= end;
-    });
-  };
-
-  const unavailable = isDateUnavailable(selectedDate);
 
   return (
     <div className="space-y-6">
@@ -129,27 +118,32 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
 
         {/* Fecha */}
         <div className="sm:col-span-3">
-          <label htmlFor="event_date" className="block text-sm font-medium text-text-secondary">
+          <label id="event_date-label" className="block text-sm font-medium text-text-secondary">
             {t('events:general.event_date')} *
           </label>
           <div className="mt-1">
-            <input
+            {/* The picker replaces the native date input. Blocked days are
+                disable-select (REQ-2) and struck-through (REQ-1); the form
+                value is driven through react-hook-form setValue/watch. The
+                labeled group carries the a11y/error attributes. */}
+            <div
               id="event_date"
-              type="date"
-              {...register('event_date')}
-              className="shadow-xs rounded-xl p-2 border bg-card text-text border-border transition-shadow focus:ring-2 focus:ring-primary/20"
-              aria-required="true"
+              role="group"
+              aria-labelledby="event_date-label"
               aria-invalid={errors.event_date ? "true" : "false"}
               aria-describedby={errors.event_date ? "event_date-error" : undefined}
-            />
+            >
+              <EventDatePicker
+                value={selectedDate || ''}
+                onChange={(d) => setValue('event_date', d, { shouldValidate: true, shouldDirty: true })}
+                unavailableDates={unavailableDates}
+                locale={pickDateFnsLocale(i18n.language)}
+                label={t('events:general.event_date')}
+              />
+            </div>
             {errors.event_date && (
               <p id="event_date-error" className="mt-2 text-sm text-error" role="alert">
                 {errors.event_date.message as string}
-              </p>
-            )}
-            {unavailable && (
-              <p className="mt-2 text-sm text-error" role="alert">
-                {t('events:general.date_unavailable')}
               </p>
             )}
           </div>

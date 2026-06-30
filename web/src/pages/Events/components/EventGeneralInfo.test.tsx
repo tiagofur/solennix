@@ -261,14 +261,33 @@ describe('EventGeneralInfo', () => {
   });
 
   it('renders with pre-filled default values', () => {
-    renderWithForm(
+    const { container } = renderWithForm(
       <EventGeneralInfo clients={sampleClients} />,
       { event_date: '2025-06-15', service_type: 'Coctel', num_people: 50 }
     );
 
-    expect(screen.getByDisplayValue('2025-06-15')).toBeInTheDocument();
+    // The date picker reflects the pre-filled value: day 15 is selected.
+    expect(container.querySelector('.rdp-selected')?.textContent).toContain('15');
     expect(screen.getByDisplayValue('Coctel')).toBeInTheDocument();
     expect(screen.getByDisplayValue('50')).toBeInTheDocument();
+  });
+
+  it('renders blocked days as disabled in the picker (disable-select end-to-end, REQ-2)', () => {
+    const { container } = renderWithForm(
+      <EventGeneralInfo
+        clients={sampleClients}
+        unavailableDates={[{ id: 'b1', start_date: '2025-06-15', end_date: '2025-06-15' } as any]}
+      />,
+      { event_date: '2025-06-15' },
+    );
+    // The blocked day (15) must render with native `disabled` in the picker.
+    const dayButtons = Array.from(
+      container.querySelectorAll<HTMLButtonElement>('button'),
+    ).filter(
+      (b) => /^\d+$/.test(b.textContent?.trim() ?? '') && !b.closest('.rdp-day_outside'),
+    );
+    const blocked = dayButtons.find((b) => Number(b.textContent?.trim()) === 15);
+    expect(blocked?.hasAttribute('disabled')).toBe(true);
   });
 
   it('renders placeholders for text fields', () => {

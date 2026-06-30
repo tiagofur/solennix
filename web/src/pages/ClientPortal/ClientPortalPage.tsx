@@ -28,10 +28,7 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
 // Parse `yyyy-MM-dd` as a LOCAL date (new Date("2026-08-15") would be
 // interpreted UTC and drift back one day in negative-offset timezones).
-function parseLocalDate(dateStr: string): Date {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(y, (m || 1) - 1, d || 1);
-}
+import { parseLocalDate } from "@/lib/dateUtils";
 
 function formatLongDate(dateStr: string, lng: string = "es"): string {
   try {

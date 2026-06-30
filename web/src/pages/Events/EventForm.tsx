@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   useNavigate,
   useParams,
@@ -52,7 +52,8 @@ import {
 } from "@/types/entities";
 import { UpgradeBanner } from "@/components/UpgradeBanner";
 import { useUnavailableDatesByRange } from "@/hooks/queries/useUnavailableDatesQueries";
-import { parseEventDate } from "@/lib/dateUtils";
+import { localToday, parseEventDate } from "@/lib/dateUtils";
+import { buildBlockedDateList, advancePastBlockedDate } from "@/lib/blockedDates";
 
 // Local types to avoid Supabase dependency
 interface Client {
@@ -328,7 +329,7 @@ export const EventForm: React.FC = () => {
       client_id: "",
       service_type: "",
       event_date:
-        searchParams.get("date") || new Date().toISOString().split("T")[0],
+        searchParams.get("date") || localToday(),
       start_time: "",
       end_time: "",
       status: "quoted",
@@ -357,6 +358,29 @@ export const EventForm: React.FC = () => {
 
   const discountValue = useWatch({ control, name: "discount" }) || 0;
   const clientIdValue = useWatch({ control, name: "client_id" });
+
+  // REQ-3/REQ-4: create-only auto-skip of a blocked local-today default.
+  // Strict ordering (Web ADR-1 / design §4):
+  //   1. edit mode (`id`) and explicit `?date=` prefill never auto-skip (REQ-4)
+  //   2. Fix 1 DATA-READY GATE — react-query yields [] on the first render,
+  //      so return WITHOUT latching the ref; the effect re-fires once blocked
+  //      data resolves (deps include `unavailableDates`)
+  //   3. run at most once per mount (ref latched only AFTER data is present)
+  // The ref latches ONLY at the terminal decision, which always requires
+  // non-empty data, so it can never latch on the empty first render.
+  const autoSkipAppliedRef = useRef(false);
+  useEffect(() => {
+    if (id || searchParams.get("date")) return; // REQ-4
+    if (!unavailableDates?.length) return; // Fix 1: data-ready gate
+    if (autoSkipAppliedRef.current) return; // run once per mount
+    const advanced = advancePastBlockedDate(
+      localToday(),
+      buildBlockedDateList(unavailableDates),
+    );
+    setValue("event_date", advanced);
+    autoSkipAppliedRef.current = true;
+  }, [unavailableDates, id, searchParams, setValue]);
+
   const locationValue = useWatch({ control, name: "location" });
   const cityValue = useWatch({ control, name: "city" });
   const requiresInvoiceValue =
