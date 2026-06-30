@@ -358,6 +358,19 @@
         "Gráficos Recharts en Admin Dashboard mostrando MAU, registros e intensidad de uso",
         "El ./init.sh completa sin errores"
       ]
+    },
+    {
+      "id": 30,
+      "name": "android-system-language",
+      "description": "Eliminar selección manual de idioma en Android y reportar idioma del sistema al backend con paridad funcional con iOS",
+      "status": "done",
+      "acceptance_criteria": [
+        "Se eliminó la opción de idioma y el diálogo de selección en la pantalla de Configuración en Android",
+        "Se implementó LanguageReporter en Kotlin para reportar el idioma del sistema al backend de forma filtrada y optimizada",
+        "Se agregaron pruebas unitarias para validar la lógica de throttling de LanguageReporter",
+        "La app de Android inicia y respeta el idioma del sistema eliminando cualquier override local",
+        "La suite completa de compilación y pruebas de Android finaliza en verde"
+      ]
     }
   ]
 }

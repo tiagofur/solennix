@@ -10,8 +10,11 @@ import com.creapolis.solennix.core.model.ThemeConfig
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.Endpoints
 import com.creapolis.solennix.core.network.post
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,6 +28,16 @@ class SettingsRepositoryImpl @Inject constructor(
     private val THEME_CONFIG_KEY = stringPreferencesKey("theme_config")
     private val APP_LANGUAGE_KEY = stringPreferencesKey("app_language")
 
+    init {
+        CoroutineScope(Dispatchers.IO).launch {
+            dataStore.edit { preferences ->
+                if (preferences.contains(APP_LANGUAGE_KEY)) {
+                    preferences.remove(APP_LANGUAGE_KEY)
+                }
+            }
+        }
+    }
+
     override val themeConfig: Flow<ThemeConfig> = dataStore.data.map { preferences ->
         val themeString = preferences[THEME_CONFIG_KEY] ?: ThemeConfig.SYSTEM_DEFAULT.name
         try {
@@ -34,22 +47,10 @@ class SettingsRepositoryImpl @Inject constructor(
         }
     }
 
-    override val appLanguage: Flow<String> = dataStore.data.map { preferences ->
-        preferences[APP_LANGUAGE_KEY] ?: ""
-    }
-
     override suspend fun setThemeConfig(config: ThemeConfig) {
         dataStore.edit { preferences ->
             preferences[THEME_CONFIG_KEY] = config.name
         }
-    }
-
-    override suspend fun setAppLanguage(language: String) {
-        val normalized = language.trim().lowercase().takeIf { it == "es" || it == "en" } ?: ""
-        dataStore.edit { preferences ->
-            preferences[APP_LANGUAGE_KEY] = normalized
-        }
-        AppLocaleManager.applyLanguage(context, normalized)
     }
 
     override suspend fun registerFcmToken(token: String) {

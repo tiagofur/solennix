@@ -7,7 +7,6 @@ import com.creapolis.solennix.core.model.ThemeConfig
 import com.creapolis.solennix.core.model.User
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.AuthManager
-import com.creapolis.solennix.core.network.put
 import com.creapolis.solennix.feature.settings.billing.BillingManager
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -42,7 +41,6 @@ class SettingsViewModelTest {
     fun setUp() {
         Dispatchers.setMain(dispatcher)
         every { settingsRepository.themeConfig } returns MutableStateFlow(ThemeConfig.SYSTEM_DEFAULT)
-        every { settingsRepository.appLanguage } returns MutableStateFlow("es")
         every { authManager.currentUser } returns MutableStateFlow(
             User(
                 id = "u1",
@@ -73,36 +71,6 @@ class SettingsViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { settingsRepository.setThemeConfig(ThemeConfig.DARK) }
-    }
-
-    @Test
-    fun `update language stores remote user and invokes success callback`() = runTest {
-        val updatedUser = User(
-            id = "u1",
-            email = "ana@example.com",
-            name = "Ana",
-            preferredLanguage = "en"
-        )
-        coEvery {
-            apiService.put<User>(any(), any())
-        } returns updatedUser
-
-        var successCalled = false
-        val viewModel = SettingsViewModel(
-            authManager = authManager,
-            billingManager = billingManager,
-            settingsRepository = settingsRepository,
-            localCacheManager = localCacheManager,
-            apiService = apiService,
-            context = context
-        )
-
-        viewModel.updateLanguage("en", onSuccess = { successCalled = true })
-        advanceUntilIdle()
-
-        assertTrue(successCalled)
-        coVerify(exactly = 1) { settingsRepository.setAppLanguage("en") }
-        coVerify(exactly = 1) { authManager.storeUser(updatedUser) }
     }
 
     @Test

@@ -1,6 +1,8 @@
 package com.creapolis.solennix.core.data.di
 
 import com.creapolis.solennix.core.data.repository.*
+import com.creapolis.solennix.core.data.locale.LanguageReportStoring
+import com.creapolis.solennix.core.data.locale.SharedPreferencesLanguageStore
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -58,4 +60,9 @@ interface DataModule {
     fun bindsDashboardRepository(
         repository: DashboardRepositoryImpl
     ): DashboardRepository
+
+    @Binds
+    fun bindsLanguageReportStoring(
+        store: SharedPreferencesLanguageStore
+    ): LanguageReportStoring
 }
