@@ -123,7 +123,7 @@ fun TopClientsWidget(
                                     Text(
                                         client.totalSpent.asMXNCompact(),
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = SolennixTheme.colors.kpiGreen,
+                                        color = SolennixTheme.colors.primary,
                                         fontWeight = FontWeight.SemiBold
                                     )
                                     Icon(

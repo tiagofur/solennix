@@ -333,16 +333,17 @@ fun DashboardScreen(
                 }
 
                 // Upcoming Events
+                item {
+                    Spacer(modifier = Modifier.height(Spacing.xl))
+                    Text(
+                        text = stringResource(R.string.dashboard_upcoming_events),
+                        modifier = Modifier.semantics { heading() },
+                        style = MaterialTheme.typography.titleMedium,
+                        color = SolennixTheme.colors.primaryText
+                    )
+                }
+
                 if (uiState.upcomingEvents.isNotEmpty()) {
-                    item {
-                        Spacer(modifier = Modifier.height(Spacing.xl))
-                        Text(
-                            text = stringResource(R.string.dashboard_upcoming_events),
-                            modifier = Modifier.semantics { heading() },
-                            style = MaterialTheme.typography.titleMedium,
-                            color = SolennixTheme.colors.primaryText
-                        )
-                    }
                     items(
                         items = uiState.upcomingEvents,
                         key = { it.id }
@@ -352,6 +353,35 @@ fun DashboardScreen(
                             clientName = uiState.clientMap[event.clientId],
                             onClick = { onEventClick(event.id) }
                         )
+                    }
+                } else if (!uiState.isLoading) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
+                            shape = MaterialTheme.shapes.large
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Event,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = SolennixTheme.colors.secondaryText.copy(alpha = 0.6f)
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(
+                                    text = stringResource(R.string.dashboard_upcoming_empty),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = SolennixTheme.colors.secondaryText
+                                )
+                            }
+                        }
                     }
                 }
 

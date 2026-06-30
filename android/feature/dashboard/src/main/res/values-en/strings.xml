@@ -40,6 +40,7 @@
     <string name="dashboard_quick_new_client">New client</string>
     <string name="dashboard_inventory_alerts">Inventory alerts</string>
     <string name="dashboard_upcoming_events">Upcoming events</string>
+    <string name="dashboard_upcoming_empty">No upcoming events</string>
     <string name="dashboard_event_status">Event status</string>
     <string name="dashboard_financial_comparison">Financial comparison</string>
     <string name="dashboard_revenue_last_6_months">Revenue — last 6 months</string>
