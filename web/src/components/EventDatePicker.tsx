@@ -65,5 +65,6 @@ export const EventDatePicker: React.FC<EventDatePickerProps> = ({
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const pickDateFnsLocale = (lang: string | undefined): Locale =>
   lang?.startsWith("en") ? enUS : esLocale;
