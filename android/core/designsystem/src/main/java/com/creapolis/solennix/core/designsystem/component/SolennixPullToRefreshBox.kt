@@ -30,10 +30,15 @@ fun SolennixPullToRefreshBox(
         onRefresh = onRefresh,
         modifier = modifier,
         state = state,
-        colors = PullToRefreshDefaults.colors(
-            containerColor = SolennixTheme.colors.card,
-            color = SolennixTheme.colors.primary
-        ),
+        indicator = {
+            PullToRefreshDefaults.Indicator(
+                state = state,
+                isRefreshing = isRefreshing,
+                modifier = Modifier.align(Alignment.TopCenter),
+                containerColor = SolennixTheme.colors.card,
+                color = SolennixTheme.colors.primary
+            )
+        },
         contentAlignment = contentAlignment,
         content = content
     )
