@@ -103,11 +103,13 @@ final class BackgroundTaskManager {
             async let clientsResult: [Client] = apiClient.getAll(Endpoint.clients)
             async let productsResult: [Product] = apiClient.getAll(Endpoint.products)
             async let inventoryResult: [InventoryItem] = apiClient.getAll(Endpoint.inventory)
+            async let paymentsResult: [Payment] = apiClient.getAll(Endpoint.payments)
 
             let events = try await eventsResult
             let clients = try await clientsResult
             let products = try await productsResult
             let inventory = try await inventoryResult
+            let payments = try await paymentsResult
 
             // Update SwiftData cache
             try? cacheManager?.cacheEvents(events)
@@ -150,12 +152,30 @@ final class BackgroundTaskManager {
                 .filter { $0.status == .completed }
                 .reduce(0.0) { $0 + $1.totalAmount }
 
+            // Calculate pending payments for confirmed events in the next 7 days
+            let startOfToday = calendar.startOfDay(for: now)
+            let next7Days = calendar.date(byAdding: .day, value: 7, to: startOfToday) ?? now
+            let paymentsByEventId = Dictionary(grouping: payments, by: \.eventId)
+
+            let pendingPayments = events
+                .filter { event in
+                    guard event.status == .confirmed else { return false }
+                    guard let eventDate = ISO8601DateFormatter().date(from: event.eventDate) else { return false }
+                    let normalizedEventDate = calendar.startOfDay(for: eventDate)
+                    return normalizedEventDate >= startOfToday && normalizedEventDate <= next7Days
+                }
+                .reduce(0.0) { total, event in
+                    let totalPaid = paymentsByEventId[event.id, default: []].reduce(0) { $0 + $1.amount }
+                    let outstanding = max(event.totalAmount - totalPaid, 0)
+                    return total + outstanding
+                }
+
             let kpis = WidgetKPIData.from(
                 monthlyRevenue: monthlyRevenue,
                 eventsThisMonth: eventsThisMonth.count,
                 eventsThisWeek: eventsThisWeek.count,
                 lowStockCount: lowStockCount,
-                pendingPayments: 0,
+                pendingPayments: pendingPayments,
                 confirmedEvents: events.filter { $0.status == .confirmed }.count,
                 quotedEvents: events.filter { $0.status == .quoted }.count
             )

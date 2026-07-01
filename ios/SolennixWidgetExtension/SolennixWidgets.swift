@@ -19,9 +19,12 @@ struct SolennixWidgets: WidgetBundle {
 enum AppGroup {
     static let identifier = "group.com.solennix.app"
 
-    static var userDefaults: UserDefaults? {
-        UserDefaults(suiteName: identifier)
-    }
+    static let userDefaults: UserDefaults = {
+        guard let suite = UserDefaults(suiteName: identifier) else {
+            fatalError("App Group '\(identifier)' not configured in widget extension. Enable it in Signing & Capabilities.")
+        }
+        return suite
+    }()
 }
 
 // MARK: - Shared Data Keys
