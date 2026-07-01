@@ -14,6 +14,7 @@ struct EventCountIntent: AppIntent {
     @Parameter(title: "intent.count.param.period", default: .thisWeek)
     var period: EventPeriod
 
+    @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         guard IntentSharedDataStore.hasProAccess else {
             return .result(

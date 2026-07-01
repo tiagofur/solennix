@@ -8,7 +8,7 @@ aliases:
   - Roadmap
   - Timeline
 date: 2026-03-20
-updated: 2026-04-26
+updated: 2026-06-30
 status: active
 ---
 
@@ -156,6 +156,14 @@ Items pendientes: staff seats, portal cliente shape-based gate, payment submissi
 #### Sprint 10 — Feature I: Reseñas post-evento
 - Backend: `event_reviews` + cron 48h post-evento.
 - Web: UI pública para review + portfolio público `/organizer/:slug/reviews`.
+
+#### Sprint 11 — Perfil Profesional Público (Planificado, pendiente ejecución)
+**Decisión 2026-06-30:** primera etapa rumbo a marketplace de servicios. Web-first; iOS/Android pendiente.
+- **Backend:** migration `public_profile` en `products` + endpoint público `GET /api/public/profile/:username`.
+- **Web:** 3 pantallas nuevas (UserProfile configuración, EventSelection, PublicProfilePage) + modificaciones en ProductForm/ProductList.
+- **Privacidad:** Datos de clientes NUNCA expuestos; organizador controla 100% qué aparece; perfil NO es público por defecto (opt-in).
+- **Estimación:** ~16-22 horas (4-6h backend + 12-16h web).
+- **Documentado en:** `docs/PRD/02_FEATURES.md` §16.
 
 ### Bloqueantes externos (acción del usuario, 2-4h)
 

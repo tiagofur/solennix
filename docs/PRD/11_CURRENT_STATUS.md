@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-06-12
+updated: 2026-06-30
 status: active
 ---
 
@@ -23,7 +23,18 @@ status: active
 > - El flujo de `payment_submissions` (Sprint 7.E) es un formulario de reporte de transferencias bancarias externas — Solennix NO procesa ni mueve dinero.
 
 **Fecha:** Junio 2026
-**Version:** 1.9
+**Version:** 1.10
+
+> [!success] 2026-06-30 — Perfil Profesional Público planificado (feature futura)
+> Se diseñó y documentó la feature de Perfiles Profesionales Públicos como primera etapa rumbo a un marketplace de servicios de eventos.
+> - **Concepto:** Perfil público (`solennix.com/u/username`) que muestra productos del catálogo (con checkbox "mostrar en perfil público" + solo activos) + eventos pasados seleccionables (máx 6) + datos de contacto.
+> - **Stack:** Web-first; iOS/Android pendiente.
+> - **Cambios Backend:** Migration `public_profile` en `products` + endpoint público `GET /api/public/profile/:username`.
+> - **Cambios Web:** 3 pantallas nuevas (UserProfile configuración, EventSelection, PublicProfilePage) + modificaciones en ProductForm/ProductList.
+> - **Privacidad:** Datos de clientes NUNCA expuestos; organizador controla 100% qué aparece; perfil NO es público por defecto (opt-in).
+> - **Estimación:** ~16-22 horas (4-6h backend + 12-16h web).
+> - **Documentado en:** `docs/PRD/02_FEATURES.md` §16 (Perfil Profesional Público).
+> - **Estado:** Planificado, no implementado aún.
 
 > [!success] 2026-06-29 — Localización de Moneda Dinámica (currency-localization, Phase 5 complete)
 > Soporte completo para múltiples monedas (USD, COP, MXN, etc.) a nivel de presentación en todo el ecosistema de Solennix.

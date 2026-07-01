@@ -442,3 +442,47 @@
   - `MainActivity.kt`: Inyección de `LanguageReporter`, restablecimiento de overrides in-app llamando a `AppLocaleManager.applyLanguage(this, "")` en `onCreate`, y observación de `authState` para sincronizar automáticamente el idioma del sistema con el servidor en la autenticación.
   - `LanguageReporterTest.kt`: Pruebas unitarias de MockK completas que garantizan el correcto funcionamiento del throttling y la resiliencia ante errores de red.
   - `SettingsViewModelTest.kt`: Eliminados tests unitarios obsoletos relacionados con el selector de idioma manual.
+
+## Sesión 2026-06-30: Paridad Web de Date Picker con Fechas Bloqueadas en Form de Evento
+- **Feature ID:** 32 (web-event-form-blocked-dates)
+- **PR:** [#701](https://github.com/tiagofur/solennix/pull/701) (merge squash `52472d93`) | **Issue:** #700 | **Rama:** `feat/web-event-form-blocked-dates` (10 commits, borrada tras merge) | **Estrategia:** single-pr + `size:exception` (maintainer-approved)
+- **Paridad cross-platform:** iOS ✅ (#699), Android ✅ (#696), Web ✅ (este PR). Las 3 plataformas ahora comparten disable-select + auto-skip para fechas bloqueadas en el form de evento.
+- **Resultado:** COMPLETO y Validado. Vitest 1298/1298 verde, lint 0/0, `./init.sh` exit 0, CI `Frontend Tests` pass (3m37s), `Frontend smoke` pass. 3 revisiones fresh-context independientes (design gate FAIL→rework→re-check PASS, apply-gate PASS, verify PASS-WITH-WARNINGS).
+- **Entregables:**
+  - `web/src/components/EventDatePicker.tsx`: nuevo picker basado en `react-day-picker` v10 (misma lib que `/events?view=calendar`), con `disabled={blockedDateList}` (disable-select, native `disabled`) + `.rdp-unavailable` strikethrough visual idéntico al calendario de eventos, sin dots (paridad iOS).
+  - `web/src/lib/blockedDates.ts`: `buildBlockedDateList` + `isDateBlocked` + `advancePastBlockedDate` (auto-skip puro, TZ-pinneable por input). Tipo `UnavailableDateRange` narrow (sin index signature — fix del bug TS del CI).
+  - `web/src/lib/dateUtils.ts`: `parseLocalDate` (local-midnight) extraído de 4 copias inline + `localToday` + doc ADR-1 (LOCAL-noon ES2016, no `Z`).
+  - `web/src/components/dayPickerStyles.tsx`: theming rdp extraído y compartido entre EventList y EventDatePicker (`.rdp-unavailable` byte-identical, REQ-11 behavior-neutral).
+  - `web/src/pages/Events/EventForm.tsx`: FIX bug TZ en default date (`localToday()` reemplaza `new Date().toISOString().split("T")[0]`), efecto auto-skip create-only con data-ready gate (`if (!unavailableDates?.length) return` antes del latch del ref), cap 365, DST-safe. Save guard intacto como defensa secundaria.
+  - `web/src/pages/Events/components/EventGeneralInfo.tsx`: `<input type="date">` + inline warning reemplazados por `<EventDatePicker>`.
+  - `web/src/pages/Events/EventList.tsx`: delega al builder compartido (refactor behavior-neutral).
+  - Tests: `dateUtils.test.ts` (UTC+14 pin), `blockedDates.test.ts`, `helpersAgree.test.ts` (REQ-6), `EventDatePicker.test.tsx`, `EventForm.test.tsx` extendido (async-advance / no-latch / edit-no-op / prefill-no-op / cap-exhaust / disable-select), Playwright spec `tests/e2e/event-form.spec.ts` (skip sin backend).
+- **Gotcha descubierto (importante):** `./init.sh` NO corre `npm run check` (tsc + regeneración api.ts). El CI sí. Hubo un bug TS (`[key: string]: unknown` index signature en `UnavailableDateRange`) que pasó init.sh local pero reventó el CI. **De ahora en más: correr `cd web && npm run check` antes de PRs web.** Guardado en Engram #3117.
+- **Deferred (no bloqueante):** Playwright e2e necesita backend vivo para validar end-to-end; UTC+14 pin tiene blind spot en CI UTC+0 (Node cachea host TZ).
+
+## Sesión 2026-06-30 (cont.): Rework UX del Date Picker Web — Modal-on-demand (paridad iOS)
+- **Feature ID:** 33 (web-event-date-picker-popover)
+- **PR:** [#703](https://github.com/tiagofur/solennix/pull/703) (merge squash `793185ac`) | **Issue:** #702 | **Rama:** `fix/web-event-date-picker-popover` (1 commit, deletada tras merge) | **Estrategia:** fix directo (sin SDD formal)
+- **Motivo:** El PR #701 dejó el `<DayPicker>` **siempre visible inline** en el form (~300px, sin affordance de campo). El usuario reportó que no podía elegir fecha y que el calendario estaba siempre abierto. El UX empeoró vs el `<input type="date">` original. iOS usa sheet on-demand (`EventFormDatePickerSheet`) — el patrón correcto.
+- **Resultado:** COMPLETO y Validado. Vitest 1304/1304 verde (+6 tests nuevos del modal), `npm run check` verde (lo que había reventado en #701), lint 0/0, `./init.sh` exit 0, CI `Frontend Tests` pass (3m44s). El "no puedo elegir fecha" era **UX confusion, no bug** — confirmado, el `onSelect` funcionaba bien; el patrón Modal lo resuelve.
+- **Entregables:**
+  - `web/src/components/EventDatePicker.tsx`: reescrito — trigger button compacto (`aria-haspopup="dialog"`, `aria-expanded`, icono `Calendar` de `lucide-react`) + `<Modal>` existente (`web/src/components/Modal.tsx`) hosteando el mismo `<DayPicker>`. `onSelect` ahora emite + cierra el modal. Props signature sin cambios.
+  - `web/src/components/EventDatePicker.test.tsx`: 6 → 13 tests (modal-on-demand flow, trigger date/placeholder, `aria-haspopup`/`aria-expanded`, native `disabled` + `.rdp-unavailable` parity mantenidos, pick-emits-and-closes, Esc/backdrop dismiss sin `onChange`).
+  - `web/src/pages/Events/components/EventGeneralInfo.test.tsx`: 2 tests transitivos actualizados (abren el trigger antes de query el calendar).
+  - **Sin tocar:** `lib/blockedDates.ts`, `lib/dateUtils.ts`, `components/dayPickerStyles.tsx`, auto-skip effect en `EventForm.tsx`. Lógica de #701 intacta.
+- **Incidente resuelto (engram #3121):** El sub-agente apply commitió un fix iOS **fuera de scope** (`f8552145`, "fix App Group UserDefaults persistence causing empty widgets") mientras corría `./init.sh`. Detectado en `git diff --stat` pre-push (8 archivos en vez de 3). Branch reseteada + cherry-pick solo del commit web. **El fix iOS es legítimo y está preservado en reflog + engram #3121** — candidato a PR propio futuro (`fix/ios-widget-appgroup-userdefaults`).
+- **Patrón reincidente documentado:** sub-agentes que corren validación amplia (`./init.sh`) y encuentran cosas rotas tienden a commitarlas fuera de scope. Mitigación: el orquestador SIEMPRE debe auditar `git diff --stat main...HEAD` antes de push y comparar contra el file set esperado.
+
+## Sesión 2026-06-30 (cont.): Fix iOS Widget Vacío — App Group UserDefaults Persistence
+- **Feature ID:** 34 (ios-widget-appgroup-userdefaults)
+- **PR:** [#705](https://github.com/tiagofur/solennix/pull/705) (merge squash `503db3f5`) | **Issue:** #704 | **Rama:** `fix/ios-widget-appgroup-userdefaults` (1 commit, deletada tras merge) | **Origen:** commit `f8552145` del sub-agente apply (out-of-scope en su momento, preservado en reflog + engram #3121, ahora cherry-picked a su propia branch)
+- **Motivo:** Los widgets iOS (home/lock screen)渲染aban vacíos — sin eventos, sin pagos, sin nombre de usuario — aunque la app tuviera datos.
+- **Root cause:** `WidgetDataSync.swift` y `SolennixWidgets.swift` exponían el `UserDefaults` del App Group como **propiedad computada**, creando una instancia nueva en cada acceso → writes de la app y reads del widget caían en instancias distintas → data se perdía entre procesos.
+- **Fix:**
+  - Conversión a **propiedad almacenada** reusando una única instancia de `UserDefaults`.
+  - `synchronize()` después de writes para garantizar persistencia inmediata.
+  - `BackgroundTaskManager.swift`: cálculo correcto de `pendingPayments` desde la API de payments.
+  - `WidgetModels.swift`: removidos optionals inseguros + logs de decode.
+  - `InteractiveWidget.swift`: removido optional chaining que enmascaraba el invariante.
+- **Resultado:** COMPLETO. CI `iOS Validation` pass (12m2s — el check crítico que NUNCA se había corrido para este commit, porque originalmente fue side-quest del sub-agente web). Sin tests unitarios nuevos (la persistencia App Group no es unit-testeable de forma aislada); validación manual post-merge: agregar widget al home screen y verificar que renderiza eventos/pagos.
+- **Scope:** 5 archivos Swift iOS, +70/−31. Web/Backend/Android no tocados.

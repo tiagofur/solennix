@@ -695,7 +695,7 @@ public actor APIClient {
                 if AuthManager.isDefinitiveAuthFailure(error) {
                     let manager = _authManager
                     Task { @MainActor in
-                        await manager?.handleSessionExpired()
+                        manager?.handleSessionExpired()
                     }
                 }
                 // Re-throw so the original caller knows the request failed.

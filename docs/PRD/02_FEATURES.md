@@ -8,7 +8,7 @@ aliases:
   - Catálogo de Features
   - Features
 date: 2026-03-20
-updated: 2026-05-20
+updated: 2026-06-30
 status: active
 ---
 
@@ -721,7 +721,66 @@ Dashboard administrativo exclusivo para el equipo de Solennix. Protegido por mid
 
 ---
 
-### 16. Onboarding [Mobile]
+### 16. Perfil Profesional Público [Web] (⬜ Futuro)
+
+> [!info] Feature planificada — primera etapa rumbo a marketplace
+> Perfil público del organizador para que clientes potenciales vean sus servicios, productos y eventos pasados. Web-first; iOS/Android pendiente.
+
+**Concepto:**
+- El organizador puede tener un perfil público (`solennix.com/u/username`) que muestra sus servicios
+- Los **Productos del catálogo** son la base de "servicios ofrecidos" — no se crea una entidad nueva
+- Cada producto tiene un checkbox "Mostrar en perfil público" (solo productos `is_active=true` pueden ser públicos)
+- Galería de eventos pasados (máximo 6) con fotos seleccionables por el organizador
+- Datos de contacto: teléfono, ciudad, redes sociales
+- Todo es opt-in: el perfil NO es público por defecto; el usuario debe activarlo
+
+**Pantallas a crear (Web):**
+| Pantalla | Descripción |
+|----------|-------------|
+| `/profile` (configuración) | Datos personales: teléfono, ciudad, redes sociales, toggle "hacer perfil público" |
+| `/profile/events` (selección) | Elegir qué eventos (máx 6) y fotos mostrar en el perfil |
+| `/u/:username` (pública) | Página pública que ven los clientes: header + productos públicos + eventos seleccionados |
+
+**Cambios Backend:**
+| Cambio | Descripción |
+|--------|-------------|
+| Migration | `ALTER TABLE products ADD COLUMN public_profile BOOLEAN DEFAULT false;` |
+| Handler | Nuevo `GET /api/public/profile/:username` (público, sin auth) |
+| Handler | `PUT /api/users/me` actualiza campos extra del perfil |
+| Model | `PublicProfileView` con productos públicos + eventos seleccionados + datos de contacto |
+
+**Cambios Web:**
+| Archivo | Cambio |
+|--------|--------|
+| `types/entities.ts` | Añadir `public_profile?: boolean` a Product |
+| `services/productService.ts` | Actualizar create/update para incluir flag |
+| `pages/Products/ProductForm.tsx` | Checkbox "Mostrar en perfil público" |
+| `pages/Products/ProductList.tsx` | Indicador visual (icono) de productos públicos |
+| `pages/Profile/UserProfile.tsx` (NUEVA) | Configurar datos personales + toggle público |
+| `pages/Profile/EventSelection.tsx` (NUEVA) | Selector de eventos visibles (máx 6) |
+| `pages/PublicProfile/PublicProfilePage.tsx` (NUEVA) | Página pública read-only |
+
+**Reglas de privacidad (NO-NEGOCIABLE):**
+- Datos del cliente (nombre, contacto, montos) NUNCA se exponen en el perfil
+- Eventos solo muestran: foto, tipo de servicio, fecha genérica ("Boda en Hacienda Los Arcos")
+- Sin precios en el perfil público (solo catálogo visual)
+- El organizador controla 100% qué aparece
+
+**Tier gating (pendiente decisión):**
+- **Gratis**: perfil básico o sin perfil
+- **Pro**: perfil público completo
+- **Business**: destacado en directorio (futuro)
+
+**Estimación de esfuerzo:**
+- Backend: ~4-6h (migración + endpoint público)
+- Web: ~12-16h (3 pantallas + modificaciones)
+- **Total**: ~16-22 horas
+
+**Estado:** Planificado — documentado 2026-06-30. No implementado aún.
+
+---
+
+### 17. Onboarding [Mobile]
 
 Flujo de bienvenida para nuevos usuarios en aplicaciones moviles.
 
