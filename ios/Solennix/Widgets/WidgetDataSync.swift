@@ -11,7 +11,9 @@ private let logger = Logger(subsystem: "com.solennix.app", category: "WidgetData
 // Mirror of WidgetDataKey in SolennixWidgetExtension. Both targets share the
 // same App Group container, so every key used to write/clear data here MUST
 // match the constant used in the widget extension. Add new keys to BOTH enums.
-private enum WidgetKey {
+// `internal` (not private) so the app test target can lock the literals via
+// `@testable import Solennix` (cross-target key-parity, REQ-WDS-09).
+enum WidgetKey {
     static let upcomingEvents = "widget_upcoming_events"
     static let kpis           = "widget_kpis"
     static let lastUpdated    = "widget_last_updated"

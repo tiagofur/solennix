@@ -69,10 +69,16 @@ final class WidgetSyncCoordinator {
             NSLocale.currentLocaleDidChangeNotification
         ]
         for name in names {
-            let observer = center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+            // Deliver synchronously when the notification is posted from the
+            // main thread (the common case: all current posters are @MainActor
+            // VMs / the app / the system). For the rare background poster, hop
+            // to the main actor asynchronously so the handler never runs off-main.
+            let observer = center.addObserver(forName: name, object: nil, queue: nil) { [weak self] _ in
                 guard let self else { return }
-                Task { @MainActor in
-                    self.handleSyncTrigger()
+                if Thread.isMainThread {
+                    MainActor.assumeIsolated { self.handleSyncTrigger() }
+                } else {
+                    Task { @MainActor in self.handleSyncTrigger() }
                 }
             }
             observers.append(observer)
