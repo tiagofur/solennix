@@ -58,6 +58,29 @@ final class WidgetSyncCoordinatorTests: XCTestCase {
         XCTAssertTrue(fixture.mock.upcomingEventsCalls.isEmpty)
     }
 
+    // MARK: - Derived payload values (closes PR1 gate warning #1)
+
+    /// `deriveKPIs` previously had tests asserting only call COUNTS, never the
+    /// derived VALUES. This pins the derivation on the shared fixture so a
+    /// regression in filtering (confirmed/quoted), date math, or the
+    /// paid-subtraction is caught (REQ from PR1 gate triage #3142).
+    func testDeriveKPIsProducesCorrectValues() throws {
+        let fixture = makeCoordinator(authenticated: true)
+        fixture.coordinator.syncAll()
+
+        // Upcoming events = confirmed + quoted only (completed excluded), ≤10.
+        XCTAssertEqual(fixture.mock.upcomingEventsCalls.count, 1)
+        XCTAssertEqual(fixture.mock.upcomingEventsCalls[0].count, 2,
+                       "1 confirmed future (e_1) + 1 quoted future (e_2); completed e_3 excluded")
+
+        let kpis = try XCTUnwrap(fixture.mock.kpisCalls.first)
+        XCTAssertEqual(kpis.confirmedEvents, 1, "only e_1 is confirmed")
+        // e_1 is a confirmed event inside the 7-day window (amount 1000) with
+        // 300 already paid → pending must be 700, proving payments are subtracted.
+        XCTAssertEqual(kpis.pendingPayments, 700, accuracy: 0.001,
+                       "pendingPayments must subtract cached payments (1000 - 300)")
+    }
+
     // MARK: - Performance (NFR-WDS-01)
 
     /// `syncAll()` p95 wall-clock must stay under 50ms. It reads the local
@@ -123,6 +146,14 @@ final class WidgetSyncCoordinatorTests: XCTestCase {
             makeEvent(id: "e_1", clientId: "c_1", status: .confirmed, totalAmount: 1000, eventDate: dateStr(dayOffset: 3)),
             makeEvent(id: "e_2", clientId: "c_2", status: .quoted, totalAmount: 2000, eventDate: dateStr(dayOffset: 10)),
             makeEvent(id: "e_3", clientId: "c_1", status: .completed, totalAmount: 5000, eventDate: dateStr(dayOffset: -5))
+        ])
+        // A cached payment against e_1 so deriveKPIs value tests can prove the
+        // pending-payments figure SUBTRACTS what is already paid (PR1 gate
+        // warning #1). e_1 = 1000, paid 300 → pending 700.
+        try cache.cachePayments([
+            Payment(id: "p_1", eventId: "e_1", userId: "u_1", amount: 300,
+                    paymentDate: dateStr(dayOffset: 1), paymentMethod: "cash",
+                    createdAt: "2026-01-01T00:00:00Z")
         ])
         return cache
     }

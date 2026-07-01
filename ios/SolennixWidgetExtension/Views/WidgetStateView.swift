@@ -1,4 +1,5 @@
 import SwiftUI
+import WidgetKit
 import SolennixDesign
 
 // MARK: - WidgetStateView
@@ -117,7 +118,13 @@ struct WidgetStateView: View {
     // MARK: - Resolved values
 
     private var resolvedIcon: String {
-        if let systemImage { return systemImage }
+        Self.icon(for: state, override: systemImage)
+    }
+
+    /// SF Symbol for a state, honoring an adopter override. Internal so the
+    /// mapping is unit-testable without inspecting the view tree.
+    internal static func icon(for state: State, override: String? = nil) -> String {
+        if let override { return override }
         switch state {
         case .placeholder: return "ellipsis"
         case .empty: return "tray"

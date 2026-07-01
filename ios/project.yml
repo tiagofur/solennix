@@ -25,6 +25,9 @@ packages:
     path: Packages/SolennixNetwork
   SolennixFeatures:
     path: Packages/SolennixFeatures
+  ViewInspector:
+    url: https://github.com/nalexn/ViewInspector.git
+    from: 0.10.0
 
 settings:
   base:
@@ -163,6 +166,9 @@ targets:
       # bundle + widget views are intentionally excluded).
       - path: SolennixWidgetExtension/WidgetSharedConstants.swift
       - path: SolennixWidgetExtension/Models/WidgetModels.swift
+      # WidgetStateView is compiled in so its render behavior is testable
+      # without linking the extension product (NFR-WP-02 render tests).
+      - path: SolennixWidgetExtension/Views/WidgetStateView.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.solennix.app.widgettests
@@ -170,6 +176,9 @@ targets:
         SWIFT_VERSION: "5.9"
     dependencies:
       - package: SolennixCore
+      - package: SolennixDesign
+      - package: ViewInspector
+      - sdk: WidgetKit.framework
 
 schemes:
   Solennix:

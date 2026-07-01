@@ -30,14 +30,17 @@
 		1CFD2273166C9E19E2B04FF7 /* StaffInviteIngredientModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D80FA668D747F502127AF7D /* StaffInviteIngredientModelsTests.swift */; };
 		1D7AACEE0E1E61B63FDDE739 /* TabMetadataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D001B8A6327B9C6BA4D5A99 /* TabMetadataTests.swift */; };
 		1DEF87BFAF9F63670363B09B /* SolennixNetwork in Frameworks */ = {isa = PBXBuildFile; productRef = DC521897BBEAC6707453E470 /* SolennixNetwork */; };
+		20FDC49940B61379E7EEA33E /* WidgetStateViewRenderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBB2933363C102F3C54569D8 /* WidgetStateViewRenderTests.swift */; };
 		26314057AB37187F042BCE2E /* MoreMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F34A685767D81C0E207E6AA /* MoreMenuView.swift */; };
 		28B4DD4DA8C16B7929C22612 /* FeatureL10nPluralTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A4C956999D89DE134DCD33B /* FeatureL10nPluralTests.swift */; };
 		31977930EB1AE0C01E08EF44 /* CalendarLocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5160A693AB3B6217988AC976 /* CalendarLocalizationTests.swift */; };
+		3258146080A8D93D4B1A5E65 /* ViewInspector in Frameworks */ = {isa = PBXBuildFile; productRef = D46CC4CCEEC50D825BF21A6F /* ViewInspector */; };
 		3308A6FB75C54194C9E6C91B /* WidgetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB69CCDF04807E01479F4939 /* WidgetModels.swift */; };
 		33E491C06B9349361609BD21 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1F3752A818448EDDCFD8813A /* Assets.xcassets */; };
 		376106B1D17103E34A7427DE /* IntentSharedDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE43BE1CFDD958B8E9569442 /* IntentSharedDataStore.swift */; };
 		38157680A3287F18EA61BD48 /* SolennixFeatures in Frameworks */ = {isa = PBXBuildFile; productRef = 15FA5790BF9FBB377C754173 /* SolennixFeatures */; };
 		40A6DAE581CB68D9CD746D87 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BD8FAF4B7299793724BA9DF /* NotificationManager.swift */; };
+		44D569BCF0E8A6CE42BA1B8E /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 580AA1774790AC2E21AD5C3E /* WidgetKit.framework */; };
 		463241C8CE37DF4EA6D1A2B6 /* ShowMonthlyRevenueIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A639BA04B2C90E8F96B85CB /* ShowMonthlyRevenueIntent.swift */; };
 		4766FC809AF1F1240713C7DB /* StaffLocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2523503309E3EDE5391F898D /* StaffLocalizationTests.swift */; };
 		4B8444FA9F8DD556DA2AC5BD /* CheckLowStockIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37AD23CC5B1391CBA9558C1C /* CheckLowStockIntent.swift */; };
@@ -63,6 +66,7 @@
 		7C31948E19EF9953FE88C597 /* SolennixApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B0FFA9AF756AB9C85E856D /* SolennixApp.swift */; };
 		81C081FB8AF678138D1FC9F4 /* UserPlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0272551BEA13A36CB61CD05 /* UserPlanTests.swift */; };
 		839AD9036591A392CA60FA9E /* CommonLocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 544F0FD317CFD964A8D0AAB3 /* CommonLocalizationTests.swift */; };
+		85C053BDC5560DB09C97154B /* WidgetFabricatedMetricScanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9DC786850B91912AB359A1A /* WidgetFabricatedMetricScanTests.swift */; };
 		86C7A6B6D12046E424A7CD7E /* AnyCodableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6023D2EED64DFA78FD19EE2 /* AnyCodableTests.swift */; };
 		87181E7C5D01864E818B612B /* EventCountIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2E55DCCA04D139222E1CEBC /* EventCountIntent.swift */; };
 		898C82163ABABB80647816C6 /* WidgetDataSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = F712A2D8BEDA9371EBEED283 /* WidgetDataSync.swift */; };
@@ -78,6 +82,7 @@
 		9FCB2938BDB06024838740AF /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05EBD34830F053929B594F2 /* NotificationService.swift */; };
 		A27CB9783C59A51D7587C844 /* SearchPresentationContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAF3A83A3A12455DC5119536 /* SearchPresentationContextTests.swift */; };
 		AAB2D4DEF3E2E7C0732C4DF3 /* RouteDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC512DE1AC7C660755ECA909 /* RouteDestination.swift */; };
+		AACB3582334137857AB086B2 /* SolennixDesign in Frameworks */ = {isa = PBXBuildFile; productRef = 46483E125379924E00FC04EF /* SolennixDesign */; };
 		AD0D60C610794317D1E4A740 /* TabBarSlotFitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A9960185E35C14D27728A69 /* TabBarSlotFitTests.swift */; };
 		ADFBCDB88318A61EB8CDFE42 /* SearchLocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7BED9B55598FF95C3ABFD87 /* SearchLocalizationTests.swift */; };
 		AE5C577C51730FE91172BAEA /* SolennixShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26D154F9FACF2A74B9D23331 /* SolennixShortcuts.swift */; };
@@ -95,6 +100,7 @@
 		BEC5A84A09F3EBD593336FE9 /* PaymentSubmissionUnavailableDateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4543FD09823B67AE40EFA089 /* PaymentSubmissionUnavailableDateTests.swift */; };
 		BFA22CBD8DA7BCA9D5023236 /* L10nCatalogCoverageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D31AC410B3C3F2D858AD1C1 /* L10nCatalogCoverageTests.swift */; };
 		C10D6B3E2969262852FF6369 /* SolennixWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 68A9B9C7CCD508780816FFD3 /* SolennixWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C13BAC051A9B0BA0F4D7926B /* WidgetStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA766757943BD31DF24D4FB4 /* WidgetStateView.swift */; };
 		C7862E1051955E8D56F89519 /* SolennixDesign in Frameworks */ = {isa = PBXBuildFile; productRef = FE19AF27F762FD5C5E20E30D /* SolennixDesign */; };
 		CA5598A050A8DED76E21A43F /* WidgetDataRoundTripTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FABB7EB59D04D487C4E2486 /* WidgetDataRoundTripTests.swift */; };
 		CAD8B8BB6082458577864D3D /* DashboardLocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12073CCC52D04CF4E0ED6DE /* DashboardLocalizationTests.swift */; };
@@ -225,6 +231,7 @@
 		5311BA08A554C452F2BF622A /* SolennixLiveActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolennixLiveActivityAttributes.swift; sourceTree = "<group>"; };
 		544F0FD317CFD964A8D0AAB3 /* CommonLocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommonLocalizationTests.swift; sourceTree = "<group>"; };
 		55B62E2796D149F1C17BE7FE /* InteractiveWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractiveWidget.swift; sourceTree = "<group>"; };
+		580AA1774790AC2E21AD5C3E /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		5A4C956999D89DE134DCD33B /* FeatureL10nPluralTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureL10nPluralTests.swift; sourceTree = "<group>"; };
 		5CCE1DA7E02AFAE5F7B0C74A /* EventLinkModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLinkModelsTests.swift; sourceTree = "<group>"; };
 		5CD1B67C3C6CA27A85EEBA99 /* EventFormLinksLocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventFormLinksLocalizationTests.swift; sourceTree = "<group>"; };
@@ -287,6 +294,8 @@
 		DFD6B263EC4549ED0AE7340A /* SidebarSplitLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarSplitLayout.swift; sourceTree = "<group>"; };
 		E2ACB7B57F8EAC7E18D70DA6 /* WidgetDataModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataModelsTests.swift; sourceTree = "<group>"; };
 		E2E55DCCA04D139222E1CEBC /* EventCountIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventCountIntent.swift; sourceTree = "<group>"; };
+		E9DC786850B91912AB359A1A /* WidgetFabricatedMetricScanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetFabricatedMetricScanTests.swift; sourceTree = "<group>"; };
+		EBB2933363C102F3C54569D8 /* WidgetStateViewRenderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStateViewRenderTests.swift; sourceTree = "<group>"; };
 		EC4BED0BA0668EB3B1475A7D /* KPIWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KPIWidget.swift; sourceTree = "<group>"; };
 		EC588A81D7FFEEA5C9C0E560 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		EF5F119C9BD3B2FD94A37BD8 /* WidgetExtensionTargetSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetExtensionTargetSmokeTests.swift; sourceTree = "<group>"; };
@@ -316,6 +325,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				9CD68549CA6B59022D1F3D2B /* SolennixCore in Frameworks */,
+				AACB3582334137857AB086B2 /* SolennixDesign in Frameworks */,
+				3258146080A8D93D4B1A5E65 /* ViewInspector in Frameworks */,
+				44D569BCF0E8A6CE42BA1B8E /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -354,6 +366,7 @@
 				7ABDCACFC9C877BE9DA4AAD5 /* SolennixUITests */,
 				58C12AB9D6560302A4E17B9D /* SolennixWidgetExtension */,
 				40BC21EA077DF55C3CB7CA6B /* SolennixWidgetExtensionTests */,
+				1816E0773163898C33F508D7 /* Frameworks */,
 				9E6B3A43E92B9C5181767046 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -364,6 +377,14 @@
 				AB69CCDF04807E01479F4939 /* WidgetModels.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		1816E0773163898C33F508D7 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				580AA1774790AC2E21AD5C3E /* WidgetKit.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		1CBDEC2D8A602CADCC4BE4B3 /* SolennixLiveActivity */ = {
@@ -410,7 +431,9 @@
 				935DD22326B0466DD407FF2C /* WidgetAuthStateTests.swift */,
 				7FABB7EB59D04D487C4E2486 /* WidgetDataRoundTripTests.swift */,
 				EF5F119C9BD3B2FD94A37BD8 /* WidgetExtensionTargetSmokeTests.swift */,
+				E9DC786850B91912AB359A1A /* WidgetFabricatedMetricScanTests.swift */,
 				72B80B2B9E06A2541C342549 /* WidgetKeyParityTests.swift */,
+				EBB2933363C102F3C54569D8 /* WidgetStateViewRenderTests.swift */,
 			);
 			path = SolennixWidgetExtensionTests;
 			sourceTree = "<group>";
@@ -725,6 +748,8 @@
 			name = SolennixWidgetExtensionTests;
 			packageProductDependencies = (
 				DA9D33A7BC96346B01A62061 /* SolennixCore */,
+				46483E125379924E00FC04EF /* SolennixDesign */,
+				D46CC4CCEEC50D825BF21A6F /* ViewInspector */,
 			);
 			productName = SolennixWidgetExtensionTests;
 			productReference = 4FD1E76F206E5139E3FB394A /* SolennixWidgetExtensionTests.xctest */;
@@ -794,6 +819,7 @@
 			mainGroup = 00B3A82EFA8ECD121B573E85;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				9C7AE26BB0DC7BD4873C69A0 /* XCRemoteSwiftPackageReference "ViewInspector" */,
 				A6C2F7E662A8160E4391E47E /* XCLocalSwiftPackageReference "Packages/SolennixCore" */,
 				69A02BF1E2CB4A997972DEFF /* XCLocalSwiftPackageReference "Packages/SolennixDesign" */,
 				E93AFF29772B74ADC5A5E97C /* XCLocalSwiftPackageReference "Packages/SolennixFeatures" */,
@@ -893,9 +919,12 @@
 				134E0457BC0A4C01AC82600B /* WidgetAuthStateTests.swift in Sources */,
 				CA5598A050A8DED76E21A43F /* WidgetDataRoundTripTests.swift in Sources */,
 				0A71A9344A87974753B31511 /* WidgetExtensionTargetSmokeTests.swift in Sources */,
+				85C053BDC5560DB09C97154B /* WidgetFabricatedMetricScanTests.swift in Sources */,
 				B548BC2741A00765EBD665DF /* WidgetKeyParityTests.swift in Sources */,
 				3308A6FB75C54194C9E6C91B /* WidgetModels.swift in Sources */,
 				8A78CFD3A6EF013C1BB45B37 /* WidgetSharedConstants.swift in Sources */,
+				C13BAC051A9B0BA0F4D7926B /* WidgetStateView.swift in Sources */,
+				20FDC49940B61379E7EEA33E /* WidgetStateViewRenderTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1464,6 +1493,17 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		9C7AE26BB0DC7BD4873C69A0 /* XCRemoteSwiftPackageReference "ViewInspector" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/nalexn/ViewInspector.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.10.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		15FA5790BF9FBB377C754173 /* SolennixFeatures */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -1481,6 +1521,10 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = SolennixDesign;
 		};
+		46483E125379924E00FC04EF /* SolennixDesign */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SolennixDesign;
+		};
 		5ED55B2A557A9FD74159614F /* SolennixNetwork */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = SolennixNetwork;
@@ -1488,6 +1532,11 @@
 		B6C6823DFAB04CC472F37EAE /* SolennixCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = SolennixCore;
+		};
+		D46CC4CCEEC50D825BF21A6F /* ViewInspector */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9C7AE26BB0DC7BD4873C69A0 /* XCRemoteSwiftPackageReference "ViewInspector" */;
+			productName = ViewInspector;
 		};
 		DA9D33A7BC96346B01A62061 /* SolennixCore */ = {
 			isa = XCSwiftPackageProductDependency;
