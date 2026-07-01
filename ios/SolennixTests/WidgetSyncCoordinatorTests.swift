@@ -81,6 +81,46 @@ final class WidgetSyncCoordinatorTests: XCTestCase {
                        "pendingPayments must subtract cached payments (1000 - 300)")
     }
 
+    // MARK: - WidgetEventData date parsing (hotfix #712)
+
+    /// Regression for #712: `event.eventDate` (a `yyyy-MM-dd` server string) MUST
+    /// parse to a `Date` whose LOCAL calendar components match the server string,
+    /// regardless of the device timezone. Previously parsed as UTC midnight
+    /// (`ISO8601DateFormatter.withFullDate`), which made the widget display one
+    /// day earlier for users west of UTC. We assert via `Calendar.current` — the
+    /// exact calendar the widget uses to render (`WidgetModels.formattedDate`) —
+    /// so this mirrors the user-facing contract. (Fails against the buggy code on
+    /// any negative-offset device, e.g. UTC-3 Argentina; passes everywhere once
+    /// fixed, because parse-local + `Calendar.current` always agree.)
+    func testWidgetEventDataParsesServerDayAsLocalCalendarDay() {
+        let event = makeEvent(id: "e_date", clientId: "c_1", status: .confirmed,
+                              totalAmount: 1000, eventDate: "2026-07-01")
+        let widgetEvent = WidgetEventData.from(event: event, clientName: "Alfa")
+        let calendar = Calendar.current
+
+        XCTAssertEqual(calendar.component(.day, from: widgetEvent.eventDate), 1,
+                       "server day '2026-07-01' must read as day 1 in the local calendar")
+        XCTAssertEqual(calendar.component(.month, from: widgetEvent.eventDate), 7,
+                       "server day '2026-07-01' must read as month 7 in the local calendar")
+        XCTAssertEqual(calendar.component(.year, from: widgetEvent.eventDate), 2026,
+                       "server day '2026-07-01' must read as year 2026 in the local calendar")
+    }
+
+    /// Year-boundary companion to #712: the local-midnight parse must also hold
+    /// for the last day of the year (no wrap into the next year's components).
+    func testWidgetEventDataParsesServerDayAsLocalCalendarDayAtYearBoundary() {
+        let event = makeEvent(id: "e_nye", clientId: "c_1", status: .confirmed,
+                              totalAmount: 1000, eventDate: "2026-12-31")
+        let widgetEvent = WidgetEventData.from(event: event, clientName: "Alfa")
+        let calendar = Calendar.current
+
+        XCTAssertEqual(calendar.component(.day, from: widgetEvent.eventDate), 31,
+                       "server day '2026-12-31' must read as day 31 in the local calendar")
+        XCTAssertEqual(calendar.component(.month, from: widgetEvent.eventDate), 12,
+                       "server day '2026-12-31' must read as month 12 in the local calendar")
+        XCTAssertEqual(calendar.component(.year, from: widgetEvent.eventDate), 2026)
+    }
+
     // MARK: - Performance (NFR-WDS-01)
 
     /// `syncAll()` p95 wall-clock must stay under 50ms. It reads the local
