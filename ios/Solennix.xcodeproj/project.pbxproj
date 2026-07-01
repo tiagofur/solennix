@@ -119,6 +119,7 @@
 		F0E28736B1829F4A18C96238 /* CatalogFormatStringTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A581E354FF752DBF5349402C /* CatalogFormatStringTests.swift */; };
 		F2EA7E03ACCDBF9D0569E4FD /* CalendarMonthBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3B0DFB4B140542F9EBC7AF8 /* CalendarMonthBuilderTests.swift */; };
 		F3CB350892669F4A6DBD712A /* SolennixProducts.storekit in Resources */ = {isa = PBXBuildFile; fileRef = C2D2D2FC95DE89E91CACFC96 /* SolennixProducts.storekit */; };
+		F3F65218047577356DF47D00 /* WidgetStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA766757943BD31DF24D4FB4 /* WidgetStateView.swift */; };
 		F7F57BF451ABC276348AEF96 /* PaginatedResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA149AF02100DB28164D3150 /* PaginatedResponseTests.swift */; };
 		F7FEE0E325354FC58B15BE19 /* EventFormLinksLocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CD1B67C3C6CA27A85EEBA99 /* EventFormLinksLocalizationTests.swift */; };
 		FA21F9C37384204F97FE19A2 /* DashboardFormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE9496EB7FCC0E14B7EB9B7E /* DashboardFormattingTests.swift */; };
@@ -259,6 +260,7 @@
 		A3B0FFA9AF756AB9C85E856D /* SolennixApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolennixApp.swift; sourceTree = "<group>"; };
 		A581E354FF752DBF5349402C /* CatalogFormatStringTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogFormatStringTests.swift; sourceTree = "<group>"; };
 		A6023D2EED64DFA78FD19EE2 /* AnyCodableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyCodableTests.swift; sourceTree = "<group>"; };
+		AA766757943BD31DF24D4FB4 /* WidgetStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStateView.swift; sourceTree = "<group>"; };
 		AB69CCDF04807E01479F4939 /* WidgetModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetModels.swift; sourceTree = "<group>"; };
 		AE1690546D867F499D0E6B0C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		AE5D1D3BB8D8DDFF96028EDC /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -508,6 +510,7 @@
 			isa = PBXGroup;
 			children = (
 				1661383B6CAFD0EAF76BDBC6 /* Models */,
+				6268C721D23E9E083CB710E4 /* Views */,
 				CDB07D578E4648966F144CE6 /* Widgets */,
 				0243D8F43F07F77468C0E894 /* Info.plist */,
 				EC588A81D7FFEEA5C9C0E560 /* Localizable.xcstrings */,
@@ -516,6 +519,14 @@
 				A2B97A1B2C2CACD87812C0E5 /* WidgetSharedConstants.swift */,
 			);
 			path = SolennixWidgetExtension;
+			sourceTree = "<group>";
+		};
+		6268C721D23E9E083CB710E4 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				AA766757943BD31DF24D4FB4 /* WidgetStateView.swift */,
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 		6C92B91AEB6A0E5ACE33DA18 /* Widgets */ = {
@@ -901,6 +912,7 @@
 				66F6F5DFE0E5D087760F1B6A /* UpcomingEventsWidget.swift in Sources */,
 				B58301ACDCAB10C078D350D3 /* WidgetModels.swift in Sources */,
 				AFE1FAEFDDA3874B9235A741 /* WidgetSharedConstants.swift in Sources */,
+				F3F65218047577356DF47D00 /* WidgetStateView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
