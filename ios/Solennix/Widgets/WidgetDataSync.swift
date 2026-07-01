@@ -196,21 +196,26 @@ struct WidgetKPIData: Codable {
     }
 }
 
-// MARK: - Widget Sync Extension for ViewModels
+// MARK: - Widget Syncing Protocol
 
-/// Protocol for ViewModels that can sync data to widgets
-protocol WidgetSyncable {
-    func syncToWidget()
+/// Concrete contract for syncing app data to the widget extension.
+///
+/// `WidgetSyncCoordinator` holds a `WidgetSyncing` (injectable, defaults to
+/// `WidgetDataSync.shared`) so the coordinator can be unit-tested with a mock
+/// without touching the App Group container or WidgetKit.
+///
+/// Replaces the dead, never-adopted `WidgetSyncable` protocol.
+/// Amends spec REQ-WDS-05.
+@MainActor
+protocol WidgetSyncing: AnyObject {
+    func syncUpcomingEvents(_ events: [WidgetEventData])
+    func syncKPIs(_ kpis: WidgetKPIData)
+    func syncUserPlan(_ planRawValue: String?)
+    func setAuthState(_ state: WidgetAuthState)
+    func clearWidgetData()
+    func reloadEventWidgets()
+    func reloadKPIWidgets()
 }
 
-// Example usage in DashboardViewModel:
-// extension DashboardViewModel: WidgetSyncable {
-//     func syncToWidget() {
-//         let kpis = WidgetKPIData(
-//             monthlyRevenue: self.monthlyRevenue,
-//             eventsThisMonth: self.eventsThisMonth,
-//             // ... etc
-//         )
-//         WidgetDataSync.shared.syncKPIs(kpis)
-//     }
-// }
+// WidgetDataSync already implements every method of `WidgetSyncing`.
+extension WidgetDataSync: WidgetSyncing {}
