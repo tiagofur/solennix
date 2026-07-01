@@ -80,6 +80,31 @@ struct WidgetKPIs: Codable {
     let pendingPayments: Double
     let confirmedEvents: Int
     let quotedEvents: Int
+    /// Optional trend seam (decision #3134). `nil` → neutral render (no arrow).
+    let revenueTrend: WidgetTrend?
+
+    /// Custom memberwise init so `revenueTrend` is both passable (seam) and
+    /// defaulted to a neutral `nil` (decision #3131) without touching existing
+    /// call sites. Codable synthesis is independent of this initializer.
+    init(
+        monthlyRevenue: Double,
+        eventsThisMonth: Int,
+        eventsThisWeek: Int,
+        lowStockCount: Int,
+        pendingPayments: Double,
+        confirmedEvents: Int,
+        quotedEvents: Int,
+        revenueTrend: WidgetTrend? = nil
+    ) {
+        self.monthlyRevenue = monthlyRevenue
+        self.eventsThisMonth = eventsThisMonth
+        self.eventsThisWeek = eventsThisWeek
+        self.lowStockCount = lowStockCount
+        self.pendingPayments = pendingPayments
+        self.confirmedEvents = confirmedEvents
+        self.quotedEvents = quotedEvents
+        self.revenueTrend = revenueTrend
+    }
 
     /// Neutral KPIs used when no payload exists (signed-out / not yet synced)
     /// or when decoding failed. Never displayed directly: widgets route those
@@ -146,20 +171,25 @@ final class WidgetDataProvider {
         loadUpcomingEvents().events
     }
 
-    /// Reads KPIs (REQ-WP-01 `.error` wiring, decision #3139).
-    func loadKPIs() -> (kpis: WidgetKPIs, decodeFailed: Bool) {
+    /// Reads KPIs (REQ-WP-01 `.error`/`.empty` wiring, decision #3139).
+    ///
+    /// `hasData` distinguishes "no payload written yet" (→ `.empty`) from a
+    /// payload that exists but failed to decode (→ `.error`). KPIs have a
+    /// meaningful zero representation, so absence — not zeros — drives the
+    /// empty state.
+    func loadKPIs() -> (kpis: WidgetKPIs, decodeFailed: Bool, hasData: Bool) {
         guard let data = AppGroup.userDefaults.data(forKey: WidgetDataKey.kpis) else {
             logger.debug("No KPIs data found in App Group, returning zeros")
-            return (kpis: .zeros, decodeFailed: false)
+            return (kpis: .zeros, decodeFailed: false, hasData: false)
         }
 
         do {
             let kpis = try JSONDecoder().decode(WidgetKPIs.self, from: data)
             logger.debug("Successfully decoded KPIs from App Group: revenue=\(kpis.monthlyRevenue), pending=\(kpis.pendingPayments)")
-            return (kpis: kpis, decodeFailed: false)
+            return (kpis: kpis, decodeFailed: false, hasData: true)
         } catch {
             logger.error("Failed to decode KPIs: \(error.localizedDescription, privacy: .public)")
-            return (kpis: .zeros, decodeFailed: true)
+            return (kpis: .zeros, decodeFailed: true, hasData: true)
         }
     }
 
