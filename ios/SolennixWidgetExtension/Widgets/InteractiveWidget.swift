@@ -1,6 +1,7 @@
 import WidgetKit
 import SwiftUI
 import SolennixDesign
+import SolennixCore
 import AppIntents
 
 // MARK: - Interactive Event Widget (iOS 17+)
@@ -68,38 +69,36 @@ struct QuickAddPaymentIntent: AppIntent {
 struct InteractiveEventProvider: TimelineProvider {
 
     func placeholder(in context: Context) -> InteractiveEventEntry {
-        InteractiveEventEntry(date: Date(), event: sampleEvent, isCompleted: false)
+        InteractiveEventEntry(date: Date(), event: sampleEvent, isCompleted: false, decodeFailed: false)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (InteractiveEventEntry) -> Void) {
-        let events = WidgetDataProvider.shared.getUpcomingEvents()
-        let todayEvent = events.first { $0.isToday }
-        let completedEvents = AppGroup.userDefaults.stringArray(forKey: "completed_events") ?? []
-        let isCompleted = todayEvent.map { completedEvents.contains($0.id) } ?? false
-
-        let entry = InteractiveEventEntry(
-            date: Date(),
-            event: todayEvent ?? sampleEvent,
-            isCompleted: isCompleted
-        )
+        let entry = makeEntry()
         completion(entry)
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<InteractiveEventEntry>) -> Void) {
-        let events = WidgetDataProvider.shared.getUpcomingEvents()
-        let todayEvent = events.first { $0.isToday }
-        let completedEvents = AppGroup.userDefaults.stringArray(forKey: "completed_events") ?? []
-        let isCompleted = todayEvent.map { completedEvents.contains($0.id) } ?? false
-
-        let entry = InteractiveEventEntry(
-            date: Date(),
-            event: todayEvent,
-            isCompleted: isCompleted
-        )
+        let entry = makeEntry()
 
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: Date()) ?? Date()
         let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
         completion(timeline)
+    }
+
+    /// Builds an entry from the shared store, surfacing decode failure so the
+    /// widget can route to the `.error` state (REQ-WP-01).
+    private func makeEntry() -> InteractiveEventEntry {
+        let result = WidgetDataProvider.shared.loadUpcomingEvents()
+        let todayEvent = result.events.first { $0.isToday }
+        let completedEvents = AppGroup.userDefaults.stringArray(forKey: "completed_events") ?? []
+        let isCompleted = todayEvent.map { completedEvents.contains($0.id) } ?? false
+
+        return InteractiveEventEntry(
+            date: Date(),
+            event: todayEvent,
+            isCompleted: isCompleted,
+            decodeFailed: result.decodeFailed
+        )
     }
 
     private var sampleEvent: WidgetEvent {
@@ -123,6 +122,8 @@ struct InteractiveEventEntry: TimelineEntry {
     let date: Date
     let event: WidgetEvent?
     let isCompleted: Bool
+    /// True when the events payload existed but could not be decoded (→ `.error`).
+    let decodeFailed: Bool
 }
 
 // MARK: - Interactive Widget View
@@ -131,7 +132,13 @@ struct InteractiveEventWidgetView: View {
     var entry: InteractiveEventEntry
 
     var body: some View {
-        if let event = entry.event {
+        // REQ-WP-01: signed-out and decode-error route to the shared state
+        // surface before the content; no-event-today also delegates to it.
+        if WidgetAuthState.current == .signedOut {
+            WidgetStateView(state: .signedOut)
+        } else if entry.decodeFailed {
+            WidgetStateView(state: .error)
+        } else if let event = entry.event {
             VStack(alignment: .leading, spacing: 8) {
                 // Header
                 HStack {
@@ -242,18 +249,8 @@ struct InteractiveEventWidgetView: View {
             .padding()
             .containerBackground(.fill.tertiary, for: .widget)
         } else {
-            // No event today
-            VStack(spacing: 8) {
-                Image(systemName: "calendar.badge.checkmark")
-                    .font(.largeTitle)
-                    .foregroundStyle(.secondary)
-
-                Text("widget.interactive.no_events_today")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .containerBackground(.fill.tertiary, for: .widget)
+            // No event today → shared empty state (replaces the bespoke block).
+            WidgetStateView(state: .empty, systemImage: "calendar.badge.plus")
         }
     }
 }
@@ -291,6 +288,7 @@ struct InteractiveEventWidget: Widget {
             status: "confirmed",
             totalAmount: 45000
         ),
-        isCompleted: false
+        isCompleted: false,
+        decodeFailed: false
     )
 }
