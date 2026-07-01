@@ -146,11 +146,24 @@ struct WidgetEventData: Codable, Identifiable {
     let status: String
     let totalAmount: Double?
 
+    /// Parses `yyyy-MM-dd` server-day strings as LOCAL midnight (the device's
+    /// timezone), not UTC. The widget renders `eventDate` via `Calendar.current`
+    /// and a local-timezone `DateFormatter` (`WidgetModels.formattedDate`), so a
+    /// UTC-midnight anchor shifted the displayed day backward by one for users
+    /// west of UTC (hotfix #712). The rest of the app parses server days with
+    /// `Date.fromServerDay` (UTC) paired with UTC display formatters; the widget
+    /// is a local-display surface, so it intentionally uses local-midnight here.
+    private static let localDayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone.current
+        return formatter
+    }()
+
     /// Create from Event model with client name
     static func from(event: Event, clientName: String) -> WidgetEventData {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withFullDate]
-        let eventDate = formatter.date(from: event.eventDate) ?? Date()
+        let eventDate = Self.localDayFormatter.date(from: String(event.eventDate.prefix(10))) ?? Date()
 
         return WidgetEventData(
             id: event.id,
