@@ -171,7 +171,7 @@ public final class SettingsViewModel {
     public func logout() async {
         // Log out of RevenueCat first so the customer identity is detached
         // before auth tokens are cleared. Best-effort — non-fatal on failure.
-        try? await subscriptionManager?.logout()
+        await subscriptionManager?.logout()
         await authManager.signOut()
         user = nil
     }

@@ -370,7 +370,7 @@ struct SolennixApp: App {
 
         // 2. Clear widget shared container and reload widget timelines so widgets
         //    show a logged-out / empty state immediately.
-        await WidgetDataSync.shared.clearWidgetData()
+        WidgetDataSync.shared.clearWidgetData()
 
         // 3. Cancel all pending local event reminders. Payment receipts that already
         //    fired are in Notification Center (delivered) and cannot be removed here

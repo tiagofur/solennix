@@ -384,6 +384,48 @@
         "iOS and Android LanguageReporter suggests default currency based on system locale to backend",
         "All unit tests pass 100% green and project init.sh validation is green"
       ]
+    },
+    {
+      "id": 32,
+      "name": "web-event-form-blocked-dates",
+      "description": "Web event form blocked dates picker — cross-platform parity with iOS #699 / Android #696 (react-day-picker v10 reuse, disable-select, TZ-safe auto-skip, DRY extractions)",
+      "status": "done",
+      "acceptance_criteria": [
+        "Blocked dates render in the form date picker with the same .rdp-unavailable strikethrough visual as /events?view=calendar",
+        "Blocked dates are not selectable in the form date picker (disable-select via react-day-picker disabled matcher)",
+        "New event with an implicit local-today default that is blocked auto-advances to the first non-blocked day (cap 365); edit mode and ?date= prefill are exempt",
+        "TZ-safe default date (fix pre-existing UTC bug) and helpers (parseLocalDate local-midnight seam, parseEventDate LOCAL-noon per ES2016)",
+        "DRY extractions: parseLocalDate to lib/dateUtils, buildBlockedDateList to lib/blockedDates, rdp theming to components/dayPickerStyles; EventList.tsx delegates (behavior-neutral)",
+        "Save guard retained as secondary defense; no event dots in the picker (parity iOS)",
+        "Vitest 1298/1298 green, lint 0/0, ./init.sh exit 0, CI Frontend Tests pass"
+      ]
+    },
+    {
+      "id": 33,
+      "name": "web-event-date-picker-popover",
+      "description": "Web event form date picker rework — Modal-on-demand pattern (UX parity iOS) replacing the always-visible inline calendar shipped in #701",
+      "status": "done",
+      "acceptance_criteria": [
+        "Date picker is a compact trigger button (label + selected date + calendar icon, same visual weight as other form inputs) that opens an on-demand Modal hosting the DayPicker — NOT an always-visible inline calendar",
+        "Picking a non-blocked day emits onChange with yyyy-MM-dd AND closes the Modal; Esc / backdrop / X button close without emitting",
+        "All #701 logic preserved unchanged: disable-select (native disabled), .rdp-unavailable strikethrough, TZ-safe parseLocalDate seam, buildBlockedDateList/advancePastBlockedDate/shared theming",
+        "EventDatePicker props signature unchanged — EventGeneralInfo.tsx needed zero source edits",
+        "'Cannot pick a date' from #701 confirmed as UX confusion (not a bug); onSelect fires correctly for non-blocked days",
+        "npm run check green, vitest 1304/1304 green, lint 0/0, ./init.sh exit 0, CI Frontend Tests pass"
+      ]
+    },
+    {
+      "id": 34,
+      "name": "ios-widget-appgroup-userdefaults",
+      "description": "iOS widget empty-data fix — App Group UserDefaults stored-property + synchronize so widget data persists between app and extension",
+      "status": "done",
+      "acceptance_criteria": [
+        "WidgetDataSync and SolennixWidgets expose the App Group UserDefaults via a stored property (single shared instance), not a computed property (which instantiated a new object per access)",
+        "synchronize() called after writes to guarantee immediate persistence across the App Group process boundary",
+        "BackgroundTaskManager calculates pendingPayments correctly from the payments API",
+        "WidgetModels removes unsafe optionals and adds decode debug logs; InteractiveWidget removes optional chaining that masked the data invariant",
+        "Existing iOS test suite stays green (CI iOS Validation pass); manual widget validation post-merge renders events/payments"
+      ]
     }
   ]
 }

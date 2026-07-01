@@ -107,13 +107,15 @@ public final class CalendarSyncPreferencesViewModel {
     /// SAME `defaults` so opt-in state is observed live on every CRUD.
     public convenience init(apiClient: APIClient, defaults: UserDefaults = .standard) {
         let syncService = EventKitSyncService()
+        let syncEnabledKey = Self.syncEnabledKey
+        let syncDestinationKey = Self.syncDestinationKey
         let repository = DefaultEventRepository(
             eventAPI: apiClient,
             syncService: syncService,
             identityStore: UserDefaultsCalendarSyncIdentityStore(defaults: defaults),
-            syncEnabled: { (defaults.object(forKey: Self.syncEnabledKey) as? Bool) ?? false },
-            destination: {
-                let raw = defaults.string(forKey: Self.syncDestinationKey) ?? ""
+            syncEnabled: { [defaults] in (defaults.object(forKey: syncEnabledKey) as? Bool) ?? false },
+            destination: { [defaults] in
+                let raw = defaults.string(forKey: syncDestinationKey) ?? ""
                 return SyncDestination(rawValue: raw) ?? .solennix
             }
         )

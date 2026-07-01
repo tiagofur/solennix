@@ -231,7 +231,7 @@ public struct EventShoppingListView: View {
                     .foregroundStyle(SolennixColors.text)
 
                 HStack(spacing: Spacing.sm) {
-                    Text(FeatureL10n.format("events.shopping.required_qty", "Necesario: %1$@ %2$@", formatQuantity(ingredient.quantityRequired), ingredient.unit ?? ""))
+                    Text(FeatureL10n.format("events.shopping.required_qty", "Necesario: %1$@ %2$@", formatQuantity(ingredient.quantityRequired), ingredient.unit))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
 

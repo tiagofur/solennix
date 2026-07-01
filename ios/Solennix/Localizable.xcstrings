@@ -1,7 +1,14 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@" : {
+
+    },
+    "•" : {
+
+    },
     "auth.unlock.prompt" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -18,6 +25,7 @@
       }
     },
     "common.action.cancel" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -34,6 +42,7 @@
       }
     },
     "common.action.done" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -49,71 +58,8 @@
         }
       }
     },
-    "keyboard.menu.help" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Solennix Help"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ayuda de Solennix"
-          }
-        }
-      }
-    },
-    "keyboard.menu.refresh" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Refresh"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Actualizar"
-          }
-        }
-      }
-    },
-    "keyboard.menu.search" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Buscar"
-          }
-        }
-      }
-    },
-    "keyboard.menu.settings" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Settings..."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajustes..."
-          }
-        }
-      }
-    },
     "intent.count.desc" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -130,6 +76,7 @@
       }
     },
     "intent.count.dialog.many_fmt.month" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -146,6 +93,7 @@
       }
     },
     "intent.count.dialog.many_fmt.today" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -162,6 +110,7 @@
       }
     },
     "intent.count.dialog.many_fmt.week" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -178,6 +127,7 @@
       }
     },
     "intent.count.dialog.none.month" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -194,6 +144,7 @@
       }
     },
     "intent.count.dialog.none.today" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -210,6 +161,7 @@
       }
     },
     "intent.count.dialog.none.week" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -226,6 +178,7 @@
       }
     },
     "intent.count.dialog.one.month" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -242,6 +195,7 @@
       }
     },
     "intent.count.dialog.one.today" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -258,6 +212,7 @@
       }
     },
     "intent.count.dialog.one.week" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -274,6 +229,7 @@
       }
     },
     "intent.count.param.period" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -290,6 +246,7 @@
       }
     },
     "intent.count.snippet.confirmed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -306,6 +263,7 @@
       }
     },
     "intent.count.snippet.event_plural" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -322,6 +280,7 @@
       }
     },
     "intent.count.snippet.event_singular" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -338,6 +297,7 @@
       }
     },
     "intent.count.snippet.quoted" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -354,6 +314,7 @@
       }
     },
     "intent.count.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -370,6 +331,7 @@
       }
     },
     "intent.dialog.pro_required" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -386,6 +348,7 @@
       }
     },
     "intent.lowstock.desc" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -402,6 +365,7 @@
       }
     },
     "intent.lowstock.dialog.many_fmt" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -417,23 +381,8 @@
         }
       }
     },
-    "intent.lowstock.dialog.one" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You have 1 item with low stock that needs attention."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tienes 1 item con stock bajo que necesita atención."
-          }
-        }
-      }
-    },
     "intent.lowstock.dialog.ok" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -445,6 +394,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Todo tu inventario está en orden. No hay items con stock bajo."
+          }
+        }
+      }
+    },
+    "intent.lowstock.dialog.one" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You have 1 item with low stock that needs attention."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tienes 1 item con stock bajo que necesita atención."
           }
         }
       }
@@ -514,6 +480,7 @@
       }
     },
     "intent.lowstock.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -530,6 +497,7 @@
       }
     },
     "intent.period.this_month" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -546,6 +514,7 @@
       }
     },
     "intent.period.this_week" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -578,6 +547,7 @@
       }
     },
     "intent.period.typename" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -594,6 +564,7 @@
       }
     },
     "intent.revenue.desc" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -610,6 +581,7 @@
       }
     },
     "intent.revenue.dialog.generated_fmt" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -626,6 +598,7 @@
       }
     },
     "intent.revenue.dialog.pending_suffix_fmt" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -690,6 +663,7 @@
       }
     },
     "intent.revenue.snippet.revenue_month_fmt" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -722,6 +696,7 @@
       }
     },
     "intent.revenue.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -733,6 +708,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ingresos del Mes"
+          }
+        }
+      }
+    },
+    "intent.shared.tomorrow" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tomorrow"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mañana"
           }
         }
       }
@@ -770,6 +762,7 @@
       }
     },
     "intent.today.desc" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -786,6 +779,7 @@
       }
     },
     "intent.today.dialog.free" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -802,6 +796,7 @@
       }
     },
     "intent.today.dialog.many_fmt" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -818,6 +813,7 @@
       }
     },
     "intent.today.dialog.one" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -834,6 +830,7 @@
       }
     },
     "intent.today.snippet.all_day" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -882,6 +879,7 @@
       }
     },
     "intent.today.snippet.no_location" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -898,6 +896,7 @@
       }
     },
     "intent.today.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -914,6 +913,7 @@
       }
     },
     "intent.upcoming.desc" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -930,6 +930,7 @@
       }
     },
     "intent.upcoming.dialog.count_fmt" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "variations" : {
@@ -970,6 +971,7 @@
       }
     },
     "intent.upcoming.dialog.empty" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -986,6 +988,7 @@
       }
     },
     "intent.upcoming.param.count" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1018,6 +1021,7 @@
       }
     },
     "intent.upcoming.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1033,21 +1037,85 @@
         }
       }
     },
-    "intent.shared.tomorrow" : {
+    "keyboard.menu.help" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tomorrow"
+            "value" : "Solennix Help"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mañana"
+            "value" : "Ayuda de Solennix"
           }
         }
       }
+    },
+    "keyboard.menu.refresh" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar"
+          }
+        }
+      }
+    },
+    "keyboard.menu.search" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar"
+          }
+        }
+      }
+    },
+    "keyboard.menu.settings" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings..."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes..."
+          }
+        }
+      }
+    },
+    "No se pudo verificar tu identidad" : {
+
+    },
+    "Sin conexion - Mostrando datos guardados" : {
+
+    },
+    "Solennix" : {
+
+    },
+    "SOLENNIX" : {
+
     }
   },
   "version" : "1.0"

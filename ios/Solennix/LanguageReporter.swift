@@ -100,7 +100,7 @@ final class LanguageReporter {
                 Locale.current.language.languageCode?.identifier ?? "es"
             },
             currentCurrencyProvider: {
-                Locale.current.currencyCode ?? "MXN"
+                Locale.current.currency?.identifier ?? "MXN"
             },
             report: { lang, currency in
                 try await authManager.updateProfile(
