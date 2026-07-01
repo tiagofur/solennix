@@ -1,7 +1,24 @@
 import Foundation
 import os.log
+import SolennixCore
 
 private let logger = Logger(subsystem: "com.solennix.app", category: "WidgetModels")
+
+// MARK: - Widget Auth State (extension-side reader)
+
+extension WidgetAuthState {
+    /// Reads the auth state from the shared App Group container.
+    ///
+    /// Defaults to `.signedOut` when the key is absent — a safe pre-login
+    /// default so a freshly installed widget renders signed-out and never a
+    /// previous user's stale data. The app writes this key on login/logout
+    /// (`WidgetDataSync.setAuthState`).
+    static var current: WidgetAuthState {
+        let raw = AppGroup.userDefaults.string(forKey: WidgetDataKey.authState)
+            ?? WidgetAuthState.signedOut.rawValue
+        return WidgetAuthState(rawValue: raw) ?? .signedOut
+    }
+}
 
 // MARK: - Widget Event
 

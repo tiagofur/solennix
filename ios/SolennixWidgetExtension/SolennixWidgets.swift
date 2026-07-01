@@ -35,4 +35,7 @@ enum WidgetDataKey {
     static let lastUpdated = "widget_last_updated"
     static let userPlan = "widget_user_plan"
     static let completedEvents = "completed_events"
+    /// Auth-state signal (mirrors `WidgetKey.authState` in the app target).
+    /// Lets the extension distinguish signed-out from empty data.
+    static let authState = "widget_auth_state"
 }

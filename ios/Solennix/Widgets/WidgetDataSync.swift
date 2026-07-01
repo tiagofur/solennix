@@ -17,6 +17,10 @@ private enum WidgetKey {
     static let lastUpdated    = "widget_last_updated"
     static let userPlan       = "widget_user_plan"
     static let completedEvents = "completed_events"
+    /// Auth-state signal (mirrors `WidgetDataKey.authState` in the widget
+    /// extension). Written here so the extension can distinguish signed-out
+    /// from empty data.
+    static let authState      = "widget_auth_state"
 }
 
 // MARK: - Widget Data Sync
@@ -98,6 +102,18 @@ final class WidgetDataSync {
         WidgetCenter.shared.reloadAllTimelines()
     }
 
+    // MARK: - Auth State
+
+    /// Writes the auth-state signal the widget extension reads via
+    /// `WidgetAuthState.current`. Call `.authenticated` on login and
+    /// `.signedOut` on logout (before `clearWidgetData()`). The extension uses
+    /// this to distinguish a signed-out user from an authenticated user whose
+    /// data has not loaded yet.
+    func setAuthState(_ state: WidgetAuthState) {
+        appGroup.set(state.rawValue, forKey: WidgetKey.authState)
+        appGroup.synchronize()
+    }
+
     // MARK: - Clear Widget Data
 
     func clearWidgetData() {
@@ -106,6 +122,9 @@ final class WidgetDataSync {
         appGroup.removeObject(forKey: WidgetKey.userPlan)
         appGroup.removeObject(forKey: WidgetKey.lastUpdated)
         appGroup.removeObject(forKey: WidgetKey.completedEvents)
+        // Intentionally NOT removing `authState`: callers write `.signedOut`
+        // before clearing data keys so the extension keeps rendering the
+        // signed-out state (rather than defaulting back through an absent key).
         appGroup.synchronize()
         reloadAllWidgets()
     }

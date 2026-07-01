@@ -195,6 +195,11 @@ struct SolennixApp: App {
                     // transitions that happen AFTER launch — matching Android parity.
                     if case .authenticated(let user) = newState {
                         Task {
+                            // Mark the widget extension as authenticated and force a
+                            // timeline reload so widgets leave the signed-out state
+                            // immediately on login.
+                            WidgetDataSync.shared.setAuthState(.authenticated)
+                            WidgetDataSync.shared.reloadAllWidgets()
                             await subscriptionManager.login(userID: user.id)
                             if user.plan != .basic {
                                 subscriptionManager.setBackendPremiumStatus(true)
@@ -368,16 +373,21 @@ struct SolennixApp: App {
         // 1. Clear SwiftData cache
         try? cacheManager?.clearAll()
 
-        // 2. Clear widget shared container and reload widget timelines so widgets
+        // 2. Mark widgets signed-out BEFORE clearing data keys so the extension
+        //    renders the signed-out state (not empty) on the next timeline reload.
+        //    clearWidgetData() intentionally preserves the authState key.
+        WidgetDataSync.shared.setAuthState(.signedOut)
+
+        // 3. Clear widget shared container and reload widget timelines so widgets
         //    show a logged-out / empty state immediately.
         WidgetDataSync.shared.clearWidgetData()
 
-        // 3. Cancel all pending local event reminders. Payment receipts that already
+        // 4. Cancel all pending local event reminders. Payment receipts that already
         //    fired are in Notification Center (delivered) and cannot be removed here
         //    without also removing the legitimate history — leave them as-is.
         NotificationManager.shared.cancelAllPendingNotifications()
 
-        // 4. Reset per-user UserDefaults keys.
+        // 5. Reset per-user UserDefaults keys.
         //    - hasSeenOnboarding: next user should see onboarding flow.
         //    - hasRequestedPushAuthorization: next user should be prompted for push.
         //    - pendingDeviceToken: stale token must not be registered for the next user.
@@ -388,11 +398,11 @@ struct SolennixApp: App {
         UserDefaults.standard.removeObject(forKey: "pendingDeviceToken")
         UserDefaults.standard.removeObject(forKey: "registeredDeviceToken")
 
-        // 5. Clear Core Spotlight index so the next user cannot search previous
+        // 6. Clear Core Spotlight index so the next user cannot search previous
         //    user's events, clients, or products from the system search.
         SpotlightIndexer.removeAll()
 
-        // 6. Invalidate persisted navigation state (ios-lifecycle PR-B / B4).
+        // 7. Invalidate persisted navigation state (ios-lifecycle PR-B / B4).
         //    @SceneStorage survives cold launches AND view teardown, so without
         //    an active clear the next user would land on the previous user's
         //    restored tab/section/screens. The deterministic guard is the session
