@@ -40,7 +40,20 @@
          </BuildableReference>
       </MacroExpansion>
       <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "BF146EFD0C048548551E57E8"
+               BuildableName = "SolennixWidgetExtensionTests.xctest"
+               BlueprintName = "SolennixWidgetExtensionTests"
+               ReferencedContainer = "container:Solennix.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
+      <CommandLineArguments>
+      </CommandLineArguments>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"

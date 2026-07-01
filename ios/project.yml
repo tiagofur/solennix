@@ -152,6 +152,25 @@ targets:
     dependencies:
       - target: Solennix
 
+  SolennixWidgetExtensionTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - SolennixWidgetExtensionTests
+      # An app-extension product is not linkable by a test bundle, so the
+      # widget data layer is compiled directly into this target (the @main
+      # bundle + widget views are intentionally excluded).
+      - path: SolennixWidgetExtension/WidgetSharedConstants.swift
+      - path: SolennixWidgetExtension/Models/WidgetModels.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.solennix.app.widgettests
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "5.9"
+    dependencies:
+      - package: SolennixCore
+
 schemes:
   Solennix:
     build:
@@ -168,6 +187,7 @@ schemes:
       targets:
         - SolennixTests
         - SolennixUITests
+        - SolennixWidgetExtensionTests
     profile:
       config: Release
     analyze:
@@ -182,3 +202,7 @@ schemes:
     run:
       config: Debug
       askForAppToLaunch: true
+    test:
+      config: Debug
+      targets:
+        - SolennixWidgetExtensionTests
