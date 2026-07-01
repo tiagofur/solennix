@@ -1,24 +1,27 @@
 import WidgetKit
 import SwiftUI
 import SolennixDesign
+import SolennixCore
 
 // MARK: - Timeline Provider
 
 struct UpcomingEventsProvider: TimelineProvider {
 
     func placeholder(in context: Context) -> UpcomingEventsEntry {
-        UpcomingEventsEntry(date: Date(), events: sampleEvents)
+        UpcomingEventsEntry(date: Date(), events: sampleEvents, decodeFailed: false)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (UpcomingEventsEntry) -> Void) {
-        let events = WidgetDataProvider.shared.getUpcomingEvents()
-        let entry = UpcomingEventsEntry(date: Date(), events: events.isEmpty ? sampleEvents : events)
+        // REQ-WP-02: do NOT mask emptiness with sample data — a signed-in user
+        // with zero events must see the real empty state, not fake previews.
+        let result = WidgetDataProvider.shared.loadUpcomingEvents()
+        let entry = UpcomingEventsEntry(date: Date(), events: result.events, decodeFailed: result.decodeFailed)
         completion(entry)
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<UpcomingEventsEntry>) -> Void) {
-        let events = WidgetDataProvider.shared.getUpcomingEvents()
-        let entry = UpcomingEventsEntry(date: Date(), events: events)
+        let result = WidgetDataProvider.shared.loadUpcomingEvents()
+        let entry = UpcomingEventsEntry(date: Date(), events: result.events, decodeFailed: result.decodeFailed)
 
         // Refresh every 15 minutes
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: Date()) ?? Date()
@@ -71,6 +74,8 @@ struct UpcomingEventsProvider: TimelineProvider {
 struct UpcomingEventsEntry: TimelineEntry {
     let date: Date
     let events: [WidgetEvent]
+    /// True when a payload existed but could not be decoded (→ `.error`).
+    let decodeFailed: Bool
 }
 
 // MARK: - Widget View
@@ -80,15 +85,28 @@ struct UpcomingEventsWidgetView: View {
     @Environment(\.widgetFamily) var family
 
     var body: some View {
-        switch family {
-        case .systemSmall:
-            smallWidget
-        case .systemMedium:
-            mediumWidget
-        case .systemLarge:
-            largeWidget
-        default:
-            smallWidget
+        // REQ-WP-01 / REQ-WP-02: short-circuit to the shared state surface for
+        // signed-out, decode-error, and empty. The Medium family previously
+        // rendered a blank rectangle here because its `if let events.first`
+        // had no else branch — routing empty (and the other states) to
+        // WidgetStateView fixes that (decision D10 / #3135).
+        if WidgetAuthState.current == .signedOut {
+            WidgetStateView(state: .signedOut)
+        } else if entry.decodeFailed {
+            WidgetStateView(state: .error)
+        } else if entry.events.isEmpty {
+            WidgetStateView(state: .empty, systemImage: "calendar.badge.plus")
+        } else {
+            switch family {
+            case .systemSmall:
+                smallWidget
+            case .systemMedium:
+                mediumWidget
+            case .systemLarge:
+                largeWidget
+            default:
+                smallWidget
+            }
         }
     }
 
@@ -418,17 +436,17 @@ private let previewSampleEvents: [WidgetEvent] = [
 #Preview("Small", as: .systemSmall) {
     UpcomingEventsWidget()
 } timeline: {
-    UpcomingEventsEntry(date: Date(), events: previewSampleEvents)
+    UpcomingEventsEntry(date: Date(), events: previewSampleEvents, decodeFailed: false)
 }
 
 #Preview("Medium", as: .systemMedium) {
     UpcomingEventsWidget()
 } timeline: {
-    UpcomingEventsEntry(date: Date(), events: previewSampleEvents)
+    UpcomingEventsEntry(date: Date(), events: previewSampleEvents, decodeFailed: false)
 }
 
 #Preview("Large", as: .systemLarge) {
     UpcomingEventsWidget()
 } timeline: {
-    UpcomingEventsEntry(date: Date(), events: previewSampleEvents)
+    UpcomingEventsEntry(date: Date(), events: previewSampleEvents, decodeFailed: false)
 }
