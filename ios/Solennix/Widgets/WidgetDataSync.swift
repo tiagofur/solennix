@@ -11,12 +11,18 @@ private let logger = Logger(subsystem: "com.solennix.app", category: "WidgetData
 // Mirror of WidgetDataKey in SolennixWidgetExtension. Both targets share the
 // same App Group container, so every key used to write/clear data here MUST
 // match the constant used in the widget extension. Add new keys to BOTH enums.
-private enum WidgetKey {
+// `internal` (not private) so the app test target can lock the literals via
+// `@testable import Solennix` (cross-target key-parity, REQ-WDS-09).
+enum WidgetKey {
     static let upcomingEvents = "widget_upcoming_events"
     static let kpis           = "widget_kpis"
     static let lastUpdated    = "widget_last_updated"
     static let userPlan       = "widget_user_plan"
     static let completedEvents = "completed_events"
+    /// Auth-state signal (mirrors `WidgetDataKey.authState` in the widget
+    /// extension). Written here so the extension can distinguish signed-out
+    /// from empty data.
+    static let authState      = "widget_auth_state"
 }
 
 // MARK: - Widget Data Sync
@@ -98,6 +104,18 @@ final class WidgetDataSync {
         WidgetCenter.shared.reloadAllTimelines()
     }
 
+    // MARK: - Auth State
+
+    /// Writes the auth-state signal the widget extension reads via
+    /// `WidgetAuthState.current`. Call `.authenticated` on login and
+    /// `.signedOut` on logout (before `clearWidgetData()`). The extension uses
+    /// this to distinguish a signed-out user from an authenticated user whose
+    /// data has not loaded yet.
+    func setAuthState(_ state: WidgetAuthState) {
+        appGroup.set(state.rawValue, forKey: WidgetKey.authState)
+        appGroup.synchronize()
+    }
+
     // MARK: - Clear Widget Data
 
     func clearWidgetData() {
@@ -106,6 +124,9 @@ final class WidgetDataSync {
         appGroup.removeObject(forKey: WidgetKey.userPlan)
         appGroup.removeObject(forKey: WidgetKey.lastUpdated)
         appGroup.removeObject(forKey: WidgetKey.completedEvents)
+        // Intentionally NOT removing `authState`: callers write `.signedOut`
+        // before clearing data keys so the extension keeps rendering the
+        // signed-out state (rather than defaulting back through an absent key).
         appGroup.synchronize()
         reloadAllWidgets()
     }
@@ -177,21 +198,26 @@ struct WidgetKPIData: Codable {
     }
 }
 
-// MARK: - Widget Sync Extension for ViewModels
+// MARK: - Widget Syncing Protocol
 
-/// Protocol for ViewModels that can sync data to widgets
-protocol WidgetSyncable {
-    func syncToWidget()
+/// Concrete contract for syncing app data to the widget extension.
+///
+/// `WidgetSyncCoordinator` holds a `WidgetSyncing` (injectable, defaults to
+/// `WidgetDataSync.shared`) so the coordinator can be unit-tested with a mock
+/// without touching the App Group container or WidgetKit.
+///
+/// Replaces the dead, never-adopted `WidgetSyncable` protocol.
+/// Amends spec REQ-WDS-05.
+@MainActor
+protocol WidgetSyncing: AnyObject {
+    func syncUpcomingEvents(_ events: [WidgetEventData])
+    func syncKPIs(_ kpis: WidgetKPIData)
+    func syncUserPlan(_ planRawValue: String?)
+    func setAuthState(_ state: WidgetAuthState)
+    func clearWidgetData()
+    func reloadEventWidgets()
+    func reloadKPIWidgets()
 }
 
-// Example usage in DashboardViewModel:
-// extension DashboardViewModel: WidgetSyncable {
-//     func syncToWidget() {
-//         let kpis = WidgetKPIData(
-//             monthlyRevenue: self.monthlyRevenue,
-//             eventsThisMonth: self.eventsThisMonth,
-//             // ... etc
-//         )
-//         WidgetDataSync.shared.syncKPIs(kpis)
-//     }
-// }
+// WidgetDataSync already implements every method of `WidgetSyncing`.
+extension WidgetDataSync: WidgetSyncing {}
