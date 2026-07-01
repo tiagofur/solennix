@@ -175,6 +175,9 @@ struct WidgetKPIData: Codable {
     let pendingPayments: Double
     let confirmedEvents: Int
     let quotedEvents: Int
+    /// Optional trend seam (decision #3134). `nil` ships a neutral render;
+    /// a future backend trend wires here with no UI churn.
+    let revenueTrend: WidgetTrend?
 
     /// Create from dashboard data
     static func from(
@@ -184,7 +187,8 @@ struct WidgetKPIData: Codable {
         lowStockCount: Int,
         pendingPayments: Double,
         confirmedEvents: Int,
-        quotedEvents: Int
+        quotedEvents: Int,
+        revenueTrend: WidgetTrend? = nil
     ) -> WidgetKPIData {
         WidgetKPIData(
             monthlyRevenue: monthlyRevenue,
@@ -193,7 +197,8 @@ struct WidgetKPIData: Codable {
             lowStockCount: lowStockCount,
             pendingPayments: pendingPayments,
             confirmedEvents: confirmedEvents,
-            quotedEvents: quotedEvents
+            quotedEvents: quotedEvents,
+            revenueTrend: revenueTrend
         )
     }
 }

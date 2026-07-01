@@ -1,24 +1,25 @@
 import WidgetKit
 import SwiftUI
 import SolennixDesign
+import SolennixCore
 
 // MARK: - Timeline Provider
 
 struct KPIProvider: TimelineProvider {
 
     func placeholder(in context: Context) -> KPIEntry {
-        KPIEntry(date: Date(), kpis: sampleKPIs)
+        KPIEntry(date: Date(), kpis: sampleKPIs, decodeFailed: false, hasData: true)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (KPIEntry) -> Void) {
-        let kpis = WidgetDataProvider.shared.getKPIs()
-        let entry = KPIEntry(date: Date(), kpis: kpis)
+        let result = WidgetDataProvider.shared.loadKPIs()
+        let entry = KPIEntry(date: Date(), kpis: result.kpis, decodeFailed: result.decodeFailed, hasData: result.hasData)
         completion(entry)
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<KPIEntry>) -> Void) {
-        let kpis = WidgetDataProvider.shared.getKPIs()
-        let entry = KPIEntry(date: Date(), kpis: kpis)
+        let result = WidgetDataProvider.shared.loadKPIs()
+        let entry = KPIEntry(date: Date(), kpis: result.kpis, decodeFailed: result.decodeFailed, hasData: result.hasData)
 
         // Refresh every 30 minutes
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date()) ?? Date()
@@ -44,6 +45,10 @@ struct KPIProvider: TimelineProvider {
 struct KPIEntry: TimelineEntry {
     let date: Date
     let kpis: WidgetKPIs
+    /// True when a payload existed but could not be decoded (→ `.error`).
+    let decodeFailed: Bool
+    /// True when any KPI payload exists in the App Group (drives `.empty`).
+    let hasData: Bool
 }
 
 // MARK: - Widget View
@@ -57,13 +62,24 @@ struct KPIWidgetView: View {
     private var cappedRevenueFontSize: CGFloat { min(revenueFontSize, 36) }
 
     var body: some View {
-        switch family {
-        case .systemSmall:
-            smallWidget
-        case .systemMedium:
-            mediumWidget
-        default:
-            smallWidget
+        // REQ-WP-01: every family renders the four states. signed-out and a
+        // decode failure short-circuit to the shared state surface before the
+        // family switch (decision D10 / #3135).
+        if WidgetAuthState.current == .signedOut {
+            WidgetStateView(state: .signedOut)
+        } else if entry.decodeFailed {
+            WidgetStateView(state: .error)
+        } else if !entry.hasData {
+            WidgetStateView(state: .empty)
+        } else {
+            switch family {
+            case .systemSmall:
+                smallWidget
+            case .systemMedium:
+                mediumWidget
+            default:
+                smallWidget
+            }
         }
     }
 
@@ -103,16 +119,10 @@ struct KPIWidgetView: View {
 
             Spacer()
 
-            // Trend indicator (mock)
-            HStack(spacing: 2) {
-                Image(systemName: "arrow.up.right")
-                    .font(.caption2)
-                    .foregroundStyle(.green)
-                Text("+12%")
-                    .font(.caption2)
-                    .fontWeight(.medium)
-                    .foregroundStyle(.green)
-            }
+            // Trend indicator (decision #3134 / REQ-WP-03): neutral by default.
+            // Renders only when the backend supplies a real `revenueTrend` —
+            // never a fabricated "+12%" (NFR-WP-01).
+            trendIndicator
         }
         .padding()
         .containerBackground(.fill.tertiary, for: .widget)
@@ -196,6 +206,54 @@ struct KPIWidgetView: View {
         .containerBackground(.fill.tertiary, for: .widget)
     }
 
+    // MARK: - Trend (neutral seam)
+
+    /// Renders the trend glyph + percentage when the backend provides one, or a
+    /// neutral em dash when it does not (decision #3134, REQ-WP-03).
+    @ViewBuilder
+    private var trendIndicator: some View {
+        if let trend = entry.kpis.revenueTrend {
+            HStack(spacing: 2) {
+                Image(systemName: trendArrow(trend.direction))
+                    .font(.caption2)
+                Text(formattedPercentage(trend))
+                    .font(.caption2)
+                    .fontWeight(.medium)
+            }
+            .foregroundStyle(trendColor(trend.direction))
+        } else {
+            Text(verbatim: "—")
+                .font(.caption2)
+                .fontWeight(.medium)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func trendArrow(_ direction: WidgetTrend.Direction) -> String {
+        switch direction {
+        case .up: return "arrow.up.right"
+        case .down: return "arrow.down.right"
+        case .flat: return "arrow.right"
+        }
+    }
+
+    private func trendColor(_ direction: WidgetTrend.Direction) -> Color {
+        switch direction {
+        case .up: return .green
+        case .down: return .red
+        case .flat: return .secondary
+        }
+    }
+
+    private func formattedPercentage(_ trend: WidgetTrend) -> String {
+        let value = Int(trend.percentage.rounded())
+        switch trend.direction {
+        case .up: return "+\(value)%"
+        case .down: return "-\(value)%"
+        case .flat: return "\(value)%"
+        }
+    }
+
     // MARK: - KPI Row
 
     private func kpiRow(icon: String, iconColor: Color, label: String, value: String) -> some View {
@@ -245,7 +303,7 @@ struct KPIWidget: Widget {
         pendingPayments: 35000,
         confirmedEvents: 6,
         quotedEvents: 4
-    ))
+    ), decodeFailed: false, hasData: true)
 }
 
 #Preview("Medium KPI", as: .systemMedium) {
@@ -259,5 +317,5 @@ struct KPIWidget: Widget {
         pendingPayments: 35000,
         confirmedEvents: 6,
         quotedEvents: 4
-    ))
+    ), decodeFailed: false, hasData: true)
 }
