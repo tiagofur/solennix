@@ -116,6 +116,7 @@ final class BackgroundTaskManager {
             try? cacheManager?.cacheClients(clients)
             try? cacheManager?.cacheProducts(products)
             try? cacheManager?.cacheInventoryItems(inventory)
+            try? cacheManager?.cachePayments(payments)
 
             // Update Spotlight index
             let clientMap = Dictionary(uniqueKeysWithValues: clients.map { ($0.id, $0.name) })
@@ -123,63 +124,10 @@ final class BackgroundTaskManager {
             SpotlightIndexer.indexEvents(events, clientMap: clientMap)
             SpotlightIndexer.indexProducts(products)
 
-            // Update widget data
-            let widgetEvents = events
-                .filter { $0.status == .confirmed || $0.status == .quoted }
-                .prefix(10)
-                .map { event in
-                    WidgetEventData.from(
-                        event: event,
-                        clientName: clientMap[event.clientId] ?? "Cliente"
-                    )
-                }
-            WidgetDataSync.shared.syncUpcomingEvents(Array(widgetEvents))
-
-            // Sync KPIs for widget
-            let now = Date()
-            let calendar = Calendar.current
-            let eventsThisMonth = events.filter {
-                guard let date = ISO8601DateFormatter().date(from: $0.eventDate) else { return false }
-                return calendar.isDate(date, equalTo: now, toGranularity: .month)
-            }
-            let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
-            let eventsThisWeek = events.filter {
-                guard let date = ISO8601DateFormatter().date(from: $0.eventDate) else { return false }
-                return date >= startOfWeek && date <= now.addingTimeInterval(7 * 24 * 3600)
-            }
-            let lowStockCount = inventory.filter { $0.minimumStock > 0 && $0.currentStock < $0.minimumStock }.count
-            let monthlyRevenue = eventsThisMonth
-                .filter { $0.status == .completed }
-                .reduce(0.0) { $0 + $1.totalAmount }
-
-            // Calculate pending payments for confirmed events in the next 7 days
-            let startOfToday = calendar.startOfDay(for: now)
-            let next7Days = calendar.date(byAdding: .day, value: 7, to: startOfToday) ?? now
-            let paymentsByEventId = Dictionary(grouping: payments, by: \.eventId)
-
-            let pendingPayments = events
-                .filter { event in
-                    guard event.status == .confirmed else { return false }
-                    guard let eventDate = ISO8601DateFormatter().date(from: event.eventDate) else { return false }
-                    let normalizedEventDate = calendar.startOfDay(for: eventDate)
-                    return normalizedEventDate >= startOfToday && normalizedEventDate <= next7Days
-                }
-                .reduce(0.0) { total, event in
-                    let totalPaid = paymentsByEventId[event.id, default: []].reduce(0) { $0 + $1.amount }
-                    let outstanding = max(event.totalAmount - totalPaid, 0)
-                    return total + outstanding
-                }
-
-            let kpis = WidgetKPIData.from(
-                monthlyRevenue: monthlyRevenue,
-                eventsThisMonth: eventsThisMonth.count,
-                eventsThisWeek: eventsThisWeek.count,
-                lowStockCount: lowStockCount,
-                pendingPayments: pendingPayments,
-                confirmedEvents: events.filter { $0.status == .confirmed }.count,
-                quotedEvents: events.filter { $0.status == .quoted }.count
-            )
-            WidgetDataSync.shared.syncKPIs(kpis)
+            // Update widget data through the shared coordinator (single DRY
+            // source for widget payload derivation — D3). It reads from the
+            // cache populated above, so this stays network-fresh.
+            WidgetSyncCoordinator.shared.syncAll()
 
             return true
         } catch {

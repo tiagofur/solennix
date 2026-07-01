@@ -147,9 +147,24 @@ struct SolennixApp: App {
                 .task {
                     // Initialize CacheManager with the model context
                     if cacheManager == nil {
-                        cacheManager = CacheManager(
+                        let cache = CacheManager(
                             modelContext: modelContainer.mainContext
                         )
+                        cacheManager = cache
+                        // Start the widget sync coordinator now that the cache
+                        // is available. CRUD/foreground/locale triggers keep
+                        // widget timelines fresh from the local cache
+                        // (REQ-WDS-03 amended). Idempotent on re-entry.
+                        WidgetSyncCoordinator.shared.start(
+                            cache: cache,
+                            isAuthorized: { [authManager] in authManager.isAuthenticated }
+                        )
+                        // Cold-launch sync so widgets reflect cached data
+                        // immediately (the scene-activated trigger may race
+                        // coordinator registration).
+                        if authManager.isAuthenticated {
+                            WidgetSyncCoordinator.shared.syncAll()
+                        }
                     }
                 }
                 .environment(cacheManager)
