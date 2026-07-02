@@ -145,7 +145,6 @@ fun EventsScreen(
     var longPressedDate by remember { mutableStateOf<LocalDate?>(null) }
     var showManageUnavailableSheet by remember { mutableStateOf(false) }
     var showAddRangeDialog by remember { mutableStateOf(false) }
-    var isExportingCalendar by remember { mutableStateOf(false) }
 
     // Sheets + dialogs for row actions + sort
     var showSortSheet by remember { mutableStateOf(false) }
@@ -205,27 +204,6 @@ fun EventsScreen(
                     }
                     // Calendar-specific actions
                     if (viewMode == EventViewMode.CALENDAR) {
-                        IconButton(
-                            onClick = {
-                                // Export calendar functionality
-                                isExportingCalendar = true
-                                // TODO: Implement calendar export
-                                isExportingCalendar = false
-                            },
-                            enabled = !isExportingCalendar
-                        ) {
-                            if (isExportingCalendar) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(Spacing.xl),
-                                    strokeWidth = Spacing.xs
-                                )
-                            } else {
-                                Icon(
-                                    Icons.Default.IosShare,
-                                    contentDescription = "Exportar calendario"
-                                )
-                            }
-                        }
                         IconButton(onClick = {
                             showManageUnavailableSheet = true
                         }) {
@@ -392,7 +370,7 @@ fun EventsScreen(
         BlockDateDialog(
             date = longPressedDate!!,
             onConfirm = { reason ->
-                // TODO: Implement toggleDateBlock in viewModel
+                viewModel.toggleDateBlock(longPressedDate!!, reason)
                 showBlockDialog = false
                 longPressedDate = null
             },
@@ -410,7 +388,7 @@ fun EventsScreen(
             date = longPressedDate!!,
             reason = unavailableDate?.reason,
             onConfirm = {
-                // TODO: Implement toggleDateBlock in viewModel
+                viewModel.toggleDateBlock(longPressedDate!!)
                 showUnblockDialog = false
                 longPressedDate = null
             },
@@ -427,7 +405,7 @@ fun EventsScreen(
             unavailableDates = uiState.unavailableDates,
             onDismiss = { showManageUnavailableSheet = false },
             onDelete = { id ->
-                // TODO: Implement deleteUnavailableDate in viewModel
+                viewModel.deleteUnavailableDate(id)
             },
             onAddRange = { showAddRangeDialog = true }
         )
@@ -437,7 +415,7 @@ fun EventsScreen(
     if (showAddRangeDialog) {
         AddDateRangeDialog(
             onConfirm = { startDate, endDate, reason ->
-                // TODO: Implement blockDateRange in viewModel
+                viewModel.blockDateRange(startDate, endDate, reason)
                 showAddRangeDialog = false
             },
             onDismiss = { showAddRangeDialog = false }
