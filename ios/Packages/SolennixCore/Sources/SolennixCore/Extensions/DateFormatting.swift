@@ -151,6 +151,50 @@ extension Date {
         serverDayFormatter.date(from: String(dateString.prefix(10)))
     }
 
+    // MARK: - Server day parse formatter (LOCAL — widget display contract)
+
+    /// Parses a `yyyy-MM-dd` string (optionally with a trailing time component)
+    /// into a `Date` anchored at **midnight in the given timezone** (defaults to
+    /// the device's current timezone).
+    ///
+    /// **`fromServerDayLocal` vs `fromServerDay`** — the two helpers look alike
+    /// but anchor to DIFFERENT midnights, and that difference is load-bearing:
+    ///
+    /// - `fromServerDay` anchors to **UTC midnight**. Pair it with UTC display
+    ///   formatters (e.g. `formattedServerDay`). The in-app surfaces
+    ///   (`DashboardViewModel`, `PendingEventsViewModel`) use this UTC contract
+    ///   end-to-end so date math is stable regardless of device timezone.
+    /// - `fromServerDayLocal` anchors to **LOCAL midnight**. Pair it with
+    ///   `Calendar.current` / local display formatters. The widget is a
+    ///   LOCAL-display surface: it renders `eventDate` via `Calendar.current`
+    ///   (`WidgetModels.formattedDate`), so a UTC-midnight anchor shifted the
+    ///   displayed day backward by one for users west of UTC (hotfix #713).
+    ///
+    /// **Never** swap one for the other at a call site: parse timezone MUST
+    /// match the display timezone, or the calendar day drifts by the offset.
+    ///
+    /// The timezone is resolved at call time (not captured in a cached static
+    /// formatter) so a runtime timezone change is honoured — `WidgetSyncCoordinator`
+    /// re-syncs on `NSLocale.currentLocaleDidChangeNotification`.
+    ///
+    /// - Parameters:
+    ///   - serverDay: A `yyyy-MM-dd` server string (a trailing time component is
+    ///     stripped via `.prefix(10)` for tolerance of full-ISO inputs).
+    ///   - timeZone: Timezone to anchor the midnight. Defaults to
+    ///     `TimeZone.current`. Exposed so tests can pin extreme offsets
+    ///     (UTC-12 / UTC / UTC+14) and catch the off-by-one deterministically
+    ///     instead of relying on the test host's timezone.
+    public static func fromServerDayLocal(
+        _ serverDay: String,
+        timeZone: TimeZone = .current
+    ) -> Date? {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = timeZone
+        return formatter.date(from: String(serverDay.prefix(10)))
+    }
+
     // MARK: - Server day display formatter (UTC — must match parse timezone)
 
     /// UTC formatter for rendering a `Date` that was produced by `fromServerDay`

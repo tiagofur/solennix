@@ -81,6 +81,40 @@ final class WidgetSyncCoordinatorTests: XCTestCase {
                        "pendingPayments must subtract cached payments (1000 - 300)")
     }
 
+    /// Regression for #714: production `event.eventDate` is a date-only
+    /// `yyyy-MM-dd` string. The buggy `ISO8601DateFormatter().date(from:)`
+    /// (default `.withInternetDateTime`) returned `nil` for bare dates, so the
+    /// silent `guard … else { return false }` dropped EVERY event from
+    /// `eventsThisMonth` / `eventsThisWeek` / `pendingPayments` → those KPIs
+    /// rendered 0. The value test above used full-ISO fixtures and so never
+    /// caught it; this one pins date-only strings.
+    func testDeriveKPIsParsesDateOnlyEventDateStrings() throws {
+        let fixture = makeCoordinatorWithDateOnlyEvents(authenticated: true)
+        fixture.coordinator.syncAll()
+
+        let kpis = try XCTUnwrap(fixture.mock.kpisCalls.first)
+
+        // Status counts have NO date filter → worked before and after the fix.
+        XCTAssertEqual(kpis.confirmedEvents, 2, "two .confirmed events (e_a, e_b)")
+        XCTAssertEqual(kpis.quotedEvents, 1, "one .quoted event (e_quoted)")
+
+        // Date-filtered KPIs were structurally 0 with the bug; now non-zero.
+        XCTAssertGreaterThan(kpis.eventsThisMonth, 0,
+            "eventsThisMonth was 0 when date-only strings failed to parse")
+        XCTAssertGreaterThan(kpis.eventsThisWeek, 0,
+            "eventsThisWeek was 0 when date-only strings failed to parse")
+
+        // e_completed is .completed and dated today (this month) → its amount is
+        // the month's revenue (monthlyRevenue sums only .completed events).
+        XCTAssertEqual(kpis.monthlyRevenue, 500, accuracy: 0.001,
+            "monthlyRevenue must sum this-month .completed events")
+
+        // e_a (today, 1000) + e_b (+3d, 2000), both .confirmed in the 7-day
+        // window with no payments → pendingPayments = 3000.
+        XCTAssertEqual(kpis.pendingPayments, 3000, accuracy: 0.001,
+            "confirmed events in the 7-day window must surface their full amount")
+    }
+
     // MARK: - WidgetEventData date parsing (hotfix #712)
 
     /// Regression for #712: `event.eventDate` (a `yyyy-MM-dd` server string) MUST
@@ -196,6 +230,42 @@ final class WidgetSyncCoordinatorTests: XCTestCase {
                     createdAt: "2026-01-01T00:00:00Z")
         ])
         return cache
+    }
+
+    private func makeCoordinatorWithDateOnlyEvents(authenticated: Bool) -> CoordinatorFixture {
+        let cache = try! makeCacheManagerWithDateOnlyEvents()
+        let mock = MockWidgetSyncing()
+        let coordinator = WidgetSyncCoordinator(sync: mock)
+        coordinator.start(cache: cache, isAuthorized: { authenticated })
+        return CoordinatorFixture(coordinator: coordinator, mock: mock, cache: cache)
+    }
+
+    /// Production-shaped fixture: `event.eventDate` is a date-only `yyyy-MM-dd`
+    /// string (LOCAL-anchored, the shape `Date.fromServerDayLocal` parses and
+    /// the shape the buggy `ISO8601DateFormatter()` returned nil for).
+    private func makeCacheManagerWithDateOnlyEvents() throws -> CacheManager {
+        let cache = try makeCacheManager()
+        try cache.cacheClients([
+            Client(id: "c_1", userId: "u_1", name: "Alfa", phone: "55",
+                   createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-02T00:00:00Z")
+        ])
+        try cache.cacheEvents([
+            makeEvent(id: "e_a",         clientId: "c_1", status: .confirmed, totalAmount: 1000, eventDate: localDayString(offset: 0)),
+            makeEvent(id: "e_b",         clientId: "c_1", status: .confirmed, totalAmount: 2000, eventDate: localDayString(offset: 3)),
+            makeEvent(id: "e_completed", clientId: "c_1", status: .completed, totalAmount: 500,  eventDate: localDayString(offset: 0)),
+            makeEvent(id: "e_quoted",    clientId: "c_1", status: .quoted,    totalAmount: 3000, eventDate: localDayString(offset: 10))
+        ])
+        return cache
+    }
+
+    /// `yyyy-MM-dd` string for `offset` days from now in the LOCAL timezone.
+    private func localDayString(offset: Int) -> String {
+        let dayFormatter = DateFormatter()
+        dayFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dayFormatter.dateFormat = "yyyy-MM-dd"
+        dayFormatter.timeZone = .current
+        let date = Calendar.current.date(byAdding: .day, value: offset, to: Date())!
+        return dayFormatter.string(from: date)
     }
 
     private func makeCacheManager() throws -> CacheManager {
