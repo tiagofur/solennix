@@ -279,14 +279,29 @@ public final class EventDetailViewModel {
             let updated: Event = try await apiClient.put(Endpoint.event(eventId), body: body)
             event = updated
             HapticsHelper.play(.success)
-            
+
             NotificationCenter.default.post(name: .solennixEventUpdated, object: nil)
 
             // Actualizar la Live Activity si está activa
             await updateLiveActivityStatus()
         } catch {
             HapticsHelper.play(.error)
-            errorMessage = tr("events.detail.error.change_status", "Error al cambiar el estado")
+            // Check if this is a balance pending error from backend
+            // Format: "Cannot complete: $XXX.XX remaining"
+            if let error = error as? APIError,
+               let description = error.errorDescription,
+               description.contains("Cannot complete:") {
+                // Extract amount from "Cannot complete: $XXX.XX remaining"
+                if let dollarIndex = description.firstIndex(of: "$"),
+                   let spaceIndex = description[dollarIndex...].firstIndex(of: " ") {
+                    let amount = String(description[description.index(after: dollarIndex)..<spaceIndex])
+                    errorMessage = String(format: tr("events.detail.error.balance_pending", "El evento tiene un saldo pendiente de $%@ para completar"), locale: FeatureL10n.locale, amount)
+                } else {
+                    errorMessage = description
+                }
+            } else {
+                errorMessage = tr("events.detail.error.change_status", "Error al cambiar el estado")
+            }
         }
     }
 

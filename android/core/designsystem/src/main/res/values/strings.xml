@@ -74,4 +74,7 @@
     <string name="error_banner_load_message">No se pudieron cargar los datos. Reintentá.</string>
     <string name="cd_error_banner">Banner de error</string>
 
+    <!-- Events -->
+    <string name="events_error_balance_pending">El evento tiene un saldo pendiente de $%1$s para completar</string>
+
 </resources>

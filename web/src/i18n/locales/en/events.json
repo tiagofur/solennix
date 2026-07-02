@@ -96,6 +96,7 @@
     "error_delete": "Error deleting the event.",
     "error_save": "Error saving the event. Please try again.",
     "error_status_update": "Error updating event status.",
+    "error_balance_pending": "Event has a pending balance of ${{amount}} to complete",
     "steps": {
       "general": "General Information",
       "products": "Products",

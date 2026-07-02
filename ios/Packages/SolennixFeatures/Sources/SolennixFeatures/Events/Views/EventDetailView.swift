@@ -17,6 +17,7 @@ public struct EventDetailView: View {
     @State private var duplicateViewModel: EventFormViewModel?
     @State private var showClientPortalSheet = false
     @State private var duplicateHapticTrigger: Int = 0
+    @State private var showBalanceAlert = false
     @Environment(AuthManager.self) private var authManager
     @Environment(ToastManager.self) private var toastManager
     @Environment(\.dismiss) private var dismiss
@@ -54,28 +55,7 @@ public struct EventDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    NavigationLink(value: Route.eventForm(id: eventId)) {
-                        Label(tr("events.detail.action.edit", "Editar"), systemImage: "pencil")
-                    }
-
-                    Button {
-                        duplicateEvent()
-                    } label: {
-                        Label(tr("events.detail.action.duplicate", "Duplicar evento"), systemImage: "doc.on.doc")
-                    }
-
-                    Divider()
-
-                    Button(role: .destructive) {
-                        viewModel.showDeleteConfirm = true
-                    } label: {
-                        Label(tr("events.detail.action.delete", "Eliminar evento"), systemImage: "trash")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                        .accessibilityLabel(tr("events.detail.action.more", "Acciones del evento"))
-                }
+                eventMenu
             }
         }
         .confirmationDialog(
@@ -84,11 +64,22 @@ public struct EventDetailView: View {
         ) {
             Button(tr("events.detail.status.quoted", "Cotizado")) { Task { await viewModel.changeStatus(.quoted, eventId: eventId) } }
             Button(tr("events.detail.status.confirmed", "Confirmado")) { Task { await viewModel.changeStatus(.confirmed, eventId: eventId) } }
-            Button(tr("events.detail.status.completed", "Completado")) { Task { await viewModel.changeStatus(.completed, eventId: eventId) } }
+            Button(tr("events.detail.status.completed", "Completado")) {
+                if viewModel.remaining > 0.01 {
+                    showBalanceAlert = true
+                } else {
+                    Task { await viewModel.changeStatus(.completed, eventId: eventId) }
+                }
+            }
             Button(tr("events.detail.status.cancelled", "Cancelado"), role: .destructive) { Task { await viewModel.changeStatus(.cancelled, eventId: eventId) } }
             Button(tr("events.form.cancel", "Cancelar"), role: .cancel) {}
         } message: {
             Text(tr("events.detail.status.change_message", "Selecciona el nuevo estado del evento"))
+        }
+        .alert(tr("events.detail.status.completed", "Completado"), isPresented: $showBalanceAlert) {
+            Button(tr("events.form.ok", "OK")) { }
+        } message: {
+            Text(String(format: tr("events.detail.error.balance_pending", "El evento tiene un saldo pendiente de $%@ para completar"), locale: FeatureL10n.locale, String(format: "%.2f", viewModel.remaining)))
         }
         .confirmationDialog(
             tr("events.detail.delete.title", "Eliminar evento"),
@@ -124,6 +115,33 @@ public struct EventDetailView: View {
             ClientPortalShareSheet(apiClient: apiClient, eventId: eventId)
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
+        }
+    }
+
+    // MARK: - Toolbar Menu
+
+    private var eventMenu: some View {
+        Menu {
+            NavigationLink(value: Route.eventForm(id: eventId)) {
+                Label(tr("events.detail.action.edit", "Editar"), systemImage: "pencil")
+            }
+
+            Button {
+                duplicateEvent()
+            } label: {
+                Label(tr("events.detail.action.duplicate", "Duplicar evento"), systemImage: "doc.on.doc")
+            }
+
+            Divider()
+
+            Button(role: .destructive) {
+                viewModel.showDeleteConfirm = true
+            } label: {
+                Label(tr("events.detail.action.delete", "Eliminar evento"), systemImage: "trash")
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+                .accessibilityLabel(tr("events.detail.action.more", "Acciones del evento"))
         }
     }
 
