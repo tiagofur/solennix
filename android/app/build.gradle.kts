@@ -84,7 +84,7 @@ android {
     defaultConfig {
         applicationId = "com.solennix.app"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 9
         versionName = "1.3.1"
 
