@@ -139,6 +139,67 @@ class EventFormViewModelTest {
     }
 
     @Test
+    fun `new event seeds contract defaults from user profile`() = runTest {
+        // Override the relaxed mock to return a user with non-default contract
+        // settings. Verifies the form honors Settings instead of 50/7/50.
+        every { authManager.currentUser } returns MutableStateFlow(
+            User(
+                id = "user-1",
+                email = "a@b.com",
+                name = "Juan Perez",
+                plan = Plan.BASIC,
+                defaultDepositPercent = 30.0,
+                defaultCancellationDays = 5.0,
+                defaultRefundPercent = 80.0
+            )
+        )
+
+        val vm = EventFormViewModel(
+            appContext,
+            eventRepository,
+            clientRepository,
+            productRepository,
+            inventoryRepository,
+            staffRepository,
+            staffTeamRepository,
+            apiService,
+            planLimitsManager,
+            authManager,
+            SavedStateHandle()
+        )
+
+        advanceUntilIdle()
+
+        assertEquals("30.0", vm.depositPercent)
+        assertEquals("5.0", vm.cancellationDays)
+        assertEquals("80.0", vm.refundPercent)
+    }
+
+    @Test
+    fun `new event falls back to built-in defaults when user profile is empty`() = runTest {
+        // Default setUp mock: User with null contract defaults.
+        val vm = EventFormViewModel(
+            appContext,
+            eventRepository,
+            clientRepository,
+            productRepository,
+            inventoryRepository,
+            staffRepository,
+            staffTeamRepository,
+            apiService,
+            planLimitsManager,
+            authManager,
+            SavedStateHandle()
+        )
+
+        advanceUntilIdle()
+
+        assertEquals("50.0", vm.depositPercent)
+        assertEquals("7.0", vm.cancellationDays)
+        assertEquals("50.0", vm.refundPercent)
+    }
+
+    @Test
     fun `addProduct merges quantity for same product`() = runTest {
         val vm = EventFormViewModel(
             appContext,
