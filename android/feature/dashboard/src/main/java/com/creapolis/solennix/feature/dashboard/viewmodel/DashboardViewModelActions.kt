@@ -40,7 +40,7 @@ fun DashboardViewModel.updateEventStatus(eventId: String, newStatus: EventStatus
             val balanceMatch = Regex("Cannot complete: \\$([\\d,]+\\.?\\d*) remaining").find(message)
             if (balanceMatch != null) {
                 val amount = balanceMatch.groupValues[1]
-                _transientMessage.value = "No puedes completar: $$amount pendiente"
+                _transientMessage.value = tr(R.string.events_error_balance_pending, amount)
             } else {
                 _transientMessage.value = tr(R.string.dashboard_error_status_change_failed)
             }

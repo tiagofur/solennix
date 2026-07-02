@@ -100,7 +100,7 @@ public struct EventDetailView: View {
         .alert(tr("events.detail.status.completed", "Completado"), isPresented: $showBalanceAlert) {
             Button(tr("events.form.ok", "OK")) { }
         } message: {
-            Text(tr("events.detail.status.balance_pending_message", "El evento tiene $%.2f pendiente. Registra el pago para completar.", viewModel.remaining))
+            Text(tr("events.detail.error.balance_pending", "El evento tiene un saldo pendiente de $%@ para completar", String(format: "%.2f", viewModel.remaining)))
         }
         .confirmationDialog(
             tr("events.detail.delete.title", "Eliminar evento"),

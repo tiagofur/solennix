@@ -99,4 +99,7 @@
 
     <!-- General Access -->
     <string name="access_go_to">Ir a %s</string>
+
+    <!-- Events -->
+    <string name="events_error_balance_pending">El evento tiene un saldo pendiente de $%s para completar</string>
 </resources>

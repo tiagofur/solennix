@@ -173,7 +173,7 @@ export function useUpdateEventStatus() {
       const balanceMatch = message.match(/Cannot complete: \$([\d,]+\.?\d*) remaining/);
       if (balanceMatch) {
         const amount = balanceMatch[1];
-        addToast(`Falta $${amount} para completar`, 'warning');
+        addToast(t('form.error_balance_pending', { amount }), 'warning');
       } else {
         addToast(t('form.error_status_update'), 'error');
       }

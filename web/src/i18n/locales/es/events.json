@@ -96,6 +96,7 @@
     "error_delete": "Error al eliminar el evento.",
     "error_save": "Error al guardar el evento. Por favor intenta de nuevo.",
     "error_status_update": "Error al actualizar el estado del evento.",
+    "error_balance_pending": "El evento tiene un saldo pendiente de ${{amount}} para completar",
     "steps": {
       "general": "Información General",
       "products": "Productos",

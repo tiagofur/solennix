@@ -880,5 +880,21 @@
       }
     }
   },
+  "events.detail.error.balance_pending" : {
+    "localizations" : {
+      "en" : {
+        "stringUnit" : {
+          "state" : "translated",
+          "value" : "Event has a pending balance of $%@ to complete"
+        }
+      },
+      "es" : {
+        "stringUnit" : {
+          "state" : "translated",
+          "value" : "El evento tiene un saldo pendiente de $%@ para completar"
+        }
+      }
+    }
+  },
   "version" : "1.0"
 }

@@ -297,7 +297,7 @@ class EventListViewModel @Inject constructor(
                 val balanceMatch = Regex(r"Cannot complete: \$([\d,]+\.?\d*) remaining").find(message)
                 if (balanceMatch != null) {
                     val amount = balanceMatch.groupValues[1]
-                    _error.value = "No puedes completar: $$amount pendiente"
+                    _error.value = tr(R.string.events_error_balance_pending, amount)
                 } else {
                     _error.value = message.ifEmpty { tr(R.string.events_list_error_change_status) }
                 }
