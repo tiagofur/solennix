@@ -58,6 +58,19 @@ extension EventFormViewModel {
         // default shows the inline warning immediately.
         checkDateAvailability(eventDate)
 
+        // Apply the user's contract defaults (deposit %, cancellation days,
+        // refund %) for NEW events only — edit mode already loaded them from
+        // the event above. Parity with web (`user?.default_deposit_percent`)
+        // and Android. Fault-isolated: a network failure leaves the built-in
+        // 50/3/50 defaults in place so the form stays usable.
+        if !isEdit {
+            if let me: User = try? await apiClient.get(Endpoint.me) {
+                depositPercent = me.defaultDepositPercent ?? depositPercent
+                cancellationDays = me.defaultCancellationDays ?? cancellationDays
+                refundPercent = me.defaultRefundPercent ?? refundPercent
+            }
+        }
+
         isLoading = false
         // Snapshot the post-load state so isDirty can compare against it.
         takeSnapshot()
