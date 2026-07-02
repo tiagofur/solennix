@@ -184,6 +184,6 @@ quadrantChart
 - [[Backend MOC]] — Índice general del backend
 - [[Arquitectura General]] — Capas, flujo de datos, estructura
 - [[Seguridad]] — Headers OWASP, rate limiting, JWT blacklist
-- [[Roadmap Backend]] — Mejoras priorizadas incluyendo gaps de testing
+- [[../PRD/09_ROADMAP|Roadmap maestro]] — Mejoras priorizadas incluyendo gaps de testing
 
 #backend #testing #calidad

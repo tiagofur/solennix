@@ -317,7 +317,7 @@ graph TD
 
 ## Lecciones duras registradas
 
-- **Asumir que `CLAUDE.md` está al día** — audit del 2026-04-16 detectó que Web era React 19 + React Query (el doc decía React 18 + Zustand). Los docs se atrasan, siempre verificar el código.
+- **Asumir que los docs están al día** — audit del 2026-04-16 detectó que Web era React 19 + React Query (un doc decía React 18). Los docs se atrasan, siempre verificar el código fuente. (Hoy la fuente normative única es `AGENTS.md`.)
 - **Saltear tests "porque va a andar"** — audit encontró 38 findings que nadie había detectado.
 - **Confiar 100% en sub-agents sin verificar** — 2 findings de Sprint 1 y Sprint 2 fueron inválidos.
 - **Delegar decisiones comerciales** (precios, marketing) a Claude sin validación humana.

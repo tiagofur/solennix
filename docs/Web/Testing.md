@@ -68,4 +68,4 @@ cd web && npx playwright test
 ## Relaciones
 
 - [[Arquitectura General]] — Herramientas del stack
-- [[Roadmap Web]] — Deuda técnica de tests documentada
+- [[../PRD/09_ROADMAP|Roadmap maestro]] — Deuda técnica de tests documentada

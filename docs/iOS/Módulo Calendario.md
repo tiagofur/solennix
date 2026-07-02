@@ -17,7 +17,7 @@ status: active
 > Calendario mensual nativo SwiftUI con `LazyVGrid`, status dots por día, gestión de fechas bloqueadas via sheets, creación de eventos desde toolbar y Quick Quote. Layout adaptivo iPad/iPhone.
 
 > [!bug] Bug conocido
-> **Syntax error en CalendarViewModel.swift líneas 232-235** — código huérfano duplicado que genera compile error. Ver [[../../PRD/21_CALENDAR_PARITY_AUDIT#🔴 Alta Prioridad|G3]].
+> **Syntax error en CalendarViewModel.swift líneas 232-235** — código huérfano duplicado que genera compile error. Ver [[../../_archive/21_CALENDAR_PARITY_AUDIT#🔴 Alta Prioridad|G3]].
 
 ---
 
@@ -101,9 +101,9 @@ iPhone:
 
 | Gap | Referencia |
 |-----|-----------|
-| Syntax error CalendarViewModel | [[../../PRD/21_CALENDAR_PARITY_AUDIT#🔴 Alta Prioridad\|G3]] |
-| Sin botón Retry en error | [[../../PRD/21_CALENDAR_PARITY_AUDIT#🟡 Media Prioridad\|G5]] |
-| Sin event count badge | [[../../PRD/21_CALENDAR_PARITY_AUDIT#🟢 Baja Prioridad\|G9]] |
+| Syntax error CalendarViewModel | [[../../_archive/21_CALENDAR_PARITY_AUDIT#🔴 Alta Prioridad\|G3]] |
+| Sin botón Retry en error | [[../../_archive/21_CALENDAR_PARITY_AUDIT#🟡 Media Prioridad\|G5]] |
+| Sin event count badge | [[../../_archive/21_CALENDAR_PARITY_AUDIT#🟢 Baja Prioridad\|G9]] |
 
 ---
 
@@ -113,6 +113,6 @@ iPhone:
 - [[Navegación]] — Tab principal + NavigationLink routes
 - [[Manejo de Estado]] — CalendarViewModel `@Observable`
 - [[Capa de Red]] — API client para events + unavailable dates
-- [[../../PRD/21_CALENDAR_PARITY_AUDIT|Audit de Paridad Calendario]]
+- [[../../_archive/21_CALENDAR_PARITY_AUDIT|Audit de Paridad Calendario]]
 
 #ios #calendario #dominio

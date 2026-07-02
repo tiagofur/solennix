@@ -13,7 +13,7 @@
 
 ## Estado operativo
 
-- [[Estado Plataforma|Estado actual de iOS]]
+- [[../PRD/11_CURRENT_STATUS|Estado actual del producto]] — fuente viva (cross-platform)
 
 ---
 
@@ -65,4 +65,4 @@
 
 | Área | Documento |
 |------|-----------|
-| Próximos pasos y prioridades | [[Roadmap iOS]] |
+| Próximos pasos y prioridades | [[../PRD/09_ROADMAP]] (roadmap maestro cross-platform) |

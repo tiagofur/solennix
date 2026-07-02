@@ -7,20 +7,18 @@ aliases:
   - Solennix Docs
   - Solennix Vault
 status: active
-date: 2026-04-29
-updated: 2026-04-29
 ---
 
-# 📚 Solennix - Documentación Operativa
+# 📚 Solennix — Documentación
 
 > [!abstract] Resumen
-> Esta carpeta contiene toda la documentación operativa de Solennix, organizada por plataforma (iOS, Android, Web, Backend) y función (Producto, Arquitectura, Marketing). El objetivo es tener una fuente única de verdad para decisiones técnicas, roadmap y procedimientos operativos.
+> Documentación operativa de Solennix por plataforma (iOS, Android, Web, Backend) y función (Producto, Arquitectura, Marketing). El estado del producto es **vivo** — ver las fuentes canónicas abajo.
 
 ---
 
 ## 🎯 Punto de entrada
 
-- [[00_DASHBOARD|Dashboard Ejecutivo]] — 30 segundos overview del proyecto
+- [[00_DASHBOARD|Dashboard Ejecutivo]] — vista de 30 segundos
 
 ---
 
@@ -31,8 +29,18 @@ updated: 2026-04-29
 - **[[Web/Web MOC|Web]]** — Aplicación web React
 - **[[Backend/Backend MOC|Backend]]** — API, base de datos, servicios
 - **[[PRD/PRD MOC|Producto (PRD)]]** — Visión, features, roadmap
-- **[[Marketing/MOC|Marketing]]** — Branding, campañas, assets
-- **[[SUPER_PLAN/SUPER PLAN MOC|Super Plan]]** — Visión a largo plazo
+- **[[Marketing/videos/MOC|Marketing / Videos]]** — Branding, campañas, assets de video
+
+---
+
+## 📋 Fuentes canónicas de estado
+
+- 📊 **[[PRD/11_CURRENT_STATUS|Estado Actual del producto]]** — fuente viva
+- 📅 **[[PRD/09_ROADMAP|Roadmap maestro]]**
+- 🏗️ **[[../AGENTS|AGENTS.md]]** — reglas normativas para agentes de IA (router)
+
+> [!note] Estado por plataforma
+> Para estado operativo de cada plataforma, ver el MOC correspondiente. El de Android incluye una baseline de calidad (2026-05-13); las demás plataformas se reflejan en PRD/11.
 
 ---
 
@@ -47,40 +55,23 @@ Ver [[_templates/README|todos los templates]].
 
 ---
 
-## 📋 Fuentes canónicas de estado
-
-- [[iOS/Estado Plataforma|Estado iOS]]
-- [[Android/Estado Plataforma|Estado Android]]
-- [[Web/Estado Plataforma|Estado Web]]
-- [[Backend/Estado Plataforma|Estado Backend]]
-
----
-
 ## 🏗️ Estructura de mantenimiento
 
 1. **Cambios en arquitectura** → Crear/actualizar ADR en la plataforma afectada
-2. **Nueva feature** → Crear módulo en carpeta correspondiente + actualizar PRD
+2. **Nueva feature** → Crear módulo en la carpeta correspondiente + actualizar PRD
 3. **Procedimiento repetible** → Crear Runbook en `Runbooks/`
-4. **Estado del sistema** → Actualizar `Estado Plataforma` en cada plataforma
-5. **Dashboard desactualizado** → Actualizar `00_DASHBOARD.md`
-
----
-
-## 🔗 Referencias externas
-
-- [Solennix repo](https://github.com/tuorg/solennix)
-- [[../DASHBOARD|← Volver al Dashboard]]
+4. **Estado del sistema** → Actualizar `PRD/11_CURRENT_STATUS.md`
+5. **Cambios cerrados/históricos** → Mover a `[[_archive|docs/_archive/]]`
 
 ---
 
 ## ✅ Reglas de mantenimiento
 
-- **Actualizaciones diarias:** Dashboard si hay cambios críticos
-- **Actualizaciones semanales:** "Estado Plataforma" en cada área
-- **Actualizaciones mensuales:** PRD roadmap y audit findings
-- **Ningún ADR sin linkearse:** Siempre update el MOC correspondiente
-- **Documentación antes de code:** PRD + ADR antes de implementar features grandes
+- **Estado del producto:** `PRD/11_CURRENT_STATUS.md` es la fuente viva — mantenerla actualizada.
+- **Ningún ADR sin linkearse:** Siempre actualizar el MOC correspondiente.
+- **Documentación antes de code:** PRD + ADR antes de implementar features grandes.
+- **Planos cerrados:** archivar en `_archive/` (historia preservada, no activos).
 
 ---
 
-*Última revisión: 2026-04-29*
+*Reglas normativas para agentes de IA en [`AGENTS.md`](../AGENTS.md) (raíz del repo).*

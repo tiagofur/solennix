@@ -39,4 +39,4 @@
 
 - [[Design System]] — colores y tipografía custom
 - [[Componentes Compartidos]] — labels de accesibilidad
-- [[Roadmap iOS]] — auditoría planificada
+- [[../PRD/09_ROADMAP|Roadmap maestro]] — auditoría planificada

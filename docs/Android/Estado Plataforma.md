@@ -71,6 +71,6 @@ Riesgos activos de calidad:
 ---
 
 **Nota:** Para arquitectura de Android, ver [[Arquitectura General]].
-**Nota:** Para ejecución de calidad incremental, ver [[Roadmap Android]] y [[Testing]].
+**Nota:** Para ejecución de calidad incremental, ver [[../PRD/09_ROADMAP|Roadmap maestro]] y [[Testing]].
 
 Relacionado: [[../00_DASHBOARD|← Dashboard ejecutivo]]

@@ -9,7 +9,7 @@
 
 ## Estado operativo
 
-- [[Estado Plataforma|Estado actual de la Web]]
+- [[../PRD/11_CURRENT_STATUS|Estado actual del producto]] — fuente viva (cross-platform)
 
 ---
 
@@ -43,14 +43,13 @@
 
 ## Calidad
 
-- [[Auditoría Web 2026-04-27]] — Paridad con backend, UX premium y landing
 - [[Testing]] — Vitest, Playwright, MSW, estructura de tests
 - [[Accesibilidad]] — ARIA, focus, contraste, screen readers
 - [[Performance]] — Lazy loading, bundle size, CLS
 
 ## Roadmap
 
-- [[Roadmap Web]] — Mejoras priorizadas para llevar la app a nivel premium
+- [[../PRD/09_ROADMAP|Roadmap maestro]] — fuente viva cross-platform (los roadmaps por plataforma se archivaron)
 
 ---
 

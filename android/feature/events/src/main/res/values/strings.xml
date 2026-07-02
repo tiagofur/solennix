@@ -102,6 +102,10 @@
     <string name="events_detail_error_delete_photo">Error al eliminar la foto: %1$s</string>
     <string name="events_detail_error_change_status">Error al cambiar el estado: %1$s</string>
     <string name="events_detail_error_delete_event">Error al eliminar el evento: %1$s</string>
+    <!-- Balance pending: event can't be completed until fully paid -->
+    <string name="events_detail_balance_pending_title">No se puede completar</string>
+    <string name="events_detail_balance_pending_message">El evento tiene un saldo pendiente de $%1$s para completar.</string>
+    <string name="events_detail_balance_pending_action">Entendido</string>
     <string name="events_detail_finances_title">Finanzas</string>
     <string name="events_detail_finances_total_charged">Total cobrado</string>
     <string name="events_detail_finances_gross_sales">Venta bruta</string>

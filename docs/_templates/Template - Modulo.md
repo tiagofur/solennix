@@ -71,4 +71,4 @@ updated: "{{date}}"
 ## Dependencias del módulo
 
 - [[../Arquitectura General]]
-- [[../PRD/README|PRD Index]]
+- [[../PRD/PRD MOC|PRD Index]]

@@ -20,7 +20,7 @@ status: active
 > Feature A (Portal Cliente) **MVP cerrado en los 4 stacks** (Backend + Web + iOS + Android) al 2026-04-16. Features B–L en estado de diseño, alineadas a sprints Q2–Q4 2026 y Q1 2027.
 
 > [!tip] Documentos relacionados
-> [[PRD MOC]] · [[02_FEATURES|Feature Matrix]] · [[04_MONETIZATION|Monetización §4.3]] · [[09_ROADMAP|Roadmap]] · [[13_POST_MVP_ROADMAP|Post-MVP Roadmap]] · [[14_CLIENT_EXPERIENCE_IDEAS|Ideas Experiencia Cliente]] · [[15_PORTAL_CLIENTE_TRACKER|Portal Cliente Tracker]]
+> [[PRD MOC]] · [[02_FEATURES|Feature Matrix]] · [[04_MONETIZATION|Monetización §4.3]] · [[09_ROADMAP|Roadmap]] · [[13_POST_MVP_ROADMAP|Post-MVP Roadmap]] · [[14_CLIENT_EXPERIENCE_IDEAS|Ideas Experiencia Cliente]] · [[../_archive/15_PORTAL_CLIENTE_TRACKER|Portal Cliente Tracker]]
 
 **Autor:** Sesión 2026-04-16.
 **Última actualización:** 2026-04-17 (consolidación del root PRD al vault Obsidian).
@@ -75,7 +75,7 @@ La propuesta: abrir una **ventana controlada** al cliente — el organizador dec
 
 ### A. Portal público del cliente (`/client/:token`) — ✅ MVP COMPLETO
 
-**Estado:** MVP backend + web + iOS + Android **shipped 2026-04-16**. Tracking detallado en [[15_PORTAL_CLIENTE_TRACKER]].
+**Estado:** MVP backend + web + iOS + Android **shipped 2026-04-16**. Tracking detallado en [[../_archive/15_PORTAL_CLIENTE_TRACKER]].
 
 **Qué (vision original):** URL única por evento (token de 256 bits, opcional PIN). No requiere cuenta ni instalación.
 
@@ -592,7 +592,7 @@ El portal del cliente **NO necesita view nativa** — se consume en browser. Lo 
 
 ## 10. Siguientes pasos
 
-1. ✅ **Feature A MVP shipped en los 4 stacks** — Backend + Web (2026-04-16, commits `8dff4f3` + `06d69ff` + `a3f425a`) + iOS + Android (mismo día). Ver [[15_PORTAL_CLIENTE_TRACKER]].
+1. ✅ **Feature A MVP shipped en los 4 stacks** — Backend + Web (2026-04-16, commits `8dff4f3` + `06d69ff` + `a3f425a`) + iOS + Android (mismo día). Ver [[../_archive/15_PORTAL_CLIENTE_TRACKER]].
 2. 📋 **Sprint 7.C — Enforcement de límites por tier:** gate del "1 portal activo" Gratis vs "∞" Pro/Business en el backend.
 3. 📋 **Sprint 9 — Feature B (Transparencia de pagos):** cronograma de cuotas + registro de pago por transferencia + approve/reject del organizador.
 4. 📋 **Sprint 10 — Feature I (Reseñas post-evento):** cron job + UI pública + portfolio público del organizer.

@@ -351,7 +351,7 @@ Antes de subir una versión a Play Store:
 ## Relaciones
 
 - [[Android MOC]]
-- [[Roadmap Android]]
+- [[../PRD/09_ROADMAP|Roadmap maestro]]
 - [[Autenticación]] — donde vive la integración con RevenueCat
 - [[Módulo Settings]] — PricingScreen usa la API key
 - [[../PRD/11_CURRENT_STATUS|Estado actual del proyecto]]

@@ -28,6 +28,7 @@ import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
 import com.creapolis.solennix.core.network.EventDayNotificationManager
 import com.creapolis.solennix.feature.events.R
+import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -245,8 +246,27 @@ class EventDetailViewModel @Inject constructor(
                 eventRepository.updateEvent(updated)
                 _event.value = updated
             } catch (e: Exception) {
-                _errorMessage.value = tr(R.string.events_detail_error_change_status, e.message.orEmpty())
+                _errorMessage.value = translateStatusError(e.message.orEmpty())
             }
+        }
+    }
+
+    /**
+     * Maps a backend status-change failure to a localized message. Mirrors the handling
+     * in `EventListViewModel.updateEventStatus`: if the backend rejected the transition
+     * to "completed" because of a pending balance (message
+     * `"Cannot complete: $XXX.XX remaining"`), the amount is extracted and rendered via
+     * [R.string.events_error_balance_pending]. Otherwise a generic localized fallback
+     * is shown — never the raw English backend string.
+     */
+    private fun translateStatusError(rawMessage: String): String {
+        val balanceMatch = Regex("Cannot complete: \\$([\\d,]+\\.?\\d*) remaining").find(rawMessage)
+        return if (balanceMatch != null) {
+            val amount = balanceMatch.groupValues[1]
+            tr(DesignSystemR.string.events_error_balance_pending, amount)
+        } else {
+            // Generic, localized fallback — never surface the raw backend message.
+            tr(R.string.events_list_error_change_status)
         }
     }
 

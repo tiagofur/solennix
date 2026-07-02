@@ -54,4 +54,25 @@ sealed class UiEvent {
         val message: String,
         val undoActionId: String,
     ) : UiEvent()
+
+    /**
+     * Show an informational snackbar (neutral / accent). Use for non-blocking
+     * hints such as "el evento tiene un saldo pendiente".
+     * If [actionLabel] is non-null, a button with that label is shown and the
+     * host invokes [onAction] (passed via [com.creapolis.solennix.core.designsystem.event.UiEventSnackbarHandler.onActionInfo])
+     * when tapped.
+     */
+    data class Info(
+        val message: String,
+        val actionLabel: String? = null,
+    ) : UiEvent()
+
+    /**
+     * Show a warning snackbar (amber). Use for recoverable preconditions that
+     * block an action, surfaced transiently.
+     */
+    data class Warning(
+        val message: String,
+        val actionLabel: String? = null,
+    ) : UiEvent()
 }

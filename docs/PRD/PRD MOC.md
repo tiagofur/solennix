@@ -3,20 +3,10 @@
 > [!info] Solennix
 > **Producto**: Plataforma de gestión de eventos para organizadores LATAM
 > **Plataformas**: iOS · Android · Web · Backend (Go)
-> **Estado**: En producción (4 plataformas live) · Audit 2026-04-16 cerrado (30/38) · **Portal Cliente MVP shipped**
-> **Última actualización**: 2026-04-16 — jornada de 28 commits, 7 sprints cerrados, nuevo feature shipped
+> **Estado**: En producción (4 plataformas live) — ver [[11_CURRENT_STATUS|Estado Actual]] para detalle vivo
 
-> [!success] 🎯 Dashboard Visual Diario
-> Abrí [[../00_DASHBOARD|🏛️ Dashboard Ejecutivo]] para ver el estado del producto en 30 segundos con Mermaid + progress bars + matrices visuales. **Es el nuevo punto de entrada recomendado.**
-
----
-
-## 🆕 Jornada 2026-04-16
-
-- 🏛️ [[../00_DASHBOARD|Dashboard Ejecutivo]] — visión global con progreso visual + gantt + pies
-- 📅 [[16_SPRINT_LOG_2026_04_16|Sprint Log de la jornada]] — los 7 sprints + 28 commits detallados
-- 🎁 [[15_PORTAL_CLIENTE_TRACKER|Portal Cliente Tracker]] — feature A estado end-to-end con mermaid de arquitectura
-- 🤝 [[17_PERSONAL_TRACKER|Personal / Colaboradores Tracker]] — feature nueva Phase 1 cerrada · scaffolding Phase 2/3 listo
+> [!success] 🎯 Dashboard Ejecutivo
+> Abrí [[../00_DASHBOARD|🏛️ Dashboard Ejecutivo]] para la vista de 30 segundos y navegación por área.
 
 ---
 
@@ -28,8 +18,8 @@
 
 ## Features y Estado
 
-- [[02_FEATURES|Catálogo de Features]] — Paridad cross-platform por feature, **§13.bis Portal Cliente**
-- [[11_CURRENT_STATUS|Estado Actual]] — Implementación por plataforma, brechas, migraciones, commits del día
+- [[02_FEATURES|Catálogo de Features]] — Paridad cross-platform por feature
+- [[11_CURRENT_STATUS|Estado Actual]] — Implementación por plataforma, brechas, migraciones. **Fuente viva.**
 
 ## Arquitectura Técnica
 
@@ -38,33 +28,14 @@
 - [[07_TECHNICAL_ARCHITECTURE_BACKEND|Arquitectura Backend]] — Go + Chi + PostgreSQL + pgx
 - [[08_TECHNICAL_ARCHITECTURE_WEB|Arquitectura Web]] — React 19 + TypeScript + Vite + Tailwind
 - [[19_I18N_STRATEGY|i18n Strategy]] — Infraestructura multi-idioma + copy matrix canónica + governance cross-platform
-- [[Web MOC]] — Documentación detallada de la app web (módulos, design system, hooks)
 
 ## Planificación
 
 - [[09_ROADMAP|Roadmap Maestro]] — Timeline, matriz feature-per-platform, bloqueantes externos, Q2-Q4 2026 + Q1 2027
 - [[13_POST_MVP_ROADMAP|Roadmap Post-MVP (Etapa 2)]] — Notificaciones, reportes, portal del cliente, diferenciadores
-- [[14_CLIENT_EXPERIENCE_IDEAS|Ideas Experiencia Cliente (Exploración)]] — Clusters A–G: bidireccionalidad, transparencia, momentos en vivo, co-planificación, pagos, telemetría inversa, multi-destinatario
-- [[10_COLLABORATION_GUIDE|Guía de Colaboración]] — Workflow con Claude Code, prompts, reglas
-- [[21_CALENDAR_PARITY_AUDIT|🔍 Calendario Audit de Paridad]] — Auditoría cross-platform con gaps priorizados (2026-04-27)
-- [[22_DASHBOARD_REFACTOR_PLAN|🏗️ Dashboard Refactor Plan]] — Plan aprobado de unificación cross-platform
-
-## Super Plan Cross-Platform
-
-- [[SUPER PLAN MOC]] — Indice principal del programa de transformación
-- [[01_VISUAL_EXECUTIVE_SUMMARY]] — Objetivos y resultados esperados
-- [[02_PLATFORM_EXPERIENCE_PRINCIPLES]] — UX nativa por plataforma/dispositivo
-- [[03_CROSS_PLATFORM_PARITY_MODEL]] — Reglas de paridad y SLA de desvíos
-- [[04_BACKEND_AS_PRODUCT_CONTRACT]] — Contratos backend-frontends
-- [[05_RELEASE_GOVERNANCE_AND_QUALITY_GATES]] — Gates obligatorios de calidad
-- [[06_DEVICE_MATRIX_AND_UX_VALIDATION]] — Matriz de validación smartphone/tablet/desktop
-- [[07_WAVE_PLAN_12_WEEKS]] — Roadmap por ondas de ejecución
-- [[08_RISK_REGISTER_AND_CONTINGENCIES]] — Registro de riesgos y contingencias
-- [[09_TEAM_OPERATING_SYSTEM]] — Sistema operativo de ejecución
-- [[10_BACKLOG_STRUCTURE_AND_ACCEPTANCE]] — Estructura de backlog y DoD
-- [[11_CROSS_PLATFORM_KPI_SCORECARD]] — Scorecard de salud del programa
-- [[12_EXECUTION_CHECKLISTS]] — Checklists de PR, ola y release
-- [[13_MASTER_TRACEABILITY_TABLE]] — Trazabilidad ejecutiva objetivo→ola→evidencia→KPI
+- [[14_CLIENT_EXPERIENCE_IDEAS|Ideas Experiencia Cliente (Exploración)]] — Clusters A–G
+- [[10_COLLABORATION_GUIDE|Guía de Colaboración]] — Workflow con agentes, prompts, reglas
+- [[12_CLIENT_TRANSPARENCY_AND_DELIGHT|Transparencia & Delight]] — Features A–L de experiencia del cliente
 
 ---
 
@@ -81,15 +52,17 @@
 
 ---
 
+## 📦 Histórico
+
+Los trackers cerrados, audits puntuales y el SUPER_PLAN (programa de transformación de 12 semanas, concluido) se preservan en **[[_archive|docs/_archive/]]** como registro histórico. No están activos — la verdad actual vive en [[11_CURRENT_STATUS]] y [[09_ROADMAP]].
+
+---
+
 ## Navegación Rápida
 
 ```mermaid
 graph TB
-    D["🏛️ 00_DASHBOARD<br/>Visual daily hub"]
-    D --> SL["📅 16_SPRINT_LOG<br/>Jornada 2026-04-16"]
-    D --> PCT["🎁 15_PORTAL_CLIENTE<br/>Feature A tracker"]
-    D --> CPA["📅 21_CALENDAR_PARITY<br/>Audit Calendario"]
-
+    D["🏛️ 00_DASHBOARD<br/>Índice de navegación"]
     V[Visión] --> F[Features]
     V --> C[Competencia]
     V --> M[Monetización §4.3 taste<br/>+ §11 keys y secrets]
@@ -97,7 +70,7 @@ graph TB
     F --> And[Arq. Android]
     F --> Web[Arq. Web]
     F --> Back[Arq. Backend]
-    F --> S[Estado Actual]
+    F --> S["Estado Actual (vivo)"]
     iOS --> R[Roadmap]
     And --> R
     Web --> R
@@ -108,12 +81,9 @@ graph TB
     D -.-> R
 
     style D fill:#1B2A4A,stroke:#C4A265,color:#fff
-    style SL fill:#C4A265,stroke:#1B2A4A,color:#1A1A1A
-    style PCT fill:#C4A265,stroke:#1B2A4A,color:#1A1A1A
-    style CPA fill:#C4A265,stroke:#1B2A4A,color:#1A1A1A
+    style S fill:#C4A265,stroke:#1B2A4A,color:#1A1A1A
     style V fill:#F5F4F1,stroke:#1B2A4A,color:#1A1A1A
     style F fill:#F5F4F1,stroke:#1B2A4A,color:#1A1A1A
-    style S fill:#F5F4F1,stroke:#1B2A4A,color:#1A1A1A
     style M fill:#F5F4F1,stroke:#1B2A4A,color:#1A1A1A
     style R fill:#F5F4F1,stroke:#1B2A4A,color:#1A1A1A
 ```
@@ -121,6 +91,6 @@ graph TB
 ---
 
 > [!tip] Navegación
-> Cada documento enlaza con `[[wikilinks]]` a sus dependencias. Usá el **Graph View** de Obsidian para ver las relaciones entre documentos del PRD. El `00_DASHBOARD` tiene Mermaid gantt + pies + flowcharts y es el punto de entrada diario recomendado.
+> Cada documento enlaza con `[[wikilinks]]` a sus dependencias. Usá el **Graph View** de Obsidian para ver las relaciones. Para estado del producto, [[11_CURRENT_STATUS|Estado Actual]] es la fuente viva.
 
 #prd #moc #solennix

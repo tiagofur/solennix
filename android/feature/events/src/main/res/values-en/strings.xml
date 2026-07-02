@@ -100,6 +100,10 @@
     <string name="events_detail_error_delete_photo">Error deleting photo: %1$s</string>
     <string name="events_detail_error_change_status">Error changing status: %1$s</string>
     <string name="events_detail_error_delete_event">Error deleting event: %1$s</string>
+    <!-- Balance pending: event can't be completed until fully paid -->
+    <string name="events_detail_balance_pending_title">Can\'t complete</string>
+    <string name="events_detail_balance_pending_message">This event has a pending balance of $%1$s to complete.</string>
+    <string name="events_detail_balance_pending_action">Got it</string>
     <string name="events_detail_finances_title">Finances</string>
     <string name="events_detail_finances_total_charged">Total charged</string>
     <string name="events_detail_finances_gross_sales">Gross sales</string>
