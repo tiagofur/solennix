@@ -118,7 +118,7 @@ Last updated: 2026-06-26
 | `project-tracking` | Methods for monitoring project progress, managing timelines, and ensuring milestones are met. | user | `/Users/tiagofur/.hermes/skills/management/project-tracking/SKILL.md` |
 | `python-templates` | Templates, boilerplate, and best practices for Python development. | user | `/Users/tiagofur/.hermes/skills/software-development/python-templates/SKILL.md` |
 | `refactoring-patterns` | Common techniques to improve code structure and maintainability. | user | `/Users/tiagofur/.hermes/skills/software-development/refactoring-patterns/SKILL.md` |
-| `remotion-best-practices` | Best practices for Remotion - Video creation in React | project | `/Users/tiagofur/dev/solennix/.agents/skills/remotion/SKILL.md` |
+| `remotion-best-practices` | Best practices for Remotion - Video creation in React | project | `/Users/tiagofur/dev/solennix/.agents/skills/remotion-best-practices/SKILL.md` |
 | `requirements-gathering` | Techniques for effectively gathering and documenting functional and non-functional requirements. | user | `/Users/tiagofur/.hermes/skills/software-development/requirements-gathering/SKILL.md` |
 | `research-paper-writing` | Write ML papers for NeurIPS/ICML/ICLR: design→submit. | user | `/Users/tiagofur/.hermes/skills/research/research-paper-writing/SKILL.md` |
 | `script-writing` | Guidelines for writing effective scripts for video, audio, and presentations. | user | `/Users/tiagofur/.hermes/skills/marketing/script-writing/SKILL.md` |
