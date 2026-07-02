@@ -293,6 +293,7 @@ class EventListViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.w(TAG, "updateEventStatus failed for ${event.id}", e)
                 val message = e.message ?: ""
+                Log.d(TAG, "Error message: '$message'")
                 // Check if this is a balance pending error from backend
                 // Format: "Cannot complete: $XXX.XX remaining"
                 val balanceMatch = Regex("Cannot complete: \\$([\\d,]+\\.?\\d*) remaining").find(message)
