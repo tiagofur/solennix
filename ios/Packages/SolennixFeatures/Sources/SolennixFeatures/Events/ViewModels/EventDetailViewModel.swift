@@ -295,7 +295,7 @@ public final class EventDetailViewModel {
                 if let dollarIndex = description.firstIndex(of: "$"),
                    let spaceIndex = description[dollarIndex...].firstIndex(of: " ") {
                     let amount = String(description[description.index(after: dollarIndex)..<spaceIndex])
-                    errorMessage = tr("events.detail.error.balance_pending", "El evento tiene un saldo pendiente de $%@ para completar", amount)
+                    errorMessage = String(format: tr("events.detail.error.balance_pending", "El evento tiene un saldo pendiente de $%@ para completar"), locale: FeatureL10n.locale, amount)
                 } else {
                     errorMessage = description
                 }
