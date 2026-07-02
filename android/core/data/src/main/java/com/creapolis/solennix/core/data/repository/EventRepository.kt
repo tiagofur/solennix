@@ -130,11 +130,15 @@ class OfflineFirstEventRepository @Inject constructor(
             eventDao.insertEvents(listOf(remoteEvent.asEntity(SyncStatus.SYNCED)))
             remoteEvent
         } catch (e: Exception) {
-            if (e is SolennixException.Auth) throw e
-            // Offline support: update locally with pending status
-            val localEvent = event.asEntity(SyncStatus.PENDING_UPDATE)
-            eventDao.insertEvents(listOf(localEvent))
-            event
+            // Only cache locally for network errors (offline).
+            // Server errors (400, 404, etc.) must be propagated to UI.
+            if (e is SolennixException.Network) {
+                val localEvent = event.asEntity(SyncStatus.PENDING_UPDATE)
+                eventDao.insertEvents(listOf(localEvent))
+                event
+            } else {
+                throw e
+            }
         }
     }
 
