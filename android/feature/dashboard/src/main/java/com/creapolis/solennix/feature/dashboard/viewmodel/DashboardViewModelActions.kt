@@ -34,7 +34,16 @@ fun DashboardViewModel.updateEventStatus(eventId: String, newStatus: EventStatus
             }
         } catch (e: Exception) {
             Log.e(TAG, "updateEventStatus failed for event=$eventId", e)
-            _transientMessage.value = tr(R.string.dashboard_error_status_change_failed)
+            val message = e.message ?: ""
+            // Check if this is a balance pending error from backend
+            // Format: "Cannot complete: $XXX.XX remaining"
+            val balanceMatch = Regex("Cannot complete: \\$([\\d,]+\\.?\\d*) remaining").find(message)
+            if (balanceMatch != null) {
+                val amount = balanceMatch.groupValues[1]
+                _transientMessage.value = "No puedes completar: $$amount pendiente"
+            } else {
+                _transientMessage.value = tr(R.string.dashboard_error_status_change_failed)
+            }
         } finally {
             _updatingEventId.value = null
         }

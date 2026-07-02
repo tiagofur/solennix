@@ -291,7 +291,16 @@ class EventListViewModel @Inject constructor(
                 eventRepository.updateEvent(event.copy(status = newStatus))
             } catch (e: Exception) {
                 Log.w(TAG, "updateEventStatus failed for ${event.id}", e)
-                _error.value = e.message ?: tr(R.string.events_list_error_change_status)
+                val message = e.message ?: ""
+                // Check if this is a balance pending error from backend
+                // Format: "Cannot complete: $XXX.XX remaining"
+                val balanceMatch = Regex(r"Cannot complete: \$([\d,]+\.?\d*) remaining").find(message)
+                if (balanceMatch != null) {
+                    val amount = balanceMatch.groupValues[1]
+                    _error.value = "No puedes completar: $$amount pendiente"
+                } else {
+                    _error.value = message.ifEmpty { tr(R.string.events_list_error_change_status) }
+                }
             } finally {
                 _updatingStatusEventId.value = null
             }

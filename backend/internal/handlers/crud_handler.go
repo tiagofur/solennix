@@ -778,6 +778,23 @@ func (h *CRUDHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Block status change to "completed" if event has pending balance
+	if existing.Status == "completed" && oldStatus != "completed" {
+		paymentRepo := repository.NewPaymentRepo(h.pool)
+		paid, err := paymentRepo.SumByEventID(r.Context(), id)
+		if err != nil {
+			slog.Warn("Failed to verify payment status for completion", "event_id", id, "error", err)
+			writeError(w, http.StatusInternalServerError, "Failed to verify payment status")
+			return
+		}
+		const tolerance = 0.01
+		if paid < existing.TotalAmount-tolerance {
+			remaining := existing.TotalAmount - paid
+			writeError(w, http.StatusBadRequest, fmt.Sprintf("Cannot complete: $%.2f remaining", remaining))
+			return
+		}
+	}
+
 	// Validate unavailable dates (only if date changed)
 	startReqStr := strings.Split(existing.EventDate, "T")[0]
 	if _, err := time.Parse("2006-01-02", startReqStr); err != nil {

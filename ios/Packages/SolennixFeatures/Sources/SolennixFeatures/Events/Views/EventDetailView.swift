@@ -17,6 +17,7 @@ public struct EventDetailView: View {
     @State private var duplicateViewModel: EventFormViewModel?
     @State private var showClientPortalSheet = false
     @State private var duplicateHapticTrigger: Int = 0
+    @State private var showBalanceAlert = false
     @Environment(AuthManager.self) private var authManager
     @Environment(ToastManager.self) private var toastManager
     @Environment(\.dismiss) private var dismiss
@@ -84,11 +85,22 @@ public struct EventDetailView: View {
         ) {
             Button(tr("events.detail.status.quoted", "Cotizado")) { Task { await viewModel.changeStatus(.quoted, eventId: eventId) } }
             Button(tr("events.detail.status.confirmed", "Confirmado")) { Task { await viewModel.changeStatus(.confirmed, eventId: eventId) } }
-            Button(tr("events.detail.status.completed", "Completado")) { Task { await viewModel.changeStatus(.completed, eventId: eventId) } }
+            Button(tr("events.detail.status.completed", "Completado")) {
+                if viewModel.remaining > 0.01 {
+                    showBalanceAlert = true
+                } else {
+                    Task { await viewModel.changeStatus(.completed, eventId: eventId) }
+                }
+            }
             Button(tr("events.detail.status.cancelled", "Cancelado"), role: .destructive) { Task { await viewModel.changeStatus(.cancelled, eventId: eventId) } }
             Button(tr("events.form.cancel", "Cancelar"), role: .cancel) {}
         } message: {
             Text(tr("events.detail.status.change_message", "Selecciona el nuevo estado del evento"))
+        }
+        .alert(tr("events.detail.status.completed", "Completado"), isPresented: $showBalanceAlert) {
+            Button(tr("events.form.ok", "OK")) { }
+        } message: {
+            Text(tr("events.detail.status.balance_pending_message", "El evento tiene $%.2f pendiente. Registra el pago para completar.", viewModel.remaining))
         }
         .confirmationDialog(
             tr("events.detail.delete.title", "Eliminar evento"),

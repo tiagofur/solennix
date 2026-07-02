@@ -167,7 +167,16 @@ export function useUpdateEventStatus() {
     },
     onError: (error) => {
       logError('Error updating event status', error);
-      addToast(t('form.error_status_update'), 'error');
+      const message = getErrorMessage(error);
+      // Check if this is a balance pending error from backend
+      // Format: "Cannot complete: $XXX.XX remaining"
+      const balanceMatch = message.match(/Cannot complete: \$([\d,]+\.?\d*) remaining/);
+      if (balanceMatch) {
+        const amount = balanceMatch[1];
+        addToast(`Falta $${amount} para completar`, 'warning');
+      } else {
+        addToast(t('form.error_status_update'), 'error');
+      }
     },
   });
 }

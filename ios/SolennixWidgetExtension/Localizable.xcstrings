@@ -17,12 +17,6 @@
     "• %@" : {
 
     },
-    "0" : {
-
-    },
-    "Solennix" : {
-
-    },
     "widget.interactive.complete" : {
       "localizations" : {
         "en" : {
@@ -181,6 +175,7 @@
       }
     },
     "widget.interactive.no_events_today" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -604,6 +599,7 @@
       }
     },
     "widget.lockscreen.no_events" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -653,6 +649,7 @@
       }
     },
     "widget.lockscreen.upcoming" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -664,6 +661,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "próximos"
+          }
+        }
+      }
+    },
+    "widget.state.empty.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No data yet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin datos aún"
+          }
+        }
+      }
+    },
+    "widget.state.error.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load data"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudieron cargar los datos"
+          }
+        }
+      }
+    },
+    "widget.state.signedout.title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in to view"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia sesión para ver"
           }
         }
       }
@@ -827,54 +875,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "widget.state.empty.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No data yet"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sin datos aún"
-          }
-        }
-      }
-    },
-    "widget.state.error.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn't load data"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No se pudieron cargar los datos"
-          }
-        }
-      }
-    },
-    "widget.state.signedout.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sign in to view"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inicia sesión para ver"
           }
         }
       }
