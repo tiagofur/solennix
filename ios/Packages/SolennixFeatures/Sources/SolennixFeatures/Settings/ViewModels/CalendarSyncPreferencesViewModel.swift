@@ -109,15 +109,18 @@ public final class CalendarSyncPreferencesViewModel {
         let syncService = EventKitSyncService()
         let syncEnabledKey = Self.syncEnabledKey
         let syncDestinationKey = Self.syncDestinationKey
+        // Read values before creating closures to avoid capturing non-Sendable defaults
+        let initialSyncEnabled = (defaults.object(forKey: syncEnabledKey) as? Bool) ?? false
+        let initialDestination: SyncDestination = {
+            let raw = defaults.string(forKey: syncDestinationKey) ?? ""
+            return SyncDestination(rawValue: raw) ?? .solennix
+        }()
         let repository = DefaultEventRepository(
             eventAPI: apiClient,
             syncService: syncService,
             identityStore: UserDefaultsCalendarSyncIdentityStore(defaults: defaults),
-            syncEnabled: { [defaults] in (defaults.object(forKey: syncEnabledKey) as? Bool) ?? false },
-            destination: { [defaults] in
-                let raw = defaults.string(forKey: syncDestinationKey) ?? ""
-                return SyncDestination(rawValue: raw) ?? .solennix
-            }
+            syncEnabled: { initialSyncEnabled },
+            destination: { initialDestination }
         )
         self.init(eventRepository: repository, syncService: syncService, defaults: defaults)
     }
