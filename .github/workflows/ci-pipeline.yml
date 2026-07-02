@@ -124,6 +124,8 @@ jobs:
           EOF
       - name: Unit tests (debug)
         run: ./gradlew testDebugUnitTest --no-daemon
+      - name: Android Lint gate (errors only)
+        run: ./gradlew :app:lintDebug --no-daemon
       - name: Coverage gate (phase 4.1 + 4.4 + app/widget/designsystem)
         run: ./gradlew :core:model:jacocoDebugCoverageVerification :core:database:jacocoDebugCoverageVerification :feature:auth:jacocoDebugCoverageVerification :feature:clients:jacocoDebugCoverageVerification :feature:products:jacocoDebugCoverageVerification :feature:inventory:jacocoDebugCoverageVerification :feature:search:jacocoDebugCoverageVerification :feature:payments:jacocoDebugCoverageVerification :feature:settings:jacocoDebugCoverageVerification :feature:calendar:jacocoDebugCoverageVerification :app:jacocoDebugCoverageVerification :core:designsystem:jacocoDebugCoverageVerification :widget:jacocoDebugCoverageVerification --no-daemon
       - name: Smoke androidTest compile gate
