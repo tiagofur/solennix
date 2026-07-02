@@ -90,7 +90,4 @@
 
     <!-- General Access -->
     <string name="access_go_to">Go to %s</string>
-
-    <!-- Events -->
-    <string name="events_error_balance_pending">Event has a pending balance of $%s to complete</string>
 </resources>

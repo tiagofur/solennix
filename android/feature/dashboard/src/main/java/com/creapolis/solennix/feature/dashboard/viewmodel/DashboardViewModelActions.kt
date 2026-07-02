@@ -3,6 +3,7 @@ package com.creapolis.solennix.feature.dashboard.viewmodel
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.feature.dashboard.R
+import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.model.Payment
 import kotlinx.coroutines.launch
@@ -40,7 +41,7 @@ fun DashboardViewModel.updateEventStatus(eventId: String, newStatus: EventStatus
             val balanceMatch = Regex("Cannot complete: \\$([\\d,]+\\.?\\d*) remaining").find(message)
             if (balanceMatch != null) {
                 val amount = balanceMatch.groupValues[1]
-                _transientMessage.value = tr(R.string.events_error_balance_pending, amount)
+                _transientMessage.value = tr(DesignSystemR.string.events_error_balance_pending, amount)
             } else {
                 _transientMessage.value = tr(R.string.dashboard_error_status_change_failed)
             }
