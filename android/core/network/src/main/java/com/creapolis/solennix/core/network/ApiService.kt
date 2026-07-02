@@ -68,7 +68,7 @@ class ApiService @Inject constructor(
             } catch (_: Exception) {
                 null
             }
-            val message = errorBody?.message
+            val message = errorBody?.message ?: errorBody?.error
                 ?: context.getString(R.string.core_network_error_server, e.response.status.value)
             when {
                 e.response.status == HttpStatusCode.Unauthorized -> {
