@@ -292,9 +292,9 @@ public final class EventDetailViewModel {
                let description = error.errorDescription,
                description.contains("Cannot complete:") {
                 // Extract amount from "Cannot complete: $XXX.XX remaining"
-                if let match = description.firstMatch(of: /Cannot complete: \$([\d,]+\.?\d*) remaining/),
-                   let amountRange = match.range(at: 1) {
-                    let amount = String(description[amountRange])
+                if let dollarIndex = description.firstIndex(of: "$"),
+                   let spaceIndex = description[dollarIndex...].firstIndex(of: " ") {
+                    let amount = String(description[description.index(after: dollarIndex)..<spaceIndex])
                     errorMessage = tr("events.detail.error.balance_pending", "El evento tiene un saldo pendiente de $%@ para completar", amount)
                 } else {
                     errorMessage = description
