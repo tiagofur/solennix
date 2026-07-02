@@ -45,6 +45,83 @@ final class DateFormattingTests: XCTestCase {
         XCTAssertNil(Date.fromServerDay(""))
     }
 
+    // MARK: - fromServerDayLocal LOCAL anchor (issue #714)
+
+    // The widget renders eventDate via Calendar.current, so it MUST be parsed as
+    // LOCAL midnight. These tests pin the timezone to extreme offsets so the
+    // off-by-one (UTC midnight → previous local day in negative offsets) is
+    // caught deterministically on EVERY test host, not only those west of UTC.
+
+    func testFromServerDayLocalAnchorsLocalMidnightAcrossTimezones() {
+        let offsets: [(name: String, seconds: Int)] = [
+            ("UTC-12",   -12 * 3600),
+            ("UTC",        0),
+            ("UTC+14",   14 * 3600)
+        ]
+        let cases: [(serverDay: String, day: Int, month: Int, year: Int)] = [
+            ("2026-07-01", 1, 7, 2026),
+            ("2026-12-31", 31, 12, 2026)
+        ]
+        for tz in offsets {
+            guard let timezone = TimeZone(secondsFromGMT: tz.seconds) else {
+                XCTFail("Could not construct timezone for \(tz.name)"); continue
+            }
+            for c in cases {
+                guard let date = Date.fromServerDayLocal(c.serverDay, timeZone: timezone) else {
+                    XCTFail("\(c.serverDay) did not parse in \(tz.name)"); continue
+                }
+                var cal = Calendar(identifier: .gregorian)
+                cal.timeZone = timezone
+                let comps = cal.dateComponents([.year, .month, .day], from: date)
+                XCTAssertEqual(comps.year,  c.year,  "year mismatch for \(c.serverDay) @ \(tz.name)")
+                XCTAssertEqual(comps.month, c.month, "month mismatch for \(c.serverDay) @ \(tz.name)")
+                XCTAssertEqual(comps.day,   c.day,   "day mismatch for \(c.serverDay) @ \(tz.name)")
+            }
+        }
+    }
+
+    /// Proves `fromServerDayLocal` prevents the widget off-by-one for users
+    /// WEST of UTC — the exact bug from #713. Parsing "2026-07-01" as UTC
+    /// midnight then reading it with a UTC-3 calendar yields June 30 (one day
+    /// early). The LOCAL-midnight parse must keep July 1 in that calendar.
+    func testFromServerDayLocalPreventsWestOfUTCDayShift() {
+        let utcMinus3 = TimeZone(secondsFromGMT: -3 * 3600)!
+        var localCal = Calendar(identifier: .gregorian)
+        localCal.timeZone = utcMinus3
+
+        let correct = Date.fromServerDayLocal("2026-07-01", timeZone: utcMinus3)!
+        let buggyUTC = Date.fromServerDay("2026-07-01")!  // UTC midnight
+
+        // Correct (LOCAL) parse: the local calendar reads July 1.
+        XCTAssertEqual(localCal.component(.day,   from: correct), 1)
+        XCTAssertEqual(localCal.component(.month, from: correct), 7)
+
+        // Documents the bug: the UTC-midnight parse reads June 30 here, one day
+        // earlier — why the widget showed the wrong day before #713/#714.
+        XCTAssertEqual(localCal.component(.day,   from: buggyUTC), 30,
+            "UTC-midnight parse must shift one day earlier in a negative-offset calendar")
+        XCTAssertEqual(localCal.component(.month, from: buggyUTC), 6)
+
+        // For a negative offset, LOCAL midnight is a LATER absolute instant than
+        // UTC midnight (the negative-offset day starts after UTC's). +3h here.
+        XCTAssertGreaterThan(correct, buggyUTC)
+        XCTAssertEqual(correct.timeIntervalSince(buggyUTC), 3 * 3600, accuracy: 1.0)
+    }
+
+    func testFromServerDayLocalStripsTrailingTimestamp() {
+        // Tolerates full-ISO server inputs (mirrors fromServerDay + the working
+        // WidgetEventData.from path, both of which apply .prefix(10)).
+        XCTAssertEqual(
+            Date.fromServerDayLocal("2026-07-01"),
+            Date.fromServerDayLocal("2026-07-01T23:59:59Z")
+        )
+    }
+
+    func testFromServerDayLocalReturnsNilForGarbage() {
+        XCTAssertNil(Date.fromServerDayLocal("not-a-date"))
+        XCTAssertNil(Date.fromServerDayLocal(""))
+    }
+
     // MARK: - Round-trip parse→format is lossless
 
     func testFormattedServerDayRoundTripPreservesDay() {
