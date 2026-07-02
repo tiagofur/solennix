@@ -1,44 +1,107 @@
-# AGENTS.md — Mapa de navegación para agentes de IA (Solennix)
+# AGENTS.md — Punto de entrada para agentes de IA (Solennix)
 
-> Este archivo es el **punto de entrada** para cualquier agente que trabaje en Solennix. NO es una biblia de reglas: es un **mapa**. Lee solo lo que necesites cuando lo necesites (divulgación progresiva).
+> **Este archivo es la única fuente normative para cualquier agente** (ZCode, Claude Code, Codex, Copilot, Cursor). No es una biblia de reglas: es un **mapa con divulgación progresiva**. Lee solo lo que tu tarea necesita.
+> Otros archivos de entrada (`CLAUDE.md`, `.github/copilot-instructions.md`) son stubs que apuntan aquí.
 
 ---
 
 ## 1. Antes de empezar (obligatorio)
 
-1. Ejecuta `./init.sh` en la raíz y verifica que termine sin errores. Si falla, **para** y resuelve el entorno antes de tocar código.
-2. Lee `progress/current.md` para entender en qué estado quedó la última sesión activa.
-3. Lee `feature_list.json` y elige **una** tarea con estado `pending`. No trabajes en más de una a la vez.
+1. Ejecutá `./init.sh` en la raíz y verificá que termine sin errores. Si falla, **pará** y resolvé el entorno antes de tocar código.
+2. Leé `progress/current.md` para saber en qué estado quedó la última sesión activa.
+3. Elegí **una** tarea con estado `pending` en `feature_list.json`. No trabajes en más de una a la vez.
 
-## 2. Mapa de navegación del repositorio
+## 2. Mapa de navegación (qué leer según tu tarea)
 
-| Archivo / carpeta | Qué contiene | Cuándo leerlo |
-| :--- | :--- | :--- |
-| `feature_list.json` | Lista de tareas con estado (`pending` / `in_progress` / `done`) | Siempre, al empezar la sesión |
-| `progress/current.md` | Estado de la sesión actual activa | Siempre, al empezar la sesión |
-| `progress/history.md` | Bitácora append-only de sesiones anteriores | Si necesitás contexto histórico de lo hecho |
-| `docs/agents/architecture.md` | Estructura técnica de las 4 plataformas (Backend, Web, iOS, Android) | Antes de diseñar o estructurar cambios |
-| `docs/agents/conventions.md` | Reglas de estilo, nombres, DRY, manejo de errores y base de datos | Antes de escribir código |
-| `docs/agents/verification.md` | Cómo escribir y ejecutar pruebas en frontend y backend | Antes de declarar una tarea como completada |
-| `CHECKPOINTS.md` | Criterios objetivos de "estado final correcto" | Para auto-evaluarte antes del review |
-| `.agents/agents/` | Definiciones de subagentes (Líder, Implementador, Revisor) | Si necesitás saber cómo actúan los roles |
-| `backend/` | Código fuente del servidor Go y sus pruebas | Para cambios de API o lógica de negocio |
-| `web/` | Código fuente del frontend React y sus pruebas | Para cambios en la UI web o flujos de usuario |
+Leé **solo** lo relevante a tu tarea. Cargar todo de antemano desperdicia contexto y genera alucinaciones.
+
+| Si tu tarea es… | Leé esto |
+| :--- | :--- |
+| Arrancar sesión / elegir tarea | `feature_list.json` + `progress/current.md` |
+| Diseñar o estructurar cambios | `docs/agents/architecture.md` |
+| Escribir código (estilo, naming, DRY) | `docs/agents/conventions.md` |
+| Declarar tarea completada / escribir tests | `docs/agents/verification.md` |
+| Tocar UI, marca, diseño o accesibilidad | `PRODUCT.md` (fuente canónica de diseño) |
+| Auto-evaluarte antes del review | `CHECKPOINTS.md` |
+| Definir o implementar un cambio grande (spec-driven) | familia SDD: `.agents/skills/sdd-*` + `openspec/` |
+| Crear PR / issue | skills `branch-pr` / `issue-creation` |
+| Estado actual del producto | `docs/PRD/11_CURRENT_STATUS.md` (vivo) |
+| Roadmap | `docs/PRD/09_ROADMAP.md` (master) |
+| Contexto histórico | `progress/history.md` y `docs/_archive/` |
+
+**Stack por plataforma:** iOS, Android, Web y Backend. Ver `docs/agents/architecture.md` para el desglose de capas y `README.md` para los comandos de cada una.
 
 ## 3. Reglas duras (no negociables)
 
 - **Una sola feature a la vez.** No mezcles cambios de múltiples tareas.
-- **Paridad Cross-Platform obligatoria.** Todo cambio que altere el dominio, base de datos o APIs DEBE ser propagado a iOS, Android, Web y Go Backend de inmediato. No esperes a que te lo pidan.
-- **DRY (Don't Repeat Yourself).** Evitá la duplicación de código en lógica de negocio o utilidades. Reutilizá componentes existentes en atomic design.
-- **No declares una tarea `done` sin pruebas en verde.** Corré `./init.sh` y asegurate de que todos los tests pasen al 100%.
-- **Documentá lo que hacés** en `progress/current.md` a medida que avanzás, no al final.
-- **Dejá el repositorio limpio** al cerrar la sesión (sin archivos temporales huérfanos).
+- **Paridad Cross-Platform obligatoria.** Todo cambio que altere dominio, DB o APIs DEBE propagarse a iOS, Android, Web y Backend de inmediato. Revisá proactivamente — no esperes que te lo pidan.
+- **DRY (Don't Repeat Yourself).** Antes de escribir una utilidad/componente, buscá si ya existe.
+- **No declares una tarea `done` sin pruebas en verde.** Corré `./init.sh` y asegurá que pase al 100%.
+- **Documentá lo que hacés** en `progress/current.md` a medida que avanzás.
+- **Dejá el repositorio limpio** al cerrar (sin logs de debug ni temporales huérfanos).
 
-## 4. Lifecycle de cierre de sesión
+### Mapeo cross-platform (dónde tocar por área)
 
-Antes de terminar tu turno de trabajo:
+| Área | iOS | Android | Web | Backend |
+| :--- | :--- | :--- | :--- | :--- |
+| Modelos | `ios/Packages/SolennixCore/.../Models/` | `android/core/model/` | `web/src/types/` | `backend/internal/model/` |
+| API/Red | `ios/Packages/SolennixNetwork/.../` | `android/core/network/` | `web/src/services/` | `backend/internal/handler/` |
+| ViewModels | `.../ViewModels/` | `android/feature/**/viewmodel/` | `web/src/stores/` (Zustand) | — |
+| UI | `.../Views/` | `android/feature/**/ui/` | `web/src/pages/`, `components/` | — |
+| Navegación | `ios/Solennix/Navigation/` | `.../navigation/` | `web/src/router/` | — |
+| Auth | `AuthManager.swift` | `AuthInterceptor.kt` | `AuthContext.tsx` / `authStore.ts` | `handler/auth.go`, `middleware/auth.go` |
+| DB / Repo | — | — | — | `backend/internal/repository/` |
+| Rutas API | — | — | — | `backend/internal/router/` |
+
+### Terminología del dominio
+
+UI en español · código y DB en inglés · endpoints en `kebab-case`.
+
+| UI (español) | Código | DB |
+| :--- | --- | --- |
+| Evento | `Event` | `events` |
+| Cliente | `Client` | `clients` |
+| Producto | `Product` | `products` |
+| Inventario | `InventoryItem` | `inventory_items` |
+| Cotización | `Quote` | `quotes` |
+| Contrato | `Contract` | `contracts` |
+| Pago | `Payment` | `payments` |
+| Extra | `EventExtra` | `event_extras` |
+| Equipo | `Equipment` | _(subcategoría inventario)_ |
+| Insumo | `Supply` | _(subcategoría inventario)_ |
+| Receta | `Recipe` | _(ingredientes de un producto)_ |
+| Plan | `Plan` | _(tier: Gratis/Pro/Business)_ |
+| Checklist | `Checklist` | _(tareas por evento)_ |
+| Dashboard | `Dashboard` | _(panel KPIs)_ |
+
+## 4. Commits
+
+Después de cada cambio significativo, commiteá.
+
+- **Formato:** Conventional Commits, en inglés: `type(scope): description`
+- **Types:** `feat` · `fix` · `refactor` · `docs` · `test` · `chore` · `style` · `perf`
+- **Scopes:** `ios` · `android` · `web` · `backend` · `prd` · `infra`
+
+```
+feat(ios): add quick quote generation from client detail
+fix(backend): correct event date parsing for timezone offset
+docs(prd): update feature parity table after inventory release
+```
+
+**No commitear:** trabajo incompleto, secretos/`.env`, generados (`node_modules/`, `build/`, `.gradle/`), `console.log` de debug.
+
+## 5. Comunicación
+
+- Herramientas primero, texto después · Pará al encontrar lo buscado.
+- Respuestas directas: solo la ruta, el valor, el dato.
+- Oraciones cortas · Listas en vez de prosa · Código inline si es ≤3 líneas.
+- Sin preámbulos, disculpas, hedging ni resúmenes redundantes.
+- Números, no palabras: "3 archivos" no "varios".
+
+## 6. Lifecycle de cierre de sesión
+
 1. Ejecutá `./init.sh` y validá que termine en verde.
-2. Si completaste la feature, marcala como `done` en `feature_list.json`.
+2. Si completaste la feature, marcála `done` en `feature_list.json`.
 3. Pasá el resumen de `progress/current.md` al final de `progress/history.md`.
-4. Dejá `progress/current.md` limpio y vacío con su plantilla básica.
-5. Remové logs de debug, prints innecesarios y archivos temporales que no estén en `.gitignore`.
+4. Dejá `progress/current.md` limpio con su plantilla básica.
+5. Remové logs de debug, prints y temporales fuera del `.gitignore`.
