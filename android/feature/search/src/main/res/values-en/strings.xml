@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <plurals name="search_client_event_count">
+        <item quantity="one">%1$d event</item>
+        <item quantity="other">%1$d events</item>
+    </plurals>
     <string name="search_title">Search</string>
     <string name="search_back">Back</string>
     <string name="search_placeholder">Search events, clients, products...</string>

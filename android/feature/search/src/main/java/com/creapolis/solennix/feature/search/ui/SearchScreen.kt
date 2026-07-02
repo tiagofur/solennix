@@ -35,7 +35,6 @@ import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.Product
-import com.creapolis.solennix.feature.clients.ui.ClientListItem
 import com.creapolis.solennix.feature.search.R
 import com.creapolis.solennix.feature.search.viewmodel.SearchViewModel
 import com.creapolis.solennix.feature.search.viewmodel.SearchScope
