@@ -228,7 +228,6 @@ dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:network"))
     implementation(project(":core:designsystem"))
-    implementation(project(":core:database"))
     implementation(project(":core:data"))
     implementation(project(":feature:auth"))
     implementation(project(":feature:dashboard"))
