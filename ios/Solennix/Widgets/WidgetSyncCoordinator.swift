@@ -146,12 +146,18 @@ final class WidgetSyncCoordinator {
         let calendar = Calendar.current
 
         let eventsThisMonth = events.filter {
-            guard let date = ISO8601DateFormatter().date(from: $0.eventDate) else { return false }
+            guard let date = Date.fromServerDayLocal($0.eventDate) else {
+                logger.warning("deriveKPIs: unparseable eventDate '\($0.eventDate, privacy: .public)' (eventsThisMonth)")
+                return false
+            }
             return calendar.isDate(date, equalTo: now, toGranularity: .month)
         }
         let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
         let eventsThisWeek = events.filter {
-            guard let date = ISO8601DateFormatter().date(from: $0.eventDate) else { return false }
+            guard let date = Date.fromServerDayLocal($0.eventDate) else {
+                logger.warning("deriveKPIs: unparseable eventDate '\($0.eventDate, privacy: .public)' (eventsThisWeek)")
+                return false
+            }
             return date >= startOfWeek && date <= now.addingTimeInterval(7 * 24 * 3600)
         }
         let lowStockCount = inventory.filter { $0.minimumStock > 0 && $0.currentStock < $0.minimumStock }.count
@@ -167,7 +173,10 @@ final class WidgetSyncCoordinator {
         let pendingPayments = events
             .filter { event in
                 guard event.status == .confirmed else { return false }
-                guard let eventDate = ISO8601DateFormatter().date(from: event.eventDate) else { return false }
+                guard let eventDate = Date.fromServerDayLocal(event.eventDate) else {
+                    logger.warning("deriveKPIs: unparseable eventDate '\(event.eventDate, privacy: .public)' (pendingPayments)")
+                    return false
+                }
                 let normalized = calendar.startOfDay(for: eventDate)
                 return normalized >= startOfToday && normalized <= next7Days
             }
