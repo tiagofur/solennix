@@ -15,6 +15,7 @@ import com.creapolis.solennix.core.model.User
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.EventDayNotificationManager
+import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.feature.events.R
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -68,10 +69,26 @@ class EventDetailViewModelTest {
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(dispatcher)
-        every { appContext.getString(any()) } returns ""
-        every { appContext.getString(any(), *anyVararg()) } answers {
+        every { appContext.getString(any()) } answers {
             when (firstArg<Int>()) {
+                R.string.events_list_error_change_status -> "No se pudo cambiar el estado"
+                else -> ""
+            }
+        }
+        every { appContext.getString(any(), *anyVararg()) } answers {
+            val resId = firstArg<Int>()
+            // The vararg arrives packed as a single Array argument; unwrap it to read values.
+            val firstFmtArg = args.drop(1).firstOrNull()?.let { arg ->
+                when (arg) {
+                    is Array<*> -> arg.firstOrNull()
+                    else -> arg
+                }
+            }
+            when (resId) {
                 R.string.events_detail_error_positive_amount -> "El monto debe ser mayor a 0"
+                R.string.events_list_error_change_status -> "No se pudo cambiar el estado"
+                DesignSystemR.string.events_error_balance_pending ->
+                    "El evento tiene un saldo pendiente de \$$firstFmtArg para completar"
                 else -> ""
             }
         }
@@ -176,6 +193,42 @@ class EventDetailViewModelTest {
         }
         coVerify(exactly = 0) { eventRepository.updateEvent(any()) }
         assertNull(vm.uiState.value.errorMessage)
+        collectJob.cancel()
+    }
+
+    @Test
+    fun `updateEventStatus translates backend balance error to localized message`() = runTest {
+        // Backend rejects "completed" with "Cannot complete: $X remaining".
+        coEvery { eventRepository.updateEvent(any()) } throws
+            RuntimeException("Cannot complete: \$1500.00 remaining")
+
+        val vm = buildViewModel()
+        val collectJob = backgroundScope.launch { vm.uiState.collect {} }
+        advanceUntilIdle()
+
+        vm.updateEventStatus(EventStatus.COMPLETED)
+        advanceUntilIdle()
+
+        assertEquals(
+            "El evento tiene un saldo pendiente de \$1500.00 para completar",
+            vm.uiState.value.errorMessage
+        )
+        collectJob.cancel()
+    }
+
+    @Test
+    fun `updateEventStatus generic error uses localized fallback`() = runTest {
+        coEvery { eventRepository.updateEvent(any()) } throws
+            RuntimeException("some unexpected failure")
+
+        val vm = buildViewModel()
+        val collectJob = backgroundScope.launch { vm.uiState.collect {} }
+        advanceUntilIdle()
+
+        vm.updateEventStatus(EventStatus.CANCELLED)
+        advanceUntilIdle()
+
+        assertEquals("No se pudo cambiar el estado", vm.uiState.value.errorMessage)
         collectJob.cancel()
     }
 }

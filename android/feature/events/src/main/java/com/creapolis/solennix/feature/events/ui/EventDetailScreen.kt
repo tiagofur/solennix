@@ -31,6 +31,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.designsystem.component.*
+import com.creapolis.solennix.core.designsystem.component.SnackbarVariant
+import com.creapolis.solennix.core.designsystem.event.rememberSnackbarController
+import com.creapolis.solennix.core.designsystem.event.SolennixSnackbarHost
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveDetailLayout
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
@@ -57,6 +60,13 @@ import com.creapolis.solennix.feature.events.viewmodel.*
 import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
 import java.io.File
+
+/**
+ * Tolerance (in currency units) for treating an event as fully paid when deciding whether
+ * the "completed" transition is allowed client-side. Mirrors the backend's 0.01 tolerance
+ * (see `backend/internal/handlers/crud_handler.go`) and the iOS `remaining <= 0.01` guard.
+ */
+private const val BALANCE_TOLERANCE = 0.01
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
@@ -87,7 +97,8 @@ fun EventDetailScreen(
     var showPhotoGallery by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showClientPortalSheet by remember { mutableStateOf(false) }
-    val snackbarHostState = remember { SnackbarHostState() }
+    var showBalanceDialog by remember { mutableStateOf(false) }
+    val snackbarController = rememberSnackbarController()
 
     val windowInfoTracker = WindowInfoTracker.getOrCreate(context)
     val windowLayoutInfo by (context as? android.app.Activity)?.let { activity ->
@@ -111,10 +122,15 @@ fun EventDetailScreen(
 
     // Surface post-load errors (e.g. delete/status failures) via Snackbar when event is loaded.
     // Guard with event != null so we don't race with the full-screen error on initial load failure.
+    // Pick the snackbar variant from the message semantics: balance-pending warnings (already
+    // localized by the ViewModel) render as WARNING; everything else is ERROR.
+    val balanceTitle = stringResource(R.string.events_detail_balance_pending_title)
     LaunchedEffect(uiState.errorMessage) {
         val msg = uiState.errorMessage
         if (msg != null && uiState.event != null) {
-            snackbarHostState.showSnackbar(msg)
+            snackbarController.currentVariant =
+                if (msg.contains(balanceTitle)) SnackbarVariant.WARNING else SnackbarVariant.ERROR
+            snackbarController.hostState.showSnackbar(msg)
             viewModel.onErrorShown()
         }
     }
@@ -124,7 +140,7 @@ fun EventDetailScreen(
     LaunchedEffect(viewModel.addPaymentSuccess) {
         if (viewModel.addPaymentSuccess) {
             viewModel.consumeAddPaymentSuccess()
-            snackbarHostState.showSnackbar(addPaymentSuccessLabel)
+            snackbarController.hostState.showSnackbar(addPaymentSuccessLabel)
         }
     }
 
@@ -141,7 +157,7 @@ fun EventDetailScreen(
 
     Scaffold(
         modifier = sharedBoundsModifier,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { SolennixSnackbarHost(snackbarController) },
         topBar = {
             SolennixTopAppBar(
                 title = { Text(stringResource(R.string.events_detail_title)) },
@@ -195,7 +211,17 @@ fun EventDetailScreen(
                             // Event Info Card (header)
                             EventInfoCard(
                                 event = event,
-                                onStatusChange = { newStatus -> viewModel.updateEventStatus(newStatus) }
+                                onStatusChange = { newStatus ->
+                                    // Client-side guard (parity with iOS): block the transition to
+                                    // COMPLETED when there's a pending balance. Avoids the network
+                                    // round-trip and the raw English backend error; shows an instant
+                                    // modal alert with the localized remaining amount.
+                                    if (newStatus == EventStatus.COMPLETED && remaining > BALANCE_TOLERANCE) {
+                                        showBalanceDialog = true
+                                    } else {
+                                        viewModel.updateEventStatus(newStatus)
+                                    }
+                                }
                             )
 
                             // Client Info
@@ -404,6 +430,19 @@ fun EventDetailScreen(
                             Text(stringResource(R.string.events_list_cancel))
                         }
                     }
+                )
+            }
+
+            if (showBalanceDialog) {
+                InfoAlertDialog(
+                    title = stringResource(R.string.events_detail_balance_pending_title),
+                    message = stringResource(
+                        R.string.events_detail_balance_pending_message,
+                        remaining.asMXN()
+                    ),
+                    confirmText = stringResource(R.string.events_detail_balance_pending_action),
+                    severity = AlertSeverity.WARNING,
+                    onConfirm = { showBalanceDialog = false }
                 )
             }
         }
