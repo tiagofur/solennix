@@ -19,10 +19,8 @@ status: active
 > - [[PRD MOC]] — índice del PRD
 > - [[11_CURRENT_STATUS|Estado Actual]] — qué está implementado hoy
 > - [[02_FEATURES|Features]] — catálogo completo con paridad
-> - [[10_COLLABORATION_GUIDE|Guía de Colaboración]] — workflow con Claude Code
-> - [[SUPER PLAN MOC]] — sistema de ejecución cross-platform (12 semanas)
-> - [[07_WAVE_PLAN_12_WEEKS]] — plan operativo por ondas
-> - [[05_RELEASE_GOVERNANCE_AND_QUALITY_GATES]] — calidad obligatoria por PR/release
+> - [[10_COLLABORATION_GUIDE|Guía de Colaboración]] — workflow con agentes de IA
+> - _Histórico:_ el SUPER_PLAN (programa de 12 semanas, concluido) y sus ondas/gates se preservan en `docs/_archive/SUPER_PLAN/`.
 
 ---
 

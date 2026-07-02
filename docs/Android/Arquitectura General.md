@@ -163,7 +163,7 @@ sequenceDiagram
 
 Módulos con tests hoy: `core/data`, `core/database`, `core/model`, `core/network`, `feature/auth`, `feature/clients`, `feature/dashboard`, `feature/events`, `feature/inventory`, `feature/products`.
 
-Ver detalle operativo en [[Testing]] y priorización en [[Roadmap Android]].
+Ver detalle operativo en [[Testing]] y priorización en [[../PRD/09_ROADMAP|Roadmap maestro]].
 
 ---
 

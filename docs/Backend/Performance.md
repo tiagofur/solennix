@@ -8,7 +8,7 @@ updated: 2025-04-05
 related:
   - "[[Backend MOC]]"
   - "[[Base de Datos]]"
-  - "[[Roadmap Backend]]"
+  - "[[../PRD/09_ROADMAP|Roadmap maestro]]"
   - "[[Arquitectura General]]"
 ---
 
@@ -225,4 +225,4 @@ flowchart TD
 
 ---
 
-**Relacionado:** [[Backend MOC]] | [[Base de Datos]] | [[Roadmap Backend]] | [[Arquitectura General]]
+**Relacionado:** [[Backend MOC]] | [[Base de Datos]] | [[../PRD/09_ROADMAP|Roadmap maestro]] | [[Arquitectura General]]

@@ -51,4 +51,4 @@ Compose Material 3 provee por default:
 
 - [[Design System]] — colores y tipografía afectan accesibilidad
 - [[Componentes Compartidos]] — componentes deben ser accesibles
-- [[Roadmap Android]] — accesibilidad como mejora planificada
+- [[../PRD/09_ROADMAP|Roadmap maestro]] — accesibilidad como mejora planificada

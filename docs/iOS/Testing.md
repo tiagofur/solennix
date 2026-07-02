@@ -77,5 +77,5 @@ Una pantalla solo se marca cerrada cuando los 3 tracks están completos.
 - [[Arquitectura General]] — SPM facilita testing por paquete
 - [[Manejo de Estado]] — @Observable ViewModels como target principal
 - [[Capa de Red]] — APIClient actor testeable
-- [[Roadmap iOS]] — testing como prioridad
+- [[../PRD/09_ROADMAP|Roadmap maestro]] — testing como prioridad
 - [[Plan iOS i18n + QA + Refactor por Pantalla]] — ejecución operativa pantalla por pantalla

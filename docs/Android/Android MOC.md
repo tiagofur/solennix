@@ -67,5 +67,5 @@
 
 | Área | Documento |
 |------|-----------|
-| Próximos pasos y prioridades | [[Roadmap Android]] |
+| Próximos pasos y prioridades | [[../PRD/09_ROADMAP]] (roadmap maestro cross-platform) |
 | Firma de release y secretos | [[Firma y Secretos de Release]] |

@@ -11,7 +11,7 @@ related:
   - "[[Backend MOC]]"
   - "[[Integraciones]]"
   - "[[Performance]]"
-  - "[[Roadmap Backend]]"
+  - "[[../PRD/09_ROADMAP|Roadmap maestro]]"
 ---
 
 # Módulos Auxiliares del Backend
@@ -119,7 +119,7 @@ UnavailableDate {
 > - Crear `tsvector` columns en las tablas relevantes
 > - Indexar con `GIN` para búsquedas sub-milisegundo
 > - Soporte para stemming y acentos en español
-> - Ver detalles en [[Roadmap Backend]]
+> - Ver detalles en [[../PRD/09_ROADMAP|Roadmap maestro]]
 
 ---
 
@@ -177,7 +177,7 @@ Cliente → POST /api/uploads/image (multipart)
 > - **Sin replicación** — si el servidor cae, las imágenes se pierden
 > - **Sin CDN** — el ancho de banda sale del servidor de la app
 >
-> Para producción multi-instancia, migrar a S3/GCS. Ver [[Roadmap Backend]] y [[Despliegue]].
+> Para producción multi-instancia, migrar a S3/GCS. Ver [[../PRD/09_ROADMAP|Roadmap maestro]] y [[Despliegue]].
 
 > [!info] Cache de Archivos Estáticos
 > Los archivos servidos por `GET /api/uploads/*` tienen headers de cache de **1 año** (`Cache-Control: max-age=31536000`). Esto es seguro porque los filenames incluyen un identificador único — si se re-sube una imagen, el nombre cambia y no hay stale cache.
@@ -260,7 +260,7 @@ DeviceToken {
 | Límites de plan y suscripción | [[Autenticación]] |
 | Esquema de base de datos | [[Base de Datos]] |
 | Plan de mejora de performance | [[Performance]] |
-| Roadmap de features pendientes | [[Roadmap Backend]] |
+| Roadmap de features pendientes | [[../PRD/09_ROADMAP|Roadmap maestro]] |
 | Servicios externos (FCM, S3) | [[Integraciones]] |
 | Despliegue multi-instancia | [[Despliegue]] |
 | Seguridad y multi-tenancy | [[Seguridad]] |

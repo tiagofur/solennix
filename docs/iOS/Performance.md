@@ -50,4 +50,4 @@
 
 - [[Caché y Offline]] — SwiftData como caché
 - [[Manejo de Estado]] — @Observable vs redraws
-- [[Roadmap iOS]] — optimizaciones planificadas
+- [[../PRD/09_ROADMAP|Roadmap maestro]] — optimizaciones planificadas

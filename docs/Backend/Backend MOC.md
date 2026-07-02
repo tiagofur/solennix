@@ -11,14 +11,13 @@
 
 ## Estado operativo
 
-- [[Estado Plataforma|Estado actual del Backend]]
+- [[../PRD/11_CURRENT_STATUS|Estado actual del producto]] — fuente viva (cross-platform)
 
 ---
 
 ## Arquitectura
 
 - [[Arquitectura General]] — Vista de alto nivel, capas, flujo de datos, estructura de directorios
-- [[Auditoría Backend 2026-04-27]] — Resultado de auditoría técnica, métricas reales, gaps confirmados
 - [[Middleware Stack]] — Recovery, CORS, Security, Logger, Auth, RateLimit, AdminOnly
 - [[Autenticación]] — JWT, bcrypt, cookies httpOnly, OAuth (Google/Apple), token refresh
 - [[Sistema de Tipos]] — Models, entidades, relaciones, patrones Insert/Update
@@ -51,7 +50,7 @@
 
 ## Roadmap
 
-- [[Roadmap Backend]] — Mejoras priorizadas para alinear con frontend, seguridad, y escalabilidad
+- [[../PRD/09_ROADMAP|Roadmap maestro]] — fuente viva cross-platform
 
 ---
 

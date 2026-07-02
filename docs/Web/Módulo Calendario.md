@@ -17,7 +17,7 @@ status: active
 > Vista mensual interactiva con eventos coloreados por status, fechas bloqueadas, context menu (right-click) y creación de eventos con fecha pre-llenada. Construido sobre `@daypicker/react`.
 
 > [!warning] Gap conocido
-> **Status filter eliminado en FASE 7C** — iOS y Android aún lo tienen. Ver [[../../PRD/21_CALENDAR_PARITY_AUDIT|Audit de Paridad]] gap G4.
+> **Status filter eliminado en FASE 7C** — iOS y Android aún lo tienen. Ver [[../../_archive/21_CALENDAR_PARITY_AUDIT|Audit de Paridad]] gap G4.
 
 ---
 
@@ -93,8 +93,8 @@ CalendarView.tsx
 
 | Gap | Referencia |
 |-----|-----------|
-| Status filter eliminado | [[../../PRD/21_CALENDAR_PARITY_AUDIT#❌ Gaps de Paridad\|G4]] |
-| Sin plan limits guard al crear | [[../../PRD/21_CALENDAR_PARITY_AUDIT#❌ Gaps de Paridad\|G7]] |
+| Status filter eliminado | [[../../_archive/21_CALENDAR_PARITY_AUDIT#❌ Gaps de Paridad\|G4]] |
+| Sin plan limits guard al crear | [[../../_archive/21_CALENDAR_PARITY_AUDIT#❌ Gaps de Paridad\|G7]] |
 | Sin Quick Quote | Exclusivo iOS — baja prioridad |
 
 ---
@@ -105,6 +105,6 @@ CalendarView.tsx
 - [[Capa de Servicios]] — `unavailableDatesService`
 - [[Componentes Compartidos]] — @daypicker/react como base
 - [[Hooks Personalizados]] — `usePlanLimits`, `useEventsByDateRange`
-- [[../../PRD/21_CALENDAR_PARITY_AUDIT|Audit de Paridad Calendario]]
+- [[../../_archive/21_CALENDAR_PARITY_AUDIT|Audit de Paridad Calendario]]
 
 #web #calendario #dominio

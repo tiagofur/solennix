@@ -43,5 +43,5 @@
 
 ## Relaciones
 
-- [[Roadmap Web]] — Mejoras de accesibilidad priorizadas
+- [[../PRD/09_ROADMAP|Roadmap maestro]] — Mejoras de accesibilidad priorizadas
 - [[Design System]] — Tokens de color y contraste

@@ -47,7 +47,7 @@ platform: Web
 > Se definió la evolución del portal `team_member` para pasar de vistas de lista/filtro a una experiencia operativa diaria.
 > - Superficies objetivo: `TeamHome`, `TeamAssignmentsInbox`, `TeamCalendar` (mes/semana/día) y `TeamEventDetail`.
 > - Requisito: mantener guard de rol para aislar miembros invitados del layout de organizer.
-> - Fuente de backlog y DoD: `docs/PRD/17_PERSONAL_TRACKER.md`.
+> - Fuente de backlog y DoD: `docs/_archive/17_PERSONAL_TRACKER.md`.
 
 > [!success] 2026-05-15 — Team Member web A1 consolidado
 > Primera ejecución del rediseño utility-first en web:

@@ -162,4 +162,4 @@ Ver [[Módulo Formularios Compartibles]] para detalle completo.
 - [[Middleware Stack]] — Implementación de cada middleware de seguridad
 - [[Autenticación]] — JWT, bcrypt, OAuth
 - [[Módulo Formularios Compartibles]] — Seguridad de enlaces publicos
-- [[Roadmap Backend]] — Plan de mejoras de seguridad
+- [[../PRD/09_ROADMAP|Roadmap maestro]] — Plan de mejoras de seguridad

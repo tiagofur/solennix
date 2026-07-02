@@ -35,5 +35,5 @@
 
 ## Relaciones
 
-- [[Roadmap Web]] — Mejoras priorizadas
+- [[../PRD/09_ROADMAP|Roadmap maestro]] — Mejoras priorizadas
 - [[Arquitectura General]] — Stack y decisiones técnicas

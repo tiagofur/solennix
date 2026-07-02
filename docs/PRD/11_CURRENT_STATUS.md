@@ -481,7 +481,7 @@ status: active
 
 > [!info] 2026-05-14 — Plan de producto definido para Team Member Portal (Ola 4)
 > Se formalizó el backlog funcional para evolucionar el portal `team_member` desde vistas listadas hacia una experiencia de utilidad diaria y calendario operativo real.
-> - **Documento fuente:** `docs/PRD/17_PERSONAL_TRACKER.md` (sección "Ola 4 — Team Member Portal Utility")
+> - **Documento fuente:** `docs/_archive/17_PERSONAL_TRACKER.md` (sección "Ola 4 — Team Member Portal Utility")
 > - **Pantallas objetivo:** Mi Jornada, Bandeja de Asignaciones, Calendario mes/semana/día, Detalle de Evento Team, Timeline de cambios y Disponibilidad del miembro.
 > - **Paridad requerida:** Web + iOS + Android con UX nativa en cada stack y misma cobertura funcional.
 > - **Estado:** planificación cerrada; ejecución iniciada.
@@ -849,7 +849,7 @@ status: active
 > - Backend changes recientes (FTS search, activity log, admin audit log, CSRF v2) verificados como **sin impacto** sobre iOS: el cliente usa Bearer JWT y bypasa CSRF; los nuevos endpoints no son consumidos por iOS.
 
 > [!tip] Documentos relacionados
-> [[PRD MOC]] · [[01_PRODUCT_VISION]] · [[02_FEATURES]] · [[04_MONETIZATION]] · [[09_ROADMAP]] · [[SUPER PLAN MOC]] · [[03_CROSS_PLATFORM_PARITY_MODEL]] · [[11_CROSS_PLATFORM_KPI_SCORECARD]]
+> [[PRD MOC]] · [[01_PRODUCT_VISION]] · [[02_FEATURES]] · [[04_MONETIZATION]] · [[09_ROADMAP]] · [[03_CROSS_PLATFORM_PARITY_MODEL]] · [[11_CROSS_PLATFORM_KPI_SCORECARD]]
 
 ---
 
@@ -1958,7 +1958,7 @@ Refactors planificados para lograr paridad total entre las 6 plataformas (iPhone
 | Botones contextuales Eventos | ✅  | ✅      | ✅  | Header de EventList en tablet/desktop                                        |
 | Web Mobile bottom tab bar    | ➖  | ➖      | ✅  | NUEVO: bottom tabs para web <1024px                                          |
 
-### 8.2 Refactor de Dashboard (DASHBOARD_REFACTOR_PLAN.md)
+### 8.2 Refactor de Dashboard (docs/_archive/22_DASHBOARD_REFACTOR_PLAN.md)
 
 **Estado:** ✅ Completado — todos los items implementados.
 

@@ -62,4 +62,4 @@
 - [[Sincronización Offline]] — intervalo de sync afecta batería
 - [[Manejo de Estado]] — Flows y recomposiciones
 - [[Base de Datos Local]] — paginación desde Room
-- [[Roadmap Android]] — optimizaciones planificadas
+- [[../PRD/09_ROADMAP|Roadmap maestro]] — optimizaciones planificadas

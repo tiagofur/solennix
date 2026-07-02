@@ -21,7 +21,7 @@ status: active
 > - **Loading state sin UI** — campo existe en state pero no se renderiza (gap G2)
 > - **Status dots por evento** en vez de por status — inconsistente con overflow (gap G6)
 >
-> Ver [[../../PRD/21_CALENDAR_PARITY_AUDIT|Audit de Paridad]].
+> Ver [[../../_archive/21_CALENDAR_PARITY_AUDIT|Audit de Paridad]].
 
 ---
 
@@ -108,13 +108,13 @@ Phone:
 
 | Gap | Prioridad | Referencia |
 |-----|:---------:|-----------|
-| Sin crear evento desde calendario | 🔴 Alta | [[../../PRD/21_CALENDAR_PARITY_AUDIT#🔴 Alta Prioridad\|G1]] |
-| Loading state sin UI | 🔴 Alta | [[../../PRD/21_CALENDAR_PARITY_AUDIT#🔴 Alta Prioridad\|G2]] |
-| Sin botón Retry | 🟡 Media | [[../../PRD/21_CALENDAR_PARITY_AUDIT#🟡 Media Prioridad\|G5]] |
-| Dots por evento vs status | 🟡 Media | [[../../PRD/21_CALENDAR_PARITY_AUDIT#🟡 Media Prioridad\|G6]] |
-| Sin plan limits guard | 🟡 Media | [[../../PRD/21_CALENDAR_PARITY_AUDIT#🟡 Media Prioridad\|G7]] |
-| Accesibilidad parcial | 🟢 Baja | [[../../PRD/21_CALENDAR_PARITY_AUDIT#🟢 Baja Prioridad\|G10]] |
-| Sin pull-to-refresh | 🟢 Baja | [[../../PRD/21_CALENDAR_PARITY_AUDIT#🟢 Baja Prioridad\|G11]] |
+| Sin crear evento desde calendario | 🔴 Alta | [[../../_archive/21_CALENDAR_PARITY_AUDIT#🔴 Alta Prioridad\|G1]] |
+| Loading state sin UI | 🔴 Alta | [[../../_archive/21_CALENDAR_PARITY_AUDIT#🔴 Alta Prioridad\|G2]] |
+| Sin botón Retry | 🟡 Media | [[../../_archive/21_CALENDAR_PARITY_AUDIT#🟡 Media Prioridad\|G5]] |
+| Dots por evento vs status | 🟡 Media | [[../../_archive/21_CALENDAR_PARITY_AUDIT#🟡 Media Prioridad\|G6]] |
+| Sin plan limits guard | 🟡 Media | [[../../_archive/21_CALENDAR_PARITY_AUDIT#🟡 Media Prioridad\|G7]] |
+| Accesibilidad parcial | 🟢 Baja | [[../../_archive/21_CALENDAR_PARITY_AUDIT#🟢 Baja Prioridad\|G10]] |
+| Sin pull-to-refresh | 🟢 Baja | [[../../_archive/21_CALENDAR_PARITY_AUDIT#🟢 Baja Prioridad\|G11]] |
 
 ---
 
@@ -124,6 +124,6 @@ Phone:
 - [[Navegación]] — Destino principal en bottom nav
 - [[Manejo de Estado]] — `StateFlow<CalendarUiState>`
 - [[Componentes Compartidos]] — `StatusBadge`, `SolennixSectionTopAppBar`
-- [[../../PRD/21_CALENDAR_PARITY_AUDIT|Audit de Paridad Calendario]]
+- [[../../_archive/21_CALENDAR_PARITY_AUDIT|Audit de Paridad Calendario]]
 
 #android #calendario #dominio

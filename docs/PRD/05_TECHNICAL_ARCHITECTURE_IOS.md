@@ -54,7 +54,7 @@ platform: iOS
 > - Implementado: `TeamMemberPortalView` y `TeamMemberPortalViewModel` con carga y respuesta de asignaciones (`accept|decline`).
 > - Implementado: Home `Mi jornada` (Hoy + Próximos 7 días + Pendientes) con CTAs de agenda de hoy y revisión de asignaciones.
 > - Pendiente: calendario completo mes/semana/día y detalle Team scoped.
-> - Fuente de roadmap y DoD: `docs/PRD/17_PERSONAL_TRACKER.md`.
+> - Fuente de roadmap y DoD: `docs/_archive/17_PERSONAL_TRACKER.md`.
 
 > [!success] 2026-05-15 — Team Member Portal iOS: consolidación + calendario (slice A3)
 >

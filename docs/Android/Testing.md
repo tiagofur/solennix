@@ -142,4 +142,4 @@
 - [[Arquitectura General]] — la separación en módulos facilita el testing
 - [[Manejo de Estado]] — ViewModels son el target principal de unit tests
 - [[Base de Datos Local]] — Room in-memory para integration tests
-- [[Roadmap Android]] — testing como prioridad en el roadmap
+- [[../PRD/09_ROADMAP|Roadmap maestro]] — testing como prioridad en el roadmap
