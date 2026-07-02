@@ -8,9 +8,8 @@ import com.creapolis.solennix.core.data.repository.EventRepository
 import com.creapolis.solennix.core.data.repository.InventoryRepository
 import com.creapolis.solennix.core.data.repository.ProductRepository
 import com.creapolis.solennix.core.data.search.AppSearchIndexer
+import com.creapolis.solennix.core.data.repository.PendingAction
 import com.creapolis.solennix.core.network.EventDayNotificationManager
-import com.creapolis.solennix.core.database.entity.asExternalModel
-import com.creapolis.solennix.core.database.entity.SyncStatus
 import kotlinx.coroutines.flow.first
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -62,20 +61,18 @@ class SyncWorker @AssistedInject constructor(
         try {
             // Eventos pendientes
             val pendingEvents = eventRepository.getPendingEvents()
-            pendingEvents.forEach { cachedEvent ->
+            pendingEvents.forEach { pending ->
                 try {
-                    val event = cachedEvent.asExternalModel()
-                    when (cachedEvent.syncStatus) {
-                        SyncStatus.PENDING_INSERT -> {
-                            eventRepository.createEvent(event)
+                    when (pending.action) {
+                        PendingAction.INSERT -> {
+                            eventRepository.createEvent(pending.event)
                         }
-                        SyncStatus.PENDING_UPDATE -> {
-                            eventRepository.updateEvent(event)
+                        PendingAction.UPDATE -> {
+                            eventRepository.updateEvent(pending.event)
                         }
-                        SyncStatus.PENDING_DELETE -> {
-                            eventRepository.deleteEvent(event.id)
+                        PendingAction.DELETE -> {
+                            eventRepository.deleteEvent(pending.event.id)
                         }
-                        else -> {}
                     }
                 } catch (e: Exception) {
                     // Fail individual item but continue with others

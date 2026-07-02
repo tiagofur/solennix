@@ -21,7 +21,7 @@ interface EventRepository {
     fun getEventCountForMonth(monthStart: String, monthEnd: String): Flow<Int>
     suspend fun getEvent(id: String): Event?
     fun observeEvent(id: String): Flow<Event?>
-    suspend fun getPendingEvents(): List<com.creapolis.solennix.core.database.entity.CachedEvent>
+    suspend fun getPendingEvents(): List<PendingEvent>
     suspend fun syncEvents()
     suspend fun createEvent(event: Event): Event
     suspend fun updateEvent(event: Event): Event
@@ -102,8 +102,18 @@ class OfflineFirstEventRepository @Inject constructor(
     override fun observeEvent(id: String): Flow<Event?> =
         eventDao.observeEvent(id).map { it?.asExternalModel() }
 
-    override suspend fun getPendingEvents(): List<com.creapolis.solennix.core.database.entity.CachedEvent> =
-        eventDao.getPendingEvents()
+    override suspend fun getPendingEvents(): List<PendingEvent> =
+        eventDao.getPendingEvents().map { cached ->
+            PendingEvent(
+                event = cached.asExternalModel(),
+                action = when (cached.syncStatus) {
+                    SyncStatus.PENDING_INSERT -> PendingAction.INSERT
+                    SyncStatus.PENDING_UPDATE -> PendingAction.UPDATE
+                    SyncStatus.PENDING_DELETE -> PendingAction.DELETE
+                    SyncStatus.SYNCED -> PendingAction.UPDATE
+                }
+            )
+        }
 
     override suspend fun syncEvents() {
         val networkEvents: List<Event> = apiService.get(Endpoints.EVENTS)
