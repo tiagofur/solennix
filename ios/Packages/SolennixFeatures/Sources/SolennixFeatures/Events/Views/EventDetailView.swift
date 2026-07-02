@@ -55,28 +55,7 @@ public struct EventDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    NavigationLink(value: Route.eventForm(id: eventId)) {
-                        Label(tr("events.detail.action.edit", "Editar"), systemImage: "pencil")
-                    }
-
-                    Button {
-                        duplicateEvent()
-                    } label: {
-                        Label(tr("events.detail.action.duplicate", "Duplicar evento"), systemImage: "doc.on.doc")
-                    }
-
-                    Divider()
-
-                    Button(role: .destructive) {
-                        viewModel.showDeleteConfirm = true
-                    } label: {
-                        Label(tr("events.detail.action.delete", "Eliminar evento"), systemImage: "trash")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                        .accessibilityLabel(tr("events.detail.action.more", "Acciones del evento"))
-                }
+                eventMenu
             }
         }
         .confirmationDialog(
@@ -100,7 +79,7 @@ public struct EventDetailView: View {
         .alert(tr("events.detail.status.completed", "Completado"), isPresented: $showBalanceAlert) {
             Button(tr("events.form.ok", "OK")) { }
         } message: {
-            Text(tr("events.detail.error.balance_pending", "El evento tiene un saldo pendiente de $%@ para completar", String(format: "%.2f", viewModel.remaining)))
+            Text(String(format: tr("events.detail.error.balance_pending", "El evento tiene un saldo pendiente de $%@ para completar"), locale: FeatureL10n.locale, String(format: "%.2f", viewModel.remaining)))
         }
         .confirmationDialog(
             tr("events.detail.delete.title", "Eliminar evento"),
@@ -136,6 +115,33 @@ public struct EventDetailView: View {
             ClientPortalShareSheet(apiClient: apiClient, eventId: eventId)
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
+        }
+    }
+
+    // MARK: - Toolbar Menu
+
+    private var eventMenu: some View {
+        Menu {
+            NavigationLink(value: Route.eventForm(id: eventId)) {
+                Label(tr("events.detail.action.edit", "Editar"), systemImage: "pencil")
+            }
+
+            Button {
+                duplicateEvent()
+            } label: {
+                Label(tr("events.detail.action.duplicate", "Duplicar evento"), systemImage: "doc.on.doc")
+            }
+
+            Divider()
+
+            Button(role: .destructive) {
+                viewModel.showDeleteConfirm = true
+            } label: {
+                Label(tr("events.detail.action.delete", "Eliminar evento"), systemImage: "trash")
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+                .accessibilityLabel(tr("events.detail.action.more", "Acciones del evento"))
         }
     }
 
