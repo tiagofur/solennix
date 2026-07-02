@@ -350,8 +350,16 @@ class EventFormViewModel @Inject constructor(
         if (eventId != null) {
             loadExistingEvent(eventId)
         } else {
+            // New-event creation: seed the contract financial defaults from
+            // the user's profile so the form honors Settings (deposit %,
+            // cancellation days, refund %) instead of the hardcoded 50/7/50.
+            // Mirrors web (`user?.default_deposit_percent ?? 50`) and iOS.
+            val user = authManager.currentUser.value
+            depositPercent = user?.defaultDepositPercent?.toString() ?: "50.0"
+            cancellationDays = user?.defaultCancellationDays?.toString() ?: "7.0"
+            refundPercent = user?.defaultRefundPercent?.toString() ?: "50.0"
             viewModelScope.launch {
-                val plan = authManager.currentUser.value?.plan ?: Plan.BASIC
+                val plan = user?.plan ?: Plan.BASIC
                 limitCheckResult = planLimitsManager.canCreateEvent(plan)
             }
             val dateParam = savedStateHandle.get<String>("date")
@@ -443,9 +451,16 @@ class EventFormViewModel @Inject constructor(
         discountType = source.discountType
         requiresInvoice = source.requiresInvoice
         taxRate = source.taxRate.toString()
-        depositPercent = source.depositPercent?.toString() ?: "50.0"
-        cancellationDays = source.cancellationDays?.toString() ?: "7.0"
-        refundPercent = source.refundPercent?.toString() ?: "50.0"
+        // Fall back to the user's contract defaults (then to the built-in
+        // 50/7/50) when the source event lacks these fields — same precedence
+        // as new-event creation above.
+        val user = authManager.currentUser.value
+        depositPercent = source.depositPercent?.toString()
+            ?: user?.defaultDepositPercent?.toString() ?: "50.0"
+        cancellationDays = source.cancellationDays?.toString()
+            ?: user?.defaultCancellationDays?.toString() ?: "7.0"
+        refundPercent = source.refundPercent?.toString()
+            ?: user?.defaultRefundPercent?.toString() ?: "50.0"
 
         selectedProducts.clear()
         data.products.forEach { product ->
