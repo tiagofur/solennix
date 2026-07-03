@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!-- Base app theme (light default; dark variant in values-night/). -->
     <style name="Theme.Solennix" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <!--
+      Splash screen theme (Android 12+ SplashScreen API, backported to pre-12 by core-splashscreen).
+      Light variant: white background so the golden cup floats with no surrounding box.
+    -->
+    <style name="Theme.Solennix.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background_light</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_animated</item>
+        <item name="windowSplashScreenAnimationDuration">300</item>
+        <item name="postSplashScreenTheme">@style/Theme.Solennix</item>
     </style>
 </resources>

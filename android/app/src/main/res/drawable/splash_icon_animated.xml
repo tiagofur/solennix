@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Animated splash icon (Android 12+).
+  Wraps splash_icon.xml and animates the whole logo (scale + alpha) on exit.
+  On API < 31 the SplashScreen backport falls back to the static splash_icon.
+-->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/splash_icon">
+    <target
+        android:name="bowl"
+        android:animation="@animator/splash_icon_exit" />
+    <target
+        android:name="reflection"
+        android:animation="@animator/splash_icon_exit" />
+    <target
+        android:name="node"
+        android:animation="@animator/splash_icon_exit" />
+    <target
+        android:name="stem"
+        android:animation="@animator/splash_icon_exit" />
+    <target
+        android:name="sparkle"
+        android:animation="@animator/splash_icon_exit" />
+</animated-vector>

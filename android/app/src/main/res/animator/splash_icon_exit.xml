@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Splash icon exit animation (Android 12+).
+  Slight scale-up + fade-out over 280ms — a soft "release" of the logo.
+-->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:ordering="together">
+    <objectAnimator
+        android:propertyName="scaleX"
+        android:duration="280"
+        android:startOffset="0"
+        android:valueFrom="1.0"
+        android:valueTo="1.1"
+        android:valueType="floatType"
+        android:interpolator="@android:interpolator/fast_out_slow_in" />
+    <objectAnimator
+        android:propertyName="scaleY"
+        android:duration="280"
+        android:startOffset="0"
+        android:valueFrom="1.0"
+        android:valueTo="1.1"
+        android:valueType="floatType"
+        android:interpolator="@android:interpolator/fast_out_slow_in" />
+    <objectAnimator
+        android:propertyName="alpha"
+        android:duration="280"
+        android:startOffset="0"
+        android:valueFrom="1.0"
+        android:valueTo="0.0"
+        android:valueType="floatType"
+        android:interpolator="@android:interpolator/fast_out_linear_in" />
+</set>

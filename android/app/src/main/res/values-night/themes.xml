@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Dark app theme override: dark status bar icons. -->
+    <style name="Theme.Solennix" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!--
+      Splash screen theme (dark variant): black background matching iOS dark Background,
+      so the golden cup floats with no surrounding box.
+    -->
+    <style name="Theme.Solennix.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background_dark</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_animated</item>
+        <item name="windowSplashScreenAnimationDuration">300</item>
+        <item name="postSplashScreenTheme">@style/Theme.Solennix</item>
+    </style>
+</resources>

@@ -269,6 +269,7 @@ dependencies {
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.navigation.compose)
     implementation(libs.appcompat)
+    implementation(libs.core.splashscreen)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.ktor)

@@ -10,6 +10,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.creapolis.solennix.core.data.locale.AppLocaleManager
@@ -39,7 +40,26 @@ class MainActivity : AppCompatActivity() {
     private var deepLinkIntent by mutableStateOf<Intent?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Install the SplashScreen API before super.onCreate(). On Android 12+ this drives the
+        // system splash with our animated icon; on older versions the core-splashscreen backport
+        // draws an equivalent static splash. Either way the post-splash theme (Theme.Solennix)
+        // is applied automatically.
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        // Animate the splash icon out (scale + fade) instead of the default hard dismissal.
+        // On API < 31 there is no iconView, so this degrades gracefully to the default behavior.
+        splashScreen.setOnExitAnimationListener { splashScreenViewProvider ->
+            val iconView = splashScreenViewProvider.iconView
+            iconView.animate()
+                .scaleX(1.1f)
+                .scaleY(1.1f)
+                .alpha(0f)
+                .setDuration(280L)
+                .setInterpolator(android.view.animation.PathInterpolator(0.4f, 0f, 0.2f, 1f))
+                .withEndAction { splashScreenViewProvider.remove() }
+                .start()
+        }
 
         deepLinkIntent = intent
 
