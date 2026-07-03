@@ -56,69 +56,53 @@ fun DocumentActionsGrid(
         }
     }
 
+    // 6 document actions rendered in a uniform 2-column grid (3 rows × 2),
+    // mirroring the iOS LazyVGrid with two flexible columns. Previously the
+    // layout was a hand-rolled 3-2-1 arrangement that left the last row
+    // ragged (one card + two empty slots).
+    val actions = listOf(
+        DocumentAction(Icons.Default.Description, R.string.events_document_budget) {
+            downloadPdfAsync("budget", "cotizacion_${event.id}.pdf")
+        },
+        DocumentAction(Icons.AutoMirrored.Filled.Article, R.string.events_document_contract) {
+            downloadPdfAsync("contract", "contrato_${event.id}.pdf")
+        },
+        DocumentAction(Icons.Default.Checklist, R.string.events_document_checklist) {
+            downloadPdfAsync("checklist", "checklist_${event.id}.pdf")
+        },
+        DocumentAction(Icons.Default.Payments, R.string.events_document_payments) {
+            downloadPdfAsync("payment-report", "pagos_${event.id}.pdf")
+        },
+        DocumentAction(Icons.Default.ShoppingCart, R.string.events_document_shopping) {
+            downloadPdfAsync("shopping-list", "compras_${event.id}.pdf")
+        },
+        DocumentAction(Icons.Default.Inventory2, R.string.events_document_equipment) {
+            downloadPdfAsync("equipment-list", "equipo_${event.id}.pdf")
+        }
+    )
+
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            ActionButton(
-                icon = Icons.Default.Description,
-                label = stringResource(R.string.events_document_budget),
-                modifier = Modifier.weight(1f),
-                onClick = {
-                    downloadPdfAsync("budget", "cotizacion_${event.id}.pdf")
+        actions.chunked(2).forEachIndexed { index, row ->
+            Row(modifier = Modifier.fillMaxWidth()) {
+                row.forEachIndexed { pos, action ->
+                    if (pos > 0) Spacer(modifier = Modifier.width(8.dp))
+                    ActionButton(
+                        icon = action.icon,
+                        label = stringResource(action.labelRes),
+                        modifier = Modifier.weight(1f),
+                        onClick = action.onClick
+                    )
+                    // If the row has a single card, fill the second slot so the
+                    // lone card doesn't stretch full-width (keeps the grid even).
+                    if (row.size == 1) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
                 }
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            ActionButton(
-                icon = Icons.AutoMirrored.Filled.Article,
-                label = stringResource(R.string.events_document_contract),
-                modifier = Modifier.weight(1f),
-                onClick = {
-                    downloadPdfAsync("contract", "contrato_${event.id}.pdf")
-                }
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            ActionButton(
-                icon = Icons.Default.Checklist,
-                label = stringResource(R.string.events_document_checklist),
-                modifier = Modifier.weight(1f),
-                onClick = {
-                    downloadPdfAsync("checklist", "checklist_${event.id}.pdf")
-                }
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(modifier = Modifier.fillMaxWidth()) {
-            ActionButton(
-                icon = Icons.Default.Payments,
-                label = stringResource(R.string.events_document_payments),
-                modifier = Modifier.weight(1f),
-                onClick = {
-                    downloadPdfAsync("payment-report", "pagos_${event.id}.pdf")
-                }
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            ActionButton(
-                icon = Icons.Default.ShoppingCart,
-                label = stringResource(R.string.events_document_shopping),
-                modifier = Modifier.weight(1f),
-                onClick = {
-                    downloadPdfAsync("shopping-list", "compras_${event.id}.pdf")
-                }
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(modifier = Modifier.fillMaxWidth()) {
-            ActionButton(
-                icon = Icons.Default.Inventory2,
-                label = stringResource(R.string.events_document_equipment),
-                modifier = Modifier.weight(1f),
-                onClick = {
-                    downloadPdfAsync("equipment-list", "equipo_${event.id}.pdf")
-                }
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Spacer(modifier = Modifier.weight(1f))
-            Spacer(modifier = Modifier.width(8.dp))
-            Spacer(modifier = Modifier.weight(1f))
+            }
+            if (index < (actions.size + 1) / 2 - 1) {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
         }
     }
 
@@ -131,6 +115,13 @@ fun DocumentActionsGrid(
         }
     }
 }
+
+/** A single document-generation entry: icon, label resource, and click handler. */
+private data class DocumentAction(
+    val icon: ImageVector,
+    val labelRes: Int,
+    val onClick: () -> Unit
+)
 
 @Composable
 private fun ActionButton(icon: ImageVector, label: String, modifier: Modifier, onClick: () -> Unit) {
