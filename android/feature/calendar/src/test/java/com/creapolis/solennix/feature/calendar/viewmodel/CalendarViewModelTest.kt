@@ -39,6 +39,7 @@ class CalendarViewModelTest {
     private val eventRepository = mockk<EventRepository>()
     private val clientRepository = mockk<ClientRepository>()
     private val apiService = mockk<ApiService>()
+    private val logger = com.creapolis.solennix.core.network.log.AndroidSolennixLogger()
 
     @BeforeEach
     fun setUp() {
@@ -62,7 +63,7 @@ class CalendarViewModelTest {
 
         everyFlowSetup(events = listOf(quotedEvent, confirmedEvent, otherDateEvent))
 
-        val viewModel = CalendarViewModel(eventRepository, clientRepository, apiService)
+        val viewModel = CalendarViewModel(eventRepository, clientRepository, apiService, logger)
         val collector = backgroundScope.launch { viewModel.uiState.collect { } }
         advanceUntilIdle()
 
@@ -83,7 +84,7 @@ class CalendarViewModelTest {
         everyFlowSetup(events = emptyList())
         coEvery { eventRepository.syncEvents() } throws IllegalStateException("boom")
 
-        val viewModel = CalendarViewModel(eventRepository, clientRepository, apiService)
+        val viewModel = CalendarViewModel(eventRepository, clientRepository, apiService, logger)
         val collector = backgroundScope.launch { viewModel.uiState.collect { } }
         advanceUntilIdle()
 

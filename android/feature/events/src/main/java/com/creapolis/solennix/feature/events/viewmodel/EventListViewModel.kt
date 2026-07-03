@@ -1,7 +1,6 @@
 package com.creapolis.solennix.feature.events.viewmodel
 
 import android.content.Context
-import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -19,6 +18,7 @@ import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.Endpoints
+import com.creapolis.solennix.core.network.log.SolennixLogger
 import com.creapolis.solennix.core.network.toApiError
 import com.creapolis.solennix.core.network.get
 import com.creapolis.solennix.core.network.post
@@ -82,7 +82,8 @@ class EventListViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context,
     private val eventRepository: EventRepository,
     private val clientRepository: ClientRepository,
-    private val apiService: ApiService
+    private val apiService: ApiService,
+    private val logger: SolennixLogger
 ) : ViewModel() {
 
     private fun tr(@StringRes id: Int, vararg args: Any): String = appContext.getString(id, *args)
@@ -291,9 +292,8 @@ class EventListViewModel @Inject constructor(
             try {
                 eventRepository.updateEvent(event.copy(status = newStatus))
             } catch (e: Exception) {
-                Log.w(TAG, "updateEventStatus failed for ${event.id}", e)
+                logger.w(TAG, "updateEventStatus failed for ${event.id}", e)
                 val message = e.message ?: ""
-                Log.d(TAG, "Error message: '$message'")
                 // Check if this is a balance pending error from backend
                 // Format: "Cannot complete: $XXX.XX remaining"
                 val balanceMatch = Regex("Cannot complete: \\$([\\d,]+\\.?\\d*) remaining").find(message)
@@ -345,7 +345,7 @@ class EventListViewModel @Inject constructor(
                 // Clear local copy after successful hard delete
                 _localEvents.value = _localEvents.value.filter { it.id != event.id }
             } catch (e: Exception) {
-                Log.w(TAG, "deleteEvent failed for ${event.id}", e)
+                logger.w(TAG, "deleteEvent failed for ${event.id}", e)
                 // Restore the event in local list since hard delete failed
                 onRestore()
                 _error.value = e.message ?: tr(R.string.events_list_error_delete)
@@ -504,7 +504,7 @@ class EventListViewModel @Inject constructor(
                 // Reload unavailable dates after toggle
                 loadUnavailableDatesForCurrentMonth()
             } catch (e: Exception) {
-                Log.w(TAG, "toggleDateBlock failed for $date", e)
+                logger.w(TAG, "toggleDateBlock failed for $date", e)
                 val dateStr = date.toString()
                 val wasExisting = _unavailableDates.value.any { ud ->
                     dateStr >= ud.startDate && dateStr <= ud.endDate
@@ -527,7 +527,7 @@ class EventListViewModel @Inject constructor(
                 apiService.delete(Endpoints.unavailableDate(id))
                 loadUnavailableDatesForCurrentMonth()
             } catch (e: Exception) {
-                Log.w(TAG, "deleteUnavailableDate $id failed", e)
+                logger.w(TAG, "deleteUnavailableDate $id failed", e)
                 _error.value = appContext.getString(R.string.events_list_error_unblock_date)
             }
         }
@@ -549,7 +549,7 @@ class EventListViewModel @Inject constructor(
                 apiService.post<UnavailableDate>(Endpoints.UNAVAILABLE_DATES, payload)
                 loadUnavailableDatesForCurrentMonth()
             } catch (e: Exception) {
-                Log.w(TAG, "blockDateRange $startDate..$endDate failed", e)
+                logger.w(TAG, "blockDateRange $startDate..$endDate failed", e)
                 _error.value = appContext.getString(R.string.events_list_error_block_date)
             }
         }
@@ -571,7 +571,7 @@ class EventListViewModel @Inject constructor(
                 )
                 _unavailableDates.value = dates
             } catch (e: Exception) {
-                Log.w(TAG, "unavailable-dates load failed", e)
+                logger.w(TAG, "unavailable-dates load failed", e)
                 _error.value = appContext.getString(R.string.events_list_error_sync)
             }
         }

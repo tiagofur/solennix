@@ -47,6 +47,7 @@ data class SearchUiState(
 class SearchViewModel @Inject constructor(
     private val apiService: ApiService,
     private val recentSearchRepository: RecentSearchRepository,
+    private val logger: com.creapolis.solennix.core.network.log.SolennixLogger,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -70,10 +71,10 @@ class SearchViewModel @Inject constructor(
                 .collectLatest { query ->
                     val trimmed = query.trim()
                     if (trimmed.length < 2) {
-                        android.util.Log.d("SearchViewModel", "Query '$query' has trimmed length < 2, clearing results")
+                        logger.d(TAG, "Query trimmed length < 2, clearing results")
                         _searchResult.value = SearchUiState(query = query)
                     } else {
-                        android.util.Log.d("SearchViewModel", "Starting search for query: '$trimmed'")
+                        logger.d(TAG, "Starting search")
                         _searchResult.value = _searchResult.value.copy(
                             query = query,
                             isLoading = true,
@@ -84,9 +85,9 @@ class SearchViewModel @Inject constructor(
                                 Endpoints.SEARCH,
                                 mapOf("q" to trimmed)
                             )
-                            android.util.Log.d(
-                                "SearchViewModel",
-                                "Search success for '$trimmed'. Clients: ${response.clients.size}, Events: ${response.events.size}, Products: ${response.products.size}, Inventory: ${response.inventory.size}"
+                            logger.d(
+                                TAG,
+                                "Search success. Clients: ${response.clients.size}, Events: ${response.events.size}, Products: ${response.products.size}, Inventory: ${response.inventory.size}"
                             )
                             _searchResult.value = SearchUiState(
                                 query = query,
@@ -96,11 +97,13 @@ class SearchViewModel @Inject constructor(
                                 inventory = response.inventory,
                                 isLoading = false
                             )
+                        } catch (e: kotlinx.coroutines.CancellationException) {
+                            throw e
                         } catch (e: Exception) {
-                            android.util.Log.e("SearchViewModel", "Search error for query '$trimmed'", e)
+                            logger.e(TAG, "Search error", e)
                             _searchResult.value = _searchResult.value.copy(
                                 isLoading = false,
-                                error = "Error al buscar: ${e.message}"
+                                error = "Error al buscar. Intentá de nuevo."
                             )
                         }
                     }
@@ -161,5 +164,9 @@ class SearchViewModel @Inject constructor(
                 products = emptyList()
             )
         }
+    }
+
+    private companion object {
+        const val TAG = "SearchViewModel"
     }
 }
