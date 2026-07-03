@@ -9,9 +9,29 @@ Historial oficial de cambios de Solennix para Web, iOS, Android y Backend.
 | Plataforma | Versión | Build | Source |
 | --- | --- | --- | --- |
 | Web | 1.0.1 | - | web/package.json |
-| iOS | 1.3.0 | 8 | ios/project.yml |
-| Android | 1.3.1 | 9 | android/app/build.gradle.kts |
+| iOS | 1.4.0 | 9 | ios/project.yml |
+| Android | 1.4.0 | 10 | android/app/build.gradle.kts |
 | Backend | 1.0.4 | - | backend/VERSION |
+
+## 2026-07-03 - Móvil 1.4.0: Judgment Day de calidad — bugs críticos, integridad financiera y endurecimiento
+
+Release pareado iOS + Android 1.4.0 tras una revisión 'Judgment Day' de la app iOS: corrige un crash de permiso de calendario, filtra URLs en logs de Release, integridad de cálculos financieros (margen, redondeo de pagos), migración versionada de cache y paridad de UX en borrados.
+
+### WEB
+
+### IOS
+- Crash: se añade NSCalendarsUsageDescription al Info.plist; iOS cerraba la app por violación de TCC al activar la sincronización con el calendario del sistema.
+- Privacidad: los NSLog se migran a os.Logger; las URLs completas con query params ya no llegan a Console.app ni a los diagnósticos de TestFlight/App Store en builds Release.
+- Finanzas: el margen del detalle de evento y de la pantalla de finanzas ahora incluye el costo de ingredientes (antes estaba inflado por usar unitCost nil), igualando al formulario y al quick-quote.
+- Finanzas: el monto de pago manual valida >= 0.01 y se redondea a centavos antes de enviar (política de round2), evitando drift y rechazos de backend.
+- Finanzas (DRY): los accesores financieros del formulario delegan en EventFinancials.compute() como única fuente de verdad, eliminando la fórmula duplicada que podía divergir.
+- Persistencia: SwiftData adopts VersionedSchema (SchemaV1) + SchemaMigrationPlan; el próximo cambio de modelo migrará limpio en vez de caer al cache in-memory.
+- UX: los borrados fallidos en listas pobladas ahora muestran un toast de error en vez de fallar silenciosamente (Events, Clients, Products, Inventory, Staff, StaffTeams, EventFormLinks).
+
+### ANDROID
+- Versionado: bump a 1.4.0 (versionCode 10) para parear con iOS.
+
+### BACKEND
 
 ## 2026-07-03 - iOS 1.3.0: Widgets funcionales, formulario inteligente y pulido visual
 

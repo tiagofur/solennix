@@ -9,13 +9,13 @@ export const changelogData = {
       "source": "web/package.json"
     },
     "ios": {
-      "version": "1.3.0",
-      "build": "8",
+      "version": "1.4.0",
+      "build": "9",
       "source": "ios/project.yml"
     },
     "android": {
-      "version": "1.3.1",
-      "build": "9",
+      "version": "1.4.0",
+      "build": "10",
       "source": "android/app/build.gradle.kts"
     },
     "backend": {
@@ -24,6 +24,28 @@ export const changelogData = {
     }
   },
   "releases": [
+    {
+      "id": "2026-07-03-mobile-1.4.0-judgment-day",
+      "date": "2026-07-03",
+      "title": "Móvil 1.4.0: Judgment Day de calidad — bugs críticos, integridad financiera y endurecimiento",
+      "summary": "Release pareado iOS + Android 1.4.0 tras una revisión 'Judgment Day' de la app iOS: corrige un crash de permiso de calendario, filtra URLs en logs de Release, integridad de cálculos financieros (margen, redondeo de pagos), migración versionada de cache y paridad de UX en borrados.",
+      "platforms": {
+        "web": [],
+        "ios": [
+          "Crash: se añade NSCalendarsUsageDescription al Info.plist; iOS cerraba la app por violación de TCC al activar la sincronización con el calendario del sistema.",
+          "Privacidad: los NSLog se migran a os.Logger; las URLs completas con query params ya no llegan a Console.app ni a los diagnósticos de TestFlight/App Store en builds Release.",
+          "Finanzas: el margen del detalle de evento y de la pantalla de finanzas ahora incluye el costo de ingredientes (antes estaba inflado por usar unitCost nil), igualando al formulario y al quick-quote.",
+          "Finanzas: el monto de pago manual valida >= 0.01 y se redondea a centavos antes de enviar (política de round2), evitando drift y rechazos de backend.",
+          "Finanzas (DRY): los accesores financieros del formulario delegan en EventFinancials.compute() como única fuente de verdad, eliminando la fórmula duplicada que podía divergir.",
+          "Persistencia: SwiftData adopts VersionedSchema (SchemaV1) + SchemaMigrationPlan; el próximo cambio de modelo migrará limpio en vez de caer al cache in-memory.",
+          "UX: los borrados fallidos en listas pobladas ahora muestran un toast de error en vez de fallar silenciosamente (Events, Clients, Products, Inventory, Staff, StaffTeams, EventFormLinks)."
+        ],
+        "android": [
+          "Versionado: bump a 1.4.0 (versionCode 10) para parear con iOS."
+        ],
+        "backend": []
+      }
+    },
     {
       "id": "2026-07-03-ios-1.3.0-widgets-form-polish",
       "date": "2026-07-03",
