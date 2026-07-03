@@ -1,6 +1,5 @@
 package com.creapolis.solennix.feature.calendar.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.core.data.repository.ClientRepository
@@ -9,13 +8,14 @@ import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.model.UnavailableDate
 import com.creapolis.solennix.core.network.ApiService
+import com.creapolis.solennix.core.network.error.launchCatching
 import com.creapolis.solennix.core.network.get
 import com.creapolis.solennix.core.network.post
 import com.creapolis.solennix.core.network.put
 import com.creapolis.solennix.core.network.Endpoints
+import com.creapolis.solennix.core.network.log.SolennixLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
 import java.time.LocalDate
 import java.time.YearMonth
@@ -55,7 +55,8 @@ data class CalendarUiState(
 class CalendarViewModel @Inject constructor(
     private val eventRepository: EventRepository,
     private val clientRepository: ClientRepository,
-    private val apiService: ApiService
+    private val apiService: ApiService,
+    private val logger: SolennixLogger
 ) : ViewModel() {
 
     private val _selectedDate = MutableStateFlow(LocalDate.now())
@@ -147,124 +148,94 @@ class CalendarViewModel @Inject constructor(
     }
 
     fun refresh() {
-        viewModelScope.launch {
-            try {
-                eventRepository.syncEvents()
-            } catch (e: Exception) {
-                Log.w(TAG, "event sync failed", e)
-                _error.value = CalendarError.LoadFailed
-            }
+        viewModelScope.launchCatching(logger, onError = { _error.value = CalendarError.LoadFailed }) {
+            eventRepository.syncEvents()
         }
         // Independent launch so a stale client cache doesn't hold up the
-        // event list (nor vice versa).
-        viewModelScope.launch {
-            try {
-                clientRepository.syncClients()
-            } catch (e: Exception) {
-                Log.w(TAG, "client sync failed", e)
-                // Non-fatal — event cards fall back to "Cliente" if the
-                // clientId doesn't resolve.
-            }
+        // event list (nor vice versa). Non-fatal: event cards fall back to
+        // "Cliente" if the clientId doesn't resolve.
+        viewModelScope.launchCatching(logger, onError = { /* non-fatal */ }) {
+            clientRepository.syncClients()
         }
     }
 
     private fun loadUnavailableDates(yearMonth: YearMonth) {
-        viewModelScope.launch {
-            try {
-                val start = yearMonth.atDay(1).toString()
-                val end = yearMonth.atEndOfMonth().toString()
-                val dates: List<UnavailableDate> = apiService.get(
-                    Endpoints.UNAVAILABLE_DATES,
-                    mapOf("start" to start, "end" to end)
-                )
-                _unavailableDates.value = dates
-            } catch (e: Exception) {
-                Log.w(TAG, "unavailable-dates load failed for $yearMonth", e)
-                _error.value = CalendarError.LoadFailed
-            }
+        viewModelScope.launchCatching(logger, onError = { _error.value = CalendarError.LoadFailed }) {
+            val start = yearMonth.atDay(1).toString()
+            val end = yearMonth.atEndOfMonth().toString()
+            val dates: List<UnavailableDate> = apiService.get(
+                Endpoints.UNAVAILABLE_DATES,
+                mapOf("start" to start, "end" to end)
+            )
+            _unavailableDates.value = dates
         }
     }
 
     fun loadAllUnavailableDates() {
-        viewModelScope.launch {
-            try {
-                // Load a wide range to show all blocked dates in management sheet
-                val now = LocalDate.now()
-                val start = now.minusMonths(6).toString()
-                val end = now.plusMonths(12).toString()
-                val dates: List<UnavailableDate> = apiService.get(
-                    Endpoints.UNAVAILABLE_DATES,
-                    mapOf("start" to start, "end" to end)
-                )
-                _unavailableDates.value = dates
-            } catch (e: Exception) {
-                Log.w(TAG, "all-unavailable-dates load failed", e)
-                _error.value = CalendarError.LoadFailed
-            }
+        viewModelScope.launchCatching(logger, onError = { _error.value = CalendarError.LoadFailed }) {
+            // Load a wide range to show all blocked dates in management sheet
+            val now = LocalDate.now()
+            val start = now.minusMonths(6).toString()
+            val end = now.plusMonths(12).toString()
+            val dates: List<UnavailableDate> = apiService.get(
+                Endpoints.UNAVAILABLE_DATES,
+                mapOf("start" to start, "end" to end)
+            )
+            _unavailableDates.value = dates
         }
     }
 
     fun toggleDateBlock(date: LocalDate, reason: String? = null) {
-        viewModelScope.launch {
-            try {
-                val dateStr = date.toString()
-                val existing = _unavailableDates.value.find { ud ->
-                    dateStr >= ud.startDate && dateStr <= ud.endDate
-                }
-                if (existing != null) {
-                    apiService.delete(Endpoints.unavailableDate(existing.id))
-                } else {
-                    val payload = buildMap<String, String> {
-                        put("start_date", dateStr)
-                        put("end_date", dateStr)
-                        if (!reason.isNullOrBlank()) {
-                            put("reason", reason)
-                        }
-                    }
-                    apiService.post<UnavailableDate>(Endpoints.UNAVAILABLE_DATES, payload)
-                }
-                loadUnavailableDates(_currentMonth.value)
-            } catch (e: Exception) {
-                Log.w(TAG, "toggleDateBlock failed for $date", e)
+        viewModelScope.launchCatching(
+            logger,
+            onError = {
                 _error.value = if (existingBlockFor(date) != null) {
                     CalendarError.UnblockFailed
                 } else {
                     CalendarError.BlockFailed
                 }
             }
-        }
-    }
-
-    fun blockDateRange(startDate: LocalDate, endDate: LocalDate, reason: String?) {
-        viewModelScope.launch {
-            try {
+        ) {
+            val dateStr = date.toString()
+            val existing = _unavailableDates.value.find { ud ->
+                dateStr >= ud.startDate && dateStr <= ud.endDate
+            }
+            if (existing != null) {
+                apiService.delete(Endpoints.unavailableDate(existing.id))
+            } else {
                 val payload = buildMap<String, String> {
-                    put("start_date", startDate.toString())
-                    put("end_date", endDate.toString())
+                    put("start_date", dateStr)
+                    put("end_date", dateStr)
                     if (!reason.isNullOrBlank()) {
                         put("reason", reason)
                     }
                 }
                 apiService.post<UnavailableDate>(Endpoints.UNAVAILABLE_DATES, payload)
-                loadUnavailableDates(_currentMonth.value)
-                loadAllUnavailableDates()
-            } catch (e: Exception) {
-                Log.w(TAG, "blockDateRange $startDate..$endDate failed", e)
-                _error.value = CalendarError.BlockFailed
             }
+            loadUnavailableDates(_currentMonth.value)
+        }
+    }
+
+    fun blockDateRange(startDate: LocalDate, endDate: LocalDate, reason: String?) {
+        viewModelScope.launchCatching(logger, onError = { _error.value = CalendarError.BlockFailed }) {
+            val payload = buildMap<String, String> {
+                put("start_date", startDate.toString())
+                put("end_date", endDate.toString())
+                if (!reason.isNullOrBlank()) {
+                    put("reason", reason)
+                }
+            }
+            apiService.post<UnavailableDate>(Endpoints.UNAVAILABLE_DATES, payload)
+            loadUnavailableDates(_currentMonth.value)
+            loadAllUnavailableDates()
         }
     }
 
     fun deleteUnavailableDate(id: String) {
-        viewModelScope.launch {
-            try {
-                apiService.delete(Endpoints.unavailableDate(id))
-                loadUnavailableDates(_currentMonth.value)
-                loadAllUnavailableDates()
-            } catch (e: Exception) {
-                Log.w(TAG, "deleteUnavailableDate $id failed", e)
-                _error.value = CalendarError.UnblockFailed
-            }
+        viewModelScope.launchCatching(logger, onError = { _error.value = CalendarError.UnblockFailed }) {
+            apiService.delete(Endpoints.unavailableDate(id))
+            loadUnavailableDates(_currentMonth.value)
+            loadAllUnavailableDates()
         }
     }
 
@@ -273,8 +244,14 @@ class CalendarViewModel @Inject constructor(
     fun getUnavailableDateFor(date: LocalDate): UnavailableDate? = existingBlockFor(date)
 
     fun exportCalendar() {
-        viewModelScope.launch {
-            _isExportingCalendar.value = true
+        _isExportingCalendar.value = true
+        viewModelScope.launchCatching(
+            logger,
+            onError = {
+                _error.value = CalendarError.ExportFailed
+                _isExportingCalendar.value = false
+            }
+        ) {
             try {
                 val month = _currentMonth.value
                 val start = month.atDay(1).toString()
@@ -284,9 +261,6 @@ class CalendarViewModel @Inject constructor(
                     mapOf("start" to start, "end" to end)
                 )
                 _exportIcalResult.emit(content)
-            } catch (e: Exception) {
-                Log.e(TAG, "exportCalendar failed", e)
-                _error.value = CalendarError.ExportFailed
             } finally {
                 _isExportingCalendar.value = false
             }

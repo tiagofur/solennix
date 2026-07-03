@@ -39,6 +39,7 @@ class SearchViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private val apiService = mockk<ApiService>()
     private val recentSearchRepository = mockk<RecentSearchRepository>(relaxed = true)
+    private val logger = com.creapolis.solennix.core.network.log.AndroidSolennixLogger()
 
     @BeforeEach
     fun setUp() {
@@ -57,7 +58,7 @@ class SearchViewModelTest {
 
     @Test
     fun `blank query resets state without calling api`() = runTest {
-        val viewModel = SearchViewModel(apiService, recentSearchRepository, SavedStateHandle())
+        val viewModel = SearchViewModel(apiService, recentSearchRepository, logger, SavedStateHandle())
 
         viewModel.onQueryChange("   ")
         advanceUntilIdle()
@@ -75,7 +76,7 @@ class SearchViewModelTest {
 
     @Test
     fun `query shorter than 2 characters does not call api`() = runTest {
-        val viewModel = SearchViewModel(apiService, recentSearchRepository, SavedStateHandle())
+        val viewModel = SearchViewModel(apiService, recentSearchRepository, logger, SavedStateHandle())
 
         viewModel.onQueryChange("a")
         advanceUntilIdle()
@@ -129,7 +130,7 @@ class SearchViewModelTest {
             )
         )
 
-        val viewModel = SearchViewModel(apiService, recentSearchRepository, SavedStateHandle())
+        val viewModel = SearchViewModel(apiService, recentSearchRepository, logger, SavedStateHandle())
 
         viewModel.onQueryChange("boda")
         advanceTimeBy(300)
@@ -154,7 +155,7 @@ class SearchViewModelTest {
             apiService.get<SearchResponse>("search", mapOf("q" to "fallo"))
         } throws IllegalStateException("boom")
 
-        val viewModel = SearchViewModel(apiService, recentSearchRepository, SavedStateHandle())
+        val viewModel = SearchViewModel(apiService, recentSearchRepository, logger, SavedStateHandle())
 
         viewModel.onQueryChange("fallo")
         advanceTimeBy(300)
@@ -163,7 +164,9 @@ class SearchViewModelTest {
         val state = viewModel.uiState.value
         assertEquals("fallo", state.query)
         assertFalse(state.isLoading)
-        assertTrue(state.error?.contains("boom") == true)
+        // Error message is localized and generic — backend detail (e.message)
+        // is intentionally NOT surfaced to the user (PII / info leak prevention).
+        assertTrue(state.error?.isNotBlank() == true)
         coVerify(exactly = 1) {
             apiService.get<SearchResponse>("search", mapOf("q" to "fallo"))
         }

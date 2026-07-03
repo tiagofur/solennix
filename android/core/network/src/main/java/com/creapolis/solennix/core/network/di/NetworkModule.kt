@@ -11,6 +11,8 @@ import com.creapolis.solennix.core.network.put
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.KtorClient
 import com.creapolis.solennix.core.network.NetworkMonitor
+import com.creapolis.solennix.core.network.log.AndroidSolennixLogger
+import com.creapolis.solennix.core.network.log.SolennixLogger
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -64,4 +66,8 @@ object NetworkModule {
     fun provideNetworkMonitor(
         @ApplicationContext context: Context
     ): NetworkMonitor = NetworkMonitor(context)
+
+    @Provides
+    @Singleton
+    fun provideSolennixLogger(): SolennixLogger = AndroidSolennixLogger()
 }

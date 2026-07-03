@@ -3,11 +3,14 @@ package com.creapolis.solennix.core.data.util
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import android.util.Log
 import androidx.exifinterface.media.ExifInterface
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 
 object ImageCompressor {
+
+    private const val TAG = "ImageCompressor"
 
     /**
      * Compresses and resizes an image from a ByteArray.
@@ -60,7 +63,7 @@ object ImageCompressor {
 
             return compressedBytes
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "Image compression failed, returning original bytes", e)
             return bytes // Return original if something fails
         }
     }
