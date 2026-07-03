@@ -205,20 +205,19 @@ public struct EventFinancesDetailView: View {
 
     /// Computes the full financial result for a loaded event.
     ///
-    /// Cost side: supply rows are loaded from viewModel.supplies.
-    /// Product costs are NOT available on this screen (would require loading
-    /// all product ingredients) — productCost is therefore 0 here.
-    /// DIVERGENCE: EventFormViewModel has productUnitCosts from the form flow;
-    /// this view only shows events already persisted (cost precision ≠ form),
-    /// so totalCost reflects supplies + extras costs only.
+    /// Cost side: supply rows are loaded from viewModel.supplies; product
+    /// ingredient costs come from `viewModel.productUnitCosts` (populated by
+    /// `EventDetailViewModel.loadProductUnitCosts` during the detail load), so
+    /// the margin here now matches the form / quick-quote instead of inflating
+    /// it by ignoring ingredients.
     private func computeFinancials(_ event: Event) -> EventFinancials.Result {
-        // Rebuild product rows from viewModel data (prices only; no ingredient costs here).
+        // Rebuild product rows from viewModel data, injecting cached ingredient costs.
         let productRows = viewModel.products.map { p in
             EventFinancials.ProductRow(
                 quantity: p.quantity,
                 unitPrice: p.unitPrice,
                 lineDiscount: p.discount,
-                unitCost: nil // ingredient costs not loaded in detail view
+                unitCost: viewModel.productUnitCosts[p.productId]
             )
         }
 

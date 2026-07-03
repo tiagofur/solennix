@@ -361,7 +361,7 @@ public struct EventDetailView: View {
 
     private func financialsMargin(_ event: Event) -> Double {
         let productRows = viewModel.products.map { p in
-            EventFinancials.ProductRow(quantity: p.quantity, unitPrice: p.unitPrice, lineDiscount: p.discount, unitCost: nil)
+            EventFinancials.ProductRow(quantity: p.quantity, unitPrice: p.unitPrice, lineDiscount: p.discount, unitCost: viewModel.productUnitCosts[p.productId])
         }
         let extraRows = viewModel.extras.map { e in
             EventFinancials.ExtraRow(price: e.price, cost: e.cost, excludeUtility: e.excludeUtility)
