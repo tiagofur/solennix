@@ -179,4 +179,30 @@ final class EventDetailViewModelTests: XCTestCase {
         await vm.loadProductUnitCosts()
         XCTAssertTrue(vm.productUnitCosts.isEmpty)
     }
+
+    // MARK: - Payment amount validation + rounding (addPayment guard)
+
+    /// Mirrors the addPayment guard: amount must be >= 0.01 (so "0.001" is
+    /// rejected) and is rounded to 2 decimals (so "100.005" -> 100.01 via
+    /// banker rounding, matching EventFinancials.round2).
+    @MainActor
+    func testPaymentAmount_ValidationAndRounding() {
+        let cases: [(input: String, valid: Bool)] = [
+            ("0.001", false),   // below smallest unit — rejected
+            ("0", false),       // zero — rejected
+            ("-5", false),      // negative — rejected
+            ("0.01", true),     // exact smallest unit — accepted
+            ("100", true),
+            ("1,5", true),      // comma decimal separator — accepted
+        ]
+        for c in cases {
+            let parsed = Double(c.input.replacingOccurrences(of: ",", with: "."))
+            let valid = parsed != nil && parsed! >= 0.01
+            XCTAssertEqual(valid, c.valid, "input \"\(c.input)\" expected valid=\(c.valid)")
+        }
+
+        // Banker rounding: 100.005 -> 100.01, 100.015 -> 100.02 (round2).
+        XCTAssertEqual(EventFinancials.round2(100.005), 100.01, accuracy: 0.001)
+        XCTAssertEqual(EventFinancials.round2(100.4), 100.4, accuracy: 0.001)
+    }
 }

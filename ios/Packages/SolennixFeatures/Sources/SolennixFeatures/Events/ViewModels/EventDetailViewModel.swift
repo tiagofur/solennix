@@ -363,7 +363,14 @@ public final class EventDetailViewModel {
 
     @MainActor
     public func addPayment(eventId: String) async {
-        guard let amount = Double(paymentAmount.replacingOccurrences(of: ",", with: ".")), amount > 0 else { return }
+        // Require a positive, sub-centavo-safe amount: reject anything below
+        // 0.01 (so "0.001" is invalid, matching the backend's smallest unit),
+        // and round to 2 decimals before sending — same policy as tax/total on
+        // event save (EventFinancials.round2). Prevents float drift (e.g.
+        // "100.005") from being sent raw or rejected by the backend.
+        guard let parsed = Double(paymentAmount.replacingOccurrences(of: ",", with: ".")),
+              parsed >= 0.01 else { return }
+        let amount = EventFinancials.round2(parsed)
         isSavingPayment = true
 
         do {
