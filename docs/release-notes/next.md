@@ -1,7 +1,7 @@
 # Release Notes — Próxima versión
 
 Notas listas para copiar/pegar en App Store Connect y Google Play Console.
-Este archivo acompaña el release train **iOS 1.3.0 (8)** + **Android 1.2.0 (6)**.
+Este archivo acompaña el release train **iOS 1.4.0 (9)** + **Android 1.4.0 (10)**.
 
 - **Corta (< 500 chars)** — App Store / Play Store resumen breve
 - **Larga** — cuerpo completo de "What's New"
@@ -10,9 +10,61 @@ El changelog técnico canónico vive en `versioning/releases.json` y genera `CHA
 
 ---
 
-## iOS 1.3.0 (build 8)
+## iOS 1.4.0 (build 9)
 
 ### 🇲🇽 Español (LATAM) — versión corta
+
+```text
+🛠️ Más estable, más justo, más claro
+
+• Arreglamos un cierre al activar la sincronización con el calendario del sistema
+• Los márgenes de evento ahora muestran el costo real de ingredientes
+• Los pagos se redondean y validan correctamente
+• Los borrados fallidos ya avisan en vez de fallar en silencio
+```
+
+### 🇲🇽 Español (LATAM) — versión larga
+
+```text
+Esta versión es un pase de calidad y estabilidad en iPhone y iPad.
+
+Arreglado
+• Ya no se cierra la app al activar la sincronización con el calendario del sistema (permiso de calendario).
+• El margen del detalle de evento y de finanzas ahora incluye el costo de ingredientes, así coincide con el formulario y la cotización rápida.
+• Los pagos manuales se redondean a centavos y validan montos válidos antes de enviarse.
+• Cuando un borrado falla (por red o error del servidor) ahora ves un aviso claro, en vez de que parezca que se borró sin éxito.
+• Ya no se registran URLs con datos sensibles en los diagnósticos de la app.
+
+Mejorado
+• Refuerzos internos de la base de datos local para que las actualizaciones futuras no pierdan tu caché offline.
+```
+
+### 🇺🇸 English — short version
+
+```text
+🛠️ More stable, fairer, clearer
+
+• Fixed a crash when enabling system calendar sync
+• Event margins now reflect the real ingredient cost
+• Payments round and validate correctly
+• Failed deletes now tell you instead of failing silently
+```
+
+### 🇺🇸 English — long version
+
+```text
+This release is a quality and stability pass on iPhone and iPad.
+
+Fixed
+• No longer crashes when enabling system calendar sync (calendar permission).
+• The event detail and finances margins now include ingredient cost, matching the form and quick quote.
+• Manual payments round to cents and validate amounts before being sent.
+• When a delete fails (network or server error) you now get a clear notice instead of it silently appearing undone.
+• Sensitive URLs are no longer written to the app's diagnostics.
+
+Improved
+• Internal hardening of the local database so future updates don't lose your offline cache.
+```
 
 ```text
 📲 Widgets, formulario más inteligente y mejoras visuales
