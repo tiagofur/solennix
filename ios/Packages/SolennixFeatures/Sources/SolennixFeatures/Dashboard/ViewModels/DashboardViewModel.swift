@@ -1,7 +1,10 @@
 import Foundation
 import Observation
+import os.log
 import SolennixCore
 import SolennixNetwork
+
+private let logger = Logger(subsystem: SolennixLog.subsystem, category: "DashboardViewModel")
 
 // MARK: - Dashboard Attention Events
 
@@ -199,7 +202,7 @@ public final class DashboardViewModel {
                 lowStockCount = aggregated.lowStockItems
             }
         } catch {
-            NSLog("[Dashboard] ⚠️ kpis preload failed: %@", String(describing: error))
+            logger.error("kpis preload failed: \(String(describing: error), privacy: .public)")
             // Non-fatal — the sequential loaders below will still populate
             // everything; we just lose the progressive-paint advantage.
         }
@@ -210,15 +213,17 @@ public final class DashboardViewModel {
             label: String
         ) async -> [T] {
             let paramsDesc = params?.map { "\($0.key)=\($0.value)" }.joined(separator: "&") ?? "none"
-            // Log the ACTUAL resolved URL to diagnose 404s
+            // Log the ACTUAL resolved URL to diagnose 404s. Debug-level so it
+            // is dropped in Release: the URL carries query params that may
+            // include resource IDs, which must not reach Console.app/diagnostics.
             let resolvedURL = await apiClient.resolveURL(endpoint)?.absoluteString ?? "nil"
-            NSLog("[Dashboard] 🔄 Loading %@ -> %@ params: %@ | FULL URL: %@", label, endpoint, paramsDesc, resolvedURL)
+            logger.debug("Loading \(label, privacy: .public) -> \(endpoint, privacy: .public) params: \(paramsDesc, privacy: .private) | URL: \(resolvedURL, privacy: .private)")
             do {
                 let result: [T] = try await apiClient.getAll(endpoint, params: params)
-                NSLog("[Dashboard] ✅ %@ loaded %d items", label, result.count)
+                logger.debug("\(label, privacy: .public) loaded \(result.count) items")
                 return result
             } catch {
-                NSLog("[Dashboard] ❌ %@ FAILED: %@", label, String(describing: error))
+                logger.error("\(label, privacy: .public) FAILED: \(String(describing: error), privacy: .public)")
                 encounteredError = true
                 return []
             }
@@ -290,10 +295,7 @@ public final class DashboardViewModel {
             now: now
         )
 
-          NSLog("[Dashboard] 📊 Summary: clients=%d, monthEvents=%d, upcoming=%d, allEvents=%d, inventory=%d, products=%d, allPayments=%d, encounteredError=%@",
-              clients.count, monthEvents.count, upcomingEvents.count, loadedAllEvents.count,
-              inventory.count, products.count, loadedAllPayments.count,
-              encounteredError ? "YES" : "NO")
+          logger.debug("Summary: clients=\(clients.count), monthEvents=\(monthEvents.count), upcoming=\(self.upcomingEvents.count), allEvents=\(loadedAllEvents.count), inventory=\(inventory.count), products=\(products.count), allPayments=\(loadedAllPayments.count), encounteredError=\(encounteredError ? "YES" : "NO", privacy: .public)")
 
         // Premium 6-month chart: backend-aggregated revenue by month. Loaded
         // regardless of plan — the View gates the card on `isPremium`, so a
@@ -560,7 +562,7 @@ public final class DashboardViewModel {
                 params: ["period": "year"]
             )
         } catch {
-            NSLog("[Dashboard] ⚠️ revenue-chart failed: %@", String(describing: error))
+            logger.error("revenue-chart failed: \(String(describing: error), privacy: .public)")
             return
         }
 
@@ -617,7 +619,7 @@ public final class DashboardViewModel {
                 params: ["scope": "month"]
             )
         } catch {
-            NSLog("[Dashboard] ⚠️ events-by-status failed: %@", String(describing: error))
+            logger.error("events-by-status failed: \(String(describing: error), privacy: .public)")
             return
         }
 
@@ -638,7 +640,7 @@ public final class DashboardViewModel {
         do {
             topClients = try await apiClient.getTopClients(limit: 5)
         } catch {
-            NSLog("[Dashboard] ⚠️ top-clients failed: %@", String(describing: error))
+            logger.error("top-clients failed: \(String(describing: error), privacy: .public)")
         }
     }
 
@@ -648,7 +650,7 @@ public final class DashboardViewModel {
         do {
             productDemand = try await apiClient.getProductDemand()
         } catch {
-            NSLog("[Dashboard] ⚠️ product-demand failed: %@", String(describing: error))
+            logger.error("product-demand failed: \(String(describing: error), privacy: .public)")
         }
     }
 
@@ -658,7 +660,7 @@ public final class DashboardViewModel {
         do {
             forecast = try await apiClient.getForecast()
         } catch {
-            NSLog("[Dashboard] ⚠️ forecast failed: %@", String(describing: error))
+            logger.error("forecast failed: \(String(describing: error), privacy: .public)")
         }
     }
 }

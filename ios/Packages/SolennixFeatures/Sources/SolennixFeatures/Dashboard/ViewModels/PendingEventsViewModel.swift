@@ -1,7 +1,10 @@
 import Foundation
 import Observation
+import os.log
 import SolennixCore
 import SolennixNetwork
+
+private let logger = Logger(subsystem: SolennixLog.subsystem, category: "PendingEventsViewModel")
 
 // MARK: - Pending Event with Reason
 
@@ -138,7 +141,7 @@ public final class PendingEventsViewModel {
                 self.isPresented = true
             }
         } catch {
-            NSLog("[Dashboard] ⚠️ loadPendingEvents failed: %@", String(describing: error))
+            logger.error("loadPendingEvents failed: \(String(describing: error), privacy: .public)")
         }
         isLoading = false
     }
@@ -159,7 +162,7 @@ public final class PendingEventsViewModel {
                 : tr("dashboard.messages.event_cancelled", "Evento cancelado")
         } catch {
             transientMessage = tr("dashboard.error.status_change_failed", "No se pudo cambiar el estado")
-            NSLog("[Dashboard] ⚠️ updateEventStatus failed: %@", String(describing: error))
+            logger.error("updateEventStatus failed: \(String(describing: error), privacy: .public)")
         }
         updatingEventId = nil
     }

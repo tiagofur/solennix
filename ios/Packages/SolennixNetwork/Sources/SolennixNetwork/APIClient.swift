@@ -1,5 +1,8 @@
 import Foundation
+import os.log
 import SolennixCore
+
+private let logger = Logger(subsystem: SolennixLog.subsystem, category: "APIClient")
 
 // MARK: - Upload Response
 
@@ -226,13 +229,15 @@ public actor APIClient {
             return array
         }
         // Both decode attempts failed — log a real error to help diagnose schema drift.
+        // Body preview stays private by default: decode failures often surface
+        // response payloads that may echo user data, so we redact unless a
+        // developer explicitly opts in via Console.app's metadata disclosure.
         do {
             _ = try decoder.decode(PaginatedResponse<T>.self, from: data)
         } catch {
             let url = request.url?.absoluteString ?? "?"
             let preview = String(data: data.prefix(800), encoding: .utf8) ?? "<binary>"
-            NSLog("[APIClient.getAll] ❌ decode failed for %@ as PaginatedResponse<%@>: %@\n  body preview: %@",
-                  url, String(describing: T.self), String(describing: error), preview)
+            logger.error("getAll decode failed for \(url, privacy: .public) as PaginatedResponse<\(String(describing: T.self), privacy: .public)>: \(String(describing: error), privacy: .public)\n  body preview: \(preview, privacy: .private)")
         }
         throw APIError.decodingError
     }
@@ -466,8 +471,7 @@ public actor APIClient {
                 } catch {
                     let url = request.url?.absoluteString ?? "?"
                     let preview = String(data: data.prefix(500), encoding: .utf8) ?? "<binary>"
-                    NSLog("[APIClient] ❌ decode failed for %@ as %@: %@\n  body preview: %@",
-                          url, String(describing: T.self), String(describing: error), preview)
+                    logger.error("decode failed for \(url, privacy: .public) as \(String(describing: T.self), privacy: .public)>: \(String(describing: error), privacy: .public)\n  body preview: \(preview, privacy: .private)")
                     throw APIError.decodingError
                 }
             } catch let urlError as URLError where isIdempotent && isTransient(urlError) && attempt < attempts - 1 {
