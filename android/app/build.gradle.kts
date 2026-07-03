@@ -120,6 +120,16 @@ android {
             }
         }
     }
+    // Lint gate: fail the build only on errors. Warnings are reported (XML +
+    // HTML) but do not block — there is ~120 warnings of pre-existing debt
+    // (unused resources, ktx style, icon cosmetics) to tackle incrementally.
+    // abortOnError catches real correctness problems (MissingTranslation,
+    // HardcodedText, etc.) while keeping the gate green today.
+    lint {
+        abortOnError = true
+        warningsAsErrors = false
+        checkReleaseBuilds = true
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
