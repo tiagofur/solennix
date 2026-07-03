@@ -36,13 +36,14 @@ status: active
 > - **Documentado en:** `docs/PRD/02_FEATURES.md` §16 (Perfil Profesional Público).
 > - **Estado:** Planificado, no implementado aún.
 
-> [!success] 2026-06-29 — Localización de Moneda Dinámica (currency-localization, Phase 5 complete)
-> Soporte completo para múltiples monedas (USD, COP, MXN, etc.) a nivel de presentación en todo el ecosistema de Solennix.
-> - **Base de Datos y Backend (Go)**: Agregado `default_currency` a `users` y `currency` a `events` (por defecto `MXN`) en la migración `061_add_currency`. Actualizados modelos, repositorios, y `FormatCurrency` (variádico para evitar breaking changes) en el generador de PDF.
-> - **Web (React)**: Soporte dinámico en `formatCurrency` vía `Intl.NumberFormat`. Agregado selector de moneda por defecto en el perfil de Ajustes y visualización dinámica en listados y resúmenes de eventos.
-> - **iOS & Android**: Actualizadas extensiones `CurrencyFormatting.swift` y `CurrencyFormatting.kt` para formatear valores dinámicamente con el código de moneda del evento (`.formattedCurrency(code:)` y `.asCurrency(currencyCode:)`).
-> - **Sugerencia de Moneda**: Modificado el reporte de idioma del dispositivo (`LanguageReporter.swift` y `LanguageReporter.kt`) para sugerir y reportar también el código de moneda por defecto basado en la región/locale del sistema al backend de manera throttled.
+> [!success] 2026-06-29 — Localización de Moneda Dinámica (currency-localization, infraestructura completa; wiring mobile pendiente)
+> Soporte multi-moneda (USD, COP, MXN, etc.) a nivel de presentación en el ecosistema de Solennix. **Estado real por plataforma:**
+> - **Base de Datos y Backend (Go)** — ✅ COMPLETO: Agregado `default_currency` a `users` y `currency` a `events` (por defecto `MXN`) en la migración `061_add_currency`. Actualizados modelos, repositorios, y `FormatCurrency` (variádico para evitar breaking changes) en el generador de PDF. El handler envía `event.currency` en las respuestas.
+> - **Web (React)** — ✅ COMPLETO: Soporte dinámico en `formatCurrency` vía `Intl.NumberFormat`. Agregado selector de moneda por defecto en el perfil de Ajustes y visualización dinámica en listados y resúmenes de eventos.
+> - **iOS & Android** — ⚠️ INFRAESTRUCTURA LISTA, WIRING PENDIENTE: Existen las extensiones `CurrencyFormatting.swift` (`.formattedCurrency(code:)`) y `CurrencyFormatting.kt` (`.asCurrency(currencyCode:)`), pero los modelos `Event` de ambas plataformas **no declaran `currencyCode`/`currency`** y toda la UI de eventos/pagos/widgets/intents usa MXN hardcodeado (`.asMXN`). El backend envía el campo, pero el móvil no lo consume. Hoy no rompe nada (Solennix opera en MXN), pero la afirmación "complete" previa era inexacta. Tracking del wiring: ver issue cross-platform.
+> - **Sugerencia de Moneda** — ✅: Modificado el reporte de idioma del dispositivo (`LanguageReporter.swift` y `LanguageReporter.kt`) para sugerir y reportar también el código de moneda por defecto basado en la región/locale del sistema al backend de manera throttled.
 > - **Pruebas y Validación**: Todos los unit tests en Go, React, iOS (`LanguageReporterTests`) y Android (`LanguageReporterTest`) pasan correctamente (100% verde).
+> - **Corrección (2026-07-03)**: esta entrada originalmente decía "Phase 5 complete" para iOS/Android. Tras el Judgment Day iOS se verificó que solo está la infraestructura de formato; el wiring del campo `currency` al modelo y la UI está pendiente en móvil. `openapi.yaml` tampoco declara `currency` en el schema Event.
 
 > [!success] 2026-06-26 — iOS: Búsqueda global como 5° tab del bottom-nav (bottom-nav-search)
 > La búsqueda global deja de ser un overlay/push y se convierte en un **destino nativo de primer nivel** del bottom-nav en iPhone (compact). Entregado en 3 PRs encadenados stacked-to-main (#613, #615 + PR3 local).
