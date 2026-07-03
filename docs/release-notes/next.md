@@ -1,7 +1,7 @@
 # Release Notes — Próxima versión
 
 Notas listas para copiar/pegar en App Store Connect y Google Play Console.
-Este archivo acompaña el release train **iOS 1.2.0 (7)** + **Android 1.2.0 (6)**.
+Este archivo acompaña el release train **iOS 1.3.0 (8)** + **Android 1.2.0 (6)**.
 
 - **Corta (< 500 chars)** — App Store / Play Store resumen breve
 - **Larga** — cuerpo completo de "What's New"
@@ -10,66 +10,70 @@ El changelog técnico canónico vive en `versioning/releases.json` y genera `CHA
 
 ---
 
-## iOS 1.2.0 (build 7)
+## iOS 1.3.0 (build 8)
 
 ### 🇲🇽 Español (LATAM) — versión corta
 
 ```text
-📅 Mejoramos calendario, búsqueda y planeación de eventos
+📲 Widgets, formulario más inteligente y mejoras visuales
 
-• El calendario ahora tiene mejor paridad: filtros por estado, exportación iCal y navegación más fluida
-• La búsqueda de eventos se apoya en backend para resultados más consistentes
-• Mejoramos la disponibilidad de equipo al planear eventos
-• Arreglamos widgets clave del Dashboard y el guardado de ajustes de stock
+• Los widgets del Dashboard y la pantalla de bloqueo ya muestran tus datos correctamente
+• El formulario de evento ahora respeta tus valores de anticipo, días de cancelación y reembolso
+• El formulario bloquea y avisa si eliges una fecha marcada como no disponible
+• Refinamiento visual: paleta de marca, estados vacíos nativos y animaciones más suaves
 ```
 
 ### 🇲🇽 Español (LATAM) — versión larga
 
 ```text
-Esta actualización prepara el siguiente salto de calidad de Solennix en iPhone y iPad.
+Esta actualización lleva a Solennix al siguiente nivel de pulido en iPhone y iPad.
 
 Nuevo
-• La búsqueda de eventos ahora usa resultados apoyados en backend, con más coherencia entre vistas y plataformas.
-• El calendario gana mejor paridad funcional: filtro por estado, exportación iCal, retry y navegación más clara desde los eventos.
-• La disponibilidad de equipo entra al flujo de planeación para ayudarte a detectar capacidad real antes de cerrar cambios.
+• Widgets funcionales: los widgets del Dashboard y la pantalla de bloqueo ahora reflejan tus eventos, KPIs e ingresos reales, con estados vacíos para todas las familias.
+• Formulario de evento inteligente: respeta el % de anticipo, los días de cancelación y el % de reembolso que configuraste en Ajustes al crear un evento nuevo.
+• Fechas bloqueadas: el calendario del formulario deshabilita las fechas marcadas como no disponibles, avisa en línea y protege el guardado para que no agendes un día bloqueado.
 
 Mejorado
-• El módulo de Staff queda mejor localizado y más consistente con el resto de la app.
-• La experiencia general de detalle y calendar queda más alineada con Web y Android.
+• Refinamiento visual integral: paleta de marca unificada, estados vacíos nativos (ContentUnavailableView), símbolos SF jerárquicos y animaciones con resorte que respetan "reducir movimiento".
+• Navegación restaurada: al volver a abrir la app se conserva la última pantalla vista (y se limpia al cerrar sesión).
+• Pantalla de inicio con fade que coincide con el primer contenido.
 
 Arreglado
-• Restauramos tarjetas clave del Dashboard: próximos eventos y top clients.
-• El botón Guardar en ajustes de stock vuelve a persistir correctamente aunque el PUT sea parcial.
+• Widgets: se corrigió la persistencia del App Group que dejaba los widgets en blanco y un error de un día en las fechas que mostraba KPIs en cero.
+• Live Activity: el color de "completado" ahora es verde, consistente con la app.
+• Bloqueo de completar un evento con saldo pendiente, con diálogo claro.
 ```
 
 ### 🇺🇸 English — short version
 
 ```text
-📅 Better calendar, search, and event planning
+📲 Widgets, smarter event form, and visual polish
 
-• Calendar now has stronger parity: status filters, iCal export, and smoother navigation
-• Event search now uses backend-powered results for better consistency
-• Equipment availability is clearer during planning
-• Fixed key Dashboard widgets and stock adjustment saving
+• Dashboard and Lock Screen widgets now show your real data
+• The event form now honors your deposit, cancellation, and refund defaults
+• The form blocks and warns when you pick a date marked unavailable
+• Visual refinement: brand palette, native empty states, smoother animations
 ```
 
 ### 🇺🇸 English — long version
 
 ```text
-This release improves the core planning workflow on iPhone and iPad.
+This release takes Solennix to the next level of polish on iPhone and iPad.
 
 New
-• Event search now relies on backend-powered results for stronger consistency across screens and platforms.
-• Calendar reaches better functional parity with status filters, iCal export, retry states, and clearer event navigation.
-• Equipment availability is now surfaced more clearly while planning event changes.
+• Working widgets: Dashboard and Lock Screen widgets now reflect your real events, KPIs, and revenue, with empty states for every widget family.
+• Smarter event form: new events now honor the deposit %, cancellation days, and refund % you configured in Settings.
+• Blocked dates: the form's calendar disables dates marked unavailable, shows an inline warning, and guards the save so you can't book a blocked day.
 
 Improved
-• Staff flows are better localized and more consistent with the rest of the app.
-• Event detail and calendar behavior are better aligned with Web and Android.
+• End-to-end visual polish: unified brand palette, native empty states (ContentUnavailableView), hierarchical SF Symbols, and spring animations that respect Reduce Motion.
+• Restored navigation: reopening the app keeps the last screen you were on (and clears it on logout).
+• Launch screen fades into the first content frame.
 
 Fixed
-• Restored key Dashboard cards: upcoming events and top clients.
-• Fixed stock adjustment saving when the request body is partial.
+• Widgets: corrected App Group persistence that left widgets blank, and a date off-by-one that showed KPIs as zero.
+• Live Activity: the "completed" color is now green, matching the app.
+• Blocked completing an event with a pending balance, with a clear dialog.
 ```
 
 ---
