@@ -101,7 +101,12 @@ public struct InventoryListView: View {
                             HapticsHelper.play(.success)
                         },
                         onExpire: {
-                            Task { await viewModel.confirmDeleteItem(removed.item) }
+                            Task {
+                                await viewModel.confirmDeleteItem(removed.item)
+                                if let message = viewModel.errorMessage {
+                                    toastManager.show(message: message, type: .error)
+                                }
+                            }
                         }
                     )
                 }

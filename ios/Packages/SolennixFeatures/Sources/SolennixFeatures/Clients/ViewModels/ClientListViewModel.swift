@@ -240,6 +240,7 @@ public final class ClientListViewModel {
     /// Permanently delete a client via API (called after undo grace period).
     @MainActor
     public func confirmDeleteClient(_ client: Client) async {
+        errorMessage = nil
         do {
             try await apiClient.delete(Endpoint.client(client.id))
         } catch {

@@ -55,11 +55,12 @@ public struct EventFormLinksView: View {
                 // A4: warning here (dialog open), success fires AFTER async delete below
                 Task {
                     await viewModel.deleteLink(id: link.id)
-                    // deleteLink swallows errors into errorMessage — success feedback
-                    // only when the API call actually succeeded.
-                    guard viewModel.errorMessage == nil else { return }
-                    toastManager.show(message: EventFormLinksStrings.linkDeletedToast, type: .success)
-                    deleteSuccessCounter += 1   // A4: triggers .success sensoryFeedback
+                    if let message = viewModel.errorMessage {
+                        toastManager.show(message: message, type: .error)
+                    } else {
+                        toastManager.show(message: EventFormLinksStrings.linkDeletedToast, type: .success)
+                        deleteSuccessCounter += 1   // A4: triggers .success sensoryFeedback
+                    }
                 }
             }
             Button(EventFormLinksStrings.cancel, role: .cancel) {}

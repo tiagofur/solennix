@@ -85,7 +85,12 @@ public struct ClientListView: View {
                             HapticsHelper.play(.success)
                         },
                         onExpire: {
-                            Task { await viewModel.confirmDeleteClient(removed.client) }
+                            Task {
+                                await viewModel.confirmDeleteClient(removed.client)
+                                if let message = viewModel.errorMessage {
+                                    toastManager.show(message: message, type: .error)
+                                }
+                            }
                         }
                     )
                 }

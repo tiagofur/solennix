@@ -292,7 +292,12 @@ public struct EventListView: View {
                             HapticsHelper.play(.success)
                         },
                         onExpire: {
-                            Task { await viewModel.confirmDeleteEvent(removed.event) }
+                            Task {
+                                await viewModel.confirmDeleteEvent(removed.event)
+                                if let message = viewModel.errorMessage {
+                                    toastManager.show(message: message, type: .error)
+                                }
+                            }
                         }
                     )
                 }

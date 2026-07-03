@@ -649,6 +649,7 @@ public final class EventListViewModel {
 
     @MainActor
     public func confirmDeleteEvent(_ event: Event) async {
+        errorMessage = nil
         do {
             // Route through the repository (ADR-2): the delete + system-mirror
             // cleanup + identity clearing fan out from this single boundary.

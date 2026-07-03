@@ -338,6 +338,7 @@ public final class InventoryListViewModel {
     /// Permanently delete an item via API (called after undo grace period).
     @MainActor
     public func confirmDeleteItem(_ item: InventoryItem) async {
+        errorMessage = nil
         do {
             try await apiClient.delete(Endpoint.inventoryItem(item.id))
         } catch {

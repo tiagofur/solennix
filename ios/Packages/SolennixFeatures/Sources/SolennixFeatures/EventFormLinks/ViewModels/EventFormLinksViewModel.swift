@@ -74,6 +74,7 @@ public final class EventFormLinksViewModel {
 
     @MainActor
     public func deleteLink(id: String) async {
+        errorMessage = nil
         do {
             try await apiClient.delete(Endpoint.eventFormLink(id))
             links.removeAll { $0.id == id }
