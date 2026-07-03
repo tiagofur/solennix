@@ -51,6 +51,8 @@
 	<string>Take photos of your events and products.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Select images for your events and products.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Sync your events with the system calendar so you never miss a booking.</string>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>com.solennix.app.refresh</string>
