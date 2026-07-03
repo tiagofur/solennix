@@ -641,57 +641,37 @@ public final class EventFormViewModel {
     }
 
     // MARK: - Computed Properties
+    //
+    // Financial accessors delegate to `financialResult` (EventFinancials.compute()),
+    // the single source of truth shared with EventFinancesDetailView and
+    // QuickQuoteViewModel. Previously this file reimplemented the same formula
+    // (subtotal/discount/tax/total) by hand, which drifted silently whenever
+    // EventFinancials changed. See EventFormViewModel+Profitability.swift for the
+    // canonical computation; values here are read-only projections of it.
 
-    public var productsSubtotal: Double {
-        selectedProducts.reduce(0) { sum, item in
-            sum + (item.quantity * (item.unitPrice - item.discount))
-        }
-    }
+    public var productsSubtotal: Double { financialResult.productsSubtotal }
 
+    /// Sum of ALL extras (normal + pass-through). Not a field on
+    /// `EventFinancials.Result`, so derived from its two extras subtotals.
     public var extrasSubtotal: Double {
-        extras.reduce(0) { $0 + $1.price }
+        financialResult.normalExtrasSubtotal + financialResult.passThroughExtrasSubtotal
     }
 
-    public var normalExtrasSubtotal: Double {
-        extras.filter { !$0.excludeUtility }.reduce(0) { $0 + $1.price }
-    }
+    public var normalExtrasSubtotal: Double { financialResult.normalExtrasSubtotal }
 
-    public var passThroughExtrasSubtotal: Double {
-        extras.filter { $0.excludeUtility }.reduce(0) { $0 + $1.price }
-    }
+    public var passThroughExtrasSubtotal: Double { financialResult.passThroughExtrasSubtotal }
 
-    public var subtotal: Double {
-        productsSubtotal + extrasSubtotal
-    }
+    public var subtotal: Double { productsSubtotal + extrasSubtotal }
 
-    public var discountableBase: Double {
-        productsSubtotal + normalExtrasSubtotal
-    }
+    public var discountableBase: Double { financialResult.discountableBase }
 
-    public var discountAmount: Double {
-        // Clamp to prevent negative totals. Percent ∈ [0, 100]; fixed ∈ [0, base].
-        // Mirrors EventFinancials.compute() and backend financial.go:84-89.
-        switch discountType {
-        case .percent:
-            let clampedPercent = max(0, min(100, discount))
-            return discountableBase * clampedPercent / 100
-        case .fixed:
-            return min(max(0, discount), discountableBase)
-        }
-    }
+    public var discountAmount: Double { financialResult.discountAmount }
 
-    public var afterDiscount: Double {
-        max(discountableBase - discountAmount, 0)
-    }
+    public var afterDiscount: Double { financialResult.afterDiscount }
 
-    public var taxAmount: Double {
-        let baseTotal = afterDiscount + passThroughExtrasSubtotal
-        return requiresInvoice ? EventFinancials.round2(baseTotal * taxRate / 100) : 0
-    }
+    public var taxAmount: Double { financialResult.taxAmount }
 
-    public var total: Double {
-        EventFinancials.round2(afterDiscount + passThroughExtrasSubtotal + taxAmount)
-    }
+    public var total: Double { financialResult.total }
 
     public var depositAmount: Double {
         total * depositPercent / 100
