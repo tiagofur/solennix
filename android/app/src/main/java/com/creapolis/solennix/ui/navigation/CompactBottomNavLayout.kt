@@ -335,7 +335,6 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                      onChangePassword = { navController.navigate("change_password") },
                      onBusinessSettings = { navController.navigate("business_settings") },
                      onContractDefaults = { navController.navigate("contract_defaults") },
-                     onReviews = { navController.navigate("reviews") },
                      onNotificationPreferences = { navController.navigate("notification_preferences") },
                     onPricing = { navController.navigate("pricing") },
                     onHelp = { uriHandler.openUri("https://solennix.com/help") },
