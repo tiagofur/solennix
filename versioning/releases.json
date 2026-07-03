@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-06-09",
+  "updatedAt": "2026-07-03",
   "currentVersions": {
     "web": {
       "version": "1.0.1",
@@ -22,6 +22,28 @@
     }
   },
   "releases": [
+    {
+      "id": "2026-07-03-ios-1.3.0-widgets-form-polish",
+      "date": "2026-07-03",
+      "title": "iOS 1.3.0: Widgets funcionales, formulario inteligente y pulido visual",
+      "summary": "Los widgets del Dashboard y la pantalla de bloqueo ahora muestran datos reales; el formulario de evento respeta los defaults de contrato y bloquea fechas no disponibles; refinamiento visual integral de marca, estados vacíos y animaciones.",
+      "platforms": {
+        "web": [],
+        "ios": [
+          "Widgets: se corrige la persistencia del App Group que dejaba los widgets en blanco y se alambran el flujo de datos, el estado de auth y los disparadores de sincronización.",
+          "Widgets: se adopta WidgetStateView en todas las familias con estados vacíos, y se corrige un error off-by-one en el parseo de fecha que mostraba KPIs en cero.",
+          "Widgets: se centraliza el parser de fecha de evento (DRY) para que KPIs, próximos eventos y conteos usen el mismo cálculo.",
+          "Formulario de evento: las fechas marcadas como no disponibles se deshabilitan en el selector, con aviso en línea y guardia del guardado (paridad con Web/Android).",
+          "Formulario de evento: los eventos nuevos ahora respetan el % de anticipo, días de cancelación y % de reembolso configurados en Ajustes (paridad con Web).",
+          "Visual: paleta de marca unificada, migración de estados vacíos a ContentUnavailableView nativo, símbolos SF jerárquicos y animaciones con resorte que respetan 'reducir movimiento'.",
+          "Navegación: se restaura la última pantalla al reabrir la app (con limpieza al cerrar sesión) y se alinea la pantalla de lanzamiento con el primer contenido.",
+          "Live Activity: el color de estado 'completado' pasa a verde para coincidir con la app.",
+          "Seguridad: se bloquea completar un evento con saldo pendiente, con diálogo claro mostrando el monto faltante."
+        ],
+        "android": [],
+        "backend": []
+      }
+    },
     {
       "id": "2026-06-09-backend-low-severity-cleanups",
       "date": "2026-06-09",
