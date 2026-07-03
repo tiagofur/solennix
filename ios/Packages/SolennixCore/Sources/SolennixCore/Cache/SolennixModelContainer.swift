@@ -23,13 +23,11 @@ public enum SolennixModelContainer {
     public static func create(
         onPersistentFallback: ((Error) -> Void)? = nil
     ) throws -> ModelContainer {
-        let schema = Schema([
-            CachedClient.self,
-            CachedEvent.self,
-            CachedProduct.self,
-            CachedInventoryItem.self,
-            CachedPayment.self
-        ])
+        // Versioned schema (currently SchemaV1) + migration plan. Existing
+        // unversioned stores open as V1 with no migration (models unchanged);
+        // future model changes go through SolennixMigrationPlan instead of
+        // dropping to the in-memory fallback. See SolennixSchemaVersioning.
+        let schema = SchemaV1.schema
 
         let configuration = ModelConfiguration(
             "SolennixCache",
@@ -40,6 +38,7 @@ public enum SolennixModelContainer {
         do {
             return try ModelContainer(
                 for: schema,
+                migrationPlan: SolennixMigrationPlan.self,
                 configurations: [configuration]
             )
         } catch {
@@ -50,7 +49,7 @@ public enum SolennixModelContainer {
                 schema: schema,
                 isStoredInMemoryOnly: true
             )
-            return try ModelContainer(for: schema, configurations: [fallback])
+            return try ModelContainer(for: schema, migrationPlan: SolennixMigrationPlan.self, configurations: [fallback])
         }
     }
 }
