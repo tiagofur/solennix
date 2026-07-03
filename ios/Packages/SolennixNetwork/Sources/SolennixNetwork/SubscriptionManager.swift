@@ -3,6 +3,11 @@ import Observation
 import RevenueCat
 import SolennixCore
 import StoreKit
+// UIKit is imported only for `UIApplication.shared.connectedScenes` →
+// `UIWindowScene`, which `AppStore.showManageSubscriptions(in:)` (StoreKit)
+// mandates as its presentation anchor. This is an unavoidable framework
+// frontier for the manage-subscription flow, not UI logic leaking into the
+// network layer. (#757)
 import UIKit
 
 // MARK: - Subscription Error
