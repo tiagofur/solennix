@@ -21,6 +21,14 @@ public final class EventDetailViewModel {
     public var eventPhotos: [String] = []
     public var eventStaff: [EventStaff] = []
 
+    /// Per-product ingredient cost cache (productId -> unit cost). Populated
+    /// by `loadProductUnitCosts()` after `products` load so the detail's margin
+    /// (`EventDetailView.financialsMargin`) includes ingredient costs — matching
+    /// `EventFormViewModel.productUnitCosts` and `QuickQuoteViewModel`. A fetch
+    /// failure records 0 for that product so the margin stays usable (fault-
+    /// isolated, same policy as the form).
+    public var productUnitCosts: [String: Double] = [:]
+
     public var isLoading: Bool = false
     public var showDeleteConfirm: Bool = false
     public var showStatusSheet: Bool = false
@@ -179,6 +187,14 @@ public final class EventDetailViewModel {
                     }
                 }
             }
+
+            // Load ingredient costs so the detail margin matches the form /
+            // quick-quote (EventFinancials cost side). Fan-out in parallel with
+            // per-product fault isolation: a failure on one product records 0
+            // and leaves the rest usable. Mirrors EventFormViewModel.fetchProductCosts
+            // but as a parallel TaskGroup and without re-fetching cached entries.
+            await loadProductUnitCosts()
+        } catch {
         } catch {
             // B5: a 404 on the primary event fetch means the entity no longer
             // exists for this user (deleted on another device, or a restored
@@ -205,6 +221,44 @@ public final class EventDetailViewModel {
     }
 
     // MARK: - Scoped Load Methods
+
+    /// Populates `productUnitCosts` by fanning out the ingredient recipe of each
+    /// event product in parallel. For each product, sums
+    /// `quantityRequired × unitCost` over ingredients of type `.ingredient` or
+    /// `.supply` (matches `EventFinancials` cost aggregation). Already-cached
+    /// products are skipped; a fetch failure records 0 so the margin stays
+    /// usable. Parity with `EventFormViewModel.fetchProductCosts`.
+    @MainActor
+    public func loadProductUnitCosts() async {
+        let missing = Set(products.map { $0.productId }.filter { !$0.isEmpty && productUnitCosts[$0] == nil })
+        guard !missing.isEmpty else { return }
+
+        await withTaskGroup(of: (String, Double).self) { group in
+            for productId in missing {
+                group.addTask { [apiClient] in
+                    do {
+                        let ingredients: [ProductIngredient] = try await apiClient.getAll(
+                            Endpoint.productIngredients(productId)
+                        )
+                        let cost = ingredients
+                            .filter { ing in
+                                guard let type = ing.type else { return true }
+                                return type == .ingredient || type == .supply
+                            }
+                            .reduce(0.0) { sum, ing in
+                                sum + (ing.unitCost ?? 0) * ing.quantityRequired
+                            }
+                        return (productId, cost)
+                    } catch {
+                        return (productId, 0.0)
+                    }
+                }
+            }
+            for await (id, cost) in group {
+                productUnitCosts[id] = cost
+            }
+        }
+    }
 
     /// Fetches only the equipment list for an event.
     /// Use this from EventEquipmentDetailView to avoid firing 8 parallel requests.

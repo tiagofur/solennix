@@ -141,4 +141,42 @@ final class EventDetailViewModelTests: XCTestCase {
         let vm = try makeViewModel(depositPercent: 30, totalAmount: 1000, paidAmounts: [500])
         XCTAssertEqual(vm.depositBalance, 0)
     }
+
+    // MARK: - Product unit-cost cache (margin includes ingredient costs)
+
+    /// The detail's margin feeds `EventFinancials.compute()` with
+    /// `productUnitCosts`. With costs present the margin must be LOWER than
+    /// without them — proving the ingredient cost is now included (it was
+    /// previously dropped via `unitCost: nil`, inflating the margin).
+    @MainActor
+    func testProductUnitCosts_LowerMargin_ThanNilCosts() {
+        let vm = EventDetailViewModel(apiClient: APIClient())
+        let productRows = { (unitCost: Double?) in
+            EventFinancials.ProductRow(quantity: 2, unitPrice: 100, lineDiscount: 0, unitCost: unitCost)
+        }
+        let withoutCost = EventFinancials.compute(
+            products: [productRows(nil)],
+            extras: [], supplies: [],
+            globalDiscountType: .fixed, globalDiscount: 0,
+            requiresInvoice: false, taxRate: 0
+        ).profitMargin
+        let withCost = EventFinancials.compute(
+            products: [productRows(40)],
+            extras: [], supplies: [],
+            globalDiscountType: .fixed, globalDiscount: 0,
+            requiresInvoice: false, taxRate: 0
+        ).profitMargin
+        XCTAssertTrue(vm.productUnitCosts.isEmpty, "cache starts empty")
+        XCTAssertLessThan(withCost, withoutCost, "ingredient cost must reduce the margin")
+    }
+
+    /// `loadProductUnitCosts` is a no-op when there are no products to fetch —
+    /// guards the fan-out from unnecessary work. Empty list => no network call.
+    @MainActor
+    func testLoadProductUnitCosts_NoOpWhenProductsEmpty() async {
+        let vm = EventDetailViewModel(apiClient: APIClient())
+        vm.products = []
+        await vm.loadProductUnitCosts()
+        XCTAssertTrue(vm.productUnitCosts.isEmpty)
+    }
 }
