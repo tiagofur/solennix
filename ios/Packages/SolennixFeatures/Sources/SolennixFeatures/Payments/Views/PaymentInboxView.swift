@@ -33,6 +33,7 @@ public struct PaymentInboxView: View {
     @State private var approveCounter: Int = 0                 // Fix 9: sensory feedback counter
     @State private var rejectCounter: Int = 0
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(ToastManager.self) private var toastManager
 
     private var isRegularWidth: Bool { horizontalSizeClass == .regular }
@@ -410,6 +411,8 @@ public struct PaymentInboxView: View {
                         .fontWeight(.semibold)
                     TextEditor(text: $rejectionReason)
                         .frame(minHeight: 120)
+                        .frame(maxHeight: dynamicTypeSize >= .accessibility1 ? 150 : nil)
+                        .scrollDisabled(false)
                         .padding(Spacing.sm)                           // Fix 7: Spacing token
                         .overlay(
                             RoundedRectangle(cornerRadius: CornerRadius.md)

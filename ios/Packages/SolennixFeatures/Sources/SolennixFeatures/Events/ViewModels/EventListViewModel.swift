@@ -2,6 +2,9 @@ import Foundation
 import Observation
 import SolennixCore
 import SolennixNetwork
+#if canImport(UIKit)
+import UIKit
+#endif
 
 // MARK: - Sort
 
@@ -304,6 +307,9 @@ public final class EventListViewModel {
                 let _: UnavailableDate = try await apiClient.post(Endpoint.unavailableDates, body: body)
             }
             await loadUnavailableDates()
+            #if canImport(UIKit)
+            UIAccessibility.post(notification: .announcement, argument: wasBlocked ? CalendarStrings.a11yDateUnblockedAnnouncement : CalendarStrings.a11yDateBlockedAnnouncement)
+            #endif
         } catch {
             self.calendarError = wasBlocked ? .unblockFailed : .blockFailed
         }
@@ -317,6 +323,9 @@ public final class EventListViewModel {
         do {
             try await apiClient.delete(Endpoint.unavailableDate(entry.id))
             await loadUnavailableDates()
+            #if canImport(UIKit)
+            UIAccessibility.post(notification: .announcement, argument: CalendarStrings.a11yDateUnblockedAnnouncement)
+            #endif
         } catch {
             self.calendarError = .unblockFailed
         }

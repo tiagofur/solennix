@@ -44,4 +44,9 @@ enum CalendarStrings {
     static func a11yDayWithEvents(_ count: Int) -> String {
         FeatureL10n.plural("calendar.a11y.day_with_events", "%lld eventos", count: count)
     }
+
+    static var a11yUnblockAction: String { FeatureL10n.text("calendar.a11y.unblock_action", "Desbloquear fecha") }
+    static var a11yBlockAction: String { FeatureL10n.text("calendar.a11y.block_action", "Bloquear fecha") }
+    static var a11yDateBlockedAnnouncement: String { FeatureL10n.text("calendar.a11y.date_blocked", "Fecha bloqueada") }
+    static var a11yDateUnblockedAnnouncement: String { FeatureL10n.text("calendar.a11y.date_unblocked", "Fecha desbloqueada") }
 }

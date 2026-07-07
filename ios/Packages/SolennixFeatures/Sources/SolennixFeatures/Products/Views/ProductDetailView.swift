@@ -240,6 +240,7 @@ public struct ProductDetailView: View {
 
     @State private var viewModel: ProductDetailViewModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     public init(apiClient: APIClient, productId: String) {
         _viewModel = State(initialValue: ProductDetailViewModel(apiClient: apiClient, productId: productId))
@@ -472,7 +473,7 @@ public struct ProductDetailView: View {
         let marginSubtitle = marginValue != nil ? ProductStrings.profitEstimated : ProductStrings.noRecipe
 
         return VStack(spacing: 0) {
-            HStack(spacing: 0) {
+            if dynamicTypeSize >= .accessibility1 {
                 kpiCard(
                     icon: "dollarsign.circle.fill",
                     iconColor: SolennixColors.primary,
@@ -483,7 +484,7 @@ public struct ProductDetailView: View {
                 )
 
                 Divider()
-                    .frame(height: 70)
+                    .padding(.horizontal, Spacing.md)
 
                 kpiCard(
                     icon: "square.stack.3d.up.fill",
@@ -493,12 +494,10 @@ public struct ProductDetailView: View {
                     subtitle: ProductStrings.inSupplies,
                     a11yLabel: "\(ProductStrings.unitCost): \(viewModel.unitCost.formatted(.currency(code: "MXN")))"
                 )
-            }
 
-            Divider()
-                .padding(.horizontal, Spacing.md)
+                Divider()
+                    .padding(.horizontal, Spacing.md)
 
-            HStack(spacing: 0) {
                 kpiCard(
                     icon: "arrow.up.right",
                     iconColor: marginColor,
@@ -510,7 +509,7 @@ public struct ProductDetailView: View {
                 )
 
                 Divider()
-                    .frame(height: 70)
+                    .padding(.horizontal, Spacing.md)
 
                 kpiCard(
                     icon: "calendar",
@@ -520,6 +519,56 @@ public struct ProductDetailView: View {
                     subtitle: ProductStrings.confirmed,
                     a11yLabel: "\(ProductStrings.upcomingEvents): \(viewModel.demandData.count)"
                 )
+            } else {
+                HStack(spacing: 0) {
+                    kpiCard(
+                        icon: "dollarsign.circle.fill",
+                        iconColor: SolennixColors.primary,
+                        label: ProductStrings.basePrice,
+                        value: product.basePrice.formatted(.currency(code: "MXN")),
+                        subtitle: ProductStrings.perUnit,
+                        a11yLabel: "\(ProductStrings.basePrice): \(product.basePrice.formatted(.currency(code: "MXN")))"
+                    )
+
+                    Divider()
+                        .frame(height: 70)
+
+                    kpiCard(
+                        icon: "square.stack.3d.up.fill",
+                        iconColor: SolennixColors.textSecondary,
+                        label: ProductStrings.unitCost,
+                        value: viewModel.unitCost.formatted(.currency(code: "MXN")),
+                        subtitle: ProductStrings.inSupplies,
+                        a11yLabel: "\(ProductStrings.unitCost): \(viewModel.unitCost.formatted(.currency(code: "MXN")))"
+                    )
+                }
+
+                Divider()
+                    .padding(.horizontal, Spacing.md)
+
+                HStack(spacing: 0) {
+                    kpiCard(
+                        icon: "arrow.up.right",
+                        iconColor: marginColor,
+                        label: ProductStrings.marginEstimated,
+                        value: marginDisplay,
+                        subtitle: marginSubtitle,
+                        valueColor: marginColor,
+                        a11yLabel: "\(ProductStrings.marginEstimated): \(marginDisplay)"
+                    )
+
+                    Divider()
+                        .frame(height: 70)
+
+                    kpiCard(
+                        icon: "calendar",
+                        iconColor: SolennixColors.primary,
+                        label: ProductStrings.upcomingEvents,
+                        value: "\(viewModel.demandData.count)",
+                        subtitle: ProductStrings.confirmed,
+                        a11yLabel: "\(ProductStrings.upcomingEvents): \(viewModel.demandData.count)"
+                    )
+                }
             }
         }
         .solennixCard(radius: CornerRadius.lg, shadow: false, border: false)
@@ -708,44 +757,54 @@ public struct ProductDetailView: View {
 
             Divider()
 
-            // Table header
-            HStack {
-                Text(ProductStrings.ingredientHeader)
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(SolennixColors.textSecondary)
-                Spacer()
-                Text(ProductStrings.quantityHeader)
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(SolennixColors.textSecondary)
-                if showCost {
-                    Text(ProductStrings.estimatedCostHeader)
+            if dynamicTypeSize < .accessibility1 {
+                // Table header
+                HStack {
+                    Text(ProductStrings.ingredientHeader)
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(SolennixColors.textSecondary)
-                        .frame(width: 80, alignment: .trailing)
+                    Spacer()
+                    Text(ProductStrings.quantityHeader)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(SolennixColors.textSecondary)
+                    if showCost {
+                        Text(ProductStrings.estimatedCostHeader)
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(SolennixColors.textSecondary)
+                            .frame(width: 80, alignment: .trailing)
+                    }
                 }
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, Spacing.sm)
+                .background(SolennixColors.surface)
             }
-            .padding(.horizontal, Spacing.md)
-            .padding(.vertical, Spacing.sm)
-            .background(SolennixColors.surface)
 
             // Items
             ForEach(items) { ingredient in
                 Divider().opacity(0.5)
                 let qtyFormatted = ingredient.quantityRequired.formatted(.number.precision(.fractionLength(0...2)))
-                HStack {
+                let rowLayout = dynamicTypeSize >= .accessibility1
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4))
+                    : AnyLayout(HStackLayout())
+                rowLayout {
                     Text(ingredient.ingredientName ?? ProductStrings.unknownItem)
                         .font(.subheadline)
                         .foregroundStyle(SolennixColors.text)
-                    Spacer()
+                    
+                    if dynamicTypeSize < .accessibility1 {
+                        Spacer()
+                    }
+                    
                     Text("\(qtyFormatted) \(ingredient.unit ?? ProductStrings.unitFallback)")
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(SolennixColors.text)
+                    
                     if showCost {
                         let cost = ingredient.quantityRequired * (ingredient.unitCost ?? 0)
                         Text(cost > 0 ? cost.formatted(.currency(code: "MXN")) : "—")
                             .font(.subheadline.weight(.medium))
                             .foregroundStyle(totalColor)
-                            .frame(width: 80, alignment: .trailing)
+                            .frame(width: dynamicTypeSize >= .accessibility1 ? nil : 80, alignment: dynamicTypeSize >= .accessibility1 ? .leading : .trailing)
                     }
                 }
                 .padding(.horizontal, Spacing.md)
@@ -758,11 +817,16 @@ public struct ProductDetailView: View {
             // Total footer
             if let totalLabel, let totalValue {
                 Divider()
-                HStack {
+                let footerLayout = dynamicTypeSize >= .accessibility1
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4))
+                    : AnyLayout(HStackLayout())
+                footerLayout {
                     Text(totalLabel)
                         .font(.subheadline)
                         .foregroundStyle(SolennixColors.textSecondary)
-                    Spacer()
+                    if dynamicTypeSize < .accessibility1 {
+                        Spacer()
+                    }
                     Text(totalValue.formatted(.currency(code: "MXN")))
                         .font(.title3.weight(.bold))
                         .foregroundStyle(totalColor)

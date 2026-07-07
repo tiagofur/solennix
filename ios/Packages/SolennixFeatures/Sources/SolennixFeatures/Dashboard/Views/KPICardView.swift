@@ -6,6 +6,8 @@ import SolennixDesign
 /// Reusable card component for displaying a single KPI metric.
 public struct KPICardView: View {
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     let title: String
     let value: String
     let icon: String
@@ -41,6 +43,7 @@ public struct KPICardView: View {
                 .frame(width: 40, height: 40)
                 .background(iconBgColor)
                 .clipShape(Circle())
+                .accessibilityHidden(true)
 
             // Value
             Text(value)
@@ -64,8 +67,8 @@ public struct KPICardView: View {
                     .lineLimit(1)
             }
         }
-        .frame(width: flexible ? nil : 155)
-        .frame(maxWidth: flexible ? .infinity : nil)
+        .frame(width: (flexible || dynamicTypeSize >= .accessibility1) ? nil : 155)
+        .frame(maxWidth: (flexible || dynamicTypeSize >= .accessibility1) ? .infinity : nil)
         .padding(.vertical, Spacing.md)
         .padding(.horizontal, Spacing.sm)
         .solennixCard(border: false)

@@ -17,6 +17,7 @@ public struct ClientDetailView: View {
     @State private var showDeleteConfirm: Bool = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(PlanLimitsManager.self) private var planLimitsManager
 
     private let apiClient: APIClient
@@ -241,7 +242,10 @@ public struct ClientDetailView: View {
             }
 
             if !client.phone.isEmpty || (client.email != nil && !(client.email?.isEmpty ?? true)) {
-                HStack(spacing: Spacing.sm) {
+                let layout = dynamicTypeSize >= .accessibility1
+                    ? AnyLayout(VStackLayout(spacing: Spacing.sm))
+                    : AnyLayout(HStackLayout(spacing: Spacing.sm))
+                layout {
                     if !client.phone.isEmpty {
                         contactChip(
                             icon: "phone.fill",

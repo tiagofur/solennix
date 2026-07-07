@@ -57,6 +57,9 @@ struct DashboardDateBox: View {
     let month: String
     let day: String
 
+    @ScaledMetric(relativeTo: .body) private var size: CGFloat = 48
+    private var cappedSize: CGFloat { min(size, 72) }
+
     var body: some View {
         VStack(spacing: Spacing.xxs) {
             Text(month)
@@ -70,7 +73,7 @@ struct DashboardDateBox: View {
                 .fontWeight(.bold)
                 .foregroundStyle(SolennixColors.text)
         }
-        .frame(width: 48, height: 48)
+        .frame(width: cappedSize, height: cappedSize)
         .background(SolennixColors.primaryLight)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
     }

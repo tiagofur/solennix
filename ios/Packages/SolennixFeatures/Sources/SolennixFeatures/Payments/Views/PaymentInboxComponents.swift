@@ -7,6 +7,7 @@ import SolennixDesign
 // MARK: - Card View (iPad grid — unchanged chrome)
 
 struct PaymentSubmissionCardView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let submission: PaymentSubmission
     let onTap: () -> Void
 
@@ -14,7 +15,10 @@ struct PaymentSubmissionCardView: View {
         Button(action: onTap) {
             ReviewCardContainer {
                 VStack(alignment: .leading, spacing: Spacing.sm) {
-                    HStack {
+                    let headerLayout = dynamicTypeSize >= .accessibility1
+                        ? AnyLayout(VStackLayout(alignment: .leading, spacing: Spacing.xs))
+                        : AnyLayout(HStackLayout(alignment: .center))
+                    headerLayout {
                         VStack(alignment: .leading, spacing: Spacing.xs) {
                             Text(submission.clientName ?? PaymentsStrings.clientPlaceholder)
                                 .font(.headline)
@@ -25,11 +29,16 @@ struct PaymentSubmissionCardView: View {
                                 .foregroundStyle(SolennixColors.textSecondary)
                         }
 
-                        Spacer()
+                        if dynamicTypeSize < .accessibility1 {
+                            Spacer()
+                        }
                         PaymentSubmissionStatusBadge(status: submission.status)
                     }
 
-                    HStack(spacing: Spacing.md) {
+                    let metaLayout = dynamicTypeSize >= .accessibility1
+                        ? AnyLayout(VStackLayout(alignment: .leading, spacing: Spacing.xs))
+                        : AnyLayout(HStackLayout(spacing: Spacing.md))
+                    metaLayout {
                         Label(CommonFormatting.currencyMXN(submission.amount), systemImage: "dollarsign.circle.fill")
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.primary)

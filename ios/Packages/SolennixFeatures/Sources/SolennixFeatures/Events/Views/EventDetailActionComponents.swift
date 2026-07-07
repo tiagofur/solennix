@@ -2,9 +2,20 @@ import SwiftUI
 import SolennixDesign
 
 struct EventDetailDocumentsCard: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     let title: String
     let options: [(key: String, label: String, icon: String)]
     let onTap: (String) -> Void
+
+    private var columns: [GridItem] {
+        if dynamicTypeSize >= .accessibility1 {
+            return [GridItem(.flexible(), spacing: Spacing.sm)]
+        } else {
+            return [GridItem(.flexible(), spacing: Spacing.sm),
+                    GridItem(.flexible(), spacing: Spacing.sm)]
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
@@ -17,8 +28,7 @@ struct EventDetailDocumentsCard: View {
                     .foregroundStyle(SolennixColors.text)
             }
 
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: Spacing.sm),
-                                GridItem(.flexible(), spacing: Spacing.sm)],
+            LazyVGrid(columns: columns,
                       spacing: Spacing.sm) {
                 ForEach(options, id: \.key) { option in
                     Button {
