@@ -486,3 +486,23 @@
   - `InteractiveWidget.swift`: removido optional chaining que enmascaraba el invariante.
 - **Resultado:** COMPLETO. CI `iOS Validation` pass (12m2s — el check crítico que NUNCA se había corrido para este commit, porque originalmente fue side-quest del sub-agente web). Sin tests unitarios nuevos (la persistencia App Group no es unit-testeable de forma aislada); validación manual post-merge: agregar widget al home screen y verificar que renderiza eventos/pagos.
 - **Scope:** 5 archivos Swift iOS, +70/−31. Web/Backend/Android no tocados.
+
+## Sesión 2026-07-07: Responsividad y Accesibilidad (Dynamic Type + VoiceOver) en iOS
+- **Feature ID:** ios-a11y-responsiveness
+- **Resultado:** COMPLETO y validado. `./init.sh` (1304 tests en verde), `xcodebuild test` (128 tests iOS en verde), Issue #780 creado y aprobado, PR #781 mergeado.
+- **Entregables:**
+  - `DashboardViewComponents.swift` (`DashboardDateBox`): `@ScaledMetric` reemplaza frame fijo 48×48.
+  - `KPICardView.swift`: frame flexible en iPhone + `.accessibilityHidden(true)` en iconos decorativos.
+  - `CalendarGridView.swift`: `.isButton` trait, `.accessibilityAction` nombrada para bloquear/desbloquear, mapeo de abreviaturas de días a nombres completos localizados.
+  - `CalendarStrings.swift`: nuevas claves `a11yBlockAction`, `a11yUnblockAction`, `a11yDateBlockedAnnouncement`, `a11yDateUnblockedAnnouncement`.
+  - `EventListViewModel.swift`: `UIAccessibility.post(.announcement)` al completar bloqueo/desbloqueo de fechas.
+  - `ClientDetailView.swift`: chips de contacto apilados en `VStack` bajo `.accessibility1`.
+  - `ClientFormView.swift`: `TextEditor` de notas con `maxHeight: 150` + scroll interno en AX1+.
+  - `EventDetailComponents.swift`: `EventDetailDateBox` con frame flexible.
+  - `EventDetailActionComponents.swift`: doc cards apiladas en AX1+.
+  - `EventDetailHubComponents.swift`: KPI columns y quick-info apilados en AX1+.
+  - `PaymentInboxView.swift`: `TextEditor` de rechazo con `maxHeight: 150` en AX1+.
+  - `PaymentInboxComponents.swift`: metadata de tarjeta de pago apilada en AX1+.
+  - `CategoryChips.swift`: scroll horizontal → `VStack` en AX1+.
+  - `ProductDetailView.swift`: KPI grid y filas de composición apiladas en AX1+.
+- **Gotcha:** `CalendarGridView.swift` vive en `Events/Views/`, no en `Calendar/Views/`.
