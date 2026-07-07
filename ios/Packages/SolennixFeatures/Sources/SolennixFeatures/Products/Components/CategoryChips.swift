@@ -20,9 +20,11 @@ public struct CategoryChips: View {
         self.onToggle = onToggle
     }
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     public var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Spacing.xs) {
+        if dynamicTypeSize >= .accessibility1 {
+            VStack(alignment: .leading, spacing: Spacing.xs) {
                 ForEach(categories, id: \.self) { category in
                     CategoryChip(
                         title: category,
@@ -33,6 +35,20 @@ public struct CategoryChips: View {
                 }
             }
             .padding(.horizontal, Spacing.lg)
+        } else {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: Spacing.xs) {
+                    ForEach(categories, id: \.self) { category in
+                        CategoryChip(
+                            title: category,
+                            isSelected: selectedCategory == category
+                        ) {
+                            onToggle(category)
+                        }
+                    }
+                }
+                .padding(.horizontal, Spacing.lg)
+            }
         }
     }
 }

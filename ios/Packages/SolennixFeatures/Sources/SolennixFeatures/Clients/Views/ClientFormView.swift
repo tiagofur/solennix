@@ -14,6 +14,7 @@ public struct ClientFormView: View {
     @State private var selectedItem: PhotosPickerItem?
     @State private var showDiscardDialog: Bool = false
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(PlanLimitsManager.self) private var planLimitsManager
 
     public init(clientId: String? = nil, apiClient: APIClient) {
@@ -225,6 +226,8 @@ public struct ClientFormView: View {
         Section {
             TextEditor(text: $viewModel.notes)
                 .frame(minHeight: 80)
+                .frame(maxHeight: dynamicTypeSize >= .accessibility1 ? 150 : nil)
+                .scrollDisabled(false)
                 .scrollContentBackground(.hidden)
                 .solennixRow()
         } header: {

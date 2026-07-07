@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#1B2A4A</color>
+
+    <!-- Splash screen background — aligned with iOS Background (#FFFFFF light / #000000 dark). -->
+    <color name="splash_background_light">#FFFFFF</color>
+    <color name="splash_background_dark">#000000</color>
+
+    <!-- Splash icon — Solennix brand gold (from solennix-icon-transparent-filled.svg). -->
+    <color name="splash_gold_top">#D4B87A</color>
+    <color name="splash_gold_mid">#C4A265</color>
+    <color name="splash_sparkle">#F5F0E8</color>
 </resources>

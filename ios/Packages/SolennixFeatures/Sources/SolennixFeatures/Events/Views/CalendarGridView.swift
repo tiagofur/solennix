@@ -39,6 +39,14 @@ public struct CalendarGridView: View {
         return Array(symbols[shift...]) + Array(symbols[..<shift])
     }
 
+    private var weekdayFullNames: [String] {
+        var nameCal = Calendar.current
+        nameCal.locale = FeatureL10n.locale
+        let symbols = nameCal.weekdaySymbols   // localized, length 7, Sunday at index 0
+        let shift = Calendar.current.firstWeekday - 1  // device order: 0 Sunday-first, 1 Monday-first
+        return Array(symbols[shift...]) + Array(symbols[..<shift])
+    }
+
     // MARK: - Init
 
     public init(
@@ -67,12 +75,15 @@ public struct CalendarGridView: View {
         VStack(spacing: Spacing.sm) {
             // Weekday headers
             LazyVGrid(columns: columns, spacing: 2) {
-                ForEach(weekdaySymbols, id: \.self) { symbol in
+                let symbols = weekdaySymbols
+                let fullNames = weekdayFullNames
+                ForEach(Array(symbols.enumerated()), id: \.offset) { index, symbol in
                     Text(symbol)
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundStyle(SolennixColors.textSecondary)
                         .frame(maxWidth: .infinity)
+                        .accessibilityLabel(fullNames[index])
                 }
             }
 
@@ -83,7 +94,8 @@ public struct CalendarGridView: View {
                         day: day,
                         dots: day.isCurrentMonth ? eventDotsForDay(day.date) : [],
                         overflow: day.isCurrentMonth ? max(0, eventOverflowForDay(day.date)) : 0,
-                        isBlocked: day.isCurrentMonth ? isDateBlocked(day.date) : false
+                        isBlocked: day.isCurrentMonth ? isDateBlocked(day.date) : false,
+                        onLongPress: day.isCurrentMonth && onLongPressDate != nil ? { onLongPressDate?(day.date) } : nil
                     )
                     .onTapGesture {
                         guard day.isCurrentMonth else { return }
@@ -114,6 +126,7 @@ private struct DayCellView: View {
     /// than the dot row suggests.
     let overflow: Int
     let isBlocked: Bool
+    let onLongPress: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 3) {
@@ -174,6 +187,11 @@ private struct DayCellView: View {
         // G10 — accessibility label describing the day's full state:
         // e.g. "15 de marzo, 2 eventos, confirmado y cotizado"
         .accessibilityLabel(accessibilityLabelForDay)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction(named: isBlocked ? CalendarStrings.a11yUnblockAction : CalendarStrings.a11yBlockAction) {
+            guard day.isCurrentMonth else { return }
+            onLongPress?()
+        }
     }
 
     private var dayTextColor: Color {

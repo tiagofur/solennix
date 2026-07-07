@@ -254,7 +254,10 @@ struct EventDetailHeaderCard: View {
     var body: some View {
         VStack(spacing: Spacing.md) {
             // Top row: date box + name/client/status
-            HStack(alignment: .top, spacing: Spacing.md) {
+            let topRowLayout = dynamicTypeSize >= .accessibility1
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: Spacing.md))
+                : AnyLayout(HStackLayout(alignment: .top, spacing: Spacing.md))
+            topRowLayout {
                 EventDetailDateBox(month: month, day: day)
 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -282,7 +285,9 @@ struct EventDetailHeaderCard: View {
                     .accessibilityHint(FeatureL10n.text("events.detail.tap_to_change_status", "Toca para cambiar el estado"))
                 }
 
-                Spacer()
+                if dynamicTypeSize < .accessibility1 {
+                    Spacer()
+                }
             }
 
             // Quick info grid — 2 cols compact, 1 col accessibility sizes
@@ -304,7 +309,10 @@ struct EventDetailHeaderCard: View {
             if let phone = clientPhone, !phone.isEmpty {
                 Divider().background(SolennixColors.border)
 
-                HStack(spacing: Spacing.sm) {
+                let contactLayout = dynamicTypeSize >= .accessibility1
+                    ? AnyLayout(VStackLayout(spacing: Spacing.sm))
+                    : AnyLayout(HStackLayout(spacing: Spacing.sm))
+                contactLayout {
                     actionChip(
                         icon: "phone.fill",
                         label: FeatureL10n.text("events.detail.client.action.call", "Llamar"),
@@ -558,6 +566,7 @@ struct EventDetailPaymentSummaryCard: View {
         self.onDeposit = onDeposit
     }
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .body) private var scaledRingSize: CGFloat = 64
 
     /// Cap the ring at 96 pt to prevent ballooning at AX text sizes.
@@ -599,7 +608,10 @@ struct EventDetailPaymentSummaryCard: View {
             Divider().background(SolennixColors.border)
 
             // Ring + KPI columns
-            HStack(alignment: .center, spacing: Spacing.lg) {
+            let layout = dynamicTypeSize >= .accessibility1
+                ? AnyLayout(VStackLayout(alignment: .center, spacing: Spacing.md))
+                : AnyLayout(HStackLayout(alignment: .center, spacing: Spacing.lg))
+            layout {
                 PaymentCollectionRing(
                     progress: progress,
                     paidValue: paidValue,
