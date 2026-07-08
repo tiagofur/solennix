@@ -149,17 +149,11 @@ struct EventosFilteredList<Cell: View>: View {
                     .padding(.vertical, Spacing.sm)
             } else {
                 ForEach(vm.filteredEvents) { event in
-                    // Inline ZStack: the shared cell in front of an opacity-0
-                    // NavigationLink so a tap navigates to the event detail WITHOUT
-                    // painting a disclosure chevron. Mirrors the `.lista` row in
-                    // `EventListView` (same Route.eventDetail value). Without this
-                    // wrap, calendar-mode events were not tappable (critical bug).
-                    ZStack {
+                    // Wrap the cell directly in the NavigationLink to restore taps.
+                    // Out of a List SwiftUI does not render a chevron, and the plain button
+                    // style preserves the cell's look.
+                    NavigationLink(value: Route.eventDetail(id: event.id)) {
                         cell(event)
-                        NavigationLink(value: Route.eventDetail(id: event.id)) {
-                            EmptyView()
-                        }
-                        .opacity(0)
                     }
                     .buttonStyle(.plain)
                 }

@@ -36,6 +36,11 @@ status: active
 > - **Documentado en:** `docs/PRD/02_FEATURES.md` §16 (Perfil Profesional Público).
 > - **Estado:** Planificado, no implementado aún.
 
+> [!success] 2026-07-08 — Corrección de Redirección en Vista de Calendario (ios-calendar-event-tap-redirect, COMPLETO)
+> Solución al error donde hacer tap/clic sobre las tarjetas de evento de la lista filtrada en la vista de Calendario de iOS no navegaba al detalle del evento. **Issue #791.**
+> - **`EventosLayoutFactory` (SolennixFeatures)** — `EventosFilteredList` utiliza un contenedor `VStack` plano. El hack tradicional `ZStack { cell; NavigationLink(EmptyView) }` (creado para omitir los chevrons en SwiftUI `List`) no recibe interacciones táctiles en un `VStack` plano porque `EmptyView` tiene hit target de tamaño cero. Se refactorizó para envolver la celda directamente en el `NavigationLink`. Dado que se renderiza fuera de un `List`, SwiftUI no dibuja chevrons nativos, lo que soluciona la redirección sin alterar el diseño visual.
+> - **Pruebas y Validación** — Se validó la compilación del paquete y la suite completa de pruebas unitarias y de UI de iOS, finalizando en verde.
+
 > [!success] 2026-07-08 — iOS StoreKit 2 Purchase Flow (ios-storekit2-purchase-flow, COMPLETO)
 > Flujo nativo de compra, restauración y verificación local via StoreKit 2 como fallback cuando RevenueCat no está configurado o está offline. **Issue #784.**
 > - **`SubscriptionManager` (SolennixNetwork)** — `updatesTask` escucha `Transaction.updates` desde el inicio de la app en un `Task` class-bound (se cancela en `deinit` para evitar leaks). `handleTransactionUpdate` verifica la firma criptográfica (`VerificationResult`): transacciones `.verified` se terminan con `transaction.finish()` y sincronizan con RevenueCat si está configurado; `.unverified` reportan al `delegate` (Sentry) sin terminar. `refreshLocalStoreKitEntitlements` itera `Transaction.currentEntitlements` y activa `isPremium` solo para transacciones verificadas y no expiradas de `solennix_premium_monthly` / `solennix_premium_yearly`. `checkEntitlementStatus` y `restorePurchases` hacen fallback directo a StoreKit cuando `isConfigured == false`.
