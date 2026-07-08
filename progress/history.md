@@ -506,3 +506,13 @@
   - `CategoryChips.swift`: scroll horizontal → `VStack` en AX1+.
   - `ProductDetailView.swift`: KPI grid y filas de composición apiladas en AX1+.
 - **Gotcha:** `CalendarGridView.swift` vive en `Events/Views/`, no en `Calendar/Views/`.
+
+## Sesión 2026-07-08: Flujo de Compra Nativo StoreKit 2 en iOS
+- **Feature ID:** 35 (ios-storekit2-purchase-flow)
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1304 tests en verde, incluyendo `SubscriptionManagerTests.swift`).
+- **Entregables:**
+  - `SubscriptionManager.swift`: Implementación de `updatesTask` class-bound, `handleTransactionUpdate` con verificación criptográfica, `refreshLocalStoreKitEntitlements` leyendo `currentEntitlements`, y fallbacks en `checkEntitlementStatus` y `restorePurchases`.
+  - `PricingView.swift`: Botones mensual/anual cayendo a `fallbackMonthlyProduct` / `fallbackYearlyProduct` e integrando `handleStoreKitPurchase` con validaciones de firma.
+  - `SubscriptionManagerTests.swift`: Suite completa de 10 tests unitarios que validan el comportamiento lógico del manager sin requerir un test session de StoreKit activo.
+  - `11_CURRENT_STATUS.md`: Documentada la feature como completa en la bitácora del PRD.
+

@@ -63,6 +63,7 @@ struct SolennixApp: App {
         let info = Bundle.main.infoDictionary
         let revenueCatAPIKey = (info?["REVENUECAT_PUBLIC_API_KEY"] as? String) ?? ""
         subManager.configure(apiKey: revenueCatAPIKey)
+        subManager.delegate = SentrySubscriptionDelegate.shared
 
         auth.signOutDelegate = AppSignOutDelegate.shared
 
@@ -448,6 +449,18 @@ private final class SentryUserTrackingDelegate: UserTrackingDelegate, @unchecked
 
     func clearUser() {
         SentryHelper.clearUser()
+    }
+}
+
+private final class SentrySubscriptionDelegate: SubscriptionDelegate, @unchecked Sendable {
+    static let shared = SentrySubscriptionDelegate()
+    private init() {}
+
+    func subscriptionManager(_ manager: SubscriptionManager, didFailVerificationFor productId: String, transactionId: UInt64) {
+        let error = NSError(domain: "com.solennix.SubscriptionError", code: 1001, userInfo: [
+            NSLocalizedDescriptionKey: "StoreKit 2 transaction verification failed for \(productId) (ID: \(transactionId))"
+        ])
+        SentryHelper.capture(error: error, context: "storekit2_verification_failed")
     }
 }
 

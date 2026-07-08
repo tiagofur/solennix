@@ -36,6 +36,13 @@ status: active
 > - **Documentado en:** `docs/PRD/02_FEATURES.md` §16 (Perfil Profesional Público).
 > - **Estado:** Planificado, no implementado aún.
 
+> [!success] 2026-07-08 — iOS StoreKit 2 Purchase Flow (ios-storekit2-purchase-flow, COMPLETO)
+> Flujo nativo de compra, restauración y verificación local via StoreKit 2 como fallback cuando RevenueCat no está configurado o está offline. **Issue #784.**
+> - **`SubscriptionManager` (SolennixNetwork)** — `updatesTask` escucha `Transaction.updates` desde el inicio de la app en un `Task` class-bound (se cancela en `deinit` para evitar leaks). `handleTransactionUpdate` verifica la firma criptográfica (`VerificationResult`): transacciones `.verified` se terminan con `transaction.finish()` y sincronizan con RevenueCat si está configurado; `.unverified` reportan al `delegate` (Sentry) sin terminar. `refreshLocalStoreKitEntitlements` itera `Transaction.currentEntitlements` y activa `isPremium` solo para transacciones verificadas y no expiradas de `solennix_premium_monthly` / `solennix_premium_yearly`. `checkEntitlementStatus` y `restorePurchases` hacen fallback directo a StoreKit cuando `isConfigured == false`.
+> - **`PricingView` (SolennixFeatures)** — `handleStoreKitPurchase` llama a `purchaseStoreKitProduct(_:)` que verifica la firma antes de terminar la transacción. Los botones mensual/anual caen a `fallbackMonthlyProduct` / `fallbackYearlyProduct` cuando RevenueCat offerings no están disponibles. El botón "Restaurar compras" usa `restorePurchases()` que ya tiene el fallback StoreKit 2 (`AppStore.sync()` + `refreshLocalStoreKitEntitlements`).
+> - **Tests unitarios** — `SubscriptionManagerTests.swift` añadido en `SolennixNetworkTests` cubriendo: estado inicial, guards de `configure()`, `setBackendPremiumStatus`, y descripciones de `SubscriptionError`. Tests de integración StoreKit (streams async) requieren SKTestSession / host bundle y se verifican manualmente en sandbox.
+> - **Plataformas no afectadas:** Android (RevenueCat/Google Play ✅), Web (Stripe ✅), Backend (webhooks RevenueCat ✅).
+
 > [!success] 2026-07-08 — Localización de Moneda Dinámica (currency-localization, COMPLETO)
 > Soporte multi-moneda (USD, COP, MXN, etc.) a nivel de presentación en el ecosistema de Solennix. **Estado real por plataforma:**
 > - **Base de Datos y Backend (Go)** — ✅ COMPLETO: Agregado `default_currency` a `users` y `currency` a `events` (por defecto `MXN`) en la migración `061_add_currency`. Actualizados modelos, repositorios, y `FormatCurrency` (variádico para evitar breaking changes) en el generador de PDF. El handler envía `event.currency` en las respuestas.

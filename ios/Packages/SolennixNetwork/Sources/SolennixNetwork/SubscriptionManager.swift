@@ -39,6 +39,13 @@ public enum SubscriptionError: LocalizedError, Sendable {
     }
 }
 
+// MARK: - Subscription Delegate
+
+/// Delegate to report subscription-related events and errors to the app layer.
+public protocol SubscriptionDelegate: AnyObject, Sendable {
+    func subscriptionManager(_ manager: SubscriptionManager, didFailVerificationFor productId: String, transactionId: UInt64)
+}
+
 // MARK: - Subscription Manager
 
 /// Administra las suscripciones de la app usando RevenueCat.
@@ -79,6 +86,12 @@ public final class SubscriptionManager {
     public var errorMessage: String?
     public private(set) var isConfigured: Bool = false
 
+    /// Delegate to report subscription-related errors/verification failures to Sentry/logs.
+    public weak var delegate: SubscriptionDelegate?
+
+    /// Task listening to background transaction updates.
+    private var updatesTask: Task<Void, Never>?
+
     // MARK: - Computed Properties
 
     /// Obtiene el package mensual del offering actual.
@@ -93,7 +106,18 @@ public final class SubscriptionManager {
 
     // MARK: - Init
 
-    public init() {}
+    public init() {
+        updatesTask = Task { [weak self] in
+            for await verificationResult in Transaction.updates {
+                guard let self = self else { break }
+                await self.handleTransactionUpdate(verificationResult)
+            }
+        }
+    }
+
+    deinit {
+        updatesTask?.cancel()
+    }
 
     // MARK: - Configure
 
@@ -281,8 +305,15 @@ public final class SubscriptionManager {
                     if isConfigured {
                         _ = try? await Purchases.shared.syncPurchases()
                         await checkEntitlementStatus()
+                    } else {
+                        await refreshLocalStoreKitEntitlements()
                     }
-                case .unverified:
+                case .unverified(let transaction, _):
+                    delegate?.subscriptionManager(
+                        self,
+                        didFailVerificationFor: transaction.productID,
+                        transactionId: transaction.id
+                    )
                     throw SubscriptionError.verificationFailed
                 }
             case .userCancelled:
@@ -301,12 +332,21 @@ public final class SubscriptionManager {
 
     // MARK: - Restore Purchases
 
-    /// Restaura compras anteriores del usuario via RevenueCat.
+    /// Restaura compras anteriores del usuario via RevenueCat o StoreKit directamente.
     @MainActor
     public func restorePurchases() async {
-        guard isConfigured else { return }
         isLoading = true
         defer { isLoading = false }
+
+        guard isConfigured else {
+            do {
+                try await AppStore.sync()
+                await refreshLocalStoreKitEntitlements()
+            } catch {
+                errorMessage = "No se pudieron restaurar las compras. Intenta de nuevo."
+            }
+            return
+        }
 
         do {
             let customerInfo = try await Purchases.shared.restorePurchases()
@@ -319,10 +359,13 @@ public final class SubscriptionManager {
 
     // MARK: - Check Entitlement Status
 
-    /// Actualiza el estado de suscripcion consultando RevenueCat.
+    /// Actualiza el estado de suscripcion consultando RevenueCat o StoreKit directamente.
     @MainActor
     public func checkEntitlementStatus() async {
-        guard isConfigured else { return }
+        guard isConfigured else {
+            await refreshLocalStoreKitEntitlements()
+            return
+        }
         do {
             let customerInfo = try await Purchases.shared.customerInfo()
             self.customerInfo = customerInfo
@@ -330,6 +373,55 @@ public final class SubscriptionManager {
         } catch {
             // Non-fatal: rely on backend plan status
         }
+    }
+
+    // MARK: - StoreKit 2 Direct Verification & Entitlements
+
+    @MainActor
+    private func handleTransactionUpdate(_ verificationResult: StoreKit.VerificationResult<Transaction>) async {
+        switch verificationResult {
+        case .verified(let transaction):
+            await transaction.finish()
+            if isConfigured {
+                _ = try? await Purchases.shared.syncPurchases()
+                await checkEntitlementStatus()
+            } else {
+                await refreshLocalStoreKitEntitlements()
+            }
+        case .unverified(let transaction, _):
+            // StoreKit verification failed (cryptographic verification failure)
+            delegate?.subscriptionManager(
+                self,
+                didFailVerificationFor: transaction.productID,
+                transactionId: transaction.id
+            )
+        }
+    }
+
+    @MainActor
+    private func refreshLocalStoreKitEntitlements() async {
+        var hasActivePremium = false
+        for await verificationResult in Transaction.currentEntitlements {
+            switch verificationResult {
+            case .verified(let transaction):
+                if Self.productIDs.contains(transaction.productID) {
+                    if let expirationDate = transaction.expirationDate {
+                        if expirationDate > Date() {
+                            hasActivePremium = true
+                        }
+                    } else {
+                        hasActivePremium = true
+                    }
+                }
+            case .unverified(let transaction, _):
+                delegate?.subscriptionManager(
+                    self,
+                    didFailVerificationFor: transaction.productID,
+                    transactionId: transaction.id
+                )
+            }
+        }
+        isPremium = hasActivePremium
     }
 
     // MARK: - Manage Subscription
