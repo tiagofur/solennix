@@ -16,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.ForecastDataPoint
-import com.creapolis.solennix.core.model.extensions.asMXNCompact
+import com.creapolis.solennix.core.model.extensions.asCurrencyCompact
 import com.creapolis.solennix.feature.dashboard.R
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -26,7 +26,8 @@ import java.util.Locale
 fun ForecastWidget(
     forecast: List<ForecastDataPoint>,
     isLoading: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    currencyCode: String = "MXN"
 ) {
     val context = LocalContext.current
     val locale = remember(context) {
@@ -102,7 +103,7 @@ fun ForecastWidget(
                             Spacer(modifier = Modifier.height(4.dp))
                             val totalRevenue = forecast.sumOf { it.confirmedRevenue }
                             Text(
-                                text = totalRevenue.asMXNCompact(),
+                                text = totalRevenue.asCurrencyCompact(currencyCode),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = SolennixTheme.colors.primaryText
@@ -159,7 +160,7 @@ fun ForecastWidget(
                                         color = SolennixTheme.colors.primaryText
                                     )
                                     Text(
-                                        text = point.confirmedRevenue.asMXNCompact(),
+                                        text = point.confirmedRevenue.asCurrencyCompact(currencyCode),
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.SemiBold,
                                         color = SolennixTheme.colors.primaryText

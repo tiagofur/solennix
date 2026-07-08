@@ -65,11 +65,11 @@ data class QuickQuoteUiState(
     val clientName: String = "",
     val clientPhone: String = "",
     val clientEmail: String = "",
-    val showClientInfo: Boolean = false
+    val showClientInfo: Boolean = false,
+    val defaultCurrency: String = "MXN"
 ) {
     val subtotalProducts: Double
         get() = selectedItems.sumOf { it.subtotal }
-
     val normalExtrasTotal: Double
         get() = extras.filter { !it.excludeUtility }.sumOf { it.price }
 
@@ -175,6 +175,7 @@ class QuickQuoteViewModel @Inject constructor(
     private val productRepository: ProductRepository,
     private val clientRepository: ClientRepository,
     private val apiService: ApiService,
+    private val authManager: com.creapolis.solennix.core.network.AuthManager,
     @ApplicationContext private val appContext: Context,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -186,6 +187,11 @@ class QuickQuoteViewModel @Inject constructor(
 
     init {
         loadData()
+        viewModelScope.launch {
+            authManager.currentUser.collect { user ->
+                _uiState.update { it.copy(defaultCurrency = user?.defaultCurrencyCode ?: "MXN") }
+            }
+        }
     }
 
     private fun loadData() {

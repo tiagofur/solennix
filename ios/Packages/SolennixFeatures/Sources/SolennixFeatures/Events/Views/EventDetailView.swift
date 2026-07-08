@@ -189,7 +189,7 @@ public struct EventDetailView: View {
                 EventDetailFinanceSummaryCard(
                     title: tr("events.detail.card.finances", "Finanzas"),
                     totalLabel: tr("events.detail.finances.total", "Total"),
-                    totalValue: event.totalAmount.asMXN,
+                    totalValue: event.totalAmount.formattedCurrency(code: event.currency),
                     profitLabel: tr("events.detail.finances.profit", "Utilidad"),
                     profitValue: "\(String(format: "%.0f", financialsMargin(event)))%",
                     discountText: discountText(event),
@@ -206,9 +206,9 @@ public struct EventDetailView: View {
                     title: tr("events.detail.card.payments", "Pagos"),
                     paymentsCount: viewModel.payments.count,
                     paidLabel: tr("events.detail.payments.kpi.paid", "Pagado"),
-                    paidValue: viewModel.totalPaid.asMXN,
+                    paidValue: viewModel.totalPaid.formattedCurrency(code: event.currency),
                     balanceLabel: tr("events.detail.payments.kpi.balance", "Saldo"),
-                    balanceValue: viewModel.remaining.asMXN,
+                    balanceValue: viewModel.remaining.formattedCurrency(code: event.currency),
                     isFullyPaid: viewModel.isFullyPaid,
                     progress: viewModel.progress,
                     depositText: depositText(event),
@@ -216,9 +216,9 @@ public struct EventDetailView: View {
                     route: Route.eventPayments(id: eventId),
                     fullyPaidCounter: viewModel.fullyPaidCounter,
                     recordTitle: viewModel.remaining > 0.01 ? tr("events.detail.payments.action.record", "Registrar pago") : nil,
-                    settleTitle: viewModel.remaining > 0.01 ? trf("events.detail.payments.action.settle", "Liquidar %@", viewModel.remaining.asMXN) : nil,
+                    settleTitle: viewModel.remaining > 0.01 ? trf("events.detail.payments.action.settle", "Liquidar %@", viewModel.remaining.formattedCurrency(code: event.currency)) : nil,
                     depositTitle: viewModel.remaining > 0.01 && (event.depositPercent ?? 0) > 0 && viewModel.depositBalance > 0.01
-                        ? trf("events.detail.payments.action.deposit", "Anticipo %@", viewModel.depositBalance.asMXN)
+                        ? trf("events.detail.payments.action.deposit", "Anticipo %@", viewModel.depositBalance.formattedCurrency(code: event.currency))
                         : nil,
                     onRecord: { viewModel.showRecordPaymentSheet() },
                     onSettle: { viewModel.payRemaining() },
@@ -392,7 +392,7 @@ public struct EventDetailView: View {
     private func depositText(_ event: Event) -> String? {
         guard let pct = event.depositPercent, pct > 0 else { return nil }
         let amount = event.totalAmount * (pct / 100)
-        return trf2("events.detail.payments.deposit_card", "Anticipo %@%%: %@", String(Int(pct)), amount.asMXN)
+        return trf2("events.detail.payments.deposit_card", "Anticipo %@%%: %@", String(Int(pct)), amount.formattedCurrency(code: event.currency))
     }
 
     private func isDepositMet(_ event: Event) -> Bool {

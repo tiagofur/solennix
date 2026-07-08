@@ -43,6 +43,7 @@ class QuickQuoteViewModelTest {
         val productRepository = mockk<ProductRepository>()
         val clientRepository = mockk<ClientRepository>()
         val apiService = mockk<ApiService>(relaxed = true)
+        val authManager = mockk<com.creapolis.solennix.core.network.AuthManager>()
         val context = mockk<Context>(relaxed = true)
 
         every { productRepository.getProducts() } returns MutableStateFlow(
@@ -50,11 +51,13 @@ class QuickQuoteViewModelTest {
         )
         coEvery { productRepository.syncProducts() } returns Unit
         coEvery { clientRepository.getClient(any()) } returns null
+        every { authManager.currentUser } returns MutableStateFlow(null)
 
         return QuickQuoteViewModel(
             productRepository = productRepository,
             clientRepository = clientRepository,
             apiService = apiService,
+            authManager = authManager,
             appContext = context,
             savedStateHandle = androidx.lifecycle.SavedStateHandle()
         )

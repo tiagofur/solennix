@@ -50,7 +50,7 @@ import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.AssignmentStatus
 import com.creapolis.solennix.core.model.DiscountType
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.core.model.extensions.formatQuantity
 import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
@@ -78,6 +78,7 @@ fun EventStaffScreen(
         }
     ) { padding ->
         val staff = uiState.staff
+        val currencyCode = uiState.event?.currencyCode ?: "MXN"
 
         Column(
             modifier = Modifier
@@ -119,7 +120,7 @@ fun EventStaffScreen(
                         if (totalFee > 0.0) {
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                stringResource(R.string.events_detail_staff_total_cost, totalFee.asMXN()),
+                                stringResource(R.string.events_detail_staff_total_cost, totalFee.asCurrency(currencyCode)),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = SolennixTheme.colors.primary
                             )
@@ -160,7 +161,7 @@ fun EventStaffScreen(
                                         color = SolennixTheme.colors.primary.copy(alpha = 0.12f)
                                     ) {
                                         Text(
-                                            fee.asMXN(),
+                                            fee.asCurrency(currencyCode),
                                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.Bold,

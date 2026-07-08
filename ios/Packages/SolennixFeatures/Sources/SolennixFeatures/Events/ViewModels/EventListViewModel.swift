@@ -717,7 +717,7 @@ public final class EventListViewModel {
             let date = String(event.eventDate.prefix(10)).escapingCsv
             let client = clientName(for: event.clientId).escapingCsv
             let status = (statusLabels[event.status] ?? event.status.rawValue).escapingCsv
-            let total = event.totalAmount.asMXN.escapingCsv
+            let total = event.totalAmount.formattedCurrency(code: event.currency).escapingCsv
             let people = "\(event.numPeople)"
             let location = (event.location ?? "").escapingCsv
             csv += "\(name),\(date),\(client),\(status),\(total),\(people),\(location)\n"

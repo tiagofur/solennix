@@ -83,6 +83,7 @@ class EventFormViewModel @Inject constructor(
     var status by mutableStateOf(EventStatus.QUOTED)
     var serviceType by mutableStateOf("")
     var numPeople by mutableStateOf("0")
+    var currency by mutableStateOf("MXN")
 
     // Client Picker Logic
     private val _clientSearchQuery = MutableStateFlow("")
@@ -358,6 +359,7 @@ class EventFormViewModel @Inject constructor(
             depositPercent = user?.defaultDepositPercent?.toString() ?: "50.0"
             cancellationDays = user?.defaultCancellationDays?.toString() ?: "7.0"
             refundPercent = user?.defaultRefundPercent?.toString() ?: "50.0"
+            currency = user?.defaultCurrencyCode ?: "MXN"
             viewModelScope.launch {
                 val plan = user?.plan ?: Plan.BASIC
                 limitCheckResult = planLimitsManager.canCreateEvent(plan)
@@ -450,6 +452,7 @@ class EventFormViewModel @Inject constructor(
         discount = source.discount.toString()
         discountType = source.discountType
         requiresInvoice = source.requiresInvoice
+        currency = source.currencyCode
         taxRate = source.taxRate.toString()
         // Fall back to the user's contract defaults (then to the built-in
         // 50/7/50) when the source event lacks these fields — same precedence
@@ -539,6 +542,7 @@ class EventFormViewModel @Inject constructor(
                 depositPercent = event.depositPercent?.toString() ?: "50.0"
                 cancellationDays = event.cancellationDays?.toString() ?: "7.0"
                 refundPercent = event.refundPercent?.toString() ?: "50.0"
+                currency = event.currencyCode
 
                 val client = clientRepository.getClient(event.clientId)
                 selectedClient = client
@@ -890,7 +894,8 @@ class EventFormViewModel @Inject constructor(
                     depositPercent = depositPercent.toDoubleOrNull(),
                     cancellationDays = cancellationDays.toDoubleOrNull(),
                     refundPercent = refundPercent.toDoubleOrNull(),
-                    notes = notes.ifBlank { null }
+                    notes = notes.ifBlank { null },
+                    currency = currency
                 )
 
                 val savedEvent = if (isEditMode) {

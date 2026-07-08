@@ -19,6 +19,7 @@ public struct ClientDetailView: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(PlanLimitsManager.self) private var planLimitsManager
+    @Environment(AuthManager.self) private var authManager
 
     private let apiClient: APIClient
 
@@ -301,9 +302,9 @@ public struct ClientDetailView: View {
 
                     statBox(
                         icon: "dollarsign.circle",
-                        value: (client.totalSpent ?? 0).asMXN,
+                        value: (client.totalSpent ?? 0).formattedCurrency(code: authManager.currentUser?.defaultCurrency),
                         label: tr("clients.stats.total", "Total"),
-                        a11yLabel: "\(tr("clients.stats.total", "Total gastado")): \((client.totalSpent ?? 0).asMXN)"
+                        a11yLabel: "\(tr("clients.stats.total", "Total gastado")): \((client.totalSpent ?? 0).formattedCurrency(code: authManager.currentUser?.defaultCurrency))"
                     )
 
                     if let totalEvents = client.totalEvents, totalEvents > 0,
@@ -311,9 +312,9 @@ public struct ClientDetailView: View {
                         let avg = totalSpent / Double(totalEvents)
                         statBox(
                             icon: "chart.bar",
-                            value: avg.asMXN,
+                            value: avg.formattedCurrency(code: authManager.currentUser?.defaultCurrency),
                             label: tr("clients.stats.average", "Promedio"),
-                            a11yLabel: "\(tr("clients.stats.average", "Ticket promedio")): \(avg.asMXN)"
+                            a11yLabel: "\(tr("clients.stats.average", "Ticket promedio")): \(avg.formattedCurrency(code: authManager.currentUser?.defaultCurrency))"
                         )
                     }
 
@@ -326,7 +327,7 @@ public struct ClientDetailView: View {
                         let valueColor: Color = isSettled
                             ? SolennixColors.success
                             : isOverpaid ? SolennixColors.info : SolennixColors.warning
-                        let formattedBalance = abs(balance).asMXN
+                        let formattedBalance = abs(balance).formattedCurrency(code: authManager.currentUser?.defaultCurrency)
                         let a11yLabel = isOverpaid
                             ? trf("clients.detail.a11y.stat_credit", "A favor: %@", formattedBalance)
                             : trf("clients.detail.a11y.stat_pending_balance", "Por cobrar: %@", formattedBalance)
@@ -351,9 +352,9 @@ public struct ClientDetailView: View {
 
                     statBox(
                         icon: "dollarsign.circle",
-                        value: (client.totalSpent ?? 0).asMXN,
+                        value: (client.totalSpent ?? 0).formattedCurrency(code: authManager.currentUser?.defaultCurrency),
                         label: tr("clients.stats.total", "Total"),
-                        a11yLabel: "\(tr("clients.stats.total", "Total gastado")): \((client.totalSpent ?? 0).asMXN)"
+                        a11yLabel: "\(tr("clients.stats.total", "Total gastado")): \((client.totalSpent ?? 0).formattedCurrency(code: authManager.currentUser?.defaultCurrency))"
                     )
 
                     if let totalEvents = client.totalEvents, totalEvents > 0,
@@ -361,9 +362,9 @@ public struct ClientDetailView: View {
                         let avg = totalSpent / Double(totalEvents)
                         statBox(
                             icon: "chart.bar",
-                            value: avg.asMXN,
+                            value: avg.formattedCurrency(code: authManager.currentUser?.defaultCurrency),
                             label: tr("clients.stats.average", "Promedio"),
-                            a11yLabel: "\(tr("clients.stats.average", "Ticket promedio")): \(avg.asMXN)"
+                            a11yLabel: "\(tr("clients.stats.average", "Ticket promedio")): \(avg.formattedCurrency(code: authManager.currentUser?.defaultCurrency))"
                         )
                     }
                 }
@@ -507,7 +508,7 @@ public struct ClientDetailView: View {
 
             Spacer()
 
-            Text(event.totalAmount.asMXN)
+            Text(event.totalAmount.formattedCurrency(code: event.currency))
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(SolennixColors.text)
         }
@@ -645,7 +646,7 @@ public struct ClientDetailView: View {
                             insightBadge(
                                 icon: "arrow.up.right",
                                 label: tr("clients.insights.average_ticket", "Ticket promedio"),
-                                value: avgTicket.asMXN
+                                value: avgTicket.formattedCurrency(code: authManager.currentUser?.defaultCurrency)
                             )
                         }
                     }

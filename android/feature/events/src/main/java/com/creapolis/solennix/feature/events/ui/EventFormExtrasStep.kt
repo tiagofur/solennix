@@ -54,7 +54,7 @@ import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.EventExtra
 import com.creapolis.solennix.core.model.EventProduct
 import com.creapolis.solennix.core.model.Product
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.*
 
@@ -164,7 +164,7 @@ fun StepExtras(viewModel: EventFormViewModel) {
                                 modifier = Modifier.weight(1f),
                             )
                             Text(
-                                viewModel.subtotalExtras.asMXN(),
+                                viewModel.subtotalExtras.asCurrency(viewModel.currency),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = SolennixTheme.colors.primary,

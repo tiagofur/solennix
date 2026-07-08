@@ -35,6 +35,7 @@ public final class CachedEvent {
     public var photos: String?
     public var createdAt: String
     public var updatedAt: String
+    public var currency: String?
 
     // MARK: - Init
 
@@ -62,7 +63,8 @@ public final class CachedEvent {
         notes: String? = nil,
         photos: String? = nil,
         createdAt: String,
-        updatedAt: String
+        updatedAt: String,
+        currency: String? = "MXN"
     ) {
         self.id = id
         self.userId = userId
@@ -88,6 +90,7 @@ public final class CachedEvent {
         self.photos = photos
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.currency = currency ?? "MXN"
     }
 
     /// Creates a cached version from an `Event` struct.
@@ -116,7 +119,8 @@ public final class CachedEvent {
             notes: event.notes,
             photos: event.photos,
             createdAt: event.createdAt,
-            updatedAt: event.updatedAt
+            updatedAt: event.updatedAt,
+            currency: event.currency
         )
     }
 
@@ -148,7 +152,8 @@ public final class CachedEvent {
             notes: notes,
             photos: photos,
             createdAt: createdAt,
-            updatedAt: updatedAt
+            updatedAt: updatedAt,
+            currency: currency
         )
     }
 }

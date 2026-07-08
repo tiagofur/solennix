@@ -62,7 +62,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.*
 
@@ -183,7 +183,7 @@ private fun StaffAssignmentPanel(viewModel: EventFormViewModel) {
             if (viewModel.costStaff > 0) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    stringResource(R.string.events_form_staff_total_cost, viewModel.costStaff.asMXN()),
+                    stringResource(R.string.events_form_staff_total_cost, viewModel.costStaff.asCurrency(viewModel.currency)),
                     style = MaterialTheme.typography.labelMedium,
                     color = SolennixTheme.colors.primary
                 )

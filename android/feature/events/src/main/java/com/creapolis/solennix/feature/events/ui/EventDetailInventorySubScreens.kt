@@ -31,7 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.SupplySource
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.core.model.extensions.formatQuantity
 import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
@@ -58,6 +58,7 @@ fun EventSuppliesScreen(
     ) { padding ->
         val supplies = uiState.supplies
         val totalCost = supplies.sumOf { it.quantity * it.unitCost }
+        val currencyCode = uiState.event?.currencyCode ?: "MXN"
         val stockCount = supplies.count { it.source == SupplySource.STOCK }
         val purchaseCount = supplies.count { it.source == SupplySource.PURCHASE }
 
@@ -78,7 +79,7 @@ fun EventSuppliesScreen(
                     KpiCard(stringResource(R.string.events_detail_supplies_kpi_total), "${supplies.size}", SolennixTheme.colors.warning, Modifier.weight(1f))
                     KpiCard(stringResource(R.string.events_detail_supplies_kpi_stock), "$stockCount", SolennixTheme.colors.success, Modifier.weight(1f))
                     KpiCard(stringResource(R.string.events_detail_supplies_kpi_purchase), "$purchaseCount", SolennixTheme.colors.error, Modifier.weight(1f))
-                    KpiCard(stringResource(R.string.events_detail_supplies_kpi_cost), totalCost.asMXN(), SolennixTheme.colors.warning, Modifier.weight(1f))
+                    KpiCard(stringResource(R.string.events_detail_supplies_kpi_cost), totalCost.asCurrency(currencyCode), SolennixTheme.colors.warning, Modifier.weight(1f))
                 }
 
                 supplies.forEach { supply ->
@@ -107,8 +108,8 @@ fun EventSuppliesScreen(
                                 }
                             }
                             Column(horizontalAlignment = Alignment.End) {
-                                Text((supply.quantity * supply.unitCost).asMXN(), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                                Text(stringResource(R.string.events_catalog_quantity_price, supply.quantity.formatQuantity(), supply.unitCost.asMXN()), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
+                                Text((supply.quantity * supply.unitCost).asCurrency(currencyCode), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.events_catalog_quantity_price, supply.quantity.formatQuantity(), supply.unitCost.asCurrency(currencyCode)), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
                             }
                         }
                     }

@@ -29,8 +29,11 @@ data class User(
     @SerialName("push_payment_received") val pushPaymentReceived: Boolean? = null,
     val plan: Plan = Plan.BASIC,
     @SerialName("created_at") val createdAt: String = "",
-    @SerialName("updated_at") val updatedAt: String = ""
-)
+    @SerialName("updated_at") val updatedAt: String = "",
+    @SerialName("default_currency") val defaultCurrency: String? = "MXN"
+) {
+    val defaultCurrencyCode: String get() = defaultCurrency ?: "MXN"
+}
 
 /**
  * User subscription plan.

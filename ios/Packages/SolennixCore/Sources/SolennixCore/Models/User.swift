@@ -55,4 +55,65 @@ public struct User: Codable, Identifiable, Sendable, Hashable {
     public var accountStatus: String?
     public let createdAt: String
     public let updatedAt: String
+    public var defaultCurrency: String?
+
+    // MARK: - Custom Init & Codable
+
+    public init(
+        id: String,
+        email: String,
+        name: String,
+        role: String? = nil,
+        preferredLanguage: String? = nil,
+        businessName: String? = nil,
+        logoUrl: String? = nil,
+        brandColor: String? = nil,
+        showBusinessNameInPdf: Bool? = nil,
+        defaultDepositPercent: Double? = nil,
+        defaultCancellationDays: Double? = nil,
+        defaultRefundPercent: Double? = nil,
+        contractTemplate: String? = nil,
+        emailPaymentReceipt: Bool? = nil,
+        emailEventReminder: Bool? = nil,
+        emailSubscriptionUpdates: Bool? = nil,
+        emailWeeklySummary: Bool? = nil,
+        emailMarketing: Bool? = nil,
+        pushEnabled: Bool? = nil,
+        pushEventReminder: Bool? = nil,
+        pushPaymentReceived: Bool? = nil,
+        plan: Plan,
+        planExpiresAt: String? = nil,
+        accountStatus: String? = nil,
+        createdAt: String,
+        updatedAt: String,
+        defaultCurrency: String? = "MXN"
+    ) {
+        self.id = id
+        self.email = email
+        self.name = name
+        self.role = role
+        self.preferredLanguage = preferredLanguage
+        self.businessName = businessName
+        self.logoUrl = logoUrl
+        self.brandColor = brandColor
+        self.showBusinessNameInPdf = showBusinessNameInPdf
+        self.defaultDepositPercent = defaultDepositPercent
+        self.defaultCancellationDays = defaultCancellationDays
+        self.defaultRefundPercent = defaultRefundPercent
+        self.contractTemplate = contractTemplate
+        self.emailPaymentReceipt = emailPaymentReceipt
+        self.emailEventReminder = emailEventReminder
+        self.emailSubscriptionUpdates = emailSubscriptionUpdates
+        self.emailWeeklySummary = emailWeeklySummary
+        self.emailMarketing = emailMarketing
+        self.pushEnabled = pushEnabled
+        self.pushEventReminder = pushEventReminder
+        self.pushPaymentReceived = pushPaymentReceived
+        self.plan = plan
+        self.planExpiresAt = planExpiresAt
+        self.accountStatus = accountStatus
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.defaultCurrency = defaultCurrency ?? "MXN"
+    }
 }

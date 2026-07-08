@@ -35,7 +35,7 @@ import com.creapolis.solennix.core.model.QuickQuoteDataHolder
 import com.creapolis.solennix.core.model.QuickQuoteTransferData
 import com.creapolis.solennix.core.model.QuoteTransferExtra
 import com.creapolis.solennix.core.model.QuoteTransferProduct
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.feature.clients.viewmodel.QuickQuoteViewModel
 import com.creapolis.solennix.feature.clients.viewmodel.QuoteExtra
 import com.creapolis.solennix.feature.clients.viewmodel.QuoteItem
@@ -249,7 +249,8 @@ fun QuickQuoteScreen(
                                         onQuantityChanged = { qty -> viewModel.updateItemQuantity(item.id, qty) },
                                         onPriceChanged = { price -> viewModel.updateItemPrice(item.id, price) },
                                         onRemove = { viewModel.removeItem(item.id) },
-                                        canRemove = uiState.selectedItems.size > 1
+                                        canRemove = uiState.selectedItems.size > 1,
+                                        currencyCode = uiState.defaultCurrency
                                     )
                                 }
                             }
@@ -267,7 +268,8 @@ fun QuickQuoteScreen(
                             onQuantityChanged = { qty -> viewModel.updateItemQuantity(item.id, qty) },
                             onPriceChanged = { price -> viewModel.updateItemPrice(item.id, price) },
                             onRemove = { viewModel.removeItem(item.id) },
-                            canRemove = uiState.selectedItems.size > 1
+                            canRemove = uiState.selectedItems.size > 1,
+                            currencyCode = uiState.defaultCurrency
                         )
                     }
                 }
@@ -523,10 +525,10 @@ fun QuickQuoteScreen(
                         )
                         Spacer(Modifier.height(12.dp))
 
-                        SummaryRow(stringResource(R.string.clients_quick_quote_subtotal_products), uiState.subtotalProducts.asMXN())
+                        SummaryRow(stringResource(R.string.clients_quick_quote_subtotal_products), uiState.subtotalProducts.asCurrency(uiState.defaultCurrency))
 
                         if (uiState.extrasTotal > 0) {
-                            SummaryRow(stringResource(R.string.clients_quick_quote_subtotal_extras), uiState.extrasTotal.asMXN())
+                            SummaryRow(stringResource(R.string.clients_quick_quote_subtotal_extras), uiState.extrasTotal.asCurrency(uiState.defaultCurrency))
                         }
 
                         if (uiState.discountAmount > 0) {
@@ -536,12 +538,12 @@ fun QuickQuoteScreen(
                                 } else {
                                     context.getString(R.string.clients_quick_quote_discount)
                                 },
-                                value = "-${uiState.discountAmount.asMXN()}"
+                                value = "-${uiState.discountAmount.asCurrency(uiState.defaultCurrency)}"
                             )
                         }
 
                         if (uiState.requiresInvoice && uiState.taxAmount > 0) {
-                            SummaryRow(context.getString(R.string.clients_quick_quote_tax_value, uiState.taxRate), uiState.taxAmount.asMXN())
+                            SummaryRow(context.getString(R.string.clients_quick_quote_tax_value, uiState.taxRate), uiState.taxAmount.asCurrency(uiState.defaultCurrency))
                         }
 
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -557,7 +559,7 @@ fun QuickQuoteScreen(
                                 color = SolennixTheme.colors.primaryText
                             )
                             Text(
-                                text = uiState.total.asMXN(),
+                                text = uiState.total.asCurrency(uiState.defaultCurrency),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = SolennixTheme.colors.primary
@@ -577,9 +579,9 @@ fun QuickQuoteScreen(
                             )
                             Spacer(Modifier.height(8.dp))
 
-                            SummaryRow(stringResource(R.string.clients_quick_quote_cost_products), uiState.costProducts.asMXN())
-                            SummaryRow(stringResource(R.string.clients_quick_quote_cost_extras), uiState.costExtras.asMXN())
-                            SummaryRow(stringResource(R.string.clients_quick_quote_total_costs), uiState.totalCosts.asMXN())
+                            SummaryRow(stringResource(R.string.clients_quick_quote_cost_products), uiState.costProducts.asCurrency(uiState.defaultCurrency))
+                            SummaryRow(stringResource(R.string.clients_quick_quote_cost_extras), uiState.costExtras.asCurrency(uiState.defaultCurrency))
+                            SummaryRow(stringResource(R.string.clients_quick_quote_total_costs), uiState.totalCosts.asCurrency(uiState.defaultCurrency))
 
                             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -602,7 +604,7 @@ fun QuickQuoteScreen(
                                     color = profitColor
                                 )
                                 Text(
-                                    text = uiState.netProfit.asMXN(),
+                                    text = uiState.netProfit.asCurrency(uiState.defaultCurrency),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = profitColor
@@ -817,7 +819,8 @@ private fun ProductItemCard(
     onQuantityChanged: (String) -> Unit,
     onPriceChanged: (String) -> Unit,
     onRemove: () -> Unit,
-    canRemove: Boolean
+    canRemove: Boolean,
+    currencyCode: String = "MXN"
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -856,7 +859,7 @@ private fun ProductItemCard(
                                     Column {
                                         Text(product.name, style = MaterialTheme.typography.bodyMedium)
                                         Text(
-                                            product.basePrice.asMXN(),
+                                            product.basePrice.asCurrency(currencyCode),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = SolennixTheme.colors.secondaryText
                                         )
@@ -912,7 +915,7 @@ private fun ProductItemCard(
                         color = SolennixTheme.colors.secondaryText
                     )
                     Text(
-                        text = item.subtotal.asMXN(),
+                        text = item.subtotal.asCurrency(currencyCode),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = SolennixTheme.colors.primary

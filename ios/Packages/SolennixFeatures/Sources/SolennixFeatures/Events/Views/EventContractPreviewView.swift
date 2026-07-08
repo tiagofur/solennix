@@ -107,7 +107,7 @@ public struct EventContractPreviewView: View {
                 .padding(.horizontal, Spacing.xl)
 
             let remaining = max(depositAmount - totalPaid, 0)
-            Text(FeatureL10n.format("events.contract.remaining_to_collect", "Faltan %@ por cobrar.", remaining.asMXN))
+            Text(FeatureL10n.format("events.contract.remaining_to_collect", "Faltan %@ por cobrar.", remaining.formattedCurrency(code: event.currency)))
                 .font(.callout)
                 .fontWeight(.bold)
                 .foregroundStyle(SolennixColors.warning)
@@ -283,13 +283,13 @@ public struct EventContractPreviewView: View {
             ("[Ubicación del evento]", event.location),
             ("[Ciudad del evento]", event.city),
             ("[Lugar del evento]", event.location),
-            ("[Monto total del evento]", event.totalAmount.asMXN),
-            ("[Subtotal del evento]", (event.totalAmount - event.taxAmount + discountValue).asMXN),
-            ("[Descuento del evento]", discountValue.asMXN),
-            ("[IVA del evento]", event.taxAmount.asMXN),
+            ("[Monto total del evento]", event.totalAmount.formattedCurrency(code: event.currency)),
+            ("[Subtotal del evento]", (event.totalAmount - event.taxAmount + discountValue).formattedCurrency(code: event.currency)),
+            ("[Descuento del evento]", discountValue.formattedCurrency(code: event.currency)),
+            ("[IVA del evento]", event.taxAmount.formattedCurrency(code: event.currency)),
             ("[Porcentaje de anticipo]", "\(Int(depositPct))%"),
-            ("[Monto de anticipo]", depositAmt.asMXN),
-            ("[Total pagado]", totalPaid.asMXN),
+            ("[Monto de anticipo]", depositAmt.formattedCurrency(code: event.currency)),
+            ("[Total pagado]", totalPaid.formattedCurrency(code: event.currency)),
             ("[Días de cancelación]", "\(Int(cancellationDays))"),
             ("[Porcentaje de reembolso]", "\(Int(refundPct))%"),
             ("[Nombre del negocio]", profile?.businessName ?? profile?.name),

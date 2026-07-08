@@ -36,13 +36,15 @@ data class ClientDetailUiState(
      * Negative = overpayment / credit ("A favor").
      * Null     = field absent in payload (list/search endpoint) — hide the KPI.
      */
-    val pendingBalance: Double? = null
+    val pendingBalance: Double? = null,
+    val defaultCurrency: String = "MXN"
 )
 
 @HiltViewModel
 class ClientDetailViewModel @Inject constructor(
     private val clientRepository: ClientRepository,
     private val eventRepository: EventRepository,
+    private val authManager: com.creapolis.solennix.core.network.AuthManager,
     @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -63,6 +65,11 @@ class ClientDetailViewModel @Inject constructor(
     init {
         loadClient()
         loadClientEvents()
+        viewModelScope.launch {
+            authManager.currentUser.collect { user ->
+                _uiState.update { it.copy(defaultCurrency = user?.defaultCurrencyCode ?: "MXN") }
+            }
+        }
     }
 
     private var loadClientJob: kotlinx.coroutines.Job? = null

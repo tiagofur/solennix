@@ -15,7 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.TopClient
-import com.creapolis.solennix.core.model.extensions.asMXNCompact
+import com.creapolis.solennix.core.model.extensions.asCurrencyCompact
 import com.creapolis.solennix.feature.dashboard.R
 
 @Composable
@@ -23,7 +23,8 @@ fun TopClientsWidget(
     clients: List<TopClient>,
     isLoading: Boolean,
     onClientClick: (String) -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    currencyCode: String = "MXN"
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -121,7 +122,7 @@ fun TopClientsWidget(
                                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     Text(
-                                        client.totalSpent.asMXNCompact(),
+                                        client.totalSpent.asCurrencyCompact(currencyCode),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = SolennixTheme.colors.primary,
                                         fontWeight = FontWeight.SemiBold

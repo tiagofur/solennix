@@ -38,7 +38,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.SolennixTextField
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.Product
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.EventFormViewModel
 
@@ -146,7 +146,7 @@ fun ProductPickerSheet(
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    product.basePrice.asMXN(),
+                                    product.basePrice.asCurrency(viewModel.currency),
                                     style = MaterialTheme.typography.titleSmall,
                                     color = SolennixTheme.colors.primary,
                                     fontWeight = FontWeight.SemiBold

@@ -32,7 +32,7 @@ import com.creapolis.solennix.core.model.DiscountType
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.EventExtra
 import com.creapolis.solennix.core.model.EventProduct
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.core.model.extensions.toPaymentMethodLabel
 import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailUiState
@@ -72,15 +72,15 @@ fun FinancialBreakdownCard(
             Spacer(modifier = Modifier.height(16.dp))
 
             if (products.isNotEmpty()) {
-                FinancialRow(stringResource(R.string.events_financial_products_subtotal), productsTotal.asMXN())
+                FinancialRow(stringResource(R.string.events_financial_products_subtotal), productsTotal.asCurrency(event.currencyCode))
             }
 
             if (extras.isNotEmpty()) {
-                FinancialRow(stringResource(R.string.events_financial_extras_subtotal), extrasTotal.asMXN())
+                FinancialRow(stringResource(R.string.events_financial_extras_subtotal), extrasTotal.asCurrency(event.currencyCode))
             }
 
             if (products.isNotEmpty() && extras.isNotEmpty()) {
-                FinancialRow(stringResource(R.string.events_financial_subtotal), subtotal.asMXN())
+                FinancialRow(stringResource(R.string.events_financial_subtotal), subtotal.asCurrency(event.currencyCode))
             }
 
             if (event.discount > 0) {
@@ -96,7 +96,7 @@ fun FinancialBreakdownCard(
                 }
                 FinancialRow(
                     discountLabel,
-                    "-${discountAmount.asMXN()}",
+                    "-${discountAmount.asCurrency(event.currencyCode)}",
                     valueColor = SolennixTheme.colors.error
                 )
             }
@@ -104,7 +104,7 @@ fun FinancialBreakdownCard(
             if (event.requiresInvoice && event.taxRate > 0) {
                 FinancialRow(
                     stringResource(R.string.events_financial_tax_percent, event.taxRate.toInt()),
-                    event.taxAmount.asMXN()
+                    event.taxAmount.asCurrency(event.currencyCode)
                 )
             }
 
@@ -124,7 +124,7 @@ fun FinancialBreakdownCard(
                     color = SolennixTheme.colors.primaryText
                 )
                 Text(
-                    text = event.totalAmount.asMXN(),
+                    text = event.totalAmount.asCurrency(event.currencyCode),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = SolennixTheme.colors.primary
@@ -133,13 +133,13 @@ fun FinancialBreakdownCard(
 
             FinancialRow(
                 stringResource(R.string.events_financial_paid),
-                totalPaid.asMXN(),
+                totalPaid.asCurrency(event.currencyCode),
                 valueColor = SolennixTheme.colors.success
             )
 
             FinancialRow(
                 stringResource(R.string.events_financial_remaining),
-                remaining.asMXN(),
+                remaining.asCurrency(event.currencyCode),
                 valueColor = if (remaining > 0) SolennixTheme.colors.error else SolennixTheme.colors.success
             )
 
@@ -174,7 +174,7 @@ fun FinancialBreakdownCard(
                 val depositAmount = event.totalAmount * depositPct / 100
                 FinancialRow(
                     stringResource(R.string.events_financial_deposit_percent, depositPct.toInt()),
-                    depositAmount.asMXN(),
+                    depositAmount.asCurrency(event.currencyCode),
                     valueColor = SolennixTheme.colors.primary
                 )
             }
@@ -246,7 +246,7 @@ fun PaymentsSection(
                     }
                 }
                 Text(
-                    payment.amount.asMXN(),
+                    payment.amount.asCurrency(uiState.event?.currencyCode),
                     style = MaterialTheme.typography.titleMedium,
                     color = SolennixTheme.colors.success
                 )

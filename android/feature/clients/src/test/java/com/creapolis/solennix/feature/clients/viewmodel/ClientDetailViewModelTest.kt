@@ -40,15 +40,18 @@ class ClientDetailViewModelTest {
     private fun createViewModel(client: Client): ClientDetailViewModel {
         val clientRepository = mockk<ClientRepository>()
         val eventRepository = mockk<EventRepository>()
+        val authManager = mockk<com.creapolis.solennix.core.network.AuthManager>()
         val context = mockk<Context>(relaxed = true)
         val savedStateHandle = SavedStateHandle(mapOf("clientId" to client.id))
 
         coEvery { clientRepository.getClient(client.id) } returns client
         every { eventRepository.getEvents() } returns MutableStateFlow(emptyList())
+        every { authManager.currentUser } returns MutableStateFlow(null)
 
         return ClientDetailViewModel(
             clientRepository = clientRepository,
             eventRepository = eventRepository,
+            authManager = authManager,
             context = context,
             savedStateHandle = savedStateHandle
         )

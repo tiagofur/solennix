@@ -31,7 +31,7 @@ import com.creapolis.solennix.core.network.UrlResolver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.creapolis.solennix.core.model.Event
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.core.model.extensions.toFormattedDate
 import com.creapolis.solennix.feature.clients.R
 import com.creapolis.solennix.feature.clients.viewmodel.ClientDetailViewModel
@@ -208,16 +208,16 @@ fun ClientDetailScreen(
                         } else {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.xxlg)) {
                                 KPICard(title = stringResource(R.string.clients_csv_header_events), value = uiState.totalEvents.toString(), icon = Icons.Default.Event, iconColor = SolennixTheme.colors.kpiBlue, modifier = Modifier.weight(1f))
-                                KPICard(title = stringResource(R.string.clients_stats_total_spent), value = uiState.totalSpent.asMXN(), icon = Icons.Default.AttachMoney, iconColor = SolennixTheme.colors.kpiGreen, modifier = Modifier.weight(1f))
+                                KPICard(title = stringResource(R.string.clients_stats_total_spent), value = uiState.totalSpent.asCurrency(uiState.defaultCurrency), icon = Icons.Default.AttachMoney, iconColor = SolennixTheme.colors.kpiGreen, modifier = Modifier.weight(1f))
                             }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.xxlg)) {
-                                KPICard(title = stringResource(R.string.clients_stats_average), value = uiState.averagePerEvent.asMXN(), icon = Icons.AutoMirrored.Filled.TrendingUp, iconColor = SolennixTheme.colors.kpiOrange, modifier = Modifier.weight(1f))
+                                KPICard(title = stringResource(R.string.clients_stats_average), value = uiState.averagePerEvent.asCurrency(uiState.defaultCurrency), icon = Icons.AutoMirrored.Filled.TrendingUp, iconColor = SolennixTheme.colors.kpiOrange, modifier = Modifier.weight(1f))
                                 val balance = uiState.pendingBalance
                                 if (balance != null) {
                                     val isInFavor = balance < 0
                                     val absBalance = Math.abs(balance)
                                     val label = if (isInFavor) stringResource(R.string.clients_stats_in_favor) else stringResource(R.string.clients_stats_pending_balance)
-                                    val cdText = if (isInFavor) stringResource(R.string.clients_cd_in_favor, absBalance.asMXN()) else stringResource(R.string.clients_cd_pending_balance, absBalance.asMXN())
+                                    val cdText = if (isInFavor) stringResource(R.string.clients_cd_in_favor, absBalance.asCurrency(uiState.defaultCurrency)) else stringResource(R.string.clients_cd_pending_balance, absBalance.asCurrency(uiState.defaultCurrency))
                                     val iconColor = when {
                                         balance > 0 -> SolennixTheme.colors.warning
                                         balance < 0 -> SolennixTheme.colors.info
@@ -225,7 +225,7 @@ fun ClientDetailScreen(
                                     }
                                     KPICard(
                                         title = label,
-                                        value = absBalance.asMXN(),
+                                        value = absBalance.asCurrency(uiState.defaultCurrency),
                                         icon = Icons.Default.AccountBalance,
                                         iconColor = iconColor,
                                         modifier = Modifier
@@ -387,7 +387,7 @@ private fun EventHistoryItem(
                     color = SolennixTheme.colors.secondaryText
                 )
                 Text(
-                    text = event.totalAmount.asMXN(),
+                    text = event.totalAmount.asCurrency(event.currencyCode),
                     style = MaterialTheme.typography.titleSmall,
                     color = SolennixTheme.colors.primary,
                     fontWeight = FontWeight.Bold

@@ -39,7 +39,8 @@ data class EventChecklistUiState(
     val items: List<ChecklistItem> = emptyList(),
     val checkedIds: Set<String> = emptySet(),
     val isLoading: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
+    val currency: String = "MXN"
 ) {
     val progress: Float
         get() = if (items.isEmpty()) 0f else checkedIds.size.toFloat() / items.size
@@ -193,7 +194,8 @@ class EventChecklistViewModel @Inject constructor(
                         isLoading = false,
                         eventName = event.serviceType,
                         eventDate = event.eventDate,
-                        items = checklistItems
+                        items = checklistItems,
+                        currency = event.currencyCode
                     )
                 }
             } catch (e: Exception) {

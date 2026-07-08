@@ -53,7 +53,7 @@ import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.EventExtra
 import com.creapolis.solennix.core.model.EventProduct
 import com.creapolis.solennix.core.model.Product
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.EventFormViewModel
 
@@ -65,6 +65,7 @@ fun ProductSelectionItem(
     onQuantityChange: (Double) -> Unit,
     onDiscountChange: (Double) -> Unit,
     onRemove: () -> Unit,
+    currency: String = "MXN"
 ) {
     val product = availableProducts.find { it.id == item.productId } ?: return
     var discountText by remember(item.id) {
@@ -129,7 +130,7 @@ fun ProductSelectionItem(
                         fontWeight = FontWeight.Medium,
                     )
                     Text(
-                        stringResource(R.string.events_form_products_unit_price, item.unitPrice.asMXN()),
+                        stringResource(R.string.events_form_products_unit_price, item.unitPrice.asCurrency(currency)),
                         style = MaterialTheme.typography.bodyMedium,
                         color = SolennixTheme.colors.primary,
                     )
@@ -226,7 +227,7 @@ fun ProductSelectionItem(
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = stringResource(R.string.events_form_products_total, lineTotal.asMXN()),
+                    text = stringResource(R.string.events_form_products_total, lineTotal.asCurrency(currency)),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = if (item.discount > 0) SolennixTheme.colors.success else SolennixTheme.colors.primaryText

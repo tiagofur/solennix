@@ -98,6 +98,7 @@ data class DashboardUiState(
     val productDemand: List<com.creapolis.solennix.core.model.ProductDemandItem> = emptyList(),
     /** Revenue forecast from /dashboard/forecast */
     val forecast: List<com.creapolis.solennix.core.model.ForecastDataPoint> = emptyList(),
+    val defaultCurrency: String = "MXN"
 )
 
 @HiltViewModel
@@ -285,6 +286,7 @@ class DashboardViewModel @Inject constructor(
         val currentUser = authManager.currentUser.value
         val firstName = currentUser?.name?.split(" ")?.firstOrNull() ?: ""
         val clientMap = data.allClients.associate { it.id to it.name }
+        val defaultCurrency = currentUser?.defaultCurrencyCode ?: "MXN"
 
         DashboardUiState(
             upcomingEvents = data.upcoming,
@@ -325,7 +327,8 @@ class DashboardViewModel @Inject constructor(
             monthlyRevenueTrend = buildTrailingSixMonthTrend(revenueTrend, now),
             topClients = topClients,
             productDemand = productDemand,
-            forecast = forecast
+            forecast = forecast,
+            defaultCurrency = defaultCurrency
         )
     }.stateIn(
         scope = viewModelScope,

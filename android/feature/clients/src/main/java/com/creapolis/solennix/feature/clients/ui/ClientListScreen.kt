@@ -57,7 +57,7 @@ import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCardG
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.network.UrlResolver
 import com.creapolis.solennix.core.model.Client
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.feature.clients.R
 import com.creapolis.solennix.feature.clients.viewmodel.ClientListViewModel
 import com.creapolis.solennix.feature.clients.viewmodel.ClientSortOption
@@ -238,7 +238,8 @@ fun ClientListScreen(
                                         onLongClick = {
                                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                             rowActionsClient = client
-                                        }
+                                        },
+                                        currencyCode = uiState.defaultCurrency
                                     )
                                 }
                             }
@@ -259,7 +260,8 @@ fun ClientListScreen(
                                             onLongClick = {
                                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                                 rowActionsClient = client
-                                            }
+                                            },
+                                            currencyCode = uiState.defaultCurrency
                                         )
                                     }
                                 }
@@ -408,7 +410,8 @@ private fun ClientListSkeleton() {
 fun ClientListItem(
     client: Client,
     onClick: () -> Unit,
-    onLongClick: (() -> Unit)? = null
+    onLongClick: (() -> Unit)? = null,
+    currencyCode: String = "MXN"
 ) {
     Row(
         modifier = Modifier
@@ -451,7 +454,7 @@ fun ClientListItem(
                         client.totalSpent?.let { spent ->
                             if (spent > 0.0) {
                                 Text(
-                                    text = spent.asMXN(),
+                                    text = spent.asCurrency(currencyCode),
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = SolennixTheme.colors.primary

@@ -56,7 +56,7 @@ import com.creapolis.solennix.core.designsystem.component.PremiumButton
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.DiscountType
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.core.model.extensions.toPaymentMethodLabel
 import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.*
@@ -132,9 +132,9 @@ fun EventPaymentsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                KpiCard(stringResource(R.string.events_detail_payments_kpi_total), event.totalAmount.asMXN(), SolennixTheme.colors.primary, Modifier.weight(1f))
-                KpiCard(stringResource(R.string.events_detail_payments_kpi_paid), totalPaid.asMXN(), SolennixTheme.colors.success, Modifier.weight(1f))
-                KpiCard(stringResource(R.string.events_detail_payments_kpi_balance), remaining.asMXN(), if (remaining <= 0.01) SolennixTheme.colors.success else SolennixTheme.colors.error, Modifier.weight(1f))
+                KpiCard(stringResource(R.string.events_detail_payments_kpi_total), event.totalAmount.asCurrency(event.currencyCode), SolennixTheme.colors.primary, Modifier.weight(1f))
+                KpiCard(stringResource(R.string.events_detail_payments_kpi_paid), totalPaid.asCurrency(event.currencyCode), SolennixTheme.colors.success, Modifier.weight(1f))
+                KpiCard(stringResource(R.string.events_detail_payments_kpi_balance), remaining.asCurrency(event.currencyCode), if (remaining <= 0.01) SolennixTheme.colors.success else SolennixTheme.colors.error, Modifier.weight(1f))
             }
 
             Card(
@@ -169,7 +169,7 @@ fun EventPaymentsScreen(
                         )
 
                         PremiumButton(
-                            text = stringResource(R.string.events_detail_payments_settle, remaining.asMXN()),
+                            text = stringResource(R.string.events_detail_payments_settle, remaining.asCurrency(event.currencyCode)),
                             onClick = {
                                 paymentInitialAmount = remaining
                                 showPaymentModal = true
@@ -194,7 +194,7 @@ fun EventPaymentsScreen(
                             ) {
                                 Icon(Icons.Default.Savings, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(stringResource(R.string.events_detail_payments_deposit, depositRemaining.asMXN()))
+                                Text(stringResource(R.string.events_detail_payments_deposit, depositRemaining.asCurrency(event.currencyCode)))
                             }
                         }
                     }
@@ -242,7 +242,7 @@ fun EventPaymentsScreen(
                                             Text(payment.notes.orEmpty(), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
                                         }
                                     }
-                                    Text(payment.amount.asMXN(), style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.success, fontWeight = FontWeight.Bold)
+                                    Text(payment.amount.asCurrency(event.currencyCode), style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.success, fontWeight = FontWeight.Bold)
                                     Spacer(modifier = Modifier.width(8.dp))
                                     IconButton(
                                         onClick = { pendingDeletePaymentId = payment.id },

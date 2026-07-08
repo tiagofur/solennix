@@ -36,7 +36,7 @@ import com.creapolis.solennix.core.designsystem.component.SolennixTextField
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.DiscountType
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.*
 
@@ -123,7 +123,7 @@ fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean) {
                     modifier = Modifier.weight(1f),
                 )
                 Text(
-                    stringResource(R.string.events_form_summary_deposit_amount, depositAmount.asMXN()),
+                    stringResource(R.string.events_form_summary_deposit_amount, depositAmount.asCurrency(viewModel.currency)),
                     style = MaterialTheme.typography.titleSmall,
                     color = SolennixTheme.colors.primary,
                     fontWeight = FontWeight.SemiBold,
@@ -198,36 +198,36 @@ fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean) {
                         Spacer(modifier = Modifier.height(8.dp))
                     }
 
-                    SummaryRow(stringResource(R.string.events_form_summary_subtotal_products), viewModel.subtotalProducts.asMXN())
-                    SummaryRow(stringResource(R.string.events_form_summary_subtotal_extras), viewModel.subtotalExtras.asMXN())
+                    SummaryRow(stringResource(R.string.events_form_summary_subtotal_products), viewModel.subtotalProducts.asCurrency(viewModel.currency))
+                    SummaryRow(stringResource(R.string.events_form_summary_subtotal_extras), viewModel.subtotalExtras.asCurrency(viewModel.currency))
 
                     if (viewModel.discountAmount > 0) {
-                        SummaryRow(stringResource(R.string.events_form_summary_discount_title), "-${viewModel.discountAmount.asMXN()}", valueColor = SolennixTheme.colors.error)
+                        SummaryRow(stringResource(R.string.events_form_summary_discount_title), "-${viewModel.discountAmount.asCurrency(viewModel.currency)}", valueColor = SolennixTheme.colors.error)
                     }
 
                     if (viewModel.requiresInvoice && viewModel.taxAmount > 0) {
                         val rate = viewModel.taxRate.toDoubleOrNull() ?: 0.0
-                        SummaryRow(stringResource(R.string.events_form_summary_tax_value, String.format("%.0f", rate)), "+${viewModel.taxAmount.asMXN()}")
+                        SummaryRow(stringResource(R.string.events_form_summary_tax_value, String.format("%.0f", rate)), "+${viewModel.taxAmount.asCurrency(viewModel.currency)}")
                     }
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = SolennixTheme.colors.borderLight)
 
                     Row(modifier = Modifier.fillMaxWidth()) {
                         Text(stringResource(R.string.events_form_summary_total), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                        Text(viewModel.total.asMXN(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = SolennixTheme.colors.primary)
+                        Text(viewModel.total.asCurrency(viewModel.currency), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = SolennixTheme.colors.primary)
                     }
 
                     Spacer(modifier = Modifier.height(4.dp))
-                    SummaryRow(stringResource(R.string.events_form_summary_deposit_value, String.format("%.0f", depositPct)), depositAmount.asMXN(), valueColor = SolennixTheme.colors.primary)
+                    SummaryRow(stringResource(R.string.events_form_summary_deposit_value, String.format("%.0f", depositPct)), depositAmount.asCurrency(viewModel.currency), valueColor = SolennixTheme.colors.primary)
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = SolennixTheme.colors.borderLight)
 
                     Text(stringResource(R.string.events_form_summary_profitability), style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.secondaryText)
                     Spacer(modifier = Modifier.height(6.dp))
-                    SummaryRow(stringResource(R.string.events_form_summary_total_costs), viewModel.totalCosts.asMXN())
+                    SummaryRow(stringResource(R.string.events_form_summary_total_costs), viewModel.totalCosts.asCurrency(viewModel.currency))
                     SummaryRow(
                         stringResource(R.string.events_form_summary_net_profit),
-                        viewModel.netProfit.asMXN(),
+                        viewModel.netProfit.asCurrency(viewModel.currency),
                         valueColor = if (viewModel.netProfit >= 0) SolennixTheme.colors.success else SolennixTheme.colors.error
                     )
                     SummaryRow(

@@ -8,6 +8,7 @@ public struct QuickQuoteView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.apiClient) private var apiClient
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(AuthManager.self) private var authManager
     @State private var viewModel: QuickQuoteViewModel
     var onConvertToEvent: (() -> Void)?
 
@@ -152,19 +153,19 @@ public struct QuickQuoteView: View {
                         
                         Section(QuickQuoteStrings.summary) {
                             let fin = viewModel.financials
-                            SummaryRow(label: QuickQuoteStrings.subtotalProducts, value: fin.productsSubtotal)
+                            SummaryRow(label: QuickQuoteStrings.subtotalProducts, value: fin.productsSubtotal, code: authManager.currentUser?.defaultCurrency)
                                 .solennixRow()
-                            SummaryRow(label: QuickQuoteStrings.subtotalExtras, value: fin.extrasTotal)
+                            SummaryRow(label: QuickQuoteStrings.subtotalExtras, value: fin.extrasTotal, code: authManager.currentUser?.defaultCurrency)
                                 .solennixRow()
                             
                             if fin.discountAmount > 0 {
-                                SummaryRow(label: QuickQuoteStrings.discount, value: -fin.discountAmount)
+                                SummaryRow(label: QuickQuoteStrings.discount, value: -fin.discountAmount, code: authManager.currentUser?.defaultCurrency)
                                     .foregroundStyle(SolennixColors.success)
                                     .solennixRow()
                             }
                             
                             if viewModel.requiresInvoice {
-                                SummaryRow(label: QuickQuoteStrings.vat, value: fin.taxAmount)
+                                SummaryRow(label: QuickQuoteStrings.vat, value: fin.taxAmount, code: authManager.currentUser?.defaultCurrency)
                                     .solennixRow()
                             }
                             
@@ -172,7 +173,7 @@ public struct QuickQuoteView: View {
                                 Text(QuickQuoteStrings.total)
                                     .font(.headline)
                                 Spacer()
-                                Text(fin.total.asMXN)
+                                Text(fin.total.formattedCurrency(code: authManager.currentUser?.defaultCurrency))
                                     .font(.headline)
                                     .foregroundStyle(SolennixColors.primary)
                             }
@@ -182,17 +183,17 @@ public struct QuickQuoteView: View {
                         if viewModel.financials.totalCost > 0 {
                             Section(QuickQuoteStrings.profitabilityMetrics) {
                                 let profitFin = viewModel.financials
-                                SummaryRow(label: QuickQuoteStrings.productCost, value: profitFin.productCost)
+                                SummaryRow(label: QuickQuoteStrings.productCost, value: profitFin.productCost, code: authManager.currentUser?.defaultCurrency)
                                     .solennixRow()
-                                SummaryRow(label: QuickQuoteStrings.extrasCost, value: profitFin.extrasCost)
+                                SummaryRow(label: QuickQuoteStrings.extrasCost, value: profitFin.extrasCost, code: authManager.currentUser?.defaultCurrency)
                                     .solennixRow()
-                                SummaryRow(label: QuickQuoteStrings.totalCost, value: profitFin.totalCost)
+                                SummaryRow(label: QuickQuoteStrings.totalCost, value: profitFin.totalCost, code: authManager.currentUser?.defaultCurrency)
                                     .solennixRow()
                                 HStack {
                                     Text(QuickQuoteStrings.netProfit)
                                         .foregroundStyle(SolennixColors.textSecondary)
                                     Spacer()
-                                    Text(profitFin.profit.asMXN)
+                                    Text(profitFin.profit.formattedCurrency(code: authManager.currentUser?.defaultCurrency))
                                         .foregroundStyle(profitFin.profit >= 0 ? SolennixColors.success : SolennixColors.error)
                                 }
                                 .solennixRow()
@@ -311,7 +312,7 @@ public struct QuickQuoteView: View {
                 
                 Spacer()
                 
-                Text(product.wrappedValue.unitPrice.asMXN)
+                Text(product.wrappedValue.unitPrice.formattedCurrency(code: authManager.currentUser?.defaultCurrency))
                     .foregroundStyle(SolennixColors.textSecondary)
             }
         }
@@ -342,13 +343,14 @@ public struct QuickQuoteView: View {
 private struct SummaryRow: View {
     let label: String
     let value: Double
+    let code: String?
 
     var body: some View {
         HStack {
             Text(label)
                 .foregroundStyle(SolennixColors.textSecondary)
             Spacer()
-            Text(value.asMXN)
+            Text(value.formattedCurrency(code: code))
         }
     }
 }
