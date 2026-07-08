@@ -36,6 +36,12 @@ status: active
 > - **Documentado en:** `docs/PRD/02_FEATURES.md` §16 (Perfil Profesional Público).
 > - **Estado:** Planificado, no implementado aún.
 
+> [!success] 2026-07-08 — iOS Feature Gating Enforcement (ios-feature-gating-enforcement, COMPLETO)
+> Implementación del control y restricción de funciones según el plan de suscripción del usuario en la plataforma iOS.
+> - **Gating de Creación de Eventos** — `EventListView` ahora consume `PlanLimitsManager`. Al alcanzar el límite mensual de eventos del plan básico (4 eventos), el botón "+" de la barra de herramientas y el botón de llamada a la acción del estado vacío redirigen dinámicamente al usuario a la vista de precios (`Route.pricing`). Adicionalmente, se renderiza una `UpgradeBannerView` en el safe area superior de la pantalla.
+> - **Gating de Identidad Visual y Contratos** — En `BusinessSettingsView`, el selector de logo (`PhotosPicker`) y el selector de color de marca (`ColorPicker`) se deshabilitan para usuarios del plan básico, reemplazándose por botones bloqueados con ícono de candado que abren un modal sheet con la vista de precios (`PricingView`). Del mismo modo, en `ContractDefaultsView`, el banner de bloqueo de personalización de plantillas de contratos se convierte en un botón accionable que presenta dicho modal.
+> - **Pruebas y Validación** — Se agregaron pruebas unitarias en `BusinessSettingsViewModelTests` para verificar de forma exhaustiva las reglas de negocio de `canCustomizeBranding` y `canCustomizeContractTemplate` para planes `.basic`, `.pro`, `.business` y `.premium`.
+
 > [!success] 2026-07-08 — Corrección de Redirección en Vista de Calendario (ios-calendar-event-tap-redirect, COMPLETO)
 > Solución al error donde hacer tap/clic sobre las tarjetas de evento de la lista filtrada en la vista de Calendario de iOS no navegaba al detalle del evento. **Issue #791.**
 > - **`EventosLayoutFactory` (SolennixFeatures)** — `EventosFilteredList` utiliza un contenedor `VStack` plano. El hack tradicional `ZStack { cell; NavigationLink(EmptyView) }` (creado para omitir los chevrons en SwiftUI `List`) no recibe interacciones táctiles en un `VStack` plano porque `EmptyView` tiene hit target de tamaño cero. Se refactorizó para envolver la celda directamente en el `NavigationLink`. Dado que se renderiza fuera de un `List`, SwiftUI no dibuja chevrons nativos, lo que soluciona la redirección sin alterar el diseño visual.

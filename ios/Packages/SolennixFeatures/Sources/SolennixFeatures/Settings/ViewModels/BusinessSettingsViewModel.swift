@@ -88,6 +88,9 @@ public final class BusinessSettingsViewModel {
     public var canCustomizeContractTemplate: Bool {
         user?.plan.isPaid ?? false
     }
+    public var canCustomizeBranding: Bool {
+        user?.plan.isPaid ?? false
+    }
 
     // Logo
     public var logoUrl: String?

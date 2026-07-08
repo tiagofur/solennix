@@ -16,6 +16,9 @@ public struct BusinessSettingsView: View {
     @State private var initialShowInPdf: Bool = true
     @State private var initialBrandColor: Color = SolennixColors.primary
     @State private var showDiscardConfirm = false
+    @State private var showPricingSheet = false
+    @Environment(AuthManager.self) private var authManager
+    @Environment(\.apiClient) private var apiClient
 
     private var isDirty: Bool {
         viewModel.businessName != initialBusinessName
@@ -80,6 +83,9 @@ public struct BusinessSettingsView: View {
                 Task { await viewModel.handleLogoSelection() }
             }
         }
+        .sheet(isPresented: $showPricingSheet) {
+            PricingView(apiClient: apiClient, authManager: authManager)
+        }
         .task {
             await viewModel.loadUser()
             initialBusinessName = viewModel.businessName
@@ -122,23 +128,39 @@ public struct BusinessSettingsView: View {
                         }
 
                         // Upload button
-                        PhotosPicker(
-                            selection: $viewModel.selectedPhoto,
-                            matching: .images
-                        ) {
-                            HStack {
-                                if viewModel.isUploadingLogo {
-                                    ProgressView()
-                                        .progressViewStyle(.circular)
-                                } else {
+                        if viewModel.canCustomizeBranding {
+                            PhotosPicker(
+                                selection: $viewModel.selectedPhoto,
+                                matching: .images
+                            ) {
+                                HStack {
+                                    if viewModel.isUploadingLogo {
+                                        ProgressView()
+                                            .progressViewStyle(.circular)
+                                    } else {
+                                        Image(systemName: "photo")
+                                        Text(viewModel.logoUrl != nil ? tr("settings.business.logo.change", "Cambiar logo") : tr("settings.business.logo.upload", "Subir logo"))
+                                    }
+                                }
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            }
+                            .disabled(viewModel.isUploadingLogo)
+                        } else {
+                            Button {
+                                showPricingSheet = true
+                            } label: {
+                                HStack {
                                     Image(systemName: "photo")
                                     Text(viewModel.logoUrl != nil ? tr("settings.business.logo.change", "Cambiar logo") : tr("settings.business.logo.upload", "Subir logo"))
+                                    Image(systemName: "lock.fill")
+                                        .font(.caption)
+                                        .foregroundStyle(SolennixColors.textTertiary)
                                 }
+                                .font(.subheadline)
+                                .fontWeight(.medium)
                             }
-                            .font(.subheadline)
-                            .fontWeight(.medium)
                         }
-                        .disabled(viewModel.isUploadingLogo)
                     }
 
                     Spacer()
@@ -153,6 +175,32 @@ public struct BusinessSettingsView: View {
 
             // Business name + Brand color section (2-col on iPad)
             Section {
+                if !viewModel.canCustomizeBranding {
+                    Button {
+                        showPricingSheet = true
+                    } label: {
+                        HStack(spacing: Spacing.sm) {
+                            Image(systemName: "lock.fill")
+                                .foregroundStyle(SolennixColors.primary)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(tr("settings.business.branding_pro_only", "Identidad visual exclusiva del plan Pro"))
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(SolennixColors.text)
+                                Text(tr("settings.business.branding_pro_only_hint", "Subir tu logo y personalizar el color de marca requiere un plan de pago."))
+                                    .font(.caption)
+                                    .foregroundStyle(SolennixColors.textSecondary)
+                            }
+                            Spacer()
+                        }
+                        .padding(Spacing.sm)
+                        .background(SolennixColors.primaryLight)
+                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    }
+                    .buttonStyle(.plain)
+                    .solennixRow()
+                }
+
                 AdaptiveFormRow {
                     VStack(alignment: .leading, spacing: Spacing.sm) {
                         TextField(tr("settings.business.name_label", "Nombre del negocio"), text: $viewModel.businessName)
@@ -163,7 +211,29 @@ public struct BusinessSettingsView: View {
                     }
                 } right: {
                     VStack(alignment: .leading, spacing: Spacing.sm) {
-                        ColorPicker(tr("settings.business.brand_color", "Color de marca"), selection: $viewModel.brandColor)
+                        if viewModel.canCustomizeBranding {
+                            ColorPicker(tr("settings.business.brand_color", "Color de marca"), selection: $viewModel.brandColor)
+                        } else {
+                            Button {
+                                showPricingSheet = true
+                            } label: {
+                                HStack {
+                                    Text(tr("settings.business.brand_color", "Color de marca"))
+                                        .foregroundStyle(SolennixColors.text)
+                                    Spacer()
+                                    Circle()
+                                        .fill(viewModel.brandColor)
+                                        .frame(width: 28, height: 28)
+                                        .overlay(
+                                            Circle()
+                                                .stroke(SolennixColors.border, lineWidth: 1)
+                                        )
+                                    Image(systemName: "lock.fill")
+                                        .foregroundStyle(SolennixColors.textTertiary)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
                         Text(tr("settings.business.brand_color_hint", "Este color se usará como acento en los documentos PDF que generes."))
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textTertiary)

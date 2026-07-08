@@ -12,12 +12,15 @@ public struct ContractDefaultsView: View {
     @State private var templateCoordinator: ContractTemplateTextView.Coordinator?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(AuthManager.self) private var authManager
+    @Environment(\.apiClient) private var apiClient
 
     @State private var initialDepositPercent: Double = 50
     @State private var initialCancellationDays: Double = 7
     @State private var initialRefundPercent: Double = 50
     @State private var initialContractTemplate: String = ""
     @State private var showDiscardConfirm = false
+    @State private var showPricingSheet = false
 
     private var isDirty: Bool {
         viewModel.depositPercent != initialDepositPercent
@@ -85,6 +88,9 @@ public struct ContractDefaultsView: View {
             }
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showPricingSheet) {
+            PricingView(apiClient: apiClient, authManager: authManager)
         }
         .task {
             await viewModel.loadUser()
@@ -170,22 +176,28 @@ public struct ContractDefaultsView: View {
             Section {
                 VStack(alignment: .leading, spacing: Spacing.sm) {
                     if !viewModel.canCustomizeContractTemplate {
-                        HStack(spacing: Spacing.sm) {
-                            Image(systemName: "lock.fill")
-                                .foregroundStyle(SolennixColors.primary)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(tr("settings.contract.pro_only", "Función exclusiva del plan Pro"))
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
-                                    .foregroundStyle(SolennixColors.text)
-                                Text(tr("settings.contract.pro_only_hint", "Puedes usar la plantilla predeterminada; personalizarla requiere Pro."))
-                                    .font(.caption)
-                                    .foregroundStyle(SolennixColors.textSecondary)
+                        Button {
+                            showPricingSheet = true
+                        } label: {
+                            HStack(spacing: Spacing.sm) {
+                                Image(systemName: "lock.fill")
+                                    .foregroundStyle(SolennixColors.primary)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(tr("settings.contract.pro_only", "Función exclusiva del plan Pro"))
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundStyle(SolennixColors.text)
+                                    Text(tr("settings.contract.pro_only_hint", "Puedes usar la plantilla predeterminada; personalizarla requiere Pro."))
+                                        .font(.caption)
+                                        .foregroundStyle(SolennixColors.textSecondary)
+                                }
+                                Spacer()
                             }
+                            .padding(Spacing.sm)
+                            .background(SolennixColors.primaryLight)
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
                         }
-                        .padding(Spacing.sm)
-                        .background(SolennixColors.primaryLight)
-                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                        .buttonStyle(.plain)
                     }
 
                     Button {
