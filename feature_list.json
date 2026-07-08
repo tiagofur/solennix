@@ -426,6 +426,20 @@
         "WidgetModels removes unsafe optionals and adds decode debug logs; InteractiveWidget removes optional chaining that masked the data invariant",
         "Existing iOS test suite stays green (CI iOS Validation pass); manual widget validation post-merge renders events/payments"
       ]
+    },
+    {
+      "id": 35,
+      "name": "ios-storekit2-purchase-flow",
+      "description": "feat(ios): StoreKit 2 purchase flow (Issue #784)",
+      "status": "done",
+      "acceptance_criteria": [
+        "SubscriptionManager listens to Transaction.updates in the background from app launch",
+        "SubscriptionManager.purchaseStoreKitProduct verifies cryptographic signature and finishes transactions locally",
+        "SubscriptionManager.restorePurchases falls back to direct StoreKit entitlements verification",
+        "SubscriptionManager checkEntitlementStatus falls back to direct StoreKit currentEntitlements check when RevenueCat is not configured",
+        "All SwiftUI Settings/Pricing views support fallback direct StoreKit purchase flow",
+        "Global init.sh validation suite runs and passes successfully"
+      ]
     }
   ]
 }
