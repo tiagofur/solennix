@@ -378,7 +378,7 @@ public final class SubscriptionManager {
     // MARK: - StoreKit 2 Direct Verification & Entitlements
 
     @MainActor
-    private func handleTransactionUpdate(_ verificationResult: VerificationResult<Transaction>) async {
+    private func handleTransactionUpdate(_ verificationResult: StoreKit.VerificationResult<Transaction>) async {
         switch verificationResult {
         case .verified(let transaction):
             await transaction.finish()
