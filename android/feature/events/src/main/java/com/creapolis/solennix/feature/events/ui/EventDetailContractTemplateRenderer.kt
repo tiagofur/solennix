@@ -1,7 +1,7 @@
 package com.creapolis.solennix.feature.events.ui
 
 import com.creapolis.solennix.core.model.DiscountType
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.core.model.extensions.formatQuantity
 
 internal data class ContractRenderResult(
@@ -64,13 +64,13 @@ internal fun renderContractTemplate(
         "[Ubicación del evento]" to event.location,
         "[Lugar del evento]" to event.location,
         "[Ciudad del evento]" to event.city,
-        "[Monto total del evento]" to event.totalAmount.asMXN(),
-        "[Subtotal del evento]" to (event.totalAmount - event.taxAmount + discountValue).asMXN(),
-        "[Descuento del evento]" to discountValue.asMXN(),
-        "[IVA del evento]" to event.taxAmount.asMXN(),
+        "[Monto total del evento]" to event.totalAmount.asCurrency(event.currencyCode),
+        "[Subtotal del evento]" to (event.totalAmount - event.taxAmount + discountValue).asCurrency(event.currencyCode),
+        "[Descuento del evento]" to discountValue.asCurrency(event.currencyCode),
+        "[IVA del evento]" to event.taxAmount.asCurrency(event.currencyCode),
         "[Porcentaje de anticipo]" to "${depositPercent.toInt()}%",
-        "[Monto de anticipo]" to depositAmount.asMXN(),
-        "[Total pagado]" to totalPaid.asMXN(),
+        "[Monto de anticipo]" to depositAmount.asCurrency(event.currencyCode),
+        "[Total pagado]" to totalPaid.asCurrency(event.currencyCode),
         "[Días de cancelación]" to "${cancellationDays.toInt()}",
         "[Porcentaje de reembolso]" to "${refundPercent.toInt()}%",
         "[Nombre del negocio]" to (user?.businessName ?: user?.name),

@@ -50,7 +50,7 @@ import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.AssignmentStatus
 import com.creapolis.solennix.core.model.DiscountType
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.core.model.extensions.formatQuantity
 import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
@@ -81,6 +81,7 @@ fun EventShoppingListScreen(
         val event = uiState.event
         val supplies = uiState.supplies
         val purchaseSupplies = supplies.filter { it.source == com.creapolis.solennix.core.model.SupplySource.PURCHASE }
+        val currencyCode = uiState.event?.currencyCode ?: "MXN"
         val stockSupplies = supplies.filter { it.source == com.creapolis.solennix.core.model.SupplySource.STOCK }
 
         Column(
@@ -133,7 +134,7 @@ fun EventShoppingListScreen(
                                 )
                             }
                             Text(
-                                (supply.quantity * supply.unitCost).asMXN(),
+                                (supply.quantity * supply.unitCost).asCurrency(currencyCode),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = SolennixTheme.colors.warning

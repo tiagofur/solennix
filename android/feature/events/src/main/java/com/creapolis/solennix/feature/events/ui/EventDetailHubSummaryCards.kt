@@ -35,7 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.DiscountType
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.feature.events.R
 
 @Composable
@@ -96,7 +96,7 @@ fun FinanceSummaryCard(
                         color = SolennixTheme.colors.secondaryText
                     )
                     Text(
-                        event.totalAmount.asMXN(),
+                        event.totalAmount.asCurrency(event.currencyCode),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = SolennixTheme.colors.primary
@@ -198,13 +198,13 @@ fun PaymentSummaryCard(
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 MiniKpi(
                     label = stringResource(R.string.events_detail_finances_paid),
-                    value = totalPaid.asMXN(),
+                    value = totalPaid.asCurrency(event.currencyCode),
                     color = SolennixTheme.colors.success,
                     modifier = Modifier.weight(1f)
                 )
                 MiniKpi(
                     label = stringResource(R.string.events_detail_payments_kpi_balance),
-                    value = remaining.asMXN(),
+                    value = remaining.asCurrency(event.currencyCode),
                     color = if (remaining <= 0.01) SolennixTheme.colors.success else SolennixTheme.colors.error,
                     modifier = Modifier.weight(1f)
                 )
@@ -240,7 +240,7 @@ fun PaymentSummaryCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        stringResource(R.string.events_detail_summary_deposit_amount, depositPct.toInt(), depositAmount.asMXN()),
+                        stringResource(R.string.events_detail_summary_deposit_amount, depositPct.toInt(), depositAmount.asCurrency(event.currencyCode)),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (isDepositMet) SolennixTheme.colors.success else SolennixTheme.colors.warning
                     )

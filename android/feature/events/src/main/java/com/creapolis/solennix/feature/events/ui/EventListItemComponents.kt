@@ -52,7 +52,7 @@ import com.creapolis.solennix.core.designsystem.util.LocalNavAnimatedVisibilityS
 import com.creapolis.solennix.core.designsystem.util.LocalSharedTransitionScope
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.EventStatus
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
 import com.creapolis.solennix.feature.events.R
 import kotlinx.coroutines.delay
@@ -352,7 +352,7 @@ private fun EventListItem(
                     )
                 }
                 Text(
-                    text = event.totalAmount.asMXN(),
+                    text = event.totalAmount.asCurrency(event.currencyCode),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = SolennixTheme.colors.primary
@@ -380,7 +380,7 @@ internal fun eventCardTalkBackLabel(
     val resolvedClient = clientName?.takeIf { it.isNotBlank() }
         ?: context.getString(R.string.events_list_client_fallback)
     val localizedStatus = localizedEventStatus(context, event.status)
-    val total = event.totalAmount.asMXN()
+    val total = event.totalAmount.asCurrency(event.currencyCode)
 
     return if (locationLabel.isNotBlank()) {
         context.getString(

@@ -14,7 +14,7 @@ import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.model.UnavailableDate
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.Endpoints
@@ -426,7 +426,7 @@ class EventListViewModel @Inject constructor(
             val date = event.eventDate.escapeCsv()
             val clientName = (state.clientMap[event.clientId]?.name ?: "").escapeCsv()
             val status = (statusLabels[event.status] ?: event.status.name).escapeCsv()
-            val total = event.totalAmount.asMXN().escapeCsv()
+            val total = event.totalAmount.asCurrency(event.currencyCode).escapeCsv()
             val location = (event.location ?: "").escapeCsv()
             sb.appendLine("$name,$date,$clientName,$status,$total,$location")
         }

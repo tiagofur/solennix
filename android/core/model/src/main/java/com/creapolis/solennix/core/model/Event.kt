@@ -28,8 +28,11 @@ data class Event(
     val notes: String? = null,
     val photos: String? = null, // JSON array of URLs
     @SerialName("created_at") val createdAt: String = "",
-    @SerialName("updated_at") val updatedAt: String = ""
-)
+    @SerialName("updated_at") val updatedAt: String = "",
+    @SerialName("currency") val currency: String? = "MXN"
+) {
+    val currencyCode: String get() = currency ?: "MXN"
+}
 
 @Serializable
 enum class EventStatus {

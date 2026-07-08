@@ -58,7 +58,7 @@ public struct EventFinancesDetailView: View {
                         .foregroundStyle(SolennixColors.textTertiary)
                         .textCase(.uppercase)
 
-                    Text(event.totalAmount.asMXN)
+                    Text(event.totalAmount.formattedCurrency(code: event.currency))
                         .font(.largeTitle)
                         .fontWeight(.black)
                         .foregroundStyle(SolennixColors.primary)
@@ -78,21 +78,21 @@ public struct EventFinancesDetailView: View {
                 VStack(spacing: 0) {
                     financialMetricRow(
                         label: EventFinancesDetailStrings.grossSale,
-                        value: financials.revenue.asMXN,
+                        value: financials.revenue.formattedCurrency(code: event.currency),
                         color: SolennixColors.text
                     )
 
                     if event.taxAmount > 0 {
                         financialMetricRow(
                             label: EventFinancesDetailStrings.iva(Int(event.taxRate)),
-                            value: event.taxAmount.asMXN,
+                            value: event.taxAmount.formattedCurrency(code: event.currency),
                             color: SolennixColors.text
                         )
                     }
 
                     financialMetricRow(
                         label: EventFinancesDetailStrings.totalChargedRow,
-                        value: event.totalAmount.asMXN,
+                        value: event.totalAmount.formattedCurrency(code: event.currency),
                         color: SolennixColors.primary,
                         isBold: true
                     )
@@ -100,7 +100,7 @@ public struct EventFinancesDetailView: View {
                     if let depositPercent = event.depositPercent, depositPercent > 0 {
                         financialMetricRow(
                             label: EventFinancesDetailStrings.deposit(Int(depositPercent)),
-                            value: depositAmount.asMXN,
+                            value: depositAmount.formattedCurrency(code: event.currency),
                             color: isDepositMet ? SolennixColors.success : SolennixColors.warning,
                             icon: isDepositMet ? "checkmark.circle.fill" : "exclamationmark.circle.fill"
                         )
@@ -112,7 +112,7 @@ public struct EventFinancesDetailView: View {
                             : EventFinancesDetailStrings.discountFixed
                         financialMetricRow(
                             label: discountLabel,
-                            value: "-\(discountAmount.asMXN)",
+                            value: "-\(discountAmount.formattedCurrency(code: event.currency))",
                             color: SolennixColors.error
                         )
                     }
@@ -121,13 +121,13 @@ public struct EventFinancesDetailView: View {
 
                     financialMetricRow(
                         label: EventFinancesDetailStrings.costs,
-                        value: financials.totalCost.asMXN,
+                        value: financials.totalCost.formattedCurrency(code: event.currency),
                         color: SolennixColors.error
                     )
 
                     financialMetricRow(
                         label: EventFinancesDetailStrings.netProfit,
-                        value: financials.netProfit.asMXN,
+                        value: financials.netProfit.formattedCurrency(code: event.currency),
                         color: SolennixColors.success,
                         isBold: true
                     )
@@ -143,13 +143,13 @@ public struct EventFinancesDetailView: View {
 
                     financialMetricRow(
                         label: EventFinancesDetailStrings.paid,
-                        value: viewModel.totalPaid.asMXN,
+                        value: viewModel.totalPaid.formattedCurrency(code: event.currency),
                         color: SolennixColors.success
                     )
 
                     financialMetricRow(
                         label: EventFinancesDetailStrings.pending,
-                        value: viewModel.remaining.asMXN,
+                        value: viewModel.remaining.formattedCurrency(code: event.currency),
                         color: viewModel.remaining > 0 ? SolennixColors.error : SolennixColors.success,
                         isBold: true
                     )
@@ -185,11 +185,11 @@ public struct EventFinancesDetailView: View {
                         .frame(height: 12)
 
                         HStack {
-                            Text(viewModel.totalPaid.asMXN)
+                            Text(viewModel.totalPaid.formattedCurrency(code: event.currency))
                                 .font(.caption)
                                 .foregroundStyle(SolennixColors.success)
                             Spacer()
-                            Text(event.totalAmount.asMXN)
+                            Text(event.totalAmount.formattedCurrency(code: event.currency))
                                 .font(.caption)
                                 .foregroundStyle(SolennixColors.textSecondary)
                         }

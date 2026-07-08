@@ -53,7 +53,7 @@ import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.EventExtra
 import com.creapolis.solennix.core.model.EventProduct
 import com.creapolis.solennix.core.model.Product
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.*
 
@@ -166,6 +166,7 @@ fun StepProducts(viewModel: EventFormViewModel) {
                                         onQuantityChange = { viewModel.updateProductQuantity(pair[0].productId, it) },
                                         onDiscountChange = { viewModel.updateProductDiscount(pair[0].productId, it) },
                                         onRemove = { viewModel.removeProduct(pair[0].productId) },
+                                        currency = viewModel.currency
                                     )
                                 }
                                 if (pair.size > 1) {
@@ -177,6 +178,7 @@ fun StepProducts(viewModel: EventFormViewModel) {
                                             onQuantityChange = { viewModel.updateProductQuantity(pair[1].productId, it) },
                                             onDiscountChange = { viewModel.updateProductDiscount(pair[1].productId, it) },
                                             onRemove = { viewModel.removeProduct(pair[1].productId) },
+                                            currency = viewModel.currency
                                         )
                                     }
                                 } else {
@@ -193,6 +195,7 @@ fun StepProducts(viewModel: EventFormViewModel) {
                                 onQuantityChange = { viewModel.updateProductQuantity(item.productId, it) },
                                 onDiscountChange = { viewModel.updateProductDiscount(item.productId, it) },
                                 onRemove = { viewModel.removeProduct(item.productId) },
+                                currency = viewModel.currency
                             )
                         }
                     }
@@ -217,7 +220,7 @@ fun StepProducts(viewModel: EventFormViewModel) {
                                 modifier = Modifier.weight(1f),
                             )
                             Text(
-                                viewModel.subtotalProducts.asMXN(),
+                                viewModel.subtotalProducts.asCurrency(viewModel.currency),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = SolennixTheme.colors.primary,

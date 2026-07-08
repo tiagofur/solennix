@@ -55,6 +55,7 @@ public struct Event: Codable, Identifiable, Sendable, Hashable {
     public var photos: String?
     public let createdAt: String
     public let updatedAt: String
+    public var currency: String?
 
     // MARK: - Init
 
@@ -82,7 +83,8 @@ public struct Event: Codable, Identifiable, Sendable, Hashable {
         notes: String? = nil,
         photos: String? = nil,
         createdAt: String,
-        updatedAt: String
+        updatedAt: String,
+        currency: String? = "MXN"
     ) {
         self.id = id
         self.userId = userId
@@ -108,5 +110,6 @@ public struct Event: Codable, Identifiable, Sendable, Hashable {
         self.photos = photos
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.currency = currency ?? "MXN"
     }
 }

@@ -25,7 +25,7 @@ import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.SwipeToCompleteBox
 import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.ChecklistItem
 import com.creapolis.solennix.feature.events.viewmodel.ChecklistSection
@@ -179,7 +179,8 @@ private fun LazyListScope.checklistEquipmentSection(
                 ChecklistItemCard(
                     item = item,
                     isChecked = isChecked,
-                    onToggle = { viewModel.toggleItem(item.id) }
+                    onToggle = { viewModel.toggleItem(item.id) },
+                    currencyCode = uiState.currency
                 )
             }
         }
@@ -214,7 +215,8 @@ private fun LazyListScope.checklistStockSection(
                 ChecklistItemCard(
                     item = item,
                     isChecked = isChecked,
-                    onToggle = { viewModel.toggleItem(item.id) }
+                    onToggle = { viewModel.toggleItem(item.id) },
+                    currencyCode = uiState.currency
                 )
             }
         }
@@ -249,7 +251,8 @@ private fun LazyListScope.checklistPurchaseSection(
                     item = item,
                     isChecked = isChecked,
                     onToggle = { viewModel.toggleItem(item.id) },
-                    showCost = true
+                    showCost = true,
+                    currencyCode = uiState.currency
                 )
             }
         }
@@ -267,7 +270,7 @@ private fun LazyListScope.checklistPurchaseSection(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(stringResource(R.string.events_checklist_purchase_total), style = MaterialTheme.typography.titleSmall)
-                    Text(totalCost.asMXN(), style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.warning)
+                    Text(totalCost.asCurrency(uiState.currency), style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.warning)
                 }
             }
         }
@@ -364,7 +367,8 @@ fun ChecklistItemCard(
     item: ChecklistItem,
     isChecked: Boolean,
     onToggle: () -> Unit,
-    showCost: Boolean = false
+    showCost: Boolean = false,
+    currencyCode: String = "MXN"
 ) {
     val backgroundColor by animateColorAsState(
         targetValue = if (isChecked) SolennixTheme.colors.success.copy(alpha = 0.1f) else SolennixTheme.colors.card,
@@ -406,7 +410,7 @@ fun ChecklistItemCard(
             }
             if (showCost && item.unitCost > 0) {
                 Text(
-                    (item.quantity * item.unitCost).asMXN(),
+                    (item.quantity * item.unitCost).asCurrency(currencyCode),
                     style = MaterialTheme.typography.labelMedium,
                     color = SolennixTheme.colors.warning
                 )

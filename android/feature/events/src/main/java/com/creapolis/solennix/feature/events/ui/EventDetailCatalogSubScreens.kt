@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.core.model.extensions.formatQuantity
 import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
@@ -60,6 +60,7 @@ fun EventProductsScreen(
     ) { padding ->
         val products = uiState.products
         val subtotal = products.sumOf { it.totalPrice ?: (it.quantity * it.unitPrice) }
+        val currencyCode = uiState.event?.currencyCode ?: "MXN"
 
         Column(
             modifier = Modifier
@@ -77,7 +78,7 @@ fun EventProductsScreen(
                 Surface(shape = MaterialTheme.shapes.medium, color = SolennixTheme.colors.primary.copy(alpha = 0.1f)) {
                     Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(pluralStringResource(R.plurals.events_catalog_products_count, products.size, products.size), style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText)
-                        Text(stringResource(R.string.events_catalog_subtotal_value, subtotal.asMXN()), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = SolennixTheme.colors.primary)
+                        Text(stringResource(R.string.events_catalog_subtotal_value, subtotal.asCurrency(currencyCode)), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = SolennixTheme.colors.primary)
                     }
                 }
 
@@ -96,9 +97,9 @@ fun EventProductsScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                                Text(stringResource(R.string.events_catalog_quantity_price, product.quantity.formatQuantity(), product.unitPrice.asMXN()), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
+                                Text(stringResource(R.string.events_catalog_quantity_price, product.quantity.formatQuantity(), product.unitPrice.asCurrency(currencyCode)), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
                             }
-                            Text(total.asMXN(), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                            Text(total.asCurrency(currencyCode), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -129,6 +130,7 @@ fun EventExtrasScreen(
     ) { padding ->
         val extras = uiState.extras
         val subtotal = extras.sumOf { it.price }
+        val currencyCode = uiState.event?.currencyCode ?: "MXN"
 
         Column(
             modifier = Modifier
@@ -146,7 +148,7 @@ fun EventExtrasScreen(
                 Surface(shape = MaterialTheme.shapes.medium, color = SolennixTheme.colors.info.copy(alpha = 0.1f)) {
                     Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(pluralStringResource(R.plurals.events_catalog_extras_count, extras.size, extras.size), style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText)
-                        Text(stringResource(R.string.events_catalog_subtotal_value, subtotal.asMXN()), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = SolennixTheme.colors.info)
+                        Text(stringResource(R.string.events_catalog_subtotal_value, subtotal.asCurrency(currencyCode)), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = SolennixTheme.colors.info)
                     }
                 }
 
@@ -163,7 +165,7 @@ fun EventExtrasScreen(
                         ) {
                             Text(extra.description, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(extra.price.asMXN(), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                            Text(extra.price.asCurrency(currencyCode), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

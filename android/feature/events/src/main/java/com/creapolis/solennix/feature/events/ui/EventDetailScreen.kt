@@ -46,7 +46,7 @@ import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.model.EventSupply
 import com.creapolis.solennix.core.model.SupplySource
 import com.creapolis.solennix.core.model.EventPhoto
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.core.model.extensions.formatQuantity
 import com.creapolis.solennix.core.model.extensions.toPaymentMethodLabel
 import com.creapolis.solennix.core.network.UrlResolver
@@ -301,7 +301,7 @@ fun EventDetailScreen(
                                         )
 
                                         PremiumButton(
-                                            text = stringResource(R.string.events_detail_payments_settle, remaining.asMXN()),
+                                            text = stringResource(R.string.events_detail_payments_settle, remaining.asCurrency(event.currencyCode)),
                                             onClick = {
                                                 paymentInitialAmount = remaining
                                                 showPaymentModal = true
@@ -330,7 +330,7 @@ fun EventDetailScreen(
                                                     modifier = Modifier.size(18.dp)
                                                 )
                                                 Spacer(modifier = Modifier.width(4.dp))
-                                                Text(stringResource(R.string.events_detail_payments_deposit, depositRemaining.asMXN()))
+                                                Text(stringResource(R.string.events_detail_payments_deposit, depositRemaining.asCurrency(event.currencyCode)))
                                             }
                                         }
                                     }
@@ -438,7 +438,7 @@ fun EventDetailScreen(
                     title = stringResource(R.string.events_detail_balance_pending_title),
                     message = stringResource(
                         R.string.events_detail_balance_pending_message,
-                        remaining.asMXN()
+                        remaining.asCurrency(event.currencyCode)
                     ),
                     confirmText = stringResource(R.string.events_detail_balance_pending_action),
                     severity = AlertSeverity.WARNING,

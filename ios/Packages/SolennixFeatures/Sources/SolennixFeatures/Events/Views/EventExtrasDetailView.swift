@@ -67,7 +67,7 @@ public struct EventExtrasDetailView: View {
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.textSecondary)
                         Spacer()
-                        Text(String(format: tr("events.detail.extras.subtotal", "Subtotal: %@"), subtotal.asMXN))
+                        Text(String(format: tr("events.detail.extras.subtotal", "Subtotal: %@"), subtotal.formattedCurrency(code: viewModel.event?.currency)))
                             .font(.subheadline)
                             .fontWeight(.bold)
                             .foregroundStyle(SolennixColors.info)
@@ -85,7 +85,7 @@ public struct EventExtrasDetailView: View {
 
                             Spacer()
 
-                            Text(extra.price.asMXN)
+                            Text(extra.price.formattedCurrency(code: viewModel.event?.currency))
                                 .font(.body)
                                 .fontWeight(.bold)
                                 .foregroundStyle(SolennixColors.text)

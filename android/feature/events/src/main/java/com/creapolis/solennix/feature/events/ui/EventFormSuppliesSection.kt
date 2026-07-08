@@ -45,7 +45,7 @@ import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.EventSupply
 import com.creapolis.solennix.core.model.SupplySource
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.*
 
@@ -149,7 +149,8 @@ fun SuppliesSection(viewModel: EventFormViewModel) {
                                     onQuantityChange = { viewModel.updateSupplyQuantity(pair[0].inventoryId, it) },
                                     onSourceChange = { viewModel.updateSupplySource(pair[0].inventoryId, it) },
                                     onExcludeCostChange = { viewModel.updateSupplyExcludeCost(pair[0].inventoryId, it) },
-                                    onRemove = { viewModel.removeSupply(pair[0].inventoryId) }
+                                    onRemove = { viewModel.removeSupply(pair[0].inventoryId) },
+                                    currency = viewModel.currency
                                 )
                             }
                             if (pair.size > 1) {
@@ -159,7 +160,8 @@ fun SuppliesSection(viewModel: EventFormViewModel) {
                                         onQuantityChange = { viewModel.updateSupplyQuantity(pair[1].inventoryId, it) },
                                         onSourceChange = { viewModel.updateSupplySource(pair[1].inventoryId, it) },
                                         onExcludeCostChange = { viewModel.updateSupplyExcludeCost(pair[1].inventoryId, it) },
-                                        onRemove = { viewModel.removeSupply(pair[1].inventoryId) }
+                                        onRemove = { viewModel.removeSupply(pair[1].inventoryId) },
+                                        currency = viewModel.currency
                                     )
                                 }
                             } else {
@@ -174,7 +176,8 @@ fun SuppliesSection(viewModel: EventFormViewModel) {
                             onQuantityChange = { viewModel.updateSupplyQuantity(supply.inventoryId, it) },
                             onSourceChange = { viewModel.updateSupplySource(supply.inventoryId, it) },
                             onExcludeCostChange = { viewModel.updateSupplyExcludeCost(supply.inventoryId, it) },
-                            onRemove = { viewModel.removeSupply(supply.inventoryId) }
+                            onRemove = { viewModel.removeSupply(supply.inventoryId) },
+                            currency = viewModel.currency
                         )
                     }
                 }
@@ -198,7 +201,7 @@ fun SuppliesSection(viewModel: EventFormViewModel) {
                         modifier = Modifier.weight(1f),
                     )
                     Text(
-                        viewModel.costSupplies.asMXN(),
+                        viewModel.costSupplies.asCurrency(viewModel.currency),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = SolennixTheme.colors.primary,
@@ -222,7 +225,8 @@ private fun SupplyCard(
     onQuantityChange: (Double) -> Unit,
     onSourceChange: (SupplySource) -> Unit,
     onExcludeCostChange: (Boolean) -> Unit,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
+    currency: String = "MXN"
 ) {
     val isInteger = isIntegerSupplyUnit(supply.unit)
     var qtyText by remember(supply.inventoryId, isInteger) {
@@ -257,7 +261,7 @@ private fun SupplyCard(
                         }
                     }
                     Text(
-                        stringResource(R.string.events_form_inventory_cost_formula, supply.unitCost.asMXN(), String.format("%.1f", supply.quantity), (supply.unitCost * supply.quantity).asMXN()),
+                        stringResource(R.string.events_form_inventory_cost_formula, supply.unitCost.asCurrency(currency), String.format("%.1f", supply.quantity), (supply.unitCost * supply.quantity).asCurrency(currency)),
                         style = MaterialTheme.typography.bodySmall,
                         color = SolennixTheme.colors.primary
                     )

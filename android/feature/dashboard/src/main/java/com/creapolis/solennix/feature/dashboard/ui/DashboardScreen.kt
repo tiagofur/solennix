@@ -49,7 +49,7 @@ import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.model.InventoryItem
-import com.creapolis.solennix.core.model.extensions.asMXNCompact
+import com.creapolis.solennix.core.model.extensions.asCurrencyCompact
 import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
 import com.creapolis.solennix.feature.dashboard.R
 import com.creapolis.solennix.feature.dashboard.viewmodel.*
@@ -199,10 +199,10 @@ fun DashboardScreen(
                 item {
                     if (isWideScreen) {
                         val kpiItems = listOf(
-                            Triple(stringResource(R.string.dashboard_kpi_net_sales), uiState.revenueThisMonth.asMXNCompact(), Triple(Icons.Default.AttachMoney, SolennixTheme.colors.kpiGreen, stringResource(R.string.dashboard_kpi_confirmed_completed))),
-                            Triple(stringResource(R.string.dashboard_kpi_collected), uiState.cashCollected.asMXNCompact(), Triple(Icons.Default.Payments, SolennixTheme.colors.kpiOrange, stringResource(R.string.dashboard_kpi_this_month))),
-                            Triple(stringResource(R.string.dashboard_kpi_vat_collected), uiState.vatCollected.asMXNCompact(), Triple(Icons.Default.Receipt, SolennixTheme.colors.kpiBlue, stringResource(R.string.dashboard_kpi_this_month))),
-                            Triple(stringResource(R.string.dashboard_kpi_vat_outstanding), uiState.vatOutstanding.asMXNCompact(), Triple(Icons.AutoMirrored.Filled.ReceiptLong, SolennixTheme.colors.kpiBlue, stringResource(R.string.dashboard_kpi_due))),
+                            Triple(stringResource(R.string.dashboard_kpi_net_sales), uiState.revenueThisMonth.asCurrencyCompact(uiState.defaultCurrency), Triple(Icons.Default.AttachMoney, SolennixTheme.colors.kpiGreen, stringResource(R.string.dashboard_kpi_confirmed_completed))),
+                            Triple(stringResource(R.string.dashboard_kpi_collected), uiState.cashCollected.asCurrencyCompact(uiState.defaultCurrency), Triple(Icons.Default.Payments, SolennixTheme.colors.kpiOrange, stringResource(R.string.dashboard_kpi_this_month))),
+                            Triple(stringResource(R.string.dashboard_kpi_vat_collected), uiState.vatCollected.asCurrencyCompact(uiState.defaultCurrency), Triple(Icons.Default.Receipt, SolennixTheme.colors.kpiBlue, stringResource(R.string.dashboard_kpi_this_month))),
+                            Triple(stringResource(R.string.dashboard_kpi_vat_outstanding), uiState.vatOutstanding.asCurrencyCompact(uiState.defaultCurrency), Triple(Icons.AutoMirrored.Filled.ReceiptLong, SolennixTheme.colors.kpiBlue, stringResource(R.string.dashboard_kpi_due))),
                             Triple(stringResource(R.string.dashboard_kpi_events_this_month), uiState.eventsThisMonth.toString(), Triple(Icons.Default.CalendarMonth, SolennixTheme.colors.kpiOrange, null)),
                             Triple(stringResource(R.string.dashboard_kpi_low_stock), uiState.lowStockCount.toString(), Triple(Icons.Default.Inventory2, if (uiState.lowStockCount > 0) SolennixTheme.colors.kpiOrange else SolennixTheme.colors.kpiGreen, null)),
                             Triple(stringResource(R.string.dashboard_kpi_clients), uiState.totalClients.toString(), Triple(Icons.Default.People, SolennixTheme.colors.kpiBlue, stringResource(R.string.dashboard_kpi_total))),
@@ -248,10 +248,10 @@ fun DashboardScreen(
                             horizontalArrangement = Arrangement.spacedBy(Spacing.xl)
                         ) {
                             Spacer(modifier = Modifier.width(Spacing.xs))
-                            KPICard(title = stringResource(R.string.dashboard_kpi_net_sales), value = uiState.revenueThisMonth.asMXNCompact(), icon = Icons.Default.AttachMoney, iconColor = SolennixTheme.colors.kpiGreen, subtitle = stringResource(R.string.dashboard_kpi_confirmed_completed), modifier = cardModifier)
-                            KPICard(title = stringResource(R.string.dashboard_kpi_collected), value = uiState.cashCollected.asMXNCompact(), icon = Icons.Default.Payments, iconColor = SolennixTheme.colors.kpiOrange, subtitle = stringResource(R.string.dashboard_kpi_this_month), modifier = cardModifier)
-                            KPICard(title = stringResource(R.string.dashboard_kpi_vat_collected), value = uiState.vatCollected.asMXNCompact(), icon = Icons.Default.Receipt, iconColor = SolennixTheme.colors.kpiBlue, subtitle = stringResource(R.string.dashboard_kpi_this_month), modifier = cardModifier)
-                            KPICard(title = stringResource(R.string.dashboard_kpi_vat_outstanding), value = uiState.vatOutstanding.asMXNCompact(), icon = Icons.AutoMirrored.Filled.ReceiptLong, iconColor = SolennixTheme.colors.kpiBlue, subtitle = stringResource(R.string.dashboard_kpi_due), modifier = cardModifier)
+                            KPICard(title = stringResource(R.string.dashboard_kpi_net_sales), value = uiState.revenueThisMonth.asCurrencyCompact(uiState.defaultCurrency), icon = Icons.Default.AttachMoney, iconColor = SolennixTheme.colors.kpiGreen, subtitle = stringResource(R.string.dashboard_kpi_confirmed_completed), modifier = cardModifier)
+                            KPICard(title = stringResource(R.string.dashboard_kpi_collected), value = uiState.cashCollected.asCurrencyCompact(uiState.defaultCurrency), icon = Icons.Default.Payments, iconColor = SolennixTheme.colors.kpiOrange, subtitle = stringResource(R.string.dashboard_kpi_this_month), modifier = cardModifier)
+                            KPICard(title = stringResource(R.string.dashboard_kpi_vat_collected), value = uiState.vatCollected.asCurrencyCompact(uiState.defaultCurrency), icon = Icons.Default.Receipt, iconColor = SolennixTheme.colors.kpiBlue, subtitle = stringResource(R.string.dashboard_kpi_this_month), modifier = cardModifier)
+                            KPICard(title = stringResource(R.string.dashboard_kpi_vat_outstanding), value = uiState.vatOutstanding.asCurrencyCompact(uiState.defaultCurrency), icon = Icons.AutoMirrored.Filled.ReceiptLong, iconColor = SolennixTheme.colors.kpiBlue, subtitle = stringResource(R.string.dashboard_kpi_due), modifier = cardModifier)
                             KPICard(title = stringResource(R.string.dashboard_kpi_events_this_month), value = uiState.eventsThisMonth.toString(), icon = Icons.Default.CalendarMonth, iconColor = SolennixTheme.colors.kpiOrange, modifier = cardModifier)
                             KPICard(title = stringResource(R.string.dashboard_kpi_low_stock), value = uiState.lowStockCount.toString(), icon = Icons.Default.Inventory2, iconColor = if (uiState.lowStockCount > 0) SolennixTheme.colors.kpiOrange else SolennixTheme.colors.kpiGreen, modifier = cardModifier)
                             KPICard(title = stringResource(R.string.dashboard_kpi_clients), value = uiState.totalClients.toString(), icon = Icons.Default.People, iconColor = SolennixTheme.colors.kpiBlue, subtitle = stringResource(R.string.dashboard_kpi_total), modifier = cardModifier)
@@ -287,7 +287,8 @@ fun DashboardScreen(
                                     revenueThisMonth = uiState.revenueThisMonth,
                                     cashCollected = uiState.cashCollected,
                                     vatOutstanding = uiState.vatOutstanding,
-                                    modifier = detailCardModifier
+                                    modifier = detailCardModifier,
+                                    currencyCode = uiState.defaultCurrency
                                 )
                             }
                         )
@@ -309,7 +310,8 @@ fun DashboardScreen(
                     ForecastWidget(
                         forecast = uiState.forecast,
                         isLoading = uiState.isRefreshing,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        currencyCode = uiState.defaultCurrency
                     )
                 }
 
@@ -392,7 +394,8 @@ fun DashboardScreen(
                         clients = uiState.topClients,
                         isLoading = uiState.isRefreshing,
                         onClientClick = onClientClick,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        currencyCode = uiState.defaultCurrency
                     )
                 }
 
@@ -402,7 +405,8 @@ fun DashboardScreen(
                         products = uiState.productDemand,
                         isLoading = uiState.isRefreshing,
                         onProductClick = onProductClick,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        currencyCode = uiState.defaultCurrency
                     )
                 }
 
@@ -919,7 +923,8 @@ private fun MonthlyRevenueTrendCard(points: List<com.creapolis.solennix.core.mod
 @Composable
 private fun FinancialComparisonCard(
     revenueThisMonth: Double, cashCollected: Double, vatOutstanding: Double,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    currencyCode: String = "MXN"
 ) {
     val maxValue = maxOf(revenueThisMonth, cashCollected, vatOutstanding, 1.0)
     Card(modifier = modifier.fillMaxWidth(),
@@ -928,20 +933,20 @@ private fun FinancialComparisonCard(
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(R.string.dashboard_financial_comparison), style = MaterialTheme.typography.titleSmall,
                 color = SolennixTheme.colors.primaryText, fontWeight = FontWeight.SemiBold)
-            FinancialBar(stringResource(R.string.dashboard_kpi_net_sales), revenueThisMonth, maxValue, SolennixTheme.colors.kpiGreen)
-            FinancialBar(stringResource(R.string.dashboard_kpi_collected), cashCollected, maxValue, SolennixTheme.colors.primary)
-            FinancialBar(stringResource(R.string.dashboard_kpi_vat_outstanding), vatOutstanding, maxValue, SolennixTheme.colors.kpiRed)
+            FinancialBar(stringResource(R.string.dashboard_kpi_net_sales), revenueThisMonth, maxValue, SolennixTheme.colors.kpiGreen, currencyCode)
+            FinancialBar(stringResource(R.string.dashboard_kpi_collected), cashCollected, maxValue, SolennixTheme.colors.primary, currencyCode)
+            FinancialBar(stringResource(R.string.dashboard_kpi_vat_outstanding), vatOutstanding, maxValue, SolennixTheme.colors.kpiRed, currencyCode)
         }
     }
 }
 
 @Composable
-private fun FinancialBar(label: String, value: Double, maxValue: Double, barColor: Color) {
+private fun FinancialBar(label: String, value: Double, maxValue: Double, barColor: Color, currencyCode: String = "MXN") {
     val fraction = (value / maxValue).coerceIn(0.0, 1.0).toFloat()
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(label, style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
-            Text(value.asMXNCompact(), style = MaterialTheme.typography.bodySmall,
+            Text(value.asCurrencyCompact(currencyCode), style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Medium, color = SolennixTheme.colors.primaryText)
         }
         Box(modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp))

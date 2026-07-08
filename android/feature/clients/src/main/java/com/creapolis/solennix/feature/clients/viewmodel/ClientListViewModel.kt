@@ -11,7 +11,7 @@ import com.creapolis.solennix.core.data.plan.PlanLimitsManager
 import com.creapolis.solennix.core.data.repository.ClientRepository
 import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.Plan
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.feature.clients.R
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,7 +33,8 @@ data class ClientListUiState(
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val searchQuery: String = "",
-    val sortOption: ClientSortOption = ClientSortOption.NAME_ASC
+    val sortOption: ClientSortOption = ClientSortOption.NAME_ASC,
+    val defaultCurrency: String = "MXN"
 )
 
 @HiltViewModel
@@ -66,8 +67,9 @@ class ClientListViewModel @Inject constructor(
         clientRepository.getClients(),
         _searchQuery,
         _isRefreshing,
-        _sortOption
-    ) { clients, query, refreshing, sortOption ->
+        _sortOption,
+        authManager.currentUser
+    ) { clients, query, refreshing, sortOption, user ->
         val filteredClients = if (query.isBlank()) {
             clients
         } else {
@@ -88,7 +90,8 @@ class ClientListViewModel @Inject constructor(
             clients = sortedClients,
             isRefreshing = refreshing,
             searchQuery = query,
-            sortOption = sortOption
+            sortOption = sortOption,
+            defaultCurrency = user?.defaultCurrencyCode ?: "MXN"
         )
     }.distinctUntilChanged().stateIn(
         scope = viewModelScope,
@@ -118,6 +121,7 @@ class ClientListViewModel @Inject constructor(
 
     fun generateCsvContent(): String {
         val clients = uiState.value.clients
+        val currencyCode = uiState.value.defaultCurrency
         val sb = StringBuilder()
         sb.appendLine(
             listOf(
@@ -133,7 +137,7 @@ class ClientListViewModel @Inject constructor(
             val email = (client.email ?: "").escapeCsv()
             val phone = client.phone.escapeCsv()
             val events = (client.totalEvents ?: 0).toString()
-            val spent = (client.totalSpent ?: 0.0).asMXN().escapeCsv()
+            val spent = (client.totalSpent ?: 0.0).asCurrency(currencyCode).escapeCsv()
             sb.appendLine("$name,$email,$phone,$events,$spent")
         }
         return sb.toString()

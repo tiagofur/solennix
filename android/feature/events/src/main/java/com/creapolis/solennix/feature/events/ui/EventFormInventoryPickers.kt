@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.SolennixTextField
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.*
 
@@ -174,7 +174,7 @@ internal fun SupplyPickerSheet(
                                     val unitCost = item.unitCost
                                     if (unitCost != null) {
                                         Text(
-                                            stringResource(R.string.events_form_inventory_unit_cost_value, unitCost.asMXN(), item.unit),
+                                            stringResource(R.string.events_form_inventory_unit_cost_value, unitCost.asCurrency(viewModel.currency), item.unit),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = SolennixTheme.colors.primary
                                         )

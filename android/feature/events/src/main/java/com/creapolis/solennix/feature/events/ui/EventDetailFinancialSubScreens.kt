@@ -54,7 +54,7 @@ import com.creapolis.solennix.core.designsystem.component.PremiumButton
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.DiscountType
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.core.model.extensions.toPaymentMethodLabel
 import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
@@ -122,7 +122,7 @@ fun EventFinancesScreen(
                 ) {
                     Text(stringResource(R.string.events_detail_finances_total_charged).uppercase(), style = MaterialTheme.typography.labelSmall, color = SolennixTheme.colors.secondaryText)
                     Text(
-                        event.totalAmount.asMXN(),
+                        event.totalAmount.asCurrency(event.currencyCode),
                         style = MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.Black,
                         color = SolennixTheme.colors.primary
@@ -136,18 +136,18 @@ fun EventFinancesScreen(
                 shape = MaterialTheme.shapes.medium
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
-                    FinancialMetricRow(stringResource(R.string.events_detail_finances_gross_sales), netSales.asMXN())
+                    FinancialMetricRow(stringResource(R.string.events_detail_finances_gross_sales), netSales.asCurrency(event.currencyCode))
 
                     if (event.taxAmount > 0) {
-                        FinancialMetricRow(stringResource(R.string.events_detail_finances_tax, event.taxRate.toInt()), event.taxAmount.asMXN())
+                        FinancialMetricRow(stringResource(R.string.events_detail_finances_tax, event.taxRate.toInt()), event.taxAmount.asCurrency(event.currencyCode))
                     }
 
-                    FinancialMetricRow(stringResource(R.string.events_detail_finances_total_charged), event.totalAmount.asMXN(), SolennixTheme.colors.primary, true)
+                    FinancialMetricRow(stringResource(R.string.events_detail_finances_total_charged), event.totalAmount.asCurrency(event.currencyCode), SolennixTheme.colors.primary, true)
 
                     if (event.depositPercent != null && event.depositPercent!! > 0) {
                         FinancialMetricRow(
                             stringResource(R.string.events_detail_finances_deposit, event.depositPercent!!.toInt()),
-                            depositAmount.asMXN(),
+                            depositAmount.asCurrency(event.currencyCode),
                             if (isDepositMet) SolennixTheme.colors.success else SolennixTheme.colors.warning
                         )
                     }
@@ -157,7 +157,7 @@ fun EventFinancesScreen(
                             stringResource(R.string.events_detail_finances_discount_percent, event.discount.toInt()) else stringResource(R.string.events_detail_finances_discount)
                         val discountAmount = if (event.discountType == DiscountType.PERCENT)
                             netSales * event.discount / 100 else event.discount
-                        FinancialMetricRow(discountLabel, "-${discountAmount.asMXN()}", SolennixTheme.colors.error)
+                        FinancialMetricRow(discountLabel, "-${discountAmount.asCurrency(event.currencyCode)}", SolennixTheme.colors.error)
                     }
 
                     HorizontalDivider(
@@ -165,8 +165,8 @@ fun EventFinancesScreen(
                         color = SolennixTheme.colors.secondaryText.copy(alpha = 0.2f)
                     )
 
-                    FinancialMetricRow(stringResource(R.string.events_detail_finances_costs), supplyCost.asMXN(), SolennixTheme.colors.error)
-                    FinancialMetricRow(stringResource(R.string.events_detail_finances_net_profit), profit.asMXN(), SolennixTheme.colors.success, true)
+                    FinancialMetricRow(stringResource(R.string.events_detail_finances_costs), supplyCost.asCurrency(event.currencyCode), SolennixTheme.colors.error)
+                    FinancialMetricRow(stringResource(R.string.events_detail_finances_net_profit), profit.asCurrency(event.currencyCode), SolennixTheme.colors.success, true)
                     FinancialMetricRow(stringResource(R.string.events_detail_finances_margin), stringResource(R.string.events_detail_percent_value, margin.toInt()), SolennixTheme.colors.info, true)
 
                     HorizontalDivider(
@@ -174,10 +174,10 @@ fun EventFinancesScreen(
                         color = SolennixTheme.colors.secondaryText.copy(alpha = 0.2f)
                     )
 
-                    FinancialMetricRow(stringResource(R.string.events_detail_finances_paid), totalPaid.asMXN(), SolennixTheme.colors.success)
+                    FinancialMetricRow(stringResource(R.string.events_detail_finances_paid), totalPaid.asCurrency(event.currencyCode), SolennixTheme.colors.success)
                     FinancialMetricRow(
                         stringResource(R.string.events_detail_finances_pending),
-                        remaining.asMXN(),
+                        remaining.asCurrency(event.currencyCode),
                         if (remaining > 0) SolennixTheme.colors.error else SolennixTheme.colors.success,
                         true
                     )
@@ -208,8 +208,8 @@ fun EventFinancesScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(totalPaid.asMXN(), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.success)
-                            Text(event.totalAmount.asMXN(), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
+                            Text(totalPaid.asCurrency(event.currencyCode), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.success)
+                            Text(event.totalAmount.asCurrency(event.currencyCode), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
                         }
                     }
                 }

@@ -60,7 +60,7 @@ public struct EventPaymentsDetailView: View {
             }
             Button(tr("events.form.cancel", "Cancelar"), role: .cancel) {}
         } message: { payment in
-            Text(trf("events.detail.payments.delete.message", "¿Eliminar el pago de %@?", payment.amount.asMXN))
+            Text(trf("events.detail.payments.delete.message", "¿Eliminar el pago de %@?", payment.amount.formattedCurrency(code: viewModel.event?.currency)))
         }
         .task { await viewModel.loadData(eventId: eventId) }
     }
@@ -70,10 +70,10 @@ public struct EventPaymentsDetailView: View {
             VStack(spacing: Spacing.lg) {
                 // Summary KPIs
                 HStack(spacing: Spacing.sm) {
-                    kpiCard(label: tr("events.detail.payments.kpi.total", "Total"), value: event.totalAmount.asMXN, color: SolennixColors.primary, bgColor: SolennixColors.primaryLight)
-                    kpiCard(label: tr("events.detail.payments.kpi.paid", "Pagado"), value: viewModel.totalPaid.asMXN, color: SolennixColors.success, bgColor: SolennixColors.successBg)
-                    kpiCard(label: tr("events.detail.payments.kpi.balance", "Saldo"), value: viewModel.remaining.asMXN,
-                            color: viewModel.isFullyPaid ? SolennixColors.success : SolennixColors.error,
+                    kpiCard(label: tr("events.detail.payments.kpi.total", "Total"), value: event.totalAmount.formattedCurrency(code: event.currency), color: SolennixColors.primary, bgColor: SolennixColors.primaryLight)
+                    kpiCard(label: tr("events.detail.payments.kpi.paid", "Pagado"), value: viewModel.totalPaid.formattedCurrency(code: event.currency), color: SolennixColors.success, bgColor: SolennixColors.successBg)
+                    kpiCard(label: tr("events.detail.payments.kpi.balance", "Saldo"), value: viewModel.remaining.formattedCurrency(code: event.currency),
+                            color: viewModel.isFullyPaid ? SolennixColors.success : SolennixColors.warning,
                             bgColor: viewModel.isFullyPaid ? SolennixColors.successBg : SolennixColors.errorBg)
                 }
 
@@ -118,12 +118,12 @@ public struct EventPaymentsDetailView: View {
                                 .foregroundStyle(SolennixColors.text)
                             Text(isDepositMet
                                  ? tr("events.detail.payments.deposit.covered", "Anticipo cubierto")
-                                 : trf("events.detail.payments.deposit.missing", "Faltan %@", (depositAmount - viewModel.totalPaid).asMXN))
+                                 : trf("events.detail.payments.deposit.missing", "Faltan %@", (depositAmount - viewModel.totalPaid).formattedCurrency(code: event.currency)))
                                 .font(.caption)
                                 .foregroundStyle(isDepositMet ? SolennixColors.success : SolennixColors.warning)
                         }
                         Spacer()
-                        Text(depositAmount.asMXN)
+                        Text(depositAmount.formattedCurrency(code: event.currency))
                             .font(.subheadline)
                             .fontWeight(.bold)
                             .foregroundStyle(isDepositMet ? SolennixColors.success : SolennixColors.warning)
@@ -145,14 +145,14 @@ public struct EventPaymentsDetailView: View {
                         Button {
                             viewModel.payRemaining()
                         } label: {
-                            Label(trf("events.detail.payments.action.settle", "Liquidar %@", viewModel.remaining.asMXN), systemImage: "checkmark.circle")
+                            Label(trf("events.detail.payments.action.settle", "Liquidar %@", viewModel.remaining.formattedCurrency(code: event.currency)), systemImage: "checkmark.circle")
                         }
 
                         if viewModel.depositBalance > 0.01 {
                             Button {
                                 viewModel.payDeposit()
                             } label: {
-                                Label(trf("events.detail.payments.action.deposit", "Anticipo %@", viewModel.depositBalance.asMXN), systemImage: "clock")
+                                Label(trf("events.detail.payments.action.deposit", "Anticipo %@", viewModel.depositBalance.formattedCurrency(code: event.currency)), systemImage: "clock")
                             }
                         }
                     } label: {
@@ -245,7 +245,7 @@ public struct EventPaymentsDetailView: View {
 
             Spacer()
 
-            Text(payment.amount.asMXN)
+            Text(payment.amount.formattedCurrency(code: viewModel.event?.currency))
                 .font(.body)
                 .fontWeight(.bold)
                 .foregroundStyle(SolennixColors.success)

@@ -51,7 +51,7 @@ import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.AssignmentStatus
 import com.creapolis.solennix.core.model.DiscountType
-import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.core.model.extensions.formatQuantity
 import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
@@ -147,7 +147,7 @@ fun EventContractPreviewScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 val remaining = maxOf(depositAmount - totalPaid, 0.0)
                 Text(
-                    stringResource(R.string.events_contract_deposit_remaining, remaining.asMXN()),
+                    stringResource(R.string.events_contract_deposit_remaining, remaining.asCurrency(event?.currencyCode)),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = SolennixTheme.colors.warning
