@@ -516,3 +516,9 @@
   - `SubscriptionManagerTests.swift`: Suite completa de 10 tests unitarios que validan el comportamiento lógico del manager sin requerir un test session de StoreKit activo.
   - `11_CURRENT_STATUS.md`: Documentada la feature como completa en la bitácora del PRD.
 
+## Sesión 2026-07-08: Redirección al Tocar Eventos de Calendario en iOS
+- **Feature ID:** 36 (ios-calendar-event-tap-redirect)
+- **Resultado:** COMPLETO y Validado con `./init.sh` y tests de iOS.
+- **Entregables:**
+  - `EventosLayoutFactory.swift`: Se refactorizó `EventosFilteredList` para envolver la celda de evento directamente en el `NavigationLink(value:)` en lugar del hack `ZStack + EmptyView` incompatible con `VStack` plano.
+  - `11_CURRENT_STATUS.md`: Registrada la corrección en la bitácora del PRD.

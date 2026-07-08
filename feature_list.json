@@ -445,7 +445,7 @@
       "id": 36,
       "name": "ios-calendar-event-tap-redirect",
       "description": "fix(ios): calendar-mode events are not tappable (Issue #791)",
-      "status": "pending",
+      "status": "done",
       "acceptance_criteria": [
         "In calendar mode, tapping on any event card navigates to the event detail view (Route.eventDetail)",
         "The event card remains visually correct without displaying a disclosure chevron",
