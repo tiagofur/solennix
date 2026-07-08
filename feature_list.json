@@ -440,6 +440,18 @@
         "All SwiftUI Settings/Pricing views support fallback direct StoreKit purchase flow",
         "Global init.sh validation suite runs and passes successfully"
       ]
+    },
+    {
+      "id": 36,
+      "name": "ios-calendar-event-tap-redirect",
+      "description": "fix(ios): calendar-mode events are not tappable (Issue #791)",
+      "status": "pending",
+      "acceptance_criteria": [
+        "In calendar mode, tapping on any event card navigates to the event detail view (Route.eventDetail)",
+        "The event card remains visually correct without displaying a disclosure chevron",
+        "iOS package unit and UI tests compile and pass successfully",
+        "Global init.sh validation suite runs and passes successfully"
+      ]
     }
   ]
 }
