@@ -17,6 +17,7 @@ public struct EventListView: View {
     @Environment(CacheManager.self) private var cacheManager: CacheManager?
     @Environment(ToastManager.self) private var toastManager
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(PlanLimitsManager.self) private var planLimitsManager
     @State private var viewModel: EventListViewModel
     @State private var showShareSheet = false
     @State private var csvFileURL: URL?
@@ -119,6 +120,20 @@ public struct EventListView: View {
                         CachedDataBanner()
                             .background(SolennixColors.surfaceGrouped)
                     }
+
+                    if !planLimitsManager.canCreateEvent {
+                        NavigationLink(value: Route.pricing) {
+                            UpgradeBannerView(
+                                type: .limitReached,
+                                resource: tr("events.list.title", "Eventos"),
+                                currentUsage: planLimitsManager.eventsThisMonth,
+                                limit: PlanLimitsManager.freePlanEventLimit
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, Spacing.md)
+                        .padding(.top, Spacing.sm)
+                    }
                 }
             }
             .refreshable {
@@ -126,6 +141,7 @@ public struct EventListView: View {
             }
             .task {
                 viewModel.setCacheManager(cacheManager)
+                await planLimitsManager.checkLimits()
                 await viewModel.loadEvents()
                 // Load blocked/unavailable dates so the calendar grid can show
                 // them (critical bug: loadUnavailableDates existed but was never
@@ -145,7 +161,7 @@ public struct EventListView: View {
                 HStack(spacing: Spacing.sm) {
                     // 1. Create (event or quick quote)
                     Menu {
-                        NavigationLink(value: Route.eventForm()) {
+                        NavigationLink(value: planLimitsManager.canCreateEvent ? Route.eventForm() : Route.pricing) {
                             Label(tr("events.list.new_event", "Nuevo evento"), systemImage: "calendar.badge.plus")
                         }
 
@@ -750,7 +766,7 @@ public struct EventListView: View {
             } description: {
                 Text(tr("events.list.empty.first_run_message", "Registra tus eventos para llevar el control de fechas, clientes y pagos en un solo lugar."))
             } actions: {
-                NavigationLink(value: Route.eventForm()) {
+                NavigationLink(value: planLimitsManager.canCreateEvent ? Route.eventForm() : Route.pricing) {
                     Text(tr("events.list.empty.first_run_cta", "Crear evento"))
                         .font(.headline)
                         .foregroundStyle(SolennixColors.primaryDark)

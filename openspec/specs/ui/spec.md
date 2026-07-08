@@ -10,6 +10,9 @@ Define the mobile client specifications (iOS and Android) for dynamic, multi-cur
 | **REQ-EV-01** | Event Currency Mapping | Event model maps backend `currency` field. Defaults to MXN if null or empty. | Model |
 | **REQ-USR-01** | User Default Currency Mapping | User model maps backend `default_currency` field. Defaults to MXN if null or empty. | Model |
 | **REQ-UI-01** | Dynamic UI Currency Formatting | Format all prices/amounts using event or user currency code instead of hardcoded MXN. | UI / View |
+| **REQ-UI-02** | iOS Event Creation Gating | When basic plan event limit is reached, event creation is blocked. | UI / View |
+| **REQ-UI-03** | iOS Custom Branding Gating | When user is not on a paid plan, custom branding settings are locked. | UI / View |
+
 
 ---
 
@@ -64,3 +67,39 @@ UI elements displaying prices or amounts must dynamically format values based on
 - **GIVEN** a dashboard or client detail screen displaying aggregated financials
 - **WHEN** formatting a currency amount (e.g., `5000`)
 - **THEN** the UI MUST format the amount using the logged-in user's `defaultCurrency` (falling back to `"MXN"` if null).
+
+---
+
+### Requirement: REQ-UI-02 (iOS Event Creation Gating)
+When `isBasicPlan` is true and `eventsThisMonth` reaches or exceeds `PlanLimitsManager.freePlanEventLimit`, new event creation MUST be blocked in the UI.
+
+#### Scenario: Gated Toolbar New Event Button
+- **GIVEN** a user on the Basic plan who has reached the monthly event limit (4 events)
+- **WHEN** the user taps the '+' button in the event list toolbar
+- **THEN** the app redirects the user to the Pricing view (Route.pricing) instead of opening the event creation form.
+
+#### Scenario: Gated Empty State CTA
+- **GIVEN** a user on the Basic plan who has reached the monthly event limit
+- **WHEN** the user taps the 'Crear evento' CTA button in the empty state
+- **THEN** the app redirects the user to the Pricing view (Route.pricing).
+
+#### Scenario: Upgrade Banner Presentation
+- **GIVEN** a user on the Basic plan who has reached the monthly event limit
+- **WHEN** the Event list screen is presented
+- **THEN** an UpgradeBannerView is displayed at the top of the event list.
+
+---
+
+### Requirement: REQ-UI-03 (iOS Custom Branding Gating)
+When `user?.plan.isPaid` is false, custom branding settings (logo upload and brand color picker) MUST be locked.
+
+#### Scenario: Logo Upload Locked
+- **GIVEN** a user on the Basic plan viewing the Business Settings screen
+- **WHEN** the user tries to upload/change the business logo
+- **THEN** the app presents the Pricing view as a modal sheet instead of opening the photo picker.
+
+#### Scenario: Brand Color Picker Locked
+- **GIVEN** a user on the Basic plan viewing the Business Settings screen
+- **WHEN** the user tries to select a brand color
+- **THEN** the app presents the Pricing view as a modal sheet instead of opening the color picker.
+
