@@ -64,40 +64,40 @@ Chain strategy: stacked-to-main
 
 ### Phase 1B: Foundation (GATE — must be GREEN before any SceneStorage)
 
-- [ ] B1.1 RED: add `SolennixCoreTests/RouteCodableRoundTripTests.swift` — encode/decode every `Route` case, assert equality; assert malformed payload degrades (R1).
-- [ ] B1.2 GREEN: make `Route: Hashable, Codable` at `SolennixCore/.../Route.swift:6`. Confirm auto-synthesis covers all associated values (String/Int/Date?); add custom `init(from:)` only if malformed test needs it.
-- [ ] B1.3 Commit: `feat(core): make Route Codable with round-trip tests`. Gate: `swift test` green.
+- [x] B1.1 RED: add `SolennixCoreTests/RouteCodableRoundTripTests.swift` — encode/decode every `Route` case, assert equality; assert malformed payload degrades (R1).
+- [x] B1.2 GREEN: make `Route: Hashable, Codable` at `SolennixCore/.../Route.swift:6`. Confirm auto-synthesis covers all associated values (String/Int/Date?); add custom `init(from:)` only if malformed test needs it.
+- [x] B1.3 Commit: `feat(core): make Route Codable with round-trip tests`. Gate: `swift test` green.
 
 ### Phase 2B: Compact restoration
 
-- [ ] B2.1 `CompactTabLayout.swift:23` — `selectedTab` → `@SceneStorage` (`Tab` is `Int`-raw → plist-ok).
-- [ ] B2.2 `CompactTabLayout.swift:24-28` — 5 NavigationPaths: add `@SceneStorage Data?` backing + computed codable bridge (encode `path.codable`→Data; restore `NavigationPath(codable)`). This is the NavigationPath.codable binding dance.
-- [ ] B2.3 Commit: `feat(ios): restore compact tab navigation paths via SceneStorage`.
+- [x] B2.1 `CompactTabLayout.swift:23` — `selectedTab` → `@SceneStorage` (`Tab` is `Int`-raw → plist-ok).
+- [x] B2.2 `CompactTabLayout.swift:24-28` — 5 NavigationPaths: add `@SceneStorage Data?` backing + computed codable bridge (encode `path.codable`→Data; restore `NavigationPath(codable)`). This is the NavigationPath.codable binding dance.
+- [x] B2.3 Commit: `feat(ios): restore compact tab navigation paths via SceneStorage`.
 
 ### Phase 3B: iPad sidebar restoration
 
-- [ ] B3.1 `SidebarSplitLayout.swift:28` `selectedSection` → `@SceneStorage` (`SidebarSection` is `String`-raw).
-- [ ] B3.2 `SidebarSplitLayout.swift:29` `contentPath` → codable bridge (same dance as B2).
-- [ ] B3.3 Commit: `feat(ios): restore sidebar section and content path via SceneStorage`.
+- [x] B3.1 `SidebarSplitLayout.swift:28` `selectedSection` → `@SceneStorage` (`SidebarSection` is `String`-raw).
+- [x] B3.2 `SidebarSplitLayout.swift:29` `contentPath` → codable bridge (same dance as B2).
+- [x] B3.3 Commit: `feat(ios): restore sidebar section and content path via SceneStorage`.
 
 ### Phase 4B: Logout-clear (CRITICAL — cross-user leakage guard)
 
-- [ ] B4.1 Add reset-signal (e.g. `@AppStorage("sessionEpoch")`) incremented in `SolennixApp.swift:361` `performSessionCleanup`; layouts reset their SceneStorage keys when epoch differs on appear.
-- [ ] B4.2 Confirm BOTH sign-out hooks reach cleanup: `ContentView.swift:248` (biometric failure) + `ContentView.swift:280` (biometric re-login) → `AuthManager.signOut()` → cleanup.
-- [ ] B4.3 RED→GREEN unit test: `performSessionCleanup` increments signal / returns cleared keys; assert empty.
-- [ ] B4.4 Commit: `fix(ios): clear scene-storage state on logout and biometric sign-out`.
+- [x] B4.1 Add reset-signal (e.g. `@AppStorage("sessionEpoch")`) incremented in `SolennixApp.swift:361` `performSessionCleanup`; layouts reset their SceneStorage keys when epoch differs on appear.
+- [x] B4.2 Confirm BOTH sign-out hooks reach cleanup: `ContentView.swift:248` (biometric failure) + `ContentView.swift:280` (biometric re-login) → `AuthManager.signOut()` → cleanup.
+- [x] B4.3 RED→GREEN unit test: `performSessionCleanup` increments signal / returns cleared keys; assert empty.
+- [x] B4.4 Commit: `fix(ios): clear scene-storage state on logout and biometric sign-out`.
 
 ### Phase 5B: Spotlight-preserve + stale-entity recovery
 
-- [ ] B5.1 Verify `CompactTabLayout.swift:106` (ios26) + `:168` (legacy) `homePath = NavigationPath()` reset-first still wins over restored path after B2 wiring; preserve ordering.
-- [ ] B5.2 Stale-entity pop (R5): restored detail route (eventDetail/clientDetail/etc.) whose entity is gone → pop silently to root (no crash/dead-end). Add not-found→pop guard on restored detail views.
-- [ ] B5.3 Commit: `fix(ios): pop to root when restored route targets deleted entity`.
+- [x] B5.1 Verify `CompactTabLayout.swift:106` (ios26) + `:168` (legacy) `homePath = NavigationPath()` reset-first still wins over restored path after B2 wiring; preserve ordering.
+- [x] B5.2 Stale-entity pop (R5): restored detail route (eventDetail/clientDetail/etc.) whose entity is gone → pop silently to root (no crash/dead-end). Add not-found→pop guard on restored detail views.
+- [x] B5.3 Commit: `fix(ios): pop to root when restored route targets deleted entity`.
 
 ### Phase 6B: Testing & Docs
 
-- [ ] B6.1 `xcodebuild test` green across `SolennixCoreTests` + app target.
-- [ ] B6.2 Manual device matrix: relaunch restores (iPhone+iPad); logout→user2 fresh; Spotlight wins; no blank flash on launch.
-- [ ] B6.3 Update `docs/PRD/11_CURRENT_STATUS.md` (last task per `rules.tasks`). Commit: `docs(prd): record ios-lifecycle sprint status`.
+- [x] B6.1 `xcodebuild test` green across `SolennixCoreTests` + app target.
+- [x] B6.2 Manual device matrix: relaunch restores (iPhone+iPad); logout→user2 fresh; Spotlight wins; no blank flash on launch.
+- [x] B6.3 Update `docs/PRD/11_CURRENT_STATUS.md` (last task per `rules.tasks`). Commit: `docs(prd): record ios-lifecycle sprint status`.
 
 ---
 
