@@ -40,6 +40,7 @@
 		376106B1D17103E34A7427DE /* IntentSharedDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE43BE1CFDD958B8E9569442 /* IntentSharedDataStore.swift */; };
 		38157680A3287F18EA61BD48 /* SolennixFeatures in Frameworks */ = {isa = PBXBuildFile; productRef = 15FA5790BF9FBB377C754173 /* SolennixFeatures */; };
 		40A6DAE581CB68D9CD746D87 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BD8FAF4B7299793724BA9DF /* NotificationManager.swift */; };
+		4447F9E9CA6DE099E07FEB82 /* TabNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C524528CA54127BCE3D1B53E /* TabNavigationTests.swift */; };
 		44D569BCF0E8A6CE42BA1B8E /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 580AA1774790AC2E21AD5C3E /* WidgetKit.framework */; };
 		463241C8CE37DF4EA6D1A2B6 /* ShowMonthlyRevenueIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A639BA04B2C90E8F96B85CB /* ShowMonthlyRevenueIntent.swift */; };
 		4766FC809AF1F1240713C7DB /* StaffLocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2523503309E3EDE5391F898D /* StaffLocalizationTests.swift */; };
@@ -115,6 +116,7 @@
 		D46A28C054FF61B55E6CA9B9 /* EventDetailViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A61288722D88853A7E4E119 /* EventDetailViewModelTests.swift */; };
 		D4BC28EC7953D59C01932B45 /* SearchViewModelClearRecentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40F00173BA2F114824528B1C /* SearchViewModelClearRecentsTests.swift */; };
 		D738B142D5858B5FCA5E737C /* DeepLinkHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A362069977C87D34D5E51A2 /* DeepLinkHandler.swift */; };
+		D786928DC7734F34F368659A /* LoginFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FC0EBE44D03DB45A50FB06A /* LoginFlowTests.swift */; };
 		D82CBBD7D2E30D0A2EBB7A36 /* AuthFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C051B91E5F738A07F4A1E176 /* AuthFlowView.swift */; };
 		D8F8E86A1BD7013475220DE8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4BBBA84B07A78A34C0C606C /* AppDelegate.swift */; };
 		DB2512D50E0D90B6D8DA687C /* SettingsLocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA57DB54D5DBF3930618AA7A /* SettingsLocalizationTests.swift */; };
@@ -246,6 +248,7 @@
 		63856E6F5C0F3C9413900FB5 /* SolennixFeatures */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SolennixFeatures; path = Packages/SolennixFeatures; sourceTree = SOURCE_ROOT; };
 		680873FC1C746CB314C610F0 /* ProductsInventoryLocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductsInventoryLocalizationTests.swift; sourceTree = "<group>"; };
 		68A9B9C7CCD508780816FFD3 /* SolennixWidgetExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SolennixWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		6FC0EBE44D03DB45A50FB06A /* LoginFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginFlowTests.swift; sourceTree = "<group>"; };
 		70877D09C7C58457DDD2F657 /* Route.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Route.swift; sourceTree = "<group>"; };
 		72B80B2B9E06A2541C342549 /* WidgetKeyParityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetKeyParityTests.swift; sourceTree = "<group>"; };
 		72F41ABD56C3074AEF875CB1 /* EventDomainModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventDomainModelTests.swift; sourceTree = "<group>"; };
@@ -284,6 +287,7 @@
 		C2D2D2FC95DE89E91CACFC96 /* SolennixProducts.storekit */ = {isa = PBXFileReference; path = SolennixProducts.storekit; sourceTree = "<group>"; };
 		C3B0DFB4B140542F9EBC7AF8 /* CalendarMonthBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarMonthBuilderTests.swift; sourceTree = "<group>"; };
 		C4044E1E8D266357DF20E1A2 /* CoreFormattingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreFormattingTests.swift; sourceTree = "<group>"; };
+		C524528CA54127BCE3D1B53E /* TabNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabNavigationTests.swift; sourceTree = "<group>"; };
 		C86D0D98819337D4F48773A9 /* CachedModelConversionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedModelConversionTests.swift; sourceTree = "<group>"; };
 		C8B70BB90FB78613EEC79E0F /* LanguageReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageReporter.swift; sourceTree = "<group>"; };
 		CA57DB54D5DBF3930618AA7A /* SettingsLocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsLocalizationTests.swift; sourceTree = "<group>"; };
@@ -586,8 +590,10 @@
 		7ABDCACFC9C877BE9DA4AAD5 /* SolennixUITests */ = {
 			isa = PBXGroup;
 			children = (
+				6FC0EBE44D03DB45A50FB06A /* LoginFlowTests.swift */,
 				8054E5E1247CCBFBF6D038A0 /* SearchTabEmptyStateTests.swift */,
 				1A9960185E35C14D27728A69 /* TabBarSlotFitTests.swift */,
+				C524528CA54127BCE3D1B53E /* TabNavigationTests.swift */,
 			);
 			path = SolennixUITests;
 			sourceTree = "<group>";
@@ -917,8 +923,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D786928DC7734F34F368659A /* LoginFlowTests.swift in Sources */,
 				B22E9671915E9B32D289A8BD /* SearchTabEmptyStateTests.swift in Sources */,
 				AD0D60C610794317D1E4A740 /* TabBarSlotFitTests.swift in Sources */,
+				4447F9E9CA6DE099E07FEB82 /* TabNavigationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

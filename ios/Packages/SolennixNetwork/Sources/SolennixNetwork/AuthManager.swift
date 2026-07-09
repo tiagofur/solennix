@@ -131,6 +131,28 @@ public final class AuthManager {
     /// Check for existing tokens in the Keychain and restore the session.
     /// Called once at app launch from `SolennixApp.task`.
     public func checkAuth() async {
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["SOLX_UI_TEST_BYPASS_AUTH"] == "1" {
+            let mockUser = User(
+                id: "mock-user-id",
+                email: "test@example.com",
+                name: "Mock User",
+                role: "admin",
+                plan: .pro,
+                createdAt: "2026-01-01T00:00:00Z",
+                updatedAt: "2026-01-01T00:00:00Z"
+            )
+            currentUser = mockUser
+            authState = .authenticated(mockUser)
+            userTrackingDelegate?.setUser(id: mockUser.id, email: mockUser.email, name: mockUser.name)
+            return
+        }
+        if ProcessInfo.processInfo.environment["SOLX_UI_TEST_MOCK_LOGIN"] == "1" {
+            authState = .unauthenticated
+            return
+        }
+        #endif
+
         guard let accessToken = keychain.readString(for: KeychainHelper.Keys.accessToken),
               !accessToken.isEmpty else {
             authState = .unauthenticated
@@ -253,6 +275,25 @@ public final class AuthManager {
     /// - Returns: The authenticated `User`.
     @discardableResult
     public func signIn(email: String, password: String) async throws -> User {
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["SOLX_UI_TEST_MOCK_LOGIN"] == "1" {
+            let mockUser = User(
+                id: "mock-user-id",
+                email: email,
+                name: "Mock User",
+                role: "admin",
+                plan: .pro,
+                createdAt: "2026-01-01T00:00:00Z",
+                updatedAt: "2026-01-01T00:00:00Z"
+            )
+            storeTokens(access: "mock_access_token", refresh: "mock_refresh_token")
+            currentUser = mockUser
+            authState = .authenticated(mockUser)
+            userTrackingDelegate?.setUser(id: mockUser.id, email: mockUser.email, name: mockUser.name)
+            return mockUser
+        }
+        #endif
+
         isLoading = true
         defer { isLoading = false }
 

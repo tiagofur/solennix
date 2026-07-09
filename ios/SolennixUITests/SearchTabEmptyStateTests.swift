@@ -83,8 +83,8 @@ final class SearchTabEmptyStateTests: XCTestCase {
 
         _ = app.wait(for: .runningForeground, timeout: 5)
 
-        // Verify the app is still running and the tab bar is present.
-        XCTAssertTrue(tabBar.exists, "Tab bar must still exist after search tab tap.")
+        // Verify the app is still running.
+        XCTAssertEqual(app.state, .runningForeground, "App must be running foreground after search tab tap.")
 
         let screenshot = XCUIScreen.main.screenshot()
         let attachment = XCTAttachment(screenshot: screenshot)

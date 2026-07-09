@@ -420,7 +420,7 @@ public final class DashboardViewModel {
         return c
     }()
 
-    private static func makeAttentionEvents(
+    static func makeAttentionEvents(
         events: [Event],
         payments: [Payment],
         clientMap: [String: Client],
@@ -480,7 +480,7 @@ public final class DashboardViewModel {
         .sorted(by: Self.compareAttentionEvents)
     }
 
-    private static func compareAttentionEvents(
+    static func compareAttentionEvents(
         lhs: DashboardAttentionEvent,
         rhs: DashboardAttentionEvent
     ) -> Bool {

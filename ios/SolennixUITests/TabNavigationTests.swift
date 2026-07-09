@@ -1,0 +1,78 @@
+import XCTest
+
+final class TabNavigationTests: XCTestCase {
+
+    func testTabNavigationAndMoreMenuRouting() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["SOLX_UI_TEST_BYPASS_AUTH"] = "1"
+        app.launch()
+
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 10), "Tab bar should exist.")
+
+        // 1. Home Tab (Index 0)
+        let homeTab = tabBar.buttons.element(boundBy: 0)
+        XCTAssertTrue(homeTab.exists)
+        homeTab.tap()
+        
+        // 2. Events Tab (Index 1)
+        let eventsTab = tabBar.buttons.element(boundBy: 1)
+        XCTAssertTrue(eventsTab.exists)
+        eventsTab.tap()
+        
+        // 3. Clients Tab (Index 2)
+        let clientsTab = tabBar.buttons.element(boundBy: 2)
+        XCTAssertTrue(clientsTab.exists)
+        clientsTab.tap()
+        
+        // 4. Más Tab (Index 3)
+        let masTab = tabBar.buttons.element(boundBy: 3)
+        XCTAssertTrue(masTab.exists)
+        masTab.tap()
+
+        // Test navigation within More menu
+        // 4.1. Productos
+        let productsCell = app.cells.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'Productos'")).firstMatch
+        XCTAssertTrue(productsCell.waitForExistence(timeout: 5), "Productos row should exist in Más menu.")
+        productsCell.tap()
+        
+        // Verify detail view navigation title for Productos
+        let productsTitle = app.navigationBars.firstMatch.staticTexts.firstMatch
+        XCTAssertTrue(productsTitle.waitForExistence(timeout: 5))
+        XCTAssertTrue(productsTitle.label.contains("Productos") || productsTitle.label.contains("Products"))
+        
+        // Go back
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+
+        // 4.2. Inventario
+        let inventoryCell = app.cells.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'Inventario'")).firstMatch
+        XCTAssertTrue(inventoryCell.waitForExistence(timeout: 5), "Inventario row should exist in Más menu.")
+        inventoryCell.tap()
+        
+        // Verify detail view navigation title for Inventario
+        let inventoryTitle = app.navigationBars.firstMatch.staticTexts.firstMatch
+        XCTAssertTrue(inventoryTitle.waitForExistence(timeout: 5))
+        XCTAssertTrue(inventoryTitle.label.contains("Inventario") || inventoryTitle.label.contains("Inventory"))
+        
+        // Go back
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+
+        // 4.3. Configuración
+        let settingsCell = app.cells.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'Configuraci'")).firstMatch
+        XCTAssertTrue(settingsCell.waitForExistence(timeout: 5), "Configuracion row should exist in Más menu.")
+        settingsCell.tap()
+        
+        // Verify detail view navigation title for Configuración
+        let settingsTitle = app.navigationBars.firstMatch.staticTexts.firstMatch
+        XCTAssertTrue(settingsTitle.waitForExistence(timeout: 5))
+        XCTAssertTrue(settingsTitle.label.contains("Ajustes") || settingsTitle.label.contains("Configuraci") || settingsTitle.label.contains("Settings"))
+        
+        // Go back
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+
+        // 5. Search Tab (Index 4)
+        let searchTab = tabBar.buttons.element(boundBy: 4)
+        XCTAssertTrue(searchTab.exists)
+        searchTab.tap()
+    }
+}

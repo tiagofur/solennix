@@ -195,7 +195,6 @@ public final class EventDetailViewModel {
             // but as a parallel TaskGroup and without re-fetching cached entries.
             await loadProductUnitCosts()
         } catch {
-        } catch {
             // B5: a 404 on the primary event fetch means the entity no longer
             // exists for this user (deleted on another device, or a restored
             // route that points at a stale ID). Signal the view to pop silently
