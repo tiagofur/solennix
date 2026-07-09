@@ -522,3 +522,14 @@
 - **Entregables:**
   - `EventosLayoutFactory.swift`: Se refactorizó `EventosFilteredList` para envolver la celda de evento directamente en el `NavigationLink(value:)` en lugar del hack `ZStack + EmptyView` incompatible con `VStack` plano.
   - `11_CURRENT_STATUS.md`: Registrada la corrección en la bitácora del PRD.
+
+## Sesión 2026-07-09: Optimización de Layouts para iPad y macOS en iOS
+- **Feature ID:** 37 (ios-layout-optimizations)
+- **PR:** [#797](https://github.com/tiagofur/solennix/pull/797) (merge squash `84fdcb21`) | **Issue:** #788 | **Rama:** `feat/ios-layout-optimizations` (deletada tras merge)
+- **Resultado:** COMPLETO y Validado con `./init.sh` (1304 tests en verde), `xcodebuild build` verde para iPad y `xcodebuild test` en verde (18 tests iOS y widgets aprobados).
+- **Entregables:**
+  - `ContentView.swift`: Navegación adaptativa basada en clases de tamaño (`horizontalSizeClass == .regular && verticalSizeClass == .regular` para sidebar, `.compact` para tab bar) reemplazando `GeometryReader`. Soporta el colapso al diseño compacto de teléfono en macOS Catalyst al estrechar la ventana.
+  - `EventFormView.swift`: Limita el ancho del formulario a `640pt` centrado horizontalmente en clase `.regular` con fondos nativos (`systemGroupedBackground` en el exterior y `surfaceGrouped` en el formulario).
+  - `EventDetailView.swift` y `ClientDetailView.swift`: Diseño responsivo de dos columnas (HStack de VStacks en un ScrollView) en clase `.regular` cuando existe información secundaria (`hasSecondaryContent`), colapsando a una sola columna centrada de forma dinámica en ausencia de contenido secundario.
+  - `11_CURRENT_STATUS.md`: Registrada la optimización en la bitácora del PRD.
+  - `feature_list.json`: Añadida la tarea ID 37 marcada como "done".
