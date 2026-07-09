@@ -9,9 +9,9 @@
 - [x] 2.2 API call & logout: Integrate the `api.delete` call, success toast, and logout sequence.
 
 ## Phase 3: Administrative Moderation & Auditing UI
-- [ ] 3.1 Moderation panels: Update `web/src/pages/Admin/AdminUsers.tsx` with auditing options and panels.
-- [ ] 3.2 Moderate actions: Enable administrative block or delete actions.
+- [x] 3.1 Moderation panels: Update `web/src/pages/Admin/AdminUsers.tsx` with auditing options and panels.
+- [x] 3.2 Moderate actions: Enable administrative block or delete actions.
 
 ## Phase 4: Verification & Testing
-- [ ] 4.1 Unit Testing: Add `AccountDeletion.test.tsx` and update `AdminUsers.test.tsx`.
-- [ ] 4.2 Verify build: Run linter and tests to ensure no regressions in frontend Web.
+- [x] 4.1 Unit Testing: Add `AccountDeletion.test.tsx` and update `AdminUsers.test.tsx`.
+- [x] 4.2 Verify build: Run linter and tests to ensure no regressions in frontend Web.
