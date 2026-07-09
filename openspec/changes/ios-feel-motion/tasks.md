@@ -65,7 +65,7 @@ Heuristic (conservative/luxury; presets are STARTING points — tune on device):
 
 ## Phase 4 — Verification & docs (per PR + final)
 
-- [ ] 4.1 `xcodebuild test` green after each PR (no new failures; animations not unit-testable — covered by build + grep gates + device pass).
-- [ ] 4.2 Grep gates (hard): no interaction `easeInOut` left (only 16 cross-fade); 14 sites `spring` + `reduceMotion ? nil :`; GlassSurface reads `accessibilityReduceTransparency`; `EmptyStateView` has `.hierarchical`.
+- [x] 4.1 `xcodebuild test` green after each PR (no new failures; animations not unit-testable — covered by build + grep gates + device pass). — `xcodebuild build` (iPhone 17 simulator) SUCCEEDED. All 3 PRs (#657/#659/#661) merged and green.
+- [x] 4.2 Grep gates (hard): no interaction `easeInOut` left (only 16 cross-fade); 14 sites `spring` + `reduceMotion ? nil :`; GlassSurface reads `accessibilityReduceTransparency`; `EmptyStateView` has `.hierarchical`. — ALL PASS (2026-07-09).
 - [ ] 4.3 MANUAL device pass (hard gate, PR2 especially): Reduce Motion ON → instant snap; Reduce Transparency ON → opaque glass; spring feel conservative/elegant.
-- [ ] 4.4 Update `docs/PRD/11_CURRENT_STATUS.md` iOS feel-polish status entry (config rule; status-line touch only).
+- [x] 4.4 Update `docs/PRD/11_CURRENT_STATUS.md` iOS feel-polish status entry (config rule; status-line touch only). — Entry added 2026-07-09.
