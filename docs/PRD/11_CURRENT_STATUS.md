@@ -78,6 +78,13 @@ status: active
 > - **Spotlight y Stale-Entity:** Los enlaces Spotlight resetean el path y toman prioridad sobre la restauración de scene storage. Las rutas que apunten a entidades eliminadas (eventos/clientes) se restauran realizando un pop silencioso a la raíz (guardia 404 en sub-views).
 > - **Pruebas y Validación:** 10 nuevos unit tests en `RouteCoreTests` y `NavSceneStorageTests` en verde. Suite de xcodebuild verde.
 
+> [!success] 2026-06-29 — iOS Empty & Error States Modernization (ios-empty-states, COMPLETO)
+> Migración sistemática de 63 pantallas de estados vacíos y de error en iOS hacia el componente nativo de Apple `ContentUnavailableView` (CUV), jubilando el componente custom legacy `EmptyStateView`.
+> - **PR1 — Búsqueda y Filtrados:** Implementación de `ContentUnavailableView.search(text:)` para búsquedas puras (`.searchable`) en `ClientListView`, `StaffListView`, `StaffTeamListView`, `ReviewsView` y `PaymentInboxView`. Para filtros activos sin texto de búsqueda (categorías en productos, stock en inventario y el bloque filtrado en `EventListView`), se usa CUV clásico acompañado de un botón de acción para limpiar filtros.
+> - **PR2 — Estados Vacíos y Primer Registro:** CUV adaptados con textos descriptivos para guiar al usuario. En las 8 pantallas de primer registro, los botones de acción se incorporaron directamente en la propiedad `actions:` de CUV. Preservación del estilo e identidad visual mediante `.tint(SolennixColors.primary)` y `.symbolRenderingMode(.hierarchical)` en los iconos principales de las pantallas hero.
+> - **PR3 — Errores y Retiro de Componente:** Conversión de vistas de error a CUV. Las pantallas con acción de reintento conservan el botón que ejecuta el reintento, mientras que los 10 sitios de error informativo (icono de advertencia) se mantienen estrictamente informativos sin botones. Eliminación completa del archivo `EmptyStateView.swift` al conseguir cero referencias del componente.
+> - **Validación:** Verificación exitosa de compilación del paquete y suite de pruebas en verde.
+
 > [!success] 2026-06-26 — iOS: Búsqueda global como 5° tab del bottom-nav (bottom-nav-search)
 > La búsqueda global deja de ser un overlay/push y se convierte en un **destino nativo de primer nivel** del bottom-nav en iPhone (compact). Entregado en 3 PRs encadenados stacked-to-main (#613, #615 + PR3 local).
 > - **iOS 26 (Primary, spike-validated):** `Tab(role: .search)` + `.tabViewSearchActivation(.searchTabSelection)` — el sistema pina el magnifier al final, maneja focus y dismiss-restore. 4 tabs regulares + 1 search-role = **exactamente 5 slots, sin overflow** (validado on-device; el "Más" legit es uno de los 5, no un overflow). iOS 17–25: 5° tab regular de magnifier (Fallback, mismo `searchTabContent`).
