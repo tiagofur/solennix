@@ -56,10 +56,10 @@ Chain strategy: feature-branch-chain
 
 ## Phase 2 — Core: sync service & repository
 
-- [ ] **2.1** [RED→GREEN impl] Create `SolennixFeatures/.../CalendarSync/EventKitSyncService.swift`: `actor` owning the only `EKEventStore`; maps domain↔`EKEvent`; resolve/ensure/create/update/delete/migrate per ADR-1/3/4. E2E not unit-tested (real store); covered via repo tests using the mock.
-- [ ] **2.2** [RED→GREEN test+impl] Create `SolennixFeatures/.../Events/Repositories/EventRepository.swift` holding `EventAPI` + `SystemCalendarSyncing` + identity store + `syncEnabled`. Test (mocks) covers: `create`/`update`/`changeStatus`/`delete` call EventAPI THEN sync fan-out (guarded by `syncEnabled`), idempotent identity-store rewrite, return `Event`. Covers calendar-sync scenarios: create/edit/delete+idempotent; **write-only** (system edit ignored on next load); implicit-on-CRUD (ADR-2).
-- [ ] **2.3** [RED→GREEN test+impl] `EventRepository.changeDestination(to:progress:)`: detached `Task`, per-item delete-old+create-new, rewrite identity store, `progress` 0…1, partial-failure returns `partial:[ids]` keeping old ids, re-runnable (ADR-4). Covers migration scenario.
-- [ ] **2.4** [RED→GREEN test+impl] Resilience: `.solennix` missing + sync ON → `ensureSolennixCalendarExists()` then write succeeds; `.personal` missing → `throw SyncError.personalCalendarUnavailable`. Covers 2 missing-calendar scenarios (ADR-3). `syncAuthorization` accessor.
+- [x] **2.1** [RED→GREEN impl] Create `SolennixFeatures/.../CalendarSync/EventKitSyncService.swift`: `actor` owning the only `EKEventStore`; maps domain↔`EKEvent`; resolve/ensure/create/update/delete/migrate per ADR-1/3/4. E2E not unit-tested (real store); covered via repo tests using the mock.
+- [x] **2.2** [RED→GREEN test+impl] Create `SolennixFeatures/.../Events/Repositories/EventRepository.swift` holding `EventAPI` + `SystemCalendarSyncing` + identity store + `syncEnabled`. Test (mocks) covers: `create`/`update`/`changeStatus`/`delete` call EventAPI THEN sync fan-out (guarded by `syncEnabled`), idempotent identity-store rewrite, return `Event`. Covers calendar-sync scenarios: create/edit/delete+idempotent; **write-only** (system edit ignored on next load); implicit-on-CRUD (ADR-2).
+- [x] **2.3** [RED→GREEN test+impl] `EventRepository.changeDestination(to:progress:)`: detached `Task`, per-item delete-old+create-new, rewrite identity store, `progress` 0…1, partial-failure returns `partial:[ids]` keeping old ids, re-runnable (ADR-4). Covers migration scenario.
+- [x] **2.4** [RED→GREEN test+impl] Resilience: `.solennix` missing + sync ON → `ensureSolennixCalendarExists()` then write succeeds; `.personal` missing → `throw SyncError.personalCalendarUnavailable`. Covers 2 missing-calendar scenarios (ADR-3). `syncAuthorization` accessor.
 
 ## Phase 3 — ViewModel rewiring & unified state
 
@@ -81,9 +81,9 @@ Chain strategy: feature-branch-chain
 
 - [x] **5.1** [RED→GREEN test+impl] Create `CalendarSyncPreferencesViewModel` (`togglePreference`/`inFlightKeys` parity with `NotificationPreferencesViewModel`); master toggle ON→`requestFullAccessToEvents`, denied→revert+guide to Settings+skip sync; binary destination default `.solennix`, `.personal`→warning. Covers toggle/permission (2), binary destination default+warning (2), preferences-screen inFlightKeys.
 - [x] **5.2** [RED→GREEN impl] Create `CalendarSyncPreferencesView` (master `preferenceToggle`, binary destination selector, write-only warning, `.tint(SolennixColors.primary)`, `.solennixRow()`). Wire destination change → `EventRepository.changeDestination`.
-- [ ] **5.3** [RED→GREEN impl] `SolennixCore/.../Route.swift`: add `case calendarSyncPreferences`. `ios/Solennix/Navigation/Route.swift`: resolve it to `CalendarSyncPreferencesView`. Covers nav-route scenario.
-- [ ] **5.4** [RED→GREEN impl] Remove `.calendar` from `Tab` + `SidebarSection` + `mainSections` (4 destinations: home, events, clients, more). App-test assertions: compact tabs exactly 4, sidebar excludes calendar. Covers tab/sidebar (2).
-- [ ] **5.5** [impl] `SettingsView`: add calendar-sync section/link → `Route.calendarSyncPreferences` (both width layouts).
+- [x] **5.3** [RED→GREEN impl] `SolennixCore/.../Route.swift`: add `case calendarSyncPreferences`. `ios/Solennix/Navigation/Route.swift`: resolve it to `CalendarSyncPreferencesView`. Covers nav-route scenario.
+- [x] **5.4** [RED→GREEN impl] Remove `.calendar` from `Tab` + `SidebarSection` + `mainSections` (4 destinations: home, events, clients, more). App-test assertions: compact tabs exactly 4, sidebar excludes calendar. Covers tab/sidebar (2).
+- [x] **5.5** [impl] `SettingsView`: add calendar-sync section/link → `Route.calendarSyncPreferences` (both width layouts).
 
 ## Phase 6 — Removal, localization & cleanup
 

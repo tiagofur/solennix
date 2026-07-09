@@ -24,8 +24,8 @@
 
 - [x] 4.1 Write Go unit tests in `template_tokens_test.go` verifying dynamic currency formatting (e.g., USD, COP).
 - [x] 4.2 Write React unit tests verifying the dynamic currency formatting behavior of `formatCurrency`.
-- [ ] 4.3 Manually verify that setting a profile currency updates invoices, client portal links, and dashboard metrics.
+- [x] 4.3 Manually verify that setting a profile currency updates invoices, client portal links, and dashboard metrics.
 
 ## Phase 5: Documentation
 
-- [ ] 5.1 Update the product status documentation in `docs/PRD/11_CURRENT_STATUS.md`.
+- [x] 5.1 Update the product status documentation in `docs/PRD/11_CURRENT_STATUS.md`.
