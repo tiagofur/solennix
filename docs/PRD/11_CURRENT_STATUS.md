@@ -70,6 +70,14 @@ status: active
 > - **Grep gates:** 0 `easeInOut` de interacción sin gate; 14 `reduceMotion ? nil :` en sitios spring; `accessibilityReduceTransparency` en GlassSurface; 27 `symbolRenderingMode` sites.
 > - **Tests y build:** `xcodebuild build` verde. `xcodebuild test` green (0 nuevas fallas). Gate 4.3 (device pass) pendiente de verificación manual en dispositivo.
 
+> [!success] 2026-06-29 — iOS State Restoration y Launch Fijo (ios-lifecycle, COMPLETO)
+> Restauración de estado de navegación (`@SceneStorage`) y optimización del cold launch de la aplicación iOS. **Issue #671.**
+> - **PR1 — Seamless Launch (PR-A):** Configuración de `Background.colorset` (#FFFFFF light / #000000 dark) e integración en `Info.plist` UILaunchScreen (`UIImageName=SolennixLogoIcon`, `UIColorName=Background`) eliminando destellos vacíos en el inicio de la app. Reemplazo del progress spinner por el logo de marca e implementación de un fade suave en `ContentView` al resolverse `authState` (gated en la carga de sesión, nunca con timers fijos).
+> - **PR2 — Restauración de Navegación y Logout-Clear (PR-B):** Conformidad de `Route` a `Codable` y round-trip tests unitarios en `RouteCoreTests`. Integración de `@SceneStorage` en `CompactTabLayout` y `SidebarSplitLayout` manejando 5 `NavigationPath` y la sección seleccionada con una capa de envoltura JSON (`NavSceneStorage`).
+> - **Control de Sesión y Seguridad:** Implementación de `session.resetEpoch` en `SolennixApp.swift` incrementado en `performSessionCleanup` (logout y biometric failure). La restauración descarta la persistencia de rutas cuya época no coincida con el usuario actual, previniendo fugas de estado entre cuentas.
+> - **Spotlight y Stale-Entity:** Los enlaces Spotlight resetean el path y toman prioridad sobre la restauración de scene storage. Las rutas que apunten a entidades eliminadas (eventos/clientes) se restauran realizando un pop silencioso a la raíz (guardia 404 en sub-views).
+> - **Pruebas y Validación:** 10 nuevos unit tests en `RouteCoreTests` y `NavSceneStorageTests` en verde. Suite de xcodebuild verde.
+
 > [!success] 2026-06-26 — iOS: Búsqueda global como 5° tab del bottom-nav (bottom-nav-search)
 > La búsqueda global deja de ser un overlay/push y se convierte en un **destino nativo de primer nivel** del bottom-nav en iPhone (compact). Entregado en 3 PRs encadenados stacked-to-main (#613, #615 + PR3 local).
 > - **iOS 26 (Primary, spike-validated):** `Tab(role: .search)` + `.tabViewSearchActivation(.searchTabSelection)` — el sistema pina el magnifier al final, maneja focus y dismiss-restore. 4 tabs regulares + 1 search-role = **exactamente 5 slots, sin overflow** (validado on-device; el "Más" legit es uno de los 5, no un overflow). iOS 17–25: 5° tab regular de magnifier (Fallback, mismo `searchTabContent`).
