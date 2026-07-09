@@ -27,11 +27,16 @@ struct ContentView: View {
     @Environment(\.apiClient) private var apiClient
     @Environment(NetworkMonitor.self) private var networkMonitor
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
 
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
     @State private var deepLinkResetToken: String?
     @State private var deepLinkTeamInviteToken: String?
     @State private var pendingSpotlightRoute: Route?
+
+    private var isRegularSizeClass: Bool {
+        sizeClass == .regular && verticalSizeClass == .regular
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -106,16 +111,10 @@ struct ContentView: View {
     /// - iPad landscape: sidebar split
     @ViewBuilder
     private var mainLayout: some View {
-        if sizeClass == .compact {
-            CompactTabLayout(apiClient: apiClient, pendingSpotlightRoute: $pendingSpotlightRoute)
+        if isRegularSizeClass {
+            SidebarSplitLayout(pendingSpotlightRoute: $pendingSpotlightRoute)
         } else {
-            GeometryReader { geo in
-                if geo.size.width > geo.size.height {
-                    SidebarSplitLayout(pendingSpotlightRoute: $pendingSpotlightRoute)
-                } else {
-                    CompactTabLayout(apiClient: apiClient, pendingSpotlightRoute: $pendingSpotlightRoute)
-                }
-            }
+            CompactTabLayout(apiClient: apiClient, pendingSpotlightRoute: $pendingSpotlightRoute)
         }
     }
 

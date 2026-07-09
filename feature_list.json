@@ -452,6 +452,19 @@
         "iOS package unit and UI tests compile and pass successfully",
         "Global init.sh validation suite runs and passes successfully"
       ]
+    },
+    {
+      "id": 37,
+      "name": "ios-layout-optimizations",
+      "description": "feat(ios): iPad/macOS layout optimizations (Issue #788)",
+      "status": "done",
+      "acceptance_criteria": [
+        "Adaptive navigation switching based on size classes matches Apple native standard.",
+        "macOS Catalyst window resizing to compact collapses navigation to bottom tab bar.",
+        "EventDetailView and ClientDetailView dynamically present single column or two-column details based on secondary content presence.",
+        "EventFormView centers form content, caps width to 640pt and applies systemGroupedBackground natively in regular class.",
+        "iOS package build and tests run 100% green."
+      ]
     }
   ]
 }

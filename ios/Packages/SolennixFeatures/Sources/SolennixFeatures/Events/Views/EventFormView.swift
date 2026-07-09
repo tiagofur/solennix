@@ -16,6 +16,7 @@ public struct EventFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(PlanLimitsManager.self) private var planLimitsManager
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     public init(eventId: String? = nil, initialStep: Int? = nil, apiClient: APIClient) {
         self.eventId = eventId
@@ -73,7 +74,7 @@ public struct EventFormView: View {
     // keep body type-checker budget below threshold.
     private var formWithNavigation: some View {
         formContent
-            .background(SolennixColors.surfaceGrouped)
+            .background(horizontalSizeClass == .regular ? Color(uiColor: .systemGroupedBackground) : SolennixColors.surfaceGrouped)
             .navigationTitle(eventId != nil ? tr("events.form.title_edit", "Editar evento") : tr("events.form.title_new", "Nuevo evento"))
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
@@ -125,38 +126,50 @@ public struct EventFormView: View {
     }
 
     private var formContent: some View {
-        VStack(spacing: 0) {
-            // Step indicator
-            stepIndicator
-
-            Divider()
-                .foregroundStyle(SolennixColors.border)
-
-            // Step content
-            TabView(selection: $viewModel.currentStep) {
-                Step1GeneralView(viewModel: viewModel)
-                    .tag(1)
-
-                Step2ProductsView(viewModel: viewModel)
-                    .tag(2)
-
-                Step3ExtrasView(viewModel: viewModel)
-                    .tag(3)
-
-                Step4SuppliesEquipmentView(viewModel: viewModel)
-                    .tag(4)
-
-                Step5FinancesView(viewModel: viewModel)
-                    .tag(5)
+        HStack {
+            if horizontalSizeClass == .regular {
+                Spacer()
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: viewModel.currentStep)
 
-            Divider()
-                .foregroundStyle(SolennixColors.border)
+            VStack(spacing: 0) {
+                // Step indicator
+                stepIndicator
 
-            // Navigation buttons
-            navigationButtons
+                Divider()
+                    .foregroundStyle(SolennixColors.border)
+
+                // Step content
+                TabView(selection: $viewModel.currentStep) {
+                    Step1GeneralView(viewModel: viewModel)
+                        .tag(1)
+
+                    Step2ProductsView(viewModel: viewModel)
+                        .tag(2)
+
+                    Step3ExtrasView(viewModel: viewModel)
+                        .tag(3)
+
+                    Step4SuppliesEquipmentView(viewModel: viewModel)
+                        .tag(4)
+
+                    Step5FinancesView(viewModel: viewModel)
+                        .tag(5)
+                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: viewModel.currentStep)
+
+                Divider()
+                    .foregroundStyle(SolennixColors.border)
+
+                // Navigation buttons
+                navigationButtons
+            }
+            .background(SolennixColors.surfaceGrouped)
+            .frame(maxWidth: horizontalSizeClass == .regular ? 640 : .infinity)
+
+            if horizontalSizeClass == .regular {
+                Spacer()
+            }
         }
     }
 

@@ -20,8 +20,13 @@ public struct ClientDetailView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(PlanLimitsManager.self) private var planLimitsManager
     @Environment(AuthManager.self) private var authManager
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     private let apiClient: APIClient
+
+    private var hasSecondaryContent: Bool {
+        !events.isEmpty
+    }
 
     public init(clientId: String, apiClient: APIClient) {
         self.clientId = clientId
@@ -29,23 +34,30 @@ public struct ClientDetailView: View {
     }
 
     public var body: some View {
-        Group {
-            if isLoading && client == nil {
-                // In-List skeleton so the layout doesn't flash from ProgressView → content
-                List {
-                    ClientDetailSkeleton()
-                }
-                .listStyle(.insetGrouped)
-                .solennixListStyle()
-            } else if let client {
-                hubList(client)
-            } else {
-                ContentUnavailableView {
-                    Label(tr("clients.error.title", "Error"), systemImage: "exclamationmark.triangle")
-                } description: {
-                    Text(errorMessage ?? tr("clients.error.load", "No se pudo cargar el cliente"))
+        GeometryReader { geo in
+            Group {
+                if isLoading && client == nil {
+                    // In-List skeleton so the layout doesn't flash from ProgressView → content
+                    List {
+                        ClientDetailSkeleton()
+                    }
+                    .listStyle(.insetGrouped)
+                    .solennixListStyle()
+                } else if let client {
+                    if sizeClass == .regular && hasSecondaryContent {
+                        twoColumnHub(client, totalWidth: geo.size.width)
+                    } else {
+                        hubList(client)
+                    }
+                } else {
+                    ContentUnavailableView {
+                        Label(tr("clients.error.title", "Error"), systemImage: "exclamationmark.triangle")
+                    } description: {
+                        Text(errorMessage ?? tr("clients.error.load", "No se pudo cargar el cliente"))
+                    }
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(SolennixColors.surfaceGrouped)
         .navigationTitle(client?.name ?? tr("clients.title_singular", "Cliente"))
@@ -723,6 +735,109 @@ public struct ClientDetailView: View {
 
     private func trf(_ key: String, _ value: String, _ arg: CVarArg) -> String {
         FeatureL10n.format(key, value, arg)
+    }
+
+    // MARK: - iPad Two-Column Hub
+
+    private func twoColumnHub(_ client: Client, totalWidth: CGFloat) -> some View {
+        let spacing = Spacing.md
+        let padding = Spacing.md
+        let availableWidth = totalWidth - (padding * 2) - spacing
+        let columnWidth = availableWidth * 0.50
+
+        return ScrollView {
+            HStack(alignment: .top, spacing: spacing) {
+                // Left column (~50% width)
+                VStack(alignment: .leading, spacing: Spacing.md) {
+                    clientHeaderCard(client)
+                        .solennixCard()
+
+                    if let address = client.address, !address.isEmpty {
+                        addressRow(address: address, city: client.city)
+                            .solennixCard()
+                    } else if let city = client.city, !city.isEmpty {
+                        addressRow(address: nil, city: city)
+                            .solennixCard()
+                    }
+
+                    if let notes = client.notes, !notes.isEmpty {
+                        VStack(alignment: .leading, spacing: Spacing.sm) {
+                            HStack(spacing: Spacing.sm) {
+                                Image(systemName: "note.text")
+                                    .font(.caption)
+                                    .foregroundStyle(SolennixColors.primary)
+                                Text(tr("clients.detail.notes", "Notas"))
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(SolennixColors.textSecondary)
+                            }
+                            Text(notes)
+                                .font(.caption)
+                                .foregroundStyle(SolennixColors.textSecondary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(Spacing.md)
+                        .solennixCard()
+                    }
+
+                    NavigationLink(value: Route.eventForm(clientId: clientId)) {
+                        HStack(spacing: Spacing.sm) {
+                            Image(systemName: "calendar.badge.plus")
+                                .font(.body)
+                            Text(tr("clients.action.create_event", "Nuevo evento"))
+                                .font(.body.weight(.medium))
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundStyle(SolennixColors.textTertiary)
+                        }
+                        .foregroundStyle(SolennixColors.primary)
+                        .frame(minHeight: 44)
+                        .padding(.horizontal, Spacing.md)
+                    }
+                    .solennixCard()
+                }
+                .frame(width: columnWidth)
+
+                // Right column (~50% width)
+                VStack(alignment: .leading, spacing: Spacing.md) {
+                    if !sortedCompletedEvents.isEmpty {
+                        clientInsightsCard
+                            .solennixCard()
+                    }
+
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text(FeatureL10n.plural("clients.events.history_count", "Historial de eventos (%lld)", count: events.count))
+                            .font(.caption)
+                            .foregroundStyle(SolennixColors.textSecondary)
+                            .padding(.horizontal, Spacing.xs)
+
+                        VStack(spacing: 0) {
+                            ForEach(sortedEvents) { event in
+                                NavigationLink(value: Route.eventDetail(id: event.id)) {
+                                    eventRow(event)
+                                }
+                                .buttonStyle(.plain)
+
+                                if event.id != sortedEvents.last?.id {
+                                    Divider()
+                                        .foregroundStyle(SolennixColors.border)
+                                        .padding(.leading, Spacing.md)
+                                }
+                            }
+                        }
+                        .solennixCard()
+                    }
+                }
+                .frame(width: columnWidth)
+            }
+            .padding(.horizontal, padding)
+            .padding(.top, padding)
+        }
+        .scrollContentBackground(.hidden)
+        .background(SolennixColors.surfaceGrouped)
+        .refreshable {
+            await loadData()
+        }
     }
 }
 

@@ -23,6 +23,10 @@ public struct EventDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var sizeClass
 
+    private var hasSecondaryContent: Bool {
+        !viewModel.payments.isEmpty || !viewModel.eventPhotos.isEmpty
+    }
+
     public init(eventId: String, apiClient: APIClient) {
         self.eventId = eventId
         self.apiClient = apiClient
@@ -30,23 +34,30 @@ public struct EventDetailView: View {
     }
 
     public var body: some View {
-        Group {
-            if viewModel.isLoading && viewModel.event == nil {
-                // In-List skeleton so the layout doesn't flash from ProgressView → content
-                List {
-                    EventDetailHubSkeleton()
-                }
-                .listStyle(.insetGrouped)
-                .solennixListStyle()
-            } else if let event = viewModel.event {
-                hubList(event)
-            } else {
-                ContentUnavailableView {
-                    Label(tr("events.detail.error.title", "Error"), systemImage: "exclamationmark.triangle")
-                } description: {
-                    Text(viewModel.errorMessage ?? tr("events.detail.error.load_fallback", "No se pudo cargar el evento"))
+        GeometryReader { geo in
+            Group {
+                if viewModel.isLoading && viewModel.event == nil {
+                    // In-List skeleton so the layout doesn't flash from ProgressView → content
+                    List {
+                        EventDetailHubSkeleton()
+                    }
+                    .listStyle(.insetGrouped)
+                    .solennixListStyle()
+                } else if let event = viewModel.event {
+                    if sizeClass == .regular && hasSecondaryContent {
+                        twoColumnHub(event, totalWidth: geo.size.width)
+                    } else {
+                        hubList(event)
+                    }
+                } else {
+                    ContentUnavailableView {
+                        Label(tr("events.detail.error.title", "Error"), systemImage: "exclamationmark.triangle")
+                    } description: {
+                        Text(viewModel.errorMessage ?? tr("events.detail.error.load_fallback", "No se pudo cargar el evento"))
+                    }
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(SolennixColors.surfaceGrouped)
         .sensoryFeedback(.success, trigger: viewModel.paymentSavedCounter)
@@ -514,6 +525,221 @@ public struct EventDetailView: View {
         )
         duplicateViewModel = vm
         showDuplicateSheet = true
+    }
+
+    // MARK: - iPad Two-Column Hub
+
+    private func twoColumnHub(_ event: Event, totalWidth: CGFloat) -> some View {
+        let spacing = Spacing.md
+        let padding = Spacing.md
+        let availableWidth = totalWidth - (padding * 2) - spacing
+        let leftWidth = availableWidth * 0.55
+        let rightWidth = availableWidth * 0.45
+
+        return ScrollView {
+            HStack(alignment: .top, spacing: spacing) {
+                VStack(alignment: .leading, spacing: Spacing.md) {
+                    EventDetailHeaderCard(
+                        event: event,
+                        clientName: viewModel.client?.name,
+                        clientCity: viewModel.client?.city,
+                        clientPhone: viewModel.client?.phone,
+                        clientEmail: viewModel.client?.email,
+                        month: parseDateComponents(event.eventDate).month,
+                        day: parseDateComponents(event.eventDate).day,
+                        dateLabel: tr("events.detail.info.date", "Fecha"),
+                        dateValue: formatDateShort(event.eventDate),
+                        scheduleLabel: tr("events.detail.info.schedule", "Horario"),
+                        scheduleValue: scheduleText(event),
+                        peopleLabel: tr("events.detail.info.people", "Personas"),
+                        peopleValue: trf("events.detail.info.people_value", "%@ PAX", String(event.numPeople)),
+                        locationLabel: locationLabel(event),
+                        locationValue: locationValue(event),
+                        onStatusTap: { viewModel.showStatusSheet = true },
+                        editRoute: Route.eventForm(id: eventId, step: 1)
+                    )
+                    .solennixCard()
+
+                    if let notes = event.notes, !notes.isEmpty {
+                        EventDetailNotesCard(
+                            title: tr("events.detail.notes", "Notas"),
+                            notes: notes
+                        )
+                        .padding(Spacing.md)
+                        .solennixCard()
+                    }
+
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text(tr("events.detail.section.content", "Contenido"))
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(SolennixColors.textSecondary)
+                            .padding(.horizontal, Spacing.xs)
+
+                        VStack(spacing: 0) {
+                            EventDetailContentGridSection(
+                                productsTitle: tr("events.detail.card.products", "Productos"),
+                                productsCount: viewModel.products.count,
+                                extrasTitle: tr("events.detail.card.extras", "Extras"),
+                                extrasCount: viewModel.extras.count,
+                                suppliesTitle: tr("events.detail.card.supplies", "Insumos"),
+                                suppliesCount: viewModel.supplies.count,
+                                equipmentTitle: tr("events.detail.card.equipment", "Equipo"),
+                                equipmentCount: viewModel.equipment.count,
+                                shoppingTitle: tr("events.detail.card.shopping", "Compras"),
+                                shoppingSubtitle: shoppingListSubtitle,
+                                staffTitle: tr("events.detail.card.staff", "Personal"),
+                                staffCount: viewModel.eventStaff.count,
+                                photosTitle: tr("events.detail.card.photos", "Fotos"),
+                                photosCount: viewModel.eventPhotos.count,
+                                eventId: eventId
+                            )
+                        }
+                        .padding(.horizontal, Spacing.md)
+                        .solennixCard()
+                    }
+
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text(tr("events.detail.section.tools", "Herramientas"))
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(SolennixColors.textSecondary)
+                            .padding(.horizontal, Spacing.xs)
+
+                        EventDetailPrimaryLinkCard(
+                            icon: "checklist",
+                            title: tr("events.detail.card.checklist", "Checklist de carga"),
+                            tint: SolennixColors.primary,
+                            background: SolennixColors.primaryLight,
+                            route: Route.eventChecklist(id: eventId)
+                        )
+                        .padding(.horizontal, Spacing.md)
+                        .background(SolennixColors.primaryLight)
+                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: CornerRadius.card, style: .continuous).stroke(SolennixColors.border, lineWidth: 1))
+
+                        EventDetailPrimaryLinkCard(
+                            icon: "cart",
+                            title: tr("events.detail.card.shopping_checklist", "Checklist de compras"),
+                            tint: SolennixColors.warning,
+                            background: SolennixColors.warningBg,
+                            route: Route.eventPurchaseChecklist(id: eventId)
+                        )
+                        .padding(.horizontal, Spacing.md)
+                        .background(SolennixColors.warningBg)
+                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: CornerRadius.card, style: .continuous).stroke(SolennixColors.border, lineWidth: 1))
+
+                        EventDetailPrimaryLinkCard(
+                            icon: "doc.richtext",
+                            title: tr("events.detail.card.contract", "Ver contrato"),
+                            tint: SolennixColors.info,
+                            background: SolennixColors.info.opacity(0.1),
+                            route: Route.eventContractPreview(id: eventId)
+                        )
+                        .padding(.horizontal, Spacing.md)
+                        .background(SolennixColors.info.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: CornerRadius.card, style: .continuous).stroke(SolennixColors.border, lineWidth: 1))
+
+                        EventDetailPrimaryButtonCard(
+                            icon: "person.2.circle",
+                            title: tr("events.detail.share.title", "Portal del cliente"),
+                            tint: SolennixColors.primary,
+                            background: SolennixColors.primaryLight,
+                            action: { showClientPortalSheet = true }
+                        )
+                        .padding(.horizontal, Spacing.md)
+                        .background(SolennixColors.primaryLight)
+                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: CornerRadius.card, style: .continuous).stroke(SolennixColors.border, lineWidth: 1))
+                    }
+
+                    EventDetailDocumentsCard(
+                        title: tr("events.detail.documents.title", "Generar documentos"),
+                        options: pdfOptions,
+                        onTap: { key in
+                            Task { await generateAndSharePDF(key: key, event: event) }
+                        }
+                    )
+                    .solennixCard()
+
+                    if !viewModel.eventPhotos.isEmpty {
+                        EventDetailPhotosPreviewCard(
+                            title: tr("events.detail.card.photos", "Fotos"),
+                            photos: viewModel.eventPhotos,
+                            route: Route.eventPhotos(id: eventId)
+                        )
+                        .solennixCard()
+                    }
+
+                    if viewModel.canStartLiveActivity || viewModel.isLiveActivityActive {
+                        EventDetailLiveActivityCard(
+                            isActive: viewModel.isLiveActivityActive,
+                            startTitle: tr("events.detail.live_activity.start", "Iniciar actividad en vivo"),
+                            stopTitle: tr("events.detail.live_activity.stop", "Detener actividad en vivo"),
+                            action: {
+                                if viewModel.isLiveActivityActive {
+                                    Task { await viewModel.stopLiveActivity() }
+                                } else {
+                                    viewModel.startLiveActivity()
+                                }
+                            }
+                        )
+                        .padding(.horizontal, Spacing.md)
+                        .background(viewModel.isLiveActivityActive ? SolennixColors.errorBg : SolennixColors.success)
+                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: CornerRadius.card, style: .continuous).stroke(SolennixColors.border, lineWidth: 1))
+                    }
+                }
+                .frame(width: leftWidth)
+
+                VStack(alignment: .leading, spacing: Spacing.md) {
+                    EventDetailFinanceSummaryCard(
+                        title: tr("events.detail.card.finances", "Finanzas"),
+                        totalLabel: tr("events.detail.finances.total", "Total"),
+                        totalValue: event.totalAmount.formattedCurrency(code: event.currency),
+                        profitLabel: tr("events.detail.finances.profit", "Utilidad"),
+                        profitValue: "\(String(format: "%.0f", financialsMargin(event)))%",
+                        discountText: discountText(event),
+                        taxText: taxText(event),
+                        route: Route.eventFinances(id: eventId),
+                        editRoute: Route.eventForm(id: eventId, step: 5)
+                    )
+                    .solennixCard()
+
+                    EventDetailPaymentSummaryCard(
+                        title: tr("events.detail.card.payments", "Pagos"),
+                        paymentsCount: viewModel.payments.count,
+                        paidLabel: tr("events.detail.payments.kpi.paid", "Pagado"),
+                        paidValue: viewModel.totalPaid.formattedCurrency(code: event.currency),
+                        balanceLabel: tr("events.detail.payments.kpi.balance", "Saldo"),
+                        balanceValue: viewModel.remaining.formattedCurrency(code: event.currency),
+                        isFullyPaid: viewModel.isFullyPaid,
+                        progress: viewModel.progress,
+                        depositText: depositText(event),
+                        isDepositMet: isDepositMet(event),
+                        route: Route.eventPayments(id: eventId),
+                        fullyPaidCounter: viewModel.fullyPaidCounter,
+                        recordTitle: viewModel.remaining > 0.01 ? tr("events.detail.payments.action.record", "Registrar pago") : nil,
+                        settleTitle: viewModel.remaining > 0.01 ? trf("events.detail.payments.action.settle", "Liquidar %@", viewModel.remaining.formattedCurrency(code: event.currency)) : nil,
+                        depositTitle: viewModel.remaining > 0.01 && (event.depositPercent ?? 0) > 0 && viewModel.depositBalance > 0.01
+                            ? trf("events.detail.payments.action.deposit", "Anticipo %@", viewModel.depositBalance.formattedCurrency(code: event.currency))
+                            : nil,
+                        onRecord: { viewModel.showRecordPaymentSheet() },
+                        onSettle: { viewModel.payRemaining() },
+                        onDeposit: { viewModel.payDeposit() }
+                    )
+                    .solennixCard()
+                }
+                .frame(width: rightWidth)
+            }
+            .padding(.horizontal, padding)
+            .padding(.top, padding)
+        }
+        .scrollContentBackground(.hidden)
+        .background(SolennixColors.surfaceGrouped)
+        .refreshable {
+            await viewModel.loadData(eventId: eventId)
+        }
     }
 
 }
