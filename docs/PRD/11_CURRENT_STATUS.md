@@ -36,6 +36,13 @@ status: active
 > - **Documentado en:** `docs/PRD/02_FEATURES.md` §16 (Perfil Profesional Público).
 > - **Estado:** Planificado, no implementado aún.
 
+> [!success] 2026-07-09 — Optimización de Layouts para iPad y macOS (ios-layout-optimizations, COMPLETO)
+> Optimización de la navegación, pantallas de detalle y formularios de registro en dispositivos iPad y macOS Catalyst para cumplir con los estándares de diseño nativos de Apple (HIG) y maximizar el uso de pantalla. **Issue #788.**
+> - **Navegación Adaptativa** — Se eliminaron los chequeos basados en dimensiones físicas (`GeometryReader`) en `ContentView.swift`. La app ahora conmuta a `SidebarSplitLayout` de forma nativa e integrada en iPad y macOS si el tamaño horizontal y vertical son `.regular`, y conmuta responsivamente a `CompactTabLayout` (barra de pestañas/tabs de iPhone) si la ventana se estrecha a tamaño compacto.
+> - **Formularios Centrados y Acotados** — En `EventFormView.swift`, cuando se detecta una clase de tamaño `.regular`, la interfaz del formulario limita su ancho máximo a `640pt`, se centra horizontalmente mediante Spacers y establece su fondo al color de sistema gris nativo de Apple (`systemGroupedBackground`).
+> - **Columnas Dinámicas de Detalle** — En las vistas de detalle de eventos (`EventDetailView.swift`) y clientes (`ClientDetailView.swift`), se añadió el estado computado `hasSecondaryContent`. Si el tamaño horizontal es `.regular` y existe información secundaria (pagos/fotos para eventos o historial para clientes), los elementos se dividen dinámicamente en un diseño de dos columnas de alta densidad. Si no hay contenido secundario, se colapsa a una única columna central minimalista.
+> - **Pruebas y Validación** — Se validó la suite completa de pruebas unitarias y de UI de iOS en el simulador de `iPhone 17` y se comprobó la compilación del proyecto para el destino de iPad (M5), logrando un estado 100% verde (BUILD SUCCEEDED y TEST SUCCEEDED).
+
 > [!success] 2026-07-08 — iOS Feature Gating Enforcement (ios-feature-gating-enforcement, COMPLETO)
 > Implementación del control y restricción de funciones según el plan de suscripción del usuario en la plataforma iOS.
 > - **Gating de Creación de Eventos** — `EventListView` ahora consume `PlanLimitsManager`. Al alcanzar el límite mensual de eventos del plan básico (4 eventos), el botón "+" de la barra de herramientas y el botón de llamada a la acción del estado vacío redirigen dinámicamente al usuario a la vista de precios (`Route.pricing`). Adicionalmente, se renderiza una `UpgradeBannerView` en el safe area superior de la pantalla.
