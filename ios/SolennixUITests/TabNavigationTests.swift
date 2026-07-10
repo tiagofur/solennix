@@ -1,5 +1,14 @@
 import XCTest
 
+extension XCUIElement {
+    func safeTap() {
+        let predicate = NSPredicate(format: "exists == true && isHittable == true")
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: self)
+        _ = XCTWaiter().wait(for: [expectation], timeout: 5)
+        self.tap()
+    }
+}
+
 final class TabNavigationTests: XCTestCase {
 
     func testTabNavigationAndMoreMenuRouting() throws {
@@ -13,22 +22,22 @@ final class TabNavigationTests: XCTestCase {
         // 1. Home Tab (Index 0)
         let homeTab = tabBar.buttons.element(boundBy: 0)
         XCTAssertTrue(homeTab.exists)
-        homeTab.tap()
+        homeTab.safeTap()
         
         // 2. Events Tab (Index 1)
         let eventsTab = tabBar.buttons.element(boundBy: 1)
         XCTAssertTrue(eventsTab.exists)
-        eventsTab.tap()
+        eventsTab.safeTap()
         
         // 3. Clients Tab (Index 2)
         let clientsTab = tabBar.buttons.element(boundBy: 2)
         XCTAssertTrue(clientsTab.exists)
-        clientsTab.tap()
+        clientsTab.safeTap()
         
         // 4. Más Tab (Index 3)
         let masTab = tabBar.buttons.element(boundBy: 3)
         XCTAssertTrue(masTab.exists)
-        masTab.tap()
+        masTab.safeTap()
 
         // Test navigation within More menu
         // 4.1. Productos
@@ -73,6 +82,6 @@ final class TabNavigationTests: XCTestCase {
         // 5. Search Tab (Index 4) - Tapped last to avoid search role hiding the tab bar
         let searchTab = tabBar.buttons.element(boundBy: 4)
         XCTAssertTrue(searchTab.exists)
-        searchTab.tap()
+        searchTab.safeTap()
     }
 }
