@@ -48,11 +48,7 @@ final class TabNavigationTests: XCTestCase {
         // Test navigation within More menu
         // 4.1. Productos
         let productsCell = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Productos' || label CONTAINS[c] 'Products'")).firstMatch
-        if !productsCell.waitForExistence(timeout: 5) {
-            print("TabNavigationTests Debug - App hierarchy:\n\(app.debugDescription)")
-            XCTFail("Productos row should exist in Más menu. Hierarchy printed above.")
-            return
-        }
+        XCTAssertTrue(productsCell.waitForExistence(timeout: 5), "Productos row should exist in Más menu.")
         productsCell.tap()
         sleep(1)
         
