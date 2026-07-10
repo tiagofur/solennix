@@ -599,6 +599,11 @@ public final class AuthManager {
     ///   Those should leave the session intact so the user can retry later.
     @MainActor
     public func handleSessionExpired() {
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["SOLX_UI_TEST_MOCK_LOGIN"] == "1" {
+            return
+        }
+        #endif
         guard isAuthenticated else { return }
         clearTokens()
         currentUser = nil

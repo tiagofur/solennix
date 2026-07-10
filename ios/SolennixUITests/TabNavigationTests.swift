@@ -32,7 +32,7 @@ final class TabNavigationTests: XCTestCase {
 
         // Test navigation within More menu
         // 4.1. Productos
-        let productsCell = app.cells.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'Productos'")).firstMatch
+        let productsCell = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS[c] 'Productos' || label CONTAINS[c] 'Products'")).firstMatch
         XCTAssertTrue(productsCell.waitForExistence(timeout: 5), "Productos row should exist in Más menu.")
         productsCell.tap()
         
@@ -45,7 +45,7 @@ final class TabNavigationTests: XCTestCase {
         app.navigationBars.buttons.element(boundBy: 0).tap()
 
         // 4.2. Inventario
-        let inventoryCell = app.cells.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'Inventario'")).firstMatch
+        let inventoryCell = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS[c] 'Inventario' || label CONTAINS[c] 'Inventory'")).firstMatch
         XCTAssertTrue(inventoryCell.waitForExistence(timeout: 5), "Inventario row should exist in Más menu.")
         inventoryCell.tap()
         
@@ -57,9 +57,9 @@ final class TabNavigationTests: XCTestCase {
         // Go back
         app.navigationBars.buttons.element(boundBy: 0).tap()
 
-        // 4.3. Configuración
-        let settingsCell = app.cells.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'Configuraci'")).firstMatch
-        XCTAssertTrue(settingsCell.waitForExistence(timeout: 5), "Configuracion row should exist in Más menu.")
+        // 4.3. Configuración (Ajustes / Settings)
+        let settingsCell = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS[c] 'Ajustes' || label CONTAINS[c] 'Settings'")).firstMatch
+        XCTAssertTrue(settingsCell.waitForExistence(timeout: 5), "Configuracion (Ajustes) row should exist in Más menu.")
         settingsCell.tap()
         
         // Verify detail view navigation title for Configuración
@@ -70,7 +70,7 @@ final class TabNavigationTests: XCTestCase {
         // Go back
         app.navigationBars.buttons.element(boundBy: 0).tap()
 
-        // 5. Search Tab (Index 4)
+        // 5. Search Tab (Index 4) - Tapped last to avoid search role hiding the tab bar
         let searchTab = tabBar.buttons.element(boundBy: 4)
         XCTAssertTrue(searchTab.exists)
         searchTab.tap()
