@@ -41,7 +41,7 @@ final class TabNavigationTests: XCTestCase {
 
         // Test navigation within More menu
         // 4.1. Productos
-        let productsCell = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS[c] 'Productos' || label CONTAINS[c] 'Products'")).firstMatch
+        let productsCell = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Productos' || label CONTAINS[c] 'Products'")).firstMatch
         XCTAssertTrue(productsCell.waitForExistence(timeout: 5), "Productos row should exist in Más menu.")
         productsCell.tap()
         
@@ -54,7 +54,7 @@ final class TabNavigationTests: XCTestCase {
         app.navigationBars.buttons.element(boundBy: 0).tap()
 
         // 4.2. Inventario
-        let inventoryCell = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS[c] 'Inventario' || label CONTAINS[c] 'Inventory'")).firstMatch
+        let inventoryCell = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Inventario' || label CONTAINS[c] 'Inventory'")).firstMatch
         XCTAssertTrue(inventoryCell.waitForExistence(timeout: 5), "Inventario row should exist in Más menu.")
         inventoryCell.tap()
         
@@ -67,7 +67,7 @@ final class TabNavigationTests: XCTestCase {
         app.navigationBars.buttons.element(boundBy: 0).tap()
 
         // 4.3. Configuración (Ajustes / Settings)
-        let settingsCell = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS[c] 'Ajustes' || label CONTAINS[c] 'Settings'")).firstMatch
+        let settingsCell = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Ajustes' || label CONTAINS[c] 'Settings'")).firstMatch
         XCTAssertTrue(settingsCell.waitForExistence(timeout: 5), "Configuracion (Ajustes) row should exist in Más menu.")
         settingsCell.tap()
         
