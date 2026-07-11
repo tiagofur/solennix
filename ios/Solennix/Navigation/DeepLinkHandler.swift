@@ -8,6 +8,10 @@ import SolennixCore
 enum DeepLinkAction: Equatable {
     case resetPassword(token: String)
     case teamInvite(token: String)
+    /// Navigate to an event's detail screen.
+    case showEvent(id: String)
+    /// Navigate to an event's detail screen and open the record-payment sheet.
+    case showEventPayment(id: String)
 }
 
 // MARK: - Spotlight Action
@@ -26,6 +30,8 @@ enum SpotlightAction: Equatable {
 /// Supported deep links:
 /// - `solennix://reset-password?token=<TOKEN>` — Navigate to the password reset flow.
 /// - `solennix://team-invite?token=<TOKEN>` — Navigate to team invite accept flow.
+/// - `solennix://event/{id}` — Navigate to the event detail screen.
+/// - `solennix://event/{id}/payment` — Navigate to the event detail and open the payment sheet.
 enum DeepLinkHandler {
 
     /// Parse a URL into a deep link action.
@@ -47,6 +53,46 @@ enum DeepLinkHandler {
             }
             return .teamInvite(token: token)
 
+        case "event":
+            return parseEventRoute(url)
+
+        default:
+            return nil
+        }
+    }
+
+    // MARK: - Event Route Parsing
+
+    /// Parses `solennix://event/{id}` and `solennix://event/{id}/payment`.
+    ///
+    /// Unknown sub-paths and missing ids return `nil` so the app stays at root
+    /// instead of navigating to a broken destination.
+    /// - Parameter url: The URL with `host == "event"`.
+    /// - Returns: A `DeepLinkAction`, or `nil` if the path is unrecognized.
+    private static func parseEventRoute(_ url: URL) -> DeepLinkAction? {
+        // `URLComponents` is required because `URL.path` is empty for custom
+        // schemes; the path lives in the components' `path` property.
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            return nil
+        }
+        let segments = components.path
+            .split(separator: "/", omittingEmptySubsequences: true)
+            .map(String.init)
+
+        // Expected shapes: ["{id}"] or ["{id}", "payment"]
+        guard let eventId = segments.first, !eventId.isEmpty else {
+            return nil
+        }
+
+        // Reject anything longer than the two supported shapes so typos like
+        // `event/{id}/payment/extra` don't silently match the payment route.
+        guard segments.count <= 2 else { return nil }
+
+        switch segments.dropFirst().first {
+        case nil:
+            return .showEvent(id: eventId)
+        case "payment":
+            return .showEventPayment(id: eventId)
         default:
             return nil
         }

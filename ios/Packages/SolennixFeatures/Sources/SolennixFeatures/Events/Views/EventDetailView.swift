@@ -109,7 +109,18 @@ public struct EventDetailView: View {
         .sheet(isPresented: $viewModel.showPaymentSheet) {
             paymentSheet
         }
-        .task { await viewModel.loadData(eventId: eventId) }
+        .task {
+            await viewModel.loadData(eventId: eventId)
+            // Consume a one-shot deep-link request (solennix://event/{id}/payment)
+            // only if the event actually loaded. Avoids opening the sheet on a
+            // 404/empty state, which would dismiss immediately afterward.
+            if !viewModel.entityNotFound,
+               viewModel.event != nil,
+               DeepLinkPendingAction.openPaymentEventId == eventId {
+                DeepLinkPendingAction.openPaymentEventId = nil
+                viewModel.showRecordPaymentSheet()
+            }
+        }
         // B5: if the restored/deep-linked event no longer exists (404), pop
         // silently back to root instead of stranding on the error screen.
         .onChange(of: viewModel.entityNotFound) { _, isGone in

@@ -39,6 +39,40 @@ final class DeepLinkHandlerTests: XCTestCase {
         XCTAssertNil(DeepLinkHandler.handle(url))
     }
 
+    // MARK: - Event Route Parsing
+
+    func testHandleEventDetailWithId() {
+        let url = URL(string: "solennix://event/abc123")!
+        let action = DeepLinkHandler.handle(url)
+
+        XCTAssertEqual(action, .showEvent(id: "abc123"))
+    }
+
+    func testHandleEventPaymentWithId() {
+        let url = URL(string: "solennix://event/abc123/payment")!
+        let action = DeepLinkHandler.handle(url)
+
+        XCTAssertEqual(action, .showEventPayment(id: "abc123"))
+    }
+
+    func testHandleEventRejectsMissingId() {
+        let url = URL(string: "solennix://event/")!
+
+        XCTAssertNil(DeepLinkHandler.handle(url))
+    }
+
+    func testHandleEventRejectsUnknownSubPath() {
+        let url = URL(string: "solennix://event/abc123/unknown")!
+
+        XCTAssertNil(DeepLinkHandler.handle(url))
+    }
+
+    func testHandleEventRejectsExtraPathSegments() {
+        let url = URL(string: "solennix://event/abc123/payment/extra")!
+
+        XCTAssertNil(DeepLinkHandler.handle(url))
+    }
+
     func testHandleSpotlightClientWithDottedIdentifier() {
         let activity = NSUserActivity(activityType: CSSearchableItemActionType)
         activity.userInfo = [CSSearchableItemActivityIdentifier: "solennix.client.client.42"]
