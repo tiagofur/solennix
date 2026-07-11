@@ -435,6 +435,15 @@ input, select, textarea {
   }
 }
 
+/* ── RESIZABLE SIDEBAR (lg+ / ≥1024px) (#884) ──
+   Desktop sidebar width is driven by --lg-sidebar-width, set inline
+   on the <aside> by Layout.tsx. Mobile keeps the fixed w-64 class. */
+@media (min-width: 1024px) {
+  .sidebar-resizable {
+    width: var(--lg-sidebar-width, 256px);
+  }
+}
+
 /* ── ANIMATIONS ── */
 
 /* Fade in + slide up (page enter, card appear) */

@@ -49,6 +49,47 @@ export const Layout: React.FC = () => {
     localStorage.setItem('sidebar-collapsed', String(isCollapsed));
   }, [isCollapsed]);
 
+  // ── Resizable sidebar (#884) ──────────────────────────────
+  // Desktop sidebar width is user-adjustable (200–320px) and persisted.
+  // Collapsed state forces 80px (icon-rail mode). Mobile stays fixed w-64.
+  const SIDEBAR_MIN = 200;
+  const SIDEBAR_MAX = 320;
+  const SIDEBAR_COLLAPSED = 80;
+  const SIDEBAR_DEFAULT = 256;
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
+    const stored = Number(localStorage.getItem('sidebar-width'));
+    return Number.isFinite(stored) && stored >= SIDEBAR_MIN && stored <= SIDEBAR_MAX
+      ? stored
+      : SIDEBAR_DEFAULT;
+  });
+
+  useEffect(() => {
+    if (!isCollapsed) localStorage.setItem('sidebar-width', String(sidebarWidth));
+  }, [sidebarWidth, isCollapsed]);
+
+  const startResize = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Only resize in expanded desktop mode (not mobile slide-in, not collapsed).
+    if (isCollapsed) return;
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = sidebarWidth;
+    const handle = e.currentTarget;
+    handle.setPointerCapture(e.pointerId);
+
+    const onMove = (ev: PointerEvent) => {
+      const delta = ev.clientX - startX;
+      const next = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, startWidth + delta));
+      setSidebarWidth(next);
+    };
+    const onUp = (ev: PointerEvent) => {
+      handle.releasePointerCapture(ev.pointerId);
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+    };
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  };
+
   // Initialize push notifications after login
   useEffect(() => {
     if (user) {
@@ -152,12 +193,14 @@ export const Layout: React.FC = () => {
       <aside
         className={clsx(
           "fixed inset-y-0 left-0 z-50 lg:z-20 liquid-glass transform transition-all duration-200 ease-in-out lg:translate-x-0 lg:relative lg:inset-0",
-          // Mobile: always w-64
-          "w-64",
-          // Desktop: collapsible
-          isCollapsed ? "lg:w-20 lg:border-r lg:border-border" : "lg:w-64 lg:border-r lg:border-border",
+          // Mobile: always w-64. Desktop width driven by inline style (#884).
+          "w-64 lg:border-r lg:border-border sidebar-resizable",
           isSidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         )}
+        style={{
+          // Desktop-only width; mobile keeps w-64 via class. Collapsed → icon rail.
+          ['--lg-sidebar-width' as string]: `${isCollapsed ? SIDEBAR_COLLAPSED : sidebarWidth}px`,
+        }}
         aria-label={t('nav.main_nav')}
       >
         <div className={clsx(
@@ -260,6 +303,16 @@ export const Layout: React.FC = () => {
             </div>
           </div>
         </div>
+        {/* Resize handle (desktop, expanded only) — #884 */}
+        {!isCollapsed && (
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label={t('nav.resize_sidebar', { defaultValue: 'Resize sidebar' })}
+            onPointerDown={startResize}
+            className="hidden lg:block absolute top-0 right-0 bottom-0 w-1.5 cursor-col-resize hover:bg-primary/20 active:bg-primary/30 transition-colors group-resize"
+          />
+        )}
       </aside>
 
       {/* Main Content Area (Layered Panel) */}
