@@ -265,10 +265,10 @@ export const ProductList: React.FC = () => {
               <thead>
                 <tr>
                   {/* Multi-select checkbox (#885) — desktop only */}
-                  <th scope="col" className="px-6 py-3 hidden lg:table-cell">
+                  <th scope="col" className="px-2 py-3 w-10 text-center hidden lg:table-cell">
                     <input
                       type="checkbox"
-                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer align-middle"
                       checked={selection.allSelected}
                       ref={(el) => { if (el) el.indeterminate = selection.someSelected; }}
                       onChange={selection.toggleAll}
@@ -317,10 +317,10 @@ export const ProductList: React.FC = () => {
                     onClick={() => navigate(`/products/${product.id}`)}
                   >
                     {/* Multi-select checkbox (#885) — desktop only */}
-                    <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell" onClick={(e) => e.stopPropagation()}>
+                    <td className="px-2 py-4 w-10 text-center hidden lg:table-cell" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
-                        className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                        className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer align-middle"
                         checked={selection.selected.has(product.id)}
                         onChange={() => selection.toggle(product.id)}
                         aria-label={`Seleccionar ${product.name}`}
