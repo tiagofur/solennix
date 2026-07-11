@@ -185,6 +185,81 @@ final class WidgetSyncCoordinatorTests: XCTestCase {
                        "deleted payment must no longer be subtracted")
     }
 
+    // MARK: - Foreground event mutation reflection (#804)
+
+    /// Regression for #804: mutating an event in the foreground (status change,
+    /// edit, delete) used to leave the widget stale because the cache was never
+    /// updated before `.solennixEventUpdated` fired. With
+    /// `CacheManager.upsertCachedEvent`, the VM now mirrors before posting, so
+    /// the next `syncAll()` must see the new status.
+    ///
+    /// This test pins the `changeStatus` path: start with a `.quoted` event
+    /// (excluded from the confirmed count and the pending-payments window),
+    /// upsert it as `.confirmed` (now counted), sync again, and assert both
+    /// KPIs moved.
+    func testUpsertCachedEventReflectsInDerivedKPIs() throws {
+        let cache = try makeCacheManager()
+        try cache.cacheClients([
+            Client(id: "c_1", userId: "u_1", name: "Alfa", phone: "55",
+                   createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-02T00:00:00Z")
+        ])
+        // .quoted today — excluded from confirmedEvents and pendingPayments.
+        let quoted = makeEvent(id: "e_mut", clientId: "c_1", status: .quoted,
+                               totalAmount: 1000, eventDate: localDayString(offset: 0))
+        try cache.cacheEvents([quoted])
+
+        let mock = MockWidgetSyncing()
+        let coordinator = WidgetSyncCoordinator(sync: mock)
+        coordinator.start(cache: cache, isAuthorized: { true })
+
+        coordinator.syncAll()
+        let beforeKpis = try XCTUnwrap(mock.kpisCalls.last)
+        XCTAssertEqual(beforeKpis.confirmedEvents, 0, "quoted event is not confirmed")
+        XCTAssertEqual(beforeKpis.pendingPayments, 0, accuracy: 0.001,
+                       "quoted event does not contribute to pending")
+
+        // Foreground mutation: changeStatus → .confirmed (same id, today, 1000).
+        let confirmed = makeEvent(id: "e_mut", clientId: "c_1", status: .confirmed,
+                                  totalAmount: 1000, eventDate: localDayString(offset: 0))
+        try cache.upsertCachedEvent(confirmed)
+
+        coordinator.syncAll()
+        let afterKpis = try XCTUnwrap(mock.kpisCalls.last)
+        XCTAssertEqual(afterKpis.confirmedEvents, 1, "upserted confirmed event is now counted")
+        XCTAssertEqual(afterKpis.pendingPayments, 1000, accuracy: 0.001,
+                       "confirmed event in the 7-day window contributes its full amount")
+    }
+
+    /// Deleting a cached event in the foreground must drop it from the widget
+    /// immediately (mirror of the add/status path).
+    func testDeleteCachedEventReflectsInDerivedKPIs() throws {
+        let cache = try makeCacheManager()
+        try cache.cacheClients([
+            Client(id: "c_1", userId: "u_1", name: "Alfa", phone: "55",
+                   createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-02T00:00:00Z")
+        ])
+        let event = makeEvent(id: "e_del", clientId: "c_1", status: .confirmed,
+                              totalAmount: 1000, eventDate: localDayString(offset: 0))
+        try cache.cacheEvents([event])
+
+        let mock = MockWidgetSyncing()
+        let coordinator = WidgetSyncCoordinator(sync: mock)
+        coordinator.start(cache: cache, isAuthorized: { true })
+
+        coordinator.syncAll()
+        let beforeKpis = try XCTUnwrap(mock.kpisCalls.last)
+        XCTAssertEqual(beforeKpis.confirmedEvents, 1)
+
+        // Foreground delete (single id, not a full wipe).
+        try cache.deleteCachedEvent(id: "e_del")
+
+        coordinator.syncAll()
+        let afterKpis = try XCTUnwrap(mock.kpisCalls.last)
+        XCTAssertEqual(afterKpis.confirmedEvents, 0, "deleted event must no longer be counted")
+        XCTAssertEqual(afterKpis.pendingPayments, 0, accuracy: 0.001,
+                       "deleted event must not contribute to pending")
+    }
+
     // MARK: - WidgetEventData date parsing (hotfix #712)
 
     /// Regression for #712: `event.eventDate` (a `yyyy-MM-dd` server string) MUST

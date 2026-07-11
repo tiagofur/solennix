@@ -320,6 +320,13 @@ public final class EventFormViewModel {
 
     public let apiClient: APIClient
 
+    /// Widget/offline cache. Injected by the host view via `setCacheManager`
+    /// (same pattern as `EventListViewModel`/`EventDetailViewModel`). When set,
+    /// `save()` mirrors the created/updated event into SwiftData before posting
+    /// `.solennixEventUpdated` so the widget reflects it immediately instead of
+    /// waiting for the background refresh (#804).
+    private var cacheManager: CacheManager?
+
     /// Single event-mutation surface (ADR-2). Every create/edit fans out to the
     /// system calendar through this repository instead of hitting `APIClient`
     /// directly (ADR-9 rewire). The `save()` call routes here; non-event
@@ -410,6 +417,21 @@ public final class EventFormViewModel {
     public init(apiClient: APIClient, eventRepository: (any EventRepository)? = nil) {
         self.apiClient = apiClient
         self.eventRepository = eventRepository ?? DefaultEventRepository.makeDefault(eventAPI: apiClient)
+    }
+
+    /// Set the cache manager so event mutations mirror into the widget cache.
+    public func setCacheManager(_ manager: CacheManager?) {
+        self.cacheManager = manager
+    }
+
+    /// Mirrors a saved event into the widget cache. Called from `save()` (in
+    /// `EventFormViewModel+Save`) BEFORE posting `.solennixEventUpdated` so the
+    /// widget reflects the create/edit on the next `syncAll()` (#804). Keeps
+    /// `cacheManager` private: the `+Save` extension lives in a separate file
+    /// and cannot access a `private` stored property directly.
+    @MainActor
+    func mirrorEventToCache(_ event: Event) {
+        try? cacheManager?.upsertCachedEvent(event)
     }
 
     deinit {
