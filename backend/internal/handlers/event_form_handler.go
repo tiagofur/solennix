@@ -102,19 +102,6 @@ func (h *EventFormHandler) GenerateLink(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if normalizePlan(user.Plan) == "basic" {
-		count, err := h.linkRepo.CountActiveByUserID(r.Context(), userID)
-		if err != nil {
-			slog.Error("Failed to count active links", "error", err)
-			writeError(w, http.StatusInternalServerError, "Failed to check link limits")
-			return
-		}
-		if count >= 3 {
-			writePlanLimitError(w, "event_form_links", count, 3)
-			return
-		}
-	}
-
 	// Generate cryptographically random token
 	token, err := generateFormToken()
 	if err != nil {
@@ -130,7 +117,50 @@ func (h *EventFormHandler) GenerateLink(w http.ResponseWriter, r *http.Request) 
 		ExpiresAt: time.Now().UTC().Add(time.Duration(ttlDays) * 24 * time.Hour),
 	}
 
-	if err := h.linkRepo.Create(r.Context(), link); err != nil {
+	const basicLinkLimit = 3
+	const countSQL = `SELECT COUNT(*) FROM event_form_links WHERE user_id = $1 AND status = 'active' AND expires_at > NOW()`
+
+	if normalizePlan(user.Plan) == "basic" {
+		err := withPlanLimit(r.Context(), h.pool, userID, "event_form_links", basicLinkLimit, countSQL,
+			func(ctx context.Context, tx pgx.Tx) error {
+				return tx.QueryRow(ctx,
+					`INSERT INTO event_form_links (user_id, token, label, expires_at)
+					VALUES ($1, $2, $3, $4)
+					RETURNING id, user_id, token, label, status, submitted_event_id, submitted_client_id, expires_at, used_at, created_at, updated_at`,
+					link.UserID, link.Token, link.Label, link.ExpiresAt,
+				).Scan(
+					&link.ID, &link.UserID, &link.Token, &link.Label, &link.Status,
+					&link.SubmittedEventID, &link.SubmittedClientID,
+					&link.ExpiresAt, &link.UsedAt, &link.CreatedAt, &link.UpdatedAt,
+				)
+			},
+		)
+		if err == errPoolNil {
+			count, cErr := h.linkRepo.CountActiveByUserID(r.Context(), userID)
+			if cErr != nil {
+				slog.Error("Failed to count active links", "error", cErr)
+				writeError(w, http.StatusInternalServerError, "Failed to check link limits")
+				return
+			}
+			if count >= basicLinkLimit {
+				writePlanLimitError(w, "event_form_links", count, basicLinkLimit)
+				return
+			}
+			if err := h.linkRepo.Create(r.Context(), link); err != nil {
+				slog.Error("Failed to create event form link", "error", err)
+				writeError(w, http.StatusInternalServerError, "Failed to create link")
+				return
+			}
+		} else if err == ErrPlanLimitReached {
+			count, _ := h.linkRepo.CountActiveByUserID(r.Context(), userID)
+			writePlanLimitError(w, "event_form_links", count, basicLinkLimit)
+			return
+		} else if err != nil {
+			slog.Error("Failed to create event form link", "error", err)
+			writeError(w, http.StatusInternalServerError, "Failed to create link")
+			return
+		}
+	} else if err := h.linkRepo.Create(r.Context(), link); err != nil {
 		slog.Error("Failed to create event form link", "error", err)
 		writeError(w, http.StatusInternalServerError, "Failed to create link")
 		return

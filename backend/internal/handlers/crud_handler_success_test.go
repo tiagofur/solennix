@@ -1210,11 +1210,13 @@ func TestUpdateProductIngredients_Success(t *testing.T) {
 	productID := uuid.New()
 	inventoryID := uuid.New()
 	productRepo := new(MockProductRepo)
+	inventoryRepo := new(MockInventoryRepo)
 
 	productRepo.On("GetByID", mock.Anything, productID, userID).Return(&models.Product{ID: productID, UserID: userID, Name: "Tacos", Category: "main"}, nil)
+	inventoryRepo.On("VerifyOwnership", mock.Anything, mock.AnythingOfType("[]uuid.UUID"), userID).Return(nil)
 	productRepo.On("UpdateIngredients", mock.Anything, productID, mock.AnythingOfType("[]models.ProductIngredient")).Return(nil)
 
-	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), productRepo, new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))
+	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), productRepo, inventoryRepo, new(MockFullPaymentRepo), new(MockFullUserRepo))
 
 	body := `{"ingredients":[{"inventory_id":"` + inventoryID.String() + `","quantity_required":2.5}]}`
 	req := makeReqWithIDParam(http.MethodPut, "/api/products/"+productID.String()+"/ingredients", body, productID.String(), userID)
@@ -1253,11 +1255,13 @@ func TestUpdateProductIngredients_RepoError_Returns500(t *testing.T) {
 	userID := uuid.New()
 	productID := uuid.New()
 	productRepo := new(MockProductRepo)
+	inventoryRepo := new(MockInventoryRepo)
 
 	productRepo.On("GetByID", mock.Anything, productID, userID).Return(&models.Product{ID: productID, UserID: userID, Name: "Tacos", Category: "main"}, nil)
+	inventoryRepo.On("VerifyOwnership", mock.Anything, mock.AnythingOfType("[]uuid.UUID"), userID).Return(nil)
 	productRepo.On("UpdateIngredients", mock.Anything, productID, mock.AnythingOfType("[]models.ProductIngredient")).Return(errTest)
 
-	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), productRepo, new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))
+	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), productRepo, inventoryRepo, new(MockFullPaymentRepo), new(MockFullUserRepo))
 
 	body := `{"ingredients":[{"inventory_id":"` + uuid.New().String() + `","quantity_required":2.5}]}`
 	req := makeReqWithIDParam(http.MethodPut, "/api/products/"+productID.String()+"/ingredients", body, productID.String(), userID)

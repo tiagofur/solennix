@@ -144,6 +144,22 @@ func (r *InventoryRepo) Update(ctx context.Context, i *models.InventoryItem) err
 	).Scan(&i.LastUpdated)
 }
 
+// VerifyOwnership checks that all inventory IDs belong to the given user.
+func (r *InventoryRepo) VerifyOwnership(ctx context.Context, inventoryIDs []uuid.UUID, userID uuid.UUID) error {
+	if len(inventoryIDs) == 0 {
+		return nil
+	}
+	query := `SELECT COUNT(*) FROM inventory WHERE id = ANY($1) AND user_id = $2`
+	var count int
+	if err := r.pool.QueryRow(ctx, query, inventoryIDs, userID).Scan(&count); err != nil {
+		return fmt.Errorf("failed to verify inventory ownership: %w", err)
+	}
+	if count != len(inventoryIDs) {
+		return fmt.Errorf("one or more inventory items not found")
+	}
+	return nil
+}
+
 func (r *InventoryRepo) Delete(ctx context.Context, id, userID uuid.UUID) error {
 	tag, err := r.pool.Exec(ctx, "DELETE FROM inventory WHERE id=$1 AND user_id=$2", id, userID)
 	if err != nil {

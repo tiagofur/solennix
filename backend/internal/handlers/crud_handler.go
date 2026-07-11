@@ -1920,6 +1920,15 @@ func (h *CRUDHandler) UpdateProductIngredients(w http.ResponseWriter, r *http.Re
 		seenInventory[ingredient.InventoryID] = true
 	}
 
+	inventoryIDs := make([]uuid.UUID, 0, len(req.Ingredients))
+	for _, ingredient := range req.Ingredients {
+		inventoryIDs = append(inventoryIDs, ingredient.InventoryID)
+	}
+	if err := h.inventoryRepo.VerifyOwnership(r.Context(), inventoryIDs, userID); err != nil {
+		writeError(w, http.StatusBadRequest, "one or more inventory items not found")
+		return
+	}
+
 	if err := h.productRepo.UpdateIngredients(r.Context(), id, req.Ingredients); err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to update ingredients: "+err.Error())
 		return

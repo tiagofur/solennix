@@ -35,7 +35,7 @@ type fakePaymentSubmissionReviewStore struct {
 	getSubmissionCalled    bool
 }
 
-func (f *fakePaymentSubmissionReviewStore) GetSubmissionForUpdate(context.Context, uuid.UUID) (*models.PaymentSubmission, error) {
+func (f *fakePaymentSubmissionReviewStore) GetSubmissionForUpdate(context.Context, uuid.UUID, uuid.UUID) (*models.PaymentSubmission, error) {
 	f.getSubmissionCalled = true
 	if f.getSubmissionErr != nil {
 		return nil, f.getSubmissionErr

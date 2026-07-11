@@ -510,7 +510,7 @@ func TestPaymentSubmissionGetReceiptAuthorizationAndMissingFile(t *testing.T) {
 		handler := NewPaymentSubmissionHandler(nil, nil, userRepo, nil, uploadDir)
 		privatePath := filepath.Join(handler.privateReceiptsDir, storedReceipt)
 		require.NoError(t, os.WriteFile(privatePath, pngFixtureBytes(), 0o644))
-		handler.getSubmission = func(_ context.Context, id uuid.UUID) (*models.PaymentSubmission, error) {
+		handler.getSubmission = func(_ context.Context, id uuid.UUID, _ uuid.UUID) (*models.PaymentSubmission, error) {
 			return &models.PaymentSubmission{
 				ID:             id,
 				UserID:         ownerID,
