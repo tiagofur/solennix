@@ -25,6 +25,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import { logError } from "@/lib/errorHandler";
+import { productUnitCostFromIngredients } from "@/lib/EventFinancials";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { EventGeneralInfo } from "./components/EventGeneralInfo";
 import { EventProducts } from "./components/EventProducts";
@@ -48,7 +49,6 @@ import {
   EventExtra,
   EventEquipment as EventEquipmentEntity,
   EventSupply,
-  ProductIngredient,
 } from "@/types/entities";
 import { UpgradeBanner } from "@/components/UpgradeBanner";
 import { useUnavailableDatesByRange } from "@/hooks/queries/useUnavailableDatesQueries";
@@ -552,13 +552,7 @@ export const EventForm: React.FC = () => {
         const costs = await Promise.all(
           missing.map(async (productId) => {
             const ingredients = await productService.getIngredients(productId);
-            const cost =
-              ingredients
-                ?.filter((ing: ProductIngredient) => ing.type === "ingredient")
-                .reduce((sum: number, ing: ProductIngredient) => {
-                  const unitCost = ing.unit_cost ?? 0;
-                  return sum + ing.quantity_required * unitCost;
-                }, 0) || 0;
+            const cost = productUnitCostFromIngredients(ingredients ?? []);
             return { productId, cost };
           }),
         );

@@ -49,6 +49,10 @@ struct SolennixApp: App {
     // MARK: - Init
 
     init() {
+        #if DEBUG
+        Self.applyUITestLaunchDefaults()
+        #endif
+
         let keychain = KeychainHelper.standard
         let baseURL = URL(string: "https://api.solennix.com/api")!
         let client = APIClient(baseURL: baseURL, keychainHelper: keychain)
@@ -379,6 +383,18 @@ struct SolennixApp: App {
             SentryHelper.capture(error: error, context: "sync_upcoming_event_notifications")
         }
     }
+
+    #if DEBUG
+    /// Seeds UserDefaults for UI tests. Launch arguments for `@AppStorage` are unreliable
+    /// across the XCUITest runner ↔ app process boundary on CI simulators.
+    private static func applyUITestLaunchDefaults() {
+        let env = ProcessInfo.processInfo.environment
+        guard env["SOLX_UI_TEST_BYPASS_AUTH"] == "1" || env["SOLX_UI_TEST_MOCK_LOGIN"] == "1" else {
+            return
+        }
+        UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
+    }
+    #endif
 
     // MARK: - Session Cleanup
 

@@ -875,12 +875,17 @@ func TestCreatePaymentValidation(t *testing.T) {
 		{
 			name:     "ZeroAmount",
 			body:     `{"event_id":"` + eventID + `","amount":0,"payment_date":"2026-01-01","payment_method":"cash"}`,
-			wantBody: "amount: must be greater than 0",
+			wantBody: "amount: must be at least 0.01",
+		},
+		{
+			name:     "BelowMinimumCent",
+			body:     `{"event_id":"` + eventID + `","amount":0.005,"payment_date":"2026-01-01","payment_method":"cash"}`,
+			wantBody: "amount: must be at least 0.01",
 		},
 		{
 			name:     "NegativeAmount",
 			body:     `{"event_id":"` + eventID + `","amount":-10,"payment_date":"2026-01-01","payment_method":"cash"}`,
-			wantBody: "amount: must be greater than 0",
+			wantBody: "amount: must be at least 0.01",
 		},
 		{
 			name:     "EmptyPaymentMethod",
@@ -919,7 +924,7 @@ func TestUpdatePaymentValidation(t *testing.T) {
 		{
 			name:     "ZeroAmount",
 			body:     `{"event_id":"` + eventID + `","amount":0,"payment_date":"2026-01-01","payment_method":"cash"}`,
-			wantBody: "amount: must be greater than 0",
+			wantBody: "amount: must be at least 0.01",
 		},
 		{
 			name:     "EmptyPaymentMethod",

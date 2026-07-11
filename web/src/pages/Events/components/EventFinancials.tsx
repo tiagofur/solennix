@@ -24,6 +24,7 @@ interface EventFinancialsProps {
 }
 
 import { useTranslation } from 'react-i18next';
+import { computeEventFinancials } from '@/lib/EventFinancials';
 
 export const EventFinancials: React.FC<EventFinancialsProps> = ({
   selectedProducts,
@@ -38,9 +39,28 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
   const { register, control } = useFormContext();
   const discountValue = useWatch({ control, name: 'discount' }) || 0;
   const requiresInvoiceValue = useWatch({ control, name: 'requires_invoice' });
-  const taxAmountValue = useWatch({ control, name: 'tax_amount' }) || 0;
+  const taxRateValue = useWatch({ control, name: 'tax_rate' }) || 16;
   const totalAmountValue = useWatch({ control, name: 'total_amount' }) || 0;
   const depositPercentValue = useWatch({ control, name: 'deposit_percent' }) || 0;
+
+  const profitability = computeEventFinancials({
+    products: selectedProducts.map((p) => ({
+      quantity: p.quantity,
+      unitPrice: p.price,
+      lineDiscount: p.discount || 0,
+      unitCost: productUnitCosts[p.product_id] || 0,
+    })),
+    extras: extras.map((e) => ({
+      price: e.price,
+      cost: e.cost,
+      excludeUtility: e.exclude_utility,
+    })),
+    supplies: supplyCost > 0 ? [{ quantity: 1, unitCost: supplyCost }] : [],
+    globalDiscountType: discountType,
+    globalDiscount: Number(discountValue) || 0,
+    requiresInvoice: Boolean(requiresInvoiceValue),
+    taxRate: Number(taxRateValue) || 0,
+  });
 
   return (
     <div className="space-y-6">
@@ -191,61 +211,33 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
             <div className="grid grid-cols-2 gap-y-2 text-sm">
               <div className="text-text-secondary">{t('events:financials.est_cost')}</div>
               <div className="text-right font-medium text-text">
-                ${(selectedProducts.reduce((sum, p) => sum + (productUnitCosts[p.product_id] || 0) * p.quantity, 0) + extras.reduce((sum, e) => sum + e.cost, 0)).toLocaleString(moneyLocale, { minimumFractionDigits: 2 })}
+                ${(profitability.productCost + profitability.extrasCost).toLocaleString(moneyLocale, { minimumFractionDigits: 2 })}
               </div>
 
-              {supplyCost > 0 && (
+              {profitability.suppliesCost > 0 && (
                 <>
                   <div className="text-warning">{t('events:supplies.title')}:</div>
                   <div className="text-right font-medium text-warning">
-                    ${supplyCost.toLocaleString(moneyLocale, { minimumFractionDigits: 2 })}
+                    ${profitability.suppliesCost.toLocaleString(moneyLocale, { minimumFractionDigits: 2 })}
                   </div>
                 </>
               )}
 
               <div className="text-text-secondary font-medium border-t border-border pt-2">{t('events:financials.total')} {t('events:financials.est_cost').toLowerCase()}</div>
               <div className="text-right font-medium text-text border-t border-border pt-2">
-                ${(selectedProducts.reduce((sum, p) => sum + (productUnitCosts[p.product_id] || 0) * p.quantity, 0) + extras.reduce((sum, e) => sum + e.cost, 0) + supplyCost).toLocaleString(moneyLocale, { minimumFractionDigits: 2 })}
+                ${profitability.totalCost.toLocaleString(moneyLocale, { minimumFractionDigits: 2 })}
               </div>
 
               <div className="text-text-secondary">{t('events:financials.est_profit')}</div>
               <div className="text-right font-bold text-success">
-                 ${(
-                    totalAmountValue -
-                    (requiresInvoiceValue ? taxAmountValue : 0) -
-                    (selectedProducts.reduce(
-                      (sum, p) =>
-                        sum +
-                        (productUnitCosts[p.product_id] || 0) * p.quantity,
-                      0,
-                    ) +
-                      extras.reduce((sum, e) => sum + e.cost, 0) + supplyCost)
-                  ).toLocaleString(moneyLocale, { minimumFractionDigits: 2 })}
+                 ${profitability.netProfit.toLocaleString(moneyLocale, { minimumFractionDigits: 2 })}
               </div>
 
               <div className="text-text-secondary">{t('events:financials.est_margin')}</div>
               <div className="text-right font-bold text-info">
-                 {(() => {
-                    const totalRevenue = totalAmountValue - (requiresInvoiceValue ? taxAmountValue : 0);
-                    const totalCost =
-                      selectedProducts.reduce(
-                        (sum, p) =>
-                          sum +
-                          (productUnitCosts[p.product_id] || 0) * p.quantity,
-                        0,
-                      ) + extras.reduce((sum, e) => sum + e.cost, 0) + supplyCost;
-
-                    const profit = totalRevenue - totalCost;
-                    const passThroughRevenue = extras
-                      .filter((e) => e.exclude_utility)
-                      .reduce((sum, e) => sum + e.price, 0);
-
-                    const adjustedRevenue = totalRevenue - passThroughRevenue;
-
-                    if (adjustedRevenue <= 0) return "0.0%";
-
-                    return `${((profit / adjustedRevenue) * 100).toFixed(1)}%`;
-                  })()}
+                 {profitability.adjustedRevenue <= 0
+                   ? "0.0%"
+                   : `${profitability.profitMargin.toFixed(1)}%`}
               </div>
             </div>
           </div>

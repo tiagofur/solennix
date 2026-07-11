@@ -37,6 +37,7 @@ import { downloadEventPDF } from "@/services/pdfService";
 import { logError } from "@/lib/errorHandler";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { getEventTotalCharged, getEventTaxAmount, getEventNetSales } from "@/lib/finance";
+import { computeEventFinancials, productUnitCostFromIngredients } from "@/lib/EventFinancials";
 import { Payments } from "./components/Payments";
 import { ClientPortalShareCard } from "./components/ClientPortalShareCard";
 import { StatusDropdown, EventStatus } from "@/components/StatusDropdown";
@@ -376,19 +377,38 @@ export const EventSummary: React.FC = () => {
     );
   }
 
-  const totalProductCost = ingredients.reduce((sum, i) => sum + (i.cost ?? 0), 0);
-  const totalExtrasCost = extras.reduce((sum, e) => sum + e.cost, 0);
-  const totalCost = totalProductCost + totalExtrasCost;
+  const financials = computeEventFinancials({
+    products: (products as EventProductWithDetails[]).map((p) => ({
+      quantity: p.quantity || 1,
+      unitPrice: p.unit_price,
+      lineDiscount: p.discount || 0,
+      unitCost: productUnitCostFromIngredients(
+        (allProdIngredients as ProductIngredientWithInventory[]).filter(
+          (ing) => ing.product_id === p.product_id,
+        ),
+      ),
+    })),
+    extras: (extras as EventExtra[]).map((e) => ({
+      price: e.price,
+      cost: e.cost,
+      excludeUtility: e.exclude_utility ?? false,
+    })),
+    supplies: (supplies as EventSupply[]).map((s) => ({
+      quantity: s.quantity || 0,
+      unitCost: s.unit_cost || 0,
+      excludeCost: s.exclude_cost ?? false,
+    })),
+    globalDiscountType: (event.discount_type as "percent" | "fixed") || "percent",
+    globalDiscount: event.discount || 0,
+    requiresInvoice: event.requires_invoice ?? false,
+    taxRate: event.tax_rate || 0,
+  });
+  const totalCost = financials.totalCost;
+  const profit = financials.netProfit;
+  const margin = financials.profitMargin;
   const totalCharged = getEventTotalCharged(event);
   const taxAmount = getEventTaxAmount(event);
   const netSales = getEventNetSales(event);
-  const revenueExTax = netSales;
-  const profit = revenueExTax - totalCost;
-  const passThroughRevenue = extras
-    .filter((e) => e.exclude_utility)
-    .reduce((sum, e) => sum + e.price, 0);
-  const adjustedRevenue = revenueExTax - passThroughRevenue;
-  const margin = adjustedRevenue > 0 ? (profit / adjustedRevenue) * 100 : 0;
 
   const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
   const remainingValue = totalCharged - totalPaid;

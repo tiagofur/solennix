@@ -267,12 +267,10 @@ fun EventDetailScreen(
                             // Finance Summary Card (navigable)
                             FinanceSummaryCard(
                                 event = event,
-                                // Honor excludeCost: supplies marked as reused/excluded
-                                // must not contribute to the cost basis (mirrors iOS
-                                // EventFinancials.suppliesCost filter).
-                                supplyCost = uiState.supplies
-                                    .filter { !it.excludeCost }
-                                    .sumOf { it.quantity * it.unitCost },
+                                products = uiState.products,
+                                extras = uiState.extras,
+                                supplies = uiState.supplies,
+                                productUnitCosts = uiState.productUnitCosts,
                                 onClick = { onFinancesClick(event.id) }
                             )
 

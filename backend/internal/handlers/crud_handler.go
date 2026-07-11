@@ -19,6 +19,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/tiagofur/solennix-backend/internal/financial"
 	"github.com/tiagofur/solennix-backend/internal/i18n"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
@@ -961,6 +962,68 @@ func (h *CRUDHandler) GetEventExtras(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, extras)
+}
+
+// GetEventFinancials handles GET /api/events/{id}/financials.
+// Returns the canonical revenue, cost, and margin breakdown for an event.
+func (h *CRUDHandler) GetEventFinancials(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	eventID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid event ID")
+		return
+	}
+
+	event, err := h.eventRepo.GetByID(r.Context(), eventID, userID)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "Event not found")
+		return
+	}
+
+	products, err := h.eventRepo.GetProducts(r.Context(), eventID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to fetch event products")
+		return
+	}
+	extras, err := h.eventRepo.GetExtras(r.Context(), eventID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to fetch event extras")
+		return
+	}
+	supplies, err := h.eventRepo.GetSupplies(r.Context(), eventID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to fetch event supplies")
+		return
+	}
+
+	productIDs := make([]uuid.UUID, 0, len(products))
+	seen := make(map[uuid.UUID]bool, len(products))
+	for _, p := range products {
+		if seen[p.ProductID] {
+			continue
+		}
+		seen[p.ProductID] = true
+		productIDs = append(productIDs, p.ProductID)
+	}
+
+	unitCosts := make(map[string]float64, len(productIDs))
+	if len(productIDs) > 0 {
+		ingredients, err := h.productRepo.GetIngredientsForProducts(r.Context(), productIDs)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to fetch product ingredients")
+			return
+		}
+		byProduct := make(map[uuid.UUID][]models.ProductIngredient, len(productIDs))
+		for _, ing := range ingredients {
+			byProduct[ing.ProductID] = append(byProduct[ing.ProductID], ing)
+		}
+		for _, id := range productIDs {
+			unitCosts[id.String()] = financial.ProductUnitCost(byProduct[id])
+		}
+	}
+
+	result := financial.ComputeEventFinancials(*event, products, extras, supplies, unitCosts)
+	writeJSON(w, http.StatusOK, result)
 }
 
 func (h *CRUDHandler) UpdateEventItems(w http.ResponseWriter, r *http.Request) {
@@ -2294,6 +2357,7 @@ func (h *CRUDHandler) CreatePayment(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, validationErrorMessage(ctx, err))
 		return
 	}
+	payment.Amount = roundCents(payment.Amount)
 
 	if h.eventRepo != nil {
 		if _, err := h.eventRepo.GetByID(ctx, payment.EventID, userID); err != nil {
@@ -2396,6 +2460,7 @@ func (h *CRUDHandler) UpdatePayment(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, validationErrorMessage(ctx, err))
 		return
 	}
+	payment.Amount = roundCents(payment.Amount)
 
 	payment.ID = id
 
