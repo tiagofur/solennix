@@ -419,6 +419,22 @@ input, select, textarea {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* ── DESKTOP DENSITY (lg+ / ≥1024px) ──
+   PRODUCT.md: desktop-primary information hierarchy. Compact tables,
+   tighter rows — more data per screen without horizontal scroll.
+   Scoped to #main-content so auth/marketing pages are unaffected.
+   Specificity (0,2,3) outranks Tailwind's py-4 utility (0,1,0). */
+@media (min-width: 1024px) {
+  #main-content table.min-w-full thead th {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  #main-content table.min-w-full tbody td {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
 /* ── ANIMATIONS ── */
 
 /* Fade in + slide up (page enter, card appear) */

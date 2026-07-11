@@ -132,11 +132,6 @@ export const Layout: React.FC = () => {
         {t('nav.skip_to_content')}
       </a>
 
-      {/* Dynamic iOS-style ambient mesh gradient blobs for liquid glass refraction */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[120px] pointer-events-none z-0 dark:bg-primary/5" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-accent/20 blur-[150px] pointer-events-none z-0 dark:bg-accent/5" />
-      <div className="absolute top-[40%] right-[20%] w-[35%] h-[35%] rounded-full bg-primary-light/30 blur-[100px] pointer-events-none z-0 dark:bg-primary-light/5" />
-
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div
@@ -286,7 +281,7 @@ export const Layout: React.FC = () => {
         </header>
 
         {/* The Panel Container */}
-        <div className="flex-1 overflow-hidden flex flex-col bg-surface-grouped/80 backdrop-blur-xl lg:rounded-[2.5rem] lg:border border-border lg:shadow-xl relative z-10">
+        <div className="flex-1 overflow-hidden flex flex-col bg-surface-grouped/80 backdrop-blur-xl lg:rounded-lg lg:border border-border lg:shadow-xl relative z-10">
 
           {/* Topbar inside panel */}
           <div className="shrink-0 px-6 lg:px-10 py-4 lg:py-6 flex items-center justify-between gap-4">
@@ -306,7 +301,7 @@ export const Layout: React.FC = () => {
           </div>
 
           {/* Scrollable Page Content */}
-          <main id="main-content" className="flex-1 overflow-y-auto px-6 lg:px-10 pb-28 md:pb-10">
+          <main id="main-content" className="flex-1 overflow-y-auto px-6 lg:px-10 pb-28 md:pb-6">
             <Outlet />
           </main>
         </div>

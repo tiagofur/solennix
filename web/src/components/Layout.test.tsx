@@ -136,8 +136,8 @@ describe('Layout', () => {
   it('uses smartphone-only bottom spacing for the main content area', () => {
     renderLayout();
     expect(screen.getByRole('main').className).toContain('pb-28');
-    expect(screen.getByRole('main').className).toContain('md:pb-10');
-    expect(screen.getByRole('main').className).not.toContain('lg:pb-10');
+    // Desktop (md+) uses tighter padding — issue #880 density pass.
+    expect(screen.getByRole('main').className).toContain('md:pb-6');
   });
 
   // --- Overlay keyboard handler tests ---
