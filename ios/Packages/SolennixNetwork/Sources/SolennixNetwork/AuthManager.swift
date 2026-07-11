@@ -148,6 +148,8 @@ public final class AuthManager {
             return
         }
         if ProcessInfo.processInfo.environment["SOLX_UI_TEST_MOCK_LOGIN"] == "1" {
+            clearTokens()
+            currentUser = nil
             authState = .unauthenticated
             return
         }
