@@ -34,7 +34,7 @@ public actor APIClient {
     // MARK: - Properties
 
     private let baseURL: URL
-    private let keychainHelper: KeychainHelper
+    private let keychainHelper: any KeychainStoring
     private let session: URLSession
     private let decoder: JSONDecoder
     private let encoder: JSONEncoder
@@ -68,7 +68,7 @@ public actor APIClient {
     ///   - keychainHelper: The keychain helper for reading auth tokens.
     public init(
         baseURL: URL = URL(string: "https://api.solennix.com/api")!,
-        keychainHelper: KeychainHelper = .standard
+        keychainHelper: any KeychainStoring = KeychainHelper.standard
     ) {
         self.baseURL = baseURL
         self.keychainHelper = keychainHelper
@@ -91,7 +91,7 @@ public actor APIClient {
     /// Creates a new API client for testing with injected URLSession.
     public init(
         baseURL: URL = URL(string: "https://api.solennix.com/api")!,
-        keychainHelper: KeychainHelper = .standard,
+        keychainHelper: any KeychainStoring = KeychainHelper.standard,
         session: URLSession
     ) {
         self.baseURL = baseURL

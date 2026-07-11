@@ -102,7 +102,13 @@ public final class AuthManager {
 
     // MARK: - Dependencies
 
-    private let keychain: KeychainHelper
+    private let keychain: any KeychainStoring
+
+    /// Backing store for the cached user JSON (mirrors Android `KEY_USER_JSON`).
+    /// Tokens live in the Keychain; the user object is non-secret display data, so
+    /// `UserDefaults` is the right place — it survives cold launch and is cheap to
+    /// read synchronously during session restore.
+    private let defaults: UserDefaults
 
     /// Reference to the APIClient, set after initialization to break the dependency cycle.
     /// AuthManager uses this to make authenticated API calls (login, register, etc.).
@@ -122,8 +128,12 @@ public final class AuthManager {
 
     // MARK: - Init
 
-    public init(keychain: KeychainHelper = .standard) {
+    public init(
+        keychain: any KeychainStoring = KeychainHelper.standard,
+        defaults: UserDefaults = .standard
+    ) {
         self.keychain = keychain
+        self.defaults = defaults
     }
 
     // MARK: - Session Restore
@@ -167,6 +177,13 @@ public final class AuthManager {
             return
         }
 
+        // Load the persisted user before the network call so the offline path
+        // below can restore an optimistic session without a round-trip. Mirrors
+        // Android's `loadCachedUser()` in `restoreSession()`.
+        if currentUser == nil {
+            currentUser = loadCachedUser()
+        }
+
         // Try to fetch current user with the stored token
         do {
             guard let client = apiClient else {
@@ -174,20 +191,23 @@ public final class AuthManager {
                 return
             }
             let user: User = try await client.get(Endpoint.me)
-            currentUser = user
+            setCurrentUser(user)
             authState = .authenticated(user)
             userTrackingDelegate?.setUser(id: user.id, email: user.email, name: user.name)
         } catch {
             // Distinguish network errors (timeout, no connection) from auth errors (401/403).
             // A timeout does NOT mean the token is invalid — it means we can't verify right now.
             if isNetworkError(error) {
-                // Network issue: preserve session with cached user if available
+                // Network issue: preserve session with cached user if available.
                 if let cachedUser = currentUser {
                     authState = .authenticated(cachedUser)
                 } else {
-                    // No cached user but tokens exist — optimistically assume authenticated.
-                    // The next API call will trigger token refresh or re-auth if truly expired.
-                    authState = .unauthenticated
+                    // Tokens exist but no cached user and we can't reach the server.
+                    // Stay deferred (.unknown) instead of forcing logout — the reconnect
+                    // hook (SolennixApp) will re-run checkAuth() once connectivity returns.
+                    // Going .unauthenticated here was bug #800: it logged users out on every
+                    // cold launch with no signal, even though their tokens were still valid.
+                    authState = .unknown
                 }
                 return
             }
@@ -203,7 +223,7 @@ public final class AuthManager {
                 // Retry fetching user after refresh
                 if let client = apiClient,
                    let user: User = try? await client.get(Endpoint.me) {
-                    currentUser = user
+                    setCurrentUser(user)
                     authState = .authenticated(user)
                     userTrackingDelegate?.setUser(id: user.id, email: user.email, name: user.name)
                 } else {
@@ -221,8 +241,11 @@ public final class AuthManager {
                     // Tokens survived — behave as if we couldn't reach the server.
                     if let cachedUser = currentUser {
                         authState = .authenticated(cachedUser)
+                    } else {
+                        // Tokens exist but no user yet — stay deferred. The reconnect
+                        // hook (SolennixApp) re-runs checkAuth() when connectivity returns.
+                        authState = .unknown
                     }
-                    // else: authState stays .unknown until next attempt (tokens exist, no user yet)
                 } else {
                     authState = .unauthenticated
                 }
@@ -307,7 +330,7 @@ public final class AuthManager {
         let response: AuthResponse = try await client.post(Endpoint.login, body: body)
 
         storeTokens(access: response.accessToken, refresh: response.refreshToken)
-        currentUser = response.user
+        setCurrentUser(response.user)
         authState = .authenticated(response.user)
         userTrackingDelegate?.setUser(id: response.user.id, email: response.user.email, name: response.user.name)
         return response.user
@@ -357,7 +380,7 @@ public final class AuthManager {
         let response: AuthResponse = try await client.post(Endpoint.teamInviteAccept, body: body)
 
         storeTokens(access: response.accessToken, refresh: response.refreshToken)
-        currentUser = response.user
+        setCurrentUser(response.user)
         authState = .authenticated(response.user)
         userTrackingDelegate?.setUser(id: response.user.id, email: response.user.email, name: response.user.name)
         return response.user
@@ -394,7 +417,7 @@ public final class AuthManager {
         let response: AuthResponse = try await client.post(Endpoint.appleAuth, body: body)
 
         storeTokens(access: response.accessToken, refresh: response.refreshToken)
-        currentUser = response.user
+        setCurrentUser(response.user)
         authState = .authenticated(response.user)
         userTrackingDelegate?.setUser(id: response.user.id, email: response.user.email, name: response.user.name)
         return response.user
@@ -420,7 +443,7 @@ public final class AuthManager {
         let response: AuthResponse = try await client.post(Endpoint.googleAuth, body: body)
 
         storeTokens(access: response.accessToken, refresh: response.refreshToken)
-        currentUser = response.user
+        setCurrentUser(response.user)
         authState = .authenticated(response.user)
         userTrackingDelegate?.setUser(id: response.user.id, email: response.user.email, name: response.user.name)
         return response.user
@@ -445,7 +468,7 @@ public final class AuthManager {
         }
 
         clearTokens()
-        currentUser = nil
+        clearCurrentUser()
         biometricPassed = false
         authState = .unauthenticated
         userTrackingDelegate?.clearUser()
@@ -508,7 +531,7 @@ public final class AuthManager {
         }
 
         let updatedUser: User = try await client.put(Endpoint.updateProfile, body: data)
-        currentUser = updatedUser
+        setCurrentUser(updatedUser)
         if case .authenticated = authState {
             authState = .authenticated(updatedUser)
         }
@@ -608,7 +631,7 @@ public final class AuthManager {
         #endif
         guard isAuthenticated else { return }
         clearTokens()
-        currentUser = nil
+        clearCurrentUser()
         authState = .unauthenticated
     }
 
@@ -617,6 +640,36 @@ public final class AuthManager {
     private func storeTokens(access: String, refresh: String) {
         keychain.saveString(access, for: KeychainHelper.Keys.accessToken)
         keychain.saveString(refresh, for: KeychainHelper.Keys.refreshToken)
+    }
+
+    // MARK: - Cached User Persistence
+
+    /// UserDefaults key for the serialized current user. Mirrors Android's
+    /// `KEY_USER_JSON` (`current_user`) so both native apps restore the session
+    /// offline without a round-trip to `/auth/me`.
+    private static let cachedUserKey = "com.solennix.app.currentUser"
+
+    /// Sets the current user and persists it for offline session restore.
+    /// Central write path — every successful auth flow funnels through here so
+    /// the cache can never drift from the in-memory value.
+    private func setCurrentUser(_ user: User) {
+        currentUser = user
+        if let data = try? JSONEncoder().encode(user) {
+            defaults.set(data, forKey: Self.cachedUserKey)
+        }
+    }
+
+    /// Clears both the in-memory user and its persisted cache.
+    private func clearCurrentUser() {
+        currentUser = nil
+        defaults.removeObject(forKey: Self.cachedUserKey)
+    }
+
+    /// Loads the persisted user without touching the network. Returns `nil` if
+    /// no cache exists or the cache is corrupt (treated as a cold launch).
+    private func loadCachedUser() -> User? {
+        guard let data = defaults.data(forKey: Self.cachedUserKey) else { return nil }
+        return try? JSONDecoder().decode(User.self, from: data)
     }
 }
 

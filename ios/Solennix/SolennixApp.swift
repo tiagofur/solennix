@@ -244,7 +244,17 @@ struct SolennixApp: App {
                     }
                 }
                 .onChange(of: networkMonitor.isConnected) { _, isConnected in
-                    guard isConnected, authManager.isAuthenticated else { return }
+                    guard isConnected else { return }
+
+                    // #800: If checkAuth() deferred to .unknown on cold launch with no
+                    // connectivity (tokens present, couldn't reach /auth/me), retry now that
+                    // the network is back so the session resolves instead of staying stuck.
+                    if case .unknown = authManager.authState, authManager.getAccessToken() != nil {
+                        Task { await authManager.checkAuth() }
+                        return
+                    }
+
+                    guard authManager.isAuthenticated else { return }
                     Task {
                         await apiClient.flushQueuedMutations()
                         await syncUpcomingEventNotifications()

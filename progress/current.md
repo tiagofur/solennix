@@ -1,21 +1,34 @@
 # Sesión Activa — Solennix Agent Progress
 
 ## Feature en curso
-- **ID:** epic-890-phase-3
-- **Nombre:** Financial integrity (Judgment Day Phase 3)
+- **Issue:** #800 — fix(ios): AuthManager logs out on network failure with valid keychain tokens
 - **Estado:** done (pendiente PR)
+- **Branch:** `fix/ios-auth-offline-session-restore`
 
-## Plan de trabajo
-- [x] Backend #901: payment min 0.01 + roundCents on create/update
-- [x] Backend #903: GET /api/events/{id}/financials
-- [x] Web #856/#858: EventFinancials.ts DRY + EventSummary supplies in margin
-- [x] Android #829: EventFinancials.kt + detail margin with ingredient costs
-- [x] Tests backend/web/android
+## Root cause
+`AuthManager.checkAuth()`: cuando `/auth/me` fallaba por **error de red** con tokens presentes pero `currentUser == nil` (siempre nil en cold launch — iOS no persistía el usuario), el código hacía `authState = .unauthenticated`. El usuario caía al login con tokens válidos en keychain.
 
-## Notas de Desarrollo
-- Branch: `fix/financial-integrity-phase-3`
-- iOS ya tenía `EventFinancials.compute()` — sin cambios necesarios
-- Endpoint `/financials` listo para consumo cross-platform; clientes usan compute local con mismos golden tests
+Brecha de paridad: Android ya persistía el usuario (`KEY_USER_JSON`) y restauraba optimistamente; iOS no.
+
+## Cambios
+- [x] `AuthManager.swift`: persistencia de `currentUser` en UserDefaults (`setCurrentUser`/`clearCurrentUser`/`loadCachedUser`) — paridad con Android `KEY_USER_JSON`
+- [x] `AuthManager.swift`: fix del path offline — `loadCachedUser()` antes del fetch + `.unknown` (deferred) en vez de `.unauthenticated` cuando hay tokens pero no se alcanza el server
+- [x] `AuthManager.swift`: path de refresh-failed transitorio con tokens intactos ahora explícito `.unknown`
+- [x] `KeychainHelper.swift`: protocolo `KeychainStoring` (saveString/readString/delete) para testeabilidad
+- [x] `APIClient.swift` + `AuthManager.swift`: usan `any KeychainStoring` en vez de `KeychainHelper` concreto
+- [x] `SolennixApp.swift`: hook de reconnect resuelve estado `.unknown` diferido llamando `checkAuth()`
+- [x] `AuthManagerTests.swift` (nuevo): 7 tests cubren los 4 paths de `checkAuth` + persistencia + cold launch + signOut
+
+## Verificación
+- `AuthManagerTests`: 7/7 pasan (paquete SolennixNetwork)
+- `APIClientPolicyTests`: 12/12 pasan
+- `SolennixTests` (app): 450/450 pasan (1 skipped)
+- Build proyecto `Solennix`: OK
+- Nota: `KeychainHelperTests` fallan solo en contexto standalone SPM sin host app (preexistente, no causado por este cambio)
+
+## Notas
+- El protocolo `KeychainStoring` fue necesario porque el Keychain del simulador no es confiable en test bundles SPM sin host app
+- Cambios cross-platform NO necesarios: Android ya correcto, Web usa cookie httpOnly, Backend sin cambios
 
 ## Bloqueos
 - Ninguno.
