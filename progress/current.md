@@ -13,14 +13,16 @@
 - [x] #900 public payment cap fail-closed on sum error
 - [x] #905 PaymentSubmission GetByID tenant predicate
 - [x] #909 migration payments_event_user_fkey
-- [ ] #906 public uploads CORS
-- [ ] #907 Live Activity TZ
-- [ ] #908 decodeJSON 413
+- [x] #906 public uploads CORS
+- [x] #907 Live Activity TZ
+- [x] #908 decodeJSON 413
 
 ## Notas de Desarrollo
 - Branch: `fix/hardening-phase-4` (from main)
-- PR #913 fix pushed: `ea9450b0`
+- Commits: `287aa4d1`, `b01bda41`
+- PR #913 CI green (Frontend Tests fixed)
 - PR #914 Phase 3 pending merge
+- Phase 4 PR opened (pending CI)
 
 ## Bloqueos
 - Ninguno.
