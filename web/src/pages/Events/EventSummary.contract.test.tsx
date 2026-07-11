@@ -123,6 +123,7 @@ vi.mock('./components/Payments', () => ({
 vi.mock('../../lib/errorHandler', () => ({
   logError: vi.fn(),
   getErrorMessage: vi.fn((_err: unknown, fallback?: string) => fallback || 'Error'),
+  getEventCompletionBlockedError: vi.fn(() => null),
 }));
 
 vi.mock('../../hooks/useToast', () => ({

@@ -18,6 +18,7 @@ vi.mock('../services/clientService');
 vi.mock('../lib/errorHandler', () => ({
   logError: vi.fn(),
   getErrorMessage: vi.fn((_err: unknown, fallback?: string) => fallback || 'Error'),
+  getEventCompletionBlockedError: vi.fn(() => null),
 }));
 
 // Mock child components that render in dashboard
