@@ -120,6 +120,71 @@ final class WidgetSyncCoordinatorTests: XCTestCase {
             "confirmed events in the 7-day window must surface their full amount")
     }
 
+    // MARK: - Foreground payment reflection (#803)
+
+    /// Regression for #803: recording a payment in the foreground used to leave
+    /// the widget stale because the payment was never written to the SwiftData
+    /// cache (only the background refresh populated it, ~30+ min later). With
+    /// `CacheManager.upsertCachedPayment`, the VM now upserts before posting
+    /// `.solennixPaymentRegistered`, so the next `syncAll()` must see it.
+    ///
+    /// This test pins the foreground path: start with NO cached payments
+    /// (pendingPayments = full amount), upsert a payment, sync again, and
+    /// assert the pending figure subtracts it.
+    func testUpsertCachedPaymentReflectsInDerivedPendingPayments() throws {
+        let cache = try makeCacheManagerWithSingleConfirmedEvent()
+        let mock = MockWidgetSyncing()
+        let coordinator = WidgetSyncCoordinator(sync: mock)
+        coordinator.start(cache: cache, isAuthorized: { true })
+
+        // Before any payment: pending = full event amount (1000).
+        coordinator.syncAll()
+        let beforeKpis = try XCTUnwrap(mock.kpisCalls.last)
+        XCTAssertEqual(beforeKpis.pendingPayments, 1000, accuracy: 0.001,
+                       "no cached payments → pending equals the full amount")
+
+        // Foreground mutation: upsert a partial payment (300) for the event.
+        try cache.upsertCachedPayment(
+            Payment(id: "p_new", eventId: "e_confirmed", userId: "u_1",
+                    amount: 300, paymentDate: localDayString(offset: 0),
+                    paymentMethod: "cash", createdAt: "2026-01-01T00:00:00Z")
+        )
+
+        // The `.solennixPaymentRegistered` trigger fires `syncAll()` again.
+        coordinator.syncAll()
+        let afterKpis = try XCTUnwrap(mock.kpisCalls.last)
+        XCTAssertEqual(afterKpis.pendingPayments, 700, accuracy: 0.001,
+                       "upserted payment must be subtracted (1000 - 300) on the next sync")
+    }
+
+    /// Deleting a cached payment in the foreground must re-raise the pending
+    /// figure immediately (mirror of the add path).
+    func testDeleteCachedPaymentReflectsInDerivedPendingPayments() throws {
+        let cache = try makeCacheManagerWithSingleConfirmedEvent()
+        // Seed a payment the way the background refresh would.
+        try cache.cachePayments([
+            Payment(id: "p_seed", eventId: "e_confirmed", userId: "u_1",
+                    amount: 300, paymentDate: localDayString(offset: 0),
+                    paymentMethod: "cash", createdAt: "2026-01-01T00:00:00Z")
+        ])
+        let mock = MockWidgetSyncing()
+        let coordinator = WidgetSyncCoordinator(sync: mock)
+        coordinator.start(cache: cache, isAuthorized: { true })
+
+        coordinator.syncAll()
+        let beforeKpis = try XCTUnwrap(mock.kpisCalls.last)
+        XCTAssertEqual(beforeKpis.pendingPayments, 700, accuracy: 0.001,
+                       "seeded payment subtracted (1000 - 300)")
+
+        // Foreground delete (single id, not a full wipe).
+        try cache.deleteCachedPayment(id: "p_seed")
+
+        coordinator.syncAll()
+        let afterKpis = try XCTUnwrap(mock.kpisCalls.last)
+        XCTAssertEqual(afterKpis.pendingPayments, 1000, accuracy: 0.001,
+                       "deleted payment must no longer be subtracted")
+    }
+
     // MARK: - WidgetEventData date parsing (hotfix #712)
 
     /// Regression for #712: `event.eventDate` (a `yyyy-MM-dd` server string) MUST
@@ -420,6 +485,22 @@ final class WidgetSyncCoordinatorTests: XCTestCase {
         let container = try ModelContainer(for: schema, configurations: [configuration])
         containers.append(container)
         return CacheManager(modelContext: container.mainContext)
+    }
+
+    /// Minimal cache for the #803 foreground-payment tests: one client and
+    /// one confirmed event dated today (inside the 7-day pending window) with
+    /// amount 1000 and no payments seeded.
+    private func makeCacheManagerWithSingleConfirmedEvent() throws -> CacheManager {
+        let cache = try makeCacheManager()
+        try cache.cacheClients([
+            Client(id: "c_1", userId: "u_1", name: "Alfa", phone: "55",
+                   createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-02T00:00:00Z")
+        ])
+        try cache.cacheEvents([
+            makeEvent(id: "e_confirmed", clientId: "c_1", status: .confirmed,
+                      totalAmount: 1000, eventDate: localDayString(offset: 0))
+        ])
+        return cache
     }
 
     private func makeEvent(

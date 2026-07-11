@@ -12,6 +12,7 @@ public struct EventPaymentsDetailView: View {
     @State private var viewModel: EventDetailViewModel
     @State private var deletePaymentTarget: Payment?
     @State private var showDeletePaymentConfirm: Bool = false
+    @Environment(CacheManager.self) private var cacheManager: CacheManager?
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     public init(eventId: String, apiClient: APIClient) {
@@ -62,7 +63,10 @@ public struct EventPaymentsDetailView: View {
         } message: { payment in
             Text(trf("events.detail.payments.delete.message", "¿Eliminar el pago de %@?", payment.amount.formattedCurrency(code: viewModel.event?.currency)))
         }
-        .task { await viewModel.loadData(eventId: eventId) }
+        .task {
+            viewModel.setCacheManager(cacheManager)
+            await viewModel.loadData(eventId: eventId)
+        }
     }
 
     private func content(_ event: Event) -> some View {

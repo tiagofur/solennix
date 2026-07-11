@@ -152,4 +152,83 @@ final class CacheManagerTests: XCTestCase {
 
         XCTAssertTrue(cached.isEmpty)
     }
+
+    // MARK: - Single-payment mutations (#803)
+
+    /// `upsertCachedPayment` must insert a new payment without wiping
+    /// pre-existing ones, and updating the same id must mutate in place
+    /// rather than creating a duplicate row. This is the foreground path
+    /// `EventDetailViewModel.addPayment` relies on so the widget sees the
+    /// payment immediately (before the background refresh does a full
+    /// `cachePayments` wipe+insert).
+    func testUpsertCachedPaymentInsertsThenUpdates() throws {
+        let manager = try makeManager()
+
+        // Seed a payment for a different event; the upsert must NOT drop it.
+        let other = Payment(id: "p_other", eventId: "ev_2", userId: "u_1",
+                            amount: 200, paymentDate: "2026-03-03",
+                            paymentMethod: "cash", createdAt: "2026-03-03T00:00:00Z")
+        try manager.cachePayments([other])
+
+        // Insert a new payment for ev_1.
+        let payment = Payment(id: "p_1", eventId: "ev_1", userId: "u_1",
+                              amount: 300, paymentDate: "2026-03-05",
+                              paymentMethod: "cash", createdAt: "2026-03-05T00:00:00Z")
+        try manager.upsertCachedPayment(payment)
+
+        var ev1 = try manager.getCachedPayments(eventId: "ev_1")
+        XCTAssertEqual(ev1.count, 1, "upsert must insert a single payment")
+        XCTAssertEqual(try XCTUnwrap(ev1.first?.amount), 300, accuracy: 0.001)
+        XCTAssertEqual(try manager.getCachedPayments(eventId: "ev_2").count, 1,
+                       "upsert must not wipe payments for other events")
+
+        // Update the same id: amount changes, no duplicate row.
+        let updated = Payment(id: payment.id, eventId: payment.eventId,
+                              userId: payment.userId, amount: 500,
+                              paymentDate: payment.paymentDate,
+                              paymentMethod: payment.paymentMethod,
+                              createdAt: payment.createdAt)
+        try manager.upsertCachedPayment(updated)
+
+        ev1 = try manager.getCachedPayments(eventId: "ev_1")
+        XCTAssertEqual(ev1.count, 1, "upsert must update in place, not duplicate")
+        XCTAssertEqual(try XCTUnwrap(ev1.first?.amount), 500, accuracy: 0.001,
+                       "upsert must reflect the new amount")
+    }
+
+    /// `deleteCachedPayment` must remove only the targeted id and leave other
+    /// payments intact — the contract `EventDetailViewModel.deletePayment`
+    /// depends on so the widget drops a deleted payment immediately.
+    func testDeleteCachedPaymentRemovesOnlyTargetId() throws {
+        let manager = try makeManager()
+
+        let p1 = Payment(id: "p_1", eventId: "ev_1", userId: "u_1",
+                         amount: 300, paymentDate: "2026-03-05",
+                         paymentMethod: "cash", createdAt: "2026-03-05T00:00:00Z")
+        let p2 = Payment(id: "p_2", eventId: "ev_1", userId: "u_1",
+                         amount: 700, paymentDate: "2026-03-06",
+                         paymentMethod: "card", createdAt: "2026-03-06T00:00:00Z")
+        try manager.cachePayments([p1, p2])
+
+        try manager.deleteCachedPayment(id: "p_1")
+
+        let remaining = try manager.getCachedPayments(eventId: "ev_1")
+        XCTAssertEqual(remaining.map(\.id), ["p_2"], "only the targeted id is removed")
+        XCTAssertEqual(try XCTUnwrap(remaining.first?.amount), 700, accuracy: 0.001)
+    }
+
+    /// Deleting an unknown id is a no-op (the widget cache may not yet have
+    /// been populated by the background refresh).
+    func testDeleteCachedPaymentUnknownIdIsNoOp() throws {
+        let manager = try makeManager()
+
+        let p1 = Payment(id: "p_1", eventId: "ev_1", userId: "u_1",
+                         amount: 300, paymentDate: "2026-03-05",
+                         paymentMethod: "cash", createdAt: "2026-03-05T00:00:00Z")
+        try manager.cachePayments([p1])
+
+        try manager.deleteCachedPayment(id: "p_unknown")
+
+        XCTAssertEqual(try manager.getCachedPayments(eventId: "ev_1").count, 1)
+    }
 }

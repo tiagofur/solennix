@@ -20,6 +20,7 @@ public struct EventDetailView: View {
     @State private var showBalanceAlert = false
     @Environment(AuthManager.self) private var authManager
     @Environment(ToastManager.self) private var toastManager
+    @Environment(CacheManager.self) private var cacheManager: CacheManager?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var sizeClass
 
@@ -110,6 +111,7 @@ public struct EventDetailView: View {
             paymentSheet
         }
         .task {
+            viewModel.setCacheManager(cacheManager)
             await viewModel.loadData(eventId: eventId)
             // Consume a one-shot deep-link request (solennix://event/{id}/payment)
             // only if the event actually loaded. Avoids opening the sheet on a
