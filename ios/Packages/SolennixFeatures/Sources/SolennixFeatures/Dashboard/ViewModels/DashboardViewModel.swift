@@ -166,22 +166,11 @@ public final class DashboardViewModel {
         isLoading = true
         errorMessage = nil
 
-        // Build date range for current month using UTC calendar so the
-        // month boundary matches the server (UTC dates) regardless of device TZ.
+        // Build date range for current month using the shared UTC month-range
+        // helper so the boundary matches the server (UTC dates) regardless of
+        // device TZ — and is identical to `PlanLimitsManager` (issue #805).
         let now = Date()
-        let calendar = Self.utcCalendar
-        let components = calendar.dateComponents([.year, .month], from: now)
-        guard let startOfMonth = calendar.date(from: components),
-              let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth)
-        else {
-            errorMessage = Self.tr("dashboard.error.invalid_date_range", "Rango de fechas inválido")
-            isLoading = false
-            return
-        }
-
-        // Reuse the UTC-pinned static formatter — no new allocation per load.
-        let startStr = Self.dashboardDateFormatter.string(from: startOfMonth)
-        let endStr = Self.dashboardDateFormatter.string(from: endOfMonth)
+        let (startStr, endStr) = Date.utcMonthRange(for: now)
 
         var encounteredError = false
 

@@ -208,6 +208,51 @@ extension Date {
         return f
     }()
 
+    // MARK: - UTC month range (server-month boundary)
+
+    /// UTC-pinned calendar shared by `utcMonthRange` so the month boundary it
+    /// computes matches `utcDayFormatter` (UTC) and the server's UTC dates,
+    /// regardless of device timezone. Fixes #805: `PlanLimitsManager` and
+    /// `DashboardViewModel` previously computed the month with different
+    /// calendars (`Calendar.current` vs a private UTC calendar), so their
+    /// `start`/`end` query params disagreed near month edges in negative-offset
+    /// zones (e.g. UTC-6) and the free-plan event count drifted from the
+    /// dashboard's server-sourced count.
+    private static let utcCalendar: Calendar = {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(secondsFromGMT: 0)!
+        c.locale = Locale(identifier: "en_US_POSIX")
+        return c
+    }()
+
+    /// Inclusive `yyyy-MM-dd` `[start, end]` range covering the calendar month
+    /// of `date` in **UTC**. Returned as a tuple so callers can spread it
+    /// straight into `params: ["start": ..., "end": ...]` for the server.
+    ///
+    /// Used by `PlanLimitsManager.checkLimits()` and
+    /// `DashboardViewModel.loadDashboard()` so both gate the same month. The
+    /// range is inclusive (`end` is the last calendar day of the month), matching
+    /// how the backend filters `?start=&end=` server dates.
+    public static func utcMonthRange(for date: Date = Date()) -> (start: String, end: String) {
+        let calendar = Self.utcCalendar
+        let startComponents = calendar.dateComponents([.year, .month], from: date)
+        guard let startOfMonth = calendar.date(from: startComponents),
+              let endOfMonth = calendar.date(
+                byAdding: DateComponents(month: 1, day: -1),
+                to: startOfMonth
+              )
+        else {
+            // Fallback: format `date` for both bounds. Keeps callers running
+            // even with pathological inputs instead of crashing the gate.
+            let s = utcDayFormatter.string(from: date)
+            return (s, s)
+        }
+        return (
+            utcDayFormatter.string(from: startOfMonth),
+            utcDayFormatter.string(from: endOfMonth)
+        )
+    }
+
     // MARK: - UTC display helper for server-day Dates
 
     /// NSCache of UTC DateFormatter instances keyed by "<format>|<locale>".

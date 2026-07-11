@@ -70,27 +70,15 @@ public final class PlanLimitsManager {
     @MainActor
     public func checkLimits() async {
         guard let _ = authManager?.currentUser else { return }
-        
+
         isLoading = true
 
-        let now = Date()
-        let calendar = Calendar.current
-        let startComponents = calendar.dateComponents([.year, .month], from: now)
-        var endComponents = startComponents
-        endComponents.month = (startComponents.month ?? 0) + 1
-        endComponents.day = 0 // Last day of current month
-
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-
-        guard let startDate = calendar.date(from: startComponents),
-              let endDate = calendar.date(from: endComponents) else {
-            isLoading = false
-            return
-        }
-
-        let startStr = formatter.string(from: startDate)
-        let endStr = formatter.string(from: endDate)
+        // Use the shared UTC month-range helper so the `start`/`end` query
+        // params match `DashboardViewModel` and the server's UTC dates exactly
+        // (issue #805). Previously this used `Calendar.current`, which in
+        // negative-offset zones (e.g. UTC-6) shifted the month boundary and
+        // made the free-plan event count disagree with the dashboard.
+        let (startStr, endStr) = Date.utcMonthRange()
 
         do {
             if isBasicPlan {
