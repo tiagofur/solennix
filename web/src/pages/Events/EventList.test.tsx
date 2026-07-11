@@ -320,7 +320,9 @@ describe('EventList', () => {
   it('exports csv with current rows', () => {
     renderPage();
 
-    fireEvent.click(screen.getByLabelText(/Exportar eventos a CSV/i));
+    // Both the desktop toolbar and mobile header render the export button;
+    // click the first match.
+    fireEvent.click(screen.getAllByLabelText(/Exportar eventos a CSV/i)[0]);
 
     expect(mockExportToCsv).toHaveBeenCalledTimes(1);
     expect(mockExportToCsv.mock.calls[0][2]).toHaveLength(2);
@@ -340,8 +342,9 @@ describe('EventList', () => {
   it('renders segmented control view toggle and respects view parameter', () => {
     renderPage(['/events?view=calendar']);
 
-    // Should show Export .ics button in calendar view mode
-    expect(screen.getByText('Exportar .ics', { exact: false })).toBeInTheDocument();
+    // Should show Export .ics button in calendar view mode (present in both
+    // desktop toolbar and mobile header — assert at least one renders).
+    expect(screen.getAllByText('Exportar .ics', { exact: false }).length).toBeGreaterThan(0);
   });
 
   it('handles period chips in list mode', () => {

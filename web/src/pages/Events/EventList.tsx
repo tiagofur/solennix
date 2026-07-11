@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 
 import { RowActionMenu } from "../../components/RowActionMenu";
+import { DesktopToolbar } from "../../components/DesktopToolbar";
 import { exportToCsv } from "../../lib/exportCsv";
 import { formatCurrency as libFormatCurrency } from "../../lib/finance";
 import { parseLocalDate } from "../../lib/dateUtils";
@@ -571,8 +572,128 @@ export const EventList: React.FC = () => {
         </Card>
       )}
 
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Desktop: persistent sticky toolbar (#881) */}
+      <DesktopToolbar
+        title={t("events:list.title")}
+        actions={
+          <>
+            {/* Segmented View Mode Toggle */}
+            <div className="inline-flex rounded-xl bg-surface-alt/80 p-0.5 border border-border/60 backdrop-blur-xs">
+              <button
+                type="button"
+                onClick={() => updateFilter("view", "list")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all active-ios-scale ${
+                  viewMode === "list"
+                    ? "bg-card text-text shadow-sm border border-border/30"
+                    : "text-text-secondary hover:text-text"
+                }`}
+              >
+                {t("events:list.view_mode.list")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchParams((prev) => {
+                    const next = new URLSearchParams(prev);
+                    next.set("view", "calendar");
+                    next.delete("from");
+                    next.delete("to");
+                    next.delete("page");
+                    return next;
+                  }, { replace: true });
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all active-ios-scale ${
+                  viewMode === "calendar"
+                    ? "bg-card text-text shadow-sm border border-border/30"
+                    : "text-text-secondary hover:text-text"
+                }`}
+              >
+                {t("events:list.view_mode.calendar")}
+              </button>
+            </div>
+            {viewMode === "calendar" && (
+              <>
+                <Button
+                  variant="glass"
+                  size="md"
+                  onClick={handleExportIcal}
+                  disabled={isExportingIcal}
+                  className="active-ios-scale"
+                >
+                  {isExportingIcal ? (
+                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-text border-t-transparent mr-2" aria-hidden="true" />
+                  ) : (
+                    <Download className="h-4 w-4 mr-2" aria-hidden="true" />
+                  )}
+                  {t("calendar:export_ics")}
+                </Button>
+                <Button
+                  variant="glass"
+                  size="md"
+                  onClick={() => {
+                    setContextMenuDate(undefined);
+                    setIsManagingBlocks(true);
+                  }}
+                  className="active-ios-scale"
+                >
+                  <Lock className="h-4 w-4 mr-2" aria-hidden="true" />
+                  {t("calendar:manage_blocks")}
+                </Button>
+              </>
+            )}
+            {viewMode === "list" && csvRows.length > 0 && (
+              <button
+                type="button"
+                onClick={() =>
+                  exportToCsv(
+                    t("events:list.csv.file_name"),
+                    [
+                      t("events:list.csv.headers.date"),
+                      t("events:list.csv.headers.client"),
+                      t("events:list.csv.headers.service_type"),
+                      t("events:list.csv.headers.people"),
+                      t("events:list.csv.headers.status"),
+                      t("events:list.csv.headers.total"),
+                      t("events:list.csv.headers.city"),
+                    ],
+                    csvRows.map((e) => [
+                      formatDate(e.event_date),
+                      e.client?.name ?? "",
+                      e.service_type,
+                      e.num_people,
+                      t(`events:list.status.${e.status as EventStatus}`),
+                      formatCurrency(e.total_amount, e.currency),
+                      e.city ?? "",
+                    ]),
+                  )
+                }
+                className="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+                aria-label={t("events:list.export_csv_aria")}
+              >
+                <Download className="h-4 w-4 mr-2" aria-hidden="true" />
+                {t("events:list.export_csv")}
+              </button>
+            )}
+            <Link
+              to="/cotizacion-rapida"
+              className="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-bold rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+            >
+              <Zap className="h-4 w-4 mr-2" aria-hidden="true" />
+              {t("events:list.quick_quote")}
+            </Link>
+            <Link
+              to="/events/new"
+              className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
+            >
+              <CalendarPlus className="h-5 w-5 mr-2" aria-hidden="true" />
+              {t("events:list.new_event")}
+            </Link>
+          </>
+        }
+      />
+
+      {/* Page Header (mobile) */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 lg:hidden">
         <div className="flex items-center gap-4 flex-wrap">
           <h1 className="text-2xl font-bold text-text tracking-tight">
             {t("events:list.title")}{" "}
@@ -582,7 +703,7 @@ export const EventList: React.FC = () => {
               </span>
             )}
           </h1>
-          
+
           {/* Segmented View Mode Toggle */}
           <div className="inline-flex rounded-xl bg-surface-alt/80 p-0.5 border border-border/60 backdrop-blur-xs">
             <button
@@ -691,14 +812,14 @@ export const EventList: React.FC = () => {
 
           <Link
             to="/cotizacion-rapida"
-            className="hidden lg:inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-bold rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+            className="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-bold rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
           >
             <Zap className="h-4 w-4 mr-2" aria-hidden="true" />
             {t("events:list.quick_quote")}
           </Link>
           <Link
             to="/events/new"
-            className="hidden lg:inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
+            className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
           >
             <CalendarPlus className="h-5 w-5 mr-2" aria-hidden="true" />
             {t("events:list.new_event")}

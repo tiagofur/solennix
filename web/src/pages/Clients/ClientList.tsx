@@ -16,6 +16,7 @@ import {
   ArrowDown,
 } from "lucide-react";
 import { RowActionMenu } from "@/components/RowActionMenu";
+import { DesktopToolbar } from "@/components/DesktopToolbar";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { exportToCsv } from "@/lib/exportCsv";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -166,6 +167,48 @@ export const ClientList: React.FC = () => {
     return sortOrder === "asc" ? "ascending" : "descending";
   };
 
+  const headerActions = (
+    <div className="flex flex-wrap items-center gap-2">
+      {hasAnyClients && (
+        <Button
+          variant="glass"
+          onClick={() =>
+            exportToCsv(
+              t("clients:export_file_name"),
+              [
+                t("clients:form.name"),
+                t("clients:form.phone"),
+                t("clients:form.email"),
+                t("clients:form.address"),
+                t("clients:form.city"),
+                t("clients:table.events"),
+                t("clients:details.total_spent"),
+                t("clients:form.notes"),
+              ],
+              allClients.map((c) => [
+                c.name,
+                c.phone,
+                c.email,
+                c.address,
+                c.city,
+                c.total_events,
+                c.total_spent?.toFixed(2),
+                c.notes,
+              ]),
+            )
+          }
+        >
+          <Download className="h-4 w-4 mr-2" aria-hidden="true" />
+          CSV
+        </Button>
+      )}
+      <Button variant="primary" onClick={() => navigate("/clients/new")}>
+        <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
+        {t("clients:new_client")}
+      </Button>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <ConfirmDialog
@@ -180,52 +223,14 @@ export const ClientList: React.FC = () => {
           setPendingDeleteId(null);
         }}
       />
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Desktop: persistent sticky toolbar (#881) */}
+      <DesktopToolbar title={t("clients:title")} actions={headerActions} />
+      {/* Mobile: in-content header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 lg:hidden">
         <h1 className="text-2xl font-bold text-text tracking-tight">
           {t("clients:title")}
         </h1>
-        <div className="flex flex-wrap items-center gap-2">
-          {hasAnyClients && (
-            <Button
-              variant="glass"
-              onClick={() =>
-                exportToCsv(
-                  t("clients:export_file_name"),
-                  [
-                    t("clients:form.name"),
-                    t("clients:form.phone"),
-                    t("clients:form.email"),
-                    t("clients:form.address"),
-                    t("clients:form.city"),
-                    t("clients:table.events"),
-                    t("clients:details.total_spent"),
-                    t("clients:form.notes"),
-                  ],
-                  allClients.map((c) => [
-                    c.name,
-                    c.phone,
-                    c.email,
-                    c.address,
-                    c.city,
-                    c.total_events,
-                    c.total_spent?.toFixed(2),
-                    c.notes,
-                  ]),
-                )
-              }
-            >
-              <Download className="h-4 w-4 mr-2" aria-hidden="true" />
-              CSV
-            </Button>
-          )}
-          <Button
-            variant="primary"
-            onClick={() => navigate("/clients/new")}
-          >
-            <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
-            {t("clients:new_client")}
-          </Button>
-        </div>
+        {headerActions}
       </div>
 
       <div className="relative max-w-md">
