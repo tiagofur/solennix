@@ -5854,22 +5854,6 @@
         }
       }
     },
-    "dashboard.error.invalid_date_range" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invalid date range"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rango de fechas inválido"
-          }
-        }
-      }
-    },
     "dashboard.error.load_failed" : {
       "localizations" : {
         "en" : {
