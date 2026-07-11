@@ -109,7 +109,9 @@ func TestCRUDHandler_Payments(t *testing.T) {
 
 	t.Run("CreatePayment_Success", func(t *testing.T) {
 		mockRepo := new(MockFullPaymentRepo)
-		h := &CRUDHandler{paymentRepo: mockRepo}
+		eventRepo := new(MockFullEventRepo)
+		eventRepo.On("GetByID", mock.Anything, eventID, userID).Return(&models.Event{ID: eventID, UserID: userID}, nil)
+		h := &CRUDHandler{paymentRepo: mockRepo, eventRepo: eventRepo}
 
 		paymentBody := models.Payment{
 			EventID:       eventID,
