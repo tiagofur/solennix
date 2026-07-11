@@ -39,7 +39,6 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
   const { register, control } = useFormContext();
   const discountValue = useWatch({ control, name: 'discount' }) || 0;
   const requiresInvoiceValue = useWatch({ control, name: 'requires_invoice' });
-  const taxAmountValue = useWatch({ control, name: 'tax_amount' }) || 0;
   const taxRateValue = useWatch({ control, name: 'tax_rate' }) || 16;
   const totalAmountValue = useWatch({ control, name: 'total_amount' }) || 0;
   const depositPercentValue = useWatch({ control, name: 'deposit_percent' }) || 0;

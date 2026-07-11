@@ -49,7 +49,6 @@ import {
   EventExtra,
   EventEquipment as EventEquipmentEntity,
   EventSupply,
-  ProductIngredient,
 } from "@/types/entities";
 import { UpgradeBanner } from "@/components/UpgradeBanner";
 import { useUnavailableDatesByRange } from "@/hooks/queries/useUnavailableDatesQueries";
