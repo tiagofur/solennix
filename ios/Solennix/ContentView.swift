@@ -186,6 +186,18 @@ struct ContentView: View {
             deepLinkResetToken = token
         case .teamInvite(let token):
             deepLinkTeamInviteToken = token
+        case .showEvent(let id):
+            // Event/payment deep links are post-auth: they require an active
+            // session and the main layout to navigate into. Mirror the guard
+            // used by `.spotlightNavigationRequested`.
+            guard authManager.isAuthenticated else { return }
+            pendingSpotlightRoute = .eventDetail(id: id)
+        case .showEventPayment(let id):
+            guard authManager.isAuthenticated else { return }
+            // Stage the one-shot flag before pushing the route so EventDetailView
+            // consumes it in its `.task` right after `loadData`.
+            DeepLinkPendingAction.openPaymentEventId = id
+            pendingSpotlightRoute = .eventDetail(id: id)
         }
     }
 }
