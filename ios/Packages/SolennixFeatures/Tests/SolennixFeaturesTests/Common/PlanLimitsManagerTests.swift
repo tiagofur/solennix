@@ -3,13 +3,14 @@ import SolennixCore
 import SolennixNetwork
 @testable import SolennixFeatures
 
-// MARK: - PlanLimitsManager tests (issue #805)
+// MARK: - PlanLimitsManager tests
 //
-// `checkLimits()` builds `GET /events?start=&end=` for the current month. Before
-// #805 it used `Calendar.current`, so in negative-offset zones (UTC-6) the month
-// boundary drifted and `eventsThisMonth` disagreed with the dashboard. These
-// tests pin the request params to the shared UTC range, the event count, and the
-// free-plan gate.
+// Covers two fixes that both touch `checkLimits()`:
+//   #805 — the `start`/`end` query params must use the shared UTC month range
+//          (not `Calendar.current`), so counts agree with the dashboard in
+//          negative-offset zones.
+//   #806 — on a network/server error the last known count is preserved (not
+//          zeroed), so the free-plan gate can't silently reopen.
 
 final class PlanLimitsManagerTests: XCTestCase {
 
@@ -21,8 +22,8 @@ final class PlanLimitsManagerTests: XCTestCase {
     private var defaults: UserDefaults!
     private let defaultsSuite = "com.solennix.tests.plan-limits"
 
-    // Encoder mirroring APIClient's wire format (snake_case) so Event arrays
-    // round-trip through the decoder's `.convertFromSnakeCase` strategy.
+    // Encoder mirroring APIClient's wire format (snake_case) so arrays round-trip
+    // through the decoder's `.convertFromSnakeCase` strategy.
     private let encoder: JSONEncoder = {
         let e = JSONEncoder()
         e.keyEncodingStrategy = .convertToSnakeCase
@@ -64,22 +65,8 @@ final class PlanLimitsManagerTests: XCTestCase {
 
     // MARK: - Helpers
 
-    /// Seed tokens + run `checkAuth()` with a mocked `/auth/me` so
-    /// `currentUser` is populated with a `.basic` user (the guard
-    /// `checkLimits()` requires). Returns the JSON handler for `/auth/me`.
-    private func authMeResponse() -> Data {
-        """
-        {
-            "id": "user-1",
-            "email": "tiago@solennix.com",
-            "name": "Tiago",
-            "plan": "basic",
-            "created_at": "2026-01-01T00:00:00Z",
-            "updated_at": "2026-01-01T00:00:00Z"
-        }
-        """.data(using: .utf8)!
-    }
-
+    /// Run `checkAuth()` against a mocked `/auth/me` to populate `currentUser`
+    /// with a `.basic` user — the guard `checkLimits()` requires.
     private func seedBasicUser() async {
         mockKeychain.saveString("test-access-token", for: KeychainHelper.Keys.accessToken)
         mockKeychain.saveString("test-refresh-token", for: KeychainHelper.Keys.refreshToken)
@@ -97,6 +84,19 @@ final class PlanLimitsManagerTests: XCTestCase {
         await authManager.checkAuth()
         XCTAssertNotNil(authManager.currentUser, "precondition: /auth/me should populate currentUser")
         XCTAssertEqual(authManager.currentUser?.plan, .basic, "precondition: user must be basic plan")
+    }
+
+    private func authMeResponse() -> Data {
+        """
+        {
+            "id": "user-1",
+            "email": "tiago@solennix.com",
+            "name": "Tiago",
+            "plan": "basic",
+            "created_at": "2026-01-01T00:00:00Z",
+            "updated_at": "2026-01-01T00:00:00Z"
+        }
+        """.data(using: .utf8)!
     }
 
     private func makeEvent(id: String) -> Event {
@@ -119,24 +119,31 @@ final class PlanLimitsManagerTests: XCTestCase {
         )
     }
 
-    /// Returns a canned `200` response for any `GET` — empty arrays for
-    /// `/clients`, `/products`, `/inventory`; the given events for `/events`.
-    private func basicPlanHandler(events: [Event]) -> (URLRequest) throws -> (HTTPURLResponse, Data) {
+    private func makeClient(id: String) -> Client {
+        Client(
+            id: id,
+            userId: "user-1",
+            name: "Client \(id)",
+            phone: "555-0100",
+            createdAt: "2026-01-01T00:00:00Z",
+            updatedAt: "2026-01-01T00:00:00Z"
+        )
+    }
+
+    /// Handler returning canned arrays for each collection — events/clients
+    /// populated, products/inventory empty. Used to establish a known baseline.
+    private func successHandler(events: [Event], clients: [Client]) -> (URLRequest) throws -> (HTTPURLResponse, Data) {
         let eventsData = try! encoder.encode(events)
+        let clientsData = try! encoder.encode(clients)
         return { request in
             let url = request.url?.absoluteString ?? ""
             let data: Data
-            if url.contains("/events") {
-                data = eventsData
-            } else {
-                data = "[]".data(using: .utf8)!
-            }
+            if url.contains("/events") { data = eventsData }
+            else if url.contains("/clients") { data = clientsData }
+            else { data = "[]".data(using: .utf8)! }
             let response = HTTPURLResponse(
-                url: request.url!,
-                statusCode: 200,
-                httpVersion: nil,
-                headerFields: ["Content-Type": "application/json"]
-            )!
+                url: request.url!, statusCode: 200, httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"])!
             return (response, data)
         }
     }
@@ -179,13 +186,13 @@ final class PlanLimitsManagerTests: XCTestCase {
         XCTAssertEqual(items["end"], expected.end, "events request must use UTC month end")
     }
 
-    // MARK: - 2. Event count reflects the month-scoped response
+    // MARK: - 2. Event count reflects the month-scoped response (#805)
 
     @MainActor
     func testEventsThisMonthMatchesResponseCount_BelowLimit() async {
         await seedBasicUser()
         let events = (1...3).map { makeEvent(id: "evt-\($0)") }
-        MockURLProtocol.requestHandler = basicPlanHandler(events: events)
+        MockURLProtocol.requestHandler = successHandler(events: events, clients: [])
 
         await planLimits.checkLimits()
 
@@ -198,7 +205,7 @@ final class PlanLimitsManagerTests: XCTestCase {
     func testEventsThisMonthAtLimitBlocksFreePlan() async {
         await seedBasicUser()
         let events = (1...PlanLimitsManager.freePlanEventLimit).map { makeEvent(id: "evt-\($0)") }
-        MockURLProtocol.requestHandler = basicPlanHandler(events: events)
+        MockURLProtocol.requestHandler = successHandler(events: events, clients: [])
 
         await planLimits.checkLimits()
 
@@ -207,7 +214,97 @@ final class PlanLimitsManagerTests: XCTestCase {
             "At the free-plan limit, canCreateEvent must be false for basic plan")
     }
 
-    // MARK: - 3. No user → no-op (guard)
+    // MARK: - 3. On error, last known counts are preserved (regression for #806)
+
+    @MainActor
+    func testCheckLimitsPreservesCountsOnError() async {
+        await seedBasicUser()
+
+        // First call succeeds → counts populated to known values.
+        MockURLProtocol.requestHandler = successHandler(
+            events: [makeEvent(id: "e1"), makeEvent(id: "e2")],
+            clients: (1...10).map { makeClient(id: "c\($0)") }
+        )
+        await planLimits.checkLimits()
+        XCTAssertEqual(planLimits.eventsThisMonth, 2, "baseline: first load should report 2 events")
+        XCTAssertEqual(planLimits.clientsCount, 10, "baseline: first load should report 10 clients")
+
+        // Second call fails on every endpoint. Before #806 this zeroed the
+        // counts and reopened the free-plan gate; now the previous values must
+        // be preserved.
+        MockURLProtocol.requestHandler = { _ in
+            throw URLError(.notConnectedToInternet)
+        }
+        await planLimits.checkLimits()
+
+        XCTAssertEqual(planLimits.eventsThisMonth, 2,
+            "#806: a failed fetch must NOT zero eventsThisMonth — preserve last known value")
+        XCTAssertEqual(planLimits.clientsCount, 10,
+            "#806: a failed fetch must NOT zero clientsCount — preserve last known value")
+        XCTAssertFalse(planLimits.isLoading, "isLoading must clear even on failure")
+    }
+
+    // MARK: - 4. Counts update to the latest server value on success (#806)
+
+    @MainActor
+    func testCheckLimitsUpdatesCountsOnSuccess() async {
+        await seedBasicUser()
+
+        MockURLProtocol.requestHandler = successHandler(
+            events: (1...3).map { makeEvent(id: "e\($0)") },
+            clients: (1...5).map { makeClient(id: "c\($0)") }
+        )
+        await planLimits.checkLimits()
+        XCTAssertEqual(planLimits.eventsThisMonth, 3)
+        XCTAssertEqual(planLimits.clientsCount, 5)
+
+        // A subsequent successful fetch with different counts must reflect them.
+        MockURLProtocol.requestHandler = successHandler(
+            events: (1...5).map { makeEvent(id: "e\($0)") },
+            clients: (1...8).map { makeClient(id: "c\($0)") }
+        )
+        await planLimits.checkLimits()
+        XCTAssertEqual(planLimits.eventsThisMonth, 5, "successful refetch must update the count")
+        XCTAssertEqual(planLimits.clientsCount, 8)
+    }
+
+    // MARK: - 5. Partial failure preserves the failing count, updates the rest (#806)
+
+    @MainActor
+    func testCheckLimitsPartialFailurePreservesFailingCount() async {
+        await seedBasicUser()
+
+        // Baseline: 4 events, 6 clients.
+        MockURLProtocol.requestHandler = successHandler(
+            events: (1...4).map { makeEvent(id: "e\($0)") },
+            clients: (1...6).map { makeClient(id: "c\($0)") }
+        )
+        await planLimits.checkLimits()
+        XCTAssertEqual(planLimits.eventsThisMonth, 4)
+        XCTAssertEqual(planLimits.clientsCount, 6)
+
+        // Now: events endpoint errors, clients succeeds with 9.
+        let clientsData = try! encoder.encode((1...9).map { makeClient(id: "c\($0)") })
+        MockURLProtocol.requestHandler = { request in
+            let url = request.url?.absoluteString ?? ""
+            if url.contains("/events") {
+                throw URLError(.timedOut)
+            }
+            let data = url.contains("/clients") ? clientsData : "[]".data(using: .utf8)!
+            let response = HTTPURLResponse(
+                url: request.url!, statusCode: 200, httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"])!
+            return (response, data)
+        }
+        await planLimits.checkLimits()
+
+        XCTAssertEqual(planLimits.eventsThisMonth, 4,
+            "#806: events endpoint failed → preserve last known (4), not 0")
+        XCTAssertEqual(planLimits.clientsCount, 9,
+            "clients endpoint succeeded → update to fresh count")
+    }
+
+    // MARK: - 6. No user → no-op (guard)
 
     @MainActor
     func testCheckLimitsNoCurrentUserIsNoOp() async {

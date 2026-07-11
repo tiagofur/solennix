@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import os.log
 import SolennixCore
 import SolennixNetwork
 
@@ -7,6 +8,8 @@ import SolennixNetwork
 
 @Observable
 public final class PlanLimitsManager {
+
+    private let logger = Logger(subsystem: SolennixLog.subsystem, category: "PlanLimitsManager")
 
     // MARK: - Configuration Limits
     
@@ -72,6 +75,7 @@ public final class PlanLimitsManager {
         guard let _ = authManager?.currentUser else { return }
 
         isLoading = true
+        defer { isLoading = false }
 
         // Use the shared UTC month-range helper so the `start`/`end` query
         // params match `DashboardViewModel` and the server's UTC dates exactly
@@ -79,33 +83,39 @@ public final class PlanLimitsManager {
         // negative-offset zones (e.g. UTC-6) shifted the month boundary and
         // made the free-plan event count disagree with the dashboard.
         let (startStr, endStr) = Date.utcMonthRange()
+        let eventsParams: [String: String] = ["start": startStr, "end": endStr]
 
-        do {
-            if isBasicPlan {
-                // Fetch all to check limits
-                async let eventsTask: [Event] = apiClient.getAll(Endpoint.events, params: ["start": startStr, "end": endStr])
-                async let clientsTask: [Client] = apiClient.getAll(Endpoint.clients)
-                async let productsTask: [Product] = apiClient.getAll(Endpoint.products)
-                async let inventoryTask: [InventoryItem] = apiClient.getAll(Endpoint.inventory)
+        if isBasicPlan {
+            // Kick off the four limit-relevant fetches concurrently with async
+            // let, then await each inside its own do/catch. On failure we log
+            // and preserve the last known count (instead of zeroing it), so a
+            // transient network/server error can't silently reopen the free-plan
+            // gate (issue #806). Each is awaited independently so one failure
+            // can't abort the others.
+            async let eventsTask = apiClient.getAll(Endpoint.events, params: eventsParams) as [Event]
+            async let clientsTask = apiClient.getAll(Endpoint.clients) as [Client]
+            async let productsTask = apiClient.getAll(Endpoint.products) as [Product]
+            async let inventoryTask = apiClient.getAll(Endpoint.inventory) as [InventoryItem]
 
-                // Await all concurrently, falling back to empty on individual errors if needed,
-                // but here we wait for all to succeed. To match RN's `.catch(() => [])` we would:
-                let events = (try? await eventsTask) ?? []
-                let clients = (try? await clientsTask) ?? []
-                let products = (try? await productsTask) ?? []
-                let inventory = (try? await inventoryTask) ?? []
+            do { eventsThisMonth = (try await eventsTask).count }
+            catch { logger.error("events fetch failed: \(String(describing: error), privacy: .public)") }
 
+            do { clientsCount = (try await clientsTask).count }
+            catch { logger.error("clients fetch failed: \(String(describing: error), privacy: .public)") }
+
+            do { productsCount = (try await productsTask).count }
+            catch { logger.error("products fetch failed: \(String(describing: error), privacy: .public)") }
+
+            do { inventoryCount = (try await inventoryTask).count }
+            catch { logger.error("inventory fetch failed: \(String(describing: error), privacy: .public)") }
+        } else {
+            // Paid plans only gate events-per-month.
+            do {
+                let events: [Event] = try await apiClient.getAll(Endpoint.events, params: eventsParams)
                 eventsThisMonth = events.count
-                clientsCount = clients.count
-                productsCount = products.count
-                inventoryCount = inventory.count
-            } else {
-                // Only need to count events this month
-                let events: [Event] = (try? await apiClient.getAll(Endpoint.events, params: ["start": startStr, "end": endStr])) ?? []
-                eventsThisMonth = events.count
+            } catch {
+                logger.error("events fetch failed: \(String(describing: error), privacy: .public)")
             }
         }
-
-        isLoading = false
     }
 }
