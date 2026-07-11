@@ -138,6 +138,21 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		cleaned := path.Clean("/" + trimmed)
 		return cleaned == "/receipts" || strings.HasPrefix(cleaned, "/receipts/")
 	}
+	corsOriginAllowed := func(origin string) bool {
+		for _, allowed := range corsOrigins {
+			if strings.TrimSpace(allowed) == origin {
+				return true
+			}
+		}
+		return false
+	}
+	setUploadCORSHeaders := func(w http.ResponseWriter, r *http.Request) {
+		if origin := r.Header.Get("Origin"); origin != "" && corsOriginAllowed(origin) {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Add("Vary", "Origin")
+		}
+		w.Header().Set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
+	}
 	v1FileServer := http.StripPrefix("/api/v1/uploads/", http.FileServer(http.Dir(uploadDir)))
 	legacyFileServer := http.StripPrefix("/api/uploads/", http.FileServer(http.Dir(uploadDir)))
 	r.Get("/api/v1/uploads/*", func(w http.ResponseWriter, r *http.Request) {
@@ -145,8 +160,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			http.NotFound(w, r)
 			return
 		}
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
+		setUploadCORSHeaders(w, r)
 		w.Header().Set("Cache-Control", "public, max-age=31536000")
 		w.Header().Set("X-API-Version", "v1")
 		v1FileServer.ServeHTTP(w, r)
@@ -156,8 +170,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			http.NotFound(w, r)
 			return
 		}
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
+		setUploadCORSHeaders(w, r)
 		w.Header().Set("Cache-Control", "public, max-age=31536000")
 		w.Header().Set("X-API-Version", "v1")
 		legacyFileServer.ServeHTTP(w, r)

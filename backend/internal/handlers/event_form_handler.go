@@ -69,7 +69,10 @@ func (h *EventFormHandler) GenerateLink(w http.ResponseWriter, r *http.Request) 
 		Label   *string `json:"label"`
 		TTLDays *int    `json:"ttl_days"`
 	}
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		// Allow empty body (all fields optional)
 		req.Label = nil
 		req.TTLDays = nil
@@ -346,7 +349,10 @@ func (h *EventFormHandler) SubmitForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req EventFormSubmission
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}

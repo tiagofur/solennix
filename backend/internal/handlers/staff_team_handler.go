@@ -72,7 +72,10 @@ func (h *StaffTeamHandler) GetTeam(w http.ResponseWriter, r *http.Request) {
 func (h *StaffTeamHandler) CreateTeam(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	var t models.StaffTeam
-	if err := decodeJSON(r, &t); err != nil {
+	if err := decodeJSON(w, r, &t); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -99,7 +102,10 @@ func (h *StaffTeamHandler) UpdateTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var t models.StaffTeam
-	if err := decodeJSON(r, &t); err != nil {
+	if err := decodeJSON(w, r, &t); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}

@@ -84,7 +84,12 @@ func (h *EventPublicLinkHandler) CreateOrRotate(w http.ResponseWriter, r *http.R
 	var req struct {
 		TTLDays *int `json:"ttl_days"`
 	}
-	_ = decodeJSON(r, &req)
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
+		// Body is optional — empty or invalid JSON keeps default TTL.
+	}
 
 	var expiresAt *time.Time
 	if req.TTLDays != nil {

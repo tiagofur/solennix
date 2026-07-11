@@ -60,6 +60,40 @@ func TestNewRouter(t *testing.T) {
 		}
 	})
 
+	t.Run("GivenUploadsEndpoint_WhenOriginAllowed_ThenSetsCORSAllowOrigin", func(t *testing.T) {
+		tempDir := t.TempDir()
+		require.NoError(t, os.WriteFile(filepath.Join(tempDir, "test.png"), []byte("fake image data"), 0o644))
+
+		h := New(&handlers.AuthHandler{}, &handlers.CRUDHandler{}, &handlers.SubscriptionHandler{}, &handlers.SearchHandler{}, &handlers.EventPaymentHandler{}, handlers.NewUploadHandler(tempDir, nil), &handlers.AdminHandler{}, &handlers.DashboardHandler{}, &handlers.AuditHandler{}, &handlers.UnavailableDateHandler{}, nil, nil, nil, nil, nil, nil, nil, nil, nil, authService, &repository.UserRepo{}, &noopAuditLogger{}, nil, []string{"http://allowed.com"}, tempDir, "development", false)
+
+		req := httptest.NewRequest(http.MethodGet, "/api/uploads/test.png", nil)
+		req.Header.Set("Origin", "http://allowed.com")
+		rr := httptest.NewRecorder()
+
+		h.ServeHTTP(rr, req)
+
+		if got := rr.Header().Get("Access-Control-Allow-Origin"); got != "http://allowed.com" {
+			t.Fatalf("Access-Control-Allow-Origin = %q, want %q", got, "http://allowed.com")
+		}
+	})
+
+	t.Run("GivenUploadsEndpoint_WhenOriginDisallowed_ThenOmitsCORSAllowOrigin", func(t *testing.T) {
+		tempDir := t.TempDir()
+		require.NoError(t, os.WriteFile(filepath.Join(tempDir, "test.png"), []byte("fake image data"), 0o644))
+
+		h := New(&handlers.AuthHandler{}, &handlers.CRUDHandler{}, &handlers.SubscriptionHandler{}, &handlers.SearchHandler{}, &handlers.EventPaymentHandler{}, handlers.NewUploadHandler(tempDir, nil), &handlers.AdminHandler{}, &handlers.DashboardHandler{}, &handlers.AuditHandler{}, &handlers.UnavailableDateHandler{}, nil, nil, nil, nil, nil, nil, nil, nil, nil, authService, &repository.UserRepo{}, &noopAuditLogger{}, nil, []string{"http://allowed.com"}, tempDir, "development", false)
+
+		req := httptest.NewRequest(http.MethodGet, "/api/uploads/test.png", nil)
+		req.Header.Set("Origin", "http://evil.com")
+		rr := httptest.NewRecorder()
+
+		h.ServeHTTP(rr, req)
+
+		if got := rr.Header().Get("Access-Control-Allow-Origin"); got != "" {
+			t.Fatalf("Access-Control-Allow-Origin = %q, want empty for disallowed origin", got)
+		}
+	})
+
 	t.Run("GivenUploadsEndpoint_WhenRequest_ThenSetsCacheControl", func(t *testing.T) {
 		tempDir := t.TempDir()
 		testFilePath := filepath.Join(tempDir, "test.png")

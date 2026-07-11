@@ -35,7 +35,10 @@ func (h *LiveActivityHandler) Register(w http.ResponseWriter, r *http.Request) {
 		EventID   string `json:"event_id"`
 		PushToken string `json:"push_token"`
 	}
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
