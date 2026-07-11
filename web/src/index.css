@@ -419,17 +419,34 @@ input, select, textarea {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* ── DATA TABLE (canonical list-table styling) ──
+   Apply class="data-table" on <table> in list/detail data views.
+   Keeps header, body, and row dividers consistent across pages. */
+@layer components {
+  #main-content table.data-table {
+    @apply min-w-full divide-y divide-border;
+  }
+
+  #main-content table.data-table thead {
+    @apply bg-surface-alt border-b border-border;
+  }
+
+  #main-content table.data-table tbody {
+    @apply bg-card divide-y divide-border;
+  }
+}
+
 /* ── DESKTOP DENSITY (lg+ / ≥1024px) ──
    PRODUCT.md: desktop-primary information hierarchy. Compact tables,
    tighter rows — more data per screen without horizontal scroll.
    Scoped to #main-content so auth/marketing pages are unaffected.
    Specificity (0,2,3) outranks Tailwind's py-4 utility (0,1,0). */
 @media (min-width: 1024px) {
-  #main-content table.min-w-full thead th {
+  #main-content table.data-table thead th {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
   }
-  #main-content table.min-w-full tbody td {
+  #main-content table.data-table tbody td {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
   }

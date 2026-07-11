@@ -321,10 +321,10 @@ export const InventoryList: React.FC = () => {
   ) => (
     <div className="overflow-x-auto">
       <table
-        className="min-w-full divide-y divide-border"
+        className="data-table"
         aria-label={tableLabel}
       >
-        <thead className="bg-surface-alt/45 backdrop-blur-xs border-b border-border">
+        <thead>
           <tr>
             <th
               scope="col"
@@ -363,7 +363,7 @@ export const InventoryList: React.FC = () => {
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-border">
+        <tbody>
           {sectionItems.map((item) => {
             const isLowStock =
               item.minimum_stock > 0 &&

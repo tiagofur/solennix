@@ -315,10 +315,10 @@ export const ClientDetails: React.FC = () => {
           ) : (
             <div className="overflow-x-auto">
               <table
-                className="min-w-full divide-y divide-border"
+                className="data-table"
                 aria-label={t("clients:details.events_history")}
               >
-                <thead className="bg-surface-alt">
+                <thead>
                   <tr>
                     <th
                       scope="col"
@@ -364,7 +364,7 @@ export const ClientDetails: React.FC = () => {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-card divide-y divide-border">
+                <tbody>
                   {events.map((event) => (
                     <tr
                       key={event.id}

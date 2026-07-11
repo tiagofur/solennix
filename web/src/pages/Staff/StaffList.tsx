@@ -166,7 +166,7 @@ export const StaffList: React.FC = () => {
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-border" aria-label="Tabla de colaboradores">
+            <table className="data-table" aria-label="Tabla de colaboradores">
               <caption className="sr-only">
                 {t("staff:list.table.summary", {
                   count: totalItems,
@@ -174,7 +174,7 @@ export const StaffList: React.FC = () => {
                   totalPages,
                 })}
               </caption>
-              <thead className="bg-surface-alt">
+              <thead>
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-text-secondary">
                     {t("staff:list.table.name")}
@@ -190,7 +190,7 @@ export const StaffList: React.FC = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-card divide-y divide-border">
+              <tbody>
                 {rows.map((s) => (
                   <tr
                     key={s.id}

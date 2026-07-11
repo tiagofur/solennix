@@ -634,8 +634,8 @@ export const ProductDetails: React.FC = () => {
               </div>
             ) : (
               <>
-                <table className="min-w-full divide-y divide-border">
-                  <thead className="bg-surface-alt">
+                <table className="data-table">
+                  <thead>
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
                         {t("products:form.inventory")}
@@ -648,7 +648,7 @@ export const ProductDetails: React.FC = () => {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
+                  <tbody>
                     {ingredients.map((ing: ProductIngredientRow) => (
                         <tr
                           key={ing.inventory_id}
@@ -706,8 +706,8 @@ export const ProductDetails: React.FC = () => {
                   {t("products:details.fixed_cost_per_event")}
                 </span>
               </div>
-              <table className="min-w-full divide-y divide-border">
-                <thead className="bg-surface-alt">
+              <table className="data-table">
+                <thead>
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
                       {t("products:form.inventory")}
@@ -720,7 +720,7 @@ export const ProductDetails: React.FC = () => {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody>
                   {ingredients
                     .filter((i: ProductIngredientRow) => i.type === "supply")
                     .map((ing: ProductIngredientRow) => (
@@ -785,8 +785,8 @@ export const ProductDetails: React.FC = () => {
                   {t("products:form.reusable_no_cost")}
                 </span>
               </div>
-              <table className="min-w-full divide-y divide-border">
-                <thead className="bg-surface-alt">
+              <table className="data-table">
+                <thead>
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
                       {t("products:form.equipment")}
@@ -799,7 +799,7 @@ export const ProductDetails: React.FC = () => {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody>
                   {ingredients
                     .filter((i: ProductIngredientRow) => i.type === "equipment")
                     .map((ing: ProductIngredientRow) => (

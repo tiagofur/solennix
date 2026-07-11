@@ -93,11 +93,11 @@ export const StaffTeamList: React.FC = () => {
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-border" aria-label="Tabla de equipos">
+            <table className="data-table" aria-label="Tabla de equipos">
               <caption className="sr-only">
                 {t("staff:teams.list.table.summary", { count: teams.length })}
               </caption>
-              <thead className="bg-surface-alt">
+              <thead>
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-text-secondary">
                     {t("staff:teams.list.table.name")}
@@ -113,7 +113,7 @@ export const StaffTeamList: React.FC = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-card divide-y divide-border">
+              <tbody>
                 {teams.map((team) => (
                   <tr
                     key={team.id}

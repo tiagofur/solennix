@@ -234,11 +234,11 @@ export const ProductList: React.FC = () => {
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-border" aria-label={t("products:title")}>
+            <table className="data-table" aria-label={t("products:title")}>
               <caption className="sr-only">
                 {t("common:pagination.showing")} {currentPage} {t("common:pagination.of")} {totalPages}
               </caption>
-              <thead className="bg-surface-alt">
+              <thead>
                 <tr>
                   <th
                     scope="col"
@@ -272,7 +272,7 @@ export const ProductList: React.FC = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-card divide-y divide-border">
+              <tbody>
                 {paginatedProducts.map((product) => {
                   const imageSrc = getAssetUrl(product.image_url);
                   return (
