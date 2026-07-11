@@ -231,4 +231,104 @@ final class CacheManagerTests: XCTestCase {
 
         XCTAssertEqual(try manager.getCachedPayments(eventId: "ev_1").count, 1)
     }
+
+    // MARK: - Single-event mutations (#804)
+
+    /// `upsertCachedEvent` must insert a new event without wiping pre-existing
+    /// ones, and updating the same id must mutate in place rather than create a
+    /// duplicate. This is the foreground path `EventFormViewModel.save` and
+    /// `EventDetailViewModel.changeStatus` rely on so the widget sees the new
+    /// event/status immediately (before the background refresh does a full
+    /// `cacheEvents` wipe+insert).
+    func testUpsertCachedEventInsertsThenUpdates() throws {
+        let manager = try makeManager()
+
+        // Seed an event that the upsert must NOT drop.
+        let other = Event(
+            id: "e_other", userId: "u_1", clientId: "c_1", eventDate: "2026-07-15",
+            startTime: "18:00", endTime: "23:00", serviceType: "Boda", numPeople: 100,
+            status: .confirmed, discount: 0, discountType: .percent, requiresInvoice: false,
+            taxRate: 0, taxAmount: 0, totalAmount: 5000, location: "Salón",
+            createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-02T00:00:00Z"
+        )
+        try manager.cacheEvents([other])
+
+        // Insert a new event.
+        let event = Event(
+            id: "e_1", userId: "u_1", clientId: "c_1", eventDate: "2026-07-10",
+            startTime: "18:00", endTime: "23:00", serviceType: "Cumpleaños", numPeople: 50,
+            status: .quoted, discount: 0, discountType: .percent, requiresInvoice: false,
+            taxRate: 0, taxAmount: 0, totalAmount: 1000, location: "Casa",
+            createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-02T00:00:00Z"
+        )
+        try manager.upsertCachedEvent(event)
+
+        var all = try manager.getCachedEvents()
+        XCTAssertEqual(all.count, 2, "upsert must insert without wiping existing events")
+        XCTAssertTrue(all.contains { $0.id == "e_other" }, "pre-existing event must survive")
+
+        // Update the same id: status + amount change, no duplicate row.
+        let updated = Event(
+            id: event.id, userId: event.userId, clientId: event.clientId, eventDate: event.eventDate,
+            startTime: event.startTime, endTime: event.endTime, serviceType: event.serviceType,
+            numPeople: event.numPeople, status: .confirmed, discount: event.discount,
+            discountType: event.discountType, requiresInvoice: event.requiresInvoice,
+            taxRate: event.taxRate, taxAmount: event.taxAmount, totalAmount: 2500,
+            location: event.location, createdAt: event.createdAt, updatedAt: "2026-01-03T00:00:00Z"
+        )
+        try manager.upsertCachedEvent(updated)
+
+        all = try manager.getCachedEvents()
+        XCTAssertEqual(all.count, 2, "upsert must update in place, not duplicate")
+        let mutated = try XCTUnwrap(all.first { $0.id == "e_1" })
+        XCTAssertEqual(mutated.status, .confirmed, "status must reflect the update")
+        XCTAssertEqual(mutated.totalAmount, 2500, accuracy: 0.001, "amount must reflect the update")
+    }
+
+    /// `deleteCachedEvent` must remove only the targeted id and leave other
+    /// events intact — the contract `EventDetailViewModel.deleteEvent` depends
+    /// on so the widget drops a deleted event immediately.
+    func testDeleteCachedEventRemovesOnlyTargetId() throws {
+        let manager = try makeManager()
+
+        let e1 = Event(
+            id: "e_1", userId: "u_1", clientId: "c_1", eventDate: "2026-07-10",
+            startTime: "18:00", endTime: "23:00", serviceType: "Boda", numPeople: 100,
+            status: .confirmed, discount: 0, discountType: .percent, requiresInvoice: false,
+            taxRate: 0, taxAmount: 0, totalAmount: 1000, location: "Salón",
+            createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-02T00:00:00Z"
+        )
+        let e2 = Event(
+            id: "e_2", userId: "u_1", clientId: "c_1", eventDate: "2026-07-20",
+            startTime: "18:00", endTime: "23:00", serviceType: "Boda", numPeople: 100,
+            status: .quoted, discount: 0, discountType: .percent, requiresInvoice: false,
+            taxRate: 0, taxAmount: 0, totalAmount: 2000, location: "Salón",
+            createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-02T00:00:00Z"
+        )
+        try manager.cacheEvents([e1, e2])
+
+        try manager.deleteCachedEvent(id: "e_1")
+
+        let remaining = try manager.getCachedEvents()
+        XCTAssertEqual(remaining.map(\.id), ["e_2"], "only the targeted id is removed")
+    }
+
+    /// Deleting an unknown id is a no-op (the widget cache may not yet have
+    /// been populated by the background refresh).
+    func testDeleteCachedEventUnknownIdIsNoOp() throws {
+        let manager = try makeManager()
+
+        let e1 = Event(
+            id: "e_1", userId: "u_1", clientId: "c_1", eventDate: "2026-07-10",
+            startTime: "18:00", endTime: "23:00", serviceType: "Boda", numPeople: 100,
+            status: .confirmed, discount: 0, discountType: .percent, requiresInvoice: false,
+            taxRate: 0, taxAmount: 0, totalAmount: 1000, location: "Salón",
+            createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-02T00:00:00Z"
+        )
+        try manager.cacheEvents([e1])
+
+        try manager.deleteCachedEvent(id: "e_unknown")
+
+        XCTAssertEqual(try manager.getCachedEvents().count, 1)
+    }
 }

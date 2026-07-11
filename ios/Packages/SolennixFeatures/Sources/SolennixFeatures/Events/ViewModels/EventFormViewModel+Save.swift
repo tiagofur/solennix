@@ -181,18 +181,30 @@ extension EventFormViewModel {
         // PUT /events/{id} then PUT /events/{id}/items for edit — and fans the
         // write out to the system calendar. No `EventDraft` type is introduced.
         do {
+            // Capture the saved event so we can mirror it into the widget cache
+            // before posting `.solennixEventUpdated` (#804). The repository
+            // returns the authoritative server record (with assigned id,
+            // auto-confirmed status, etc.), which is exactly what the cache
+            // should hold.
+            let saved: Event
             if isEdit, let editId {
-                _ = try await eventRepository.update(
+                saved = try await eventRepository.update(
                     editId,
                     body: AnyCodable(body),
                     itemsBody: AnyCodable(itemsBody)
                 )
             } else {
-                _ = try await eventRepository.create(
+                saved = try await eventRepository.create(
                     eventBody: AnyCodable(body),
                     itemsBody: AnyCodable(itemsBody)
                 )
             }
+            // Mirror into the widget cache BEFORE posting: the notification
+            // triggers `WidgetSyncCoordinator.syncAll()` synchronously on the
+            // main thread, so the cache must hold the new event when that
+            // handler runs — otherwise the widget stays stale until the next
+            // list load / background refresh (#804).
+            mirrorEventToCache(saved)
         } catch {
             HapticsHelper.play(.error)
             throw error

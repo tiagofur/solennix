@@ -76,6 +76,58 @@ public final class CacheManager {
         return cached.map { $0.toEvent() }
     }
 
+    /// Upserts a single event into the cache without wiping the rest.
+    ///
+    /// Mirrors `upsertCachedPayment` for event mutations
+    /// (`EventFormViewModel.save`, `EventDetailViewModel.changeStatus`) so the
+    /// widget reflects the change on the next `syncAll()` instead of waiting
+    /// for the background refresh (#804). Same explicit fetch+update posture
+    /// (not relying on SwiftData's implicit upsert for `@Attribute(.unique)`).
+    public func upsertCachedEvent(_ event: Event) throws {
+        if let existing = try fetchCachedEvent(id: event.id) {
+            existing.userId = event.userId
+            existing.clientId = event.clientId
+            existing.eventDate = event.eventDate
+            existing.startTime = event.startTime
+            existing.endTime = event.endTime
+            existing.serviceType = event.serviceType
+            existing.numPeople = event.numPeople
+            existing.statusRawValue = event.status.rawValue
+            existing.discount = event.discount
+            existing.discountTypeRawValue = event.discountType.rawValue
+            existing.requiresInvoice = event.requiresInvoice
+            existing.taxRate = event.taxRate
+            existing.taxAmount = event.taxAmount
+            existing.totalAmount = event.totalAmount
+            existing.location = event.location
+            existing.city = event.city
+            existing.depositPercent = event.depositPercent
+            existing.cancellationDays = event.cancellationDays
+            existing.refundPercent = event.refundPercent
+            existing.notes = event.notes
+            existing.photos = event.photos
+            existing.createdAt = event.createdAt
+            existing.updatedAt = event.updatedAt
+            existing.currency = event.currency
+        } else {
+            modelContext.insert(CachedEvent(from: event))
+        }
+        try modelContext.save()
+        markCacheUpdated(.events)
+    }
+
+    /// Deletes a single cached event by id, leaving other events intact.
+    ///
+    /// Used by `EventDetailViewModel.deleteEvent` so the widget drops the
+    /// event immediately instead of waiting for the background refresh (#804).
+    public func deleteCachedEvent(id: String) throws {
+        if let existing = try fetchCachedEvent(id: id) {
+            modelContext.delete(existing)
+            try modelContext.save()
+            markCacheUpdated(.events)
+        }
+    }
+
     // MARK: - Products
 
     /// Replaces all cached products with the provided list.
@@ -185,6 +237,15 @@ public final class CacheManager {
     /// Fetches a single cached payment by id, or nil if absent.
     private func fetchCachedPayment(id: String) throws -> CachedPayment? {
         var descriptor = FetchDescriptor<CachedPayment>(
+            predicate: #Predicate { $0.id == id }
+        )
+        descriptor.fetchLimit = 1
+        return try modelContext.fetch(descriptor).first
+    }
+
+    /// Fetches a single cached event by id, or nil if absent.
+    private func fetchCachedEvent(id: String) throws -> CachedEvent? {
+        var descriptor = FetchDescriptor<CachedEvent>(
             predicate: #Predicate { $0.id == id }
         )
         descriptor.fetchLimit = 1

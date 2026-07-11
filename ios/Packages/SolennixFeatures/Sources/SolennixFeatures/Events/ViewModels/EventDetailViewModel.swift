@@ -344,6 +344,14 @@ public final class EventDetailViewModel {
             event = updated
             HapticsHelper.play(.success)
 
+            // Mirror into the widget cache BEFORE posting: `.solennixEventUpdated`
+            // triggers `WidgetSyncCoordinator.syncAll()` synchronously on the main
+            // thread, so the cache must hold the new status (which drives the
+            // confirmed-events KPI and the pending-payments window) when that
+            // handler runs — otherwise the widget stays stale until the next
+            // list load / background refresh (#804).
+            try? cacheManager?.upsertCachedEvent(updated)
+
             NotificationCenter.default.post(name: .solennixEventUpdated, object: nil)
 
             // Actualizar la Live Activity si está activa
@@ -503,6 +511,9 @@ public final class EventDetailViewModel {
         do {
             try await apiClient.delete(Endpoint.event(eventId))
             HapticsHelper.play(.success)
+            // Drop from the widget cache before posting `.solennixEventUpdated`
+            // (same reason as changeStatus: the trigger re-derives synchronously).
+            try? cacheManager?.deleteCachedEvent(id: eventId)
             NotificationCenter.default.post(name: .solennixEventUpdated, object: nil)
             return true
         } catch {

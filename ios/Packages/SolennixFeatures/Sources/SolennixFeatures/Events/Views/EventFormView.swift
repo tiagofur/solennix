@@ -291,10 +291,12 @@ private struct FormLifecycleModifier: ViewModifier {
     let initialStep: Int?
     @Binding var didApplyInitialStep: Bool
     @Bindable var viewModel: EventFormViewModel
+    @Environment(CacheManager.self) private var cacheManager: CacheManager?
 
     func body(content: Content) -> some View {
         content
             .task {
+                viewModel.setCacheManager(cacheManager)
                 await viewModel.loadInitialData()
                 if let id = eventId {
                     await viewModel.loadEventForEditing(id: id)
