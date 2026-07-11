@@ -398,7 +398,7 @@ func (r *UserRepo) AcceptStaffInvite(ctx context.Context, tokenHash, passwordHas
 		INSERT INTO users (email, password_hash, name, plan, role)
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, email, password_hash, name, plan, role, created_at, updated_at
-	`, email, passwordHash, staffName, ownerPlan, targetRole).Scan(
+	`, email, passwordHash, staffName, "basic", targetRole).Scan(
 		&createdUser.ID,
 		&createdUser.Email,
 		&createdUser.PasswordHash,

@@ -135,6 +135,7 @@ type InventoryRepository interface {
 	Delete(ctx context.Context, id, userID uuid.UUID) error
 	CountByUserID(ctx context.Context, userID uuid.UUID) (int, error)
 	Search(ctx context.Context, userID uuid.UUID, query string) ([]models.InventoryItem, error)
+	VerifyOwnership(ctx context.Context, inventoryIDs []uuid.UUID, userID uuid.UUID) error
 }
 
 // UnavailableDateRepository defines unavailable date repo operations.

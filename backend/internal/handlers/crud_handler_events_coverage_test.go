@@ -7,11 +7,13 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
 	"github.com/tiagofur/solennix-backend/internal/repository"
@@ -112,35 +114,45 @@ func TestParseEventPhotos(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestParseEventStartTime(t *testing.T) {
+	loc, err := time.LoadLocation("America/Mexico_City")
+	require.NoError(t, err)
+
 	t.Run("date + HH:MM start_time", func(t *testing.T) {
 		st := "14:30"
-		got := parseEventStartTime("2026-06-15", &st)
+		got := parseEventStartTime(loc, "2026-06-15", &st)
 		assert.Equal(t, 14, got.Hour())
 		assert.Equal(t, 30, got.Minute())
+		assert.Equal(t, loc, got.Location())
 	})
 
 	t.Run("date + HH:MM:SS truncates to HH:MM", func(t *testing.T) {
 		st := "09:15:45"
-		got := parseEventStartTime("2026-06-15", &st)
+		got := parseEventStartTime(loc, "2026-06-15", &st)
 		assert.Equal(t, 9, got.Hour())
 		assert.Equal(t, 15, got.Minute())
 	})
 
 	t.Run("RFC3339 date is accepted", func(t *testing.T) {
 		st := "18:00"
-		got := parseEventStartTime("2026-06-15T00:00:00Z", &st)
+		got := parseEventStartTime(loc, "2026-06-15T00:00:00Z", &st)
 		assert.Equal(t, 18, got.Hour())
 	})
 
 	t.Run("nil start_time defaults to 09:00", func(t *testing.T) {
-		got := parseEventStartTime("2026-06-15", nil)
+		got := parseEventStartTime(loc, "2026-06-15", nil)
 		assert.Equal(t, 9, got.Hour())
 	})
 
 	t.Run("invalid date falls back to now", func(t *testing.T) {
-		// "not-a-date" fails parsing → returns time.Now() which should be valid
-		got := parseEventStartTime("not-a-date", nil)
+		got := parseEventStartTime(loc, "not-a-date", nil)
 		assert.False(t, got.IsZero())
+	})
+
+	t.Run("nil location falls back to UTC", func(t *testing.T) {
+		st := "10:00"
+		got := parseEventStartTime(nil, "2026-06-15", &st)
+		assert.Equal(t, time.UTC, got.Location())
+		assert.Equal(t, 10, got.Hour())
 	})
 }
 

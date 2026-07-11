@@ -184,7 +184,7 @@ func TestPaymentSubmissionReviewSubmissionConcurrentApprovalsCreateSinglePayment
 		t.Fatal("expected payment id when one payment exists")
 	}
 
-	submission, err := repository.NewPaymentSubmissionRepo(pool).GetByID(ctx, submissionID)
+	submission, err := repository.NewPaymentSubmissionRepo(pool).GetByID(ctx, submissionID, organizerID)
 	if err != nil {
 		t.Fatalf("load submission: %v", err)
 	}

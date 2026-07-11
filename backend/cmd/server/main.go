@@ -134,6 +134,12 @@ func main() {
 	crudHandler.SetEmailService(emailService)
 	crudHandler.SetLiveActivityNotifier(liveActivityService)
 	crudHandler.SetStaffTeamRepo(staffTeamRepo)
+	if eventTZ, err := time.LoadLocation(cfg.DefaultTimezone); err != nil {
+		slog.Warn("Invalid APP_TIMEZONE for event scheduling; falling back to UTC", "configured", cfg.DefaultTimezone, "error", err)
+		crudHandler.SetEventTimezone(time.UTC)
+	} else {
+		crudHandler.SetEventTimezone(eventTZ)
+	}
 	subHandler := handlers.NewSubscriptionHandler(userRepo, subscriptionRepo, eventRepo, paymentRepo, stripeService, rcService, processedWebhookRepo, cfg)
 	subHandler.SetEmailService(emailService)
 	// Evict expired Stripe subscription cache entries to bound memory (M10).

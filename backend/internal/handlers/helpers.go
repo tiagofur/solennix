@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -52,12 +53,27 @@ func writePlanLimitError(w http.ResponseWriter, limitType string, current, max i
 	})
 }
 
-// Decode JSON body into struct with a 1MB size limit to prevent DoS
-func decodeJSON(r *http.Request, dst interface{}) error {
-	const maxBodySize = 1 << 20 // 1 MB
-	r.Body = http.MaxBytesReader(nil, r.Body, maxBodySize)
+const maxJSONBodySize = 1 << 20 // 1 MB
+
+// decodeJSON decodes a JSON request body with a 1MB size limit.
+// Pass the ResponseWriter so MaxBytesReader can enforce the limit and emit HTTP 413.
+func decodeJSON(w http.ResponseWriter, r *http.Request, dst interface{}) error {
+	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBodySize)
 	defer r.Body.Close()
-	return json.NewDecoder(r.Body).Decode(dst)
+	if err := json.NewDecoder(r.Body).Decode(dst); err != nil {
+		if isRequestBodyTooLarge(err) {
+			writeError(w, http.StatusRequestEntityTooLarge, "Request body too large")
+		}
+		return err
+	}
+	return nil
+}
+
+// isRequestBodyTooLarge reports whether decodeJSON failed because the body exceeded
+// the size limit. When true, MaxBytesReader has already written HTTP 413.
+func isRequestBodyTooLarge(err error) bool {
+	var maxErr *http.MaxBytesError
+	return errors.As(err, &maxErr)
 }
 
 // maskEmail enmasks user email PII to protect privacy.

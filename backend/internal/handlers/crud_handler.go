@@ -48,6 +48,7 @@ type CRUDHandler struct {
 	notifier        NotificationSender     // optional, may be nil
 	emailService    *services.EmailService // optional, may be nil
 	liveActivitySvc LiveActivityNotifier   // optional, may be nil
+	eventTZ         *time.Location         // organizer timezone for Live Activity scheduling (APP_TIMEZONE)
 }
 
 // LiveActivityNotifier is the subset of services.LiveActivityService the handler needs.
@@ -96,6 +97,12 @@ func (h *CRUDHandler) SetEmailService(e *services.EmailService) {
 // SetLiveActivityNotifier configures an optional Live Activity push notifier.
 func (h *CRUDHandler) SetLiveActivityNotifier(s LiveActivityNotifier) {
 	h.liveActivitySvc = s
+}
+
+// SetEventTimezone configures the timezone used to parse event start times for
+// Live Activity push scheduling. Falls back to UTC when unset.
+func (h *CRUDHandler) SetEventTimezone(loc *time.Location) {
+	h.eventTZ = loc
 }
 
 // SetStaffTeamRepo configures an optional staff team repository used to verify
@@ -165,7 +172,10 @@ func (h *CRUDHandler) GetClient(w http.ResponseWriter, r *http.Request) {
 func (h *CRUDHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	var client models.Client
-	if err := decodeJSON(r, &client); err != nil {
+	if err := decodeJSON(w, r, &client); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeCRUDI18nError(w, r, http.StatusBadRequest, "common.invalid_request_body")
 		return
 	}
@@ -239,7 +249,10 @@ func (h *CRUDHandler) UpdateClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var client models.Client
-	if err := decodeJSON(r, &client); err != nil {
+	if err := decodeJSON(w, r, &client); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeCRUDI18nError(w, r, http.StatusBadRequest, "common.invalid_request_body")
 		return
 	}
@@ -613,7 +626,10 @@ func icalEscape(s string) string {
 func (h *CRUDHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	var event models.Event
-	if err := decodeJSON(r, &event); err != nil {
+	if err := decodeJSON(w, r, &event); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -872,7 +888,7 @@ func (h *CRUDHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	// Reaches running iOS Activities so the Dynamic Island reflects the new state
 	// even if the change came from another device or team member.
 	if h.liveActivitySvc != nil && existing.Status != oldStatus {
-		eventStart := parseEventStartTime(existing.EventDate, existing.StartTime)
+		eventStart := parseEventStartTime(h.eventTZ, existing.EventDate, existing.StartTime)
 		state := services.DeriveContentStateFromStatus(existing.Status, eventStart)
 		go func() {
 			if err := h.liveActivitySvc.PushUpdate(context.Background(), id, state); err != nil {
@@ -885,8 +901,12 @@ func (h *CRUDHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 }
 
 // parseEventStartTime combines event_date (YYYY-MM-DD or RFC3339) with optional
-// start_time (HH:MM[:SS]) into a single Time. Falls back to "now" if parsing fails.
-func parseEventStartTime(eventDate string, startTime *string) time.Time {
+// start_time (HH:MM[:SS]) into a single Time in the organizer timezone.
+// Falls back to "now" if parsing fails.
+func parseEventStartTime(loc *time.Location, eventDate string, startTime *string) time.Time {
+	if loc == nil {
+		loc = time.UTC
+	}
 	dateStr := strings.Split(eventDate, "T")[0]
 	timeStr := "09:00"
 	if startTime != nil && *startTime != "" {
@@ -895,10 +915,10 @@ func parseEventStartTime(eventDate string, startTime *string) time.Time {
 			timeStr = timeStr[:5]
 		}
 	}
-	if t, err := time.ParseInLocation("2006-01-02 15:04", dateStr+" "+timeStr, time.Local); err == nil {
+	if t, err := time.ParseInLocation("2006-01-02 15:04", dateStr+" "+timeStr, loc); err == nil {
 		return t
 	}
-	return time.Now()
+	return time.Now().In(loc)
 }
 
 func (h *CRUDHandler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
@@ -1046,7 +1066,10 @@ func (h *CRUDHandler) UpdateEventItems(w http.ResponseWriter, r *http.Request) {
 		Supplies  *[]models.EventSupply    `json:"supplies,omitempty"`
 		Staff     *[]models.EventStaff     `json:"staff,omitempty"`
 	}
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -1243,7 +1266,10 @@ func (h *CRUDHandler) CheckEquipmentConflicts(w http.ResponseWriter, r *http.Req
 		InventoryIDs   []string `json:"inventory_ids"`
 		ExcludeEventID *string  `json:"exclude_event_id,omitempty"`
 	}
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -1390,7 +1416,10 @@ func (h *CRUDHandler) GetEquipmentSuggestions(w http.ResponseWriter, r *http.Req
 			Quantity  float64 `json:"quantity"`
 		} `json:"products"`
 	}
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -1485,7 +1514,10 @@ func (h *CRUDHandler) GetSupplySuggestions(w http.ResponseWriter, r *http.Reques
 			Quantity  float64 `json:"quantity"`
 		} `json:"products"`
 	}
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -1589,7 +1621,10 @@ func (h *CRUDHandler) AddEventPhoto(w http.ResponseWriter, r *http.Request) {
 		ThumbnailURL *string `json:"thumbnail_url,omitempty"`
 		Caption      *string `json:"caption,omitempty"`
 	}
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -1761,7 +1796,10 @@ func (h *CRUDHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 func (h *CRUDHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	var product models.Product
-	if err := decodeJSON(r, &product); err != nil {
+	if err := decodeJSON(w, r, &product); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -1882,7 +1920,10 @@ func (h *CRUDHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var product models.Product
-	if err := decodeJSON(r, &product); err != nil {
+	if err := decodeJSON(w, r, &product); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -1964,7 +2005,10 @@ func (h *CRUDHandler) UpdateProductIngredients(w http.ResponseWriter, r *http.Re
 	var req struct {
 		Ingredients []models.ProductIngredient `json:"ingredients"`
 	}
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -1983,6 +2027,15 @@ func (h *CRUDHandler) UpdateProductIngredients(w http.ResponseWriter, r *http.Re
 		seenInventory[ingredient.InventoryID] = true
 	}
 
+	inventoryIDs := make([]uuid.UUID, 0, len(req.Ingredients))
+	for _, ingredient := range req.Ingredients {
+		inventoryIDs = append(inventoryIDs, ingredient.InventoryID)
+	}
+	if err := h.inventoryRepo.VerifyOwnership(r.Context(), inventoryIDs, userID); err != nil {
+		writeError(w, http.StatusBadRequest, "one or more inventory items not found")
+		return
+	}
+
 	if err := h.productRepo.UpdateIngredients(r.Context(), id, req.Ingredients); err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to update ingredients: "+err.Error())
 		return
@@ -1995,7 +2048,10 @@ func (h *CRUDHandler) GetBatchProductIngredients(w http.ResponseWriter, r *http.
 	var req struct {
 		ProductIDs []string `json:"product_ids"`
 	}
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -2101,7 +2157,10 @@ func (h *CRUDHandler) GetInventoryItem(w http.ResponseWriter, r *http.Request) {
 func (h *CRUDHandler) CreateInventoryItem(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	var item models.InventoryItem
-	if err := decodeJSON(r, &item); err != nil {
+	if err := decodeJSON(w, r, &item); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -2201,7 +2260,10 @@ func (h *CRUDHandler) UpdateInventoryItem(w http.ResponseWriter, r *http.Request
 		return
 	}
 	var item models.InventoryItem
-	if err := decodeJSON(r, &item); err != nil {
+	if err := decodeJSON(w, r, &item); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -2347,7 +2409,10 @@ func (h *CRUDHandler) CreatePayment(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := middleware.GetUserID(ctx)
 	var payment models.Payment
-	if err := decodeJSON(r, &payment); err != nil {
+	if err := decodeJSON(w, r, &payment); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -2450,7 +2515,10 @@ func (h *CRUDHandler) UpdatePayment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var payment models.Payment
-	if err := decodeJSON(r, &payment); err != nil {
+	if err := decodeJSON(w, r, &payment); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}

@@ -656,6 +656,11 @@ func (m *MockInventoryRepo) Search(ctx context.Context, userID uuid.UUID, query 
 	return args.Get(0).([]models.InventoryItem), args.Error(1)
 }
 
+func (m *MockInventoryRepo) VerifyOwnership(ctx context.Context, inventoryIDs []uuid.UUID, userID uuid.UUID) error {
+	args := m.Called(ctx, inventoryIDs, userID)
+	return args.Error(0)
+}
+
 // ---------------------------------------------------------------------------
 // MockFullPaymentRepo — implements FullPaymentRepository
 // ---------------------------------------------------------------------------

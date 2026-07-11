@@ -61,27 +61,27 @@ func (r *PaymentSubmissionRepo) Create(ctx context.Context, ps *models.PaymentSu
 	return err
 }
 
-// GetByID retrieves a payment submission with client/event details.
-func (r *PaymentSubmissionRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.PaymentSubmission, error) {
+// GetByID retrieves a payment submission with client/event details scoped to the organizer.
+func (r *PaymentSubmissionRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.PaymentSubmission, error) {
 	query := fmt.Sprintf(`SELECT %s, c.name as client_name, e.service_type as event_label
 		FROM payment_submissions ps
 		LEFT JOIN clients c ON ps.client_id = c.id
 		LEFT JOIN events e ON ps.event_id = e.id
-		WHERE ps.id = $1`, paymentSubmissionSelectFields)
+		WHERE ps.id = $1 AND ps.user_id = $2`, paymentSubmissionSelectFields)
 
-	row := r.pool.QueryRow(ctx, query, id)
+	row := r.pool.QueryRow(ctx, query, id, userID)
 	return scanPaymentSubmissionWithJoins(row)
 }
 
-func (r *PaymentSubmissionRepo) GetByIDForUpdateTx(ctx context.Context, tx pgx.Tx, id uuid.UUID) (*models.PaymentSubmission, error) {
+func (r *PaymentSubmissionRepo) GetByIDForUpdateTx(ctx context.Context, tx pgx.Tx, id, userID uuid.UUID) (*models.PaymentSubmission, error) {
 	query := fmt.Sprintf(`SELECT %s, c.name as client_name, e.service_type as event_label
 		FROM payment_submissions ps
 		LEFT JOIN clients c ON ps.client_id = c.id
 		LEFT JOIN events e ON ps.event_id = e.id
-		WHERE ps.id = $1
+		WHERE ps.id = $1 AND ps.user_id = $2
 		FOR UPDATE OF ps`, paymentSubmissionSelectFields)
 
-	row := tx.QueryRow(ctx, query, id)
+	row := tx.QueryRow(ctx, query, id, userID)
 	return scanPaymentSubmissionWithJoins(row)
 }
 

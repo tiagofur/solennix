@@ -57,7 +57,10 @@ func (h *UnavailableDateHandler) CreateUnavailableDate(w http.ResponseWriter, r 
 		EndTime   string `json:"end_time"`
 		Reason    string `json:"reason"`
 	}
-	if err := decodeJSON(r, &body); err != nil {
+	if err := decodeJSON(w, r, &body); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
@@ -139,7 +142,10 @@ func (h *UnavailableDateHandler) UpdateUnavailableDate(w http.ResponseWriter, r 
 		EndTime   string `json:"end_time"`
 		Reason    string `json:"reason"`
 	}
-	if err := decodeJSON(r, &body); err != nil {
+	if err := decodeJSON(w, r, &body); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}

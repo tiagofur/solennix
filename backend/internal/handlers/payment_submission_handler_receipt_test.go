@@ -503,14 +503,17 @@ func TestPaymentSubmissionGetReceiptAuthorizationAndMissingFile(t *testing.T) {
 	submissionID := uuid.New()
 	storedReceipt := "receipt-proof.png"
 
-	buildHandler := func(t *testing.T, organizer *models.User) (*PaymentSubmissionHandler, string) {
+	buildHandler := func(t *testing.T, requestUserID uuid.UUID, organizer *models.User) (*PaymentSubmissionHandler, string) {
 		t.Helper()
 		userRepo := &MockFullUserRepo{}
-		userRepo.On("GetByID", mock.Anything, mock.Anything).Return(organizer, nil)
+		userRepo.On("GetByID", mock.Anything, requestUserID).Return(organizer, nil)
 		handler := NewPaymentSubmissionHandler(nil, nil, userRepo, nil, uploadDir)
 		privatePath := filepath.Join(handler.privateReceiptsDir, storedReceipt)
 		require.NoError(t, os.WriteFile(privatePath, pngFixtureBytes(), 0o644))
-		handler.getSubmission = func(_ context.Context, id uuid.UUID) (*models.PaymentSubmission, error) {
+		handler.getSubmission = func(_ context.Context, id uuid.UUID, userID uuid.UUID) (*models.PaymentSubmission, error) {
+			if userID != ownerID {
+				return nil, pgx.ErrNoRows
+			}
 			return &models.PaymentSubmission{
 				ID:             id,
 				UserID:         ownerID,
@@ -521,6 +524,8 @@ func TestPaymentSubmissionGetReceiptAuthorizationAndMissingFile(t *testing.T) {
 	}
 
 	activePro := &models.User{ID: ownerID, Plan: "pro"}
+	otherOrganizerID := uuid.New()
+	otherPro := &models.User{ID: otherOrganizerID, Plan: "pro"}
 	expiredAt := time.Now().Add(-time.Hour)
 	expiredPro := &models.User{ID: ownerID, Plan: "pro", PlanExpiresAt: &expiredAt}
 	basicPlan := &models.User{ID: ownerID, Plan: "basic"}
@@ -533,7 +538,7 @@ func TestPaymentSubmissionGetReceiptAuthorizationAndMissingFile(t *testing.T) {
 		expectedStatus int
 	}{
 		{name: "owner with active pro plan can download", requestUserID: ownerID, organizer: activePro, expectedStatus: http.StatusOK},
-		{name: "different organizer forbidden", requestUserID: uuid.New(), organizer: activePro, expectedStatus: http.StatusForbidden},
+		{name: "different organizer forbidden", requestUserID: otherOrganizerID, organizer: otherPro, expectedStatus: http.StatusNotFound},
 		{name: "missing file returns not found", requestUserID: ownerID, organizer: activePro, removeFile: true, expectedStatus: http.StatusNotFound},
 		{name: "basic plan organizer forbidden", requestUserID: ownerID, organizer: basicPlan, expectedStatus: http.StatusForbidden},
 		{name: "expired paid plan organizer forbidden", requestUserID: ownerID, organizer: expiredPro, expectedStatus: http.StatusForbidden},
@@ -541,7 +546,7 @@ func TestPaymentSubmissionGetReceiptAuthorizationAndMissingFile(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			handler, privatePath := buildHandler(t, tc.organizer)
+			handler, privatePath := buildHandler(t, tc.requestUserID, tc.organizer)
 			if tc.removeFile {
 				require.NoError(t, os.Remove(privatePath))
 			} else if _, err := os.Stat(privatePath); errors.Is(err, os.ErrNotExist) {

@@ -30,7 +30,7 @@ var allowedReceiptMIME = map[string]string{
 }
 
 type paymentSubmissionReviewStore interface {
-	GetSubmissionForUpdate(context.Context, uuid.UUID) (*models.PaymentSubmission, error)
+	GetSubmissionForUpdate(context.Context, uuid.UUID, uuid.UUID) (*models.PaymentSubmission, error)
 	CreatePayment(context.Context, *models.Payment) error
 	AutoConfirmQuotedEventIfDepositCovered(context.Context, uuid.UUID, uuid.UUID) (bool, error)
 	UpdateSubmission(context.Context, *models.PaymentSubmission) error
@@ -46,11 +46,11 @@ type paymentSubmissionReviewStoreTx struct {
 	beforeGetSubmissionForUpdate func()
 }
 
-func (s *paymentSubmissionReviewStoreTx) GetSubmissionForUpdate(ctx context.Context, id uuid.UUID) (*models.PaymentSubmission, error) {
+func (s *paymentSubmissionReviewStoreTx) GetSubmissionForUpdate(ctx context.Context, id, userID uuid.UUID) (*models.PaymentSubmission, error) {
 	if s.beforeGetSubmissionForUpdate != nil {
 		s.beforeGetSubmissionForUpdate()
 	}
-	return s.submissionRepo.GetByIDForUpdateTx(ctx, s.tx, id)
+	return s.submissionRepo.GetByIDForUpdateTx(ctx, s.tx, id, userID)
 }
 
 func (s *paymentSubmissionReviewStoreTx) CreatePayment(ctx context.Context, payment *models.Payment) error {
@@ -86,7 +86,7 @@ type PaymentSubmissionHandler struct {
 	lookupEvent                 func(context.Context, uuid.UUID) (*models.Event, error)
 	sumPaymentsByEventID        func(context.Context, uuid.UUID, uuid.UUID) (float64, error)
 	createSubmission            func(context.Context, *models.PaymentSubmission) error
-	getSubmission               func(context.Context, uuid.UUID) (*models.PaymentSubmission, error)
+	getSubmission               func(context.Context, uuid.UUID, uuid.UUID) (*models.PaymentSubmission, error)
 	beginReviewTx               func(context.Context) (paymentSubmissionReviewStore, error)
 	beforeReviewSelectForUpdate func()
 }
@@ -184,11 +184,11 @@ func (h *PaymentSubmissionHandler) createPaymentSubmission(ctx context.Context, 
 	return h.repo.Create(ctx, ps)
 }
 
-func (h *PaymentSubmissionHandler) fetchSubmission(ctx context.Context, id uuid.UUID) (*models.PaymentSubmission, error) {
+func (h *PaymentSubmissionHandler) fetchSubmission(ctx context.Context, id, userID uuid.UUID) (*models.PaymentSubmission, error) {
 	if h.getSubmission != nil {
-		return h.getSubmission(ctx, id)
+		return h.getSubmission(ctx, id, userID)
 	}
-	return h.repo.GetByID(ctx, id)
+	return h.repo.GetByID(ctx, id, userID)
 }
 
 func (h *PaymentSubmissionHandler) receiptDownloadPath(ps *models.PaymentSubmission) *string {
@@ -350,23 +350,26 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 	}
 
 	// A8: cap submission at remaining balance (total_amount - already_paid + 0.01 tolerance).
+	// Fail-closed: if event lookup or payment sum fails, deny the submission.
 	if h.lookupEvent != nil && h.sumPaymentsByEventID != nil {
 		event, evErr := h.lookupEvent(ctx, eventID)
-		alreadyPaid := 0.0
-		if evErr == nil && event != nil {
-			if s, sErr := h.sumPaymentsByEventID(ctx, event.UserID, eventID); sErr == nil {
-				alreadyPaid = s
-			}
+		if evErr != nil || event == nil {
+			writeError(w, http.StatusForbidden, "Unable to verify payment balance")
+			return
 		}
-		if evErr == nil && event != nil {
-			maxAllowed := roundCents(event.TotalAmount-alreadyPaid) + 0.01
-			if amountFloat > maxAllowed {
-				writeError(w, http.StatusBadRequest, fmt.Sprintf(
-					"amount exceeds remaining balance: remaining=%.2f",
-					roundCents(event.TotalAmount-alreadyPaid),
-				))
-				return
-			}
+		alreadyPaid, sErr := h.sumPaymentsByEventID(ctx, event.UserID, eventID)
+		if sErr != nil {
+			slog.Error("Failed to sum payments for public submission cap", "event_id", eventID, "error", sErr)
+			writeError(w, http.StatusInternalServerError, "Unable to verify payment balance")
+			return
+		}
+		maxAllowed := roundCents(event.TotalAmount-alreadyPaid) + 0.01
+		if amountFloat > maxAllowed {
+			writeError(w, http.StatusBadRequest, fmt.Sprintf(
+				"amount exceeds remaining balance: remaining=%.2f",
+				roundCents(event.TotalAmount-alreadyPaid),
+			))
+			return
 		}
 	}
 
@@ -590,14 +593,9 @@ func (h *PaymentSubmissionHandler) GetReceipt(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	ps, err := h.fetchSubmission(ctx, submissionID)
+	ps, err := h.fetchSubmission(ctx, submissionID, userID)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "Submission not found")
-		return
-	}
-
-	if ps.UserID != userID {
-		writeError(w, http.StatusForbidden, "You do not have permission to access this receipt")
 		return
 	}
 
@@ -665,7 +663,7 @@ func (h *PaymentSubmissionHandler) ReviewSubmission(w http.ResponseWriter, r *ht
 		_ = reviewStore.Rollback(ctx)
 	}()
 
-	ps, err := reviewStore.GetSubmissionForUpdate(ctx, submissionID)
+	ps, err := reviewStore.GetSubmissionForUpdate(ctx, submissionID, userID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			writeError(w, http.StatusNotFound, "Submission not found")
@@ -673,12 +671,6 @@ func (h *PaymentSubmissionHandler) ReviewSubmission(w http.ResponseWriter, r *ht
 		}
 		slog.Error("Failed to lock payment submission for review", "submission_id", submissionID, "error", err)
 		writeError(w, http.StatusInternalServerError, "Failed to load submission")
-		return
-	}
-
-	// Verify organizer ownership
-	if ps.UserID != userID {
-		writeError(w, http.StatusForbidden, "You do not have permission to review this submission")
 		return
 	}
 
