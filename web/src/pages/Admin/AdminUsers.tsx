@@ -786,8 +786,8 @@ export const AdminUsers: React.FC = () => {
       {/* Users Table */}
       <div className="bg-card shadow-sm border border-border rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-border" aria-label={t('admin:users.title')}>
-            <thead className="bg-surface-alt">
+          <table className="data-table" aria-label={t('admin:users.title')}>
+            <thead>
               <tr>
                 <th className="px-6 py-4 text-left">
                   <button type="button" onClick={() => handleSort('name')} className="flex items-center text-xs font-medium text-text-secondary uppercase tracking-wider hover:text-text transition-colors">
@@ -816,7 +816,7 @@ export const AdminUsers: React.FC = () => {
                 <th className="px-6 py-4 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">{t('admin:users.table.actions')}</th>
               </tr>
             </thead>
-            <tbody className="bg-card divide-y divide-border">
+            <tbody>
               {loading ? (
                 <tr>
                   <td colSpan={9} className="px-6 py-12 text-center">

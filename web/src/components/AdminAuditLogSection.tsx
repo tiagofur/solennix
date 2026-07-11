@@ -74,8 +74,8 @@ export const AdminAuditLogSection: React.FC = () => {
             {t("admin:audit.empty")}
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-border" aria-label={t("admin:audit.title")}>
-            <thead className="bg-surface-alt">
+          <table className="data-table" aria-label={t("admin:audit.title")}>
+            <thead>
               <tr>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">
                   {t("admin:audit.table.date")}
@@ -94,7 +94,7 @@ export const AdminAuditLogSection: React.FC = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-card divide-y divide-border">
+            <tbody>
               {entries.map((entry) => (
                 <tr key={entry.id} className="hover:bg-surface-alt/50 transition-colors">
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-text-secondary">

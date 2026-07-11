@@ -79,7 +79,7 @@ describe('InventoryList', () => {
     vi.clearAllMocks();
   });
 
-  it('renders items separated into two sections', async () => {
+  it('renders all item types in a single table', async () => {
     (inventoryService.getAll as any).mockResolvedValue(sampleItems);
 
     renderList();
@@ -88,14 +88,10 @@ describe('InventoryList', () => {
       expect(screen.getByText('Harina')).toBeInTheDocument();
     });
 
-    // Verify section headers
-    expect(screen.getByText('Consumibles')).toBeInTheDocument();
-    expect(screen.getByText('Equipos')).toBeInTheDocument();
-
-    // Verify items exist
     expect(screen.getByText('Harina')).toBeInTheDocument();
     expect(screen.getByText('Azucar')).toBeInTheDocument();
     expect(screen.getByText('Horno')).toBeInTheDocument();
+    expect(screen.getAllByText('Stock Actual')).toHaveLength(1);
   });
 
   it('renders items and low stock warning', async () => {
@@ -225,7 +221,6 @@ describe('InventoryList', () => {
       expect(screen.getByText('Horno')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Equipos')).toBeInTheDocument();
     expect(screen.getByText('$0.00')).toBeInTheDocument();
 
     // Open RowActionMenu and click Eliminar
@@ -271,7 +266,7 @@ describe('InventoryList', () => {
     expect(screen.queryByRole('button', { name: /Eliminar permanentemente|actions\.delete_permanent/i })).not.toBeInTheDocument();
   });
 
-  it('renders consumibles section with unit label', async () => {
+  it('renders item rows with unit label', async () => {
     (inventoryService.getAll as any).mockResolvedValue([
       {
         id: '1',
@@ -290,13 +285,12 @@ describe('InventoryList', () => {
       expect(screen.getByText('Harina')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Consumibles')).toBeInTheDocument();
     expect(screen.getByText(/Unidad: kg/i)).toBeInTheDocument();
   });
 
   // ---------- sorting tests ----------
 
-  it('sorts consumibles section by minimum_stock column', async () => {
+  it('sorts by minimum_stock column', async () => {
     (inventoryService.getAll as any).mockResolvedValue([
       {
         id: '1',
@@ -617,7 +611,7 @@ describe('InventoryList', () => {
     });
   });
 
-  it('shows empty section message when only one type exists', async () => {
+  it('shows only matching types in the unified table when scoped', async () => {
     (inventoryService.getAll as any).mockResolvedValue([
       {
         id: '1',
@@ -636,34 +630,8 @@ describe('InventoryList', () => {
       expect(screen.getByText('Horno')).toBeInTheDocument();
     });
 
-    // Equipment section should be visible
-    expect(screen.getByText('Equipos')).toBeInTheDocument();
-    // Consumibles and supply sections should show empty messages
-    const emptyMessages = screen.getAllByText(/No hay insumos/i);
-    expect(emptyMessages.length).toBeGreaterThanOrEqual(1);
-  });
-
-  it('sorts equipment section independently from consumibles', async () => {
-    (inventoryService.getAll as any).mockResolvedValue(sampleItems);
-
-    renderList();
-
-    await waitFor(() => {
-      expect(screen.getByText('Harina')).toBeInTheDocument();
-    });
-
-    // There should be two tables — get all Stock Actual headers
-    const stockHeaders = screen.getAllByText('Stock Actual');
-    expect(stockHeaders.length).toBe(2);
-
-    // Click the equipment section's Stock Actual header (second one)
-    fireEvent.click(stockHeaders[1]);
-    const equipTh = stockHeaders[1].closest('th');
-    expect(equipTh).toHaveAttribute('aria-sort', 'ascending');
-
-    // The consumibles section's header should still be "none"
-    const ingredientTh = stockHeaders[0].closest('th');
-    expect(ingredientTh).toHaveAttribute('aria-sort', 'none');
+    fireEvent.click(screen.getByRole('button', { name: 'Ingredientes' }));
+    expect(screen.queryByText('Horno')).not.toBeInTheDocument();
   });
 
   it('renders scope filter buttons correctly', async () => {

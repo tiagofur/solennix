@@ -1057,11 +1057,11 @@ export const EventList: React.FC = () => {
             />
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-border" aria-label={t("events:list.table.aria")}>
+              <table className="data-table" aria-label={t("events:list.table.aria")}>
                 <caption className="sr-only">
                   {t("events:list.table.caption", { total: totalItems, page: currentPage, pages: totalPages })}
                 </caption>
-                <thead className="bg-surface-alt/55 border-b border-border">
+                <thead>
                   <tr>
                     {/* Multi-select checkbox (#885) — desktop only */}
                     <th scope="col" className="px-6 py-3 hidden lg:table-cell">
@@ -1109,11 +1109,11 @@ export const EventList: React.FC = () => {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-transparent divide-y divide-border/60">
+                <tbody>
                   {paginatedEvents.map((event) => (
                     <tr
                       key={event.id}
-                      className="group hover:bg-surface-alt/40 cursor-pointer transition-colors"
+                      className="group hover:bg-surface-alt/50 cursor-pointer transition-colors"
                       onClick={() => navigate(`/events/${event.id}/summary`)}
                       onContextMenu={(e) => {
                         e.preventDefault();

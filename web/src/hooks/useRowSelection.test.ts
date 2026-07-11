@@ -55,4 +55,21 @@ describe('useRowSelection', () => {
     act(() => result.current.toggle('a'));
     expect(result.current.selectedArray).toEqual(['b', 'a']);
   });
+
+  it('toggleIds selects and clears a subset', () => {
+    const { result } = renderHook(() => useRowSelection(['a', 'b', 'c', 'd']));
+    act(() => result.current.toggleIds(['a', 'c']));
+    expect(result.current.selectedArray).toEqual(['a', 'c']);
+
+    act(() => result.current.toggleIds(['a', 'c']));
+    expect(result.current.count).toBe(0);
+  });
+
+  it('sectionState reports per-section flags', () => {
+    const { result } = renderHook(() => useRowSelection(['a', 'b', 'c']));
+    act(() => result.current.toggle('a'));
+    const section = result.current.sectionState(['a', 'b']);
+    expect(section.allSelected).toBe(false);
+    expect(section.someSelected).toBe(true);
+  });
 });

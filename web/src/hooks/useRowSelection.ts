@@ -31,10 +31,40 @@ export function useRowSelection<T extends string>(ids: T[] = []) {
 
   const clear = useCallback(() => setSelected(new Set()), []);
 
+  /** Toggle a subset of rows. Clears when all in the subset are selected. */
+  const toggleIds = useCallback((targetIds: T[]) => {
+    if (targetIds.length === 0) return;
+    setSelected((prev) => {
+      const next = new Set(prev);
+      const allInTargetSelected = targetIds.every((id) => next.has(id));
+      if (allInTargetSelected) {
+        targetIds.forEach((id) => next.delete(id));
+      } else {
+        targetIds.forEach((id) => next.add(id));
+      }
+      return next;
+    });
+  }, []);
+
   const allSelected = ids.length > 0 && selected.size === ids.length;
   const someSelected = selected.size > 0 && selected.size < ids.length;
 
   const selectedArray = useMemo(() => Array.from(selected), [selected]);
+
+  const sectionState = useCallback(
+    (targetIds: T[]) => {
+      const allInSectionSelected =
+        targetIds.length > 0 && targetIds.every((id) => selected.has(id));
+      const someInSectionSelected =
+        targetIds.some((id) => selected.has(id)) && !allInSectionSelected;
+      return {
+        allSelected: allInSectionSelected,
+        someSelected: someInSectionSelected,
+        toggle: () => toggleIds(targetIds),
+      };
+    },
+    [selected, toggleIds],
+  );
 
   return {
     selected,
@@ -42,6 +72,8 @@ export function useRowSelection<T extends string>(ids: T[] = []) {
     count: selected.size,
     toggle,
     toggleAll,
+    toggleIds,
+    sectionState,
     clear,
     allSelected,
     someSelected,

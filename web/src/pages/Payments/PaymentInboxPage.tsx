@@ -186,8 +186,8 @@ export const PaymentInboxPage: React.FC = () => {
 			) : (
 				<div className="rounded-2xl border border-border bg-surface overflow-hidden">
 					<div className="overflow-x-auto">
-						<table className="min-w-full divide-y divide-border">
-							<thead className="bg-surface-alt">
+						<table className="data-table">
+							<thead>
 								<tr>
 									{[
 										t("payments:table.client"),
@@ -207,7 +207,7 @@ export const PaymentInboxPage: React.FC = () => {
 									))}
 								</tr>
 							</thead>
-							<tbody className="divide-y divide-border">
+							<tbody>
 								{submissions.map((sub) => (
 									<tr
 										key={sub.id}

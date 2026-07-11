@@ -343,13 +343,13 @@ export const ClientList: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table
-              className="min-w-full divide-y divide-border"
+              className="data-table"
               aria-label={t("clients:title")}
             >
               <caption className="sr-only">
                 {t("common:pagination.showing")} {currentPage} {t("common:pagination.of")} {totalPages}
               </caption>
-              <thead className="bg-surface-alt">
+              <thead>
                 <tr>
                   {/* Multi-select checkbox (#885) — desktop only */}
                   <th scope="col" className="px-6 py-3 hidden lg:table-cell">
@@ -397,7 +397,7 @@ export const ClientList: React.FC = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-card divide-y divide-border">
+              <tbody>
                 {paginatedClients.map((client) => (
                   <tr
                     key={client.id}
