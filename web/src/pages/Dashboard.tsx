@@ -652,6 +652,21 @@ export const Dashboard: React.FC = () => {
   const { addToast } = useToast();
 
   const handleCompleteEvent = async (eventId: string) => {
+    const event = attentionEvents.find((e) => e.id === eventId);
+    if (event) {
+      const totalPaid = attentionPaidByEvent[eventId] || 0;
+      const pendingAmount = event.total_amount - totalPaid;
+      if (pendingAmount > PAYMENT_COMPLETION_EPSILON) {
+        addToast(
+          t('events:form.error_balance_pending', {
+            amount: pendingAmount.toFixed(2),
+          }),
+          'info',
+        );
+        return;
+      }
+    }
+
     setUpdatingEventId(eventId);
     try {
       await updateStatusMutation.mutateAsync({ id: eventId, status: "completed" });

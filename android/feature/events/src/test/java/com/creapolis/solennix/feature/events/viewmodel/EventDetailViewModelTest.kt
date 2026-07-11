@@ -197,10 +197,13 @@ class EventDetailViewModelTest {
     }
 
     @Test
-    fun `updateEventStatus translates backend balance error to localized message`() = runTest {
-        // Backend rejects "completed" with "Cannot complete: $X remaining".
+    fun `updateEventStatus translates structured completion blocked error`() = runTest {
         coEvery { eventRepository.updateEvent(any()) } throws
-            RuntimeException("Cannot complete: \$1500.00 remaining")
+            com.creapolis.solennix.core.network.SolennixException.CompletionBlocked(
+                remaining = 1500.0,
+                currency = "MXN",
+                message = "No se puede completar: quedan $1500.00 por cobrar"
+            )
 
         val vm = buildViewModel()
         val collectJob = backgroundScope.launch { vm.uiState.collect {} }

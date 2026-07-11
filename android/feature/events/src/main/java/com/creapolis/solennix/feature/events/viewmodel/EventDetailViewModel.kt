@@ -246,7 +246,7 @@ class EventDetailViewModel @Inject constructor(
                 eventRepository.updateEvent(updated)
                 _event.value = updated
             } catch (e: Exception) {
-                _errorMessage.value = translateStatusError(e.message.orEmpty())
+                _errorMessage.value = translateStatusError(e)
             }
         }
     }
@@ -259,15 +259,12 @@ class EventDetailViewModel @Inject constructor(
      * [R.string.events_error_balance_pending]. Otherwise a generic localized fallback
      * is shown — never the raw English backend string.
      */
-    private fun translateStatusError(rawMessage: String): String {
-        val balanceMatch = Regex("Cannot complete: \\$([\\d,]+\\.?\\d*) remaining").find(rawMessage)
-        return if (balanceMatch != null) {
-            val amount = balanceMatch.groupValues[1]
-            tr(DesignSystemR.string.events_error_balance_pending, amount)
-        } else {
-            // Generic, localized fallback — never surface the raw backend message.
-            tr(R.string.events_list_error_change_status)
+    private fun translateStatusError(error: Exception): String {
+        if (error is com.creapolis.solennix.core.network.SolennixException.CompletionBlocked) {
+            val amount = String.format("%.2f", error.remaining)
+            return tr(DesignSystemR.string.events_error_balance_pending, amount)
         }
+        return tr(R.string.events_list_error_change_status)
     }
 
     fun prepareDuplicate(): Boolean {

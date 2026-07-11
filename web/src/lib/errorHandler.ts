@@ -1,4 +1,11 @@
 import * as Sentry from '@sentry/react';
+import { EventCompletionBlockedError } from '@/lib/api';
+
+export function getEventCompletionBlockedError(
+	error: unknown,
+): EventCompletionBlockedError | null {
+	return error instanceof EventCompletionBlockedError ? error : null;
+}
 
 /**
  * Safely logs errors without exposing sensitive user data.

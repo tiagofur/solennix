@@ -47,7 +47,8 @@ val coverageExclusions = listOf(
 
 val coverageIncludes = listOf(
     "**/com/creapolis/solennix/widget/WidgetFormatters*",
-    "**/com/creapolis/solennix/widget/WidgetAuthProvider*"
+    "**/com/creapolis/solennix/widget/WidgetAuthProvider*",
+    "**/com/creapolis/solennix/widget/KpiCalculator*"
 )
 
 val debugKotlinClassesDir = layout.buildDirectory.dir("tmp/kotlin-classes/debug").get().asFile

@@ -14,6 +14,8 @@ public enum APIError: LocalizedError, Sendable {
     case accountBlocked
     /// Thrown when the backend returns 403 `{ code: "auth.account_deleted" }`.
     case accountDeleted
+    /// Thrown when the backend returns 400 `{ error: "event.completion_blocked" }`.
+    case eventCompletionBlocked(message: String, remaining: Double, currency: String)
 
     public var errorDescription: String? {
         switch self {
@@ -33,6 +35,8 @@ public enum APIError: LocalizedError, Sendable {
             return "Tu cuenta fue suspendida. Contactá a soporte para más información."
         case .accountDeleted:
             return "Esta cuenta fue eliminada y ya no está disponible."
+        case .eventCompletionBlocked(let message, _, _):
+            return message
         }
     }
 
@@ -56,6 +60,8 @@ public enum APIError: LocalizedError, Sendable {
             return "Tu cuenta fue suspendida. Contactá a soporte para más información."
         case .accountDeleted:
             return "Esta cuenta fue eliminada y ya no está disponible."
+        case .eventCompletionBlocked(let message, _, _):
+            return message
         }
     }
 

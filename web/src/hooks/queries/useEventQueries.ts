@@ -3,7 +3,7 @@ import { eventService } from '@/services/eventService';
 import type { EventPhotoCreateRequest, EventSearchFilters } from '@/services/eventService';
 import { queryKeys } from './queryKeys';
 import { useToast } from '@/hooks/useToast';
-import { logError, getErrorMessage } from '@/lib/errorHandler';
+import { logError, getErrorMessage, getEventCompletionBlockedError } from '@/lib/errorHandler';
 import type { EventInsert, EventUpdate, PaginationParams } from '@/types/entities';
 import type { EventStatus } from '@/components/StatusDropdown';
 import { useTranslation } from 'react-i18next';
@@ -167,15 +167,16 @@ export function useUpdateEventStatus() {
     },
     onError: (error) => {
       logError('Error updating event status', error);
-      const message = getErrorMessage(error);
-      // Check if this is a balance pending error from backend
-      // Format: "Cannot complete: $XXX.XX remaining"
-      const balanceMatch = message.match(/Cannot complete: \$([\d,]+\.?\d*) remaining/);
-      if (balanceMatch) {
-        const amount = balanceMatch[1];
-        addToast(t('form.error_balance_pending', { amount }), 'info');
+      const completionBlocked = getEventCompletionBlockedError(error);
+      if (completionBlocked) {
+        addToast(
+          t('form.error_balance_pending', {
+            amount: completionBlocked.remaining.toFixed(2),
+          }),
+          'info',
+        );
       } else {
-        addToast(t('form.error_status_update'), 'error');
+        addToast(getErrorMessage(error, t('form.error_status_update')), 'error');
       }
     },
   });

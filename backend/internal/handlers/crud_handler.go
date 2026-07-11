@@ -794,8 +794,8 @@ func (h *CRUDHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		}
 		const tolerance = 0.01
 		if paid < existing.TotalAmount-tolerance {
-			remaining := existing.TotalAmount - paid
-			writeError(w, http.StatusBadRequest, fmt.Sprintf("Cannot complete: $%.2f remaining", remaining))
+			remaining := roundCents(existing.TotalAmount - paid)
+			writeEventCompletionBlockedError(w, r, remaining, existing.Currency)
 			return
 		}
 	}

@@ -47,9 +47,9 @@ class KpiWidget : GlanceAppWidget() {
                 .filter { it.eventDate >= thisMonth && it.status == EventStatus.COMPLETED }
                 .sumOf { it.totalAmount }
 
-            val pendingPayments = events
-                .filter { it.status == EventStatus.CONFIRMED || it.status == EventStatus.QUOTED }
-                .size
+            val payments = database.paymentDao().getPayments().first()
+
+            val pendingPayments = derivePendingPaymentBalance(events, payments)
 
             KpiData(
                 upcomingEvents = upcomingEvents,
@@ -57,7 +57,7 @@ class KpiWidget : GlanceAppWidget() {
                 pendingPayments = pendingPayments
             )
         } catch (e: Exception) {
-            KpiData(0, 0.0, 0)
+            KpiData(0, 0.0, 0.0)
         }
 
         provideContent {
@@ -145,11 +145,11 @@ class KpiWidget : GlanceAppWidget() {
                     )
                 }
                 Text(
-                    text = kpiData.pendingPayments.toString(),
+                    text = WidgetFormatters.formatCurrency(kpiData.pendingPayments),
                     style = TextStyle(
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
-                        color = ColorProvider(if (kpiData.pendingPayments > 0) warningColor else successColor)
+                        color = ColorProvider(if (kpiData.pendingPayments > 0.0) warningColor else successColor)
                     )
                 )
             }
@@ -199,6 +199,6 @@ class KpiWidget : GlanceAppWidget() {
     private data class KpiData(
         val upcomingEvents: Int,
         val monthlyRevenue: Double,
-        val pendingPayments: Int
+        val pendingPayments: Double
     )
 }

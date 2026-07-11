@@ -884,6 +884,9 @@ public actor APIClient {
             showErrorToast(for: err)
             throw err
         case 400...499:
+            if let completionError = extractEventCompletionBlockedError(from: data) {
+                throw completionError
+            }
             let message = extractErrorMessage(from: data)
             let err = APIError.serverError(
                 statusCode: response.statusCode,
@@ -907,6 +910,19 @@ public actor APIClient {
             showErrorToast(for: .unknown)
             throw APIError.unknown
         }
+    }
+
+    /// Parse a 400 response body for `event.completion_blocked` structured error.
+    private func extractEventCompletionBlockedError(from data: Data) -> APIError? {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let errorType = json["error"] as? String,
+              errorType == "event.completion_blocked" else {
+            return nil
+        }
+        let message = json["message"] as? String ?? "Cannot complete event"
+        let remaining = json["remaining"] as? Double ?? 0
+        let currency = json["currency"] as? String ?? "MXN"
+        return .eventCompletionBlocked(message: message, remaining: remaining, currency: currency)
     }
 
     /// Parse a 403 response body for `plan_limit_exceeded` structured error.
