@@ -52,8 +52,8 @@ func TestPaymentRepo_SumByEventID(t *testing.T) {
 	}
 }
 
-// TestPaymentRepo_SumByEventID_ExcludesCrossTenantPayments verifies poison
-// payments inserted with a mismatched user_id are excluded from the sum.
+// TestPaymentRepo_SumByEventID_ExcludesCrossTenantPayments verifies migration 062
+// rejects poison payments with a mismatched user_id and SumByEventID stays accurate.
 func TestPaymentRepo_SumByEventID_ExcludesCrossTenantPayments(t *testing.T) {
 	pool := openTestPool(t)
 	defer pool.Close()
@@ -81,8 +81,8 @@ func TestPaymentRepo_SumByEventID_ExcludesCrossTenantPayments(t *testing.T) {
 		INSERT INTO payments (event_id, user_id, amount, payment_date, payment_method)
 		VALUES ($1, $2, $3, $4, $5)
 	`, eventID, attackerID, 9999.00, "2026-08-02", "cash")
-	if err != nil {
-		t.Fatalf("insert poison payment error = %v", err)
+	if err == nil {
+		t.Fatal("expected FK violation when inserting cross-tenant poison payment, got nil")
 	}
 
 	sum, err := repo.SumByEventID(context.Background(), ownerID, eventID)
