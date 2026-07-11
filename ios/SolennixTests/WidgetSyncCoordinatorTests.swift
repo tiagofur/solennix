@@ -68,10 +68,13 @@ final class WidgetSyncCoordinatorTests: XCTestCase {
         let fixture = makeCoordinator(authenticated: true)
         fixture.coordinator.syncAll()
 
-        // Upcoming events = confirmed + quoted only (completed excluded), ≤10.
+        // Upcoming events: confirmed-only, today-or-future, ≤5 (issue #802).
+        // e_1 (confirmed, +3d) is the only match; e_2 (quoted) is excluded,
+        // e_3 (completed, past) is excluded.
         XCTAssertEqual(fixture.mock.upcomingEventsCalls.count, 1)
-        XCTAssertEqual(fixture.mock.upcomingEventsCalls[0].count, 2,
-                       "1 confirmed future (e_1) + 1 quoted future (e_2); completed e_3 excluded")
+        XCTAssertEqual(fixture.mock.upcomingEventsCalls[0].count, 1,
+                       "only e_1 (confirmed, future) qualifies; quoted e_2 and past e_3 excluded")
+        XCTAssertEqual(fixture.mock.upcomingEventsCalls[0][0].id, "e_1")
 
         let kpis = try XCTUnwrap(fixture.mock.kpisCalls.first)
         XCTAssertEqual(kpis.confirmedEvents, 1, "only e_1 is confirmed")
@@ -104,10 +107,12 @@ final class WidgetSyncCoordinatorTests: XCTestCase {
         XCTAssertGreaterThan(kpis.eventsThisWeek, 0,
             "eventsThisWeek was 0 when date-only strings failed to parse")
 
-        // e_completed is .completed and dated today (this month) → its amount is
-        // the month's revenue (monthlyRevenue sums only .completed events).
-        XCTAssertEqual(kpis.monthlyRevenue, 500, accuracy: 0.001,
-            "monthlyRevenue must sum this-month .completed events")
+        // monthlyRevenue cache fallback now sums confirmed + completed events
+        // in this month (issue #802): e_a (1000) + e_b (2000) + e_completed
+        // (500) = 3500. (e_quoted is excluded; was 500 under the old
+        // completed-only filter.)
+        XCTAssertEqual(kpis.monthlyRevenue, 3500, accuracy: 0.001,
+            "monthlyRevenue must sum this-month confirmed + completed events")
 
         // e_a (today, 1000) + e_b (+3d, 2000), both .confirmed in the 7-day
         // window with no payments → pendingPayments = 3000.
@@ -153,6 +158,128 @@ final class WidgetSyncCoordinatorTests: XCTestCase {
         XCTAssertEqual(calendar.component(.month, from: widgetEvent.eventDate), 12,
                        "server day '2026-12-31' must read as month 12 in the local calendar")
         XCTAssertEqual(calendar.component(.year, from: widgetEvent.eventDate), 2026)
+    }
+
+    // MARK: - Issue #802: server KPI override + calendar week + upcoming parity
+
+    /// Server-aggregated KPIs posted via `.solennixDashboardKPIsRefreshed` must
+    /// override the cache-derived values for revenue, month count, and low stock
+    /// so the widget matches the dashboard (issue #802, divergences #1/#4).
+    func testServerKPIsOverrideCacheDerivation() throws {
+        let fixture = makeCoordinatorWithDateOnlyEvents(authenticated: true)
+
+        // Post server KPIs with deliberately different values than the cache.
+        let server = DashboardKPIs(
+            totalRevenue: 99999, eventsThisMonth: 42, pendingQuotes: 0,
+            lowStockItems: 7, upcomingEvents: 0, totalClients: 0,
+            averageEventValue: 0, netSalesThisMonth: 12345.0,
+            cashCollectedThisMonth: 0, vatCollectedThisMonth: 0,
+            vatOutstandingThisMonth: 0
+        )
+        let exp = expectation(description: "sync after server KPIs")
+        fixture.mock.onKPIs = { exp.fulfill() }
+        NotificationCenter.default.post(
+            name: .solennixDashboardKPIsRefreshed, object: nil,
+            userInfo: ["kpis": server]
+        )
+        wait(for: [exp], timeout: 2.0)
+
+        let kpis = try XCTUnwrap(fixture.mock.kpisCalls.last)
+        XCTAssertEqual(kpis.monthlyRevenue, 12345.0, accuracy: 0.001,
+                       "server netSalesThisMonth must override cache sum")
+        XCTAssertEqual(kpis.eventsThisMonth, 42,
+                       "server eventsThisMonth must override cache count")
+        XCTAssertEqual(kpis.lowStockCount, 7,
+                       "server lowStockItems must override cache count")
+    }
+
+    /// Server-KPI trigger ignored when logged out (auth gate parity).
+    func testServerKPIsIgnoredWhenNotAuthenticated() throws {
+        let fixture = makeCoordinator(authenticated: false)
+        let exp = expectation(description: "no sync when logged out")
+        exp.isInverted = true
+        fixture.mock.onKPIs = { exp.fulfill() }
+
+        let server = DashboardKPIs(
+            totalRevenue: 0, eventsThisMonth: 0, pendingQuotes: 0,
+            lowStockItems: 0, upcomingEvents: 0, totalClients: 0,
+            averageEventValue: 0, netSalesThisMonth: 0,
+            cashCollectedThisMonth: 0, vatCollectedThisMonth: 0,
+            vatOutstandingThisMonth: 0
+        )
+        NotificationCenter.default.post(
+            name: .solennixDashboardKPIsRefreshed, object: nil,
+            userInfo: ["kpis": server]
+        )
+        wait(for: [exp], timeout: 1.0)
+        XCTAssertTrue(fixture.mock.kpisCalls.isEmpty)
+    }
+
+    /// `eventsThisWeek` must use a true calendar-week interval (issue #802,
+    /// divergence #2), not the old rolling 7-day window. An event 6 days ago
+    /// but still within the same calendar week counts; an event yesterday that
+    /// fell into the previous week does not.
+    func testEventsThisWeekUsesCalendarWeek() throws {
+        let cache = try makeCacheManager()
+        try cache.cacheClients([
+            Client(id: "c_1", userId: "u_1", name: "Alfa", phone: "55",
+                   createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-02T00:00:00Z")
+        ])
+        let calendar = Calendar.current
+        let weekInterval = calendar.dateInterval(of: .weekOfYear, for: Date())!
+        let inWeekOffset = weekInterval.end.timeIntervalSinceNow > 0
+            ? min(3 * 24 * 3600.0, weekInterval.end.timeIntervalSinceNow - 1)
+            : 24 * 3600.0
+        let inWeekDate = Date().addingTimeInterval(inWeekOffset)
+        // An event dated 10 days out — definitely outside the calendar week.
+        let outOfWeekDate = calendar.date(byAdding: .day, value: 10, to: Date())!
+        try cache.cacheEvents([
+            makeEvent(id: "e_in", clientId: "c_1", status: .confirmed,
+                      totalAmount: 100, eventDate: localDayStringFromDate(inWeekDate)),
+            makeEvent(id: "e_out", clientId: "c_1", status: .confirmed,
+                      totalAmount: 200, eventDate: localDayStringFromDate(outOfWeekDate))
+        ])
+        let mock = MockWidgetSyncing()
+        let coordinator = WidgetSyncCoordinator(sync: mock)
+        coordinator.start(cache: cache, isAuthorized: { true })
+        coordinator.syncAll()
+
+        let kpis = try XCTUnwrap(mock.kpisCalls.first)
+        XCTAssertEqual(kpis.eventsThisWeek, 1,
+                       "only the in-calendar-week event counts; 10-day-out event excluded")
+    }
+
+    /// Upcoming events must be confirmed-only, today-or-future, sorted ascending
+    /// by date, and capped at 5 — matching the dashboard (issue #802, #3).
+    func testUpcomingEventsConfirmedOnlyFutureSortedCapped() throws {
+        let cache = try makeCacheManager()
+        try cache.cacheClients([
+            Client(id: "c_1", userId: "u_1", name: "Alfa", phone: "55",
+                   createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-02T00:00:00Z")
+        ])
+        try cache.cacheEvents([
+            // Past confirmed — excluded by the future filter.
+            makeEvent(id: "e_past", clientId: "c_1", status: .confirmed,
+                      totalAmount: 100, eventDate: localDayString(offset: -3)),
+            // Quoted future — excluded by the confirmed-only filter.
+            makeEvent(id: "e_quoted", clientId: "c_1", status: .quoted,
+                      totalAmount: 100, eventDate: localDayString(offset: 2)),
+            // Confirmed future, deliberately out of date order in the array.
+            makeEvent(id: "e_c", clientId: "c_1", status: .confirmed,
+                      totalAmount: 100, eventDate: localDayString(offset: 9)),
+            makeEvent(id: "e_a", clientId: "c_1", status: .confirmed,
+                      totalAmount: 100, eventDate: localDayString(offset: 1)),
+            makeEvent(id: "e_b", clientId: "c_1", status: .confirmed,
+                      totalAmount: 100, eventDate: localDayString(offset: 5)),
+        ])
+        let mock = MockWidgetSyncing()
+        let coordinator = WidgetSyncCoordinator(sync: mock)
+        coordinator.start(cache: cache, isAuthorized: { true })
+        coordinator.syncAll()
+
+        let upcoming = try XCTUnwrap(mock.upcomingEventsCalls.first)
+        XCTAssertEqual(upcoming.map(\.id), ["e_a", "e_b", "e_c"],
+                       "confirmed-only, future, ascending by date; e_past and e_quoted excluded")
     }
 
     // MARK: - Performance (NFR-WDS-01)
@@ -265,6 +392,15 @@ final class WidgetSyncCoordinatorTests: XCTestCase {
         dayFormatter.dateFormat = "yyyy-MM-dd"
         dayFormatter.timeZone = .current
         let date = Calendar.current.date(byAdding: .day, value: offset, to: Date())!
+        return dayFormatter.string(from: date)
+    }
+
+    /// `yyyy-MM-dd` string for an absolute `Date` in the LOCAL timezone.
+    private func localDayStringFromDate(_ date: Date) -> String {
+        let dayFormatter = DateFormatter()
+        dayFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dayFormatter.dateFormat = "yyyy-MM-dd"
+        dayFormatter.timeZone = .current
         return dayFormatter.string(from: date)
     }
 

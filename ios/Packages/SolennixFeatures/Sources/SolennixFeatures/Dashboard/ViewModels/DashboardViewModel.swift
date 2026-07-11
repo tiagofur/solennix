@@ -193,6 +193,14 @@ public final class DashboardViewModel {
         do {
             let aggregated: DashboardKPIs = try await apiClient.get(Endpoint.dashboardKpis)
             kpis = aggregated
+            // Publish server-aggregated KPIs so the widget sync coordinator can
+            // persist them to the App Group — keeps widget revenue/event counts
+            // aligned with the dashboard instead of the local cache (issue #802).
+            NotificationCenter.default.post(
+                name: .solennixDashboardKPIsRefreshed,
+                object: nil,
+                userInfo: ["kpis": aggregated]
+            )
             // Mirror low stock count for views that read `lowStockCount`
             // directly only while inventory hasn't loaded yet. Once
             // lowStockItems is populated by the inventory loader below it
@@ -346,6 +354,11 @@ public final class DashboardViewModel {
             // new status without requiring a full pull-to-refresh.
             if let refreshed: DashboardKPIs = try? await apiClient.get(Endpoint.dashboardKpis) {
                 kpis = refreshed
+                NotificationCenter.default.post(
+                    name: .solennixDashboardKPIsRefreshed,
+                    object: nil,
+                    userInfo: ["kpis": refreshed]
+                )
                 // lowStockCount is owned by lowStockItems (canonical source after inventory load).
                 // Do NOT overwrite it from kpis here to avoid a flicker back to the
                 // server-aggregate value. lowStockItems remains authoritative.

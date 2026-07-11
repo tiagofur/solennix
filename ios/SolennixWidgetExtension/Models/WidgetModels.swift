@@ -71,7 +71,11 @@ struct WidgetEvent: Codable, Identifiable, Hashable {
 }
 
 // MARK: - Widget KPIs
-
+//
+// `monthlyRevenue` is sourced from the server `DashboardKPIs.netSalesThisMonth`
+// (confirmed + completed events, net of discounts) via `WidgetSyncCoordinator`;
+// it only falls back to a cache-derived sum before the dashboard's first load
+// (issue #802). `eventsThisWeek` uses a true calendar-week interval.
 struct WidgetKPIs: Codable {
     let monthlyRevenue: Double
     let eventsThisMonth: Int

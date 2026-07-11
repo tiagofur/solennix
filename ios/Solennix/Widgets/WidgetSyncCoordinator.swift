@@ -35,6 +35,12 @@ final class WidgetSyncCoordinator {
     /// coordinator never syncs for a logged-out user. Defaults to `false`.
     private var isAuthorized: () -> Bool = { false }
 
+    /// Last server-aggregated KPIs received from `DashboardViewModel` (issue
+    /// #802). When present, `deriveKPIs` uses these as the source of truth for
+    /// revenue / month count / low stock so the widget matches the dashboard;
+    /// the cache is only a fallback (cold launch before dashboard loads).
+    private var lastServerKPIs: DashboardKPIs?
+
     /// Registered notification observers (removed by `stop()`).
     private var observers: [NSObjectProtocol] = []
 
@@ -60,12 +66,14 @@ final class WidgetSyncCoordinator {
         // REQ-WDS-03 (amended): cold launch + scene foreground are delivered
         // via .solennixSceneActivated; CRUD via the event/payment names;
         // locale change via NSLocale. Pull-to-refresh is intentionally NOT a
-        // trigger (descoped).
+        // trigger (descoped). `.solennixDashboardKPIsRefreshed` feeds
+        // server-aggregated KPIs to the widget (issue #802).
         let names: [Notification.Name] = [
             .solennixEventUpdated,
             .solennixPaymentRegistered,
             .solennixPaymentDeleted,
             .solennixSceneActivated,
+            .solennixDashboardKPIsRefreshed,
             NSLocale.currentLocaleDidChangeNotification
         ]
         for name in names {
@@ -73,12 +81,19 @@ final class WidgetSyncCoordinator {
             // main thread (the common case: all current posters are @MainActor
             // VMs / the app / the system). For the rare background poster, hop
             // to the main actor asynchronously so the handler never runs off-main.
-            let observer = center.addObserver(forName: name, object: nil, queue: nil) { [weak self] _ in
+            let observer = center.addObserver(forName: name, object: nil, queue: nil) { [weak self] notification in
                 guard let self else { return }
+                let handle = {
+                    if name == .solennixDashboardKPIsRefreshed {
+                        self.handleServerKPIsRefreshed(notification)
+                    } else {
+                        self.handleSyncTrigger()
+                    }
+                }
                 if Thread.isMainThread {
-                    MainActor.assumeIsolated { self.handleSyncTrigger() }
+                    MainActor.assumeIsolated { handle() }
                 } else {
-                    Task { @MainActor in self.handleSyncTrigger() }
+                    Task { @MainActor in handle() }
                 }
             }
             observers.append(observer)
@@ -114,10 +129,25 @@ final class WidgetSyncCoordinator {
 
         let clientMap = Dictionary(uniqueKeysWithValues: clients.map { ($0.id, $0.name) })
 
-        // Upcoming events: confirmed/quoted, capped at 10.
+        // Upcoming events: confirmed-only, today-or-future, sorted ascending by
+        // date, capped at 5 — mirrors the dashboard's upcoming list (issue #802,
+        // divergence #3). Date parse uses the local-day anchor so the widget's
+        // "today" matches what the user sees.
+        let startOfToday = Calendar.current.startOfDay(for: Date())
         let widgetEvents = events
-            .filter { $0.status == .confirmed || $0.status == .quoted }
-            .prefix(10)
+            .filter { event in
+                guard event.status == .confirmed else { return false }
+                guard let date = Date.fromServerDayLocal(event.eventDate) else {
+                    logger.warning("syncAll: unparseable eventDate '\(event.eventDate, privacy: .public)' (upcoming filter)")
+                    return false
+                }
+                return date >= startOfToday
+            }
+            .sorted {
+                (Date.fromServerDayLocal($0.eventDate) ?? .distantFuture) <
+                (Date.fromServerDayLocal($1.eventDate) ?? .distantFuture)
+            }
+            .prefix(5)
             .map { WidgetEventData.from(event: $0, clientName: clientMap[$0.clientId] ?? "Cliente") }
         sync.syncUpcomingEvents(Array(widgetEvents))
 
@@ -134,9 +164,30 @@ final class WidgetSyncCoordinator {
         syncAll()
     }
 
+    /// Captures server-aggregated KPIs and immediately re-syncs so the widget
+    /// reflects dashboard values without waiting for the next cache trigger
+    /// (issue #802 — divergences #1 and #4).
+    private func handleServerKPIsRefreshed(_ notification: Notification) {
+        guard isAuthorized() else {
+            logger.debug("Server-KPIs trigger ignored — not authenticated")
+            return
+        }
+        if let kpis = notification.userInfo?["kpis"] as? DashboardKPIs {
+            lastServerKPIs = kpis
+            logger.debug("Server KPIs captured — netSales=\(kpis.netSalesThisMonth, privacy: .private), eventsThisMonth=\(kpis.eventsThisMonth)")
+        } else {
+            logger.warning("solennixDashboardKPIsRefreshed posted without valid `kpis` payload")
+        }
+        syncAll()
+    }
+
     /// Derives KPIs from cached events + inventory + (best-effort) payments.
-    /// Mirrors the derivation previously inlined in
-    /// `BackgroundTaskManager.performRefresh` (single DRY source — D3).
+    ///
+    /// Server-aggregated KPIs (`lastServerKPIs`) are the source of truth for
+    /// revenue, month event count, and low stock when available — so the widget
+    /// matches the dashboard (issue #802). The cache remains the fallback for
+    /// cold launch before the dashboard has fetched. `eventsThisWeek` uses a
+    /// true calendar-week interval (was a rolling 7-day window).
     private func deriveKPIs(
         events: [Event],
         inventory: [InventoryItem],
@@ -144,26 +195,44 @@ final class WidgetSyncCoordinator {
     ) -> WidgetKPIData {
         let now = Date()
         let calendar = Calendar.current
+        let server = lastServerKPIs
 
-        let eventsThisMonth = events.filter {
+        // --- Month count: server first, cache fallback ---
+        let cacheEventsThisMonth = events.filter {
             guard let date = Date.fromServerDayLocal($0.eventDate) else {
                 logger.warning("deriveKPIs: unparseable eventDate '\($0.eventDate, privacy: .public)' (eventsThisMonth)")
                 return false
             }
             return calendar.isDate(date, equalTo: now, toGranularity: .month)
         }
-        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
+        let eventsThisMonthCount = server?.eventsThisMonth ?? cacheEventsThisMonth.count
+
+        // --- This week: true calendar week, not a rolling window (issue #802) ---
+        let weekInterval = calendar.dateInterval(of: .weekOfYear, for: now)
         let eventsThisWeek = events.filter {
             guard let date = Date.fromServerDayLocal($0.eventDate) else {
                 logger.warning("deriveKPIs: unparseable eventDate '\($0.eventDate, privacy: .public)' (eventsThisWeek)")
                 return false
             }
-            return date >= startOfWeek && date <= now.addingTimeInterval(7 * 24 * 3600)
+            return weekInterval?.contains(date) ?? false
         }
-        let lowStockCount = inventory.filter { $0.minimumStock > 0 && $0.currentStock < $0.minimumStock }.count
-        let monthlyRevenue = eventsThisMonth
-            .filter { $0.status == .completed }
-            .reduce(0.0) { $0 + $1.totalAmount }
+
+        // --- Low stock: server first, cache fallback ---
+        let cacheLowStock = inventory.filter { $0.minimumStock > 0 && $0.currentStock < $0.minimumStock }.count
+        let lowStockCount = server?.lowStockItems ?? cacheLowStock
+
+        // --- Revenue: server net sales first; cache fallback sums
+        // confirmed + completed `totalAmount` (was completed-only), matching
+        // the backend's `SUM(total_amount)` definition (#802). `totalAmount`
+        // is already the post-discount final amount, so no extra subtraction. ---
+        let monthlyRevenue: Double
+        if let server {
+            monthlyRevenue = server.netSalesThisMonth
+        } else {
+            monthlyRevenue = cacheEventsThisMonth
+                .filter { $0.status == .confirmed || $0.status == .completed }
+                .reduce(0.0) { $0 + $1.totalAmount }
+        }
 
         // Pending payments: confirmed events in the next 7 days, minus cached
         // payments per event. Payments are cached by the background refresh;
@@ -188,7 +257,7 @@ final class WidgetSyncCoordinator {
 
         return WidgetKPIData.from(
             monthlyRevenue: monthlyRevenue,
-            eventsThisMonth: eventsThisMonth.count,
+            eventsThisMonth: eventsThisMonthCount,
             eventsThisWeek: eventsThisWeek.count,
             lowStockCount: lowStockCount,
             pendingPayments: pendingPayments,
