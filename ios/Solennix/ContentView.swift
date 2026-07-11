@@ -16,6 +16,10 @@ import SolennixFeatures
 private enum SolennixUITestBypass {
     static let authBypassEnabled =
         ProcessInfo.processInfo.environment["SOLX_UI_TEST_BYPASS_AUTH"] == "1"
+    static let mockLoginEnabled =
+        ProcessInfo.processInfo.environment["SOLX_UI_TEST_MOCK_LOGIN"] == "1"
+    /// UI tests must not show onboarding — launch-arg UserDefaults seeding is flaky in CI.
+    static var skipsOnboarding: Bool { authBypassEnabled || mockLoginEnabled }
 }
 #endif
 
@@ -163,7 +167,7 @@ struct ContentView: View {
         Binding(
             get: {
                 #if DEBUG
-                return !hasSeenOnboarding && !SolennixUITestBypass.authBypassEnabled
+                return !hasSeenOnboarding && !SolennixUITestBypass.skipsOnboarding
                 #else
                 return !hasSeenOnboarding
                 #endif

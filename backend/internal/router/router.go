@@ -279,6 +279,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Delete("/{id}", crudHandler.DeleteEvent)
 			r.Get("/{id}/products", crudHandler.GetEventProducts)
 			r.Get("/{id}/extras", crudHandler.GetEventExtras)
+			r.Get("/{id}/financials", crudHandler.GetEventFinancials)
 			r.Put("/{id}/items", crudHandler.UpdateEventItems)
 			r.Get("/{id}/equipment", crudHandler.GetEventEquipment)
 			r.Get("/{id}/supplies", crudHandler.GetEventSupplies)

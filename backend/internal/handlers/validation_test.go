@@ -204,7 +204,16 @@ func TestValidatePayment(t *testing.T) {
 				PaymentMethod: "cash",
 			},
 			wantErr: true,
-			errMsg:  "amount: must be greater than 0",
+			errMsg:  "amount: must be at least 0.01",
+		},
+		{
+			name: "amount below minimum cent",
+			payment: &models.Payment{
+				Amount:        0.005,
+				PaymentMethod: "cash",
+			},
+			wantErr: true,
+			errMsg:  "amount: must be at least 0.01",
 		},
 		{
 			name: "amount negative",
@@ -213,7 +222,7 @@ func TestValidatePayment(t *testing.T) {
 				PaymentMethod: "cash",
 			},
 			wantErr: true,
-			errMsg:  "amount: must be greater than 0",
+			errMsg:  "amount: must be at least 0.01",
 		},
 		{
 			name: "empty payment_method",

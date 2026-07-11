@@ -97,6 +97,7 @@ var catalogs = map[string]map[string]string{
 		"validation.range_percent":                   "debe estar entre 0 y 100",
 		"validation.discount_percent_range":          "debe estar entre 0 y 100 para descuentos porcentuales",
 		"validation.greater_than_zero":               "debe ser mayor que 0",
+		"validation.min_payment_amount":              "debe ser al menos 0.01",
 		"validation.required":                        "es obligatorio",
 		"validation.invalid_email":                   "formato de email invalido",
 		"validation.event_status_enum":               "debe ser uno de: quoted, confirmed, completed, cancelled",
@@ -120,6 +121,7 @@ var catalogs = map[string]map[string]string{
 		"crud.search_events_failed":                  "No se pudieron buscar eventos",
 		"crud.invalid_event_id":                      "ID de evento invalido",
 		"crud.event_not_found":                       "Evento no encontrado",
+		"crud.event_complete_balance_remaining":      "No se puede completar: quedan $%.2f por cobrar",
 	},
 	"en": {
 		"common.invalid_request_body":                "Invalid request body",
@@ -202,6 +204,7 @@ var catalogs = map[string]map[string]string{
 		"validation.range_percent":                   "must be between 0 and 100",
 		"validation.discount_percent_range":          "must be between 0 and 100 for percentage discounts",
 		"validation.greater_than_zero":               "must be greater than 0",
+		"validation.min_payment_amount":              "must be at least 0.01",
 		"validation.required":                        "is required",
 		"validation.invalid_email":                   "invalid email format",
 		"validation.event_status_enum":               "must be one of: quoted, confirmed, completed, cancelled",
@@ -225,6 +228,7 @@ var catalogs = map[string]map[string]string{
 		"crud.search_events_failed":                  "Failed to search events",
 		"crud.invalid_event_id":                      "Invalid event ID",
 		"crud.event_not_found":                       "Event not found",
+		"crud.event_complete_balance_remaining":      "Cannot complete: $%.2f remaining",
 	},
 }
 

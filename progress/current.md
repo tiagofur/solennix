@@ -18,11 +18,10 @@
 - [x] #908 decodeJSON 413
 
 ## Notas de Desarrollo
-- Branch: `fix/hardening-phase-4` (from main)
-- Commits: `287aa4d1`, `b01bda41`
-- PR #913 CI green (Frontend Tests fixed)
-- PR #914 Phase 3 pending merge
-- Phase 4 PR opened (pending CI)
+- Branch: `fix/hardening-phase-4`
+- PR #915 — Phase 4 hardening
+- Phase 3 merged via #914
+- Merge conflict `progress/current.md` resuelto con main
 
 ## Bloqueos
 - Ninguno.

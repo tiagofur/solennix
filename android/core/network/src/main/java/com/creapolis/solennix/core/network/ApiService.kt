@@ -22,10 +22,12 @@ data class UploadResponse(
 
 @Serializable
 data class ApiErrorResponse(
-    val message: String,
+    val message: String? = null,
     val error: String? = null,
     val code: String? = null,
-    val limit: ApiLimitInfo? = null
+    val limit: ApiLimitInfo? = null,
+    val remaining: Double? = null,
+    val currency: String? = null
 )
 
 @Serializable
@@ -51,6 +53,11 @@ sealed class SolennixException(message: String, cause: Throwable? = null) : Exce
     class AccountBlocked(message: String) : SolennixException(message)
     /** The account was deleted (`auth.account_deleted`). */
     class AccountDeleted(message: String) : SolennixException(message)
+    class CompletionBlocked(
+        val remaining: Double,
+        val currency: String,
+        message: String
+    ) : SolennixException(message)
     class Unknown(message: String, cause: Throwable? = null) : SolennixException(message, cause)
 }
 
@@ -71,6 +78,14 @@ class ApiService @Inject constructor(
             val message = errorBody?.message ?: errorBody?.error
                 ?: context.getString(R.string.core_network_error_server, e.response.status.value)
             when {
+                e.response.status == HttpStatusCode.BadRequest &&
+                    errorBody?.error == "event.completion_blocked" -> {
+                    throw SolennixException.CompletionBlocked(
+                        remaining = errorBody.remaining ?: 0.0,
+                        currency = errorBody.currency ?: "MXN",
+                        message = message
+                    )
+                }
                 e.response.status == HttpStatusCode.Unauthorized -> {
                     throw SolennixException.Auth(message)
                 }

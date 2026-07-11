@@ -85,6 +85,8 @@ func localizeValidationMessage(ctx context.Context, message string) string {
 		return i18n.Message(ctx, "validation.discount_percent_range")
 	case "must be greater than 0":
 		return i18n.Message(ctx, "validation.greater_than_zero")
+	case "must be at least 0.01":
+		return i18n.Message(ctx, "validation.min_payment_amount")
 	case "is required":
 		return i18n.Message(ctx, "validation.required")
 	case "invalid email format":
@@ -192,9 +194,9 @@ func ValidateEvent(event *models.Event) error {
 
 // ValidatePayment validates all business rules for a payment
 func ValidatePayment(payment *models.Payment) error {
-	// Validate amount (must be positive)
-	if payment.Amount <= 0 {
-		return ValidationError{Field: "amount", Message: "must be greater than 0"}
+	// Validate amount (minimum one cent)
+	if payment.Amount < 0.01 {
+		return ValidationError{Field: "amount", Message: "must be at least 0.01"}
 	}
 
 	// Validate payment_method is not empty

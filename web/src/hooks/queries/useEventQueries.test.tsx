@@ -42,6 +42,7 @@ vi.mock('@/hooks/useToast', () => ({
 vi.mock('@/lib/errorHandler', () => ({
   logError: vi.fn(),
   getErrorMessage: (_err: any, fallback: string) => fallback,
+  getEventCompletionBlockedError: vi.fn(() => null),
 }));
 
 import {

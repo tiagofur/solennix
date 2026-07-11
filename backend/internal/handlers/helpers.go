@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+
+	"github.com/tiagofur/solennix-backend/internal/i18n"
 )
 
 // JSON helper to write JSON responses
@@ -20,6 +22,21 @@ func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 // Error helper to write JSON error responses
 func writeError(w http.ResponseWriter, status int, message string) {
 	writeJSON(w, status, map[string]string{"error": message})
+}
+
+// writeEventCompletionBlockedError returns a structured 400 when an event cannot be
+// marked completed due to a pending balance. Clients read error + remaining fields.
+func writeEventCompletionBlockedError(w http.ResponseWriter, r *http.Request, remaining float64, currency string) {
+	if currency == "" {
+		currency = "MXN"
+	}
+	msg := i18n.Message(r.Context(), "crud.event_complete_balance_remaining", remaining)
+	writeJSON(w, http.StatusBadRequest, map[string]interface{}{
+		"error":     "event.completion_blocked",
+		"remaining": remaining,
+		"currency":  currency,
+		"message":   msg,
+	})
 }
 
 // writePlanLimitError returns a structured 403 response for plan limit violations.

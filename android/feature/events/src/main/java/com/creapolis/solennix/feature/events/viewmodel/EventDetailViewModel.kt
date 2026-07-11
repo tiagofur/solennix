@@ -48,6 +48,7 @@ data class EventDetailUiState(
     val event: Event? = null,
     val client: Client? = null,
     val products: List<EventProduct> = emptyList(),
+    val productUnitCosts: Map<String, Double> = emptyMap(),
     val extras: List<EventExtra> = emptyList(),
     val equipment: List<EventEquipment> = emptyList(),
     val supplies: List<EventSupply> = emptyList(),
@@ -78,6 +79,15 @@ class EventDetailViewModel @Inject constructor(
     internal fun tr(@StringRes id: Int, vararg args: Any): String = appContext.getString(id, *args)
 
     internal val eventId: String = checkNotNull(savedStateHandle["eventId"])
+
+    private val _productUnitCosts = MutableStateFlow<Map<String, Double>>(emptyMap())
+
+    internal val productUnitCosts: Map<String, Double>
+        get() = _productUnitCosts.value
+
+    internal fun updateProductUnitCosts(costs: Map<String, Double>) {
+        _productUnitCosts.value = costs
+    }
 
     private val _isLoading = MutableStateFlow(true)
     internal val _errorMessage = MutableStateFlow<String?>(null)
@@ -117,13 +127,15 @@ class EventDetailViewModel @Inject constructor(
         combine(
             _isLoading,
             _errorMessage,
-            ::Pair
+            _productUnitCosts,
+            ::Triple
         )
-    ) { (event, client), (products, extras), (payments, equipment, supplies), photosAndStaff, (isLoading, errorMessage) ->
+    ) { (event, client), (products, extras), (payments, equipment, supplies), photosAndStaff, (isLoading, errorMessage, productUnitCosts) ->
         EventDetailUiState(
             event = event,
             client = client,
             products = products,
+            productUnitCosts = productUnitCosts,
             extras = extras,
             equipment = equipment,
             supplies = supplies,
@@ -150,6 +162,11 @@ class EventDetailViewModel @Inject constructor(
                 if (updated != null && updated != _event.value) {
                     _event.value = updated
                 }
+            }
+        }
+        viewModelScope.launch {
+            eventRepository.getEventProducts(eventId).collect { products ->
+                loadProductUnitCosts(products)
             }
         }
     }
@@ -246,7 +263,7 @@ class EventDetailViewModel @Inject constructor(
                 eventRepository.updateEvent(updated)
                 _event.value = updated
             } catch (e: Exception) {
-                _errorMessage.value = translateStatusError(e.message.orEmpty())
+                _errorMessage.value = translateStatusError(e)
             }
         }
     }
@@ -259,15 +276,12 @@ class EventDetailViewModel @Inject constructor(
      * [R.string.events_error_balance_pending]. Otherwise a generic localized fallback
      * is shown — never the raw English backend string.
      */
-    private fun translateStatusError(rawMessage: String): String {
-        val balanceMatch = Regex("Cannot complete: \\$([\\d,]+\\.?\\d*) remaining").find(rawMessage)
-        return if (balanceMatch != null) {
-            val amount = balanceMatch.groupValues[1]
-            tr(DesignSystemR.string.events_error_balance_pending, amount)
-        } else {
-            // Generic, localized fallback — never surface the raw backend message.
-            tr(R.string.events_list_error_change_status)
+    private fun translateStatusError(error: Exception): String {
+        if (error is com.creapolis.solennix.core.network.SolennixException.CompletionBlocked) {
+            val amount = String.format("%.2f", error.remaining)
+            return tr(DesignSystemR.string.events_error_balance_pending, amount)
         }
+        return tr(R.string.events_list_error_change_status)
     }
 
     fun prepareDuplicate(): Boolean {

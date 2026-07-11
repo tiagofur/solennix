@@ -10,6 +10,18 @@ export const API_URL =
  * everyone else ignores it and a global listener (mounted in Layout)
  * surfaces a toast + navigates to /pricing.
  */
+export class EventCompletionBlockedError extends Error {
+	readonly remaining: number;
+	readonly currency: string;
+
+	constructor(message: string, remaining: number, currency: string) {
+		super(message);
+		this.name = "EventCompletionBlockedError";
+		this.remaining = remaining;
+		this.currency = currency;
+	}
+}
+
 export class PlanLimitExceededError extends Error {
 	readonly limitType: string;
 	readonly current: number;
@@ -179,6 +191,21 @@ class ApiClient {
 					? ` ${i18n.language.startsWith("es") ? "Intentá nuevamente en" : "Try again in"} ${retryAfter}.`
 					: "";
 				throw new Error(i18n.t("common:error.too_many_requests", { waitHint }));
+			}
+			if (
+				response.status === 400 &&
+				errorData.error === "event.completion_blocked"
+			) {
+				const remaining =
+					typeof errorData.remaining === "number" ? errorData.remaining : 0;
+				const currency =
+					typeof errorData.currency === "string" ? errorData.currency : "MXN";
+				const message =
+					errorData.message ||
+					i18n.t("events:form.error_balance_pending", {
+						amount: remaining.toFixed(2),
+					});
+				throw new EventCompletionBlockedError(message, remaining, currency);
 			}
 			if (
 				response.status === 403 &&
