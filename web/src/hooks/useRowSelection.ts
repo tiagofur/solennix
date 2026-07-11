@@ -31,7 +31,7 @@ export function useRowSelection<T extends string>(ids: T[] = []) {
 
   const clear = useCallback(() => setSelected(new Set()), []);
 
-  /** Toggle a subset of rows (e.g. one inventory section). Clears when all are selected. */
+  /** Toggle a subset of rows. Clears when all in the subset are selected. */
   const toggleIds = useCallback((targetIds: T[]) => {
     if (targetIds.length === 0) return;
     setSelected((prev) => {
