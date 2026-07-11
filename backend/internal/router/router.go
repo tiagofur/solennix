@@ -407,6 +407,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		// Dashboard analytics (user-scoped)
 		r.Route("/dashboard", func(r chi.Router) {
 			r.Get("/kpis", dashboardHandler.GetKPIs)
+			r.Get("/summary", dashboardHandler.GetSummary)
 			r.Get("/revenue-chart", dashboardHandler.GetRevenueChart)
 			r.Get("/events-by-status", dashboardHandler.GetEventsByStatus)
 			r.Get("/top-clients", dashboardHandler.GetTopClients)
