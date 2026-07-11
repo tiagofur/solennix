@@ -84,7 +84,7 @@ type PaymentSubmissionHandler struct {
 
 	lookupPublicLink            func(context.Context, string) (*models.EventPublicLink, error)
 	lookupEvent                 func(context.Context, uuid.UUID) (*models.Event, error)
-	sumPaymentsByEventID        func(context.Context, uuid.UUID) (float64, error)
+	sumPaymentsByEventID        func(context.Context, uuid.UUID, uuid.UUID) (float64, error)
 	createSubmission            func(context.Context, *models.PaymentSubmission) error
 	getSubmission               func(context.Context, uuid.UUID) (*models.PaymentSubmission, error)
 	beginReviewTx               func(context.Context) (paymentSubmissionReviewStore, error)
@@ -125,8 +125,8 @@ func NewPaymentSubmissionHandler(repo *repository.PaymentSubmissionRepo, payment
 			return eventRepo.GetByIDPublic(ctx, eventID)
 		}
 		if paymentRepo != nil {
-			handler.sumPaymentsByEventID = func(ctx context.Context, eventID uuid.UUID) (float64, error) {
-				return paymentRepo.SumByEventID(ctx, eventID)
+			handler.sumPaymentsByEventID = func(ctx context.Context, userID, eventID uuid.UUID) (float64, error) {
+				return paymentRepo.SumByEventID(ctx, userID, eventID)
 			}
 		}
 	}
@@ -353,12 +353,12 @@ func (h *PaymentSubmissionHandler) CreatePublic(w http.ResponseWriter, r *http.R
 	if h.lookupEvent != nil && h.sumPaymentsByEventID != nil {
 		event, evErr := h.lookupEvent(ctx, eventID)
 		alreadyPaid := 0.0
-		if h.sumPaymentsByEventID != nil {
-			if s, sErr := h.sumPaymentsByEventID(ctx, eventID); sErr == nil {
+		if evErr == nil && event != nil {
+			if s, sErr := h.sumPaymentsByEventID(ctx, event.UserID, eventID); sErr == nil {
 				alreadyPaid = s
 			}
 		}
-		if evErr == nil {
+		if evErr == nil && event != nil {
 			maxAllowed := roundCents(event.TotalAmount-alreadyPaid) + 0.01
 			if amountFloat > maxAllowed {
 				writeError(w, http.StatusBadRequest, fmt.Sprintf(

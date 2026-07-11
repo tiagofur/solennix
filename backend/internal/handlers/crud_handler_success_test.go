@@ -1818,6 +1818,46 @@ func TestCreatePayment_Success(t *testing.T) {
 	}
 }
 
+func TestCreatePayment_EventNotOwned_Returns404(t *testing.T) {
+	userID := uuid.New()
+	eventID := uuid.New()
+	eventRepo := new(MockFullEventRepo)
+
+	eventRepo.On("GetByID", mock.Anything, eventID, userID).Return((*models.Event)(nil), errTest)
+
+	h := newTestHandler(new(MockClientRepo), eventRepo, new(MockProductRepo), new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))
+
+	body := `{"event_id":"` + eventID.String() + `","amount":500,"payment_date":"2026-06-15","payment_method":"cash"}`
+	req := makeReqWithUserID(http.MethodPost, "/api/payments", body, userID)
+	rr := httptest.NewRecorder()
+	h.CreatePayment(rr, req)
+
+	if rr.Code != http.StatusNotFound {
+		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusNotFound, rr.Body.String())
+	}
+}
+
+func TestCreateEvent_ClientNotOwned_Returns404(t *testing.T) {
+	userID := uuid.New()
+	clientID := uuid.New()
+	clientRepo := new(MockClientRepo)
+	userRepo := new(MockFullUserRepo)
+
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "pro"}, nil)
+	clientRepo.On("GetByID", mock.Anything, clientID, userID).Return((*models.Client)(nil), errTest)
+
+	h := newTestHandler(clientRepo, new(MockFullEventRepo), new(MockProductRepo), new(MockInventoryRepo), new(MockFullPaymentRepo), userRepo)
+
+	body := `{"client_id":"` + clientID.String() + `","event_date":"2026-06-15","service_type":"catering","num_people":50,"status":"quoted","tax_rate":16,"tax_amount":100,"total_amount":1000}`
+	req := makeReqWithUserID(http.MethodPost, "/api/events", body, userID)
+	rr := httptest.NewRecorder()
+	h.CreateEvent(rr, req)
+
+	if rr.Code != http.StatusNotFound {
+		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusNotFound, rr.Body.String())
+	}
+}
+
 func TestUpdatePayment_Success(t *testing.T) {
 	userID := uuid.New()
 	paymentID := uuid.New()

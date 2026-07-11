@@ -21,7 +21,7 @@ func TestPaymentRepo_SumByEventID(t *testing.T) {
 	repo := NewPaymentRepo(pool)
 
 	// No payments yet → sum = 0
-	sum, err := repo.SumByEventID(context.Background(), eventID)
+	sum, err := repo.SumByEventID(context.Background(), userID, eventID)
 	if err != nil {
 		t.Fatalf("SumByEventID() error = %v", err)
 	}
@@ -43,12 +43,54 @@ func TestPaymentRepo_SumByEventID(t *testing.T) {
 		}
 	}
 
-	sum, err = repo.SumByEventID(context.Background(), eventID)
+	sum, err = repo.SumByEventID(context.Background(), userID, eventID)
 	if err != nil {
 		t.Fatalf("SumByEventID() error = %v", err)
 	}
 	if sum != 1000.00 {
 		t.Fatalf("SumByEventID() = %.2f; want 1000.00", sum)
+	}
+}
+
+// TestPaymentRepo_SumByEventID_ExcludesCrossTenantPayments verifies poison
+// payments inserted with a mismatched user_id are excluded from the sum.
+func TestPaymentRepo_SumByEventID_ExcludesCrossTenantPayments(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	ownerID := seedUser(t, pool, "payment.sum.owner@test.dev")
+	attackerID := seedUser(t, pool, "payment.sum.attacker@test.dev")
+	clientID := seedClient(t, pool, ownerID, "Sum Owner Client")
+	eventID := seedEvent(t, pool, ownerID, clientID, "2026-08-02")
+
+	repo := NewPaymentRepo(pool)
+
+	legit := &models.Payment{
+		EventID:       eventID,
+		UserID:        ownerID,
+		Amount:        400.00,
+		PaymentDate:   "2026-08-02",
+		PaymentMethod: "cash",
+	}
+	if err := repo.Create(context.Background(), legit); err != nil {
+		t.Fatalf("Create() legit payment error = %v", err)
+	}
+
+	_, err := pool.Exec(context.Background(), `
+		INSERT INTO payments (event_id, user_id, amount, payment_date, payment_method)
+		VALUES ($1, $2, $3, $4, $5)
+	`, eventID, attackerID, 9999.00, "2026-08-02", "cash")
+	if err != nil {
+		t.Fatalf("insert poison payment error = %v", err)
+	}
+
+	sum, err := repo.SumByEventID(context.Background(), ownerID, eventID)
+	if err != nil {
+		t.Fatalf("SumByEventID() error = %v", err)
+	}
+	if sum != 400.00 {
+		t.Fatalf("SumByEventID() = %.2f; want 400.00 (cross-tenant payment excluded)", sum)
 	}
 }
 
