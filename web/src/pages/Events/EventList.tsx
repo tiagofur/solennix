@@ -38,7 +38,10 @@ import {
   Sparkles,
 } from "lucide-react";
 
-import { RowActionMenu } from "../../components/RowActionMenu";
+import { RowActionMenu, type RowActionMenuItem } from "../../components/RowActionMenu";
+import { ContextMenu } from "../../components/ContextMenu";
+import { BulkActionBar } from "../../components/BulkActionBar";
+import { useRowSelection } from "../../hooks/useRowSelection";
 import { DesktopToolbar } from "../../components/DesktopToolbar";
 import { exportToCsv } from "../../lib/exportCsv";
 import { formatCurrency as libFormatCurrency } from "../../lib/finance";
@@ -431,12 +434,56 @@ export const EventList: React.FC = () => {
     setConfirmOpen(true);
   };
 
+  // Context-menu state (#883): row right-click opens positioned menu.
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; eventId: string } | null>(null);
+  const closeCtxMenu = useCallback(() => setCtxMenu(null), []);
+  const getRowActions = useCallback(
+    (eventId: string): RowActionMenuItem[] => [
+      { label: t("events:list.actions.view_summary"), icon: Eye, onClick: () => navigate(`/events/${eventId}/summary`) },
+      { label: t("events:list.actions.edit"), icon: Edit, onClick: () => navigate(`/events/${eventId}/edit`) },
+      { label: t("events:list.actions.delete"), icon: Trash2, onClick: () => requestDelete(eventId), variant: "destructive" as const },
+    ],
+    [t, navigate],
+  );
+
   const confirmDelete = () => {
     if (!pendingDeleteId) return;
     const id = pendingDeleteId;
     setConfirmOpen(false);
     setPendingDeleteId(null);
     deleteEvent.mutate(id);
+  };
+
+  // Bulk delete selected events (#885)
+  const bulkDelete = () => {
+    selection.selectedArray.forEach((id) => deleteEvent.mutate(id));
+    selection.clear();
+  };
+
+  // Export only selected events (#885)
+  const exportSelected = () => {
+    const selectedEvents = csvRows.filter((e) => selection.selected.has(e.id));
+    exportToCsv(
+      t("events:list.csv.file_name"),
+      [
+        t("events:list.csv.headers.date"),
+        t("events:list.csv.headers.client"),
+        t("events:list.csv.headers.service_type"),
+        t("events:list.csv.headers.people"),
+        t("events:list.csv.headers.status"),
+        t("events:list.csv.headers.total"),
+        t("events:list.csv.headers.city"),
+      ],
+      selectedEvents.map((e) => [
+        formatDate(e.event_date),
+        e.client?.name ?? "",
+        e.service_type,
+        e.num_people,
+        t(`events:list.status.${e.status as EventStatus}`),
+        formatCurrency(e.total_amount, e.currency),
+        e.city ?? "",
+      ]),
+    );
   };
 
   const filteredEvents: EventWithClient[] = hasFilters ? (searchQuery.data ?? []) : [];
@@ -450,6 +497,9 @@ export const EventList: React.FC = () => {
   const paginatedEvents: EventWithClient[] = hasFilters
     ? clientPagination.currentData
     : paginatedQuery.data?.data ?? [];
+
+  // Multi-select for bulk actions (#885) — desktop only column.
+  const selection = useRowSelection(paginatedEvents.map((e) => e.id));
 
   const currentPage = hasFilters ? clientPagination.currentPage : urlPage;
   const totalPages = hasFilters ? clientPagination.totalPages : paginatedQuery.data?.total_pages ?? 1;
@@ -1013,6 +1063,17 @@ export const EventList: React.FC = () => {
                 </caption>
                 <thead className="bg-surface-alt/55 border-b border-border">
                   <tr>
+                    {/* Multi-select checkbox (#885) — desktop only */}
+                    <th scope="col" className="px-6 py-3 hidden lg:table-cell">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                        checked={selection.allSelected}
+                        ref={(el) => { if (el) el.indeterminate = selection.someSelected; }}
+                        onChange={selection.toggleAll}
+                        aria-label="Seleccionar todos los eventos"
+                      />
+                    </th>
                     <th
                       scope="col"
                       className="px-6 py-3 text-left text-xs font-semibold text-text-secondary cursor-pointer hover:bg-surface-alt/50 transition-colors"
@@ -1054,7 +1115,21 @@ export const EventList: React.FC = () => {
                       key={event.id}
                       className="group hover:bg-surface-alt/40 cursor-pointer transition-colors"
                       onClick={() => navigate(`/events/${event.id}/summary`)}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        setCtxMenu({ x: e.clientX, y: e.clientY, eventId: event.id });
+                      }}
                     >
+                      {/* Multi-select checkbox (#885) — desktop only */}
+                      <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                          checked={selection.selected.has(event.id)}
+                          onChange={() => selection.toggle(event.id)}
+                          aria-label={`Seleccionar ${event.client?.name ?? "evento"}`}
+                        />
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-semibold text-text">{formatDate(event.event_date)}</div>
                         {event.start_time && (
@@ -1082,13 +1157,7 @@ export const EventList: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                          <RowActionMenu
-                            items={[
-                              { label: t("events:list.actions.view_summary"), icon: Eye, onClick: () => navigate(`/events/${event.id}/summary`) },
-                              { label: t("events:list.actions.edit"), icon: Edit, onClick: () => navigate(`/events/${event.id}/edit`) },
-                              { label: t("events:list.actions.delete"), icon: Trash2, onClick: () => requestDelete(event.id), variant: "destructive" as const },
-                            ]}
-                          />
+                          <RowActionMenu items={getRowActions(event.id)} />
                         </div>
                       </td>
                     </tr>
@@ -1356,6 +1425,29 @@ export const EventList: React.FC = () => {
             </div>
           </Card>
         </div>
+      )}
+
+      {/* Bulk actions bar (#885) — desktop only, list view only */}
+      {viewMode === "list" && (
+        <BulkActionBar count={selection.count} onClear={selection.clear}>
+          <Button variant="glass" size="sm" onClick={exportSelected}>
+            <Download className="h-4 w-4 mr-2" aria-hidden="true" />
+            {t("common:action.download")}
+          </Button>
+          <Button variant="danger" size="sm" onClick={bulkDelete}>
+            <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
+            {t("common:action.delete")}
+          </Button>
+        </BulkActionBar>
+      )}
+
+      {/* Right-click context menu (#883) — list view rows only */}
+      {ctxMenu && viewMode === "list" && (
+        <ContextMenu
+          position={{ x: ctxMenu.x, y: ctxMenu.y }}
+          items={getRowActions(ctxMenu.eventId)}
+          onClose={closeCtxMenu}
+        />
       )}
     </div>
   );

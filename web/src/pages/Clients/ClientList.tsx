@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Client } from "@/types/entities";
@@ -15,8 +15,11 @@ import {
   ArrowUp,
   ArrowDown,
 } from "lucide-react";
-import { RowActionMenu } from "@/components/RowActionMenu";
+import { RowActionMenu, type RowActionMenuItem } from "@/components/RowActionMenu";
 import { DesktopToolbar } from "@/components/DesktopToolbar";
+import { ContextMenu } from "@/components/ContextMenu";
+import { BulkActionBar } from "@/components/BulkActionBar";
+import { useRowSelection } from "@/hooks/useRowSelection";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { exportToCsv } from "@/lib/exportCsv";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -44,6 +47,10 @@ export const ClientList: React.FC = () => {
   const [sortKey, setSortKey] = useState<keyof Client | "">("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const navigate = useNavigate();
+  // Context-menu state (#883): row right-click opens positioned menu.
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; clientId: string } | null>(null);
+
+  const closeCtxMenu = useCallback(() => setCtxMenu(null), []);
 
   const isSearching = searchTerm.trim().length > 0;
 
@@ -105,6 +112,9 @@ export const ClientList: React.FC = () => {
     ? searchPaginatedClients
     : (paginatedQuery.data?.data ?? []);
 
+  // Multi-select for bulk actions (#885) — desktop only column.
+  const selection = useRowSelection(paginatedClients.map((c) => c.id));
+
   const currentPage = isSearching
     ? searchPage
     : (paginatedQuery.data?.page ?? page);
@@ -129,12 +139,58 @@ export const ClientList: React.FC = () => {
     setConfirmOpen(true);
   };
 
+  const getRowActions = useCallback(
+    (clientId: string, phone?: string, email?: string): RowActionMenuItem[] => [
+      { label: t("common:action.view"), icon: Eye, onClick: () => navigate(`/clients/${clientId}`) },
+      { label: t("common:action.edit"), icon: Edit, onClick: () => navigate(`/clients/${clientId}/edit`) },
+      ...(phone ? [{ label: t("clients:form.phone"), icon: Phone, onClick: () => window.open(`tel:${phone}`) }] : []),
+      ...(email ? [{ label: t("clients:form.email"), icon: Mail, onClick: () => window.open(`mailto:${email}`) }] : []),
+      { label: t("common:action.delete"), icon: Trash2, onClick: () => requestDelete(clientId), variant: 'destructive' as const },
+    ],
+    // requestDelete is stable (closes over setState only)
+    [t, navigate],
+  );
+
   const confirmDelete = () => {
     if (!pendingDeleteId) return;
     const id = pendingDeleteId;
     setConfirmOpen(false);
     setPendingDeleteId(null);
     deleteClient.mutate(id);
+  };
+
+  // Bulk delete selected clients (#885)
+  const bulkDelete = () => {
+    selection.selectedArray.forEach((id) => deleteClient.mutate(id));
+    selection.clear();
+  };
+
+  // Export only selected clients (#885)
+  const exportSelected = () => {
+    const selectedClients = allClients.filter((c) => selection.selected.has(c.id));
+    exportToCsv(
+      t("clients:export_file_name"),
+      [
+        t("clients:form.name"),
+        t("clients:form.phone"),
+        t("clients:form.email"),
+        t("clients:form.address"),
+        t("clients:form.city"),
+        t("clients:table.events"),
+        t("clients:details.total_spent"),
+        t("clients:form.notes"),
+      ],
+      selectedClients.map((c) => [
+        c.name,
+        c.phone,
+        c.email,
+        c.address,
+        c.city,
+        c.total_events,
+        c.total_spent?.toFixed(2),
+        c.notes,
+      ]),
+    );
   };
 
   const handlePageChange = (newPage: number) => {
@@ -295,6 +351,17 @@ export const ClientList: React.FC = () => {
               </caption>
               <thead className="bg-surface-alt">
                 <tr>
+                  {/* Multi-select checkbox (#885) — desktop only */}
+                  <th scope="col" className="px-6 py-3 hidden lg:table-cell">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                      checked={selection.allSelected}
+                      ref={(el) => { if (el) el.indeterminate = selection.someSelected; }}
+                      onChange={selection.toggleAll}
+                      aria-label="Seleccionar todos los clientes"
+                    />
+                  </th>
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-semibold text-text-secondary cursor-pointer hover:bg-surface-alt/50 transition-colors"
@@ -336,7 +403,21 @@ export const ClientList: React.FC = () => {
                     key={client.id}
                     className="group hover:bg-surface-alt/50 cursor-pointer transition-colors"
                     onClick={() => navigate(`/clients/${client.id}`)}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setCtxMenu({ x: e.clientX, y: e.clientY, clientId: client.id });
+                    }}
                   >
+                    {/* Multi-select checkbox (#885) — desktop only */}
+                    <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                        checked={selection.selected.has(client.id)}
+                        onChange={() => selection.toggle(client.id)}
+                        aria-label={`Seleccionar ${client.name}`}
+                      />
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         {client.photo_url ? (
@@ -409,13 +490,7 @@ export const ClientList: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                        <RowActionMenu items={[
-                          { label: t("common:action.view"), icon: Eye, onClick: () => navigate(`/clients/${client.id}`) },
-                          { label: t("common:action.edit"), icon: Edit, onClick: () => navigate(`/clients/${client.id}/edit`) },
-                          ...(client.phone ? [{ label: t("clients:form.phone"), icon: Phone, onClick: () => window.open(`tel:${client.phone}`) }] : []),
-                          ...(client.email ? [{ label: t("clients:form.email"), icon: Mail, onClick: () => window.open(`mailto:${client.email}`) }] : []),
-                          { label: t("common:action.delete"), icon: Trash2, onClick: () => requestDelete(client.id), variant: 'destructive' as const },
-                        ]} />
+                        <RowActionMenu items={getRowActions(client.id, client.phone, client.email)} />
                       </div>
                     </td>
                   </tr>
@@ -434,6 +509,31 @@ export const ClientList: React.FC = () => {
           />
         )}
       </Card>
+
+      {/* Bulk actions bar (#885) — desktop only */}
+      <BulkActionBar count={selection.count} onClear={selection.clear}>
+        <Button variant="glass" size="sm" onClick={exportSelected}>
+          <Download className="h-4 w-4 mr-2" aria-hidden="true" />
+          {t("common:action.download")}
+        </Button>
+        <Button variant="danger" size="sm" onClick={bulkDelete}>
+          <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
+          {t("common:action.delete")}
+        </Button>
+      </BulkActionBar>
+
+      {/* Right-click context menu (#883) */}
+      {ctxMenu && (
+        <ContextMenu
+          position={{ x: ctxMenu.x, y: ctxMenu.y }}
+          items={getRowActions(
+            ctxMenu.clientId,
+            paginatedClients.find((c) => c.id === ctxMenu.clientId)?.phone,
+            paginatedClients.find((c) => c.id === ctxMenu.clientId)?.email,
+          )}
+          onClose={closeCtxMenu}
+        />
+      )}
     </div>
   );
 };
