@@ -140,6 +140,37 @@ describe('usePlanLimits', () => {
     expect(result.current.eventsThisMonth).toBe(0);
   });
 
+  it('blocks product creation when compound catalog limit reached on basic plan', async () => {
+    mockUser = { id: '1', plan: 'basic' };
+    mockProducts = Array.from({ length: 12 }, (_, i) => ({ id: `p${i}` }));
+    mockInventory = Array.from({ length: 8 }, (_, i) => ({ id: `i${i}` }));
+
+    const { result } = renderHook(() => usePlanLimits());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.catalogTotal).toBe(20);
+    expect(result.current.canCreateProduct).toBe(false);
+    expect(result.current.canCreateInventoryItem).toBe(false);
+  });
+
+  it('allows inventory when under compound catalog limit on basic plan', async () => {
+    mockUser = { id: '1', plan: 'basic' };
+    mockProducts = Array.from({ length: 10 }, (_, i) => ({ id: `p${i}` }));
+    mockInventory = Array.from({ length: 5 }, (_, i) => ({ id: `i${i}` }));
+
+    const { result } = renderHook(() => usePlanLimits());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.canCreateProduct).toBe(true);
+    expect(result.current.canCreateInventoryItem).toBe(true);
+  });
+
   it('handles null responses from services', async () => {
     mockUser = { id: '1', plan: 'basic' };
     // When React Query returns undefined/null, the hook defaults to []

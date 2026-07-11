@@ -102,7 +102,7 @@ func (h *EventFormHandler) GenerateLink(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if user.Plan == "basic" {
+	if normalizePlan(user.Plan) == "basic" {
 		count, err := h.linkRepo.CountActiveByUserID(r.Context(), userID)
 		if err != nil {
 			slog.Error("Failed to count active links", "error", err)

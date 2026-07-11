@@ -123,8 +123,8 @@ func (h *UploadHandler) verifyPresignedUploadToken(userID, objectKey, token stri
 
 // maxUploadsForPlan returns the maximum number of uploads allowed per user based on plan.
 func maxUploadsForPlan(plan string) int {
-	switch plan {
-	case "pro":
+	switch normalizePlan(plan) {
+	case "pro", "business":
 		return 200
 	default: // basic
 		return 50

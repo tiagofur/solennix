@@ -18,7 +18,8 @@ import javax.inject.Singleton
 interface EventRepository {
     fun getEvents(): Flow<List<Event>>
     fun getUpcomingEvents(limit: Int = 5): Flow<List<Event>>
-    fun getEventCountForMonth(monthStart: String, monthEnd: String): Flow<Int>
+    fun getEventCountForMonth(userId: String, monthStart: String, monthEnd: String): Flow<Int>
+    suspend fun getEventsByDateRangeFromApi(start: String, end: String): List<Event>
     suspend fun getEvent(id: String): Event?
     fun observeEvent(id: String): Flow<Event?>
     suspend fun getPendingEvents(): List<PendingEvent>
@@ -93,8 +94,11 @@ class OfflineFirstEventRepository @Inject constructor(
     override fun getUpcomingEvents(limit: Int): Flow<List<Event>> =
         eventDao.getUpcomingEvents(limit).map { it.map { entity -> entity.asExternalModel() } }
 
-    override fun getEventCountForMonth(monthStart: String, monthEnd: String): Flow<Int> =
-        eventDao.getEventCountForMonth(monthStart, monthEnd)
+    override fun getEventCountForMonth(userId: String, monthStart: String, monthEnd: String): Flow<Int> =
+        eventDao.getEventCountForMonth(userId, monthStart, monthEnd)
+
+    override suspend fun getEventsByDateRangeFromApi(start: String, end: String): List<Event> =
+        apiService.get(Endpoints.EVENTS, mapOf("start" to start, "end" to end))
 
     override suspend fun getEvent(id: String): Event? =
         eventDao.getEvent(id)?.asExternalModel()
