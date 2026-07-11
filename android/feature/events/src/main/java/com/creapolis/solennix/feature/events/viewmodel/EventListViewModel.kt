@@ -293,14 +293,11 @@ class EventListViewModel @Inject constructor(
                 eventRepository.updateEvent(event.copy(status = newStatus))
             } catch (e: Exception) {
                 logger.w(TAG, "updateEventStatus failed for ${event.id}", e)
-                val message = e.message ?: ""
-                // Check if this is a balance pending error from backend
-                // Format: "Cannot complete: $XXX.XX remaining"
-                val balanceMatch = Regex("Cannot complete: \\$([\\d,]+\\.?\\d*) remaining").find(message)
-                if (balanceMatch != null) {
-                    val amount = balanceMatch.groupValues[1]
+                if (e is com.creapolis.solennix.core.network.SolennixException.CompletionBlocked) {
+                    val amount = String.format("%.2f", e.remaining)
                     _error.value = tr(DesignSystemR.string.events_error_balance_pending, amount)
                 } else {
+                    val message = e.message ?: ""
                     _error.value = message.ifEmpty { tr(R.string.events_list_error_change_status) }
                 }
             } finally {

@@ -337,24 +337,22 @@ public final class EventDetailViewModel {
 
             // Actualizar la Live Activity si está activa
             await updateLiveActivityStatus()
-        } catch {
+        } catch let error as APIError {
             HapticsHelper.play(.error)
-            // Check if this is a balance pending error from backend
-            // Format: "Cannot complete: $XXX.XX remaining"
-            if let error = error as? APIError,
-               let description = error.errorDescription,
-               description.contains("Cannot complete:") {
-                // Extract amount from "Cannot complete: $XXX.XX remaining"
-                if let dollarIndex = description.firstIndex(of: "$"),
-                   let spaceIndex = description[dollarIndex...].firstIndex(of: " ") {
-                    let amount = String(description[description.index(after: dollarIndex)..<spaceIndex])
-                    errorMessage = String(format: tr("events.detail.error.balance_pending", "El evento tiene un saldo pendiente de $%@ para completar"), locale: FeatureL10n.locale, amount)
-                } else {
-                    errorMessage = description
-                }
-            } else {
+            switch error {
+            case .eventCompletionBlocked(_, let remaining, _):
+                let amount = String(format: "%.2f", remaining)
+                errorMessage = String(
+                    format: tr("events.detail.error.balance_pending", "El evento tiene un saldo pendiente de $%@ para completar"),
+                    locale: FeatureL10n.locale,
+                    amount
+                )
+            default:
                 errorMessage = tr("events.detail.error.change_status", "Error al cambiar el estado")
             }
+        } catch {
+            HapticsHelper.play(.error)
+            errorMessage = tr("events.detail.error.change_status", "Error al cambiar el estado")
         }
     }
 

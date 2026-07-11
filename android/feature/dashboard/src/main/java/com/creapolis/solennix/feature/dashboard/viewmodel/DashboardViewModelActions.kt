@@ -35,12 +35,8 @@ fun DashboardViewModel.updateEventStatus(eventId: String, newStatus: EventStatus
             }
         } catch (e: Exception) {
             Log.e(TAG, "updateEventStatus failed for event=$eventId", e)
-            val message = e.message ?: ""
-            // Check if this is a balance pending error from backend
-            // Format: "Cannot complete: $XXX.XX remaining"
-            val balanceMatch = Regex("Cannot complete: \\$([\\d,]+\\.?\\d*) remaining").find(message)
-            if (balanceMatch != null) {
-                val amount = balanceMatch.groupValues[1]
+            if (e is com.creapolis.solennix.core.network.SolennixException.CompletionBlocked) {
+                val amount = String.format("%.2f", e.remaining)
                 _transientMessage.value = tr(DesignSystemR.string.events_error_balance_pending, amount)
             } else {
                 _transientMessage.value = tr(R.string.dashboard_error_status_change_failed)

@@ -14,6 +14,17 @@ final class APIErrorTests: XCTestCase {
         XCTAssertEqual(APIError.accountDeleted.errorDescription, "Esta cuenta fue eliminada y ya no está disponible.")
     }
 
+    func testEventCompletionBlockedUsesBackendMessage() {
+        let error = APIError.eventCompletionBlocked(
+            message: "No se puede completar: quedan $1500.00 por cobrar",
+            remaining: 1500,
+            currency: "MXN"
+        )
+
+        XCTAssertEqual(error.errorDescription, "No se puede completar: quedan $1500.00 por cobrar")
+        XCTAssertEqual(error.userFacingMessage, "No se puede completar: quedan $1500.00 por cobrar")
+    }
+
     func testPlanLimitExceededUsesBackendMessage() {
         let error = APIError.planLimitExceeded(
             message: "Límite alcanzado",

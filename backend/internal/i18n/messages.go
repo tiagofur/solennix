@@ -120,6 +120,7 @@ var catalogs = map[string]map[string]string{
 		"crud.search_events_failed":                  "No se pudieron buscar eventos",
 		"crud.invalid_event_id":                      "ID de evento invalido",
 		"crud.event_not_found":                       "Evento no encontrado",
+		"crud.event_complete_balance_remaining":      "No se puede completar: quedan $%.2f por cobrar",
 	},
 	"en": {
 		"common.invalid_request_body":                "Invalid request body",
@@ -225,6 +226,7 @@ var catalogs = map[string]map[string]string{
 		"crud.search_events_failed":                  "Failed to search events",
 		"crud.invalid_event_id":                      "Invalid event ID",
 		"crud.event_not_found":                       "Event not found",
+		"crud.event_complete_balance_remaining":      "Cannot complete: $%.2f remaining",
 	},
 }
 
