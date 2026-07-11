@@ -11,6 +11,7 @@ public struct SolennixTextField: View {
     var textContentType: UITextContentType? = nil
     var keyboardType: UIKeyboardType = .default
     var autocapitalization: TextInputAutocapitalization = .sentences
+    var accessibilityIdentifier: String? = nil
 
     @FocusState private var isFocused: Bool
     @State private var isSecureVisible: Bool = false
@@ -24,7 +25,8 @@ public struct SolennixTextField: View {
         errorMessage: String? = nil,
         textContentType: UITextContentType? = nil,
         keyboardType: UIKeyboardType = .default,
-        autocapitalization: TextInputAutocapitalization = .sentences
+        autocapitalization: TextInputAutocapitalization = .sentences,
+        accessibilityIdentifier: String? = nil
     ) {
         self.label = label
         self._text = text
@@ -35,6 +37,7 @@ public struct SolennixTextField: View {
         self.textContentType = textContentType
         self.keyboardType = keyboardType
         self.autocapitalization = autocapitalization
+        self.accessibilityIdentifier = accessibilityIdentifier
     }
 
     public var body: some View {
@@ -61,6 +64,7 @@ public struct SolennixTextField: View {
                         .textContentType(textContentType)
                         .focused($isFocused)
                         .foregroundStyle(SolennixColors.text)
+                        .accessibilityIdentifier(accessibilityIdentifier ?? "")
                 } else {
                     TextField(placeholder, text: $text)
                         .textContentType(textContentType)
@@ -68,6 +72,7 @@ public struct SolennixTextField: View {
                         .textInputAutocapitalization(autocapitalization)
                         .focused($isFocused)
                         .foregroundStyle(SolennixColors.text)
+                        .accessibilityIdentifier(accessibilityIdentifier ?? "")
                 }
 
                 // Secure toggle
@@ -90,6 +95,7 @@ public struct SolennixTextField: View {
             .overlay(
                 RoundedRectangle(cornerRadius: CornerRadius.md)
                     .stroke(borderColor, lineWidth: isFocused ? 2 : 1)
+                    .allowsHitTesting(false)
             )
 
             // Error message

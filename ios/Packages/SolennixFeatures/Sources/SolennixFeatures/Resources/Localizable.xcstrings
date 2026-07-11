@@ -3777,6 +3777,38 @@
         }
       }
     },
+    "clients.form.validation.email_empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Email is required"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El correo electrónico es obligatorio"
+          }
+        }
+      }
+    },
+    "clients.form.validation.email_invalid" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid email format"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formato de correo inválido"
+          }
+        }
+      }
+    },
     "clients.insights.average_ticket" : {
       "localizations" : {
         "en" : {

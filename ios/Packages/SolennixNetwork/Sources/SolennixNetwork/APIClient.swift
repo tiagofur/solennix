@@ -87,6 +87,26 @@ public actor APIClient {
         self.offlineMutationQueue = OfflineMutationQueue()
     }
 
+    #if DEBUG
+    /// Creates a new API client for testing with injected URLSession.
+    public init(
+        baseURL: URL = URL(string: "https://api.solennix.com/api")!,
+        keychainHelper: KeychainHelper = .standard,
+        session: URLSession
+    ) {
+        self.baseURL = baseURL
+        self.keychainHelper = keychainHelper
+        self.session = session
+
+        self.decoder = JSONDecoder()
+        self.decoder.keyDecodingStrategy = .convertFromSnakeCase
+
+        self.encoder = JSONEncoder()
+        self.encoder.keyEncodingStrategy = .convertToSnakeCase
+        self.offlineMutationQueue = OfflineMutationQueue()
+    }
+    #endif
+
     /// Resolves a relative API path (e.g. `/api/uploads/...`) to an absolute URL.
     /// If the path is already absolute (has a scheme), returns it as-is.
     public func resolveURL(_ path: String) -> URL? {

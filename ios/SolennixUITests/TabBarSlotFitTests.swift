@@ -15,6 +15,8 @@ final class TabBarSlotFitTests: XCTestCase {
     func testFiveSlotFitProducesNoOverflow() throws {
         let app = XCUIApplication()
         app.launchEnvironment["SOLX_UI_TEST_BYPASS_AUTH"] = "1"
+        app.launchArguments.append("-hasSeenOnboarding")
+        app.launchArguments.append("YES")
         app.launch()
 
         let tabBar = app.tabBars.firstMatch

@@ -172,7 +172,8 @@ public struct LoginView: View {
                 leftIcon: "envelope",
                 textContentType: .emailAddress,
                 keyboardType: .emailAddress,
-                autocapitalization: .never
+                autocapitalization: .never,
+                accessibilityIdentifier: "login_email_field"
             )
 
             SolennixTextField(
@@ -184,7 +185,8 @@ public struct LoginView: View {
                 placeholder: AuthStrings.loginPasswordPlaceholder,
                 leftIcon: "lock",
                 isSecure: true,
-                textContentType: .password
+                textContentType: .password,
+                accessibilityIdentifier: "login_password_field"
             )
 
             PremiumButton(
@@ -194,6 +196,7 @@ public struct LoginView: View {
             ) {
                 Task { await viewModel?.signIn() }
             }
+            .accessibilityIdentifier("login_submit_button")
         }
         .onSubmit {
             Task { await viewModel?.signIn() }

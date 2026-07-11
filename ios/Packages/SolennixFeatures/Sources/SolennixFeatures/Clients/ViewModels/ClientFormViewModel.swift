@@ -76,8 +76,14 @@ public final class ClientFormViewModel {
         return digits.count >= 10
     }
 
+    public var isEmailValid: Bool {
+        let emailPattern = "^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}$"
+        let emailPredicate = NSPredicate(format: "SELF MATCHES %@", emailPattern)
+        return emailPredicate.evaluate(with: email.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
     public var isFormValid: Bool {
-        isNameValid && isPhoneValid
+        isNameValid && isPhoneValid && isEmailValid
     }
 
     // MARK: - Load Client (Edit Mode)
@@ -177,6 +183,15 @@ public final class ClientFormViewModel {
         }
         guard isPhoneValid else {
             errorMessage = FeatureL10n.text("clients.form.validation.phone_min", "El teléfono debe tener al menos 10 dígitos")
+            return nil
+        }
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedEmail.isEmpty else {
+            errorMessage = FeatureL10n.text("clients.form.validation.email_empty", "El correo electrónico es obligatorio")
+            return nil
+        }
+        guard isEmailValid else {
+            errorMessage = FeatureL10n.text("clients.form.validation.email_invalid", "Formato de correo inválido")
             return nil
         }
 
