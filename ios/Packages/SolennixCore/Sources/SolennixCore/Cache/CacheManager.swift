@@ -143,6 +143,54 @@ public final class CacheManager {
         return cached.map { $0.toPayment() }
     }
 
+    /// Upserts a single payment into the cache without wiping the rest.
+    ///
+    /// Used by foreground mutations (`EventDetailViewModel.addPayment`) so the
+    /// widget reflects the new payment immediately, before the background
+    /// refresh re-fetches the full list (#803). If a payment with the same id
+    /// already exists, its fields are updated in place; otherwise a new row is
+    /// inserted. Explicit fetch+update (not relying on SwiftData's implicit
+    /// upsert for `@Attribute(.unique)`, which has been inconsistent across
+    /// OS versions) — same defensive posture as the wipe-then-insert in
+    /// `cachePayments`.
+    public func upsertCachedPayment(_ payment: Payment) throws {
+        if let existing = try fetchCachedPayment(id: payment.id) {
+            existing.eventId = payment.eventId
+            existing.userId = payment.userId
+            existing.amount = payment.amount
+            existing.paymentDate = payment.paymentDate
+            existing.paymentMethod = payment.paymentMethod
+            existing.notes = payment.notes
+            existing.createdAt = payment.createdAt
+        } else {
+            modelContext.insert(CachedPayment(from: payment))
+        }
+        try modelContext.save()
+        markCacheUpdated(.payments)
+    }
+
+    /// Deletes a single cached payment by id, leaving other payments intact.
+    ///
+    /// Mirrors `upsertCachedPayment` for the delete path
+    /// (`EventDetailViewModel.deletePayment`) so the widget drops the payment
+    /// immediately instead of waiting for the background refresh (#803).
+    public func deleteCachedPayment(id: String) throws {
+        if let existing = try fetchCachedPayment(id: id) {
+            modelContext.delete(existing)
+            try modelContext.save()
+            markCacheUpdated(.payments)
+        }
+    }
+
+    /// Fetches a single cached payment by id, or nil if absent.
+    private func fetchCachedPayment(id: String) throws -> CachedPayment? {
+        var descriptor = FetchDescriptor<CachedPayment>(
+            predicate: #Predicate { $0.id == id }
+        )
+        descriptor.fetchLimit = 1
+        return try modelContext.fetch(descriptor).first
+    }
+
     // MARK: - Clear All
 
     /// Removes all cached data from the local store.

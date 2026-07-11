@@ -1,34 +1,28 @@
 # Sesión Activa — Solennix Agent Progress
 
 ## Feature en curso
-- **Issue:** #800 — fix(ios): AuthManager logs out on network failure with valid keychain tokens
+- **Issue:** #803 — fix(ios): Widget pending payments stale — payment cache not updated on foreground
 - **Estado:** done (pendiente PR)
-- **Branch:** `fix/ios-auth-offline-session-restore`
+- **Branch:** `fix/ios-widget-stale-payments`
 
 ## Root cause
-`AuthManager.checkAuth()`: cuando `/auth/me` fallaba por **error de red** con tokens presentes pero `currentUser == nil` (siempre nil en cold launch — iOS no persistía el usuario), el código hacía `authState = .unauthenticated`. El usuario caía al login con tokens válidos en keychain.
-
-Brecha de paridad: Android ya persistía el usuario (`KEY_USER_JSON`) y restauraba optimistamente; iOS no.
+`EventDetailViewModel.addPayment()` / `deletePayment()` mutaban el array `payments` en memoria y posteaban `.solennixPaymentRegistered` / `.solennixPaymentDeleted`, pero **nunca escribían en la caché SwiftData**. `WidgetSyncCoordinator.syncAll()` deriva `pendingPayments` desde `getCachedPayments(eventId:)`, que devolvía `[]` hasta que `BackgroundTaskManager.performRefresh()` (background, ~30+ min) poblaba la caché. Resultado: el widget mostraba el monto total del evento sin descontar el pago parcial.
 
 ## Cambios
-- [x] `AuthManager.swift`: persistencia de `currentUser` en UserDefaults (`setCurrentUser`/`clearCurrentUser`/`loadCachedUser`) — paridad con Android `KEY_USER_JSON`
-- [x] `AuthManager.swift`: fix del path offline — `loadCachedUser()` antes del fetch + `.unknown` (deferred) en vez de `.unauthenticated` cuando hay tokens pero no se alcanza el server
-- [x] `AuthManager.swift`: path de refresh-failed transitorio con tokens intactos ahora explícito `.unknown`
-- [x] `KeychainHelper.swift`: protocolo `KeychainStoring` (saveString/readString/delete) para testeabilidad
-- [x] `APIClient.swift` + `AuthManager.swift`: usan `any KeychainStoring` en vez de `KeychainHelper` concreto
-- [x] `SolennixApp.swift`: hook de reconnect resuelve estado `.unknown` diferido llamando `checkAuth()`
-- [x] `AuthManagerTests.swift` (nuevo): 7 tests cubren los 4 paths de `checkAuth` + persistencia + cold launch + signOut
+- [x] `CacheManager.swift`: `upsertCachedPayment(_:)` (fetch por id + update in place / insert) y `deleteCachedPayment(id:)` — mutaciones de un solo pago sin wipe de la caché existente
+- [x] `EventDetailViewModel.swift`: `setCacheManager(_:)` + llamada a `upsertCachedPayment`/`deleteCachedPayment` **antes** del `NotificationCenter.post` (el trigger corre `syncAll` sincrónico en main thread)
+- [x] `EventDetailView.swift` + `EventPaymentsDetailView.swift`: `@Environment(CacheManager.self)` + `viewModel.setCacheManager(cacheManager)` en `.task`
+- [x] Tests: `CacheManagerTests` (upsert insert+update, delete single id, no-op unknown id) + `WidgetSyncCoordinatorTests` (pendingPayments refleja upsert y delete en el siguiente `syncAll`)
 
 ## Verificación
-- `AuthManagerTests`: 7/7 pasan (paquete SolennixNetwork)
-- `APIClientPolicyTests`: 12/12 pasan
-- `SolennixTests` (app): 450/450 pasan (1 skipped)
+- `SolennixTests` (app): 464/464 pasan (1 skipped preexistente)
+- Tests nuevos: 5 (3 CacheManager + 2 WidgetSyncCoordinator), todos en verde
 - Build proyecto `Solennix`: OK
-- Nota: `KeychainHelperTests` fallan solo en contexto standalone SPM sin host app (preexistente, no causado por este cambio)
 
 ## Notas
-- El protocolo `KeychainStoring` fue necesario porque el Keychain del simulador no es confiable en test bundles SPM sin host app
-- Cambios cross-platform NO necesarios: Android ya correcto, Web usa cookie httpOnly, Backend sin cambios
+- Approach: upsert local (sin red), coherente con D3/REQ-WDS-06 — el widget SIEMPRE deriva de la caché local
+- Mutación antes del posteo de notificación es crítico: el observer de `WidgetSyncCoordinator` entrega sincrónico en main thread
+- Paridad cross-platform NO necesaria: el widget y su arquitectura App-Group son específicos de iOS
 
 ## Bloqueos
 - Ninguno.

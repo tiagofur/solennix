@@ -56,10 +56,21 @@ public final class EventDetailViewModel {
 
     private let apiClient: APIClient
 
+    /// Widget/offline cache. Injected by the host view via `setCacheManager`
+    /// (same pattern as `EventListViewModel`). When set, payment mutations
+    /// upsert/delete into SwiftData so the widget reflects them immediately
+    /// instead of waiting for the background refresh (#803).
+    private var cacheManager: CacheManager?
+
     // MARK: - Init
 
     public init(apiClient: APIClient) {
         self.apiClient = apiClient
+    }
+
+    /// Set the cache manager so payment mutations mirror into the widget cache.
+    public func setCacheManager(_ manager: CacheManager?) {
+        self.cacheManager = manager
     }
 
     private func tr(_ key: String, _ defaultValue: String) -> String {
@@ -388,6 +399,14 @@ public final class EventDetailViewModel {
 
             payments.append(payment)
 
+            // Mirror into the widget cache BEFORE posting the notification:
+            // `.solennixPaymentRegistered` triggers `WidgetSyncCoordinator` to
+            // re-derive KPIs from SwiftData synchronously on the main thread,
+            // so the cache must hold the new payment when that handler runs.
+            // Without this, `getCachedPayments` returns the pre-payment state
+            // and the widget keeps showing the full event amount (#803).
+            try? cacheManager?.upsertCachedPayment(payment)
+
             // Route to the correct counter so exactly one haptic fires:
             // - fully-paid crossing → fullyPaidCounter (ring's .sensoryFeedback fires)
             // - any other payment   → paymentSavedCounter (EventDetailView's .sensoryFeedback fires)
@@ -462,7 +481,11 @@ public final class EventDetailViewModel {
             try await apiClient.delete(Endpoint.payment(id))
             payments.removeAll { $0.id == id }
             HapticsHelper.play(.success)
-            
+
+            // Drop from the widget cache before posting `.solennixPaymentDeleted`
+            // (same reason as addPayment: the trigger re-derives synchronously).
+            try? cacheManager?.deleteCachedPayment(id: id)
+
             NotificationCenter.default.post(name: .solennixPaymentDeleted, object: nil)
 
             // Reload to sync status
