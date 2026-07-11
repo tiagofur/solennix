@@ -30,4 +30,14 @@ public extension Notification.Name {
     /// refresquen sus rangos de fecha. Se publica a nivel de la app target para
     /// mantener la lógica de scenePhase centralizada.
     static let solennixSceneActivated = Notification.Name("solennix.scene.activated")
+
+    /// Posted por `DashboardViewModel` cada vez que el servidor devuelve KPIs
+    /// agregados (`GET /dashboard/kpis`). El observador
+    /// (`WidgetSyncCoordinator`) los persiste en el App Group para que el
+    /// widget muestre los mismos valores que el dashboard, en vez de derivarlos
+    /// del caché local.
+    ///
+    /// `userInfo` esperado:
+    /// - `kpis: DashboardKPIs`
+    static let solennixDashboardKPIsRefreshed = Notification.Name("solennix.dashboard.kpis.refreshed")
 }
