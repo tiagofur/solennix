@@ -25,8 +25,10 @@ import { usePagination } from "@/hooks/usePagination";
 import { Pagination } from "@/components/Pagination";
 import { SkeletonTable } from "@/components/Skeleton";
 import { Button } from "@/components/Button";
+import { BulkActionBar } from "@/components/BulkActionBar";
 import { Card } from "@/components/Card";
 import { Input } from "@/components/Input";
+import { useRowSelection } from "@/hooks/useRowSelection";
 import { useProducts, useDeleteProduct } from "@/hooks/queries/useProductQueries";
 
 export const ProductList: React.FC = () => {
@@ -85,6 +87,28 @@ export const ProductList: React.FC = () => {
     initialSortKey: "name",
     initialSortOrder: "asc",
   });
+
+  // Multi-select for bulk actions (#885) — desktop only column.
+  const selection = useRowSelection(paginatedProducts.map((p) => p.id));
+
+  const bulkDelete = () => {
+    selection.selectedArray.forEach((id) => deleteProduct.mutate(id));
+    selection.clear();
+  };
+
+  const exportSelected = () => {
+    const selectedProducts = products.filter((p) => selection.selected.has(p.id));
+    exportToCsv(
+      t("products:list.csv_filename"),
+      [t("products:table.name"), t("products:table.category"), t("products:table.price"), t("products:list.active_header")],
+      selectedProducts.map((p) => [
+        p.name,
+        p.category,
+        p.base_price.toFixed(2),
+        p.is_active ? t("products:status.active") : t("products:status.inactive"),
+      ]),
+    );
+  };
 
   const renderSortIcon = (key: keyof Product) => {
     if (sortKey !== key) return null;
@@ -240,6 +264,17 @@ export const ProductList: React.FC = () => {
               </caption>
               <thead>
                 <tr>
+                  {/* Multi-select checkbox (#885) — desktop only */}
+                  <th scope="col" className="px-6 py-3 hidden lg:table-cell">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                      checked={selection.allSelected}
+                      ref={(el) => { if (el) el.indeterminate = selection.someSelected; }}
+                      onChange={selection.toggleAll}
+                      aria-label="Seleccionar todos los productos"
+                    />
+                  </th>
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-semibold text-text-secondary cursor-pointer hover:bg-surface-alt/50 transition-colors"
@@ -281,6 +316,16 @@ export const ProductList: React.FC = () => {
                     className="group hover:bg-surface-alt/50 transition-colors cursor-pointer"
                     onClick={() => navigate(`/products/${product.id}`)}
                   >
+                    {/* Multi-select checkbox (#885) — desktop only */}
+                    <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                        checked={selection.selected.has(product.id)}
+                        onChange={() => selection.toggle(product.id)}
+                        aria-label={`Seleccionar ${product.name}`}
+                      />
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="shrink-0 h-10 w-10">
@@ -349,6 +394,18 @@ export const ProductList: React.FC = () => {
           />
         )}
       </Card>
+
+      {/* Bulk actions bar (#885) — desktop only */}
+      <BulkActionBar count={selection.count} onClear={selection.clear}>
+        <Button variant="glass" size="sm" onClick={exportSelected}>
+          <Download className="h-4 w-4 mr-2" aria-hidden="true" />
+          {t("common:action.download")}
+        </Button>
+        <Button variant="danger" size="sm" onClick={bulkDelete}>
+          <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
+          {t("common:action.delete")}
+        </Button>
+      </BulkActionBar>
     </div>
   );
 };

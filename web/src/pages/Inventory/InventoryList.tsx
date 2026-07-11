@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { InventoryItem } from "../../types/entities";
@@ -26,8 +26,10 @@ import { useToast } from "../../hooks/useToast";
 import { SkeletonTable } from "../../components/Skeleton";
 import { Modal } from "../../components/Modal";
 import { Button } from "../../components/Button";
+import { BulkActionBar } from "../../components/BulkActionBar";
 import { Card } from "../../components/Card";
 import { Input } from "../../components/Input";
+import { useRowSelection } from "../../hooks/useRowSelection";
 import { useInventoryItems, useDeleteInventoryItem, useUpdateInventoryItem } from "../../hooks/queries/useInventoryQueries";
 
 type SortKey =
@@ -238,6 +240,55 @@ export const InventoryList: React.FC = () => {
     supplySort.order,
   );
 
+  const visibleSelectableIds = useMemo(() => {
+    const visible: string[] = [];
+    if (activeScope === "all" || activeScope === "ingredient") {
+      visible.push(...ingredients.map((item) => item.id));
+    }
+    if (activeScope === "all" || activeScope === "supply") {
+      visible.push(...supplies.map((item) => item.id));
+    }
+    if (activeScope === "all" || activeScope === "equipment") {
+      visible.push(...equipment.map((item) => item.id));
+    }
+    return visible;
+  }, [activeScope, ingredients, supplies, equipment]);
+
+  // Multi-select for bulk actions (#885) — desktop only column.
+  const selection = useRowSelection(visibleSelectableIds);
+
+  const bulkDelete = () => {
+    selection.selectedArray.forEach((id) => deleteItem.mutate(id));
+    selection.clear();
+  };
+
+  const exportSelected = () => {
+    const selectedItems = items.filter((item) => selection.selected.has(item.id));
+    exportToCsv(
+      t("inventory:list.csv_filename"),
+      [
+        t("inventory:form.name"),
+        t("inventory:form.type"),
+        t("inventory:list.stock"),
+        t("inventory:list.min_stock"),
+        t("inventory:form.unit"),
+        t("inventory:list.unit_cost"),
+      ],
+      selectedItems.map((i) => [
+        i.ingredient_name,
+        i.type === "equipment"
+          ? t("inventory:list.type_equipment")
+          : i.type === "supply"
+            ? t("inventory:list.type_supply")
+            : t("inventory:list.type_ingredient"),
+        i.current_stock,
+        i.minimum_stock,
+        i.unit,
+        i.unit_cost?.toFixed(2),
+      ]),
+    );
+  };
+
   const handleIngredientSort = (key: SortKey) => {
     setIngredientSort((prev) => ({
       key,
@@ -318,7 +369,10 @@ export const InventoryList: React.FC = () => {
     sort: { key: SortKey; order: SortOrder },
     onSort: (key: SortKey) => void,
     tableLabel: string,
-  ) => (
+  ) => {
+    const sectionSelection = selection.sectionState(sectionItems.map((item) => item.id));
+
+    return (
     <div className="overflow-x-auto">
       <table
         className="data-table"
@@ -326,6 +380,17 @@ export const InventoryList: React.FC = () => {
       >
         <thead>
           <tr>
+            {/* Multi-select checkbox (#885) — desktop only */}
+            <th scope="col" className="px-6 py-3 hidden lg:table-cell">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                checked={sectionSelection.allSelected}
+                ref={(el) => { if (el) el.indeterminate = sectionSelection.someSelected; }}
+                onChange={sectionSelection.toggle}
+                aria-label={`Seleccionar todos en ${tableLabel}`}
+              />
+            </th>
             <th
               scope="col"
               className="px-6 py-3 text-left text-xs font-semibold text-text-secondary cursor-pointer hover:bg-surface-alt/50 transition-colors"
@@ -374,6 +439,16 @@ export const InventoryList: React.FC = () => {
                 className="group hover:bg-surface-alt/50 transition-colors cursor-pointer"
                 onClick={() => navigate(`/inventory/${item.id}`)}
               >
+                {/* Multi-select checkbox (#885) — desktop only */}
+                <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                    checked={selection.selected.has(item.id)}
+                    onChange={() => selection.toggle(item.id)}
+                    aria-label={`Seleccionar ${item.ingredient_name}`}
+                  />
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-text">
                     {item.ingredient_name}
@@ -424,7 +499,8 @@ export const InventoryList: React.FC = () => {
         </tbody>
       </table>
     </div>
-  );
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -694,6 +770,18 @@ export const InventoryList: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Bulk actions bar (#885) — desktop only */}
+      <BulkActionBar count={selection.count} onClear={selection.clear}>
+        <Button variant="glass" size="sm" onClick={exportSelected}>
+          <Download className="h-4 w-4 mr-2" aria-hidden="true" />
+          {t("common:action.download")}
+        </Button>
+        <Button variant="danger" size="sm" onClick={bulkDelete}>
+          <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
+          {t("common:action.delete")}
+        </Button>
+      </BulkActionBar>
 
       <Modal
         isOpen={!!adjustingItem}

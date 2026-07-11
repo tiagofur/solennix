@@ -12,8 +12,11 @@ import {
   Users,
 } from "lucide-react";
 import { RowActionMenu } from "@/components/RowActionMenu";
+import { BulkActionBar } from "@/components/BulkActionBar";
+import { Button } from "@/components/Button";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import Empty from "@/components/Empty";
+import { useRowSelection } from "@/hooks/useRowSelection";
 import { Pagination } from "@/components/Pagination";
 import { SkeletonTable } from "@/components/Skeleton";
 import { useTranslation } from "react-i18next";
@@ -26,7 +29,7 @@ import {
 const ITEMS_PER_PAGE = 10;
 
 export const StaffList: React.FC = () => {
-  const { t } = useTranslation(["staff"]);
+  const { t } = useTranslation(["staff", "common"]);
   const deleteStaff = useDeleteStaff();
   const [searchTerm, setSearchTerm] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -61,6 +64,15 @@ export const StaffList: React.FC = () => {
   );
 
   const rows = isSearching ? searchPaginated : paginatedQuery.data?.data ?? [];
+
+  // Multi-select for bulk actions (#885) — desktop only column.
+  const selection = useRowSelection(rows.map((s) => s.id));
+
+  const bulkDelete = () => {
+    selection.selectedArray.forEach((id) => deleteStaff.mutate(id));
+    selection.clear();
+  };
+
   const currentPage = isSearching ? searchPage : paginatedQuery.data?.page ?? page;
   const totalPages = isSearching
     ? Math.max(1, Math.ceil(filteredStaff.length / ITEMS_PER_PAGE))
@@ -176,6 +188,17 @@ export const StaffList: React.FC = () => {
               </caption>
               <thead>
                 <tr>
+                  {/* Multi-select checkbox (#885) — desktop only */}
+                  <th scope="col" className="px-6 py-3 hidden lg:table-cell">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                      checked={selection.allSelected}
+                      ref={(el) => { if (el) el.indeterminate = selection.someSelected; }}
+                      onChange={selection.toggleAll}
+                      aria-label="Seleccionar todos los colaboradores"
+                    />
+                  </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-text-secondary">
                     {t("staff:list.table.name")}
                   </th>
@@ -197,6 +220,16 @@ export const StaffList: React.FC = () => {
                     className="group hover:bg-surface-alt/50 cursor-pointer transition-colors"
                     onClick={() => navigate(`/staff/${s.id}`)}
                   >
+                    {/* Multi-select checkbox (#885) — desktop only */}
+                    <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                        checked={selection.selected.has(s.id)}
+                        onChange={() => selection.toggle(s.id)}
+                        aria-label={`Seleccionar ${s.name}`}
+                      />
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="h-10 w-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary font-bold" aria-hidden="true">
@@ -262,6 +295,14 @@ export const StaffList: React.FC = () => {
           />
         )}
       </div>
+
+      {/* Bulk actions bar (#885) — desktop only */}
+      <BulkActionBar count={selection.count} onClear={selection.clear}>
+        <Button variant="danger" size="sm" onClick={bulkDelete}>
+          <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
+          {t("common:action.delete")}
+        </Button>
+      </BulkActionBar>
     </div>
   );
 };

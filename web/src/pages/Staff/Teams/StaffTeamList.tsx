@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Edit, Eye, Plus, Trash2, Users } from "lucide-react";
 import { RowActionMenu } from "@/components/RowActionMenu";
+import { BulkActionBar } from "@/components/BulkActionBar";
+import { Button } from "@/components/Button";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import Empty from "@/components/Empty";
+import { useRowSelection } from "@/hooks/useRowSelection";
 import { SkeletonTable } from "@/components/Skeleton";
 import { useTranslation } from "react-i18next";
 import {
@@ -13,7 +16,7 @@ import {
 
 export const StaffTeamList: React.FC = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation(["staff"]);
+  const { t } = useTranslation(["staff", "common"]);
   const { data: teams = [], isLoading } = useStaffTeams();
   const deleteTeam = useDeleteStaffTeam();
 
@@ -30,6 +33,14 @@ export const StaffTeamList: React.FC = () => {
     setConfirmOpen(false);
     setPendingDeleteId(null);
     deleteTeam.mutate(id);
+  };
+
+  // Multi-select for bulk actions (#885) — desktop only column.
+  const selection = useRowSelection(teams.map((team) => team.id));
+
+  const bulkDelete = () => {
+    selection.selectedArray.forEach((id) => deleteTeam.mutate(id));
+    selection.clear();
   };
 
   return (
@@ -99,6 +110,17 @@ export const StaffTeamList: React.FC = () => {
               </caption>
               <thead>
                 <tr>
+                  {/* Multi-select checkbox (#885) — desktop only */}
+                  <th scope="col" className="px-6 py-3 hidden lg:table-cell">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                      checked={selection.allSelected}
+                      ref={(el) => { if (el) el.indeterminate = selection.someSelected; }}
+                      onChange={selection.toggleAll}
+                      aria-label="Seleccionar todos los equipos"
+                    />
+                  </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-text-secondary">
                     {t("staff:teams.list.table.name")}
                   </th>
@@ -120,6 +142,16 @@ export const StaffTeamList: React.FC = () => {
                     className="group hover:bg-surface-alt/50 cursor-pointer transition-colors"
                     onClick={() => navigate(`/staff/teams/${team.id}`)}
                   >
+                    {/* Multi-select checkbox (#885) — desktop only */}
+                    <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                        checked={selection.selected.has(team.id)}
+                        onChange={() => selection.toggle(team.id)}
+                        aria-label={`Seleccionar ${team.name}`}
+                      />
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div
@@ -170,6 +202,14 @@ export const StaffTeamList: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Bulk actions bar (#885) — desktop only */}
+      <BulkActionBar count={selection.count} onClear={selection.clear}>
+        <Button variant="danger" size="sm" onClick={bulkDelete}>
+          <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
+          {t("common:action.delete")}
+        </Button>
+      </BulkActionBar>
     </div>
   );
 };
