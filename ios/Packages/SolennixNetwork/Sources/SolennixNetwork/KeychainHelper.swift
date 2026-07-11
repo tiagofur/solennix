@@ -177,3 +177,17 @@ public final class KeychainHelper: Sendable {
         return status == errSecSuccess || status == errSecItemNotFound
     }
 }
+
+// MARK: - KeychainStoring Protocol
+
+/// Abstraction over the string-level keychain operations the auth layer needs.
+/// `KeychainHelper` is the production implementation; tests inject an in-memory
+/// conformance so they don't depend on the simulator keychain (which is only
+/// reliable inside a host app process).
+public protocol KeychainStoring: Sendable {
+    func saveString(_ value: String, for key: String) -> Bool
+    func readString(for key: String) -> String?
+    func delete(for key: String) -> Bool
+}
+
+extension KeychainHelper: KeychainStoring {}
