@@ -163,13 +163,12 @@ func (r *PaymentRepo) DeleteAndReturnEventIDTx(ctx context.Context, tx pgx.Tx, i
 	return eventID, err
 }
 
-// SumByEventID returns the sum of all payments for the given event_id
-// (regardless of user_id — the event already belongs to the user).
-func (r *PaymentRepo) SumByEventID(ctx context.Context, eventID uuid.UUID) (float64, error) {
+// SumByEventID returns the sum of payments for the given event scoped to user_id.
+func (r *PaymentRepo) SumByEventID(ctx context.Context, userID, eventID uuid.UUID) (float64, error) {
 	var total float64
 	err := r.pool.QueryRow(ctx,
-		"SELECT COALESCE(SUM(amount),0) FROM payments WHERE event_id=$1",
-		eventID,
+		"SELECT COALESCE(SUM(amount),0) FROM payments WHERE event_id=$1 AND user_id=$2",
+		eventID, userID,
 	).Scan(&total)
 	return total, err
 }

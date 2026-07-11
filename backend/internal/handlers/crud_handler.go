@@ -646,6 +646,11 @@ func (h *CRUDHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if _, err := h.clientRepo.GetByID(r.Context(), event.ClientID, userID); err != nil {
+		writeCRUDI18nError(w, r, http.StatusNotFound, "crud.client_not_found")
+		return
+	}
+
 	// 1. Check user plan and limits
 	user, err := h.userRepo.GetByID(r.Context(), userID)
 	if err != nil {
@@ -782,7 +787,7 @@ func (h *CRUDHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	// Block status change to "completed" if event has pending balance
 	if existing.Status == "completed" && oldStatus != "completed" {
 		paymentRepo := repository.NewPaymentRepo(h.pool)
-		paid, err := paymentRepo.SumByEventID(r.Context(), id)
+		paid, err := paymentRepo.SumByEventID(r.Context(), userID, id)
 		if err != nil {
 			slog.Warn("Failed to verify payment status for completion", "event_id", id, "error", err)
 			writeError(w, http.StatusInternalServerError, "Failed to verify payment status")
@@ -2353,6 +2358,13 @@ func (h *CRUDHandler) CreatePayment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	payment.Amount = roundCents(payment.Amount)
+
+	if h.eventRepo != nil {
+		if _, err := h.eventRepo.GetByID(ctx, payment.EventID, userID); err != nil {
+			writeCRUDI18nError(w, r, http.StatusNotFound, "crud.event_not_found")
+			return
+		}
+	}
 
 	payment.UserID = userID
 

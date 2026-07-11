@@ -28,6 +28,7 @@ func newTestHandler(
 	paymentRepo *MockFullPaymentRepo,
 	userRepo *MockFullUserRepo,
 ) *CRUDHandler {
+	clientRepo.On("GetByID", mock.Anything, mock.Anything, mock.Anything).Return(&models.Client{}, nil).Maybe()
 	udr := new(MockUnavailableDateRepo)
 	udr.On("GetByDateRange", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]models.UnavailableDate{}, nil).Maybe()
 	// A7 stub: default to no line items so existing tests are unaffected.
@@ -39,6 +40,7 @@ func newTestHandler(
 // setupCRUDTest creates a CRUDHandler with new mocks and returns them.
 func setupCRUDTest(t *testing.T) (*CRUDHandler, *MockClientRepo, *MockFullEventRepo, *MockProductRepo, *MockInventoryRepo, *MockFullPaymentRepo, *MockFullUserRepo, *MockUnavailableDateRepo) {
 	clientRepo := new(MockClientRepo)
+	clientRepo.On("GetByID", mock.Anything, mock.Anything, mock.Anything).Return(&models.Client{}, nil).Maybe()
 	eventRepo := new(MockFullEventRepo)
 	productRepo := new(MockProductRepo)
 	inventoryRepo := new(MockInventoryRepo)
