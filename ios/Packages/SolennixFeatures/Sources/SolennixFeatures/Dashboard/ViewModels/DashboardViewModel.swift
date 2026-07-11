@@ -174,41 +174,29 @@ public final class DashboardViewModel {
 
         var encounteredError = false
 
-        // Paint header counts IMMEDIATELY from the server-aggregated endpoint.
-        // A single /dashboard/kpis call returns revenue, event/client/inventory
-        // counts in <200ms. The 8 list calls below still populate the body
-        // (events, payments, inventory details) but the user no longer stares
-        // at an empty dashboard for ~1.6s while those fire sequentially.
+        // Single aggregated round-trip: KPIs + the 5 chart/widget datasets
+        // (revenue-chart, events-by-status, top-clients, product-demand,
+        // forecast) collapse into one GET /dashboard/summary (issue #807).
+        // This replaced the old 1 KPI preload + 5 sequential analytics calls.
         do {
-            let aggregated: DashboardKPIs = try await apiClient.get(Endpoint.dashboardKpis)
-            kpis = aggregated
-            // Publish server-aggregated KPIs so the widget sync coordinator can
-            // persist them to the App Group — keeps widget revenue/event counts
-            // aligned with the dashboard instead of the local cache (issue #802).
-            NotificationCenter.default.post(
-                name: .solennixDashboardKPIsRefreshed,
-                object: nil,
-                userInfo: ["kpis": aggregated]
-            )
-            // Mirror low stock count for views that read `lowStockCount`
-            // directly only while inventory hasn't loaded yet. Once
-            // lowStockItems is populated by the inventory loader below it
-            // becomes the canonical source, so skip the preload write on
-            // pull-to-refresh (lowStockItems is non-empty after first load).
-            if lowStockItems.isEmpty {
-                lowStockCount = aggregated.lowStockItems
-            }
+            let summary: DashboardSummary = try await apiClient.get(Endpoint.dashboardSummary)
+            applySummary(summary, now: now)
         } catch {
-            logger.error("kpis preload failed: \(String(describing: error), privacy: .public)")
-            // Non-fatal — the sequential loaders below will still populate
-            // everything; we just lose the progressive-paint advantage.
+            logger.error("summary load failed: \(String(describing: error), privacy: .public)")
+            // Non-fatal — the body-list loaders below still populate the
+            // dashboard; we just lose the header/charts/widgets until the next
+            // load. Fall through so the lists still attempt.
+            encounteredError = true
         }
 
+        // Generic list loader returning a (values, failed) tuple so it is safe
+        // to call from concurrent `async let` branches (no shared mutable
+        // capture). Callers aggregate the `failed` flags after awaiting.
         func loadOrEmpty<T: Decodable>(
             _ endpoint: String,
             params: [String: String]? = nil,
             label: String
-        ) async -> [T] {
+        ) async -> (values: [T], failed: Bool) {
             let paramsDesc = params?.map { "\($0.key)=\($0.value)" }.joined(separator: "&") ?? "none"
             // Log the ACTUAL resolved URL to diagnose 404s. Debug-level so it
             // is dropped in Release: the URL carries query params that may
@@ -218,55 +206,71 @@ public final class DashboardViewModel {
             do {
                 let result: [T] = try await apiClient.getAll(endpoint, params: params)
                 logger.debug("\(label, privacy: .public) loaded \(result.count) items")
-                return result
+                return (result, false)
             } catch {
                 logger.error("\(label, privacy: .public) FAILED: \(String(describing: error), privacy: .public)")
-                encounteredError = true
-                return []
+                return ([], true)
             }
         }
 
-        // Fetch sequentially instead of in parallel.
-        // Some nginx HTTP/2 deployments choke on many concurrent streams over a
-        // single connection (the dashboard previously fired 8 GETs in parallel
-        // and they all hung waiting for response frames). Sequential issues one
-        // request at a time over the multiplexed connection, sidestepping the bug.
-        // TODO: collapse most of these into the server-side aggregated endpoints
-        // /api/dashboard/kpis and related endpoints (already implemented in backend).
-        let clients: [Client] = await loadOrEmpty(
+        // Body lists in bounded-parallel batches (max 3 in flight per batch).
+        // The dashboard previously fired these sequentially as a workaround for
+        // an nginx HTTP/2 concurrent-stream hang; other ViewModels now fan out
+        // with async let over the same URLSession without issue, so we cap at 3
+        // (well below the 8 that triggered the old hang) as insurance.
+        // 5 lists at cap 3 ≈ 2 round-trips instead of 5 sequential ones.
+        // Note: /products is no longer fetched — its only consumer was
+        // `totalProducts`, now sourced from `kpis.totalProducts`. The duplicate
+        // month-scoped /events fetch is gone too — `eventsThisMonth` is derived
+        // client-side from the single all-events fetch below.
+        async let clientsFetch: (values: [Client], failed: Bool) = loadOrEmpty(
             Endpoint.clients,
             label: "clients"
         )
-        let monthEvents: [Event] = await loadOrEmpty(
-            Endpoint.events,
-            params: ["start": startStr, "end": endStr],
-            label: "month events"
-        )
-        let loadedAllEvents: [Event] = await loadOrEmpty(
+        async let eventsFetch: (values: [Event], failed: Bool) = loadOrEmpty(
             Endpoint.events,
             label: "all events"
         )
-        let loadedUpcomingEvents: [Event] = await loadOrEmpty(
-            Endpoint.upcomingEvents,
-            label: "upcoming events"
-        )
-        let inventory: [InventoryItem] = await loadOrEmpty(
+        async let inventoryFetch: (values: [InventoryItem], failed: Bool) = loadOrEmpty(
             Endpoint.inventory,
             label: "inventory"
         )
-        let products: [Product] = await loadOrEmpty(
-            Endpoint.products,
-            label: "products"
+        let clientsLoad = await clientsFetch
+        let eventsLoad = await eventsFetch
+        let inventoryLoad = await inventoryFetch
+
+        async let upcomingFetch: (values: [Event], failed: Bool) = loadOrEmpty(
+            Endpoint.upcomingEvents,
+            label: "upcoming events"
         )
-        let loadedAllPayments: [Payment] = await loadOrEmpty(
+        async let paymentsFetch: (values: [Payment], failed: Bool) = loadOrEmpty(
             Endpoint.payments,
             label: "all payments"
         )
+        let upcomingLoad = await upcomingFetch
+        let paymentsLoad = await paymentsFetch
+
+        let clients = clientsLoad.values
+        let loadedAllEvents = eventsLoad.values
+        let inventory = inventoryLoad.values
+        let loadedUpcomingEvents = upcomingLoad.values
+        let loadedAllPayments = paymentsLoad.values
+
+        if clientsLoad.failed || eventsLoad.failed || inventoryLoad.failed
+            || upcomingLoad.failed || paymentsLoad.failed {
+            encounteredError = true
+        }
 
         // Build client map
         clientMap = Dictionary(uniqueKeysWithValues: clients.map { ($0.id, $0) })
 
-        // Events this month
+        // Events this month: derived client-side from the single all-events
+        // fetch (inclusive UTC start/end string compare matches the server's
+        // ?start=&end= filter exactly for ISO "YYYY-MM-DD" dates).
+        let monthEvents = loadedAllEvents.filter { event in
+            let day = String(event.eventDate.prefix(10))
+            return day >= startStr && day <= endStr
+        }
         eventsThisMonth = monthEvents
         allEvents = loadedAllEvents
         allPayments = loadedAllPayments
@@ -276,12 +280,13 @@ public final class DashboardViewModel {
 
         // Low stock items = inventory where current_stock < minimum_stock AND minimum_stock > 0.
         // lowStockItems.count is the single canonical source once inventory loads.
-        // The KPI preload value (set above) is only a pre-inventory placeholder.
+        // The KPI value (set in applySummary) is only a pre-inventory placeholder.
         lowStockItems = inventory.filter { $0.minimumStock > 0 && $0.currentStock < $0.minimumStock }
-        lowStockCount = lowStockItems.count  // canonical — KPI preload value is now superseded
+        lowStockCount = lowStockItems.count  // canonical — KPI value is now superseded
 
-        // Counts for onboarding checklist
-        totalProducts = products.count
+        // Counts for onboarding checklist. totalProducts comes from KPIs now
+        // (no /products list fetch); totalEvents is still the full event count.
+        totalProducts = kpis?.totalProducts ?? 0
         totalEvents = loadedAllEvents.count
 
         // Attention events for dashboard alerts/cards.
@@ -292,25 +297,10 @@ public final class DashboardViewModel {
             now: now
         )
 
-          logger.debug("Summary: clients=\(clients.count), monthEvents=\(monthEvents.count), upcoming=\(self.upcomingEvents.count), allEvents=\(loadedAllEvents.count), inventory=\(inventory.count), products=\(products.count), allPayments=\(loadedAllPayments.count), encounteredError=\(encounteredError ? "YES" : "NO", privacy: .public)")
-
-        // Premium 6-month chart: backend-aggregated revenue by month. Loaded
-        // regardless of plan — the View gates the card on `isPremium`, so a
-        // non-premium user just pays for one extra GET and never sees it.
-        await loadMonthlyRevenueTrend()
-
-        // Month-scoped status distribution for the "Estado de Eventos" chart.
-        // Kept in parallel with the same-named iOS/Android/Web card so all
-        // three platforms show identical confirmed / completed / quoted counts.
-        await loadEventStatusCounts()
-
-        // Analytics widgets: top clients, product demand, forecast
-        await loadTopClients()
-        await loadProductDemand()
-        await loadForecast()
+        logger.debug("Summary: clients=\(clients.count), monthEvents=\(monthEvents.count), upcoming=\(self.upcomingEvents.count), allEvents=\(loadedAllEvents.count), inventory=\(inventory.count), totalProducts=\(self.totalProducts), allPayments=\(loadedAllPayments.count), encounteredError=\(encounteredError ? "YES" : "NO", privacy: .public)")
 
         if encounteredError {
-            if clients.isEmpty && loadedAllEvents.isEmpty && products.isEmpty {
+            if clients.isEmpty && loadedAllEvents.isEmpty {
                 errorMessage = Self.tr("dashboard.error.load_failed", "Error al cargar dashboard")
             } else {
                 errorMessage = Self.tr("dashboard.error.partial_load", "Algunos datos no se pudieron cargar")
@@ -319,6 +309,52 @@ public final class DashboardViewModel {
 
         hasLoadedOnce = true
         isLoading = false
+    }
+
+    /// Fan a `DashboardSummary` payload out to the chart/widget properties.
+    /// Extracted so `loadDashboard` and `updateEventStatus` can both apply a
+    /// server payload without duplicating the mapping.
+    @MainActor
+    private func applySummary(_ summary: DashboardSummary, now: Date) {
+        let aggregated = summary.kpis
+        kpis = aggregated
+        // Publish server-aggregated KPIs so the widget sync coordinator can
+        // persist them to the App Group — keeps widget revenue/event counts
+        // aligned with the dashboard instead of the local cache (issue #802).
+        NotificationCenter.default.post(
+            name: .solennixDashboardKPIsRefreshed,
+            object: nil,
+            userInfo: ["kpis": aggregated]
+        )
+        // Mirror low stock count for views that read `lowStockCount` directly
+        // only while inventory hasn't loaded yet. Once lowStockItems is
+        // populated by the inventory loader it becomes the canonical source,
+        // so skip the placeholder write on pull-to-refresh (lowStockItems is
+        // non-empty after first load).
+        if lowStockItems.isEmpty {
+            lowStockCount = aggregated.lowStockItems
+        }
+
+        // Revenue trend: backend returns only months with payments; pad the
+        // trailing 6-month window with zero-revenue points so the chart always
+        // shows 6 bars. Loaded regardless of plan — the View gates the card on
+        // `isPremium`, so a non-premium user just gets the data and never sees it.
+        monthlyRevenueTrend = Self.buildTrailingSixMonthTrend(from: summary.revenueChart, now: now)
+
+        // Month-scoped status distribution → [EventStatus: Int]. Status strings
+        // that don't match the iOS enum are dropped silently (defensive against
+        // future backend additions).
+        var statusMap: [EventStatus: Int] = [:]
+        for row in summary.eventsByStatus {
+            if let status = EventStatus(rawValue: row.status) {
+                statusMap[status] = row.count
+            }
+        }
+        eventStatusCounts = statusMap
+
+        topClients = summary.topClients
+        productDemand = summary.productDemand
+        forecast = summary.forecast
     }
 
     @MainActor
