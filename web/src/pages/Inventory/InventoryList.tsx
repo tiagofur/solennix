@@ -16,6 +16,7 @@ import {
   Eye,
   ArrowUp,
   ArrowDown,
+  type LucideIcon,
 } from "lucide-react";
 import { RowActionMenu } from "../../components/RowActionMenu";
 import { exportToCsv } from "../../lib/exportCsv";
@@ -29,6 +30,8 @@ import { Button } from "../../components/Button";
 import { BulkActionBar } from "../../components/BulkActionBar";
 import { Card } from "../../components/Card";
 import { Input } from "../../components/Input";
+import { Pagination } from "../../components/Pagination";
+import { usePagination } from "../../hooks/usePagination";
 import { useRowSelection } from "../../hooks/useRowSelection";
 import { useInventoryItems, useDeleteInventoryItem, useUpdateInventoryItem } from "../../hooks/queries/useInventoryQueries";
 
@@ -38,6 +41,33 @@ type SortKey =
   | "minimum_stock"
   | "unit_cost";
 type SortOrder = "asc" | "desc";
+type InventoryType = InventoryItem["type"];
+
+const ITEMS_PER_PAGE = 10;
+
+const TYPE_VISUALS: Record<
+  InventoryType,
+  { icon: LucideIcon; bg: string; color: string; labelKey: string }
+> = {
+  ingredient: {
+    icon: ShoppingBasket,
+    bg: "bg-primary/10",
+    color: "text-primary",
+    labelKey: "inventory:list.type_ingredient",
+  },
+  supply: {
+    icon: Fuel,
+    bg: "bg-warning/10",
+    color: "text-warning",
+    labelKey: "inventory:list.type_supply",
+  },
+  equipment: {
+    icon: Wrench,
+    bg: "bg-info/10",
+    color: "text-info",
+    labelKey: "inventory:list.type_equipment",
+  },
+};
 
 function sortItems(
   items: InventoryItem[],
@@ -66,6 +96,25 @@ function sortItems(
     }
   });
 }
+
+const InventoryTypeIcon: React.FC<{ type: InventoryType }> = ({ type }) => {
+  const { t } = useTranslation(["inventory"]);
+  const visual = TYPE_VISUALS[type] ?? TYPE_VISUALS.ingredient;
+  const Icon = visual.icon;
+
+  return (
+    <div
+      className={clsx(
+        "flex items-center justify-center w-9 h-9 rounded-xl shrink-0",
+        visual.bg,
+      )}
+      title={t(visual.labelKey)}
+    >
+      <Icon className={clsx("h-4 w-4", visual.color)} aria-hidden="true" />
+      <span className="sr-only">{t(visual.labelKey)}</span>
+    </div>
+  );
+};
 
 const InlineStockCell: React.FC<{
   item: InventoryItem;
@@ -150,15 +199,7 @@ export const InventoryList: React.FC = () => {
   ];
 
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
-  const [ingredientSort, setIngredientSort] = useState<{
-    key: SortKey;
-    order: SortOrder;
-  }>({ key: "ingredient_name", order: "asc" });
-  const [equipmentSort, setEquipmentSort] = useState<{
-    key: SortKey;
-    order: SortOrder;
-  }>({ key: "ingredient_name", order: "asc" });
-  const [supplySort, setSupplySort] = useState<{
+  const [listSort, setListSort] = useState<{
     key: SortKey;
     order: SortOrder;
   }>({ key: "ingredient_name", order: "asc" });
@@ -213,49 +254,40 @@ export const InventoryList: React.FC = () => {
     );
   };
 
-  const filteredItems = (items || []).filter((item) => {
-    const matchesSearch = item.ingredient_name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesLowStock =
-      !showLowStockOnly ||
-      (item.minimum_stock > 0 && item.current_stock < item.minimum_stock);
-    const matchesScope = activeScope === "all" || item.type === activeScope;
-    return matchesSearch && matchesLowStock && matchesScope;
+  const filteredItems = useMemo(
+    () =>
+      (items || []).filter((item) => {
+        const matchesSearch = item.ingredient_name
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
+        const matchesLowStock =
+          !showLowStockOnly ||
+          (item.minimum_stock > 0 && item.current_stock < item.minimum_stock);
+        const matchesScope = activeScope === "all" || item.type === activeScope;
+        return matchesSearch && matchesLowStock && matchesScope;
+      }),
+    [items, searchTerm, showLowStockOnly, activeScope],
+  );
+
+  const sortedItems = useMemo(
+    () => sortItems(filteredItems, listSort.key, listSort.order),
+    [filteredItems, listSort],
+  );
+
+  const {
+    currentData: paginatedItems,
+    currentPage,
+    totalPages,
+    totalItems,
+    handlePageChange,
+  } = usePagination({
+    data: sortedItems,
+    itemsPerPage: ITEMS_PER_PAGE,
+    initialSortKey: "",
   });
 
-  const ingredients = sortItems(
-    filteredItems.filter((item) => item.type === "ingredient"),
-    ingredientSort.key,
-    ingredientSort.order,
-  );
-  const equipment = sortItems(
-    filteredItems.filter((item) => item.type === "equipment"),
-    equipmentSort.key,
-    equipmentSort.order,
-  );
-  const supplies = sortItems(
-    filteredItems.filter((item) => item.type === "supply"),
-    supplySort.key,
-    supplySort.order,
-  );
-
-  const visibleSelectableIds = useMemo(() => {
-    const visible: string[] = [];
-    if (activeScope === "all" || activeScope === "ingredient") {
-      visible.push(...ingredients.map((item) => item.id));
-    }
-    if (activeScope === "all" || activeScope === "supply") {
-      visible.push(...supplies.map((item) => item.id));
-    }
-    if (activeScope === "all" || activeScope === "equipment") {
-      visible.push(...equipment.map((item) => item.id));
-    }
-    return visible;
-  }, [activeScope, ingredients, supplies, equipment]);
-
   // Multi-select for bulk actions (#885) — desktop only column.
-  const selection = useRowSelection(visibleSelectableIds);
+  const selection = useRowSelection(paginatedItems.map((item) => item.id));
 
   const bulkDelete = () => {
     selection.selectedArray.forEach((id) => deleteItem.mutate(id));
@@ -289,31 +321,17 @@ export const InventoryList: React.FC = () => {
     );
   };
 
-  const handleIngredientSort = (key: SortKey) => {
-    setIngredientSort((prev) => ({
+  const handleSort = (key: SortKey) => {
+    setListSort((prev) => ({
       key,
       order: prev.key === key && prev.order === "asc" ? "desc" : "asc",
     }));
+    handlePageChange(1);
   };
 
-  const handleEquipmentSort = (key: SortKey) => {
-    setEquipmentSort((prev) => ({
-      key,
-      order: prev.key === key && prev.order === "asc" ? "desc" : "asc",
-    }));
-  };
+  const resetToFirstPage = () => handlePageChange(1);
 
-  const handleSupplySort = (key: SortKey) => {
-    setSupplySort((prev) => ({
-      key,
-      order: prev.key === key && prev.order === "asc" ? "desc" : "asc",
-    }));
-  };
-
-  const renderMobileSortBar = (
-    sort: { key: SortKey; order: SortOrder },
-    setSort: React.Dispatch<React.SetStateAction<{ key: SortKey; order: SortOrder }>>,
-  ) => {
+  const renderMobileSortBar = () => {
     const sortLabels: Record<SortKey, string> = {
       ingredient_name: t("inventory:form.name_accessible"),
       current_stock: t("inventory:list.stock"),
@@ -326,10 +344,11 @@ export const InventoryList: React.FC = () => {
         <span className="text-xs text-text-secondary font-medium whitespace-nowrap">{t("inventory:list.sort_label")}:</span>
         <select
           className="flex-1 text-xs bg-surface-alt border border-border rounded-lg px-2 py-1.5 text-text focus:outline-none focus:ring-2 focus:ring-primary/30"
-          value={`${sort.key}-${sort.order}`}
+          value={`${listSort.key}-${listSort.order}`}
           onChange={(e) => {
             const [key, order] = e.target.value.split("-") as [SortKey, SortOrder];
-            setSort({ key, order });
+            setListSort({ key, order });
+            resetToFirstPage();
           }}
           aria-label={t("inventory:list.sort_items")}
         >
@@ -344,162 +363,18 @@ export const InventoryList: React.FC = () => {
     );
   };
 
-  const renderSortIcon = (
-    key: SortKey,
-    sort: { key: SortKey; order: SortOrder },
-  ) => {
-    if (sort.key !== key) return null;
-    return sort.order === "asc" ? (
+  const renderSortIcon = (key: SortKey) => {
+    if (listSort.key !== key) return null;
+    return listSort.order === "asc" ? (
       <ArrowUp className="inline h-3 w-3 ml-1" aria-hidden="true" />
     ) : (
       <ArrowDown className="inline h-3 w-3 ml-1" aria-hidden="true" />
     );
   };
 
-  const getSortAriaSort = (
-    key: SortKey,
-    sort: { key: SortKey; order: SortOrder },
-  ): "ascending" | "descending" | "none" => {
-    if (sort.key !== key) return "none";
-    return sort.order === "asc" ? "ascending" : "descending";
-  };
-
-  const renderTable = (
-    sectionItems: InventoryItem[],
-    sort: { key: SortKey; order: SortOrder },
-    onSort: (key: SortKey) => void,
-    tableLabel: string,
-  ) => {
-    const sectionSelection = selection.sectionState(sectionItems.map((item) => item.id));
-
-    return (
-    <div className="overflow-x-auto">
-      <table
-        className="data-table"
-        aria-label={tableLabel}
-      >
-        <thead>
-          <tr>
-            {/* Multi-select checkbox (#885) — desktop only */}
-            <th scope="col" className="px-6 py-3 hidden lg:table-cell">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
-                checked={sectionSelection.allSelected}
-                ref={(el) => { if (el) el.indeterminate = sectionSelection.someSelected; }}
-                onChange={sectionSelection.toggle}
-                aria-label={`Seleccionar todos en ${tableLabel}`}
-              />
-            </th>
-            <th
-              scope="col"
-              className="px-6 py-3 text-left text-xs font-semibold text-text-secondary cursor-pointer hover:bg-surface-alt/50 transition-colors"
-              onClick={() => onSort("ingredient_name")}
-              aria-sort={getSortAriaSort("ingredient_name", sort)}
-            >
-              {t("inventory:list.name_column")} {renderSortIcon("ingredient_name", sort)}
-            </th>
-            <th
-              scope="col"
-              className="px-6 py-3 text-left text-xs font-semibold text-text-secondary cursor-pointer hover:bg-surface-alt/50 transition-colors"
-              onClick={() => onSort("current_stock")}
-              aria-sort={getSortAriaSort("current_stock", sort)}
-            >
-              {t("inventory:list.stock")} {renderSortIcon("current_stock", sort)}
-            </th>
-            <th
-              scope="col"
-              className="px-6 py-3 text-left text-xs font-semibold text-text-secondary cursor-pointer hover:bg-surface-alt/50 transition-colors"
-              onClick={() => onSort("minimum_stock")}
-              aria-sort={getSortAriaSort("minimum_stock", sort)}
-            >
-              {t("inventory:list.min_stock")} {renderSortIcon("minimum_stock", sort)}
-            </th>
-            <th
-              scope="col"
-              className="px-6 py-3 text-left text-xs font-semibold text-text-secondary cursor-pointer hover:bg-surface-alt/50 transition-colors"
-              onClick={() => onSort("unit_cost")}
-              aria-sort={getSortAriaSort("unit_cost", sort)}
-            >
-              {t("inventory:list.unit_cost")} {renderSortIcon("unit_cost", sort)}
-            </th>
-            <th scope="col" className="relative px-6 py-3 text-text-secondary">
-              <span className="sr-only">{t("inventory:list.actions")}</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {sectionItems.map((item) => {
-            const isLowStock =
-              item.minimum_stock > 0 &&
-              item.current_stock < item.minimum_stock;
-            return (
-              <tr
-                key={item.id}
-                className="group hover:bg-surface-alt/50 transition-colors cursor-pointer"
-                onClick={() => navigate(`/inventory/${item.id}`)}
-              >
-                {/* Multi-select checkbox (#885) — desktop only */}
-                <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell" onClick={(e) => e.stopPropagation()}>
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
-                    checked={selection.selected.has(item.id)}
-                    onChange={() => selection.toggle(item.id)}
-                    aria-label={`Seleccionar ${item.ingredient_name}`}
-                  />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-text">
-                    {item.ingredient_name}
-                  </div>
-                  <div className="text-sm text-text-secondary">
-                    {t("inventory:form.unit")}: {item.unit}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                  <InlineStockCell
-                    item={item}
-                    isLowStock={isLowStock}
-                    onSave={(newStock) => {
-                      updateItem.mutate({
-                        id: item.id,
-                        data: {
-                          ingredient_name: item.ingredient_name,
-                          current_stock: newStock,
-                          minimum_stock: item.minimum_stock,
-                          unit: item.unit,
-                          unit_cost: item.unit_cost,
-                          type: item.type,
-                        },
-                      }, {
-                         onSuccess: () => addToast(t("inventory:list.stock_updated"), "success"),
-                      });
-                    }}
-                  />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
-                  {item.minimum_stock}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
-                  ${item.unit_cost?.toLocaleString(moneyLocale, { minimumFractionDigits: 2 }) || "0.00"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                    <RowActionMenu items={[
-                      { label: t("common:action.view"), icon: Eye, onClick: () => navigate(`/inventory/${item.id}`) },
-                      { label: t("common:action.edit"), icon: Edit, onClick: () => navigate(`/inventory/${item.id}/edit`) },
-                      { label: t("common:action.delete"), icon: Trash2, onClick: () => requestDelete(item.id), variant: 'destructive' as const },
-                    ]} />
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-    );
+  const getSortAriaSort = (key: SortKey): "ascending" | "descending" | "none" => {
+    if (listSort.key !== key) return "none";
+    return listSort.order === "asc" ? "ascending" : "descending";
   };
 
   return (
@@ -565,7 +440,10 @@ export const InventoryList: React.FC = () => {
       {lowStockItems.length > 0 && (
         <button
           type="button"
-          onClick={() => setShowLowStockOnly((v) => !v)}
+          onClick={() => {
+            setShowLowStockOnly((v) => !v);
+            resetToFirstPage();
+          }}
           className="w-full flex items-center gap-3 bg-error/5 border border-error/20 text-error rounded-2xl p-4 hover:bg-error/10 transition-colors text-left"
           aria-pressed={showLowStockOnly}
         >
@@ -591,7 +469,10 @@ export const InventoryList: React.FC = () => {
           className="pl-11 pr-10 bg-card/60 hover:bg-surface-alt/40 focus:bg-card focus:border-primary"
           placeholder={t("inventory:list.search_placeholder")}
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            resetToFirstPage();
+          }}
         />
       </div>
 
@@ -601,7 +482,10 @@ export const InventoryList: React.FC = () => {
             <button
               key={chip.value}
               type="button"
-              onClick={() => setActiveScope(chip.value as any)}
+              onClick={() => {
+                setActiveScope(chip.value as typeof activeScope);
+                resetToFirstPage();
+              }}
               className={clsx(
                 "px-4 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 active-ios-scale",
                 activeScope === chip.value
@@ -615,11 +499,12 @@ export const InventoryList: React.FC = () => {
         </div>
       </div>
 
-      {loading ? (
-        <Card variant="glass" padding="none" className="overflow-hidden">
+      <Card variant="glass" padding="none" className="overflow-hidden">
+        {loading ? (
           <SkeletonTable
             rows={6}
             columns={[
+              { width: "w-10" },
               { width: "w-40" },
               { width: "w-20" },
               { width: "w-20" },
@@ -627,9 +512,7 @@ export const InventoryList: React.FC = () => {
               { width: "w-20" },
             ]}
           />
-        </Card>
-      ) : filteredItems.length === 0 ? (
-        <Card variant="glass" padding="none" className="overflow-hidden">
+        ) : filteredItems.length === 0 ? (
           <Empty
             icon={Package}
             title={
@@ -671,105 +554,150 @@ export const InventoryList: React.FC = () => {
               ) : undefined
             }
           />
-        </Card>
-      ) : (
-        <div className="space-y-8">
-          {(activeScope === "all" || activeScope === "ingredient") && (
-            <section>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10">
-                  <ShoppingBasket
-                    className="h-5 w-5 text-primary"
-                    aria-hidden="true"
-                  />
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-text">{t("inventory:list.type_ingredient")}</h2>
-                  <p className="text-xs text-text-secondary">
-                    {ingredients.length}{" "}
-                    {t("inventory:list.type_ingredient")}
-                  </p>
-                </div>
-              </div>
-              <Card variant="glass" padding="none" className="overflow-hidden shadow-sm">
-                {ingredients.length === 0 ? (
-                  <div className="px-6 py-8 text-center text-sm text-text-secondary">
-                     {t("inventory:list.section_empty")}
-                  </div>
-                ) : (
-                  <>
-                    {renderMobileSortBar(ingredientSort, setIngredientSort)}
-                    {renderTable(ingredients, ingredientSort, handleIngredientSort, t("inventory:list.type_ingredient"))}
-                  </>
-                )}
-              </Card>
-            </section>
-          )}
-
-          {(activeScope === "all" || activeScope === "supply") && (
-            <section>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-warning/10">
-                  <Fuel className="h-5 w-5 text-warning" aria-hidden="true" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-text">
-                    {t("inventory:list.type_supply")}
-                  </h2>
-                  <p className="text-xs text-text-secondary">
-                    {supplies.length}{" "}
-                    {t("inventory:list.type_supply")}
-                  </p>
-                </div>
-              </div>
-              <Card variant="glass" padding="none" className="overflow-hidden shadow-sm">
-                {supplies.length === 0 ? (
-                  <div className="px-6 py-8 text-center text-sm text-text-secondary">
-                     {t("inventory:list.section_empty")}
-                  </div>
-                ) : (
-                  <>
-                    {renderMobileSortBar(supplySort, setSupplySort)}
-                    {renderTable(supplies, supplySort, handleSupplySort, t("inventory:list.type_supply"))}
-                  </>
-                )}
-              </Card>
-            </section>
-          )}
-
-          {(activeScope === "all" || activeScope === "equipment") && (
-            <section>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-info/10">
-                  <Wrench
-                    className="h-5 w-5 text-info"
-                    aria-hidden="true"
-                  />
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-text">{t("inventory:list.type_equipment")}</h2>
-                  <p className="text-xs text-text-secondary">
-                    {equipment.length}{" "}
-                    {t("inventory:list.type_equipment")}
-                  </p>
-                </div>
-              </div>
-              <Card variant="glass" padding="none" className="overflow-hidden shadow-sm">
-                {equipment.length === 0 ? (
-                  <div className="px-6 py-8 text-center text-sm text-text-secondary">
-                     {t("inventory:list.section_empty")}
-                  </div>
-                ) : (
-                  <>
-                    {renderMobileSortBar(equipmentSort, setEquipmentSort)}
-                    {renderTable(equipment, equipmentSort, handleEquipmentSort, t("inventory:list.type_equipment"))}
-                  </>
-                )}
-              </Card>
-            </section>
-          )}
-        </div>
-      )}
+        ) : (
+          <>
+            {renderMobileSortBar()}
+            <div className="overflow-x-auto">
+              <table className="data-table" aria-label={t("inventory:title")}>
+                <caption className="sr-only">
+                  {t("common:pagination.showing")} {currentPage} {t("common:pagination.of")} {totalPages}
+                </caption>
+                <thead>
+                  <tr>
+                    {/* Multi-select checkbox (#885) — desktop only */}
+                    <th scope="col" className="px-6 py-3 hidden lg:table-cell">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                        checked={selection.allSelected}
+                        ref={(el) => { if (el) el.indeterminate = selection.someSelected; }}
+                        onChange={selection.toggleAll}
+                        aria-label="Seleccionar todos los ítems"
+                      />
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-semibold text-text-secondary cursor-pointer hover:bg-surface-alt/50 transition-colors"
+                      onClick={() => handleSort("ingredient_name")}
+                      aria-sort={getSortAriaSort("ingredient_name")}
+                    >
+                      {t("inventory:list.name_column")} {renderSortIcon("ingredient_name")}
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-semibold text-text-secondary cursor-pointer hover:bg-surface-alt/50 transition-colors"
+                      onClick={() => handleSort("current_stock")}
+                      aria-sort={getSortAriaSort("current_stock")}
+                    >
+                      {t("inventory:list.stock")} {renderSortIcon("current_stock")}
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-semibold text-text-secondary cursor-pointer hover:bg-surface-alt/50 transition-colors"
+                      onClick={() => handleSort("minimum_stock")}
+                      aria-sort={getSortAriaSort("minimum_stock")}
+                    >
+                      {t("inventory:list.min_stock")} {renderSortIcon("minimum_stock")}
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-semibold text-text-secondary cursor-pointer hover:bg-surface-alt/50 transition-colors"
+                      onClick={() => handleSort("unit_cost")}
+                      aria-sort={getSortAriaSort("unit_cost")}
+                    >
+                      {t("inventory:list.unit_cost")} {renderSortIcon("unit_cost")}
+                    </th>
+                    <th scope="col" className="relative px-6 py-3 text-text-secondary">
+                      <span className="sr-only">{t("inventory:list.actions")}</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedItems.map((item) => {
+                    const isLowStock =
+                      item.minimum_stock > 0 &&
+                      item.current_stock < item.minimum_stock;
+                    return (
+                      <tr
+                        key={item.id}
+                        className="group hover:bg-surface-alt/50 transition-colors cursor-pointer"
+                        onClick={() => navigate(`/inventory/${item.id}`)}
+                      >
+                        {/* Multi-select checkbox (#885) — desktop only */}
+                        <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                            checked={selection.selected.has(item.id)}
+                            onChange={() => selection.toggle(item.id)}
+                            aria-label={`Seleccionar ${item.ingredient_name}`}
+                          />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-3">
+                            <InventoryTypeIcon type={item.type} />
+                            <div>
+                              <div className="text-sm font-medium text-text">
+                                {item.ingredient_name}
+                              </div>
+                              <div className="text-sm text-text-secondary">
+                                {t("inventory:form.unit")}: {item.unit}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <InlineStockCell
+                            item={item}
+                            isLowStock={isLowStock}
+                            onSave={(newStock) => {
+                              updateItem.mutate({
+                                id: item.id,
+                                data: {
+                                  ingredient_name: item.ingredient_name,
+                                  current_stock: newStock,
+                                  minimum_stock: item.minimum_stock,
+                                  unit: item.unit,
+                                  unit_cost: item.unit_cost,
+                                  type: item.type,
+                                },
+                              }, {
+                                 onSuccess: () => addToast(t("inventory:list.stock_updated"), "success"),
+                              });
+                            }}
+                          />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
+                          {item.minimum_stock}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
+                          ${item.unit_cost?.toLocaleString(moneyLocale, { minimumFractionDigits: 2 }) || "0.00"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                            <RowActionMenu items={[
+                              { label: t("common:action.view"), icon: Eye, onClick: () => navigate(`/inventory/${item.id}`) },
+                              { label: t("common:action.edit"), icon: Edit, onClick: () => navigate(`/inventory/${item.id}/edit`) },
+                              { label: t("common:action.delete"), icon: Trash2, onClick: () => requestDelete(item.id), variant: 'destructive' as const },
+                            ]} />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              itemsPerPage={ITEMS_PER_PAGE}
+              onPageChange={handlePageChange}
+            />
+          </>
+        )}
+      </Card>
 
       {/* Bulk actions bar (#885) — desktop only */}
       <BulkActionBar count={selection.count} onClear={selection.clear}>
