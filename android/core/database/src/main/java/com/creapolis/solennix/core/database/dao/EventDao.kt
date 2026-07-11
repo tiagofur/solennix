@@ -47,6 +47,6 @@ interface EventDao {
     @Query("DELETE FROM events")
     suspend fun deleteAll()
 
-    @Query("SELECT COUNT(*) FROM events WHERE event_date >= :monthStart AND event_date < :monthEnd")
-    fun getEventCountForMonth(monthStart: String, monthEnd: String): Flow<Int>
+    @Query("SELECT COUNT(*) FROM events WHERE user_id = :userId AND event_date >= :monthStart AND event_date < :monthEnd")
+    fun getEventCountForMonth(userId: String, monthStart: String, monthEnd: String): Flow<Int>
 }

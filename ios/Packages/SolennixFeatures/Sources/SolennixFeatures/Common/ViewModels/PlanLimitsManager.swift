@@ -14,6 +14,7 @@ public final class PlanLimitsManager {
     public static let clientLimit = 20
     public static let productLimit = 15
     public static let inventoryLimit = 30
+    public static let catalogLimit = 20
 
     // MARK: - Properties
 
@@ -53,11 +54,15 @@ public final class PlanLimitsManager {
     }
 
     public var canCreateProduct: Bool {
-        !isBasicPlan || productsCount < Self.productLimit
+        guard isBasicPlan else { return true }
+        let catalogTotal = productsCount + inventoryCount
+        return productsCount < Self.productLimit && catalogTotal < Self.catalogLimit
     }
 
     public var canCreateInventoryItem: Bool {
-        !isBasicPlan || inventoryCount < Self.inventoryLimit
+        guard isBasicPlan else { return true }
+        let catalogTotal = productsCount + inventoryCount
+        return inventoryCount < Self.inventoryLimit && catalogTotal < Self.catalogLimit
     }
 
     // MARK: - Actions
@@ -90,7 +95,7 @@ public final class PlanLimitsManager {
         do {
             if isBasicPlan {
                 // Fetch all to check limits
-                async let eventsTask: [Event] = apiClient.getAll(Endpoint.events, params: ["start_date": startStr, "end_date": endStr])
+                async let eventsTask: [Event] = apiClient.getAll(Endpoint.events, params: ["start": startStr, "end": endStr])
                 async let clientsTask: [Client] = apiClient.getAll(Endpoint.clients)
                 async let productsTask: [Product] = apiClient.getAll(Endpoint.products)
                 async let inventoryTask: [InventoryItem] = apiClient.getAll(Endpoint.inventory)
@@ -108,7 +113,7 @@ public final class PlanLimitsManager {
                 inventoryCount = inventory.count
             } else {
                 // Only need to count events this month
-                let events: [Event] = (try? await apiClient.getAll(Endpoint.events, params: ["start_date": startStr, "end_date": endStr])) ?? []
+                let events: [Event] = (try? await apiClient.getAll(Endpoint.events, params: ["start": startStr, "end": endStr])) ?? []
                 eventsThisMonth = events.count
             }
         }

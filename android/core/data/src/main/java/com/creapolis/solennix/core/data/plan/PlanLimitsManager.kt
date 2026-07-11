@@ -5,6 +5,7 @@ import com.creapolis.solennix.core.data.repository.EventRepository
 import com.creapolis.solennix.core.data.repository.InventoryRepository
 import com.creapolis.solennix.core.data.repository.ProductRepository
 import com.creapolis.solennix.core.model.Plan
+import com.creapolis.solennix.core.network.AuthManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -20,7 +21,8 @@ class PlanLimitsManager @Inject constructor(
     private val eventRepository: EventRepository,
     private val clientRepository: ClientRepository,
     private val productRepository: ProductRepository,
-    private val inventoryRepository: InventoryRepository
+    private val inventoryRepository: InventoryRepository,
+    private val authManager: AuthManager
 ) {
     companion object {
         // Basic plan limits (free tier)
@@ -28,6 +30,7 @@ class PlanLimitsManager @Inject constructor(
         const val BASIC_CLIENTS_TOTAL = 20
         const val BASIC_PRODUCTS_TOTAL = 15
         const val BASIC_INVENTORY_TOTAL = 30
+        const val BASIC_CATALOG_TOTAL = 20
 
         // Pro and Business are unlimited. The difference between them lives at
         // the feature level (team seats, multi-business, advanced analytics),
@@ -44,6 +47,7 @@ class PlanLimitsManager @Inject constructor(
                 totalClients = BASIC_CLIENTS_TOTAL,
                 totalProducts = BASIC_PRODUCTS_TOTAL,
                 totalInventory = BASIC_INVENTORY_TOTAL,
+                totalCatalog = BASIC_CATALOG_TOTAL,
                 hasAdvancedReports = false,
                 hasCustomBranding = false,
                 hasPrioritySupport = false
@@ -53,6 +57,7 @@ class PlanLimitsManager @Inject constructor(
                 totalClients = Int.MAX_VALUE,
                 totalProducts = Int.MAX_VALUE,
                 totalInventory = Int.MAX_VALUE,
+                totalCatalog = Int.MAX_VALUE,
                 hasAdvancedReports = true,
                 hasCustomBranding = true,
                 hasPrioritySupport = false
@@ -62,6 +67,7 @@ class PlanLimitsManager @Inject constructor(
                 totalClients = Int.MAX_VALUE,
                 totalProducts = Int.MAX_VALUE,
                 totalInventory = Int.MAX_VALUE,
+                totalCatalog = Int.MAX_VALUE,
                 hasAdvancedReports = true,
                 hasCustomBranding = true,
                 hasPrioritySupport = true
@@ -70,21 +76,16 @@ class PlanLimitsManager @Inject constructor(
     }
 
     /**
-     * Get current usage counts.
+     * Get current usage counts (catalog counts from local cache; events use API in checks).
      */
     fun getUsage(): Flow<PlanUsage> {
-        val currentMonth = YearMonth.now()
-        val monthStart = currentMonth.atDay(1).toString()
-        val monthEnd = currentMonth.plusMonths(1).atDay(1).toString()
-
         return combine(
-            eventRepository.getEventCountForMonth(monthStart, monthEnd),
             clientRepository.getClientCount(),
             productRepository.getActiveProductCount(),
             inventoryRepository.getInventoryItems()
-        ) { eventsThisMonth, totalClients, totalProducts, inventoryList ->
+        ) { totalClients, totalProducts, inventoryList ->
             PlanUsage(
-                eventsThisMonth = eventsThisMonth,
+                eventsThisMonth = 0,
                 totalClients = totalClients,
                 totalProducts = totalProducts,
                 totalInventory = inventoryList.size
@@ -92,26 +93,41 @@ class PlanLimitsManager @Inject constructor(
         }
     }
 
+    private suspend fun countEventsThisMonth(): Int {
+        val currentMonth = YearMonth.now()
+        val monthStart = currentMonth.atDay(1).toString()
+        val monthEnd = currentMonth.plusMonths(1).atDay(1).toString()
+
+        return try {
+            eventRepository.getEventsByDateRangeFromApi(monthStart, monthEnd).size
+        } catch (_: Exception) {
+            val userId = authManager.currentUser.value?.id ?: return 0
+            eventRepository.getEventCountForMonth(userId, monthStart, monthEnd).first()
+        }
+    }
+
     /**
      * Check if a specific action is allowed under the current plan.
      */
     suspend fun canCreateEvent(plan: Plan): LimitCheckResult {
-        val limits = getLimits(plan)
-        val usage = getUsage().first()
+        if (plan != Plan.BASIC) return LimitCheckResult.Allowed
 
-        return if (usage.eventsThisMonth >= limits.eventsPerMonth) {
+        val limits = getLimits(plan)
+        val eventsThisMonth = countEventsThisMonth()
+
+        return if (eventsThisMonth >= limits.eventsPerMonth) {
             LimitCheckResult.LimitReached(
                 feature = "events",
-                current = usage.eventsThisMonth,
+                current = eventsThisMonth,
                 limit = limits.eventsPerMonth,
                 message = "Has alcanzado el límite de ${limits.eventsPerMonth} eventos este mes."
             )
-        } else if (usage.eventsThisMonth >= limits.eventsPerMonth - 1) {
+        } else if (eventsThisMonth >= limits.eventsPerMonth - 1) {
             LimitCheckResult.NearLimit(
                 feature = "events",
-                current = usage.eventsThisMonth,
+                current = eventsThisMonth,
                 limit = limits.eventsPerMonth,
-                remaining = limits.eventsPerMonth - usage.eventsThisMonth
+                remaining = limits.eventsPerMonth - eventsThisMonth
             )
         } else {
             LimitCheckResult.Allowed
@@ -142,8 +158,11 @@ class PlanLimitsManager @Inject constructor(
     }
 
     suspend fun canCreateProduct(plan: Plan): LimitCheckResult {
+        if (plan != Plan.BASIC) return LimitCheckResult.Allowed
+
         val limits = getLimits(plan)
         val usage = getUsage().first()
+        val catalogTotal = usage.totalProducts + usage.totalInventory
 
         return if (usage.totalProducts >= limits.totalProducts) {
             LimitCheckResult.LimitReached(
@@ -151,6 +170,13 @@ class PlanLimitsManager @Inject constructor(
                 current = usage.totalProducts,
                 limit = limits.totalProducts,
                 message = "Has alcanzado el límite de ${limits.totalProducts} productos."
+            )
+        } else if (catalogTotal >= limits.totalCatalog) {
+            LimitCheckResult.LimitReached(
+                feature = "catalog",
+                current = catalogTotal,
+                limit = limits.totalCatalog,
+                message = "Has alcanzado el límite de ${limits.totalCatalog} ítems en catálogo."
             )
         } else if (usage.totalProducts >= limits.totalProducts - 3) {
             LimitCheckResult.NearLimit(
@@ -165,8 +191,11 @@ class PlanLimitsManager @Inject constructor(
     }
 
     suspend fun canCreateInventoryItem(plan: Plan): LimitCheckResult {
+        if (plan != Plan.BASIC) return LimitCheckResult.Allowed
+
         val limits = getLimits(plan)
         val usage = getUsage().first()
+        val catalogTotal = usage.totalProducts + usage.totalInventory
 
         return if (usage.totalInventory >= limits.totalInventory) {
             LimitCheckResult.LimitReached(
@@ -174,6 +203,13 @@ class PlanLimitsManager @Inject constructor(
                 current = usage.totalInventory,
                 limit = limits.totalInventory,
                 message = "Has alcanzado el límite de ${limits.totalInventory} ítems de inventario."
+            )
+        } else if (catalogTotal >= limits.totalCatalog) {
+            LimitCheckResult.LimitReached(
+                feature = "catalog",
+                current = catalogTotal,
+                limit = limits.totalCatalog,
+                message = "Has alcanzado el límite de ${limits.totalCatalog} ítems en catálogo."
             )
         } else if (usage.totalInventory >= limits.totalInventory - 3) {
             LimitCheckResult.NearLimit(
@@ -196,6 +232,7 @@ data class PlanLimits(
     val totalClients: Int,
     val totalProducts: Int,
     val totalInventory: Int,
+    val totalCatalog: Int,
     val hasAdvancedReports: Boolean,
     val hasCustomBranding: Boolean,
     val hasPrioritySupport: Boolean

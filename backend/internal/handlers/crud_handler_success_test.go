@@ -697,6 +697,31 @@ func TestCreateInventoryItem_BasicUser_AtInventoryLimit_Forbidden(t *testing.T) 
 	}
 }
 
+func TestCreateInventoryItem_BasicUser_AtCatalogLimit_Forbidden(t *testing.T) {
+	userID := uuid.New()
+	productRepo := new(MockProductRepo)
+	inventoryRepo := new(MockInventoryRepo)
+	userRepo := new(MockFullUserRepo)
+
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "basic"}, nil)
+	productRepo.On("CountByUserID", mock.Anything, userID).Return(12, nil)
+	inventoryRepo.On("CountByUserID", mock.Anything, userID).Return(8, nil)
+
+	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), productRepo, inventoryRepo, new(MockFullPaymentRepo), userRepo)
+
+	body := `{"ingredient_name":"Flour","current_stock":100,"minimum_stock":10,"unit":"kg","type":"ingredient"}`
+	req := makeReqWithUserID(http.MethodPost, "/api/inventory", body, userID)
+	rr := httptest.NewRecorder()
+	h.CreateInventoryItem(rr, req)
+
+	if rr.Code != http.StatusForbidden {
+		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusForbidden, rr.Body.String())
+	}
+	if !strings.Contains(rr.Body.String(), "plan_limit_exceeded") {
+		t.Fatalf("body = %q, expected to contain 'plan_limit_exceeded'", rr.Body.String())
+	}
+}
+
 // ---------------------------------------------------------------------------
 // ListInventory — type filter
 // ---------------------------------------------------------------------------

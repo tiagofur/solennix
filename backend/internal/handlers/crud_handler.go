@@ -1075,7 +1075,7 @@ func (h *CRUDHandler) notifyAssignedStaff(userID, eventID uuid.UUID) {
 		slog.Error("staff notifs: failed to load organizer", "error", err, "user_id", userID)
 		return
 	}
-	if user.Plan == "basic" {
+	if normalizePlan(user.Plan) == "basic" {
 		return
 	}
 
@@ -2054,10 +2054,27 @@ func (h *CRUDHandler) CreateInventoryItem(w http.ResponseWriter, r *http.Request
 	item.UserID = userID
 
 	if normalizePlan(user.Plan) == "basic" {
-		const limit = 30
+		// Compound limit: inventory ≤ 30 AND products+inventory ≤ 20.
+		const inventoryLimit = 30
+		const catalogLimit = 20
 		const countSQL = `SELECT COUNT(*) FROM inventory WHERE user_id = $1`
-		err := withPlanLimit(r.Context(), h.pool, userID, "inventory", limit, countSQL,
+		err := withPlanLimit(r.Context(), h.pool, userID, "catalog", inventoryLimit, countSQL,
 			func(ctx context.Context, tx pgx.Tx) error {
+				var pCount int
+				if err := tx.QueryRow(ctx,
+					`SELECT COUNT(*) FROM products WHERE user_id = $1`, userID,
+				).Scan(&pCount); err != nil {
+					return err
+				}
+				var invCount int
+				if err := tx.QueryRow(ctx,
+					`SELECT COUNT(*) FROM inventory WHERE user_id = $1`, userID,
+				).Scan(&invCount); err != nil {
+					return err
+				}
+				if pCount+invCount >= catalogLimit {
+					return ErrPlanLimitReached
+				}
 				return tx.QueryRow(ctx,
 					`INSERT INTO inventory (user_id, ingredient_name, current_stock, minimum_stock, unit, unit_cost, type)
 					VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -2069,13 +2086,22 @@ func (h *CRUDHandler) CreateInventoryItem(w http.ResponseWriter, r *http.Request
 		)
 		if err == errPoolNil {
 			// Fallback: pool not available (unit tests with mocks).
-			count, cErr := h.inventoryRepo.CountByUserID(r.Context(), userID)
+			inventoryCount, cErr := h.inventoryRepo.CountByUserID(r.Context(), userID)
 			if cErr != nil {
 				writeError(w, http.StatusInternalServerError, "Failed to verify inventory limits")
 				return
 			}
-			if count >= limit {
-				writePlanLimitError(w, "inventory", count, limit)
+			if inventoryCount >= inventoryLimit {
+				writePlanLimitError(w, "inventory", inventoryCount, inventoryLimit)
+				return
+			}
+			productCount, cErr := h.productRepo.CountByUserID(r.Context(), userID)
+			if cErr != nil {
+				writeError(w, http.StatusInternalServerError, "Failed to verify product limits")
+				return
+			}
+			if productCount+inventoryCount >= catalogLimit {
+				writePlanLimitError(w, "catalog", productCount+inventoryCount, catalogLimit)
 				return
 			}
 			if cErr := h.inventoryRepo.Create(r.Context(), &item); cErr != nil {
@@ -2083,7 +2109,7 @@ func (h *CRUDHandler) CreateInventoryItem(w http.ResponseWriter, r *http.Request
 				return
 			}
 		} else if errors.Is(err, ErrPlanLimitReached) {
-			writePlanLimitError(w, "inventory", limit, limit)
+			writePlanLimitError(w, "catalog", catalogLimit, catalogLimit)
 			return
 		} else if err != nil {
 			writeError(w, http.StatusInternalServerError, "Failed to create inventory item")
