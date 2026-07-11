@@ -8,9 +8,12 @@ import com.creapolis.solennix.core.model.EventProduct
 import com.creapolis.solennix.core.model.EventSupply
 import com.creapolis.solennix.core.model.ProductIngredient
 import com.creapolis.solennix.core.network.Endpoints
+import io.ktor.util.reflect.typeInfo
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+
+private val productIngredientsTypeInfo = typeInfo<List<ProductIngredient>>()
 
 internal suspend fun EventDetailViewModel.loadProductUnitCosts(products: List<EventProduct>) {
     val missing = products
@@ -23,8 +26,11 @@ internal suspend fun EventDetailViewModel.loadProductUnitCosts(products: List<Ev
         missing.map { productId ->
             async {
                 try {
-                    val ingredients: List<ProductIngredient> =
-                        apiService.get(Endpoints.productIngredients(productId))
+                    val ingredients: List<ProductIngredient> = apiService.get(
+                        Endpoints.productIngredients(productId),
+                        emptyMap(),
+                        productIngredientsTypeInfo,
+                    )
                     productId to EventFinancials.productUnitCostFromIngredients(ingredients)
                 } catch (_: Exception) {
                     productId to 0.0
