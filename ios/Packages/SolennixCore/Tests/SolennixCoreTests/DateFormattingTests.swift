@@ -203,4 +203,95 @@ final class DateFormattingTests: XCTestCase {
         let tz = Date.mexicanTimeZone
         XCTAssertEqual(tz.secondsFromGMT(), -21600)
     }
+
+    // MARK: - utcMonthRange (server-month boundary — issue #805)
+
+    // Verifies the shared UTC month-range helper used by PlanLimitsManager and
+    // DashboardViewModel. The range must be inclusive ([first day, last day]),
+    // pinned to UTC, and stable regardless of the device timezone running the
+    // test. Input dates are built via `fromServerDay` (UTC midnight) so the test
+    // is deterministic on every host.
+
+    func testUtcMonthRangeReturnsInclusiveFirstAndLastDay_January31Days() {
+        // Mid-January date → range covers Jan 1 .. Jan 31.
+        let date = Date.fromServerDay("2026-01-15")!
+        let range = Date.utcMonthRange(for: date)
+        XCTAssertEqual(range.start, "2026-01-01")
+        XCTAssertEqual(range.end, "2026-01-31")
+    }
+
+    func testUtcMonthRangeLastDay_December31Days() {
+        let date = Date.fromServerDay("2026-12-01")!
+        let range = Date.utcMonthRange(for: date)
+        XCTAssertEqual(range.start, "2026-12-01")
+        XCTAssertEqual(range.end, "2026-12-31")
+    }
+
+    func testUtcMonthRangeLastDay_FebruaryNonLeapYear() {
+        // 2027 is not a leap year → February has 28 days.
+        let date = Date.fromServerDay("2027-02-10")!
+        let range = Date.utcMonthRange(for: date)
+        XCTAssertEqual(range.start, "2027-02-01")
+        XCTAssertEqual(range.end, "2027-02-28")
+    }
+
+    func testUtcMonthRangeLastDay_FebruaryLeapYear() {
+        // 2024 is a leap year → February has 29 days.
+        let date = Date.fromServerDay("2024-02-10")!
+        let range = Date.utcMonthRange(for: date)
+        XCTAssertEqual(range.start, "2024-02-01")
+        XCTAssertEqual(range.end, "2024-02-29")
+    }
+
+    func testUtcMonthRangeLastDay_April30Days() {
+        let date = Date.fromServerDay("2026-04-15")!
+        let range = Date.utcMonthRange(for: date)
+        XCTAssertEqual(range.start, "2026-04-01")
+        XCTAssertEqual(range.end, "2026-04-30")
+    }
+
+    /// Regression for #805: an instant that is the LAST UTC day of a month must
+    /// map to that month, not roll into the next one. Conversely an instant on
+    /// the FIRST UTC day must not roll back into the previous month. Both inputs
+    /// are UTC-midnight anchors, so the expected range is unambiguous.
+    func testUtcMonthRangeBoundaryDaysStayInSameMonth() {
+        let lastDay = Date.fromServerDay("2026-01-31")!
+        let firstDay = Date.fromServerDay("2026-02-01")!
+
+        let janEdge = Date.utcMonthRange(for: lastDay)
+        XCTAssertEqual(janEdge.start, "2026-01-01")
+        XCTAssertEqual(janEdge.end, "2026-01-31", "Jan 31 must stay in January")
+
+        let febEdge = Date.utcMonthRange(for: firstDay)
+        XCTAssertEqual(febEdge.start, "2026-02-01", "Feb 1 must stay in February")
+        XCTAssertEqual(febEdge.end, "2026-02-28")
+    }
+
+    /// Direct regression for #805: the range is UTC-pinned, so for an instant
+    /// near the UTC midnight that starts a month it must scope that month even
+    /// though a negative-offset `Calendar.current` would read the PREVIOUS day.
+    /// `TimeZone.current` has no setter, so we prove the bug by showing the UTC
+    /// helper disagrees with a hand-built UTC-6 calendar for the same instant.
+    func testUtcMonthRangeScopesUtcMonthNotLocalMonth() {
+        // 2026-07-01 00:30 UTC. In UTC-6 the local wall clock is 2026-06-30 18:30,
+        // so a Calendar.current-based impl would wrongly scope June. The UTC
+        // helper must scope July.
+        let utcInstant = Date.fromServerDay("2026-07-01")!.addingTimeInterval(30 * 60)
+        let utcMinus6 = TimeZone(secondsFromGMT: -6 * 3600)!
+
+        let range = Date.utcMonthRange(for: utcInstant)
+        XCTAssertEqual(range.start, "2026-07-01")
+        XCTAssertEqual(range.end, "2026-07-31",
+            "UTC instant in early July must scope July")
+
+        // Documents the bug: the negative-offset calendar WOULD read June for
+        // this instant — i.e. a `Calendar.current` impl on a UTC-6 device scopes
+        // the wrong month here. The UTC helper must (and does) disagree.
+        var negCal = Calendar(identifier: .gregorian)
+        negCal.timeZone = utcMinus6
+        XCTAssertEqual(negCal.component(.month, from: utcInstant), 6,
+            "sanity: UTC-6 calendar reads June for a July-1 UTC instant — the bug #805 fixed")
+        XCTAssertNotEqual(range.start, "2026-06-01",
+            "the UTC range must not collapse to the UTC-6 local month")
+    }
 }
