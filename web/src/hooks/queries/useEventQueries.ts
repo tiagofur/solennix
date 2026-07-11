@@ -166,17 +166,21 @@ export function useUpdateEventStatus() {
       queryClient.invalidateQueries({ queryKey: queryKeys.events.upcoming(5) });
     },
     onError: (error) => {
-      logError('Error updating event status', error);
-      const completionBlocked = getEventCompletionBlockedError(error);
-      if (completionBlocked) {
-        addToast(
-          t('form.error_balance_pending', {
-            amount: completionBlocked.remaining.toFixed(2),
-          }),
-          'info',
-        );
-      } else {
-        addToast(getErrorMessage(error, t('form.error_status_update')), 'error');
+      try {
+        logError('Error updating event status', error);
+        const completionBlocked = getEventCompletionBlockedError(error);
+        if (completionBlocked) {
+          addToast(
+            t('form.error_balance_pending', {
+              amount: completionBlocked.remaining.toFixed(2),
+            }),
+            'info',
+          );
+        } else {
+          addToast(getErrorMessage(error, t('form.error_status_update')), 'error');
+        }
+      } catch (handlerError) {
+        logError('Error handling status update failure', handlerError);
       }
     },
   });

@@ -1139,6 +1139,47 @@ func TestGetEventExtras_Success(t *testing.T) {
 	}
 }
 
+func TestGetEventFinancials_Success(t *testing.T) {
+	userID := uuid.New()
+	eventID := uuid.New()
+	productID := uuid.New()
+	eventRepo := new(MockFullEventRepo)
+	productRepo := new(MockProductRepo)
+
+	ingType := "ingredient"
+	unitCost := 50.0
+	existing := &models.Event{
+		ID: eventID, UserID: userID, DiscountType: "fixed",
+		TotalAmount: 1000, TaxAmount: 0,
+	}
+	eventRepo.On("GetByID", mock.Anything, eventID, userID).Return(existing, nil)
+	eventRepo.On("GetProducts", mock.Anything, eventID).Return([]models.EventProduct{
+		{ProductID: productID, Quantity: 2, UnitPrice: 500},
+	}, nil)
+	eventRepo.On("GetExtras", mock.Anything, eventID).Return([]models.EventExtra{
+		{Price: 200, Cost: 50, ExcludeUtility: false},
+	}, nil)
+	eventRepo.On("GetSupplies", mock.Anything, eventID).Return([]models.EventSupply{
+		{Quantity: 1, UnitCost: 20},
+	}, nil)
+	productRepo.On("GetIngredientsForProducts", mock.Anything, mock.AnythingOfType("[]uuid.UUID")).Return([]models.ProductIngredient{
+		{ProductID: productID, Type: &ingType, UnitCost: &unitCost, QuantityRequired: 1},
+	}, nil)
+
+	h := newTestHandler(new(MockClientRepo), eventRepo, productRepo, new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))
+
+	req := makeReqWithIDParam(http.MethodGet, "/api/events/"+eventID.String()+"/financials", "", eventID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.GetEventFinancials(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusOK, rr.Body.String())
+	}
+	if !strings.Contains(rr.Body.String(), `"total_cost"`) {
+		t.Fatalf("expected total_cost in body, got %s", rr.Body.String())
+	}
+}
+
 func TestGetEventExtras_RepoError_Returns500(t *testing.T) {
 	userID := uuid.New()
 	eventID := uuid.New()

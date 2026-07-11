@@ -48,6 +48,7 @@ data class EventDetailUiState(
     val event: Event? = null,
     val client: Client? = null,
     val products: List<EventProduct> = emptyList(),
+    val productUnitCosts: Map<String, Double> = emptyMap(),
     val extras: List<EventExtra> = emptyList(),
     val equipment: List<EventEquipment> = emptyList(),
     val supplies: List<EventSupply> = emptyList(),
@@ -78,6 +79,15 @@ class EventDetailViewModel @Inject constructor(
     internal fun tr(@StringRes id: Int, vararg args: Any): String = appContext.getString(id, *args)
 
     internal val eventId: String = checkNotNull(savedStateHandle["eventId"])
+
+    private val _productUnitCosts = MutableStateFlow<Map<String, Double>>(emptyMap())
+
+    internal val productUnitCosts: Map<String, Double>
+        get() = _productUnitCosts.value
+
+    internal fun updateProductUnitCosts(costs: Map<String, Double>) {
+        _productUnitCosts.value = costs
+    }
 
     private val _isLoading = MutableStateFlow(true)
     internal val _errorMessage = MutableStateFlow<String?>(null)
@@ -117,13 +127,15 @@ class EventDetailViewModel @Inject constructor(
         combine(
             _isLoading,
             _errorMessage,
-            ::Pair
+            _productUnitCosts,
+            ::Triple
         )
-    ) { (event, client), (products, extras), (payments, equipment, supplies), photosAndStaff, (isLoading, errorMessage) ->
+    ) { (event, client), (products, extras), (payments, equipment, supplies), photosAndStaff, (isLoading, errorMessage, productUnitCosts) ->
         EventDetailUiState(
             event = event,
             client = client,
             products = products,
+            productUnitCosts = productUnitCosts,
             extras = extras,
             equipment = equipment,
             supplies = supplies,
@@ -150,6 +162,11 @@ class EventDetailViewModel @Inject constructor(
                 if (updated != null && updated != _event.value) {
                     _event.value = updated
                 }
+            }
+        }
+        viewModelScope.launch {
+            eventRepository.getEventProducts(eventId).collect { products ->
+                loadProductUnitCosts(products)
             }
         }
     }

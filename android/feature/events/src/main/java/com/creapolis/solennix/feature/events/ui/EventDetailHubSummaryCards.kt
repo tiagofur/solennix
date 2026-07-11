@@ -35,24 +35,51 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.DiscountType
+import com.creapolis.solennix.core.model.EventFinancials
+import com.creapolis.solennix.core.model.EventExtra
+import com.creapolis.solennix.core.model.EventProduct
+import com.creapolis.solennix.core.model.EventSupply
 import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.feature.events.R
 
 @Composable
 fun FinanceSummaryCard(
     event: com.creapolis.solennix.core.model.Event,
-    supplyCost: Double,
+    products: List<EventProduct>,
+    extras: List<EventExtra>,
+    supplies: List<EventSupply>,
+    productUnitCosts: Map<String, Double>,
     onClick: () -> Unit
 ) {
-    val netSales = event.totalAmount - event.taxAmount
-    val profit = netSales - supplyCost
-    // Margin denominator = adjustedRevenue (excludes pass-through extras that flow
-    // to third parties). For the hub card we use netSales as-is because extras are
-    // not loaded here. Product ingredient costs are not included in supplyCost
-    // (that is passed in from EventDetailScreen which only sums EventSupply rows).
-    // Both limitations are accepted as first-slice scope — full EventFinancials
-    // parity requires products+extras on this card too.
-    val margin = if (netSales > 0) (profit / netSales) * 100 else 0.0
+    val financials = EventFinancials.compute(
+        products = products.map {
+            EventFinancials.ProductRow(
+                quantity = it.quantity,
+                unitPrice = it.unitPrice,
+                lineDiscount = it.discount,
+                unitCost = productUnitCosts[it.productId] ?: 0.0,
+            )
+        },
+        extras = extras.map {
+            EventFinancials.ExtraRow(
+                price = it.price,
+                cost = it.cost,
+                excludeUtility = it.excludeUtility,
+            )
+        },
+        supplies = supplies.map {
+            EventFinancials.SupplyRow(
+                quantity = it.quantity,
+                unitCost = it.unitCost,
+                excludeCost = it.excludeCost,
+            )
+        },
+        globalDiscountType = event.discountType,
+        globalDiscount = event.discount,
+        requiresInvoice = event.requiresInvoice,
+        taxRate = event.taxRate,
+    )
+    val margin = financials.profitMargin
 
     Card(
         modifier = Modifier

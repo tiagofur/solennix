@@ -55,6 +55,7 @@ import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.DiscountType
 import com.creapolis.solennix.core.model.extensions.asCurrency
+import com.creapolis.solennix.feature.events.viewmodel.computeFinancials
 import com.creapolis.solennix.core.model.extensions.toPaymentMethodLabel
 import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
@@ -88,15 +89,14 @@ fun EventFinancesScreen(
         }
 
         val netSales = event.totalAmount - event.taxAmount
-        // Honor excludeCost: supplies marked as reused/excluded must not count as
-        // cost (mirrors iOS EventFinancials.suppliesCost filter). Product ingredient
-        // costs are not loaded on this screen — that gap is documented; at minimum
-        // excludeCost is honoured here.
-        val supplyCost = uiState.supplies
-            .filter { !it.excludeCost }
-            .sumOf { it.quantity * it.unitCost }
-        val profit = netSales - supplyCost
-        val margin = if (netSales > 0) (profit / netSales) * 100 else 0.0
+        val financials = viewModel.computeFinancials(
+            event = event,
+            products = uiState.products,
+            extras = uiState.extras,
+            supplies = uiState.supplies,
+        )
+        val profit = financials.netProfit
+        val margin = financials.profitMargin
         val totalPaid = uiState.totalPaid
         val remaining = (event.totalAmount - totalPaid).coerceAtLeast(0.0)
         val progress = if (event.totalAmount > 0) (totalPaid / event.totalAmount).coerceIn(0.0, 1.0) else 0.0
@@ -165,7 +165,7 @@ fun EventFinancesScreen(
                         color = SolennixTheme.colors.secondaryText.copy(alpha = 0.2f)
                     )
 
-                    FinancialMetricRow(stringResource(R.string.events_detail_finances_costs), supplyCost.asCurrency(event.currencyCode), SolennixTheme.colors.error)
+                    FinancialMetricRow(stringResource(R.string.events_detail_finances_costs), financials.totalCost.asCurrency(event.currencyCode), SolennixTheme.colors.error)
                     FinancialMetricRow(stringResource(R.string.events_detail_finances_net_profit), profit.asCurrency(event.currencyCode), SolennixTheme.colors.success, true)
                     FinancialMetricRow(stringResource(R.string.events_detail_finances_margin), stringResource(R.string.events_detail_percent_value, margin.toInt()), SolennixTheme.colors.info, true)
 

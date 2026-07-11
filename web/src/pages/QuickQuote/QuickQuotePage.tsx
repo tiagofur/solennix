@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import { productService } from "@/services/productService";
 import { logError } from "@/lib/errorHandler";
+import { computeEventFinancials, productUnitCostFromIngredients } from "@/lib/EventFinancials";
 import { EventProducts } from "@/pages/Events/components/EventProducts";
 import { EventExtras } from "@/pages/Events/components/EventExtras";
 import { downloadQuickQuotePDF } from "@/services/pdfService";
@@ -105,13 +106,7 @@ export const QuickQuotePage: React.FC = () => {
         const costs = await Promise.all(
           missing.map(async (productId) => {
             const ingredients = await productService.getIngredients(productId);
-            const cost =
-              ingredients
-                ?.filter((ing: any) => ing.type === "ingredient")
-                .reduce((sum: number, ing: any) => {
-                  const unitCost = ing.unit_cost ?? 0;
-                  return sum + ing.quantity_required * unitCost;
-                }, 0) || 0;
+            const cost = productUnitCostFromIngredients(ingredients ?? []);
             return { productId, cost };
           }),
         );
@@ -131,65 +126,36 @@ export const QuickQuotePage: React.FC = () => {
     fetchMissingCosts();
   }, [selectedProducts, productUnitCosts]);
 
-  // Financial calculations (same logic as EventForm)
   const financials = useMemo(() => {
-    const productsSubtotal = selectedProducts.reduce(
-      (sum, item) => sum + (item.price - (item.discount || 0)) * item.quantity,
-      0,
-    );
-
-    const normalExtrasTotal = extras
-      .filter((e) => !e.exclude_utility)
-      .reduce((sum, item) => sum + item.price, 0);
-
-    const passThroughExtrasTotal = extras
-      .filter((e) => e.exclude_utility)
-      .reduce((sum, item) => sum + item.price, 0);
-
-    const extrasTotal = extras.reduce((sum, item) => sum + item.price, 0);
-
-    const discountableBase = productsSubtotal + normalExtrasTotal;
-    const discountAmount =
-      discountType === "percent"
-        ? Math.round(discountableBase * (discountValue / 100) * 100) / 100
-        : Math.min(discountValue, discountableBase);
-    const discountedBase =
-      Math.round((discountableBase - discountAmount) * 100) / 100;
-
-    const baseTotal =
-      Math.round((discountedBase + passThroughExtrasTotal) * 100) / 100;
-    const taxAmount = requiresInvoice
-      ? Math.round(baseTotal * (taxRate / 100) * 100) / 100
-      : 0;
-    const total = Math.round((baseTotal + taxAmount) * 100) / 100;
-
-    // Costs
-    const productCost = selectedProducts.reduce(
-      (sum, p) => sum + (productUnitCosts[p.product_id] || 0) * p.quantity,
-      0,
-    );
-    const extrasCost = extras.reduce((sum, e) => sum + e.cost, 0);
-    const totalCost = productCost + extrasCost;
-
-    const revenue = total - (requiresInvoice ? taxAmount : 0);
-    const profit = revenue - totalCost;
-    const passThroughRevenue = extras
-      .filter((e) => e.exclude_utility)
-      .reduce((sum, e) => sum + e.price, 0);
-    const adjustedRevenue = revenue - passThroughRevenue;
-    const margin = adjustedRevenue > 0 ? (profit / adjustedRevenue) * 100 : 0;
+    const result = computeEventFinancials({
+      products: selectedProducts.map((p) => ({
+        quantity: p.quantity,
+        unitPrice: p.price,
+        lineDiscount: p.discount || 0,
+        unitCost: productUnitCosts[p.product_id] || 0,
+      })),
+      extras: extras.map((e) => ({
+        price: e.price,
+        cost: e.cost,
+        excludeUtility: e.exclude_utility ?? false,
+      })),
+      globalDiscountType: discountType,
+      globalDiscount: discountValue,
+      requiresInvoice,
+      taxRate,
+    });
 
     return {
-      productsSubtotal,
-      extrasTotal,
-      discountAmount,
-      taxAmount,
-      total,
-      productCost,
-      extrasCost,
-      totalCost,
-      profit,
-      margin,
+      productsSubtotal: result.productsSubtotal,
+      extrasTotal: extras.reduce((sum, item) => sum + item.price, 0),
+      discountAmount: result.discountAmount,
+      taxAmount: result.taxAmount,
+      total: result.total,
+      productCost: result.productCost,
+      extrasCost: result.extrasCost,
+      totalCost: result.totalCost,
+      profit: result.netProfit,
+      margin: result.profitMargin,
     };
   }, [
     selectedProducts,
