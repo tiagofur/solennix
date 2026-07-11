@@ -56,11 +56,12 @@ func TestWriteJSON_EncodingError(t *testing.T) {
 func TestDecodeJSON(t *testing.T) {
 	t.Run("GivenValidJSON_WhenDecode_ThenPopulateStruct", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"name":"john"}`))
+		rr := httptest.NewRecorder()
 		var dst struct {
 			Name string `json:"name"`
 		}
 
-		if err := decodeJSON(req, &dst); err != nil {
+		if err := decodeJSON(rr, req, &dst); err != nil {
 			t.Fatalf("decodeJSON() error = %v", err)
 		}
 		if dst.Name != "john" {
@@ -70,21 +71,29 @@ func TestDecodeJSON(t *testing.T) {
 
 	t.Run("GivenInvalidJSON_WhenDecode_ThenReturnError", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"name":}`))
+		rr := httptest.NewRecorder()
 		var dst map[string]string
 
-		if err := decodeJSON(req, &dst); err == nil {
+		if err := decodeJSON(rr, req, &dst); err == nil {
 			t.Fatalf("decodeJSON() expected error for invalid JSON")
 		}
 	})
 
-	t.Run("GivenOversizedBody_WhenDecode_ThenReturnError", func(t *testing.T) {
-		// Create a body that exceeds the 1MB limit.
-		bigBody := strings.Repeat("a", 1<<20+1)
+	t.Run("GivenOversizedBody_WhenDecode_ThenReturn413", func(t *testing.T) {
+		bigBody := `{"payload":"` + strings.Repeat("x", 1<<20+1) + `"}`
 		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(bigBody))
+		rr := httptest.NewRecorder()
 		var dst map[string]string
 
-		if err := decodeJSON(req, &dst); err == nil {
+		err := decodeJSON(rr, req, &dst)
+		if err == nil {
 			t.Fatalf("decodeJSON() expected error for oversized body")
+		}
+		if !isRequestBodyTooLarge(err) {
+			t.Fatalf("decodeJSON() error = %v, want *http.MaxBytesError", err)
+		}
+		if rr.Code != http.StatusRequestEntityTooLarge {
+			t.Fatalf("status = %d, want %d", rr.Code, http.StatusRequestEntityTooLarge)
 		}
 	})
 }

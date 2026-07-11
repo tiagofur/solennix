@@ -146,7 +146,10 @@ func (h *StaffHandler) CreateStaff(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var s models.Staff
-	if err := decodeJSON(r, &s); err != nil {
+	if err := decodeJSON(w, r, &s); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -227,7 +230,10 @@ func (h *StaffHandler) UpdateStaff(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var s models.Staff
-	if err := decodeJSON(r, &s); err != nil {
+	if err := decodeJSON(w, r, &s); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -330,7 +336,10 @@ func (h *StaffHandler) InviteStaffUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req := staffInviteRequest{TargetRole: "team_member"}
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -477,7 +486,10 @@ func (h *StaffHandler) RespondAssignment(w http.ResponseWriter, r *http.Request)
 	}
 
 	var req assignmentResponseRequest
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -563,7 +575,10 @@ func (h *StaffHandler) MarkMyTimelineRead(w http.ResponseWriter, r *http.Request
 	}
 
 	var req markTimelineReadRequest
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}

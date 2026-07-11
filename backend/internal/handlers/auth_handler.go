@@ -319,7 +319,10 @@ func (h *AuthHandler) sendEmailVerification(user *models.User, token string) {
 // Register handles POST /api/auth/register
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeAuthI18nError(w, r, http.StatusBadRequest, "auth.invalid_request_body")
 		return
 	}
@@ -414,7 +417,10 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 // Login handles POST /api/auth/login
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req loginRequest
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeAuthI18nError(w, r, http.StatusBadRequest, "auth.invalid_request_body")
 		return
 	}
@@ -542,7 +548,10 @@ func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 // ResendEmailVerification handles POST /api/auth/verify-email/resend
 func (h *AuthHandler) ResendEmailVerification(w http.ResponseWriter, r *http.Request) {
 	var req resendVerificationRequest
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeAuthI18nError(w, r, http.StatusBadRequest, "auth.invalid_request_body")
 		return
 	}
@@ -618,7 +627,10 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		RefreshToken string `json:"refresh_token"`
 	}
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeAuthI18nError(w, r, http.StatusBadRequest, "auth.invalid_request_body")
 		return
 	}
@@ -776,7 +788,10 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 // ForgotPassword handles POST /api/auth/forgot-password
 func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	var req forgotPasswordRequest
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeAuthI18nError(w, r, http.StatusBadRequest, "auth.invalid_request_body")
 		return
 	}
@@ -824,7 +839,10 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 // It creates a collaborator user account from a pending staff invite token.
 func (h *AuthHandler) AcceptTeamInvite(w http.ResponseWriter, r *http.Request) {
 	var req acceptTeamInviteRequest
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeAuthI18nError(w, r, http.StatusBadRequest, "auth.invalid_request_body")
 		return
 	}
@@ -900,7 +918,10 @@ type resetPasswordRequest struct {
 // ResetPassword handles POST /api/auth/reset-password
 func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	var req resetPasswordRequest
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeAuthI18nError(w, r, http.StatusBadRequest, "auth.invalid_request_body")
 		return
 	}
@@ -981,7 +1002,10 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		CurrentPassword string `json:"current_password"`
 		NewPassword     string `json:"new_password"`
 	}
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeAuthI18nError(w, r, http.StatusBadRequest, "auth.invalid_request_body")
 		return
 	}
@@ -1064,7 +1088,10 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		DefaultCurrency         *string `json:"default_currency"`
 	}
 
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeAuthI18nError(w, r, http.StatusBadRequest, "auth.invalid_request_body")
 		return
 	}
@@ -1152,7 +1179,10 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 		IDToken  string  `json:"id_token"`
 		FullName *string `json:"full_name,omitempty"`
 	}
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeAuthI18nError(w, r, http.StatusBadRequest, "auth.invalid_request_body")
 		return
 	}
@@ -1543,7 +1573,10 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 		FullName          *string `json:"full_name,omitempty"`
 		Email             *string `json:"email,omitempty"`
 	}
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}

@@ -91,7 +91,12 @@ func (h *SubscriptionHandler) CreateCheckoutSession(w http.ResponseWriter, r *ht
 	// Body is optional — older clients POST with no body, new clients send
 	// `{"plan": "business"}` to upgrade to Business tier.
 	var req checkoutSessionRequest
-	_ = decodeJSON(r, &req)
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
+		// Body is optional — older clients POST with no body.
+	}
 
 	priceID := h.cfg.StripeProPriceID
 	plan := "pro"

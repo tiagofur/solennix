@@ -156,7 +156,10 @@ func (h *AdminHandler) UpgradeUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req upgradeRequest
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		req.Plan = "pro" // Default to 'pro' if no body
 	}
 	if req.Plan == "" {
@@ -243,7 +246,10 @@ func (h *AdminHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req blockUserRequest
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
