@@ -7,6 +7,57 @@
     "•" : {
 
     },
+    "app.offline.banner" : {
+      "extractionState" : "translated",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No connection — showing saved data"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin conexión - Mostrando datos guardados"
+          }
+        }
+      }
+    },
+    "auth.unlock.button" : {
+      "extractionState" : "translated",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlock"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desbloquear"
+          }
+        }
+      }
+    },
+    "auth.unlock.error" : {
+      "extractionState" : "translated",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We couldn't verify your identity"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo verificar tu identidad"
+          }
+        }
+      }
+    },
     "auth.unlock.prompt" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1105,17 +1156,96 @@
         }
       }
     },
-    "No se pudo verificar tu identidad" : {
-
-    },
-    "Sin conexion - Mostrando datos guardados" : {
-
-    },
     "Solennix" : {
 
     },
     "SOLENNIX" : {
 
+    },
+    "upgrade.banner.cta" : {
+      "extractionState" : "translated",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "See plans"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ver planes"
+          }
+        }
+      }
+    },
+    "upgrade.banner.limit_desc" : {
+      "extractionState" : "translated",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You've used %1$@ of %2$@. Upgrade your plan to continue."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Has usado %1$@ de %2$@. Actualiza tu plan para continuar."
+          }
+        }
+      }
+    },
+    "upgrade.banner.limit_title" : {
+      "extractionState" : "translated",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limit reached"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limite alcanzado"
+          }
+        }
+      }
+    },
+    "upgrade.banner.upsell_desc" : {
+      "extractionState" : "translated",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get unlimited events, more clients, and all features."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obten eventos ilimitados, mas clientes y todas las funcionalidades."
+          }
+        }
+      }
+    },
+    "upgrade.banner.upsell_title" : {
+      "extractionState" : "translated",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlock more with Pro"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desbloquea mas con Pro"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

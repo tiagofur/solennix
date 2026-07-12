@@ -587,10 +587,10 @@ public final class AuthManager {
     /// - Returns: `true` if authentication succeeded.
     public func authenticateWithBiometrics() async throws -> Bool {
         let context = LAContext()
-        context.localizedReason = "Desbloquear Solennix"
+        context.localizedReason = NetL10n.text("auth.biometric.unlock_reason", "Unlock Solennix")
         let success = try await context.evaluatePolicy(
             .deviceOwnerAuthenticationWithBiometrics,
-            localizedReason: "Inicia sesion con Face ID o Touch ID"
+            localizedReason: NetL10n.text("auth.biometric.reason", "Sign in with Face ID or Touch ID")
         )
         if success {
             biometricPassed = true

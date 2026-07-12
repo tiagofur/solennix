@@ -630,6 +630,7 @@ private final class MockWidgetSyncing: WidgetSyncing {
         onKPIs?()
     }
     func syncUserPlan(_ planRawValue: String?) {}
+    func syncCurrencyCode(_ currencyCode: String?) {}
     func setAuthState(_ state: WidgetAuthState) {}
     func clearWidgetData() {}
     func reloadEventWidgets() {}
