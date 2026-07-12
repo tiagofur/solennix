@@ -267,6 +267,7 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.lifecycle.runtime.compose)
+    implementation(libs.lifecycle.process)
     implementation(libs.navigation.compose)
     implementation(libs.appcompat)
     implementation(libs.core.splashscreen)
@@ -283,11 +284,17 @@ dependencies {
     implementation(libs.hilt.work)
     ksp(libs.hilt.work.compiler)
 
+    // Glance — WidgetSyncCoordinator drives GlanceAppWidgetManager.updateAll() from the app
+    // process (sync/dashboard/auth/foreground hooks). Mirrors iOS WidgetSyncCoordinator.
+    implementation(libs.glance.appwidget)
+
     implementation(libs.profileinstaller)
     baselineProfile(project(":baselineprofile"))
 
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
 
 // Fail fast on release builds if required secrets are missing.

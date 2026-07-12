@@ -51,6 +51,7 @@ class DashboardViewModelTest {
     private val productRepository = mockk<ProductRepository>(relaxed = true)
     private val dashboardRepository = mockk<DashboardRepository>(relaxed = true)
     private val authManager = mockk<AuthManager>(relaxed = true)
+    private val widgetSyncTrigger = mockk<com.creapolis.solennix.core.data.widget.WidgetSyncTrigger>(relaxed = true)
     private val appContext = mockk<Context>(relaxed = true)
 
     private val dispatcher = StandardTestDispatcher()
@@ -171,7 +172,8 @@ class DashboardViewModelTest {
             paymentRepository,
             productRepository,
             dashboardRepository,
-            authManager
+            authManager,
+            widgetSyncTrigger
         )
         val collectJob = backgroundScope.launch { viewModel.uiState.collect {} }
 
@@ -240,7 +242,8 @@ class DashboardViewModelTest {
             paymentRepository,
             productRepository,
             dashboardRepository,
-            authManager
+            authManager,
+            widgetSyncTrigger
         )
         val collectJob = backgroundScope.launch { viewModel.uiState.collect {} }
 
@@ -308,7 +311,8 @@ class DashboardViewModelTest {
             paymentRepository,
             productRepository,
             dashboardRepository,
-            authManager
+            authManager,
+            widgetSyncTrigger
         )
         val collectJob = backgroundScope.launch { viewModel.uiState.collect {} }
 
@@ -368,7 +372,8 @@ class DashboardViewModelTest {
             paymentRepository,
             productRepository,
             dashboardRepository,
-            authManager
+            authManager,
+            widgetSyncTrigger
         )
         val collectJob = backgroundScope.launch { viewModel.uiState.collect {} }
 
@@ -408,7 +413,8 @@ class DashboardViewModelTest {
             paymentRepository,
             productRepository,
             dashboardRepository,
-            authManager
+            authManager,
+            widgetSyncTrigger
         )
         val collectJob = backgroundScope.launch { viewModel.uiState.collect {} }
 

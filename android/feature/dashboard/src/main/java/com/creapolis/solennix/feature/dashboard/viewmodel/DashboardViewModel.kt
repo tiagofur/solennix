@@ -110,7 +110,8 @@ class DashboardViewModel @Inject constructor(
     internal val paymentRepository: PaymentRepository,
     internal val productRepository: ProductRepository,
     internal val dashboardRepository: DashboardRepository,
-    internal val authManager: AuthManager
+    internal val authManager: AuthManager,
+    internal val widgetSyncTrigger: com.creapolis.solennix.core.data.widget.WidgetSyncTrigger
 ) : ViewModel() {
 
     internal fun tr(id: Int, vararg args: Any): String = appContext.getString(id, *args)

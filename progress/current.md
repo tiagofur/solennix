@@ -1,29 +1,40 @@
 # Sesión Activa — Solennix Agent Progress
 
 ## Feature en curso
-- **Issue:** #806 — fix(ios): PlanLimitsManager swallows errors in checkLimits()
+- **Issue:** #831 — fix(android): No widget sync coordinator — widgets stale after app mutations
 - **Estado:** done (pendiente PR)
-- **Branch:** `fix/ios-plan-limits-swallowed-errors`
+- **Branch:** `fix/android-widget-sync-coordinator-831`
 
 ## Root cause
-`PlanLimitsManager.checkLimits()` usaba `(try? await ...) ?? []` para cada endpoint. En fallo de red, todos los counts se seteaban a **0** → `canCreate*` retornaba `true** → el gate free-plan se **abría silenciosamente** (false allowance). El usuario entraba al form sin el guard proactivo y recién al submitir recibía el 403 del server. Además, el `do` no tenía `catch` → cero observabilidad.
+No existía `WidgetSyncCoordinator` en Android. Los widgets Glance leen Room directamente en `provideGlance`, pero solo se refrescan por el `APPWIDGET_UPDATE` broadcast del OS. Tras sync, mutaciones locales (pago, status de evento), login o foreground, los widgets quedaban stale hasta el refresh del sistema.
 
 ## Cambios
-- [x] `PlanLimitsManager.swift`: agrega `Logger(subsystem: SolennixLog.subsystem, category: "PlanLimitsManager")` (mismo patrón que `DashboardViewModel`). Reescribe el fetch con `async let` + `do/catch` por endpoint: en éxito actualiza el count, en fallo `logger.error(...)` y **conserva** el último valor. `defer { isLoading = false }` garantiza el reset. Rebasado sobre #805 (ya mergeado): usa `Date.utcMonthRange()` para el rango de mes.
-- [x] Tests `PlanLimitsManagerTests.swift` (nuevo): 4 casos — preserva counts en error total (regresión #806), actualiza en éxito consecutivo, fallo parcial (events falla + clients ok), no-op sin user.
+- **Arquitectura:** `WidgetSyncTrigger` (interface en `:core:data`) + `WidgetSyncCoordinator` (impl en `:app`, `@Singleton`) + `WidgetUpdater`/`GlanceWidgetUpdater` (abstracción sobre `GlanceAppWidget.updateAll`). La interfaz vive en core:data para ser visible a todos los feature modules; la implementación vive en `:app` donde está la dependencia Glance.
+- **Hooks (paridad iOS WidgetSyncCoordinator):**
+  - `SyncWorker.doWork()` post-sync exitosa
+  - `DashboardViewModelActions`: `registerPayment`, `updateEventStatus`
+  - `EventDetailViewModel`: `updateEventStatus`, `deleteEvent`, `addPayment`, `deletePayment`
+  - `EventListViewModel`: `updateEventStatus`, `confirmDeleteEvent`
+  - `EventFormViewModel`: save (create/update)
+  - `SettingsViewModel.logout()` tras `clearAll()` (unconditional)
+  - `SolennixApp`: `ProcessLifecycleOwner` ON_START (foreground) + observer de `authState` → Authenticated (cubre las 4 rutas de login + restore en cold launch)
+- **Auth gate:** `refreshAll()` es no-op cuando signed out (nunca refresca widgets que mostrarían rows de otro tenant). `refreshAllUnconditional()` para logout (post-purge, re-renderiza estado signed-out).
+- **Best-effort:** try/catch + Log.w en el coordinator; errores de Glance nunca propagan (paridad iOS REQ-WDS-06).
+- **DI:** `WidgetModule` con `@Binds` (WidgetSyncTrigger→Coordinator, WidgetUpdater→GlanceWidgetUpdater) + `@Provides CoroutineDispatcher`.
+- **Tests:** `WidgetSyncCoordinatorTest` (5 casos): no-op signed out, refresh cuando authenticated, unconditional siempre, swallow failure en ambos paths. Tests existentes actualizados (Dashboard, Settings, EventDetail, EventForm) con el nuevo constructor param.
 
 ## Verificación
-- `SolennixFeatures` (xcodebuild test): suite completa en verde (+4 nuevos)
-- `Solennix` (xcodebuild test): 469/469 (1 skipped preexistente)
-- `./init.sh`: verde
-- Build esquema `Solennix`: OK
+- `:app:testDebugUnitTest`: verde (+5 nuevos WidgetSyncCoordinatorTest)
+- `:feature:{dashboard,events,settings,auth}:testDebugUnitTest`: verde
+- `assembleDebug`: APK generado OK
+- `./init.sh`: verde (entorno completo)
 
 ## Notas
-- Gate on error: **preservar último valor + log** (decidido). No fail-closed: bloquear al usuario offline contradice la naturaleza offline-capable de la app (OfflineMutationQueue).
-- UI feedback: **solo logging** (decidido). `PlanLimitsManager` es `@Environment` compartido, no un per-screen VM; los list Views ya muestran su propio error de `load*` que típicamente falla a la vez.
-- `async let` no se puede capturar en closures → el helper `updateCount`/`assignCount` no funcionaba. Resuelto con `do/catch` inline por cada `await`.
-- Paridad cross-platform NO necesaria: bug de manejo de errores del manager de plan de iOS.
-- Resuelto conflicto de merge con #805 (PR #929, ya mergeado): ambas tocaban `checkLimits()` en áreas ortogonales (TZ del rango de mes vs. manejo de errores del fetch).
+- A diferencia de iOS (que deriva payloads y escribe App Group), Android solo necesita disparar `updateAll()` porque los widgets leen Room directamente. El coordinator es más simple.
+- El hook del dashboard NO es sobre `getSummary()` — los widgets no leen KPIs del summary del backend, solo Room (eventDao/paymentDao). El summary actualiza `_kpis` en memoria del VM, irrelevante para widgets. Los hooks correctos son sobre mutaciones que escriben Room.
+- Login cubierto con un solo observer de `authState` en `SolennixApp` en vez de instrumentar las 4 rutas de AuthViewModel (paridad con iOS `onChange(of: authManager.authState)`).
+- `CoroutineDispatcher` inyectado en el coordinator para testabilidad (StandardTestDispatcher en tests).
+- Paridad cross-platform: iOS ya tiene `WidgetSyncCoordinator` (PRs #921/#927/#928). Este issue es de paridad Android-only.
 
 ## Bloqueos
 - Ninguno.
