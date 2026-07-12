@@ -6,7 +6,7 @@ import { AuthContext } from './AuthContextInstance';
 import { useAuth } from '@/hooks/useAuth';
 import i18n from '@/i18n/config';
 import { queryClient } from '@/lib/queryClient';
-import { setDefaultCurrency } from '@/lib/finance';
+import { setDefaultCurrency, setDefaultLocale, localeFromLanguage } from '@/lib/finance';
 
 // eslint-disable-next-line react-refresh/only-export-components
 export { AuthContext, useAuth };
@@ -65,6 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (user?.preferred_language && i18n.language !== user.preferred_language) {
       i18n.changeLanguage(user.preferred_language);
     }
+    setDefaultLocale(localeFromLanguage(i18n.language));
   }, [user?.preferred_language]);
 
   useEffect(() => {

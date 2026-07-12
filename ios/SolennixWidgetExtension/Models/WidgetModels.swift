@@ -48,13 +48,13 @@ struct WidgetEvent: Codable, Identifiable, Hashable {
 
     var formattedDate: String {
         if isToday {
-            return "Hoy"
+            return String(localized: "widget.event.today")
         } else if isTomorrow {
-            return "Manana"
+            return String(localized: "widget.event.tomorrow")
         } else {
             let formatter = DateFormatter()
-            formatter.dateFormat = "d MMM"
-            formatter.locale = Locale(identifier: "es_MX")
+            formatter.setLocalizedDateFormatFromTemplate("dMMM")
+            formatter.locale = Locale.current
             return formatter.string(from: eventDate)
         }
     }
@@ -122,7 +122,7 @@ struct WidgetKPIs: Codable {
     var formattedRevenue: String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
-        formatter.currencyCode = "MXN"
+        formatter.currencyCode = WidgetCurrency.current
         formatter.maximumFractionDigits = 0
         return formatter.string(from: NSNumber(value: monthlyRevenue)) ?? "$0"
     }
@@ -130,7 +130,7 @@ struct WidgetKPIs: Codable {
     var formattedPendingPayments: String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
-        formatter.currencyCode = "MXN"
+        formatter.currencyCode = WidgetCurrency.current
         formatter.maximumFractionDigits = 0
         return formatter.string(from: NSNumber(value: pendingPayments)) ?? "$0"
     }

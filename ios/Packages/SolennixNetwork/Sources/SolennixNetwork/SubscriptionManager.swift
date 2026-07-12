@@ -24,17 +24,17 @@ public enum SubscriptionError: LocalizedError, Sendable {
     public var errorDescription: String? {
         switch self {
         case .productsNotFound:
-            return "No se pudieron cargar los productos. Intenta de nuevo mas tarde."
+            return NetL10n.text("subscription.error.products_not_found", "Couldn't load the products. Try again later.")
         case .purchaseFailed(let message):
-            return "Error al procesar la compra: \(message)"
+            return NetL10n.format("subscription.error.purchase_failed_fmt", "Error processing the purchase: %@", message)
         case .verificationFailed:
-            return "No se pudo verificar la transaccion. Contacta soporte si el problema persiste."
+            return NetL10n.text("subscription.error.verification_failed", "Couldn't verify the transaction. Contact support if the problem persists.")
         case .userCancelled:
-            return "La compra fue cancelada."
+            return NetL10n.text("subscription.error.user_cancelled", "The purchase was cancelled.")
         case .pending:
-            return "La compra esta pendiente de aprobacion."
+            return NetL10n.text("subscription.error.pending", "The purchase is pending approval.")
         case .unknown:
-            return "Ocurrio un error desconocido con la suscripcion."
+            return NetL10n.text("subscription.error.unknown", "An unknown error occurred with the subscription.")
         }
     }
 }
@@ -126,7 +126,7 @@ public final class SubscriptionManager {
         let normalizedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalizedKey.isEmpty else {
             isConfigured = false
-            errorMessage = "Suscripciones no disponibles: falta la configuración de RevenueCat."
+            errorMessage = NetL10n.text("subscription.error.not_configured", "Subscriptions unavailable: RevenueCat configuration is missing.")
             return
         }
 
@@ -217,7 +217,7 @@ public final class SubscriptionManager {
                 }
             } catch {
                 if attempt == 3 {
-                    errorMessage = "No se pudieron cargar los planes desde RevenueCat."
+                    errorMessage = NetL10n.text("subscription.error.load_offerings", "Couldn't load plans from RevenueCat.")
                 }
             }
             // Brief delay before retry
@@ -240,7 +240,7 @@ public final class SubscriptionManager {
         } catch {
             // StoreKit also failed - this is a real connectivity/config issue
             if currentOffering == nil && storeProducts.isEmpty {
-                errorMessage = "No se pudieron cargar los planes. Verifica tu conexion e intenta de nuevo."
+                errorMessage = NetL10n.text("subscription.error.load_plans", "Couldn't load the plans. Check your connection and try again.")
             }
         }
     }
@@ -253,7 +253,7 @@ public final class SubscriptionManager {
     @MainActor
     public func purchase(_ package: RevenueCat.Package) async throws {
         guard isConfigured else {
-            throw SubscriptionError.purchaseFailed("RevenueCat no esta configurado.")
+            throw SubscriptionError.purchaseFailed(NetL10n.text("subscription.error.not_configured", "Subscriptions unavailable: RevenueCat configuration is missing."))
         }
         isPurchasing = true
         defer { isPurchasing = false }
@@ -343,7 +343,7 @@ public final class SubscriptionManager {
                 try await AppStore.sync()
                 await refreshLocalStoreKitEntitlements()
             } catch {
-                errorMessage = "No se pudieron restaurar las compras. Intenta de nuevo."
+                errorMessage = NetL10n.text("subscription.error.restore_failed", "Couldn't restore purchases. Try again.")
             }
             return
         }
@@ -436,7 +436,7 @@ public final class SubscriptionManager {
         do {
             try await AppStore.showManageSubscriptions(in: windowScene)
         } catch {
-            errorMessage = "No se pudo abrir la administracion de suscripciones."
+            errorMessage = NetL10n.text("subscription.error.manage_failed", "Couldn't open subscription management.")
         }
     }
 

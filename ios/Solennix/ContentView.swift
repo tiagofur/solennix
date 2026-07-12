@@ -81,9 +81,13 @@ struct ContentView: View {
         }
         .onAppear {
             WidgetDataSync.shared.syncUserPlan(authManager.currentUser?.plan.rawValue)
+            WidgetDataSync.shared.syncCurrencyCode(authManager.currentUser?.defaultCurrency)
         }
         .onChange(of: authManager.currentUser?.plan.rawValue) { _, newValue in
             WidgetDataSync.shared.syncUserPlan(newValue)
+        }
+        .onChange(of: authManager.currentUser?.defaultCurrency) { _, newValue in
+            WidgetDataSync.shared.syncCurrencyCode(newValue)
         }
     }
 
@@ -95,7 +99,7 @@ struct ContentView: View {
             Image(systemName: "wifi.slash")
                 .font(.subheadline)
 
-            Text("Sin conexion - Mostrando datos guardados")
+            Text(LocalizedStringKey("app.offline.banner"))
                 .font(.subheadline)
                 .fontWeight(.medium)
         }
@@ -266,12 +270,12 @@ struct BiometricGateView: View {
                 .foregroundStyle(SolennixColors.textSecondary)
 
             if showError {
-                Text("No se pudo verificar tu identidad")
+                Text(LocalizedStringKey("auth.unlock.error"))
                     .font(.footnote)
                     .foregroundStyle(SolennixColors.error)
             }
 
-            Button("Desbloquear") {
+            Button(LocalizedStringKey("auth.unlock.button")) {
                 Task { await authenticate() }
             }
             .buttonStyle(.borderedProminent)
@@ -280,7 +284,7 @@ struct BiometricGateView: View {
             Spacer()
 
             if failureCount >= maxAttempts {
-                Button("Iniciar sesion de nuevo") {
+                Button(LocalizedStringKey("auth.unlock.relogin")) {
                     // Use signOut() so authState transitions to .unauthenticated
                     // and the full session cleanup path in SolennixApp fires.
                     Task { await authManager.signOut() }

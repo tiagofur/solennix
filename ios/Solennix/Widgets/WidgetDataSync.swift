@@ -23,6 +23,10 @@ enum WidgetKey {
     /// extension). Written here so the extension can distinguish signed-out
     /// from empty data.
     static let authState      = "widget_auth_state"
+    /// Currency code signal (mirrors `WidgetDataKey.currencyCode`). Written
+    /// from `User.defaultCurrency` so widgets format amounts in the user's
+    /// currency instead of a hardcoded MXN (#808).
+    static let currencyCode   = "widget_currency_code"
 }
 
 // MARK: - Widget Data Sync
@@ -88,6 +92,20 @@ final class WidgetDataSync {
         appGroup.synchronize()
     }
 
+    // MARK: - Sync Currency Code
+
+    /// Writes the user's preferred currency code (`User.defaultCurrency`) so the
+    /// widget extension formats amounts in the user's currency instead of a
+    /// hardcoded MXN. Pass `nil`/empty to fall back to the widget default.
+    func syncCurrencyCode(_ currencyCode: String?) {
+        if let currencyCode, !currencyCode.isEmpty {
+            appGroup.set(currencyCode, forKey: WidgetKey.currencyCode)
+        } else {
+            appGroup.removeObject(forKey: WidgetKey.currencyCode)
+        }
+        appGroup.synchronize()
+    }
+
     // MARK: - Reload Widgets
 
     func reloadEventWidgets() {
@@ -124,6 +142,7 @@ final class WidgetDataSync {
         appGroup.removeObject(forKey: WidgetKey.userPlan)
         appGroup.removeObject(forKey: WidgetKey.lastUpdated)
         appGroup.removeObject(forKey: WidgetKey.completedEvents)
+        appGroup.removeObject(forKey: WidgetKey.currencyCode)
         // Intentionally NOT removing `authState`: callers write `.signedOut`
         // before clearing data keys so the extension keeps rendering the
         // signed-out state (rather than defaulting back through an absent key).
@@ -223,6 +242,7 @@ protocol WidgetSyncing: AnyObject {
     func syncUpcomingEvents(_ events: [WidgetEventData])
     func syncKPIs(_ kpis: WidgetKPIData)
     func syncUserPlan(_ planRawValue: String?)
+    func syncCurrencyCode(_ currencyCode: String?)
     func setAuthState(_ state: WidgetAuthState)
     func clearWidgetData()
     func reloadEventWidgets()

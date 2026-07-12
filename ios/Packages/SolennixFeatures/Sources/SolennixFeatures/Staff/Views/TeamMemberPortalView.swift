@@ -90,7 +90,7 @@ public struct TeamMemberPortalView: View {
             } description: {
                 Text(errorMessage)
             } actions: {
-                Button("Reintentar") {
+                Button(tr("team_portal.retry", "Reintentar")) {
                     Task { await viewModel.loadAssignments() }
                 }
             }
@@ -234,14 +234,14 @@ public struct TeamMemberPortalView: View {
 
     private var monthLabel: String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "es_MX")
+        formatter.locale = Locale.current
         formatter.dateFormat = "LLLL yyyy"
         return formatter.string(from: displayedMonth).capitalized
     }
 
     private var selectedDateLabel: String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "es_MX")
+        formatter.locale = Locale.current
         formatter.dateFormat = "EEEE d MMMM"
         return formatter.string(from: selectedDate).capitalized
     }
@@ -273,7 +273,7 @@ public struct TeamMemberPortalView: View {
         else { return nil }
 
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "es_MX")
+        formatter.locale = Locale.current
         formatter.dateFormat = "HH:mm"
         return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
     }
@@ -292,7 +292,7 @@ public struct TeamMemberPortalView: View {
     private var weekdaySymbols: [String] {
         let calendar = Calendar.current
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "es_MX")
+        formatter.locale = Locale.current
         let symbols = formatter.shortStandaloneWeekdaySymbols ?? formatter.shortWeekdaySymbols ?? ["L", "M", "M", "J", "V", "S", "D"]
         let shift = max(0, min(symbols.count - 1, calendar.firstWeekday - 1))
         return Array(symbols[shift...]) + Array(symbols[..<shift])
@@ -418,7 +418,7 @@ public struct TeamMemberPortalView: View {
                         resetAvailabilityForm()
                     }
                 } label: {
-                    Text(isEditingAvailability ? tr("common.save_changes", "Guardar cambios") : "Bloquear fechas")
+                    Text(isEditingAvailability ? tr("common.save_changes", "Guardar cambios") : tr("team_portal.block_dates", "Bloquear fechas"))
                         .font(.footnote.weight(.semibold))
                 }
                 .buttonStyle(.borderedProminent)
@@ -818,7 +818,7 @@ public struct TeamMemberPortalView: View {
 
     private func dayHeaderLabel(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "es_MX")
+        formatter.locale = Locale.current
         formatter.dateFormat = "EEE d"
         return formatter.string(from: date).capitalized
     }
@@ -927,19 +927,15 @@ private struct TeamMemberAssignmentCard: View {
 
     private var feeLabel: String? {
         guard let feeAmount = assignment.feeAmount else { return nil }
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "MXN"
-        formatter.maximumFractionDigits = 2
-        return formatter.string(from: NSNumber(value: feeAmount))
+        return feeAmount.formattedCurrency(code: nil)
     }
 
     private var statusLabel: String {
         switch assignment.status {
         case .pending: return tr("team_portal.pending", "Pendiente")
-        case .confirmed: return "Confirmada"
-        case .declined: return "Rechazada"
-        case .cancelled: return "Cancelada"
+        case .confirmed: return tr("team_portal.confirmed", "Confirmada")
+        case .declined: return tr("team_portal.declined", "Rechazada")
+        case .cancelled: return tr("team_portal.cancelled", "Cancelada")
         }
     }
 
@@ -968,13 +964,13 @@ private struct TeamMemberAssignmentCard: View {
             }
 
             if let roleOverride = assignment.roleOverride {
-                Text("Rol: \(roleOverride)")
+                Text(FeatureL10n.format("team_portal.role_fmt", "Rol: %@", roleOverride))
                     .font(.subheadline)
                     .foregroundStyle(SolennixColors.textSecondary)
             }
 
             if let feeLabel {
-                Text("Pago: \(feeLabel)")
+                Text(FeatureL10n.format("team_portal.payment_fmt", "Pago: %@", feeLabel))
                     .font(.subheadline)
                     .foregroundStyle(SolennixColors.primary)
             }
@@ -1088,7 +1084,7 @@ private struct TeamPortalAssignmentDetailSheet: View {
                     detailRow(tr("clients.form.name", "Nombre"), assignment.eventName)
                     detailRow(tr("team_portal.date_label", "Fecha"), assignment.eventDate)
                     if let locationLabel {
-                        detailRow("Ubicacion", locationLabel)
+                        detailRow(tr("team_portal.location_label", "Ubicación"), locationLabel)
                     }
                     if let mapsURL {
                         Link(tr("team_portal.open_maps", "Abrir en mapas"), destination: mapsURL)
@@ -1099,9 +1095,9 @@ private struct TeamPortalAssignmentDetailSheet: View {
                 }
 
                 Section(tr("team_portal.assignment_section", "Asignación")) {
-                    detailRow("Estado", statusLabel)
+                    detailRow(tr("team_portal.status_label", "Estado"), statusLabel)
                     if let role = assignment.roleOverride {
-                        detailRow("Rol", role)
+                        detailRow(tr("team_portal.role_label", "Rol"), role)
                     }
                     if let notes = assignment.notes {
                         detailRow(tr("team_portal.notes_section", "Notas"), notes)
@@ -1136,9 +1132,9 @@ private struct TeamPortalAssignmentDetailSheet: View {
     private var statusLabel: String {
         switch assignment.status {
         case .pending: return tr("team_portal.pending", "Pendiente")
-        case .confirmed: return "Confirmada"
-        case .declined: return "Rechazada"
-        case .cancelled: return "Cancelada"
+        case .confirmed: return tr("team_portal.confirmed", "Confirmada")
+        case .declined: return tr("team_portal.declined", "Rechazada")
+        case .cancelled: return tr("team_portal.cancelled", "Cancelada")
         }
     }
 

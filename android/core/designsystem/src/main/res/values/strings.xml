@@ -49,6 +49,12 @@
     <string name="common_retry">Reintentar</string>
     <string name="common_undo">Deshacer</string>
 
+    <!-- Plan limit gating — parity with iOS EventListView banner (#830).
+         Centralized here so any feature module (events, dashboard) can render
+         the near-limit / limit-reached banner without cross-feature deps. -->
+    <string name="plan_limit_events_near">Te quedan %1$d eventos disponibles este mes.</string>
+    <string name="plan_limit_events_reached">Has alcanzado el límite de %1$d eventos este mes.</string>
+
     <!-- Feature discovery tooltips -->
     <string name="tooltip_new_event_title">Crea tu primer evento</string>
     <string name="tooltip_new_event_body">Organizá bodas, quinceañeras y más desde aquí.</string>

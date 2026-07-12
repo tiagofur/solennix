@@ -5,19 +5,26 @@ import androidx.annotation.StringRes
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.core.model.ApiError
+import com.creapolis.solennix.core.data.plan.LimitCheckResult
+import com.creapolis.solennix.core.data.plan.PlanLimitsManager
 import com.creapolis.solennix.core.data.repository.ClientRepository
 import com.creapolis.solennix.core.data.repository.EventRepository
 import com.creapolis.solennix.core.data.widget.WidgetSyncTrigger
 import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.EventStatus
+import com.creapolis.solennix.core.model.Plan
 import com.creapolis.solennix.core.model.UnavailableDate
 import com.creapolis.solennix.core.model.extensions.asCurrency
 import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
 import com.creapolis.solennix.core.network.ApiService
+import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
 import com.creapolis.solennix.core.network.log.SolennixLogger
 import com.creapolis.solennix.core.network.toApiError
@@ -85,10 +92,29 @@ class EventListViewModel @Inject constructor(
     private val clientRepository: ClientRepository,
     private val apiService: ApiService,
     private val logger: SolennixLogger,
-    private val widgetSyncTrigger: WidgetSyncTrigger
+    private val widgetSyncTrigger: WidgetSyncTrigger,
+    private val planLimitsManager: PlanLimitsManager,
+    private val authManager: AuthManager
 ) : ViewModel() {
 
     private fun tr(@StringRes id: Int, vararg args: Any): String = appContext.getString(id, *args)
+
+    // Plan limit check — drives the near-limit UpgradeBanner (parity with iOS
+    // EventListView and clients/products lists). Hard blocking stays in
+    // EventPlanGateViewModel/CompactBottomNavLayout; this VM only surfaces the
+    // proactive near-limit warning so organizers can upgrade before hitting the wall.
+    var limitCheckResult by mutableStateOf<LimitCheckResult?>(null)
+        private set
+    val isLimitReached: Boolean
+        get() = limitCheckResult is LimitCheckResult.LimitReached
+    val nearLimitMessage: String?
+        get() = (limitCheckResult as? LimitCheckResult.NearLimit)?.let { result ->
+            appContext.getString(DesignSystemR.string.plan_limit_events_near, result.remaining)
+        }
+    val limitReachedMessage: String?
+        get() = (limitCheckResult as? LimitCheckResult.LimitReached)?.let { result ->
+            appContext.getString(DesignSystemR.string.plan_limit_events_reached, result.limit)
+        }
 
     private val _searchQuery = MutableStateFlow("")
     private val _selectedStatus = MutableStateFlow<EventStatus?>(null)
@@ -245,6 +271,14 @@ class EventListViewModel @Inject constructor(
 
     init {
         refresh()
+        checkPlanLimits()
+    }
+
+    private fun checkPlanLimits() {
+        viewModelScope.launch {
+            val plan = authManager.currentUser.value?.plan ?: Plan.BASIC
+            limitCheckResult = planLimitsManager.canCreateEvent(plan)
+        }
     }
 
     fun onSearchQueryChange(query: String) {
@@ -453,6 +487,9 @@ class EventListViewModel @Inject constructor(
             } finally {
                 _isRefreshing.value = false
                 refreshJob = null
+                // Re-evaluate the event limit after a sync so the near-limit
+                // banner reflects events created/deleted since the last check.
+                checkPlanLimits()
             }
         }
     }

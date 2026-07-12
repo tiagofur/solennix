@@ -119,4 +119,42 @@ final class WidgetDataRoundTripTests: XCTestCase {
             XCTAssertEqual(decoded, state)
         }
     }
+
+    // MARK: Currency code sync (#808)
+
+    func testWidgetCurrencyDefaultsToMXNWhenAbsent() {
+        suite.removeObject(forKey: WidgetDataKey.currencyCode)
+        XCTAssertEqual(WidgetCurrency.current, WidgetCurrency.defaultCode)
+        XCTAssertEqual(WidgetCurrency.current, "MXN")
+    }
+
+    func testWidgetCurrencyReadsSyncedCode() {
+        suite.set("USD", forKey: WidgetDataKey.currencyCode)
+        XCTAssertEqual(WidgetCurrency.current, "USD")
+        suite.removeObject(forKey: WidgetDataKey.currencyCode)
+    }
+
+    func testWidgetKPIsFormatWithSyncedCurrency() {
+        suite.set("USD", forKey: WidgetDataKey.currencyCode)
+        defer { suite.removeObject(forKey: WidgetDataKey.currencyCode) }
+
+        let kpis = WidgetKPIs(monthlyRevenue: 5000, eventsThisMonth: 3, eventsThisWeek: 1,
+                               lowStockCount: 0, pendingPayments: 0,
+                               confirmedEvents: 1, quotedEvents: 2)
+
+        // Locale-independent check: build a reference formatter with the same
+        // config as `formattedRevenue` but pinned to the synced code. Both share
+        // the runtime's default locale, so this fails only if the sync is
+        // ignored — it never asserts on the localized symbol (e.g. "$" vs
+        // "USD"), which is CI-locale dependent.
+        let reference = NumberFormatter()
+        reference.numberStyle = .currency
+        reference.currencyCode = "USD"
+        reference.maximumFractionDigits = 0
+        let expected = reference.string(from: NSNumber(value: 5000))
+
+        XCTAssertEqual(WidgetCurrency.current, "USD")
+        XCTAssertEqual(kpis.formattedRevenue, expected,
+                       "formattedRevenue should use the synced currency code")
+    }
 }

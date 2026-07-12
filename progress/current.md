@@ -2,7 +2,7 @@
 
 ## Feature en curso
 - **Issue:** #831 — fix(android): No widget sync coordinator — widgets stale after app mutations
-- **Estado:** done (pendiente PR)
+- **Estado:** done (resolviendo conflictos de merge con main / #830)
 - **Branch:** `fix/android-widget-sync-coordinator-831`
 
 ## Root cause
@@ -22,6 +22,7 @@ No existía `WidgetSyncCoordinator` en Android. Los widgets Glance leen Room dir
 - **Best-effort:** try/catch + Log.w en el coordinator; errores de Glance nunca propagan (paridad iOS REQ-WDS-06).
 - **DI:** `WidgetModule` con `@Binds` (WidgetSyncTrigger→Coordinator, WidgetUpdater→GlanceWidgetUpdater) + `@Provides CoroutineDispatcher`.
 - **Tests:** `WidgetSyncCoordinatorTest` (5 casos): no-op signed out, refresh cuando authenticated, unconditional siempre, swallow failure en ambos paths. Tests existentes actualizados (Dashboard, Settings, EventDetail, EventForm) con el nuevo constructor param.
+- **Merge con main (#830):** conflictos resueltos conservando ambas features — `widgetSyncTrigger` + `planLimitsManager`/`authManager` en `DashboardViewModel` y `EventListViewModel`.
 
 ## Verificación
 - `:app:testDebugUnitTest`: verde (+5 nuevos WidgetSyncCoordinatorTest)

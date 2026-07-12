@@ -2,9 +2,14 @@ package com.creapolis.solennix.feature.dashboard.viewmodel
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.feature.dashboard.R
+import com.creapolis.solennix.core.data.plan.LimitCheckResult
+import com.creapolis.solennix.core.data.plan.PlanLimitsManager
 import com.creapolis.solennix.core.data.repository.ClientRepository
 import com.creapolis.solennix.core.data.repository.DashboardRepository
 import com.creapolis.solennix.core.data.repository.EventRepository
@@ -111,10 +116,21 @@ class DashboardViewModel @Inject constructor(
     internal val productRepository: ProductRepository,
     internal val dashboardRepository: DashboardRepository,
     internal val authManager: AuthManager,
-    internal val widgetSyncTrigger: com.creapolis.solennix.core.data.widget.WidgetSyncTrigger
+    internal val widgetSyncTrigger: com.creapolis.solennix.core.data.widget.WidgetSyncTrigger,
+    internal val planLimitsManager: PlanLimitsManager
 ) : ViewModel() {
 
     internal fun tr(id: Int, vararg args: Any): String = appContext.getString(id, *args)
+
+    // Plan limit check — drives the proactive near-limit banner on the
+    // dashboard (parity with iOS DashboardView planLimitsBanner). The hard
+    // block on "Nuevo evento" is handled centrally by EventPlanGateViewModel.
+    var limitCheckResult by mutableStateOf<LimitCheckResult?>(null)
+        internal set
+    val nearLimitMessage: String?
+        get() = (limitCheckResult as? LimitCheckResult.NearLimit)?.let {
+            appContext.getString(com.creapolis.solennix.core.designsystem.R.string.plan_limit_events_near, it.remaining)
+        }
 
     internal val _isRefreshing = MutableStateFlow(false)
     internal val _updatingEventId = MutableStateFlow<String?>(null)
