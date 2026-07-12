@@ -47,6 +47,38 @@ interface EventDao {
     @Query("DELETE FROM events")
     suspend fun deleteAll()
 
+    /**
+     * Deletes locally-cached SYNCED events whose id is not in [keepIds] — i.e. events that
+     * were deleted on the server and are therefore stale orphans locally.
+     *
+     * PENDING_* rows are explicitly preserved: they represent offline mutations that have
+     * not yet been uploaded, so they will not appear in the API response yet.
+     */
+    @Query("DELETE FROM events WHERE id NOT IN (:keepIds) AND sync_status = 'SYNCED'")
+    suspend fun deleteSyncedOrphans(keepIds: List<String>)
+
+    /** Deletes every SYNCED event — used when a sync response is empty (everything deleted). */
+    @Query("DELETE FROM events WHERE sync_status = 'SYNCED'")
+    suspend fun deleteAllSynced()
+
+    /**
+     * Atomically reconciles the cached events table with a fresh server response: upserts
+     * [events], then deletes SYNCED rows whose id is absent from the batch.
+     *
+     * Wrapped in `@Transaction` so Flow collectors don't briefly emit a stale/partial list
+     * between the upsert and the orphan cleanup. PENDING_* rows are preserved by
+     * [deleteSyncedOrphans] / [deleteAllSynced] (offline mutations not yet uploaded).
+     */
+    @Transaction
+    suspend fun syncEvents(events: List<CachedEvent>) {
+        insertEvents(events)
+        if (events.isEmpty()) {
+            deleteAllSynced()
+        } else {
+            deleteSyncedOrphans(events.map { it.id })
+        }
+    }
+
     @Query("SELECT COUNT(*) FROM events WHERE user_id = :userId AND event_date >= :monthStart AND event_date < :monthEnd")
     fun getEventCountForMonth(userId: String, monthStart: String, monthEnd: String): Flow<Int>
 }

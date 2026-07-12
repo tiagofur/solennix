@@ -26,4 +26,27 @@ interface InventoryDao {
 
     @Query("DELETE FROM inventory")
     suspend fun deleteAll()
+
+    /**
+     * Deletes locally-cached inventory items whose id is not in [keepIds] — i.e. items
+     * deleted on the server. Inventory does not support offline mutations (no sync_status
+     * column), so all rows are eligible for orphan cleanup.
+     */
+    @Query("DELETE FROM inventory WHERE id NOT IN (:keepIds)")
+    suspend fun deleteOrphans(keepIds: List<String>)
+
+    /**
+     * Atomically reconciles the cached inventory table with a fresh server response: upserts
+     * [items], then deletes rows whose id is absent from the batch. Inventory does not
+     * support offline mutations, so all rows are eligible for orphan cleanup.
+     */
+    @Transaction
+    suspend fun syncInventory(items: List<CachedInventoryItem>) {
+        insertInventoryItems(items)
+        if (items.isEmpty()) {
+            deleteAll()
+        } else {
+            deleteOrphans(items.map { it.id })
+        }
+    }
 }

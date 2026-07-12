@@ -45,7 +45,7 @@ class ClientRepositoryTest {
     }
 
     @Test
-    fun `syncClients fetches from network and inserts to dao`() = runTest {
+    fun `syncClients fetches from network and reconciles via dao syncClients`() = runTest {
         val networkClients = listOf(
             createClient(id = "1", name = "Network Client")
         )
@@ -53,7 +53,15 @@ class ClientRepositoryTest {
 
         repository.syncClients()
 
-        coVerify { mockClientDao.insertClients(any()) }
+        // Must call the transactional syncClients (upsert + orphan cleanup), not the bare
+        // insertClients — otherwise deleted-on-server clients persist locally (#832).
+        coVerify {
+            mockClientDao.syncClients(withArg { entities ->
+                assertEquals(1, entities.size)
+                assertEquals("1", entities[0].id)
+            })
+        }
+        coVerify(exactly = 0) { mockClientDao.insertClients(any()) }
     }
 
     @Test

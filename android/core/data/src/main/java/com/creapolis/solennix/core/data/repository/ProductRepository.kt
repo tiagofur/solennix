@@ -66,7 +66,7 @@ class OfflineFirstProductRepository @Inject constructor(
 
     override suspend fun syncProducts() {
         val networkProducts: List<Product> = apiService.get(Endpoints.PRODUCTS)
-        productDao.insertProducts(networkProducts.map { it.asEntity() })
+        productDao.syncProducts(networkProducts.map { it.asEntity() })
     }
 
     override suspend fun createProduct(product: Product): Product {

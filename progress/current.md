@@ -1,36 +1,34 @@
 # Sesión Activa — Solennix Agent Progress
 
 ## Feature en curso
-- **Issue:** #830 — fix(android): No plan gating before navigation to event form
+- **Issue:** #832 — fix(android): Repository sync upsert-only — deleted remote entities persist locally
 - **Estado:** done (pendiente PR)
-- **Branch:** `fix/android-plan-gating-event-form-830`
-- **Worktree:** `/Users/tiagofur/dev/solennix-android`
+- **Branch:** `fix/android-sync-orphan-deletion-832`
 
 ## Root cause
-Android navegaba a `event_form?eventId=` (evento nuevo) desde 6 entrypoints sin checkear `canCreateEvent` antes. Free users a 4 eventos/mes solo recibían el paywall al final del submit dentro del form. iOS sí gateaba en `EventListView`/`DashboardView` con `planLimitsManager.canCreateEvent` + banner. Paridad rota (Judgment Day A-005 CRITICAL).
+Los 4 repositorios (`EventRepository`, `ClientRepository`, `ProductRepository`, `InventoryRepository`) hacían solo upsert (`@Insert(REPLACE)`) durante `sync*()`. Las filas cuyo `id` no aparecía en el response del API nunca se borraban → entidades borradas en web persistían en Room indefinidamente (listas, search index, widgets, plan-limit counts).
 
 ## Cambios
-- [x] `EventPlanGateViewModel.kt` (nuevo, módulo `app`): `@HiltViewModel` centralizado que expone `isLimitReached`/`limitReachedMessage`. `checkLimit()` en init + al reanudar (`LifecycleResumeEffect`).
-- [x] `CompactBottomNavLayout.kt`: helper `tryCreateEvent(route)` que muestra `UpgradePlanDialog` si `isLimitReached` o navega. Aplicado a los 6 entrypoints: FAB global, Dashboard quick-action, Dashboard onboarding, EventsScreen calendario, QuickQuote→Convert, EventDetail→Duplicate.
-- [x] `EventListViewModel.kt`: agregado `PlanLimitsManager`+`AuthManager` al constructor. Propiedades `limitCheckResult`/`isLimitReached`/`nearLimitMessage`/`limitReachedMessage` (clon del patrón `ClientListViewModel`). `checkPlanLimits()` en init + al final de `refresh()`.
-- [x] `EventsScreen.kt`: parámetro `onUpgradeClick`, `UpgradeBanner(WARNING)` near-limit arriba del content.
-- [x] `DashboardViewModel.kt`: agregado `PlanLimitsManager` al constructor, `limitCheckResult`/`nearLimitMessage`. `checkPlanLimits()` en `refresh()` (vía `DashboardViewModelSync.kt`).
-- [x] `DashboardScreen.kt`: `UpgradeBanner(WARNING)` near-limit debajo del promo banner existente.
-- [x] Strings `plan_limit_events_near`/`plan_limit_events_reached` en `core:designsystem` (genéricos, reutilizables cross-feature — dashboard no depende de events).
-
-## Decisiones
-- **Gate centralizado en módulo `app`** (no replicado 6 veces): los entrypoints viven en `CompactBottomNavLayout`, un solo `EventPlanGateViewModel` los cubre.
-- **Banner near-limit además del diálogo**: paridad iOS + clients/products Android. El diálogo bloquea; el banner preveniene.
-- **`EventFormViewModel.checkCreateEvent` existente NO se toca**: queda como defensa en profundidad si el gate falla offline.
-- **Edición (`eventId=$id`) no se gatea**: correcto, solo crear.
-- Strings en `core:designsystem` (no en `feature:events`) porque `DashboardViewModel` referencia el string y dashboard no depende de events.
+- **DAOs (4):** Agregué queries de orphan-cleanup + métodos `@Transaction sync*()` atómicos:
+  - `EventDao.syncEvents()` / `deleteSyncedOrphans(keepIds)` / `deleteAllSynced()` — preserva `PENDING_*` (mutaciones offline).
+  - `ClientDao.syncClients()` / `deleteSyncedOrphans(keepIds)` / `deleteAllSynced()` — preserva `PENDING_*`.
+  - `ProductDao.syncProducts()` / `deleteOrphans(keepIds)` — sin `sync_status` (no offline).
+  - `InventoryDao.syncInventory()` / `deleteOrphans(keepIds)` — sin `sync_status`.
+- **Repositorios (4):** cada `sync*()` ahora delega al método transaccional del DAO en vez del bare `insert*`.
+  - `InventoryRepository.syncInventory(typeParam)`: **full sync** (typeParam null) → orphan cleanup; **partial sync** (typeParam non-null) → upsert-only (preserva items de otros tipos).
+- **Edge case empty response:** si el API devuelve `[]`, se borran todos los SYNCED (no se puede hacer `NOT IN ([])` en SQL).
 
 ## Verificación
-- `:core:designsystem:assembleDebug :feature:events:assembleDebug :feature:dashboard:assembleDebug :app:assembleDebug`: BUILD SUCCESSFUL
-- `:feature:events:testDebugUnitTest`: verde (+4 tests nuevos en `EventListViewModelTest`)
-- `:feature:dashboard:testDebugUnitTest`: verde (+1 test near-limit, 5 constructores actualizados)
-- `:app:testDebugUnitTest`: verde (+4 tests `EventPlanGateViewModelTest`)
-- `./init.sh`: verde (backend Go + web React 1334 tests)
+- `:core:data:testDebugUnitTest`: verde (+6 tests nuevos en Event/Product/Inventory + Client actualizado)
+- `assembleDebug`: APK generado OK
+- `./init.sh`: verde (entorno completo)
+
+## Notas
+- No necesita userId scoping: el API ya devuelve solo las rows del caller (bearer token), así que cualquier row local SYNCED ausente del set es necesariamente un huérfano de este tenant. `NOT IN (:keepIds)` + `sync_status = 'SYNCED'` es suficiente y más seguro.
+- Event/Client preservan `PENDING_INSERT/UPDATE/DELETE` durante orphan-cleanup (offline mutations aún no subidas no aparecen en el response del API).
+- Product/Inventory no tienen `sync_status` (no soportan offline mutations), así que su cleanup es directo.
+- Partial sync de inventory por tipo (`InventoryListViewModel:164`) NO hace orphan cleanup — borraría items de los otros dos tipos ausentes del subset.
+- Paridad cross-platform: iOS ya hace reconciliation. Backend no afectado (es solo read path).
 
 ## Bloqueos
 - Ninguno.
