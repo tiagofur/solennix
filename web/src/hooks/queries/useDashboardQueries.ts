@@ -4,6 +4,21 @@ import type { DashboardEventStatusScope, DashboardRevenuePeriod } from "@/types/
 import { queryKeys } from "./queryKeys";
 
 /**
+ * All dashboard analytics (KPIs + revenue chart + status distribution + top
+ * clients + product demand + forecast) are bundled into a single
+ * `GET /dashboard/summary` round-trip (issue #807 / #932). Each hook below
+ * reads from the SAME shared query cache (`['dashboard','summary']`) and
+ * projects its slice via `select`, so 6 hook call sites collapse to 1 network
+ * request. `staleTime: 30s` honors the KPI freshness requirement (the header
+ * is the first thing the user sees after a mutation).
+ *
+ * The `period`/`scope`/`limit` args on some hooks are kept in their signatures
+ * for call-site compatibility but are no longer sent — the summary endpoint
+ * pins them internally to the values the dashboard used to pass individually
+ * (revenue-chart period=year, events-by-status scope=month, top-clients limit=5).
+ */
+
+/**
  * Backend-aggregated KPIs for the dashboard header (sales, VAT, counts).
  *
  * Backend is the single source of truth — the web client reads the values
@@ -12,8 +27,9 @@ import { queryKeys } from "./queryKeys";
  */
 export function useDashboardKpis() {
   return useQuery({
-    queryKey: queryKeys.dashboard.kpis,
-    queryFn: () => dashboardService.getKpis(),
+    queryKey: queryKeys.dashboard.summary,
+    queryFn: () => dashboardService.getSummary(),
+    select: (s) => s.kpis,
     // Fresh-ish but not jittery: the header is the first thing the user sees
     // after any mutation (new event, payment, inventory change), so a short
     // staleness window keeps it honest without hammering the server.
@@ -26,14 +42,15 @@ export function useDashboardKpis() {
  * Backend returns up to 12 months; the Dashboard slices the tail to 6.
  */
 export function useDashboardRevenueChart(
-  period: DashboardRevenuePeriod = "year",
+  _period: DashboardRevenuePeriod = "year",
   enabled: boolean = true
 ) {
   return useQuery({
-    queryKey: queryKeys.dashboard.revenueChart(period),
-    queryFn: () => dashboardService.getRevenueChart(period),
+    queryKey: queryKeys.dashboard.summary,
+    queryFn: () => dashboardService.getSummary(),
+    select: (s) => s.revenue_chart,
     enabled,
-    staleTime: 5 * 60_000,
+    staleTime: 30_000,
   });
 }
 
@@ -42,11 +59,12 @@ export function useDashboardRevenueChart(
  * Backend is the source of truth so iOS / Android / Web show identical counts.
  */
 export function useDashboardEventsByStatus(
-  scope: DashboardEventStatusScope = "month"
+  _scope: DashboardEventStatusScope = "month"
 ) {
   return useQuery({
-    queryKey: queryKeys.dashboard.eventsByStatus(scope),
-    queryFn: () => dashboardService.getEventsByStatus(scope),
+    queryKey: queryKeys.dashboard.summary,
+    queryFn: () => dashboardService.getSummary(),
+    select: (s) => s.events_by_status,
     staleTime: 30_000,
   });
 }
@@ -54,11 +72,12 @@ export function useDashboardEventsByStatus(
 /**
  * Top clients by total spent — analytics widget for dashboard.
  */
-export function useTopClients(limit: number = 10) {
+export function useTopClients(_limit: number = 10) {
   return useQuery({
-    queryKey: queryKeys.dashboard.topClients(limit),
-    queryFn: () => dashboardService.getTopClients(limit),
-    staleTime: 10 * 60_000,
+    queryKey: queryKeys.dashboard.summary,
+    queryFn: () => dashboardService.getSummary(),
+    select: (s) => s.top_clients,
+    staleTime: 30_000,
   });
 }
 
@@ -67,9 +86,10 @@ export function useTopClients(limit: number = 10) {
  */
 export function useProductDemand() {
   return useQuery({
-    queryKey: queryKeys.dashboard.productDemand,
-    queryFn: () => dashboardService.getProductDemand(),
-    staleTime: 10 * 60_000,
+    queryKey: queryKeys.dashboard.summary,
+    queryFn: () => dashboardService.getSummary(),
+    select: (s) => s.product_demand,
+    staleTime: 30_000,
   });
 }
 
@@ -78,8 +98,9 @@ export function useProductDemand() {
  */
 export function useForecast() {
   return useQuery({
-    queryKey: queryKeys.dashboard.forecast,
-    queryFn: () => dashboardService.getForecast(),
-    staleTime: 10 * 60_000,
+    queryKey: queryKeys.dashboard.summary,
+    queryFn: () => dashboardService.getSummary(),
+    select: (s) => s.forecast,
+    staleTime: 30_000,
   });
 }

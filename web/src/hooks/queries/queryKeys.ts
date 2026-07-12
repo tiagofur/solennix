@@ -85,6 +85,7 @@ export const queryKeys = {
   },
   planLimits: ['planLimits'] as const,
   dashboard: {
+    summary: ['dashboard', 'summary'] as const,
     kpis: ['dashboard', 'kpis'] as const,
     revenueChart: (period: string) => ['dashboard', 'revenueChart', period] as const,
     eventsByStatus: (scope: string) => ['dashboard', 'eventsByStatus', scope] as const,
