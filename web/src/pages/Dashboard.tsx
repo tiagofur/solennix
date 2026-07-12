@@ -39,7 +39,7 @@ import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 import { PaymentFormFields, PaymentFormData } from "../components/PaymentFormFields";
 import { useToast } from "../hooks/useToast";
-import { getEventTotalCharged } from "../lib/finance";
+import { getEventTotalCharged, PAYMENT_COMPLETION_EPSILON } from "../lib/finance";
 import { StatusDropdown, EventStatus } from "../components/StatusDropdown";
 import { OnboardingChecklist } from "../components/OnboardingChecklist";
 import { RecentActivityCard } from "../components/RecentActivityCard";
@@ -58,7 +58,6 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const PAYMENT_COMPLETION_EPSILON = 0.01;
 
 type DashboardEvent = Event & {
   client?: { name: string } | null;
