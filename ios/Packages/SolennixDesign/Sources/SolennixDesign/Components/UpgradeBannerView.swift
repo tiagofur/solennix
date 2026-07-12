@@ -14,15 +14,16 @@ public struct UpgradeBannerView: View {
     let currentUsage: Int?
     let limit: Int?
     // Fix 14: callers supply the CTA label so it can be localized by the feature package.
-    // Defaults to the Spanish fallback for backwards-compat with existing callers.
-    let ctaLabel: String
+    // `nil` resolves the default key `upgrade.banner.cta` against the app catalog; a
+    // non-nil value is used verbatim (for callers that pass an already-localized label).
+    let ctaLabel: String?
 
     public init(
         type: UpgradeBannerType,
         resource: String? = nil,
         currentUsage: Int? = nil,
         limit: Int? = nil,
-        ctaLabel: String = "Ver planes"
+        ctaLabel: String? = nil
     ) {
         self.type = type
         self.resource = resource
@@ -51,7 +52,7 @@ public struct UpgradeBannerView: View {
                 .foregroundStyle(SolennixColors.textSecondary)
 
             // CTA label — non-interactive; navigation is owned by the caller's NavigationLink wrapper.
-            Text(ctaLabel)
+            Text(ctaLabel != nil ? LocalizedStringKey(ctaLabel!) : LocalizedStringKey("upgrade.banner.cta"))
                 .font(.caption)
                 .fontWeight(.bold)
                 .foregroundStyle(.white)
@@ -74,21 +75,37 @@ public struct UpgradeBannerView: View {
         type == .limitReached
     }
 
+    /// Resolves a key against the app's `Localizable` catalog.
+    /// `SolennixDesign` is an SPM package without its own catalog, so — like
+    /// `ViewModifiers.swift`'s `LocalizedStringKey` usage — strings resolve
+    /// against the host app bundle at runtime. Manual lookup (instead of
+    /// `LocalizedStringKey`) keeps the conditional/interpolated title and
+    /// description clean without positional-format key gymnastics.
+    private static func l10n(_ key: String, _ defaultValue: String) -> String {
+        Bundle.main.localizedString(forKey: key, value: defaultValue, table: "Localizable")
+    }
+
     private var title: String {
         if isLimitReached {
-            return "Limite alcanzado\(resource != nil ? " (\(resource!))" : "")"
+            let base = Self.l10n("upgrade.banner.limit_title", "Limit reached")
+            if let resource, !resource.isEmpty {
+                return "\(base) (\(resource))"
+            }
+            return base
         } else {
-            return "Desbloquea mas con Pro"
+            return Self.l10n("upgrade.banner.upsell_title", "Unlock more with Pro")
         }
     }
 
     private var description: String {
         if isLimitReached {
+            // Single template so translators control word order: "You've used %1$@ of %2$@. Upgrade your plan to continue."
             let usageStr = currentUsage.map { "\($0)" } ?? "?"
             let limitStr = limit.map { "\($0)" } ?? "?"
-            return "Has usado \(usageStr) de \(limitStr). Actualiza tu plan para continuar."
+            let template = Self.l10n("upgrade.banner.limit_desc", "You've used %@ of %@. Upgrade your plan to continue.")
+            return String(format: template, usageStr, limitStr)
         } else {
-            return "Obten eventos ilimitados, mas clientes y todas las funcionalidades."
+            return Self.l10n("upgrade.banner.upsell_desc", "Get unlimited events, more clients, and all features.")
         }
     }
 
@@ -115,7 +132,7 @@ public struct UpgradeBannerView: View {
 
         UpgradeBannerView(
             type: .limitReached,
-            resource: "Eventos",
+            resource: "Events",
             currentUsage: 5,
             limit: 5
         )

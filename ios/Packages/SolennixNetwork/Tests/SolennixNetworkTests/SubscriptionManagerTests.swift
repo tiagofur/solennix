@@ -134,6 +134,40 @@ final class SubscriptionManagerTests: XCTestCase {
         }
     }
 
+    // MARK: - Localized error strings route through the catalog (#808)
+    //
+    // Guards against regressions where descriptions fall back to hardcoded
+    // Spanish. `Bundle.module` returns the key itself when an entry is missing,
+    // so asserting the description differs from the key proves the catalog was
+    // wired. `purchaseFailed` must additionally interpolate its argument.
+
+    func testSubscriptionErrorDescriptionsAreNotRawKeys() {
+        let cases: [(SubscriptionError, String)] = [
+            (.productsNotFound, "subscription.error.products_not_found"),
+            (.verificationFailed, "subscription.error.verification_failed"),
+            (.userCancelled, "subscription.error.user_cancelled"),
+            (.pending, "subscription.error.pending"),
+            (.unknown, "subscription.error.unknown"),
+        ]
+        for (error, key) in cases {
+            let desc = error.errorDescription ?? ""
+            XCTAssertNotEqual(desc, key, "Description must resolve from catalog, not return raw key for \(key)")
+            XCTAssertNotEqual(desc, "", "Description must not be empty for \(key)")
+        }
+    }
+
+    func testSubscriptionErrorPurchaseFailedInterpolatesMessage() {
+        let desc = SubscriptionError.purchaseFailed("NETWORK_TIMEOUT").errorDescription ?? ""
+        XCTAssertTrue(desc.contains("NETWORK_TIMEOUT"), "purchaseFailed must interpolate its message; got: \(desc)")
+    }
+
+    func testConfigureErrorMessageIsNotRawKey() {
+        sut.configure(apiKey: "")
+        let msg = sut.errorMessage ?? ""
+        XCTAssertNotEqual(msg, "subscription.error.not_configured", "errorMessage must resolve from catalog, not return raw key")
+        XCTAssertFalse(msg.isEmpty, "errorMessage must not be empty when key is missing")
+    }
+
     // MARK: - Fallback product IDs (regression guard)
 
     func testProductIDsContainMonthlyAndYearly() {

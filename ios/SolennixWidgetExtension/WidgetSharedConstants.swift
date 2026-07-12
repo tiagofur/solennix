@@ -29,4 +29,25 @@ enum WidgetDataKey {
     /// Auth-state signal (mirrors `WidgetKey.authState` in the app target).
     /// Lets the extension distinguish signed-out from empty data.
     static let authState = "widget_auth_state"
+    /// User's preferred currency code (mirrors `WidgetKey.currencyCode`).
+    /// Written by the app from `User.defaultCurrency`; read by widget formatters
+    /// so widgets render in the user's currency, not a hardcoded MXN. Defaults
+    /// to `"MXN"` when the app hasn't synced yet (#808).
+    static let currencyCode = "widget_currency_code"
+}
+
+// MARK: - Widget Currency
+
+/// Read-only accessor for the currency code the widget extension should use
+/// when formatting amounts. Reads the App Group key written by the app
+/// (`WidgetDataSync.syncCurrencyCode`), defaulting to `"MXN"` before the app
+/// has synced a value.
+enum WidgetCurrency {
+    /// The default currency shown before the app writes the user's preference.
+    static let defaultCode = "MXN"
+
+    /// Current currency code synced from the app, or `defaultCode`.
+    static var current: String {
+        AppGroup.userDefaults.string(forKey: WidgetDataKey.currencyCode) ?? defaultCode
+    }
 }

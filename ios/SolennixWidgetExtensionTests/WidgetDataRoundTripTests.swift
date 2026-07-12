@@ -119,4 +119,28 @@ final class WidgetDataRoundTripTests: XCTestCase {
             XCTAssertEqual(decoded, state)
         }
     }
+
+    // MARK: Currency code sync (#808)
+
+    func testWidgetCurrencyDefaultsToMXNWhenAbsent() {
+        suite.removeObject(forKey: WidgetDataKey.currencyCode)
+        XCTAssertEqual(WidgetCurrency.current, WidgetCurrency.defaultCode)
+        XCTAssertEqual(WidgetCurrency.current, "MXN")
+    }
+
+    func testWidgetCurrencyReadsSyncedCode() {
+        suite.set("USD", forKey: WidgetDataKey.currencyCode)
+        XCTAssertEqual(WidgetCurrency.current, "USD")
+        suite.removeObject(forKey: WidgetDataKey.currencyCode)
+    }
+
+    func testWidgetKPIsFormatWithSyncedCurrency() {
+        suite.set("USD", forKey: WidgetDataKey.currencyCode)
+        defer { suite.removeObject(forKey: WidgetDataKey.currencyCode) }
+
+        let kpis = WidgetKPIs(monthlyRevenue: 5000, eventsThisMonth: 3, eventsThisWeek: 1,
+                               lowStockCount: 0, pendingPayments: 0,
+                               confirmedEvents: 1, quotedEvents: 2)
+        XCTAssertTrue(kpis.formattedRevenue.contains("USD"), "Revenue should reflect synced currency code")
+    }
 }

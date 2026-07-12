@@ -13,11 +13,17 @@ let package = Package(
         .package(url: "https://github.com/google/GoogleSignIn-iOS.git", from: "8.0.0"),
     ],
     targets: [
-        .target(name: "SolennixNetwork", dependencies: [
-            "SolennixCore",
-            .product(name: "RevenueCat", package: "purchases-ios-spm"),
-            .product(name: "GoogleSignIn", package: "GoogleSignIn-iOS"),
-        ]),
+        .target(
+            name: "SolennixNetwork",
+            dependencies: [
+                "SolennixCore",
+                .product(name: "RevenueCat", package: "purchases-ios-spm"),
+                .product(name: "GoogleSignIn", package: "GoogleSignIn-iOS"),
+            ],
+            resources: [
+                .process("Resources")
+            ]
+        ),
         .testTarget(
             name: "SolennixNetworkTests",
             dependencies: ["SolennixNetwork"]
