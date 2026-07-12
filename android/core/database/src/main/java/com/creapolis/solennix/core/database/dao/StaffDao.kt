@@ -51,6 +51,9 @@ interface StaffDao {
     @Query("DELETE FROM cached_event_staff WHERE event_id = :eventId")
     suspend fun deleteEventStaffByEventId(eventId: String)
 
+    @Query("DELETE FROM cached_event_staff")
+    suspend fun deleteAllEventStaff()
+
     /**
      * Reemplaza atómicamente todas las asignaciones de un evento. Sin
      * `@Transaction`, los colectores de [getEventStaff] verían una lista
