@@ -36,7 +36,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { downloadEventPDF } from "@/services/pdfService";
 import { logError } from "@/lib/errorHandler";
 import { Breadcrumb } from "@/components/Breadcrumb";
-import { getEventTotalCharged, getEventTaxAmount, getEventNetSales } from "@/lib/finance";
+import { getEventTotalCharged, getEventTaxAmount, getEventNetSales, localeFromLanguage } from "@/lib/finance";
 import { computeEventFinancials, productUnitCostFromIngredients } from "@/lib/EventFinancials";
 import { Payments } from "./components/Payments";
 import { ClientPortalShareCard } from "./components/ClientPortalShareCard";
@@ -105,10 +105,12 @@ export const EventSummary: React.FC = () => {
   const { addToast } = useToast();
 
   const { t, i18n } = useTranslation(['events', 'common']);
-  const moneyLocale = i18n.language === 'en' ? 'en-US' : 'es-MX';
+  const moneyLocale = localeFromLanguage(i18n.language);
   // ── 6 parallel queries via React Query ──
   const { data: eventRaw = null, isLoading: eventLoading } = useEvent(id);
   const event = eventRaw as EventWithClient | null;
+  // Currency for all money displays: event-specified → user default → MXN
+  const eventCurrency = event?.currency || user?.default_currency || 'MXN';
   const { data: productsRaw = [], isLoading: productsLoading } = useEventProducts(id);
   const products = useMemo(() => (Array.isArray(productsRaw) ? productsRaw : []), [productsRaw]);
   const { data: extrasRaw = [] } = useEventExtras(id);
@@ -737,13 +739,13 @@ export const EventSummary: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border">
               <div className="px-4 py-4 text-center">
                 <p className="text-2xl font-black text-primary">
-                  {totalCharged.toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 })}
+                  {totalCharged.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency, minimumFractionDigits: 0 })}
                 </p>
                 <p className="text-xs text-text-secondary mt-0.5">{t('events:financials.total_charged')}</p>
               </div>
               <div className="px-4 py-4 text-center">
                 <p className={clsx("text-2xl font-black", remainingValue > 0 ? "text-warning" : "text-success")}>
-                  {totalPaid.toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 })}
+                  {totalPaid.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency, minimumFractionDigits: 0 })}
                 </p>
                 <p className="text-xs text-text-secondary mt-0.5">{t('events:summary.paid')}</p>
               </div>
@@ -778,7 +780,7 @@ export const EventSummary: React.FC = () => {
                   <dt className="text-xs font-semibold text-text-tertiary uppercase tracking-wide flex items-center gap-1.5">
                     <Calendar className="h-3.5 w-3.5" /> {t('events:general.date')}
                   </dt>
-                  <dd className="mt-1 font-bold text-text">{new Date(event.event_date + "T12:00:00").toLocaleDateString(moneyLocale === 'en-US' ? 'en-US' : 'es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</dd>
+                  <dd className="mt-1 font-bold text-text">{new Date(event.event_date + "T12:00:00").toLocaleDateString(moneyLocale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</dd>
                 </div>
                 <div>
                   <dt className="text-xs font-semibold text-text-tertiary uppercase tracking-wide flex items-center gap-1.5">
@@ -815,7 +817,7 @@ export const EventSummary: React.FC = () => {
                       <DollarSign className="h-3.5 w-3.5" /> {t('events:financials.deposit')}
                     </dt>
                     <dd className="mt-1 font-bold text-text">
-                      {event.deposit_percent}% — {depositAmount.toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' })}
+                      {event.deposit_percent}% — {depositAmount.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}
                       {isDownpaymentMet ? (
                         <span className="ml-2 text-xs text-success font-semibold">{t('events:summary.covered')}</span>
                       ) : (
@@ -855,13 +857,13 @@ export const EventSummary: React.FC = () => {
                       <td className="py-4 px-1 font-bold text-text">{p.product_name || t('common:product')}</td>
                       <td className="py-4 px-1 text-right text-text-secondary">{p.quantity}</td>
                       <td className="py-4 px-1 text-right text-text-secondary font-medium">
-                        {p.unit_price.toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' })}
+                        {p.unit_price.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}
                       </td>
                       <td className="py-4 px-1 text-right font-bold text-text">
                         {(
                           (p.unit_price - (p.discount || 0)) *
                           p.quantity
-                        ).toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' })}
+                        ).toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}
                       </td>
                     </tr>
                   ))}
@@ -885,7 +887,7 @@ export const EventSummary: React.FC = () => {
                   {extras.map((e, idx) => (
                     <tr key={e.id || `extra-${idx}`} className="hover:bg-surface-alt/50 transition-colors">
                       <td className="py-4 px-1 font-bold text-text">{e.description}</td>
-                      <td className="py-4 px-1 text-right font-bold text-text">{e.price.toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' })}</td>
+                      <td className="py-4 px-1 text-right font-bold text-text">{e.price.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}</td>
                     </tr>
                   ))}
                   {extras.length === 0 && (
@@ -916,7 +918,7 @@ export const EventSummary: React.FC = () => {
                     <div>
                       <span className="font-bold text-text">{s.supply_name || t('common:supply')}</span>
                       <span className="text-text-secondary ml-2">
-                        {s.quantity} {s.unit || t('common:unit_short')} × {s.unit_cost?.toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' }) || '$0.00'}
+                        {s.quantity} {s.unit || t('common:unit_short')} × {s.unit_cost?.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency }) || '$0.00'}
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
@@ -937,7 +939,7 @@ export const EventSummary: React.FC = () => {
                           ? 'line-through text-text-tertiary'
                           : 'text-warning'
                       }`}>
-                        {(s.quantity * (s.unit_cost || 0)).toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' })}
+                        {(s.quantity * (s.unit_cost || 0)).toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}
                       </span>
                     </div>
                   </div>
@@ -946,7 +948,7 @@ export const EventSummary: React.FC = () => {
               <div className="mt-4 pt-3 border-t border-border flex justify-between items-center">
                 <span className="text-sm text-text-secondary">{t('events:summary.total_supplies_cost')}</span>
                 <span className="text-lg font-bold text-warning">
-                  {supplies.reduce((sum: number, s: EventSupply) => sum + (s.exclude_cost ? 0 : s.quantity * (s.unit_cost || 0)), 0).toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' })}
+                  {supplies.reduce((sum: number, s: EventSupply) => sum + (s.exclude_cost ? 0 : s.quantity * (s.unit_cost || 0)), 0).toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}
                 </span>
               </div>
             </div>
@@ -1014,7 +1016,7 @@ export const EventSummary: React.FC = () => {
                       )}
                       {s.fee_amount != null && s.fee_amount > 0 ? (
                         <span className="font-bold text-warning">
-                          {s.fee_amount.toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' })}
+                          {s.fee_amount.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}
                         </span>
                       ) : (
                         <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-surface-alt text-text-secondary">
@@ -1040,24 +1042,24 @@ export const EventSummary: React.FC = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
                 <div className="space-y-1">
                   <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">{t('events:financials.net_sales')}</p>
-                  <p className="text-xl font-black text-text">{netSales.toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' })}</p>
+                  <p className="text-xl font-black text-text">{netSales.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">{t('events:financials.tax')}</p>
-                  <p className="text-xl font-black text-text">{taxAmount.toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' })}</p>
+                  <p className="text-xl font-black text-text">{taxAmount.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">{t('events:financials.costs')}</p>
-                  <p className="text-xl font-black text-error">{totalCost.toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' })}</p>
+                  <p className="text-xl font-black text-error">{totalCost.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">{t('events:financials.net_profit')}</p>
-                  <p className="text-xl font-black text-success">{profit.toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' })}</p>
+                  <p className="text-xl font-black text-success">{profit.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">{t('common:pending')}</p>
                   <p className={clsx("text-xl font-black", remainingValue > 0 ? "text-warning" : "text-success")}>
-                    {remainingValue.toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' })}
+                    {remainingValue.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}
                   </p>
                 </div>
               </div>
@@ -1081,8 +1083,8 @@ export const EventSummary: React.FC = () => {
                     />
                   </div>
                   <div className="flex items-center justify-between mt-2 text-xs text-text-secondary">
-                    <span>{t('events:summary.charged')}: {totalPaid.toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' })}</span>
-                    <span>{t('common:total')}: {totalCharged.toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' })}</span>
+                    <span>{t('events:summary.charged')}: {totalPaid.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}</span>
+                    <span>{t('common:total')}: {totalCharged.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}</span>
                   </div>
                   {remainingValue > 0 && currentStatus !== "cancelled" && (
                     <div className="flex flex-wrap gap-3 mt-3">
@@ -1129,7 +1131,7 @@ export const EventSummary: React.FC = () => {
             </h1>
             <p className="text-text-secondary text-sm flex items-center gap-2">
               <ShoppingCart className="h-4 w-4 text-primary" />
-              {event.service_type} • {new Date(event.event_date + "T12:00:00").toLocaleDateString(moneyLocale === 'en-US' ? 'en-US' : 'es-MX')}
+              {event.service_type} • {new Date(event.event_date + "T12:00:00").toLocaleDateString(moneyLocale)}
             </p>
           </div>
 
@@ -1218,10 +1220,10 @@ export const EventSummary: React.FC = () => {
                       </td>
                       <td className="py-3 text-right text-text font-bold">{s.quantity}</td>
                       <td className="py-3 text-right text-text-secondary">
-                        {(s.unit_cost || 0).toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' })}
+                        {(s.unit_cost || 0).toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}
                       </td>
                       <td className="py-3 text-right text-text font-bold">
-                        {((s.quantity || 0) * (s.unit_cost || 0)).toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' })}
+                        {((s.quantity || 0) * (s.unit_cost || 0)).toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}
                       </td>
                     </tr>
                   ))}
@@ -1309,10 +1311,10 @@ export const EventSummary: React.FC = () => {
               <h3 className="text-2xl font-black text-text uppercase">{t('events:summary.deposit_required')}</h3>
               <p className="text-text-secondary max-w-md">
                 {t('events:summary.deposit_required_desc', { percent: event.deposit_percent })}
-                ({depositAmount.toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' })}).
+                ({depositAmount.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}).
               </p>
               <p className="text-sm text-warning font-bold">
-                {t('events:summary.deposit_missing', { amount: (depositAmount - totalPaid).toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' }) })}
+                {t('events:summary.deposit_missing', { amount: (depositAmount - totalPaid).toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency }) })}
               </p>
               <button
                 type="button"
@@ -1428,7 +1430,7 @@ export const EventSummary: React.FC = () => {
             </h1>
             <p className="text-text-secondary text-sm flex items-center gap-2">
               <ClipboardList className="h-4 w-4 text-primary" />
-              {event.service_type} • {new Date(event.event_date + "T12:00:00").toLocaleDateString(moneyLocale === 'en-US' ? 'en-US' : 'es-MX')}
+              {event.service_type} • {new Date(event.event_date + "T12:00:00").toLocaleDateString(moneyLocale)}
             </p>
 
             {checklistItems.length > 0 && (
@@ -1650,7 +1652,7 @@ export const EventSummary: React.FC = () => {
       <div className="mt-12 text-center text-xs text-text-secondary print:mt-12">
         <p>
           {t('events:summary.generated_by', { business: profile?.business_name || "Solennix" })} -{" "}
-          {new Date().toLocaleString(moneyLocale === 'en-US' ? 'en-US' : 'es-MX')}
+          {new Date().toLocaleString(moneyLocale)}
         </p>
       </div>
       <ConfirmDialog

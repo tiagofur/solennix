@@ -27,16 +27,31 @@ export const setDefaultCurrency = (currency: string) => {
   }
 };
 
+// Locale used for currency/date formatting; aligned with i18n.language.
+let activeLocale = "es-MX";
+
+// Maps an i18n language code to an Intl-compatible locale. Only es/en are
+// supported today — extend here when new languages land.
+export const localeFromLanguage = (language: string): string => {
+  return language?.startsWith("en") ? "en-US" : "es-MX";
+};
+
+export const setDefaultLocale = (locale: string) => {
+  if (locale) {
+    activeLocale = locale;
+  }
+};
+
 export const formatCurrency = (amount: number | string, currency: string = activeCurrency): string => {
   const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
-  
+
   if (isNaN(numAmount)) {
     return "$0.00";
   }
 
   // To display the currency code when it is not MXN (consistent with Apple/Google native practices)
   const currencyCode = currency || "MXN";
-  const formatted = numAmount.toLocaleString("es-MX", {
+  const formatted = numAmount.toLocaleString(activeLocale, {
     style: "currency",
     currency: currencyCode,
     minimumFractionDigits: 2,
