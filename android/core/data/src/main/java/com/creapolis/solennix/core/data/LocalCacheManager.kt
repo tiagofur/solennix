@@ -6,6 +6,7 @@ import com.creapolis.solennix.core.database.dao.EventItemDao
 import com.creapolis.solennix.core.database.dao.InventoryDao
 import com.creapolis.solennix.core.database.dao.PaymentDao
 import com.creapolis.solennix.core.database.dao.ProductDao
+import com.creapolis.solennix.core.database.dao.StaffDao
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,7 +17,8 @@ class LocalCacheManager @Inject constructor(
     private val productDao: ProductDao,
     private val inventoryDao: InventoryDao,
     private val paymentDao: PaymentDao,
-    private val eventItemDao: EventItemDao
+    private val eventItemDao: EventItemDao,
+    private val staffDao: StaffDao
 ) {
     suspend fun clearAll() {
         eventItemDao.deleteAllProducts()
@@ -26,5 +28,7 @@ class LocalCacheManager @Inject constructor(
         clientDao.deleteAll()
         productDao.deleteAll()
         inventoryDao.deleteAll()
+        staffDao.deleteAllStaff()
+        staffDao.deleteAllEventStaff()
     }
 }
