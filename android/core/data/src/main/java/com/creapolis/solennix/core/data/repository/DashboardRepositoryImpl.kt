@@ -3,6 +3,7 @@ package com.creapolis.solennix.core.data.repository
 import com.creapolis.solennix.core.model.DashboardEventStatusCount
 import com.creapolis.solennix.core.model.DashboardKPIs
 import com.creapolis.solennix.core.model.DashboardRevenuePoint
+import com.creapolis.solennix.core.model.DashboardSummary
 import com.creapolis.solennix.core.model.TopClient
 import com.creapolis.solennix.core.model.ProductDemandItem
 import com.creapolis.solennix.core.model.ForecastDataPoint
@@ -16,6 +17,9 @@ import javax.inject.Singleton
 class DashboardRepositoryImpl @Inject constructor(
     private val apiService: ApiService
 ) : DashboardRepository {
+
+    override suspend fun getSummary(): DashboardSummary =
+        apiService.get(Endpoints.DASHBOARD_SUMMARY)
 
     override suspend fun getKPIs(): DashboardKPIs =
         apiService.get(Endpoints.DASHBOARD_KPIS)

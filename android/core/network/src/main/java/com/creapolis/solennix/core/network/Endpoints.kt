@@ -93,6 +93,7 @@ object Endpoints {
 
     // Dashboard (aggregated, server-computed)
     const val DASHBOARD_KPIS = "dashboard/kpis"
+    const val DASHBOARD_SUMMARY = "dashboard/summary"
     const val DASHBOARD_REVENUE_CHART = "dashboard/revenue-chart"
     const val DASHBOARD_EVENTS_BY_STATUS = "dashboard/events-by-status"
     const val DASHBOARD_TOP_CLIENTS = "dashboard/top-clients"

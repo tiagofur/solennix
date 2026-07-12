@@ -25,49 +25,21 @@ fun DashboardViewModel.refresh() {
         }
     }
 
-    // Pull the backend-aggregated KPIs + revenue trend independently so a
-    // slow list sync doesn't block the header cards from painting, and a
-    // single failed aggregate doesn't wipe the whole dashboard.
+    // Single bundled round-trip: KPIs + the 5 chart/widget datasets
+    // (revenue-chart, events-by-status, top-clients, product-demand, forecast)
+    // collapse into one GET /dashboard/summary (issue #807 / #931). Replaces
+    // the 6 parallel launches that each fetched one endpoint.
     viewModelScope.launch {
         try {
-            _kpis.value = dashboardRepository.getKPIs()
+            val summary = dashboardRepository.getSummary()
+            _kpis.value = summary.kpis
+            _monthlyRevenueTrend.value = summary.revenueChart
+            _statusCountsFromBackend.value = summary.eventsByStatus
+            _topClients.value = summary.topClients
+            _productDemand.value = summary.productDemand
+            _forecast.value = summary.forecast
         } catch (e: Exception) {
-            Log.w(TAG, "dashboard KPIs fetch failed", e)
-        }
-    }
-    viewModelScope.launch {
-        try {
-            _monthlyRevenueTrend.value = dashboardRepository.getRevenueChart("year")
-        } catch (e: Exception) {
-            Log.w(TAG, "revenue-chart fetch failed", e)
-        }
-    }
-    viewModelScope.launch {
-        try {
-            _statusCountsFromBackend.value = dashboardRepository.getEventsByStatus("month")
-        } catch (e: Exception) {
-            Log.w(TAG, "events-by-status fetch failed", e)
-        }
-    }
-    viewModelScope.launch {
-        try {
-            _topClients.value = dashboardRepository.getTopClients(5)
-        } catch (e: Exception) {
-            Log.w(TAG, "top-clients fetch failed", e)
-        }
-    }
-    viewModelScope.launch {
-        try {
-            _productDemand.value = dashboardRepository.getProductDemand()
-        } catch (e: Exception) {
-            Log.w(TAG, "product-demand fetch failed", e)
-        }
-    }
-    viewModelScope.launch {
-        try {
-            _forecast.value = dashboardRepository.getForecast()
-        } catch (e: Exception) {
-            Log.w(TAG, "forecast fetch failed", e)
+            Log.w(TAG, "dashboard summary fetch failed", e)
         }
     }
 }

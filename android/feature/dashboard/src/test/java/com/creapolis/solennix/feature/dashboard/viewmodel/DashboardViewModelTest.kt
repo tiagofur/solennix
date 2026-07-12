@@ -9,6 +9,7 @@ import com.creapolis.solennix.core.data.repository.PaymentRepository
 import com.creapolis.solennix.core.data.repository.ProductRepository
 import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.DashboardKPIs
+import com.creapolis.solennix.core.model.DashboardSummary
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.model.InventoryItem
@@ -152,13 +153,15 @@ class DashboardViewModelTest {
         coEvery { clientRepository.syncClients() } returns Unit
         coEvery { paymentRepository.syncPayments() } returns Unit
         coEvery { productRepository.syncProducts() } returns Unit
-        coEvery { dashboardRepository.getKPIs() } returns DashboardKPIs(
-            eventsThisMonth = 2,
-            totalClients = 2,
-            pendingQuotes = 1,
-            cashCollectedThisMonth = 500.0
+        coEvery { dashboardRepository.getSummary() } returns DashboardSummary(
+            kpis = DashboardKPIs(
+                eventsThisMonth = 2,
+                totalClients = 2,
+                pendingQuotes = 1,
+                cashCollectedThisMonth = 500.0
+            ),
+            revenueChart = emptyList()
         )
-        coEvery { dashboardRepository.getRevenueChart(any()) } returns emptyList()
 
         val viewModel = DashboardViewModel(
             appContext,
@@ -418,6 +421,7 @@ class DashboardViewModelTest {
         coVerify(atLeast = 1) { clientRepository.syncClients() }
         coVerify(atLeast = 1) { paymentRepository.syncPayments() }
         coVerify(atLeast = 1) { productRepository.syncProducts() }
+        coVerify(atLeast = 1) { dashboardRepository.getSummary() }
         collectJob.cancel()
     }
 }

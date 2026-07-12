@@ -23,6 +23,7 @@ data class DashboardKPIs(
     @SerialName("low_stock_items") val lowStockItems: Int = 0,
     @SerialName("upcoming_events") val upcomingEvents: Int = 0,
     @SerialName("total_clients") val totalClients: Int = 0,
+    @SerialName("total_products") val totalProducts: Int = 0,
     @SerialName("average_event_value") val averageEventValue: Double = 0.0,
     @SerialName("net_sales_this_month") val netSalesThisMonth: Double = 0.0,
     @SerialName("cash_collected_this_month") val cashCollectedThisMonth: Double = 0.0,
@@ -51,4 +52,19 @@ data class DashboardRevenuePoint(
 data class DashboardEventStatusCount(
     val status: String,
     val count: Int
+)
+
+/**
+ * Bundled dashboard payload from `GET /api/dashboard/summary`. Collapses KPIs +
+ * the 5 chart/widget datasets into one response (issue #807 / #931).
+ * Mirrors [backend/internal/repository/DashboardSummary].
+ */
+@Serializable
+data class DashboardSummary(
+    val kpis: DashboardKPIs = DashboardKPIs(),
+    @SerialName("revenue_chart") val revenueChart: List<DashboardRevenuePoint> = emptyList(),
+    @SerialName("events_by_status") val eventsByStatus: List<DashboardEventStatusCount> = emptyList(),
+    @SerialName("top_clients") val topClients: List<TopClient> = emptyList(),
+    @SerialName("product_demand") val productDemand: List<ProductDemandItem> = emptyList(),
+    val forecast: List<ForecastDataPoint> = emptyList()
 )
