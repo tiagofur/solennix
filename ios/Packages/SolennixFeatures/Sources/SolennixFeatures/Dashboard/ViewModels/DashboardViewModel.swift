@@ -125,13 +125,19 @@ public final class DashboardViewModel {
     // MARK: - Dependencies
 
     private let apiClient: APIClient
+    private let isBasicPlan: Bool
     private var allEvents: [Event] = []
     private var allPayments: [Payment] = []
 
     // MARK: - Init
 
-    public init(apiClient: APIClient) {
+    /// - parameter isBasicPlan: Snapshot of the user's plan tier at load time
+    ///   (from `PlanLimitsManager.isBasicPlan`). When true, `loadDashboard()`
+    ///   fetches only the core KPIs and skips the premium analytics bundle so
+    ///   basic users don't pay for chart/widget data they can't see (#820).
+    public init(apiClient: APIClient, isBasicPlan: Bool = false) {
         self.apiClient = apiClient
+        self.isBasicPlan = isBasicPlan
     }
 
     // MARK: - Computed
@@ -174,15 +180,25 @@ public final class DashboardViewModel {
 
         var encounteredError = false
 
-        // Single aggregated round-trip: KPIs + the 5 chart/widget datasets
-        // (revenue-chart, events-by-status, top-clients, product-demand,
-        // forecast) collapse into one GET /dashboard/summary (issue #807).
-        // This replaced the old 1 KPI preload + 5 sequential analytics calls.
+        // Plan-tier-aware header load (#820).
+        // - Paid users: single aggregated round-trip — KPIs + the 5
+        //   chart/widget datasets (revenue-chart, events-by-status,
+        //   top-clients, product-demand, forecast) collapse into one
+        //   GET /dashboard/summary (issue #807).
+        // - Basic users: fetch only GET /dashboard/kpis (core counts). The 5
+        //   premium datasets are gated behind `!planLimitsManager.isBasicPlan`
+        //   in the View, so basic users never see them — fetching the bundle
+        //   would waste bandwidth for data that is rendered into nothing.
         do {
-            let summary: DashboardSummary = try await apiClient.get(Endpoint.dashboardSummary)
-            applySummary(summary, now: now)
+            if isBasicPlan {
+                let kpisOnly: DashboardKPIs = try await apiClient.get(Endpoint.dashboardKpis)
+                applyKPIs(kpisOnly, now: now)
+            } else {
+                let summary: DashboardSummary = try await apiClient.get(Endpoint.dashboardSummary)
+                applySummary(summary, now: now)
+            }
         } catch {
-            logger.error("summary load failed: \(String(describing: error), privacy: .public)")
+            logger.error("dashboard header load failed: \(String(describing: error), privacy: .public)")
             // Non-fatal — the body-list loaders below still populate the
             // dashboard; we just lose the header/charts/widgets until the next
             // load. Fall through so the lists still attempt.
@@ -311,12 +327,11 @@ public final class DashboardViewModel {
         isLoading = false
     }
 
-    /// Fan a `DashboardSummary` payload out to the chart/widget properties.
-    /// Extracted so `loadDashboard` and `updateEventStatus` can both apply a
-    /// server payload without duplicating the mapping.
+    /// Applies only the core KPIs (counts all plans need). Shared by the
+    /// basic-plan path (`GET /dashboard/kpis`) and the paid-plan summary path.
+    /// Posts `.solennixDashboardKPIsRefreshed` so the widget stays aligned.
     @MainActor
-    private func applySummary(_ summary: DashboardSummary, now: Date) {
-        let aggregated = summary.kpis
+    private func applyKPIs(_ aggregated: DashboardKPIs, now: Date) {
         kpis = aggregated
         // Publish server-aggregated KPIs so the widget sync coordinator can
         // persist them to the App Group — keeps widget revenue/event counts
@@ -334,11 +349,18 @@ public final class DashboardViewModel {
         if lowStockItems.isEmpty {
             lowStockCount = aggregated.lowStockItems
         }
+    }
+
+    /// Fan a `DashboardSummary` payload out to the chart/widget properties.
+    /// Paid-plan path: KPIs (via `applyKPIs`) + the 5 premium datasets. Basic
+    /// users never reach here — `loadDashboard` routes them to `applyKPIs` only.
+    @MainActor
+    private func applySummary(_ summary: DashboardSummary, now: Date) {
+        applyKPIs(summary.kpis, now: now)
 
         // Revenue trend: backend returns only months with payments; pad the
         // trailing 6-month window with zero-revenue points so the chart always
-        // shows 6 bars. Loaded regardless of plan — the View gates the card on
-        // `isPremium`, so a non-premium user just gets the data and never sees it.
+        // shows 6 bars.
         monthlyRevenueTrend = Self.buildTrailingSixMonthTrend(from: summary.revenueChart, now: now)
 
         // Month-scoped status distribution → [EventStatus: Int]. Status strings
