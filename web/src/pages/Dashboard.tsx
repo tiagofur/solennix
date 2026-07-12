@@ -937,7 +937,7 @@ export const Dashboard: React.FC = () => {
                       {t('dashboard:revenue_chart.pro_description')}
                     </p>
                   </div>
-                  <button onClick={() => navigate("/profile/pricing")} className="text-xs font-bold text-primary hover:underline active-ios-scale">{t('dashboard:revenue_chart.view_plans')}</button>
+                  <button onClick={() => navigate("/pricing")} className="text-xs font-bold text-primary hover:underline active-ios-scale">{t('dashboard:revenue_chart.view_plans')}</button>
                 </Card>
              )}
           </div>
