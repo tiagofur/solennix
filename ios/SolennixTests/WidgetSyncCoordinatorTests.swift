@@ -311,7 +311,7 @@ final class WidgetSyncCoordinatorTests: XCTestCase {
         // Post server KPIs with deliberately different values than the cache.
         let server = DashboardKPIs(
             totalRevenue: 99999, eventsThisMonth: 42, pendingQuotes: 0,
-            lowStockItems: 7, upcomingEvents: 0, totalClients: 0,
+            lowStockItems: 7, upcomingEvents: 0, totalClients: 0, totalProducts: 0,
             averageEventValue: 0, netSalesThisMonth: 12345.0,
             cashCollectedThisMonth: 0, vatCollectedThisMonth: 0,
             vatOutstandingThisMonth: 0
@@ -342,7 +342,7 @@ final class WidgetSyncCoordinatorTests: XCTestCase {
 
         let server = DashboardKPIs(
             totalRevenue: 0, eventsThisMonth: 0, pendingQuotes: 0,
-            lowStockItems: 0, upcomingEvents: 0, totalClients: 0,
+            lowStockItems: 0, upcomingEvents: 0, totalClients: 0, totalProducts: 0,
             averageEventValue: 0, netSalesThisMonth: 0,
             cashCollectedThisMonth: 0, vatCollectedThisMonth: 0,
             vatOutstandingThisMonth: 0
