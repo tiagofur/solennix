@@ -378,7 +378,8 @@
       "uploaded_success": "{{count}} foto(s) subida(s) correctamente",
       "deleted_success": "Foto eliminada correctamente",
       "error_uploading": "Error al subir fotos",
-      "error_deleting": "Error al eliminar la foto"
+      "error_deleting": "Error al eliminar la foto",
+      "error_too_large": "{{name}} es demasiado grande (máximo 10MB)"
     }
   },
   "staff": {
