@@ -12,6 +12,7 @@ final class DashboardMetricsModelsTests: XCTestCase {
             lowStockItems: 3,
             upcomingEvents: 5,
             totalClients: 42,
+            totalProducts: 18,
             averageEventValue: 21428.60,
             netSalesThisMonth: 80000,
             cashCollectedThisMonth: 55000,
@@ -25,6 +26,7 @@ final class DashboardMetricsModelsTests: XCTestCase {
         XCTAssertEqual(kpis.lowStockItems, 3)
         XCTAssertEqual(kpis.upcomingEvents, 5)
         XCTAssertEqual(kpis.totalClients, 42)
+        XCTAssertEqual(kpis.totalProducts, 18)
         XCTAssertEqual(kpis.averageEventValue, 21428.60)
         XCTAssertEqual(kpis.netSalesThisMonth, 80000)
         XCTAssertEqual(kpis.cashCollectedThisMonth, 55000)
@@ -41,6 +43,7 @@ final class DashboardMetricsModelsTests: XCTestCase {
           "low_stock_items": 0,
           "upcoming_events": 3,
           "total_clients": 8,
+          "total_products": 6,
           "average_event_value": 500.25,
           "net_sales_this_month": 700.0,
           "cash_collected_this_month": 500.0,
@@ -56,6 +59,7 @@ final class DashboardMetricsModelsTests: XCTestCase {
 
         XCTAssertEqual(decoded.totalRevenue, 1000.5)
         XCTAssertEqual(decoded.eventsThisMonth, 2)
+        XCTAssertEqual(decoded.totalProducts, 6)
         XCTAssertEqual(decoded.averageEventValue, 500.25)
         XCTAssertEqual(decoded.vatOutstandingThisMonth, 20.0)
     }

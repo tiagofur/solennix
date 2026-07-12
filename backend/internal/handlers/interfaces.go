@@ -167,6 +167,7 @@ type DashboardRepository interface {
 	GetTopClients(ctx context.Context, userID uuid.UUID, limit int) ([]repository.TopClient, error)
 	GetProductDemand(ctx context.Context, userID uuid.UUID) ([]repository.ProductDemandItem, error)
 	GetForecast(ctx context.Context, userID uuid.UUID) ([]repository.ForecastDataPoint, error)
+	GetSummary(ctx context.Context, userID uuid.UUID) (*repository.DashboardSummary, error)
 }
 
 // AuditRepository defines audit log repo operations.

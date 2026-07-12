@@ -22,6 +22,7 @@ public struct DashboardKPIs: Codable, Sendable, Hashable {
     public let lowStockItems: Int
     public let upcomingEvents: Int
     public let totalClients: Int
+    public let totalProducts: Int
     public let averageEventValue: Double
     public let netSalesThisMonth: Double
     public let cashCollectedThisMonth: Double
@@ -35,6 +36,7 @@ public struct DashboardKPIs: Codable, Sendable, Hashable {
         lowStockItems: Int,
         upcomingEvents: Int,
         totalClients: Int,
+        totalProducts: Int,
         averageEventValue: Double,
         netSalesThisMonth: Double,
         cashCollectedThisMonth: Double,
@@ -47,6 +49,7 @@ public struct DashboardKPIs: Codable, Sendable, Hashable {
         self.lowStockItems = lowStockItems
         self.upcomingEvents = upcomingEvents
         self.totalClients = totalClients
+        self.totalProducts = totalProducts
         self.averageEventValue = averageEventValue
         self.netSalesThisMonth = netSalesThisMonth
         self.cashCollectedThisMonth = cashCollectedThisMonth
@@ -80,5 +83,36 @@ public struct DashboardEventStatusCount: Codable, Sendable, Hashable {
     public init(status: String, count: Int) {
         self.status = status
         self.count = count
+    }
+}
+
+/// Aggregated dashboard payload returned by `GET /api/dashboard/summary`.
+/// Bundles KPIs + the 5 chart/widget datasets into one response so the client
+/// fetches the entire analytics surface in a single round-trip instead of 6
+/// sequential GETs (issue #807). Mirrors `repository.DashboardSummary` on the
+/// backend. Relies on APIClient's `.convertFromSnakeCase` — no explicit
+/// `CodingKeys`.
+public struct DashboardSummary: Codable, Sendable, Hashable {
+    public let kpis: DashboardKPIs
+    public let revenueChart: [DashboardRevenuePoint]
+    public let eventsByStatus: [DashboardEventStatusCount]
+    public let topClients: [TopClient]
+    public let productDemand: [ProductDemandItem]
+    public let forecast: [ForecastDataPoint]
+
+    public init(
+        kpis: DashboardKPIs,
+        revenueChart: [DashboardRevenuePoint],
+        eventsByStatus: [DashboardEventStatusCount],
+        topClients: [TopClient],
+        productDemand: [ProductDemandItem],
+        forecast: [ForecastDataPoint]
+    ) {
+        self.kpis = kpis
+        self.revenueChart = revenueChart
+        self.eventsByStatus = eventsByStatus
+        self.topClients = topClients
+        self.productDemand = productDemand
+        self.forecast = forecast
     }
 }

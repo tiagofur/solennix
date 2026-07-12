@@ -402,3 +402,60 @@ func TestGetForecast(t *testing.T) {
 		repo.AssertExpectations(t)
 	})
 }
+
+// ---------------------------------------------------------------------------
+// GetSummary
+// ---------------------------------------------------------------------------
+
+func TestGetSummary(t *testing.T) {
+	t.Run("GivenValidRequest_WhenSummaryExists_ThenReturnOK", func(t *testing.T) {
+		repo := new(MockDashboardRepo)
+		h := newDashboardHandler(repo)
+
+		summary := &repository.DashboardSummary{
+			KPIs: &repository.DashboardKPIs{TotalRevenue: 50000, TotalProducts: 12},
+			RevenueChart: []repository.RevenueDataPoint{
+				{Month: "2026-07", Revenue: 10000, EventCount: 3},
+			},
+			EventsByStatus: []repository.EventStatusCount{
+				{Status: "confirmed", Count: 5},
+			},
+			TopClients: []repository.TopClient{
+				{ID: uuid.New(), Name: "Alice", TotalSpent: 20000, TotalEvents: 5},
+			},
+			ProductDemand: []repository.ProductDemandItem{
+				{ID: uuid.New(), Name: "Pastel 3 pisos", TimesUsed: 15, TotalRevenue: 30000},
+			},
+			Forecast: []repository.ForecastDataPoint{
+				{Month: "2026-08", ConfirmedRevenue: 25000, ConfirmedEvents: 3},
+			},
+		}
+		repo.On("GetSummary", mock.Anything, mock.Anything).Return(summary, nil)
+
+		req, _ := dashboardReq("/api/dashboard/summary")
+		rr := httptest.NewRecorder()
+		h.GetSummary(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		assert.Contains(t, rr.Body.String(), "50000")
+		assert.Contains(t, rr.Body.String(), "total_products")
+		assert.Contains(t, rr.Body.String(), "Pastel 3 pisos")
+		assert.Contains(t, rr.Body.String(), "revenue_chart")
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("GivenRepoError_WhenGetSummary_ThenInternalServerError", func(t *testing.T) {
+		repo := new(MockDashboardRepo)
+		h := newDashboardHandler(repo)
+
+		repo.On("GetSummary", mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
+
+		req, _ := dashboardReq("/api/dashboard/summary")
+		rr := httptest.NewRecorder()
+		h.GetSummary(rr, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Failed to get dashboard summary")
+		repo.AssertExpectations(t)
+	})
+}

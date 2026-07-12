@@ -23,6 +23,7 @@ type DashboardKPIs struct {
 	LowStockItems             int     `json:"low_stock_items"`
 	UpcomingEvents            int     `json:"upcoming_events"`
 	TotalClients              int     `json:"total_clients"`
+	TotalProducts             int     `json:"total_products"`
 	AverageEventValue         float64 `json:"average_event_value"`
 	NetSalesThisMonth         float64 `json:"net_sales_this_month"`
 	CashCollectedThisMonth    float64 `json:"cash_collected_this_month"`
@@ -64,6 +65,20 @@ type ForecastDataPoint struct {
 	Month             string  `json:"month"`
 	ConfirmedRevenue  float64 `json:"confirmed_revenue"`
 	ConfirmedEvents   int     `json:"confirmed_events"`
+}
+
+// DashboardSummary bundles every aggregated dashboard dataset into a single
+// response so the client can fetch KPIs + charts + widgets in one round-trip
+// instead of N sequential GETs (issue #807). Field params are pinned to the
+// values the iOS dashboard used to pass individually: revenue-chart period=year,
+// events-by-status scope=month, top-clients limit=5.
+type DashboardSummary struct {
+	KPIs           *DashboardKPIs      `json:"kpis"`
+	RevenueChart   []RevenueDataPoint  `json:"revenue_chart"`
+	EventsByStatus []EventStatusCount  `json:"events_by_status"`
+	TopClients     []TopClient         `json:"top_clients"`
+	ProductDemand  []ProductDemandItem `json:"product_demand"`
+	Forecast       []ForecastDataPoint `json:"forecast"`
 }
 
 // DashboardRepo provides data access for user-scoped dashboard analytics.
@@ -152,6 +167,16 @@ func (r *DashboardRepo) GetKPIs(ctx context.Context, userID uuid.UUID) (*Dashboa
 		WHERE user_id = $1`, userID).Scan(&kpis.TotalClients)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count clients: %w", err)
+	}
+
+	// Total products — lets the client drop the full /products list fetch that
+	// was only used to read .count for the onboarding checklist (issue #807).
+	err = tx.QueryRow(ctx, `
+		SELECT COUNT(*)
+		FROM products
+		WHERE user_id = $1`, userID).Scan(&kpis.TotalProducts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count products: %w", err)
 	}
 
 	// Average event value
@@ -415,4 +440,45 @@ func (r *DashboardRepo) GetForecast(ctx context.Context, userID uuid.UUID) ([]Fo
 		result = []ForecastDataPoint{}
 	}
 	return result, nil
+}
+
+// GetSummary bundles KPIs + the 5 chart/widget datasets into one response
+// (issue #807). It delegates to the existing methods sequentially — server-side
+// query time is small relative to the N client round-trips this collapses.
+// Params are pinned to the values the iOS dashboard used to pass individually:
+// revenue-chart period=year, events-by-status scope=month, top-clients limit=5.
+func (r *DashboardRepo) GetSummary(ctx context.Context, userID uuid.UUID) (*DashboardSummary, error) {
+	kpis, err := r.GetKPIs(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	revenueChart, err := r.GetRevenueChart(ctx, userID, "year")
+	if err != nil {
+		return nil, err
+	}
+	eventsByStatus, err := r.GetEventsByStatus(ctx, userID, "month")
+	if err != nil {
+		return nil, err
+	}
+	topClients, err := r.GetTopClients(ctx, userID, 5)
+	if err != nil {
+		return nil, err
+	}
+	productDemand, err := r.GetProductDemand(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	forecast, err := r.GetForecast(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &DashboardSummary{
+		KPIs:           kpis,
+		RevenueChart:   revenueChart,
+		EventsByStatus: eventsByStatus,
+		TopClients:     topClients,
+		ProductDemand:  productDemand,
+		Forecast:       forecast,
+	}, nil
 }

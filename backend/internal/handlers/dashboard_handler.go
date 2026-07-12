@@ -135,3 +135,20 @@ func (h *DashboardHandler) GetForecast(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, data)
 }
+
+// GetSummary returns KPIs + the 5 chart/widget datasets in one response so the
+// client can fetch the entire dashboard analytics surface in a single round-trip
+// instead of 6 sequential GETs (issue #807).
+// GET /api/dashboard/summary
+func (h *DashboardHandler) GetSummary(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+
+	summary, err := h.dashboardRepo.GetSummary(r.Context(), userID)
+	if err != nil {
+		slog.Error("dashboard: failed to get summary", "error", err, "user_id", userID)
+		writeError(w, http.StatusInternalServerError, "Failed to get dashboard summary")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, summary)
+}

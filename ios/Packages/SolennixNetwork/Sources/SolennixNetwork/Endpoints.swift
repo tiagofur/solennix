@@ -180,6 +180,11 @@ public enum Endpoint {
     /// while the underlying list endpoints continue loading.
     public static let dashboardKpis = "/dashboard/kpis"
 
+    /// Bundled dashboard endpoint — returns KPIs + the 5 chart/widget datasets
+    /// (revenue-chart, events-by-status, top-clients, product-demand, forecast)
+    /// in a single response. Collapses 6 client round-trips into one (issue #807).
+    public static let dashboardSummary = "/dashboard/summary"
+
     /// Revenue chart endpoint — returns `[DashboardRevenuePoint]` with one
     /// entry per month. Query param `period=month|quarter|year` controls the
     /// window (year = last 12 months). The dashboard's 6-month chart takes

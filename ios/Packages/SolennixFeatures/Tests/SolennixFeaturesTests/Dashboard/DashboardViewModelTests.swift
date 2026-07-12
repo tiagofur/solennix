@@ -50,6 +50,7 @@ final class DashboardViewModelTests: XCTestCase {
             lowStockItems: 2,
             upcomingEvents: 4,
             totalClients: 10,
+            totalProducts: 8,
             averageEventValue: 10000.0,
             netSalesThisMonth: 25000.0,
             cashCollectedThisMonth: 15000.0,
@@ -230,7 +231,76 @@ final class DashboardViewModelTests: XCTestCase {
         XCTAssertEqual(attention[2].event.id, "evt-unconfirmed")
     }
 
-    // MARK: - 4. Status Update Logic
+    // MARK: - 4. loadDashboard — summary + parallel lists
+    @MainActor
+    func testLoadDashboardPopulatesFromSummaryAndLists() async {
+        // One all-events list feeds both eventsThisMonth (client-side month
+        // filter) and the total count. /products is intentionally NOT stubbed
+        // — it must not be fetched anymore; totalProducts comes from KPIs.
+        let allEvents = "[]".data(using: .utf8)!
+        MockURLProtocol.requestHandler = { request in
+            let urlString = request.url?.absoluteString ?? ""
+            let ok = { (body: Data) in
+                (HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil,
+                                 headerFields: ["Content-Type": "application/json"])!, body)
+            }
+            if urlString.contains("/dashboard/summary") {
+                // Single bundled payload: KPIs + 5 datasets.
+                let json = """
+                {
+                    "kpis": {
+                        "totalRevenue": 50000.0,
+                        "eventsThisMonth": 5,
+                        "pendingQuotes": 3,
+                        "lowStockItems": 2,
+                        "upcomingEvents": 4,
+                        "totalClients": 10,
+                        "totalProducts": 8,
+                        "averageEventValue": 10000.0,
+                        "netSalesThisMonth": 25000.0,
+                        "cashCollectedThisMonth": 15000.0,
+                        "vatCollectedThisMonth": 2400.0,
+                        "vatOutstandingThisMonth": 1600.0
+                    },
+                    "revenueChart": [{"month": "2026-07", "revenue": 1500.0, "eventCount": 2}],
+                    "eventsByStatus": [{"status": "confirmed", "count": 4}],
+                    "topClients": [{"id": "00000000-0000-0000-0000-000000000001", "name": "Alice", "totalSpent": 20000.0, "totalEvents": 5}],
+                    "productDemand": [{"id": "00000000-0000-0000-0000-000000000002", "name": "Pastel", "timesUsed": 15, "totalRevenue": 30000.0}],
+                    "forecast": [{"month": "2026-08", "confirmedRevenue": 25000.0, "confirmedEvents": 3}]
+                }
+                """
+                return ok(json.data(using: .utf8)!)
+            }
+            if urlString.contains("/events") || urlString.contains("/clients")
+                || urlString.contains("/inventory") || urlString.contains("/payments") {
+                return ok(allEvents)
+            }
+            // Any unexpected endpoint (e.g. /products) → 404. loadDashboard
+            // tolerates list failures, but this also documents that /products
+            // is no longer in the call set.
+            return (HTTPURLResponse(url: request.url!, statusCode: 404, httpVersion: nil,
+                                    headerFields: nil)!, Data())
+        }
+
+        await viewModel.loadDashboard()
+
+        // Summary fanned out to chart/widget properties.
+        XCTAssertEqual(viewModel.kpis?.totalClients, 10)
+        XCTAssertEqual(viewModel.kpis?.totalProducts, 8)
+        XCTAssertEqual(viewModel.topClients.count, 1)
+        XCTAssertEqual(viewModel.topClients.first?.name, "Alice")
+        XCTAssertEqual(viewModel.productDemand.count, 1)
+        XCTAssertEqual(viewModel.forecast.count, 1)
+        XCTAssertEqual(viewModel.eventStatusCounts[.confirmed], 4)
+        XCTAssertEqual(viewModel.monthlyRevenueTrend.count, 6) // padded window
+
+        // totalProducts sourced from KPIs (no /products fetch).
+        XCTAssertEqual(viewModel.totalProducts, 8)
+        XCTAssertNil(viewModel.errorMessage)
+        XCTAssertTrue(viewModel.hasLoadedOnce)
+    }
+
+    // MARK: - 5. Status Update Logic
     @MainActor
     func testUpdateEventStatusSuccess() async {
         let updatedEvent = Event(
@@ -271,6 +341,7 @@ final class DashboardViewModelTests: XCTestCase {
                     "lowStockItems": 0,
                     "upcomingEvents": 0,
                     "totalClients": 0,
+                    "totalProducts": 0,
                     "averageEventValue": 0.0,
                     "netSalesThisMonth": 0.0,
                     "cashCollectedThisMonth": 0.0,
