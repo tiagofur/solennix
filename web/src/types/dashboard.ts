@@ -1,3 +1,5 @@
+import type { components } from "./api";
+
 // Mirrors backend/internal/repository/DashboardKPIs.
 // Fetched via GET /api/dashboard/kpis. Backend is the single source of truth
 // for every metric on the dashboard header — the web client no longer
@@ -9,6 +11,7 @@ export interface DashboardKpis {
   low_stock_items: number;
   upcoming_events: number;
   total_clients: number;
+  total_products: number;
   average_event_value: number;
   net_sales_this_month: number;
   cash_collected_this_month: number;
@@ -35,3 +38,16 @@ export interface DashboardEventStatusCount {
 }
 
 export type DashboardEventStatusScope = "month" | "all";
+
+// Bundled dashboard payload from GET /api/dashboard/summary. Collapses KPIs +
+// the 5 chart/widget datasets into one response (issue #807 / #932).
+// Mirrors backend/internal/repository/DashboardSummary. Snake_case — the web
+// API client returns raw JSON with no key-casing transform.
+export interface DashboardSummary {
+  kpis: DashboardKpis;
+  revenue_chart: DashboardRevenuePoint[];
+  events_by_status: DashboardEventStatusCount[];
+  top_clients: components["schemas"]["TopClient"][];
+  product_demand: components["schemas"]["ProductDemandItem"][];
+  forecast: components["schemas"]["ForecastDataPoint"][];
+}

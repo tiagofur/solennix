@@ -6,6 +6,7 @@ import type {
   DashboardKpis,
   DashboardRevenuePeriod,
   DashboardRevenuePoint,
+  DashboardSummary,
 } from "../types/dashboard";
 
 type TopClient = components["schemas"]["TopClient"];
@@ -13,6 +14,9 @@ type ProductDemandItem = components["schemas"]["ProductDemandItem"];
 type ForecastDataPoint = components["schemas"]["ForecastDataPoint"];
 
 export const dashboardService = {
+  async getSummary(): Promise<DashboardSummary> {
+    return api.get<DashboardSummary>("/dashboard/summary");
+  },
   async getKpis(): Promise<DashboardKpis> {
     return api.get<DashboardKpis>("/dashboard/kpis");
   },
