@@ -1,29 +1,35 @@
 # Sesión Activa — Solennix Agent Progress
 
 ## Feature en curso
-- **Issue:** #820 — perf(ios): Gate dashboard premium API fetches for basic plan users
-- **Estado:** done (pendiente merge PR #949)
-- **Branch:** `perf/ios-dashboard-premium-fetch-gating-820`
-- **Worktree:** `/Users/tiagofur/dev/solennix-ios-820`
+- **Issue:** #828 — fix(android): Widget monthly revenue diverges from dashboard netSalesThisMonth
+- **Estado:** done (pendiente PR)
+- **Branch:** `fix/android-widget-monthly-revenue-divergence-828`
 
 ## Root cause
-El issue se escribió antes de #807. Originalmente había 5 fetches premium separados; #807 los consolidó en un único `GET /dashboard/summary`. Eso significa que un **basic user hacía el mismo fetch pesado que un Pro/Business** — solo se le ocultaba el `premiumReportsCard` en la UI, pero los 5 datasets premium viajaban igual por la red para renderizarse en nada.
+El widget "Este mes" sumaba `COMPLETED` event `totalAmount` client-side (excluía `CONFIRMED`, sin conciencia de descuentos/impuestos). El dashboard usa `netSalesThisMonth` del backend (`/dashboard/summary`), que scopea confirmed+completed y es tax/discount-aware. Widget y dashboard mostraban valores distintos.
 
 ## Cambios
-- [x] `DashboardViewModel.swift`: agregado `isBasicPlan: Bool` al `init` (snapshot de `PlanLimitsManager.isBasicPlan` al cargar, default `false` para no romper callers existentes). `loadDashboard()` branchear: basic → `GET /dashboard/kpis` (core counts); paid → `GET /dashboard/summary` (bundle completo). Extraído `applyKPIs(_ kpis:now:)` de `applySummary` para compartir la lógica de KPIs + `NotificationCenter` post + `lowStockCount` sin duplicar.
-- [x] `DashboardView.swift`: `.task` pasa `isBasicPlan: planLimitsManager.isBasicPlan` al constructor del VM. Gateados `ForecastWidgetView`, `TopClientsWidgetView`, `ProductDemandWidgetView` detrás de `!planLimitsManager.isBasicPlan` para consistencia con `premiumReportsCard` (que ya estaba gateado). Antes los 3 widgets se renderizaban vacíos/loading para basic users.
-- [x] Tests `DashboardViewModelPlanGatingTests.swift` (nuevo, en `SolennixFeaturesTests/Dashboard/`): 2 casos — basic → kpis only (summary nunca hit, premium datasets vacíos), paid → summary (todos los datasets populados). Reusa `MockURLProtocol` de `DashboardViewModelTests`.
+- **`WidgetKpiSnapshot`** (`:core:model`): DTO con `netSalesThisMonth`, `eventsThisMonth`, `updatedAt` — el snapshot server-authoritative que el widget prefiere.
+- **`WidgetKpiStore`** (`:widget`): lee/escribe el snapshot en el mismo `EncryptedSharedPreferences` compartido app↔widget (mismo UID). `read()`/`write()`/`clear()` best-effort.
+- **`WidgetSyncTrigger`** (`:core:data`): extendido con `saveKpiSnapshot(kpis)` + `clearKpiSnapshot()`.
+- **`WidgetSyncCoordinator`** (`:app`): impl que persiste el snapshot vía `WidgetKpiStore` y luego refresca widgets.
+- **`DashboardViewModelSync.refresh()`**: tras `getSummary()` exitoso, llama `widgetSyncTrigger.saveKpiSnapshot(summary.kpis)`.
+- **`SettingsViewModel.logout()`**: llama `widgetSyncTrigger.clearKpiSnapshot()` antes del refresh.
+- **`KpiCalculator.deriveMonthlyRevenue()`**: fallback client-side corregido — confirmed+completed (no solo completed), scoped al mes calendario real vía `YearMonth`. Usado solo cuando no hay snapshot (cold launch antes del primer fetch del dashboard).
+- **`KpiWidget`**: lee `WidgetKpiStore.read(context)`; prefiere `snapshot.netSalesThisMonth`, fallback a `deriveMonthlyRevenue(events)`. También corregido el upcoming count para usar `parseFlexibleDate` en vez de naive string compare.
 
 ## Verificación
-- `SolennixFeatures` (xcodebuild test): 155/155 (+2 nuevos)
-- `Solennix` (xcodebuild test): 469/469 (1 skipped preexistente)
-- `./init.sh`: verde (Go + Web 1341/1341)
+- `:widget:testDebugUnitTest`: verde (+5 tests nuevos de `deriveMonthlyRevenue`)
+- `:app:testDebugUnitTest`: verde (coordinator test actualizado con nuevo `appContext` param)
+- `:feature:{dashboard,settings}:testDebugUnitTest`: verde
+- `assembleDebug`: APK generado OK
+- `./init.sh`: verde (entorno completo)
 
 ## Notas
-- `init(apiClient:)` defaultea `isBasicPlan: false` → callers existentes (tests, previews) siguen funcionando sin cambios (toman el path paid/summary, que es el comportamiento previo).
-- Rebasado sobre `origin/main` (`61847215`) antes de pushear.
-- Endpoint `dashboardKpis` ya existía (`/dashboard/kpis`) — no requiere cambio de backend.
-- Paridad cross-platform NO necesaria: optimización de fetch específica de iOS. Android/Web tienen sus propios mecanismos de gating.
+- Patrón "server-authoritative override" (igual que iOS PR #921): el dashboard ya fetcha `/dashboard/summary` con `netSalesThisMonth`; solo faltaba persistirlo para que el widget lo lea.
+- El snapshot vive en `EncryptedSharedPreferences` (mismo archivo que `WidgetAuthProvider` ya lee) — no requiere DataStore nuevo ni una tabla Room adicional.
+- El fallback `deriveMonthlyRevenue` replica el scope del backend (`status IN ('confirmed','completed')`, `totalAmount` ya post-descuento) para cold-launch antes del primer fetch. No replica prorrateo VAT (el snapshot del server es la fuente autoritativa para eso).
+- #824 (pending payment balance) ya estaba resuelto en PR #913 (commit 79bb1043) — verificado y confirmado antes de pivotar a #828.
 
 ## Bloqueos
 - Ninguno.

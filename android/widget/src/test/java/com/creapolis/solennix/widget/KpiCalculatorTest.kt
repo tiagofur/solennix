@@ -189,4 +189,57 @@ class KpiCalculatorTest {
             createdAt = today.toString()
         )
     }
+
+    // --- deriveMonthlyRevenue (server snapshot fallback, #828) ---
+
+    @Test
+    fun `monthly revenue includes confirmed and completed events this month`() {
+        val events = listOf(
+            event("e1", totalAmount = 1000.0, status = EventStatus.CONFIRMED, date = today),
+            event("e2", totalAmount = 2000.0, status = EventStatus.COMPLETED, date = today.minusDays(5))
+        )
+
+        assertEquals(3000.0, deriveMonthlyRevenue(events, today))
+    }
+
+    @Test
+    fun `monthly revenue excludes quoted and cancelled events`() {
+        val events = listOf(
+            event("e1", totalAmount = 1000.0, status = EventStatus.QUOTED, date = today),
+            event("e2", totalAmount = 500.0, status = EventStatus.CANCELLED, date = today),
+            event("e3", totalAmount = 800.0, status = EventStatus.CONFIRMED, date = today)
+        )
+
+        assertEquals(800.0, deriveMonthlyRevenue(events, today))
+    }
+
+    @Test
+    fun `monthly revenue excludes events from a different month`() {
+        val lastMonth = today.minusMonths(1)
+        val events = listOf(
+            event("e1", totalAmount = 5000.0, status = EventStatus.COMPLETED, date = lastMonth),
+            event("e2", totalAmount = 1000.0, status = EventStatus.CONFIRMED, date = today)
+        )
+
+        assertEquals(1000.0, deriveMonthlyRevenue(events, today))
+    }
+
+    @Test
+    fun `monthly revenue returns zero for empty event list`() {
+        assertEquals(0.0, deriveMonthlyRevenue(emptyList(), today))
+    }
+
+    @Test
+    fun `monthly revenue handles month boundary - last day of month included, first of next excluded`() {
+        val endOfMonth = LocalDate.of(2026, 7, 31)
+        val startOfNextMonth = LocalDate.of(2026, 8, 1)
+        val events = listOf(
+            event("e1", totalAmount = 1000.0, status = EventStatus.CONFIRMED, date = endOfMonth),
+            event("e2", totalAmount = 2000.0, status = EventStatus.COMPLETED, date = startOfNextMonth)
+        )
+
+        // Only e1 is in July; e2 is August.
+        assertEquals(1000.0, deriveMonthlyRevenue(events, today))
+    }
 }
+
