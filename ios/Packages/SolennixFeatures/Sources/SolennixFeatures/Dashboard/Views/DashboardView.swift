@@ -79,8 +79,9 @@ public struct DashboardView: View {
                 // Premium: Monthly Revenue Trend
                 premiumReportsCard
 
-                // Forecast
-                if let vm = viewModel {
+                // Forecast (premium — gated so basic users don't see an empty
+                // widget for data they can't fetch, #820)
+                if let vm = viewModel, !planLimitsManager.isBasicPlan {
                     ForecastWidgetView(
                         forecast: vm.forecast,
                         isLoading: vm.isLoading
@@ -96,12 +97,12 @@ public struct DashboardView: View {
                 // Upcoming Events
                 upcomingEventsSection
 
-                // Analytics Widgets
-                if let vm = viewModel {
+                // Analytics Widgets (premium — same gate as premiumReportsCard, #820)
+                if let vm = viewModel, !planLimitsManager.isBasicPlan {
                     let columns = sizeClass == .regular
                         ? [GridItem(.flexible(), spacing: Spacing.md), GridItem(.flexible(), spacing: Spacing.md)]
                         : [GridItem(.flexible())]
-                    
+
                     LazyVGrid(columns: columns, spacing: Spacing.md) {
                         TopClientsWidgetView(
                             clients: vm.topClients,
@@ -149,7 +150,7 @@ public struct DashboardView: View {
         .background(SolennixColors.surfaceGrouped)
         .task {
             if viewModel == nil {
-                viewModel = DashboardViewModel(apiClient: apiClient)
+                viewModel = DashboardViewModel(apiClient: apiClient, isBasicPlan: planLimitsManager.isBasicPlan)
             }
             await viewModel?.loadDashboard()
             await planLimitsManager.checkLimits()
