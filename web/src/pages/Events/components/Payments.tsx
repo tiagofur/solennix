@@ -1,8 +1,6 @@
-import React, { useCallback, useEffect, useState, useRef } from "react";
-import { paymentService } from "../../../services/paymentService";
+import React, { useEffect, useState, useRef } from "react";
 import { Payment } from "../../../types/entities";
 import { Trash2, DollarSign, CheckCircle, AlertCircle, Calendar, CreditCard, Banknote } from "lucide-react";
-import { logError } from "../../../lib/errorHandler";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { Modal } from "../../../components/Modal";
 import { PaymentFormFields, PaymentFormData } from "../../../components/PaymentFormFields";
@@ -11,6 +9,11 @@ import clsx from "clsx";
 import { useTranslation } from "react-i18next";
 import { parseEventDate } from "../../../lib/dateUtils";
 import { formatCurrency as libFormatCurrency, PAYMENT_COMPLETION_EPSILON } from "../../../lib/finance";
+import {
+  usePaymentsByEvent,
+  useCreatePayment,
+  useDeletePayment,
+} from "../../../hooks/queries/usePaymentQueries";
 
 interface PaymentsProps {
   eventId: string;
@@ -39,13 +42,14 @@ export const Payments: React.FC<PaymentsProps> = ({
   currency,
 }) => {
   const { t, i18n } = useTranslation(["events"]);
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: paymentsData = [], isLoading } = usePaymentsByEvent(eventId);
+  const payments: Payment[] = paymentsData;
+  const createPaymentMutation = useCreatePayment();
+  const deletePaymentMutation = useDeletePayment();
   const [isAdding, setIsAdding] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [formInitialAmount, setFormInitialAmount] = useState(0);
   const [formInitialNotes, setFormInitialNotes] = useState("");
-  const [isSavingPayment, setIsSavingPayment] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -97,21 +101,6 @@ export const Payments: React.FC<PaymentsProps> = ({
     setIsAdding(true);
   };
 
-  const loadPayments = useCallback(async () => {
-    try {
-      const data = await paymentService.getByEventId(eventId);
-      setPayments(data || []);
-    } catch (err) {
-      logError("Error loading payments", err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [eventId]);
-
-  useEffect(() => {
-    loadPayments();
-  }, [loadPayments]);
-
   const statusTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -121,12 +110,12 @@ export const Payments: React.FC<PaymentsProps> = ({
   }, []);
 
   const onSubmit = async (data: PaymentFormData) => {
-    setIsSavingPayment(true);
+    const newPaymentAmount = Number(data.amount);
     try {
-      const newPaymentAmount = Number(data.amount);
       // `user_id` is NOT sent in the body — the backend takes the
-      // authenticated user from the JWT.
-      await paymentService.create({
+      // authenticated user from the JWT. Toast + cache invalidation are
+      // handled by useCreatePayment.
+      await createPaymentMutation.mutateAsync({
         event_id: eventId,
         amount: newPaymentAmount,
         payment_date: data.payment_date,
@@ -142,29 +131,22 @@ export const Payments: React.FC<PaymentsProps> = ({
       }
 
       setIsAdding(false);
-      loadPayments();
       onPaymentAdded?.();
-      addToast(t("events:summary.payments.success_create"), "success");
-    } catch (err) {
-      logError("Error creating payment", err);
-      addToast(t("events:summary.payments.error_create"), "error");
-    } finally {
-      setIsSavingPayment(false);
+    } catch {
+      // useCreatePayment already logs and toasts the error.
     }
   };
 
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
-      await paymentService.delete(deleteId);
-      addToast(t('events:summary.payments.success_delete'), 'success');
+      // Toast + cache invalidation are handled by useDeletePayment.
+      await deletePaymentMutation.mutateAsync({ id: deleteId, eventId });
       setConfirmOpen(false);
       setDeleteId(null);
-      loadPayments();
       onPaymentAdded?.();
-    } catch (err) {
-      logError("Error deleting payment", err);
-      addToast(t('events:summary.payments.error_delete'), 'error');
+    } catch {
+      // useDeletePayment already logs and toasts the error.
     }
   };
 
@@ -372,7 +354,7 @@ export const Payments: React.FC<PaymentsProps> = ({
             saldoAmount={balance > 0 ? balance : undefined}
             submitLabel={t("events:summary.payments.form.confirm")}
             cancelLabel={t("events:summary.payments.form.cancel")}
-            isSubmitting={isSavingPayment}
+            isSubmitting={createPaymentMutation.isPending}
             onCancel={() => setIsAdding(false)}
             onSubmit={onSubmit}
           />
