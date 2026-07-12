@@ -141,6 +141,20 @@ final class WidgetDataRoundTripTests: XCTestCase {
         let kpis = WidgetKPIs(monthlyRevenue: 5000, eventsThisMonth: 3, eventsThisWeek: 1,
                                lowStockCount: 0, pendingPayments: 0,
                                confirmedEvents: 1, quotedEvents: 2)
-        XCTAssertTrue(kpis.formattedRevenue.contains("USD"), "Revenue should reflect synced currency code")
+
+        // Locale-independent check: build a reference formatter with the same
+        // config as `formattedRevenue` but pinned to the synced code. Both share
+        // the runtime's default locale, so this fails only if the sync is
+        // ignored — it never asserts on the localized symbol (e.g. "$" vs
+        // "USD"), which is CI-locale dependent.
+        let reference = NumberFormatter()
+        reference.numberStyle = .currency
+        reference.currencyCode = "USD"
+        reference.maximumFractionDigits = 0
+        let expected = reference.string(from: NSNumber(value: 5000))
+
+        XCTAssertEqual(WidgetCurrency.current, "USD")
+        XCTAssertEqual(kpis.formattedRevenue, expected,
+                       "formattedRevenue should use the synced currency code")
     }
 }
