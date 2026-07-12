@@ -145,7 +145,7 @@ export const RowActionMenu: React.FC<RowActionMenuProps> = ({ items }) => {
           setOpen((prev) => !prev);
         }}
         className="p-1.5 text-text-secondary hover:text-primary hover:bg-surface-alt rounded-lg transition-colors inline-block"
-        aria-label={t('common:nav.actions_group')}
+        aria-label={t('command_palette.actions_group')}
         aria-haspopup="true"
         aria-expanded={open}
       >
