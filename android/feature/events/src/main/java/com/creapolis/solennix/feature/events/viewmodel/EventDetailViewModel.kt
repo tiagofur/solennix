@@ -9,6 +9,7 @@ import com.creapolis.solennix.core.data.repository.ClientRepository
 import com.creapolis.solennix.core.data.repository.EventRepository
 import com.creapolis.solennix.core.data.repository.PaymentRepository
 import com.creapolis.solennix.core.data.repository.StaffRepository
+import com.creapolis.solennix.core.data.widget.WidgetSyncTrigger
 import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.DuplicateEventData
 import com.creapolis.solennix.core.model.DuplicateEventDataHolder
@@ -73,6 +74,7 @@ class EventDetailViewModel @Inject constructor(
     internal val apiService: ApiService,
     internal val authManager: AuthManager,
     internal val eventDayNotificationManager: EventDayNotificationManager,
+    internal val widgetSyncTrigger: WidgetSyncTrigger,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -262,6 +264,8 @@ class EventDetailViewModel @Inject constructor(
                 val updated = currentEvent.copy(status = newStatus)
                 eventRepository.updateEvent(updated)
                 _event.value = updated
+                // Room mutated — refresh home-screen widgets (parity iOS `.solennixEventUpdated`).
+                widgetSyncTrigger.refreshAll()
             } catch (e: Exception) {
                 _errorMessage.value = translateStatusError(e)
             }
@@ -328,6 +332,8 @@ class EventDetailViewModel @Inject constructor(
             try {
                 eventRepository.deleteEvent(eventId)
                 deleteSuccess = true
+                // Room mutated — refresh home-screen widgets (parity iOS `.solennixEventUpdated`).
+                widgetSyncTrigger.refreshAll()
             } catch (e: Exception) {
                 _errorMessage.value = tr(R.string.events_detail_error_delete_event, e.message.orEmpty())
             }

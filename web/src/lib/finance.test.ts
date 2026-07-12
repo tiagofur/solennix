@@ -1,5 +1,13 @@
-import { describe, it, expect } from 'vitest';
-import { getEventTaxAmount, getEventTotalCharged, getEventNetSales } from './finance';
+import { describe, it, expect, afterEach } from 'vitest';
+import {
+  getEventTaxAmount,
+  getEventTotalCharged,
+  getEventNetSales,
+  formatCurrency,
+  setDefaultCurrency,
+  setDefaultLocale,
+  localeFromLanguage,
+} from './finance';
 
 describe('finance utils', () => {
   describe('getEventTaxAmount', () => {
@@ -43,6 +51,49 @@ describe('finance utils', () => {
       expect(
         getEventNetSales({ total_amount: 100, requires_invoice: true, tax_amount: 200 }),
       ).toBe(0);
+    });
+  });
+
+  describe('formatCurrency', () => {
+    afterEach(() => {
+      // Reset module-level defaults so tests are isolated
+      setDefaultLocale('es-MX');
+      setDefaultCurrency('MXN');
+    });
+
+    it('formats using the default es-MX locale and MXN currency', () => {
+      // es-MX + MXN → bare $ symbol
+      expect(formatCurrency(1500)).toBe('$1,500.00');
+    });
+
+    it('switches formatting when setDefaultLocale changes', () => {
+      // en-US + MXN → Intl disambiguates with MX$ prefix
+      setDefaultLocale('en-US');
+      expect(formatCurrency(1500)).toBe('MX$1,500.00');
+    });
+
+    it('honors an explicit currency argument', () => {
+      // en-US + USD → bare $ symbol
+      setDefaultLocale('en-US');
+      expect(formatCurrency(1500, 'USD')).toBe('$1,500.00');
+    });
+
+    it('returns $0.00 for NaN input', () => {
+      expect(formatCurrency('not-a-number')).toBe('$0.00');
+    });
+  });
+
+  describe('localeFromLanguage', () => {
+    it('maps en to en-US', () => {
+      expect(localeFromLanguage('en')).toBe('en-US');
+    });
+
+    it('maps es to es-MX', () => {
+      expect(localeFromLanguage('es')).toBe('es-MX');
+    });
+
+    it('falls back to es-MX for unknown languages', () => {
+      expect(localeFromLanguage('fr')).toBe('es-MX');
     });
   });
 });

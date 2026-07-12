@@ -3,6 +3,7 @@ package com.creapolis.solennix.feature.settings.viewmodel
 import android.content.Context
 import com.creapolis.solennix.core.data.LocalCacheManager
 import com.creapolis.solennix.core.data.repository.SettingsRepository
+import com.creapolis.solennix.core.data.widget.WidgetSyncTrigger
 import com.creapolis.solennix.core.model.ThemeConfig
 import com.creapolis.solennix.core.model.User
 import com.creapolis.solennix.core.network.ApiService
@@ -35,6 +36,7 @@ class SettingsViewModelTest {
     private val settingsRepository = mockk<SettingsRepository>(relaxed = true)
     private val localCacheManager = mockk<LocalCacheManager>(relaxed = true)
     private val apiService = mockk<ApiService>()
+    private val widgetSyncTrigger = mockk<WidgetSyncTrigger>(relaxed = true)
     private val context = mockk<Context>(relaxed = true)
 
     @BeforeEach
@@ -64,6 +66,7 @@ class SettingsViewModelTest {
             settingsRepository = settingsRepository,
             localCacheManager = localCacheManager,
             apiService = apiService,
+            widgetSyncTrigger = widgetSyncTrigger,
             context = context
         )
 
@@ -81,6 +84,7 @@ class SettingsViewModelTest {
             settingsRepository = settingsRepository,
             localCacheManager = localCacheManager,
             apiService = apiService,
+            widgetSyncTrigger = widgetSyncTrigger,
             context = context
         )
 
@@ -90,5 +94,6 @@ class SettingsViewModelTest {
         coVerify(exactly = 1) { billingManager.logout() }
         coVerify(exactly = 1) { authManager.logout() }
         coVerify(exactly = 1) { localCacheManager.clearAll() }
+        coVerify(exactly = 1) { widgetSyncTrigger.refreshAllUnconditional() }
     }
 }

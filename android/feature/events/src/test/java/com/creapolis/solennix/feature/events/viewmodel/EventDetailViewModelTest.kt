@@ -48,6 +48,7 @@ class EventDetailViewModelTest {
     private val apiService = mockk<ApiService>(relaxed = true)
     private val authManager = mockk<AuthManager>(relaxed = true)
     private val eventDayNotificationManager = mockk<EventDayNotificationManager>(relaxed = true)
+    private val widgetSyncTrigger = mockk<com.creapolis.solennix.core.data.widget.WidgetSyncTrigger>(relaxed = true)
 
     private val dispatcher = StandardTestDispatcher()
 
@@ -144,6 +145,7 @@ class EventDetailViewModelTest {
             apiService = apiService,
             authManager = authManager,
             eventDayNotificationManager = eventDayNotificationManager,
+            widgetSyncTrigger = widgetSyncTrigger,
             savedStateHandle = SavedStateHandle(mapOf("eventId" to "event-1"))
         )
     }

@@ -134,7 +134,39 @@ public final class AuthManager {
     ) {
         self.keychain = keychain
         self.defaults = defaults
+        #if DEBUG
+        applyUITestAuthBootstrap()
+        #endif
     }
+
+    #if DEBUG
+    /// Resolves auth state synchronously for UI tests so ContentView does not stall
+    /// on SplashView while waiting for the async `.task { checkAuth() }` chain.
+    /// `checkAuth()` keeps the same early-return paths for idempotency.
+    private func applyUITestAuthBootstrap() {
+        let env = ProcessInfo.processInfo.environment
+        if env["SOLX_UI_TEST_BYPASS_AUTH"] == "1" {
+            let mockUser = User(
+                id: "mock-user-id",
+                email: "test@example.com",
+                name: "Mock User",
+                role: "admin",
+                plan: .pro,
+                createdAt: "2026-01-01T00:00:00Z",
+                updatedAt: "2026-01-01T00:00:00Z"
+            )
+            currentUser = mockUser
+            authState = .authenticated(mockUser)
+            return
+        }
+        if env["SOLX_UI_TEST_MOCK_LOGIN"] == "1" {
+            keychain.delete(for: KeychainHelper.Keys.accessToken)
+            keychain.delete(for: KeychainHelper.Keys.refreshToken)
+            currentUser = nil
+            authState = .unauthenticated
+        }
+    }
+    #endif
 
     // MARK: - Session Restore
 
@@ -587,10 +619,10 @@ public final class AuthManager {
     /// - Returns: `true` if authentication succeeded.
     public func authenticateWithBiometrics() async throws -> Bool {
         let context = LAContext()
-        context.localizedReason = "Desbloquear Solennix"
+        context.localizedReason = NetL10n.text("auth.biometric.unlock_reason", "Unlock Solennix")
         let success = try await context.evaluatePolicy(
             .deviceOwnerAuthenticationWithBiometrics,
-            localizedReason: "Inicia sesion con Face ID o Touch ID"
+            localizedReason: NetL10n.text("auth.biometric.reason", "Sign in with Face ID or Touch ID")
         )
         if success {
             biometricPassed = true
