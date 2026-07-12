@@ -27,7 +27,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowT
   }
 
   if (!allowTeamMember && user.role === 'team_member') {
-    return <Navigate to="/team/events" replace />;
+    return <Navigate to="/team/work" replace />;
   }
 
   return <>{children}</>;
