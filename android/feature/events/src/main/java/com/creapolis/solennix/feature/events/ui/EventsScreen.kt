@@ -30,6 +30,8 @@ import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import com.creapolis.solennix.core.designsystem.component.SolennixPullToRefreshBox
+import com.creapolis.solennix.core.designsystem.component.UpgradeBanner
+import com.creapolis.solennix.core.designsystem.component.UpgradeBannerStyle
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -123,6 +125,7 @@ fun EventsScreen(
     onEventEdit: (String) -> Unit = onEventClick,
     onNavigateBack: () -> Unit,
     onSearchClick: (() -> Unit)? = null,
+    onUpgradeClick: () -> Unit = {},
     onCreateEventClick: (LocalDate) -> Unit = {},
     showBackButton: Boolean = true
 ) {
@@ -225,6 +228,15 @@ fun EventsScreen(
                 .padding(padding)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
+                // Near-limit warning banner — proactive upsell before the hard block
+                // fires in the FAB/quick-action. Parity with iOS EventListView.
+                viewModel.nearLimitMessage?.let { message ->
+                    UpgradeBanner(
+                        message = message,
+                        style = UpgradeBannerStyle.WARNING,
+                        onUpgradeClick = onUpgradeClick
+                    )
+                }
                 // View mode toggle
                 ViewModeToggle(
                     selectedMode = viewMode,

@@ -157,6 +157,20 @@ fun DashboardScreen(
                     }
                 }
 
+                // Near-limit warning banner — proactive upsell when the free-plan
+                // monthly event count is one away from the cap (parity with iOS
+                // DashboardView.planLimitsBanner). Hard blocking is handled by
+                // EventPlanGateViewModel before navigating to the form.
+                viewModel.nearLimitMessage?.let { message ->
+                    item {
+                        UpgradeBanner(
+                            message = message,
+                            style = UpgradeBannerStyle.WARNING,
+                            onUpgradeClick = onUpgradeClick
+                        )
+                    }
+                }
+
                 // Pending Events Banner
                 if (uiState.pendingEvents.isNotEmpty()) {
                     item {

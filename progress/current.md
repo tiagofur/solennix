@@ -1,29 +1,36 @@
 # Sesión Activa — Solennix Agent Progress
 
 ## Feature en curso
-- **Issue:** #806 — fix(ios): PlanLimitsManager swallows errors in checkLimits()
+- **Issue:** #830 — fix(android): No plan gating before navigation to event form
 - **Estado:** done (pendiente PR)
-- **Branch:** `fix/ios-plan-limits-swallowed-errors`
+- **Branch:** `fix/android-plan-gating-event-form-830`
+- **Worktree:** `/Users/tiagofur/dev/solennix-android`
 
 ## Root cause
-`PlanLimitsManager.checkLimits()` usaba `(try? await ...) ?? []` para cada endpoint. En fallo de red, todos los counts se seteaban a **0** → `canCreate*` retornaba `true** → el gate free-plan se **abría silenciosamente** (false allowance). El usuario entraba al form sin el guard proactivo y recién al submitir recibía el 403 del server. Además, el `do` no tenía `catch` → cero observabilidad.
+Android navegaba a `event_form?eventId=` (evento nuevo) desde 6 entrypoints sin checkear `canCreateEvent` antes. Free users a 4 eventos/mes solo recibían el paywall al final del submit dentro del form. iOS sí gateaba en `EventListView`/`DashboardView` con `planLimitsManager.canCreateEvent` + banner. Paridad rota (Judgment Day A-005 CRITICAL).
 
 ## Cambios
-- [x] `PlanLimitsManager.swift`: agrega `Logger(subsystem: SolennixLog.subsystem, category: "PlanLimitsManager")` (mismo patrón que `DashboardViewModel`). Reescribe el fetch con `async let` + `do/catch` por endpoint: en éxito actualiza el count, en fallo `logger.error(...)` y **conserva** el último valor. `defer { isLoading = false }` garantiza el reset. Rebasado sobre #805 (ya mergeado): usa `Date.utcMonthRange()` para el rango de mes.
-- [x] Tests `PlanLimitsManagerTests.swift` (nuevo): 4 casos — preserva counts en error total (regresión #806), actualiza en éxito consecutivo, fallo parcial (events falla + clients ok), no-op sin user.
+- [x] `EventPlanGateViewModel.kt` (nuevo, módulo `app`): `@HiltViewModel` centralizado que expone `isLimitReached`/`limitReachedMessage`. `checkLimit()` en init + al reanudar (`LifecycleResumeEffect`).
+- [x] `CompactBottomNavLayout.kt`: helper `tryCreateEvent(route)` que muestra `UpgradePlanDialog` si `isLimitReached` o navega. Aplicado a los 6 entrypoints: FAB global, Dashboard quick-action, Dashboard onboarding, EventsScreen calendario, QuickQuote→Convert, EventDetail→Duplicate.
+- [x] `EventListViewModel.kt`: agregado `PlanLimitsManager`+`AuthManager` al constructor. Propiedades `limitCheckResult`/`isLimitReached`/`nearLimitMessage`/`limitReachedMessage` (clon del patrón `ClientListViewModel`). `checkPlanLimits()` en init + al final de `refresh()`.
+- [x] `EventsScreen.kt`: parámetro `onUpgradeClick`, `UpgradeBanner(WARNING)` near-limit arriba del content.
+- [x] `DashboardViewModel.kt`: agregado `PlanLimitsManager` al constructor, `limitCheckResult`/`nearLimitMessage`. `checkPlanLimits()` en `refresh()` (vía `DashboardViewModelSync.kt`).
+- [x] `DashboardScreen.kt`: `UpgradeBanner(WARNING)` near-limit debajo del promo banner existente.
+- [x] Strings `plan_limit_events_near`/`plan_limit_events_reached` en `core:designsystem` (genéricos, reutilizables cross-feature — dashboard no depende de events).
+
+## Decisiones
+- **Gate centralizado en módulo `app`** (no replicado 6 veces): los entrypoints viven en `CompactBottomNavLayout`, un solo `EventPlanGateViewModel` los cubre.
+- **Banner near-limit además del diálogo**: paridad iOS + clients/products Android. El diálogo bloquea; el banner preveniene.
+- **`EventFormViewModel.checkCreateEvent` existente NO se toca**: queda como defensa en profundidad si el gate falla offline.
+- **Edición (`eventId=$id`) no se gatea**: correcto, solo crear.
+- Strings en `core:designsystem` (no en `feature:events`) porque `DashboardViewModel` referencia el string y dashboard no depende de events.
 
 ## Verificación
-- `SolennixFeatures` (xcodebuild test): suite completa en verde (+4 nuevos)
-- `Solennix` (xcodebuild test): 469/469 (1 skipped preexistente)
-- `./init.sh`: verde
-- Build esquema `Solennix`: OK
-
-## Notas
-- Gate on error: **preservar último valor + log** (decidido). No fail-closed: bloquear al usuario offline contradice la naturaleza offline-capable de la app (OfflineMutationQueue).
-- UI feedback: **solo logging** (decidido). `PlanLimitsManager` es `@Environment` compartido, no un per-screen VM; los list Views ya muestran su propio error de `load*` que típicamente falla a la vez.
-- `async let` no se puede capturar en closures → el helper `updateCount`/`assignCount` no funcionaba. Resuelto con `do/catch` inline por cada `await`.
-- Paridad cross-platform NO necesaria: bug de manejo de errores del manager de plan de iOS.
-- Resuelto conflicto de merge con #805 (PR #929, ya mergeado): ambas tocaban `checkLimits()` en áreas ortogonales (TZ del rango de mes vs. manejo de errores del fetch).
+- `:core:designsystem:assembleDebug :feature:events:assembleDebug :feature:dashboard:assembleDebug :app:assembleDebug`: BUILD SUCCESSFUL
+- `:feature:events:testDebugUnitTest`: verde (+4 tests nuevos en `EventListViewModelTest`)
+- `:feature:dashboard:testDebugUnitTest`: verde (+1 test near-limit, 5 constructores actualizados)
+- `:app:testDebugUnitTest`: verde (+4 tests `EventPlanGateViewModelTest`)
+- `./init.sh`: verde (backend Go + web React 1334 tests)
 
 ## Bloqueos
 - Ninguno.

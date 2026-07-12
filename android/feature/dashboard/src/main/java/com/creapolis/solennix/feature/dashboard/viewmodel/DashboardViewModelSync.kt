@@ -3,6 +3,7 @@ package com.creapolis.solennix.feature.dashboard.viewmodel
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.core.model.DashboardRevenuePoint
+import com.creapolis.solennix.core.model.Plan
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
@@ -23,6 +24,14 @@ fun DashboardViewModel.refresh() {
         } finally {
             _isRefreshing.value = false
         }
+    }
+
+    // Re-evaluate the event plan limit after the sync so the near-limit
+    // banner reflects events created/deleted since the last refresh.
+    viewModelScope.launch {
+        limitCheckResult = planLimitsManager.canCreateEvent(
+            authManager.currentUser.value?.plan ?: Plan.BASIC
+        )
     }
 
     // Single bundled round-trip: KPIs + the 5 chart/widget datasets

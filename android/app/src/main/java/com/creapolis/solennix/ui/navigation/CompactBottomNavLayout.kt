@@ -41,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,6 +60,7 @@ import androidx.navigation.navArgument
 import com.creapolis.solennix.R
 import com.creapolis.solennix.core.designsystem.component.QuickActionsFAB
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
+import com.creapolis.solennix.core.designsystem.component.UpgradePlanDialog
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.feature.clients.ui.ClientDetailScreen
 import com.creapolis.solennix.feature.clients.ui.ClientFormScreen
@@ -106,6 +108,7 @@ import com.creapolis.solennix.feature.staff.ui.StaffTeamFormScreen
 import com.creapolis.solennix.feature.staff.ui.StaffTeamListScreen
 import com.creapolis.solennix.feature.payments.ui.PaymentInboxScreen
 import com.creapolis.solennix.feature.settings.ui.ReviewsScreen
+import com.creapolis.solennix.ui.plan.EventPlanGateViewModel
 
 @Composable
 fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
@@ -113,6 +116,43 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    // Centralized plan-limit gate for "create new event" entrypoints (#830).
+    // Free-plan users hit the UpgradePlanDialog before navigating to event_form,
+    // matching iOS EventListView's list-level gating.
+    val gateVm: EventPlanGateViewModel = hiltViewModel()
+    var showLimitDialog by remember { mutableStateOf(false) }
+
+    // Re-check the monthly event count whenever we return to a top-level
+    // destination so the gate reflects events created/deleted elsewhere.
+    LifecycleResumeEffect(Unit) {
+        gateVm.checkLimit()
+        onPauseOrDispose { }
+    }
+
+    /**
+     * Navigate to a "create new event" route, or surface the upgrade dialog
+     * when the free-plan event limit has been reached this month.
+     */
+    val tryCreateEvent: (String) -> Unit = { route ->
+        if (gateVm.isLimitReached) {
+            showLimitDialog = true
+        } else {
+            navController.navigate(route)
+        }
+    }
+
+    // Limit-reached dialog — routes to the subscription screen on confirm.
+    if (showLimitDialog && gateVm.limitReachedMessage != null) {
+        UpgradePlanDialog(
+            message = gateVm.limitReachedMessage!!,
+            onUpgradeClick = {
+                showLimitDialog = false
+                navController.navigate("pricing")
+            },
+            onDismiss = { showLimitDialog = false }
+        )
+    }
 
     LaunchedEffect(initialDeepLinkRoute) {
         initialDeepLinkRoute?.let { route ->
@@ -163,7 +203,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 currentRoute != TopLevelDestination.SEARCH.route
             if (showQuickActions) {
                 QuickActionsFAB(
-                    onNewEventClick = { navController.navigate("event_form?eventId=") },
+                    onNewEventClick = { tryCreateEvent("event_form?eventId=") },
                     onQuickQuoteClick = { navController.navigate("quick_quote") }
                 )
             }
@@ -181,7 +221,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onEventClick = { id -> navController.navigate("event_detail/$id") },
                     onInventoryClick = { id -> navController.navigate("inventory_detail/$id") },
                     onUpgradeClick = { navController.navigate("pricing") },
-                    onNewEventClick = { navController.navigate("event_form?eventId=") },
+                    onNewEventClick = { tryCreateEvent("event_form?eventId=") },
                     onNewClientClick = { navController.navigate("client_form") },
                     onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onClientClick = { id -> navController.navigate("client_detail/$id") },
@@ -190,7 +230,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                         when (action) {
                             "clients" -> navController.navigate("client_form")
                             "products" -> navController.navigate("product_form")
-                            "events" -> navController.navigate("event_form?eventId=")
+                            "events" -> tryCreateEvent("event_form?eventId=")
                         }
                     }
                 )
@@ -203,7 +243,8 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onEventEdit = { id -> navController.navigate("event_form?eventId=$id") },
                     onNavigateBack = { navController.popBackStack() },
                     onSearchClick = { navController.navigate(buildSearchRoute()) },
-                    onCreateEventClick = { date -> navController.navigate("event_form?eventId=&date=${date}") },
+                    onUpgradeClick = { navController.navigate("pricing") },
+                    onCreateEventClick = { date -> tryCreateEvent("event_form?eventId=&date=${date}") },
                     showBackButton = false
                 )
             }
@@ -490,7 +531,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     viewModel = hiltViewModel(),
                     onNavigateBack = { navController.popBackStack() },
                     onSearchClick = { navController.navigate(buildSearchRoute()) },
-                    onConvertToEvent = { navController.navigate("event_form?eventId=") }
+                    onConvertToEvent = { tryCreateEvent("event_form?eventId=") }
                 )
             }
 
@@ -511,7 +552,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onPhotosClick = { id -> navController.navigate("event_photos/$id") },
                     onContractPreviewClick = { id -> navController.navigate("event_contract/$id") },
                     onStaffClick = { id -> navController.navigate("event_staff/$id") },
-                    onDuplicateClick = { navController.navigate("event_form?eventId=") }
+                    onDuplicateClick = { tryCreateEvent("event_form?eventId=") }
                 )
             }
             composable("event_finances/{eventId}") {
