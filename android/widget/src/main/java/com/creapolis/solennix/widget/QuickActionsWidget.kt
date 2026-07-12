@@ -29,29 +29,31 @@ class QuickActionsWidget : GlanceAppWidget() {
         val database = SolennixDatabase.getInstance(context)
         val userId = WidgetAuthProvider.getUserId(context)
 
-        val todayData = try {
-            val events = if (userId != null) {
-                database.eventDao().getEvents(userId).first()
-            } else {
-                database.eventDao().getEvents().first()
-            }
-            val today = LocalDate.now().toString()
-
-            val todayEvents = events.filter {
-                it.eventDate.startsWith(today) && it.status != EventStatus.CANCELLED
-            }
-
-            TodayData(
-                eventCount = todayEvents.size,
-                events = todayEvents.take(2).map { event ->
-                    TodayEvent(
-                        time = WidgetFormatters.formatTime(event.eventDate),
-                        serviceType = event.serviceType
-                    )
-                }
-            )
-        } catch (e: Exception) {
+        val todayData = if (userId == null) {
+            // Signed out or prefs unreadable: never query Room — empty state
+            // avoids surfacing another tenant's events (#825).
             TodayData(0, emptyList())
+        } else {
+            try {
+                val events = database.eventDao().getEvents(userId).first()
+                val today = LocalDate.now().toString()
+
+                val todayEvents = events.filter {
+                    it.eventDate.startsWith(today) && it.status != EventStatus.CANCELLED
+                }
+
+                TodayData(
+                    eventCount = todayEvents.size,
+                    events = todayEvents.take(2).map { event ->
+                        TodayEvent(
+                            time = WidgetFormatters.formatTime(event.eventDate),
+                            serviceType = event.serviceType
+                        )
+                    }
+                )
+            } catch (e: Exception) {
+                TodayData(0, emptyList())
+            }
         }
 
         provideContent {
