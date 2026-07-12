@@ -65,7 +65,16 @@ class OfflineFirstInventoryRepository @Inject constructor(
             if (!typeParam.isNullOrBlank()) put("type", typeParam)
         }
         val networkItems: List<InventoryItem> = apiService.get(Endpoints.INVENTORY, params)
-        inventoryDao.insertInventoryItems(networkItems.map { it.asEntity() })
+        val entities = networkItems.map { it.asEntity() }
+        if (typeParam.isNullOrBlank()) {
+            // Full sync: reconcile the whole table — upsert + delete orphans absent from
+            // the server response. Fixes deleted-on-server rows persisting locally (#832).
+            inventoryDao.syncInventory(entities)
+        } else {
+            // Partial sync by type: only upsert this type's items. Orphan cleanup would
+            // wrongly delete items of the other two types not included in this response.
+            inventoryDao.insertInventoryItems(entities)
+        }
     }
 
     override suspend fun createInventoryItem(item: InventoryItem): InventoryItem {

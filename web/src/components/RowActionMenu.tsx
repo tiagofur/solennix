@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { MoreVertical } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export interface RowActionMenuItem {
   label: string;
@@ -16,6 +17,7 @@ interface RowActionMenuProps {
 }
 
 export const RowActionMenu: React.FC<RowActionMenuProps> = ({ items }) => {
+  const { t } = useTranslation(['common']);
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -143,7 +145,7 @@ export const RowActionMenu: React.FC<RowActionMenuProps> = ({ items }) => {
           setOpen((prev) => !prev);
         }}
         className="p-1.5 text-text-secondary hover:text-primary hover:bg-surface-alt rounded-lg transition-colors inline-block"
-        aria-label="Acciones"
+        aria-label={t('command_palette.actions_group')}
         aria-haspopup="true"
         aria-expanded={open}
       >

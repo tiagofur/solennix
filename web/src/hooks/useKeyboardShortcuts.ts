@@ -1,5 +1,6 @@
 import { useEffect, useCallback, useMemo, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface Shortcut {
   key: string;
@@ -20,6 +21,7 @@ const SECTION_MAP: Record<string, string> = {
 export function useKeyboardShortcuts() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { t } = useTranslation(['common']);
   const [helpOpen, setHelpOpen] = useState(false);
   const gPressedRef = useRef(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -30,18 +32,18 @@ export function useKeyboardShortcuts() {
 
   const shortcuts: Shortcut[] = useMemo(() => [
     // Global navigation
-    { key: 'g d', label: 'G D', description: 'Ir al Dashboard', action: () => navigate('/dashboard') },
-    { key: 'g e', label: 'G E', description: 'Ir a Eventos', action: () => navigate('/events') },
-    { key: 'g c', label: 'G C', description: 'Ir a Clientes', action: () => navigate('/clients') },
-    { key: 'g p', label: 'G P', description: 'Ir a Productos', action: () => navigate('/products') },
-    { key: 'g i', label: 'G I', description: 'Ir a Inventario', action: () => navigate('/inventory') },
-    { key: 'g k', label: 'G K', description: 'Ir a Calendario', action: () => navigate('/events?view=calendar') },
+    { key: 'g d', label: 'G D', description: t('common:shortcuts.go_to', { target: t('common:nav.dashboard') }), action: () => navigate('/dashboard') },
+    { key: 'g e', label: 'G E', description: t('common:shortcuts.go_to', { target: t('common:nav.events') }), action: () => navigate('/events') },
+    { key: 'g c', label: 'G C', description: t('common:shortcuts.go_to', { target: t('common:nav.clients') }), action: () => navigate('/clients') },
+    { key: 'g p', label: 'G P', description: t('common:shortcuts.go_to', { target: t('common:nav.products') }), action: () => navigate('/products') },
+    { key: 'g i', label: 'G I', description: t('common:shortcuts.go_to', { target: t('common:nav.inventory') }), action: () => navigate('/inventory') },
+    { key: 'g k', label: 'G K', description: t('common:shortcuts.go_to', { target: t('common:nav.calendar') }), action: () => navigate('/events?view=calendar') },
 
     // Contextual "new" — depends on current section
     {
       key: 'n',
       label: 'N',
-      description: 'Crear nuevo (contextual)',
+      description: t('common:shortcuts.create_new_contextual'),
       action: () => {
         switch (currentSection) {
           case 'events': navigate('/events/new'); break;
@@ -54,8 +56,8 @@ export function useKeyboardShortcuts() {
     },
 
     // Help
-    { key: '?', label: '?', description: 'Mostrar atajos de teclado', action: () => setHelpOpen((v) => !v) },
-  ], [navigate, currentSection]);
+    { key: '?', label: '?', description: t('common:shortcuts.show_help'), action: () => setHelpOpen((v) => !v) },
+  ], [navigate, currentSection, t]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     // Skip if user is typing in an input, textarea, select, or contentEditable

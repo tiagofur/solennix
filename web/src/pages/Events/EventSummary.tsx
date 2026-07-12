@@ -187,6 +187,8 @@ export const EventSummary: React.FC = () => {
   // serialize or deserialize the array itself.
 
   // ── Build checklist items from cached query data (no additional fetches) ──
+  // NOTE: separated from the checked-state restore so background refetches
+  // rebuild the item list without clobbering in-flight toggles (A-006).
   useEffect(() => {
     if (!event) return;
     const clItems: typeof checklistItems = [];
@@ -223,15 +225,19 @@ export const EventSummary: React.FC = () => {
     });
 
     setChecklistItems(clItems);
+  }, [event, equipment, supplies, extras, allProdIngredients, productQuantities, t]);
 
-    // Restore checked state from localStorage
+  // ── Restore checked state from localStorage ──
+  // Runs only on event change (mount/id switch), NOT on background refetches,
+  // so toggles made during the session survive query invalidation.
+  useEffect(() => {
     const savedChecked = localStorage.getItem(`event_checklist_${id}`);
     if (savedChecked) {
       try { setCheckedIds(new Set(JSON.parse(savedChecked))); } catch { setCheckedIds(new Set()); }
     } else {
       setCheckedIds(new Set());
     }
-  }, [event, equipment, supplies, extras, allProdIngredients, productQuantities, id, t]);
+  }, [id]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -278,7 +284,7 @@ export const EventSummary: React.FC = () => {
       let uploadedCount = 0;
       for (const file of Array.from(files)) {
         if (file.size > 10 * 1024 * 1024) {
-          addToast(`${file.name} es demasiado grande (máximo 10MB)`, "error");
+          addToast(t('events:summary.photos.error_too_large', { name: file.name }), "error");
           continue;
         }
         // Step 1: upload the binary to the generic uploads endpoint to

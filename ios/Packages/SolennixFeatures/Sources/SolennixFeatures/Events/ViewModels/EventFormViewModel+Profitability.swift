@@ -1,6 +1,9 @@
 import Foundation
+import os.log
 import SolennixCore
 import SolennixNetwork
+
+private let logger = Logger(subsystem: SolennixLog.subsystem, category: "EventFormProfitability")
 
 extension EventFormViewModel {
     // MARK: - Profitability (parity con Android)
@@ -60,6 +63,10 @@ extension EventFormViewModel {
     /// unitario sumando `quantityRequired × unitCost` de cada ingrediente
     /// de tipo ingredient/supply. Cachea en `productUnitCosts`. Skip productos
     /// ya cacheados.
+    ///
+    /// On fetch failure, the cost is left `nil` so `hasPendingProductCosts`
+    /// stays `true` and the UI surfaces the warning — defaulting to 0 would
+    /// silently inflate the profit margin (#809).
     @MainActor
     public func fetchProductCosts() async {
         let missing = selectedProducts
@@ -85,7 +92,10 @@ extension EventFormViewModel {
                     }
                 productUnitCosts[productId] = cost
             } catch {
-                productUnitCosts[productId] = 0
+                // Leave nil: keeps hasPendingProductCosts true so the user
+                // sees that costs are unavailable. Recording 0 would make the
+                // margin appear inflated (#809).
+                logger.error("fetchProductCosts: failed to load ingredients for product \(productId, privacy: .public): \(String(describing: error), privacy: .public)")
             }
         }
     }
