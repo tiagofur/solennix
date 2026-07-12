@@ -7,6 +7,8 @@ import {
   setDefaultCurrency,
   setDefaultLocale,
   localeFromLanguage,
+  roundToCents,
+  PAYMENT_COMPLETION_EPSILON,
 } from './finance';
 
 describe('finance utils', () => {
@@ -94,6 +96,26 @@ describe('finance utils', () => {
 
     it('falls back to es-MX for unknown languages', () => {
       expect(localeFromLanguage('fr')).toBe('es-MX');
+    });
+  });
+
+  describe('roundToCents', () => {
+    it('rounds float drift to 2 decimals', () => {
+      expect(roundToCents(0.1 + 0.2)).toBe(0.3);
+    });
+
+    it('rounds sub-cent residue to nearest cent', () => {
+      expect(roundToCents(150.005)).toBe(150.01);
+    });
+
+    it('returns 0 for NaN/nullish input', () => {
+      expect(roundToCents(NaN)).toBe(0);
+    });
+  });
+
+  describe('PAYMENT_COMPLETION_EPSILON', () => {
+    it('is the shared 0.01 tolerance', () => {
+      expect(PAYMENT_COMPLETION_EPSILON).toBe(0.01);
     });
   });
 });

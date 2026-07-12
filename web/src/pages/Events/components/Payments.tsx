@@ -10,7 +10,7 @@ import { useToast } from "../../../hooks/useToast";
 import clsx from "clsx";
 import { useTranslation } from "react-i18next";
 import { parseEventDate } from "../../../lib/dateUtils";
-import { formatCurrency as libFormatCurrency } from "../../../lib/finance";
+import { formatCurrency as libFormatCurrency, PAYMENT_COMPLETION_EPSILON } from "../../../lib/finance";
 
 interface PaymentsProps {
   eventId: string;
@@ -171,7 +171,7 @@ export const Payments: React.FC<PaymentsProps> = ({
   const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
   const balance = totalAmount - totalPaid;
   const progress = totalAmount > 0 ? (totalPaid / totalAmount) * 100 : 0;
-  const isFullyPaid = balance <= 0.01;
+  const isFullyPaid = balance <= PAYMENT_COMPLETION_EPSILON;
   const depositPercent = eventData?.deposit_percent || 0;
   const depositAmount = totalAmount * (depositPercent / 100);
   const depositBalance = Math.max(depositAmount - totalPaid, 0);
@@ -268,19 +268,19 @@ export const Payments: React.FC<PaymentsProps> = ({
           </div>
           <div className={clsx(
             "p-6 rounded-2xl border",
-            balance > 0.01
+            balance > PAYMENT_COMPLETION_EPSILON
               ? "bg-error/5 border-error/10"
               : "bg-info/5 border-info/10"
           )}>
              <p className={clsx(
                "text-xs font-black uppercase tracking-tighter mb-1",
-               balance > 0.01 ? "text-error/70" : "text-info/70"
+               balance > PAYMENT_COMPLETION_EPSILON ? "text-error/70" : "text-info/70"
              )}>
-                {balance > 0.01 ? t('events:summary.payments.kpi_balance_pending') : t('events:summary.payments.kpi_balance_settled')}
+                {balance > PAYMENT_COMPLETION_EPSILON ? t('events:summary.payments.kpi_balance_pending') : t('events:summary.payments.kpi_balance_settled')}
              </p>
              <p className={clsx(
                "text-2xl font-black",
-               balance > 0.01 ? "text-error" : "text-info"
+               balance > PAYMENT_COMPLETION_EPSILON ? "text-error" : "text-info"
              )}>
                 {formatCurrency(Math.abs(balance))}
              </p>
