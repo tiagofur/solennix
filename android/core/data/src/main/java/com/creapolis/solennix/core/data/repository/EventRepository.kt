@@ -121,7 +121,7 @@ class OfflineFirstEventRepository @Inject constructor(
 
     override suspend fun syncEvents() {
         val networkEvents: List<Event> = apiService.get(Endpoints.EVENTS)
-        eventDao.insertEvents(networkEvents.map { it.asEntity(SyncStatus.SYNCED) })
+        eventDao.syncEvents(networkEvents.map { it.asEntity(SyncStatus.SYNCED) })
     }
 
     override suspend fun createEvent(event: Event): Event {

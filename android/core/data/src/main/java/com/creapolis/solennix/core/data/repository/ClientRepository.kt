@@ -60,7 +60,7 @@ class OfflineFirstClientRepository @Inject constructor(
 
     override suspend fun syncClients() {
         val networkClients: List<Client> = apiService.get(Endpoints.CLIENTS)
-        clientDao.insertClients(networkClients.map { it.asEntity() })
+        clientDao.syncClients(networkClients.map { it.asEntity() })
     }
 
     override suspend fun createClient(client: Client): Client {
