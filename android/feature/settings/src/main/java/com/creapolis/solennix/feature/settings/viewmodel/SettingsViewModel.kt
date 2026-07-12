@@ -91,6 +91,7 @@ class SettingsViewModel @Inject constructor(
             // Room has been wiped — force widgets to re-render into their signed-out /
             // empty state instead of showing the just-deleted rows until the next system
             // APPWIDGET_UPDATE. Unconditional: auth is already cleared at this point.
+            widgetSyncTrigger.clearKpiSnapshot()
             widgetSyncTrigger.refreshAllUnconditional()
         }
     }

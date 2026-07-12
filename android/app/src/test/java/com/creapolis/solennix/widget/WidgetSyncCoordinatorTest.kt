@@ -53,7 +53,7 @@ class WidgetSyncCoordinatorTest {
     fun `refreshAll is no-op when signed out`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
         val updater = RecordingWidgetUpdater()
-        val coordinator = WidgetSyncCoordinator(updater, authManager, dispatcher)
+        val coordinator = WidgetSyncCoordinator(updater, authManager, mockContext, dispatcher)
         // authState starts as Unknown (signed out)
         coordinator.refreshAll()
         advanceUntilIdle()
@@ -64,7 +64,7 @@ class WidgetSyncCoordinatorTest {
     fun `refreshAll triggers updateAll when authenticated`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
         val updater = RecordingWidgetUpdater()
-        val coordinator = WidgetSyncCoordinator(updater, authManager, dispatcher)
+        val coordinator = WidgetSyncCoordinator(updater, authManager, mockContext, dispatcher)
         authManager.storeTokens("access-test", "refresh-test")
         coordinator.refreshAll()
         advanceUntilIdle()
@@ -75,7 +75,7 @@ class WidgetSyncCoordinatorTest {
     fun `refreshAllUnconditional triggers updateAll even when signed out`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
         val updater = RecordingWidgetUpdater()
-        val coordinator = WidgetSyncCoordinator(updater, authManager, dispatcher)
+        val coordinator = WidgetSyncCoordinator(updater, authManager, mockContext, dispatcher)
         coordinator.refreshAllUnconditional()
         advanceUntilIdle()
         assertTrue(updater.updateAllCalled, "updateAll must be called unconditionally")
@@ -87,7 +87,7 @@ class WidgetSyncCoordinatorTest {
         val failingUpdater = object : WidgetUpdater {
             override suspend fun updateAll() { throw RuntimeException("Glance exploded") }
         }
-        val coordinator = WidgetSyncCoordinator(failingUpdater, authManager, dispatcher)
+        val coordinator = WidgetSyncCoordinator(failingUpdater, authManager, mockContext, dispatcher)
         authManager.storeTokens("access-test", "refresh-test")
         // Must not propagate the exception
         coordinator.refreshAll()
@@ -100,7 +100,7 @@ class WidgetSyncCoordinatorTest {
         val failingUpdater = object : WidgetUpdater {
             override suspend fun updateAll() { throw RuntimeException("Glance exploded") }
         }
-        val coordinator = WidgetSyncCoordinator(failingUpdater, authManager, dispatcher)
+        val coordinator = WidgetSyncCoordinator(failingUpdater, authManager, mockContext, dispatcher)
         coordinator.refreshAllUnconditional()
         advanceUntilIdle()
     }
