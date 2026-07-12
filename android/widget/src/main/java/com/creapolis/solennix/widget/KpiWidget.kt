@@ -29,35 +29,37 @@ class KpiWidget : GlanceAppWidget() {
         val database = SolennixDatabase.getInstance(context)
         val userId = WidgetAuthProvider.getUserId(context)
 
-        val kpiData = try {
-            val events = if (userId != null) {
-                database.eventDao().getEvents(userId).first()
-            } else {
-                database.eventDao().getEvents().first()
-            }
-            val today = LocalDate.now().toString()
-            val thisMonth = LocalDate.now().withDayOfMonth(1).toString()
-
-            // Calculate KPIs
-            val upcomingEvents = events.count {
-                it.eventDate >= today && it.status != EventStatus.CANCELLED
-            }
-
-            val monthlyRevenue = events
-                .filter { it.eventDate >= thisMonth && it.status == EventStatus.COMPLETED }
-                .sumOf { it.totalAmount }
-
-            val payments = database.paymentDao().getPayments().first()
-
-            val pendingPayments = derivePendingPaymentBalance(events, payments)
-
-            KpiData(
-                upcomingEvents = upcomingEvents,
-                monthlyRevenue = monthlyRevenue,
-                pendingPayments = pendingPayments
-            )
-        } catch (e: Exception) {
+        val kpiData = if (userId == null) {
+            // Signed out or prefs unreadable: never query Room — fall back to
+            // the empty state so we cannot surface another tenant's rows (#825).
             KpiData(0, 0.0, 0.0)
+        } else {
+            try {
+                val events = database.eventDao().getEvents(userId).first()
+                val today = LocalDate.now().toString()
+                val thisMonth = LocalDate.now().withDayOfMonth(1).toString()
+
+                // Calculate KPIs
+                val upcomingEvents = events.count {
+                    it.eventDate >= today && it.status != EventStatus.CANCELLED
+                }
+
+                val monthlyRevenue = events
+                    .filter { it.eventDate >= thisMonth && it.status == EventStatus.COMPLETED }
+                    .sumOf { it.totalAmount }
+
+                val payments = database.paymentDao().getPayments(userId).first()
+
+                val pendingPayments = derivePendingPaymentBalance(events, payments)
+
+                KpiData(
+                    upcomingEvents = upcomingEvents,
+                    monthlyRevenue = monthlyRevenue,
+                    pendingPayments = pendingPayments
+                )
+            } catch (e: Exception) {
+                KpiData(0, 0.0, 0.0)
+            }
         }
 
         provideContent {

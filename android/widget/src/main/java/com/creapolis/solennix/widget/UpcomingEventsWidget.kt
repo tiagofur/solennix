@@ -28,15 +28,18 @@ class UpcomingEventsWidget : GlanceAppWidget() {
         // Fetch upcoming events from database
         val database = SolennixDatabase.getInstance(context)
         val userId = WidgetAuthProvider.getUserId(context)
-        val events = try {
-            val flow = if (userId != null) {
-                database.eventDao().getUpcomingEvents(userId, 3)
-            } else {
-                database.eventDao().getUpcomingEvents(3)
-            }
-            flow.first().map { it.asExternalModel() }
-        } catch (e: Exception) {
+        val events = if (userId == null) {
+            // Signed out or prefs unreadable: never query Room — empty state
+            // avoids surfacing another tenant's events (#825).
             emptyList()
+        } else {
+            try {
+                database.eventDao().getUpcomingEvents(userId, 3)
+                    .first()
+                    .map { it.asExternalModel() }
+            } catch (e: Exception) {
+                emptyList()
+            }
         }
 
         provideContent {
