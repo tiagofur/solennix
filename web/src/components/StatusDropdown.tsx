@@ -1,15 +1,16 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, Check, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useUpdateEventStatus } from '../hooks/queries/useEventQueries';
 
 export type EventStatus = 'quoted' | 'confirmed' | 'completed' | 'cancelled';
 
-const STATUS_CONFIG: Record<EventStatus, { label: string; classes: string }> = {
-  quoted: { label: 'Cotizado', classes: 'bg-status-quoted/10 text-status-quoted' },
-  confirmed: { label: 'Confirmado', classes: 'bg-status-confirmed/10 text-status-confirmed' },
-  completed: { label: 'Completado', classes: 'bg-status-completed/10 text-status-completed' },
-  cancelled: { label: 'Cancelado', classes: 'bg-status-cancelled/10 text-status-cancelled' },
+const STATUS_CLASSES: Record<EventStatus, string> = {
+  quoted: 'bg-status-quoted/10 text-status-quoted',
+  confirmed: 'bg-status-confirmed/10 text-status-confirmed',
+  completed: 'bg-status-completed/10 text-status-completed',
+  cancelled: 'bg-status-cancelled/10 text-status-cancelled',
 };
 
 const STATUS_ORDER: EventStatus[] = ['quoted', 'confirmed', 'completed', 'cancelled'];
@@ -25,6 +26,7 @@ export const StatusDropdown: React.FC<StatusDropdownProps> = ({
   currentStatus,
   onStatusChange,
 }) => {
+  const { t } = useTranslation(['common']);
   const [open, setOpen] = useState(false);
   const updateStatus = useUpdateEventStatus();
   const loading = updateStatus.isPending;
@@ -32,7 +34,8 @@ export const StatusDropdown: React.FC<StatusDropdownProps> = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ top: 0, left: 0, openUp: false });
 
-  const cfg = STATUS_CONFIG[currentStatus] ?? STATUS_CONFIG.quoted;
+  const cfg = STATUS_CLASSES[currentStatus] ?? STATUS_CLASSES.quoted;
+  const currentLabel = t(`common:status.${currentStatus}`);
 
   const close = useCallback(() => setOpen(false), []);
 
@@ -103,11 +106,11 @@ export const StatusDropdown: React.FC<StatusDropdownProps> = ({
               : { top: pos.top, left: pos.left }),
           }}
           role="listbox"
-          aria-label="Seleccionar estado"
+          aria-label={t('common:status.select_status')}
           onClick={(e) => e.stopPropagation()}
         >
           {STATUS_ORDER.map((status) => {
-            const opt = STATUS_CONFIG[status];
+            const optClasses = STATUS_CLASSES[status];
             const isSelected = status === currentStatus;
             return (
               <button
@@ -122,11 +125,11 @@ export const StatusDropdown: React.FC<StatusDropdownProps> = ({
                 className={`w-full px-3 py-2 text-sm flex items-center gap-2 transition-colors hover:bg-surface-alt ${isSelected ? 'font-semibold' : ''}`}
               >
                 <span
-                  className={`inline-block w-2 h-2 rounded-full ${opt.classes.split(' ')[1] ? `bg-current ${opt.classes.split(' ').pop()}` : ''}`}
+                  className={`inline-block w-2 h-2 rounded-full ${optClasses.split(' ')[1] ? `bg-current ${optClasses.split(' ').pop()}` : ''}`}
                   style={{ opacity: 1 }}
                   aria-hidden="true"
                 />
-                <span className={opt.classes.split(' ').pop() || ''}>{opt.label}</span>
+                <span className={optClasses.split(' ').pop() || ''}>{t(`common:status.${status}`)}</span>
                 {isSelected && (
                   <Check className="h-3.5 w-3.5 ml-auto text-text-secondary" aria-hidden="true" />
                 )}
@@ -149,15 +152,15 @@ export const StatusDropdown: React.FC<StatusDropdownProps> = ({
           e.preventDefault();
           setOpen((prev) => !prev);
         }}
-        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer hover:ring-2 hover:ring-current/20 disabled:opacity-60 ${cfg.classes}`}
+        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer hover:ring-2 hover:ring-current/20 disabled:opacity-60 ${cfg}`}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label={`Estado: ${cfg.label}. Clic para cambiar.`}
+        aria-label={t('common:status.status_aria_change', { status: currentLabel })}
       >
         {loading ? (
           <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
         ) : null}
-        {cfg.label}
+        {currentLabel}
         <ChevronDown
           className={`h-3 w-3 transition-transform ${open ? 'rotate-180' : ''}`}
           aria-hidden="true"
