@@ -53,6 +53,7 @@ class DashboardViewModelTest {
     private val productRepository = mockk<ProductRepository>(relaxed = true)
     private val dashboardRepository = mockk<DashboardRepository>(relaxed = true)
     private val authManager = mockk<AuthManager>(relaxed = true)
+    private val widgetSyncTrigger = mockk<com.creapolis.solennix.core.data.widget.WidgetSyncTrigger>(relaxed = true)
     private val planLimitsManager = mockk<PlanLimitsManager>(relaxed = true)
     private val appContext = mockk<Context>(relaxed = true)
 
@@ -176,6 +177,7 @@ class DashboardViewModelTest {
             productRepository,
             dashboardRepository,
             authManager,
+            widgetSyncTrigger,
             planLimitsManager
         )
         val collectJob = backgroundScope.launch { viewModel.uiState.collect {} }
@@ -246,6 +248,7 @@ class DashboardViewModelTest {
             productRepository,
             dashboardRepository,
             authManager,
+            widgetSyncTrigger,
             planLimitsManager
         )
         val collectJob = backgroundScope.launch { viewModel.uiState.collect {} }
@@ -315,6 +318,7 @@ class DashboardViewModelTest {
             productRepository,
             dashboardRepository,
             authManager,
+            widgetSyncTrigger,
             planLimitsManager
         )
         val collectJob = backgroundScope.launch { viewModel.uiState.collect {} }
@@ -376,6 +380,7 @@ class DashboardViewModelTest {
             productRepository,
             dashboardRepository,
             authManager,
+            widgetSyncTrigger,
             planLimitsManager
         )
         val collectJob = backgroundScope.launch { viewModel.uiState.collect {} }
@@ -417,6 +422,7 @@ class DashboardViewModelTest {
             productRepository,
             dashboardRepository,
             authManager,
+            widgetSyncTrigger,
             planLimitsManager
         )
         val collectJob = backgroundScope.launch { viewModel.uiState.collect {} }
@@ -467,6 +473,7 @@ class DashboardViewModelTest {
             productRepository,
             dashboardRepository,
             authManager,
+            widgetSyncTrigger,
             planLimitsManager
         )
         val collectJob = backgroundScope.launch { viewModel.uiState.collect {} }

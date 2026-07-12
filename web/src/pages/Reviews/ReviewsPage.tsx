@@ -4,12 +4,15 @@ import { Loader2, MessageSquare, Save } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import eventReviewService, { ReviewVisibility } from '@/services/eventReviewService';
 import Empty from '@/components/Empty';
+import { UpgradeBanner } from '@/components/UpgradeBanner';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
 
 const QUERY_KEY = ['reviews', 'organizer'];
 
 export const ReviewsPage: React.FC = () => {
   const { t, i18n } = useTranslation('reviews');
   const queryClient = useQueryClient();
+  const { isBasicPlan } = usePlanLimits();
 
   const [draftResponses, setDraftResponses] = useState<Record<string, string>>({});
 
@@ -98,61 +101,65 @@ export const ReviewsPage: React.FC = () => {
 
                 {review.comment && <p className="text-text">{review.comment}</p>}
 
-                <div className="grid md:grid-cols-[220px,1fr] gap-4 items-start">
-                  <div>
-                    <label className="block text-sm font-semibold text-text-secondary mb-2">
-                      {t('organizer.visibility_label')}
-                    </label>
-                    <select
-                      value={review.visibility}
-                      onChange={(e) => {
-                        visibilityMutation.mutate({
-                          id: review.id,
-                          visibility: e.target.value as ReviewVisibility,
-                        });
-                      }}
-                      disabled={visibilityMutation.isPending}
-                      className="w-full rounded-xl border border-border bg-bg px-3 py-2 text-text"
-                    >
-                      <option value="private">{t('organizer.visibility_private')}</option>
-                      <option value="public">{t('organizer.visibility_public')}</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-text-secondary mb-2">
-                      {t('organizer.response_label')}
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={currentDraft}
-                      onChange={(e) =>
-                        setDraftResponses((prev) => ({
-                          ...prev,
-                          [review.id]: e.target.value,
-                        }))
-                      }
-                      placeholder={t('organizer.response_placeholder')}
-                      className="w-full rounded-xl border border-border bg-bg px-3 py-2 text-text outline-none focus:ring-2 focus:ring-primary/30"
-                    />
-                    <div className="mt-2 flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          saveResponseMutation.mutate({
+                {isBasicPlan ? (
+                  <UpgradeBanner type="upsell" />
+                ) : (
+                  <div className="grid md:grid-cols-[220px,1fr] gap-4 items-start">
+                    <div>
+                      <label className="block text-sm font-semibold text-text-secondary mb-2">
+                        {t('organizer.visibility_label')}
+                      </label>
+                      <select
+                        value={review.visibility}
+                        onChange={(e) => {
+                          visibilityMutation.mutate({
                             id: review.id,
-                            responseText: currentDraft,
-                          })
-                        }
-                        disabled={saveResponseMutation.isPending}
-                        className="inline-flex items-center gap-2 rounded-xl bg-primary text-white px-3 py-2 text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+                            visibility: e.target.value as ReviewVisibility,
+                          });
+                        }}
+                        disabled={visibilityMutation.isPending}
+                        className="w-full rounded-xl border border-border bg-bg px-3 py-2 text-text"
                       >
-                        <Save className="h-4 w-4" />
-                        {t('organizer.save_response')}
-                      </button>
+                        <option value="private">{t('organizer.visibility_private')}</option>
+                        <option value="public">{t('organizer.visibility_public')}</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-text-secondary mb-2">
+                        {t('organizer.response_label')}
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={currentDraft}
+                        onChange={(e) =>
+                          setDraftResponses((prev) => ({
+                            ...prev,
+                            [review.id]: e.target.value,
+                          }))
+                        }
+                        placeholder={t('organizer.response_placeholder')}
+                        className="w-full rounded-xl border border-border bg-bg px-3 py-2 text-text outline-none focus:ring-2 focus:ring-primary/30"
+                      />
+                      <div className="mt-2 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            saveResponseMutation.mutate({
+                              id: review.id,
+                              responseText: currentDraft,
+                            })
+                          }
+                          disabled={saveResponseMutation.isPending}
+                          className="inline-flex items-center gap-2 rounded-xl bg-primary text-white px-3 py-2 text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+                        >
+                          <Save className="h-4 w-4" />
+                          {t('organizer.save_response')}
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </article>
             );
           })}

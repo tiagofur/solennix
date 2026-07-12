@@ -15,6 +15,7 @@ import com.creapolis.solennix.core.data.plan.LimitCheckResult
 import com.creapolis.solennix.core.data.plan.PlanLimitsManager
 import com.creapolis.solennix.core.data.repository.ClientRepository
 import com.creapolis.solennix.core.data.repository.EventRepository
+import com.creapolis.solennix.core.data.widget.WidgetSyncTrigger
 import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.EventStatus
@@ -91,6 +92,7 @@ class EventListViewModel @Inject constructor(
     private val clientRepository: ClientRepository,
     private val apiService: ApiService,
     private val logger: SolennixLogger,
+    private val widgetSyncTrigger: WidgetSyncTrigger,
     private val planLimitsManager: PlanLimitsManager,
     private val authManager: AuthManager
 ) : ViewModel() {
@@ -325,6 +327,8 @@ class EventListViewModel @Inject constructor(
             _updatingStatusEventId.value = event.id
             try {
                 eventRepository.updateEvent(event.copy(status = newStatus))
+                // Room mutated — refresh home-screen widgets (parity iOS `.solennixEventUpdated`).
+                widgetSyncTrigger.refreshAll()
             } catch (e: Exception) {
                 logger.w(TAG, "updateEventStatus failed for ${event.id}", e)
                 if (e is com.creapolis.solennix.core.network.SolennixException.CompletionBlocked) {
@@ -375,6 +379,8 @@ class EventListViewModel @Inject constructor(
                 eventRepository.deleteEvent(event.id)
                 // Clear local copy after successful hard delete
                 _localEvents.value = _localEvents.value.filter { it.id != event.id }
+                // Room mutated — refresh home-screen widgets (parity iOS `.solennixEventUpdated`).
+                widgetSyncTrigger.refreshAll()
             } catch (e: Exception) {
                 logger.w(TAG, "deleteEvent failed for ${event.id}", e)
                 // Restore the event in local list since hard delete failed

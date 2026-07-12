@@ -47,6 +47,7 @@ class EventListViewModelTest {
     private val logger = mockk<SolennixLogger>(relaxed = true)
     private val planLimitsManager = mockk<PlanLimitsManager>(relaxed = true)
     private val authManager = mockk<AuthManager>(relaxed = true)
+    private val widgetSyncTrigger = mockk<com.creapolis.solennix.core.data.widget.WidgetSyncTrigger>(relaxed = true)
 
     private val dispatcher = StandardTestDispatcher()
 
@@ -93,7 +94,7 @@ class EventListViewModelTest {
 
         val vm = EventListViewModel(
             appContext, eventRepository, clientRepository, apiService, logger,
-            planLimitsManager, authManager
+            widgetSyncTrigger, planLimitsManager, authManager
         )
         advanceUntilIdle()
 
@@ -111,7 +112,7 @@ class EventListViewModelTest {
 
         val vm = EventListViewModel(
             appContext, eventRepository, clientRepository, apiService, logger,
-            planLimitsManager, authManager
+            widgetSyncTrigger, planLimitsManager, authManager
         )
         advanceUntilIdle()
 
@@ -125,7 +126,7 @@ class EventListViewModelTest {
 
         val vm = EventListViewModel(
             appContext, eventRepository, clientRepository, apiService, logger,
-            planLimitsManager, authManager
+            widgetSyncTrigger, planLimitsManager, authManager
         )
         advanceUntilIdle()
 
@@ -143,7 +144,7 @@ class EventListViewModelTest {
 
         val vm = EventListViewModel(
             appContext, eventRepository, clientRepository, apiService, logger,
-            planLimitsManager, authManager
+            widgetSyncTrigger, planLimitsManager, authManager
         )
         advanceUntilIdle()
         assertTrue(vm.limitCheckResult is LimitCheckResult.NearLimit)

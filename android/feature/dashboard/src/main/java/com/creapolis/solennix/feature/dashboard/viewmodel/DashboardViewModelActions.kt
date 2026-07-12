@@ -28,6 +28,8 @@ fun DashboardViewModel.updateEventStatus(eventId: String, newStatus: EventStatus
         try {
             val event = eventRepository.getEvent(eventId) ?: return@launch
             eventRepository.updateEvent(event.copy(status = newStatus))
+            // Room was mutated — refresh home-screen widgets (parity iOS `.solennixEventUpdated`).
+            widgetSyncTrigger.refreshAll()
             _transientMessage.value = when (newStatus) {
                 EventStatus.COMPLETED -> tr(R.string.dashboard_message_event_completed)
                 EventStatus.CANCELLED -> tr(R.string.dashboard_message_event_cancelled)
@@ -93,6 +95,10 @@ fun DashboardViewModel.registerPayment(
                 _transientMessage.value = tr(R.string.dashboard_message_payment_registered)
             }
             _paymentModalEvent.value = null
+            // Room was mutated (payment insert + optional event status change) — refresh
+            // home-screen widgets so KPIs/upcoming reflect the new state without waiting
+            // for SyncWorker or the next foreground. Mirrors iOS `.solennixPaymentRegistered`.
+            widgetSyncTrigger.refreshAll()
         } catch (e: Exception) {
             Log.e(TAG, "registerPayment failed for event=${pendingEvent.event.id}", e)
             _transientMessage.value = tr(R.string.dashboard_error_payment_failed)

@@ -13,6 +13,7 @@ import com.creapolis.solennix.core.data.plan.LimitCheckResult
 import com.creapolis.solennix.core.data.plan.PlanLimitsManager
 import com.creapolis.solennix.core.data.repository.ClientRepository
 import com.creapolis.solennix.core.data.repository.EventRepository
+import com.creapolis.solennix.core.data.widget.WidgetSyncTrigger
 import com.creapolis.solennix.core.data.repository.InventoryRepository
 import com.creapolis.solennix.core.data.repository.ProductRepository
 import com.creapolis.solennix.core.data.repository.StaffRepository
@@ -49,6 +50,7 @@ class EventFormViewModel @Inject constructor(
     internal val apiService: ApiService,
     private val planLimitsManager: PlanLimitsManager,
     private val authManager: AuthManager,
+    internal val widgetSyncTrigger: WidgetSyncTrigger,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -918,6 +920,8 @@ class EventFormViewModel @Inject constructor(
                 )
 
                 saveSuccess = true
+                // Room mutated — refresh home-screen widgets (parity iOS `.solennixEventUpdated`).
+                widgetSyncTrigger.refreshAll()
             } catch (e: SolennixException.PlanLimitExceeded) {
                 planLimitMessage = e.message
             } catch (e: Exception) {

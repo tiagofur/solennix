@@ -116,6 +116,7 @@ class DashboardViewModel @Inject constructor(
     internal val productRepository: ProductRepository,
     internal val dashboardRepository: DashboardRepository,
     internal val authManager: AuthManager,
+    internal val widgetSyncTrigger: com.creapolis.solennix.core.data.widget.WidgetSyncTrigger,
     internal val planLimitsManager: PlanLimitsManager
 ) : ViewModel() {
 

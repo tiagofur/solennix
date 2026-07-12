@@ -2,7 +2,7 @@
 
 ## Feature en curso
 - **Issue:** #832 — fix(android): Repository sync upsert-only — deleted remote entities persist locally
-- **Estado:** done (pendiente PR)
+- **Estado:** done (conflictos de merge con main resueltos, pendiente push)
 - **Branch:** `fix/android-sync-orphan-deletion-832`
 
 ## Root cause
@@ -17,6 +17,7 @@ Los 4 repositorios (`EventRepository`, `ClientRepository`, `ProductRepository`, 
 - **Repositorios (4):** cada `sync*()` ahora delega al método transaccional del DAO en vez del bare `insert*`.
   - `InventoryRepository.syncInventory(typeParam)`: **full sync** (typeParam null) → orphan cleanup; **partial sync** (typeParam non-null) → upsert-only (preserva items de otros tipos).
 - **Edge case empty response:** si el API devuelve `[]`, se borran todos los SYNCED (no se puede hacer `NOT IN ([])` en SQL).
+- **Merge con main (#943):** sin conflictos de código. `SyncWorker` conserva ambas features — orphan cleanup en `sync*()` + `widgetSyncTrigger.refreshAll()` post-sync.
 
 ## Verificación
 - `:core:data:testDebugUnitTest`: verde (+6 tests nuevos en Event/Product/Inventory + Client actualizado)
@@ -29,6 +30,7 @@ Los 4 repositorios (`EventRepository`, `ClientRepository`, `ProductRepository`, 
 - Product/Inventory no tienen `sync_status` (no soportan offline mutations), así que su cleanup es directo.
 - Partial sync de inventory por tipo (`InventoryListViewModel:164`) NO hace orphan cleanup — borraría items de los otros dos tipos ausentes del subset.
 - Paridad cross-platform: iOS ya hace reconciliation. Backend no afectado (es solo read path).
+- Complementa #831 (#943): orphan cleanup actualiza Room; `WidgetSyncCoordinator` refresca widgets tras sync/mutaciones.
 
 ## Bloqueos
 - Ninguno.
