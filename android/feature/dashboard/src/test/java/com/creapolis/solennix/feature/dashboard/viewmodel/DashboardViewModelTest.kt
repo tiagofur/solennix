@@ -1,6 +1,8 @@
 package com.creapolis.solennix.feature.dashboard.viewmodel
 
 import android.content.Context
+import com.creapolis.solennix.core.data.plan.LimitCheckResult
+import com.creapolis.solennix.core.data.plan.PlanLimitsManager
 import com.creapolis.solennix.core.data.repository.ClientRepository
 import com.creapolis.solennix.core.data.repository.DashboardRepository
 import com.creapolis.solennix.core.data.repository.EventRepository
@@ -51,6 +53,7 @@ class DashboardViewModelTest {
     private val productRepository = mockk<ProductRepository>(relaxed = true)
     private val dashboardRepository = mockk<DashboardRepository>(relaxed = true)
     private val authManager = mockk<AuthManager>(relaxed = true)
+    private val planLimitsManager = mockk<PlanLimitsManager>(relaxed = true)
     private val appContext = mockk<Context>(relaxed = true)
 
     private val dispatcher = StandardTestDispatcher()
@@ -60,6 +63,7 @@ class DashboardViewModelTest {
         Dispatchers.setMain(dispatcher)
         every { appContext.getString(any()) } returns ""
         every { appContext.getString(any(), *anyVararg()) } returns ""
+        coEvery { planLimitsManager.canCreateEvent(any()) } returns LimitCheckResult.Allowed
     }
 
     @AfterEach
@@ -171,7 +175,8 @@ class DashboardViewModelTest {
             paymentRepository,
             productRepository,
             dashboardRepository,
-            authManager
+            authManager,
+            planLimitsManager
         )
         val collectJob = backgroundScope.launch { viewModel.uiState.collect {} }
 
@@ -240,7 +245,8 @@ class DashboardViewModelTest {
             paymentRepository,
             productRepository,
             dashboardRepository,
-            authManager
+            authManager,
+            planLimitsManager
         )
         val collectJob = backgroundScope.launch { viewModel.uiState.collect {} }
 
@@ -308,7 +314,8 @@ class DashboardViewModelTest {
             paymentRepository,
             productRepository,
             dashboardRepository,
-            authManager
+            authManager,
+            planLimitsManager
         )
         val collectJob = backgroundScope.launch { viewModel.uiState.collect {} }
 
@@ -368,7 +375,8 @@ class DashboardViewModelTest {
             paymentRepository,
             productRepository,
             dashboardRepository,
-            authManager
+            authManager,
+            planLimitsManager
         )
         val collectJob = backgroundScope.launch { viewModel.uiState.collect {} }
 
@@ -408,7 +416,8 @@ class DashboardViewModelTest {
             paymentRepository,
             productRepository,
             dashboardRepository,
-            authManager
+            authManager,
+            planLimitsManager
         )
         val collectJob = backgroundScope.launch { viewModel.uiState.collect {} }
 
@@ -422,6 +431,51 @@ class DashboardViewModelTest {
         coVerify(atLeast = 1) { paymentRepository.syncPayments() }
         coVerify(atLeast = 1) { productRepository.syncProducts() }
         coVerify(atLeast = 1) { dashboardRepository.getSummary() }
+        collectJob.cancel()
+    }
+
+    @Test
+    fun `nearLimitMessage is populated when refresh hits NearLimit`() = runTest {
+        every { eventRepository.getUpcomingEvents(5) } returns flowOf(emptyList())
+        every { inventoryRepository.getLowStockItems() } returns flowOf(emptyList())
+        every { eventRepository.getEvents() } returns flowOf(emptyList())
+        every { clientRepository.getClients() } returns flowOf(emptyList())
+        every { paymentRepository.getPayments() } returns flowOf(emptyList())
+        every { productRepository.getProducts() } returns flowOf(emptyList())
+        every { authManager.currentUser } returns MutableStateFlow(
+            User(id = "user-1", email = "a@b.com", name = "Juan", plan = Plan.BASIC)
+        )
+        coEvery { eventRepository.syncEvents() } returns Unit
+        coEvery { inventoryRepository.syncInventory() } returns Unit
+        coEvery { clientRepository.syncClients() } returns Unit
+        coEvery { paymentRepository.syncPayments() } returns Unit
+        coEvery { productRepository.syncProducts() } returns Unit
+        coEvery { dashboardRepository.getSummary() } returns DashboardSummary(
+            kpis = DashboardKPIs(),
+            revenueChart = emptyList()
+        )
+        coEvery { planLimitsManager.canCreateEvent(Plan.BASIC) } returns LimitCheckResult.NearLimit(
+            feature = "events", current = 3, limit = 4, remaining = 1
+        )
+
+        val viewModel = DashboardViewModel(
+            appContext,
+            eventRepository,
+            inventoryRepository,
+            clientRepository,
+            paymentRepository,
+            productRepository,
+            dashboardRepository,
+            authManager,
+            planLimitsManager
+        )
+        val collectJob = backgroundScope.launch { viewModel.uiState.collect {} }
+
+        advanceUntilIdle()
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.limitCheckResult is LimitCheckResult.NearLimit)
         collectJob.cancel()
     }
 }
