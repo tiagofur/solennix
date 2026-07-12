@@ -10,6 +10,7 @@ import com.creapolis.solennix.core.data.repository.ProductRepository
 import com.creapolis.solennix.core.data.search.AppSearchIndexer
 import com.creapolis.solennix.core.data.repository.PendingAction
 import com.creapolis.solennix.core.network.EventDayNotificationManager
+import com.creapolis.solennix.core.data.widget.WidgetSyncTrigger
 import kotlinx.coroutines.flow.first
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -27,7 +28,8 @@ class SyncWorker @AssistedInject constructor(
     private val productRepository: ProductRepository,
     private val inventoryRepository: InventoryRepository,
     private val eventDayNotificationManager: EventDayNotificationManager,
-    private val appSearchIndexer: AppSearchIndexer
+    private val appSearchIndexer: AppSearchIndexer,
+    private val widgetSyncTrigger: WidgetSyncTrigger
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
@@ -40,6 +42,10 @@ class SyncWorker @AssistedInject constructor(
             syncClients()
             syncProducts()
             syncInventory()
+
+            // Post-sync: refresh home-screen widgets so they reflect the freshly synced
+            // Room data. Mirrors iOS BackgroundTaskManager -> WidgetSyncCoordinator.syncAll().
+            widgetSyncTrigger.refreshAll()
 
             // Post-sync: verificar eventos de hoy y mostrar notificaciones persistentes
             checkTodayEventsNotifications()

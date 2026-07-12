@@ -30,6 +30,8 @@ fun EventDetailViewModel.addPayment(amount: Double, method: String, notes: Strin
             paymentRepository.createPayment(newPayment)
             reloadEventSilently()
             addPaymentSuccess = true
+            // Room mutated — refresh home-screen widgets (parity iOS `.solennixPaymentRegistered`).
+            widgetSyncTrigger.refreshAll()
         } catch (e: Exception) {
             _errorMessage.value = tr(R.string.events_detail_error_add_payment, e.message.orEmpty())
         }
@@ -42,6 +44,8 @@ fun EventDetailViewModel.deletePayment(paymentId: String) {
             paymentRepository.deletePayment(paymentId)
             reloadEventSilently()
             deletePaymentSuccess = true
+            // Room mutated — refresh home-screen widgets (parity iOS `.solennixPaymentDeleted`).
+            widgetSyncTrigger.refreshAll()
         } catch (e: Exception) {
             _errorMessage.value = tr(R.string.events_detail_error_delete_payment, e.message.orEmpty())
         }

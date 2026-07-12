@@ -53,6 +53,7 @@ class EventFormViewModelTest {
     private val apiService = mockk<ApiService>(relaxed = true)
     private val planLimitsManager = mockk<PlanLimitsManager>(relaxed = true)
     private val authManager = mockk<AuthManager>(relaxed = true)
+    private val widgetSyncTrigger = mockk<com.creapolis.solennix.core.data.widget.WidgetSyncTrigger>(relaxed = true)
 
     private val dispatcher = StandardTestDispatcher()
 
@@ -105,6 +106,7 @@ class EventFormViewModelTest {
             apiService,
             planLimitsManager,
             authManager,
+            widgetSyncTrigger,
             SavedStateHandle()
         )
 
@@ -130,6 +132,7 @@ class EventFormViewModelTest {
             apiService,
             planLimitsManager,
             authManager,
+            widgetSyncTrigger,
             SavedStateHandle(mapOf("date" to dateStr))
         )
 
@@ -165,6 +168,7 @@ class EventFormViewModelTest {
             apiService,
             planLimitsManager,
             authManager,
+            widgetSyncTrigger,
             SavedStateHandle()
         )
 
@@ -189,6 +193,7 @@ class EventFormViewModelTest {
             apiService,
             planLimitsManager,
             authManager,
+            widgetSyncTrigger,
             SavedStateHandle()
         )
 
@@ -212,6 +217,7 @@ class EventFormViewModelTest {
             apiService,
             planLimitsManager,
             authManager,
+            widgetSyncTrigger,
             SavedStateHandle()
         )
 
@@ -243,6 +249,7 @@ class EventFormViewModelTest {
             apiService,
             planLimitsManager,
             authManager,
+            widgetSyncTrigger,
             SavedStateHandle()
         )
 
@@ -288,6 +295,7 @@ class EventFormViewModelTest {
             apiService,
             planLimitsManager,
             authManager,
+            widgetSyncTrigger,
             SavedStateHandle()
         )
 
@@ -329,6 +337,7 @@ class EventFormViewModelTest {
             apiService,
             planLimitsManager,
             authManager,
+            widgetSyncTrigger,
             SavedStateHandle(mapOf("date" to "2026-07-25"))
         )
 
