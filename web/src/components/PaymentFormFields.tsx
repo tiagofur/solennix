@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { roundToCents } from "@/lib/finance";
 
 export interface PaymentFormData {
   amount: number;
@@ -66,7 +67,7 @@ export const PaymentFormFields: React.FC<PaymentFormFieldsProps> = ({
   return (
     <div className="animate-in zoom-in-95 fade-in duration-300">
       <form
-        onSubmit={handleSubmit((data) => onSubmit({ ...data, amount: Number(data.amount) }))}
+        onSubmit={handleSubmit((data) => onSubmit({ ...data, amount: roundToCents(Number(data.amount)) }))}
         className="relative overflow-hidden"
       >
         <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">

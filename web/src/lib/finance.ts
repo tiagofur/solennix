@@ -61,3 +61,13 @@ export const formatCurrency = (amount: number | string, currency: string = activ
   return formatted;
 };
 
+// Shared tolerance for treating a balance as fully paid. Float arithmetic
+// can leave sub-cent residue; treat anything within this epsilon as zero.
+export const PAYMENT_COMPLETION_EPSILON = 0.01;
+
+// Round an amount to 2 decimal places (cents). Use before persisting money
+// values to avoid float drift (e.g. 0.1 + 0.2 = 0.30000000000000004).
+export const roundToCents = (amount: number): number => {
+  return Math.round((Number(amount) || 0) * 100) / 100;
+};
+

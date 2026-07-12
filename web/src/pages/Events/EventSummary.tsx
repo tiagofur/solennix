@@ -36,7 +36,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { downloadEventPDF } from "@/services/pdfService";
 import { logError } from "@/lib/errorHandler";
 import { Breadcrumb } from "@/components/Breadcrumb";
-import { getEventTotalCharged, getEventTaxAmount, getEventNetSales, localeFromLanguage } from "@/lib/finance";
+import { getEventTotalCharged, getEventTaxAmount, getEventNetSales, localeFromLanguage, PAYMENT_COMPLETION_EPSILON } from "@/lib/finance";
 import { computeEventFinancials, productUnitCostFromIngredients } from "@/lib/EventFinancials";
 import { Payments } from "./components/Payments";
 import { ClientPortalShareCard } from "./components/ClientPortalShareCard";
@@ -415,7 +415,7 @@ export const EventSummary: React.FC = () => {
   const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
   const remainingValue = totalCharged - totalPaid;
   const depositAmount = totalCharged * ((event.deposit_percent || 0) / 100);
-  const isDownpaymentMet = totalPaid >= (depositAmount - 0.1);
+  const isDownpaymentMet = totalPaid >= (depositAmount - PAYMENT_COMPLETION_EPSILON);
 
   let contractPreview = "";
   let contractPreviewMissingTokens: string[] = [];
