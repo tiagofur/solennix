@@ -42,8 +42,8 @@ export const Payments: React.FC<PaymentsProps> = ({
   currency,
 }) => {
   const { t, i18n } = useTranslation(["events"]);
-  const { data: paymentsData = [], isLoading } = usePaymentsByEvent(eventId);
-  const payments: Payment[] = paymentsData;
+  const { data: paymentsData, isLoading } = usePaymentsByEvent(eventId);
+  const payments: Payment[] = paymentsData ?? [];
   const createPaymentMutation = useCreatePayment();
   const deletePaymentMutation = useDeletePayment();
   const [isAdding, setIsAdding] = useState(false);
