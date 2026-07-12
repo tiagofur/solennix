@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, within, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within, act } from '@tests/customRender';
 import { Payments } from './Payments';
 import { paymentService } from '../../../services/paymentService';
 import { logError } from '../../../lib/errorHandler';
@@ -13,6 +13,7 @@ vi.mock('../../../services/paymentService', () => ({
 
 vi.mock('../../../lib/errorHandler', () => ({
   logError: vi.fn(),
+  getErrorMessage: vi.fn((_err: unknown, fallback?: string) => fallback || 'Error'),
 }));
 
 const singlePayment = [
@@ -362,8 +363,9 @@ describe('Payments', () => {
     render(<Payments eventId="event-1" totalAmount={500} userId="user-1" />);
 
     await waitFor(() => {
-      expect(logError).toHaveBeenCalledWith('Error loading payments', expect.any(Error));
+      expect(screen.getByText(/No hay pagos registrados/i)).toBeInTheDocument();
     });
+    expect(logError).not.toHaveBeenCalledWith('Error loading payments', expect.any(Error));
   });
 
   it('shows correct labels when fully paid (Saldo liquidado)', async () => {

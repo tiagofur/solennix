@@ -284,7 +284,7 @@ export const EventSummary: React.FC = () => {
       let uploadedCount = 0;
       for (const file of Array.from(files)) {
         if (file.size > 10 * 1024 * 1024) {
-          addToast(`${file.name} es demasiado grande (máximo 10MB)`, "error");
+          addToast(t('events:summary.photos.error_too_large', { name: file.name }), "error");
           continue;
         }
         // Step 1: upload the binary to the generic uploads endpoint to

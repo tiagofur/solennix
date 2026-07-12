@@ -47,6 +47,9 @@ fun DashboardViewModel.refresh() {
             _topClients.value = summary.topClients
             _productDemand.value = summary.productDemand
             _forecast.value = summary.forecast
+            // Persist server-authoritative KPIs for the widget so it renders
+            // netSalesThisMonth instead of a divergent client-side sum (#828).
+            widgetSyncTrigger.saveKpiSnapshot(summary.kpis)
         } catch (e: Exception) {
             Log.w(TAG, "dashboard summary fetch failed", e)
         }

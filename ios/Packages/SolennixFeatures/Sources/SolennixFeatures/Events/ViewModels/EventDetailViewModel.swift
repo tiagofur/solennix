@@ -1,8 +1,11 @@
 import ActivityKit
 import Foundation
 import Observation
+import os.log
 import SolennixCore
 import SolennixNetwork
+
+private let logger = Logger(subsystem: SolennixLog.subsystem, category: "EventDetailViewModel")
 
 // MARK: - Event Detail View Model
 
@@ -236,14 +239,15 @@ public final class EventDetailViewModel {
     /// event product in parallel. For each product, sums
     /// `quantityRequired × unitCost` over ingredients of type `.ingredient` or
     /// `.supply` (matches `EventFinancials` cost aggregation). Already-cached
-    /// products are skipped; a fetch failure records 0 so the margin stays
-    /// usable. Parity with `EventFormViewModel.fetchProductCosts`.
+    /// products are skipped. On fetch failure the cost is left `nil` so the UI
+    /// can surface that costs are unavailable — recording 0 would silently
+    /// inflate the margin (#809). Parity with `EventFormViewModel.fetchProductCosts`.
     @MainActor
     public func loadProductUnitCosts() async {
         let missing = Set(products.map { $0.productId }.filter { !$0.isEmpty && productUnitCosts[$0] == nil })
         guard !missing.isEmpty else { return }
 
-        await withTaskGroup(of: (String, Double).self) { group in
+        await withTaskGroup(of: (String, Double)?.self) { group in
             for productId in missing {
                 group.addTask { [apiClient] in
                     do {
@@ -260,12 +264,15 @@ public final class EventDetailViewModel {
                             }
                         return (productId, cost)
                     } catch {
-                        return (productId, 0.0)
+                        logger.error("loadProductUnitCosts: failed to load ingredients for product \(productId, privacy: .public): \(String(describing: error), privacy: .public)")
+                        return nil
                     }
                 }
             }
-            for await (id, cost) in group {
-                productUnitCosts[id] = cost
+            for await result in group {
+                if let (id, cost) = result {
+                    productUnitCosts[id] = cost
+                }
             }
         }
     }

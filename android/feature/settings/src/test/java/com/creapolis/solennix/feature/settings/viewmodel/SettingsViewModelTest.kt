@@ -94,6 +94,7 @@ class SettingsViewModelTest {
         coVerify(exactly = 1) { billingManager.logout() }
         coVerify(exactly = 1) { authManager.logout() }
         coVerify(exactly = 1) { localCacheManager.clearAll() }
+        coVerify(exactly = 1) { widgetSyncTrigger.clearKpiSnapshot() }
         coVerify(exactly = 1) { widgetSyncTrigger.refreshAllUnconditional() }
     }
 }

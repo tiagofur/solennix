@@ -1,13 +1,18 @@
 package com.creapolis.solennix.widget
 
+import android.content.Context
 import android.util.Log
 import com.creapolis.solennix.core.data.widget.WidgetSyncTrigger
+import com.creapolis.solennix.core.model.DashboardKPIs
+import com.creapolis.solennix.core.model.WidgetKpiSnapshot
 import com.creapolis.solennix.core.network.AuthManager
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -19,8 +24,9 @@ private const val TAG = "WidgetSyncCoordinator"
  *
  * On Android, widgets read Room directly inside `provideGlance`, so refreshing them is
  * just asking Glance to re-run `provideGlance` for every placed widget — no payload
- * derivation or App Group write is needed (unlike iOS). All work is delegated to
- * [WidgetUpdater].
+ * derivation or App Group write is needed for event/payment data (unlike iOS). The one
+ * exception is the server-authoritative KPI snapshot ([saveKpiSnapshot]): the widget
+ * prefers [DashboardKPIs.netSalesThisMonth] over any client-side sum (issue #828).
  *
  * Hooks (parity with iOS `WidgetCenter.reloadAllTimelines()` triggers):
  *  - [SyncWorker][com.creapolis.solennix.sync.SyncWorker] post-sync
@@ -28,6 +34,7 @@ private const val TAG = "WidgetSyncCoordinator"
  *  - Logout after [LocalCacheManager.clearAll][com.creapolis.solennix.core.data.LocalCacheManager.clearAll]
  *  - Login after `storeUser` succeeds
  *  - App foreground (`ProcessLifecycleOwner` ON_START), auth-gated
+ *  - Dashboard `/dashboard/summary` success → [saveKpiSnapshot]
  *
  * All refresh attempts are best-effort: a Glance/RemoteView failure is logged and never
  * propagated to the caller (parity with iOS REQ-WDS-06).
@@ -40,6 +47,7 @@ private const val TAG = "WidgetSyncCoordinator"
 class WidgetSyncCoordinator @Inject constructor(
     private val widgetUpdater: WidgetUpdater,
     private val authManager: AuthManager,
+    @ApplicationContext private val appContext: Context,
     private val backgroundDispatcher: CoroutineDispatcher = Dispatchers.Default
 ) : WidgetSyncTrigger {
 
@@ -54,6 +62,35 @@ class WidgetSyncCoordinator @Inject constructor(
 
     override fun refreshAllUnconditional() {
         launchRefresh()
+    }
+
+    override fun saveKpiSnapshot(kpis: DashboardKPIs) {
+        if (!isAuthenticated()) return
+        scope.launch {
+            try {
+                WidgetKpiStore.write(
+                    appContext,
+                    WidgetKpiSnapshot(
+                        netSalesThisMonth = kpis.netSalesThisMonth,
+                        eventsThisMonth = kpis.eventsThisMonth,
+                        updatedAt = Instant.now().toString()
+                    )
+                )
+                widgetUpdater.updateAll()
+            } catch (e: Exception) {
+                Log.w(TAG, "saveKpiSnapshot failed", e)
+            }
+        }
+    }
+
+    override fun clearKpiSnapshot() {
+        scope.launch {
+            try {
+                WidgetKpiStore.clear(appContext)
+            } catch (e: Exception) {
+                Log.w(TAG, "clearKpiSnapshot failed", e)
+            }
+        }
     }
 
     private fun launchRefresh() {
