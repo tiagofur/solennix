@@ -1,36 +1,29 @@
 # Sesión Activa — Solennix Agent Progress
 
 ## Feature en curso
-- **Issue:** #830 — fix(android): No plan gating before navigation to event form
+- **Issue:** #809 — fix(ios): EventFormViewModel silently sets product cost to 0 on API error
 - **Estado:** done (pendiente PR)
-- **Branch:** `fix/android-plan-gating-event-form-830`
-- **Worktree:** `/Users/tiagofur/dev/solennix-android`
+- **Branch:** `fix/ios-event-form-cost-on-error-809`
+- **Worktree:** `/Users/tiagofur/dev/solennix-ios-809`
 
 ## Root cause
-Android navegaba a `event_form?eventId=` (evento nuevo) desde 6 entrypoints sin checkear `canCreateEvent` antes. Free users a 4 eventos/mes solo recibían el paywall al final del submit dentro del form. iOS sí gateaba en `EventListView`/`DashboardView` con `planLimitsManager.canCreateEvent` + banner. Paridad rota (Judgment Day A-005 CRITICAL).
+`EventFormViewModel+Profitability.fetchProductCosts()` y `EventDetailViewModel.loadProductUnitCosts()` seteaban `productUnitCosts[id] = 0` cuando fallaba el fetch de ingredientes. Cero costo → margen inflado artificialmente. Peor: `hasPendingProductCosts` (que dispara el warning naranja "Algunos costos de productos siguen cargando") depende de que el costo sea `nil`, pero el `= 0` lo pisa y el warning **nunca aparece** — el usuario ve rentabilidad falsa sin señal. `QuickQuoteViewModel` ya hacía lo correcto (deja `nil`).
 
 ## Cambios
-- [x] `EventPlanGateViewModel.kt` (nuevo, módulo `app`): `@HiltViewModel` centralizado que expone `isLimitReached`/`limitReachedMessage`. `checkLimit()` en init + al reanudar (`LifecycleResumeEffect`).
-- [x] `CompactBottomNavLayout.kt`: helper `tryCreateEvent(route)` que muestra `UpgradePlanDialog` si `isLimitReached` o navega. Aplicado a los 6 entrypoints: FAB global, Dashboard quick-action, Dashboard onboarding, EventsScreen calendario, QuickQuote→Convert, EventDetail→Duplicate.
-- [x] `EventListViewModel.kt`: agregado `PlanLimitsManager`+`AuthManager` al constructor. Propiedades `limitCheckResult`/`isLimitReached`/`nearLimitMessage`/`limitReachedMessage` (clon del patrón `ClientListViewModel`). `checkPlanLimits()` en init + al final de `refresh()`.
-- [x] `EventsScreen.kt`: parámetro `onUpgradeClick`, `UpgradeBanner(WARNING)` near-limit arriba del content.
-- [x] `DashboardViewModel.kt`: agregado `PlanLimitsManager` al constructor, `limitCheckResult`/`nearLimitMessage`. `checkPlanLimits()` en `refresh()` (vía `DashboardViewModelSync.kt`).
-- [x] `DashboardScreen.kt`: `UpgradeBanner(WARNING)` near-limit debajo del promo banner existente.
-- [x] Strings `plan_limit_events_near`/`plan_limit_events_reached` en `core:designsystem` (genéricos, reutilizables cross-feature — dashboard no depende de events).
-
-## Decisiones
-- **Gate centralizado en módulo `app`** (no replicado 6 veces): los entrypoints viven en `CompactBottomNavLayout`, un solo `EventPlanGateViewModel` los cubre.
-- **Banner near-limit además del diálogo**: paridad iOS + clients/products Android. El diálogo bloquea; el banner preveniene.
-- **`EventFormViewModel.checkCreateEvent` existente NO se toca**: queda como defensa en profundidad si el gate falla offline.
-- **Edición (`eventId=$id`) no se gatea**: correcto, solo crear.
-- Strings en `core:designsystem` (no en `feature:events`) porque `DashboardViewModel` referencia el string y dashboard no depende de events.
+- [x] `EventFormViewModel+Profitability.swift`: removido `productUnitCosts[productId] = 0` del `catch`. Agregado `logger` (`os.log`, subsystem `SolennixLog.subsystem`, category `EventFormProfitability`). En error: `logger.error(...)` + deja `nil` → `hasPendingProductCosts` queda `true` → la UI muestra el warning. Docstring actualizado.
+- [x] `EventDetailViewModel.swift`: mismo fix en el `withTaskGroup`. Cambio el tipo del group de `(String, Double)` a `(String, Double)?` para poder retornar `nil` en el `catch` y omitir la asignación. Agregado `logger` (category `EventDetailViewModel`). Docstring corregido (decía "records 0 so the margin stays usable" — ahora documenta el comportamiento correcto).
+- [x] Tests `EventFormViewModelProfitabilityTests.swift` (nuevo, en `SolennixFeaturesTests/Events/`): 3 casos — regresión #809 (error deja nil + warning visible), éxito (10*2 + 5*4 = 40, equipment excluido), skip producto cacheado. Patrón: `ProfitabilityMockURLProtocol` + `APIClient(session:)` (copia de `ClientFormViewModelTests`).
 
 ## Verificación
-- `:core:designsystem:assembleDebug :feature:events:assembleDebug :feature:dashboard:assembleDebug :app:assembleDebug`: BUILD SUCCESSFUL
-- `:feature:events:testDebugUnitTest`: verde (+4 tests nuevos en `EventListViewModelTest`)
-- `:feature:dashboard:testDebugUnitTest`: verde (+1 test near-limit, 5 constructores actualizados)
-- `:app:testDebugUnitTest`: verde (+4 tests `EventPlanGateViewModelTest`)
-- `./init.sh`: verde (backend Go + web React 1334 tests)
+- `SolennixFeatures` (xcodebuild test): 156/156 (+3 nuevos)
+- `Solennix` (xcodebuild test): 469/469 (1 skipped preexistente)
+- `./init.sh`: verde (Go + Web 1334/1334)
+
+## Notas
+- `ProductIngredient` no tiene init público (es `Codable` sintetizado) → los tests usan JSON raw string + `Data(utf8)` en vez de construir el struct.
+- `EventDetailViewModel` usa `withTaskGroup` (paralelo) vs. `EventFormViewModel` usa `for` secuencial — el fix se adaptó a cada patrón (sentinel nil opcional vs. omitir asignación).
+- Scope: 2 ViewModels afectados (EventFormVM + EventDetailVM). `QuickQuoteVM` ya correcto, no se tocó.
+- Paridad cross-platform NO necesaria: bug de manejo de errores del fetch de costos de iOS.
 
 ## Bloqueos
 - Ninguno.
