@@ -170,6 +170,26 @@ struct SolennixApp: App {
                         if authManager.isAuthenticated {
                             WidgetSyncCoordinator.shared.syncAll()
                         }
+
+                        // Wire the BackgroundTaskManager in the SAME .task that
+                        // builds the cache (issue #813). Previously the manager
+                        // was constructed in a separate .task and captured a
+                        // possibly-nil cacheManager, so background refresh
+                        // couldn't persist data until the next app launch.
+                        // Building both here guarantees the manager sees a
+                        // non-nil cache before any BG refresh can fire.
+                        if backgroundTaskManager == nil {
+                            let manager = BackgroundTaskManager(
+                                apiClient: apiClient,
+                                authManager: authManager
+                            )
+                            manager.attach(cache: cache)
+                            BackgroundTaskManager.shared = manager
+                            manager.scheduleAppRefresh()
+                            backgroundTaskManager = manager
+                        } else {
+                            backgroundTaskManager?.attach(cache: cache)
+                        }
                     }
                 }
                 .environment(cacheManager)
@@ -295,22 +315,6 @@ struct SolennixApp: App {
                             }
                             NotificationCenter.default.post(name: .solennixSceneActivated, object: nil)
                         }
-                    }
-                }
-                .task {
-                    // BG task handler is registered synchronously in AppDelegate
-                    // (iOS requires it before launch completes). Here we only wire up
-                    // the manager that resolves dependencies for that handler and
-                    // schedules the next refresh.
-                    if backgroundTaskManager == nil {
-                        let manager = BackgroundTaskManager(
-                            apiClient: apiClient,
-                            cacheManager: cacheManager,
-                            authManager: authManager
-                        )
-                        BackgroundTaskManager.shared = manager
-                        manager.scheduleAppRefresh()
-                        backgroundTaskManager = manager
                     }
                 }
                 .onContinueUserActivity(CSSearchableItemActionType) { userActivity in

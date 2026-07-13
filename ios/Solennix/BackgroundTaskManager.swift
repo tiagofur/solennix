@@ -2,6 +2,9 @@ import BackgroundTasks
 import SolennixCore
 import SolennixNetwork
 import SolennixFeatures
+import os.log
+
+private let logger = Logger(subsystem: "com.solennix.app", category: "BackgroundTaskManager")
 
 // MARK: - Background Task Manager
 
@@ -47,15 +50,42 @@ final class BackgroundTaskManager {
     // MARK: - Dependencies
 
     private let apiClient: APIClient
-    private let cacheManager: CacheManager?
+
+    /// Cache used to persist fetched data for offline access and widget payload
+    /// derivation. Weak + attached via `attach(cache:)` once the app has built
+    /// the `CacheManager` (which requires a SwiftData `ModelContext` available
+    /// only after launch). Held weak because the app owns the cache; cleared on
+    /// logout via `CacheManager.clearAll()`.
+    private weak var cacheManager: CacheManager?
+
     private let authManager: AuthManager
 
     // MARK: - Init
 
-    init(apiClient: APIClient, cacheManager: CacheManager?, authManager: AuthManager) {
+    init(apiClient: APIClient, cacheManager: CacheManager? = nil, authManager: AuthManager) {
         self.apiClient = apiClient
         self.cacheManager = cacheManager
         self.authManager = authManager
+    }
+
+    /// Attaches the SwiftData cache once it is available.
+    ///
+    /// `BackgroundTaskManager` is constructed before the first `.task` that
+    /// builds the `CacheManager` resolves (issue #813). Rather than capturing a
+    /// possibly-`nil` cache at init — which left background refresh unable to
+    /// persist fetched data until the next app launch — the app constructs the
+    /// manager eagerly and attaches the cache from the same `.task` that builds
+    /// it. Mirrors the `WidgetSyncCoordinator.start(cache:)` pattern.
+    func attach(cache: CacheManager) {
+        cacheManager = cache
+    }
+
+    /// Whether `performRefresh` can proceed: the user must be authenticated AND
+    /// the cache must be attached. Extracted as an internal seam so the #813
+    /// cold-launch race guard is unit-testable without driving a real network
+    /// refresh.
+    internal var isReadyForRefresh: Bool {
+        authManager.isAuthenticated && cacheManager != nil
     }
 
     // MARK: - Scheduling
@@ -97,6 +127,15 @@ final class BackgroundTaskManager {
         // calls that would fail with 401 and pollute Sentry after logout.
         guard authManager.isAuthenticated else { return false }
 
+        // Guard against the #813 race: if a background refresh fires before the
+        // `.task` that builds the `CacheManager` has run, `attach(cache:)` was
+        // never called. Skip rather than fetching data we can't persist — the
+        // next refresh (after the app has warmed up) will succeed.
+        guard let cacheManager else {
+            logger.warning("performRefresh skipped — CacheManager not attached yet (issue #813 cold-launch race)")
+            return false
+        }
+
         do {
             // Fetch core data in parallel
             async let eventsResult: [Event] = apiClient.getAll(Endpoint.events)
@@ -112,11 +151,11 @@ final class BackgroundTaskManager {
             let payments = try await paymentsResult
 
             // Update SwiftData cache
-            try? cacheManager?.cacheEvents(events)
-            try? cacheManager?.cacheClients(clients)
-            try? cacheManager?.cacheProducts(products)
-            try? cacheManager?.cacheInventoryItems(inventory)
-            try? cacheManager?.cachePayments(payments)
+            try? cacheManager.cacheEvents(events)
+            try? cacheManager.cacheClients(clients)
+            try? cacheManager.cacheProducts(products)
+            try? cacheManager.cacheInventoryItems(inventory)
+            try? cacheManager.cachePayments(payments)
 
             // Update Spotlight index
             let clientMap = Dictionary(uniqueKeysWithValues: clients.map { ($0.id, $0.name) })
