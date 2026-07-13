@@ -35,20 +35,45 @@ enum WidgetKey {
 @MainActor
 final class WidgetDataSync {
 
+    /// App Group suite identifier. Shared across the app, widget extension, and
+    /// intents extension. `internal` so tests can inject an invalid suite name
+    /// to exercise the missing-App-Group degradation path (#814).
+    static let appGroupIdentifier = "group.com.solennix.app"
+
     static let shared = WidgetDataSync()
 
-    private let appGroup: UserDefaults = {
-        guard let suite = UserDefaults(suiteName: "group.com.solennix.app") else {
-            fatalError("App Group 'group.com.solennix.app' not configured. Enable it in Signing & Capabilities.")
+    /// The shared App Group `UserDefaults`. When the suite cannot be created
+    /// (misprovisioned build, missing entitlement), this is `nil` and every
+    /// sync method no-ops — the app runs without widgets instead of crashing
+    /// (#814). Mirrors the `IntentSharedDataStore` degradation pattern.
+    private lazy var appGroup: UserDefaults? = {
+        guard let suite = UserDefaults(suiteName: suiteName) else {
+            logger.error("App Group '\(self.suiteName, privacy: .public)' not configured — widget sync disabled. Enable it in Signing & Capabilities.")
+            SentryHelper.capture(message: "App Group not configured; widget sync degraded to no-op (#814)")
+            return nil
         }
         return suite
     }()
 
-    private init() {}
+    /// Suite name used to resolve the App Group. Defaults to the production
+    /// identifier; tests inject an invalid name to exercise the degradation
+    /// path (#814). Stored so the lazy `appGroup` closure can read it.
+    private let suiteName: String
+
+    private init() {
+        self.suiteName = Self.appGroupIdentifier
+    }
+
+    /// Test-only initializer: inject a suite name to exercise the
+    /// missing-App-Group degradation path without touching the real singleton.
+    internal init(suiteName: String) {
+        self.suiteName = suiteName
+    }
 
     // MARK: - Sync Upcoming Events
 
     func syncUpcomingEvents(_ events: [WidgetEventData]) {
+        guard let appGroup else { return }
         do {
             let encoder = JSONEncoder()
             encoder.dateEncodingStrategy = .iso8601
@@ -68,6 +93,7 @@ final class WidgetDataSync {
     // MARK: - Sync KPIs
 
     func syncKPIs(_ kpis: WidgetKPIData) {
+        guard let appGroup else { return }
         do {
             let data = try JSONEncoder().encode(kpis)
             appGroup.set(data, forKey: WidgetKey.kpis)
@@ -84,6 +110,7 @@ final class WidgetDataSync {
     // MARK: - Sync User Plan
 
     func syncUserPlan(_ planRawValue: String?) {
+        guard let appGroup else { return }
         if let planRawValue, !planRawValue.isEmpty {
             appGroup.set(planRawValue, forKey: WidgetKey.userPlan)
         } else {
@@ -98,6 +125,7 @@ final class WidgetDataSync {
     /// widget extension formats amounts in the user's currency instead of a
     /// hardcoded MXN. Pass `nil`/empty to fall back to the widget default.
     func syncCurrencyCode(_ currencyCode: String?) {
+        guard let appGroup else { return }
         if let currencyCode, !currencyCode.isEmpty {
             appGroup.set(currencyCode, forKey: WidgetKey.currencyCode)
         } else {
@@ -130,6 +158,7 @@ final class WidgetDataSync {
     /// this to distinguish a signed-out user from an authenticated user whose
     /// data has not loaded yet.
     func setAuthState(_ state: WidgetAuthState) {
+        guard let appGroup else { return }
         appGroup.set(state.rawValue, forKey: WidgetKey.authState)
         appGroup.synchronize()
     }
@@ -137,6 +166,12 @@ final class WidgetDataSync {
     // MARK: - Clear Widget Data
 
     func clearWidgetData() {
+        guard let appGroup else {
+            // Still reload so any cached widget timeline reflects signed-out
+            // even when the suite is unavailable.
+            reloadAllWidgets()
+            return
+        }
         appGroup.removeObject(forKey: WidgetKey.upcomingEvents)
         appGroup.removeObject(forKey: WidgetKey.kpis)
         appGroup.removeObject(forKey: WidgetKey.userPlan)

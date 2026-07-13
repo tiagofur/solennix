@@ -137,6 +137,7 @@
 		FAC3704EE0586DE8CCB614D8 /* EventModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0832D220C2F81D77AA578D8A /* EventModelsTests.swift */; };
 		FAF34E5DE8553C59E4AA2E81 /* CachedModelConversionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C86D0D98819337D4F48773A9 /* CachedModelConversionTests.swift */; };
 		FBDB7A5D924F2CE0F8596170 /* LanguageReporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135E464DD29037B8261DA4DA /* LanguageReporterTests.swift */; };
+		FF028DD75C4C0475419D1F90 /* WidgetDataSyncMissingAppGroupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24A544135625098DD5B08AB9 /* WidgetDataSyncMissingAppGroupTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -210,6 +211,7 @@
 		20FD5F115715FD819AE007D8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		241B5EAF3AF1B568DD53A31E /* PaymentClientModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentClientModelTests.swift; sourceTree = "<group>"; };
 		24710D04D5E6B19774680BC7 /* CacheManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheManagerTests.swift; sourceTree = "<group>"; };
+		24A544135625098DD5B08AB9 /* WidgetDataSyncMissingAppGroupTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WidgetDataSyncMissingAppGroupTests.swift; sourceTree = "<group>"; };
 		2523503309E3EDE5391F898D /* StaffLocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffLocalizationTests.swift; sourceTree = "<group>"; };
 		264F2A6C440C82131EA0C8C5 /* NotificationManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManagerTests.swift; sourceTree = "<group>"; };
 		26D154F9FACF2A74B9D23331 /* SolennixShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolennixShortcuts.swift; sourceTree = "<group>"; };
@@ -537,6 +539,7 @@
 				E2ACB7B57F8EAC7E18D70DA6 /* WidgetDataModelsTests.swift */,
 				1939BE7B7E7FC5BA06B55A97 /* WidgetKeyParityTests.swift */,
 				F8E382C624BD9052DAC740A3 /* WidgetSyncCoordinatorTests.swift */,
+				24A544135625098DD5B08AB9 /* WidgetDataSyncMissingAppGroupTests.swift */,
 			);
 			path = SolennixTests;
 			sourceTree = "<group>";
@@ -701,8 +704,6 @@
 				EB9D542482C2670F7AC3304D /* PBXTargetDependency */,
 			);
 			name = SolennixUITests;
-			packageProductDependencies = (
-			);
 			productName = SolennixUITests;
 			productReference = 2FB754D466BB2F2A2D614868 /* SolennixUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
@@ -781,8 +782,6 @@
 			dependencies = (
 			);
 			name = SolennixNotificationServiceExtension;
-			packageProductDependencies = (
-			);
 			productName = SolennixNotificationServiceExtension;
 			productReference = B2A8EE69CBED38B58E706A88 /* SolennixNotificationServiceExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -835,10 +834,10 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				9C7AE26BB0DC7BD4873C69A0 /* XCRemoteSwiftPackageReference "ViewInspector" */,
-				A6C2F7E662A8160E4391E47E /* XCLocalSwiftPackageReference "Packages/SolennixCore" */,
-				69A02BF1E2CB4A997972DEFF /* XCLocalSwiftPackageReference "Packages/SolennixDesign" */,
-				E93AFF29772B74ADC5A5E97C /* XCLocalSwiftPackageReference "Packages/SolennixFeatures" */,
-				54D10EE33C2832E939E4C2DF /* XCLocalSwiftPackageReference "Packages/SolennixNetwork" */,
+				A6C2F7E662A8160E4391E47E /* XCLocalSwiftPackageReference "SolennixCore" */,
+				69A02BF1E2CB4A997972DEFF /* XCLocalSwiftPackageReference "SolennixDesign" */,
+				E93AFF29772B74ADC5A5E97C /* XCLocalSwiftPackageReference "SolennixFeatures" */,
+				54D10EE33C2832E939E4C2DF /* XCLocalSwiftPackageReference "SolennixNetwork" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9E6B3A43E92B9C5181767046 /* Products */;
@@ -1028,6 +1027,7 @@
 				58D13FB1F28EE1F4C8905B2C /* WidgetDataModelsTests.swift in Sources */,
 				509BC8DBA59973010F9E640B /* WidgetKeyParityTests.swift in Sources */,
 				940D8F3844A936FD34D15B86 /* WidgetSyncCoordinatorTests.swift in Sources */,
+				FF028DD75C4C0475419D1F90 /* WidgetDataSyncMissingAppGroupTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1495,19 +1495,19 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		54D10EE33C2832E939E4C2DF /* XCLocalSwiftPackageReference "Packages/SolennixNetwork" */ = {
+		54D10EE33C2832E939E4C2DF /* XCLocalSwiftPackageReference "SolennixNetwork" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/SolennixNetwork;
 		};
-		69A02BF1E2CB4A997972DEFF /* XCLocalSwiftPackageReference "Packages/SolennixDesign" */ = {
+		69A02BF1E2CB4A997972DEFF /* XCLocalSwiftPackageReference "SolennixDesign" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/SolennixDesign;
 		};
-		A6C2F7E662A8160E4391E47E /* XCLocalSwiftPackageReference "Packages/SolennixCore" */ = {
+		A6C2F7E662A8160E4391E47E /* XCLocalSwiftPackageReference "SolennixCore" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/SolennixCore;
 		};
-		E93AFF29772B74ADC5A5E97C /* XCLocalSwiftPackageReference "Packages/SolennixFeatures" */ = {
+		E93AFF29772B74ADC5A5E97C /* XCLocalSwiftPackageReference "SolennixFeatures" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/SolennixFeatures;
 		};
