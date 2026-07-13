@@ -20,7 +20,9 @@ final class NotificationManager: NSObject, ObservableObject {
 
     /// Injectable auth check used in `didReceive` to decide whether deep navigation
     /// is safe. Set from SolennixApp via `{ authManager.isAuthenticated }`.
-    /// Falls back to a Keychain token presence check when unset (extensions/tests).
+    /// When unset (cold-launch race, Notification Service Extension, tests),
+    /// navigation is denied — a stale keychain token must not gate deep-link
+    /// navigation (#816).
     var isAuthorizedForNavigation: (() -> Bool)?
 
     private override init() {
@@ -401,6 +403,16 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
         return [.banner, .badge, .sound]
     }
 
+    /// Whether a notification tap should navigate. Reads the injected auth
+    /// closure (`isAuthorizedForNavigation`, set from SolennixApp to
+    /// `authManager.isAuthenticated`). When unset (cold-launch race,
+    /// Notification Service Extension, unit tests), returns `false` — a stale
+    /// keychain token must not gate deep-link navigation (#816).
+    @MainActor
+    func isNavigationAllowed() -> Bool {
+        isAuthorizedForNavigation?() ?? false
+    }
+
     // Handle notification tap
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
@@ -408,20 +420,10 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
     ) async {
         let userInfo = response.notification.request.content.userInfo
         let action = response.actionIdentifier
-        // Only navigate if the user is authenticated. Prefer the injected closure
-        // (set from SolennixApp) which reads AuthManager.isAuthenticated; fall back
-        // to a Keychain token presence check when the closure is unset (e.g. in
-        // Notification Service Extension or unit tests).
-        let authCheck = await MainActor.run { self.isAuthorizedForNavigation }
-        let isAuthenticated: Bool
-        if let authCheck {
-            isAuthenticated = authCheck()
-        } else {
-            // Fallback: keychain token presence (extensions and tests)
-            let keychainHelper = KeychainHelper()
-            isAuthenticated = keychainHelper.readString(for: KeychainHelper.Keys.accessToken) != nil
-        }
-        guard isAuthenticated else { return }
+        // Only navigate if the user is authenticated. Deny when the closure is
+        // unset — a stale keychain token must not gate deep-link navigation (#816).
+        let canNavigate = await MainActor.run { self.isNavigationAllowed() }
+        guard canNavigate else { return }
 
         if let route = routeFromNotification(userInfo: userInfo, actionIdentifier: action) {
             await MainActor.run {
