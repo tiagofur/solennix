@@ -364,6 +364,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 InventoryFormScreen(
                     viewModel = hiltViewModel(),
                     onSearchClick = { navController.navigate(buildSearchRoute()) },
+                    onNavigateToPricing = { navController.navigate("pricing") },
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
@@ -614,6 +615,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 EventFormScreen(
                     viewModel = hiltViewModel(),
                     onSearchClick = { navController.navigate(buildSearchRoute()) },
+                    onNavigateToPricing = { navController.navigate("pricing") },
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
