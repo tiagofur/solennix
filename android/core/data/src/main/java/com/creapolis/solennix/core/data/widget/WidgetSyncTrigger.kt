@@ -1,5 +1,7 @@
 package com.creapolis.solennix.core.data.widget
 
+import com.creapolis.solennix.core.model.DashboardKPIs
+
 /**
  * Asks the widget subsystem to refresh home-screen widgets. Implemented in the `:app`
  * module by `WidgetSyncCoordinator` (which drives `GlanceAppWidgetManager`/`updateAll`),
@@ -15,8 +17,13 @@ package com.creapolis.solennix.core.data.widget
  *  - [refreshAllUnconditional] refreshes regardless of auth state — used after
  *    `LocalCacheManager.clearAll()` on logout so widgets re-render their empty /
  *    signed-out state instead of showing stale cached rows.
- *  - Both are best-effort and never throw: Glance/RemoteViews failures are swallowed
- *    and logged by the implementation (parity with iOS REQ-WDS-06).
+ *  - [saveKpiSnapshot] persists the server-authoritative [DashboardKPIs] so the widget
+ *    shows `netSalesThisMonth` instead of a divergent client-side sum (issue #828), then
+ *    refreshes. Auth-gated.
+ *  - [clearKpiSnapshot] removes the snapshot on logout so the widget doesn't show stale
+ *    KPIs.
+ *  - All methods are best-effort and never throw: failures are swallowed and logged by
+ *    the implementation (parity with iOS REQ-WDS-06).
  */
 interface WidgetSyncTrigger {
 
@@ -30,4 +37,18 @@ interface WidgetSyncTrigger {
      * (logout) so widgets don't show stale data. Safe to call from any thread.
      */
     fun refreshAllUnconditional()
+
+    /**
+     * Persists [kpis] as the server-authoritative KPI snapshot for the widget, then
+     * refreshes widgets. The widget prefers `kpis.netSalesThisMonth` over any client-side
+     * derivation (parity with iOS WidgetSyncCoordinator / issue #828). Auth-gated.
+     */
+    fun saveKpiSnapshot(kpis: DashboardKPIs)
+
+    /**
+     * Removes the persisted KPI snapshot. Called on logout alongside
+     * [refreshAllUnconditional] so the widget doesn't render stale server KPIs.
+     */
+    fun clearKpiSnapshot()
 }
+

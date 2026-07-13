@@ -5,6 +5,7 @@ import com.creapolis.solennix.core.database.entity.CachedPayment
 import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
 import java.time.LocalDate
+import java.time.YearMonth
 
 /**
  * Derives the outstanding payment balance for the widget, mirroring iOS
@@ -41,3 +42,35 @@ internal fun derivePendingPaymentBalance(
             (event.totalAmount - totalPaid).coerceAtLeast(0.0)
         }
 }
+
+/**
+ * Fallback monthly revenue derivation used when no server KPI snapshot is available yet
+ * (cold launch before the dashboard's first `/dashboard/summary` fetch). Mirrors iOS
+ * `WidgetSyncCoordinator.deriveKPIs` cache-fallback and the backend's
+ * `net_sales_this_month` scope: [EventStatus.CONFIRMED] + [EventStatus.COMPLETED] events
+ * whose [CachedEvent.eventDate] falls in the current calendar month.
+ *
+ * `totalAmount` is already the post-discount final amount stored by the backend, so no
+ * extra discount subtraction is needed. This matches the backend's
+ * `SUM(total_amount) WHERE status IN ('confirmed','completed')` definition.
+ *
+ * Note: this is a best-effort fallback. The server snapshot (when available via
+ * [WidgetKpiStore]) is always preferred for exact parity with tax/discount handling.
+ */
+internal fun deriveMonthlyRevenue(
+    events: List<CachedEvent>,
+    today: LocalDate = LocalDate.now()
+): Double {
+    val currentMonth = YearMonth.from(today)
+    return events
+        .asSequence()
+        .filter {
+            it.status == EventStatus.CONFIRMED || it.status == EventStatus.COMPLETED
+        }
+        .filter { event ->
+            val date = parseFlexibleDate(event.eventDate) ?: return@filter false
+            YearMonth.from(date) == currentMonth
+        }
+        .sumOf { it.totalAmount }
+}
+

@@ -19,6 +19,7 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.creapolis.solennix.core.database.SolennixDatabase
 import com.creapolis.solennix.core.model.EventStatus
+import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 import java.util.Locale
@@ -36,21 +37,24 @@ class KpiWidget : GlanceAppWidget() {
         } else {
             try {
                 val events = database.eventDao().getEvents(userId).first()
-                val today = LocalDate.now().toString()
-                val thisMonth = LocalDate.now().withDayOfMonth(1).toString()
+                val payments = database.paymentDao().getPayments(userId).first()
+                val today = LocalDate.now()
 
-                // Calculate KPIs
+                // Server-authoritative KPI snapshot (written by the dashboard after
+                // /dashboard/summary). Preferred over client-side derivation for exact
+                // parity with the backend's netSalesThisMonth (#828). Null on cold launch
+                // before the first dashboard load — falls back to deriveMonthlyRevenue.
+                val snapshot = WidgetKpiStore.read(context)
+
                 val upcomingEvents = events.count {
-                    it.eventDate >= today && it.status != EventStatus.CANCELLED
+                    parseFlexibleDate(it.eventDate)?.let { d -> !d.isBefore(today) } == true &&
+                        it.status != EventStatus.CANCELLED
                 }
 
-                val monthlyRevenue = events
-                    .filter { it.eventDate >= thisMonth && it.status == EventStatus.COMPLETED }
-                    .sumOf { it.totalAmount }
+                val monthlyRevenue = snapshot?.netSalesThisMonth
+                    ?: deriveMonthlyRevenue(events, today)
 
-                val payments = database.paymentDao().getPayments(userId).first()
-
-                val pendingPayments = derivePendingPaymentBalance(events, payments)
+                val pendingPayments = derivePendingPaymentBalance(events, payments, today)
 
                 KpiData(
                     upcomingEvents = upcomingEvents,

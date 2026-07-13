@@ -282,7 +282,8 @@
       "uploaded_success": "{{count}} photo(s) uploaded successfully",
       "deleted_success": "Photo deleted successfully",
       "error_uploading": "Error uploading photos",
-      "error_deleting": "Error deleting photo"
+      "error_deleting": "Error deleting photo",
+      "error_too_large": "{{name}} is too large (maximum 10MB)"
     }
   },
   "general": {

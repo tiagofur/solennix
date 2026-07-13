@@ -128,6 +128,7 @@
     "active": "Activo",
     "inactive": "Inactivo",
     "select_status": "Seleccionar estado",
+    "status_aria_change": "Estado: {{status}}. Clic para cambiar.",
     "loading": "Cargando"
   },
   "error": {
@@ -415,5 +416,10 @@
       "edit": "Editar",
       "remove": "Eliminar"
     }
+  },
+  "shortcuts": {
+    "go_to": "Ir a {{target}}",
+    "create_new_contextual": "Crear nuevo (contextual)",
+    "show_help": "Mostrar atajos de teclado"
   }
 }
