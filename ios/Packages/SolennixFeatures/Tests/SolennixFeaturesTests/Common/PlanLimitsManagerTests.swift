@@ -322,6 +322,102 @@ final class PlanLimitsManagerTests: XCTestCase {
             "Without a current user, checkLimits must not fetch or mutate counts")
         XCTAssertFalse(planLimits.isLoading)
     }
+
+    // MARK: - Contract: param keys match backend expectations (#818)
+    //
+    // The server's `ListEvents` (`crud_handler.go:303`) reads `start`/`end` —
+    // NOT `start_date`/`end_date`. The wrong keys would be silently ignored
+    // and the filter skipped (returning ALL events, not the month subset).
+
+    /// The events request must NOT carry `start_date`/`end_date` — the server
+    /// would ignore them and return unfiltered results, breaking plan limits.
+    @MainActor
+    func testEventsRequest_ExcludesWrongDateParamKeys() async {
+        await seedBasicUser()
+        var capturedEventsURL: URL?
+        MockURLProtocol.requestHandler = { request in
+            let urlString = request.url?.absoluteString ?? ""
+            if urlString.contains("/events") {
+                capturedEventsURL = request.url
+            }
+            let response = HTTPURLResponse(
+                url: request.url!, statusCode: 200, httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"])!
+            return (response, "[]".data(using: .utf8)!)
+        }
+
+        await planLimits.checkLimits()
+
+        guard let url = capturedEventsURL else {
+            XCTFail("events request not captured"); return
+        }
+        let comps = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        let items = Dictionary(uniqueKeysWithValues: (comps?.queryItems ?? []).map { ($0.name, $0.value ?? "") })
+        XCTAssertNil(items["start_date"], "must use 'start' not 'start_date' — server ignores the latter (#818)")
+        XCTAssertNil(items["end_date"], "must use 'end' not 'end_date' — server ignores the latter (#818)")
+    }
+
+    /// `getAll` injects `page=1` and `limit=10000` to bypass pagination and
+    /// fetch the full collection for counting. A regression that drops these
+    /// would cause silent under-counting on paginated backends.
+    @MainActor
+    func testEventsRequest_IncludesPaginationParams() async {
+        await seedBasicUser()
+        var capturedEventsURL: URL?
+        MockURLProtocol.requestHandler = { request in
+            let urlString = request.url?.absoluteString ?? ""
+            if urlString.contains("/events") {
+                capturedEventsURL = request.url
+            }
+            let response = HTTPURLResponse(
+                url: request.url!, statusCode: 200, httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"])!
+            return (response, "[]".data(using: .utf8)!)
+        }
+
+        await planLimits.checkLimits()
+
+        guard let url = capturedEventsURL else {
+            XCTFail("events request not captured"); return
+        }
+        let comps = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        let items = Dictionary(uniqueKeysWithValues: (comps?.queryItems ?? []).map { ($0.name, $0.value ?? "") })
+        XCTAssertEqual(items["page"], "1", "getAll must inject page=1 (#818)")
+        XCTAssertEqual(items["limit"], "10000", "getAll must inject limit=10000 to bypass pagination (#818)")
+    }
+
+    /// Month-scoped params (`start`/`end`) apply ONLY to events — the other
+    /// collections (clients/products/inventory) must NOT carry date filters.
+    @MainActor
+    func testNonEventsRequests_ExcludeDateParams() async {
+        await seedBasicUser()
+        var capturedURLs: [String: URL] = [:]
+        MockURLProtocol.requestHandler = { request in
+            if let url = request.url {
+                let s = url.absoluteString
+                for key in ["clients", "products", "inventory"] {
+                    if s.contains("/\(key)") { capturedURLs[key] = url }
+                }
+            }
+            let response = HTTPURLResponse(
+                url: request.url!, statusCode: 200, httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"])!
+            return (response, "[]".data(using: .utf8)!)
+        }
+
+        await planLimits.checkLimits()
+
+        let expectedKeys: Set = ["clients", "products", "inventory"]
+        let captured = Set(capturedURLs.keys)
+        XCTAssertEqual(captured, expectedKeys, "all three non-events collections must be fetched")
+
+        for (key, url) in capturedURLs {
+            let comps = URLComponents(url: url, resolvingAgainstBaseURL: false)
+            let items = Dictionary(uniqueKeysWithValues: (comps?.queryItems ?? []).map { ($0.name, $0.value ?? "") })
+            XCTAssertNil(items["start"], "\(key) request must NOT carry 'start' — month scope is events-only (#818)")
+            XCTAssertNil(items["end"], "\(key) request must NOT carry 'end' — month scope is events-only (#818)")
+        }
+    }
 }
 
 // MARK: - Test Keychain double
