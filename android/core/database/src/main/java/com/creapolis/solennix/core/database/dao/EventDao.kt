@@ -29,11 +29,11 @@ interface EventDao {
     @Query("UPDATE events SET sync_status = :status WHERE id = :id")
     suspend fun updateSyncStatus(id: String, status: com.creapolis.solennix.core.database.entity.SyncStatus)
 
-    @Query("SELECT * FROM events WHERE event_date >= date('now') AND status = 'CONFIRMED' AND user_id = :userId ORDER BY event_date ASC LIMIT :limit")
-    fun getUpcomingEvents(userId: String, limit: Int): Flow<List<CachedEvent>>
+    @Query("SELECT * FROM events WHERE event_date >= :today AND status = 'CONFIRMED' AND user_id = :userId ORDER BY event_date ASC LIMIT :limit")
+    fun getUpcomingEvents(userId: String, today: String, limit: Int): Flow<List<CachedEvent>>
 
-    @Query("SELECT * FROM events WHERE event_date >= date('now') AND status = 'CONFIRMED' ORDER BY event_date ASC LIMIT :limit")
-    fun getUpcomingEvents(limit: Int): Flow<List<CachedEvent>>
+    @Query("SELECT * FROM events WHERE event_date >= :today AND status = 'CONFIRMED' ORDER BY event_date ASC LIMIT :limit")
+    fun getUpcomingEvents(today: String, limit: Int): Flow<List<CachedEvent>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEvents(events: List<CachedEvent>)
