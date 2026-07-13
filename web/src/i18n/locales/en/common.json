@@ -325,7 +325,9 @@
     "select_client": "Select a client",
     "select_client_hint": "Choose a client from the list to view their details.",
     "select_product": "Select a product",
-    "select_product_hint": "Choose a product from the list to view its details."
+    "select_product_hint": "Choose a product from the list to view its details.",
+    "select_item": "Select an inventory item",
+    "select_item_hint": "Choose an inventory item from the list to view its details."
   },
   "upgrade_banner": {
     "limit_reached": "{{resource}} Limit Reached",

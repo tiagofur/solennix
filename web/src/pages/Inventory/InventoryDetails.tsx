@@ -30,11 +30,28 @@ type DemandEntry = { date: string; quantity: number };
 
 import { useTranslation } from "react-i18next";
 
-export const InventoryDetails: React.FC = () => {
+type InventoryDetailPanelProps = {
+  itemId: string;
+  /** When true the panel renders inside the split-pane rail: no breadcrumb, no
+   * back button, and a successful delete calls `onDeleted` instead of navigating
+   * away (the list stays mounted and clears its `selected` param). */
+  embedded?: boolean;
+  onDeleted?: () => void;
+};
+
+/**
+ * Inventory detail body. Shared by the standalone route (`/inventory/:id`) and
+ * the master-detail split pane rail (#879). Route coupling (useParams /
+ * navigate back) lives only in the thin `InventoryDetails` wrapper below.
+ */
+export const InventoryDetailPanel: React.FC<InventoryDetailPanelProps> = ({
+  itemId,
+  embedded = false,
+  onDeleted,
+}) => {
   const { t, i18n } = useTranslation(["inventory", "common"]);
-  const { id } = useParams();
   const navigate = useNavigate();
-  const { data: item, isLoading: itemLoading, error: itemError } = useInventoryItem(id);
+  const { data: item, isLoading: itemLoading, error: itemError } = useInventoryItem(itemId);
   const deleteItemMutation = useDeleteInventoryItem();
   const updateItemMutation = useUpdateInventoryItem();
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
@@ -138,15 +155,20 @@ export const InventoryDetails: React.FC = () => {
   };
 
   useEffect(() => {
-    if (id && item) {
-      loadDemandForecast(id, item);
+    if (itemId && item) {
+      loadDemandForecast(itemId, item);
     }
-  }, [id, item]);
+  }, [itemId, item]);
 
   const handleDeleteItem = () => {
-    if (!id) return;
-    deleteItemMutation.mutate(id, {
-      onSuccess: () => navigate("/inventory"),
+    deleteItemMutation.mutate(itemId, {
+      onSuccess: () => {
+        if (embedded) {
+          onDeleted?.();
+        } else {
+          navigate("/inventory");
+        }
+      },
       onSettled: () => setConfirmDeleteOpen(false),
     });
   };
@@ -159,9 +181,9 @@ export const InventoryDetails: React.FC = () => {
   };
 
   const handleAdjustStock = () => {
-    if (!id || !item || adjustValue < 0) return;
+    if (!item || adjustValue < 0) return;
     updateItemMutation.mutate(
-      { id, data: { ...item, current_stock: adjustValue } },
+      { id: itemId, data: { ...item, current_stock: adjustValue } },
       {
         onSuccess: () => {
           addToast(t("common:action.save_success"), "success");
@@ -205,13 +227,15 @@ export const InventoryDetails: React.FC = () => {
     return (
       <div className="text-center p-8">
         <p className="text-error">{error || t("inventory:list.no_results")}</p>
-        <button
-          type="button"
-          onClick={() => navigate("/inventory")}
-          className="mt-4 text-primary hover:underline"
-        >
-          {t("common:action.back")}
-        </button>
+        {!embedded && (
+          <button
+            type="button"
+            onClick={() => navigate("/inventory")}
+            className="mt-4 text-primary hover:underline"
+          >
+            {t("common:action.back")}
+          </button>
+        )}
       </div>
     );
   }
@@ -327,17 +351,21 @@ export const InventoryDetails: React.FC = () => {
         </div>
       </Modal>
 
-      <Breadcrumb items={[{ label: t("inventory:title"), href: '/inventory' }, { label: item.ingredient_name }]} />
+      {!embedded && (
+        <Breadcrumb items={[{ label: t("inventory:title"), href: '/inventory' }, { label: item.ingredient_name }]} />
+      )}
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => navigate("/inventory")}
-            className="p-2 rounded-full hover:bg-surface-alt text-text-secondary transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
+          {!embedded && (
+            <button
+              type="button"
+              onClick={() => navigate("/inventory")}
+              className="p-2 rounded-full hover:bg-surface-alt text-text-secondary transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          )}
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-text">
               {item.ingredient_name}
@@ -366,7 +394,7 @@ export const InventoryDetails: React.FC = () => {
             {t("inventory:list.adjust_stock")}
           </button>
           <Link
-            to={`/inventory/${id}/edit`}
+            to={`/inventory/${itemId}/edit`}
             className="inline-flex items-center px-4 py-2 border border-border rounded-xl bg-card text-sm font-medium text-text-secondary hover:bg-surface-alt transition-colors"
           >
             <Edit className="h-4 w-4 mr-2" />
@@ -702,4 +730,17 @@ export const InventoryDetails: React.FC = () => {
       </div>
     </div>
   );
+};
+
+/**
+ * Route component for `/inventory/:id`. Thin wrapper around the shared
+ * {@link InventoryDetailPanel} — reads the id from the URL and renders the panel
+ * in standalone (non-embedded) mode with breadcrumb + back navigation.
+ */
+export const InventoryDetails: React.FC = () => {
+  const { id } = useParams();
+  if (!id) {
+    return null;
+  }
+  return <InventoryDetailPanel itemId={id} />;
 };

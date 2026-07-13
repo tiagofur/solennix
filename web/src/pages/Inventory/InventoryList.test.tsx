@@ -1,3 +1,4 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@tests/customRender';
 import { MemoryRouter } from 'react-router-dom';
@@ -24,6 +25,23 @@ vi.mock('../../hooks/useToast', () => ({
     removeToast: vi.fn(),
     toasts: [],
   }),
+}));
+
+// jsdom has no matchMedia; default to narrow viewport. Individual tests override.
+let mockIsXl = false;
+vi.mock('../../hooks/useBreakpoint', () => ({
+  useIsXl: () => mockIsXl,
+}));
+
+// Stub the detail panel so xl split-pane tests verify list wiring without
+// pulling the full detail data tree (InventoryDetailPanel has its own test file).
+vi.mock('./InventoryDetails', () => ({
+  InventoryDetailPanel: ({ itemId, embedded }: { itemId: string; embedded?: boolean }) =>
+    embedded ? (
+      <div data-testid="inventory-detail-panel" data-item-id={itemId}>
+        Detalle del item {itemId}
+      </div>
+    ) : null,
 }));
 
 /** Helper: open the RowActionMenu for a given row and click an action */
@@ -77,6 +95,7 @@ const sampleItems = [
 describe('InventoryList', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockIsXl = false;
   });
 
   it('renders all item types in a single table', async () => {
@@ -707,5 +726,51 @@ describe('InventoryList', () => {
     // Should show the empty state for Equipment
     expect(screen.getByText('Sin equipo')).toBeInTheDocument();
     expect(screen.getByText('No hay equipo en el inventario.')).toBeInTheDocument();
+  });
+
+  describe('master-detail split pane (xl+)', () => {
+    beforeEach(() => {
+      mockIsXl = true;
+    });
+
+    it('renders empty selection state when no item is selected at xl', async () => {
+      (inventoryService.getAll as any).mockResolvedValue(sampleItems);
+
+      renderList();
+
+      await waitFor(() => {
+        expect(screen.getByText('Seleccioná un insumo')).toBeInTheDocument();
+      });
+    });
+
+    it('renders detail panel in the rail when an item is preselected via URL', async () => {
+      (inventoryService.getAll as any).mockResolvedValue(sampleItems);
+
+      render(
+        <MemoryRouter initialEntries={['/inventory?selected=1']}>
+          <InventoryList />
+        </MemoryRouter>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('inventory-detail-panel')).toHaveAttribute('data-item-id', '1');
+      });
+    });
+
+    it('selects item in pane (no navigation) on row click at xl', async () => {
+      (inventoryService.getAll as any).mockResolvedValue(sampleItems);
+
+      renderList();
+
+      await waitFor(() => {
+        expect(screen.getByText('Harina')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText('Harina'));
+      // At xl the stubbed panel should now show for the clicked item.
+      await waitFor(() => {
+        expect(screen.getByTestId('inventory-detail-panel')).toHaveAttribute('data-item-id', '1');
+      });
+    });
   });
 });
