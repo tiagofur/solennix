@@ -54,6 +54,7 @@ import java.util.Locale
 fun EventFormScreen(
     viewModel: EventFormViewModel,
     onSearchClick: () -> Unit = {},
+    onNavigateToPricing: () -> Unit = {},
     onNavigateBack: () -> Unit
 ) {
     val pagerState = rememberPagerState(pageCount = { 5 })
@@ -193,7 +194,7 @@ fun EventFormScreen(
             message = message,
             onUpgradeClick = {
                 viewModel.planLimitMessage = null
-                onNavigateBack()
+                onNavigateToPricing()
             },
             onDismiss = { viewModel.planLimitMessage = null }
         )
