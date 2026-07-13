@@ -29,7 +29,12 @@ enum SpotlightAction: Equatable {
 ///
 /// Supported deep links:
 /// - `solennix://reset-password?token=<TOKEN>` — Navigate to the password reset flow.
+///   `TOKEN` is a JWT (HS256) issued by the backend: three Base64URL segments
+///   separated by dots (`header.payload.signature`). Malformed tokens are
+///   rejected client-side so they never reach the reset form (#815).
 /// - `solennix://team-invite?token=<TOKEN>` — Navigate to team invite accept flow.
+///   `TOKEN` is a 64-char lowercase hex string (256-bit random, `hex.EncodeToString`
+///   output). Malformed tokens are rejected client-side (#815).
 /// - `solennix://event/{id}` — Navigate to the event detail screen.
 /// - `solennix://event/{id}/payment` — Navigate to the event detail and open the payment sheet.
 enum DeepLinkHandler {
@@ -42,13 +47,17 @@ enum DeepLinkHandler {
 
         switch url.host {
         case "reset-password":
-            guard let token = url.queryParameters["token"], !token.isEmpty else {
+            guard let token = url.queryParameters["token"],
+                  !token.isEmpty,
+                  isValidResetToken(token) else {
                 return nil
             }
             return .resetPassword(token: token)
 
         case "team-invite":
-            guard let token = url.queryParameters["token"], !token.isEmpty else {
+            guard let token = url.queryParameters["token"],
+                  !token.isEmpty,
+                  isValidTeamInviteToken(token) else {
                 return nil
             }
             return .teamInvite(token: token)
@@ -59,6 +68,40 @@ enum DeepLinkHandler {
         default:
             return nil
         }
+    }
+
+    // MARK: - Token Format Validation
+
+    /// Cached regex matching a JWT-shaped reset token: three Base64URL segments
+    /// (`[A-Za-z0-9_-]+`) separated by dots, no `=` padding. Mirrors the backend
+    /// `AuthService.GenerateResetToken` output (HS256 JWT, auth_service.go).
+    private static let resetTokenPattern: NSRegularExpression = {
+        // swiftlint:disable:next force_try
+        try! NSRegularExpression(pattern: "^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$")
+    }()
+
+    /// Cached regex matching a team-invite token: exactly 64 lowercase hex chars
+    /// (256-bit random, `hex.EncodeToString`). Mirrors the backend
+    /// `generateFormToken` output (event_form_handler.go). Uppercase is rejected
+    /// to match server output exactly.
+    private static let teamInviteTokenPattern: NSRegularExpression = {
+        // swiftlint:disable:next force_try
+        try! NSRegularExpression(pattern: "^[0-9a-f]{64}$")
+    }()
+
+    /// True if `token` has the JWT shape the backend issues for password resets.
+    private static func isValidResetToken(_ token: String) -> Bool {
+        let range = NSRange(token.startIndex..., in: token)
+        let match = resetTokenPattern.firstMatch(in: token, range: range)
+        return match != nil
+    }
+
+    /// True if `token` is a 64-char lowercase hex string as the backend issues
+    /// for team invites.
+    private static func isValidTeamInviteToken(_ token: String) -> Bool {
+        let range = NSRange(token.startIndex..., in: token)
+        let match = teamInviteTokenPattern.firstMatch(in: token, range: range)
+        return match != nil
     }
 
     // MARK: - Event Route Parsing
