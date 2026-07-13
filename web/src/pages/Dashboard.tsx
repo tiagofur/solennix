@@ -590,6 +590,10 @@ export const Dashboard: React.FC = () => {
   const { data: _inventory, isLoading: loadingInventory } = useInventoryItems();
 
   const { data: kpis } = useDashboardKpis();
+  // Server-side event count is the single source of truth for the KPI tile
+  // (parity with iOS/Android). usePlanLimits().eventsThisMonth remains the
+  // plan-gating count (UpgradeBanner), but is NOT used for the KPI display.
+  const serverEventsThisMonth = kpis?.events_this_month ?? 0;
   const { data: revenueChartData } = useDashboardRevenueChart("year", !isBasicPlan);
   const { data: statusCountsData } = useDashboardEventsByStatus("month");
 
@@ -902,8 +906,8 @@ export const Dashboard: React.FC = () => {
               iconBg="bg-info/10"
               iconColor="text-info"
               label={t('dashboard:kpis.active_events')}
-              value={String(eventsThisMonth)}
-              sub={`${eventsThisMonth} / ${limit === -1 ? "∞" : limit} ${t('common:nav.events').toLowerCase()}`}
+              value={String(serverEventsThisMonth)}
+              sub={`${serverEventsThisMonth} / ${limit === -1 ? "∞" : limit} ${t('common:nav.events').toLowerCase()}`}
             />
           </>
         )}
