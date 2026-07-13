@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.core.data.LocalCacheManager
 import com.creapolis.solennix.core.data.repository.SettingsRepository
+import com.creapolis.solennix.core.data.search.AppSearchIndexer
 import com.creapolis.solennix.core.data.widget.WidgetSyncTrigger
 import com.creapolis.solennix.core.model.ThemeConfig
 import com.creapolis.solennix.core.model.User
@@ -28,6 +29,7 @@ class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val localCacheManager: LocalCacheManager,
     private val apiService: ApiService,
+    private val appSearchIndexer: AppSearchIndexer,
     private val widgetSyncTrigger: WidgetSyncTrigger,
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context
 ) : ViewModel() {
@@ -88,6 +90,9 @@ class SettingsViewModel @Inject constructor(
             billingManager.logout()
             authManager.logout()
             localCacheManager.clearAll()
+            // Clear the on-device search index so the prior tenant's clients/events/
+            // products don't leak into in-app search shortcuts after logout (#835).
+            appSearchIndexer.removeAll()
             // Room has been wiped — force widgets to re-render into their signed-out /
             // empty state instead of showing the just-deleted rows until the next system
             // APPWIDGET_UPDATE. Unconditional: auth is already cleared at this point.

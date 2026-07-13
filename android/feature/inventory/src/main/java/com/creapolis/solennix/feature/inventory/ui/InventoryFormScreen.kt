@@ -38,6 +38,7 @@ import com.creapolis.solennix.feature.inventory.viewmodel.InventoryFormViewModel
 fun InventoryFormScreen(
     viewModel: InventoryFormViewModel,
     onSearchClick: () -> Unit = {},
+    onNavigateToPricing: () -> Unit = {},
     onNavigateBack: () -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -97,14 +98,14 @@ fun InventoryFormScreen(
                         UpgradeBanner(
                             message = limitResult.message,
                             style = UpgradeBannerStyle.LIMIT,
-                            onUpgradeClick = { /* Handled via Settings > Suscripción */ },
+                            onUpgradeClick = onNavigateToPricing,
                             visible = true
                         )
                     } else if (limitResult is LimitCheckResult.NearLimit) {
                         UpgradeBanner(
                             message = InventoryStrings.nearLimitMessage(limitResult.remaining),
                             style = UpgradeBannerStyle.WARNING,
-                            onUpgradeClick = { /* Handled via Settings > Suscripción */ },
+                            onUpgradeClick = onNavigateToPricing,
                             visible = true
                         )
                     }
@@ -257,7 +258,11 @@ fun InventoryFormScreen(
                             text = InventoryStrings.save,
                             onClick = { viewModel.saveItem() },
                             isLoading = viewModel.isSaving,
-                            enabled = viewModel.isFormValid && !viewModel.isLimitReached
+                            // Block save when the plan-limit check is in flight or failed
+                            // (fail-closed), or when the limit is reached (issue #849).
+                            enabled = viewModel.isFormValid &&
+                                !viewModel.isLimitReached &&
+                                !viewModel.isLimitCheckBlocked
                         )
                         Spacer(modifier = Modifier.height(32.dp))
                     }

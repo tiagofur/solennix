@@ -34,7 +34,11 @@ class UpcomingEventsWidget : GlanceAppWidget() {
             emptyList()
         } else {
             try {
-                database.eventDao().getUpcomingEvents(userId, 3)
+                // Pass local-calendar today — SQLite date('now') is UTC and would miss
+                // today's events for LATAM users (e.g. UTC-6 where date('now') jumps
+                // ahead at 18:00 local). Mirrors iOS Calendar.current.startOfDay (#834).
+                val today = java.time.LocalDate.now().toString()
+                database.eventDao().getUpcomingEvents(userId, today, 3)
                     .first()
                     .map { it.asExternalModel() }
             } catch (e: Exception) {
