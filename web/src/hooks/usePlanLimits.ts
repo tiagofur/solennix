@@ -1,5 +1,6 @@
 import { useAuth } from '../contexts/AuthContext';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
+import { isBasicPlan as isBasicPlanNormalized } from '../lib/plan';
 import { useEventsByDateRange } from './queries/useEventQueries';
 import { useClients } from './queries/useClientQueries';
 import { useProducts } from './queries/useProductQueries';
@@ -13,7 +14,10 @@ const CATALOG_LIMIT = 20;
 
 export function usePlanLimits() {
   const { user } = useAuth();
-  const isBasicPlan = user?.plan === 'basic' || !user?.plan;
+  // Normalize legacy aliases (gratis/free/plan_basic/…) to match the backend
+  // NormalizePlan map. Issue #872: the old `plan === 'basic'` check let users
+  // with a legacy alias slip past the basic-plan gates.
+  const isBasicPlan = isBasicPlanNormalized(user?.plan);
 
   const now = new Date();
   const start = format(startOfMonth(now), 'yyyy-MM-dd');
