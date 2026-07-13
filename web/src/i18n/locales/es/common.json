@@ -327,7 +327,9 @@
     "select_client": "Seleccioná un cliente",
     "select_client_hint": "Elegí un cliente de la lista para ver su detalle.",
     "select_product": "Seleccioná un producto",
-    "select_product_hint": "Elegí un producto de la lista para ver su detalle."
+    "select_product_hint": "Elegí un producto de la lista para ver su detalle.",
+    "select_item": "Seleccioná un insumo",
+    "select_item_hint": "Elegí un item de inventario de la lista para ver su detalle."
   },
   "upgrade_banner": {
     "limit_reached": "Límite de {{resource}} Alcanzado",

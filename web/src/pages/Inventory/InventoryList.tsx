@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useMemo, useState, useCallback } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { InventoryItem } from "../../types/entities";
 import {
@@ -16,6 +16,7 @@ import {
   Eye,
   ArrowUp,
   ArrowDown,
+  MousePointerClick,
   type LucideIcon,
 } from "lucide-react";
 import { RowActionMenu } from "../../components/RowActionMenu";
@@ -23,6 +24,8 @@ import { exportToCsv } from "../../lib/exportCsv";
 import clsx from "clsx";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import Empty from "../../components/Empty";
+import { SplitPane } from "../../components/SplitPane";
+import { useIsXl } from "../../hooks/useBreakpoint";
 import { useToast } from "../../hooks/useToast";
 import { SkeletonTable } from "../../components/Skeleton";
 import { Modal } from "../../components/Modal";
@@ -34,6 +37,7 @@ import { Pagination } from "../../components/Pagination";
 import { usePagination } from "../../hooks/usePagination";
 import { useRowSelection } from "../../hooks/useRowSelection";
 import { useInventoryItems, useDeleteInventoryItem, useUpdateInventoryItem } from "../../hooks/queries/useInventoryQueries";
+import { InventoryDetailPanel } from "./InventoryDetails";
 
 type SortKey =
   | "ingredient_name"
@@ -174,6 +178,35 @@ const InlineStockCell: React.FC<{
 export const InventoryList: React.FC = () => {
   const { t, i18n } = useTranslation(["inventory", "common"]);
   const navigate = useNavigate();
+  // Master-detail split pane (#879): at xl+, selecting a row opens detail in
+  // the right rail via the `selected` URL param; below xl rows navigate.
+  const isXl = useIsXl();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedId = searchParams.get("selected");
+
+  const selectItem = useCallback(
+    (itemId: string) => {
+      setSearchParams(
+        (prev) => {
+          prev.set("selected", itemId);
+          return prev;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  const clearSelected = useCallback(() => {
+    setSearchParams(
+      (prev) => {
+        prev.delete("selected");
+        return prev;
+      },
+      { replace: true },
+    );
+  }, [setSearchParams]);
+
   const { data: rawItems, isLoading: loading } = useInventoryItems();
   const items = rawItems ?? [];
   const deleteItem = useDeleteInventoryItem();
@@ -377,7 +410,22 @@ export const InventoryList: React.FC = () => {
     return listSort.order === "asc" ? "ascending" : "descending";
   };
 
-  return (
+  // Master-detail split pane (#879): the list chrome is identical on every
+  // breakpoint; at xl+ it becomes the left rail with the detail panel on the
+  // right. Below xl the detail is hidden and rows navigate to the full page.
+  const detailPanel = selectedId ? (
+    <InventoryDetailPanel itemId={selectedId} embedded onDeleted={clearSelected} />
+  ) : (
+    <Empty
+      icon={MousePointerClick}
+      showImage={false}
+      title={t("common:split.select_item")}
+      description={t("common:split.select_item_hint")}
+      className="h-full justify-center"
+    />
+  );
+
+  const listContent = (
     <div className="space-y-6">
       <ConfirmDialog
         open={confirmOpen}
@@ -617,11 +665,13 @@ export const InventoryList: React.FC = () => {
                     const isLowStock =
                       item.minimum_stock > 0 &&
                       item.current_stock < item.minimum_stock;
+                    const isActiveRow = item.id === selectedId;
                     return (
                       <tr
                         key={item.id}
-                        className="group hover:bg-surface-alt/50 transition-colors cursor-pointer"
-                        onClick={() => navigate(`/inventory/${item.id}`)}
+                        className={`group cursor-pointer transition-colors ${isActiveRow ? "bg-surface-alt ring-1 ring-inset ring-primary/30" : "hover:bg-surface-alt/50"}`}
+                        onClick={() => (isXl ? selectItem(item.id) : navigate(`/inventory/${item.id}`))}
+                        aria-current={isActiveRow ? "true" : undefined}
                       >
                         {/* Multi-select checkbox (#885) — desktop only */}
                         <td className="px-2 py-4 w-10 text-center hidden lg:table-cell" onClick={(e) => e.stopPropagation()}>
@@ -676,7 +726,7 @@ export const InventoryList: React.FC = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                             <RowActionMenu items={[
-                              { label: t("common:action.view"), icon: Eye, onClick: () => navigate(`/inventory/${item.id}`) },
+                              { label: t("common:action.view"), icon: Eye, onClick: () => (isXl ? selectItem(item.id) : navigate(`/inventory/${item.id}`)) },
                               { label: t("common:action.edit"), icon: Edit, onClick: () => navigate(`/inventory/${item.id}/edit`) },
                               { label: t("common:action.delete"), icon: Trash2, onClick: () => requestDelete(item.id), variant: 'destructive' as const },
                             ]} />
@@ -760,4 +810,16 @@ export const InventoryList: React.FC = () => {
       </Modal>
     </div>
   );
+
+  if (isXl) {
+    return (
+      <SplitPane
+        master={listContent}
+        detail={detailPanel}
+        masterClassName="xl:overflow-y-auto xl:min-h-0 xl:pr-1"
+      />
+    );
+  }
+
+  return listContent;
 };
