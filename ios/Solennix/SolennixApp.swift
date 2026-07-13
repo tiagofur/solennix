@@ -429,16 +429,10 @@ struct SolennixApp: App {
         //    without also removing the legitimate history — leave them as-is.
         NotificationManager.shared.cancelAllPendingNotifications()
 
-        // 5. Reset per-user UserDefaults keys.
-        //    - hasSeenOnboarding: next user should see onboarding flow.
-        //    - hasRequestedPushAuthorization: next user should be prompted for push.
-        //    - pendingDeviceToken: stale token must not be registered for the next user.
-        //    - registeredDeviceToken: cleared after unregistration in willClearTokens.
-        //    NOT reset: "appearance" (device-wide preference, not user-specific).
-        UserDefaults.standard.removeObject(forKey: "hasSeenOnboarding")
-        UserDefaults.standard.removeObject(forKey: "hasRequestedPushAuthorization")
-        UserDefaults.standard.removeObject(forKey: "pendingDeviceToken")
-        UserDefaults.standard.removeObject(forKey: "registeredDeviceToken")
+        // 5. Reset per-user UserDefaults keys (extracted so tests can verify
+        //    which keys survive vs get cleared without driving the full async
+        //    cleanup that also touches SwiftData, widgets, and notifications).
+        Self.clearPerUserUserDefaults()
 
         // 6. Clear Core Spotlight index so the next user cannot search previous
         //    user's events, clients, or products from the system search.
@@ -462,6 +456,23 @@ struct SolennixApp: App {
         // @AppStorage wrapper caches the value; resetting via UserDefaults is enough
         // for newly launched views — in-flight views will re-read on next render).
         hasRequestedPushAuthorization = false
+    }
+
+    /// Clears the per-user `UserDefaults` keys on logout.
+    ///
+    /// Extracted from `performSessionCleanup` so tests can verify which keys
+    /// are cleared vs preserved without driving the full async cleanup (which
+    /// also touches SwiftData, widgets, and notifications).
+    ///
+    /// Device-scoped keys NOT cleared (survive logout/login on the same device):
+    /// - `appearance`: device-wide preference, not user-specific.
+    /// - `hasSeenOnboarding`: onboarding completion is per-device, not per-session;
+    ///   clearing it forced a full replay on every logout (#810). Parity with
+    ///   Android (`has_seen_onboarding` survives signOut).
+    internal static func clearPerUserUserDefaults() {
+        UserDefaults.standard.removeObject(forKey: "hasRequestedPushAuthorization")
+        UserDefaults.standard.removeObject(forKey: "pendingDeviceToken")
+        UserDefaults.standard.removeObject(forKey: "registeredDeviceToken")
     }
 }
 

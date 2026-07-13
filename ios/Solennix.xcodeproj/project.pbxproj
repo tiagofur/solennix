@@ -31,6 +31,7 @@
 		1D7AACEE0E1E61B63FDDE739 /* TabMetadataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D001B8A6327B9C6BA4D5A99 /* TabMetadataTests.swift */; };
 		1DEF87BFAF9F63670363B09B /* SolennixNetwork in Frameworks */ = {isa = PBXBuildFile; productRef = DC521897BBEAC6707453E470 /* SolennixNetwork */; };
 		20FDC49940B61379E7EEA33E /* WidgetStateViewRenderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBB2933363C102F3C54569D8 /* WidgetStateViewRenderTests.swift */; };
+		22C1D9E7E56CA8FF46246F26 /* SessionCleanupUserDefaultsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D82B151798CBC24F4A5E9A1 /* SessionCleanupUserDefaultsTests.swift */; };
 		26314057AB37187F042BCE2E /* MoreMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F34A685767D81C0E207E6AA /* MoreMenuView.swift */; };
 		28B4DD4DA8C16B7929C22612 /* FeatureL10nPluralTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A4C956999D89DE134DCD33B /* FeatureL10nPluralTests.swift */; };
 		31977930EB1AE0C01E08EF44 /* CalendarLocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5160A693AB3B6217988AC976 /* CalendarLocalizationTests.swift */; };
@@ -216,6 +217,7 @@
 		264F2A6C440C82131EA0C8C5 /* NotificationManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManagerTests.swift; sourceTree = "<group>"; };
 		26D154F9FACF2A74B9D23331 /* SolennixShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolennixShortcuts.swift; sourceTree = "<group>"; };
 		2A362069977C87D34D5E51A2 /* DeepLinkHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkHandler.swift; sourceTree = "<group>"; };
+		2D82B151798CBC24F4A5E9A1 /* SessionCleanupUserDefaultsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionCleanupUserDefaultsTests.swift; sourceTree = "<group>"; };
 		2D9C0E4EA72475F0E5777C07 /* AuthLocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthLocalizationTests.swift; sourceTree = "<group>"; };
 		2DA8D6B67BBF53BEB04EACDC /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		2EE23C26A264BFD15D312EA6 /* SidebarSectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarSectionTests.swift; sourceTree = "<group>"; };
@@ -540,6 +542,7 @@
 				1939BE7B7E7FC5BA06B55A97 /* WidgetKeyParityTests.swift */,
 				F8E382C624BD9052DAC740A3 /* WidgetSyncCoordinatorTests.swift */,
 				24A544135625098DD5B08AB9 /* WidgetDataSyncMissingAppGroupTests.swift */,
+				2D82B151798CBC24F4A5E9A1 /* SessionCleanupUserDefaultsTests.swift */,
 			);
 			path = SolennixTests;
 			sourceTree = "<group>";
@@ -1028,6 +1031,7 @@
 				509BC8DBA59973010F9E640B /* WidgetKeyParityTests.swift in Sources */,
 				940D8F3844A936FD34D15B86 /* WidgetSyncCoordinatorTests.swift in Sources */,
 				FF028DD75C4C0475419D1F90 /* WidgetDataSyncMissingAppGroupTests.swift in Sources */,
+				22C1D9E7E56CA8FF46246F26 /* SessionCleanupUserDefaultsTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

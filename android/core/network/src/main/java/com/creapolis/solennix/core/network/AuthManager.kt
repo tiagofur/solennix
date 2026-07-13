@@ -233,8 +233,18 @@ class AuthManager @Inject constructor(
         loadCachedUser()
     }
 
+    /**
+     * Called when the user cancels or fails biometric authentication. Previously this
+     * wiped refresh tokens via [clearTokens], forcing a full re-login even though the
+     * session was still valid — a poor UX for an accidental cancel (issue #845).
+     *
+     * Now transitions to [AuthState.Unauthenticated] **without** clearing tokens: the
+     * refresh token is preserved so the user can sign back in with email/password.
+     * [clearTokens] is only called on explicit logout or when the server rejects the
+     * refresh token (401).
+     */
     fun failedBiometric() {
-        clearTokens()
+        _authState.value = AuthState.Unauthenticated
     }
 
     fun setBiometricEnabled(enabled: Boolean) {

@@ -42,14 +42,27 @@ fun DashboardViewModel.refresh() {
         try {
             val summary = dashboardRepository.getSummary()
             _kpis.value = summary.kpis
-            _monthlyRevenueTrend.value = summary.revenueChart
-            _statusCountsFromBackend.value = summary.eventsByStatus
-            _topClients.value = summary.topClients
-            _productDemand.value = summary.productDemand
-            _forecast.value = summary.forecast
             // Persist server-authoritative KPIs for the widget so it renders
             // netSalesThisMonth instead of a divergent client-side sum (#828).
             widgetSyncTrigger.saveKpiSnapshot(summary.kpis)
+
+            // Premium analytics (revenue trend, forecast, top clients, product demand)
+            // are gated by plan — basic users get KPIs + status counts only (#838).
+            // The server returns them in the bundled summary regardless, but storing
+            // and rendering them for basic plan is wasteful and leaks premium insights.
+            val isBasicPlan = authManager.currentUser.value?.plan == Plan.BASIC
+            if (!isBasicPlan) {
+                _monthlyRevenueTrend.value = summary.revenueChart
+                _topClients.value = summary.topClients
+                _productDemand.value = summary.productDemand
+                _forecast.value = summary.forecast
+            } else {
+                _monthlyRevenueTrend.value = emptyList()
+                _topClients.value = emptyList()
+                _productDemand.value = emptyList()
+                _forecast.value = emptyList()
+            }
+            _statusCountsFromBackend.value = summary.eventsByStatus
         } catch (e: Exception) {
             Log.w(TAG, "dashboard summary fetch failed", e)
         }
