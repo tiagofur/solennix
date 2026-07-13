@@ -50,6 +50,13 @@ class InventoryFormViewModel @Inject constructor(
     val isLimitReached: Boolean
         get() = limitCheckResult is LimitCheckResult.LimitReached
 
+    /**
+     * True while the plan-limit check is in flight OR failed. Save is blocked until we
+     * know for sure the user is under their cap — fail-closed, not fail-open (issue #849).
+     */
+    val isLimitCheckBlocked: Boolean
+        get() = limitCheckResult == null || limitCheckResult is LimitCheckResult.Error
+
     val isFormValid: Boolean
         get() = ingredientName.isNotBlank() && currentStock.toDoubleOrNull() != null && minimumStock.toDoubleOrNull() != null && unit.isNotBlank()
 
@@ -93,7 +100,10 @@ class InventoryFormViewModel @Inject constructor(
                     else -> LimitCheckResult.Allowed
                 }
             } catch (_: Exception) {
-                // Non-fatal — allow creation if limit check fails
+                // Fail-closed: block save until the check succeeds. Previously this was
+                // fail-open (limitCheckResult stayed null → save enabled), letting free-tier
+                // users bypass the cap on network/DB errors (#849).
+                limitCheckResult = LimitCheckResult.Error
             }
         }
     }

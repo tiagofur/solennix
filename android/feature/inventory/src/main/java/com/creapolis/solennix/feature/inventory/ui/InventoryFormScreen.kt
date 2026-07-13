@@ -257,7 +257,11 @@ fun InventoryFormScreen(
                             text = InventoryStrings.save,
                             onClick = { viewModel.saveItem() },
                             isLoading = viewModel.isSaving,
-                            enabled = viewModel.isFormValid && !viewModel.isLimitReached
+                            // Block save when the plan-limit check is in flight or failed
+                            // (fail-closed), or when the limit is reached (issue #849).
+                            enabled = viewModel.isFormValid &&
+                                !viewModel.isLimitReached &&
+                                !viewModel.isLimitCheckBlocked
                         )
                         Spacer(modifier = Modifier.height(32.dp))
                     }
