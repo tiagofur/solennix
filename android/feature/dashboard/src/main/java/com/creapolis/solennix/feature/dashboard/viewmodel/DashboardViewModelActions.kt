@@ -57,7 +57,7 @@ fun DashboardViewModel.registerPayment(
     date: String,
     autoComplete: Boolean
 ) {
-    if (amount <= 0 || method.isBlank()) {
+    if (amount < MIN_PENDING_AMOUNT || method.isBlank()) {
         _transientMessage.value = tr(R.string.dashboard_error_payment_requirements)
         return
     }

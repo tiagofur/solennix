@@ -3,6 +3,7 @@ import { clientService } from '@/services/clientService';
 import { queryKeys } from './queryKeys';
 import { useToast } from '@/hooks/useToast';
 import { logError, getErrorMessage } from '@/lib/errorHandler';
+import { CATALOG_STALE_TIME } from '@/lib/queryClient';
 import type { ClientInsert, ClientUpdate, PaginationParams } from '@/types/entities';
 import { useTranslation } from 'react-i18next';
 
@@ -12,6 +13,7 @@ export function useClients() {
   return useQuery({
     queryKey: queryKeys.clients.all,
     queryFn: () => clientService.getAll(),
+    staleTime: CATALOG_STALE_TIME,
   });
 }
 

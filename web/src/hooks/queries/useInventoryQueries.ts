@@ -3,6 +3,7 @@ import { inventoryService } from '@/services/inventoryService';
 import { queryKeys } from './queryKeys';
 import { useToast } from '@/hooks/useToast';
 import { logError, getErrorMessage } from '@/lib/errorHandler';
+import { CATALOG_STALE_TIME } from '@/lib/queryClient';
 import type { InventoryItemInsert, InventoryItemUpdate, PaginationParams } from '@/types/entities';
 import { useTranslation } from 'react-i18next';
 
@@ -12,6 +13,7 @@ export function useInventoryItems() {
   return useQuery({
     queryKey: queryKeys.inventory.all,
     queryFn: () => inventoryService.getAll(),
+    staleTime: CATALOG_STALE_TIME,
   });
 }
 

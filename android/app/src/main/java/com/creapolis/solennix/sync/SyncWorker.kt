@@ -1,11 +1,13 @@
 package com.creapolis.solennix.sync
 
 import android.content.Context
+import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.*
 import com.creapolis.solennix.core.data.repository.ClientRepository
 import com.creapolis.solennix.core.data.repository.EventRepository
 import com.creapolis.solennix.core.data.repository.InventoryRepository
+import com.creapolis.solennix.core.data.repository.PaymentRepository
 import com.creapolis.solennix.core.data.repository.ProductRepository
 import com.creapolis.solennix.core.data.search.AppSearchIndexer
 import com.creapolis.solennix.core.data.repository.PendingAction
@@ -27,6 +29,7 @@ class SyncWorker @AssistedInject constructor(
     private val clientRepository: ClientRepository,
     private val productRepository: ProductRepository,
     private val inventoryRepository: InventoryRepository,
+    private val paymentRepository: PaymentRepository,
     private val eventDayNotificationManager: EventDayNotificationManager,
     private val appSearchIndexer: AppSearchIndexer,
     private val widgetSyncTrigger: WidgetSyncTrigger
@@ -42,6 +45,7 @@ class SyncWorker @AssistedInject constructor(
             syncClients()
             syncProducts()
             syncInventory()
+            syncPayments()
 
             // Post-sync: refresh home-screen widgets so they reflect the freshly synced
             // Room data. Mirrors iOS BackgroundTaskManager -> WidgetSyncCoordinator.syncAll().
@@ -67,6 +71,7 @@ class SyncWorker @AssistedInject constructor(
         try {
             // Eventos pendientes
             val pendingEvents = eventRepository.getPendingEvents()
+            var failures = 0
             pendingEvents.forEach { pending ->
                 try {
                     when (pending.action) {
@@ -81,11 +86,27 @@ class SyncWorker @AssistedInject constructor(
                         }
                     }
                 } catch (e: Exception) {
-                    // Fail individual item but continue with others
+                    // Per-item failure: log with event id + action so stale PENDING rows
+                    // are observable in logcat (issue #846 — previously swallowed
+                    // silently, leaving the user believing the event had synced).
+                    failures++
+                    Log.w(
+                        TAG,
+                        "Pending upload failed: action=${pending.action}, " +
+                            "eventId=${pending.event.id}, error=${e.message}",
+                        e
+                    )
                 }
             }
+            if (failures > 0) {
+                Log.w(
+                    TAG,
+                    "$failures/${pendingEvents.size} pending event uploads failed; " +
+                        "they remain in PENDING_* state and will retry on the next sync."
+                )
+            }
         } catch (e: Exception) {
-            // Log but don't fail the entire worker
+            Log.w(TAG, "syncPendingChanges failed entirely", e)
         }
     }
 
@@ -116,6 +137,14 @@ class SyncWorker @AssistedInject constructor(
     private suspend fun syncInventory() {
         try {
             inventoryRepository.syncInventory()
+        } catch (e: Exception) {
+            // Log but don't fail the entire sync
+        }
+    }
+
+    private suspend fun syncPayments() {
+        try {
+            paymentRepository.syncPayments()
         } catch (e: Exception) {
             // Log but don't fail the entire sync
         }
@@ -153,6 +182,7 @@ class SyncWorker @AssistedInject constructor(
     }
 
     companion object {
+        private const val TAG = "SyncWorker"
         private const val MAX_RETRY_COUNT = 3
         const val SYNC_WORK_NAME = "solennix_sync_work"
 

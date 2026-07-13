@@ -5,8 +5,10 @@ import com.creapolis.solennix.core.model.Payment
 import com.creapolis.solennix.feature.events.R
 import kotlinx.coroutines.launch
 
+private const val MIN_PAYMENT_AMOUNT: Double = 0.01
+
 fun EventDetailViewModel.addPayment(amount: Double, method: String, notes: String?, date: String? = null) {
-    if (amount <= 0) {
+    if (amount < MIN_PAYMENT_AMOUNT) {
         _errorMessage.value = tr(R.string.events_detail_error_positive_amount)
         return
     }
