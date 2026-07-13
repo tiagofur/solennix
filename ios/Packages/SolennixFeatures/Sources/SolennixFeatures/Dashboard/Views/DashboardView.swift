@@ -126,10 +126,9 @@ public struct DashboardView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
-                    NavigationLink(value: Route.eventForm()) {
+                    NavigationLink(value: planLimitsManager.canCreateEvent ? Route.eventForm() : Route.pricing) {
                         Label(tr("dashboard.quick_new_event", "Nuevo evento"), systemImage: "calendar.badge.plus")
                     }
-                    .disabled(!planLimitsManager.canCreateEvent)
 
                     Button {
                         showQuickQuote = true
@@ -254,7 +253,7 @@ public struct DashboardView: View {
                         icon: "plus.circle.fill",
                         label: tr("dashboard.quick_new_event", "Nuevo evento"),
                         color: planLimitsManager.canCreateEvent ? SolennixColors.primary : SolennixColors.textTertiary,
-                        enabled: planLimitsManager.canCreateEvent,
+                        isAtLimit: !planLimitsManager.canCreateEvent,
                         destination: Route.eventForm()
                     )
 
@@ -262,7 +261,7 @@ public struct DashboardView: View {
                         icon: "person.badge.plus",
                         label: tr("dashboard.quick_new_client", "Nuevo cliente"),
                         color: planLimitsManager.canCreateClient ? SolennixColors.accent : SolennixColors.textTertiary,
-                        enabled: planLimitsManager.canCreateClient,
+                        isAtLimit: !planLimitsManager.canCreateClient,
                         destination: Route.clientForm()
                     )
                 }
@@ -273,7 +272,7 @@ public struct DashboardView: View {
                         icon: "plus.circle.fill",
                         label: tr("dashboard.quick_new_event", "Nuevo evento"),
                         color: planLimitsManager.canCreateEvent ? SolennixColors.primary : SolennixColors.textTertiary,
-                        enabled: planLimitsManager.canCreateEvent,
+                        isAtLimit: !planLimitsManager.canCreateEvent,
                         destination: Route.eventForm()
                     )
 
@@ -281,7 +280,7 @@ public struct DashboardView: View {
                         icon: "person.badge.plus",
                         label: tr("dashboard.quick_new_client", "Nuevo cliente"),
                         color: planLimitsManager.canCreateClient ? SolennixColors.accent : SolennixColors.textTertiary,
-                        enabled: planLimitsManager.canCreateClient,
+                        isAtLimit: !planLimitsManager.canCreateClient,
                         destination: Route.clientForm()
                     )
                 }
@@ -291,17 +290,17 @@ public struct DashboardView: View {
     }
 
     @ViewBuilder
-    private func quickActionItem(icon: String, label: String, color: Color, enabled: Bool, destination: Route) -> some View {
-        if enabled {
-            NavigationLink(value: destination) {
-                quickActionButton(icon: icon, label: label, color: color)
-            }
-            .buttonStyle(.plain)
-            .simultaneousGesture(TapGesture().onEnded { HapticsHelper.play(.light) })
-        } else {
+    private func quickActionItem(icon: String, label: String, color: Color, isAtLimit: Bool, destination: Route) -> some View {
+        // Always navigate: when at the plan limit, route to the pricing/upgrade
+        // screen instead of leaving the button inert (#812). Parity with
+        // EventListView's FAB and toolbar entrypoints. The muted `color` passed
+        // by the caller already signals the at-limit affordance.
+        NavigationLink(value: isAtLimit ? Route.pricing : destination) {
             quickActionButton(icon: icon, label: label, color: color)
-                .opacity(0.6)
         }
+        .buttonStyle(.plain)
+        .opacity(isAtLimit ? 0.6 : 1.0)
+        .simultaneousGesture(TapGesture().onEnded { HapticsHelper.play(.light) })
     }
 
     private func quickActionButton(icon: String, label: String, color: Color) -> some View {
