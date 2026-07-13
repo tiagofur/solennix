@@ -1,109 +1,27 @@
 # Sesión Activa — Solennix Agent Progress
 
 ## Feature en curso
-- **Issue:** #816 — fix(ios): Notification tap auth fallback checks token presence not validity
-- **Estado:** done (pendiente merge PR #965)
-- **Branch:** `fix/ios-notification-auth-fallback-816`
-- **Worktree:** `/Users/tiagofur/dev/solennix-ios-816`
-- **Issue:** #814 — fix(ios): Replace fatalError with graceful degradation when App Group missing
-- **Estado:** done (pendiente merge PR #961)
-- **Branch:** `fix/ios-widget-appgroup-fatalerror-814`
-- **Worktree:** `/Users/tiagofur/dev/solennix-ios-814`
+- **Issue:** #810 — fix(ios): Logout resets hasSeenOnboarding forcing onboarding replay
+- **Estado:** done (pendiente merge PR #975)
+- **Branch:** `fix/ios-onboarding-replay-logout-810`
+- **Worktree:** `/Users/tiagofur/dev/solennix-ios-810`
 
 ## Root cause
-`WidgetDataSync.appGroup` (línea 41) era `UserDefaults` non-optional backed por `fatalError` cuando `UserDefaults(suiteName:)` retornaba `nil`. Builds mal aprovisionados (CI, nuevos targets sin entitlements) crasheaban en launch en vez de degradar. El crash disparaba en el primer acceso a cualquier método de sync que tocara `appGroup`.
-
-**Nota:** `SolennixApp.swift:134` citado en el issue NO es el mismo bug. Ese `fatalError` es del `SolennixModelContainer` (SwiftData) y **ya degrada correctamente** (persistent → in-memory fallback → crash solo si ambos fallan). Es el template, no un segundo fix.
+`SolennixApp.performSessionCleanup` (línea 438) removía `hasSeenOnboarding` de UserDefaults en logout, forzando el replay completo del onboarding en cada logout/login del mismo dispositivo. El flag está en `UserDefaults.standard` (device-scoped), pero el cleanup lo trataba como per-session.
 
 ## Cambios
-- [x] `WidgetDataSync.swift`:
-  - `appGroup` → `UserDefaults?` lazy. En vez de `fatalError`: `logger.error(...)` + `SentryHelper.capture(message:)` once + store `nil`.
-  - Suite name extraído a `static let appGroupIdentifier = "group.com.solennix.app"` (era string inline). `internal` para que tests puedan verificar el valor.
-  - Agregado `internal init(suiteName:)` (test-only) para inyectar suite inválido sin tocar el singleton real.
-  - `guard let appGroup else { return }` en 6 métodos: `syncUpcomingEvents`, `syncKPIs`, `syncUserPlan`, `syncCurrencyCode`, `setAuthState`, `clearWidgetData`.
-  - `reload*Widgets` (no tocan appGroup) sin cambios. `clearWidgetData` todavía llama `reloadAllWidgets()` aunque appGroup sea nil.
-- [x] Tests `WidgetDataSyncMissingAppGroupTests.swift` (nuevo): 8 casos — cada método público no-crash con suite inválido, reload siempre safe, y guard del valor de `appGroupIdentifier`.
-- [x] `project.pbxproj`: agregado el test file al target `SolennixTests` (vía `xcodeproj` gem — el proyecto usa referencias explícitas, no synchronized groups).
+- [x] `SolennixApp.swift`: removida la línea `removeObject(forKey: "hasSeenOnboarding")`. Extraído `internal static clearPerUserUserDefaults()` del `performSessionCleanup` para que el contract de key-survival sea testable sin disparar el cleanup async completo (que toca SwiftData, widgets, notifications). Doc comments actualizados con justificación y paridad Android.
+- [x] Tests `SessionCleanupUserDefaultsTests.swift` (nuevo): 2 casos — `hasSeenOnboarding` sobrevive cleanup (regresión #810), per-session keys sí se clear.
+- [x] `project.pbxproj`: agregado test file al target.
 
 ## Verificación
-- `SolennixTests` (xcodebuild test): 479/479 (+8 nuevos, 1 skipped preexistente)
+- `SolennixTests` (xcodebuild test): 484/484 (+2 nuevos, 1 skipped preexistente)
 - `./init.sh`: verde (Go + Web)
 
 ## Notas
-- El proyecto Xcode (`objectVersion 77`) **no** usa `PBXFileSystemSynchronizedRootGroup` — referencia explícita de archivos en pbxproj. Agregar un test file nuevo requiere registrarlo en el pbxproj (hecho vía `xcodeproj` gem de Ruby).
-- Patrón de degradación replicado de `IntentSharedDataStore` (el sibling intents-extension que ya maneja el missing-suite gracefully) y `SolennixModelContainer` (capture-then-degrade).
-- API pública, singleton, las 9 call sites, y el protocolo `WidgetSyncing` sin cambios.
-- Widget extension `AppGroup.userDefaults` tiene el mismo `fatalError` pero está out of scope — el widget no puede funcionar sin App Group (no tiene otra data source).
-- **Issue:** #834 — fix(android): Upcoming widget UTC date('now') and missing QUOTED events
-- **Estado:** done (pendiente PR)
-- **Branch:** `fix/android-upcoming-widget-utc-quoted-834`
-
-## Root cause
-`EventDao.getUpcomingEvents` usaba SQLite `date('now')` (UTC) como lower bound de fecha. En LATAM (UTC-6), `date('now')` salta al día siguiente a las 18:00 local → eventos de hoy desaparecen del widget "Próximos Eventos" y del dashboard upcoming list.
-
-## Cambios
-- **EventDao:** reemplazado `date('now')` por parámetro `:today` en ambas sobrecargas de `getUpcomingEvents`. El caller pasa `LocalDate.now().toString()` (fecha local).
-- **EventRepository:** `getUpcomingEvents(limit, today)` con default `today = LocalDate.now().toString()`.
-- **UpcomingEventsWidget:** pasa `today = LocalDate.now().toString()` explícito con comentario de por qué (paridad iOS `Calendar.current.startOfDay`).
-
-## Decisión de scope
-- El issue mencionaba "missing QUOTED events" pero iOS actual (`WidgetSyncCoordinator.swift:139`) filtra confirmed-only también. Se mantiene CONFIRMED para paridad con iOS. El bug real y verificable era el UTC.
-
-## Verificación
-- `:feature:dashboard:testDebugUnitTest`: verde
-- `assembleDebug`: APK generado OK
-- **Issues:** #842 (SyncWorker no payments) + #846 (swallows upload failures) — combo SyncWorker
-- **Estado:** done (pendiente PR)
-- **Branch:** `fix/android-syncworker-payments-upload-errors-842-846`
-
-## Root cause
-- **#842:** `SyncWorker.doWork()` sincronizaba events/clients/products/inventory pero nunca `paymentRepository.syncPayments()`. Los pagos solo se sincronizaban al abrir el dashboard → balances stale en background sync.
-- **#846:** `syncPendingChanges()` atrapaba cada error per-item con `catch (e: Exception) { /* nada */ }` — sin log, sin conteo. Eventos quedaban `PENDING` silenciosamente.
-
-## Cambios
-- **#842:** Inyectado `PaymentRepository` en el constructor de `SyncWorker`. Agregado `syncPayments()` a `doWork()` (download phase) + método privado `syncPayments()` con try/catch (mismo patrón que los otros sync).
-- **#846:** `syncPendingChanges()` ahora:
-  - Loguea cada error per-item con `action`, `eventId` y `error.message` via `Log.w(TAG, ...)`.
-  - Cuenta los fallos y emite un summary al final: `"$failures/${pendingEvents.size} pending event uploads failed"`.
-  - El catch outer también loguea (antes era `/* nada */`).
-  - Agregado `TAG = "SyncWorker"` al companion.
-
-## Verificación
-- `:app:testDebugUnitTest`: verde
-- `assembleDebug`: APK generado OK
-- `./init.sh`: verde
-
-## Notas
-- #846 scope: logging + conteo (observabilidad). No se agregaron notificaciones al usuario ni UI de badge — eso requiere strings localizados + diseño de UI y excede el issue. El log es el primer paso correcto para diagnosticar stale PENDING.
-- Los eventos siguen en `PENDING_*` tras un fallo y se reintentan en el próximo sync (cada 15 min) — el comportamiento de retry no cambió, ahora es visible.
-- Paridad cross-platform: iOS BackgroundTaskManager ya sincroniza payments. Este issue es de paridad Android-only.
-- **Issue:** #815 — fix(ios): Deep link tokens lack client-side format validation
-- **Estado:** done (pendiente merge PR #954)
-- **Branch:** `fix/ios-deeplink-token-validation-815`
-- **Worktree:** `/Users/tiagofur/dev/solennix-ios-815`
-- **Issue:** #828 — fix(android): Widget monthly revenue diverges from dashboard netSalesThisMonth
-- **Issue:** #835 — fix(android): App Search index not cleared on logout
-- **Estado:** done (pendiente PR)
-- **Branch:** `fix/android-logout-search-index-835`
-
-## Root cause
-`NotificationManager.didReceive` (líneas 419-423) tenía un fallback cuando `isAuthorizedForNavigation` era nil: chequeaba **presence** del token en keychain (`!= nil`). Un token expirado/revocado sigue presente en keychain hasta que el próximo 401 dispara `handleSessionExpired` → la navegación por notification tap pasaba con auth assumption stale.
-
-## Cambios
-- [x] `NotificationManager.swift`:
-  - Removido el `KeychainHelper` presence fallback. `didReceive` ahora llama a `isNavigationAllowed()` que retorna `isAuthorizedForNavigation?() ?? false` — deny-by-default cuando el closure no está seteado.
-  - Extraído `isNavigationAllowed()` como método `@MainActor` testable (sin necesidad de construir `UNNotificationResponse`, que no tiene init público).
-  - Doc comments actualizados.
-- [x] Tests `NotificationManagerTests.swift`: +3 casos — auth closure true → allowed, false → denied, unset → denied (regresión #816).
-
-## Verificación
-- `SolennixTests` (xcodebuild test): 474/474 (+3 nuevos, 1 skipped preexistente)
-- `./init.sh`: verde (Go + Web)
-
-## Notas
-- `isAuthorizedForNavigation` SIEMPRE se setea en la app principal (`SolennixApp.swift:179`, dentro del primer `.task`). El deny-by-default solo aplica a: cold-launch race (ventana chica), Notification Service Extension (no maneja taps), y tests.
-- `UNNotificationResponse` no tiene init público → no se puede testear `didReceive` directamente. Por eso se extrajo `isNavigationAllowed()`.
-- Paridad cross-platform NO necesaria: bug de auth client-side de iOS.
+- Paridad Android confirmada: `has_seen_onboarding` sobrevive signOut en Android.
+- `appearance` ya se preservaba (device-wide preference). Ahora `hasSeenOnboarding` también.
+- Paridad cross-platform: este fix ALINEA iOS con Android.
 
 ## Bloqueos
 - Ninguno.
