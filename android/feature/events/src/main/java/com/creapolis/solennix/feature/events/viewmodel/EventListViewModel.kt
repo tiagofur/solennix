@@ -247,7 +247,11 @@ class EventListViewModel @Inject constructor(
         }
 
         val comparator: Comparator<Event> = when (sortField) {
-            EventSortField.EVENT_DATE -> compareBy { it.eventDate }
+            EventSortField.EVENT_DATE -> compareBy {
+                // Parse to LocalDate so ISO datetime strings sort by calendar date,
+                // not lexicographically (issue #848). Unparseable dates sort last.
+                parseFlexibleDate(it.eventDate) ?: java.time.LocalDate.MAX
+            }
             EventSortField.SERVICE_TYPE -> compareBy(String.CASE_INSENSITIVE_ORDER) { it.serviceType }
             EventSortField.CLIENT_NAME -> compareBy(String.CASE_INSENSITIVE_ORDER) {
                 clientMap[it.clientId]?.name ?: ""
@@ -448,8 +452,13 @@ class EventListViewModel @Inject constructor(
         // active status/date/search filters and producing surprising exports.
         val filtered = state.events.filter { event ->
             val matchesStatus = state.selectedStatus == null || event.status == state.selectedStatus
-            val matchesStart = state.startDate == null || event.eventDate >= state.startDate.toString()
-            val matchesEnd = state.endDate == null || event.eventDate <= state.endDate.toString()
+            // Use parseFlexibleDate for consistency with the on-screen filter (issue #848).
+            // Raw string comparison on eventDate would mismatch ISO datetime strings.
+            val eventDate = parseFlexibleDate(event.eventDate)
+            val matchesStart = state.startDate == null ||
+                (eventDate?.let { it >= state.startDate } ?: false)
+            val matchesEnd = state.endDate == null ||
+                (eventDate?.let { it <= state.endDate } ?: false)
             val q = state.searchQuery.trim()
             val matchesQuery = q.isEmpty()
                 || event.serviceType.contains(q, ignoreCase = true)
