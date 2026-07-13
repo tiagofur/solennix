@@ -196,6 +196,39 @@ final class NotificationManagerTests: XCTestCase {
         XCTAssertEqual(NotificationManager.shared.deviceToken, "0aff01b0")
     }
 
+    // MARK: - Notification tap auth gate (#816)
+
+    @MainActor
+    func testIsNavigationAllowed_ReturnsTrueWhenAuthClosureReturnsTrue() {
+        let saved = NotificationManager.shared.isAuthorizedForNavigation
+        defer { NotificationManager.shared.isAuthorizedForNavigation = saved }
+
+        NotificationManager.shared.isAuthorizedForNavigation = { true }
+        XCTAssertTrue(NotificationManager.shared.isNavigationAllowed())
+    }
+
+    @MainActor
+    func testIsNavigationAllowed_ReturnsFalseWhenAuthClosureReturnsFalse() {
+        let saved = NotificationManager.shared.isAuthorizedForNavigation
+        defer { NotificationManager.shared.isAuthorizedForNavigation = saved }
+
+        NotificationManager.shared.isAuthorizedForNavigation = { false }
+        XCTAssertFalse(NotificationManager.shared.isNavigationAllowed())
+    }
+
+    /// Regression #816: when the auth closure is unset (cold-launch race,
+    /// extension, test), navigation is denied — NOT gated by keychain token
+    /// presence, which can't distinguish a stale/expired token from a valid one.
+    @MainActor
+    func testIsNavigationAllowed_ReturnsFalseWhenAuthClosureUnset() {
+        let saved = NotificationManager.shared.isAuthorizedForNavigation
+        defer { NotificationManager.shared.isAuthorizedForNavigation = saved }
+
+        NotificationManager.shared.isAuthorizedForNavigation = nil
+        XCTAssertFalse(NotificationManager.shared.isNavigationAllowed(),
+                       "unset auth closure must deny navigation, not fall back to keychain presence (#816)")
+    }
+
     private func makeEvent(eventDate: String, startTime: String?) -> Event {
         Event(
             id: "evt-test",
