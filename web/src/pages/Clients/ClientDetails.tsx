@@ -24,12 +24,29 @@ import { Card } from "@/components/Card";
 import { useClient, useDeleteClient } from "@/hooks/queries/useClientQueries";
 import { useEventsByClient } from "@/hooks/queries/useEventQueries";
 
-export const ClientDetails: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+type ClientDetailPanelProps = {
+  clientId: string;
+  /** When true the panel renders inside the split-pane rail: no breadcrumb, no
+   * back button, and a successful delete calls `onDeleted` instead of navigating
+   * away (the list stays mounted and clears its `selected` param). */
+  embedded?: boolean;
+  onDeleted?: () => void;
+};
+
+/**
+ * Client detail body. Shared by the standalone route (`/clients/:id`) and the
+ * master-detail split pane rail (#879). Route coupling (useParams / navigate
+ * back) lives only in the thin `ClientDetails` wrapper below.
+ */
+export const ClientDetailPanel: React.FC<ClientDetailPanelProps> = ({
+  clientId,
+  embedded = false,
+  onDeleted,
+}) => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation(["clients", "common"]);
-  const { data: client, isLoading: clientLoading, error: clientError } = useClient(id);
-  const { data: events = [] } = useEventsByClient(id);
+  const { data: client, isLoading: clientLoading, error: clientError } = useClient(clientId);
+  const { data: events = [] } = useEventsByClient(clientId);
   const deleteClient = useDeleteClient();
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
@@ -40,9 +57,14 @@ export const ClientDetails: React.FC = () => {
   const error = clientError ? t("common:error.not_found") : null;
 
   const handleDeleteClient = () => {
-    if (!id) return;
-    deleteClient.mutate(id, {
-      onSuccess: () => navigate("/clients"),
+    deleteClient.mutate(clientId, {
+      onSuccess: () => {
+        if (embedded) {
+          onDeleted?.();
+        } else {
+          navigate("/clients");
+        }
+      },
       onSettled: () => setConfirmDeleteOpen(false),
     });
   };
@@ -69,13 +91,15 @@ export const ClientDetails: React.FC = () => {
         <p className="text-error" role="alert">
           {error}
         </p>
-        <button
-          type="button"
-          onClick={() => navigate("/clients")}
-          className="mt-4 text-primary hover:underline"
-        >
-          {t("common:action.back")}
-        </button>
+        {!embedded && (
+          <button
+            type="button"
+            onClick={() => navigate("/clients")}
+            className="mt-4 text-primary hover:underline"
+          >
+            {t("common:action.back")}
+          </button>
+        )}
       </div>
     );
   }
@@ -88,16 +112,20 @@ export const ClientDetails: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb items={[{ label: t("clients:title"), href: '/clients' }, { label: client.name }]} />
+      {!embedded && (
+        <Breadcrumb items={[{ label: t("clients:title"), href: '/clients' }, { label: client.name }]} />
+      )}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center">
-          <button
-            type="button"
-            onClick={() => navigate("/clients")}
-            className="mr-4 p-2 rounded-full hover:bg-surface-alt text-text-secondary transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-          </button>
+          {!embedded && (
+            <button
+              type="button"
+              onClick={() => navigate("/clients")}
+              className="mr-4 p-2 rounded-full hover:bg-surface-alt text-text-secondary transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+            </button>
+          )}
           {client.photo_url ? (
             <OptimizedImage
               src={client.photo_url}
@@ -420,4 +448,17 @@ export const ClientDetails: React.FC = () => {
       />
     </div>
   );
+};
+
+/**
+ * Route component for `/clients/:id`. Thin wrapper around the shared
+ * {@link ClientDetailPanel} — reads the id from the URL and renders the panel
+ * in standalone (non-embedded) mode with breadcrumb + back navigation.
+ */
+export const ClientDetails: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  if (!id) {
+    return null;
+  }
+  return <ClientDetailPanel clientId={id} />;
 };

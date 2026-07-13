@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Product } from "@/types/entities";
 import {
   Plus,
@@ -14,14 +14,17 @@ import {
   Eye,
   ArrowUp,
   ArrowDown,
+  MousePointerClick,
 } from "lucide-react";
 import { RowActionMenu } from "@/components/RowActionMenu";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { SplitPane } from "@/components/SplitPane";
 import { exportToCsv } from "@/lib/exportCsv";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { getAssetUrl } from "@/lib/api";
 import Empty from "@/components/Empty";
 import { usePagination } from "@/hooks/usePagination";
+import { useIsXl } from "@/hooks/useBreakpoint";
 import { Pagination } from "@/components/Pagination";
 import { SkeletonTable } from "@/components/Skeleton";
 import { Button } from "@/components/Button";
@@ -30,10 +33,40 @@ import { Card } from "@/components/Card";
 import { Input } from "@/components/Input";
 import { useRowSelection } from "@/hooks/useRowSelection";
 import { useProducts, useDeleteProduct } from "@/hooks/queries/useProductQueries";
+import { ProductDetailPanel } from "./ProductDetails";
 
 export const ProductList: React.FC = () => {
   const { t, i18n } = useTranslation(["products", "common"]);
   const navigate = useNavigate();
+  // Master-detail split pane (#879): at xl+, selecting a row opens detail in
+  // the right rail via the `selected` URL param; below xl rows navigate.
+  const isXl = useIsXl();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedId = searchParams.get("selected");
+
+  const selectProduct = useCallback(
+    (productId: string) => {
+      setSearchParams(
+        (prev) => {
+          prev.set("selected", productId);
+          return prev;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  const clearSelected = useCallback(() => {
+    setSearchParams(
+      (prev) => {
+        prev.delete("selected");
+        return prev;
+      },
+      { replace: true },
+    );
+  }, [setSearchParams]);
+
   const { data: products = [], isLoading: loading } = useProducts();
   const deleteProduct = useDeleteProduct();
   const [searchTerm, setSearchTerm] = useState("");
@@ -126,7 +159,22 @@ export const ProductList: React.FC = () => {
     return sortOrder === "asc" ? "ascending" : "descending";
   };
 
-  return (
+  // Master-detail split pane (#879): the list chrome is identical on every
+  // breakpoint; at xl+ it becomes the left rail with the detail panel on the
+  // right. Below xl the detail is hidden and rows navigate to the full page.
+  const detailPanel = selectedId ? (
+    <ProductDetailPanel productId={selectedId} embedded onDeleted={clearSelected} />
+  ) : (
+    <Empty
+      icon={MousePointerClick}
+      showImage={false}
+      title={t("common:split.select_product")}
+      description={t("common:split.select_product_hint")}
+      className="h-full justify-center"
+    />
+  );
+
+  const listContent = (
     <div className="space-y-6">
       <ConfirmDialog
         open={confirmOpen}
@@ -310,11 +358,13 @@ export const ProductList: React.FC = () => {
               <tbody>
                 {paginatedProducts.map((product) => {
                   const imageSrc = getAssetUrl(product.image_url);
+                  const isActiveRow = product.id === selectedId;
                   return (
                   <tr
                     key={product.id}
-                    className="group hover:bg-surface-alt/50 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/products/${product.id}`)}
+                    className={`group cursor-pointer transition-colors ${isActiveRow ? "bg-surface-alt ring-1 ring-inset ring-primary/30" : "hover:bg-surface-alt/50"}`}
+                    onClick={() => (isXl ? selectProduct(product.id) : navigate(`/products/${product.id}`))}
+                    aria-current={isActiveRow ? "true" : undefined}
                   >
                     {/* Multi-select checkbox (#885) — desktop only */}
                     <td className="px-2 py-4 w-10 text-center hidden lg:table-cell" onClick={(e) => e.stopPropagation()}>
@@ -371,7 +421,7 @@ export const ProductList: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                         <RowActionMenu items={[
-                          { label: t("common:action.view"), icon: Eye, onClick: () => navigate(`/products/${product.id}`) },
+                          { label: t("common:action.view"), icon: Eye, onClick: () => (isXl ? selectProduct(product.id) : navigate(`/products/${product.id}`)) },
                           { label: t("common:action.edit"), icon: Edit, onClick: () => navigate(`/products/${product.id}/edit`) },
                           { label: t("common:action.delete"), icon: Trash2, onClick: () => requestDelete(product.id), variant: 'destructive' as const },
                         ]} />
@@ -408,4 +458,16 @@ export const ProductList: React.FC = () => {
       </BulkActionBar>
     </div>
   );
+
+  if (isXl) {
+    return (
+      <SplitPane
+        master={listContent}
+        detail={detailPanel}
+        masterClassName="xl:overflow-y-auto xl:min-h-0 xl:pr-1"
+      />
+    );
+  }
+
+  return listContent;
 };

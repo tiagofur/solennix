@@ -321,6 +321,12 @@
     "title": "No results",
     "description": "There is no information to display at this moment."
   },
+  "split": {
+    "select_client": "Select a client",
+    "select_client_hint": "Choose a client from the list to view their details.",
+    "select_product": "Select a product",
+    "select_product_hint": "Choose a product from the list to view its details."
+  },
   "upgrade_banner": {
     "limit_reached": "{{resource}} Limit Reached",
     "limit_desc": "You have reached the limit of {{limit}} {{plural}} in your Basic plan. To continue growing your business, upgrade to our Pro plan.",

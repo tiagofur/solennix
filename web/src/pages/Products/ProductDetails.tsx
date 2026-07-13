@@ -43,12 +43,29 @@ type DemandEntry = {
   numPeople: number;
 };
 
-export const ProductDetails: React.FC = () => {
+type ProductDetailPanelProps = {
+  productId: string;
+  /** When true the panel renders inside the split-pane rail: no breadcrumb, no
+   * back button, and a successful delete calls `onDeleted` instead of navigating
+   * away (the list stays mounted and clears its `selected` param). */
+  embedded?: boolean;
+  onDeleted?: () => void;
+};
+
+/**
+ * Product detail body. Shared by the standalone route (`/products/:id`) and the
+ * master-detail split pane rail (#879). Route coupling (useParams / navigate
+ * back) lives only in the thin `ProductDetails` wrapper below.
+ */
+export const ProductDetailPanel: React.FC<ProductDetailPanelProps> = ({
+  productId,
+  embedded = false,
+  onDeleted,
+}) => {
   const { t, i18n } = useTranslation(["products", "common", "clients"]);
-  const { id } = useParams();
   const navigate = useNavigate();
-  const { data: product, isLoading: productLoading, error: productError } = useProduct(id);
-  const { data: ingredients = [] } = useProductIngredients(id);
+  const { data: product, isLoading: productLoading, error: productError } = useProduct(productId);
+  const { data: ingredients = [] } = useProductIngredients(productId);
   const deleteProductMutation = useDeleteProduct();
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [demandForecast, setDemandForecast] = useState<DemandEntry[]>([]);
@@ -112,18 +129,23 @@ export const ProductDetails: React.FC = () => {
   }, [t]);
 
   useEffect(() => {
-    if (id && product) {
-      loadDemandForecast(id);
+    if (productId && product) {
+      loadDemandForecast(productId);
     }
-  }, [id, product, loadDemandForecast]);
+  }, [productId, product, loadDemandForecast]);
 
   const handleDeleteProduct = useCallback(() => {
-    if (!id) return;
-    deleteProductMutation.mutate(id, {
-      onSuccess: () => navigate("/products"),
+    deleteProductMutation.mutate(productId, {
+      onSuccess: () => {
+        if (embedded) {
+          onDeleted?.();
+        } else {
+          navigate("/products");
+        }
+      },
       onSettled: () => setConfirmDeleteOpen(false),
     });
-  }, [id, deleteProductMutation, navigate]);
+  }, [productId, deleteProductMutation, navigate, embedded, onDeleted]);
 
   if (loading) {
     return (
@@ -160,13 +182,15 @@ export const ProductDetails: React.FC = () => {
     return (
       <div className="text-center p-8">
         <p className="text-error">{error || t("products:list.no_results")}</p>
-        <button
-          type="button"
-          onClick={() => navigate("/products")}
-          className="mt-4 text-primary hover:underline"
-        >
-          {t("products:details.back_to_products")}
-        </button>
+        {!embedded && (
+          <button
+            type="button"
+            onClick={() => navigate("/products")}
+            className="mt-4 text-primary hover:underline"
+          >
+            {t("products:details.back_to_products")}
+          </button>
+        )}
       </div>
     );
   }
@@ -212,17 +236,21 @@ export const ProductDetails: React.FC = () => {
         onCancel={() => setConfirmDeleteOpen(false)}
       />
 
-      <Breadcrumb items={[{ label: t("products:title"), href: '/products' }, { label: product.name }]} />
+      {!embedded && (
+        <Breadcrumb items={[{ label: t("products:title"), href: '/products' }, { label: product.name }]} />
+      )}
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => navigate("/products")}
-            className="p-2 rounded-full hover:bg-surface-alt text-text-secondary transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
+          {!embedded && (
+            <button
+              type="button"
+              onClick={() => navigate("/products")}
+              className="p-2 rounded-full hover:bg-surface-alt text-text-secondary transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          )}
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-text">
               {product.name}
@@ -234,7 +262,7 @@ export const ProductDetails: React.FC = () => {
         </div>
         <div className="flex gap-2">
           <Link
-            to={`/products/${id}/edit`}
+            to={`/products/${productId}/edit`}
             className="inline-flex items-center justify-center font-semibold transition-all active-ios-scale disabled:opacity-50 disabled:pointer-events-none cursor-pointer liquid-glass text-text hover:bg-surface/60 px-5 py-2.5 text-sm rounded-xl gap-2"
           >
             <Edit className="h-4 w-4 mr-2" />
@@ -626,7 +654,7 @@ export const ProductDetails: React.FC = () => {
                   {t("products:details.no_ingredients")}
                 </p>
                 <Link
-                  to={`/products/${id}/edit`}
+                  to={`/products/${productId}/edit`}
                   className="text-primary hover:underline mt-2 inline-block text-sm"
                 >
                   {t("products:details.configure_composition")}
@@ -837,4 +865,17 @@ export const ProductDetails: React.FC = () => {
       </div>
     </div>
   );
+};
+
+/**
+ * Route component for `/products/:id`. Thin wrapper around the shared
+ * {@link ProductDetailPanel} — reads the id from the URL and renders the panel
+ * in standalone (non-embedded) mode with breadcrumb + back navigation.
+ */
+export const ProductDetails: React.FC = () => {
+  const { id } = useParams();
+  if (!id) {
+    return null;
+  }
+  return <ProductDetailPanel productId={id} />;
 };

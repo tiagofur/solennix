@@ -323,6 +323,12 @@
     "title": "Sin resultados",
     "description": "No hay información para mostrar en este momento."
   },
+  "split": {
+    "select_client": "Seleccioná un cliente",
+    "select_client_hint": "Elegí un cliente de la lista para ver su detalle.",
+    "select_product": "Seleccioná un producto",
+    "select_product_hint": "Elegí un producto de la lista para ver su detalle."
+  },
   "upgrade_banner": {
     "limit_reached": "Límite de {{resource}} Alcanzado",
     "limit_desc": "Has alcanzado el límite de {{limit}} {{plural}} de tu plan Básico. Para seguir creciendo tu negocio, mejora a nuestro plan Pro.",
