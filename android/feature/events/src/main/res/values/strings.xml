@@ -92,7 +92,7 @@
     <string name="events_detail_delete_title">Eliminar evento</string>
     <string name="events_detail_delete_message">Esta acción no se puede deshacer.</string>
     <string name="events_detail_status_change_title">Cambiar estado</string>
-    <string name="events_detail_error_positive_amount">El monto debe ser mayor a 0</string>
+    <string name="events_detail_error_positive_amount">El monto debe ser mayor o igual a 0.01</string>
     <string name="events_detail_error_payment_method_required">Selecciona un método de pago</string>
     <string name="events_detail_error_add_payment">Error al registrar el pago: %1$s</string>
     <string name="events_detail_error_delete_payment">Error al eliminar el pago: %1$s</string>
