@@ -36,6 +36,12 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
+// jsdom has no matchMedia; default to narrow viewport. Individual tests override.
+let mockIsXl = false;
+vi.mock('../../hooks/useBreakpoint', () => ({
+  useIsXl: () => mockIsXl,
+}));
+
 // Mock usePlanLimits to avoid pulling in more dependencies
 vi.mock('../../hooks/usePlanLimits', () => ({
   usePlanLimits: () => ({
@@ -44,6 +50,17 @@ vi.mock('../../hooks/usePlanLimits', () => ({
     clientsCount: 0,
     clientLimit: 50,
   }),
+}));
+
+// Stub the detail panel so xl split-pane tests verify list wiring without
+// pulling the full detail data tree (ClientDetailPanel has its own test file).
+vi.mock('./ClientDetails', () => ({
+  ClientDetailPanel: ({ clientId, embedded }: { clientId: string; embedded?: boolean }) =>
+    embedded ? (
+      <div data-testid="client-detail-panel" data-client-id={clientId}>
+        Detalle del cliente {clientId}
+      </div>
+    ) : null,
 }));
 
 /** Sets up both getAll and getPage mocks with the same data. */
@@ -81,6 +98,7 @@ const openRowMenuAndClick = async (rowText: string, menuItemLabel: RegExp) => {
 describe('ClientList', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockIsXl = false;
   });
 
   it('renders clients after loading', async () => {
@@ -412,5 +430,78 @@ describe('ClientList', () => {
 
     expect(screen.queryByText('ana@example.com')).not.toBeInTheDocument();
     expect(screen.getByText('5551112222')).toBeInTheDocument();
+  });
+
+  describe('master-detail split pane (xl+)', () => {
+    beforeEach(() => {
+      mockIsXl = true;
+    });
+
+    it('selects client in pane (no navigation) on row click at xl', async () => {
+      mockClients([
+        {
+          id: '1',
+          name: 'Ana Perez',
+          phone: '5551112222',
+          email: 'ana@example.com',
+          address: 'Calle 1',
+          total_events: 2,
+          total_spent: 1200,
+        },
+      ]);
+
+      renderList();
+
+      await waitFor(() => {
+        expect(screen.getByText('Ana Perez')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText('Ana Perez'));
+      // At xl, row click must NOT navigate to the full detail page.
+      expect(mockNavigate).not.toHaveBeenCalledWith('/clients/1');
+    });
+
+    it('renders empty selection state when no client is selected at xl', async () => {
+      mockClients([
+        {
+          id: '1',
+          name: 'Ana Perez',
+          phone: '5551112222',
+          email: 'ana@example.com',
+          total_events: 0,
+          total_spent: 0,
+        },
+      ]);
+
+      renderList();
+
+      await waitFor(() => {
+        expect(screen.getByText('Seleccioná un cliente')).toBeInTheDocument();
+      });
+    });
+
+    it('renders detail panel in the rail when a client is preselected via URL', async () => {
+      mockClients([
+        {
+          id: '1',
+          name: 'Ana Perez',
+          phone: '5551112222',
+          email: 'ana@example.com',
+          total_events: 0,
+          total_spent: 0,
+        },
+      ]);
+
+      render(
+        <MemoryRouter initialEntries={['/clients?selected=1']}>
+          <ClientList />
+        </MemoryRouter>,
+      );
+
+      // The stubbed detail panel should render for the selected client id.
+      await waitFor(() => {
+        expect(screen.getByTestId('client-detail-panel')).toHaveAttribute('data-client-id', '1');
+      });
+    });
   });
 });

@@ -28,6 +28,23 @@ vi.mock('../../hooks/useToast', () => ({
   useToast: () => ({ toasts: [], addToast: vi.fn(), removeToast: vi.fn() }),
 }));
 
+// jsdom has no matchMedia; default to narrow viewport. Individual tests override.
+let mockIsXl = false;
+vi.mock('../../hooks/useBreakpoint', () => ({
+  useIsXl: () => mockIsXl,
+}));
+
+// Stub the detail panel so xl split-pane tests verify list wiring without
+// pulling the full detail data tree (ProductDetailPanel has its own test file).
+vi.mock('./ProductDetails', () => ({
+  ProductDetailPanel: ({ productId, embedded }: { productId: string; embedded?: boolean }) =>
+    embedded ? (
+      <div data-testid="product-detail-panel" data-product-id={productId}>
+        Detalle del producto {productId}
+      </div>
+    ) : null,
+}));
+
 const renderList = () =>
   render(
     <MemoryRouter>
@@ -38,6 +55,7 @@ const renderList = () =>
 describe('ProductList', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockIsXl = false;
   });
 
   it('renders products after loading', async () => {
@@ -363,5 +381,40 @@ describe('ProductList', () => {
     const image = container.querySelector('img[src*="/uploads/products/churros.jpg"]');
     expect(image).toBeTruthy();
     expect(image?.getAttribute('src')).toBe('http://localhost:8080/uploads/products/churros.jpg');
+  });
+
+  describe('master-detail split pane (xl+)', () => {
+    beforeEach(() => {
+      mockIsXl = true;
+    });
+
+    it('renders empty selection state when no product is selected at xl', async () => {
+      (productService.getAll as any).mockResolvedValue([
+        { id: '1', name: 'Churros', category: 'Postres', base_price: 50 },
+      ]);
+
+      renderList();
+
+      await waitFor(() => {
+        expect(screen.getByText('Seleccioná un producto')).toBeInTheDocument();
+      });
+    });
+
+    it('renders detail panel in the rail when a product is preselected via URL', async () => {
+      (productService.getAll as any).mockResolvedValue([
+        { id: '1', name: 'Churros', category: 'Postres', base_price: 50 },
+      ]);
+
+      render(
+        <MemoryRouter initialEntries={['/products?selected=1']}>
+          <ProductList />
+        </MemoryRouter>,
+      );
+
+      // The stubbed detail panel should render for the selected product id.
+      await waitFor(() => {
+        expect(screen.getByTestId('product-detail-panel')).toHaveAttribute('data-product-id', '1');
+      });
+    });
   });
 });

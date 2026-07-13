@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Client } from "@/types/entities";
 import {
@@ -14,13 +14,16 @@ import {
   Eye,
   ArrowUp,
   ArrowDown,
+  MousePointerClick,
 } from "lucide-react";
 import { RowActionMenu, type RowActionMenuItem } from "@/components/RowActionMenu";
 import { DesktopToolbar } from "@/components/DesktopToolbar";
 import { ContextMenu } from "@/components/ContextMenu";
 import { BulkActionBar } from "@/components/BulkActionBar";
 import { useRowSelection } from "@/hooks/useRowSelection";
+import { useIsXl } from "@/hooks/useBreakpoint";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { SplitPane } from "@/components/SplitPane";
 import { exportToCsv } from "@/lib/exportCsv";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import Empty from "@/components/Empty";
@@ -34,6 +37,7 @@ import {
   useClientsPaginated,
   useDeleteClient,
 } from "@/hooks/queries/useClientQueries";
+import { ClientDetailPanel } from "./ClientDetails";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -47,6 +51,35 @@ export const ClientList: React.FC = () => {
   const [sortKey, setSortKey] = useState<keyof Client | "">("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const navigate = useNavigate();
+  // Master-detail split pane (#879): at xl+, selecting a row opens detail in
+  // the right rail via the `selected` URL param; below xl rows navigate.
+  const isXl = useIsXl();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedId = searchParams.get("selected");
+
+  const selectClient = useCallback(
+    (clientId: string) => {
+      setSearchParams(
+        (prev) => {
+          prev.set("selected", clientId);
+          return prev;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  const clearSelected = useCallback(() => {
+    setSearchParams(
+      (prev) => {
+        prev.delete("selected");
+        return prev;
+      },
+      { replace: true },
+    );
+  }, [setSearchParams]);
+
   // Context-menu state (#883): row right-click opens positioned menu.
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; clientId: string } | null>(null);
 
@@ -141,14 +174,14 @@ export const ClientList: React.FC = () => {
 
   const getRowActions = useCallback(
     (clientId: string, phone?: string, email?: string): RowActionMenuItem[] => [
-      { label: t("common:action.view"), icon: Eye, onClick: () => navigate(`/clients/${clientId}`) },
+      { label: t("common:action.view"), icon: Eye, onClick: () => (isXl ? selectClient(clientId) : navigate(`/clients/${clientId}`)) },
       { label: t("common:action.edit"), icon: Edit, onClick: () => navigate(`/clients/${clientId}/edit`) },
       ...(phone ? [{ label: t("clients:form.phone"), icon: Phone, onClick: () => window.open(`tel:${phone}`) }] : []),
       ...(email ? [{ label: t("clients:form.email"), icon: Mail, onClick: () => window.open(`mailto:${email}`) }] : []),
       { label: t("common:action.delete"), icon: Trash2, onClick: () => requestDelete(clientId), variant: 'destructive' as const },
     ],
     // requestDelete is stable (closes over setState only)
-    [t, navigate],
+    [t, navigate, isXl, selectClient],
   );
 
   const confirmDelete = () => {
@@ -265,7 +298,22 @@ export const ClientList: React.FC = () => {
     </div>
   );
 
-  return (
+  // Master-detail split pane (#879): the list chrome is identical on every
+  // breakpoint; at xl+ it becomes the left rail with the detail panel on the
+  // right. Below xl the detail is hidden and rows navigate to the full page.
+  const detailPanel = selectedId ? (
+    <ClientDetailPanel clientId={selectedId} embedded onDeleted={clearSelected} />
+  ) : (
+    <Empty
+      icon={MousePointerClick}
+      showImage={false}
+      title={t("common:split.select_client")}
+      description={t("common:split.select_client_hint")}
+      className="h-full justify-center"
+    />
+  );
+
+  const listContent = (
     <div className="space-y-6">
       <ConfirmDialog
         open={confirmOpen}
@@ -398,11 +446,14 @@ export const ClientList: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {paginatedClients.map((client) => (
+                {paginatedClients.map((client) => {
+                  const isActiveRow = client.id === selectedId;
+                  return (
                   <tr
                     key={client.id}
-                    className="group hover:bg-surface-alt/50 cursor-pointer transition-colors"
-                    onClick={() => navigate(`/clients/${client.id}`)}
+                    className={`group cursor-pointer transition-colors ${isActiveRow ? "bg-surface-alt ring-1 ring-inset ring-primary/30" : "hover:bg-surface-alt/50"}`}
+                    onClick={() => (isXl ? selectClient(client.id) : navigate(`/clients/${client.id}`))}
+                    aria-current={isActiveRow ? "true" : undefined}
                     onContextMenu={(e) => {
                       e.preventDefault();
                       setCtxMenu({ x: e.clientX, y: e.clientY, clientId: client.id });
@@ -494,7 +545,8 @@ export const ClientList: React.FC = () => {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -536,4 +588,16 @@ export const ClientList: React.FC = () => {
       )}
     </div>
   );
+
+  if (isXl) {
+    return (
+      <SplitPane
+        master={listContent}
+        detail={detailPanel}
+        masterClassName="xl:overflow-y-auto xl:min-h-0 xl:pr-1"
+      />
+    );
+  }
+
+  return listContent;
 };
