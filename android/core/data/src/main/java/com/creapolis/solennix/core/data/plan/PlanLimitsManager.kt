@@ -267,4 +267,10 @@ sealed class LimitCheckResult {
         val limit: Int,
         val message: String
     ) : LimitCheckResult()
+
+    /**
+     * Limit check failed (network/DB error). Used to fail-closed: callers should block
+     * creation until the check succeeds, rather than silently allowing it (issue #849).
+     */
+    data object Error : LimitCheckResult()
 }
