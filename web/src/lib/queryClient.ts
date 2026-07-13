@@ -5,6 +5,11 @@ import i18n from '@/i18n/config';
 
 const STALE_TIME = 2 * 60 * 1000; // 2 minutes
 const GC_TIME = 10 * 60 * 1000; // 10 minutes
+// Catalog lists (clients/products/inventory) back usePlanLimits and are read
+// across many mounts (Dashboard, Settings, forms, OnboardingChecklist). They
+// change rarely, so a longer stale window collapses repeated getAll calls into
+// one fetch per window (issue #862).
+export const CATALOG_STALE_TIME = 5 * 60 * 1000; // 5 minutes
 // Minimum gap between background-refetch error toasts. On a flaky network
 // several queries can fail in the same tick, producing a flood of identical
 // toasts. This throttles them to at most one every 10s.
