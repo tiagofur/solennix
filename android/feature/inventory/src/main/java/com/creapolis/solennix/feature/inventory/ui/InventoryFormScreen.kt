@@ -38,6 +38,7 @@ import com.creapolis.solennix.feature.inventory.viewmodel.InventoryFormViewModel
 fun InventoryFormScreen(
     viewModel: InventoryFormViewModel,
     onSearchClick: () -> Unit = {},
+    onNavigateToPricing: () -> Unit = {},
     onNavigateBack: () -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -97,14 +98,14 @@ fun InventoryFormScreen(
                         UpgradeBanner(
                             message = limitResult.message,
                             style = UpgradeBannerStyle.LIMIT,
-                            onUpgradeClick = { /* Handled via Settings > Suscripción */ },
+                            onUpgradeClick = onNavigateToPricing,
                             visible = true
                         )
                     } else if (limitResult is LimitCheckResult.NearLimit) {
                         UpgradeBanner(
                             message = InventoryStrings.nearLimitMessage(limitResult.remaining),
                             style = UpgradeBannerStyle.WARNING,
-                            onUpgradeClick = { /* Handled via Settings > Suscripción */ },
+                            onUpgradeClick = onNavigateToPricing,
                             visible = true
                         )
                     }
