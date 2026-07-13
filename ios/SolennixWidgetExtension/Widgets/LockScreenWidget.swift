@@ -90,6 +90,12 @@ struct LockScreenWidgetView: View {
     var entry: LockScreenEntry
     @Environment(\.widgetFamily) var family
 
+    // MARK: - @ScaledMetric sizes (Dynamic Type-safe, capped)
+    // Mirrors KPIWidget's pattern so the circular count scales with the user's
+    // Dynamic Type setting instead of staying fixed (#821).
+    @ScaledMetric(relativeTo: .title2) private var circularNumberSize: CGFloat = 22
+    private var cappedCircularNumberSize: CGFloat { min(circularNumberSize, 28) }
+
     var body: some View {
         // REQ-WP-01: signed-out and a decode failure route to the shared state
         // surface before the accessory switch (decision D10). The existing
@@ -143,7 +149,7 @@ struct LockScreenWidgetView: View {
         if entry.eventsToday > 0 {
             circularFace {
                 Text("\(entry.eventsToday)")
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .font(.system(size: cappedCircularNumberSize, weight: .bold, design: .rounded))
 
                 Text("widget.lockscreen.today")
                     .font(.caption2)
@@ -152,7 +158,7 @@ struct LockScreenWidgetView: View {
         } else if let event = entry.nextEvent {
             circularFace {
                 Text("\(event.daysUntil)")
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .font(.system(size: cappedCircularNumberSize, weight: .bold, design: .rounded))
 
                 Text("widget.lockscreen.days")
                     .font(.caption2)
