@@ -319,14 +319,17 @@ fun DashboardScreen(
                     }
                 }
 
-                item {
-                    Spacer(modifier = Modifier.height(Spacing.xl))
-                    ForecastWidget(
-                        forecast = uiState.forecast,
-                        isLoading = uiState.isRefreshing,
-                        modifier = Modifier.fillMaxWidth(),
-                        currencyCode = uiState.defaultCurrency
-                    )
+                // Premium: forecast. Gated for basic plan (#838).
+                if (!uiState.isBasicPlan) {
+                    item {
+                        Spacer(modifier = Modifier.height(Spacing.xl))
+                        ForecastWidget(
+                            forecast = uiState.forecast,
+                            isLoading = uiState.isRefreshing,
+                            modifier = Modifier.fillMaxWidth(),
+                            currencyCode = uiState.defaultCurrency
+                        )
+                    }
                 }
 
                 // Low Stock Alerts
@@ -401,27 +404,30 @@ fun DashboardScreen(
                     }
                 }
 
-                // Analytics Widgets
-                item {
-                    Spacer(modifier = Modifier.height(Spacing.xl))
-                    TopClientsWidget(
-                        clients = uiState.topClients,
-                        isLoading = uiState.isRefreshing,
-                        onClientClick = onClientClick,
-                        modifier = Modifier.fillMaxWidth(),
-                        currencyCode = uiState.defaultCurrency
-                    )
-                }
+                // Premium analytics: top clients + product demand. Gated for basic
+                // plan — basic users get KPIs + status counts only (#838).
+                if (!uiState.isBasicPlan) {
+                    item {
+                        Spacer(modifier = Modifier.height(Spacing.xl))
+                        TopClientsWidget(
+                            clients = uiState.topClients,
+                            isLoading = uiState.isRefreshing,
+                            onClientClick = onClientClick,
+                            modifier = Modifier.fillMaxWidth(),
+                            currencyCode = uiState.defaultCurrency
+                        )
+                    }
 
-                item {
-                    Spacer(modifier = Modifier.height(Spacing.xl))
-                    ProductDemandWidget(
-                        products = uiState.productDemand,
-                        isLoading = uiState.isRefreshing,
-                        onProductClick = onProductClick,
-                        modifier = Modifier.fillMaxWidth(),
-                        currencyCode = uiState.defaultCurrency
-                    )
+                    item {
+                        Spacer(modifier = Modifier.height(Spacing.xl))
+                        ProductDemandWidget(
+                            products = uiState.productDemand,
+                            isLoading = uiState.isRefreshing,
+                            onProductClick = onProductClick,
+                            modifier = Modifier.fillMaxWidth(),
+                            currencyCode = uiState.defaultCurrency
+                        )
+                    }
                 }
 
 
