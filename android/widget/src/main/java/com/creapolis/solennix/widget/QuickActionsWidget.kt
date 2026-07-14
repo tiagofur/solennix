@@ -4,15 +4,14 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.*
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.action.actionStartActivity
-import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.cornerRadius
+import androidx.glance.appwidget.provideContent
 import androidx.glance.layout.*
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
@@ -57,22 +56,22 @@ class QuickActionsWidget : GlanceAppWidget() {
         }
 
         provideContent {
-            WidgetContent(context, todayData)
+            WidgetContent(context, userId, todayData)
         }
     }
 
     @Composable
-    private fun WidgetContent(context: Context, todayData: TodayData) {
-        val primaryColor = Color(0xFFC4A265)
-        val backgroundColor = Color(0xFFFAF9F6)
-        val textPrimary = Color(0xFF1A1A1A)
-        val textSecondary = Color(0xFF7A7670)
-        val buttonBackground = Color(0xFFF5F0E8)
+    private fun WidgetContent(context: Context, userId: String?, todayData: TodayData) {
+        // Signed-out users see the auth prompt instead of empty data with no explanation.
+        if (userId == null) {
+            WidgetStateView(context, WidgetState.SIGNED_OUT)
+            return
+        }
 
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .background(ColorProvider(backgroundColor))
+                .background(WidgetColors.background)
                 .padding(12.dp)
                 .clickable(actionStartActivity(getLaunchIntent(context))),
             verticalAlignment = Alignment.Top,
@@ -90,7 +89,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                         style = TextStyle(
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
-                            color = ColorProvider(primaryColor)
+                            color = WidgetColors.primary
                         )
                     )
                     if (todayData.eventCount > 0) {
@@ -98,7 +97,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                             text = "${todayData.eventCount} evento${if (todayData.eventCount > 1) "s" else ""} hoy",
                             style = TextStyle(
                                 fontSize = 11.sp,
-                                color = ColorProvider(textSecondary)
+                                color = WidgetColors.textSecondary
                             )
                         )
                     } else {
@@ -106,7 +105,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                             text = "Sin eventos hoy",
                             style = TextStyle(
                                 fontSize = 11.sp,
-                                color = ColorProvider(textSecondary)
+                                color = WidgetColors.textSecondary
                             )
                         )
                     }
@@ -121,7 +120,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                     Row(
                         modifier = GlanceModifier
                             .fillMaxWidth()
-                            .background(ColorProvider(Color.White))
+                            .background(WidgetColors.card)
                             .cornerRadius(6.dp)
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -131,7 +130,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                             style = TextStyle(
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 11.sp,
-                                color = ColorProvider(primaryColor)
+                                color = WidgetColors.primary
                             )
                         )
                         Spacer(modifier = GlanceModifier.width(6.dp))
@@ -139,7 +138,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                             text = event.serviceType,
                             style = TextStyle(
                                 fontSize = 11.sp,
-                                color = ColorProvider(textPrimary)
+                                color = WidgetColors.textPrimary
                             ),
                             maxLines = 1
                         )
@@ -159,7 +158,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                 Box(
                     modifier = GlanceModifier
                         .defaultWeight()
-                        .background(ColorProvider(buttonBackground))
+                        .background(WidgetColors.buttonBg)
                         .cornerRadius(8.dp)
                         .padding(vertical = 8.dp, horizontal = 4.dp)
                         .clickable(actionStartActivity(getDeepLinkIntent(context, "solennix://new-event"))),
@@ -170,7 +169,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                         style = TextStyle(
                             fontWeight = FontWeight.Medium,
                             fontSize = 11.sp,
-                            color = ColorProvider(primaryColor)
+                            color = WidgetColors.primary
                         )
                     )
                 }
@@ -181,7 +180,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                 Box(
                     modifier = GlanceModifier
                         .defaultWeight()
-                        .background(ColorProvider(buttonBackground))
+                        .background(WidgetColors.buttonBg)
                         .cornerRadius(8.dp)
                         .padding(vertical = 8.dp, horizontal = 4.dp)
                         .clickable(actionStartActivity(getDeepLinkIntent(context, "solennix://quick-quote"))),
@@ -192,7 +191,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                         style = TextStyle(
                             fontWeight = FontWeight.Medium,
                             fontSize = 11.sp,
-                            color = ColorProvider(primaryColor)
+                            color = WidgetColors.primary
                         )
                     )
                 }
@@ -203,7 +202,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                 Box(
                     modifier = GlanceModifier
                         .defaultWeight()
-                        .background(ColorProvider(buttonBackground))
+                        .background(WidgetColors.buttonBg)
                         .cornerRadius(8.dp)
                         .padding(vertical = 8.dp, horizontal = 4.dp)
                         .clickable(actionStartActivity(getDeepLinkIntent(context, "solennix://calendar"))),
@@ -214,17 +213,12 @@ class QuickActionsWidget : GlanceAppWidget() {
                         style = TextStyle(
                             fontWeight = FontWeight.Medium,
                             fontSize = 11.sp,
-                            color = ColorProvider(primaryColor)
+                            color = WidgetColors.primary
                         )
                     )
                 }
             }
         }
-    }
-
-    private fun getLaunchIntent(context: Context): Intent {
-        return context.packageManager.getLaunchIntentForPackage(context.packageName)
-            ?: Intent()
     }
 
     private fun getDeepLinkIntent(context: Context, deepLink: String): Intent {

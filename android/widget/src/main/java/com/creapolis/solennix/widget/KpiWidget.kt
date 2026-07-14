@@ -1,17 +1,15 @@
 package com.creapolis.solennix.widget
 
 import android.content.Context
-import android.content.Intent
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.*
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.action.actionStartActivity
-import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.cornerRadius
+import androidx.glance.appwidget.provideContent
 import androidx.glance.layout.*
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
@@ -22,7 +20,6 @@ import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
-import java.util.Locale
 
 class KpiWidget : GlanceAppWidget() {
 
@@ -30,10 +27,10 @@ class KpiWidget : GlanceAppWidget() {
         val database = SolennixDatabase.getInstance(context)
         val userId = WidgetAuthProvider.getUserId(context)
 
-        val kpiData = if (userId == null) {
+        val result = if (userId == null) {
             // Signed out or prefs unreadable: never query Room — fall back to
-            // the empty state so we cannot surface another tenant's rows (#825).
-            KpiData(0, 0.0, 0.0)
+            // the signed-out state so we cannot surface another tenant's rows (#825).
+            KpiResult.State(WidgetState.SIGNED_OUT)
         } else {
             try {
                 val events = database.eventDao().getEvents(userId).first()
@@ -56,34 +53,37 @@ class KpiWidget : GlanceAppWidget() {
 
                 val pendingPayments = derivePendingPaymentBalance(events, payments, today)
 
-                KpiData(
-                    upcomingEvents = upcomingEvents,
-                    monthlyRevenue = monthlyRevenue,
-                    pendingPayments = pendingPayments
+                KpiResult.Data(
+                    KpiData(
+                        upcomingEvents = upcomingEvents,
+                        monthlyRevenue = monthlyRevenue,
+                        pendingPayments = pendingPayments
+                    )
                 )
             } catch (e: Exception) {
-                KpiData(0, 0.0, 0.0)
+                KpiResult.State(WidgetState.ERROR)
             }
         }
 
         provideContent {
-            WidgetContent(context, kpiData)
+            WidgetContent(context, result)
         }
     }
 
     @Composable
-    private fun WidgetContent(context: Context, kpiData: KpiData) {
-        val primaryColor = Color(0xFFC4A265)
-        val backgroundColor = Color(0xFFFAF9F6)
-        val textPrimary = Color(0xFF1A1A1A)
-        val textSecondary = Color(0xFF7A7670)
-        val successColor = Color(0xFF22C55E)
-        val warningColor = Color(0xFFF59E0B)
+    private fun WidgetContent(context: Context, result: KpiResult) {
+        when (result) {
+            is KpiResult.State -> WidgetStateView(context, result.state)
+            is KpiResult.Data -> KpiContent(context, result.kpiData)
+        }
+    }
 
+    @Composable
+    private fun KpiContent(context: Context, kpiData: KpiData) {
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .background(ColorProvider(backgroundColor))
+                .background(WidgetColors.background)
                 .padding(12.dp)
                 .clickable(actionStartActivity(getLaunchIntent(context))),
             verticalAlignment = Alignment.Top,
@@ -95,7 +95,7 @@ class KpiWidget : GlanceAppWidget() {
                 style = TextStyle(
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
-                    color = ColorProvider(primaryColor)
+                    color = WidgetColors.primary
                 )
             )
 
@@ -111,9 +111,7 @@ class KpiWidget : GlanceAppWidget() {
                     modifier = GlanceModifier.defaultWeight(),
                     value = kpiData.upcomingEvents.toString(),
                     label = "Próximos",
-                    accentColor = primaryColor,
-                    textPrimary = textPrimary,
-                    textSecondary = textSecondary
+                    accentColor = WidgetColors.primary
                 )
 
                 Spacer(modifier = GlanceModifier.width(8.dp))
@@ -123,9 +121,7 @@ class KpiWidget : GlanceAppWidget() {
                     modifier = GlanceModifier.defaultWeight(),
                     value = WidgetFormatters.formatCurrency(kpiData.monthlyRevenue),
                     label = "Este mes",
-                    accentColor = successColor,
-                    textPrimary = textPrimary,
-                    textSecondary = textSecondary
+                    accentColor = WidgetColors.success
                 )
             }
 
@@ -135,7 +131,7 @@ class KpiWidget : GlanceAppWidget() {
             Row(
                 modifier = GlanceModifier
                     .fillMaxWidth()
-                    .background(ColorProvider(Color.White))
+                    .background(WidgetColors.card)
                     .cornerRadius(8.dp)
                     .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -146,7 +142,7 @@ class KpiWidget : GlanceAppWidget() {
                         text = "Pagos pendientes",
                         style = TextStyle(
                             fontSize = 11.sp,
-                            color = ColorProvider(textSecondary)
+                            color = WidgetColors.textSecondary
                         )
                     )
                 }
@@ -155,7 +151,7 @@ class KpiWidget : GlanceAppWidget() {
                     style = TextStyle(
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
-                        color = ColorProvider(if (kpiData.pendingPayments > 0.0) warningColor else successColor)
+                        color = if (kpiData.pendingPayments > 0.0) WidgetColors.warning else WidgetColors.success
                     )
                 )
             }
@@ -167,13 +163,11 @@ class KpiWidget : GlanceAppWidget() {
         modifier: GlanceModifier,
         value: String,
         label: String,
-        accentColor: Color,
-        textPrimary: Color,
-        textSecondary: Color
+        accentColor: ColorProvider
     ) {
         Column(
             modifier = modifier
-                .background(ColorProvider(Color.White))
+                .background(WidgetColors.card)
                 .cornerRadius(8.dp)
                 .padding(12.dp),
             horizontalAlignment = Alignment.Start
@@ -183,7 +177,7 @@ class KpiWidget : GlanceAppWidget() {
                 style = TextStyle(
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    color = ColorProvider(accentColor)
+                    color = accentColor
                 )
             )
             Spacer(modifier = GlanceModifier.height(2.dp))
@@ -191,15 +185,10 @@ class KpiWidget : GlanceAppWidget() {
                 text = label,
                 style = TextStyle(
                     fontSize = 11.sp,
-                    color = ColorProvider(textSecondary)
+                    color = WidgetColors.textSecondary
                 )
             )
         }
-    }
-
-    private fun getLaunchIntent(context: Context): Intent {
-        return context.packageManager.getLaunchIntentForPackage(context.packageName)
-            ?: Intent()
     }
 
     private data class KpiData(
@@ -207,4 +196,13 @@ class KpiWidget : GlanceAppWidget() {
         val monthlyRevenue: Double,
         val pendingPayments: Double
     )
+
+    /**
+     * Sealed result distinguishing widget auth/error states from rendered data.
+     * [State] wraps a [WidgetState] (SIGNED_OUT / EMPTY / ERROR); [Data] carries KPI values.
+     */
+    private sealed interface KpiResult {
+        data class State(val state: WidgetState) : KpiResult
+        data class Data(val kpiData: KpiData) : KpiResult
+    }
 }
