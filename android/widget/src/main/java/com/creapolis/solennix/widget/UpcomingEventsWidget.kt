@@ -1,17 +1,15 @@
 package com.creapolis.solennix.widget
 
 import android.content.Context
-import android.content.Intent
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.*
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.action.actionStartActivity
-import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.cornerRadius
+import androidx.glance.appwidget.provideContent
 import androidx.glance.layout.*
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
@@ -29,7 +27,7 @@ class UpcomingEventsWidget : GlanceAppWidget() {
         val database = SolennixDatabase.getInstance(context)
         val userId = WidgetAuthProvider.getUserId(context)
         val events = if (userId == null) {
-            // Signed out or prefs unreadable: never query Room — empty state
+            // Signed out or prefs unreadable: never query Room — empty list
             // avoids surfacing another tenant's events (#825).
             emptyList()
         } else {
@@ -47,21 +45,22 @@ class UpcomingEventsWidget : GlanceAppWidget() {
         }
 
         provideContent {
-            WidgetContent(context, events)
+            WidgetContent(context, userId, events)
         }
     }
 
     @Composable
-    private fun WidgetContent(context: Context, events: List<Event>) {
-        val primaryColor = Color(0xFFC4A265)
-        val backgroundColor = Color(0xFFFAF9F6)
-        val textPrimary = Color(0xFF1A1A1A)
-        val textSecondary = Color(0xFF7A7670)
+    private fun WidgetContent(context: Context, userId: String?, events: List<Event>) {
+        val state = determineWidgetState(userId, hasData = events.isNotEmpty())
+        if (state != null) {
+            WidgetStateView(context, state)
+            return
+        }
 
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .background(ColorProvider(backgroundColor))
+                .background(WidgetColors.background)
                 .padding(12.dp)
                 .clickable(actionStartActivity(getLaunchIntent(context))),
             verticalAlignment = Alignment.Top,
@@ -78,37 +77,20 @@ class UpcomingEventsWidget : GlanceAppWidget() {
                     style = TextStyle(
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
-                        color = ColorProvider(primaryColor)
+                        color = WidgetColors.primary
                     )
                 )
             }
 
             Spacer(modifier = GlanceModifier.height(8.dp))
 
-            if (events.isEmpty()) {
-                Box(
-                    modifier = GlanceModifier
-                        .fillMaxWidth()
-                        .defaultWeight(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Sin eventos próximos",
-                        style = TextStyle(
-                            fontSize = 12.sp,
-                            color = ColorProvider(textSecondary)
-                        )
-                    )
-                }
-            } else {
-                Column(
-                    modifier = GlanceModifier.fillMaxWidth()
-                ) {
-                    events.take(3).forEach { event ->
-                        EventRow(event, textPrimary, textSecondary, primaryColor)
-                        if (event != events.last()) {
-                            Spacer(modifier = GlanceModifier.height(6.dp))
-                        }
+            Column(
+                modifier = GlanceModifier.fillMaxWidth()
+            ) {
+                events.take(3).forEach { event ->
+                    EventRow(event)
+                    if (event != events.last()) {
+                        Spacer(modifier = GlanceModifier.height(6.dp))
                     }
                 }
             }
@@ -116,18 +98,13 @@ class UpcomingEventsWidget : GlanceAppWidget() {
     }
 
     @Composable
-    private fun EventRow(
-        event: Event,
-        textPrimary: Color,
-        textSecondary: Color,
-        accentColor: Color
-    ) {
+    private fun EventRow(event: Event) {
         val formattedDate = WidgetFormatters.formatEventDate(event.eventDate)
 
         Row(
             modifier = GlanceModifier
                 .fillMaxWidth()
-                .background(ColorProvider(Color.White))
+                .background(WidgetColors.card)
                 .cornerRadius(8.dp)
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -135,7 +112,7 @@ class UpcomingEventsWidget : GlanceAppWidget() {
             // Date indicator
             Column(
                 modifier = GlanceModifier
-                    .background(ColorProvider(accentColor.copy(alpha = 0.15f)))
+                    .background(WidgetColors.dateChipBg)
                     .cornerRadius(6.dp)
                     .padding(horizontal = 8.dp, vertical = 4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -145,14 +122,14 @@ class UpcomingEventsWidget : GlanceAppWidget() {
                     style = TextStyle(
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
-                        color = ColorProvider(accentColor)
+                        color = WidgetColors.primary
                     )
                 )
                 Text(
                     text = formattedDate.month,
                     style = TextStyle(
                         fontSize = 10.sp,
-                        color = ColorProvider(accentColor)
+                        color = WidgetColors.primary
                     )
                 )
             }
@@ -166,7 +143,7 @@ class UpcomingEventsWidget : GlanceAppWidget() {
                     style = TextStyle(
                         fontWeight = FontWeight.Medium,
                         fontSize = 12.sp,
-                        color = ColorProvider(textPrimary)
+                        color = WidgetColors.textPrimary
                     ),
                     maxLines = 1
                 )
@@ -174,17 +151,11 @@ class UpcomingEventsWidget : GlanceAppWidget() {
                     text = "${event.numPeople} personas",
                     style = TextStyle(
                         fontSize = 10.sp,
-                        color = ColorProvider(textSecondary)
+                        color = WidgetColors.textSecondary
                     ),
                     maxLines = 1
                 )
             }
         }
     }
-
-    private fun getLaunchIntent(context: Context): Intent {
-        return context.packageManager.getLaunchIntentForPackage(context.packageName)
-            ?: Intent()
-    }
-
 }

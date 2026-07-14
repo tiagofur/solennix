@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget state strings (English). Parity with iOS WidgetStateView. -->
+    <string name="widget_state_signed_out">Sign in to view</string>
+    <string name="widget_state_empty">No data yet</string>
+    <string name="widget_state_error">Couldn\'t load data</string>
+</resources>
