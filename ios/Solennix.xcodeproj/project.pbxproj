@@ -804,6 +804,11 @@
 					14FD8C2D317599754E5758B8 = {
 						DevelopmentTeam = T5SKULSP2M;
 						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.Push = {
+								enabled = 1;
+							};
+						};
 					};
 					38D7970DE486CE65CC049299 = {
 						DevelopmentTeam = T5SKULSP2M;
