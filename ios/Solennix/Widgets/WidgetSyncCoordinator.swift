@@ -83,7 +83,7 @@ final class WidgetSyncCoordinator {
             // to the main actor asynchronously so the handler never runs off-main.
             let observer = center.addObserver(forName: name, object: nil, queue: nil) { [weak self] notification in
                 guard let self else { return }
-                let handle = {
+                let handle: @MainActor () -> Void = {
                     if name == .solennixDashboardKPIsRefreshed {
                         self.handleServerKPIsRefreshed(notification)
                     } else {
