@@ -65,10 +65,16 @@ struct Step1GeneralView: View {
                     Image(systemName: "chevron.right")
                         .font(.caption)
                         .foregroundStyle(.tertiary)
+                        .accessibilityHidden(true)
                 }
             }
             .buttonStyle(.plain)
             .solennixRow()
+            .accessibilityLabel(tr("events.form.general.client", "Cliente"))
+            .accessibilityValue(viewModel.clientName.isEmpty
+                ? tr("events.form.general.select_client", "Seleccionar cliente")
+                : viewModel.clientName)
+            .accessibilityHint(tr("events.form.general.client_a11y_hint", "Abre el selector de cliente"))
         }
     }
 
@@ -176,10 +182,14 @@ struct Step1GeneralView: View {
                     Image(systemName: "chevron.right")
                         .font(.caption)
                         .foregroundStyle(.tertiary)
+                        .accessibilityHidden(true)
                 }
             }
             .buttonStyle(.plain)
             .solennixRow()
+            .accessibilityLabel(tr("events.form.general.event_date", "Fecha del evento"))
+            .accessibilityValue(formattedEventDate)
+            .accessibilityHint(tr("events.form.general.event_date_a11y_hint", "Abre el calendario"))
 
             // Inline warning when the selected day falls inside a blocked range.
             // Selection is still allowed (Android parity); the hard block is at
@@ -293,6 +303,8 @@ struct Step1GeneralView: View {
             }
             .buttonStyle(.plain)
             .disabled(viewModel.numPeople <= 1)
+            .accessibilityLabel(tr("common.stepper.decrease_a11y", "Quitar uno"))
+            .accessibilityValue(peopleValueLabel)
 
             EditableQuantityText(
                 quantity: $viewModel.numPeople,
@@ -311,8 +323,15 @@ struct Step1GeneralView: View {
                     .foregroundStyle(SolennixColors.primary)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(tr("common.stepper.increase_a11y", "Agregar uno"))
+            .accessibilityValue(peopleValueLabel)
         }
         .solennixRow()
+    }
+
+    private var peopleValueLabel: String {
+        String(format: tr("events.form.general.people_value", "%@ personas"),
+               locale: FeatureL10n.locale, String(viewModel.numPeople))
     }
 
     // MARK: - Status Row (native Picker .menu)
@@ -457,10 +476,12 @@ private struct OptionalTimePicker: View {
                         .foregroundStyle(SolennixColors.textTertiary)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(FeatureL10n.text("events.form.general.clear_time_a11y", "Quitar hora"))
             } else {
                 Image(systemName: "chevron.right")
                     .font(.caption)
                     .foregroundStyle(SolennixColors.textTertiary)
+                    .accessibilityHidden(true)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -276,6 +276,7 @@ private struct ExtraRowView: View {
                         .foregroundStyle(SolennixColors.error)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(tr("events.form.extras.delete_a11y", "Eliminar extra"))
             }
         }
         .onAppear { hydrate(from: extra) }

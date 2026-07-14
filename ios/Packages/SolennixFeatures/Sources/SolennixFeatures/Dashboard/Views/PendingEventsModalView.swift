@@ -60,6 +60,7 @@ public struct PendingEventsModalView: View {
                         .font(.title3)
                         .foregroundStyle(SolennixColors.primary)
                 }
+                .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(tr("dashboard.pending_modal.title", "Eventos pendientes de cierre"))
@@ -90,6 +91,7 @@ public struct PendingEventsModalView: View {
                         .foregroundStyle(SolennixColors.textTertiary)
                         .padding(8)
                 }
+                .accessibilityLabel(tr("dashboard.pending_modal.close_a11y", "Cerrar"))
             }
             .padding(Spacing.lg)
 
@@ -152,6 +154,9 @@ public struct PendingEventsModalView: View {
                     .background(SolennixColors.warningBg)
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
             }
+            // VoiceOver: merge service type + date + reason badge into one
+            // utterance ("Banquete, 14 jul, Pago pendiente") instead of three.
+            .accessibilityElement(children: .combine)
 
             actionButtons(for: pendingEvent)
         }
