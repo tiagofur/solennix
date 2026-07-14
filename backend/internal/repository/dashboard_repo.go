@@ -67,6 +67,21 @@ type ForecastDataPoint struct {
 	ConfirmedEvents   int     `json:"confirmed_events"`
 }
 
+// AttentionItem represents a single event needing follow-up on the dashboard.
+// The backend computes the reason classification and pending balance so the
+// three frontends (web, iOS, Android) don't triplicate the logic client-side.
+type AttentionItem struct {
+	EventID         uuid.UUID `json:"event_id"`
+	EventDate       string    `json:"event_date"`
+	ServiceType     string    `json:"service_type"`
+	Status          string    `json:"status"`
+	ClientName      string    `json:"client_name"`
+	TotalAmount     float64   `json:"total_amount"`
+	AmountPaid      float64   `json:"amount_paid"`
+	PendingBalance  float64   `json:"pending_balance"`
+	Reason          string    `json:"reason"`
+}
+
 // DashboardSummary bundles every aggregated dashboard dataset into a single
 // response so the client can fetch KPIs + charts + widgets in one round-trip
 // instead of N sequential GETs (issue #807). Field params are pinned to the
@@ -481,4 +496,93 @@ func (r *DashboardRepo) GetSummary(ctx context.Context, userID uuid.UUID) (*Dash
 		ProductDemand:  productDemand,
 		Forecast:       forecast,
 	}, nil
+}
+
+// GetAttention returns events needing follow-up, classified by reason.
+// The three categories mirror what web/iOS/Android used to compute client-side
+// over the full event + payment lists (issue #861):
+//
+//   - payment_due:   confirmed event in the next 7 days with pending balance > 0.01
+//   - overdue_event: past event still quoted or confirmed
+//   - quote_urgent:  quoted event in the next 14 days
+//
+// Events are pre-filtered to a 30-day lookback + 14-day forward window so the
+// query stays bounded. A LEFT JOIN on payments (summed per event) computes the
+// pending balance server-side; events with no payments show amount_paid = 0.
+// Results are capped at 50 — enough for the dashboard widget.
+func (r *DashboardRepo) GetAttention(ctx context.Context, userID uuid.UUID) ([]AttentionItem, error) {
+	query := `
+		WITH paid AS (
+			SELECT event_id, COALESCE(SUM(amount), 0) AS amount_paid
+			FROM payments
+			WHERE user_id = $1
+			GROUP BY event_id
+		)
+		SELECT
+			e.id                                   AS event_id,
+			to_char(e.event_date, 'YYYY-MM-DD')    AS event_date,
+			e.service_type                         AS service_type,
+			e.status                               AS status,
+			COALESCE(c.name, '')                   AS client_name,
+			e.total_amount                         AS total_amount,
+			COALESCE(p.amount_paid, 0)             AS amount_paid,
+			(e.total_amount - COALESCE(p.amount_paid, 0)) AS pending_balance,
+			CASE
+				WHEN e.status = 'confirmed'
+				  AND e.event_date >= CURRENT_DATE
+				  AND e.event_date <= CURRENT_DATE + INTERVAL '7 days'
+				  AND (e.total_amount - COALESCE(p.amount_paid, 0)) > 0.01
+				THEN 'payment_due'
+				WHEN e.event_date < CURRENT_DATE
+				  AND e.status IN ('quoted', 'confirmed')
+				THEN 'overdue_event'
+				WHEN e.status = 'quoted'
+				  AND e.event_date >= CURRENT_DATE
+				  AND e.event_date <= CURRENT_DATE + INTERVAL '14 days'
+				THEN 'quote_urgent'
+				ELSE NULL
+			END AS reason
+		FROM events e
+		LEFT JOIN clients c ON e.client_id = c.id
+		LEFT JOIN paid p ON p.event_id = e.id
+		WHERE e.user_id = $1
+		  AND e.status IN ('quoted', 'confirmed')
+		  AND e.event_date >= CURRENT_DATE - INTERVAL '30 days'
+		  AND e.event_date <= CURRENT_DATE + INTERVAL '14 days'
+		ORDER BY e.event_date ASC
+		LIMIT 50`
+
+	rows, err := r.pool.Query(ctx, query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("querying attention items: %w", err)
+	}
+	defer rows.Close()
+
+	items := make([]AttentionItem, 0)
+	for rows.Next() {
+		var item AttentionItem
+		if err := rows.Scan(
+			&item.EventID,
+			&item.EventDate,
+			&item.ServiceType,
+			&item.Status,
+			&item.ClientName,
+			&item.TotalAmount,
+			&item.AmountPaid,
+			&item.PendingBalance,
+			&item.Reason,
+		); err != nil {
+			return nil, fmt.Errorf("scanning attention item: %w", err)
+		}
+		// The CASE returns NULL for non-matching rows; skip them. (The WHERE
+		// already narrows candidates, but reason is the final discriminator.)
+		if item.Reason == "" {
+			continue
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating attention items: %w", err)
+	}
+	return items, nil
 }

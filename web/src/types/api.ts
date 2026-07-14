@@ -1000,6 +1000,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dashboard/attention": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get events needing follow-up (pending payments, overdue, urgent quotes)
+         * @description Returns events classified by reason with the pending balance computed server-side. Replaces the client-side attention logic that fetched the full unpaginated event and payment lists.
+         */
+        get: operations["getAttention"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/dashboard/activity": {
         parameters: {
             query?: never;
@@ -2001,6 +2021,24 @@ export interface components {
             /** Format: double */
             confirmed_revenue: number;
             confirmed_events: number;
+        };
+        AttentionItem: {
+            /** Format: uuid */
+            event_id: string;
+            /** Format: date */
+            event_date: string;
+            service_type: string;
+            /** @enum {string} */
+            status: "quoted" | "confirmed";
+            client_name: string;
+            /** Format: double */
+            total_amount: number;
+            /** Format: double */
+            amount_paid: number;
+            /** Format: double */
+            pending_balance: number;
+            /** @enum {string} */
+            reason: "payment_due" | "overdue_event" | "quote_urgent";
         };
         EventPhoto: {
             /** Format: uuid */
@@ -5268,6 +5306,33 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ForecastDataPoint"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getAttention: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Attention items */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttentionItem"][];
                 };
             };
             /** @description Unauthorized */

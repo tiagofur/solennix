@@ -1,6 +1,7 @@
 import { api } from "../lib/api";
 import type { components } from "../types/api";
 import type {
+  AttentionItem,
   DashboardEventStatusCount,
   DashboardEventStatusScope,
   DashboardKpis,
@@ -47,5 +48,9 @@ export const dashboardService = {
 
   async getForecast(): Promise<ForecastDataPoint[]> {
     return api.get<ForecastDataPoint[]>("/dashboard/forecast");
+  },
+
+  async getAttention(): Promise<AttentionItem[]> {
+    return api.get<AttentionItem[]>("/dashboard/attention");
   },
 };

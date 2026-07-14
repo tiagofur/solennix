@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { CheckCircle2, Circle, X, Users, Package, CalendarPlus, ChevronRight } from 'lucide-react';
 import { useClients } from '../hooks/queries/useClientQueries';
 import { useProducts } from '../hooks/queries/useProductQueries';
-import { useEvents } from '../hooks/queries/useEventQueries';
+import { useEventsPaginated } from '../hooks/queries/useEventQueries';
 import { useTranslation } from 'react-i18next';
 
 export const OnboardingChecklist: React.FC = () => {
@@ -12,7 +12,9 @@ export const OnboardingChecklist: React.FC = () => {
   const { user } = useAuth();
   const { data: clients = [], isLoading: clientsLoading } = useClients();
   const { data: products = [], isLoading: productsLoading } = useProducts();
-  const { data: events = [], isLoading: eventsLoading } = useEvents();
+  // Only need to know if ANY event exists — fetch a single row instead of the
+  // full unpaginated list (issue #861).
+  const { data: eventsPage, isLoading: eventsLoading } = useEventsPaginated({ page: 1, limit: 1 });
   const [dismissed, setDismissed] = useState(false);
 
   const loading = clientsLoading || productsLoading || eventsLoading;
@@ -22,7 +24,7 @@ export const OnboardingChecklist: React.FC = () => {
 
   const hasClient = clients.length > 0;
   const hasProduct = products.length > 0;
-  const hasEvent = events.length > 0;
+  const hasEvent = (eventsPage?.total ?? 0) > 0;
 
   let completed = 0;
   if (hasClient) completed++;

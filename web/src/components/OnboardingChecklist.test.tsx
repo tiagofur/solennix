@@ -15,7 +15,7 @@ vi.mock('../contexts/AuthContext', () => ({
 // Mock the React Query hooks that OnboardingChecklist now uses
 const mockClientsQuery = { data: [] as any[], isLoading: false };
 const mockProductsQuery = { data: [] as any[], isLoading: false };
-const mockEventsQuery = { data: [] as any[], isLoading: false };
+const mockEventsQuery = { data: { total: 0, data: [] as any[] }, isLoading: false };
 
 vi.mock('../hooks/queries/useClientQueries', () => ({
   useClients: () => mockClientsQuery,
@@ -26,7 +26,7 @@ vi.mock('../hooks/queries/useProductQueries', () => ({
 }));
 
 vi.mock('../hooks/queries/useEventQueries', () => ({
-  useEvents: () => mockEventsQuery,
+  useEventsPaginated: () => mockEventsQuery,
 }));
 
 // --- Helpers ---
@@ -49,7 +49,7 @@ describe('OnboardingChecklist', () => {
     mockClientsQuery.isLoading = false;
     mockProductsQuery.data = [];
     mockProductsQuery.isLoading = false;
-    mockEventsQuery.data = [];
+    mockEventsQuery.data = { total: 0, data: [] };
     mockEventsQuery.isLoading = false;
     // Reset localStorage mock
     (localStorage.getItem as ReturnType<typeof vi.fn>).mockReturnValue(null);
@@ -172,7 +172,7 @@ describe('OnboardingChecklist', () => {
   it('renders nothing when all items are completed and sets localStorage', async () => {
     mockClientsQuery.data = [{ id: '1' }];
     mockProductsQuery.data = [{ id: '1' }];
-    mockEventsQuery.data = [{ id: '1' }];
+    mockEventsQuery.data = { total: 1, data: [{ id: '1' }] };
 
     const { container } = renderComponent();
     await waitFor(() => {
@@ -274,7 +274,7 @@ describe('OnboardingChecklist', () => {
     // With React Query, null data defaults to [] via the component's `= []` defaults
     mockClientsQuery.data = [];
     mockProductsQuery.data = [];
-    mockEventsQuery.data = [];
+    mockEventsQuery.data = { total: 0, data: [] };
 
     renderComponent();
     await waitFor(() => {

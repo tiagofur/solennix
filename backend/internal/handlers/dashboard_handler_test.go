@@ -459,3 +459,77 @@ func TestGetSummary(t *testing.T) {
 		repo.AssertExpectations(t)
 	})
 }
+
+func TestGetAttention(t *testing.T) {
+	t.Run("GivenValidRequest_WhenAttentionItemsExist_ThenReturnOK", func(t *testing.T) {
+		repo := new(MockDashboardRepo)
+		h := newDashboardHandler(repo)
+
+		items := []repository.AttentionItem{
+			{
+				EventID:        uuid.New(),
+				EventDate:      "2026-07-15",
+				ServiceType:    "Boda",
+				Status:         "confirmed",
+				ClientName:     "Ana Perez",
+				TotalAmount:    5000,
+				AmountPaid:     2000,
+				PendingBalance: 3000,
+				Reason:         "payment_due",
+			},
+			{
+				EventID:        uuid.New(),
+				EventDate:      "2026-07-20",
+				ServiceType:    "XV Años",
+				Status:         "quoted",
+				ClientName:     "Juan Lopez",
+				TotalAmount:    3000,
+				AmountPaid:     0,
+				PendingBalance: 3000,
+				Reason:         "quote_urgent",
+			},
+		}
+		repo.On("GetAttention", mock.Anything, mock.Anything).Return(items, nil)
+
+		req, _ := dashboardReq("/api/dashboard/attention")
+		rr := httptest.NewRecorder()
+		h.GetAttention(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		assert.Contains(t, rr.Body.String(), "payment_due")
+		assert.Contains(t, rr.Body.String(), "quote_urgent")
+		assert.Contains(t, rr.Body.String(), "Ana Perez")
+		assert.Contains(t, rr.Body.String(), "pending_balance")
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("GivenNoAttentionItems_WhenGetAttention_ThenReturnEmptyArray", func(t *testing.T) {
+		repo := new(MockDashboardRepo)
+		h := newDashboardHandler(repo)
+
+		repo.On("GetAttention", mock.Anything, mock.Anything).Return([]repository.AttentionItem{}, nil)
+
+		req, _ := dashboardReq("/api/dashboard/attention")
+		rr := httptest.NewRecorder()
+		h.GetAttention(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		assert.Equal(t, "[]\n", rr.Body.String())
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("GivenRepoError_WhenGetAttention_ThenInternalServerError", func(t *testing.T) {
+		repo := new(MockDashboardRepo)
+		h := newDashboardHandler(repo)
+
+		repo.On("GetAttention", mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
+
+		req, _ := dashboardReq("/api/dashboard/attention")
+		rr := httptest.NewRecorder()
+		h.GetAttention(rr, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Failed to get attention items")
+		repo.AssertExpectations(t)
+	})
+}

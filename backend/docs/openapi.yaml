@@ -1666,6 +1666,44 @@ components:
           format: double
         confirmed_events:
           type: integer
+    AttentionItem:
+      type: object
+      required:
+        - event_id
+        - event_date
+        - service_type
+        - status
+        - client_name
+        - total_amount
+        - amount_paid
+        - pending_balance
+        - reason
+      properties:
+        event_id:
+          type: string
+          format: uuid
+        event_date:
+          type: string
+          format: date
+        service_type:
+          type: string
+        status:
+          type: string
+          enum: [quoted, confirmed]
+        client_name:
+          type: string
+        total_amount:
+          type: number
+          format: double
+        amount_paid:
+          type: number
+          format: double
+        pending_balance:
+          type: number
+          format: double
+        reason:
+          type: string
+          enum: [payment_due, overdue_event, quote_urgent]
     EventPhoto:
       type: object
       required:
@@ -4426,6 +4464,22 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ForecastDataPoint"
+        "401":
+          description: Unauthorized
+  /api/dashboard/attention:
+    get:
+      operationId: getAttention
+      summary: Get events needing follow-up (pending payments, overdue, urgent quotes)
+      description: Returns events classified by reason with the pending balance computed server-side. Replaces the client-side attention logic that fetched the full unpaginated event and payment lists.
+      responses:
+        "200":
+          description: Attention items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AttentionItem"
         "401":
           description: Unauthorized
   /api/dashboard/activity:

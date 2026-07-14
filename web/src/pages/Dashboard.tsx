@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { Event, Payment, InventoryItem } from "../types/entities";
-import { addDays, format, startOfMonth, endOfMonth } from "date-fns";
+import { Event, InventoryItem } from "../types/entities";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -23,15 +23,16 @@ import {
 } from "lucide-react";
 import { logError } from "../lib/errorHandler";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEvents, useUpcomingEvents, useEventsByDateRange, useUpdateEventStatus } from "../hooks/queries/useEventQueries";
+import { useUpcomingEvents, useEventsByDateRange, useUpdateEventStatus } from "../hooks/queries/useEventQueries";
 import { useInventoryItems } from "../hooks/queries/useInventoryQueries";
-import { usePaymentsByEventIds, useCreatePayment } from "../hooks/queries/usePaymentQueries";
+import { useCreatePayment } from "../hooks/queries/usePaymentQueries";
 import {
+  useDashboardAttention,
   useDashboardEventsByStatus,
   useDashboardKpis,
   useDashboardRevenueChart,
 } from "../hooks/queries/useDashboardQueries";
-import type { DashboardRevenuePoint } from "../types/dashboard";
+import type { DashboardRevenuePoint, AttentionItem } from "../types/dashboard";
 import { queryKeys } from "../hooks/queries/queryKeys";
 import { eventService } from "../services/eventService";
 import { Modal } from "../components/Modal";
@@ -66,7 +67,10 @@ type DashboardEvent = Event & {
 type AttentionAlertTone = "warning" | "error";
 
 interface DashboardAttentionItem {
-  event: DashboardEvent;
+  eventId: string;
+  eventDate: string;
+  serviceType: string;
+  clientName: string;
   detail: string;
   pendingAmount: number;
 }
@@ -316,7 +320,7 @@ interface DashboardAttentionSectionProps {
   updatingEventId: string | null;
   onComplete: (eventId: string) => void;
   onCancel: (eventId: string) => void;
-  onRegisterPayment: (event: DashboardEvent, pendingAmount: number) => void;
+  onRegisterPayment: (eventId: string, pendingAmount: number) => void;
 }
 
 function AttentionItemCard({
@@ -334,11 +338,11 @@ function AttentionItemCard({
   updatingEventId: string | null;
   onComplete: (eventId: string) => void;
   onCancel: (eventId: string) => void;
-  onRegisterPayment: (event: DashboardEvent, pendingAmount: number) => void;
+  onRegisterPayment: (eventId: string, pendingAmount: number) => void;
 }) {
   const { t, i18n } = useTranslation(['dashboard', 'common']);
-  const { event, detail, pendingAmount } = item;
-  const isUpdating = updatingEventId === event.id;
+  const { eventId, eventDate, serviceType, clientName, detail, pendingAmount } = item;
+  const isUpdating = updatingEventId === eventId;
   const hasPending = pendingAmount > PAYMENT_COMPLETION_EPSILON;
   const dateLocale = i18n.language === 'en' ? enUS : es;
 
@@ -346,11 +350,11 @@ function AttentionItemCard({
     <div className="rounded-lg border border-border bg-card px-3 py-2.5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-text truncate">{event.client?.name ?? t('dashboard:event.no_client')}</p>
-          <p className="text-xs text-text-secondary truncate mt-0.5">{event.service_type}</p>
+          <p className="text-sm font-semibold text-text truncate">{clientName || t('dashboard:event.no_client')}</p>
+          <p className="text-xs text-text-secondary truncate mt-0.5">{serviceType}</p>
         </div>
         <span className="shrink-0 text-xs text-text-secondary whitespace-nowrap">
-          {format(parseDashboardEventDate(event.event_date), "d MMM", { locale: dateLocale })}
+          {format(parseDashboardEventDate(eventDate), "d MMM", { locale: dateLocale })}
         </span>
       </div>
       <p className={`text-xs font-semibold mt-1.5 ${styles.detail}`}>{detail}</p>
@@ -360,7 +364,7 @@ function AttentionItemCard({
           <button
             type="button"
             disabled={isUpdating}
-            onClick={() => onRegisterPayment(event, pendingAmount)}
+            onClick={() => onRegisterPayment(eventId, pendingAmount)}
             className="px-3 py-1.5 text-xs font-bold rounded-lg bg-primary text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
           >
             {t('dashboard:attention.register_payment')}
@@ -372,7 +376,7 @@ function AttentionItemCard({
             <button
               type="button"
               disabled={isUpdating}
-              onClick={() => onRegisterPayment(event, pendingAmount)}
+              onClick={() => onRegisterPayment(eventId, pendingAmount)}
               className="px-3 py-1.5 text-xs font-bold rounded-lg bg-primary text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
             >
               {t('dashboard:attention.pay_and_complete')}
@@ -380,7 +384,7 @@ function AttentionItemCard({
             <button
               type="button"
               disabled={isUpdating}
-              onClick={() => onCancel(event.id)}
+              onClick={() => onCancel(eventId)}
               className="px-3 py-1.5 text-xs font-bold rounded-lg border border-error/40 text-error hover:bg-error/10 transition-colors disabled:opacity-50"
             >
               {t('common:action.cancel')}
@@ -388,7 +392,7 @@ function AttentionItemCard({
             <button
               type="button"
               disabled={isUpdating}
-              onClick={() => onComplete(event.id)}
+              onClick={() => onComplete(eventId)}
               className="text-xs font-semibold text-text-secondary hover:text-text underline-offset-2 hover:underline disabled:opacity-50"
             >
               {t('dashboard:attention.complete_only')}
@@ -401,7 +405,7 @@ function AttentionItemCard({
             <button
               type="button"
               disabled={isUpdating}
-              onClick={() => onComplete(event.id)}
+              onClick={() => onComplete(eventId)}
               className="px-3 py-1.5 text-xs font-bold rounded-lg bg-success text-white hover:bg-success/90 transition-colors disabled:opacity-50"
             >
               {t('common:action.complete')}
@@ -409,7 +413,7 @@ function AttentionItemCard({
             <button
               type="button"
               disabled={isUpdating}
-              onClick={() => onCancel(event.id)}
+              onClick={() => onCancel(eventId)}
               className="px-3 py-1.5 text-xs font-bold rounded-lg border border-error/40 text-error hover:bg-error/10 transition-colors disabled:opacity-50"
             >
               {t('common:action.cancel')}
@@ -418,7 +422,7 @@ function AttentionItemCard({
         )}
 
         <Link
-          to={`/events/${event.id}/summary`}
+          to={`/events/${eventId}/summary`}
           className="text-xs font-semibold text-primary hover:underline ml-auto inline-flex items-center gap-1"
         >
           {t('dashboard:attention.view_detail')} <ArrowRight className="h-3 w-3" />
@@ -478,7 +482,7 @@ function DashboardAttentionSection({
               <div className="mt-3 space-y-2">
                 {alert.items.slice(0, 3).map((item) => (
                   <AttentionItemCard
-                    key={item.event.id}
+                    key={item.eventId}
                     alertKey={alert.key}
                     item={item}
                     styles={styles}
@@ -586,7 +590,10 @@ export const Dashboard: React.FC = () => {
 
   const { isLoading: loadingMonth } = useEventsByDateRange(monthStart, monthEnd);
   const { data: _upcoming, isLoading: loadingUpcoming } = useUpcomingEvents(5);
-  const { data: _allEvents, isLoading: loadingAttention } = useEvents();
+  // Attention items come from the server now (issue #861): the backend classifies
+  // reasons and computes pending balances, replacing the full-list fetch +
+  // client-side filtering that used to live here.
+  const { data: _attentionItems = [], isLoading: loadingAttention } = useDashboardAttention();
   const { data: _inventory, isLoading: loadingInventory } = useInventoryItems();
 
   const { data: kpis } = useDashboardKpis();
@@ -599,39 +606,12 @@ export const Dashboard: React.FC = () => {
 
   // Using _clients directly if needed or keep it as _clients
   const upcomingEvents = _upcoming ?? [];
-  const attentionEvents = useMemo(() => (_allEvents ?? []) as DashboardEvent[], [_allEvents]);
 
   // ── Derived: low stock items ──
   const lowStockItems = useMemo(
     () => (_inventory ?? []).filter((item) => item.minimum_stock > 0 && item.current_stock <= item.minimum_stock),
     [_inventory],
   );
-
-  // ── Derived: attention event IDs for payment query ──
-  const attentionCandidateIds = useMemo(() => {
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const confirmedCutoff = addDays(todayStart, 7);
-    return (_allEvents ?? [])
-      .filter((event: DashboardEvent) => {
-        const eventDate = parseDashboardEventDate(event.event_date);
-        const isConfirmedSoon =
-          event.status === "confirmed" && eventDate >= todayStart && eventDate <= confirmedCutoff;
-        const isPastActive =
-          eventDate < todayStart && (event.status === "quoted" || event.status === "confirmed");
-        return isConfirmedSoon || isPastActive;
-      })
-      .map((event: DashboardEvent) => event.id);
-  }, [_allEvents]);
-  const { data: _attentionPayments } = usePaymentsByEventIds(attentionCandidateIds);
-
-  const attentionPaidByEvent = useMemo(() => {
-    const map: Record<string, number> = {};
-    (_attentionPayments ?? []).forEach((payment: Payment) => {
-      map[payment.event_id] = (map[payment.event_id] || 0) + Number(payment.amount || 0);
-    });
-    return map;
-  }, [_attentionPayments]);
 
   const netSalesThisMonth = kpis?.net_sales_this_month ?? 0;
   const cashCollectedThisMonth = kpis?.cash_collected_this_month ?? 0;
@@ -648,26 +628,24 @@ export const Dashboard: React.FC = () => {
   const createPaymentMutation = useCreatePayment();
   const [updatingEventId, setUpdatingEventId] = useState<string | null>(null);
   const [paymentModal, setPaymentModal] = useState<{
-    event: DashboardEvent;
+    eventId: string;
+    eventDate: string;
+    clientName: string;
     pendingAmount: number;
     shouldAutoComplete: boolean;
   } | null>(null);
   const { addToast } = useToast();
 
   const handleCompleteEvent = async (eventId: string) => {
-    const event = attentionEvents.find((e) => e.id === eventId);
-    if (event) {
-      const totalPaid = attentionPaidByEvent[eventId] || 0;
-      const pendingAmount = event.total_amount - totalPaid;
-      if (pendingAmount > PAYMENT_COMPLETION_EPSILON) {
-        addToast(
-          t('events:form.error_balance_pending', {
-            amount: pendingAmount.toFixed(2),
-          }),
-          'info',
-        );
-        return;
-      }
+    const item = _attentionItems.find((a) => a.event_id === eventId);
+    if (item && item.pending_balance > PAYMENT_COMPLETION_EPSILON) {
+      addToast(
+        t('events:form.error_balance_pending', {
+          amount: item.pending_balance.toFixed(2),
+        }),
+        'info',
+      );
+      return;
     }
 
     setUpdatingEventId(eventId);
@@ -693,26 +671,30 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const handleOpenPaymentModal = (event: DashboardEvent, pendingAmount: number) => {
-    const eventDate = parseDashboardEventDate(event.event_date);
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const shouldAutoComplete = eventDate < todayStart && pendingAmount > PAYMENT_COMPLETION_EPSILON;
-    setPaymentModal({ event, pendingAmount, shouldAutoComplete });
+  const handleOpenPaymentModal = (eventId: string, pendingAmount: number) => {
+    const item = _attentionItems.find((a) => a.event_id === eventId);
+    const shouldAutoComplete = pendingAmount > PAYMENT_COMPLETION_EPSILON;
+    setPaymentModal({
+      eventId,
+      eventDate: item?.event_date ?? "",
+      clientName: item?.client_name ?? "",
+      pendingAmount,
+      shouldAutoComplete,
+    });
   };
 
   const queryClient = useQueryClient();
 
   const handlePayAndComplete = async (data: PaymentFormData) => {
     if (!paymentModal) return;
-    const { event, pendingAmount, shouldAutoComplete } = paymentModal;
+    const { eventId, pendingAmount, shouldAutoComplete } = paymentModal;
     const willAutoComplete =
       shouldAutoComplete && data.amount >= pendingAmount - PAYMENT_COMPLETION_EPSILON;
 
-    setUpdatingEventId(event.id);
+    setUpdatingEventId(eventId);
     try {
       await createPaymentMutation.mutateAsync({
-        event_id: event.id,
+        event_id: eventId,
         amount: data.amount,
         payment_date: data.payment_date,
         payment_method: data.payment_method,
@@ -721,9 +703,9 @@ export const Dashboard: React.FC = () => {
 
       if (willAutoComplete) {
         try {
-          await eventService.update(event.id, { status: "completed" });
+          await eventService.update(eventId, { status: "completed" });
           queryClient.invalidateQueries({ queryKey: queryKeys.events.all });
-          queryClient.invalidateQueries({ queryKey: queryKeys.events.detail(event.id) });
+          queryClient.invalidateQueries({ queryKey: queryKeys.events.detail(eventId) });
           queryClient.invalidateQueries({ queryKey: queryKeys.events.upcoming(5) });
           addToast(t('dashboard:messages.event_completed'), "success");
         } catch (statusErr) {
@@ -759,71 +741,59 @@ export const Dashboard: React.FC = () => {
   }, [statusCountsData, t]);
 
   const attentionAlerts = useMemo<DashboardAttentionAlert[]>(() => {
-    if (loadingAttention || attentionEvents.length === 0) return [];
+    if (loadingAttention || _attentionItems.length === 0) return [];
 
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const paymentCutoff = addDays(todayStart, 7);
+    const toItem = (a: AttentionItem): DashboardAttentionItem => ({
+      eventId: a.event_id,
+      eventDate: a.event_date,
+      serviceType: a.service_type,
+      clientName: a.client_name,
+      detail: a.pending_balance > PAYMENT_COMPLETION_EPSILON
+        ? t('dashboard:attention.pending_balance', { pending: fmt(a.pending_balance), total: fmt(a.total_amount) })
+        : t('dashboard:attention.past_quoted'),
+      pendingAmount: a.pending_balance,
+    });
 
-    const confirmedWithPendingPayment = attentionEvents
-      .filter((event) => {
-        const eventDate = parseDashboardEventDate(event.event_date);
-        if (event.status !== "confirmed" || eventDate < todayStart || eventDate > paymentCutoff) return false;
-
-        const totalCharged = getEventTotalCharged(event);
-        const totalPaid = attentionPaidByEvent[event.id] || 0;
-        return totalCharged - totalPaid > PAYMENT_COMPLETION_EPSILON;
-      })
-      .sort((a, b) => parseDashboardEventDate(a.event_date).getTime() - parseDashboardEventDate(b.event_date).getTime())
-      .map((event) => {
-        const totalCharged = getEventTotalCharged(event);
-        const totalPaid = attentionPaidByEvent[event.id] || 0;
-        const pendingAmount = Math.max(totalCharged - totalPaid, 0);
-
-        return {
-          event,
-          detail: t('dashboard:attention.pending_balance', { pending: fmt(pendingAmount), total: fmt(totalCharged) }),
-          pendingAmount,
-        };
-      });
-
-    const pastActiveEvents = attentionEvents
-      .filter((event) => {
-        const eventDate = parseDashboardEventDate(event.event_date);
-        return eventDate < todayStart && (event.status === "quoted" || event.status === "confirmed");
-      })
-      .sort((a, b) => parseDashboardEventDate(a.event_date).getTime() - parseDashboardEventDate(b.event_date).getTime())
-      .map((event) => {
-        const totalCharged = getEventTotalCharged(event);
-        const totalPaid = attentionPaidByEvent[event.id] || 0;
-        const pendingAmount = Math.max(totalCharged - totalPaid, 0);
-        const baseDetail = event.status === "confirmed" ? t('dashboard:attention.past_confirmed') : t('dashboard:attention.past_quoted');
-        const detail = pendingAmount > PAYMENT_COMPLETION_EPSILON ? `${baseDetail} · ${t('common:status.pending').toLowerCase()} ${fmt(pendingAmount)}` : baseDetail;
-
-        return { event, detail, pendingAmount };
-      });
+    const paymentDue = _attentionItems
+      .filter((a) => a.reason === "payment_due")
+      .map(toItem);
+    const overdue = _attentionItems
+      .filter((a) => a.reason === "overdue_event")
+      .map(toItem);
+    const quoteUrgent = _attentionItems
+      .filter((a) => a.reason === "quote_urgent")
+      .map(toItem);
 
     const alerts: DashboardAttentionAlert[] = [];
-    if (confirmedWithPendingPayment.length > 0) {
+    if (paymentDue.length > 0) {
       alerts.push({
         key: "confirmed-payment",
         title: t('dashboard:attention.confirmed_payment_title'),
         description: t('dashboard:attention.confirmed_payment_desc'),
         tone: "warning",
-        items: confirmedWithPendingPayment,
+        items: paymentDue,
       });
     }
-    if (pastActiveEvents.length > 0) {
+    if (overdue.length > 0) {
       alerts.push({
         key: "past-active",
         title: t('dashboard:attention.past_active_title'),
         description: t('dashboard:attention.past_active_desc'),
         tone: "error",
-        items: pastActiveEvents,
+        items: overdue,
+      });
+    }
+    if (quoteUrgent.length > 0) {
+      alerts.push({
+        key: "quote-urgent",
+        title: t('dashboard:attention.quote_urgent_title'),
+        description: t('dashboard:attention.quote_urgent_desc'),
+        tone: "warning",
+        items: quoteUrgent,
       });
     }
     return alerts;
-  }, [loadingAttention, attentionEvents, attentionPaidByEvent, t, fmt]);
+  }, [loadingAttention, _attentionItems, t, fmt]);
 
   return (
     <div className="space-y-8 pb-12">
@@ -1051,9 +1021,9 @@ export const Dashboard: React.FC = () => {
             <div className="bg-surface-alt rounded-xl p-4 border border-border">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-text-secondary uppercase tracking-widest">{t('common:nav.events')}</span>
-                <span className="text-xs font-bold text-primary">{format(parseDashboardEventDate(paymentModal.event.event_date), "d MMM", { locale: i18n.language === 'en' ? enUS : es })}</span>
+                <span className="text-xs font-bold text-primary">{format(parseDashboardEventDate(paymentModal.eventDate), "d MMM", { locale: i18n.language === 'en' ? enUS : es })}</span>
               </div>
-              <p className="text-base font-bold text-text">{paymentModal.event.client?.name ?? t('dashboard:event.no_client')}</p>
+              <p className="text-base font-bold text-text">{paymentModal.clientName || t('dashboard:event.no_client')}</p>
               <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
                 <span className="text-sm text-text-secondary">{t('dashboard:attention.pending_balance_label')}</span>
                 <span className="text-lg font-black text-error">{fmt(paymentModal.pendingAmount)}</span>
@@ -1065,7 +1035,7 @@ export const Dashboard: React.FC = () => {
               onCancel={() => setPaymentModal(null)}
               initialAmount={paymentModal.pendingAmount}
               submitLabel={paymentModal.shouldAutoComplete ? t('common:payment.complete') : t('dashboard:attention.register_payment')}
-              isSubmitting={updatingEventId === paymentModal.event.id}
+              isSubmitting={updatingEventId === paymentModal.eventId}
             />
           </div>
         </Modal>

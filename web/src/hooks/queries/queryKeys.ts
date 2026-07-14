@@ -92,5 +92,6 @@ export const queryKeys = {
     topClients: (limit: number) => ['dashboard', 'topClients', limit] as const,
     productDemand: ['dashboard', 'productDemand'] as const,
     forecast: ['dashboard', 'forecast'] as const,
+    attention: ['dashboard', 'attention'] as const,
   },
 } as const;
