@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import i18n from '@/i18n/config';
 import { queryClient } from '@/lib/queryClient';
 import { setDefaultCurrency, setDefaultLocale, localeFromLanguage } from '@/lib/finance';
+import { clearUserScopedStorage } from '@/lib/storage';
 
 // eslint-disable-next-line react-refresh/only-export-components
 export { AuthContext, useAuth };
@@ -55,6 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const handleLogout = () => {
       setUser(null);
       queryClient.clear();
+      clearUserScopedStorage();
     };
     
     window.addEventListener('auth:logout', handleLogout);
@@ -84,6 +86,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setUser(null);
       queryClient.clear();
+      // Clear session-scoped localStorage (onboarding tips, local checklist
+      // drafts, Supabase tokens) so shared machines don't leak the previous
+      // user's context (#874). Device prefs and per-user dismissals survive.
+      clearUserScopedStorage();
       window.location.href = '/login';
     }
   };

@@ -32,6 +32,17 @@ const localStorageMock = {
   clear: vi.fn(() => {
     localStorageStore.clear();
   }),
+  // Spec API: enables iteration via `for (i=0; i<localStorage.length; i++)
+  // localStorage.key(i)`. Required by clearUserScopedStorage (#874) and any
+  // code that enumerates storage keys via the Storage interface rather than
+  // Object.keys.
+  get length() {
+    return localStorageStore.size;
+  },
+  key: vi.fn((index: number) => {
+    const keys = Array.from(localStorageStore.keys());
+    return index >= 0 && index < keys.length ? keys[index] : null;
+  }),
 };
 
 beforeAll(() => {
