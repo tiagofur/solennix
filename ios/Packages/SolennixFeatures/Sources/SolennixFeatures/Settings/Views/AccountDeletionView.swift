@@ -8,6 +8,7 @@ import SolennixNetwork
 public struct AccountDeletionView: View {
 
     @State private var viewModel: SettingsViewModel
+    @State private var scoped: ViewScopedTask?
     @Environment(\.dismiss) private var dismiss
     @Environment(ToastManager.self) private var toastManager
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -51,6 +52,7 @@ public struct AccountDeletionView: View {
                 successOverlay
             }
         }
+        .viewScopedTask(scoped: $scoped)
     }
 
     // MARK: - Header
@@ -184,7 +186,7 @@ public struct AccountDeletionView: View {
     private var deleteButton: some View {
         Button {
             HapticsHelper.play(.warning)
-            Task { await viewModel.deleteOwnAccount() }
+            scoped?.start { await viewModel.deleteOwnAccount() }
         } label: {
             HStack {
                 if viewModel.isDeletingOwnAccount {

@@ -215,3 +215,76 @@ private struct SolennixShadowModifier: ViewModifier {
         }
     }
 }
+
+// MARK: - View-Scoped Task Cancellation (issue #817)
+
+/// Tracks the last fire-and-forget `Task` started from a button/action and
+/// cancels it when the view disappears, preventing stale mutations and orphan
+/// toasts on a screen the user already left.
+///
+/// Use the ``View/viewScopedTask(scoped:)`` view modifier to wire cancellation.
+/// Call `start { await ... }` from any button/confirm action instead of writing
+/// `Task { await ... }` directly.
+///
+/// ```swift
+/// @State private var scoped: ViewScopedTask?
+///
+/// var body: some View {
+///     Form { ... }
+///         .viewScopedTask(scoped: $scoped)
+///         .toolbar {
+///             ToolbarItem {
+///                 Button("Save") {
+///                     scoped?.start {
+///                         if await viewModel.save() { dismiss() }
+///                     }
+///                 }
+///             }
+///         }
+/// }
+/// ```
+@MainActor
+public final class ViewScopedTask {
+    fileprivate var current: Task<Void, Never>?
+
+    /// Starts `operation`, cancelling any previously running scoped task first.
+    /// The task is also cancelled automatically when the view disappears.
+    public func start(_ operation: @escaping @Sendable () async -> Void) {
+        current?.cancel()
+        current = Task(operation: operation)
+    }
+
+    fileprivate func cancel() {
+        current?.cancel()
+        current = nil
+    }
+}
+
+/// ViewModifier backing ``View/viewScopedTask(scoped:)``. Holds the
+/// `ViewScopedTask` in `@State` and cancels it on disappear.
+struct ViewScopedTaskModifier: ViewModifier {
+    @Binding var scoped: ViewScopedTask?
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear {
+                if scoped == nil { scoped = ViewScopedTask() }
+            }
+            .onDisappear {
+                scoped?.cancel()
+            }
+    }
+}
+
+public extension View {
+    /// Wires view-lifetime cancellation for fire-and-forget tasks started from
+    /// buttons or confirm actions (issue #817).
+    ///
+    /// Assign to a `@State private var scoped: ViewScopedTask?` and call
+    /// `scoped?.start { await ... }` instead of `Task { await ... }`. The task
+    /// is cancelled when the view disappears.
+    func viewScopedTask(scoped: Binding<ViewScopedTask?>) -> some View {
+        modifier(ViewScopedTaskModifier(scoped: scoped))
+    }
+}
+

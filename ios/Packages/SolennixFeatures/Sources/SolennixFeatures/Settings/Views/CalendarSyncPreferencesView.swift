@@ -28,6 +28,7 @@ import SolennixNetwork
 public struct CalendarSyncPreferencesView: View {
 
     @State private var viewModel: CalendarSyncPreferencesViewModel
+    @State private var scoped: ViewScopedTask?
 
     // MARK: - Init (production — mirrors NotificationPreferencesView)
 
@@ -56,6 +57,7 @@ public struct CalendarSyncPreferencesView: View {
             .navigationTitle(tr("settings.calendar_sync.title", "Sincronizar con el calendario"))
             .navigationBarTitleDisplayMode(.inline)
             .solennixListStyle()
+            .viewScopedTask(scoped: $scoped)
     }
 
     // MARK: - Content
@@ -164,7 +166,7 @@ public struct CalendarSyncPreferencesView: View {
         Toggle(isOn: Binding(
             get: { viewModel[keyPath: keyPath] },
             set: { _ in
-                Task { await viewModel.togglePreference(keyPath, id: id) }
+                scoped?.start { await viewModel.togglePreference(keyPath, id: id) }
             }
         )) {
             Label {
@@ -191,7 +193,7 @@ public struct CalendarSyncPreferencesView: View {
         Binding(
             get: { viewModel.destination },
             set: { newValue in
-                Task { await viewModel.setDestination(newValue) }
+                scoped?.start { await viewModel.setDestination(newValue) }
             }
         )
     }

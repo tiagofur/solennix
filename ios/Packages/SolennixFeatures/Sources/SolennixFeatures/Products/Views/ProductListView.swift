@@ -12,6 +12,7 @@ public struct ProductListView: View {
     @Environment(CacheManager.self) private var cacheManager: CacheManager?
     @Environment(ToastManager.self) private var toastManager
     @State private var viewModel: ProductListViewModel
+    @State private var scoped: ViewScopedTask?
     @Environment(PlanLimitsManager.self) private var planLimitsManager
 
     public init(apiClient: APIClient) {
@@ -104,7 +105,7 @@ public struct ProductListView: View {
                             HapticsHelper.play(.success)
                         },
                         onExpire: {
-                            Task {
+                            scoped?.start {
                                 await viewModel.confirmDeleteProduct(removed.product)
                                 if let message = viewModel.errorMessage {
                                     toastManager.show(message: message, type: .error)
@@ -122,6 +123,7 @@ public struct ProductListView: View {
                 await viewModel.loadProducts()
                 await planLimitsManager.checkLimits()
             }
+            .viewScopedTask(scoped: $scoped)
     }
 
     // MARK: - Content
@@ -257,7 +259,7 @@ public struct ProductListView: View {
                 Text(error)
             } actions: {
                 Button(ProductStrings.retry) {
-                    Task { await viewModel.loadProducts() }
+                    scoped?.start { await viewModel.loadProducts() }
                 }
             }
         } else if viewModel.isLoading && viewModel.products.isEmpty {

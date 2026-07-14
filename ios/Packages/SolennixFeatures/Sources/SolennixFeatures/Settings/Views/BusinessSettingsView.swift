@@ -9,6 +9,7 @@ import SolennixNetwork
 public struct BusinessSettingsView: View {
 
     @State private var viewModel: BusinessSettingsViewModel
+    @State private var scoped: ViewScopedTask?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var sizeClass
 
@@ -66,7 +67,7 @@ public struct BusinessSettingsView: View {
                 SolennixSaveButton(
                     title: tr("common.save", "Guardar"),
                     action: {
-                        Task {
+                        scoped?.start {
                             let success = await viewModel.saveBusinessSettings()
                             if success {
                                 dismiss()
@@ -80,7 +81,7 @@ public struct BusinessSettingsView: View {
         }
         .onChange(of: viewModel.selectedPhoto) { _, newValue in
             if newValue != nil {
-                Task { await viewModel.handleLogoSelection() }
+                scoped?.start { await viewModel.handleLogoSelection() }
             }
         }
         .sheet(isPresented: $showPricingSheet) {
@@ -92,6 +93,7 @@ public struct BusinessSettingsView: View {
             initialShowInPdf = viewModel.showBusinessNameInPdf
             initialBrandColor = viewModel.brandColor
         }
+        .viewScopedTask(scoped: $scoped)
     }
 
     // MARK: - Form Content

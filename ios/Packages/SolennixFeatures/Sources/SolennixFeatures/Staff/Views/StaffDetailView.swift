@@ -17,6 +17,7 @@ public struct StaffDetailView: View {
     let staffId: String
 
     @State private var staff: Staff?
+    @State private var scoped: ViewScopedTask?
     @State private var isLoading: Bool = true
     @State private var errorMessage: String?
     @State private var showDeleteConfirm: Bool = false
@@ -87,7 +88,7 @@ public struct StaffDetailView: View {
             isPresented: $showDeleteConfirm
         ) {
             Button(StaffStrings.deleteAction, role: .destructive) {
-                Task {
+                scoped?.start {
                     do {
                         try await apiClient.delete(Endpoint.staff(staffId))
                         dismiss()
@@ -105,13 +106,14 @@ public struct StaffDetailView: View {
             isPresented: $showRevokeConfirm
         ) {
             Button(StaffStrings.revokeInvite, role: .destructive) {
-                Task { await revokeInviteAccess() }
+                scoped?.start { await revokeInviteAccess() }
             }
             Button(StaffStrings.cancel, role: .cancel) {}
         } message: {
             Text(StaffStrings.revokeConfirmMessage)
         }
         .task { await loadData() }
+        .viewScopedTask(scoped: $scoped)
     }
 
     // MARK: - Scroll Content
@@ -404,7 +406,7 @@ public struct StaffDetailView: View {
             return
         }
 
-        Task {
+        scoped?.start {
             isInviting = true
             inviteFeedback = nil
             inviteFeedbackIsError = false

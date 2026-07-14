@@ -11,6 +11,7 @@ public struct ClientFormView: View {
     let clientId: String?
 
     @State private var viewModel: ClientFormViewModel
+    @State private var scoped: ViewScopedTask?
     @State private var selectedItem: PhotosPickerItem?
     @State private var showDiscardDialog: Bool = false
     @Environment(\.dismiss) private var dismiss
@@ -51,7 +52,7 @@ public struct ClientFormView: View {
                 SolennixSaveButton(
                     title: tr("clients.action.save", "Guardar"),
                     action: {
-                        Task {
+                        scoped?.start {
                             if let _ = await viewModel.validateAndSave() {
                                 dismiss()
                             }
@@ -110,8 +111,9 @@ public struct ClientFormView: View {
                 await viewModel.loadClient(id: id)
             }
         }
+        .viewScopedTask(scoped: $scoped)
         .onChange(of: selectedItem) { _, newItem in
-            Task {
+            scoped?.start {
                 if let data = try? await newItem?.loadTransferable(type: Data.self) {
                     viewModel.selectedPhotoData = data
                 }

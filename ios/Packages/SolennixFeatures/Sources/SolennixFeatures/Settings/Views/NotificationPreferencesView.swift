@@ -8,6 +8,7 @@ import SolennixNetwork
 public struct NotificationPreferencesView: View {
 
     @State private var viewModel: NotificationPreferencesViewModel
+    @State private var scoped: ViewScopedTask?
 
     public init(apiClient: APIClient, authManager: AuthManager) {
         _viewModel = State(initialValue: NotificationPreferencesViewModel(apiClient: apiClient, authManager: authManager))
@@ -23,6 +24,7 @@ public struct NotificationPreferencesView: View {
             .navigationBarTitleDisplayMode(.inline)
             .solennixListStyle()
             .task { await viewModel.loadPreferences() }
+            .viewScopedTask(scoped: $scoped)
     }
 
     // MARK: - Content
@@ -141,7 +143,7 @@ public struct NotificationPreferencesView: View {
         Toggle(isOn: Binding(
             get: { viewModel[keyPath: keyPath] },
             set: { _ in
-                Task { await viewModel.togglePreference(keyPath, id: id) }
+                scoped?.start { await viewModel.togglePreference(keyPath, id: id) }
             }
         )) {
             Label {

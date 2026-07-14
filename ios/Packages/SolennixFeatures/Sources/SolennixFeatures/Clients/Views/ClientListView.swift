@@ -11,6 +11,7 @@ public struct ClientListView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var viewModel: ClientListViewModel
+    @State private var scoped: ViewScopedTask?
     @Environment(\.openURL) private var openURL
     @Environment(PlanLimitsManager.self) private var planLimitsManager
     @Environment(\.apiClient) private var apiClient
@@ -85,7 +86,7 @@ public struct ClientListView: View {
                             HapticsHelper.play(.success)
                         },
                         onExpire: {
-                            Task {
+                            scoped?.start {
                                 await viewModel.confirmDeleteClient(removed.client)
                                 if let message = viewModel.errorMessage {
                                     toastManager.show(message: message, type: .error)
@@ -103,6 +104,7 @@ public struct ClientListView: View {
                 await viewModel.loadClients()
                 await planLimitsManager.checkLimits()
             }
+            .viewScopedTask(scoped: $scoped)
     }
 
     // MARK: - Main List (single scroll container, always present)
@@ -127,7 +129,7 @@ public struct ClientListView: View {
                 Text(error)
             } actions: {
                 Button(tr("clients.action.retry", "Reintentar")) {
-                    Task { await viewModel.loadClients() }
+                    scoped?.start { await viewModel.loadClients() }
                 }
             }
             .background(SolennixColors.surfaceGrouped)
@@ -263,7 +265,7 @@ public struct ClientListView: View {
                 Text(error)
             } actions: {
                 Button(tr("clients.action.retry", "Reintentar")) {
-                    Task { await viewModel.loadClients() }
+                    scoped?.start { await viewModel.loadClients() }
                 }
             }
         } else if viewModel.isLoading && viewModel.clients.isEmpty {

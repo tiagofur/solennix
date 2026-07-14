@@ -12,6 +12,7 @@ private func tr(_ key: String, _ value: String) -> String {
 public struct ChangePasswordView: View {
 
     @State private var viewModel: SettingsViewModel
+    @State private var scoped: ViewScopedTask?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var sizeClass
 
@@ -109,7 +110,7 @@ public struct ChangePasswordView: View {
                 SolennixSaveButton(
                     title: SettingsStrings.commonSave,
                     action: {
-                        Task {
+                        scoped?.start {
                             let success = await viewModel.changePassword()
                             if success {
                                 // Optionally dismiss after a short delay to show success
@@ -125,6 +126,7 @@ public struct ChangePasswordView: View {
                 )
             }
         }
+        .viewScopedTask(scoped: $scoped)
     }
 
 }

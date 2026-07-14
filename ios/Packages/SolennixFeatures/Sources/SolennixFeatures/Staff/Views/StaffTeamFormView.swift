@@ -10,6 +10,7 @@ public struct StaffTeamFormView: View {
     let teamId: String?
 
     @State private var viewModel: StaffTeamFormViewModel
+    @State private var scoped: ViewScopedTask?
     @State private var showMemberPicker: Bool = false
     @State private var leadToggleCounter: Int = 0
     @State private var showDiscardDialog: Bool = false
@@ -46,7 +47,7 @@ public struct StaffTeamFormView: View {
                 SolennixSaveButton(
                     title: StaffStrings.save,
                     action: {
-                        Task {
+                        scoped?.start {
                             if await viewModel.save() != nil {
                                 dismiss()
                             }
@@ -95,6 +96,7 @@ public struct StaffTeamFormView: View {
                 await viewModel.loadTeam(id: id)
             }
         }
+        .viewScopedTask(scoped: $scoped)
     }
 
     // MARK: - Info

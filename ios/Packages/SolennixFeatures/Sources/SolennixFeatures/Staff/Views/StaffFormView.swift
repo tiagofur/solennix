@@ -10,6 +10,7 @@ public struct StaffFormView: View {
     let staffId: String?
 
     @State private var viewModel: StaffFormViewModel
+    @State private var scoped: ViewScopedTask?
     @State private var showDiscardDialog: Bool = false
     @Environment(\.dismiss) private var dismiss
 
@@ -45,7 +46,7 @@ public struct StaffFormView: View {
                 SolennixSaveButton(
                     title: StaffStrings.save,
                     action: {
-                        Task {
+                        scoped?.start {
                             if let _ = await viewModel.validateAndSave() {
                                 dismiss()
                             }
@@ -89,6 +90,7 @@ public struct StaffFormView: View {
                 await viewModel.loadStaff(id: id)
             }
         }
+        .viewScopedTask(scoped: $scoped)
     }
 
     // MARK: - Info Section

@@ -8,6 +8,7 @@ import SolennixNetwork
 public struct InventoryFormView: View {
 
     @State private var viewModel: InventoryFormViewModel
+    @State private var scoped: ViewScopedTask?
     @State private var showDiscardDialog: Bool = false
     @Environment(\.dismiss) private var dismiss
 
@@ -40,7 +41,7 @@ public struct InventoryFormView: View {
                 SolennixSaveButton(
                     title: InventoryStrings.save,
                     action: {
-                        Task {
+                        scoped?.start {
                             let success = await viewModel.save()
                             if success {
                                 dismiss()
@@ -74,6 +75,7 @@ public struct InventoryFormView: View {
             Text(viewModel.errorMessage ?? "")
         }
         .task { await viewModel.loadData() }
+        .viewScopedTask(scoped: $scoped)
     }
 
     // MARK: - Form Content (native Apple Form — no custom chrome)

@@ -11,6 +11,7 @@ public struct ClientDetailView: View {
     let clientId: String
 
     @State private var client: Client?
+    @State private var scoped: ViewScopedTask?
     @State private var events: [Event] = []
     @State private var isLoading: Bool = true
     @State private var errorMessage: String?
@@ -92,7 +93,7 @@ public struct ClientDetailView: View {
             isPresented: $showDeleteConfirm
         ) {
             Button(tr("clients.delete.confirm", "Eliminar"), role: .destructive) {
-                Task {
+                scoped?.start {
                     do {
                         try await apiClient.delete(Endpoint.client(clientId))
                         dismiss()
@@ -118,6 +119,7 @@ public struct ClientDetailView: View {
             Text(errorMessage ?? "")
         }
         .task { await loadData() }
+        .viewScopedTask(scoped: $scoped)
     }
 
     // MARK: - Hub List
