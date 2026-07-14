@@ -864,6 +864,7 @@ private struct TeamPortalCalendarDayCell: View {
                         Circle()
                             .fill(dotColor(for: status))
                             .frame(width: 5, height: 5)
+                            .accessibilityHidden(true)
                     }
                 }
                 .frame(height: 6)
@@ -873,6 +874,32 @@ private struct TeamPortalCalendarDayCell: View {
         }
         .buttonStyle(.plain)
         .opacity(day.isCurrentMonth ? 1 : 0.35)
+        // VoiceOver: status dots are color-only (PRODUCT.md forbids color as
+        // sole indicator). Announce the day number + selection state + the
+        // assignment status names instead of unlabeled dots.
+        .accessibilityLabel(accessibilityLabel)
+        .accessibilityValue(accessibilityValue)
+    }
+
+    private var accessibilityLabel: String {
+        var parts = [tr("team_portal.day_a11y", "Día \(day.dayNumber)")]
+        if day.isToday { parts.append(tr("calendar.today", "Hoy")) }
+        if day.isSelected { parts.append(tr("team_portal.selected_a11y", "Seleccionado")) }
+        return parts.joined(separator: ", ")
+    }
+
+    private var accessibilityValue: String {
+        guard !dots.isEmpty else { return "" }
+        return dots.map(statusName).joined(separator: ", ")
+    }
+
+    private func statusName(_ status: AssignmentStatus) -> String {
+        switch status {
+        case .pending: return tr("team_portal.pending", "Pendiente")
+        case .confirmed: return tr("team_portal.confirmed", "Confirmada")
+        case .declined: return tr("team_portal.declined", "Rechazada")
+        case .cancelled: return tr("team_portal.cancelled", "Cancelada")
+        }
     }
 
     private var dayNumberColor: Color {
@@ -962,6 +989,9 @@ private struct TeamMemberAssignmentCard: View {
                     .foregroundStyle(statusForeground)
                     .clipShape(Capsule())
             }
+            // VoiceOver: merge event name + date + status badge into one
+            // utterance ("Boda García, 2026-07-20, Pendiente").
+            .accessibilityElement(children: .combine)
 
             if let roleOverride = assignment.roleOverride {
                 Text(FeatureL10n.format("team_portal.role_fmt", "Rol: %@", roleOverride))
@@ -1042,6 +1072,7 @@ private struct TeamPortalTimelineRow: View {
                 RoundedRectangle(cornerRadius: 2)
                     .fill(SolennixColors.primary)
                     .frame(width: 3, height: 32)
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(assignment.eventName)
@@ -1061,6 +1092,8 @@ private struct TeamPortalTimelineRow: View {
             .padding(Spacing.sm)
             .background(SolennixColors.surfaceGrouped)
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+            // VoiceOver: merge event name + time into one utterance.
+            .accessibilityElement(children: .combine)
         }
         .buttonStyle(.plain)
     }
