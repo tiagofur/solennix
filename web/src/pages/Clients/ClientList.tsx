@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Client } from "@/types/entities";
@@ -33,7 +33,6 @@ import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Input } from "@/components/Input";
 import {
-  useClients,
   useClientsPaginated,
   useDeleteClient,
 } from "@/hooks/queries/useClientQueries";
@@ -44,11 +43,10 @@ const ITEMS_PER_PAGE = 8;
 export const ClientList: React.FC = () => {
   const { t, i18n } = useTranslation(["clients", "common"]);
   const deleteClient = useDeleteClient();
-  const [searchTerm, setSearchTerm] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [sortKey, setSortKey] = useState<keyof Client | "">("name");
+  const [sortKey, setSortKey] = useState<keyof Client | "">( "name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const navigate = useNavigate();
   // Master-detail split pane (#879): at xl+, selecting a row opens detail in
@@ -82,90 +80,49 @@ export const ClientList: React.FC = () => {
 
   // Context-menu state (#883): row right-click opens positioned menu.
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; clientId: string } | null>(null);
-
   const closeCtxMenu = useCallback(() => setCtxMenu(null), []);
 
-  const isSearching = searchTerm.trim().length > 0;
+  // Debounce search input 300ms before firing a new query
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [searchTerm]);
 
-  // Server-side paginated query (used when NOT searching)
+
+  // Single server-side query — passes search when set, otherwise plain pagination
   const paginatedQuery = useClientsPaginated({
     page,
     limit: ITEMS_PER_PAGE,
     sort: sortKey || undefined,
     order: sortOrder,
+    search: debouncedSearch || undefined,
   });
 
-  // Full client list query (used only when searching, for client-side filtering)
-  const allClientsQuery = useClients();
+  const loading = paginatedQuery.isLoading;
 
-  // Pick the correct loading state
-  const loading = isSearching ? allClientsQuery.isLoading : paginatedQuery.isLoading;
+  // Paginated clients from server (already filtered + paginated)
+  const paginatedClients = paginatedQuery.data?.data ?? [];
 
-  // All clients for CSV export and search filtering
-  const allClients = useMemo(() => allClientsQuery.data ?? [], [allClientsQuery.data]);
-
-  // Client-side filtered results (only used when searching)
-  const filteredClients = useMemo(() => {
-    if (!isSearching) return [];
-    const term = searchTerm.toLowerCase();
-    return allClients.filter(
-      (client) =>
-        client.name.toLowerCase().includes(term) ||
-        (client.email && client.email.toLowerCase().includes(term)) ||
-        client.phone.includes(searchTerm),
-    );
-  }, [allClients, searchTerm, isSearching]);
-
-  // Client-side sorting for search results
-  const sortedFilteredClients = useMemo(() => {
-    if (!isSearching || !sortKey) return filteredClients;
-    return [...filteredClients].sort((a, b) => {
-      const aVal = a[sortKey];
-      const bVal = b[sortKey];
-      if (aVal === bVal) return 0;
-      const isAsc = sortOrder === "asc";
-      if (typeof aVal === "string" && typeof bVal === "string") {
-        return isAsc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-      }
-      if ((aVal ?? 0) > (bVal ?? 0)) return isAsc ? 1 : -1;
-      if ((aVal ?? 0) < (bVal ?? 0)) return isAsc ? -1 : 1;
-      return 0;
-    });
-  }, [filteredClients, sortKey, sortOrder, isSearching]);
-
-  // Client-side pagination for search results
-  const searchPage = Math.min(page, Math.max(1, Math.ceil(sortedFilteredClients.length / ITEMS_PER_PAGE)));
-  const searchPaginatedClients = useMemo(() => {
-    const start = (searchPage - 1) * ITEMS_PER_PAGE;
-    return sortedFilteredClients.slice(start, start + ITEMS_PER_PAGE);
-  }, [sortedFilteredClients, searchPage]);
-
-  // Unified data for the table
-  const paginatedClients = isSearching
-    ? searchPaginatedClients
-    : (paginatedQuery.data?.data ?? []);
 
   // Multi-select for bulk actions (#885) — desktop only column.
   const selection = useRowSelection(paginatedClients.map((c) => c.id));
 
-  const currentPage = isSearching
-    ? searchPage
-    : (paginatedQuery.data?.page ?? page);
+  const currentPage = paginatedQuery.data?.page ?? page;
+  const totalPages = paginatedQuery.data?.total_pages ?? 1;
+  const totalItems = paginatedQuery.data?.total ?? 0;
 
-  const totalPages = isSearching
-    ? Math.max(1, Math.ceil(sortedFilteredClients.length / ITEMS_PER_PAGE))
-    : (paginatedQuery.data?.total_pages ?? 1);
+  // For the empty state and CSV export
+  const hasAnyClients = (paginatedQuery.data?.total ?? 0) > 0 || paginatedClients.length > 0;
 
-  const totalItems = isSearching
-    ? sortedFilteredClients.length
-    : (paginatedQuery.data?.total ?? 0);
+  // For bulk CSV export — use the current page data only (server-side)
+  const allClients = paginatedClients;
 
-  // For the empty state and CSV export, we need to know if there are any clients at all
-  const hasAnyClients = useMemo(() => {
-    return isSearching
-      ? allClients.length > 0
-      : (paginatedQuery.data?.total ?? 0) > 0 || paginatedClients.length > 0;
-  }, [isSearching, allClients.length, paginatedQuery.data?.total, paginatedClients.length]);
 
   const requestDelete = (id: string) => {
     setPendingDeleteId(id);

@@ -19,11 +19,12 @@ export function useClients() {
 
 export function useClientsPaginated(params: PaginationParams) {
   return useQuery({
-    queryKey: queryKeys.clients.paginated(params.page, params.limit, params.sort, params.order),
+    queryKey: queryKeys.clients.paginated(params.page, params.limit, params.sort, params.order, params.search),
     queryFn: () => clientService.getPage(params),
     placeholderData: keepPreviousData,
   });
 }
+
 
 export function useClient(id: string | undefined) {
   return useQuery({

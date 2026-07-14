@@ -359,13 +359,14 @@ func (m *MockClientRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models
 	return args.Get(0).([]models.Client), args.Error(1)
 }
 
-func (m *MockClientRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Client, int, error) {
-	args := m.Called(ctx, userID, offset, limit, sortCol, order)
+func (m *MockClientRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order, search string) ([]models.Client, int, error) {
+	args := m.Called(ctx, userID, offset, limit, sortCol, order, search)
 	if args.Get(0) == nil {
 		return nil, args.Int(1), args.Error(2)
 	}
 	return args.Get(0).([]models.Client), args.Int(1), args.Error(2)
 }
+
 
 func (m *MockClientRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Client, error) {
 	args := m.Called(ctx, id, userID)

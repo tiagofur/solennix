@@ -5,9 +5,11 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tiagofur/solennix-backend/internal/models"
 )
+
 
 type ClientRepo struct {
 	pool *pgxpool.Pool
@@ -51,20 +53,43 @@ func (r *ClientRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Cli
 
 var clientAllowedSortCols = []string{"name", "created_at", "total_events", "total_spent"}
 
-func (r *ClientRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Client, int, error) {
+func (r *ClientRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order, search string) ([]models.Client, int, error) {
 	sortCol = safeSortColumn(sortCol, clientAllowedSortCols, "name")
 	order = safeSortOrder(order)
 
 	var total int
-	countQuery := `SELECT COUNT(*) FROM clients WHERE user_id = $1`
-	if err := r.pool.QueryRow(ctx, countQuery, userID).Scan(&total); err != nil {
-		return nil, 0, fmt.Errorf("count clients: %w", err)
+	if search != "" {
+		like := "%" + search + "%"
+		countQuery := `SELECT COUNT(*) FROM clients
+			WHERE user_id = $1
+			AND (name ILIKE $2 OR email ILIKE $2 OR phone ILIKE $2 OR city ILIKE $2)`
+		if err := r.pool.QueryRow(ctx, countQuery, userID, like).Scan(&total); err != nil {
+			return nil, 0, fmt.Errorf("count clients (search): %w", err)
+		}
+	} else {
+		countQuery := `SELECT COUNT(*) FROM clients WHERE user_id = $1`
+		if err := r.pool.QueryRow(ctx, countQuery, userID).Scan(&total); err != nil {
+			return nil, 0, fmt.Errorf("count clients: %w", err)
+		}
 	}
 
-	query := fmt.Sprintf(`SELECT id, user_id, name, phone, email, address, city, notes, photo_url,
-		total_events, total_spent, created_at, updated_at
-		FROM clients WHERE user_id = $1 ORDER BY %s %s LIMIT $2 OFFSET $3`, sortCol, order)
-	rows, err := r.pool.Query(ctx, query, userID, limit, offset)
+	var rows pgx.Rows
+	var err error
+	if search != "" {
+		like := "%" + search + "%"
+		query := fmt.Sprintf(`SELECT id, user_id, name, phone, email, address, city, notes, photo_url,
+			total_events, total_spent, created_at, updated_at
+			FROM clients
+			WHERE user_id = $1
+			AND (name ILIKE $2 OR email ILIKE $2 OR phone ILIKE $2 OR city ILIKE $2)
+			ORDER BY %s %s LIMIT $3 OFFSET $4`, sortCol, order)
+		rows, err = r.pool.Query(ctx, query, userID, like, limit, offset)
+	} else {
+		query := fmt.Sprintf(`SELECT id, user_id, name, phone, email, address, city, notes, photo_url,
+			total_events, total_spent, created_at, updated_at
+			FROM clients WHERE user_id = $1 ORDER BY %s %s LIMIT $2 OFFSET $3`, sortCol, order)
+		rows, err = r.pool.Query(ctx, query, userID, limit, offset)
+	}
 	if err != nil {
 		return nil, 0, err
 	}
@@ -85,6 +110,7 @@ func (r *ClientRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offs
 	}
 	return clients, total, nil
 }
+
 
 func (r *ClientRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Client, error) {
 	c := &models.Client{}

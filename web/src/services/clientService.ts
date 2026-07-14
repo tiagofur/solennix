@@ -12,8 +12,10 @@ export const clientService = {
       limit: String(params.limit ?? 20),
       ...(params.sort && { sort: params.sort }),
       ...(params.order && { order: params.order }),
+      ...(params.search && { search: params.search }),
     });
   },
+
 
   async getById(id: string): Promise<Client> {
     return api.get<Client>(`/clients/${id}`);
