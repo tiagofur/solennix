@@ -1,9 +1,7 @@
 package com.creapolis.solennix.widget
 
 import android.content.Context
-import android.content.SharedPreferences
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
+import com.creapolis.solennix.core.data.security.SecurePrefsProvider
 import com.creapolis.solennix.core.model.WidgetKpiSnapshot
 import kotlinx.serialization.json.Json
 
@@ -22,7 +20,6 @@ import kotlinx.serialization.json.Json
  */
 object WidgetKpiStore {
 
-    private const val PREFS_NAME = "solennix_secure_prefs"
     private const val KEY_KPI_SNAPSHOT = "widget_kpi_snapshot"
 
     private val json = Json {
@@ -36,7 +33,7 @@ object WidgetKpiStore {
      */
     fun read(context: Context): WidgetKpiSnapshot? {
         return try {
-            val raw = getEncryptedPrefs(context).getString(KEY_KPI_SNAPSHOT, null)
+            val raw = SecurePrefsProvider.get(context).getString(KEY_KPI_SNAPSHOT, null)
             if (raw.isNullOrBlank()) null
             else json.decodeFromString(WidgetKpiSnapshot.serializer(), raw)
         } catch (_: Exception) {
@@ -51,7 +48,7 @@ object WidgetKpiStore {
     fun write(context: Context, snapshot: WidgetKpiSnapshot) {
         try {
             val raw = json.encodeToString(WidgetKpiSnapshot.serializer(), snapshot)
-            getEncryptedPrefs(context).edit().putString(KEY_KPI_SNAPSHOT, raw).apply()
+            SecurePrefsProvider.get(context).edit().putString(KEY_KPI_SNAPSHOT, raw).apply()
         } catch (_: Exception) {
             // Swallow: the widget will keep using the previous snapshot (or fall back).
         }
@@ -60,22 +57,9 @@ object WidgetKpiStore {
     /** Removes the snapshot — called on logout so the widget doesn't show stale KPIs. */
     fun clear(context: Context) {
         try {
-            getEncryptedPrefs(context).edit().remove(KEY_KPI_SNAPSHOT).apply()
+            SecurePrefsProvider.get(context).edit().remove(KEY_KPI_SNAPSHOT).apply()
         } catch (_: Exception) {
             // Swallow: best-effort cleanup.
         }
-    }
-
-    private fun getEncryptedPrefs(context: Context): SharedPreferences {
-        val masterKey = MasterKey.Builder(context)
-            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-            .build()
-        return EncryptedSharedPreferences.create(
-            context,
-            PREFS_NAME,
-            masterKey,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
     }
 }

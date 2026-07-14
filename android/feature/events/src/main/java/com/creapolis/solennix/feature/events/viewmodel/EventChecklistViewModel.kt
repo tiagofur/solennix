@@ -5,8 +5,7 @@ import android.content.SharedPreferences
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
+import com.creapolis.solennix.core.data.security.SecurePrefsProvider
 import com.creapolis.solennix.core.data.repository.EventRepository
 import com.creapolis.solennix.core.data.repository.ProductRepository
 import com.creapolis.solennix.core.model.SupplySource
@@ -75,16 +74,7 @@ class EventChecklistViewModel @Inject constructor(
     // ticked checklist items across the upgrade. Gated by an internal flag so
     // it only runs once per install.
     private val prefs: SharedPreferences = run {
-        val masterKey = MasterKey.Builder(context)
-            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-            .build()
-        val encrypted = EncryptedSharedPreferences.create(
-            context,
-            ENCRYPTED_PREFS_NAME,
-            masterKey,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
+        val encrypted = SecurePrefsProvider.get(context, SecurePrefsProvider.FILE_CHECKLIST)
         migrateLegacyChecklistPrefs(context, encrypted)
         encrypted
     }
@@ -267,7 +257,6 @@ class EventChecklistViewModel @Inject constructor(
 // ─────────────────────────────────────────────────────────────────────────
 
 private const val LEGACY_PREFS_NAME = "checklist_prefs"
-private const val ENCRYPTED_PREFS_NAME = "checklist_prefs_encrypted"
 private const val MIGRATION_FLAG_KEY = "__migrated_from_plaintext_v1__"
 
 private fun migrateLegacyChecklistPrefs(

@@ -29,6 +29,9 @@ object NetworkModule {
     fun provideEncryptedSharedPreferences(
         @ApplicationContext context: Context
     ): SharedPreferences {
+        // NOTE: This mirrors SecurePrefsProvider in :core:data (#854). It cannot
+        // delegate because :core:network cannot depend on :core:data (circular).
+        // The provider name/scheme must stay in sync manually.
         val masterKey = MasterKey.Builder(context)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()
