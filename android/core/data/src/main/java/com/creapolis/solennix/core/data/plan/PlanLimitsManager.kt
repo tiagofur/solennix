@@ -1,11 +1,14 @@
 package com.creapolis.solennix.core.data.plan
 
+import android.content.Context
 import com.creapolis.solennix.core.data.repository.ClientRepository
 import com.creapolis.solennix.core.data.repository.EventRepository
 import com.creapolis.solennix.core.data.repository.InventoryRepository
 import com.creapolis.solennix.core.data.repository.ProductRepository
+import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.model.Plan
 import com.creapolis.solennix.core.network.AuthManager
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -18,6 +21,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class PlanLimitsManager @Inject constructor(
+    @ApplicationContext private val appContext: Context,
     private val eventRepository: EventRepository,
     private val clientRepository: ClientRepository,
     private val productRepository: ProductRepository,
@@ -120,7 +124,9 @@ class PlanLimitsManager @Inject constructor(
                 feature = "events",
                 current = eventsThisMonth,
                 limit = limits.eventsPerMonth,
-                message = "Has alcanzado el límite de ${limits.eventsPerMonth} eventos este mes."
+                message = appContext.getString(
+                    DesignSystemR.string.plan_limit_events_reached, limits.eventsPerMonth
+                )
             )
         } else if (eventsThisMonth >= limits.eventsPerMonth - 1) {
             LimitCheckResult.NearLimit(
@@ -143,7 +149,9 @@ class PlanLimitsManager @Inject constructor(
                 feature = "clients",
                 current = usage.totalClients,
                 limit = limits.totalClients,
-                message = "Has alcanzado el límite de ${limits.totalClients} clientes."
+                message = appContext.getString(
+                    DesignSystemR.string.plan_limit_clients_reached, limits.totalClients
+                )
             )
         } else if (usage.totalClients >= limits.totalClients - 5) {
             LimitCheckResult.NearLimit(
@@ -169,14 +177,18 @@ class PlanLimitsManager @Inject constructor(
                 feature = "products",
                 current = usage.totalProducts,
                 limit = limits.totalProducts,
-                message = "Has alcanzado el límite de ${limits.totalProducts} productos."
+                message = appContext.getString(
+                    DesignSystemR.string.plan_limit_products_reached, limits.totalProducts
+                )
             )
         } else if (catalogTotal >= limits.totalCatalog) {
             LimitCheckResult.LimitReached(
                 feature = "catalog",
                 current = catalogTotal,
                 limit = limits.totalCatalog,
-                message = "Has alcanzado el límite de ${limits.totalCatalog} ítems en catálogo."
+                message = appContext.getString(
+                    DesignSystemR.string.plan_limit_catalog_reached, limits.totalCatalog
+                )
             )
         } else if (usage.totalProducts >= limits.totalProducts - 3) {
             LimitCheckResult.NearLimit(
@@ -202,14 +214,18 @@ class PlanLimitsManager @Inject constructor(
                 feature = "inventory",
                 current = usage.totalInventory,
                 limit = limits.totalInventory,
-                message = "Has alcanzado el límite de ${limits.totalInventory} ítems de inventario."
+                message = appContext.getString(
+                    DesignSystemR.string.plan_limit_inventory_reached, limits.totalInventory
+                )
             )
         } else if (catalogTotal >= limits.totalCatalog) {
             LimitCheckResult.LimitReached(
                 feature = "catalog",
                 current = catalogTotal,
                 limit = limits.totalCatalog,
-                message = "Has alcanzado el límite de ${limits.totalCatalog} ítems en catálogo."
+                message = appContext.getString(
+                    DesignSystemR.string.plan_limit_catalog_reached, limits.totalCatalog
+                )
             )
         } else if (usage.totalInventory >= limits.totalInventory - 3) {
             LimitCheckResult.NearLimit(

@@ -4,4 +4,29 @@
     <string name="widget_state_signed_out">Sign in to view</string>
     <string name="widget_state_empty">No data yet</string>
     <string name="widget_state_error">Couldn\'t load data</string>
+
+    <!-- KpiWidget labels -->
+    <string name="widget_kpi_title">Summary</string>
+    <string name="widget_kpi_upcoming">Upcoming</string>
+    <string name="widget_kpi_this_month">This month</string>
+    <string name="widget_kpi_pending_payments">Pending payments</string>
+
+    <!-- UpcomingEventsWidget labels -->
+    <string name="widget_upcoming_title">Upcoming Events</string>
+
+    <!-- QuickActionsWidget labels -->
+    <string name="widget_quick_no_events_today">No events today</string>
+    <string name="widget_quick_new_event">＋ Event</string>
+    <string name="widget_quick_new_quote">＋ Quote</string>
+    <string name="widget_quick_calendar">Calendar</string>
+
+    <!-- Plurals -->
+    <plurals name="widget_people_count">
+        <item quantity="one">%d person</item>
+        <item quantity="other">%d people</item>
+    </plurals>
+    <plurals name="widget_events_today">
+        <item quantity="one">%d event today</item>
+        <item quantity="other">%d events today</item>
+    </plurals>
 </resources>

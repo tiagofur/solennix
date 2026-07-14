@@ -484,4 +484,14 @@
     <string name="events_summary_photos_title">Photos</string>
     <string name="events_summary_staff_title">Staff</string>
 
+    <!-- Block/Unblock date dialogs (#836) -->
+    <string name="events_block_date_title">Block date</string>
+    <string name="events_block_date_reason_label">Reason (optional)</string>
+    <string name="events_block_date_reason_placeholder">e.g. Vacation, private event…</string>
+    <string name="events_block_date_confirm">Block</string>
+    <string name="events_unblock_date_title">Unblock date</string>
+    <string name="events_unblock_date_reason">Reason: %1$s</string>
+    <string name="events_unblock_date_confirm">Unblock</string>
+    <string name="events_date_dialog_cancel">Cancel</string>
+
 </resources>

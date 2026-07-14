@@ -76,4 +76,12 @@
     <!-- Events -->
     <string name="events_error_balance_pending">Event has a pending balance of $%1$s to complete</string>
 
+    <!-- Plan limits (#836) -->
+    <string name="plan_limit_events_near">You have %1$d events left this month.</string>
+    <string name="plan_limit_events_reached">You\'ve reached the limit of %1$d events this month.</string>
+    <string name="plan_limit_clients_reached">You\'ve reached the limit of %1$d clients.</string>
+    <string name="plan_limit_products_reached">You\'ve reached the limit of %1$d products.</string>
+    <string name="plan_limit_inventory_reached">You\'ve reached the limit of %1$d inventory items.</string>
+    <string name="plan_limit_catalog_reached">You\'ve reached the limit of %1$d catalog items.</string>
+
 </resources>

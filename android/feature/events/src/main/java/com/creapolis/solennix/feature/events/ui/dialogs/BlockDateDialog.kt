@@ -19,8 +19,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
+import com.creapolis.solennix.feature.events.R
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -36,7 +38,7 @@ fun BlockDateDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Bloquear fecha") },
+        title = { Text(stringResource(R.string.events_block_date_title)) },
         text = {
             Column {
                 Text(
@@ -48,8 +50,8 @@ fun BlockDateDialog(
                 OutlinedTextField(
                     value = reason,
                     onValueChange = { reason = it },
-                    label = { Text("Motivo (opcional)") },
-                    placeholder = { Text("Ej: Vacaciones, evento privado...") },
+                    label = { Text(stringResource(R.string.events_block_date_reason_label)) },
+                    placeholder = { Text(stringResource(R.string.events_block_date_reason_placeholder)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -62,12 +64,15 @@ fun BlockDateDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(reason.ifBlank { null }) }) {
-                Text("Bloquear", color = SolennixTheme.colors.error)
+                Text(
+                    stringResource(R.string.events_block_date_confirm),
+                    color = SolennixTheme.colors.error
+                )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+                Text(stringResource(R.string.events_date_dialog_cancel))
             }
         }
     )

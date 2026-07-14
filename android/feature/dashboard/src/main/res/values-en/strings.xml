@@ -84,4 +84,25 @@
         <item quantity="one">%1$d event</item>
         <item quantity="other">%1$d events</item>
     </plurals>
+
+    <!-- Onboarding (#836) -->
+    <string name="onboarding_welcome_title">Welcome to Solennix</string>
+    <string name="onboarding_welcome_desc">The definitive tool to organize your events professionally</string>
+    <string name="onboarding_features_title">Everything in One Place</string>
+    <string name="onboarding_feature_clients">Manage clients and contacts</string>
+    <string name="onboarding_feature_quotes">Create quotes and contracts</string>
+    <string name="onboarding_feature_inventory">Control your inventory</string>
+    <string name="onboarding_feature_calendar">Schedule events on a calendar</string>
+    <string name="onboarding_android_title">Designed for Android</string>
+    <string name="onboarding_android_widgets">Widgets on your home screen</string>
+    <string name="onboarding_android_dark_mode">Automatic dark mode</string>
+    <string name="onboarding_android_offline">Works offline</string>
+    <string name="onboarding_android_notifications">Smart notifications</string>
+    <string name="onboarding_android_tablets">Tablet and foldable support</string>
+    <string name="onboarding_cta_title">Get Started</string>
+    <string name="onboarding_cta_desc">Create your account or sign in to get started</string>
+    <string name="onboarding_button_start">Get Started</string>
+    <string name="onboarding_button_skip">Skip</string>
+    <string name="onboarding_button_next">Next</string>
+    <string name="onboarding_step_counter">Step %1$d of %2$d</string>
 </resources>

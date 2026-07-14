@@ -44,6 +44,7 @@ dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:network"))
     implementation(project(":core:database"))
+    implementation(project(":core:designsystem"))
 
     // EncryptedSharedPreferences (SecurePrefsProvider, #854)
     implementation(libs.security.crypto)

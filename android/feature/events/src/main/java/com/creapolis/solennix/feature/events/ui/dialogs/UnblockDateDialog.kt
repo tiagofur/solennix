@@ -11,8 +11,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
+import com.creapolis.solennix.feature.events.R
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -28,7 +30,7 @@ fun UnblockDateDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Desbloquear fecha") },
+        title = { Text(stringResource(R.string.events_unblock_date_title)) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth()
@@ -41,7 +43,7 @@ fun UnblockDateDialog(
                 if (!reason.isNullOrBlank()) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Motivo: $reason",
+                        text = stringResource(R.string.events_unblock_date_reason, reason),
                         style = MaterialTheme.typography.bodySmall,
                         color = SolennixTheme.colors.secondaryText
                     )
@@ -50,12 +52,15 @@ fun UnblockDateDialog(
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("Desbloquear", color = SolennixTheme.colors.primary)
+                Text(
+                    stringResource(R.string.events_unblock_date_confirm),
+                    color = SolennixTheme.colors.primary
+                )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+                Text(stringResource(R.string.events_date_dialog_cancel))
             }
         }
     )
