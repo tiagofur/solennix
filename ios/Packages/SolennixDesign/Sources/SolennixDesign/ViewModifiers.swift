@@ -249,7 +249,7 @@ public final class ViewScopedTask {
 
     /// Starts `operation`, cancelling any previously running scoped task first.
     /// The task is also cancelled automatically when the view disappears.
-    public func start(_ operation: @escaping @Sendable () async -> Void) {
+    public func start(_ operation: @escaping @MainActor () async -> Void) {
         current?.cancel()
         current = Task(operation: operation)
     }

@@ -179,6 +179,7 @@ public final class SettingsViewModel {
     // MARK: - Delete Own Account
 
     @MainActor
+    @discardableResult
     public func deleteOwnAccount() async -> Bool {
         guard confirmDeletionConsent else {
             deleteOwnAccountError = FeatureL10n.text("settings.delete_account.consent_required", "Debes aceptar las condiciones para continuar.")
