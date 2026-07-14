@@ -113,6 +113,7 @@ tasks.register<JacocoCoverageVerification>("jacocoDebugCoverageVerification") {
 dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:database"))
+    implementation(project(":core:data"))
 
     // Room (needed for database access)
     implementation(libs.room.runtime)
