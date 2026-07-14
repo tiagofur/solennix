@@ -489,4 +489,14 @@
     <string name="events_form_discard_message">Tienes cambios sin guardar. ¿Seguro que deseas salir?</string>
     <string name="events_form_discard_confirm">Salir</string>
 
+    <!-- Block/Unblock date dialogs (#836) -->
+    <string name="events_block_date_title">Bloquear fecha</string>
+    <string name="events_block_date_reason_label">Motivo (opcional)</string>
+    <string name="events_block_date_reason_placeholder">Ej: Vacaciones, evento privado…</string>
+    <string name="events_block_date_confirm">Bloquear</string>
+    <string name="events_unblock_date_title">Desbloquear fecha</string>
+    <string name="events_unblock_date_reason">Motivo: %1$s</string>
+    <string name="events_unblock_date_confirm">Desbloquear</string>
+    <string name="events_date_dialog_cancel">Cancelar</string>
+
 </resources>

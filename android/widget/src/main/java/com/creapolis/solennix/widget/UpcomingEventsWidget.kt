@@ -73,7 +73,7 @@ class UpcomingEventsWidget : GlanceAppWidget() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Próximos Eventos",
+                    text = context.getString(R.string.widget_upcoming_title),
                     style = TextStyle(
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
@@ -88,7 +88,7 @@ class UpcomingEventsWidget : GlanceAppWidget() {
                 modifier = GlanceModifier.fillMaxWidth()
             ) {
                 events.take(3).forEach { event ->
-                    EventRow(event)
+                    EventRow(context, event)
                     if (event != events.last()) {
                         Spacer(modifier = GlanceModifier.height(6.dp))
                     }
@@ -98,7 +98,7 @@ class UpcomingEventsWidget : GlanceAppWidget() {
     }
 
     @Composable
-    private fun EventRow(event: Event) {
+    private fun EventRow(context: Context, event: Event) {
         val formattedDate = WidgetFormatters.formatEventDate(event.eventDate)
 
         Row(
@@ -148,7 +148,9 @@ class UpcomingEventsWidget : GlanceAppWidget() {
                     maxLines = 1
                 )
                 Text(
-                    text = "${event.numPeople} personas",
+                    text = context.resources.getQuantityString(
+                        R.plurals.widget_people_count, event.numPeople, event.numPeople
+                    ),
                     style = TextStyle(
                         fontSize = 10.sp,
                         color = WidgetColors.textSecondary

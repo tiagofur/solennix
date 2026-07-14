@@ -54,6 +54,10 @@
          the near-limit / limit-reached banner without cross-feature deps. -->
     <string name="plan_limit_events_near">Te quedan %1$d eventos disponibles este mes.</string>
     <string name="plan_limit_events_reached">Has alcanzado el límite de %1$d eventos este mes.</string>
+    <string name="plan_limit_clients_reached">Has alcanzado el límite de %1$d clientes.</string>
+    <string name="plan_limit_products_reached">Has alcanzado el límite de %1$d productos.</string>
+    <string name="plan_limit_inventory_reached">Has alcanzado el límite de %1$d ítems de inventario.</string>
+    <string name="plan_limit_catalog_reached">Has alcanzado el límite de %1$d ítems en catálogo.</string>
 
     <!-- Feature discovery tooltips -->
     <string name="tooltip_new_event_title">Crea tu primer evento</string>

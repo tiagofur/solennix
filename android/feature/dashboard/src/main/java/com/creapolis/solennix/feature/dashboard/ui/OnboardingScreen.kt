@@ -1,6 +1,7 @@
 package com.creapolis.solennix.feature.dashboard.ui
 
 import android.content.Context
+import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -20,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -28,6 +30,7 @@ import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixGradient
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.designsystem.theme.Spacing
+import com.creapolis.solennix.feature.dashboard.R
 import kotlinx.coroutines.launch
 
 private const val ONBOARDING_PREFS = "solennix_onboarding"
@@ -89,48 +92,47 @@ private fun OnboardingScreenCompact(
             .fillMaxSize()
             .background(SolennixTheme.colors.background)
     ) {
-        // Pager
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 140.dp) // Room for navigation controls
+                .padding(bottom = 140.dp)
         ) { page ->
             when (page) {
                 0 -> OnboardingPageContent(
                     icon = Icons.Default.AutoAwesome,
-                    title = "Bienvenido a Solennix",
-                    description = "La herramienta definitiva para organizar tus eventos de manera profesional"
+                    titleRes = R.string.onboarding_welcome_title,
+                    descriptionRes = R.string.onboarding_welcome_desc
                 )
                 1 -> OnboardingPageContent(
                     icon = Icons.Default.Layers,
-                    title = "Todo en un Solo Lugar",
-                    features = listOf(
-                        "Gestiona clientes y contactos",
-                        "Crea cotizaciones y contratos",
-                        "Controla tu inventario",
-                        "Programa eventos en calendario"
+                    titleRes = R.string.onboarding_features_title,
+                    featuresRes = listOf(
+                        R.string.onboarding_feature_clients,
+                        R.string.onboarding_feature_quotes,
+                        R.string.onboarding_feature_inventory,
+                        R.string.onboarding_feature_calendar
                     )
                 )
                 2 -> OnboardingPageContent(
                     icon = Icons.Default.PhoneAndroid,
-                    title = "Diseñado para Android",
-                    features = listOf(
-                        "Widgets en tu pantalla de inicio",
-                        "Modo oscuro automatico",
-                        "Funciona sin conexion",
-                        "Notificaciones inteligentes",
-                        "Soporte para tablets y plegables"
+                    titleRes = R.string.onboarding_android_title,
+                    featuresRes = listOf(
+                        R.string.onboarding_android_widgets,
+                        R.string.onboarding_android_dark_mode,
+                        R.string.onboarding_android_offline,
+                        R.string.onboarding_android_notifications,
+                        R.string.onboarding_android_tablets
                     )
                 )
                 3 -> OnboardingPageContent(
                     icon = Icons.Default.RocketLaunch,
-                    title = "Comienza Ahora",
-                    description = "Crea tu cuenta o inicia sesion para empezar"
+                    titleRes = R.string.onboarding_cta_title,
+                    descriptionRes = R.string.onboarding_cta_desc
                 ) {
                     Spacer(modifier = Modifier.height(Spacing.xxl))
                     PremiumButton(
-                        text = "Comenzar",
+                        text = stringResource(R.string.onboarding_button_start),
                         onClick = { completeOnboarding() },
                         modifier = Modifier.padding(horizontal = Spacing.md)
                     )
@@ -138,7 +140,6 @@ private fun OnboardingScreenCompact(
             }
         }
 
-        // Skip button (top-right) - hidden on last page
         if (pagerState.currentPage < PAGE_COUNT - 1) {
             TextButton(
                 onClick = { completeOnboarding() },
@@ -148,7 +149,7 @@ private fun OnboardingScreenCompact(
                     .padding(end = Spacing.sm, top = Spacing.sm)
             ) {
                 Text(
-                    text = "Omitir",
+                    text = stringResource(R.string.onboarding_button_skip),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Medium,
                     color = SolennixTheme.colors.secondaryText
@@ -156,7 +157,6 @@ private fun OnboardingScreenCompact(
             }
         }
 
-        // Bottom navigation: page indicators + "Siguiente" button
         OnboardingBottomNavigation(
             pagerState = pagerState,
             coroutineScope = coroutineScope,
@@ -169,10 +169,6 @@ private fun OnboardingScreenCompact(
     }
 }
 
-/**
- * Tablet layout: side-by-side with illustration/icon panel on the left
- * and text + navigation on the right.
- */
 @Composable
 private fun OnboardingScreenWide(
     pagerState: PagerState,
@@ -182,34 +178,34 @@ private fun OnboardingScreenWide(
     val pages = listOf(
         OnboardingPageData(
             icon = Icons.Default.AutoAwesome,
-            title = "Bienvenido a Solennix",
-            description = "La herramienta definitiva para organizar tus eventos de manera profesional"
+            titleRes = R.string.onboarding_welcome_title,
+            descriptionRes = R.string.onboarding_welcome_desc
         ),
         OnboardingPageData(
             icon = Icons.Default.Layers,
-            title = "Todo en un Solo Lugar",
-            features = listOf(
-                "Gestiona clientes y contactos",
-                "Crea cotizaciones y contratos",
-                "Controla tu inventario",
-                "Programa eventos en calendario"
+            titleRes = R.string.onboarding_features_title,
+            featuresRes = listOf(
+                R.string.onboarding_feature_clients,
+                R.string.onboarding_feature_quotes,
+                R.string.onboarding_feature_inventory,
+                R.string.onboarding_feature_calendar
             )
         ),
         OnboardingPageData(
             icon = Icons.Default.PhoneAndroid,
-            title = "Diseñado para Android",
-            features = listOf(
-                "Widgets en tu pantalla de inicio",
-                "Modo oscuro automatico",
-                "Funciona sin conexion",
-                "Notificaciones inteligentes",
-                "Soporte para tablets y plegables"
+            titleRes = R.string.onboarding_android_title,
+            featuresRes = listOf(
+                R.string.onboarding_android_widgets,
+                R.string.onboarding_android_dark_mode,
+                R.string.onboarding_android_offline,
+                R.string.onboarding_android_notifications,
+                R.string.onboarding_android_tablets
             )
         ),
         OnboardingPageData(
             icon = Icons.Default.RocketLaunch,
-            title = "Comienza Ahora",
-            description = "Crea tu cuenta o inicia sesion para empezar"
+            titleRes = R.string.onboarding_cta_title,
+            descriptionRes = R.string.onboarding_cta_desc
         )
     )
 
@@ -220,7 +216,6 @@ private fun OnboardingScreenWide(
             .fillMaxSize()
             .background(SolennixTheme.colors.background)
     ) {
-        // Left panel: illustration/icon with gradient background
         Box(
             modifier = Modifier
                 .fillMaxHeight()
@@ -249,20 +244,22 @@ private fun OnboardingScreenWide(
                 }
                 Spacer(modifier = Modifier.height(32.dp))
                 Text(
-                    text = "Paso ${pagerState.currentPage + 1} de $PAGE_COUNT",
+                    text = stringResource(
+                        R.string.onboarding_step_counter,
+                        pagerState.currentPage + 1,
+                        PAGE_COUNT
+                    ),
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.White.copy(alpha = 0.8f)
                 )
             }
         }
 
-        // Right panel: text content + navigation
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .weight(1f)
         ) {
-            // Skip button (top-right)
             if (pagerState.currentPage < PAGE_COUNT - 1) {
                 TextButton(
                     onClick = { completeOnboarding() },
@@ -271,7 +268,7 @@ private fun OnboardingScreenWide(
                         .padding(end = Spacing.md, top = Spacing.md)
                 ) {
                     Text(
-                        text = "Omitir",
+                        text = stringResource(R.string.onboarding_button_skip),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Medium,
                         color = SolennixTheme.colors.secondaryText
@@ -279,7 +276,6 @@ private fun OnboardingScreenWide(
                 }
             }
 
-            // Page content centered
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -288,30 +284,30 @@ private fun OnboardingScreenWide(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = currentPage.title,
+                    text = stringResource(currentPage.titleRes),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = SolennixTheme.colors.primaryText,
                     textAlign = TextAlign.Center
                 )
 
-                if (currentPage.description != null) {
+                if (currentPage.descriptionRes != null) {
                     Spacer(modifier = Modifier.height(Spacing.md))
                     Text(
-                        text = currentPage.description,
+                        text = stringResource(currentPage.descriptionRes),
                         style = MaterialTheme.typography.bodyLarge,
                         color = SolennixTheme.colors.secondaryText,
                         textAlign = TextAlign.Center
                     )
                 }
 
-                if (!currentPage.features.isNullOrEmpty()) {
+                if (!currentPage.featuresRes.isNullOrEmpty()) {
                     Spacer(modifier = Modifier.height(Spacing.xl))
                     Column(
                         modifier = Modifier.widthIn(max = 400.dp),
                         verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                     ) {
-                        currentPage.features.forEach { feature ->
+                        currentPage.featuresRes.forEach { featureRes ->
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.padding(vertical = Spacing.xs)
@@ -332,7 +328,7 @@ private fun OnboardingScreenWide(
                                 }
                                 Spacer(modifier = Modifier.width(Spacing.md))
                                 Text(
-                                    text = feature,
+                                    text = stringResource(featureRes),
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = SolennixTheme.colors.primaryText
                                 )
@@ -341,17 +337,15 @@ private fun OnboardingScreenWide(
                     }
                 }
 
-                // CTA on last page
                 if (pagerState.currentPage == PAGE_COUNT - 1) {
                     Spacer(modifier = Modifier.height(Spacing.xxl))
                     PremiumButton(
-                        text = "Comenzar",
+                        text = stringResource(R.string.onboarding_button_start),
                         onClick = { completeOnboarding() }
                     )
                 }
             }
 
-            // Bottom navigation
             OnboardingBottomNavigation(
                 pagerState = pagerState,
                 coroutineScope = coroutineScope,
@@ -364,19 +358,78 @@ private fun OnboardingScreenWide(
     }
 }
 
-/**
- * Data class to hold onboarding page information for the tablet layout.
- */
 private data class OnboardingPageData(
     val icon: ImageVector,
-    val title: String,
-    val description: String? = null,
-    val features: List<String>? = null
+    @StringRes val titleRes: Int,
+    @StringRes val descriptionRes: Int? = null,
+    val featuresRes: List<Int>? = null
 )
 
-/**
- * Shared bottom navigation: page indicators + "Siguiente" button.
- */
+@Composable
+private fun OnboardingPageContent(
+    icon: ImageVector,
+    @StringRes titleRes: Int,
+    @StringRes descriptionRes: Int? = null,
+    featuresRes: List<Int>? = null,
+    footer: @Composable () -> Unit = {}
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = Spacing.xxl)
+            .padding(top = 60.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(72.dp),
+            tint = SolennixTheme.colors.primary
+        )
+        Spacer(modifier = Modifier.height(Spacing.xl))
+        Text(
+            text = stringResource(titleRes),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = SolennixTheme.colors.primaryText,
+            textAlign = TextAlign.Center
+        )
+        if (descriptionRes != null) {
+            Spacer(modifier = Modifier.height(Spacing.sm))
+            Text(
+                text = stringResource(descriptionRes),
+                style = MaterialTheme.typography.bodyMedium,
+                color = SolennixTheme.colors.secondaryText,
+                textAlign = TextAlign.Center
+            )
+        }
+        if (!featuresRes.isNullOrEmpty()) {
+            Spacer(modifier = Modifier.height(Spacing.lg))
+            featuresRes.forEach { featureRes ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(vertical = Spacing.xs)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = SolennixTheme.colors.primary
+                    )
+                    Spacer(modifier = Modifier.width(Spacing.sm))
+                    Text(
+                        text = stringResource(featureRes),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = SolennixTheme.colors.primaryText
+                    )
+                }
+            }
+        }
+        footer()
+    }
+}
+
 @Composable
 private fun OnboardingBottomNavigation(
     pagerState: PagerState,
@@ -387,7 +440,6 @@ private fun OnboardingBottomNavigation(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Page indicators (dots)
         Row(
             horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
             verticalAlignment = Alignment.CenterVertically
@@ -412,10 +464,9 @@ private fun OnboardingBottomNavigation(
 
         Spacer(modifier = Modifier.height(Spacing.xl))
 
-        // "Siguiente" button (hidden on last page where PremiumButton is shown inline)
         if (pagerState.currentPage < PAGE_COUNT - 1) {
             PremiumButton(
-                text = "Siguiente",
+                text = stringResource(R.string.onboarding_button_next),
                 onClick = {
                     coroutineScope.launch {
                         pagerState.animateScrollToPage(pagerState.currentPage + 1)
@@ -426,9 +477,6 @@ private fun OnboardingBottomNavigation(
     }
 }
 
-/**
- * Checks whether the user has already completed the first-launch onboarding.
- */
 fun hasSeenOnboarding(context: Context): Boolean {
     return context.getSharedPreferences(ONBOARDING_PREFS, Context.MODE_PRIVATE)
         .getBoolean(KEY_HAS_SEEN_ONBOARDING, false)

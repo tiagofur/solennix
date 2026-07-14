@@ -94,7 +94,11 @@ class QuickActionsWidget : GlanceAppWidget() {
                     )
                     if (todayData.eventCount > 0) {
                         Text(
-                            text = "${todayData.eventCount} evento${if (todayData.eventCount > 1) "s" else ""} hoy",
+                            text = context.resources.getQuantityString(
+                                R.plurals.widget_events_today,
+                                todayData.eventCount,
+                                todayData.eventCount
+                            ),
                             style = TextStyle(
                                 fontSize = 11.sp,
                                 color = WidgetColors.textSecondary
@@ -102,7 +106,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                         )
                     } else {
                         Text(
-                            text = "Sin eventos hoy",
+                            text = context.getString(R.string.widget_quick_no_events_today),
                             style = TextStyle(
                                 fontSize = 11.sp,
                                 color = WidgetColors.textSecondary
@@ -165,7 +169,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "＋ Evento",
+                        text = context.getString(R.string.widget_quick_new_event),
                         style = TextStyle(
                             fontWeight = FontWeight.Medium,
                             fontSize = 11.sp,
@@ -187,7 +191,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "＋ Cotizar",
+                        text = context.getString(R.string.widget_quick_new_quote),
                         style = TextStyle(
                             fontWeight = FontWeight.Medium,
                             fontSize = 11.sp,
@@ -209,7 +213,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Calendario",
+                        text = context.getString(R.string.widget_quick_calendar),
                         style = TextStyle(
                             fontWeight = FontWeight.Medium,
                             fontSize = 11.sp,

@@ -91,7 +91,7 @@ class KpiWidget : GlanceAppWidget() {
         ) {
             // Header
             Text(
-                text = "Resumen",
+                text = context.getString(R.string.widget_kpi_title),
                 style = TextStyle(
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
@@ -110,7 +110,7 @@ class KpiWidget : GlanceAppWidget() {
                 KpiCard(
                     modifier = GlanceModifier.defaultWeight(),
                     value = kpiData.upcomingEvents.toString(),
-                    label = "Próximos",
+                    label = context.getString(R.string.widget_kpi_upcoming),
                     accentColor = WidgetColors.primary
                 )
 
@@ -120,7 +120,7 @@ class KpiWidget : GlanceAppWidget() {
                 KpiCard(
                     modifier = GlanceModifier.defaultWeight(),
                     value = WidgetFormatters.formatCurrency(kpiData.monthlyRevenue),
-                    label = "Este mes",
+                    label = context.getString(R.string.widget_kpi_this_month),
                     accentColor = WidgetColors.success
                 )
             }
@@ -139,7 +139,7 @@ class KpiWidget : GlanceAppWidget() {
             ) {
                 Column(modifier = GlanceModifier.defaultWeight()) {
                     Text(
-                        text = "Pagos pendientes",
+                        text = context.getString(R.string.widget_kpi_pending_payments),
                         style = TextStyle(
                             fontSize = 11.sp,
                             color = WidgetColors.textSecondary
