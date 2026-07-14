@@ -13,6 +13,7 @@ struct DashboardQuickActionButton: View {
             Image(systemName: icon)
                 .font(.body)
                 .foregroundStyle(color)
+                .accessibilityHidden(true)
 
             Text(label)
                 .font(.subheadline)
@@ -22,6 +23,9 @@ struct DashboardQuickActionButton: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, Spacing.md)
         .solennixCard(border: false)
+        // VoiceOver: label text alone announces the action; icon is decorative.
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -47,9 +51,15 @@ struct DashboardLowStockCard: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(SolennixColors.warning)
                 .font(.body)
+                .accessibilityHidden(true)
         }
         .padding(Spacing.md)
         .solennixCard(border: false)
+        // VoiceOver: merge item name + stock into one utterance
+        // ("Café, 2 unidades") instead of two separate pieces.
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text(itemName))
+        .accessibilityValue(Text(stockText))
     }
 }
 
@@ -76,6 +86,9 @@ struct DashboardDateBox: View {
         .frame(width: cappedSize, height: cappedSize)
         .background(SolennixColors.primaryLight)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+        // VoiceOver: read "Julio 14" as a single date label.
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text("\(month) \(day)"))
     }
 }
 
@@ -92,6 +105,7 @@ struct DashboardEmptyCardState: View {
             Image(systemName: icon)
                 .font(.system(size: cappedEmptyIconSize))
                 .foregroundStyle(SolennixColors.textTertiary)
+                .accessibilityHidden(true)
 
             Text(title)
                 .font(.subheadline)
@@ -100,5 +114,7 @@ struct DashboardEmptyCardState: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, Spacing.xxl)
         .solennixCard(border: false)
+        // VoiceOver: icon is decorative; the title text is the announcement.
+        .accessibilityElement(children: .combine)
     }
 }
