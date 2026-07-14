@@ -63,15 +63,20 @@ vi.mock('./ClientDetails', () => ({
     ) : null,
 }));
 
-/** Sets up both getAll and getPage mocks with the same data. */
-const mockClients = (clients: any[]) => {
+/** Sets up getPage mock. Optionally accepts a per-search override map. */
+const mockClients = (clients: any[], searchMap?: Record<string, any[]>) => {
   (clientService.getAll as any).mockResolvedValue(clients);
-  (clientService.getPage as any).mockResolvedValue({
-    data: clients,
-    total: clients.length,
-    page: 1,
-    limit: 20,
-    total_pages: 1,
+  (clientService.getPage as any).mockImplementation(({ search }: { search?: string } = {}) => {
+    const result = searchMap && search && searchMap[search] !== undefined
+      ? searchMap[search]
+      : clients;
+    return Promise.resolve({
+      data: result,
+      total: result.length,
+      page: 1,
+      limit: 20,
+      total_pages: result.length === 0 ? 1 : 1,
+    });
   });
 };
 
@@ -124,26 +129,17 @@ describe('ClientList', () => {
   });
 
   it('filters clients by search term', async () => {
-    mockClients([
+    vi.useFakeTimers();
+    mockClients(
+      [
+        { id: '1', name: 'Ana Perez', phone: '5551112222', email: 'ana@example.com', address: 'Calle 1', total_events: 2, total_spent: 1200 },
+        { id: '2', name: 'Juan Lopez', phone: '5553334444', email: 'juan@example.com', address: 'Calle 2', total_events: 1, total_spent: 800 },
+      ],
       {
-        id: '1',
-        name: 'Ana Perez',
-        phone: '5551112222',
-        email: 'ana@example.com',
-        address: 'Calle 1',
-        total_events: 2,
-        total_spent: 1200,
+        // When search=Ana the server returns only Ana
+        Ana: [{ id: '1', name: 'Ana Perez', phone: '5551112222', email: 'ana@example.com', address: 'Calle 1', total_events: 2, total_spent: 1200 }],
       },
-      {
-        id: '2',
-        name: 'Juan Lopez',
-        phone: '5553334444',
-        email: 'juan@example.com',
-        address: 'Calle 2',
-        total_events: 1,
-        total_spent: 800,
-      },
-    ]);
+    );
 
     renderList();
     await waitFor(() => {
@@ -154,8 +150,14 @@ describe('ClientList', () => {
       target: { value: 'Ana' },
     });
 
+    // Advance timers past the 300ms debounce so the new query fires
+    vi.advanceTimersByTime(300);
+    vi.useRealTimers();
+
+    await waitFor(() => {
+      expect(screen.queryByText('Juan Lopez')).not.toBeInTheDocument();
+    });
     expect(screen.getByText('Ana Perez')).toBeInTheDocument();
-    expect(screen.queryByText('Juan Lopez')).not.toBeInTheDocument();
   });
 
   it('navigates to detail on row click', async () => {
@@ -309,20 +311,18 @@ describe('ClientList', () => {
   });
 
   it('shows empty state with search description when search has no results', async () => {
-    mockClients([
+    vi.useFakeTimers();
+    mockClients(
+      [
+        { id: '1', name: 'Ana Perez', phone: '5551112222', email: 'ana@example.com', address: 'Calle 1', total_events: 2, total_spent: 1200 },
+      ],
       {
-        id: '1',
-        name: 'Ana Perez',
-        phone: '5551112222',
-        email: 'ana@example.com',
-        address: 'Calle 1',
-        total_events: 2,
-        total_spent: 1200,
+        // When search=zzzznonexistent the server returns empty
+        zzzznonexistent: [],
       },
-    ]);
+    );
 
     renderList();
-
     await waitFor(() => {
       expect(screen.getByText('Ana Perez')).toBeInTheDocument();
     });
@@ -331,7 +331,12 @@ describe('ClientList', () => {
       target: { value: 'zzzznonexistent' },
     });
 
-    expect(screen.getByText('No se encontraron clientes')).toBeInTheDocument();
+    vi.advanceTimersByTime(300);
+    vi.useRealTimers();
+
+    await waitFor(() => {
+      expect(screen.getByText('No se encontraron clientes')).toBeInTheDocument();
+    });
     expect(screen.getByText('No se encontraron clientes que coincidan con tu búsqueda')).toBeInTheDocument();
   });
 
