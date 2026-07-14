@@ -12,6 +12,25 @@ struct Step5FinancesView: View {
     /// Profit margin threshold (%) above which the margin is considered healthy.
     private let healthyMarginThreshold: Double = 20
 
+    /// VoiceOver-friendly margin value: appends the health state word since
+    /// color (green/amber/red) is not announced.
+    private var marginAccessibilityValue: String {
+        let pct = String(format: "%.1f%%", viewModel.profitMargin)
+        let stateKey: String
+        let stateDefault: String
+        if viewModel.profitMargin < 0 {
+            stateKey = "events.form.finances.margin_loss"
+            stateDefault = "pérdida"
+        } else if viewModel.profitMargin >= healthyMarginThreshold {
+            stateKey = "events.form.finances.margin_healthy"
+            stateDefault = "saludable"
+        } else {
+            stateKey = "events.form.finances.margin_low"
+            stateDefault = "bajo"
+        }
+        return "\(pct), \(tr(stateKey, stateDefault))"
+    }
+
     var body: some View {
         Form {
             discountSection
@@ -239,6 +258,9 @@ struct Step5FinancesView: View {
                     .foregroundStyle(SolennixColors.primary)
             }
             .solennixRow()
+            // VoiceOver: read "Total: $X" as one utterance (color is not
+            // announced, so the label must carry the meaning).
+            .accessibilityElement(children: .combine)
 
             // Deposit
             totalRow(
@@ -280,6 +302,12 @@ struct Step5FinancesView: View {
                     )
             }
             .solennixRow()
+            // VoiceOver: color encodes margin health (green/amber/red) but
+            // VoiceOver does not announce color, so the health state is added
+            // to the value text. Merge label + value into one utterance.
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(tr("events.form.finances.margin", "Margen"))
+            .accessibilityValue(marginAccessibilityValue)
         } header: {
             Text(tr("events.form.finances.summary", "Resumen"))
         }

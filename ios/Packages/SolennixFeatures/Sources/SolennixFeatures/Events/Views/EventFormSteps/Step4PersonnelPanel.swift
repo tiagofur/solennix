@@ -465,6 +465,8 @@ private struct Step4PersonnelCostSummary: View {
                 .foregroundStyle(SolennixColors.text)
         }
         .padding(Spacing.md)
+        // VoiceOver: read label + amount as one utterance.
+        .accessibilityElement(children: .combine)
 
         if embeddedInForm {
             content
@@ -536,6 +538,7 @@ private struct StaffRowView: View {
                         .foregroundStyle(SolennixColors.error)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(tr("events.form.staff.delete_a11y", "Quitar personal"))
             }
 
             // Fee amount

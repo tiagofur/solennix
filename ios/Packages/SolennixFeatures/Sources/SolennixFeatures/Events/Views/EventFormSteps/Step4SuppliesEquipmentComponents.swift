@@ -191,6 +191,8 @@ struct Step4SuppliesCostSummary: View {
                 .foregroundStyle(SolennixColors.primary)
         }
         .padding(Spacing.md)
+        // VoiceOver: read label + amount as one utterance.
+        .accessibilityElement(children: .combine)
 
         if embeddedInForm {
             content
@@ -340,6 +342,7 @@ struct SupplyRowView: View {
                         .foregroundStyle(SolennixColors.error)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(tr("events.form.inventory.delete_a11y", "Eliminar"))
             }
 
             HStack(spacing: Spacing.md) {
@@ -425,6 +428,8 @@ struct SupplyRowView: View {
             }
             .buttonStyle(.plain)
             .disabled(item.quantity <= 1)
+            .accessibilityLabel(tr("common.stepper.decrease_a11y", "Quitar uno"))
+            .accessibilityValue(trf("events.form.inventory.quantity_value_a11y", "%@ unidades", String(intValue)))
 
             EditableQuantityText(
                 quantity: intBinding,
@@ -443,6 +448,8 @@ struct SupplyRowView: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(tr("common.stepper.increase_a11y", "Agregar uno"))
+            .accessibilityValue(trf("events.form.inventory.quantity_value_a11y", "%@ unidades", String(intValue)))
         }
     }
 
@@ -510,6 +517,7 @@ struct EquipmentRowView: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .font(.caption2)
                             .foregroundStyle(SolennixColors.error)
+                            .accessibilityHidden(true)
                     }
                     Text(Step4SuppliesEquipmentView.stockLabel(stock: stock, unit: unit))
                         .font(.caption)
@@ -531,6 +539,8 @@ struct EquipmentRowView: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(item.quantity <= 1)
+                .accessibilityLabel(tr("common.stepper.decrease_a11y", "Quitar uno"))
+                .accessibilityValue(trf("events.form.inventory.quantity_value_a11y", "%@ unidades", String(item.quantity)))
 
                 EditableQuantityText(
                     quantity: Binding<Int>(
@@ -553,6 +563,8 @@ struct EquipmentRowView: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(tr("common.stepper.increase_a11y", "Agregar uno"))
+                .accessibilityValue(trf("events.form.inventory.quantity_value_a11y", "%@ unidades", String(item.quantity)))
             }
 
             Button {
@@ -564,6 +576,7 @@ struct EquipmentRowView: View {
             }
             .buttonStyle(.plain)
             .padding(.leading, Spacing.xs)
+            .accessibilityLabel(tr("events.form.inventory.delete_a11y", "Eliminar"))
         }
 
         Group {

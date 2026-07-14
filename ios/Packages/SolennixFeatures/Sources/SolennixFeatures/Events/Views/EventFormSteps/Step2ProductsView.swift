@@ -195,6 +195,8 @@ struct Step2ProductsView: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(item.quantity <= 1)
+                    .accessibilityLabel(tr("common.stepper.decrease_a11y", "Quitar uno"))
+                    .accessibilityValue(trf("events.form.products.quantity_value", "%@ unidades", quantityText(item.quantity)))
 
                     EditableQuantityTextDouble(
                         quantity: Binding<Double>(
@@ -216,6 +218,8 @@ struct Step2ProductsView: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(tr("common.stepper.increase_a11y", "Agregar uno"))
+                    .accessibilityValue(trf("events.form.products.quantity_value", "%@ unidades", quantityText(item.quantity)))
                 }
             }
             .solennixRow()
@@ -252,6 +256,7 @@ struct Step2ProductsView: View {
                         .foregroundStyle(SolennixColors.error)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(tr("events.form.products.delete_a11y", "Eliminar producto"))
             }
         }
     }
@@ -288,6 +293,7 @@ struct Step2ProductsView: View {
                             if viewModel.selectedProducts.contains(where: { $0.productId == product.id }) {
                                 Image(systemName: "checkmark.circle.fill")
                                     .foregroundStyle(SolennixColors.success)
+                                    .accessibilityHidden(true)
                             }
                         }
                     }
@@ -325,6 +331,12 @@ struct Step2ProductsView: View {
 
     private func formatCurrency(_ value: Double) -> String {
         "$\(String(format: "%.2f", value))"
+    }
+
+    private func quantityText(_ value: Double) -> String {
+        value.truncatingRemainder(dividingBy: 1) == 0
+            ? String(format: "%.0f", value)
+            : String(format: "%.1f", value)
     }
 }
 
