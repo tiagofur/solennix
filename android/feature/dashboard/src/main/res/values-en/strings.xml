@@ -24,6 +24,7 @@
     <string name="dashboard_error_status_change_failed">We couldn’t update the event status. Please try again soon.</string>
     <string name="dashboard_error_payment_failed">We couldn’t record the payment. Please try again soon.</string>
     <string name="dashboard_error_payment_requirements">Amount and payment method are required</string>
+    <string name="dashboard_error_sync_failed">Some data couldn’t be updated</string>
     <string name="dashboard_kpi_net_sales">Net sales</string>
     <string name="dashboard_kpi_collected">Collected</string>
     <string name="dashboard_kpi_vat_collected">VAT collected</string>

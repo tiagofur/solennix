@@ -98,7 +98,7 @@ fun DashboardScreen(
                 title = stringResource(R.string.dashboard_title),
                 onSearchClick = onSearchClick,
                 actions = {
-                    IconButton(onClick = { viewModel.refresh() }) {
+                    IconButton(onClick = { viewModel.forceRefresh() }) {
                         Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.dashboard_refresh))
                     }
                 },
@@ -108,7 +108,7 @@ fun DashboardScreen(
     ) { padding ->
         SolennixPullToRefreshBox(
             isRefreshing = uiState.isRefreshing,
-            onRefresh = { viewModel.refresh() },
+            onRefresh = { viewModel.forceRefresh() },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
