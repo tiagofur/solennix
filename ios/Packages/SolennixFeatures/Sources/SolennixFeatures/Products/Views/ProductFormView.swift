@@ -9,6 +9,7 @@ import SolennixNetwork
 public struct ProductFormView: View {
 
     @State private var viewModel: ProductFormViewModel
+    @State private var scoped: ViewScopedTask?
     @State private var showDiscardDialog: Bool = false
     @Environment(\.dismiss) private var dismiss
     @Environment(PlanLimitsManager.self) private var planLimitsManager
@@ -46,7 +47,7 @@ public struct ProductFormView: View {
                 SolennixSaveButton(
                     title: ProductStrings.save,
                     action: {
-                        Task {
+                        scoped?.start {
                             let success = await viewModel.save()
                             if success {
                                 dismiss()
@@ -75,8 +76,9 @@ public struct ProductFormView: View {
         .sensoryFeedback(.success, trigger: viewModel.saveSuccessCounter)
         .sensoryFeedback(.error, trigger: viewModel.saveErrorCounter)
         .task { await viewModel.loadData() }
+        .viewScopedTask(scoped: $scoped)
         .onChange(of: viewModel.selectedPhoto) { _, _ in
-            Task { await viewModel.handlePhotoSelection() }
+            scoped?.start { await viewModel.handlePhotoSelection() }
         }
         .alert(ProductStrings.alertErrorTitle, isPresented: .init(
             get: { viewModel.errorMessage != nil },

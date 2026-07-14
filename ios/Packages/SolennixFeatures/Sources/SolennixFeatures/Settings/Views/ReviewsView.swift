@@ -6,6 +6,7 @@ import SolennixNetwork
 public struct ReviewsView: View {
 
     @State private var viewModel: ReviewsViewModel
+    @State private var scoped: ViewScopedTask?
     @State private var responseDrafts: [String: String] = [:]
     @State private var saveSuccessCounter: Int = 0     // B9: post-save haptic counter
     @State private var visibilitySuccessCounter: Int = 0 // B9: post-visibility haptic counter
@@ -38,6 +39,7 @@ public struct ReviewsView: View {
             await viewModel.fetchReviews()
             hydrateDrafts()
         }
+        .viewScopedTask(scoped: $scoped)
         .refreshable {
             await viewModel.fetchReviews()
             hydrateDrafts()
@@ -71,7 +73,7 @@ public struct ReviewsView: View {
                 Text(error)
             } actions: {
                 Button(tr("event_form_links.shared.retry", "Reintentar")) {
-                    Task { await viewModel.fetchReviews() }
+                    scoped?.start { await viewModel.fetchReviews() }
                 }
             }
         } else if viewModel.filteredReviews.isEmpty && !viewModel.searchText.isEmpty {
@@ -156,7 +158,7 @@ public struct ReviewsView: View {
                     selected: review.visibility == .private,
                     disabled: viewModel.updatingVisibilityId == review.id
                 ) {
-                    Task {
+                    scoped?.start {
                         await viewModel.updateVisibility(reviewId: review.id, visibility: .private)
                         guard viewModel.errorMessage == nil else { return }
                         visibilitySuccessCounter += 1   // B9: visibility haptic
@@ -168,7 +170,7 @@ public struct ReviewsView: View {
                     selected: review.visibility == .public,
                     disabled: viewModel.updatingVisibilityId == review.id
                 ) {
-                    Task {
+                    scoped?.start {
                         await viewModel.updateVisibility(reviewId: review.id, visibility: .public)
                         guard viewModel.errorMessage == nil else { return }
                         visibilitySuccessCounter += 1   // B9: visibility haptic
@@ -196,7 +198,7 @@ public struct ReviewsView: View {
 
             Button {
                 let draft = responseDrafts[review.id] ?? ""
-                Task {
+                scoped?.start {
                     await viewModel.saveResponse(reviewId: review.id, text: draft)
                     guard viewModel.errorMessage == nil else { return }
                     toastManager.show(

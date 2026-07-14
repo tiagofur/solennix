@@ -11,6 +11,7 @@ public struct EventFormView: View {
     let initialStep: Int?
 
     @State private var viewModel: EventFormViewModel
+    @State private var scoped: ViewScopedTask?
     @State private var didApplyInitialStep = false
     @State private var showDiscardDialog = false
     @Environment(\.dismiss) private var dismiss
@@ -68,6 +69,7 @@ public struct EventFormView: View {
                 didApplyInitialStep: $didApplyInitialStep,
                 viewModel: viewModel
             )
+            .viewScopedTask(scoped: $scoped)
     }
 
     // Navigation-layer modifiers (title, toolbar, alert, sheet) — extracted to
@@ -246,7 +248,7 @@ public struct EventFormView: View {
                     fullWidth: false,
                     icon: "checkmark"
                 ) {
-                    Task {
+                    scoped?.start {
                         do {
                             let isNewEvent = !viewModel.isEdit
                             try await viewModel.save()

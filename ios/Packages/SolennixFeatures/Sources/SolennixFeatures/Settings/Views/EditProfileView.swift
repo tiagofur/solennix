@@ -8,6 +8,7 @@ import SolennixNetwork
 public struct EditProfileView: View {
 
     @State private var viewModel: SettingsViewModel
+    @State private var scoped: ViewScopedTask?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var sizeClass
 
@@ -59,7 +60,7 @@ public struct EditProfileView: View {
                 SolennixSaveButton(
                     title: tr("common.save", "Guardar"),
                     action: {
-                        Task {
+                        scoped?.start {
                             let success = await viewModel.saveProfile()
                             if success {
                                 dismiss()
@@ -76,6 +77,7 @@ public struct EditProfileView: View {
             initialName = viewModel.editName
             initialEmail = viewModel.editEmail
         }
+        .viewScopedTask(scoped: $scoped)
     }
 
     // MARK: - Form Content

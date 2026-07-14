@@ -9,6 +9,7 @@ public struct StaffTeamListView: View {
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var viewModel: StaffTeamListViewModel
+    @State private var scoped: ViewScopedTask?
     @Environment(ToastManager.self) private var toastManager
 
     public init(apiClient: APIClient) {
@@ -50,7 +51,7 @@ public struct StaffTeamListView: View {
                             HapticsHelper.play(.success)
                         },
                         onExpire: {
-                            Task {
+                            scoped?.start {
                                 await viewModel.confirmDeleteTeam(removed.team)
                                 if let message = viewModel.errorMessage {
                                     toastManager.show(message: message, type: .error)
@@ -66,6 +67,7 @@ public struct StaffTeamListView: View {
             .task {
                 await viewModel.load()
             }
+            .viewScopedTask(scoped: $scoped)
     }
 
     // MARK: - Content
@@ -79,7 +81,7 @@ public struct StaffTeamListView: View {
                 Text(error)
             } actions: {
                 Button(StaffStrings.retry) {
-                    Task { await viewModel.load() }
+                    scoped?.start { await viewModel.load() }
                 }
             }
         } else if viewModel.isLoading && viewModel.teams.isEmpty {

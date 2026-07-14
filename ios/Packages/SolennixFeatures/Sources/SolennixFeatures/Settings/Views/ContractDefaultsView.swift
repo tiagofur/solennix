@@ -8,6 +8,7 @@ import SolennixNetwork
 public struct ContractDefaultsView: View {
 
     @State private var viewModel: BusinessSettingsViewModel
+    @State private var scoped: ViewScopedTask?
     @State private var showVariablePicker = false
     @State private var templateCoordinator: ContractTemplateTextView.Coordinator?
     @Environment(\.dismiss) private var dismiss
@@ -69,7 +70,7 @@ public struct ContractDefaultsView: View {
                 SolennixSaveButton(
                     title: tr("common.save", "Guardar"),
                     action: {
-                        Task {
+                        scoped?.start {
                             let success = await viewModel.saveContractDefaults()
                             if success {
                                 dismiss()
@@ -99,6 +100,7 @@ public struct ContractDefaultsView: View {
             initialRefundPercent = viewModel.refundPercent
             initialContractTemplate = viewModel.contractTemplate
         }
+        .viewScopedTask(scoped: $scoped)
     }
 
     // MARK: - Form Content

@@ -13,6 +13,7 @@ public struct InventoryListView: View {
     @Environment(ToastManager.self) private var toastManager
     @Environment(PlanLimitsManager.self) private var planLimitsManager
     @State private var viewModel: InventoryListViewModel
+    @State private var scoped: ViewScopedTask?
 
     public init(apiClient: APIClient) {
         _viewModel = State(initialValue: InventoryListViewModel(apiClient: apiClient))
@@ -101,7 +102,7 @@ public struct InventoryListView: View {
                             HapticsHelper.play(.success)
                         },
                         onExpire: {
-                            Task {
+                            scoped?.start {
                                 await viewModel.confirmDeleteItem(removed.item)
                                 if let message = viewModel.errorMessage {
                                     toastManager.show(message: message, type: .error)
@@ -122,6 +123,7 @@ public struct InventoryListView: View {
                 await viewModel.loadItems()
                 await planLimitsManager.checkLimits()
             }
+            .viewScopedTask(scoped: $scoped)
     }
 
     // MARK: - Content
@@ -339,7 +341,7 @@ public struct InventoryListView: View {
                 Text(error)
             } actions: {
                 Button(InventoryStrings.retry) {
-                    Task { await viewModel.loadItems() }
+                    scoped?.start { await viewModel.loadItems() }
                 }
             }
         } else if viewModel.isLoading && viewModel.items.isEmpty {
@@ -708,7 +710,7 @@ public struct InventoryListView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(InventoryStrings.save) {
-                        Task { await viewModel.saveStockAdjustment() }
+                        scoped?.start { await viewModel.saveStockAdjustment() }
                     }
                     .fontWeight(.semibold)
                 }

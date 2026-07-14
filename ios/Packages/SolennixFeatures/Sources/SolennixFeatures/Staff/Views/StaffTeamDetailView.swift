@@ -10,6 +10,7 @@ public struct StaffTeamDetailView: View {
     let teamId: String
 
     @State private var team: StaffTeam?
+    @State private var scoped: ViewScopedTask?
     @State private var isLoading: Bool = true
     @State private var errorMessage: String?
     @State private var showDeleteConfirm: Bool = false
@@ -69,7 +70,7 @@ public struct StaffTeamDetailView: View {
             isPresented: $showDeleteConfirm
         ) {
             Button(StaffStrings.deleteAction, role: .destructive) {
-                Task {
+                scoped?.start {
                     do {
                         try await apiClient.deleteStaffTeam(id: teamId)
                         dismiss()
@@ -83,6 +84,7 @@ public struct StaffTeamDetailView: View {
             Text(StaffStrings.teamDeleteMessage(team?.name ?? ""))
         }
         .task { await loadData() }
+        .viewScopedTask(scoped: $scoped)
     }
 
     // MARK: - Scroll Content

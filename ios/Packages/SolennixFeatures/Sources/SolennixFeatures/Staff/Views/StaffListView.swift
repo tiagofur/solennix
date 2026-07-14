@@ -10,6 +10,7 @@ public struct StaffListView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var viewModel: StaffListViewModel
+    @State private var scoped: ViewScopedTask?
     @Environment(\.openURL) private var openURL
     @Environment(\.apiClient) private var apiClient
     @Environment(ToastManager.self) private var toastManager
@@ -58,7 +59,7 @@ public struct StaffListView: View {
                             HapticsHelper.play(.success)
                         },
                         onExpire: {
-                            Task {
+                            scoped?.start {
                                 await viewModel.confirmDeleteStaff(removed.staff)
                                 if let message = viewModel.errorMessage {
                                     toastManager.show(message: message, type: .error)
@@ -74,6 +75,7 @@ public struct StaffListView: View {
             .task {
                 await viewModel.loadStaff()
             }
+            .viewScopedTask(scoped: $scoped)
     }
 
     // MARK: - Content
@@ -247,7 +249,7 @@ public struct StaffListView: View {
                 Text(error)
             } actions: {
                 Button(StaffStrings.retry) {
-                    Task { await viewModel.loadStaff() }
+                    scoped?.start { await viewModel.loadStaff() }
                 }
             }
         } else if viewModel.isLoading && viewModel.staff.isEmpty {

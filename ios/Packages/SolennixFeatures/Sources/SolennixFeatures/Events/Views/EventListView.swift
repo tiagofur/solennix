@@ -19,6 +19,7 @@ public struct EventListView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(PlanLimitsManager.self) private var planLimitsManager
     @State private var viewModel: EventListViewModel
+    @State private var scoped: ViewScopedTask?
     @State private var showShareSheet = false
     @State private var csvFileURL: URL?
     @State private var showQuickQuote = false
@@ -148,6 +149,7 @@ public struct EventListView: View {
                 // called, so blocked dates never rendered in calendar mode).
                 await viewModel.loadUnavailableDates()
             }
+            .viewScopedTask(scoped: $scoped)
             // Phase 5 UX: switching modes clears the OTHER mode's filter residue
             // so neither carries a stale selection across (see
             // `EventListViewModel.clearFiltersForViewMode`). A flip is still
@@ -308,7 +310,7 @@ public struct EventListView: View {
                             HapticsHelper.play(.success)
                         },
                         onExpire: {
-                            Task {
+                            scoped?.start {
                                 await viewModel.confirmDeleteEvent(removed.event)
                                 if let message = viewModel.errorMessage {
                                     toastManager.show(message: message, type: .error)
@@ -563,7 +565,7 @@ public struct EventListView: View {
                 Text(error)
             } actions: {
                 Button(tr("events.list.error.retry", "Reintentar")) {
-                    Task { await viewModel.loadEvents() }
+                    scoped?.start { await viewModel.loadEvents() }
                 }
             }
             .padding(.top, Spacing.xl)
@@ -686,7 +688,7 @@ public struct EventListView: View {
                 Text(error)
             } actions: {
                 Button(tr("events.list.error.retry", "Reintentar")) {
-                    Task { await viewModel.loadEvents() }
+                    scoped?.start { await viewModel.loadEvents() }
                 }
             }
             .padding(.top, Spacing.xl)
@@ -935,7 +937,7 @@ public struct EventListView: View {
     @ViewBuilder
     private func statusChangeButton(event: Event, status: EventStatus, label: String) -> some View {
         Button {
-            Task { await viewModel.updateEventStatus(event, to: status) }
+            scoped?.start { await viewModel.updateEventStatus(event, to: status) }
         } label: {
             if event.status == status {
                 Label(label, systemImage: "checkmark")

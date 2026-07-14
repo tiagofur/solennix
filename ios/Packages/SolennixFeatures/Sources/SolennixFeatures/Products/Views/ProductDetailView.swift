@@ -239,6 +239,7 @@ final class ProductDetailViewModel {
 public struct ProductDetailView: View {
 
     @State private var viewModel: ProductDetailViewModel
+    @State private var scoped: ViewScopedTask?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -289,7 +290,7 @@ public struct ProductDetailView: View {
             isPresented: $viewModel.showDeleteConfirm
         ) {
             Button(ProductStrings.deleteAction, role: .destructive) {
-                Task {
+                scoped?.start {
                     if await viewModel.deleteProduct() {
                         dismiss()
                     }
@@ -310,6 +311,7 @@ public struct ProductDetailView: View {
             Text(viewModel.errorMessage ?? "")
         }
         .task { await viewModel.loadData() }
+        .viewScopedTask(scoped: $scoped)
     }
 
     // MARK: - @ScaledMetric sizes (Dynamic Type-safe, capped)

@@ -285,6 +285,7 @@ final class InventoryDetailViewModel {
 public struct InventoryDetailView: View {
 
     @State private var viewModel: InventoryDetailViewModel
+    @State private var scoped: ViewScopedTask?
     @Environment(\.dismiss) private var dismiss
 
     // MARK: - @ScaledMetric sizes (capped — fix #10)
@@ -347,7 +348,7 @@ public struct InventoryDetailView: View {
             isPresented: $viewModel.showDeleteConfirm
         ) {
             Button(InventoryStrings.deleteAction, role: .destructive) {
-                Task {
+                scoped?.start {
                     if await viewModel.deleteItem() {
                         dismiss()
                     }
@@ -373,6 +374,7 @@ public struct InventoryDetailView: View {
         .sensoryFeedback(.success, trigger: viewModel.stockSavedCounter)
         .sensoryFeedback(.error, trigger: viewModel.stockErrorCounter)
         .task { await viewModel.loadData() }
+        .viewScopedTask(scoped: $scoped)
     }
 
     // MARK: - Hub List (fix #4 — List insetGrouped, no shadows, no AdaptiveDetailLayout)
@@ -950,7 +952,7 @@ public struct InventoryDetailView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(InventoryStrings.save) {
-                        Task { await viewModel.saveStockAdjustment() }
+                        scoped?.start { await viewModel.saveStockAdjustment() }
                     }
                     .fontWeight(.semibold)
                 }
