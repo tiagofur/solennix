@@ -104,3 +104,17 @@ export function useForecast() {
     staleTime: 30_000,
   });
 }
+
+/**
+ * Events needing follow-up (pending payments, overdue, urgent quotes).
+ * Replaces the client-side attention logic that fetched the full unpaginated
+ * event + payment lists and filtered them client-side (issue #861). The
+ * backend computes the reason classification and pending balance.
+ */
+export function useDashboardAttention() {
+  return useQuery({
+    queryKey: queryKeys.dashboard.attention,
+    queryFn: () => dashboardService.getAttention(),
+    staleTime: 60_000,
+  });
+}

@@ -413,6 +413,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Get("/top-clients", dashboardHandler.GetTopClients)
 			r.Get("/product-demand", dashboardHandler.GetProductDemand)
 			r.Get("/forecast", dashboardHandler.GetForecast)
+			r.Get("/attention", dashboardHandler.GetAttention)
 			r.Get("/activity", auditHandler.GetActivity)
 		})
 	})

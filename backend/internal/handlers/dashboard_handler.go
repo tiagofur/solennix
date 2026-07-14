@@ -152,3 +152,21 @@ func (h *DashboardHandler) GetSummary(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, summary)
 }
+
+// GetAttention returns events needing follow-up (pending payments, overdue,
+// urgent quotes) with the reason classification and pending balance computed
+// server-side. Replaces the client-side attention logic that fetched the full
+// unpaginated event + payment lists on every dashboard load (issue #861).
+// GET /api/dashboard/attention
+func (h *DashboardHandler) GetAttention(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+
+	items, err := h.dashboardRepo.GetAttention(r.Context(), userID)
+	if err != nil {
+		slog.Error("dashboard: failed to get attention items", "error", err, "user_id", userID)
+		writeError(w, http.StatusInternalServerError, "Failed to get attention items")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, items)
+}

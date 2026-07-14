@@ -55,6 +55,8 @@
     "view_detail": "View details",
     "confirmed_payment_title": "Upcoming balances",
     "confirmed_payment_desc": "Confirmed events in the next 7 days with pending balance.",
+    "quote_urgent_title": "Urgent quotes",
+    "quote_urgent_desc": "Unconfirmed quotes in the next 14 days.",
     "past_active_title": "Overdue events",
     "past_active_desc": "Events that already passed but haven't been completed or cancelled.",
     "pending_event_talkback": "Pending event: {{service}}, date {{date}}, reason {{reason}}"

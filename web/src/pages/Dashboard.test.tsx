@@ -64,6 +64,7 @@ vi.mock('../hooks/queries/useDashboardQueries', () => ({
   useDashboardEventsByStatus: () => ({
     data: [],
   }),
+  useDashboardAttention: () => mockAttentionQuery,
 }));
 
 // Capture Tooltip formatter props so we can exercise them in tests
@@ -99,10 +100,15 @@ const renderDashboard = () =>
     </MemoryRouter>
   );
 
+// Controllable attention items returned by the mocked useDashboardAttention.
+const mockAttentionQuery = { data: [] as any[], isLoading: false };
+
 describe('Dashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     capturedTooltipFormatters.length = 0;
+    mockAttentionQuery.data = [];
+    mockAttentionQuery.isLoading = false;
     (useAuth as any).mockReturnValue({ user: { name: 'Test User' }, profile: { name: 'Test User' }, checkAuth: vi.fn() });
     (eventService.getAll as any).mockResolvedValue([]);
     (eventService.getByDateRange as any).mockResolvedValue([]);
@@ -208,52 +214,50 @@ describe('Dashboard', () => {
       return `${year}-${month}-${day}`;
     };
 
-    (eventService.getAll as any).mockResolvedValue([
+    // Server-classified attention items replace the old client-side filtering.
+    mockAttentionQuery.data = [
       {
-        id: 'confirmed-unpaid',
-        status: 'confirmed',
-        total_amount: 1000,
-        tax_amount: 0,
-        requires_invoice: false,
+        event_id: 'confirmed-unpaid',
         event_date: toLocalDateString(inThreeDays),
-        client: { name: 'Ana' },
         service_type: 'Boda',
-        num_people: 100,
+        status: 'confirmed',
+        client_name: 'Ana',
+        total_amount: 1000,
+        amount_paid: 0,
+        pending_balance: 1000,
+        reason: 'payment_due',
       },
       {
-        id: 'past-quoted',
-        status: 'quoted',
-        total_amount: 500,
-        tax_amount: 0,
-        requires_invoice: false,
+        event_id: 'past-quoted',
         event_date: toLocalDateString(twoDaysAgo),
-        client: { name: 'Luis' },
         service_type: 'XV',
-        num_people: 60,
+        status: 'quoted',
+        client_name: 'Luis',
+        total_amount: 500,
+        amount_paid: 0,
+        pending_balance: 500,
+        reason: 'overdue_event',
       },
       {
-        id: 'quoted-soon',
-        status: 'quoted',
-        total_amount: 700,
-        tax_amount: 0,
-        requires_invoice: false,
+        event_id: 'quoted-soon',
         event_date: toLocalDateString(inTenDays),
-        client: { name: 'Carla' },
         service_type: 'Cena',
-        num_people: 40,
+        status: 'quoted',
+        client_name: 'Carla',
+        total_amount: 700,
+        amount_paid: 0,
+        pending_balance: 700,
+        reason: 'quote_urgent',
       },
-    ]);
-    (paymentService.getByEventIds as any)
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([{ event_id: 'confirmed-unpaid', amount: 250 }]);
+    ];
 
     renderDashboard();
 
     expect(await screen.findByText(/Requieren atención/i)).toBeInTheDocument();
     expect(screen.getByText(/Saldos próximos/i)).toBeInTheDocument();
     expect(screen.getByText(/Eventos vencidos/i)).toBeInTheDocument();
+    expect(screen.getByText(/Cotizaciones urgentes/i)).toBeInTheDocument();
     expect(screen.getByText(/Saldo pendiente \$1,000 de \$1,000/i)).toBeInTheDocument();
-    expect(screen.getByText(/Cotización vencida sin cerrar/i)).toBeInTheDocument();
   });
 
   it('hides attention widget when there are no alerts', async () => {
@@ -369,25 +373,21 @@ describe('Dashboard', () => {
     };
 
     const seedOverdueWithBalance = () => {
-      // Single past-quoted event with $1000 total and $0 paid → "past-active"
-      // category with balance $1000 → CTAs include "Pagar y completar".
-      (eventService.getAll as any).mockResolvedValue([
+      // Server-classified overdue item with $1000 pending → "past-active"
+      // category with balance → CTAs include "Pagar y completar".
+      mockAttentionQuery.data = [
         {
-          id: 'evt-overdue',
-          status: 'quoted',
-          total_amount: 1000,
-          tax_amount: 0,
-          requires_invoice: false,
+          event_id: 'evt-overdue',
           event_date: toLocalDateString(twoDaysAgo),
-          client: { name: 'Ana' },
           service_type: 'Boda',
-          num_people: 100,
+          status: 'quoted',
+          client_name: 'Ana',
+          total_amount: 1000,
+          amount_paid: 0,
+          pending_balance: 1000,
+          reason: 'overdue_event',
         },
-      ]);
-      // realizedEventIds payments + attentionCandidateIds payments
-      (paymentService.getByEventIds as any)
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce([]);
+      ];
     };
 
     it('"Pagar y completar" with full amount triggers payment + status=completed', async () => {
@@ -397,13 +397,9 @@ describe('Dashboard', () => {
 
       renderDashboard();
 
-      // Click the inline CTA — there's only one button with this text before
-      // the modal opens.
       const ctaBtn = await screen.findByRole('button', { name: /Pagar y completar/i });
       fireEvent.click(ctaBtn);
 
-      // Modal opens. Scope subsequent queries to the dialog so the submit
-      // button (same label) is unambiguous.
       const dialog = await screen.findByRole('dialog');
       const amountInput = within(dialog).getByLabelText(/Monto/i) as HTMLInputElement;
       await waitFor(() => expect(amountInput.value).toBe('1000'));
@@ -447,9 +443,6 @@ describe('Dashboard', () => {
         );
       });
 
-      // Wait for the modal to close — that only happens after the handler
-      // finishes its async block, so by this point the auto-complete branch
-      // had its chance to fire and didn't (Bug 5 guard).
       await waitFor(() => {
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       });
@@ -458,22 +451,19 @@ describe('Dashboard', () => {
 
     it('"Cancelar" on past-active without balance triggers status=cancelled only', async () => {
       // Past-active fully paid → no balance → renders "Completar" + "Cancelar"
-      (eventService.getAll as any).mockResolvedValue([
+      mockAttentionQuery.data = [
         {
-          id: 'evt-fullpaid',
-          status: 'confirmed',
-          total_amount: 500,
-          tax_amount: 0,
-          requires_invoice: false,
+          event_id: 'evt-fullpaid',
           event_date: toLocalDateString(twoDaysAgo),
-          client: { name: 'Bea' },
           service_type: 'XV',
-          num_people: 50,
+          status: 'confirmed',
+          client_name: 'Bea',
+          total_amount: 500,
+          amount_paid: 500,
+          pending_balance: 0,
+          reason: 'overdue_event',
         },
-      ]);
-      (paymentService.getByEventIds as any)
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce([{ event_id: 'evt-fullpaid', amount: 500 }]);
+      ];
       (eventService.update as any).mockResolvedValue({ id: 'evt-fullpaid' });
 
       renderDashboard();

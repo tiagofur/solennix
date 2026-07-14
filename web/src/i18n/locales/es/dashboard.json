@@ -55,6 +55,8 @@
     "view_detail": "Ver detalle",
     "confirmed_payment_title": "Saldos próximos",
     "confirmed_payment_desc": "Eventos confirmados en los próximos 7 días con saldo pendiente.",
+    "quote_urgent_title": "Cotizaciones urgentes",
+    "quote_urgent_desc": "Cotizaciones sin confirmar en los próximos 14 días.",
     "past_active_title": "Eventos vencidos",
     "past_active_desc": "Eventos que ya pasaron pero no han sido completados o cancelados.",
     "pending_event_talkback": "Evento pendiente: {{service}}, fecha {{date}}, motivo {{reason}}"

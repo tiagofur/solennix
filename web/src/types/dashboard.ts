@@ -51,3 +51,20 @@ export interface DashboardSummary {
   product_demand: components["schemas"]["ProductDemandItem"][];
   forecast: components["schemas"]["ForecastDataPoint"][];
 }
+
+// One row from GET /api/dashboard/attention. Mirrors backend
+// AttentionItem — events needing follow-up with reason + balance computed
+// server-side so the three frontends don't triplicate the logic (issue #861).
+export type AttentionReason = "payment_due" | "overdue_event" | "quote_urgent";
+
+export interface AttentionItem {
+  event_id: string;
+  event_date: string;
+  service_type: string;
+  status: string;
+  client_name: string;
+  total_amount: number;
+  amount_paid: number;
+  pending_balance: number;
+  reason: AttentionReason;
+}

@@ -58,7 +58,6 @@ import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 
 import {
-  useEvents,
   useEventsPaginated,
   useDeleteEvent,
   useEventSearch,
@@ -404,13 +403,11 @@ export const EventList: React.FC = () => {
   }, [searchTerm, statusFilter, dateFrom, dateTo]);
   
   const searchQuery = useEventSearch(searchFilters);
-  const allEventsQuery = useEvents();
 
   const loading = viewMode === "list"
     ? (hasFilters ? searchQuery.isLoading : paginatedQuery.isLoading)
     : (eventsRangeFetching || unavailableFetching);
 
-  const allEvents: EventWithClient[] = allEventsQuery.data ?? [];
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
@@ -504,7 +501,7 @@ export const EventList: React.FC = () => {
   const currentPage = hasFilters ? clientPagination.currentPage : urlPage;
   const totalPages = hasFilters ? clientPagination.totalPages : paginatedQuery.data?.total_pages ?? 1;
   const totalItems = hasFilters ? clientPagination.totalItems : paginatedQuery.data?.total ?? 0;
-  const headerCount = hasFilters ? filteredEvents.length : (paginatedQuery.data?.total ?? allEvents.length);
+  const headerCount = hasFilters ? filteredEvents.length : (paginatedQuery.data?.total ?? 0);
 
   const sortKey = hasFilters ? clientPagination.sortKey : urlSort;
   const sortOrder = hasFilters ? clientPagination.sortOrder : urlOrder;
@@ -521,7 +518,10 @@ export const EventList: React.FC = () => {
     [t],
   );
 
-  const csvRows = hasFilters ? filteredEvents : allEvents;
+  // CSV export reflects the current view: filtered results when searching,
+  // otherwise the current paginated page. Exporting the entire catalog would
+  // require a dedicated backend endpoint (out of scope for #861).
+  const csvRows = hasFilters ? filteredEvents : paginatedEvents;
   const hasActiveFilters = !!(searchTerm || statusFilter !== "all" || dateFrom || dateTo);
 
 

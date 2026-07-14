@@ -990,6 +990,14 @@ func (m *MockDashboardRepo) GetSummary(ctx context.Context, userID uuid.UUID) (*
 	return args.Get(0).(*repository.DashboardSummary), args.Error(1)
 }
 
+func (m *MockDashboardRepo) GetAttention(ctx context.Context, userID uuid.UUID) ([]repository.AttentionItem, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]repository.AttentionItem), args.Error(1)
+}
+
 // ---------------------------------------------------------------------------
 // MockRefreshTokenRepo — implements RefreshTokenRepository
 // ---------------------------------------------------------------------------
