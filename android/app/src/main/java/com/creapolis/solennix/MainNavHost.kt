@@ -9,6 +9,7 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -49,6 +50,32 @@ fun MainNavHost(deepLinkIntent: Intent? = null) {
     val appDeepLinkRoute = remember(deepLinkIntent) { parseAppDeepLinkRoute(deepLinkIntent) }
     val authDeepLinkRoute = remember(deepLinkIntent) { parseAuthDeepLinkRoute(deepLinkIntent) }
 
+    // Pending app deep link that survives the Unauthenticated → Authenticated
+    // transition (#841). When a deep link arrives while logged out, it is parked
+    // here and replayed once the user authenticates, then cleared after consumption.
+    var pendingAppDeepLinkRoute by rememberSaveable { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(appDeepLinkRoute, authState) {
+        if (appDeepLinkRoute != null && authState != AuthManager.AuthState.Authenticated) {
+            // Park the route until the user is authenticated.
+            pendingAppDeepLinkRoute = appDeepLinkRoute
+        }
+    }
+
+    val replayRoute = if (authState == AuthManager.AuthState.Authenticated) {
+        pendingAppDeepLinkRoute ?: appDeepLinkRoute
+    } else {
+        null
+    }
+
+    LaunchedEffect(authState, replayRoute) {
+        // Clear the pending route after it has been consumed by the authenticated
+        // layout, so it is not replayed on every recomposition.
+        if (authState == AuthManager.AuthState.Authenticated && pendingAppDeepLinkRoute != null) {
+            pendingAppDeepLinkRoute = null
+        }
+    }
+
     LaunchedEffect(Unit) {
         authViewModel.authManager.restoreSession()
     }
@@ -87,11 +114,11 @@ fun MainNavHost(deepLinkIntent: Intent? = null) {
                 )
             } else if (windowSizeClass != null && windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact) {
                 AdaptiveNavigationRailLayout(
-                    initialDeepLinkRoute = appDeepLinkRoute,
+                    initialDeepLinkRoute = replayRoute,
                     currentUser = currentUser
                 )
             } else {
-                CompactBottomNavLayout(initialDeepLinkRoute = appDeepLinkRoute)
+                CompactBottomNavLayout(initialDeepLinkRoute = replayRoute)
             }
         }
     }

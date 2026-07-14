@@ -158,6 +158,16 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
         initialDeepLinkRoute?.let { route ->
             navController.navigate(route) {
                 launchSingleTop = true
+                // Prevent duplicate destinations when the same deep link is
+                // re-delivered: pop the back stack up to the start destination
+                // for top-level routes so no stale copies remain (#851).
+                val isTopLevel = TopLevelDestination.entries.any { it.route == route }
+                if (isTopLevel) {
+                    popUpTo(navController.graph.startDestinationId) {
+                        saveState = true
+                    }
+                    restoreState = true
+                }
             }
         }
     }
