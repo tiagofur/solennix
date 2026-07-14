@@ -63,15 +63,20 @@ vi.mock('./ClientDetails', () => ({
     ) : null,
 }));
 
-/** Sets up both getAll and getPage mocks with the same data. */
-const mockClients = (clients: any[]) => {
+/** Sets up getPage mock. Optionally accepts a per-search override map. */
+const mockClients = (clients: any[], searchMap?: Record<string, any[]>) => {
   (clientService.getAll as any).mockResolvedValue(clients);
-  (clientService.getPage as any).mockResolvedValue({
-    data: clients,
-    total: clients.length,
-    page: 1,
-    limit: 20,
-    total_pages: 1,
+  (clientService.getPage as any).mockImplementation(({ search }: { search?: string } = {}) => {
+    const result = searchMap && search && searchMap[search] !== undefined
+      ? searchMap[search]
+      : clients;
+    return Promise.resolve({
+      data: result,
+      total: result.length,
+      page: 1,
+      limit: 20,
+      total_pages: result.length === 0 ? 1 : 1,
+    });
   });
 };
 
@@ -101,6 +106,11 @@ describe('ClientList', () => {
     mockIsXl = false;
   });
 
+  afterEach(() => {
+    // Always restore real timers so fake-timer tests don't leak into subsequent tests
+    vi.useRealTimers();
+  });
+
   it('renders clients after loading', async () => {
     mockClients([
       {
@@ -124,38 +134,35 @@ describe('ClientList', () => {
   });
 
   it('filters clients by search term', async () => {
-    mockClients([
+    mockClients(
+      [
+        { id: '1', name: 'Ana Perez', phone: '5551112222', email: 'ana@example.com', address: 'Calle 1', total_events: 2, total_spent: 1200 },
+        { id: '2', name: 'Juan Lopez', phone: '5553334444', email: 'juan@example.com', address: 'Calle 2', total_events: 1, total_spent: 800 },
+      ],
       {
-        id: '1',
-        name: 'Ana Perez',
-        phone: '5551112222',
-        email: 'ana@example.com',
-        address: 'Calle 1',
-        total_events: 2,
-        total_spent: 1200,
+        Ana: [{ id: '1', name: 'Ana Perez', phone: '5551112222', email: 'ana@example.com', address: 'Calle 1', total_events: 2, total_spent: 1200 }],
       },
-      {
-        id: '2',
-        name: 'Juan Lopez',
-        phone: '5553334444',
-        email: 'juan@example.com',
-        address: 'Calle 2',
-        total_events: 1,
-        total_spent: 800,
-      },
-    ]);
+    );
 
+    // Render under real timers so React Query initializes normally
     renderList();
     await waitFor(() => {
       expect(screen.getByText('Juan Lopez')).toBeInTheDocument();
     });
 
+    // Switch to fake timers AFTER the initial load, only for the debounce
+    vi.useFakeTimers();
     fireEvent.change(screen.getByPlaceholderText('Buscar cliente por nombre, correo o teléfono...'), {
       target: { value: 'Ana' },
     });
+    vi.advanceTimersByTime(300);
+    // Restore real timers BEFORE the async assertion so waitFor can tick
+    vi.useRealTimers();
 
+    await waitFor(() => {
+      expect(screen.queryByText('Juan Lopez')).not.toBeInTheDocument();
+    });
     expect(screen.getByText('Ana Perez')).toBeInTheDocument();
-    expect(screen.queryByText('Juan Lopez')).not.toBeInTheDocument();
   });
 
   it('navigates to detail on row click', async () => {
@@ -309,29 +316,33 @@ describe('ClientList', () => {
   });
 
   it('shows empty state with search description when search has no results', async () => {
-    mockClients([
+    mockClients(
+      [
+        { id: '1', name: 'Ana Perez', phone: '5551112222', email: 'ana@example.com', address: 'Calle 1', total_events: 2, total_spent: 1200 },
+      ],
       {
-        id: '1',
-        name: 'Ana Perez',
-        phone: '5551112222',
-        email: 'ana@example.com',
-        address: 'Calle 1',
-        total_events: 2,
-        total_spent: 1200,
+        zzzznonexistent: [],
       },
-    ]);
+    );
 
+    // Render under real timers so React Query initializes normally
     renderList();
-
     await waitFor(() => {
       expect(screen.getByText('Ana Perez')).toBeInTheDocument();
     });
 
+    // Switch to fake timers only for the debounce advance
+    vi.useFakeTimers();
     fireEvent.change(screen.getByPlaceholderText('Buscar cliente por nombre, correo o teléfono...'), {
       target: { value: 'zzzznonexistent' },
     });
+    vi.advanceTimersByTime(300);
+    // Restore real timers BEFORE waitFor so async resolution works
+    vi.useRealTimers();
 
-    expect(screen.getByText('No se encontraron clientes')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('No se encontraron clientes')).toBeInTheDocument();
+    });
     expect(screen.getByText('No se encontraron clientes que coincidan con tu búsqueda')).toBeInTheDocument();
   });
 

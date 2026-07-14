@@ -71,7 +71,7 @@ type FullEventRepository interface {
 // ClientRepository defines client repo operations.
 type ClientRepository interface {
 	GetAll(ctx context.Context, userID uuid.UUID) ([]models.Client, error)
-	GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Client, int, error)
+	GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order, search string) ([]models.Client, int, error)
 	GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Client, error)
 	Create(ctx context.Context, c *models.Client) error
 	Update(ctx context.Context, c *models.Client) error

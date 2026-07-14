@@ -1664,6 +1664,47 @@ func TestListClients_Success(t *testing.T) {
 	}
 }
 
+func TestListClients_Paginated_WithSearch(t *testing.T) {
+	userID := uuid.New()
+	clientRepo := new(MockClientRepo)
+
+	clientRepo.On("GetAllPaginated", mock.Anything, userID, 0, 20, "name", "DESC", "maria").
+		Return([]models.Client{
+			{ID: uuid.New(), UserID: userID, Name: "Maria García"},
+		}, 1, nil)
+
+	h := newTestHandler(clientRepo, new(MockFullEventRepo), new(MockProductRepo), new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))
+
+	req := makeReqWithUserID(http.MethodGet, "/api/clients?page=1&limit=20&sort=name&order=DESC&search=maria", "", userID)
+	rr := httptest.NewRecorder()
+	h.ListClients(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("paginated search: status = %d, want %d, body=%s", rr.Code, http.StatusOK, rr.Body.String())
+	}
+}
+
+func TestListClients_Paginated_NoSearch(t *testing.T) {
+	userID := uuid.New()
+	clientRepo := new(MockClientRepo)
+
+	clientRepo.On("GetAllPaginated", mock.Anything, userID, 0, 20, "name", "DESC", "").
+		Return([]models.Client{
+			{ID: uuid.New(), UserID: userID, Name: "Client A"},
+		}, 1, nil)
+
+	h := newTestHandler(clientRepo, new(MockFullEventRepo), new(MockProductRepo), new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))
+
+	req := makeReqWithUserID(http.MethodGet, "/api/clients?page=1&limit=20&sort=name&order=DESC", "", userID)
+	rr := httptest.NewRecorder()
+	h.ListClients(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("paginated no-search: status = %d, want %d, body=%s", rr.Code, http.StatusOK, rr.Body.String())
+	}
+}
+
+
 func TestGetClient_Success(t *testing.T) {
 	userID := uuid.New()
 	clientID := uuid.New()

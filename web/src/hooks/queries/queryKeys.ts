@@ -1,8 +1,8 @@
 export const queryKeys = {
   clients: {
     all: ['clients'] as const,
-    paginated: (page?: number, limit?: number, sort?: string, order?: string) =>
-      ['clients', 'paginated', { page, limit, sort, order }] as const,
+    paginated: (page?: number, limit?: number, sort?: string, order?: string, search?: string) =>
+      ['clients', 'paginated', { page, limit, sort, order, search }] as const,
     detail: (id: string) => ['clients', id] as const,
   },
   events: {

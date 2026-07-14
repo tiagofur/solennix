@@ -134,7 +134,11 @@ func (h *CRUDHandler) ListClients(w http.ResponseWriter, r *http.Request) {
 	params := parsePaginationParams(r, clientSortAllowlist, "name")
 	if params != nil {
 		offset := (params.Page - 1) * params.Limit
-		clients, total, err := h.clientRepo.GetAllPaginated(r.Context(), userID, offset, params.Limit, params.Sort, params.Order)
+		search := r.URL.Query().Get("search")
+		if search == "" {
+			search = r.URL.Query().Get("q")
+		}
+		clients, total, err := h.clientRepo.GetAllPaginated(r.Context(), userID, offset, params.Limit, params.Sort, params.Order, search)
 		if err != nil {
 			writeCRUDI18nError(w, r, http.StatusInternalServerError, "crud.fetch_clients_failed")
 			return
