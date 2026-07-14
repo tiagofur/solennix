@@ -71,9 +71,11 @@ describe('Layout', () => {
     expect(mockSignOut).toHaveBeenCalledTimes(1);
   });
 
-  it('handles sign out failure and redirects', async () => {
+  it('handles sign out failure gracefully (no redirect leak from Layout)', async () => {
+    // signOut's real implementation never rejects (try/catch/finally), so we
+    // simulate an unexpected throw to verify handleSignOut's catch logs it
+    // without duplicating the redirect — signOut's finally owns the redirect.
     mockSignOut.mockRejectedValue(new Error('fail'));
-    localStorage.setItem('sb-test-auth-token', 'token');
 
     renderLayout();
 
@@ -82,7 +84,9 @@ describe('Layout', () => {
     await waitFor(() => {
       expect(logError).toHaveBeenCalledWith('Error signing out', expect.any(Error));
     });
-    expect(window.location.href).toBe('/login');
+    // Layout no longer redirects in its catch — that's signOut's job.
+    // The redirect + localStorage cleanup happens in signOut's finally.
+    expect(window.location.href).toBe('');
   });
 
   it('opens and closes the mobile sidebar', () => {

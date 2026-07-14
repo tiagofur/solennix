@@ -156,14 +156,10 @@ export const Layout: React.FC = () => {
     try {
       await signOut();
     } catch (error) {
+      // signOut already runs clearUserScopedStorage() in its finally block,
+      // so session-scoped localStorage (incl. Supabase tokens) is cleared
+      // regardless. This catch is a safety net for unexpected throws.
       logError('Error signing out', error);
-      // Force cleanup of Supabase tokens only
-      Object.keys(localStorage).forEach((key) => {
-        if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
-          localStorage.removeItem(key);
-        }
-      });
-      window.location.href = '/login';
     }
   };
 
