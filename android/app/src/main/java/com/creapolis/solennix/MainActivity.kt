@@ -107,6 +107,14 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        // Dedup: skip re-processing if the new intent carries the exact same
+        // deep link URI as the current one. Prevents duplicate navigate() calls
+        // when the same notification/widget deep link is delivered twice (#851).
+        val currentUri = deepLinkIntent?.dataString
+        val newUri = intent.dataString
+        if (currentUri != null && currentUri == newUri) {
+            return
+        }
         // Trigger recomposition via state — avoids destroying the Compose tree
         deepLinkIntent = intent
     }
