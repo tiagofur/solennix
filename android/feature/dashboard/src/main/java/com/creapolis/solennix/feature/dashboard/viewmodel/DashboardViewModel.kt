@@ -34,6 +34,7 @@ import com.creapolis.solennix.core.network.AuthManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -136,6 +137,11 @@ class DashboardViewModel @Inject constructor(
     internal val _updatingEventId = MutableStateFlow<String?>(null)
     internal val _paymentModalEvent = MutableStateFlow<PendingEvent?>(null)
     internal val _transientMessage = MutableStateFlow<String?>(null)
+
+    // Debounce gate for resume-triggered refreshes (#847). Null = never refreshed.
+    internal val _lastRefreshTime = MutableStateFlow<Long?>(null)
+    // Tracks the in-flight sync job so forceRefresh can cancel it (#847).
+    internal val _refreshJob = MutableStateFlow<Job?>(null)
 
     // Backend-aggregated KPIs (monetary, counts). Refreshed alongside
     // `refresh()`. Null while the first fetch is in flight.

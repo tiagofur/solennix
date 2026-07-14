@@ -24,6 +24,7 @@
     <string name="dashboard_error_status_change_failed">No pudimos actualizar el estado del evento. Reintentá en un momento.</string>
     <string name="dashboard_error_payment_failed">No pudimos registrar el pago. Reintentá en un momento.</string>
     <string name="dashboard_error_payment_requirements">Monto y método de pago son requeridos</string>
+    <string name="dashboard_error_sync_failed">Algunos datos no se pudieron actualizar</string>
     <string name="dashboard_kpi_net_sales">Ventas netas</string>
     <string name="dashboard_kpi_collected">Cobrado</string>
     <string name="dashboard_kpi_vat_collected">IVA cobrado</string>
