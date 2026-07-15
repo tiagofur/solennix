@@ -160,6 +160,18 @@ class ApiClient {
 				...defaultHeaders,
 				...init.headers,
 			},
+		}).catch((err: unknown) => {
+			// Network-level failure (DNS, CORS preflight, connection refused, or
+			// navigator offline). Replace the raw TypeError ("Failed to fetch")
+			// with a localized, user-friendly message (#887).
+			if (err instanceof TypeError) {
+				throw new Error(
+					typeof navigator !== 'undefined' && !navigator.onLine
+						? i18n.t('common:offline.banner_title')
+						: i18n.t('common:error.network'),
+				);
+			}
+			throw err;
 		});
 
 		const isAuthEndpoint = endpoint.startsWith("/auth/");

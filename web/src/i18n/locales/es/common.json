@@ -429,5 +429,10 @@
     "go_to": "Ir a {{target}}",
     "create_new_contextual": "Crear nuevo (contextual)",
     "show_help": "Mostrar atajos de teclado"
+  },
+  "offline": {
+    "banner_title": "Sin conexión",
+    "banner_description": "Algunas funciones no estarán disponibles hasta que vuelvas a conectar.",
+    "back_online": "Conexión restablecida"
   }
 }

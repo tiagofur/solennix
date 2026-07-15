@@ -32,6 +32,7 @@ vi.mock('react-router-dom', async () => {
 // Mock child components that are not relevant to Layout tests
 vi.mock('./BottomTabBar', () => ({ BottomTabBar: () => <div data-testid="bottom-tab-bar" /> }));
 vi.mock('./QuickActionsFAB', () => ({ QuickActionsFAB: () => null }));
+vi.mock('./OfflineBanner', () => ({ OfflineBanner: () => <div data-testid="offline-banner" /> }));
 vi.mock('./CommandPalette', () => ({ CommandPalette: ({ isOpen }: any) => isOpen ? <div data-testid="command-palette" /> : null }));
 vi.mock('./KeyboardShortcutsHelp', () => ({ KeyboardShortcutsHelp: () => null }));
 vi.mock('../hooks/useKeyboardShortcuts', () => ({

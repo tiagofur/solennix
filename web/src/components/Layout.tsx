@@ -24,6 +24,7 @@ import { logError } from '@/lib/errorHandler';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import { ToastContainer } from './ToastContainer';
+import { OfflineBanner } from './OfflineBanner';
 import { Logo } from './Logo';
 import { CommandPalette } from './CommandPalette';
 import { BottomTabBar } from './BottomTabBar';
@@ -358,6 +359,7 @@ export const Layout: React.FC = () => {
 
       <BottomTabBar />
       <QuickActionsFAB />
+      <OfflineBanner />
       <ToastContainer />
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setIsCommandPaletteOpen(false)} />
       <KeyboardShortcutsHelp open={helpOpen} onClose={() => setHelpOpen(false)} shortcuts={shortcuts} currentSection={currentSection} />
