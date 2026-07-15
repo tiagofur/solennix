@@ -26,7 +26,7 @@ func (h *DashboardHandler) GetKPIs(w http.ResponseWriter, r *http.Request) {
 	kpis, err := h.dashboardRepo.GetKPIs(r.Context(), userID)
 	if err != nil {
 		slog.Error("dashboard: failed to get KPIs", "error", err, "user_id", userID)
-		writeError(w, http.StatusInternalServerError, "Failed to get dashboard KPIs")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "dashboard.fetch_kpis_failed")
 		return
 	}
 
@@ -43,14 +43,14 @@ func (h *DashboardHandler) GetRevenueChart(w http.ResponseWriter, r *http.Reques
 		period = "year"
 	}
 	if period != "month" && period != "quarter" && period != "year" {
-		writeError(w, http.StatusBadRequest, "Invalid period. Must be 'month', 'quarter', or 'year'")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "dashboard.invalid_period")
 		return
 	}
 
 	data, err := h.dashboardRepo.GetRevenueChart(r.Context(), userID, period)
 	if err != nil {
 		slog.Error("dashboard: failed to get revenue chart", "error", err, "user_id", userID)
-		writeError(w, http.StatusInternalServerError, "Failed to get revenue chart")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "dashboard.fetch_revenue_chart_failed")
 		return
 	}
 
@@ -70,14 +70,14 @@ func (h *DashboardHandler) GetEventsByStatus(w http.ResponseWriter, r *http.Requ
 		scope = "all"
 	}
 	if scope != "month" && scope != "all" {
-		writeError(w, http.StatusBadRequest, "Invalid scope. Must be 'month' or 'all'")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "dashboard.invalid_scope")
 		return
 	}
 
 	data, err := h.dashboardRepo.GetEventsByStatus(r.Context(), userID, scope)
 	if err != nil {
 		slog.Error("dashboard: failed to get events by status", "error", err, "user_id", userID)
-		writeError(w, http.StatusInternalServerError, "Failed to get events by status")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "dashboard.fetch_events_by_status_failed")
 		return
 	}
 
@@ -99,7 +99,7 @@ func (h *DashboardHandler) GetTopClients(w http.ResponseWriter, r *http.Request)
 	data, err := h.dashboardRepo.GetTopClients(r.Context(), userID, limit)
 	if err != nil {
 		slog.Error("dashboard: failed to get top clients", "error", err, "user_id", userID)
-		writeError(w, http.StatusInternalServerError, "Failed to get top clients")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "dashboard.fetch_top_clients_failed")
 		return
 	}
 
@@ -114,7 +114,7 @@ func (h *DashboardHandler) GetProductDemand(w http.ResponseWriter, r *http.Reque
 	data, err := h.dashboardRepo.GetProductDemand(r.Context(), userID)
 	if err != nil {
 		slog.Error("dashboard: failed to get product demand", "error", err, "user_id", userID)
-		writeError(w, http.StatusInternalServerError, "Failed to get product demand")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "dashboard.fetch_product_demand_failed")
 		return
 	}
 
@@ -129,7 +129,7 @@ func (h *DashboardHandler) GetForecast(w http.ResponseWriter, r *http.Request) {
 	data, err := h.dashboardRepo.GetForecast(r.Context(), userID)
 	if err != nil {
 		slog.Error("dashboard: failed to get forecast", "error", err, "user_id", userID)
-		writeError(w, http.StatusInternalServerError, "Failed to get forecast")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "dashboard.fetch_forecast_failed")
 		return
 	}
 
@@ -146,7 +146,7 @@ func (h *DashboardHandler) GetSummary(w http.ResponseWriter, r *http.Request) {
 	summary, err := h.dashboardRepo.GetSummary(r.Context(), userID)
 	if err != nil {
 		slog.Error("dashboard: failed to get summary", "error", err, "user_id", userID)
-		writeError(w, http.StatusInternalServerError, "Failed to get dashboard summary")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "dashboard.fetch_summary_failed")
 		return
 	}
 
@@ -164,7 +164,7 @@ func (h *DashboardHandler) GetAttention(w http.ResponseWriter, r *http.Request) 
 	items, err := h.dashboardRepo.GetAttention(r.Context(), userID)
 	if err != nil {
 		slog.Error("dashboard: failed to get attention items", "error", err, "user_id", userID)
-		writeError(w, http.StatusInternalServerError, "Failed to get attention items")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "dashboard.fetch_attention_failed")
 		return
 	}
 

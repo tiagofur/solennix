@@ -221,7 +221,7 @@ func (h *CRUDHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if count >= limit {
-				writePlanLimitError(w, "clients", count, limit)
+				writePlanLimitError(w, r, "clients", count, limit)
 				return
 			}
 			if cErr := h.clientRepo.Create(r.Context(), &client); cErr != nil {
@@ -229,7 +229,7 @@ func (h *CRUDHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		} else if errors.Is(err, ErrPlanLimitReached) {
-			writePlanLimitError(w, "clients", limit, limit)
+			writePlanLimitError(w, r, "clients", limit, limit)
 			return
 		} else if err != nil {
 			writeCRUDI18nError(w, r, http.StatusInternalServerError, "crud.create_client_failed")
@@ -727,7 +727,7 @@ func (h *CRUDHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if count >= limit {
-				writePlanLimitError(w, "events", count, limit)
+				writePlanLimitError(w, r, "events", count, limit)
 				return
 			}
 			if cErr := h.eventRepo.Create(r.Context(), &event); cErr != nil {
@@ -735,7 +735,7 @@ func (h *CRUDHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		} else if errors.Is(err, ErrPlanLimitReached) {
-			writePlanLimitError(w, "events", limit, limit)
+			writePlanLimitError(w, r, "events", limit, limit)
 			return
 		} else if err != nil {
 			writeError(w, http.StatusInternalServerError, "Failed to create event")
@@ -1883,7 +1883,7 @@ func (h *CRUDHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if productCount >= productLimit {
-				writePlanLimitError(w, "products", productCount, productLimit)
+				writePlanLimitError(w, r, "products", productCount, productLimit)
 				return
 			}
 			inventoryCount, cErr := h.inventoryRepo.CountByUserID(r.Context(), userID)
@@ -1892,7 +1892,7 @@ func (h *CRUDHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if productCount+inventoryCount >= catalogLimit {
-				writePlanLimitError(w, "catalog", productCount+inventoryCount, catalogLimit)
+				writePlanLimitError(w, r, "catalog", productCount+inventoryCount, catalogLimit)
 				return
 			}
 			if cErr := h.productRepo.Create(r.Context(), &product); cErr != nil {
@@ -1900,7 +1900,7 @@ func (h *CRUDHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		} else if errors.Is(err, ErrPlanLimitReached) {
-			writePlanLimitError(w, "catalog", catalogLimit, catalogLimit)
+			writePlanLimitError(w, r, "catalog", catalogLimit, catalogLimit)
 			return
 		} else if err != nil {
 			writeError(w, http.StatusInternalServerError, "Failed to create product")
@@ -2223,7 +2223,7 @@ func (h *CRUDHandler) CreateInventoryItem(w http.ResponseWriter, r *http.Request
 				return
 			}
 			if inventoryCount >= inventoryLimit {
-				writePlanLimitError(w, "inventory", inventoryCount, inventoryLimit)
+				writePlanLimitError(w, r, "inventory", inventoryCount, inventoryLimit)
 				return
 			}
 			productCount, cErr := h.productRepo.CountByUserID(r.Context(), userID)
@@ -2232,7 +2232,7 @@ func (h *CRUDHandler) CreateInventoryItem(w http.ResponseWriter, r *http.Request
 				return
 			}
 			if productCount+inventoryCount >= catalogLimit {
-				writePlanLimitError(w, "catalog", productCount+inventoryCount, catalogLimit)
+				writePlanLimitError(w, r, "catalog", productCount+inventoryCount, catalogLimit)
 				return
 			}
 			if cErr := h.inventoryRepo.Create(r.Context(), &item); cErr != nil {
@@ -2240,7 +2240,7 @@ func (h *CRUDHandler) CreateInventoryItem(w http.ResponseWriter, r *http.Request
 				return
 			}
 		} else if errors.Is(err, ErrPlanLimitReached) {
-			writePlanLimitError(w, "catalog", catalogLimit, catalogLimit)
+			writePlanLimitError(w, r, "catalog", catalogLimit, catalogLimit)
 			return
 		} else if err != nil {
 			writeError(w, http.StatusInternalServerError, "Failed to create inventory item")

@@ -211,7 +211,7 @@ func (h *StaffHandler) CreateStaff(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if count >= seatLimit {
-				writePlanLimitError(w, "staff_seats", count, seatLimit)
+				writePlanLimitError(w, r, "staff_seats", count, seatLimit)
 				return
 			}
 			if cErr := h.staffRepo.Create(r.Context(), &s); cErr != nil {
@@ -220,7 +220,7 @@ func (h *StaffHandler) CreateStaff(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		} else if errors.Is(err, ErrPlanLimitReached) {
-			writePlanLimitError(w, "staff_seats", seatLimit, seatLimit)
+			writePlanLimitError(w, r, "staff_seats", seatLimit, seatLimit)
 			return
 		} else if err != nil {
 			slog.Error("failed to create staff", "error", err, "user_id", userID)

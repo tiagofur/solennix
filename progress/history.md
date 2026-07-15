@@ -533,3 +533,21 @@
   - `EventDetailView.swift` y `ClientDetailView.swift`: Diseño responsivo de dos columnas (HStack de VStacks en un ScrollView) en clase `.regular` cuando existe información secundaria (`hasSecondaryContent`), colapsando a una sola columna centrada de forma dinámica en ausencia de contenido secundario.
   - `11_CURRENT_STATUS.md`: Registrada la optimización en la bitácora del PRD.
   - `feature_list.json`: Añadida la tarea ID 37 marcada como "done".
+
+---
+
+## #852 — test(android): Add PlanLimitsManager and widget KPI derivation tests
+- **Branch:** `fix/android-planlimits-widget-tests-852`
+- **Estado:** done (pendiente push + PR)
+
+### Resumen
+Cubrió los 3 gaps de tests más críticos del audit "Judgment Day" (A-027, A-028 / B-026):
+1. `PlanLimitsManager` — 0 tests directos (solo VM-level).
+2. Widget KPI derivation — 2 de 3 KPIs extraídos como funciones puras; `upcomingEvents` inline.
+3. `LocalCacheManager.clearAll()` — 0 tests (purge de logout, 9 tablas Room).
+
+### Cambios
+- `PlanLimitsManagerTest.kt` (nuevo, 26 tests): caps free-tier, umbrales near-limit/limit-reached, catalog gate combinado.
+- Widget KPI derivation tests + `LocalCacheManager.clearAll()` tests.
+
+(Resumen migrado desde `progress/current.md` al iniciar sesión #902.)

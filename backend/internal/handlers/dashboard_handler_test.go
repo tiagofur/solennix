@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/tiagofur/solennix-backend/internal/i18n"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/repository"
 )
@@ -531,5 +532,147 @@ func TestGetAttention(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, rr.Code)
 		assert.Contains(t, rr.Body.String(), "Failed to get attention items")
 		repo.AssertExpectations(t)
+	})
+}
+
+// ---------------------------------------------------------------------------
+// Localization coverage — verifies dashboard errors render the user's locale
+// (issue #902). The default-path tests above inject no locale, so they fall
+// back to NoContextLocale ("en") and keep asserting the English text.
+// ---------------------------------------------------------------------------
+
+func TestDashboardErrors_LocalizedToSpanish(t *testing.T) {
+	cases := []struct {
+		name     string
+		endpoint string
+		mockFn   func(repo *MockDashboardRepo)
+		invoke   func(h *DashboardHandler, w http.ResponseWriter, r *http.Request)
+		wantES   string
+	}{
+		{
+			name:     "KPIs",
+			endpoint: "/api/dashboard/kpis",
+			mockFn: func(repo *MockDashboardRepo) {
+				repo.On("GetKPIs", mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
+			},
+			invoke: (*DashboardHandler).GetKPIs,
+			wantES: "No se pudieron obtener los KPIs del dashboard",
+		},
+		{
+			name:     "revenue chart",
+			endpoint: "/api/dashboard/revenue-chart?period=year",
+			mockFn: func(repo *MockDashboardRepo) {
+				repo.On("GetRevenueChart", mock.Anything, mock.Anything, "year").Return(nil, errors.New("db error"))
+			},
+			invoke: (*DashboardHandler).GetRevenueChart,
+			wantES: "No se pudo obtener el grafico de ingresos",
+		},
+		{
+			name:     "events by status",
+			endpoint: "/api/dashboard/events-by-status",
+			mockFn: func(repo *MockDashboardRepo) {
+				repo.On("GetEventsByStatus", mock.Anything, mock.Anything, "all").Return(nil, errors.New("db error"))
+			},
+			invoke: (*DashboardHandler).GetEventsByStatus,
+			wantES: "No se pudieron obtener los eventos por estado",
+		},
+		{
+			name:     "top clients",
+			endpoint: "/api/dashboard/top-clients",
+			mockFn: func(repo *MockDashboardRepo) {
+				repo.On("GetTopClients", mock.Anything, mock.Anything, 10).Return(nil, errors.New("db error"))
+			},
+			invoke: (*DashboardHandler).GetTopClients,
+			wantES: "No se pudieron obtener los mejores clientes",
+		},
+		{
+			name:     "product demand",
+			endpoint: "/api/dashboard/product-demand",
+			mockFn: func(repo *MockDashboardRepo) {
+				repo.On("GetProductDemand", mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
+			},
+			invoke: (*DashboardHandler).GetProductDemand,
+			wantES: "No se pudo obtener la demanda de productos",
+		},
+		{
+			name:     "forecast",
+			endpoint: "/api/dashboard/forecast",
+			mockFn: func(repo *MockDashboardRepo) {
+				repo.On("GetForecast", mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
+			},
+			invoke: (*DashboardHandler).GetForecast,
+			wantES: "No se pudo obtener el pronostico",
+		},
+		{
+			name:     "summary",
+			endpoint: "/api/dashboard/summary",
+			mockFn: func(repo *MockDashboardRepo) {
+				repo.On("GetSummary", mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
+			},
+			invoke: (*DashboardHandler).GetSummary,
+			wantES: "No se pudo obtener el resumen del dashboard",
+		},
+		{
+			name:     "attention",
+			endpoint: "/api/dashboard/attention",
+			mockFn: func(repo *MockDashboardRepo) {
+				repo.On("GetAttention", mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
+			},
+			invoke: (*DashboardHandler).GetAttention,
+			wantES: "No se pudieron obtener los items de atencion",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			repo := new(MockDashboardRepo)
+			tc.mockFn(repo)
+			h := newDashboardHandler(repo)
+
+			userID := uuid.New()
+			req := httptest.NewRequest(http.MethodGet, tc.endpoint, nil)
+			ctx := i18n.WithLocale(context.WithValue(req.Context(), middleware.UserIDKey, userID), "es")
+			req = req.WithContext(ctx)
+
+			rr := httptest.NewRecorder()
+			tc.invoke(h, rr, req)
+
+			assert.Contains(t, rr.Body.String(), tc.wantES)
+			repo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestDashboardErrors_LocalizedValidation(t *testing.T) {
+	t.Run("GivenSpanishLocale_WhenInvalidPeriod_ThenSpanishMessage", func(t *testing.T) {
+		repo := new(MockDashboardRepo)
+		h := newDashboardHandler(repo)
+
+		userID := uuid.New()
+		req := httptest.NewRequest(http.MethodGet, "/api/dashboard/revenue-chart?period=invalid", nil)
+		ctx := i18n.WithLocale(context.WithValue(req.Context(), middleware.UserIDKey, userID), "es")
+		req = req.WithContext(ctx)
+
+		rr := httptest.NewRecorder()
+		h.GetRevenueChart(rr, req)
+
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Periodo invalido")
+	})
+
+	t.Run("GivenSpanishLocale_WhenInvalidScope_ThenSpanishMessage", func(t *testing.T) {
+		repo := new(MockDashboardRepo)
+		h := newDashboardHandler(repo)
+
+		userID := uuid.New()
+		req := httptest.NewRequest(http.MethodGet, "/api/dashboard/events-by-status?scope=invalid", nil)
+		ctx := i18n.WithLocale(context.WithValue(req.Context(), middleware.UserIDKey, userID), "es")
+		req = req.WithContext(ctx)
+
+		rr := httptest.NewRecorder()
+		h.GetEventsByStatus(rr, req)
+
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Ambito invalido")
 	})
 }
