@@ -568,3 +568,18 @@ Cubrió los 3 gaps de tests más críticos del audit "Judgment Day" (A-027, A-02
 - Tests: `plan_limit_error_test.go` (nuevo, 3) + 10 tests dashboard localizados ES.
 
 (Resumen migrado desde `progress/current.md` al iniciar sesión #904.)
+
+---
+
+## #904 — feat(backend): Optional start_date/end_date alias on GET /events
+- **PR:** #1013 (merged, squash)
+- **Branch:** `feat/backend-events-date-aliases-904`
+
+### Resumen
+iOS `PlanLimitsManager` envía `start_date`/`end_date`; el backend solo leía `start`/`end`, ignorando el filtro. Safety-net backward-compat para la migración iOS (#799).
+
+### Cambios
+- `crud_handler.go` ListEvents: aliases `start_date`/`end_date` con fallback + `slog.Warn` de deprecación. Canónico tiene prioridad.
+- 2 tests: alias resuelto + canónico gana.
+
+(Resumen migrado desde `progress/current.md` al iniciar sesión #1014.)

@@ -100,7 +100,7 @@ func (h *StaffHandler) ListStaff(w http.ResponseWriter, r *http.Request) {
 		results, err := h.staffRepo.Search(r.Context(), userID, q)
 		if err != nil {
 			slog.Error("staff search failed", "error", err, "user_id", userID)
-			writeError(w, http.StatusInternalServerError, "Failed to search staff")
+			writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.search_failed")
 			return
 		}
 		writeJSON(w, http.StatusOK, results)
@@ -112,7 +112,7 @@ func (h *StaffHandler) ListStaff(w http.ResponseWriter, r *http.Request) {
 		offset := (params.Page - 1) * params.Limit
 		staff, total, err := h.staffRepo.GetAllPaginated(r.Context(), userID, offset, params.Limit, params.Sort, params.Order)
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Failed to fetch staff")
+			writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.fetch_failed")
 			return
 		}
 		if staff == nil {
@@ -124,7 +124,7 @@ func (h *StaffHandler) ListStaff(w http.ResponseWriter, r *http.Request) {
 
 	staff, err := h.staffRepo.GetAll(r.Context(), userID)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to fetch staff")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.fetch_failed")
 		return
 	}
 	writeJSON(w, http.StatusOK, staff)
@@ -136,12 +136,12 @@ func (h *StaffHandler) GetStaff(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "Invalid staff ID")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "staff.invalid_id")
 		return
 	}
 	s, err := h.staffRepo.GetByID(r.Context(), id, userID)
 	if err != nil {
-		writeError(w, http.StatusNotFound, "Staff not found")
+		writeCRUDI18nError(w, r, http.StatusNotFound, "staff.not_found")
 		return
 	}
 	writeJSON(w, http.StatusOK, s)
@@ -159,7 +159,7 @@ func (h *StaffHandler) CreateStaff(w http.ResponseWriter, r *http.Request) {
 	// Check staff seat limits
 	user, err := h.userRepo.GetByID(r.Context(), userID)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to fetch user limits")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "crud.fetch_user_limits_failed")
 		return
 	}
 
@@ -168,7 +168,7 @@ func (h *StaffHandler) CreateStaff(w http.ResponseWriter, r *http.Request) {
 		if isRequestBodyTooLarge(err) {
 			return
 		}
-		writeError(w, http.StatusBadRequest, "Invalid request body")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "common.invalid_request_body")
 		return
 	}
 	if err := ValidateStaff(&s); err != nil {
@@ -207,7 +207,7 @@ func (h *StaffHandler) CreateStaff(w http.ResponseWriter, r *http.Request) {
 			// Fallback: pool not available (unit tests with mocks).
 			count, cErr := h.staffRepo.CountByUserID(r.Context(), userID)
 			if cErr != nil {
-				writeError(w, http.StatusInternalServerError, "Failed to verify staff limits")
+				writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.verify_limits_failed")
 				return
 			}
 			if count >= seatLimit {
@@ -216,7 +216,7 @@ func (h *StaffHandler) CreateStaff(w http.ResponseWriter, r *http.Request) {
 			}
 			if cErr := h.staffRepo.Create(r.Context(), &s); cErr != nil {
 				slog.Error("failed to create staff", "error", cErr, "user_id", userID)
-				writeError(w, http.StatusInternalServerError, "Failed to create staff")
+				writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.create_failed")
 				return
 			}
 		} else if errors.Is(err, ErrPlanLimitReached) {
@@ -224,13 +224,13 @@ func (h *StaffHandler) CreateStaff(w http.ResponseWriter, r *http.Request) {
 			return
 		} else if err != nil {
 			slog.Error("failed to create staff", "error", err, "user_id", userID)
-			writeError(w, http.StatusInternalServerError, "Failed to create staff")
+			writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.create_failed")
 			return
 		}
 	} else {
 		if err := h.staffRepo.Create(r.Context(), &s); err != nil {
 			slog.Error("failed to create staff", "error", err, "user_id", userID)
-			writeError(w, http.StatusInternalServerError, "Failed to create staff")
+			writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.create_failed")
 			return
 		}
 	}
@@ -244,7 +244,7 @@ func (h *StaffHandler) UpdateStaff(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "Invalid staff ID")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "staff.invalid_id")
 		return
 	}
 	var s models.Staff
@@ -252,7 +252,7 @@ func (h *StaffHandler) UpdateStaff(w http.ResponseWriter, r *http.Request) {
 		if isRequestBodyTooLarge(err) {
 			return
 		}
-		writeError(w, http.StatusBadRequest, "Invalid request body")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "common.invalid_request_body")
 		return
 	}
 	if err := ValidateStaff(&s); err != nil {
@@ -263,7 +263,7 @@ func (h *StaffHandler) UpdateStaff(w http.ResponseWriter, r *http.Request) {
 	s.UserID = userID
 	if err := h.staffRepo.Update(r.Context(), &s); err != nil {
 		slog.Error("failed to update staff", "error", err, "user_id", userID)
-		writeError(w, http.StatusInternalServerError, "Failed to update staff")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.update_failed")
 		return
 	}
 	writeJSON(w, http.StatusOK, s)
@@ -275,11 +275,11 @@ func (h *StaffHandler) DeleteStaff(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "Invalid staff ID")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "staff.invalid_id")
 		return
 	}
 	if err := h.staffRepo.Delete(r.Context(), id, userID); err != nil {
-		writeError(w, http.StatusNotFound, "Staff not found")
+		writeCRUDI18nError(w, r, http.StatusNotFound, "staff.not_found")
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -300,26 +300,26 @@ func (h *StaffHandler) GetStaffAvailability(w http.ResponseWriter, r *http.Reque
 	}
 
 	if start == "" || end == "" {
-		writeError(w, http.StatusBadRequest, "date or (start,end) is required")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "staff.availability_date_required")
 		return
 	}
 	if _, err := time.Parse("2006-01-02", start); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid start date, expected YYYY-MM-DD")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "staff.invalid_start_date")
 		return
 	}
 	if _, err := time.Parse("2006-01-02", end); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid end date, expected YYYY-MM-DD")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "staff.invalid_end_date")
 		return
 	}
 	if end < start {
-		writeError(w, http.StatusBadRequest, "end must be on or after start")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "staff.end_before_start")
 		return
 	}
 
 	items, err := h.staffRepo.GetAvailability(r.Context(), userID, start, end)
 	if err != nil {
 		slog.Error("staff availability failed", "error", err, "user_id", userID)
-		writeError(w, http.StatusInternalServerError, "Failed to fetch availability")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.fetch_availability_failed")
 		return
 	}
 	writeJSON(w, http.StatusOK, items)
@@ -331,25 +331,25 @@ func (h *StaffHandler) GetStaffAvailability(w http.ResponseWriter, r *http.Reque
 // POST /api/staff/{id}/invite
 func (h *StaffHandler) InviteStaffUser(w http.ResponseWriter, r *http.Request) {
 	if h.authSvc == nil {
-		writeError(w, http.StatusServiceUnavailable, "Invite support is not configured")
+		writeCRUDI18nError(w, r, http.StatusServiceUnavailable, "staff.invite_not_configured")
 		return
 	}
 
 	userID := middleware.GetUserID(r.Context())
 	staffID, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "Invalid staff ID")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "staff.invalid_id")
 		return
 	}
 
 	user, err := h.userRepo.GetByID(r.Context(), userID)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to fetch user")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.fetch_user_failed")
 		return
 	}
 	plan := normalizePlan(user.Plan)
 	if plan != "pro" && plan != "business" {
-		writeError(w, http.StatusForbidden, "Team member login is available on Pro and Business plans")
+		writeCRUDI18nError(w, r, http.StatusForbidden, "staff.team_member_plan_required")
 		return
 	}
 
@@ -358,7 +358,7 @@ func (h *StaffHandler) InviteStaffUser(w http.ResponseWriter, r *http.Request) {
 		if isRequestBodyTooLarge(err) {
 			return
 		}
-		writeError(w, http.StatusBadRequest, "Invalid request body")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "common.invalid_request_body")
 		return
 	}
 	targetRole := strings.ToLower(strings.TrimSpace(req.TargetRole))
@@ -366,28 +366,28 @@ func (h *StaffHandler) InviteStaffUser(w http.ResponseWriter, r *http.Request) {
 		targetRole = "team_member"
 	}
 	if targetRole != "team_member" && targetRole != "assistant" {
-		writeError(w, http.StatusBadRequest, "target_role must be one of: team_member, assistant")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "staff.invalid_target_role")
 		return
 	}
 	if targetRole == "assistant" && plan != "business" {
-		writeError(w, http.StatusForbidden, "Assistant access is available on Business plan")
+		writeCRUDI18nError(w, r, http.StatusForbidden, "staff.assistant_plan_required")
 		return
 	}
 
 	staff, err := h.staffRepo.GetByID(r.Context(), staffID, userID)
 	if err != nil {
-		writeError(w, http.StatusNotFound, "Staff not found")
+		writeCRUDI18nError(w, r, http.StatusNotFound, "staff.not_found")
 		return
 	}
 	if staff.Email == nil || strings.TrimSpace(*staff.Email) == "" {
-		writeError(w, http.StatusBadRequest, "Staff must have an email before sending an invite")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "staff.invite_email_required")
 		return
 	}
 
 	rawToken, err := generateFormToken()
 	if err != nil {
 		slog.Error("failed to generate staff invite token", "error", err, "user_id", userID, "staff_id", staffID)
-		writeError(w, http.StatusInternalServerError, "Failed to create invite token")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.create_invite_token_failed")
 		return
 	}
 	expiresAt := time.Now().UTC().Add(7 * 24 * time.Hour)
@@ -404,7 +404,7 @@ func (h *StaffHandler) InviteStaffUser(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.staffRepo.CreateInvite(r.Context(), invite); err != nil {
 		slog.Error("failed to create staff invite", "error", err, "user_id", userID, "staff_id", staffID)
-		writeError(w, http.StatusInternalServerError, "Failed to create invite")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.create_invite_failed")
 		return
 	}
 
@@ -436,18 +436,18 @@ func (h *StaffHandler) RevokeStaffInvite(w http.ResponseWriter, r *http.Request)
 	userID := middleware.GetUserID(r.Context())
 	staffID, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "Invalid staff ID")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "staff.invalid_id")
 		return
 	}
 
 	if _, err := h.staffRepo.GetByID(r.Context(), staffID, userID); err != nil {
-		writeError(w, http.StatusNotFound, "Staff not found")
+		writeCRUDI18nError(w, r, http.StatusNotFound, "staff.not_found")
 		return
 	}
 
 	if err := h.staffRepo.RevokeInvite(r.Context(), staffID, userID); err != nil {
 		slog.Error("failed to revoke staff invite", "error", err, "user_id", userID, "staff_id", staffID)
-		writeError(w, http.StatusInternalServerError, "Failed to revoke invite")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.revoke_invite_failed")
 		return
 	}
 
@@ -462,18 +462,18 @@ func (h *StaffHandler) GetMyAssignments(w http.ResponseWriter, r *http.Request) 
 
 	user, err := h.userRepo.GetByID(r.Context(), userID)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to fetch user")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.fetch_user_failed")
 		return
 	}
 	if !isTeamPortalRole(strings.ToLower(strings.TrimSpace(user.Role))) {
-		writeError(w, http.StatusForbidden, "Team member access required")
+		writeCRUDI18nError(w, r, http.StatusForbidden, "staff.team_member_access_required")
 		return
 	}
 
 	items, err := h.staffRepo.ListMyAssignments(r.Context(), userID)
 	if err != nil {
 		slog.Error("failed to list team-member assignments", "error", err, "user_id", userID)
-		writeError(w, http.StatusInternalServerError, "Failed to fetch assignments")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.fetch_assignments_failed")
 		return
 	}
 
@@ -489,17 +489,17 @@ func (h *StaffHandler) RespondAssignment(w http.ResponseWriter, r *http.Request)
 
 	user, err := h.userRepo.GetByID(r.Context(), userID)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to fetch user")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.fetch_user_failed")
 		return
 	}
 	if !isTeamPortalRole(strings.ToLower(strings.TrimSpace(user.Role))) {
-		writeError(w, http.StatusForbidden, "Team member access required")
+		writeCRUDI18nError(w, r, http.StatusForbidden, "staff.team_member_access_required")
 		return
 	}
 
 	eventStaffID, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "Invalid assignment ID")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "staff.invalid_assignment_id")
 		return
 	}
 
@@ -508,13 +508,13 @@ func (h *StaffHandler) RespondAssignment(w http.ResponseWriter, r *http.Request)
 		if isRequestBodyTooLarge(err) {
 			return
 		}
-		writeError(w, http.StatusBadRequest, "Invalid request body")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "common.invalid_request_body")
 		return
 	}
 
 	response := strings.ToLower(strings.TrimSpace(req.Response))
 	if response != "accept" && response != "decline" {
-		writeError(w, http.StatusBadRequest, "response must be one of: accept, decline")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "staff.invalid_response_value")
 		return
 	}
 
@@ -522,16 +522,16 @@ func (h *StaffHandler) RespondAssignment(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		switch {
 		case err == repository.ErrAssignmentNotFound:
-			writeError(w, http.StatusNotFound, "Assignment not found")
+			writeCRUDI18nError(w, r, http.StatusNotFound, "staff.assignment_not_found")
 		case err == repository.ErrAssignmentForbidden:
-			writeError(w, http.StatusForbidden, "Assignment does not belong to current user")
+			writeCRUDI18nError(w, r, http.StatusForbidden, "staff.assignment_forbidden")
 		case err == repository.ErrAssignmentNotPending:
-			writeError(w, http.StatusConflict, "Assignment is no longer pending")
+			writeCRUDI18nError(w, r, http.StatusConflict, "staff.assignment_not_pending")
 		case err == repository.ErrOfferAlreadyFilled:
-			writeError(w, http.StatusConflict, "Offer slot already taken")
+			writeCRUDI18nError(w, r, http.StatusConflict, "staff.offer_already_filled")
 		default:
 			slog.Error("failed to respond assignment", "error", err, "user_id", userID, "event_staff_id", eventStaffID)
-			writeError(w, http.StatusInternalServerError, "Failed to update assignment response")
+			writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.update_assignment_failed")
 		}
 		return
 	}
@@ -548,17 +548,17 @@ func (h *StaffHandler) GetExecutionState(w http.ResponseWriter, r *http.Request)
 
 	user, err := h.userRepo.GetByID(r.Context(), userID)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to fetch user")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.fetch_user_failed")
 		return
 	}
 	if !isTeamPortalRole(strings.ToLower(strings.TrimSpace(user.Role))) {
-		writeError(w, http.StatusForbidden, "Team member access required")
+		writeCRUDI18nError(w, r, http.StatusForbidden, "staff.team_member_access_required")
 		return
 	}
 
 	eventStaffID, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "Invalid assignment ID")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "staff.invalid_assignment_id")
 		return
 	}
 
@@ -566,12 +566,12 @@ func (h *StaffHandler) GetExecutionState(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		switch {
 		case errors.Is(err, repository.ErrAssignmentNotFound):
-			writeError(w, http.StatusNotFound, "Assignment not found")
+			writeCRUDI18nError(w, r, http.StatusNotFound, "staff.assignment_not_found")
 		case errors.Is(err, repository.ErrAssignmentForbidden):
-			writeError(w, http.StatusForbidden, "Assignment does not belong to current user")
+			writeCRUDI18nError(w, r, http.StatusForbidden, "staff.assignment_forbidden")
 		default:
 			slog.Error("failed to get execution state", "error", err, "user_id", userID, "event_staff_id", eventStaffID)
-			writeError(w, http.StatusInternalServerError, "Failed to fetch execution state")
+			writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.fetch_execution_state_failed")
 		}
 		return
 	}
@@ -588,17 +588,17 @@ func (h *StaffHandler) PutExecutionState(w http.ResponseWriter, r *http.Request)
 
 	user, err := h.userRepo.GetByID(r.Context(), userID)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to fetch user")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.fetch_user_failed")
 		return
 	}
 	if !isTeamPortalRole(strings.ToLower(strings.TrimSpace(user.Role))) {
-		writeError(w, http.StatusForbidden, "Team member access required")
+		writeCRUDI18nError(w, r, http.StatusForbidden, "staff.team_member_access_required")
 		return
 	}
 
 	eventStaffID, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "Invalid assignment ID")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "staff.invalid_assignment_id")
 		return
 	}
 
@@ -607,12 +607,12 @@ func (h *StaffHandler) PutExecutionState(w http.ResponseWriter, r *http.Request)
 		if isRequestBodyTooLarge(err) {
 			return
 		}
-		writeError(w, http.StatusBadRequest, "Invalid request body")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "common.invalid_request_body")
 		return
 	}
 
 	if len(req.QuickNote) > MaxQuickNoteLength {
-		writeError(w, http.StatusBadRequest, "quick_note is too long")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "staff.quick_note_too_long")
 		return
 	}
 
@@ -629,12 +629,12 @@ func (h *StaffHandler) PutExecutionState(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		switch {
 		case errors.Is(err, repository.ErrAssignmentNotFound):
-			writeError(w, http.StatusNotFound, "Assignment not found")
+			writeCRUDI18nError(w, r, http.StatusNotFound, "staff.assignment_not_found")
 		case errors.Is(err, repository.ErrAssignmentForbidden):
-			writeError(w, http.StatusForbidden, "Assignment does not belong to current user")
+			writeCRUDI18nError(w, r, http.StatusForbidden, "staff.assignment_forbidden")
 		default:
 			slog.Error("failed to upsert execution state", "error", err, "user_id", userID, "event_staff_id", eventStaffID)
-			writeError(w, http.StatusInternalServerError, "Failed to save execution state")
+			writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.save_execution_state_failed")
 		}
 		return
 	}
@@ -650,11 +650,11 @@ func (h *StaffHandler) GetMyTimeline(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.userRepo.GetByID(r.Context(), userID)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to fetch user")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.fetch_user_failed")
 		return
 	}
 	if !isTeamPortalRole(strings.ToLower(strings.TrimSpace(user.Role))) {
-		writeError(w, http.StatusForbidden, "Team member access required")
+		writeCRUDI18nError(w, r, http.StatusForbidden, "staff.team_member_access_required")
 		return
 	}
 
@@ -662,7 +662,7 @@ func (h *StaffHandler) GetMyTimeline(w http.ResponseWriter, r *http.Request) {
 	limit := 50
 	if value := strings.TrimSpace(r.URL.Query().Get("limit")); value != "" {
 		if parsed, parseErr := parsePositiveInt(value, 200); parseErr != nil {
-			writeError(w, http.StatusBadRequest, "limit must be an integer between 1 and 200")
+			writeCRUDI18nError(w, r, http.StatusBadRequest, "staff.invalid_timeline_limit")
 			return
 		} else {
 			limit = parsed
@@ -672,7 +672,7 @@ func (h *StaffHandler) GetMyTimeline(w http.ResponseWriter, r *http.Request) {
 	items, err := h.staffRepo.ListMyTimeline(r.Context(), userID, unreadOnly, limit)
 	if err != nil {
 		slog.Error("failed to list team-member timeline", "error", err, "user_id", userID)
-		writeError(w, http.StatusInternalServerError, "Failed to fetch timeline")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.fetch_timeline_failed")
 		return
 	}
 
@@ -687,11 +687,11 @@ func (h *StaffHandler) MarkMyTimelineRead(w http.ResponseWriter, r *http.Request
 
 	user, err := h.userRepo.GetByID(r.Context(), userID)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to fetch user")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.fetch_user_failed")
 		return
 	}
 	if !isTeamPortalRole(strings.ToLower(strings.TrimSpace(user.Role))) {
-		writeError(w, http.StatusForbidden, "Team member access required")
+		writeCRUDI18nError(w, r, http.StatusForbidden, "staff.team_member_access_required")
 		return
 	}
 
@@ -700,7 +700,7 @@ func (h *StaffHandler) MarkMyTimelineRead(w http.ResponseWriter, r *http.Request
 		if isRequestBodyTooLarge(err) {
 			return
 		}
-		writeError(w, http.StatusBadRequest, "Invalid request body")
+		writeCRUDI18nError(w, r, http.StatusBadRequest, "common.invalid_request_body")
 		return
 	}
 
@@ -708,7 +708,7 @@ func (h *StaffHandler) MarkMyTimelineRead(w http.ResponseWriter, r *http.Request
 	for _, rawID := range req.IDs {
 		id, parseErr := uuid.Parse(strings.TrimSpace(rawID))
 		if parseErr != nil {
-			writeError(w, http.StatusBadRequest, "Invalid timeline item ID")
+			writeCRUDI18nError(w, r, http.StatusBadRequest, "staff.invalid_timeline_item_id")
 			return
 		}
 		ids = append(ids, id)
@@ -717,7 +717,7 @@ func (h *StaffHandler) MarkMyTimelineRead(w http.ResponseWriter, r *http.Request
 	updated, err := h.staffRepo.MarkTimelineRead(r.Context(), userID, ids)
 	if err != nil {
 		slog.Error("failed to mark timeline read", "error", err, "user_id", userID)
-		writeError(w, http.StatusInternalServerError, "Failed to mark timeline as read")
+		writeCRUDI18nError(w, r, http.StatusInternalServerError, "staff.mark_timeline_read_failed")
 		return
 	}
 
