@@ -14,7 +14,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
+
+/** Load readiness for a single assignment's execution checklist (#1003). */
+enum class ExecutionLoadState {
+    IDLE,
+    LOADING,
+    READY,
+    FAILED
+}
 
 data class TeamMemberPortalUiState(
     val assignments: List<TeamMemberAssignment> = emptyList(),
@@ -26,6 +35,11 @@ data class TeamMemberPortalUiState(
     val respondingAssignmentIds: Set<String> = emptySet(),
     val markingTimelineReadIds: Set<String> = emptySet(),
     val executionStates: Map<String, AssignmentExecutionState> = emptyMap(),
+    val executionLoadStates: Map<String, ExecutionLoadState> = emptyMap(),
+    /** True only after a successful server GET (or server-acked migrate PUT). */
+    val executionServerSeeded: Map<String, Boolean> = emptyMap(),
+    val lastSyncedExecutionStates: Map<String, AssignmentExecutionState> = emptyMap(),
+    val executionErrorMessages: Map<String, String?> = emptyMap(),
     val errorMessage: String? = null
 )
 
@@ -37,9 +51,15 @@ class TeamMemberPortalViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(TeamMemberPortalUiState(isLoading = true))
     val uiState: StateFlow<TeamMemberPortalUiState> = _uiState.asStateFlow()
 
+    /** Serializes full-state PUTs per assignment so rapid toggles cannot last-writer-lose. */
+    private val putMutexes = java.util.concurrent.ConcurrentHashMap<String, kotlinx.coroutines.sync.Mutex>()
+
     init {
         refresh()
     }
+
+    private fun putMutex(eventStaffId: String): kotlinx.coroutines.sync.Mutex =
+        putMutexes.getOrPut(eventStaffId) { kotlinx.coroutines.sync.Mutex() }
 
     fun refresh() {
         viewModelScope.launch {
@@ -123,73 +143,288 @@ class TeamMemberPortalViewModel @Inject constructor(
         }
     }
 
-    // ── Execution state (#875) ──
+    // ── Execution state (#875 / harden #1003, parity with iOS #1001) ──
 
     /**
-     * Carga el execution state del server al abrir el detail dialog. Migración
-     * legacy: si el usuario tenía estado en SharedPreferences, lo sube al server
-     * y lo borra localmente (una sola vez).
+     * Loads server execution state when the detail dialog opens.
      *
-     * [legacyPrefs] se pasa desde la Screen (que tiene el Context); null cuando
-     * no hay prefs legacy que migrar.
+     * Invariants (Judgment Day / iOS #1001):
+     * - GET first; never PUT legacy without reading server when network allows
+     * - Delete legacy only after server-acked PUT (via [onLegacyCleared])
+     * - No sticky empty DEFAULT on GET fail — leave unset or offline-seed only
+     * - Merge non-default server + legacy (OR checklist, richer note)
+     * - Short-circuit only when already server-seeded ready
+     *
+     * @param onLegacyCleared called with [TeamMemberAssignment.eventId] only after
+     *   a successful migrate/merge PUT so the Screen can drop prefs for that event only.
      */
     fun loadExecutionState(
         assignment: TeamMemberAssignment,
-        legacyPrefs: LegacyExecutionState? = null
+        legacyPrefs: LegacyExecutionState? = null,
+        onLegacyCleared: ((eventId: String) -> Unit)? = null
     ) {
+        val id = assignment.eventStaffId
+        val state = _uiState.value
+        if (state.executionServerSeeded[id] == true &&
+            state.executionLoadStates[id] == ExecutionLoadState.READY
+        ) {
+            return
+        }
+
         viewModelScope.launch {
-            if (legacyPrefs != null) {
-                val migrated = AssignmentExecutionState(
-                    checklist = ExecutionChecklist(
-                        arrival = legacyPrefs.arrival,
-                        materials = legacyPrefs.materials,
-                        closing = legacyPrefs.closing
-                    ),
-                    quickNote = legacyPrefs.quickNote
-                )
+            val softRevalidate = state.executionLoadStates[id] == ExecutionLoadState.READY &&
+                state.executionServerSeeded[id] != true &&
+                state.executionStates.containsKey(id)
+
+            if (!softRevalidate) {
                 _uiState.value = _uiState.value.copy(
-                    executionStates = _uiState.value.executionStates + (assignment.eventStaffId to migrated)
+                    executionLoadStates = _uiState.value.executionLoadStates + (id to ExecutionLoadState.LOADING),
+                    executionErrorMessages = _uiState.value.executionErrorMessages + (id to null)
                 )
-                putExecutionState(assignment, migrated)
-                return@launch
             }
-            if (_uiState.value.executionStates.containsKey(assignment.eventStaffId)) return@launch
+
+            val legacyState = legacyPrefs?.toExecutionState()?.takeUnless { it.isDefault }
+
             try {
-                val state = staffRepository.getExecutionState(assignment.eventStaffId)
-                _uiState.value = _uiState.value.copy(
-                    executionStates = _uiState.value.executionStates + (assignment.eventStaffId to state)
-                )
+                val serverState = staffRepository.getExecutionState(id)
+
+                // Soft revalidate with live key: live is full-state authority (no OR-merge).
+                if (softRevalidate && _uiState.value.executionStates.containsKey(id)) {
+                    val live = _uiState.value.executionStates[id]!!
+                    if (live == serverState) {
+                        markServerSeededReady(id, serverState)
+                        if (legacyState != null) onLegacyCleared?.invoke(assignment.eventId)
+                        return@launch
+                    }
+                    applyLocalExecutionState(id, live)
+                    val acked = putExecutionStateSerialized(assignment, live)
+                    if (acked) {
+                        markServerSeededReady(id, live)
+                        onLegacyCleared?.invoke(assignment.eventId)
+                    } else {
+                        // Keep live; mark seeded so UI stays editable with honest lastSynced=server.
+                        _uiState.value = _uiState.value.copy(
+                            lastSyncedExecutionStates = _uiState.value.lastSyncedExecutionStates + (id to serverState),
+                            executionLoadStates = _uiState.value.executionLoadStates + (id to ExecutionLoadState.READY),
+                            executionServerSeeded = _uiState.value.executionServerSeeded + (id to true)
+                        )
+                    }
+                    return@launch
+                }
+
+                if (legacyState != null) {
+                    if (serverState.isDefault) {
+                        // Server empty + local progress → migrate via serial PUT.
+                        applyLocalExecutionState(id, legacyState)
+                        _uiState.value = _uiState.value.copy(
+                            lastSyncedExecutionStates = _uiState.value.lastSyncedExecutionStates +
+                                (id to AssignmentExecutionState.DEFAULT),
+                            executionLoadStates = _uiState.value.executionLoadStates + (id to ExecutionLoadState.LOADING)
+                        )
+                        val acked = putExecutionStateSerialized(assignment, legacyState)
+                        if (acked) {
+                            markServerSeededReady(id, legacyState)
+                            onLegacyCleared?.invoke(assignment.eventId)
+                        } else {
+                            // Keep legacy blob; stay failed so reopen retries.
+                            _uiState.value = _uiState.value.copy(
+                                executionStates = _uiState.value.executionStates - id,
+                                lastSyncedExecutionStates = _uiState.value.lastSyncedExecutionStates - id,
+                                executionLoadStates = _uiState.value.executionLoadStates + (id to ExecutionLoadState.FAILED),
+                                executionServerSeeded = _uiState.value.executionServerSeeded + (id to false),
+                                executionErrorMessages = _uiState.value.executionErrorMessages +
+                                    (id to EXECUTION_SAVE_ERROR)
+                            )
+                        }
+                        return@launch
+                    }
+
+                    val merged = mergeExecutionStates(serverState, legacyState)
+                    applyLocalExecutionState(id, merged)
+                    if (merged == serverState) {
+                        markServerSeededReady(id, serverState)
+                        onLegacyCleared?.invoke(assignment.eventId)
+                        return@launch
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        lastSyncedExecutionStates = _uiState.value.lastSyncedExecutionStates + (id to serverState),
+                        executionLoadStates = _uiState.value.executionLoadStates + (id to ExecutionLoadState.LOADING)
+                    )
+                    val acked = putExecutionStateSerialized(assignment, merged)
+                    if (acked) {
+                        markServerSeededReady(id, merged)
+                        onLegacyCleared?.invoke(assignment.eventId)
+                    } else {
+                        // Keep merged local truth + legacy for retry (do not drop legacy).
+                        applyLocalExecutionState(id, merged)
+                        _uiState.value = _uiState.value.copy(
+                            lastSyncedExecutionStates = _uiState.value.lastSyncedExecutionStates + (id to serverState),
+                            executionLoadStates = _uiState.value.executionLoadStates + (id to ExecutionLoadState.READY),
+                            executionServerSeeded = _uiState.value.executionServerSeeded + (id to true),
+                            executionErrorMessages = _uiState.value.executionErrorMessages +
+                                (id to EXECUTION_SAVE_ERROR)
+                        )
+                    }
+                    return@launch
+                }
+
+                markServerSeededReady(id, serverState)
             } catch (_: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    executionStates = _uiState.value.executionStates + (assignment.eventStaffId to AssignmentExecutionState.DEFAULT)
-                )
+                // Offline / GET fail: seed non-default legacy without auto-PUT; else failed (no sticky DEFAULT).
+                if (legacyState != null) {
+                    applyLocalExecutionState(id, legacyState)
+                    _uiState.value = _uiState.value.copy(
+                        lastSyncedExecutionStates = _uiState.value.lastSyncedExecutionStates - id,
+                        executionLoadStates = _uiState.value.executionLoadStates + (id to ExecutionLoadState.READY),
+                        executionServerSeeded = _uiState.value.executionServerSeeded + (id to false),
+                        executionErrorMessages = _uiState.value.executionErrorMessages + (id to null)
+                    )
+                } else if (softRevalidate && _uiState.value.executionStates.containsKey(id)) {
+                    // Keep live offline-ready cache; do not resurrect sticky DEFAULT.
+                    _uiState.value = _uiState.value.copy(
+                        executionLoadStates = _uiState.value.executionLoadStates + (id to ExecutionLoadState.READY)
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        executionStates = _uiState.value.executionStates - id,
+                        lastSyncedExecutionStates = _uiState.value.lastSyncedExecutionStates - id,
+                        executionLoadStates = _uiState.value.executionLoadStates + (id to ExecutionLoadState.FAILED),
+                        executionServerSeeded = _uiState.value.executionServerSeeded + (id to false),
+                        executionErrorMessages = _uiState.value.executionErrorMessages +
+                            (id to EXECUTION_LOAD_ERROR)
+                    )
+                }
             }
         }
     }
 
+    /**
+     * Applies local checklist edits and persists with a per-assignment serial mutex.
+     * Gated until load state is [ExecutionLoadState.READY].
+     */
     fun putExecutionState(assignment: TeamMemberAssignment, state: AssignmentExecutionState) {
+        val id = assignment.eventStaffId
+        if (_uiState.value.executionLoadStates[id] != ExecutionLoadState.READY) return
+
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                executionStates = _uiState.value.executionStates + (assignment.eventStaffId to state)
-            )
-            try {
-                staffRepository.putExecutionState(assignment.eventStaffId, state)
-            } catch (_: Exception) {
-                _uiState.value = _uiState.value.copy(errorMessage = "No pudimos guardar el checklist de ejecución.")
+            val previous = _uiState.value.lastSyncedExecutionStates[id]
+            applyLocalExecutionState(id, state)
+            val acked = putExecutionStateSerialized(assignment, state)
+            if (!acked) {
+                // Roll memory back only when we have a lastSynced baseline.
+                if (previous != null &&
+                    _uiState.value.executionStates[id] == state
+                ) {
+                    applyLocalExecutionState(id, previous)
+                }
+                _uiState.value = _uiState.value.copy(
+                    executionErrorMessages = _uiState.value.executionErrorMessages +
+                        (id to EXECUTION_SAVE_ERROR)
+                )
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    lastSyncedExecutionStates = _uiState.value.lastSyncedExecutionStates + (id to state),
+                    executionErrorMessages = _uiState.value.executionErrorMessages + (id to null)
+                )
             }
         }
     }
 
-    /** Shape legacy para migración desde SharedPreferences (pre-#875). */
+    fun clearExecutionError(eventStaffId: String) {
+        _uiState.value = _uiState.value.copy(
+            executionErrorMessages = _uiState.value.executionErrorMessages + (eventStaffId to null)
+        )
+    }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(errorMessage = null)
+    }
+
+    private fun applyLocalExecutionState(id: String, state: AssignmentExecutionState) {
+        var next = state
+        if (next.quickNote.length > MAX_QUICK_NOTE_LENGTH) {
+            next = next.copy(quickNote = next.quickNote.take(MAX_QUICK_NOTE_LENGTH))
+            _uiState.value = _uiState.value.copy(
+                executionErrorMessages = _uiState.value.executionErrorMessages +
+                    (id to EXECUTION_NOTE_TOO_LONG)
+            )
+        }
+        _uiState.value = _uiState.value.copy(
+            executionStates = _uiState.value.executionStates + (id to next)
+        )
+    }
+
+    private fun markServerSeededReady(id: String, state: AssignmentExecutionState) {
+        _uiState.value = _uiState.value.copy(
+            executionStates = _uiState.value.executionStates + (id to state),
+            lastSyncedExecutionStates = _uiState.value.lastSyncedExecutionStates + (id to state),
+            executionLoadStates = _uiState.value.executionLoadStates + (id to ExecutionLoadState.READY),
+            executionServerSeeded = _uiState.value.executionServerSeeded + (id to true),
+            executionErrorMessages = _uiState.value.executionErrorMessages + (id to null)
+        )
+    }
+
+    /** @return true when PUT completed without throwing (server ack). */
+    private suspend fun putExecutionStateSerialized(
+        assignment: TeamMemberAssignment,
+        state: AssignmentExecutionState
+    ): Boolean {
+        val id = assignment.eventStaffId
+        return putMutex(id).withLock {
+            try {
+                staffRepository.putExecutionState(id, state)
+                true
+            } catch (_: Exception) {
+                false
+            }
+        }
+    }
+
+    /** Shape legacy for SharedPreferences migration (pre-#875). */
     data class LegacyExecutionState(
         val arrival: Boolean = false,
         val materials: Boolean = false,
         val closing: Boolean = false,
         val quickNote: String = ""
-    )
+    ) {
+        fun toExecutionState(): AssignmentExecutionState = AssignmentExecutionState(
+            checklist = ExecutionChecklist(
+                arrival = arrival,
+                materials = materials,
+                closing = closing
+            ),
+            quickNote = quickNote
+        )
+    }
 
-    fun clearError() {
-        _uiState.value = _uiState.value.copy(errorMessage = null)
+    companion object {
+        const val MAX_QUICK_NOTE_LENGTH = 2000
+        const val EXECUTION_LOAD_ERROR = "No pudimos cargar el checklist de ejecución."
+        const val EXECUTION_SAVE_ERROR = "No pudimos guardar el checklist de ejecución."
+        const val EXECUTION_NOTE_TOO_LONG = "La nota rápida no puede superar 2000 caracteres."
+
+        /**
+         * Cold-load merge: checklist OR; longer note wins; equal length prefers legacy
+         * (local migration intent). Matches iOS #1001.
+         */
+        fun mergeExecutionStates(
+            server: AssignmentExecutionState,
+            legacy: AssignmentExecutionState
+        ): AssignmentExecutionState {
+            val checklist = ExecutionChecklist(
+                arrival = server.checklist.arrival || legacy.checklist.arrival,
+                materials = server.checklist.materials || legacy.checklist.materials,
+                closing = server.checklist.closing || legacy.checklist.closing
+            )
+            val note = when {
+                server.quickNote.isEmpty() -> legacy.quickNote
+                legacy.quickNote.isEmpty() -> server.quickNote
+                server.quickNote.length > legacy.quickNote.length -> server.quickNote
+                legacy.quickNote.length > server.quickNote.length -> legacy.quickNote
+                else -> legacy.quickNote // equal length, different or same → prefer legacy
+            }
+            return AssignmentExecutionState(checklist = checklist, quickNote = note)
+        }
     }
 
     fun createUnavailableDate(
@@ -258,3 +493,6 @@ class TeamMemberPortalViewModel @Inject constructor(
         return "${year - 1}-01-01" to "${year + 1}-12-31"
     }
 }
+
+private val AssignmentExecutionState.isDefault: Boolean
+    get() = this == AssignmentExecutionState.DEFAULT

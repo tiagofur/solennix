@@ -80,6 +80,7 @@ import com.creapolis.solennix.core.model.TeamMemberAssignment
 import com.creapolis.solennix.core.model.UnavailableDate
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.feature.staff.R
+import com.creapolis.solennix.feature.staff.viewmodel.ExecutionLoadState
 import com.creapolis.solennix.feature.staff.viewmodel.TeamMemberPortalViewModel
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
@@ -734,29 +735,53 @@ private fun TeamMemberAssignmentDetailDialog(
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
     val moneyFormatter = remember { NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-MX")) }
     val executionState = uiState.executionStates[assignment.eventStaffId] ?: AssignmentExecutionState.DEFAULT
+    val loadState = uiState.executionLoadStates[assignment.eventStaffId]
+        ?: ExecutionLoadState.IDLE
+    val executionError = uiState.executionErrorMessages[assignment.eventStaffId]
+    val canEdit = loadState == ExecutionLoadState.READY
 
-    // Carga inicial + migración legacy de SharedPreferences (#875).
-    LaunchedEffect(assignment.eventStaffId) {
+    // Carga inicial + migración legacy de SharedPreferences (#875 / harden #1003).
+    // Never prefs.clear() — only drop keys for this eventId after server-acked migrate.
+    fun readLegacyOrNull(): TeamMemberPortalViewModel.LegacyExecutionState? {
         val prefs = context.getSharedPreferences("team_event_detail", Context.MODE_PRIVATE)
         val hasLegacy = prefs.getBoolean("${assignment.eventId}_arrival", false) ||
             prefs.getBoolean("${assignment.eventId}_materials", false) ||
             prefs.getBoolean("${assignment.eventId}_closing", false) ||
             prefs.getString("${assignment.eventId}_quick_note", "").orEmpty().isNotEmpty()
-        if (hasLegacy) {
-            val legacy = TeamMemberPortalViewModel.LegacyExecutionState(
-                arrival = prefs.getBoolean("${assignment.eventId}_arrival", false),
-                materials = prefs.getBoolean("${assignment.eventId}_materials", false),
-                closing = prefs.getBoolean("${assignment.eventId}_closing", false),
-                quickNote = prefs.getString("${assignment.eventId}_quick_note", "") ?: ""
-            )
-            prefs.edit().clear().apply()
-            viewModel.loadExecutionState(assignment, legacy)
-        } else {
-            viewModel.loadExecutionState(assignment)
-        }
+        if (!hasLegacy) return null
+        return TeamMemberPortalViewModel.LegacyExecutionState(
+            arrival = prefs.getBoolean("${assignment.eventId}_arrival", false),
+            materials = prefs.getBoolean("${assignment.eventId}_materials", false),
+            closing = prefs.getBoolean("${assignment.eventId}_closing", false),
+            quickNote = prefs.getString("${assignment.eventId}_quick_note", "") ?: ""
+        )
+    }
+
+    fun clearLegacyForEvent() {
+        val prefs = context.getSharedPreferences("team_event_detail", Context.MODE_PRIVATE)
+        prefs.edit()
+            .remove("${assignment.eventId}_arrival")
+            .remove("${assignment.eventId}_materials")
+            .remove("${assignment.eventId}_closing")
+            .remove("${assignment.eventId}_quick_note")
+            .apply()
+    }
+
+    fun requestLoad() {
+        val legacy = readLegacyOrNull()
+        viewModel.loadExecutionState(
+            assignment = assignment,
+            legacyPrefs = legacy,
+            onLegacyCleared = { clearLegacyForEvent() }
+        )
+    }
+
+    LaunchedEffect(assignment.eventStaffId) {
+        requestLoad()
     }
 
     fun updateState(transform: (AssignmentExecutionState) -> AssignmentExecutionState) {
+        if (!canEdit) return
         val next = transform(executionState)
         viewModel.putExecutionState(assignment, next)
     }
@@ -798,35 +823,71 @@ private fun TeamMemberAssignmentDetailDialog(
                 }
 
                 Text(stringResource(R.string.staff_portal_execution_checklist), fontWeight = FontWeight.SemiBold)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = executionState.checklist.arrival,
-                        onCheckedChange = { checked -> updateState { it.copy(checklist = it.checklist.copy(arrival = checked)) } }
-                    )
-                    Text(stringResource(R.string.staff_portal_checklist_arrival))
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = executionState.checklist.materials,
-                        onCheckedChange = { checked -> updateState { it.copy(checklist = it.checklist.copy(materials = checked)) } }
-                    )
-                    Text(stringResource(R.string.staff_portal_checklist_materials))
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = executionState.checklist.closing,
-                        onCheckedChange = { checked -> updateState { it.copy(checklist = it.checklist.copy(closing = checked)) } }
-                    )
-                    Text(stringResource(R.string.staff_portal_checklist_closing))
-                }
 
-                OutlinedTextField(
-                    value = executionState.quickNote,
-                    onValueChange = { note -> updateState { it.copy(quickNote = note) } },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.staff_portal_quick_notes_label)) },
-                    minLines = 2
-                )
+                when (loadState) {
+                    ExecutionLoadState.LOADING, ExecutionLoadState.IDLE -> {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.width(18.dp).height(18.dp), strokeWidth = 2.dp)
+                            Text(stringResource(R.string.staff_portal_execution_loading))
+                        }
+                    }
+                    ExecutionLoadState.FAILED -> {
+                        Text(
+                            executionError ?: stringResource(R.string.staff_portal_execution_load_error),
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        OutlinedButton(onClick = { requestLoad() }) {
+                            Text(stringResource(R.string.staff_portal_execution_retry))
+                        }
+                    }
+                    ExecutionLoadState.READY -> {
+                        if (!executionError.isNullOrBlank()) {
+                            Text(executionError, color = MaterialTheme.colorScheme.error)
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(
+                                checked = executionState.checklist.arrival,
+                                enabled = canEdit,
+                                onCheckedChange = { checked ->
+                                    updateState { it.copy(checklist = it.checklist.copy(arrival = checked)) }
+                                }
+                            )
+                            Text(stringResource(R.string.staff_portal_checklist_arrival))
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(
+                                checked = executionState.checklist.materials,
+                                enabled = canEdit,
+                                onCheckedChange = { checked ->
+                                    updateState { it.copy(checklist = it.checklist.copy(materials = checked)) }
+                                }
+                            )
+                            Text(stringResource(R.string.staff_portal_checklist_materials))
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(
+                                checked = executionState.checklist.closing,
+                                enabled = canEdit,
+                                onCheckedChange = { checked ->
+                                    updateState { it.copy(checklist = it.checklist.copy(closing = checked)) }
+                                }
+                            )
+                            Text(stringResource(R.string.staff_portal_checklist_closing))
+                        }
+
+                        OutlinedTextField(
+                            value = executionState.quickNote,
+                            onValueChange = { note -> updateState { it.copy(quickNote = note) } },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = canEdit,
+                            label = { Text(stringResource(R.string.staff_portal_quick_notes_label)) },
+                            minLines = 2
+                        )
+                    }
+                }
             }
         },
         confirmButton = {
