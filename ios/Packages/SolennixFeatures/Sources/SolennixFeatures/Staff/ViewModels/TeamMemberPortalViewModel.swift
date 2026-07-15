@@ -13,7 +13,13 @@ public final class TeamMemberPortalViewModel {
     public var isResponding: Bool = false
     public var isMarkingTimelineRead: Bool = false
     public var isSavingAvailability: Bool = false
+    /// List / assignment-level errors (load assignments, respond, availability…).
+    /// Intentionally separate from execution-state errors so list "Reintentar"
+    /// never reloads the wrong surface (#875).
     public var errorMessage: String?
+
+    /// Execution checklist load/save errors for the detail sheet only.
+    public var executionErrorMessage: String?
 
     /// In-memory execution-state cache keyed by `eventStaffId` (#875).
     /// Only populated after a successful GET/migrate (server seed) or a local
@@ -30,7 +36,7 @@ public final class TeamMemberPortalViewModel {
     var lastSyncedStates: [String: AssignmentExecutionState] = [:]
 
     /// Serializes PUTs per assignment so concurrent edits coalesce.
-    private var putSerialTasks: [String: Task<Bool, Never>] = [:]
+    private var putSerialTasks: [String: Task<ExecutionPutResult, Never>] = [:]
 
     /// Debounced note-save tasks per assignment (~400ms).
     private var noteDebounceTasks: [String: Task<Void, Never>] = [:]
@@ -50,6 +56,21 @@ public final class TeamMemberPortalViewModel {
         case loading
         case ready
         case failed
+    }
+
+    /// Outcome of a single execution-state PUT (or a serial drain of them).
+    public enum ExecutionPutResult: Equatable, Sendable {
+        /// HTTP 2xx — durable server ack.
+        case serverAcked
+        /// Offline queue accepted the body (optimistic; not durable).
+        case offlineQueued
+        /// Hard failure (4xx/other); drain may have aborted.
+        case failed
+
+        var isSuccess: Bool { self != .failed }
+
+        /// True only for a real HTTP success — safe to drop legacy UserDefaults.
+        var isServerAcked: Bool { self == .serverAcked }
     }
 
     public init(apiClient: APIClient) {
@@ -189,13 +210,16 @@ public final class TeamMemberPortalViewModel {
     /// Loads execution state from the server when the detail sheet opens.
     ///
     /// - Editing stays gated (`executionLoadStates != .ready`) until a successful
-    ///   server seed so default-based mid-flight edits cannot clobber server fields.
+    ///   server seed / migrate so default-based mid-flight edits cannot clobber
+    ///   server fields.
     /// - GET runs first so a leftover UserDefaults blob cannot clobber newer
     ///   server state.
     /// - Legacy local state is PUT only when the server is empty/default, and
-    ///   the UserDefaults key is removed only after that PUT succeeds.
+    ///   the UserDefaults key is removed only after a real HTTP 2xx migrate
+    ///   (not offline-queue acceptance).
     /// - Load failures leave the cache unset (no sticky default) so reopen/retry
     ///   re-runs GET; they never seed an authoritative empty state.
+    /// - Cancellation (sheet dismiss mid-GET) resets to `.idle` without a banner.
     @MainActor
     public func loadExecutionState(for assignment: TeamMemberAssignment) async {
         let id = assignment.eventStaffId
@@ -203,12 +227,19 @@ public final class TeamMemberPortalViewModel {
         if executionLoadStates[id] == .loading { return }
 
         executionLoadStates[id] = .loading
+        executionErrorMessage = nil
 
         let legacyKey = Self.legacyDefaultsKey(eventId: assignment.eventId)
         let legacyState = Self.readLegacyState(forKey: legacyKey)
 
         do {
             let serverState = try await apiClient.getExecutionState(eventStaffId: id)
+
+            // Sheet dismissed (or Task cancelled) while GET was in flight.
+            if Task.isCancelled {
+                resetExecutionLoadToIdleIfLoading(id)
+                return
+            }
 
             // Only skip applying server when we already completed a successful seed.
             // Cache non-nil alone is not authoritative (could be a pre-seed default).
@@ -218,20 +249,36 @@ public final class TeamMemberPortalViewModel {
 
             if let legacyState, !legacyState.isDefault, serverState.isDefault {
                 // Server empty + local progress → migrate via the serial PUT queue.
+                // Stay in `.loading` until migrate finishes so concurrent edits
+                // cannot race a mid-migrate PUT of incomplete defaults.
                 executionStates[id] = legacyState
                 lastSyncedStates[id] = .defaultState
-                // Mark ready so enqueue is allowed; roll back readiness if migrate fails.
-                executionLoadStates[id] = .ready
-                let putSucceeded = await enqueueExecutionStatePut(for: assignment)
-                if putSucceeded {
+                let putResult = await enqueueExecutionStatePut(
+                    for: assignment,
+                    requireReady: false
+                )
+                switch putResult {
+                case .serverAcked:
+                    // Durable migrate — safe to drop legacy UserDefaults.
                     UserDefaults.standard.removeObject(forKey: legacyKey)
-                    errorMessage = nil
-                } else {
+                    executionLoadStates[id] = .ready
+                    executionErrorMessage = nil
+                case .offlineQueued:
+                    // Optimistic local seed for UX, but KEEP legacy until a real
+                    // server ack so cold-start GET+empty cannot drop fields.
+                    executionLoadStates[id] = .ready
+                    executionErrorMessage = nil
+                case .failed:
                     // Keep legacy in UserDefaults; clear cache so reopen retries
                     // GET+migrate instead of sticky-caching the rolled-back default.
+                    cancelNoteDebounce(for: id)
                     executionStates[id] = nil
                     lastSyncedStates[id] = nil
                     executionLoadStates[id] = .failed
+                    executionErrorMessage = tr(
+                        "team_portal.execution_load_error",
+                        "No pudimos cargar el checklist de ejecución."
+                    )
                 }
                 return
             }
@@ -240,17 +287,23 @@ public final class TeamMemberPortalViewModel {
             executionStates[id] = serverState
             lastSyncedStates[id] = serverState
             executionLoadStates[id] = .ready
-            errorMessage = nil
+            executionErrorMessage = nil
             if legacyState != nil {
                 UserDefaults.standard.removeObject(forKey: legacyKey)
             }
         } catch {
+            // Cancellation is not a hard load failure — sheet dismiss cancels `.task`.
+            if Task.isCancelled || Self.isCancellationError(error) {
+                resetExecutionLoadToIdleIfLoading(id)
+                return
+            }
             // Do NOT write `.defaultState` — that would sticky-cache an empty
             // state and let a later PUT clobber the server.
+            cancelNoteDebounce(for: id)
             executionStates[id] = nil
             lastSyncedStates[id] = nil
             executionLoadStates[id] = .failed
-            errorMessage = tr(
+            executionErrorMessage = tr(
                 "team_portal.execution_load_error",
                 "No pudimos cargar el checklist de ejecución."
             )
@@ -272,7 +325,7 @@ public final class TeamMemberPortalViewModel {
         var next = state
         if next.quickNote.count > Self.maxQuickNoteLength {
             next.quickNote = String(next.quickNote.prefix(Self.maxQuickNoteLength))
-            errorMessage = tr(
+            executionErrorMessage = tr(
                 "team_portal.quick_note_too_long",
                 "La nota rápida no puede superar 2000 caracteres."
             )
@@ -319,20 +372,34 @@ public final class TeamMemberPortalViewModel {
     }
 
     /// Enqueues a serialized PUT that always sends the latest cached state.
-    /// Returns `true` when the final PUT for this drain succeeded (or was
-    /// offline-queued); `false` if a PUT failed and the drain stopped.
+    /// Returns the last PUT outcome for this drain. Never PUTs `.defaultState`
+    /// when the cache is nil / not ready.
     @MainActor
     @discardableResult
-    private func enqueueExecutionStatePut(for assignment: TeamMemberAssignment) async -> Bool {
+    func enqueueExecutionStatePut(
+        for assignment: TeamMemberAssignment,
+        requireReady: Bool = true
+    ) async -> ExecutionPutResult {
         let id = assignment.eventStaffId
         pendingPutIds.insert(id)
 
         if let existing = putSerialTasks[id] {
             let priorResult = await existing.value
             // Prior task may have exited (success drain or failure) before seeing
-            // this pending flag — restart if work remains.
-            if pendingPutIds.contains(id) {
-                return await enqueueExecutionStatePut(for: assignment)
+            // this pending flag — restart if work remains AND we still have an
+            // authoritative local snapshot (never re-PUT empty defaults).
+            if pendingPutIds.contains(id),
+               hasAuthoritativeExecutionState(id, requireReady: requireReady) {
+                return await enqueueExecutionStatePut(
+                    for: assignment,
+                    requireReady: requireReady
+                )
+            }
+            // Pending was re-armed but cache was cleared (e.g. migrate fail) —
+            // drop the stale flag so waiters do not loop forever.
+            if pendingPutIds.contains(id),
+               !hasAuthoritativeExecutionState(id, requireReady: requireReady) {
+                pendingPutIds.remove(id)
             }
             return priorResult
         }
@@ -340,14 +407,38 @@ public final class TeamMemberPortalViewModel {
         let task = Task { @MainActor in
             defer { self.putSerialTasks[id] = nil }
 
-            var lastResult = true
+            var lastResult: ExecutionPutResult = .serverAcked
+            var retriedAfterFailure = false
             while self.pendingPutIds.contains(id) {
                 self.pendingPutIds.remove(id)
-                let stateToSave = self.executionStates[id] ?? .defaultState
-                lastResult = await self.performExecutionStatePut(eventStaffId: id, state: stateToSave)
-                if !lastResult {
+
+                guard let stateToSave = self.executionStates[id],
+                      self.hasAuthoritativeExecutionState(id, requireReady: requireReady)
+                else {
+                    // No authoritative local state — abort without putting defaults.
+                    lastResult = .failed
                     break
                 }
+
+                lastResult = await self.performExecutionStatePut(
+                    eventStaffId: id,
+                    state: stateToSave
+                )
+                if lastResult.isSuccess {
+                    retriedAfterFailure = false
+                    continue
+                }
+
+                // Hard failure: if a newer edit re-armed pending during the failed
+                // PUT, attempt one more drain with the current cache instead of
+                // dropping work when no waiter is attached.
+                if !retriedAfterFailure,
+                   self.pendingPutIds.contains(id),
+                   self.hasAuthoritativeExecutionState(id, requireReady: requireReady) {
+                    retriedAfterFailure = true
+                    continue
+                }
+                break
             }
             return lastResult
         }
@@ -355,40 +446,79 @@ public final class TeamMemberPortalViewModel {
         return await task.value
     }
 
-    /// Performs one PUT. Returns `true` on success or offline-queue acceptance.
+    /// Performs one PUT. Distinguishes HTTP success from offline-queue acceptance.
     /// On hard failure restores the last synced snapshot when the cache still
-    /// equals `state`, and surfaces an error.
+    /// equals `state`, and surfaces an execution error.
     @MainActor
     @discardableResult
     private func performExecutionStatePut(
         eventStaffId id: String,
         state: AssignmentExecutionState
-    ) async -> Bool {
+    ) async -> ExecutionPutResult {
         let rollback = lastSyncedStates[id] ?? .defaultState
         do {
             _ = try await apiClient.putExecutionState(eventStaffId: id, state: state)
             // Always advance lastSynced for the written payload — even if a
             // concurrent local edit already moved the cache past `state`.
             lastSyncedStates[id] = state
-            errorMessage = nil
-            return true
+            executionErrorMessage = nil
+            return .serverAcked
         } catch {
+            if Self.isCancellationError(error) || Task.isCancelled {
+                // Do not roll back or surface a banner for a cancelled PUT.
+                return .failed
+            }
             // APIClient enqueues the mutation then throws a networkError with a
             // "will send on reconnect" message. Treat that as optimistic success
             // so we do not roll back UI while the queue still holds the body.
             if Self.isOfflineQueuedError(error) {
                 lastSyncedStates[id] = state
-                return true
+                executionErrorMessage = nil
+                return .offlineQueued
             }
             if executionStates[id] == state {
                 executionStates[id] = rollback
             }
-            errorMessage = tr(
+            executionErrorMessage = tr(
                 "team_portal.execution_save_error",
                 "No pudimos guardar el checklist de ejecución."
             )
-            return false
+            return .failed
         }
+    }
+
+    /// Whether the assignment currently holds a cache snapshot safe to PUT.
+    /// During migrate, `requireReady` is false so we may PUT while still `.loading`.
+    @MainActor
+    private func hasAuthoritativeExecutionState(
+        _ id: String,
+        requireReady: Bool
+    ) -> Bool {
+        guard executionStates[id] != nil else { return false }
+        if requireReady {
+            return executionLoadStates[id] == .ready
+        }
+        // Migrate path: allow while loading, never while failed/idle after clear.
+        let load = executionLoadStates[id]
+        return load == .loading || load == .ready
+    }
+
+    @MainActor
+    private func resetExecutionLoadToIdleIfLoading(_ id: String) {
+        if executionLoadStates[id] == .loading {
+            executionLoadStates[id] = .idle
+        }
+        // Leave cache unset — reopen will re-GET.
+        if executionLoadStates[id] != .ready {
+            executionStates[id] = nil
+            lastSyncedStates[id] = nil
+        }
+    }
+
+    @MainActor
+    private func cancelNoteDebounce(for id: String) {
+        noteDebounceTasks[id]?.cancel()
+        noteDebounceTasks[id] = nil
     }
 
     /// Detects the offline-queue acceptance path from `APIClient.put/post/patch`.
@@ -399,6 +529,21 @@ public final class TeamMemberPortalViewModel {
         }
         // Stable fragment of the queue-acceptance copy in APIClient.
         return message.contains("se enviará automáticamente")
+    }
+
+    /// True for cooperative cancellation (sheet dismiss / Task.cancel).
+    /// APIClient may wrap `URLError.cancelled` as `APIError.networkError`, so
+    /// callers should also check `Task.isCancelled`.
+    static func isCancellationError(_ error: Error) -> Bool {
+        if error is CancellationError { return true }
+        if let urlError = error as? URLError, urlError.code == .cancelled {
+            return true
+        }
+        let nsError = error as NSError
+        if nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled {
+            return true
+        }
+        return false
     }
 
     static func legacyDefaultsKey(eventId: String) -> String {

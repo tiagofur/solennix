@@ -1121,13 +1121,28 @@ private struct TeamPortalAssignmentDetailSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                if let errorMessage = viewModel.errorMessage {
+                if let executionError = viewModel.executionErrorMessage, loadState != .failed {
+                    // Save / note-length errors while checklist is loaded.
+                    // Load failures use the dedicated failed section below (correct retry).
                     Section {
-                        Text(errorMessage)
-                            .font(.footnote)
-                            .foregroundStyle(SolennixColors.error)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .accessibilityIdentifier("team_portal.execution_error")
+                        VStack(alignment: .leading, spacing: Spacing.sm) {
+                            Text(executionError)
+                                .font(.footnote)
+                                .foregroundStyle(SolennixColors.error)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            if loadState == .ready {
+                                Button(tr("team_portal.retry", "Reintentar")) {
+                                    Task {
+                                        await viewModel.persistExecutionState(
+                                            for: assignment,
+                                            debounce: false
+                                        )
+                                    }
+                                }
+                                .accessibilityIdentifier("team_portal.execution_save_retry")
+                            }
+                        }
+                        .accessibilityIdentifier("team_portal.execution_error")
                     }
                 }
 
@@ -1171,10 +1186,13 @@ private struct TeamPortalAssignmentDetailSheet: View {
                     }
                 case .failed:
                     Section(tr("events.detail.documents.checklist", "Checklist")) {
-                        Text(tr(
-                            "team_portal.execution_load_error",
-                            "No pudimos cargar el checklist de ejecución."
-                        ))
+                        Text(
+                            viewModel.executionErrorMessage
+                                ?? tr(
+                                    "team_portal.execution_load_error",
+                                    "No pudimos cargar el checklist de ejecución."
+                                )
+                        )
                         .font(.footnote)
                         .foregroundStyle(SolennixColors.error)
                         Button(tr("team_portal.retry", "Reintentar")) {

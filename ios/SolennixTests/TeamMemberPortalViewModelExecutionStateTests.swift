@@ -158,7 +158,11 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
             viewModel.executionLoadStates[assignment.eventStaffId],
             .failed
         )
-        XCTAssertNotNil(viewModel.errorMessage)
+        XCTAssertNotNil(viewModel.executionErrorMessage)
+        XCTAssertNil(
+            viewModel.errorMessage,
+            "Execution load failure must not pollute list errorMessage"
+        )
 
         await viewModel.loadExecutionState(for: assignment)
 
@@ -167,7 +171,7 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         XCTAssertTrue(state.checklist.arrival)
         XCTAssertEqual(state.quickNote, "from server")
         XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
-        XCTAssertNil(viewModel.errorMessage, "successful load clears errorMessage")
+        XCTAssertNil(viewModel.executionErrorMessage, "successful load clears executionErrorMessage")
     }
 
     // MARK: - Load gating (no default-based clobber)
@@ -419,9 +423,10 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
             "Offline-queued body is server-bound truth for rollback purposes"
         )
         XCTAssertNil(
-            viewModel.errorMessage,
+            viewModel.executionErrorMessage,
             "Queue acceptance must not surface as a hard save error"
         )
+        XCTAssertNil(viewModel.errorMessage)
     }
 
     // MARK: - Quick note length cap
@@ -447,7 +452,8 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
 
         let cached = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
         XCTAssertEqual(cached.quickNote.count, TeamMemberPortalViewModel.maxQuickNoteLength)
-        XCTAssertNotNil(viewModel.errorMessage)
+        XCTAssertNotNil(viewModel.executionErrorMessage)
+        XCTAssertNil(viewModel.errorMessage)
     }
 
     // MARK: - Optimistic rollback on PUT failure
@@ -480,7 +486,8 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         let after = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
         XCTAssertEqual(after, before, "PUT failure must restore last synced snapshot")
         XCTAssertFalse(after.checklist.materials)
-        XCTAssertNotNil(viewModel.errorMessage)
+        XCTAssertNotNil(viewModel.executionErrorMessage)
+        XCTAssertNil(viewModel.errorMessage)
     }
 
     // MARK: - Legacy delete only after successful PUT
@@ -510,7 +517,8 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
             UserDefaults.standard.data(forKey: key),
             "Legacy key must survive a failed migrate PUT"
         )
-        XCTAssertNotNil(viewModel.errorMessage)
+        XCTAssertNotNil(viewModel.executionErrorMessage)
+        XCTAssertNil(viewModel.errorMessage)
         XCTAssertNil(
             viewModel.executionStates[assignment.eventStaffId],
             "Failed migrate must clear cache so reopen retries GET+migrate"
@@ -619,7 +627,255 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         let state = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
         XCTAssertTrue(state.isDefault)
         XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+        XCTAssertNil(viewModel.executionErrorMessage)
+    }
+
+    // MARK: - Cancellation mid-GET is not a hard failure
+
+    @MainActor
+    func testLoadExecutionState_CancellationDoesNotSetFailedOrError() async throws {
+        let assignment = try makeAssignment(eventStaffId: "es_cancel", eventId: "ev_cancel")
+        let gate = Gate()
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                gate.waitSync()
+                // Simulate task cancellation surface (sheet dismiss cancels .task).
+                throw CancellationError()
+            }
+            return errorResponse(url: url)
+        }
+
+        let loadTask = Task { @MainActor in
+            await viewModel.loadExecutionState(for: assignment)
+        }
+
+        try await Task.sleep(nanoseconds: 50_000_000)
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .loading)
+
+        loadTask.cancel()
+        gate.open()
+        await loadTask.value
+
+        XCTAssertEqual(
+            viewModel.executionLoadStates[assignment.eventStaffId],
+            .idle,
+            "Cancellation must reset to idle so reopen can re-GET"
+        )
+        XCTAssertNil(viewModel.executionStates[assignment.eventStaffId])
+        XCTAssertNil(
+            viewModel.executionErrorMessage,
+            "Cancellation must not surface an execution error banner"
+        )
         XCTAssertNil(viewModel.errorMessage)
+        XCTAssertNotEqual(viewModel.executionLoadStates[assignment.eventStaffId], .failed)
+    }
+
+    // MARK: - Migrate fail + concurrent persist must not PUT defaultState
+
+    @MainActor
+    func testMigrateFail_ConcurrentPersist_DoesNotPutDefaultState() async throws {
+        let eventId = "ev_migrate_race"
+        let assignment = try makeAssignment(eventStaffId: "es_migrate_race", eventId: eventId)
+        try seedLegacy(eventId: eventId, arrival: true, quickNote: "legacy")
+        defer { clearLegacy(eventId: eventId) }
+
+        let putGate = Gate()
+        var putBodies: [Data] = []
+        var putCount = 0
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                return okResponse(url: url, data: executionStateJSON()) // server default
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                putCount += 1
+                putBodies.append(request.httpBody ?? Data())
+                putGate.waitSync()
+                return errorResponse(url: url, status: 422)
+            }
+            return errorResponse(url: url)
+        }
+
+        let loadTask = Task { @MainActor in
+            await viewModel.loadExecutionState(for: assignment)
+        }
+
+        // Yield so migrate PUT is in flight (still .loading, not .ready).
+        try await Task.sleep(nanoseconds: 50_000_000)
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .loading)
+
+        // Concurrent user edit while migrate is mid-flight — must be gated.
+        var concurrent = AssignmentExecutionState.defaultState
+        concurrent.checklist.materials = true
+        await viewModel.saveExecutionState(for: assignment, state: concurrent, debounce: false)
+
+        putGate.open()
+        await loadTask.value
+
+        XCTAssertEqual(putCount, 1, "only the migrate PUT should fire")
+        // Decode migrate body if available — must not be empty defaults from concurrent edit.
+        if let body = putBodies.first, !body.isEmpty,
+           let decoded = try? JSONDecoder().decode(AssignmentExecutionState.self, from: body) {
+            XCTAssertTrue(decoded.checklist.arrival, "migrate PUT must send legacy, not defaults")
+            XCTAssertEqual(decoded.quickNote, "legacy")
+            XCTAssertFalse(decoded.checklist.materials)
+        }
+
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .failed)
+        XCTAssertNil(viewModel.executionStates[assignment.eventStaffId])
+        XCTAssertNotNil(
+            UserDefaults.standard.data(
+                forKey: TeamMemberPortalViewModel.legacyDefaultsKey(eventId: eventId)
+            )
+        )
+    }
+
+    // MARK: - Failed drain with re-armed pending still attempts newer state
+
+    @MainActor
+    func testFailedDrain_ReArmedPending_AttemptsNewerState() async throws {
+        let assignment = try makeAssignment(eventStaffId: "es_drain", eventId: "ev_drain")
+        let firstPutGate = Gate()
+        var putCount = 0
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                return okResponse(url: url, data: executionStateJSON(arrival: true, quickNote: "base"))
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                putCount += 1
+                if putCount == 1 {
+                    firstPutGate.waitSync()
+                    return errorResponse(url: url, status: 422)
+                }
+                // Second attempt (re-armed newer state) succeeds.
+                return okResponse(
+                    url: url,
+                    data: executionStateJSON(arrival: true, materials: true, quickNote: "newer")
+                )
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+        let id = assignment.eventStaffId
+
+        let first = AssignmentExecutionState(
+            checklist: ExecutionChecklist(arrival: true, materials: true, closing: false),
+            quickNote: "first"
+        )
+        let firstPut = Task { @MainActor in
+            await viewModel.saveExecutionState(for: assignment, state: first, debounce: false)
+        }
+
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        // Re-arm pending with a newer snapshot while first PUT is failing.
+        let newer = AssignmentExecutionState(
+            checklist: ExecutionChecklist(arrival: true, materials: true, closing: false),
+            quickNote: "newer"
+        )
+        viewModel.applyLocalExecutionState(newer, for: assignment)
+        let secondPut = Task { @MainActor in
+            await viewModel.persistExecutionState(for: assignment, debounce: false)
+        }
+
+        firstPutGate.open()
+        await firstPut.value
+        await secondPut.value
+
+        // Drain must attempt the re-armed newer state after the first hard failure.
+        XCTAssertGreaterThanOrEqual(putCount, 2, "re-armed pending must trigger another PUT")
+        XCTAssertEqual(viewModel.executionStates[id]?.quickNote, "newer")
+        XCTAssertEqual(
+            viewModel.lastSyncedStates[id]?.quickNote,
+            "newer",
+            "Successful retry of newer state must advance lastSynced"
+        )
+        XCTAssertNil(viewModel.executionErrorMessage)
+    }
+
+    // MARK: - Offline migrate keeps legacy until server ack
+
+    @MainActor
+    func testLoadExecutionState_KeepsLegacy_OnOfflineQueuedMigrate() async throws {
+        let eventId = "ev_legacy_offline"
+        let assignment = try makeAssignment(eventStaffId: "es_legacy_offline", eventId: eventId)
+        try seedLegacy(eventId: eventId, arrival: true, materials: true, quickNote: "offline migrate")
+        defer { clearLegacy(eventId: eventId) }
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                return okResponse(url: url, data: executionStateJSON()) // server default
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                throw URLError(.notConnectedToInternet)
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+
+        let key = TeamMemberPortalViewModel.legacyDefaultsKey(eventId: eventId)
+        XCTAssertNotNil(
+            UserDefaults.standard.data(forKey: key),
+            "Offline-queued migrate must NOT delete legacy UserDefaults"
+        )
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+        let state = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
+        XCTAssertTrue(state.checklist.arrival)
+        XCTAssertEqual(state.quickNote, "offline migrate")
+        XCTAssertNil(viewModel.executionErrorMessage)
+    }
+
+    // MARK: - Offline success clears prior execution error
+
+    @MainActor
+    func testOfflineQueuedPut_ClearsPriorExecutionError() async throws {
+        let assignment = try makeAssignment(eventStaffId: "es_offline_clear", eventId: "ev_offline_clear")
+        var putCount = 0
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                return okResponse(url: url, data: executionStateJSON(arrival: true))
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                putCount += 1
+                if putCount == 1 {
+                    return errorResponse(url: url, status: 422)
+                }
+                throw URLError(.notConnectedToInternet)
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+
+        let failing = AssignmentExecutionState(
+            checklist: ExecutionChecklist(arrival: true, materials: true, closing: false),
+            quickNote: ""
+        )
+        await viewModel.saveExecutionState(for: assignment, state: failing, debounce: false)
+        XCTAssertNotNil(viewModel.executionErrorMessage, "hard PUT failure must set execution error")
+
+        let offline = AssignmentExecutionState(
+            checklist: ExecutionChecklist(arrival: true, materials: true, closing: true),
+            quickNote: "queued"
+        )
+        await viewModel.saveExecutionState(for: assignment, state: offline, debounce: false)
+
+        XCTAssertNil(
+            viewModel.executionErrorMessage,
+            "Offline-queue acceptance must clear prior execution error like HTTP success"
+        )
+        XCTAssertEqual(viewModel.executionStates[assignment.eventStaffId], offline)
+        XCTAssertEqual(viewModel.lastSyncedStates[assignment.eventStaffId], offline)
     }
 
     // MARK: - Offline-queue error detector
@@ -632,6 +888,13 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         XCTAssertTrue(TeamMemberPortalViewModel.isOfflineQueuedError(queued))
         XCTAssertFalse(TeamMemberPortalViewModel.isOfflineQueuedError(plain))
         XCTAssertFalse(TeamMemberPortalViewModel.isOfflineQueuedError(APIError.decodingError))
+    }
+
+    func testIsCancellationError_MatchesCancellationSurfaces() {
+        XCTAssertTrue(TeamMemberPortalViewModel.isCancellationError(CancellationError()))
+        XCTAssertTrue(TeamMemberPortalViewModel.isCancellationError(URLError(.cancelled)))
+        XCTAssertFalse(TeamMemberPortalViewModel.isCancellationError(URLError(.notConnectedToInternet)))
+        XCTAssertFalse(TeamMemberPortalViewModel.isCancellationError(APIError.decodingError))
     }
 }
 
