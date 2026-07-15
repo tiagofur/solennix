@@ -99,13 +99,6 @@ vi.mock('../../services/subscriptionService', () => ({
   },
 }));
 
-vi.mock('../../lib/pdfGenerator', () => ({
-  generateBudgetPDF: vi.fn(),
-  generateContractPDF: vi.fn(),
-  generateShoppingListPDF: vi.fn(),
-  generatePaymentReportPDF: vi.fn(),
-}));
-
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({ user: { id: 'user-1', email: 'ana@example.com', plan: 'pro' }, profile: { name: 'Eventos Ana', business_name: 'Eventos Ana' } }),
 }));
@@ -279,12 +272,6 @@ describe('EventSummary — header & display variants', () => {
     expect(screen.getByText('Producto')).toBeInTheDocument();
   });
 
-  // TODO(contract-freeze-web): pre-existing fail — waitFor times out looking
-  // for "Ana — Boda" when getProducts/getExtras/getByEventId return null.
-  // Was hidden by the EventSummary.test.tsx worker crash. Fix: investigate
-  // whether the component actually guards against null arrays from the
-  // backend (it should, per the previous engram memory about
-  // "iOS APIClient resilient to null arrays" fix).
   it('handles null products and extras from API', async () => {
     (eventService.getProducts as any).mockResolvedValue(null);
     (eventService.getExtras as any).mockResolvedValue(null);

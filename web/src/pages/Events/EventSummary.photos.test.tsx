@@ -96,13 +96,6 @@ vi.mock('../../services/subscriptionService', () => ({
   },
 }));
 
-vi.mock('../../lib/pdfGenerator', () => ({
-  generateBudgetPDF: vi.fn(),
-  generateContractPDF: vi.fn(),
-  generateShoppingListPDF: vi.fn(),
-  generatePaymentReportPDF: vi.fn(),
-}));
-
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({ user: { id: 'user-1', email: 'ana@example.com', plan: 'pro' }, profile: { name: 'Eventos Ana', business_name: 'Eventos Ana' } }),
 }));
