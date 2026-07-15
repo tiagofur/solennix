@@ -345,12 +345,17 @@ public final class TeamMemberPortalViewModel {
             }
 
             // Re-resolve local side AFTER GET so concurrent mid-flight edits win.
-            // Soft revalidate: prefer live cache (current ?? preGet). Hard load:
-            // UserDefaults blob only (editing gated while `.loading`).
+            // Soft revalidate: live cache key presence is truth (including
+            // intentional `.defaultState`) — do NOT fall back to frozen legacy
+            // when the key exists. Hard load: UserDefaults blob only.
             let localProgress: AssignmentExecutionState? = {
                 if softRevalidate {
-                    if let current = executionStates[id] ?? preGetCache, !current.isDefault {
-                        return current
+                    if let current = executionStates[id] {
+                        // Present key (even default) is live truth — no frozen fallback.
+                        return current.isDefault ? nil : current
+                    }
+                    if let pre = preGetCache, !pre.isDefault {
+                        return pre
                     }
                     if let blob = legacyFromDefaults, !blob.isDefault {
                         return blob
@@ -366,6 +371,61 @@ public final class TeamMemberPortalViewModel {
                 && preGetCache != nil
                 && executionStates[id] != nil
                 && executionStates[id] != preGetCache
+
+            // Mid-edit during soft revalidate: live cache is authoritative for
+            // subtractive edits (uncheck / clear-to-default). Do NOT OR-merge
+            // with server — that would resurrect server-true bits the user
+            // intentionally cleared. Keep dirty and push current via serial PUT.
+            // Mark server-seeded after successful GET so we do not re-GET-loop.
+            if cacheAdvancedDuringGet, let current = executionStates[id] {
+                executionStates[id] = current
+                lastSyncedStates[id] = serverState
+                if current == serverState {
+                    markServerSeededReady(id)
+                    clearExecutionError(for: id)
+                    UserDefaults.standard.removeObject(forKey: legacyKey)
+                    return
+                }
+                Self.writeLegacyState(current, forKey: legacyKey)
+                var putResult = await enqueueExecutionStatePut(
+                    for: assignment,
+                    requireReady: true
+                )
+                if Task.isCancelled,
+                   putResult != .serverAcked,
+                   putResult != .offlineQueued {
+                    putResult = .cancelled
+                }
+                switch putResult {
+                case .serverAcked:
+                    UserDefaults.standard.removeObject(forKey: legacyKey)
+                    markServerSeededReady(id)
+                    clearExecutionError(for: id)
+                case .offlineQueued:
+                    Self.writeLegacyState(
+                        executionStates[id] ?? current,
+                        forKey: legacyKey
+                    )
+                    markServerSeededReady(id)
+                    clearExecutionError(for: id)
+                case .failed:
+                    // Keep live cache; lastSynced remains serverState (honest baseline).
+                    executionStates[id] = current
+                    lastSyncedStates[id] = serverState
+                    Self.writeLegacyState(current, forKey: legacyKey)
+                    markServerSeededReady(id)
+                    setExecutionError(
+                        tr(
+                            "team_portal.execution_save_error",
+                            "No pudimos guardar el checklist de ejecución."
+                        ),
+                        for: id
+                    )
+                case .cancelled:
+                    executionLoadStates[id] = .ready
+                }
+                return
+            }
 
             if let localProgress, !localProgress.isDefault {
                 if serverState.isDefault {
@@ -452,67 +512,10 @@ public final class TeamMemberPortalViewModel {
 
                 // Server + local both non-default → union merge (never silent-drop).
                 // Always use post-GET localProgress (not a frozen pre-GET snapshot).
+                // Mid-edit cache advances are handled above (authoritative live cache).
                 let merged = Self.mergeExecutionStates(server: serverState, legacy: localProgress)
                 if merged == serverState {
-                    // Server already covers local. Only pure-server overwrite when the
-                    // cache did not advance during the GET (mid-edit must keep current).
-                    if cacheAdvancedDuringGet, let current = executionStates[id] {
-                        let liveMerged = Self.mergeExecutionStates(
-                            server: serverState,
-                            legacy: current
-                        )
-                        executionStates[id] = liveMerged
-                        lastSyncedStates[id] = serverState
-                        if liveMerged == serverState {
-                            markServerSeededReady(id)
-                            clearExecutionError(for: id)
-                            UserDefaults.standard.removeObject(forKey: legacyKey)
-                            return
-                        }
-                        // Live merge still has local-only fields — fall through to PUT.
-                        Self.writeLegacyState(liveMerged, forKey: legacyKey)
-                        var putResult = await enqueueExecutionStatePut(
-                            for: assignment,
-                            requireReady: softRevalidate
-                        )
-                        if Task.isCancelled,
-                           putResult != .serverAcked,
-                           putResult != .offlineQueued {
-                            putResult = .cancelled
-                        }
-                        switch putResult {
-                        case .serverAcked:
-                            UserDefaults.standard.removeObject(forKey: legacyKey)
-                            markServerSeededReady(id)
-                            clearExecutionError(for: id)
-                        case .offlineQueued:
-                            Self.writeLegacyState(
-                                executionStates[id] ?? liveMerged,
-                                forKey: legacyKey
-                            )
-                            markServerSeededReady(id)
-                            clearExecutionError(for: id)
-                        case .failed:
-                            executionStates[id] = liveMerged
-                            lastSyncedStates[id] = serverState
-                            Self.writeLegacyState(liveMerged, forKey: legacyKey)
-                            markServerSeededReady(id)
-                            setExecutionError(
-                                tr(
-                                    "team_portal.execution_save_error",
-                                    "No pudimos guardar el checklist de ejecución."
-                                ),
-                                for: id
-                            )
-                        case .cancelled:
-                            if softRevalidate {
-                                executionLoadStates[id] = .ready
-                            } else {
-                                resetExecutionLoadAfterCancelledMigrate(id)
-                            }
-                        }
-                        return
-                    }
+                    // Server already covers local — pure-server overwrite.
                     executionStates[id] = serverState
                     lastSyncedStates[id] = serverState
                     markServerSeededReady(id)
@@ -586,59 +589,8 @@ public final class TeamMemberPortalViewModel {
                 return
             }
 
-            // No non-default local. Prefer server; drop empty leftover key.
-            // Never pure-server overwrite a cache that advanced during the GET.
-            if cacheAdvancedDuringGet, let current = executionStates[id] {
-                let merged = Self.mergeExecutionStates(server: serverState, legacy: current)
-                executionStates[id] = merged
-                lastSyncedStates[id] = serverState
-                if merged != serverState {
-                    Self.writeLegacyState(merged, forKey: legacyKey)
-                    var putResult = await enqueueExecutionStatePut(
-                        for: assignment,
-                        requireReady: true
-                    )
-                    if Task.isCancelled,
-                       putResult != .serverAcked,
-                       putResult != .offlineQueued {
-                        putResult = .cancelled
-                    }
-                    switch putResult {
-                    case .serverAcked:
-                        UserDefaults.standard.removeObject(forKey: legacyKey)
-                        markServerSeededReady(id)
-                        clearExecutionError(for: id)
-                    case .offlineQueued:
-                        Self.writeLegacyState(
-                            executionStates[id] ?? merged,
-                            forKey: legacyKey
-                        )
-                        markServerSeededReady(id)
-                        clearExecutionError(for: id)
-                    case .failed:
-                        executionStates[id] = merged
-                        lastSyncedStates[id] = serverState
-                        markServerSeededReady(id)
-                        setExecutionError(
-                            tr(
-                                "team_portal.execution_save_error",
-                                "No pudimos guardar el checklist de ejecución."
-                            ),
-                            for: id
-                        )
-                    case .cancelled:
-                        executionLoadStates[id] = .ready
-                    }
-                    return
-                }
-                markServerSeededReady(id)
-                clearExecutionError(for: id)
-                if UserDefaults.standard.data(forKey: legacyKey) != nil {
-                    UserDefaults.standard.removeObject(forKey: legacyKey)
-                }
-                return
-            }
-
+            // No non-default local (and no mid-edit advance). Prefer server;
+            // drop empty leftover key. Mid-edit advances handled above.
             executionStates[id] = serverState
             lastSyncedStates[id] = serverState
             markServerSeededReady(id)
@@ -728,6 +680,10 @@ public final class TeamMemberPortalViewModel {
         }
         // Keep optimistic cache for local edits, but mark not server-seeded so
         // next open re-GETs, and surface a save error for the assignment.
+        // Clear lastSynced: offline-queue path may have advanced it to the dropped
+        // body (never server-acked). Leaving it would make a later hard-fail PUT
+        // dishonestly roll back to that dropped payload.
+        lastSyncedStates[eventStaffId] = nil
         executionServerSeeded[eventStaffId] = false
         setExecutionError(
             tr(
@@ -925,7 +881,6 @@ public final class TeamMemberPortalViewModel {
         eventId: String,
         state: AssignmentExecutionState
     ) async -> ExecutionPutResult {
-        let rollback = lastSyncedStates[id] ?? .defaultState
         let legacyKey = Self.legacyDefaultsKey(eventId: eventId)
         do {
             _ = try await apiClient.putExecutionState(eventStaffId: id, state: state)
@@ -949,9 +904,11 @@ public final class TeamMemberPortalViewModel {
                 Self.rewriteLegacyIfPresent(eventId: eventId, state: state)
                 return .offlineQueued
             }
-            // Hard fail: roll memory back when cache still equals the failed write,
-            // and restore legacy UserDefaults to the same snapshot when present.
-            if executionStates[id] == state {
+            // Hard fail: roll memory back only when we have a real lastSynced
+            // baseline (server-acked or offline-queued). If lastSynced is nil
+            // (e.g. offline drop cleared it), keep the live cache — never invent
+            // `.defaultState` or restore a dropped body.
+            if executionStates[id] == state, let rollback = lastSyncedStates[id] {
                 executionStates[id] = rollback
                 Self.rewriteLegacyIfPresent(eventId: eventId, state: rollback)
             }

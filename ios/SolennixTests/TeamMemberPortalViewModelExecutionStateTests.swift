@@ -1535,6 +1535,15 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
 
         await viewModel.loadExecutionState(for: assignment)
         XCTAssertEqual(viewModel.executionServerSeeded[assignment.eventStaffId], true)
+        let id = assignment.eventStaffId
+        // Simulate offline-queue advancing lastSynced to a body that was never
+        // server-acked (the dishonest baseline the drop must clear).
+        let droppedBody = AssignmentExecutionState(
+            checklist: ExecutionChecklist(arrival: true, materials: true, closing: false),
+            quickNote: "dropped body"
+        )
+        viewModel.lastSyncedStates[id] = droppedBody
+        viewModel.executionStates[id] = droppedBody
 
         NotificationCenter.default.post(
             name: APIClient.offlineMutationDroppedNotification,
@@ -1550,8 +1559,88 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         await Task.yield()
         try await Task.sleep(nanoseconds: 20_000_000)
 
-        XCTAssertEqual(viewModel.executionServerSeeded[assignment.eventStaffId], false)
-        XCTAssertNotNil(viewModel.executionErrorMessages[assignment.eventStaffId])
+        XCTAssertEqual(viewModel.executionServerSeeded[id], false)
+        XCTAssertNotNil(viewModel.executionErrorMessages[id])
+        XCTAssertNil(
+            viewModel.lastSyncedStates[id],
+            "offline drop must clear lastSynced so it is not equal to the dropped body"
+        )
+        XCTAssertEqual(
+            viewModel.executionStates[id],
+            droppedBody,
+            "offline drop must keep optimistic cache"
+        )
+    }
+
+    // MARK: - Offline drop + hard fail must not restore dropped body
+
+    @MainActor
+    func testOfflineMutationDropped_HardFailAfterDrop_DoesNotRestoreDroppedBody() async throws {
+        let assignment = try makeAssignment(
+            eventStaffId: "es_drop_hardfail",
+            eventId: "ev_drop_hardfail"
+        )
+        let id = assignment.eventStaffId
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                return okResponse(
+                    url: url,
+                    data: executionStateJSON(arrival: true, quickNote: "server ack")
+                )
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                return errorResponse(url: url, status: 422)
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+        XCTAssertEqual(viewModel.lastSyncedStates[id]?.quickNote, "server ack")
+
+        // Offline-queued body advanced lastSynced (never server-acked).
+        let droppedBody = AssignmentExecutionState(
+            checklist: ExecutionChecklist(arrival: true, materials: true, closing: true),
+            quickNote: "dropped offline body"
+        )
+        viewModel.executionStates[id] = droppedBody
+        viewModel.lastSyncedStates[id] = droppedBody
+
+        NotificationCenter.default.post(
+            name: APIClient.offlineMutationDroppedNotification,
+            object: nil,
+            userInfo: [
+                APIClient.offlineMutationDroppedMethodKey: "PUT",
+                APIClient.offlineMutationDroppedEndpointKey:
+                    "/staff/assignments/\(id)/execution-state",
+                APIClient.offlineMutationDroppedStatusCodeKey: 422
+            ]
+        )
+        await Task.yield()
+        try await Task.sleep(nanoseconds: 20_000_000)
+
+        XCTAssertNil(viewModel.lastSyncedStates[id])
+
+        // New edit after drop — hard fail must keep cache, not restore dropped body.
+        let retry = AssignmentExecutionState(
+            checklist: ExecutionChecklist(arrival: true, materials: false, closing: false),
+            quickNote: "retry after drop"
+        )
+        await viewModel.saveExecutionState(for: assignment, state: retry, debounce: false)
+
+        XCTAssertEqual(
+            viewModel.executionStates[id]?.quickNote,
+            "retry after drop",
+            "hard fail with nil lastSynced must keep live cache, not restore dropped body"
+        )
+        XCTAssertNotEqual(
+            viewModel.executionStates[id],
+            droppedBody,
+            "dropped body must not be restored on hard fail after drop"
+        )
+        XCTAssertNil(viewModel.lastSyncedStates[id])
+        XCTAssertNotNil(viewModel.executionErrorMessages[id])
     }
 
     // MARK: - Soft revalidate mid-edit does not clobber concurrent toggle/note
@@ -1634,6 +1723,146 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
             "concurrent mid-get note that is longer",
             "concurrent note must not be clobbered by soft revalidate merge"
         )
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+    }
+
+    // MARK: - Soft revalidate mid-edit: subtractive uncheck is authoritative
+
+    @MainActor
+    func testSoftRevalidate_MidEdit_UncheckServerTrue_KeepsFalse() async throws {
+        let eventId = "ev_soft_uncheck"
+        let assignment = try makeAssignment(eventStaffId: "es_soft_uncheck", eventId: eventId)
+        // Offline seed has materials true — soft revalidate will re-GET.
+        try seedLegacy(
+            eventId: eventId,
+            arrival: true,
+            materials: true,
+            quickNote: "offline with materials"
+        )
+        defer { clearLegacy(eventId: eventId) }
+
+        let getGate = Gate()
+        var getCount = 0
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                getCount += 1
+                if getCount == 1 {
+                    return errorResponse(url: url, status: 422)
+                }
+                getGate.waitSync()
+                // Server still has materials true — OR-merge would resurrect uncheck.
+                return okResponse(
+                    url: url,
+                    data: executionStateJSON(
+                        arrival: true,
+                        materials: true,
+                        quickNote: "server still true"
+                    )
+                )
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                return okResponse(url: url, data: request.httpBody ?? Data())
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+        XCTAssertEqual(viewModel.executionServerSeeded[assignment.eventStaffId], false)
+        XCTAssertTrue(viewModel.executionStates[assignment.eventStaffId]?.checklist.materials == true)
+
+        let revalidateTask = Task { @MainActor in
+            await viewModel.loadExecutionState(for: assignment)
+        }
+        try await Task.sleep(nanoseconds: 50_000_000)
+        XCTAssertEqual(getCount, 2)
+
+        // Concurrent mid-GET subtractive edit: uncheck materials.
+        var midEdit = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
+        midEdit.checklist.materials = false
+        viewModel.applyLocalExecutionState(midEdit, for: assignment)
+        XCTAssertTrue(viewModel.executionStates[assignment.eventStaffId]?.checklist.materials == false)
+
+        getGate.open()
+        await revalidateTask.value
+
+        let final = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
+        XCTAssertFalse(
+            final.checklist.materials,
+            "mid-GET uncheck must stay false — soft revalidate must not OR-merge server true"
+        )
+        XCTAssertTrue(final.checklist.arrival)
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+    }
+
+    // MARK: - Soft revalidate mid-edit: clear to default does not resurrect legacy
+
+    @MainActor
+    func testSoftRevalidate_MidEdit_ClearToDefault_DoesNotResurrectFrozenLegacy() async throws {
+        let eventId = "ev_soft_clear_default"
+        let assignment = try makeAssignment(
+            eventStaffId: "es_soft_clear_default",
+            eventId: eventId
+        )
+        try seedLegacy(
+            eventId: eventId,
+            arrival: true,
+            materials: true,
+            quickNote: "frozen legacy progress"
+        )
+        defer { clearLegacy(eventId: eventId) }
+
+        let getGate = Gate()
+        var getCount = 0
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                getCount += 1
+                if getCount == 1 {
+                    return errorResponse(url: url, status: 422)
+                }
+                getGate.waitSync()
+                // Server empty default — resurrecting frozen legacy would be wrong.
+                return okResponse(url: url, data: executionStateJSON())
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                return okResponse(url: url, data: request.httpBody ?? Data())
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+        XCTAssertEqual(
+            viewModel.executionStates[assignment.eventStaffId]?.quickNote,
+            "frozen legacy progress"
+        )
+
+        let revalidateTask = Task { @MainActor in
+            await viewModel.loadExecutionState(for: assignment)
+        }
+        try await Task.sleep(nanoseconds: 50_000_000)
+        XCTAssertEqual(getCount, 2)
+
+        // Concurrent mid-GET clear to intentional default.
+        viewModel.applyLocalExecutionState(.defaultState, for: assignment)
+        XCTAssertTrue(
+            viewModel.executionStates[assignment.eventStaffId]?.isDefault == true,
+            "live cache must be intentional default before GET resolves"
+        )
+
+        getGate.open()
+        await revalidateTask.value
+
+        let final = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
+        XCTAssertTrue(
+            final.isDefault,
+            "intentional clear-to-default mid-GET must not resurrect frozen legacy blob"
+        )
+        XCTAssertNotEqual(final.quickNote, "frozen legacy progress")
         XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
     }
 
