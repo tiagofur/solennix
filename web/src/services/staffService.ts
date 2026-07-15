@@ -2,6 +2,7 @@ import { api } from '../lib/api';
 import type {
   AssignmentPortalResponse,
   AssignmentResponseOutcome,
+  AssignmentExecutionState,
   EventStaff,
   PaginatedResponse,
   PaginationParams,
@@ -78,6 +79,14 @@ export const staffService = {
 
   async respondAssignment(id: string, response: AssignmentPortalResponse): Promise<AssignmentResponseOutcome> {
     return api.post<AssignmentResponseOutcome>(`/staff/assignments/${id}/respond`, { response });
+  },
+
+  async getExecutionState(eventStaffId: string): Promise<AssignmentExecutionState> {
+    return api.get<AssignmentExecutionState>(`/staff/assignments/${eventStaffId}/execution-state`);
+  },
+
+  async putExecutionState(eventStaffId: string, state: AssignmentExecutionState): Promise<AssignmentExecutionState> {
+    return api.put<AssignmentExecutionState>(`/staff/assignments/${eventStaffId}/execution-state`, state);
   },
 
   async getMyTimeline(params?: { unreadOnly?: boolean; limit?: number }): Promise<TeamMemberChangeEvent[]> {

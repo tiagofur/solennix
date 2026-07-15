@@ -236,6 +236,8 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Get("/my-timeline", staffHandler.GetMyTimeline)
 			r.Post("/my-timeline/read", staffHandler.MarkMyTimelineRead)
 			r.Post("/assignments/{id}/respond", staffHandler.RespondAssignment)
+			r.Get("/assignments/{id}/execution-state", staffHandler.GetExecutionState)
+			r.Put("/assignments/{id}/execution-state", staffHandler.PutExecutionState)
 			r.Post("/{id}/invite", staffHandler.InviteStaffUser)
 			r.Delete("/{id}/invite", staffHandler.RevokeStaffInvite)
 			// availability must be registered before /{id} so chi does not treat

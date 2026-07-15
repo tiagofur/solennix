@@ -323,6 +323,20 @@ export interface StaffAvailability {
 
 export type AssignmentPortalResponse = 'accept' | 'decline'
 
+/** Team-member execution checklist progress (per assignment). */
+export interface ExecutionChecklist {
+    arrival: boolean
+    materials: boolean
+    closing: boolean
+}
+
+/** Server-backed execution state for a team-member assignment (#875).
+ *  Replaces the former device-only localStorage persistence. */
+export interface AssignmentExecutionState {
+    checklist: ExecutionChecklist
+    quick_note: string
+}
+
 export interface TeamMemberAssignment {
     event_staff_id: string
     event_id: string

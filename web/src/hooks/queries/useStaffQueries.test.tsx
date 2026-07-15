@@ -10,6 +10,8 @@ const mockGetByEvent = vi.fn();
 const mockGetAvailability = vi.fn();
 const mockGetMyAssignments = vi.fn();
 const mockRespondAssignment = vi.fn();
+const mockGetExecutionState = vi.fn();
+const mockPutExecutionState = vi.fn();
 const mockCreate = vi.fn();
 const mockUpdate = vi.fn();
 const mockDelete = vi.fn();
@@ -31,6 +33,8 @@ vi.mock('@/services/staffService', () => ({
     getAvailability: (...args: unknown[]) => mockGetAvailability(...args),
     getMyAssignments: (...args: unknown[]) => mockGetMyAssignments(...args),
     respondAssignment: (...args: unknown[]) => mockRespondAssignment(...args),
+    getExecutionState: (...args: unknown[]) => mockGetExecutionState(...args),
+    putExecutionState: (...args: unknown[]) => mockPutExecutionState(...args),
     create: (...args: unknown[]) => mockCreate(...args),
     update: (...args: unknown[]) => mockUpdate(...args),
     delete: (...args: unknown[]) => mockDelete(...args),
@@ -66,6 +70,9 @@ import {
   useStaffAvailabilityRange,
   useMyAssignments,
   useRespondAssignment,
+  useExecutionState,
+  useSaveExecutionState,
+  defaultExecutionState,
   useCreateStaff,
   useUpdateStaff,
   useDeleteStaff,
@@ -257,5 +264,62 @@ describe('useStaffQueries', () => {
   it('staff team detail stays idle when id is undefined', () => {
     const { result } = renderHook(() => useStaffTeam(undefined), { wrapper: createWrapper() });
     expect(result.current.fetchStatus).toBe('idle');
+  });
+
+  // ── Execution state (#875) ──
+
+  it('execution state query stays idle without an eventStaffId', () => {
+    const { result } = renderHook(() => useExecutionState(undefined), { wrapper: createWrapper() });
+    expect(result.current.fetchStatus).toBe('idle');
+  });
+
+  it('execution state query fetches state for an eventStaffId', async () => {
+    mockGetExecutionState.mockResolvedValue({
+      checklist: { arrival: true, materials: false, closing: false },
+      quick_note: 'hi',
+    });
+
+    const { result } = renderHook(() => useExecutionState('es-1'), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockGetExecutionState).toHaveBeenCalledWith('es-1');
+    expect(result.current.data?.checklist.arrival).toBe(true);
+    expect(result.current.data?.quick_note).toBe('hi');
+  });
+
+  it('save execution state mutation calls service with optimistic update', async () => {
+    mockPutExecutionState.mockResolvedValue({
+      checklist: { arrival: true, materials: false, closing: false },
+      quick_note: 'ok',
+    });
+    const setStateSpy = vi.spyOn(QueryClient.prototype, 'setQueryData');
+
+    const { result } = renderHook(() => useSaveExecutionState(), { wrapper: createWrapper() });
+
+    await act(async () => {
+      result.current.mutate({
+        eventStaffId: 'es-1',
+        state: { checklist: { arrival: true, materials: false, closing: false }, quick_note: 'ok' },
+      });
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockPutExecutionState).toHaveBeenCalledWith('es-1', {
+      checklist: { arrival: true, materials: false, closing: false },
+      quick_note: 'ok',
+    });
+    // Optimistic update wrote to the cache before the server responded.
+    expect(setStateSpy).toHaveBeenCalledWith(
+      ['staff', 'execution-state', 'es-1'],
+      { checklist: { arrival: true, materials: false, closing: false }, quick_note: 'ok' },
+    );
+    setStateSpy.mockRestore();
+  });
+
+  it('defaultExecutionState exports the zeroed shape', () => {
+    expect(defaultExecutionState).toEqual({
+      checklist: { arrival: false, materials: false, closing: false },
+      quick_note: '',
+    });
   });
 });
