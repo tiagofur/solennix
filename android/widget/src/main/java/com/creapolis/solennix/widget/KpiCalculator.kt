@@ -44,6 +44,27 @@ internal fun derivePendingPaymentBalance(
 }
 
 /**
+ * Counts upcoming (today and future) events for the widget, mirroring the
+ * inline derivation previously embedded in [KpiWidget.provideGlance].
+ *
+ * Scope: events whose [CachedEvent.eventDate] is today or later
+ * (`!date.isBefore(today)`) and whose [CachedEvent.status] is anything other
+ * than [EventStatus.CANCELLED]. Events with unparseable dates are discarded.
+ *
+ * Note: this is intentionally broader than the dedicated
+ * [UpcomingEventsWidget] SQL query (which filters to `CONFIRMED` only) and
+ * than the iOS `confirmedEvents` KPI. It preserves the existing KpiWidget
+ * "Próximos" counter, which treats quoted/completed future events as upcoming.
+ */
+internal fun deriveUpcomingEventsCount(
+    events: List<CachedEvent>,
+    today: LocalDate = LocalDate.now()
+): Int = events.count { event ->
+    val date = parseFlexibleDate(event.eventDate) ?: return@count false
+    !date.isBefore(today) && event.status != EventStatus.CANCELLED
+}
+
+/**
  * Fallback monthly revenue derivation used when no server KPI snapshot is available yet
  * (cold launch before the dashboard's first `/dashboard/summary` fetch). Mirrors iOS
  * `WidgetSyncCoordinator.deriveKPIs` cache-fallback and the backend's

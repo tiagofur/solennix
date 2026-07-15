@@ -16,8 +16,6 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.creapolis.solennix.core.database.SolennixDatabase
-import com.creapolis.solennix.core.model.EventStatus
-import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 
@@ -43,10 +41,7 @@ class KpiWidget : GlanceAppWidget() {
                 // before the first dashboard load — falls back to deriveMonthlyRevenue.
                 val snapshot = WidgetKpiStore.read(context)
 
-                val upcomingEvents = events.count {
-                    parseFlexibleDate(it.eventDate)?.let { d -> !d.isBefore(today) } == true &&
-                        it.status != EventStatus.CANCELLED
-                }
+                val upcomingEvents = deriveUpcomingEventsCount(events, today)
 
                 val monthlyRevenue = snapshot?.netSalesThisMonth
                     ?: deriveMonthlyRevenue(events, today)
