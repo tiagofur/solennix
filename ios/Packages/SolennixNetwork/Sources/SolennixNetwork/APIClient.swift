@@ -296,9 +296,7 @@ public actor APIClient {
                 bodyData: bodyData,
                 idempotencyKey: request.value(forHTTPHeaderField: "X-Idempotency-Key")
             ) {
-                let queuedError = APIError.networkError(
-                    "Sin conexión: guardamos tu cambio y se enviará automáticamente al reconectarte."
-                )
+                let queuedError = APIError.queuedOffline
                 showErrorToast(for: queuedError)
                 throw queuedError
             }
@@ -333,9 +331,7 @@ public actor APIClient {
                 bodyData: bodyData,
                 idempotencyKey: request.value(forHTTPHeaderField: "X-Idempotency-Key")
             ) {
-                let queuedError = APIError.networkError(
-                    "Sin conexión: guardamos tu cambio y se enviará automáticamente al reconectarte."
-                )
+                let queuedError = APIError.queuedOffline
                 showErrorToast(for: queuedError)
                 throw queuedError
             }
@@ -365,9 +361,7 @@ public actor APIClient {
                 bodyData: bodyData,
                 idempotencyKey: request.value(forHTTPHeaderField: "X-Idempotency-Key")
             ) {
-                let queuedError = APIError.networkError(
-                    "Sin conexión: guardamos tu cambio y se enviará automáticamente al reconectarte."
-                )
+                let queuedError = APIError.queuedOffline
                 showErrorToast(for: queuedError)
                 throw queuedError
             }
@@ -393,7 +387,7 @@ public actor APIClient {
                 bodyData: nil,
                 idempotencyKey: request.value(forHTTPHeaderField: "X-Idempotency-Key")
             ) {
-                showErrorToast(for: .networkError("Sin conexión: la eliminación quedó en cola y se enviará automáticamente."))
+                showErrorToast(for: .queuedOffline)
                 return
             }
             if case .networkError = apiError {

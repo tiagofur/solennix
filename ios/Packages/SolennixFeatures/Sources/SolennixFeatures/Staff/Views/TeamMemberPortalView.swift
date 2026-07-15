@@ -1121,8 +1121,9 @@ private struct TeamPortalAssignmentDetailSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                if let executionError = viewModel.executionErrorMessage, loadState != .failed {
-                    // Save / note-length errors while checklist is loaded.
+                if let executionError = viewModel.executionErrorMessages[assignment.eventStaffId],
+                   loadState != .failed {
+                    // Save / note-length errors for THIS assignment only (#875).
                     // Load failures use the dedicated failed section below (correct retry).
                     Section {
                         VStack(alignment: .leading, spacing: Spacing.sm) {
@@ -1187,7 +1188,7 @@ private struct TeamPortalAssignmentDetailSheet: View {
                 case .failed:
                     Section(tr("events.detail.documents.checklist", "Checklist")) {
                         Text(
-                            viewModel.executionErrorMessage
+                            viewModel.executionErrorMessages[assignment.eventStaffId]
                                 ?? tr(
                                     "team_portal.execution_load_error",
                                     "No pudimos cargar el checklist de ejecución."

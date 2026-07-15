@@ -158,7 +158,7 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
             viewModel.executionLoadStates[assignment.eventStaffId],
             .failed
         )
-        XCTAssertNotNil(viewModel.executionErrorMessage)
+        XCTAssertNotNil(viewModel.executionErrorMessages[assignment.eventStaffId])
         XCTAssertNil(
             viewModel.errorMessage,
             "Execution load failure must not pollute list errorMessage"
@@ -171,7 +171,10 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         XCTAssertTrue(state.checklist.arrival)
         XCTAssertEqual(state.quickNote, "from server")
         XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
-        XCTAssertNil(viewModel.executionErrorMessage, "successful load clears executionErrorMessage")
+        XCTAssertNil(
+            viewModel.executionErrorMessages[assignment.eventStaffId],
+            "successful load clears per-assignment execution error"
+        )
     }
 
     // MARK: - Load gating (no default-based clobber)
@@ -423,7 +426,7 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
             "Offline-queued body is server-bound truth for rollback purposes"
         )
         XCTAssertNil(
-            viewModel.executionErrorMessage,
+            viewModel.executionErrorMessages[assignment.eventStaffId],
             "Queue acceptance must not surface as a hard save error"
         )
         XCTAssertNil(viewModel.errorMessage)
@@ -452,8 +455,14 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
 
         let cached = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
         XCTAssertEqual(cached.quickNote.count, TeamMemberPortalViewModel.maxQuickNoteLength)
-        XCTAssertNotNil(viewModel.executionErrorMessage)
+        XCTAssertNotNil(viewModel.executionErrorMessages[assignment.eventStaffId])
         XCTAssertNil(viewModel.errorMessage)
+
+        // Trimming under the cap must clear the length error.
+        var trimmed = cached
+        trimmed.quickNote = "short"
+        viewModel.applyLocalExecutionState(trimmed, for: assignment)
+        XCTAssertNil(viewModel.executionErrorMessages[assignment.eventStaffId])
     }
 
     // MARK: - Optimistic rollback on PUT failure
@@ -486,7 +495,7 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         let after = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
         XCTAssertEqual(after, before, "PUT failure must restore last synced snapshot")
         XCTAssertFalse(after.checklist.materials)
-        XCTAssertNotNil(viewModel.executionErrorMessage)
+        XCTAssertNotNil(viewModel.executionErrorMessages[assignment.eventStaffId])
         XCTAssertNil(viewModel.errorMessage)
     }
 
@@ -517,7 +526,7 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
             UserDefaults.standard.data(forKey: key),
             "Legacy key must survive a failed migrate PUT"
         )
-        XCTAssertNotNil(viewModel.executionErrorMessage)
+        XCTAssertNotNil(viewModel.executionErrorMessages[assignment.eventStaffId])
         XCTAssertNil(viewModel.errorMessage)
         XCTAssertNil(
             viewModel.executionStates[assignment.eventStaffId],
@@ -565,13 +574,74 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         XCTAssertEqual(state.quickNote, "migrated")
     }
 
-    // MARK: - Migration does not clobber non-default server state
+    // MARK: - Non-default server + richer legacy → union merge
 
     @MainActor
-    func testLoadExecutionState_DoesNotPutLegacy_WhenServerHasState() async throws {
-        let eventId = "ev_legacy_clobber"
-        let assignment = try makeAssignment(eventStaffId: "es_legacy_clobber", eventId: eventId)
-        try seedLegacy(eventId: eventId, arrival: true, quickNote: "stale local")
+    func testLoadExecutionState_MergesRicherLegacy_WhenServerHasState() async throws {
+        let eventId = "ev_legacy_merge"
+        let assignment = try makeAssignment(eventStaffId: "es_legacy_merge", eventId: eventId)
+        // Legacy has arrival + a longer note that server lacks.
+        try seedLegacy(
+            eventId: eventId,
+            arrival: true,
+            materials: false,
+            closing: false,
+            quickNote: "legacy field note that is longer"
+        )
+        defer { clearLegacy(eventId: eventId) }
+
+        var putCount = 0
+        var putBody: Data?
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                return okResponse(
+                    url: url,
+                    data: executionStateJSON(
+                        arrival: false,
+                        materials: true,
+                        closing: true,
+                        quickNote: "server"
+                    )
+                )
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                putCount += 1
+                // URLProtocol often surfaces body via stream only — echo merged shape.
+                let mergedEcho = executionStateJSON(
+                    arrival: true,
+                    materials: true,
+                    closing: true,
+                    quickNote: "legacy field note that is longer"
+                )
+                putBody = request.httpBody ?? mergedEcho
+                return okResponse(url: url, data: mergedEcho)
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+
+        XCTAssertEqual(putCount, 1, "merged state that differs from server must be PUT")
+        let state = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
+        XCTAssertTrue(state.checklist.arrival, "OR merge keeps legacy arrival")
+        XCTAssertTrue(state.checklist.materials, "OR merge keeps server materials")
+        XCTAssertTrue(state.checklist.closing, "OR merge keeps server closing")
+        XCTAssertEqual(state.quickNote, "legacy field note that is longer")
+        // Server-acked merge drops legacy.
+        XCTAssertNil(
+            UserDefaults.standard.data(forKey: TeamMemberPortalViewModel.legacyDefaultsKey(eventId: eventId))
+        )
+        XCTAssertEqual(viewModel.lastSyncedStates[assignment.eventStaffId], state)
+        XCTAssertNotNil(putBody)
+    }
+
+    @MainActor
+    func testLoadExecutionState_DropsLegacy_WhenServerAlreadyCoversIt() async throws {
+        let eventId = "ev_legacy_covered"
+        let assignment = try makeAssignment(eventStaffId: "es_legacy_covered", eventId: eventId)
+        // Server has a superset of legacy (OR equals server; note equal/shorter).
+        try seedLegacy(eventId: eventId, arrival: true, materials: false, quickNote: "short")
         defer { clearLegacy(eventId: eventId) }
 
         var putCount = 0
@@ -580,7 +650,12 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
             if request.httpMethod == "GET", url.path.contains("execution-state") {
                 return okResponse(
                     url: url,
-                    data: executionStateJSON(arrival: false, materials: true, closing: true, quickNote: "server newer")
+                    data: executionStateJSON(
+                        arrival: true,
+                        materials: true,
+                        closing: true,
+                        quickNote: "server longer note"
+                    )
                 )
             }
             if request.httpMethod == "PUT", url.path.contains("execution-state") {
@@ -592,13 +667,10 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
 
         await viewModel.loadExecutionState(for: assignment)
 
-        XCTAssertEqual(putCount, 0, "must not PUT legacy over non-default server state")
+        XCTAssertEqual(putCount, 0, "no PUT when merge equals server")
         let state = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
-        XCTAssertEqual(state.quickNote, "server newer")
+        XCTAssertEqual(state.quickNote, "server longer note")
         XCTAssertTrue(state.checklist.materials)
-        XCTAssertTrue(state.checklist.closing)
-        XCTAssertFalse(state.checklist.arrival)
-        // Leftover legacy discarded after server wins (no clobber path).
         XCTAssertNil(
             UserDefaults.standard.data(forKey: TeamMemberPortalViewModel.legacyDefaultsKey(eventId: eventId))
         )
@@ -627,7 +699,7 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         let state = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
         XCTAssertTrue(state.isDefault)
         XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
-        XCTAssertNil(viewModel.executionErrorMessage)
+        XCTAssertNil(viewModel.executionErrorMessages[assignment.eventStaffId])
     }
 
     // MARK: - Cancellation mid-GET is not a hard failure
@@ -665,7 +737,7 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         )
         XCTAssertNil(viewModel.executionStates[assignment.eventStaffId])
         XCTAssertNil(
-            viewModel.executionErrorMessage,
+            viewModel.executionErrorMessages[assignment.eventStaffId],
             "Cancellation must not surface an execution error banner"
         )
         XCTAssertNil(viewModel.errorMessage)
@@ -796,7 +868,7 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
             "newer",
             "Successful retry of newer state must advance lastSynced"
         )
-        XCTAssertNil(viewModel.executionErrorMessage)
+        XCTAssertNil(viewModel.executionErrorMessages[id])
     }
 
     // MARK: - Offline migrate keeps legacy until server ack
@@ -830,7 +902,7 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         let state = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
         XCTAssertTrue(state.checklist.arrival)
         XCTAssertEqual(state.quickNote, "offline migrate")
-        XCTAssertNil(viewModel.executionErrorMessage)
+        XCTAssertNil(viewModel.executionErrorMessages[assignment.eventStaffId])
     }
 
     // MARK: - Offline success clears prior execution error
@@ -862,7 +934,10 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
             quickNote: ""
         )
         await viewModel.saveExecutionState(for: assignment, state: failing, debounce: false)
-        XCTAssertNotNil(viewModel.executionErrorMessage, "hard PUT failure must set execution error")
+        XCTAssertNotNil(
+            viewModel.executionErrorMessages[assignment.eventStaffId],
+            "hard PUT failure must set execution error"
+        )
 
         let offline = AssignmentExecutionState(
             checklist: ExecutionChecklist(arrival: true, materials: true, closing: true),
@@ -871,21 +946,202 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         await viewModel.saveExecutionState(for: assignment, state: offline, debounce: false)
 
         XCTAssertNil(
-            viewModel.executionErrorMessage,
+            viewModel.executionErrorMessages[assignment.eventStaffId],
             "Offline-queue acceptance must clear prior execution error like HTTP success"
         )
         XCTAssertEqual(viewModel.executionStates[assignment.eventStaffId], offline)
         XCTAssertEqual(viewModel.lastSyncedStates[assignment.eventStaffId], offline)
     }
 
+    // MARK: - Cross-assignment error isolation
+
+    @MainActor
+    func testExecutionError_IsScopedPerAssignment() async throws {
+        let assignmentA = try makeAssignment(eventStaffId: "es_err_a", eventId: "ev_err_a")
+        let assignmentB = try makeAssignment(eventStaffId: "es_err_b", eventId: "ev_err_b")
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                return okResponse(url: url, data: executionStateJSON(arrival: true))
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                // Fail only assignment A's PUT.
+                if url.path.contains("es_err_a") {
+                    return errorResponse(url: url, status: 422)
+                }
+                return okResponse(url: url, data: request.httpBody ?? executionStateJSON())
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignmentA)
+        await viewModel.loadExecutionState(for: assignmentB)
+
+        var failA = AssignmentExecutionState(
+            checklist: ExecutionChecklist(arrival: true, materials: true, closing: false),
+            quickNote: ""
+        )
+        await viewModel.saveExecutionState(for: assignmentA, state: failA, debounce: false)
+
+        XCTAssertNotNil(viewModel.executionErrorMessages[assignmentA.eventStaffId])
+        XCTAssertNil(
+            viewModel.executionErrorMessages[assignmentB.eventStaffId],
+            "Error for A must not leak into B's sheet"
+        )
+
+        // B can still save cleanly while A's error remains keyed to A.
+        var okB = AssignmentExecutionState(
+            checklist: ExecutionChecklist(arrival: true, materials: true, closing: false),
+            quickNote: "b ok"
+        )
+        await viewModel.saveExecutionState(for: assignmentB, state: okB, debounce: false)
+        XCTAssertNil(viewModel.executionErrorMessages[assignmentB.eventStaffId])
+        XCTAssertNotNil(viewModel.executionErrorMessages[assignmentA.eventStaffId])
+        XCTAssertEqual(viewModel.executionStates[assignmentB.eventStaffId]?.quickNote, "b ok")
+    }
+
+    // MARK: - GET fail + non-default legacy → offline ready
+
+    @MainActor
+    func testLoadExecutionState_GETFail_SeedsLegacyOfflineReady() async throws {
+        let eventId = "ev_cold_offline"
+        let assignment = try makeAssignment(eventStaffId: "es_cold_offline", eventId: eventId)
+        try seedLegacy(eventId: eventId, arrival: true, materials: true, quickNote: "offline progress")
+        defer { clearLegacy(eventId: eventId) }
+
+        var putCount = 0
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                // Prefer 4xx so APIClient does not retry transient network/5xx.
+                return errorResponse(url: url, status: 422)
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                putCount += 1
+                return errorResponse(url: url, status: 422)
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+        let state = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
+        XCTAssertTrue(state.checklist.arrival)
+        XCTAssertTrue(state.checklist.materials)
+        XCTAssertEqual(state.quickNote, "offline progress")
+        XCTAssertEqual(
+            viewModel.lastSyncedStates[assignment.eventStaffId],
+            state,
+            "Seeded legacy is the rollback baseline until a later PUT"
+        )
+        XCTAssertNil(
+            viewModel.executionErrorMessages[assignment.eventStaffId],
+            "Legacy seed must not surface as hard load error"
+        )
+        XCTAssertEqual(putCount, 0, "GET-fail seed must not auto-PUT (avoids clobber on hard fail)")
+        // Legacy kept until server-acked PUT.
+        XCTAssertNotNil(
+            UserDefaults.standard.data(forKey: TeamMemberPortalViewModel.legacyDefaultsKey(eventId: eventId))
+        )
+    }
+
+    // MARK: - Local edit after offline migrate rewrites legacy
+
+    @MainActor
+    func testApplyLocal_AfterOfflineMigrate_RewritesLegacyBlob() async throws {
+        let eventId = "ev_legacy_rewrite"
+        let assignment = try makeAssignment(eventStaffId: "es_legacy_rewrite", eventId: eventId)
+        try seedLegacy(eventId: eventId, arrival: true, materials: false, quickNote: "original")
+        defer { clearLegacy(eventId: eventId) }
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                return okResponse(url: url, data: executionStateJSON()) // server default
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                throw URLError(.notConnectedToInternet)
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+
+        var edited = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
+        edited.checklist.materials = true
+        edited.quickNote = "edited offline"
+        viewModel.applyLocalExecutionState(edited, for: assignment)
+
+        let key = TeamMemberPortalViewModel.legacyDefaultsKey(eventId: eventId)
+        let data = try XCTUnwrap(UserDefaults.standard.data(forKey: key))
+        // Decode legacy shape and assert rewrite matches cache (not stale original).
+        struct LegacyBlob: Codable {
+            var arrivalReady: Bool
+            var materialsReady: Bool
+            var closingDone: Bool
+            var quickNote: String
+        }
+        let blob = try JSONDecoder().decode(LegacyBlob.self, from: data)
+        XCTAssertTrue(blob.arrivalReady)
+        XCTAssertTrue(blob.materialsReady, "legacy rewrite must include offline edit")
+        XCTAssertEqual(blob.quickNote, "edited offline")
+    }
+
+    // MARK: - Server-acked PUT clears leftover legacy after offline migrate
+
+    @MainActor
+    func testServerAckedPut_ClearsLegacy_AfterOfflineMigrate() async throws {
+        let eventId = "ev_legacy_ack_clear"
+        let assignment = try makeAssignment(eventStaffId: "es_legacy_ack_clear", eventId: eventId)
+        try seedLegacy(eventId: eventId, arrival: true, quickNote: "pending")
+        defer { clearLegacy(eventId: eventId) }
+
+        var putCount = 0
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                return okResponse(url: url, data: executionStateJSON())
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                putCount += 1
+                if putCount == 1 {
+                    // First migrate PUT is offline-queued.
+                    throw URLError(.notConnectedToInternet)
+                }
+                // Later edit succeeds on the wire.
+                return okResponse(url: url, data: request.httpBody ?? executionStateJSON(arrival: true))
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+        let key = TeamMemberPortalViewModel.legacyDefaultsKey(eventId: eventId)
+        XCTAssertNotNil(UserDefaults.standard.data(forKey: key), "legacy survives offline migrate")
+
+        var next = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
+        next.checklist.materials = true
+        await viewModel.saveExecutionState(for: assignment, state: next, debounce: false)
+
+        XCTAssertNil(
+            UserDefaults.standard.data(forKey: key),
+            "Any server-acked PUT must drop leftover legacy"
+        )
+        XCTAssertTrue(viewModel.executionStates[assignment.eventStaffId]?.checklist.materials == true)
+    }
+
     // MARK: - Offline-queue error detector
 
-    func testIsOfflineQueuedError_MatchesAPIClientQueueCopy() {
-        let queued = APIError.networkError(
+    func testIsOfflineQueuedError_PrefersTypedQueuedOffline() {
+        XCTAssertTrue(TeamMemberPortalViewModel.isOfflineQueuedError(APIError.queuedOffline))
+        // Legacy substring fallback for pre-typed networkError copy.
+        let legacyQueued = APIError.networkError(
             "Sin conexión: guardamos tu cambio y se enviará automáticamente al reconectarte."
         )
         let plain = APIError.networkError("Sin conexión a internet.")
-        XCTAssertTrue(TeamMemberPortalViewModel.isOfflineQueuedError(queued))
+        XCTAssertTrue(TeamMemberPortalViewModel.isOfflineQueuedError(legacyQueued))
         XCTAssertFalse(TeamMemberPortalViewModel.isOfflineQueuedError(plain))
         XCTAssertFalse(TeamMemberPortalViewModel.isOfflineQueuedError(APIError.decodingError))
     }
@@ -895,6 +1151,22 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         XCTAssertTrue(TeamMemberPortalViewModel.isCancellationError(URLError(.cancelled)))
         XCTAssertFalse(TeamMemberPortalViewModel.isCancellationError(URLError(.notConnectedToInternet)))
         XCTAssertFalse(TeamMemberPortalViewModel.isCancellationError(APIError.decodingError))
+    }
+
+    func testMergeExecutionStates_ORsChecklistAndPrefersRicherNote() {
+        let server = AssignmentExecutionState(
+            checklist: ExecutionChecklist(arrival: false, materials: true, closing: false),
+            quickNote: "short"
+        )
+        let legacy = AssignmentExecutionState(
+            checklist: ExecutionChecklist(arrival: true, materials: false, closing: true),
+            quickNote: "a much longer legacy note"
+        )
+        let merged = TeamMemberPortalViewModel.mergeExecutionStates(server: server, legacy: legacy)
+        XCTAssertTrue(merged.checklist.arrival)
+        XCTAssertTrue(merged.checklist.materials)
+        XCTAssertTrue(merged.checklist.closing)
+        XCTAssertEqual(merged.quickNote, "a much longer legacy note")
     }
 }
 

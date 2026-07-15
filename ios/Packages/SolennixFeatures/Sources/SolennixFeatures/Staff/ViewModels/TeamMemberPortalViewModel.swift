@@ -18,8 +18,9 @@ public final class TeamMemberPortalViewModel {
     /// never reloads the wrong surface (#875).
     public var errorMessage: String?
 
-    /// Execution checklist load/save errors for the detail sheet only.
-    public var executionErrorMessage: String?
+    /// Execution checklist load/save errors keyed by `eventStaffId` (#875).
+    /// Scoped per assignment so opening B never shows A's save/load error.
+    public var executionErrorMessages: [String: String] = [:]
 
     /// In-memory execution-state cache keyed by `eventStaffId` (#875).
     /// Only populated after a successful GET/migrate (server seed) or a local
@@ -214,11 +215,11 @@ public final class TeamMemberPortalViewModel {
     ///   server fields.
     /// - GET runs first so a leftover UserDefaults blob cannot clobber newer
     ///   server state.
-    /// - Legacy local state is PUT only when the server is empty/default, and
-    ///   the UserDefaults key is removed only after a real HTTP 2xx migrate
-    ///   (not offline-queue acceptance).
-    /// - Load failures leave the cache unset (no sticky default) so reopen/retry
-    ///   re-runs GET; they never seed an authoritative empty state.
+    /// - Non-default legacy is union-merged with non-default server (checklist OR,
+    ///   richer note); legacy is removed only after a real HTTP 2xx PUT ack.
+    /// - GET failure with non-default legacy seeds offline-ready UX instead of
+    ///   hiding local progress.
+    /// - Load failures without legacy leave the cache unset (no sticky default).
     /// - Cancellation (sheet dismiss mid-GET) resets to `.idle` without a banner.
     @MainActor
     public func loadExecutionState(for assignment: TeamMemberAssignment) async {
@@ -227,7 +228,7 @@ public final class TeamMemberPortalViewModel {
         if executionLoadStates[id] == .loading { return }
 
         executionLoadStates[id] = .loading
-        executionErrorMessage = nil
+        clearExecutionError(for: id)
 
         let legacyKey = Self.legacyDefaultsKey(eventId: assignment.eventId)
         let legacyState = Self.readLegacyState(forKey: legacyKey)
@@ -247,47 +248,97 @@ public final class TeamMemberPortalViewModel {
                 return
             }
 
-            if let legacyState, !legacyState.isDefault, serverState.isDefault {
-                // Server empty + local progress → migrate via the serial PUT queue.
-                // Stay in `.loading` until migrate finishes so concurrent edits
-                // cannot race a mid-migrate PUT of incomplete defaults.
-                executionStates[id] = legacyState
-                lastSyncedStates[id] = .defaultState
+            if let legacyState, !legacyState.isDefault {
+                if serverState.isDefault {
+                    // Server empty + local progress → migrate via the serial PUT queue.
+                    // Stay in `.loading` until migrate finishes so concurrent edits
+                    // cannot race a mid-migrate PUT of incomplete defaults.
+                    executionStates[id] = legacyState
+                    lastSyncedStates[id] = .defaultState
+                    let putResult = await enqueueExecutionStatePut(
+                        for: assignment,
+                        requireReady: false
+                    )
+                    switch putResult {
+                    case .serverAcked:
+                        // Durable migrate — safe to drop legacy UserDefaults.
+                        UserDefaults.standard.removeObject(forKey: legacyKey)
+                        executionLoadStates[id] = .ready
+                        clearExecutionError(for: id)
+                    case .offlineQueued:
+                        // Optimistic local seed for UX, but KEEP legacy until a real
+                        // server ack so cold-start GET+empty cannot drop fields.
+                        // Rewrite legacy so it matches the seeded cache.
+                        Self.writeLegacyState(legacyState, forKey: legacyKey)
+                        executionLoadStates[id] = .ready
+                        clearExecutionError(for: id)
+                    case .failed:
+                        // Keep legacy in UserDefaults; clear cache so reopen retries
+                        // GET+migrate instead of sticky-caching the rolled-back default.
+                        cancelNoteDebounce(for: id)
+                        executionStates[id] = nil
+                        lastSyncedStates[id] = nil
+                        executionLoadStates[id] = .failed
+                        setExecutionError(
+                            tr(
+                                "team_portal.execution_load_error",
+                                "No pudimos cargar el checklist de ejecución."
+                            ),
+                            for: id
+                        )
+                    }
+                    return
+                }
+
+                // Server + legacy both non-default → union merge (never silent-drop).
+                let merged = Self.mergeExecutionStates(server: serverState, legacy: legacyState)
+                if merged == serverState {
+                    // Server already covers legacy — drop leftover blob.
+                    executionStates[id] = serverState
+                    lastSyncedStates[id] = serverState
+                    executionLoadStates[id] = .ready
+                    clearExecutionError(for: id)
+                    UserDefaults.standard.removeObject(forKey: legacyKey)
+                    return
+                }
+
+                executionStates[id] = merged
+                lastSyncedStates[id] = serverState
+                // Keep legacy rewritten to merged until server ack.
+                Self.writeLegacyState(merged, forKey: legacyKey)
                 let putResult = await enqueueExecutionStatePut(
                     for: assignment,
                     requireReady: false
                 )
                 switch putResult {
                 case .serverAcked:
-                    // Durable migrate — safe to drop legacy UserDefaults.
                     UserDefaults.standard.removeObject(forKey: legacyKey)
                     executionLoadStates[id] = .ready
-                    executionErrorMessage = nil
+                    clearExecutionError(for: id)
                 case .offlineQueued:
-                    // Optimistic local seed for UX, but KEEP legacy until a real
-                    // server ack so cold-start GET+empty cannot drop fields.
+                    Self.writeLegacyState(merged, forKey: legacyKey)
                     executionLoadStates[id] = .ready
-                    executionErrorMessage = nil
+                    clearExecutionError(for: id)
                 case .failed:
-                    // Keep legacy in UserDefaults; clear cache so reopen retries
-                    // GET+migrate instead of sticky-caching the rolled-back default.
-                    cancelNoteDebounce(for: id)
-                    executionStates[id] = nil
-                    lastSyncedStates[id] = nil
-                    executionLoadStates[id] = .failed
-                    executionErrorMessage = tr(
-                        "team_portal.execution_load_error",
-                        "No pudimos cargar el checklist de ejecución."
+                    // Still usable offline with merged local truth; keep legacy.
+                    Self.writeLegacyState(merged, forKey: legacyKey)
+                    executionLoadStates[id] = .ready
+                    setExecutionError(
+                        tr(
+                            "team_portal.execution_save_error",
+                            "No pudimos guardar el checklist de ejecución."
+                        ),
+                        for: id
                     )
                 }
                 return
             }
 
-            // Server has real state (or both empty). Prefer server; drop leftover legacy.
+            // No non-default legacy. Prefer server; drop empty leftover key.
             executionStates[id] = serverState
             lastSyncedStates[id] = serverState
             executionLoadStates[id] = .ready
-            executionErrorMessage = nil
+            clearExecutionError(for: id)
             if legacyState != nil {
                 UserDefaults.standard.removeObject(forKey: legacyKey)
             }
@@ -297,15 +348,31 @@ public final class TeamMemberPortalViewModel {
                 resetExecutionLoadToIdleIfLoading(id)
                 return
             }
+
+            // Cold-start offline / GET fail: surface non-default legacy so field
+            // staff can keep editing. Keep legacy until a later server-acked PUT
+            // (triggered by user edit/persist — do not auto-PUT here: a hard
+            // failure would roll the seeded cache back to defaults).
+            if let legacyState, !legacyState.isDefault {
+                executionStates[id] = legacyState
+                lastSyncedStates[id] = legacyState
+                executionLoadStates[id] = .ready
+                clearExecutionError(for: id)
+                return
+            }
+
             // Do NOT write `.defaultState` — that would sticky-cache an empty
             // state and let a later PUT clobber the server.
             cancelNoteDebounce(for: id)
             executionStates[id] = nil
             lastSyncedStates[id] = nil
             executionLoadStates[id] = .failed
-            executionErrorMessage = tr(
-                "team_portal.execution_load_error",
-                "No pudimos cargar el checklist de ejecución."
+            setExecutionError(
+                tr(
+                    "team_portal.execution_load_error",
+                    "No pudimos cargar el checklist de ejecución."
+                ),
+                for: id
             )
         }
     }
@@ -314,6 +381,8 @@ public final class TeamMemberPortalViewModel {
     ///
     /// No-op while load is not `.ready` so default-based mid-flight edits cannot
     /// seed the cache and race a GET. Caps `quickNote` at `maxQuickNoteLength`.
+    /// While a legacy UserDefaults blob still exists, rewrites it to match so
+    /// cold-start re-migrate cannot resurrect a stale snapshot.
     @MainActor
     public func applyLocalExecutionState(
         _ state: AssignmentExecutionState,
@@ -323,14 +392,19 @@ public final class TeamMemberPortalViewModel {
         guard executionLoadStates[id] == .ready else { return }
 
         var next = state
+        let lengthError = tr(
+            "team_portal.quick_note_too_long",
+            "La nota rápida no puede superar 2000 caracteres."
+        )
         if next.quickNote.count > Self.maxQuickNoteLength {
             next.quickNote = String(next.quickNote.prefix(Self.maxQuickNoteLength))
-            executionErrorMessage = tr(
-                "team_portal.quick_note_too_long",
-                "La nota rápida no puede superar 2000 caracteres."
-            )
+            setExecutionError(lengthError, for: id)
+        } else if executionErrorMessages[id] == lengthError {
+            // User trimmed under the cap — drop only the length error.
+            clearExecutionError(for: id)
         }
         executionStates[id] = next
+        Self.rewriteLegacyIfPresent(eventId: assignment.eventId, state: next)
     }
 
     /// Persists the current cached state. Toggles use `debounce: false` (immediate
@@ -422,6 +496,7 @@ public final class TeamMemberPortalViewModel {
 
                 lastResult = await self.performExecutionStatePut(
                     eventStaffId: id,
+                    eventId: assignment.eventId,
                     state: stateToSave
                 )
                 if lastResult.isSuccess {
@@ -453,38 +528,55 @@ public final class TeamMemberPortalViewModel {
     @discardableResult
     private func performExecutionStatePut(
         eventStaffId id: String,
+        eventId: String,
         state: AssignmentExecutionState
     ) async -> ExecutionPutResult {
         let rollback = lastSyncedStates[id] ?? .defaultState
+        let legacyKey = Self.legacyDefaultsKey(eventId: eventId)
         do {
             _ = try await apiClient.putExecutionState(eventStaffId: id, state: state)
             // Always advance lastSynced for the written payload — even if a
             // concurrent local edit already moved the cache past `state`.
             lastSyncedStates[id] = state
-            executionErrorMessage = nil
+            clearExecutionError(for: id)
+            // Any durable server ack may drop leftover legacy for this event.
+            UserDefaults.standard.removeObject(forKey: legacyKey)
             return .serverAcked
         } catch {
             if Self.isCancellationError(error) || Task.isCancelled {
                 // Do not roll back or surface a banner for a cancelled PUT.
                 return .failed
             }
-            // APIClient enqueues the mutation then throws a networkError with a
-            // "will send on reconnect" message. Treat that as optimistic success
-            // so we do not roll back UI while the queue still holds the body.
+            // Typed offline-queue acceptance (or legacy substring fallback).
+            // Keep UI; rewrite legacy blob if still present so cold-start is fresh.
             if Self.isOfflineQueuedError(error) {
                 lastSyncedStates[id] = state
-                executionErrorMessage = nil
+                clearExecutionError(for: id)
+                Self.rewriteLegacyIfPresent(eventId: eventId, state: state)
                 return .offlineQueued
             }
             if executionStates[id] == state {
                 executionStates[id] = rollback
             }
-            executionErrorMessage = tr(
-                "team_portal.execution_save_error",
-                "No pudimos guardar el checklist de ejecución."
+            setExecutionError(
+                tr(
+                    "team_portal.execution_save_error",
+                    "No pudimos guardar el checklist de ejecución."
+                ),
+                for: id
             )
             return .failed
         }
+    }
+
+    @MainActor
+    private func setExecutionError(_ message: String, for id: String) {
+        executionErrorMessages[id] = message
+    }
+
+    @MainActor
+    private func clearExecutionError(for id: String) {
+        executionErrorMessages.removeValue(forKey: id)
     }
 
     /// Whether the assignment currently holds a cache snapshot safe to PUT.
@@ -522,13 +614,44 @@ public final class TeamMemberPortalViewModel {
     }
 
     /// Detects the offline-queue acceptance path from `APIClient.put/post/patch`.
+    /// Prefers typed `APIError.queuedOffline`; falls back to legacy Spanish
+    /// substring only for older client builds still emitting `networkError`.
     static func isOfflineQueuedError(_ error: Error) -> Bool {
-        guard let apiError = error as? APIError,
-              case .networkError(let message) = apiError else {
-            return false
+        guard let apiError = error as? APIError else { return false }
+        if case .queuedOffline = apiError {
+            return true
         }
-        // Stable fragment of the queue-acceptance copy in APIClient.
-        return message.contains("se enviará automáticamente")
+        // Last-resort fallback for pre-typed queue errors still in flight.
+        if case .networkError(let message) = apiError {
+            return message.contains("se enviará automáticamente")
+        }
+        return false
+    }
+
+    /// Union-merge for checklist bools (OR) and richer non-empty quick note.
+    static func mergeExecutionStates(
+        server: AssignmentExecutionState,
+        legacy: AssignmentExecutionState
+    ) -> AssignmentExecutionState {
+        let checklist = ExecutionChecklist(
+            arrival: server.checklist.arrival || legacy.checklist.arrival,
+            materials: server.checklist.materials || legacy.checklist.materials,
+            closing: server.checklist.closing || legacy.checklist.closing
+        )
+        let serverNote = server.quickNote.trimmingCharacters(in: .whitespacesAndNewlines)
+        let legacyNote = legacy.quickNote.trimmingCharacters(in: .whitespacesAndNewlines)
+        let quickNote: String
+        if serverNote.isEmpty {
+            quickNote = legacy.quickNote
+        } else if legacyNote.isEmpty {
+            quickNote = server.quickNote
+        } else if legacyNote.count > serverNote.count {
+            quickNote = legacy.quickNote
+        } else {
+            // Equal length or server longer — prefer server as source of truth.
+            quickNote = server.quickNote
+        }
+        return AssignmentExecutionState(checklist: checklist, quickNote: quickNote)
     }
 
     /// True for cooperative cancellation (sheet dismiss / Task.cancel).
@@ -575,6 +698,25 @@ public final class TeamMemberPortalViewModel {
             return nil
         }
         return legacy.asExecutionState
+    }
+
+    /// Persists the current cache shape into the pre-#875 UserDefaults blob.
+    static func writeLegacyState(_ state: AssignmentExecutionState, forKey key: String) {
+        let blob = LegacyExecutionState(
+            arrivalReady: state.checklist.arrival,
+            materialsReady: state.checklist.materials,
+            closingDone: state.checklist.closing,
+            quickNote: state.quickNote
+        )
+        guard let data = try? JSONEncoder().encode(blob) else { return }
+        UserDefaults.standard.set(data, forKey: key)
+    }
+
+    /// While a legacy key still exists, rewrite it so cold-start re-migrate is not stale.
+    static func rewriteLegacyIfPresent(eventId: String, state: AssignmentExecutionState) {
+        let key = legacyDefaultsKey(eventId: eventId)
+        guard UserDefaults.standard.data(forKey: key) != nil else { return }
+        writeLegacyState(state, forKey: key)
     }
 
     private func availabilityBounds(now: Date = Date()) -> (start: String, end: String) {
