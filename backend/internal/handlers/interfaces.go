@@ -95,6 +95,8 @@ type StaffRepository interface {
 	RevokeInvite(ctx context.Context, staffID, ownerUserID uuid.UUID) error
 	ListMyAssignments(ctx context.Context, invitedUserID uuid.UUID) ([]repository.TeamMemberAssignment, error)
 	RespondToAssignment(ctx context.Context, invitedUserID, eventStaffID uuid.UUID, response string) (*repository.AssignmentResponseOutcome, error)
+	GetExecutionState(ctx context.Context, invitedUserID, eventStaffID uuid.UUID) (*repository.AssignmentExecutionState, error)
+	UpsertExecutionState(ctx context.Context, invitedUserID, eventStaffID uuid.UUID, state repository.AssignmentExecutionState) (*repository.AssignmentExecutionState, error)
 	ListMyTimeline(ctx context.Context, invitedUserID uuid.UUID, unreadOnly bool, limit int) ([]repository.TeamMemberChangeEvent, error)
 	MarkTimelineRead(ctx context.Context, invitedUserID uuid.UUID, ids []uuid.UUID) (int64, error)
 }

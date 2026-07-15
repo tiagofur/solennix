@@ -6,7 +6,7 @@ import { CalendarDays, CheckCircle2, Clock3, Search, XCircle } from 'lucide-reac
 import { addDays, format, isSameDay, parseISO, startOfDay, startOfMonth, startOfWeek, type Locale } from 'date-fns';
 import { enUS, es } from 'date-fns/locale';
 import { useSearchParams } from 'react-router-dom';
-import { useMyAssignments, useRespondAssignment } from '@/hooks/queries/useStaffQueries';
+import { useMyAssignments, useRespondAssignment, useExecutionState, useSaveExecutionState, defaultExecutionState } from '@/hooks/queries/useStaffQueries';
 import type { TeamMemberAssignment } from '@/types/entities';
 import {
   filterAssignments,
@@ -29,48 +29,6 @@ const statusBadgeClass: Record<TeamMemberAssignment['status'], string> = {
 };
 
 type CalendarMode = 'month' | 'week' | 'day';
-
-type TeamDetailChecklistKey = 'arrival' | 'materials' | 'closing';
-
-type TeamDetailExecutionState = {
-  checklist: Record<TeamDetailChecklistKey, boolean>;
-  quickNote: string;
-};
-
-const defaultExecutionState: TeamDetailExecutionState = {
-  checklist: {
-    arrival: false,
-    materials: false,
-    closing: false,
-  },
-  quickNote: '',
-};
-
-const loadExecutionState = (eventId: string): TeamDetailExecutionState => {
-  if (typeof window === 'undefined') return defaultExecutionState;
-
-  const raw = window.localStorage.getItem(`team_event_detail:${eventId}`);
-  if (!raw) return defaultExecutionState;
-
-  try {
-    const parsed = JSON.parse(raw) as Partial<TeamDetailExecutionState>;
-    return {
-      checklist: {
-        arrival: parsed.checklist?.arrival ?? false,
-        materials: parsed.checklist?.materials ?? false,
-        closing: parsed.checklist?.closing ?? false,
-      },
-      quickNote: parsed.quickNote ?? '',
-    };
-  } catch {
-    return defaultExecutionState;
-  }
-};
-
-const saveExecutionState = (eventId: string, value: TeamDetailExecutionState): void => {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(`team_event_detail:${eventId}`, JSON.stringify(value));
-};
 
 const buildMapsUrl = (location?: string | null, city?: string | null): string | null => {
   const query = [location, city].filter(Boolean).join(', ').trim();
@@ -116,21 +74,51 @@ export const TeamCalendarPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = React.useState<TeamStatusFilter>('all');
   const [search, setSearch] = React.useState('');
   const [selectedAssignmentDetail, setSelectedAssignmentDetail] = React.useState<TeamMemberAssignment | null>(null);
-  const [executionState, setExecutionState] = React.useState<TeamDetailExecutionState>(defaultExecutionState);
 
-  React.useEffect(() => {
-    if (!selectedAssignmentDetail) {
-      setExecutionState(defaultExecutionState);
-      return;
-    }
+  // ── Execution state (server-backed, #875) ──
+  // Replaces the former device-only localStorage persistence. The query fetches
+  // state when the detail modal opens; the mutation fires on every change with
+  // an optimistic update so checkboxes stay snappy. A one-time local migration
+  // pushes any pre-existing localStorage state to the server on first open.
+  const activeEventStaffId = selectedAssignmentDetail?.event_staff_id ?? null;
+  const { data: executionState = defaultExecutionState } = useExecutionState(activeEventStaffId);
+  const saveExecutionStateMutation = useSaveExecutionState();
 
-    setExecutionState(loadExecutionState(selectedAssignmentDetail.event_id));
-  }, [selectedAssignmentDetail]);
-
+  // One-time migration: if the user had device-only state from the old
+  // localStorage key, push it to the server on first open, then clear the key.
   React.useEffect(() => {
     if (!selectedAssignmentDetail) return;
-    saveExecutionState(selectedAssignmentDetail.event_id, executionState);
-  }, [executionState, selectedAssignmentDetail]);
+    const legacyKey = `team_event_detail:${selectedAssignmentDetail.event_id}`;
+    const raw = window.localStorage.getItem(legacyKey);
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw);
+      saveExecutionStateMutation.mutate({
+        eventStaffId: selectedAssignmentDetail.event_staff_id,
+        state: {
+          checklist: {
+            arrival: parsed.checklist?.arrival ?? false,
+            materials: parsed.checklist?.materials ?? false,
+            closing: parsed.checklist?.closing ?? false,
+          },
+          quick_note: parsed.quickNote ?? parsed.quick_note ?? '',
+        },
+      });
+    } catch {
+      // Malformed legacy blob — nothing useful to migrate.
+    }
+    window.localStorage.removeItem(legacyKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAssignmentDetail]);
+
+  const updateExecutionState = React.useCallback((next: React.SetStateAction<typeof executionState>) => {
+    if (!selectedAssignmentDetail) return;
+    const resolved = typeof next === 'function' ? (next as (p: typeof executionState) => typeof executionState)(executionState) : next;
+    saveExecutionStateMutation.mutate({
+      eventStaffId: selectedAssignmentDetail.event_staff_id,
+      state: resolved,
+    });
+  }, [executionState, selectedAssignmentDetail, saveExecutionStateMutation]);
 
   React.useEffect(() => {
     const targetEventStaffId = searchParams.get('eventStaffId');
@@ -706,7 +694,7 @@ export const TeamCalendarPage: React.FC = () => {
                     <input
                       type="checkbox"
                       checked={executionState.checklist.arrival}
-                      onChange={(e) => setExecutionState((prev) => ({
+                      onChange={(e) => updateExecutionState((prev) => ({
                         ...prev,
                         checklist: { ...prev.checklist, arrival: e.target.checked },
                       }))}
@@ -717,7 +705,7 @@ export const TeamCalendarPage: React.FC = () => {
                     <input
                       type="checkbox"
                       checked={executionState.checklist.materials}
-                      onChange={(e) => setExecutionState((prev) => ({
+                      onChange={(e) => updateExecutionState((prev) => ({
                         ...prev,
                         checklist: { ...prev.checklist, materials: e.target.checked },
                       }))}
@@ -728,7 +716,7 @@ export const TeamCalendarPage: React.FC = () => {
                     <input
                       type="checkbox"
                       checked={executionState.checklist.closing}
-                      onChange={(e) => setExecutionState((prev) => ({
+                      onChange={(e) => updateExecutionState((prev) => ({
                         ...prev,
                         checklist: { ...prev.checklist, closing: e.target.checked },
                       }))}
@@ -745,8 +733,8 @@ export const TeamCalendarPage: React.FC = () => {
                 <textarea
                   id="team-quick-notes"
                   rows={3}
-                  value={executionState.quickNote}
-                  onChange={(e) => setExecutionState((prev) => ({ ...prev, quickNote: e.target.value }))}
+                  value={executionState.quick_note}
+                  onChange={(e) => updateExecutionState((prev) => ({ ...prev, quick_note: e.target.value }))}
                   className="mt-2 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-text outline-none"
                   placeholder={t('team.quick_notes_placeholder', { defaultValue: 'Anotá pendientes de ejecución...' })}
                 />

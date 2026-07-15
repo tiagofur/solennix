@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/useToast';
 import { logError, getErrorMessage } from '@/lib/errorHandler';
 import type {
   AssignmentPortalResponse,
+  AssignmentExecutionState,
   PaginationParams,
   StaffInsert,
   StaffTeamInsert,
@@ -121,8 +122,54 @@ export function useRespondAssignment() {
       logError('Error responding assignment', error);
       addToast(getErrorMessage(error, t('list.error_respond_assignment')), 'error');
     },
+  })
+}
+
+// ── Execution state (team-member portal, #875) ──
+// Previously device-only localStorage; now server-backed so state survives
+// device changes. Optimistic update keeps the checkbox snappy.
+
+const defaultExecutionState: AssignmentExecutionState = {
+  checklist: { arrival: false, materials: false, closing: false },
+  quick_note: '',
+};
+
+export function useExecutionState(eventStaffId: string | null | undefined) {
+  return useQuery({
+    queryKey: eventStaffId ? queryKeys.staff.executionState(eventStaffId) : ['staff', 'execution-state', 'none'],
+    queryFn: () => staffService.getExecutionState(eventStaffId!),
+    enabled: !!eventStaffId,
+    staleTime: 0,
   });
 }
+
+export function useSaveExecutionState() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ['staff', 'save-execution-state'],
+    mutationFn: ({ eventStaffId, state }: { eventStaffId: string; state: AssignmentExecutionState }) =>
+      staffService.putExecutionState(eventStaffId, state),
+    onMutate: async ({ eventStaffId, state }) => {
+      const key = queryKeys.staff.executionState(eventStaffId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const prev = queryClient.getQueryData<AssignmentExecutionState>(key);
+      queryClient.setQueryData<AssignmentExecutionState>(key, state);
+      return { prev };
+    },
+    onError: (_err, { eventStaffId }, ctx) => {
+      if (ctx?.prev) {
+        queryClient.setQueryData(queryKeys.staff.executionState(eventStaffId), ctx.prev);
+      }
+    },
+    onSettled: (_data, _err, { eventStaffId }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.staff.executionState(eventStaffId) });
+    },
+  })
+}
+
+export { defaultExecutionState };
+
 
 // ── Mutations ──
 

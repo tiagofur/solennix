@@ -44,6 +44,24 @@ type markTimelineReadRequest struct {
 	IDs []string `json:"ids"`
 }
 
+// executionStateRequest is the PUT body for /staff/assignments/{id}/execution-state.
+// Checklist and QuickNote are pointers so "omitted" is distinguishable from
+// "set to zero value" — the repo writes the full decoded shape either way.
+type executionStateRequest struct {
+	Checklist executionChecklistRequest `json:"checklist"`
+	QuickNote string                    `json:"quick_note"`
+}
+
+type executionChecklistRequest struct {
+	Arrival   bool `json:"arrival"`
+	Materials bool `json:"materials"`
+	Closing   bool `json:"closing"`
+}
+
+// MaxQuickNoteLength caps the free-text execution note to bound the JSONB
+// column and prevent abuse. Matches the limit enforced client-side.
+const MaxQuickNoteLength = 2000
+
 func isTeamPortalRole(role string) bool {
 	return role == "team_member" || role == "assistant"
 }
@@ -519,6 +537,109 @@ func (h *StaffHandler) RespondAssignment(w http.ResponseWriter, r *http.Request)
 	}
 
 	writeJSON(w, http.StatusOK, outcome)
+}
+
+// GetExecutionState returns the team-member execution state for an assignment
+// (checklist progress + quick note). Previously device-only (#875).
+//
+// GET /api/staff/assignments/{id}/execution-state
+func (h *StaffHandler) GetExecutionState(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+
+	user, err := h.userRepo.GetByID(r.Context(), userID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to fetch user")
+		return
+	}
+	if !isTeamPortalRole(strings.ToLower(strings.TrimSpace(user.Role))) {
+		writeError(w, http.StatusForbidden, "Team member access required")
+		return
+	}
+
+	eventStaffID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid assignment ID")
+		return
+	}
+
+	state, err := h.staffRepo.GetExecutionState(r.Context(), userID, eventStaffID)
+	if err != nil {
+		switch {
+		case errors.Is(err, repository.ErrAssignmentNotFound):
+			writeError(w, http.StatusNotFound, "Assignment not found")
+		case errors.Is(err, repository.ErrAssignmentForbidden):
+			writeError(w, http.StatusForbidden, "Assignment does not belong to current user")
+		default:
+			slog.Error("failed to get execution state", "error", err, "user_id", userID, "event_staff_id", eventStaffID)
+			writeError(w, http.StatusInternalServerError, "Failed to fetch execution state")
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, state)
+}
+
+// PutExecutionState upserts the team-member execution state for an assignment
+// (checklist progress + quick note). Previously device-only (#875).
+//
+// PUT /api/staff/assignments/{id}/execution-state
+func (h *StaffHandler) PutExecutionState(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+
+	user, err := h.userRepo.GetByID(r.Context(), userID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to fetch user")
+		return
+	}
+	if !isTeamPortalRole(strings.ToLower(strings.TrimSpace(user.Role))) {
+		writeError(w, http.StatusForbidden, "Team member access required")
+		return
+	}
+
+	eventStaffID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid assignment ID")
+		return
+	}
+
+	var req executionStateRequest
+	if err := decodeJSON(w, r, &req); err != nil {
+		if isRequestBodyTooLarge(err) {
+			return
+		}
+		writeError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if len(req.QuickNote) > MaxQuickNoteLength {
+		writeError(w, http.StatusBadRequest, "quick_note is too long")
+		return
+	}
+
+	state := repository.AssignmentExecutionState{
+		Checklist: repository.ExecutionChecklist{
+			Arrival:   req.Checklist.Arrival,
+			Materials: req.Checklist.Materials,
+			Closing:   req.Checklist.Closing,
+		},
+		QuickNote: req.QuickNote,
+	}
+
+	saved, err := h.staffRepo.UpsertExecutionState(r.Context(), userID, eventStaffID, state)
+	if err != nil {
+		switch {
+		case errors.Is(err, repository.ErrAssignmentNotFound):
+			writeError(w, http.StatusNotFound, "Assignment not found")
+		case errors.Is(err, repository.ErrAssignmentForbidden):
+			writeError(w, http.StatusForbidden, "Assignment does not belong to current user")
+		default:
+			slog.Error("failed to upsert execution state", "error", err, "user_id", userID, "event_staff_id", eventStaffID)
+			writeError(w, http.StatusInternalServerError, "Failed to save execution state")
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, saved)
 }
 
 // GetMyTimeline lists team-member assignment changes in reverse chronological order.

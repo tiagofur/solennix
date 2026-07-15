@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -252,6 +253,31 @@ type AssignmentResponseOutcome struct {
 	FinalStatus       string    `json:"final_status"`
 	SeatsRemaining    int       `json:"seats_remaining"`
 	AutoDeclinedCount int       `json:"auto_declined_count"`
+}
+
+// ExecutionChecklist mirrors the team-member execution checklist persisted
+// server-side (#875). The three boolean flags track the per-assignment
+// execution progress (arrival / materials / closing).
+type ExecutionChecklist struct {
+	Arrival   bool `json:"arrival"`
+	Materials bool `json:"materials"`
+	Closing   bool `json:"closing"`
+}
+
+// AssignmentExecutionState is the server-backed execution state for a
+// team-member assignment, replacing the former device-only localStorage /
+// UserDefaults / SharedPreferences persistence. QuickNote is a free-text
+// personal note (execution reminders, pendings).
+type AssignmentExecutionState struct {
+	Checklist ExecutionChecklist `json:"checklist"`
+	QuickNote string             `json:"quick_note"`
+}
+
+// DefaultExecutionState is returned when an assignment has no stored state
+// yet (column NULL) — matches the client-side default before server sync.
+var DefaultExecutionState = AssignmentExecutionState{
+	Checklist: ExecutionChecklist{},
+	QuickNote: "",
 }
 
 type TeamMemberChangeEvent struct {
@@ -1058,4 +1084,93 @@ func (r *StaffRepo) RevokeInvite(ctx context.Context, staffID, ownerUserID uuid.
 		return fmt.Errorf("revoke staff invite: %w", err)
 	}
 	return nil
+}
+
+// GetExecutionState returns the team-member execution state for an assignment.
+// Ownership is enforced via staff.invited_user_id (same pattern as
+// RespondToAssignment). Returns DefaultExecutionState when the assignment has
+// no stored state yet (NULL column), so callers don't distinguish "no state"
+// from "default state".
+func (r *StaffRepo) GetExecutionState(ctx context.Context, invitedUserID, eventStaffID uuid.UUID) (*AssignmentExecutionState, error) {
+	var (
+		raw        []byte
+		staffUser  *uuid.UUID
+		hasState   bool
+	)
+	err := r.pool.QueryRow(ctx, `
+		SELECT s.invited_user_id, es.execution_state
+		FROM event_staff es
+		JOIN staff s ON s.id = es.staff_id
+		WHERE es.id = $1
+	`, eventStaffID).Scan(&staffUser, &raw)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrAssignmentNotFound
+		}
+		return nil, fmt.Errorf("load execution state: %w", err)
+	}
+	if staffUser == nil || *staffUser != invitedUserID {
+		return nil, ErrAssignmentForbidden
+	}
+	hasState = raw != nil
+	if !hasState {
+		state := DefaultExecutionState
+		return &state, nil
+	}
+	state, err := decodeExecutionState(raw)
+	if err != nil {
+		return nil, fmt.Errorf("decode execution state: %w", err)
+	}
+	return state, nil
+}
+
+// UpsertExecutionState stores the team-member execution state for an
+// assignment, enforcing ownership (staff.invited_user_id). The state is
+// stored as JSONB and returned as the canonical decoded shape.
+func (r *StaffRepo) UpsertExecutionState(ctx context.Context, invitedUserID, eventStaffID uuid.UUID, state AssignmentExecutionState) (*AssignmentExecutionState, error) {
+	payload, err := json.Marshal(state)
+	if err != nil {
+		return nil, fmt.Errorf("encode execution state: %w", err)
+	}
+
+	var (
+		staffUser *uuid.UUID
+	)
+	// Verify ownership before writing. A separate SELECT (rather than
+	// UPDATE ... WHERE invited_user_id =) lets us return a precise 404 vs 403.
+	err = r.pool.QueryRow(ctx, `
+		SELECT s.invited_user_id
+		FROM event_staff es
+		JOIN staff s ON s.id = es.staff_id
+		WHERE es.id = $1
+	`, eventStaffID).Scan(&staffUser)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrAssignmentNotFound
+		}
+		return nil, fmt.Errorf("load assignment for execution state: %w", err)
+	}
+	if staffUser == nil || *staffUser != invitedUserID {
+		return nil, ErrAssignmentForbidden
+	}
+
+	_, err = r.pool.Exec(ctx, `
+		UPDATE event_staff
+		SET execution_state = $2
+		WHERE id = $1
+	`, eventStaffID, payload)
+	if err != nil {
+		return nil, fmt.Errorf("upsert execution state: %w", err)
+	}
+	return &state, nil
+}
+
+// decodeExecutionState parses the JSONB payload, falling back to defaults for
+// missing fields so older/partial payloads stay valid.
+func decodeExecutionState(raw []byte) (*AssignmentExecutionState, error) {
+	var state AssignmentExecutionState
+	if err := json.Unmarshal(raw, &state); err != nil {
+		return nil, err
+	}
+	return &state, nil
 }

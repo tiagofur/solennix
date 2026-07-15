@@ -498,6 +498,22 @@ func (m *MockStaffRepo) RespondToAssignment(ctx context.Context, invitedUserID, 
 	return args.Get(0).(*repository.AssignmentResponseOutcome), args.Error(1)
 }
 
+func (m *MockStaffRepo) GetExecutionState(ctx context.Context, invitedUserID, eventStaffID uuid.UUID) (*repository.AssignmentExecutionState, error) {
+	args := m.Called(ctx, invitedUserID, eventStaffID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*repository.AssignmentExecutionState), args.Error(1)
+}
+
+func (m *MockStaffRepo) UpsertExecutionState(ctx context.Context, invitedUserID, eventStaffID uuid.UUID, state repository.AssignmentExecutionState) (*repository.AssignmentExecutionState, error) {
+	args := m.Called(ctx, invitedUserID, eventStaffID, state)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*repository.AssignmentExecutionState), args.Error(1)
+}
+
 func (m *MockStaffRepo) ListMyTimeline(ctx context.Context, invitedUserID uuid.UUID, unreadOnly bool, limit int) ([]repository.TeamMemberChangeEvent, error) {
 	args := m.Called(ctx, invitedUserID, unreadOnly, limit)
 	if args.Get(0) == nil {

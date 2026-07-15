@@ -917,3 +917,168 @@ func TestGetStaffAvailability_RepoError_Returns500(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, rr.Code)
 	assert.Contains(t, rr.Body.String(), "Failed to fetch availability")
 }
+
+// --- Execution state (#875) ---
+
+func TestGetExecutionState_Success(t *testing.T) {
+	userID := uuid.New()
+	eventStaffID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "team_member"}, nil)
+	staffRepo.On("GetExecutionState", mock.Anything, userID, eventStaffID).Return(&repository.AssignmentExecutionState{
+		Checklist: repository.ExecutionChecklist{Arrival: true, Materials: false, Closing: false},
+		QuickNote: "traer hielo extra",
+	}, nil)
+
+	h := NewStaffHandler(staffRepo, userRepo)
+	req := makeReqWithIDParam(http.MethodGet, "/api/staff/assignments/"+eventStaffID.String()+"/execution-state", "", eventStaffID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.GetExecutionState(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), "traer hielo extra")
+	assert.Contains(t, rr.Body.String(), `"arrival":true`)
+}
+
+func TestGetExecutionState_OrganizerRole_Returns403(t *testing.T) {
+	userID := uuid.New()
+	eventStaffID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "user"}, nil)
+
+	h := NewStaffHandler(staffRepo, userRepo)
+	req := makeReqWithIDParam(http.MethodGet, "/api/staff/assignments/"+eventStaffID.String()+"/execution-state", "", eventStaffID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.GetExecutionState(rr, req)
+
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	staffRepo.AssertNotCalled(t, "GetExecutionState", mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestGetExecutionState_NotFound_Returns404(t *testing.T) {
+	userID := uuid.New()
+	eventStaffID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "team_member"}, nil)
+	staffRepo.On("GetExecutionState", mock.Anything, userID, eventStaffID).Return((*repository.AssignmentExecutionState)(nil), repository.ErrAssignmentNotFound)
+
+	h := NewStaffHandler(staffRepo, userRepo)
+	req := makeReqWithIDParam(http.MethodGet, "/api/staff/assignments/"+eventStaffID.String()+"/execution-state", "", eventStaffID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.GetExecutionState(rr, req)
+
+	assert.Equal(t, http.StatusNotFound, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Assignment not found")
+}
+
+func TestGetExecutionState_Forbidden_Returns403(t *testing.T) {
+	userID := uuid.New()
+	eventStaffID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "assistant"}, nil)
+	staffRepo.On("GetExecutionState", mock.Anything, userID, eventStaffID).Return((*repository.AssignmentExecutionState)(nil), repository.ErrAssignmentForbidden)
+
+	h := NewStaffHandler(staffRepo, userRepo)
+	req := makeReqWithIDParam(http.MethodGet, "/api/staff/assignments/"+eventStaffID.String()+"/execution-state", "", eventStaffID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.GetExecutionState(rr, req)
+
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	assert.Contains(t, rr.Body.String(), "does not belong to current user")
+}
+
+func TestPutExecutionState_Success(t *testing.T) {
+	userID := uuid.New()
+	eventStaffID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "team_member"}, nil)
+	staffRepo.On("UpsertExecutionState", mock.Anything, userID, eventStaffID, mock.MatchedBy(func(s repository.AssignmentExecutionState) bool {
+		return s.Checklist.Arrival && !s.Checklist.Materials && s.Checklist.Closing && s.QuickNote == "llevar caja"
+	})).Return(&repository.AssignmentExecutionState{
+		Checklist: repository.ExecutionChecklist{Arrival: true, Materials: false, Closing: true},
+		QuickNote: "llevar caja",
+	}, nil)
+
+	h := NewStaffHandler(staffRepo, userRepo)
+	body := `{"checklist":{"arrival":true,"materials":false,"closing":true},"quick_note":"llevar caja"}`
+	req := makeReqWithIDParam(http.MethodPut, "/api/staff/assignments/"+eventStaffID.String()+"/execution-state", body, eventStaffID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.PutExecutionState(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), `"arrival":true`)
+	assert.Contains(t, rr.Body.String(), "llevar caja")
+}
+
+func TestPutExecutionState_OrganizerRole_Returns403(t *testing.T) {
+	userID := uuid.New()
+	eventStaffID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "admin"}, nil)
+
+	h := NewStaffHandler(staffRepo, userRepo)
+	body := `{"checklist":{"arrival":true},"quick_note":""}`
+	req := makeReqWithIDParam(http.MethodPut, "/api/staff/assignments/"+eventStaffID.String()+"/execution-state", body, eventStaffID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.PutExecutionState(rr, req)
+
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	staffRepo.AssertNotCalled(t, "UpsertExecutionState", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestPutExecutionState_InvalidBody_Returns400(t *testing.T) {
+	userID := uuid.New()
+	eventStaffID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "team_member"}, nil)
+
+	h := NewStaffHandler(staffRepo, userRepo)
+	req := makeReqWithIDParam(http.MethodPut, "/api/staff/assignments/"+eventStaffID.String()+"/execution-state", `{bad json`, eventStaffID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.PutExecutionState(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+func TestPutExecutionState_NoteTooLong_Returns400(t *testing.T) {
+	userID := uuid.New()
+	eventStaffID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "team_member"}, nil)
+
+	h := NewStaffHandler(staffRepo, userRepo)
+	longNote := strings.Repeat("x", MaxQuickNoteLength+1)
+	body := `{"checklist":{"arrival":true,"materials":false,"closing":false},"quick_note":"` + longNote + `"}`
+	req := makeReqWithIDParam(http.MethodPut, "/api/staff/assignments/"+eventStaffID.String()+"/execution-state", body, eventStaffID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.PutExecutionState(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "too long")
+	staffRepo.AssertNotCalled(t, "UpsertExecutionState", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestPutExecutionState_NotFound_Returns404(t *testing.T) {
+	userID := uuid.New()
+	eventStaffID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Role: "team_member"}, nil)
+	staffRepo.On("UpsertExecutionState", mock.Anything, userID, eventStaffID, mock.Anything).Return((*repository.AssignmentExecutionState)(nil), repository.ErrAssignmentNotFound)
+
+	h := NewStaffHandler(staffRepo, userRepo)
+	body := `{"checklist":{"arrival":true,"materials":false,"closing":false},"quick_note":""}`
+	req := makeReqWithIDParam(http.MethodPut, "/api/staff/assignments/"+eventStaffID.String()+"/execution-state", body, eventStaffID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.PutExecutionState(rr, req)
+
+	assert.Equal(t, http.StatusNotFound, rr.Code)
+}
