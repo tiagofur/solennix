@@ -361,9 +361,10 @@ export const InventoryDetailPanel: React.FC<InventoryDetailPanelProps> = ({
             <button
               type="button"
               onClick={() => navigate("/inventory")}
+              aria-label={t("common:action.back")}
               className="p-2 rounded-full hover:bg-surface-alt text-text-secondary transition-colors"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             </button>
           )}
           <div>

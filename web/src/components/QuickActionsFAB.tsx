@@ -84,7 +84,7 @@ export const QuickActionsFAB: React.FC = () => {
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={clsx(
-            'h-14 w-14 rounded-2xl premium-gradient shadow-lg shadow-primary/30 flex items-center justify-center transition-all duration-200 hover:shadow-xl hover:scale-105 active:scale-95',
+            'h-14 w-14 rounded-2xl premium-gradient shadow-lg shadow-primary/30 flex items-center justify-center transition-all duration-200 hover:shadow-xl hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
           )}
           aria-label={isOpen ? t('quick_actions.close_quick_actions') : t('quick_actions.open_quick_actions')}
         >
