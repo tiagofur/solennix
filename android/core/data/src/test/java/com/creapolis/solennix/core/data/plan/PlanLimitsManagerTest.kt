@@ -1,10 +1,12 @@
 package com.creapolis.solennix.core.data.plan
 
+import android.content.Context
 import com.creapolis.solennix.core.data.repository.ClientRepository
 import com.creapolis.solennix.core.data.repository.EventRepository
 import com.creapolis.solennix.core.data.repository.InventoryRepository
 import com.creapolis.solennix.core.data.repository.ProductRepository
 import com.creapolis.solennix.core.model.InventoryItem
+import com.creapolis.solennix.core.model.InventoryType
 import com.creapolis.solennix.core.model.Plan
 import com.creapolis.solennix.core.model.User
 import com.creapolis.solennix.core.network.AuthManager
@@ -32,11 +34,17 @@ import java.time.YearMonth
  * Parity reference: the iOS `PlanLimitsManagerTests` use the same numeric
  * fixtures (free event limit = 4, clients = 20, products = 15, inventory = 30,
  * catalog = 20). Those mirror the [PlanLimitsManager] companion constants.
+ *
+ * The [Context] dependency is mocked because [PlanLimitsManager] resolves its
+ * localized limit-reached messages via `appContext.getString(...)`. We don't
+ * assert on the exact message text (that belongs in the designsystem string
+ * resources); instead we assert on the structured [LimitCheckResult] fields.
  */
 class PlanLimitsManagerTest {
 
     private lateinit var manager: PlanLimitsManager
 
+    private val appContext = mockk<Context>(relaxed = true)
     private val eventRepository = mockk<EventRepository>(relaxed = true)
     private val clientRepository = mockk<ClientRepository>(relaxed = true)
     private val productRepository = mockk<ProductRepository>(relaxed = true)
@@ -45,7 +53,11 @@ class PlanLimitsManagerTest {
 
     @BeforeEach
     fun setUp() {
+        // getString(resId, formatArgs...) returns a non-null message so the
+        // LimitReached branches compile without touching real Android resources.
+        every { appContext.getString(any<Int>(), any<Int>()) } returns "limit reached"
         manager = PlanLimitsManager(
+            appContext,
             eventRepository,
             clientRepository,
             productRepository,
@@ -130,7 +142,8 @@ class PlanLimitsManagerTest {
         assertEquals("events", result.feature)
         assertEquals(PlanLimitsManager.BASIC_EVENTS_PER_MONTH, result.limit)
         assertEquals(PlanLimitsManager.BASIC_EVENTS_PER_MONTH, result.current)
-        assertTrue(result.message.contains("eventos"), "message: ${result.message}")
+        // Message comes from appContext.getString(...) — mocked; just assert non-blank.
+        assertTrue(result.message.isNotBlank(), "message: ${result.message}")
     }
 
     @Test
@@ -257,7 +270,7 @@ class PlanLimitsManagerTest {
         assertTrue(result is LimitCheckResult.LimitReached)
         result as LimitCheckResult.LimitReached
         assertEquals("clients", result.feature)
-        assertTrue(result.message.contains("clientes"), "message: ${result.message}")
+        assertTrue(result.message.isNotBlank(), "message: ${result.message}")
     }
 
     @Test
@@ -413,6 +426,6 @@ class PlanLimitsManagerTest {
         currentStock = 1.0,
         minimumStock = 0.0,
         unit = "unit",
-        type = com.creapolis.solennix.core.model.InventoryType.EQUIPMENT
+        type = InventoryType.EQUIPMENT
     )
 }
