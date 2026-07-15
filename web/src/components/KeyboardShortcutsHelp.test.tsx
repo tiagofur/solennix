@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { render, screen, fireEvent } from '@tests/customRender';
 import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 
@@ -34,8 +34,41 @@ describe('KeyboardShortcutsHelp', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText('Ir al Dashboard')).toBeInTheDocument();
     expect(screen.getByText('Crear nuevo (contextual)')).toBeInTheDocument();
-    expect(screen.getByText('⌘K')).toBeInTheDocument();
+    // jsdom defaults to an empty string platform — non-Mac → Ctrl K (#886)
+    expect(screen.getByText('CtrlK')).toBeInTheDocument();
     expect(screen.getByText('?')).toBeInTheDocument();
+  });
+
+  it('shows ⌘K on Mac platform', () => {
+    const originalPlatform = navigator.platform;
+    Object.defineProperty(navigator, 'platform', { value: 'MacIntel', configurable: true });
+
+    render(
+      <KeyboardShortcutsHelp
+        open={true}
+        onClose={vi.fn()}
+        shortcuts={shortcuts}
+      />,
+    );
+
+    expect(screen.getByText('⌘K')).toBeInTheDocument();
+    Object.defineProperty(navigator, 'platform', { value: originalPlatform, configurable: true });
+  });
+
+  it('shows CtrlK on Windows platform', () => {
+    const originalPlatform = navigator.platform;
+    Object.defineProperty(navigator, 'platform', { value: 'Win32', configurable: true });
+
+    render(
+      <KeyboardShortcutsHelp
+        open={true}
+        onClose={vi.fn()}
+        shortcuts={shortcuts}
+      />,
+    );
+
+    expect(screen.getByText('CtrlK')).toBeInTheDocument();
+    Object.defineProperty(navigator, 'platform', { value: originalPlatform, configurable: true });
   });
 
   it('falls back to raw section key when label mapping does not exist', () => {

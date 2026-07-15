@@ -16,8 +16,13 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
   currentSection,
 }) => {
   const { t } = useTranslation('common');
-  
+
   if (!open) return null;
+
+  // Platform-aware modifier symbol: ⌘ on Mac, Ctrl elsewhere (#886).
+  const isMac = typeof navigator !== 'undefined' &&
+    (/Mac|iPhone|iPad|iPod/i.test(navigator.platform) || /Mac/i.test(navigator.userAgent));
+  const modKey = isMac ? '⌘' : 'Ctrl';
 
   const SECTION_LABELS: Record<string, string> = {
     events: t('nav.events'),
@@ -29,7 +34,7 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
   const navigationShortcuts = shortcuts.filter((s) => s.key.startsWith('g '));
   const actionShortcuts = shortcuts.filter((s) => !s.key.startsWith('g ') && s.key !== '?');
   const metaShortcuts = [
-    { label: '⌘K', description: t('command_palette.open_command_palette') },
+    { label: `${modKey}K`, description: t('command_palette.open_command_palette') },
     { label: 'Esc', description: t('command_palette.close_modal_cancel') },
   ];
 
