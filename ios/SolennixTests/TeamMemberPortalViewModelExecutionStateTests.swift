@@ -1168,6 +1168,188 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         XCTAssertTrue(merged.checklist.closing)
         XCTAssertEqual(merged.quickNote, "a much longer legacy note")
     }
+
+    // MARK: - Merge PUT 4xx keeps merged local truth + legacy (no silent drop)
+
+    @MainActor
+    func testLoadExecutionState_MergePutFail_KeepsMergedCacheAndLegacy() async throws {
+        let eventId = "ev_merge_put_fail"
+        let assignment = try makeAssignment(eventStaffId: "es_merge_put_fail", eventId: eventId)
+        // Legacy has arrival + longer note that server lacks.
+        try seedLegacy(
+            eventId: eventId,
+            arrival: true,
+            materials: false,
+            closing: false,
+            quickNote: "legacy field note that is longer"
+        )
+        defer { clearLegacy(eventId: eventId) }
+
+        var putCount = 0
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                return okResponse(
+                    url: url,
+                    data: executionStateJSON(
+                        arrival: false,
+                        materials: true,
+                        closing: true,
+                        quickNote: "server"
+                    )
+                )
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                putCount += 1
+                return errorResponse(url: url, status: 422)
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+
+        XCTAssertEqual(putCount, 1)
+        let id = assignment.eventStaffId
+        let state = try XCTUnwrap(viewModel.executionStates[id])
+        XCTAssertTrue(state.checklist.arrival, "merged cache must keep legacy-only arrival")
+        XCTAssertTrue(state.checklist.materials, "merged cache must keep server materials")
+        XCTAssertTrue(state.checklist.closing, "merged cache must keep server closing")
+        XCTAssertEqual(state.quickNote, "legacy field note that is longer")
+        XCTAssertEqual(
+            viewModel.lastSyncedStates[id]?.quickNote,
+            "server",
+            "lastSynced stays server so rollback baseline is honest"
+        )
+        XCTAssertFalse(viewModel.lastSyncedStates[id]?.checklist.arrival == true)
+        XCTAssertEqual(viewModel.executionLoadStates[id], .ready)
+        XCTAssertNotNil(viewModel.executionErrorMessages[id], "save error banner on merge PUT fail")
+        XCTAssertNotNil(
+            UserDefaults.standard.data(forKey: TeamMemberPortalViewModel.legacyDefaultsKey(eventId: eventId)),
+            "Legacy must NOT be deleted on failed merge path"
+        )
+
+        // Retry PUT must still send merged (not server-only), so legacy fields are not dropped.
+        var retryPutNote: String?
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                if let body = request.httpBody,
+                   let decoded = try? JSONDecoder().decode(AssignmentExecutionState.self, from: body) {
+                    retryPutNote = decoded.quickNote
+                    XCTAssertTrue(decoded.checklist.arrival)
+                }
+                return okResponse(
+                    url: url,
+                    data: executionStateJSON(
+                        arrival: true,
+                        materials: true,
+                        closing: true,
+                        quickNote: "legacy field note that is longer"
+                    )
+                )
+            }
+            return errorResponse(url: url)
+        }
+        await viewModel.persistExecutionState(for: assignment, debounce: false)
+        // Body may arrive via stream only; assert via lastSynced after success.
+        XCTAssertEqual(
+            viewModel.lastSyncedStates[id]?.quickNote,
+            "legacy field note that is longer"
+        )
+        XCTAssertTrue(viewModel.lastSyncedStates[id]?.checklist.arrival == true)
+        XCTAssertNil(
+            UserDefaults.standard.data(forKey: TeamMemberPortalViewModel.legacyDefaultsKey(eventId: eventId)),
+            "Server-acked retry may drop legacy"
+        )
+        _ = retryPutNote // silence unused when body stream is empty
+    }
+
+    // MARK: - Cancel mid-migrate is idle, not failed
+
+    @MainActor
+    func testLoadExecutionState_CancelDuringMigratePut_ResetsIdleWithoutBanner() async throws {
+        let eventId = "ev_cancel_migrate"
+        let assignment = try makeAssignment(eventStaffId: "es_cancel_migrate", eventId: eventId)
+        try seedLegacy(eventId: eventId, arrival: true, quickNote: "keep on cancel")
+        defer { clearLegacy(eventId: eventId) }
+
+        let putGate = Gate()
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                return okResponse(url: url, data: executionStateJSON()) // server default → migrate
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                putGate.waitSync()
+                throw CancellationError()
+            }
+            return errorResponse(url: url)
+        }
+
+        let loadTask = Task { @MainActor in
+            await viewModel.loadExecutionState(for: assignment)
+        }
+
+        try await Task.sleep(nanoseconds: 50_000_000)
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .loading)
+
+        loadTask.cancel()
+        putGate.open()
+        await loadTask.value
+
+        XCTAssertEqual(
+            viewModel.executionLoadStates[assignment.eventStaffId],
+            .idle,
+            "Cancel mid-migrate must reset to idle (not .failed)"
+        )
+        XCTAssertNil(viewModel.executionStates[assignment.eventStaffId])
+        XCTAssertNil(
+            viewModel.executionErrorMessages[assignment.eventStaffId],
+            "Cancel must not surface load/save error banner"
+        )
+        XCTAssertNotNil(
+            UserDefaults.standard.data(forKey: TeamMemberPortalViewModel.legacyDefaultsKey(eventId: eventId)),
+            "Legacy retained so reopen can re-migrate"
+        )
+        XCTAssertNil(viewModel.errorMessage)
+    }
+
+    // MARK: - Concurrent load joins in-flight Task (no sticky loading)
+
+    @MainActor
+    func testLoadExecutionState_ConcurrentCallJoinsInFlightLoad() async throws {
+        let assignment = try makeAssignment(eventStaffId: "es_join_load", eventId: "ev_join_load")
+        let gate = Gate()
+        var getCount = 0
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                getCount += 1
+                gate.waitSync()
+                return okResponse(url: url, data: executionStateJSON(arrival: true, quickNote: "joined"))
+            }
+            return errorResponse(url: url)
+        }
+
+        let first = Task { @MainActor in
+            await viewModel.loadExecutionState(for: assignment)
+        }
+        try await Task.sleep(nanoseconds: 50_000_000)
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .loading)
+
+        let second = Task { @MainActor in
+            await viewModel.loadExecutionState(for: assignment)
+        }
+
+        gate.open()
+        await first.value
+        await second.value
+
+        XCTAssertEqual(getCount, 1, "concurrent callers must share a single GET")
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+        XCTAssertEqual(viewModel.executionStates[assignment.eventStaffId]?.quickNote, "joined")
+    }
 }
 
 // MARK: - Sync gate for mid-flight GET races

@@ -39,6 +39,10 @@ public final class TeamMemberPortalViewModel {
     /// Serializes PUTs per assignment so concurrent edits coalesce.
     private var putSerialTasks: [String: Task<ExecutionPutResult, Never>] = [:]
 
+    /// In-flight load tasks per assignment so concurrent callers join instead of
+    /// early-returning while a cancel can leave a sticky `.loading` spinner.
+    private var loadExecutionTasks: [String: Task<Void, Never>] = [:]
+
     /// Debounced note-save tasks per assignment (~400ms).
     private var noteDebounceTasks: [String: Task<Void, Never>] = [:]
 
@@ -67,8 +71,15 @@ public final class TeamMemberPortalViewModel {
         case offlineQueued
         /// Hard failure (4xx/other); drain may have aborted.
         case failed
+        /// Cooperative cancellation (sheet dismiss mid-PUT). Not a hard error.
+        case cancelled
 
-        var isSuccess: Bool { self != .failed }
+        var isSuccess: Bool {
+            switch self {
+            case .serverAcked, .offlineQueued: return true
+            case .failed, .cancelled: return false
+            }
+        }
 
         /// True only for a real HTTP success — safe to drop legacy UserDefaults.
         var isServerAcked: Bool { self == .serverAcked }
@@ -220,12 +231,40 @@ public final class TeamMemberPortalViewModel {
     /// - GET failure with non-default legacy seeds offline-ready UX instead of
     ///   hiding local progress.
     /// - Load failures without legacy leave the cache unset (no sticky default).
-    /// - Cancellation (sheet dismiss mid-GET) resets to `.idle` without a banner.
+    /// - Cancellation (sheet dismiss mid-GET/migrate) resets to `.idle` without a banner.
+    /// - Concurrent callers join the in-flight load Task (no sticky `.loading`).
     @MainActor
     public func loadExecutionState(for assignment: TeamMemberAssignment) async {
         let id = assignment.eventStaffId
         if executionLoadStates[id] == .ready { return }
-        if executionLoadStates[id] == .loading { return }
+
+        if let existing = loadExecutionTasks[id] {
+            // Join the in-flight load so concurrent open/retry never early-returns
+            // while a cancel can leave a sticky `.loading` spinner.
+            await existing.value
+            return
+        }
+
+        let task = Task { @MainActor in
+            await self.performLoadExecutionState(for: assignment)
+        }
+        loadExecutionTasks[id] = task
+        // Propagate sheet-dismiss cancellation into the shared load Task so
+        // Task.isCancelled is observed inside GET/migrate and state resets to idle.
+        await withTaskCancellationHandler {
+            await task.value
+        } onCancel: {
+            task.cancel()
+        }
+        if loadExecutionTasks[id] == task {
+            loadExecutionTasks[id] = nil
+        }
+    }
+
+    @MainActor
+    private func performLoadExecutionState(for assignment: TeamMemberAssignment) async {
+        let id = assignment.eventStaffId
+        if executionLoadStates[id] == .ready { return }
 
         executionLoadStates[id] = .loading
         clearExecutionError(for: id)
@@ -255,10 +294,16 @@ public final class TeamMemberPortalViewModel {
                     // cannot race a mid-migrate PUT of incomplete defaults.
                     executionStates[id] = legacyState
                     lastSyncedStates[id] = .defaultState
-                    let putResult = await enqueueExecutionStatePut(
+                    var putResult = await enqueueExecutionStatePut(
                         for: assignment,
                         requireReady: false
                     )
+                    // Sheet dismiss can race a hard PUT outcome — prefer cancel idle.
+                    if Task.isCancelled,
+                       putResult != .serverAcked,
+                       putResult != .offlineQueued {
+                        putResult = .cancelled
+                    }
                     switch putResult {
                     case .serverAcked:
                         // Durable migrate — safe to drop legacy UserDefaults.
@@ -281,11 +326,14 @@ public final class TeamMemberPortalViewModel {
                         executionLoadStates[id] = .failed
                         setExecutionError(
                             tr(
-                                "team_portal.execution_load_error",
-                                "No pudimos cargar el checklist de ejecución."
+                                "team_portal.execution_save_error",
+                                "No pudimos guardar el checklist de ejecución."
                             ),
                             for: id
                         )
+                    case .cancelled:
+                        // Sheet dismiss mid-migrate — no banner; keep legacy for reopen.
+                        resetExecutionLoadAfterCancelledMigrate(id)
                     }
                     return
                 }
@@ -306,21 +354,33 @@ public final class TeamMemberPortalViewModel {
                 lastSyncedStates[id] = serverState
                 // Keep legacy rewritten to merged until server ack.
                 Self.writeLegacyState(merged, forKey: legacyKey)
-                let putResult = await enqueueExecutionStatePut(
+                var putResult = await enqueueExecutionStatePut(
                     for: assignment,
                     requireReady: false
                 )
+                // Sheet dismiss can race a hard PUT outcome — prefer cancel idle.
+                if Task.isCancelled,
+                   putResult != .serverAcked,
+                   putResult != .offlineQueued {
+                    putResult = .cancelled
+                }
                 switch putResult {
                 case .serverAcked:
                     UserDefaults.standard.removeObject(forKey: legacyKey)
                     executionLoadStates[id] = .ready
                     clearExecutionError(for: id)
                 case .offlineQueued:
+                    // Offline queue advances lastSynced to merged inside PUT path.
                     Self.writeLegacyState(merged, forKey: legacyKey)
                     executionLoadStates[id] = .ready
                     clearExecutionError(for: id)
                 case .failed:
-                    // Still usable offline with merged local truth; keep legacy.
+                    // performExecutionStatePut rolls cache to lastSynced (server).
+                    // Restore merged as local truth so UI + retry keep legacy-only
+                    // fields; keep lastSynced = server for honest rollback baseline.
+                    // Do NOT delete legacy on this path.
+                    executionStates[id] = merged
+                    lastSyncedStates[id] = serverState
                     Self.writeLegacyState(merged, forKey: legacyKey)
                     executionLoadStates[id] = .ready
                     setExecutionError(
@@ -330,6 +390,9 @@ public final class TeamMemberPortalViewModel {
                         ),
                         for: id
                     )
+                case .cancelled:
+                    // Sheet dismiss mid-merge — no banner; keep legacy for reopen.
+                    resetExecutionLoadAfterCancelledMigrate(id)
                 }
                 return
             }
@@ -504,6 +567,11 @@ public final class TeamMemberPortalViewModel {
                     continue
                 }
 
+                // Cancellation is not a hard failure — stop drain without retry.
+                if lastResult == .cancelled {
+                    break
+                }
+
                 // Hard failure: if a newer edit re-armed pending during the failed
                 // PUT, attempt one more drain with the current cache instead of
                 // dropping work when no waiter is attached.
@@ -545,7 +613,7 @@ public final class TeamMemberPortalViewModel {
         } catch {
             if Self.isCancellationError(error) || Task.isCancelled {
                 // Do not roll back or surface a banner for a cancelled PUT.
-                return .failed
+                return .cancelled
             }
             // Typed offline-queue acceptance (or legacy substring fallback).
             // Keep UI; rewrite legacy blob if still present so cold-start is fresh.
@@ -605,6 +673,17 @@ public final class TeamMemberPortalViewModel {
             executionStates[id] = nil
             lastSyncedStates[id] = nil
         }
+    }
+
+    /// Cancelled migrate/merge PUT: reset to idle without a banner so reopen re-GETs.
+    /// Legacy UserDefaults is intentionally left intact.
+    @MainActor
+    private func resetExecutionLoadAfterCancelledMigrate(_ id: String) {
+        cancelNoteDebounce(for: id)
+        executionStates[id] = nil
+        lastSyncedStates[id] = nil
+        executionLoadStates[id] = .idle
+        clearExecutionError(for: id)
     }
 
     @MainActor

@@ -322,7 +322,11 @@ public actor APIClient {
         request.httpBody = bodyData
 
         do {
-            return try await execute(request, suppressNetworkToast: true)
+            let result: T = try await execute(request, suppressNetworkToast: true)
+            // Drop any stale offline body for this path so flush cannot clobber
+            // a fresher live success (offline A → online B → flush A).
+            await offlineMutationQueue.removeMatching(method: "PUT", endpoint: endpoint)
+            return result
         } catch let apiError as APIError {
             if await queueMutationIfNeeded(
                 apiError: apiError,
@@ -352,7 +356,9 @@ public actor APIClient {
         request.httpBody = bodyData
 
         do {
-            return try await execute(request, suppressNetworkToast: true)
+            let result: T = try await execute(request, suppressNetworkToast: true)
+            await offlineMutationQueue.removeMatching(method: "PATCH", endpoint: endpoint)
+            return result
         } catch let apiError as APIError {
             if await queueMutationIfNeeded(
                 apiError: apiError,
@@ -379,6 +385,7 @@ public actor APIClient {
         let request = try buildRequest(endpoint, method: "DELETE")
         do {
             let _: EmptyResponse = try await execute(request, suppressNetworkToast: true)
+            await offlineMutationQueue.removeMatching(method: "DELETE", endpoint: endpoint)
         } catch let apiError as APIError {
             if await queueMutationIfNeeded(
                 apiError: apiError,

@@ -19,10 +19,30 @@ actor OfflineMutationQueue {
         self.userDefaults = userDefaults
     }
 
+    /// Enqueues a mutation. For PUT/PATCH/DELETE, coalesces by (method, endpoint)
+    /// so a newer body replaces any older queued full-state write to the same path
+    /// (prevents stale offline A clobbering a later online B after flush).
     func enqueue(_ mutation: QueuedMutation) {
         var current = load()
+        if Self.shouldCoalesce(method: mutation.method) {
+            current.removeAll {
+                $0.method == mutation.method && $0.endpoint == mutation.endpoint
+            }
+        }
         current.append(mutation)
         save(current)
+    }
+
+    /// Drops any queued mutations matching (method, endpoint).
+    /// Call after a successful live PUT/PATCH/DELETE so a later flush cannot
+    /// replay a stale offline body over fresher server state.
+    func removeMatching(method: String, endpoint: String) {
+        var current = load()
+        let before = current.count
+        current.removeAll { $0.method == method && $0.endpoint == endpoint }
+        if current.count != before {
+            save(current)
+        }
     }
 
     func dequeueAll() -> [QueuedMutation] {
@@ -39,6 +59,12 @@ actor OfflineMutationQueue {
 
     func replace(with items: [QueuedMutation]) {
         save(items)
+    }
+
+    /// Idempotent full/partial replace and delete — safe to keep only latest body.
+    /// POST creates are not coalesced (multiple creates to the same path are distinct).
+    static func shouldCoalesce(method: String) -> Bool {
+        method == "PUT" || method == "PATCH" || method == "DELETE"
     }
 
     private func load() -> [QueuedMutation] {
