@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.glance.*
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
@@ -88,7 +87,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                         text = WidgetFormatters.formatTodayDate(),
                         style = TextStyle(
                             fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
+                            fontSize = rememberScaledSp(14f),
                             color = WidgetColors.primary
                         )
                     )
@@ -100,7 +99,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                                 todayData.eventCount
                             ),
                             style = TextStyle(
-                                fontSize = 11.sp,
+                                fontSize = rememberScaledSp(11f),
                                 color = WidgetColors.textSecondary
                             )
                         )
@@ -108,7 +107,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                         Text(
                             text = context.getString(R.string.widget_quick_no_events_today),
                             style = TextStyle(
-                                fontSize = 11.sp,
+                                fontSize = rememberScaledSp(11f),
                                 color = WidgetColors.textSecondary
                             )
                         )
@@ -133,7 +132,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                             text = event.time,
                             style = TextStyle(
                                 fontWeight = FontWeight.Medium,
-                                fontSize = 11.sp,
+                                fontSize = rememberScaledSp(11f),
                                 color = WidgetColors.primary
                             )
                         )
@@ -141,7 +140,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                         Text(
                             text = event.serviceType,
                             style = TextStyle(
-                                fontSize = 11.sp,
+                                fontSize = rememberScaledSp(11f),
                                 color = WidgetColors.textPrimary
                             ),
                             maxLines = 1
@@ -172,7 +171,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                         text = context.getString(R.string.widget_quick_new_event),
                         style = TextStyle(
                             fontWeight = FontWeight.Medium,
-                            fontSize = 11.sp,
+                            fontSize = rememberScaledSp(11f),
                             color = WidgetColors.primary
                         )
                     )
@@ -194,7 +193,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                         text = context.getString(R.string.widget_quick_new_quote),
                         style = TextStyle(
                             fontWeight = FontWeight.Medium,
-                            fontSize = 11.sp,
+                            fontSize = rememberScaledSp(11f),
                             color = WidgetColors.primary
                         )
                     )
@@ -216,7 +215,7 @@ class QuickActionsWidget : GlanceAppWidget() {
                         text = context.getString(R.string.widget_quick_calendar),
                         style = TextStyle(
                             fontWeight = FontWeight.Medium,
-                            fontSize = 11.sp,
+                            fontSize = rememberScaledSp(11f),
                             color = WidgetColors.primary
                         )
                     )

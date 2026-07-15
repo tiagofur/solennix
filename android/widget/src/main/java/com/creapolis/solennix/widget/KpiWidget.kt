@@ -3,7 +3,6 @@ package com.creapolis.solennix.widget
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.glance.*
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
@@ -89,7 +88,7 @@ class KpiWidget : GlanceAppWidget() {
                 text = context.getString(R.string.widget_kpi_title),
                 style = TextStyle(
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
+                    fontSize = rememberScaledSp(14f),
                     color = WidgetColors.primary
                 )
             )
@@ -136,7 +135,7 @@ class KpiWidget : GlanceAppWidget() {
                     Text(
                         text = context.getString(R.string.widget_kpi_pending_payments),
                         style = TextStyle(
-                            fontSize = 11.sp,
+                            fontSize = rememberScaledSp(11f),
                             color = WidgetColors.textSecondary
                         )
                     )
@@ -145,7 +144,7 @@ class KpiWidget : GlanceAppWidget() {
                     text = WidgetFormatters.formatCurrency(kpiData.pendingPayments),
                     style = TextStyle(
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
+                        fontSize = rememberScaledSp(18f),
                         color = if (kpiData.pendingPayments > 0.0) WidgetColors.warning else WidgetColors.success
                     )
                 )
@@ -171,17 +170,19 @@ class KpiWidget : GlanceAppWidget() {
                 text = value,
                 style = TextStyle(
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
+                    fontSize = rememberScaledSp(18f),
                     color = accentColor
-                )
+                ),
+                maxLines = 1
             )
             Spacer(modifier = GlanceModifier.height(2.dp))
             Text(
                 text = label,
                 style = TextStyle(
-                    fontSize = 11.sp,
+                    fontSize = rememberScaledSp(11f),
                     color = WidgetColors.textSecondary
-                )
+                ),
+                maxLines = 1
             )
         }
     }
