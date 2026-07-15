@@ -5,7 +5,7 @@ import SolennixNetwork
 @testable import SolennixFeatures
 
 /// Focused coverage for team-portal execution-state sync (#875):
-/// legacy migration, load failure, GET/edit race, optimistic rollback.
+/// legacy migration, load failure, load gating, sync local apply, optimistic rollback.
 final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
 
     private var session: URLSession!
@@ -154,6 +154,10 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
             viewModel.executionStates[assignment.eventStaffId],
             "Failed load must not sticky-cache .defaultState"
         )
+        XCTAssertEqual(
+            viewModel.executionLoadStates[assignment.eventStaffId],
+            .failed
+        )
         XCTAssertNotNil(viewModel.errorMessage)
 
         await viewModel.loadExecutionState(for: assignment)
@@ -162,26 +166,29 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         let state = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
         XCTAssertTrue(state.checklist.arrival)
         XCTAssertEqual(state.quickNote, "from server")
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+        XCTAssertNil(viewModel.errorMessage, "successful load clears errorMessage")
     }
 
-    // MARK: - GET/edit race
+    // MARK: - Load gating (no default-based clobber)
 
     @MainActor
-    func testLoadExecutionState_DoesNotOverwriteLocalMutationDuringLoad() async throws {
+    func testLoadExecutionState_GatesEditsUntilReady_ServerSeedsCache() async throws {
         let assignment = try makeAssignment()
         let gate = Gate()
+        var putCount = 0
 
         MockURLProtocol.requestHandler = { [self] request in
             let url = request.url!
             if request.httpMethod == "GET", url.path.contains("execution-state") {
-                // Block until the test applies a local mutation mid-flight.
                 gate.waitSync()
                 return okResponse(
                     url: url,
-                    data: executionStateJSON(arrival: true, quickNote: "server wins if applied")
+                    data: executionStateJSON(arrival: true, quickNote: "server seed")
                 )
             }
             if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                putCount += 1
                 return okResponse(url: url, data: request.httpBody ?? executionStateJSON())
             }
             return errorResponse(url: url)
@@ -193,6 +200,7 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
 
         // Yield so the GET is in flight behind the gate.
         try await Task.sleep(nanoseconds: 50_000_000)
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .loading)
 
         let local = AssignmentExecutionState(
             checklist: ExecutionChecklist(arrival: false, materials: true, closing: false),
@@ -200,13 +208,246 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         )
         await viewModel.saveExecutionState(for: assignment, state: local, debounce: false)
 
+        XCTAssertNil(
+            viewModel.executionStates[assignment.eventStaffId],
+            "Edits must not seed cache from defaults while load is in flight"
+        )
+        XCTAssertEqual(putCount, 0, "Gated edits must not PUT incomplete defaults")
+
         gate.open()
         await loadTask.value
 
         let state = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
-        XCTAssertEqual(state.quickNote, "typed during load")
-        XCTAssertTrue(state.checklist.materials)
-        XCTAssertFalse(state.checklist.arrival, "server GET must not clobber concurrent local edit")
+        XCTAssertEqual(state.quickNote, "server seed")
+        XCTAssertTrue(state.checklist.arrival)
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+        XCTAssertEqual(putCount, 0)
+    }
+
+    // MARK: - Sync local apply before await
+
+    @MainActor
+    func testApplyLocalExecutionState_MultiField_CacheHasBothBeforePutCompletes() async throws {
+        let assignment = try makeAssignment()
+        let putGate = Gate()
+        var putBodies: [Data] = []
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                return okResponse(url: url, data: executionStateJSON())
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                putBodies.append(request.httpBody ?? Data())
+                putGate.waitSync()
+                return okResponse(url: url, data: request.httpBody ?? executionStateJSON())
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+
+        var materials = AssignmentExecutionState.defaultState
+        materials.checklist.materials = true
+        viewModel.applyLocalExecutionState(materials, for: assignment)
+
+        var both = materials
+        both.quickNote = "note B"
+        viewModel.applyLocalExecutionState(both, for: assignment)
+
+        let cached = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
+        XCTAssertTrue(cached.checklist.materials, "first field must remain after second apply")
+        XCTAssertEqual(cached.quickNote, "note B", "second field must be present before any PUT completes")
+        XCTAssertEqual(putBodies.count, 0, "applyLocal must not PUT")
+
+        // Persist once with the coalesced cache.
+        let persistTask = Task { @MainActor in
+            await viewModel.persistExecutionState(for: assignment, debounce: false)
+        }
+        try await Task.sleep(nanoseconds: 50_000_000)
+        putGate.open()
+        await persistTask.value
+
+        XCTAssertEqual(putBodies.count, 1)
+        let final = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
+        XCTAssertTrue(final.checklist.materials)
+        XCTAssertEqual(final.quickNote, "note B")
+    }
+
+    // MARK: - lastSynced always advances on PUT success
+
+    @MainActor
+    func testPutSuccess_AlwaysAdvancesLastSynced_UnderConcurrentEdit() async throws {
+        let assignment = try makeAssignment()
+        let putGate = Gate()
+        var putCount = 0
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                return okResponse(url: url, data: executionStateJSON(arrival: true, quickNote: "synced"))
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                putCount += 1
+                if putCount == 1 {
+                    // First PUT (materials) blocks so we can mutate cache mid-flight.
+                    putGate.waitSync()
+                }
+                // Second PUT fails so rollback uses lastSynced from the first success.
+                if putCount >= 2 {
+                    return errorResponse(url: url, status: 422)
+                }
+                return okResponse(url: url, data: request.httpBody ?? executionStateJSON())
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+        let id = assignment.eventStaffId
+        XCTAssertEqual(viewModel.lastSyncedStates[id]?.quickNote, "synced")
+
+        var midFlight = AssignmentExecutionState(
+            checklist: ExecutionChecklist(arrival: true, materials: true, closing: false),
+            quickNote: "synced"
+        )
+        let firstPut = Task { @MainActor in
+            await viewModel.saveExecutionState(for: assignment, state: midFlight, debounce: false)
+        }
+
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        // Concurrent local edit while first PUT is in flight.
+        var concurrent = midFlight
+        concurrent.quickNote = "newer local"
+        viewModel.applyLocalExecutionState(concurrent, for: assignment)
+        XCTAssertEqual(viewModel.executionStates[id]?.quickNote, "newer local")
+
+        putGate.open()
+        await firstPut.value
+
+        XCTAssertEqual(
+            viewModel.lastSyncedStates[id],
+            midFlight,
+            "Successful PUT must advance lastSynced even when cache already moved on"
+        )
+        XCTAssertEqual(viewModel.executionStates[id]?.quickNote, "newer local")
+
+        // Persist the concurrent edit — PUT fails; rollback must use advanced lastSynced.
+        await viewModel.persistExecutionState(for: assignment, debounce: false)
+        let after = try XCTUnwrap(viewModel.executionStates[id])
+        XCTAssertEqual(after, midFlight, "Rollback target must be the successful mid-flight payload")
+        XCTAssertEqual(after.quickNote, "synced")
+        XCTAssertTrue(after.checklist.materials)
+    }
+
+    // MARK: - Note debounce coalescing
+
+    @MainActor
+    func testNoteDebounce_CoalescesRapidEditsIntoSinglePut() async throws {
+        let assignment = try makeAssignment()
+        var putCount = 0
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                return okResponse(url: url, data: executionStateJSON())
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                putCount += 1
+                // Echo final cached shape via lastSynced after success rather than
+                // parsing httpBody (URLProtocol may surface body via stream only).
+                return okResponse(
+                    url: url,
+                    data: executionStateJSON(quickNote: "abc")
+                )
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+        viewModel.noteSaveDebounceNanoseconds = 40_000_000
+
+        for note in ["a", "ab", "abc"] {
+            var state = viewModel.executionStates[assignment.eventStaffId] ?? .defaultState
+            state.quickNote = note
+            viewModel.applyLocalExecutionState(state, for: assignment)
+            await viewModel.persistExecutionState(for: assignment, debounce: true)
+        }
+
+        // Wait past debounce window for the coalesced PUT.
+        try await Task.sleep(nanoseconds: 120_000_000)
+
+        XCTAssertEqual(putCount, 1, "rapid debounced notes must coalesce to one PUT")
+        XCTAssertEqual(viewModel.executionStates[assignment.eventStaffId]?.quickNote, "abc")
+        XCTAssertEqual(
+            viewModel.lastSyncedStates[assignment.eventStaffId]?.quickNote,
+            "abc",
+            "Coalesced PUT must advance lastSynced to the final note"
+        )
+    }
+
+    // MARK: - Offline queue treated as optimistic success
+
+    @MainActor
+    func testOfflineQueuedPut_KeepsLocalAndAdvancesLastSynced() async throws {
+        let assignment = try makeAssignment()
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                return okResponse(url: url, data: executionStateJSON(arrival: true))
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                throw URLError(.notConnectedToInternet)
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+
+        let offline = AssignmentExecutionState(
+            checklist: ExecutionChecklist(arrival: true, materials: true, closing: false),
+            quickNote: ""
+        )
+        await viewModel.saveExecutionState(for: assignment, state: offline, debounce: false)
+
+        let cached = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
+        XCTAssertEqual(cached, offline, "Offline-queued PUT must not roll back optimistic UI")
+        XCTAssertEqual(
+            viewModel.lastSyncedStates[assignment.eventStaffId],
+            offline,
+            "Offline-queued body is server-bound truth for rollback purposes"
+        )
+        XCTAssertNil(
+            viewModel.errorMessage,
+            "Queue acceptance must not surface as a hard save error"
+        )
+    }
+
+    // MARK: - Quick note length cap
+
+    @MainActor
+    func testApplyLocalExecutionState_CapsQuickNoteAtMaxLength() async throws {
+        let assignment = try makeAssignment()
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                return okResponse(url: url, data: executionStateJSON())
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+
+        let tooLong = String(repeating: "x", count: TeamMemberPortalViewModel.maxQuickNoteLength + 50)
+        var state = AssignmentExecutionState.defaultState
+        state.quickNote = tooLong
+        viewModel.applyLocalExecutionState(state, for: assignment)
+
+        let cached = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
+        XCTAssertEqual(cached.quickNote.count, TeamMemberPortalViewModel.maxQuickNoteLength)
+        XCTAssertNotNil(viewModel.errorMessage)
     }
 
     // MARK: - Optimistic rollback on PUT failure
@@ -273,6 +514,11 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         XCTAssertNil(
             viewModel.executionStates[assignment.eventStaffId],
             "Failed migrate must clear cache so reopen retries GET+migrate"
+        )
+        XCTAssertEqual(
+            viewModel.executionLoadStates[assignment.eventStaffId],
+            .failed,
+            "Failed migrate must leave load state failed so UI stays gated"
         )
     }
 
@@ -372,6 +618,20 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         XCTAssertEqual(getCount, 1, "authoritative empty success may short-circuit subsequent loads")
         let state = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
         XCTAssertTrue(state.isDefault)
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+        XCTAssertNil(viewModel.errorMessage)
+    }
+
+    // MARK: - Offline-queue error detector
+
+    func testIsOfflineQueuedError_MatchesAPIClientQueueCopy() {
+        let queued = APIError.networkError(
+            "Sin conexión: guardamos tu cambio y se enviará automáticamente al reconectarte."
+        )
+        let plain = APIError.networkError("Sin conexión a internet.")
+        XCTAssertTrue(TeamMemberPortalViewModel.isOfflineQueuedError(queued))
+        XCTAssertFalse(TeamMemberPortalViewModel.isOfflineQueuedError(plain))
+        XCTAssertFalse(TeamMemberPortalViewModel.isOfflineQueuedError(APIError.decodingError))
     }
 }
 

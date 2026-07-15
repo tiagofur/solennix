@@ -109,7 +109,7 @@ public struct TeamMemberPortalView: View {
                     // Surface save/load errors while the list is populated (#875).
                     if let errorMessage = viewModel.errorMessage {
                         InlineErrorBanner(message: errorMessage) {
-                            viewModel.errorMessage = nil
+                            Task { await viewModel.loadAssignments() }
                         }
                     }
 
@@ -1110,6 +1110,14 @@ private struct TeamPortalAssignmentDetailSheet: View {
     let assignment: TeamMemberAssignment
     @Bindable var viewModel: TeamMemberPortalViewModel
 
+    private var loadState: TeamMemberPortalViewModel.ExecutionLoadState {
+        viewModel.executionLoadStates[assignment.eventStaffId] ?? .idle
+    }
+
+    private var isEditingEnabled: Bool {
+        viewModel.isExecutionEditingEnabled(for: assignment)
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -1150,15 +1158,43 @@ private struct TeamPortalAssignmentDetailSheet: View {
                     }
                 }
 
-                Section(tr("events.detail.documents.checklist", "Checklist")) {
-                    Toggle(tr("team_portal.arrival_ready", "Llegada y acceso confirmados"), isOn: checklistBinding(\.checklist.arrival))
-                    Toggle(tr("team_portal.material_ready", "Material y montaje listos"), isOn: checklistBinding(\.checklist.materials))
-                    Toggle(tr("team_portal.closing_done", "Cierre operativo completado"), isOn: checklistBinding(\.checklist.closing))
-                }
+                switch loadState {
+                case .idle, .loading:
+                    Section(tr("events.detail.documents.checklist", "Checklist")) {
+                        HStack {
+                            ProgressView()
+                            Text(tr("team_portal.execution_loading", "Cargando checklist…"))
+                                .font(.subheadline)
+                                .foregroundStyle(SolennixColors.textSecondary)
+                        }
+                        .accessibilityIdentifier("team_portal.execution_loading")
+                    }
+                case .failed:
+                    Section(tr("events.detail.documents.checklist", "Checklist")) {
+                        Text(tr(
+                            "team_portal.execution_load_error",
+                            "No pudimos cargar el checklist de ejecución."
+                        ))
+                        .font(.footnote)
+                        .foregroundStyle(SolennixColors.error)
+                        Button(tr("team_portal.retry", "Reintentar")) {
+                            Task { await viewModel.loadExecutionState(for: assignment) }
+                        }
+                        .accessibilityIdentifier("team_portal.execution_retry")
+                    }
+                case .ready:
+                    Section(tr("events.detail.documents.checklist", "Checklist")) {
+                        Toggle(tr("team_portal.arrival_ready", "Llegada y acceso confirmados"), isOn: checklistBinding(\.checklist.arrival))
+                        Toggle(tr("team_portal.material_ready", "Material y montaje listos"), isOn: checklistBinding(\.checklist.materials))
+                        Toggle(tr("team_portal.closing_done", "Cierre operativo completado"), isOn: checklistBinding(\.checklist.closing))
+                    }
+                    .disabled(!isEditingEnabled)
 
-                Section(tr("team_portal.quick_notes", "Notas rápidas")) {
-                    TextEditor(text: noteBinding)
-                        .frame(minHeight: 110)
+                    Section(tr("team_portal.quick_notes", "Notas rápidas")) {
+                        TextEditor(text: noteBinding)
+                            .frame(minHeight: 110)
+                            .disabled(!isEditingEnabled)
+                    }
                 }
             }
             .navigationTitle(tr("events.detail.title", "Detalle del evento"))
@@ -1169,26 +1205,31 @@ private struct TeamPortalAssignmentDetailSheet: View {
         }
     }
 
-    /// Checklist toggles save immediately (serialized PUT, no debounce).
+    /// Checklist toggles write the local cache synchronously, then persist immediately.
     private func checklistBinding(_ keyPath: WritableKeyPath<AssignmentExecutionState, Bool>) -> Binding<Bool> {
         Binding(
             get: { viewModel.executionStates[assignment.eventStaffId, default: .defaultState][keyPath: keyPath] },
             set: { newValue in
+                guard viewModel.isExecutionEditingEnabled(for: assignment) else { return }
                 var state = viewModel.executionStates[assignment.eventStaffId, default: .defaultState]
                 state[keyPath: keyPath] = newValue
-                Task { await viewModel.saveExecutionState(for: assignment, state: state, debounce: false) }
+                // Sync cache write BEFORE any Task so multi-field edits never clobber.
+                viewModel.applyLocalExecutionState(state, for: assignment)
+                Task { await viewModel.persistExecutionState(for: assignment, debounce: false) }
             }
         )
     }
 
-    /// Quick notes debounce ~400ms to avoid per-keystroke PUT spam (#875).
+    /// Quick notes write the local cache synchronously; PUT is debounced ~400ms.
     private var noteBinding: Binding<String> {
         Binding(
             get: { viewModel.executionStates[assignment.eventStaffId, default: .defaultState].quickNote },
             set: { newValue in
+                guard viewModel.isExecutionEditingEnabled(for: assignment) else { return }
                 var state = viewModel.executionStates[assignment.eventStaffId, default: .defaultState]
                 state.quickNote = newValue
-                Task { await viewModel.saveExecutionState(for: assignment, state: state, debounce: true) }
+                viewModel.applyLocalExecutionState(state, for: assignment)
+                Task { await viewModel.persistExecutionState(for: assignment, debounce: true) }
             }
         )
     }
