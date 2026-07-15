@@ -73,6 +73,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
+import com.creapolis.solennix.core.model.AssignmentExecutionState
 import com.creapolis.solennix.core.model.AssignmentPortalResponse
 import com.creapolis.solennix.core.model.AssignmentStatus
 import com.creapolis.solennix.core.model.TeamMemberAssignment
@@ -594,6 +595,7 @@ fun TeamMemberPortalScreen(
     selectedAssignmentDetail?.let { assignment ->
         TeamMemberAssignmentDetailDialog(
             assignment = assignment,
+            viewModel = viewModel,
             onDismiss = { selectedAssignmentDetail = null }
         )
     }
@@ -725,23 +727,38 @@ private fun timelineLabel(changeType: String): String {
 @Composable
 private fun TeamMemberAssignmentDetailDialog(
     assignment: TeamMemberAssignment,
+    viewModel: TeamMemberPortalViewModel,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
     val moneyFormatter = remember { NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-MX")) }
-    val prefs = remember(context) { context.getSharedPreferences("team_event_detail", Context.MODE_PRIVATE) }
-    var checklistArrival by remember(assignment.eventId) { mutableStateOf(prefs.getBoolean("${assignment.eventId}_arrival", false)) }
-    var checklistMaterials by remember(assignment.eventId) { mutableStateOf(prefs.getBoolean("${assignment.eventId}_materials", false)) }
-    var checklistClosing by remember(assignment.eventId) { mutableStateOf(prefs.getBoolean("${assignment.eventId}_closing", false)) }
-    var quickNote by remember(assignment.eventId) { mutableStateOf(prefs.getString("${assignment.eventId}_quick_note", "") ?: "") }
+    val executionState = uiState.executionStates[assignment.eventStaffId] ?: AssignmentExecutionState.DEFAULT
 
-    LaunchedEffect(assignment.eventId, checklistArrival, checklistMaterials, checklistClosing, quickNote) {
-        prefs.edit()
-            .putBoolean("${assignment.eventId}_arrival", checklistArrival)
-            .putBoolean("${assignment.eventId}_materials", checklistMaterials)
-            .putBoolean("${assignment.eventId}_closing", checklistClosing)
-            .putString("${assignment.eventId}_quick_note", quickNote)
-            .apply()
+    // Carga inicial + migración legacy de SharedPreferences (#875).
+    LaunchedEffect(assignment.eventStaffId) {
+        val prefs = context.getSharedPreferences("team_event_detail", Context.MODE_PRIVATE)
+        val hasLegacy = prefs.getBoolean("${assignment.eventId}_arrival", false) ||
+            prefs.getBoolean("${assignment.eventId}_materials", false) ||
+            prefs.getBoolean("${assignment.eventId}_closing", false) ||
+            prefs.getString("${assignment.eventId}_quick_note", "").orEmpty().isNotEmpty()
+        if (hasLegacy) {
+            val legacy = TeamMemberPortalViewModel.LegacyExecutionState(
+                arrival = prefs.getBoolean("${assignment.eventId}_arrival", false),
+                materials = prefs.getBoolean("${assignment.eventId}_materials", false),
+                closing = prefs.getBoolean("${assignment.eventId}_closing", false),
+                quickNote = prefs.getString("${assignment.eventId}_quick_note", "") ?: ""
+            )
+            prefs.edit().clear().apply()
+            viewModel.loadExecutionState(assignment, legacy)
+        } else {
+            viewModel.loadExecutionState(assignment)
+        }
+    }
+
+    fun updateState(transform: (AssignmentExecutionState) -> AssignmentExecutionState) {
+        val next = transform(executionState)
+        viewModel.putExecutionState(assignment, next)
     }
 
     val locationLabel = listOfNotNull(assignment.location, assignment.city)
@@ -782,21 +799,30 @@ private fun TeamMemberAssignmentDetailDialog(
 
                 Text(stringResource(R.string.staff_portal_execution_checklist), fontWeight = FontWeight.SemiBold)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = checklistArrival, onCheckedChange = { checklistArrival = it })
+                    Checkbox(
+                        checked = executionState.checklist.arrival,
+                        onCheckedChange = { checked -> updateState { it.copy(checklist = it.checklist.copy(arrival = checked)) } }
+                    )
                     Text(stringResource(R.string.staff_portal_checklist_arrival))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = checklistMaterials, onCheckedChange = { checklistMaterials = it })
+                    Checkbox(
+                        checked = executionState.checklist.materials,
+                        onCheckedChange = { checked -> updateState { it.copy(checklist = it.checklist.copy(materials = checked)) } }
+                    )
                     Text(stringResource(R.string.staff_portal_checklist_materials))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = checklistClosing, onCheckedChange = { checklistClosing = it })
+                    Checkbox(
+                        checked = executionState.checklist.closing,
+                        onCheckedChange = { checked -> updateState { it.copy(checklist = it.checklist.copy(closing = checked)) } }
+                    )
                     Text(stringResource(R.string.staff_portal_checklist_closing))
                 }
 
                 OutlinedTextField(
-                    value = quickNote,
-                    onValueChange = { quickNote = it },
+                    value = executionState.quickNote,
+                    onValueChange = { note -> updateState { it.copy(quickNote = note) } },
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(stringResource(R.string.staff_portal_quick_notes_label)) },
                     minLines = 2

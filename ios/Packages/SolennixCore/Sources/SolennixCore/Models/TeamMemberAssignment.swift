@@ -56,3 +56,36 @@ public enum AssignmentPortalResponse: String, Codable, Sendable {
     case accept
     case decline
 }
+
+// MARK: - Execution State (#875)
+
+/// Server-backed execution checklist progress for a team-member assignment.
+/// Mirrors the backend JSONB shape stored in `event_staff.execution_state`.
+public struct ExecutionChecklist: Codable, Sendable, Equatable {
+    public var arrival: Bool
+    public var materials: Bool
+    public var closing: Bool
+
+    public init(arrival: Bool = false, materials: Bool = false, closing: Bool = false) {
+        self.arrival = arrival
+        self.materials = materials
+        self.closing = closing
+    }
+}
+
+public struct AssignmentExecutionState: Codable, Sendable, Equatable {
+    public var checklist: ExecutionChecklist
+    public var quickNote: String
+
+    enum CodingKeys: String, CodingKey {
+        case checklist
+        case quickNote = "quick_note"
+    }
+
+    public init(checklist: ExecutionChecklist = ExecutionChecklist(), quickNote: String = "") {
+        self.checklist = checklist
+        self.quickNote = quickNote
+    }
+
+    public static let defaultState = AssignmentExecutionState()
+}

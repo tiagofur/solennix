@@ -16,6 +16,7 @@ import com.creapolis.solennix.core.model.StaffInviteResponse
 import com.creapolis.solennix.core.model.TeamMemberAssignment
 import com.creapolis.solennix.core.model.AssignmentPortalResponse
 import com.creapolis.solennix.core.model.AssignmentResponseOutcome
+import com.creapolis.solennix.core.model.AssignmentExecutionState
 import com.creapolis.solennix.core.model.TeamMemberChangeEvent
 import com.creapolis.solennix.core.model.TeamTimelineMarkReadResponse
 import com.creapolis.solennix.core.model.UnavailableDate
@@ -43,6 +44,8 @@ interface StaffRepository {
     suspend fun revokeStaffInvite(id: String)
     suspend fun getMyAssignments(): List<TeamMemberAssignment>
     suspend fun respondAssignment(id: String, response: AssignmentPortalResponse): AssignmentResponseOutcome
+    suspend fun getExecutionState(eventStaffId: String): AssignmentExecutionState
+    suspend fun putExecutionState(eventStaffId: String, state: AssignmentExecutionState): AssignmentExecutionState
     suspend fun getMyTimeline(unreadOnly: Boolean = false, limit: Int = 50): List<TeamMemberChangeEvent>
     suspend fun markMyTimelineRead(ids: List<String> = emptyList()): TeamTimelineMarkReadResponse
     suspend fun getMyUnavailableDates(start: String, end: String): List<UnavailableDate>
@@ -171,6 +174,14 @@ class OfflineFirstStaffRepository @Inject constructor(
             Endpoints.staffRespondAssignment(id),
             mapOf("response" to response.raw)
         )
+    }
+
+    override suspend fun getExecutionState(eventStaffId: String): AssignmentExecutionState {
+        return apiService.get(Endpoints.staffExecutionState(eventStaffId))
+    }
+
+    override suspend fun putExecutionState(eventStaffId: String, state: AssignmentExecutionState): AssignmentExecutionState {
+        return apiService.put(Endpoints.staffExecutionState(eventStaffId), state)
     }
 
     override suspend fun getMyTimeline(unreadOnly: Boolean, limit: Int): List<TeamMemberChangeEvent> {

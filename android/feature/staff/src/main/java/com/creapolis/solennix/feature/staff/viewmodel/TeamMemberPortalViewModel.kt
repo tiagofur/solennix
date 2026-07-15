@@ -3,7 +3,9 @@ package com.creapolis.solennix.feature.staff.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.core.data.repository.StaffRepository
+import com.creapolis.solennix.core.model.AssignmentExecutionState
 import com.creapolis.solennix.core.model.AssignmentPortalResponse
+import com.creapolis.solennix.core.model.ExecutionChecklist
 import com.creapolis.solennix.core.model.TeamMemberAssignment
 import com.creapolis.solennix.core.model.TeamMemberChangeEvent
 import com.creapolis.solennix.core.model.UnavailableDate
@@ -23,6 +25,7 @@ data class TeamMemberPortalUiState(
     val isSavingAvailability: Boolean = false,
     val respondingAssignmentIds: Set<String> = emptySet(),
     val markingTimelineReadIds: Set<String> = emptySet(),
+    val executionStates: Map<String, AssignmentExecutionState> = emptyMap(),
     val errorMessage: String? = null
 )
 
@@ -119,6 +122,71 @@ class TeamMemberPortalViewModel @Inject constructor(
             }
         }
     }
+
+    // ── Execution state (#875) ──
+
+    /**
+     * Carga el execution state del server al abrir el detail dialog. Migración
+     * legacy: si el usuario tenía estado en SharedPreferences, lo sube al server
+     * y lo borra localmente (una sola vez).
+     *
+     * [legacyPrefs] se pasa desde la Screen (que tiene el Context); null cuando
+     * no hay prefs legacy que migrar.
+     */
+    fun loadExecutionState(
+        assignment: TeamMemberAssignment,
+        legacyPrefs: LegacyExecutionState? = null
+    ) {
+        viewModelScope.launch {
+            if (legacyPrefs != null) {
+                val migrated = AssignmentExecutionState(
+                    checklist = ExecutionChecklist(
+                        arrival = legacyPrefs.arrival,
+                        materials = legacyPrefs.materials,
+                        closing = legacyPrefs.closing
+                    ),
+                    quickNote = legacyPrefs.quickNote
+                )
+                _uiState.value = _uiState.value.copy(
+                    executionStates = _uiState.value.executionStates + (assignment.eventStaffId to migrated)
+                )
+                putExecutionState(assignment, migrated)
+                return@launch
+            }
+            if (_uiState.value.executionStates.containsKey(assignment.eventStaffId)) return@launch
+            try {
+                val state = staffRepository.getExecutionState(assignment.eventStaffId)
+                _uiState.value = _uiState.value.copy(
+                    executionStates = _uiState.value.executionStates + (assignment.eventStaffId to state)
+                )
+            } catch (_: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    executionStates = _uiState.value.executionStates + (assignment.eventStaffId to AssignmentExecutionState.DEFAULT)
+                )
+            }
+        }
+    }
+
+    fun putExecutionState(assignment: TeamMemberAssignment, state: AssignmentExecutionState) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                executionStates = _uiState.value.executionStates + (assignment.eventStaffId to state)
+            )
+            try {
+                staffRepository.putExecutionState(assignment.eventStaffId, state)
+            } catch (_: Exception) {
+                _uiState.value = _uiState.value.copy(errorMessage = "No pudimos guardar el checklist de ejecución.")
+            }
+        }
+    }
+
+    /** Shape legacy para migración desde SharedPreferences (pre-#875). */
+    data class LegacyExecutionState(
+        val arrival: Boolean = false,
+        val materials: Boolean = false,
+        val closing: Boolean = false,
+        val quickNote: String = ""
+    )
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
