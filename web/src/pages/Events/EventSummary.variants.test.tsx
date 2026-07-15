@@ -202,12 +202,6 @@ describe('EventSummary — header & display variants', () => {
     expect(screen.getAllByText(expectedLabel).length).toBeGreaterThanOrEqual(1);
   });
 
-  // TODO(contract-freeze-web): pre-existing fail — uses aria-label
-  // `/Estado del evento/i` that doesn't exist in StatusDropdown.tsx (only
-  // `/Estado: <label>. Clic para cambiar./i` exists). Was hidden by the
-  // EventSummary.test.tsx worker crash that prevented tests 17+ from ever
-  // running. Fix: update selector to match the real aria-label, verify
-  // "Estado del evento" isn't a stale spec from a prior refactor.
   it('closes status dropdown on outside click', async () => {
     render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
@@ -225,9 +219,6 @@ describe('EventSummary — header & display variants', () => {
     });
   });
 
-  // TODO(contract-freeze-web): pre-existing fail — same selector issue as
-  // "closes status dropdown on outside click". Fix: use
-  // `/Estado:.*Clic para cambiar/i` like in core.test.tsx.
   it('renders all four statuses in the dropdown', async () => {
     render(<MemoryRouter><EventSummary /></MemoryRouter>);
 

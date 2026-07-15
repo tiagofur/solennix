@@ -241,5 +241,61 @@ class KpiCalculatorTest {
         // Only e1 is in July; e2 is August.
         assertEquals(1000.0, deriveMonthlyRevenue(events, today))
     }
+
+    // --- deriveUpcomingEventsCount (extracted from KpiWidget, #852) ---
+
+    @Test
+    fun `upcoming count includes confirmed and quoted future events`() {
+        val events = listOf(
+            event("e1", totalAmount = 1000.0, status = EventStatus.CONFIRMED, date = today),
+            event("e2", totalAmount = 2000.0, status = EventStatus.QUOTED, date = today.plusDays(3))
+        )
+
+        assertEquals(2, deriveUpcomingEventsCount(events, today))
+    }
+
+    @Test
+    fun `upcoming count excludes cancelled events`() {
+        val events = listOf(
+            event("e1", totalAmount = 1000.0, status = EventStatus.CANCELLED, date = today),
+            event("e2", totalAmount = 500.0, status = EventStatus.CONFIRMED, date = today)
+        )
+
+        assertEquals(1, deriveUpcomingEventsCount(events, today))
+    }
+
+    @Test
+    fun `upcoming count excludes past events`() {
+        val events = listOf(
+            event("e1", totalAmount = 1000.0, status = EventStatus.CONFIRMED, date = today.minusDays(1)),
+            event("e2", totalAmount = 500.0, status = EventStatus.CONFIRMED, date = today)
+        )
+
+        assertEquals(1, deriveUpcomingEventsCount(events, today))
+    }
+
+    @Test
+    fun `upcoming count treats today as upcoming`() {
+        val events = listOf(
+            event("e1", totalAmount = 1000.0, status = EventStatus.COMPLETED, date = today)
+        )
+
+        assertEquals(1, deriveUpcomingEventsCount(events, today))
+    }
+
+    @Test
+    fun `upcoming count returns zero for empty list`() {
+        assertEquals(0, deriveUpcomingEventsCount(emptyList(), today))
+    }
+
+    @Test
+    fun `upcoming count discards events with unparseable dates`() {
+        val events = listOf(
+            event("e1", totalAmount = 1000.0, status = EventStatus.CONFIRMED, dateString = "invalid"),
+            event("e2", totalAmount = 500.0, status = EventStatus.CONFIRMED, date = today)
+        )
+
+        assertEquals(1, deriveUpcomingEventsCount(events, today))
+    }
 }
 
