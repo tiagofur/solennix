@@ -39,12 +39,12 @@ func writeEventCompletionBlockedError(w http.ResponseWriter, r *http.Request, re
 	})
 }
 
-// writePlanLimitError returns a structured 403 response for plan limit violations.
+// writePlanLimitError returns a localized structured 403 response for plan limit violations.
 // Clients can parse the "error" field to detect plan limits and show upgrade prompts.
-func writePlanLimitError(w http.ResponseWriter, limitType string, current, max int) {
+func writePlanLimitError(w http.ResponseWriter, r *http.Request, limitType string, current, max int) {
 	writeJSON(w, http.StatusForbidden, map[string]interface{}{
 		"error":   "plan_limit_exceeded",
-		"message": "Has alcanzado el limite de tu plan. Actualiza a Pro para continuar.",
+		"message": i18n.Message(r.Context(), "plan.limit_exceeded"),
 		"limit": map[string]interface{}{
 			"type":    limitType,
 			"current": current,

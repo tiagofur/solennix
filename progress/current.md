@@ -1,47 +1,33 @@
 # Sesión Activa — Solennix Agent Progress
 
 ## Feature en curso
-- **Issue:** #852 — test(android): Add PlanLimitsManager and widget KPI derivation tests
-- **Estado:** done (pendiente push + PR)
-- **Branch:** `fix/android-planlimits-widget-tests-852`
+- **Issue:** #902 — fix(backend): writePlanLimitError and dashboard errors not localized
+- **Estado:** done (pendiente commit + PR)
+- **Branch:** `fix/backend-i18n-plan-limit-dashboard-902`
 
-## Objetivo
-Cubrir los 3 gaps de tests más críticos del audit "Judgment Day" (A-027, A-028 / B-026):
-1. `PlanLimitsManager` — 0 tests directos (solo VM-level).
-2. Widget KPI derivation — 2 de 3 KPIs extraídos como funciones puras; `upcomingEvents` inline.
-3. `LocalCacheManager.clearAll()` — 0 tests (purge de logout, 9 tablas Room).
+## Root cause
+`writePlanLimitError` (`helpers.go`) emitía un string español hardcodeado en el campo `message`, sin importar el locale del request. Los 10 handlers de `dashboard_handler.go` usaban `writeError(w, ..., "<English>")` con strings English hardcodeados, inconsistente con el patrón `writeCRUDI18nError` que ya localiza vía `i18n.Message(r.Context(), key)`.
 
 ## Cambios
+- [x] `backend/internal/i18n/messages.go`: agregados 11 message keys nuevos a ambos catálogos (`es` + `en`):
+  - `plan.limit_exceeded` (namespace nuevo).
+  - 10 keys `dashboard.*`: `fetch_kpis_failed`, `invalid_period`, `fetch_revenue_chart_failed`, `invalid_scope`, `fetch_events_by_status_failed`, `fetch_top_clients_failed`, `fetch_product_demand_failed`, `fetch_forecast_failed`, `fetch_summary_failed`, `fetch_attention_failed`.
+  - Valores `en` = exactamente los strings English antes hardcodeados (preserva contrato de tests existentes, que no inyectan locale → fallback `NoContextLocale = "en"`).
+- [x] `backend/internal/handlers/helpers.go`: `writePlanLimitError` cambió signature a `(w, r *http.Request, limitType string, current, max int)` y reemplazó el string hardcodeado por `i18n.Message(r.Context(), "plan.limit_exceeded")`. El code `"plan_limit_exceeded"` y el struct `limit` se preservan (los clientes los parsean).
+- [x] 13 callers de `writePlanLimitError` actualizados para pasar `r` (staff_handler.go ×2, crud_handler.go ×9, event_form_handler.go ×2).
+- [x] `backend/internal/handlers/dashboard_handler.go`: 10 `writeError(w, ..., "<English>")` → `writeCRUDI18nError(w, r, ..., "<key>")`. Sin cambios de signature.
 
-### `PlanLimitsManagerTest.kt` (nuevo, 26 tests)
-`core/data/src/test/.../plan/PlanLimitsManagerTest.kt`
-- Caps free-tier BASIC matchean fixtures iOS (events=4, clients=20, products=15, inventory=30, catalog=20).
-- Umbrales near-limit/limit-reached: events (1-slot), clients (5-slot), products/inventory (3-slot).
-- **Catalog gate combinado**: dispara `LimitReached("catalog")` cuando products solos están bajo su cap pero products+inventory superan el cap de catálogo.
-- **Month range half-open**: `canCreateEvent` consulta `[firstOfMonth, firstOfNextMonth)` (distinto del inclusive de iOS — pinnado).
-- **Fallback offline user-scoped**: API failure → `getEventCountForMonth(userId, …)` con el id del usuario autenticado (tenant-scoped, nunca filas de otro user).
-- Paid plans short-circuit antes de contar.
-
-### `KpiCalculator.kt` + `KpiWidget.kt` (extracción)
-- Extraído `deriveUpcomingEventsCount(events, today)` de `KpiWidget.provideGlance` (estaba inline en suspend Glance method → no testeable). Preserva el filtro existente: `!date.isBefore(today) && status != CANCELLED`.
-- 2 imports sin uso removidos de `KpiWidget.kt` (`EventStatus`, `parseFlexibleDate`).
-
-### `KpiCalculatorTest.kt` (+6 tests, 24 total)
-- Boundary behavior del upcoming count: hoy cuenta, pasado excluido, cancelled excluido, quoted incluido, fechas inválidas descartadas.
-
-### `LocalCacheManagerTest.kt` (nuevo, 2 tests)
-- `clearAll()` invoca cada delete en los 7 DAOs exactamente una vez (events, clients, products, inventory, payments, event items, staff).
-- Tablas staff (`cached_staff`, `cached_event_staff`) se purgan — leak cross-tenant en logout si falta.
+## Tests
+- [x] `backend/internal/handlers/plan_limit_error_test.go` (nuevo, 3 tests): locale ES, locale EN, y fallback a EN cuando no hay locale. Verifica code `plan_limit_exceeded`, `message` localizado y struct `limit` (type/current/max).
+- [x] `backend/internal/handlers/dashboard_handler_test.go`: los 10 asserts English existentes siguen pasando (fallback EN). Agregados 2 tests nuevos cubriendo el path localizado ES: `TestDashboardErrors_LocalizedToSpanish` (table-driven, 8 handlers) + `TestDashboardErrors_LocalizedValidation` (invalid_period + invalid_scope en ES).
 
 ## Verificación
-- `:core:data:testDebugUnitTest`: PlanLimitsManagerTest 26/26, LocalCacheManagerTest 2/2
-- `:widget:testDebugUnitTest`: KpiCalculatorTest 24/24
-- `./init.sh`: verde (Go + Web 1371/1371)
+- `go test ./internal/i18n/ ./internal/handlers/`: verde.
+- `./init.sh`: verde global (Web 134 archivos / 1418 tests; Go OK).
 
 ## Notas
-- **Quirk pinnado**: el branch near-limit de inventory (`inventory >= 27`) está shadowed por el catalog gate (`catalog >= 20`) cuando no hay productos — con 0 products, `0+27=27 >= 20` dispara `LimitReached("catalog")` primero. Test lo documenta como comportamiento consciente.
-- Deep-link parsing ya estaba testeado (`DeepLinkRoutesTest`); la lógica park→replay de `MainNavHost.kt` está inline en Compose state (`rememberSaveable`) y necesitaría extracción para ser testeable — fuera de scope de este issue test-only.
-- Commits de limpieza suelta (iOS xcstrings + web TODOs) commiteados en `fix/mobile-team-portal-execution-sync-875` (2 commits) antes de arrancar esta rama.
+- Backend-only: sin propagación cross-platform. Los clientes ya parsean el code `plan_limit_exceeded` (machine-readable); solo el campo `message` humano cambia de locale.
+- Fuera de scope: strings English en `staff_handler.go` (`"Failed to verify staff limits"`, `"Failed to create staff"`) — no mencionados en #902.
 
 ## Bloqueos
 - Ninguno.

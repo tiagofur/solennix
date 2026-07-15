@@ -146,7 +146,7 @@ func (h *EventFormHandler) GenerateLink(w http.ResponseWriter, r *http.Request) 
 				return
 			}
 			if count >= basicLinkLimit {
-				writePlanLimitError(w, "event_form_links", count, basicLinkLimit)
+				writePlanLimitError(w, r, "event_form_links", count, basicLinkLimit)
 				return
 			}
 			if err := h.linkRepo.Create(r.Context(), link); err != nil {
@@ -156,7 +156,7 @@ func (h *EventFormHandler) GenerateLink(w http.ResponseWriter, r *http.Request) 
 			}
 		} else if err == ErrPlanLimitReached {
 			count, _ := h.linkRepo.CountActiveByUserID(r.Context(), userID)
-			writePlanLimitError(w, "event_form_links", count, basicLinkLimit)
+			writePlanLimitError(w, r, "event_form_links", count, basicLinkLimit)
 			return
 		} else if err != nil {
 			slog.Error("Failed to create event form link", "error", err)
