@@ -17,15 +17,18 @@ export default defineConfig({
     tsconfigPaths(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'favicon-dark.ico', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.svg', 'pwa-192x192.png'],
       manifest: {
         name: 'Solennix — Gestión de Eventos',
         short_name: 'Solennix',
         description: 'Plataforma profesional para organizadores de eventos. Gestiona clientes, cotizaciones, inventario y pagos.',
+        lang: 'es',
         theme_color: '#C4A265',
         background_color: '#F5F4F1',
         display: 'standalone',
-        orientation: 'portrait-primary',
+        // 'any' lets desktop installs resize freely instead of locking to
+        // portrait (mobile-first constraint felt wrong on macOS Windows #888).
+        orientation: 'any',
         start_url: '/dashboard',
         scope: '/',
         categories: ['business', 'productivity'],
