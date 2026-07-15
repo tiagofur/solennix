@@ -48,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.feature.settings.R
 import com.creapolis.solennix.feature.settings.viewmodel.SettingsViewModel
+import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,7 +73,7 @@ fun AccountDeletionScreen(
                     navigationIcon = {
                         if (!isDeletingOwnAccount && !deleteOwnAccountSuccess) {
                             IconButton(onClick = onNavigateBack) {
-                                Icon(Icons.Default.ArrowBack, contentDescription = null)
+                                Icon(Icons.Default.ArrowBack, contentDescription = stringResource(DesignSystemR.string.cd_back))
                             }
                         }
                     }
