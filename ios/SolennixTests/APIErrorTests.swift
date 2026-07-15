@@ -12,6 +12,7 @@ final class APIErrorTests: XCTestCase {
         XCTAssertEqual(APIError.unknown.errorDescription, "Ocurrio un error desconocido.")
         XCTAssertEqual(APIError.accountBlocked.errorDescription, "Tu cuenta fue suspendida. Contactá a soporte para más información.")
         XCTAssertEqual(APIError.accountDeleted.errorDescription, "Esta cuenta fue eliminada y ya no está disponible.")
+        XCTAssertEqual(APIError.queuedOffline.errorDescription, APIError.queuedOfflineUserMessage)
     }
 
     func testEventCompletionBlockedUsesBackendMessage() {
@@ -44,6 +45,7 @@ final class APIErrorTests: XCTestCase {
         XCTAssertEqual(APIError.unknown.userFacingMessage, "Ocurrió un error inesperado. Intentá de nuevo.")
         XCTAssertEqual(APIError.accountBlocked.userFacingMessage, "Tu cuenta fue suspendida. Contactá a soporte para más información.")
         XCTAssertEqual(APIError.accountDeleted.userFacingMessage, "Esta cuenta fue eliminada y ya no está disponible.")
+        XCTAssertEqual(APIError.queuedOffline.userFacingMessage, APIError.queuedOfflineUserMessage)
     }
 
     func testUserFacingMessageForStatusCodeUsesExpectedMappings() {

@@ -19,10 +19,53 @@ actor OfflineMutationQueue {
         self.userDefaults = userDefaults
     }
 
+    /// Enqueues a mutation. For PUT/PATCH/DELETE, coalesces by (method, endpoint)
+    /// so a newer body replaces any older queued full-state write to the same path
+    /// (prevents stale offline A clobbering a later online B after flush).
     func enqueue(_ mutation: QueuedMutation) {
         var current = load()
+        if Self.shouldCoalesce(method: mutation.method) {
+            current.removeAll {
+                $0.method == mutation.method && $0.endpoint == mutation.endpoint
+            }
+        }
         current.append(mutation)
         save(current)
+    }
+
+    /// Drops any queued mutations matching (method, endpoint).
+    /// Call after a successful live PUT/PATCH/DELETE so a later flush cannot
+    /// replay a stale offline body over fresher server state.
+    func removeMatching(method: String, endpoint: String) {
+        var current = load()
+        let before = current.count
+        current.removeAll { $0.method == method && $0.endpoint == endpoint }
+        if current.count != before {
+            save(current)
+        }
+    }
+
+    /// Removes a single mutation by stable id (flush success / permanent drop).
+    /// No-ops when the id is already gone (e.g. concurrent `removeMatching`).
+    /// Never rewrites the rest of the queue from a frozen snapshot.
+    @discardableResult
+    func remove(id: String) -> Bool {
+        var current = load()
+        let before = current.count
+        current.removeAll { $0.id == id }
+        guard current.count != before else { return false }
+        save(current)
+        return true
+    }
+
+    /// True when a mutation with this id is still pending.
+    func contains(id: String) -> Bool {
+        load().contains { $0.id == id }
+    }
+
+    /// Head of the current queue, or nil when empty. Re-read between flush steps.
+    func peekFirst() -> QueuedMutation? {
+        load().first
     }
 
     func dequeueAll() -> [QueuedMutation] {
@@ -32,13 +75,20 @@ actor OfflineMutationQueue {
     }
 
     /// Returns all pending mutations without removing them from storage.
-    /// Use this in the flush path to allow crash-safe incremental removal.
     func peekAll() -> [QueuedMutation] {
         load()
     }
 
+    /// Full overwrite — avoid in flush paths after awaits (races concurrent
+    /// enqueue / removeMatching). Prefer `remove(id:)` for incremental progress.
     func replace(with items: [QueuedMutation]) {
         save(items)
+    }
+
+    /// Idempotent full/partial replace and delete — safe to keep only latest body.
+    /// POST creates are not coalesced (multiple creates to the same path are distinct).
+    static func shouldCoalesce(method: String) -> Bool {
+        method == "PUT" || method == "PATCH" || method == "DELETE"
     }
 
     private func load() -> [QueuedMutation] {

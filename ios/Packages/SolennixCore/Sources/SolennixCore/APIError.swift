@@ -16,6 +16,13 @@ public enum APIError: LocalizedError, Sendable {
     case accountDeleted
     /// Thrown when the backend returns 400 `{ error: "event.completion_blocked" }`.
     case eventCompletionBlocked(message: String, remaining: Double, currency: String)
+    /// Mutation accepted into the offline queue; will be sent on reconnect.
+    /// Prefer this typed signal over parsing localized `networkError` copy.
+    case queuedOffline
+
+    /// Canonical Spanish copy for offline-queue acceptance toasts.
+    public static let queuedOfflineUserMessage =
+        "Sin conexión: guardamos tu cambio y se enviará automáticamente al reconectarte."
 
     public var errorDescription: String? {
         switch self {
@@ -37,6 +44,8 @@ public enum APIError: LocalizedError, Sendable {
             return "Esta cuenta fue eliminada y ya no está disponible."
         case .eventCompletionBlocked(let message, _, _):
             return message
+        case .queuedOffline:
+            return Self.queuedOfflineUserMessage
         }
     }
 
@@ -62,6 +71,8 @@ public enum APIError: LocalizedError, Sendable {
             return "Esta cuenta fue eliminada y ya no está disponible."
         case .eventCompletionBlocked(let message, _, _):
             return message
+        case .queuedOffline:
+            return Self.queuedOfflineUserMessage
         }
     }
 

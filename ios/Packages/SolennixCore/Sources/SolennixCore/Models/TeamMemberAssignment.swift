@@ -73,14 +73,12 @@ public struct ExecutionChecklist: Codable, Sendable, Equatable {
     }
 }
 
+/// Key decoding relies on `APIClient`'s global `.convertFromSnakeCase` /
+/// `.convertToSnakeCase` strategies — do NOT add explicit `CodingKeys`
+/// (they'd double-map `quickNote` → `quick_note` → `quick__note`).
 public struct AssignmentExecutionState: Codable, Sendable, Equatable {
     public var checklist: ExecutionChecklist
     public var quickNote: String
-
-    enum CodingKeys: String, CodingKey {
-        case checklist
-        case quickNote = "quick_note"
-    }
 
     public init(checklist: ExecutionChecklist = ExecutionChecklist(), quickNote: String = "") {
         self.checklist = checklist
@@ -88,4 +86,7 @@ public struct AssignmentExecutionState: Codable, Sendable, Equatable {
     }
 
     public static let defaultState = AssignmentExecutionState()
+
+    /// True when every field matches a freshly-created empty state.
+    public var isDefault: Bool { self == .defaultState }
 }

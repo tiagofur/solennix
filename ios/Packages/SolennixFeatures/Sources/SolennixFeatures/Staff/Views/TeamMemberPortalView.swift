@@ -106,6 +106,13 @@ public struct TeamMemberPortalView: View {
         } else {
             ScrollView {
                 LazyVStack(spacing: Spacing.md) {
+                    // Surface save/load errors while the list is populated (#875).
+                    if let errorMessage = viewModel.errorMessage {
+                        InlineErrorBanner(message: errorMessage) {
+                            Task { await viewModel.loadAssignments() }
+                        }
+                    }
+
                     Picker(tr("team_portal.section_label", "Seccion"), selection: $section) {
                         Text(tr("team_portal.my_day", "Mi jornada")).tag(TeamMemberSection.work)
                         Text(tr("calendar.title", "Calendario")).tag(TeamMemberSection.calendar)
@@ -1103,9 +1110,43 @@ private struct TeamPortalAssignmentDetailSheet: View {
     let assignment: TeamMemberAssignment
     @Bindable var viewModel: TeamMemberPortalViewModel
 
+    private var loadState: TeamMemberPortalViewModel.ExecutionLoadState {
+        viewModel.executionLoadStates[assignment.eventStaffId] ?? .idle
+    }
+
+    private var isEditingEnabled: Bool {
+        viewModel.isExecutionEditingEnabled(for: assignment)
+    }
+
     var body: some View {
         NavigationStack {
             List {
+                if let executionError = viewModel.executionErrorMessages[assignment.eventStaffId],
+                   loadState != .failed {
+                    // Save / note-length errors for THIS assignment only (#875).
+                    // Load failures use the dedicated failed section below (correct retry).
+                    Section {
+                        VStack(alignment: .leading, spacing: Spacing.sm) {
+                            Text(executionError)
+                                .font(.footnote)
+                                .foregroundStyle(SolennixColors.error)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            if loadState == .ready {
+                                Button(tr("team_portal.retry", "Reintentar")) {
+                                    Task {
+                                        await viewModel.persistExecutionState(
+                                            for: assignment,
+                                            debounce: false
+                                        )
+                                    }
+                                }
+                                .accessibilityIdentifier("team_portal.execution_save_retry")
+                            }
+                        }
+                        .accessibilityIdentifier("team_portal.execution_error")
+                    }
+                }
+
                 Section(tr("team_portal.event_section", "Evento")) {
                     detailRow(tr("clients.form.name", "Nombre"), assignment.eventName)
                     detailRow(tr("team_portal.date_label", "Fecha"), assignment.eventDate)
@@ -1133,15 +1174,46 @@ private struct TeamPortalAssignmentDetailSheet: View {
                     }
                 }
 
-                Section(tr("events.detail.documents.checklist", "Checklist")) {
-                    Toggle(tr("team_portal.arrival_ready", "Llegada y acceso confirmados"), isOn: binding(\.checklist.arrival))
-                    Toggle(tr("team_portal.material_ready", "Material y montaje listos"), isOn: binding(\.checklist.materials))
-                    Toggle(tr("team_portal.closing_done", "Cierre operativo completado"), isOn: binding(\.checklist.closing))
-                }
+                switch loadState {
+                case .idle, .loading:
+                    Section(tr("events.detail.documents.checklist", "Checklist")) {
+                        HStack {
+                            ProgressView()
+                            Text(tr("team_portal.execution_loading", "Cargando checklist…"))
+                                .font(.subheadline)
+                                .foregroundStyle(SolennixColors.textSecondary)
+                        }
+                        .accessibilityIdentifier("team_portal.execution_loading")
+                    }
+                case .failed:
+                    Section(tr("events.detail.documents.checklist", "Checklist")) {
+                        Text(
+                            viewModel.executionErrorMessages[assignment.eventStaffId]
+                                ?? tr(
+                                    "team_portal.execution_load_error",
+                                    "No pudimos cargar el checklist de ejecución."
+                                )
+                        )
+                        .font(.footnote)
+                        .foregroundStyle(SolennixColors.error)
+                        Button(tr("team_portal.retry", "Reintentar")) {
+                            Task { await viewModel.loadExecutionState(for: assignment) }
+                        }
+                        .accessibilityIdentifier("team_portal.execution_retry")
+                    }
+                case .ready:
+                    Section(tr("events.detail.documents.checklist", "Checklist")) {
+                        Toggle(tr("team_portal.arrival_ready", "Llegada y acceso confirmados"), isOn: checklistBinding(\.checklist.arrival))
+                        Toggle(tr("team_portal.material_ready", "Material y montaje listos"), isOn: checklistBinding(\.checklist.materials))
+                        Toggle(tr("team_portal.closing_done", "Cierre operativo completado"), isOn: checklistBinding(\.checklist.closing))
+                    }
+                    .disabled(!isEditingEnabled)
 
-                Section(tr("team_portal.quick_notes", "Notas rápidas")) {
-                    TextEditor(text: binding(\.quickNote))
-                        .frame(minHeight: 110)
+                    Section(tr("team_portal.quick_notes", "Notas rápidas")) {
+                        TextEditor(text: noteBinding)
+                            .frame(minHeight: 110)
+                            .disabled(!isEditingEnabled)
+                    }
                 }
             }
             .navigationTitle(tr("events.detail.title", "Detalle del evento"))
@@ -1152,16 +1224,31 @@ private struct TeamPortalAssignmentDetailSheet: View {
         }
     }
 
-    /// Binding de dos niveles dentro del executionState cacheado del ViewModel.
-    /// Cada cambio dispara el save optimista al server (#875).
-    private func binding<T>(_ keyPath: WritableKeyPath<AssignmentExecutionState, T>) -> Binding<T> {
+    /// Checklist toggles write the local cache synchronously, then persist immediately.
+    private func checklistBinding(_ keyPath: WritableKeyPath<AssignmentExecutionState, Bool>) -> Binding<Bool> {
         Binding(
             get: { viewModel.executionStates[assignment.eventStaffId, default: .defaultState][keyPath: keyPath] },
             set: { newValue in
+                guard viewModel.isExecutionEditingEnabled(for: assignment) else { return }
                 var state = viewModel.executionStates[assignment.eventStaffId, default: .defaultState]
                 state[keyPath: keyPath] = newValue
-                viewModel.executionStates[assignment.eventStaffId] = state
-                Task { await viewModel.saveExecutionState(for: assignment, state: state) }
+                // Sync cache write BEFORE any Task so multi-field edits never clobber.
+                viewModel.applyLocalExecutionState(state, for: assignment)
+                Task { await viewModel.persistExecutionState(for: assignment, debounce: false) }
+            }
+        )
+    }
+
+    /// Quick notes write the local cache synchronously; PUT is debounced ~400ms.
+    private var noteBinding: Binding<String> {
+        Binding(
+            get: { viewModel.executionStates[assignment.eventStaffId, default: .defaultState].quickNote },
+            set: { newValue in
+                guard viewModel.isExecutionEditingEnabled(for: assignment) else { return }
+                var state = viewModel.executionStates[assignment.eventStaffId, default: .defaultState]
+                state.quickNote = newValue
+                viewModel.applyLocalExecutionState(state, for: assignment)
+                Task { await viewModel.persistExecutionState(for: assignment, debounce: true) }
             }
         )
     }
