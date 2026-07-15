@@ -45,6 +45,29 @@ actor OfflineMutationQueue {
         }
     }
 
+    /// Removes a single mutation by stable id (flush success / permanent drop).
+    /// No-ops when the id is already gone (e.g. concurrent `removeMatching`).
+    /// Never rewrites the rest of the queue from a frozen snapshot.
+    @discardableResult
+    func remove(id: String) -> Bool {
+        var current = load()
+        let before = current.count
+        current.removeAll { $0.id == id }
+        guard current.count != before else { return false }
+        save(current)
+        return true
+    }
+
+    /// True when a mutation with this id is still pending.
+    func contains(id: String) -> Bool {
+        load().contains { $0.id == id }
+    }
+
+    /// Head of the current queue, or nil when empty. Re-read between flush steps.
+    func peekFirst() -> QueuedMutation? {
+        load().first
+    }
+
     func dequeueAll() -> [QueuedMutation] {
         let current = load()
         save([])
@@ -52,11 +75,12 @@ actor OfflineMutationQueue {
     }
 
     /// Returns all pending mutations without removing them from storage.
-    /// Use this in the flush path to allow crash-safe incremental removal.
     func peekAll() -> [QueuedMutation] {
         load()
     }
 
+    /// Full overwrite — avoid in flush paths after awaits (races concurrent
+    /// enqueue / removeMatching). Prefer `remove(id:)` for incremental progress.
     func replace(with items: [QueuedMutation]) {
         save(items)
     }

@@ -584,17 +584,15 @@ public actor APIClient {
             return
         }
 
-        // Peek without clearing — items are removed from persistent storage only after
-        // each one is successfully sent (or permanently dropped). This makes the flush
-        // crash-safe: if the app is killed mid-flush, surviving mutations are replayed
-        // on the next launch rather than silently lost.
-        let pendingMutations = await offlineMutationQueue.peekAll()
-        guard !pendingMutations.isEmpty else { return }
-
-        var index = 0
-
-        while index < pendingMutations.count {
-            let mutation = pendingMutations[index]
+        // Process one mutation at a time from *current* storage. On success/drop
+        // remove that id only — never `replace` with a frozen snapshot remainder
+        // (that races concurrent enqueue / removeMatching and can reintroduce
+        // stale bodies or wipe fresher work).
+        while let mutation = await offlineMutationQueue.peekFirst() {
+            // Skip if a concurrent live write already dropped this id.
+            guard await offlineMutationQueue.contains(id: mutation.id) else {
+                continue
+            }
 
             do {
                 var request = try buildRequest(mutation.endpoint, method: mutation.method)
@@ -603,41 +601,67 @@ public actor APIClient {
                     request.httpBody = Data(base64Encoded: bodyBase64)
                 }
 
+                // If removeMatching/coalesce dropped this id while we built the
+                // request, skip the network send so we do not replay a stale body.
+                guard await offlineMutationQueue.contains(id: mutation.id) else {
+                    continue
+                }
+
                 let (_, httpResponse) = try await performReturningResponse(request)
-                _ = httpResponse // success — remove this item from persistent storage
-                index += 1
-                // Persist the remaining queue (items not yet sent) after each success.
-                // If the app is killed here, only the just-sent item is gone; the rest survive.
-                await offlineMutationQueue.replace(with: Array(pendingMutations[index...]))
+                _ = httpResponse
+                await offlineMutationQueue.remove(id: mutation.id)
             } catch let flushError as FlushError {
                 switch flushError {
                 case .rateLimited(let retryAfter):
-                    // Backend asked us to back off. Stop the current flush, keep all
-                    // remaining mutations (including the rate-limited one), and record
-                    // the earliest time the next flush attempt is allowed.
+                    // Keep the rate-limited mutation and everything after it.
                     let delay = TimeInterval(retryAfter)
                     nextFlushAllowedAt = Date().addingTimeInterval(delay)
-                    // Queue already contains these items (we peeked, not dequeued).
-                    // Replace with the remaining slice to truncate any already-sent ones.
-                    await offlineMutationQueue.replace(with: Array(pendingMutations[index...]))
                     return
                 }
             } catch let apiError as APIError {
                 switch apiError {
                 case .serverError(let statusCode, _) where Self.shouldDropReplay(statusCode: statusCode):
-                    // Permanent client-side error: drop this mutation and continue.
-                    index += 1
-                    await offlineMutationQueue.replace(with: Array(pendingMutations[index...]))
+                    // Permanent client-side error: drop and notify listeners.
+                    await offlineMutationQueue.remove(id: mutation.id)
+                    Self.postOfflineMutationDropped(
+                        method: mutation.method,
+                        endpoint: mutation.endpoint,
+                        statusCode: statusCode
+                    )
+                    continue
                 default:
-                    // Transient error — leave remaining items in the queue and stop.
-                    await offlineMutationQueue.replace(with: Array(pendingMutations[index...]))
+                    // Transient error — leave queue untouched and stop.
                     return
                 }
             } catch {
-                await offlineMutationQueue.replace(with: Array(pendingMutations[index...]))
                 return
             }
         }
+    }
+
+    /// Posted when flush permanently drops a mutation (4xx / shouldDropReplay).
+    /// `userInfo` keys: `method`, `endpoint`, optional `statusCode`.
+    public static let offlineMutationDroppedNotification = Notification.Name(
+        "solennix.offlineMutation.dropped"
+    )
+    public static let offlineMutationDroppedMethodKey = "method"
+    public static let offlineMutationDroppedEndpointKey = "endpoint"
+    public static let offlineMutationDroppedStatusCodeKey = "statusCode"
+
+    private static func postOfflineMutationDropped(
+        method: String,
+        endpoint: String,
+        statusCode: Int
+    ) {
+        NotificationCenter.default.post(
+            name: offlineMutationDroppedNotification,
+            object: nil,
+            userInfo: [
+                offlineMutationDroppedMethodKey: method,
+                offlineMutationDroppedEndpointKey: endpoint,
+                offlineMutationDroppedStatusCodeKey: statusCode
+            ]
+        )
     }
 
     /// Executes a URLRequest and returns the decoded data alongside the raw HTTP response.

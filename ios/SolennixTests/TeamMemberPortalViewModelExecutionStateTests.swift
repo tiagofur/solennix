@@ -1349,6 +1349,209 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         XCTAssertEqual(getCount, 1, "concurrent callers must share a single GET")
         XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
         XCTAssertEqual(viewModel.executionStates[assignment.eventStaffId]?.quickNote, "joined")
+        XCTAssertEqual(viewModel.executionServerSeeded[assignment.eventStaffId], true)
+    }
+
+    // MARK: - Hard PUT rollback rewrites legacy (#875 R6)
+
+    @MainActor
+    func testSaveExecutionState_HardPutFail_RewritesLegacyToRollback() async throws {
+        let eventId = "ev_put_fail_legacy"
+        let assignment = try makeAssignment(eventStaffId: "es_put_fail_legacy", eventId: eventId)
+        try seedLegacy(eventId: eventId, arrival: true, materials: false, quickNote: "baseline")
+        defer { clearLegacy(eventId: eventId) }
+
+        var putCount = 0
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                // Server default → migrate offline-queues and keeps legacy.
+                return okResponse(url: url, data: executionStateJSON())
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                putCount += 1
+                if putCount == 1 {
+                    // Offline migrate path.
+                    throw URLError(.notConnectedToInternet)
+                }
+                // Live edit fails hard — memory + legacy must both roll back.
+                return errorResponse(url: url, status: 422)
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+
+        let failed = AssignmentExecutionState(
+            checklist: ExecutionChecklist(arrival: true, materials: true, closing: true),
+            quickNote: "should roll back"
+        )
+        await viewModel.saveExecutionState(for: assignment, state: failed, debounce: false)
+
+        let after = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
+        XCTAssertFalse(after.checklist.materials, "memory rolls back materials")
+        XCTAssertFalse(after.checklist.closing)
+        XCTAssertEqual(after.quickNote, "baseline")
+
+        let key = TeamMemberPortalViewModel.legacyDefaultsKey(eventId: eventId)
+        let data = try XCTUnwrap(UserDefaults.standard.data(forKey: key))
+        struct Blob: Decodable {
+            var arrivalReady: Bool
+            var materialsReady: Bool
+            var closingDone: Bool
+            var quickNote: String
+        }
+        let blob = try JSONDecoder().decode(Blob.self, from: data)
+        XCTAssertEqual(blob.quickNote, "baseline", "legacy must match rolled-back memory")
+        XCTAssertFalse(blob.materialsReady)
+        XCTAssertFalse(blob.closingDone)
+    }
+
+    // MARK: - Note merge equal-length distinct prefers legacy (#875 R6)
+
+    func testMergeExecutionStates_EqualLengthDifferentNotes_PrefersLegacy() {
+        let server = AssignmentExecutionState(
+            checklist: ExecutionChecklist(arrival: true, materials: false, closing: false),
+            quickNote: "server!!"
+        )
+        let legacy = AssignmentExecutionState(
+            checklist: ExecutionChecklist(arrival: false, materials: true, closing: false),
+            quickNote: "legacy!!"
+        )
+        XCTAssertEqual(server.quickNote.count, legacy.quickNote.count)
+        XCTAssertNotEqual(server.quickNote, legacy.quickNote)
+
+        let merged = TeamMemberPortalViewModel.mergeExecutionStates(server: server, legacy: legacy)
+        XCTAssertEqual(merged.quickNote, "legacy!!", "equal-length distinct → prefer legacy")
+        XCTAssertTrue(merged.checklist.arrival)
+        XCTAssertTrue(merged.checklist.materials)
+        // Merged differs from server → caller must not drop legacy without PUT ack.
+        XCTAssertNotEqual(merged, server)
+    }
+
+    func testMergeExecutionStates_ServerLongerWins_EmptyTakesNonEmpty() {
+        let serverLong = AssignmentExecutionState(
+            checklist: .init(arrival: false, materials: false, closing: false),
+            quickNote: "server is longer here"
+        )
+        let legacyShort = AssignmentExecutionState(
+            checklist: .init(arrival: false, materials: false, closing: false),
+            quickNote: "short"
+        )
+        XCTAssertEqual(
+            TeamMemberPortalViewModel.mergeExecutionStates(server: serverLong, legacy: legacyShort).quickNote,
+            "server is longer here"
+        )
+
+        let serverEmpty = AssignmentExecutionState(
+            checklist: .init(arrival: false, materials: false, closing: false),
+            quickNote: ""
+        )
+        let legacyNote = AssignmentExecutionState(
+            checklist: .init(arrival: false, materials: false, closing: false),
+            quickNote: "only legacy"
+        )
+        XCTAssertEqual(
+            TeamMemberPortalViewModel.mergeExecutionStates(server: serverEmpty, legacy: legacyNote).quickNote,
+            "only legacy"
+        )
+    }
+
+    // MARK: - Offline seed re-GETs on next open (#875 R6)
+
+    @MainActor
+    func testLoadExecutionState_OfflineSeed_RegetsOnNextOpen() async throws {
+        let eventId = "ev_offline_reget"
+        let assignment = try makeAssignment(eventStaffId: "es_offline_reget", eventId: eventId)
+        try seedLegacy(eventId: eventId, arrival: true, materials: true, quickNote: "offline progress")
+        defer { clearLegacy(eventId: eventId) }
+
+        var getCount = 0
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                getCount += 1
+                if getCount == 1 {
+                    return errorResponse(url: url, status: 422)
+                }
+                // Second open: server now has a value (covers legacy → drop blob).
+                return okResponse(
+                    url: url,
+                    data: executionStateJSON(
+                        arrival: true,
+                        materials: true,
+                        quickNote: "offline progress"
+                    )
+                )
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                return okResponse(url: url, data: request.httpBody ?? Data())
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+        XCTAssertEqual(getCount, 1)
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+        XCTAssertEqual(
+            viewModel.executionServerSeeded[assignment.eventStaffId],
+            false,
+            "GET-fail seed must not mark server-seeded"
+        )
+        XCTAssertEqual(
+            viewModel.executionStates[assignment.eventStaffId]?.quickNote,
+            "offline progress"
+        )
+
+        // Second open must not short-circuit — soft-revalidate re-GETs.
+        await viewModel.loadExecutionState(for: assignment)
+        XCTAssertEqual(getCount, 2, "next open must re-GET when not server-seeded")
+        XCTAssertEqual(viewModel.executionServerSeeded[assignment.eventStaffId], true)
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+        XCTAssertEqual(
+            viewModel.executionStates[assignment.eventStaffId]?.quickNote,
+            "offline progress"
+        )
+
+        // Third open short-circuits once server-seeded.
+        await viewModel.loadExecutionState(for: assignment)
+        XCTAssertEqual(getCount, 2, "server-seeded ready must short-circuit further GETs")
+    }
+
+    // MARK: - Offline mutation drop notification surfaces dirty state
+
+    @MainActor
+    func testOfflineMutationDropped_SurfacesExecutionErrorAndClearsServerSeeded() async throws {
+        let assignment = try makeAssignment(eventStaffId: "es_drop_notify", eventId: "ev_drop_notify")
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                return okResponse(url: url, data: executionStateJSON(arrival: true, quickNote: "ok"))
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+        XCTAssertEqual(viewModel.executionServerSeeded[assignment.eventStaffId], true)
+
+        NotificationCenter.default.post(
+            name: APIClient.offlineMutationDroppedNotification,
+            object: nil,
+            userInfo: [
+                APIClient.offlineMutationDroppedMethodKey: "PUT",
+                APIClient.offlineMutationDroppedEndpointKey:
+                    "/staff/assignments/\(assignment.eventStaffId)/execution-state",
+                APIClient.offlineMutationDroppedStatusCodeKey: 422
+            ]
+        )
+        // Observer dispatches via Task { @MainActor } — yield once.
+        await Task.yield()
+        try await Task.sleep(nanoseconds: 20_000_000)
+
+        XCTAssertEqual(viewModel.executionServerSeeded[assignment.eventStaffId], false)
+        XCTAssertNotNil(viewModel.executionErrorMessages[assignment.eventStaffId])
     }
 }
 

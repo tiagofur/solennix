@@ -170,6 +170,86 @@ final class OfflineMutationQueueTests: XCTestCase {
         XCTAssertFalse(pending.contains { $0.id == "stale" })
     }
 
+    /// Regression (#875 R6): flush must remove by id, never rewrite from a frozen
+    /// snapshot. Simulates: peek A → concurrent removeMatching(A)+enqueue(C) →
+    /// remove(id: A) must not reintroduce A or drop C.
+    func testFlushRemoveById_DoesNotReintroduceRemovedOrDropConcurrentEnqueue() async {
+        let defaults = makeIsolatedDefaults()
+        let queue = OfflineMutationQueue(userDefaults: defaults)
+        let endpointA = "/staff/assignments/es_a/execution-state"
+        let endpointC = "/staff/assignments/es_c/execution-state"
+
+        let mutationA = QueuedMutation(
+            id: "A",
+            endpoint: endpointA,
+            method: "PUT",
+            bodyBase64: Data(#"{"quick_note":"A"}"#.utf8).base64EncodedString(),
+            idempotencyKey: "k-a",
+            createdAt: Date()
+        )
+        await queue.enqueue(mutationA)
+
+        // Flush peeks frozen head A (old buggy path kept a full snapshot).
+        let peekedHead = await queue.peekFirst()
+        XCTAssertEqual(peekedHead?.id, "A")
+
+        // Concurrent live success drops A; a newer mutation C is enqueued.
+        await queue.removeMatching(method: "PUT", endpoint: endpointA)
+        await queue.enqueue(
+            QueuedMutation(
+                id: "C",
+                endpoint: endpointC,
+                method: "PUT",
+                bodyBase64: Data(#"{"quick_note":"C"}"#.utf8).base64EncodedString(),
+                idempotencyKey: "k-c",
+                createdAt: Date()
+            )
+        )
+
+        // Correct flush: remove by id only (A already gone → no-op).
+        let removed = await queue.remove(id: "A")
+        XCTAssertFalse(removed, "A was already removed by removeMatching")
+
+        let pending = await queue.peekAll()
+        XCTAssertEqual(pending.map(\.id), ["C"], "C must survive; A must not reappear")
+        XCTAssertFalse(pending.contains { $0.id == "A" })
+
+        // Contrast: the old replace(with: remainder-of-snapshot) would reintroduce A
+        // and wipe C. Document that replace is unsafe after concurrent mutations.
+        await queue.replace(with: [mutationA]) // simulate stale snapshot remainder
+        let afterBadReplace = await queue.peekAll()
+        XCTAssertEqual(afterBadReplace.map(\.id), ["A"], "stale replace reintroduces A / drops C")
+        // Recover for isolation cleanliness.
+        await queue.replace(with: [])
+    }
+
+    func testRemoveById_NoopsWhenMissing_AndRemovesWhenPresent() async {
+        let defaults = makeIsolatedDefaults()
+        let queue = OfflineMutationQueue(userDefaults: defaults)
+
+        await queue.enqueue(
+            QueuedMutation(
+                id: "x",
+                endpoint: "/events",
+                method: "POST",
+                bodyBase64: nil,
+                idempotencyKey: "k",
+                createdAt: Date()
+            )
+        )
+
+        let hasX = await queue.contains(id: "x")
+        XCTAssertTrue(hasX)
+        let removedOnce = await queue.remove(id: "x")
+        XCTAssertTrue(removedOnce)
+        let stillHasX = await queue.contains(id: "x")
+        XCTAssertFalse(stillHasX)
+        let removedTwice = await queue.remove(id: "x")
+        XCTAssertFalse(removedTwice)
+        let remaining = await queue.peekAll()
+        XCTAssertTrue(remaining.isEmpty)
+    }
+
     private func makeIsolatedDefaults() -> UserDefaults {
         let suiteName = "OfflineMutationQueueTests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
