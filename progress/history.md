@@ -551,3 +551,20 @@ Cubrió los 3 gaps de tests más críticos del audit "Judgment Day" (A-027, A-02
 - Widget KPI derivation tests + `LocalCacheManager.clearAll()` tests.
 
 (Resumen migrado desde `progress/current.md` al iniciar sesión #902.)
+
+---
+
+## #902 — fix(backend): writePlanLimitError and dashboard errors not localized
+- **PR:** #1012 (merged, squash)
+- **Branch:** `fix/backend-i18n-plan-limit-dashboard-902`
+
+### Resumen
+`writePlanLimitError` emitía español hardcodeado sin importar el locale; los 10 handlers del dashboard usaban English hardcodeado, inconsistente con el patrón `writeCRUDI18nError`.
+
+### Cambios
+- `i18n/messages.go`: +11 keys (`plan.limit_exceeded`, 10 `dashboard.*`) en catálogos `es`+`en`.
+- `helpers.go`: `writePlanLimitError` ahora toma `r *http.Request` y usa `i18n.Message`. 13 callers actualizados.
+- `dashboard_handler.go`: 10 `writeError` → `writeCRUDI18nError`.
+- Tests: `plan_limit_error_test.go` (nuevo, 3) + 10 tests dashboard localizados ES.
+
+(Resumen migrado desde `progress/current.md` al iniciar sesión #904.)

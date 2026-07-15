@@ -306,6 +306,22 @@ func (h *CRUDHandler) ListEvents(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	start := r.URL.Query().Get("start")
 	end := r.URL.Query().Get("end")
+
+	// Backward-compat aliases for iOS clients (issue #904). The canonical
+	// params are "start"/"end"; "start_date"/"end_date" are accepted as a
+	// safety net during the iOS migration (#799) and logged for deprecation.
+	if start == "" {
+		if v := r.URL.Query().Get("start_date"); v != "" {
+			slog.Warn("events: deprecated query param 'start_date' used; use 'start'", "user_id", userID)
+			start = v
+		}
+	}
+	if end == "" {
+		if v := r.URL.Query().Get("end_date"); v != "" {
+			slog.Warn("events: deprecated query param 'end_date' used; use 'end'", "user_id", userID)
+			end = v
+		}
+	}
 	clientID := r.URL.Query().Get("client_id")
 
 	// Filtered queries don't support pagination (they return subsets already)

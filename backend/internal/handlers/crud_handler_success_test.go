@@ -1606,6 +1606,47 @@ func TestListEvents_DateRange_PlainDate_Success(t *testing.T) {
 	}
 }
 
+// TestListEvents_DateRange_StartDateEndDateAlias_Success verifies the iOS-compat
+// aliases (issue #904): start_date/end_date resolve to the same date-range path.
+func TestListEvents_DateRange_StartDateEndDateAlias_Success(t *testing.T) {
+	userID := uuid.New()
+	eventRepo := new(MockFullEventRepo)
+
+	eventRepo.On("GetByDateRange", mock.Anything, userID, "2026-03-01", "2026-03-31").Return([]models.Event{}, nil)
+
+	h := newTestHandler(new(MockClientRepo), eventRepo, new(MockProductRepo), new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))
+
+	req := makeReqWithUserID(http.MethodGet, "/api/events?start_date=2026-03-01&end_date=2026-03-31", "", userID)
+	rr := httptest.NewRecorder()
+	h.ListEvents(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusOK, rr.Body.String())
+	}
+	eventRepo.AssertExpectations(t)
+}
+
+// TestListEvents_DateRange_CanonicalParamWins_Success verifies that when both
+// the canonical (start/end) and alias (start_date/end_date) params are sent,
+// the canonical value takes precedence (issue #904).
+func TestListEvents_DateRange_CanonicalParamWins_Success(t *testing.T) {
+	userID := uuid.New()
+	eventRepo := new(MockFullEventRepo)
+
+	eventRepo.On("GetByDateRange", mock.Anything, userID, "2026-01-01", "2026-01-31").Return([]models.Event{}, nil)
+
+	h := newTestHandler(new(MockClientRepo), eventRepo, new(MockProductRepo), new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))
+
+	req := makeReqWithUserID(http.MethodGet, "/api/events?start=2026-01-01&end=2026-01-31&start_date=2026-03-01&end_date=2026-03-31", "", userID)
+	rr := httptest.NewRecorder()
+	h.ListEvents(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusOK, rr.Body.String())
+	}
+	eventRepo.AssertExpectations(t)
+}
+
 func TestListEvents_ByClientID_Success(t *testing.T) {
 	userID := uuid.New()
 	clientID := uuid.New()
@@ -1703,7 +1744,6 @@ func TestListClients_Paginated_NoSearch(t *testing.T) {
 		t.Fatalf("paginated no-search: status = %d, want %d, body=%s", rr.Code, http.StatusOK, rr.Body.String())
 	}
 }
-
 
 func TestGetClient_Success(t *testing.T) {
 	userID := uuid.New()
