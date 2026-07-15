@@ -610,6 +610,10 @@ public actor APIClient {
                 let (_, httpResponse) = try await performReturningResponse(request)
                 _ = httpResponse
                 await offlineMutationQueue.remove(id: mutation.id)
+                Self.postOfflineMutationFlushed(
+                    method: mutation.method,
+                    endpoint: mutation.endpoint
+                )
             } catch let flushError as FlushError {
                 switch flushError {
                 case .rateLimited(let retryAfter):
@@ -648,6 +652,14 @@ public actor APIClient {
     public static let offlineMutationDroppedEndpointKey = "endpoint"
     public static let offlineMutationDroppedStatusCodeKey = "statusCode"
 
+    /// Posted when flush successfully sends a queued mutation.
+    /// `userInfo` keys: `method`, `endpoint`.
+    public static let offlineMutationFlushedNotification = Notification.Name(
+        "solennix.offlineMutation.flushed"
+    )
+    public static let offlineMutationFlushedMethodKey = "method"
+    public static let offlineMutationFlushedEndpointKey = "endpoint"
+
     private static func postOfflineMutationDropped(
         method: String,
         endpoint: String,
@@ -660,6 +672,20 @@ public actor APIClient {
                 offlineMutationDroppedMethodKey: method,
                 offlineMutationDroppedEndpointKey: endpoint,
                 offlineMutationDroppedStatusCodeKey: statusCode
+            ]
+        )
+    }
+
+    private static func postOfflineMutationFlushed(
+        method: String,
+        endpoint: String
+    ) {
+        NotificationCenter.default.post(
+            name: offlineMutationFlushedNotification,
+            object: nil,
+            userInfo: [
+                offlineMutationFlushedMethodKey: method,
+                offlineMutationFlushedEndpointKey: endpoint
             ]
         )
     }

@@ -1553,6 +1553,170 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         XCTAssertEqual(viewModel.executionServerSeeded[assignment.eventStaffId], false)
         XCTAssertNotNil(viewModel.executionErrorMessages[assignment.eventStaffId])
     }
+
+    // MARK: - Soft revalidate mid-edit does not clobber concurrent toggle/note
+
+    @MainActor
+    func testSoftRevalidate_MidEdit_DoesNotDropConcurrentToggleAndNote() async throws {
+        let eventId = "ev_soft_mid_edit"
+        let assignment = try makeAssignment(eventStaffId: "es_soft_mid_edit", eventId: eventId)
+        // Offline seed → ready, not server-seeded → next open soft-revalidates.
+        try seedLegacy(eventId: eventId, arrival: true, materials: false, quickNote: "offline base")
+        defer { clearLegacy(eventId: eventId) }
+
+        let getGate = Gate()
+        var getCount = 0
+        var putBodies: [Data] = []
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                getCount += 1
+                if getCount == 1 {
+                    // First open: cold offline seed path.
+                    return errorResponse(url: url, status: 422)
+                }
+                // Soft revalidate GET blocks so we can edit mid-flight.
+                getGate.waitSync()
+                // Server has arrival only — concurrent materials+note must survive merge.
+                return okResponse(
+                    url: url,
+                    data: executionStateJSON(arrival: true, materials: false, quickNote: "server note")
+                )
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                putBodies.append(request.httpBody ?? Data())
+                return okResponse(url: url, data: request.httpBody ?? Data())
+            }
+            return errorResponse(url: url)
+        }
+
+        // Open 1: GET fails → offline seed ready, not server-seeded.
+        await viewModel.loadExecutionState(for: assignment)
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+        XCTAssertEqual(viewModel.executionServerSeeded[assignment.eventStaffId], false)
+        XCTAssertEqual(viewModel.executionStates[assignment.eventStaffId]?.quickNote, "offline base")
+
+        // Open 2: soft revalidate — GET in flight while we edit.
+        let revalidateTask = Task { @MainActor in
+            await viewModel.loadExecutionState(for: assignment)
+        }
+        try await Task.sleep(nanoseconds: 50_000_000)
+        XCTAssertEqual(getCount, 2, "soft revalidate must re-GET")
+        XCTAssertEqual(
+            viewModel.executionLoadStates[assignment.eventStaffId],
+            .ready,
+            "soft revalidate must keep editing enabled"
+        )
+
+        // Concurrent mid-GET edit: toggle materials + richer note.
+        var midEdit = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
+        midEdit.checklist.materials = true
+        midEdit.quickNote = "concurrent mid-get note that is longer"
+        viewModel.applyLocalExecutionState(midEdit, for: assignment)
+        XCTAssertEqual(
+            viewModel.executionStates[assignment.eventStaffId]?.quickNote,
+            "concurrent mid-get note that is longer"
+        )
+        XCTAssertTrue(viewModel.executionStates[assignment.eventStaffId]?.checklist.materials == true)
+
+        getGate.open()
+        await revalidateTask.value
+
+        let final = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
+        XCTAssertTrue(final.checklist.arrival, "server arrival must remain")
+        XCTAssertTrue(
+            final.checklist.materials,
+            "concurrent materials toggle must not be clobbered by soft revalidate"
+        )
+        XCTAssertEqual(
+            final.quickNote,
+            "concurrent mid-get note that is longer",
+            "concurrent note must not be clobbered by soft revalidate merge"
+        )
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+    }
+
+    // MARK: - Offline mutation flush notification clears serverSeeded only
+
+    @MainActor
+    func testOfflineMutationFlushed_ClearsServerSeeded_KeepsLocalCache() async throws {
+        let assignment = try makeAssignment(eventStaffId: "es_flush_notify", eventId: "ev_flush_notify")
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                return okResponse(
+                    url: url,
+                    data: executionStateJSON(arrival: true, quickNote: "seeded")
+                )
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+        XCTAssertEqual(viewModel.executionServerSeeded[assignment.eventStaffId], true)
+
+        // Dirty the cache relative to lastSynced (simulate offline edit after seed).
+        var dirty = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
+        dirty.checklist.materials = true
+        dirty.quickNote = "dirty local after seed"
+        viewModel.applyLocalExecutionState(dirty, for: assignment)
+
+        NotificationCenter.default.post(
+            name: APIClient.offlineMutationFlushedNotification,
+            object: nil,
+            userInfo: [
+                APIClient.offlineMutationFlushedMethodKey: "PUT",
+                APIClient.offlineMutationFlushedEndpointKey:
+                    "/staff/assignments/\(assignment.eventStaffId)/execution-state"
+            ]
+        )
+        await Task.yield()
+        try await Task.sleep(nanoseconds: 20_000_000)
+
+        XCTAssertEqual(
+            viewModel.executionServerSeeded[assignment.eventStaffId],
+            false,
+            "flush success must clear serverSeeded so next open soft-revalidates"
+        )
+        XCTAssertEqual(
+            viewModel.executionStates[assignment.eventStaffId]?.quickNote,
+            "dirty local after seed",
+            "flush success must not wipe dirty local cache"
+        )
+        XCTAssertTrue(viewModel.executionStates[assignment.eventStaffId]?.checklist.materials == true)
+        XCTAssertNil(
+            viewModel.executionErrorMessages[assignment.eventStaffId],
+            "flush success is not an error"
+        )
+
+        // Next open must re-GET (not short-circuit) because serverSeeded was cleared.
+        var getCount = 0
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                getCount += 1
+                return okResponse(
+                    url: url,
+                    data: executionStateJSON(
+                        arrival: true,
+                        materials: true,
+                        quickNote: "dirty local after seed"
+                    )
+                )
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                return okResponse(url: url, data: request.httpBody ?? Data())
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+        XCTAssertEqual(getCount, 1, "cleared serverSeeded must allow soft revalidate GET")
+        XCTAssertEqual(viewModel.executionServerSeeded[assignment.eventStaffId], true)
+        XCTAssertTrue(viewModel.executionStates[assignment.eventStaffId]?.checklist.materials == true)
+    }
 }
 
 // MARK: - Sync gate for mid-flight GET races
