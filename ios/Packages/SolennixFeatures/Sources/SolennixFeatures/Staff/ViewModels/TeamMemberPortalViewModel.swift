@@ -350,15 +350,19 @@ public final class TeamMemberPortalViewModel {
             // preGet). Cold first load (below) still migrates/merges UserDefaults.
             if softRevalidate {
                 if let current = executionStates[id] {
-                    executionStates[id] = current
-                    lastSyncedStates[id] = serverState
+                    // Do NOT assign lastSynced = server before PUT. That poisons
+                    // performExecutionStatePut's hard-fail rollback (would restore
+                    // server and wipe live authority / mid-GET edits).
                     if current == serverState {
+                        executionStates[id] = current
+                        lastSyncedStates[id] = serverState
                         markServerSeededReady(id)
                         clearExecutionError(for: id)
                         UserDefaults.standard.removeObject(forKey: legacyKey)
                         return
                     }
-                    Self.writeLegacyState(current, forKey: legacyKey)
+                    let snapshotAtPut = current
+                    Self.writeLegacyState(snapshotAtPut, forKey: legacyKey)
                     var putResult = await enqueueExecutionStatePut(
                         for: assignment,
                         requireReady: true
@@ -370,21 +374,32 @@ public final class TeamMemberPortalViewModel {
                     }
                     switch putResult {
                     case .serverAcked:
+                        // lastSynced advanced by perform; keep live cache (may have
+                        // advanced mid-PUT past the written body).
                         UserDefaults.standard.removeObject(forKey: legacyKey)
                         markServerSeededReady(id)
                         clearExecutionError(for: id)
                     case .offlineQueued:
                         Self.writeLegacyState(
-                            executionStates[id] ?? current,
+                            executionStates[id] ?? snapshotAtPut,
                             forKey: legacyKey
                         )
                         markServerSeededReady(id)
                         clearExecutionError(for: id)
                     case .failed:
-                        // Keep live cache; lastSynced remains serverState (honest baseline).
-                        executionStates[id] = current
+                        // Undo perform rollback (if any) and prefer concurrent mid-PUT
+                        // live over frozen post-GET snapshot.
+                        let live = executionStates[id]
+                        let preferred: AssignmentExecutionState
+                        if let live, live != snapshotAtPut, live != lastSyncedStates[id] {
+                            preferred = live
+                        } else {
+                            preferred = snapshotAtPut
+                        }
+                        executionStates[id] = preferred
+                        // Honest baseline from GET; live remains authority until retry.
                         lastSyncedStates[id] = serverState
-                        Self.writeLegacyState(current, forKey: legacyKey)
+                        Self.writeLegacyState(preferred, forKey: legacyKey)
                         markServerSeededReady(id)
                         setExecutionError(
                             tr(

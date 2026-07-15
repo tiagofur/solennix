@@ -2099,6 +2099,85 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         XCTAssertEqual(viewModel.executionServerSeeded[assignment.eventStaffId], true)
         XCTAssertTrue(viewModel.executionStates[assignment.eventStaffId]?.checklist.materials == true)
     }
+
+    /// Soft revalidate PUT fail must not rewrite frozen post-GET `current` over mid-PUT live edits.
+    @MainActor
+    func testSoftRevalidate_PutFail_MidPutEdit_KeepsConcurrentLive() async throws {
+        let eventId = "ev_soft_put_fail"
+        let assignment = try makeAssignment(eventStaffId: "es_soft_put_fail", eventId: eventId)
+        try seedLegacy(
+            eventId: eventId,
+            arrival: true,
+            materials: false,
+            quickNote: "offline base"
+        )
+        defer { clearLegacy(eventId: eventId) }
+
+        let putGate = Gate()
+        var getCount = 0
+        var putCount = 0
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                getCount += 1
+                if getCount == 1 {
+                    // First open: force offline seed path.
+                    return errorResponse(url: url, status: 422)
+                }
+                // Soft revalidate GET: server differs so a PUT will run.
+                return okResponse(
+                    url: url,
+                    data: executionStateJSON(
+                        arrival: true,
+                        materials: false,
+                        quickNote: "server note"
+                    )
+                )
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                putCount += 1
+                putGate.waitSync()
+                return errorResponse(url: url, status: 422)
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+        XCTAssertEqual(viewModel.executionServerSeeded[assignment.eventStaffId], false)
+
+        // Soft revalidate on a concurrent task so we can edit mid-PUT.
+        let loadTask = Task { @MainActor in
+            await viewModel.loadExecutionState(for: assignment)
+        }
+
+        // Wait until soft revalidate has started the PUT.
+        for _ in 0..<50 where putCount == 0 {
+            try await Task.sleep(nanoseconds: 20_000_000)
+        }
+        XCTAssertEqual(putCount, 1, "soft revalidate should issue PUT when live != server")
+
+        // Mid-PUT concurrent edit (materials on + note) while PUT is gated.
+        var advanced = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
+        advanced.checklist.materials = true
+        advanced.quickNote = "mid-put concurrent"
+        viewModel.applyLocalExecutionState(advanced, for: assignment)
+
+        putGate.open()
+        await loadTask.value
+
+        XCTAssertEqual(
+            viewModel.executionStates[assignment.eventStaffId]?.checklist.materials,
+            true,
+            "PUT fail must not clobber mid-PUT live materials with frozen post-GET current"
+        )
+        XCTAssertEqual(
+            viewModel.executionStates[assignment.eventStaffId]?.quickNote,
+            "mid-put concurrent",
+            "PUT fail must not clobber mid-PUT live note with frozen post-GET current"
+        )
+    }
 }
 
 // MARK: - Sync gate for mid-flight GET races
