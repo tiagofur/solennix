@@ -152,4 +152,65 @@ final class TeamAndAvailabilityModelTests: XCTestCase {
         XCTAssertEqual(assignment.shiftEnd, "2026-06-16T02:00:00Z")
         XCTAssertEqual(assignment.status, "confirmed")
     }
+
+    // MARK: - AssignmentExecutionState Codable (#875)
+
+    /// Mirrors `APIClient` key strategies so we catch double-map regressions
+    /// (`quickNote` + explicit `quick_note` CodingKey under convertToSnakeCase).
+    func testAssignmentExecutionStateRoundTripUnderAPIClientSnakeCaseStrategies() throws {
+        let original = AssignmentExecutionState(
+            checklist: ExecutionChecklist(arrival: true, materials: false, closing: true),
+            quickNote: "Cable HDMI faltante"
+        )
+
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        let data = try encoder.encode(original)
+
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        XCTAssertEqual(json["quick_note"] as? String, "Cable HDMI faltante")
+        XCTAssertNil(json["quickNote"], "camelCase key must not survive convertToSnakeCase")
+        XCTAssertNil(json["quick__note"], "double-mapped key must not appear")
+
+        let checklist = try XCTUnwrap(json["checklist"] as? [String: Any])
+        XCTAssertEqual(checklist["arrival"] as? Bool, true)
+        XCTAssertEqual(checklist["materials"] as? Bool, false)
+        XCTAssertEqual(checklist["closing"] as? Bool, true)
+
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let decoded = try decoder.decode(AssignmentExecutionState.self, from: data)
+
+        XCTAssertEqual(decoded, original)
+        XCTAssertEqual(decoded.quickNote, "Cable HDMI faltante")
+        XCTAssertTrue(decoded.checklist.arrival)
+        XCTAssertFalse(decoded.checklist.materials)
+        XCTAssertTrue(decoded.checklist.closing)
+    }
+
+    func testAssignmentExecutionStateDecodesServerSnakeCasePayload() throws {
+        let json = """
+        {
+          "checklist": { "arrival": true, "materials": true, "closing": false },
+          "quick_note": "Montaje listo"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let state = try decoder.decode(AssignmentExecutionState.self, from: json)
+
+        XCTAssertTrue(state.checklist.arrival)
+        XCTAssertTrue(state.checklist.materials)
+        XCTAssertFalse(state.checklist.closing)
+        XCTAssertEqual(state.quickNote, "Montaje listo")
+        XCTAssertFalse(state.isDefault)
+    }
+
+    func testAssignmentExecutionStateDefaultIsEmpty() {
+        XCTAssertTrue(AssignmentExecutionState.defaultState.isDefault)
+        XCTAssertFalse(
+            AssignmentExecutionState(checklist: ExecutionChecklist(arrival: true), quickNote: "").isDefault
+        )
+    }
 }

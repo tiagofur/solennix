@@ -106,6 +106,13 @@ public struct TeamMemberPortalView: View {
         } else {
             ScrollView {
                 LazyVStack(spacing: Spacing.md) {
+                    // Surface save/load errors while the list is populated (#875).
+                    if let errorMessage = viewModel.errorMessage {
+                        InlineErrorBanner(message: errorMessage) {
+                            viewModel.errorMessage = nil
+                        }
+                    }
+
                     Picker(tr("team_portal.section_label", "Seccion"), selection: $section) {
                         Text(tr("team_portal.my_day", "Mi jornada")).tag(TeamMemberSection.work)
                         Text(tr("calendar.title", "Calendario")).tag(TeamMemberSection.calendar)
@@ -1106,6 +1113,16 @@ private struct TeamPortalAssignmentDetailSheet: View {
     var body: some View {
         NavigationStack {
             List {
+                if let errorMessage = viewModel.errorMessage {
+                    Section {
+                        Text(errorMessage)
+                            .font(.footnote)
+                            .foregroundStyle(SolennixColors.error)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .accessibilityIdentifier("team_portal.execution_error")
+                    }
+                }
+
                 Section(tr("team_portal.event_section", "Evento")) {
                     detailRow(tr("clients.form.name", "Nombre"), assignment.eventName)
                     detailRow(tr("team_portal.date_label", "Fecha"), assignment.eventDate)
@@ -1134,13 +1151,13 @@ private struct TeamPortalAssignmentDetailSheet: View {
                 }
 
                 Section(tr("events.detail.documents.checklist", "Checklist")) {
-                    Toggle(tr("team_portal.arrival_ready", "Llegada y acceso confirmados"), isOn: binding(\.checklist.arrival))
-                    Toggle(tr("team_portal.material_ready", "Material y montaje listos"), isOn: binding(\.checklist.materials))
-                    Toggle(tr("team_portal.closing_done", "Cierre operativo completado"), isOn: binding(\.checklist.closing))
+                    Toggle(tr("team_portal.arrival_ready", "Llegada y acceso confirmados"), isOn: checklistBinding(\.checklist.arrival))
+                    Toggle(tr("team_portal.material_ready", "Material y montaje listos"), isOn: checklistBinding(\.checklist.materials))
+                    Toggle(tr("team_portal.closing_done", "Cierre operativo completado"), isOn: checklistBinding(\.checklist.closing))
                 }
 
                 Section(tr("team_portal.quick_notes", "Notas rápidas")) {
-                    TextEditor(text: binding(\.quickNote))
+                    TextEditor(text: noteBinding)
                         .frame(minHeight: 110)
                 }
             }
@@ -1152,16 +1169,26 @@ private struct TeamPortalAssignmentDetailSheet: View {
         }
     }
 
-    /// Binding de dos niveles dentro del executionState cacheado del ViewModel.
-    /// Cada cambio dispara el save optimista al server (#875).
-    private func binding<T>(_ keyPath: WritableKeyPath<AssignmentExecutionState, T>) -> Binding<T> {
+    /// Checklist toggles save immediately (serialized PUT, no debounce).
+    private func checklistBinding(_ keyPath: WritableKeyPath<AssignmentExecutionState, Bool>) -> Binding<Bool> {
         Binding(
             get: { viewModel.executionStates[assignment.eventStaffId, default: .defaultState][keyPath: keyPath] },
             set: { newValue in
                 var state = viewModel.executionStates[assignment.eventStaffId, default: .defaultState]
                 state[keyPath: keyPath] = newValue
-                viewModel.executionStates[assignment.eventStaffId] = state
-                Task { await viewModel.saveExecutionState(for: assignment, state: state) }
+                Task { await viewModel.saveExecutionState(for: assignment, state: state, debounce: false) }
+            }
+        )
+    }
+
+    /// Quick notes debounce ~400ms to avoid per-keystroke PUT spam (#875).
+    private var noteBinding: Binding<String> {
+        Binding(
+            get: { viewModel.executionStates[assignment.eventStaffId, default: .defaultState].quickNote },
+            set: { newValue in
+                var state = viewModel.executionStates[assignment.eventStaffId, default: .defaultState]
+                state.quickNote = newValue
+                Task { await viewModel.saveExecutionState(for: assignment, state: state, debounce: true) }
             }
         )
     }
