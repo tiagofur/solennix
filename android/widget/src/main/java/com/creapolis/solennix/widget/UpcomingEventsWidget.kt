@@ -3,7 +3,6 @@ package com.creapolis.solennix.widget
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.glance.*
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
@@ -76,7 +75,7 @@ class UpcomingEventsWidget : GlanceAppWidget() {
                     text = context.getString(R.string.widget_upcoming_title),
                     style = TextStyle(
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
+                        fontSize = rememberScaledSp(14f),
                         color = WidgetColors.primary
                     )
                 )
@@ -121,14 +120,14 @@ class UpcomingEventsWidget : GlanceAppWidget() {
                     text = formattedDate.day,
                     style = TextStyle(
                         fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
+                        fontSize = rememberScaledSp(16f),
                         color = WidgetColors.primary
                     )
                 )
                 Text(
                     text = formattedDate.month,
                     style = TextStyle(
-                        fontSize = 10.sp,
+                        fontSize = rememberScaledSp(10f),
                         color = WidgetColors.primary
                     )
                 )
@@ -142,7 +141,7 @@ class UpcomingEventsWidget : GlanceAppWidget() {
                     text = event.serviceType,
                     style = TextStyle(
                         fontWeight = FontWeight.Medium,
-                        fontSize = 12.sp,
+                        fontSize = rememberScaledSp(12f),
                         color = WidgetColors.textPrimary
                     ),
                     maxLines = 1
@@ -152,7 +151,7 @@ class UpcomingEventsWidget : GlanceAppWidget() {
                         R.plurals.widget_people_count, event.numPeople, event.numPeople
                     ),
                     style = TextStyle(
-                        fontSize = 10.sp,
+                        fontSize = rememberScaledSp(10f),
                         color = WidgetColors.textSecondary
                     ),
                     maxLines = 1

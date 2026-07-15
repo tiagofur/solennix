@@ -18,7 +18,6 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 /**
  * Widget auth/empty/error states, mirroring iOS `WidgetStateView`.
@@ -95,7 +94,7 @@ fun WidgetStateView(
             Text(
                 text = symbol,
                 style = TextStyle(
-                    fontSize = 28.sp,
+                    fontSize = rememberScaledSp(28f),
                     color = accent
                 )
             )
@@ -103,7 +102,7 @@ fun WidgetStateView(
                 text = context.getString(titleRes),
                 style = TextStyle(
                     fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp,
+                    fontSize = rememberScaledSp(12f),
                     color = WidgetColors.textSecondary
                 )
             )
