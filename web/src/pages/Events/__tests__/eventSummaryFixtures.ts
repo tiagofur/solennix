@@ -4,12 +4,14 @@
  * El componente tiene 1660 LOC e importa recharts + generadores PDF pesados.
  * Con 74 tests en un solo archivo, el worker de vitest hace OOM incluso con
  * heap de 6GB + --expose-gc + cleanup explícito. La solución estructural
- * fue dividir el archivo original en 3 archivos temáticos
- * (EventSummary.test.tsx, EventSummary.photos.test.tsx,
- * EventSummary.payments.test.tsx), cada uno con ~25 tests.
+ * fue dividir el archivo original en 5 archivos temáticos
+ * (EventSummary.test.tsx, EventSummary.variants.test.tsx,
+ * EventSummary.photos.test.tsx, EventSummary.payments.test.tsx,
+ * EventSummary.contract.test.tsx), cada uno con ~15 tests. Luego se agregaron
+ * EventSummary.ingredients.test.tsx (unit test de aggregateIngredients).
  *
  * Por limitaciones del hoisting de `vi.mock` (tiene que estar en el top del
- * archivo de test donde se importa el módulo mockeado), los 3 archivos
+ * archivo de test donde se importa el módulo mockeado), los archivos
  * duplican los `vi.mock(...)` calls. Este fixture centraliza solo lo que SÍ
  * se puede compartir: el `baseEvent` y la factory `installEventSummaryMocks`
  * que configura los mock returns.

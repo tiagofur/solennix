@@ -99,13 +99,6 @@ vi.mock('../../services/subscriptionService', () => ({
   },
 }));
 
-vi.mock('../../lib/pdfGenerator', () => ({
-  generateBudgetPDF: vi.fn(),
-  generateContractPDF: vi.fn(),
-  generateShoppingListPDF: vi.fn(),
-  generatePaymentReportPDF: vi.fn(),
-}));
-
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({ user: { id: 'user-1', email: 'ana@example.com', plan: 'pro' }, profile: { name: 'Eventos Ana', business_name: 'Eventos Ana' } }),
 }));
@@ -202,12 +195,6 @@ describe('EventSummary — header & display variants', () => {
     expect(screen.getAllByText(expectedLabel).length).toBeGreaterThanOrEqual(1);
   });
 
-  // TODO(contract-freeze-web): pre-existing fail — uses aria-label
-  // `/Estado del evento/i` that doesn't exist in StatusDropdown.tsx (only
-  // `/Estado: <label>. Clic para cambiar./i` exists). Was hidden by the
-  // EventSummary.test.tsx worker crash that prevented tests 17+ from ever
-  // running. Fix: update selector to match the real aria-label, verify
-  // "Estado del evento" isn't a stale spec from a prior refactor.
   it('closes status dropdown on outside click', async () => {
     render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
@@ -225,9 +212,6 @@ describe('EventSummary — header & display variants', () => {
     });
   });
 
-  // TODO(contract-freeze-web): pre-existing fail — same selector issue as
-  // "closes status dropdown on outside click". Fix: use
-  // `/Estado:.*Clic para cambiar/i` like in core.test.tsx.
   it('renders all four statuses in the dropdown', async () => {
     render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
@@ -288,12 +272,6 @@ describe('EventSummary — header & display variants', () => {
     expect(screen.getByText('Producto')).toBeInTheDocument();
   });
 
-  // TODO(contract-freeze-web): pre-existing fail — waitFor times out looking
-  // for "Ana — Boda" when getProducts/getExtras/getByEventId return null.
-  // Was hidden by the EventSummary.test.tsx worker crash. Fix: investigate
-  // whether the component actually guards against null arrays from the
-  // backend (it should, per the previous engram memory about
-  // "iOS APIClient resilient to null arrays" fix).
   it('handles null products and extras from API', async () => {
     (eventService.getProducts as any).mockResolvedValue(null);
     (eventService.getExtras as any).mockResolvedValue(null);

@@ -14,6 +14,10 @@ dist-ssr
 .vercel/
 test-results/
 coverage/
+# Stale test/coverage/lint artifacts — regenerable, never commit
+web_coverage.txt
+test_results.txt
+lint_output.txt
 
 # Editor directories and files
 .vscode/*

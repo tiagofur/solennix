@@ -170,10 +170,6 @@ describe('EventSummary — payments & edge cases', () => {
     expect(screen.getByText(/Total:/)).toBeInTheDocument();
   });
 
-  // TODO(contract-freeze-web): pre-existing fail — looks for /Registrar pago por/
-  // which isn't in the current DOM. Was hidden by EventSummary.test.tsx
-  // worker crash. Fix: verify the actual button label in the current Payments
-  // section of EventSummary.tsx.
   it('shows "Registrar pago" button when remaining > 0 and not cancelled', async () => {
     (paymentService.getByEventId as any).mockResolvedValue([
       { amount: 200 },
@@ -257,9 +253,6 @@ describe('EventSummary — payments & edge cases', () => {
     expect(screen.queryByText('Reporte de Pagos')).not.toBeInTheDocument();
   });
 
-  // TODO(contract-freeze-web): pre-existing fail — mocks generateContractPDF
-  // to throw but the flow to reach that code path likely changed.
-  // Pre-existing because hidden by worker crash.
   it('handles contract PDF generation error with ContractTemplateError', async () => {
     const templateError = new ContractTemplateError('Missing tokens', [], ['event_city', 'client_address']);
     (downloadEventPDF as any).mockRejectedValueOnce(templateError);
@@ -282,8 +275,6 @@ describe('EventSummary — payments & edge cases', () => {
     });
   });
 
-  // TODO(contract-freeze-web): pre-existing fail — same root cause as the
-  // ContractTemplateError variant above.
   it('handles contract PDF generation with generic error', async () => {
     const error = new Error('generic error');
     (downloadEventPDF as any).mockRejectedValueOnce(error);
@@ -339,8 +330,6 @@ describe('EventSummary — payments & edge cases', () => {
     expect(screen.getByText('100%')).toBeInTheDocument();
   });
 
-  // TODO(contract-freeze-web): pre-existing fail — same root cause as
-  // "shows Registrar pago button" above. Pre-existing hidden fail.
   it('clicking "Registrar pago" switches to payments view', async () => {
     (paymentService.getByEventId as any).mockResolvedValue([
       { amount: 200 },
@@ -381,8 +370,6 @@ describe('EventSummary — payments & edge cases', () => {
     expect(screen.getAllByText('Cancelado').length).toBeGreaterThanOrEqual(1);
   });
 
-  // TODO(contract-freeze-web): pre-existing fail — looks for "Sin teléfono"
-  // which may not be the current fallback string. Pre-existing hidden fail.
   it('renders event without client phone', async () => {
     setupMocks({ client: { name: 'Ana', phone: null, email: 'ana@test.com', address: 'Calle 1', city: 'CDMX' } });
 
@@ -397,8 +384,6 @@ describe('EventSummary — payments & edge cases', () => {
     expect(screen.queryByText('•')).not.toBeInTheDocument();
   });
 
-  // TODO(contract-freeze-web): pre-existing fail — looks for "0.0%" which may
-  // be formatted differently now. Pre-existing hidden fail.
   it('renders margin as 0% when net sales are 0', async () => {
     setupMocks({ total_amount: 0, tax_amount: 0 });
 
@@ -428,9 +413,6 @@ describe('EventSummary — payments & edge cases', () => {
     });
   });
 
-  // TODO(contract-freeze-web): pre-existing fail — mockRejectedValue on
-  // getIngredientsForProducts doesn't reach the expected logError call path
-  // (React Query may swallow the error). Pre-existing hidden fail.
   it('logs error when ingredient aggregation fails', async () => {
     (productService.getIngredientsForProducts as any).mockRejectedValue(new Error('ingredient fail'));
 
