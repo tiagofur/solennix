@@ -427,5 +427,10 @@
     "go_to": "Go to {{target}}",
     "create_new_contextual": "Create new (contextual)",
     "show_help": "Show keyboard shortcuts"
+  },
+  "offline": {
+    "banner_title": "You're offline",
+    "banner_description": "Some features won't be available until you reconnect.",
+    "back_online": "Back online"
   }
 }
