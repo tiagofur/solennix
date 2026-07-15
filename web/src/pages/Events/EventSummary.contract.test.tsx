@@ -191,10 +191,6 @@ describe('EventSummary — contract view', () => {
     expect(mockAddToast).not.toHaveBeenCalled();
   });
 
-  // TODO(contract-freeze-web): pre-existing fail — looks for /dedicada a Boda/
-  // which isn't in the current default contract template. Pre-existing because
-  // hidden by worker crash. Fix: check the current default template text in
-  // src/lib/contractTemplate.ts and update the expectation.
   it('shows contract template text in contract view', async () => {
     (paymentService.getByEventId as any).mockResolvedValue([{ amount: 600 }]);
 
@@ -210,9 +206,6 @@ describe('EventSummary — contract view', () => {
     expect(document.body.textContent).toMatch(/empresa dedicada a Boda/i);
   });
 
-  // TODO(contract-freeze-web): pre-existing fail — looks for /30%/ which may
-  // be rendered as "30 %" (with space) or a different format in the current
-  // template. Same root cause as "shows contract template text".
   it('shows deposit percent and cancellation days in contract', async () => {
     setupMocks({ deposit_percent: 30, cancellation_days: 10 });
     (paymentService.getByEventId as any).mockResolvedValue([{ amount: 600 }]);
