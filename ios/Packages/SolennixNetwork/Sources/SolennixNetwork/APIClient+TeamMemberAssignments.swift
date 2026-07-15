@@ -41,6 +41,19 @@ public extension APIClient {
         )
     }
 
+    /// GET /staff/assignments/{id}/execution-state (#875).
+    func getExecutionState(eventStaffId: String) async throws -> AssignmentExecutionState {
+        try await get(Endpoint.staffExecutionState(eventStaffId))
+    }
+
+    /// PUT /staff/assignments/{id}/execution-state (#875).
+    func putExecutionState(eventStaffId: String, state: AssignmentExecutionState) async throws -> AssignmentExecutionState {
+        try await put(
+            Endpoint.staffExecutionState(eventStaffId),
+            body: state
+        )
+    }
+
     func getMyTimeline(unreadOnly: Bool = false, limit: Int = 50) async throws -> [TeamMemberChangeEvent] {
         var params: [String: String] = ["limit": String(limit)]
         if unreadOnly {

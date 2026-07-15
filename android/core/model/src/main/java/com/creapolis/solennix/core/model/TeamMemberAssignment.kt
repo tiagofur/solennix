@@ -60,3 +60,22 @@ data class TeamMemberChangeEvent(
 data class TeamTimelineMarkReadResponse(
     val updated: Int
 )
+
+// Execution state (#875) — server-backed checklist + quick note.
+
+@Serializable
+data class ExecutionChecklist(
+    val arrival: Boolean = false,
+    val materials: Boolean = false,
+    val closing: Boolean = false
+)
+
+@Serializable
+data class AssignmentExecutionState(
+    val checklist: ExecutionChecklist = ExecutionChecklist(),
+    @SerialName("quick_note") val quickNote: String = ""
+) {
+    companion object {
+        val DEFAULT = AssignmentExecutionState()
+    }
+}

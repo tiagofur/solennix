@@ -92,6 +92,12 @@ public enum Endpoint {
         "/staff/assignments/\(id)/respond"
     }
 
+    /// Execution state del team member (#875). GET devuelve el estado guardado
+    /// (o defaults si nunca se guardó); PUT hace upsert.
+    public static func staffExecutionState(_ id: String) -> String {
+        "/staff/assignments/\(id)/execution-state"
+    }
+
     /// Reporte de disponibilidad de staff para una fecha o rango.
     /// Consumido via `GET /api/staff/availability?date=YYYY-MM-DD` o
     /// `?start=YYYY-MM-DD&end=YYYY-MM-DD`.

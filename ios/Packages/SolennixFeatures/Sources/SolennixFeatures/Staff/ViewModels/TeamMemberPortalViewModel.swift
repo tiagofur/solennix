@@ -15,6 +15,10 @@ public final class TeamMemberPortalViewModel {
     public var isSavingAvailability: Bool = false
     public var errorMessage: String?
 
+    /// Cache en memoria del execution state por assignment, para que el
+    /// detail sheet lo edite sin re-fetchear en cada toggle (#875).
+    public var executionStates: [String: AssignmentExecutionState] = [:]
+
     private let apiClient: APIClient
 
     public init(apiClient: APIClient) {
@@ -137,6 +141,58 @@ public final class TeamMemberPortalViewModel {
         } catch {
             errorMessage = "No pudimos eliminar el bloqueo."
         }
+    }
+
+    // MARK: - Execution State (#875)
+
+    /// Carga el execution state del server al abrir el detail sheet. Si el
+    /// usuario tenía estado legacy en UserDefaults, lo migra al server y lo
+    /// borra localmente (una sola vez).
+    @MainActor
+    public func loadExecutionState(for assignment: TeamMemberAssignment) async {
+        // Legacy migration: si existe el viejo key de UserDefaults, push al server.
+        let legacyKey = "team_event_detail_\(assignment.eventId)"
+        if let legacyData = UserDefaults.standard.data(forKey: legacyKey),
+           let legacy = try? JSONDecoder().decode(LegacyExecutionState.self, from: legacyData) {
+            let migrated = AssignmentExecutionState(
+                checklist: ExecutionChecklist(
+                    arrival: legacy.arrivalReady,
+                    materials: legacy.materialsReady,
+                    closing: legacy.closingDone
+                ),
+                quickNote: legacy.quickNote
+            )
+            executionStates[assignment.eventStaffId] = migrated
+            UserDefaults.standard.removeObject(forKey: legacyKey)
+            await saveExecutionState(for: assignment, state: migrated)
+            return
+        }
+
+        if executionStates[assignment.eventStaffId] != nil { return }
+        do {
+            executionStates[assignment.eventStaffId] = try await apiClient.getExecutionState(eventStaffId: assignment.eventStaffId)
+        } catch {
+            executionStates[assignment.eventStaffId] = .defaultState
+        }
+    }
+
+    /// Guarda el execution state en el server (fire-and-forget optimistic).
+    @MainActor
+    public func saveExecutionState(for assignment: TeamMemberAssignment, state: AssignmentExecutionState) async {
+        executionStates[assignment.eventStaffId] = state
+        do {
+            _ = try await apiClient.putExecutionState(eventStaffId: assignment.eventStaffId, state: state)
+        } catch {
+            errorMessage = "No pudimos guardar el checklist de ejecución."
+        }
+    }
+
+    /// Shape legacy del viejo UserDefaults (pre-#875). Solo para migración.
+    private struct LegacyExecutionState: Codable {
+        var arrivalReady: Bool = false
+        var materialsReady: Bool = false
+        var closingDone: Bool = false
+        var quickNote: String = ""
     }
 
     private func availabilityBounds(now: Date = Date()) -> (start: String, end: String) {

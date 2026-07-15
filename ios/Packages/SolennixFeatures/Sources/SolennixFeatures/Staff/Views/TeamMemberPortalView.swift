@@ -77,7 +77,7 @@ public struct TeamMemberPortalView: View {
             await viewModel.loadAssignments()
         }
         .sheet(item: $selectedAssignmentDetail) { assignment in
-            TeamPortalAssignmentDetailSheet(assignment: assignment)
+            TeamPortalAssignmentDetailSheet(assignment: assignment, viewModel: viewModel)
         }
         .background(SolennixColors.surfaceGrouped.ignoresSafeArea())
     }
@@ -1100,15 +1100,8 @@ private struct TeamPortalTimelineRow: View {
 }
 
 private struct TeamPortalAssignmentDetailSheet: View {
-    private struct ExecutionState: Codable, Equatable {
-        var arrivalReady: Bool = false
-        var materialsReady: Bool = false
-        var closingDone: Bool = false
-        var quickNote: String = ""
-    }
-
     let assignment: TeamMemberAssignment
-    @State private var executionState = ExecutionState()
+    @Bindable var viewModel: TeamMemberPortalViewModel
 
     var body: some View {
         NavigationStack {
@@ -1141,25 +1134,36 @@ private struct TeamPortalAssignmentDetailSheet: View {
                 }
 
                 Section(tr("events.detail.documents.checklist", "Checklist")) {
-                    Toggle(tr("team_portal.arrival_ready", "Llegada y acceso confirmados"), isOn: $executionState.arrivalReady)
-                    Toggle(tr("team_portal.material_ready", "Material y montaje listos"), isOn: $executionState.materialsReady)
-                    Toggle(tr("team_portal.closing_done", "Cierre operativo completado"), isOn: $executionState.closingDone)
+                    Toggle(tr("team_portal.arrival_ready", "Llegada y acceso confirmados"), isOn: binding(\.checklist.arrival))
+                    Toggle(tr("team_portal.material_ready", "Material y montaje listos"), isOn: binding(\.checklist.materials))
+                    Toggle(tr("team_portal.closing_done", "Cierre operativo completado"), isOn: binding(\.checklist.closing))
                 }
 
                 Section(tr("team_portal.quick_notes", "Notas rápidas")) {
-                    TextEditor(text: $executionState.quickNote)
+                    TextEditor(text: binding(\.quickNote))
                         .frame(minHeight: 110)
                 }
             }
             .navigationTitle(tr("events.detail.title", "Detalle del evento"))
             .navigationBarTitleDisplayMode(.inline)
-            .onAppear {
-                loadExecutionState()
-            }
-            .onChange(of: executionState) { _, _ in
-                saveExecutionState()
+            .task {
+                await viewModel.loadExecutionState(for: assignment)
             }
         }
+    }
+
+    /// Binding de dos niveles dentro del executionState cacheado del ViewModel.
+    /// Cada cambio dispara el save optimista al server (#875).
+    private func binding<T>(_ keyPath: WritableKeyPath<AssignmentExecutionState, T>) -> Binding<T> {
+        Binding(
+            get: { viewModel.executionStates[assignment.eventStaffId, default: .defaultState][keyPath: keyPath] },
+            set: { newValue in
+                var state = viewModel.executionStates[assignment.eventStaffId, default: .defaultState]
+                state[keyPath: keyPath] = newValue
+                viewModel.executionStates[assignment.eventStaffId] = state
+                Task { await viewModel.saveExecutionState(for: assignment, state: state) }
+            }
+        )
     }
 
     private var statusLabel: String {
@@ -1180,10 +1184,6 @@ private struct TeamPortalAssignmentDetailSheet: View {
             Text(value)
                 .font(.body)
         }
-    }
-
-    private var storageKey: String {
-        "team_event_detail_\(assignment.eventId)"
     }
 
     private var locationLabel: String? {
@@ -1211,18 +1211,6 @@ private struct TeamPortalAssignmentDetailSheet: View {
             parts.append(trimmed)
         }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
-    }
-
-    private func loadExecutionState() {
-        guard let data = UserDefaults.standard.data(forKey: storageKey) else { return }
-        if let decoded = try? JSONDecoder().decode(ExecutionState.self, from: data) {
-            executionState = decoded
-        }
-    }
-
-    private func saveExecutionState() {
-        guard let data = try? JSONEncoder().encode(executionState) else { return }
-        UserDefaults.standard.set(data, forKey: storageKey)
     }
 }
 

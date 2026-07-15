@@ -77,6 +77,11 @@ final class TabNavigationTests: XCTestCase {
     /// one of `titlePredicates`, then pops back. Each step uses `waitForExistence`
     /// instead of fixed sleeps so the test is both fast and resilient to render
     /// jitter on the CI simulator.
+    ///
+    /// Rows are scoped to `app.cells` (List cells) rather than `app.buttons` to
+    /// avoid matching tab-bar or nav-bar buttons that happen to share the label.
+    /// On CI the broader `app.buttons` query intermittently matched a non-row
+    /// element, causing the tap to no-op and the nav title to stay "Más".
     private func verifyMoreMenuRow(
         app: XCUIApplication,
         rowPredicates: [String],
@@ -86,7 +91,12 @@ final class TabNavigationTests: XCTestCase {
         let predicateFormat = rowPredicates
             .map { "label CONTAINS[c] '\($0)'" }
             .joined(separator: " || ")
-        let row = app.buttons.matching(NSPredicate(format: predicateFormat)).firstMatch
+        // Prefer List cells; fall back to buttons if the cell query is empty
+        // (older OS versions may collapse NavigationLink into a plain button).
+        var row = app.cells.matching(NSPredicate(format: predicateFormat)).firstMatch
+        if !row.waitForExistence(timeout: 3) {
+            row = app.buttons.matching(NSPredicate(format: predicateFormat)).firstMatch
+        }
         XCTAssertTrue(row.waitForExistence(timeout: 10), missingMessage)
         row.safeTap()
 
