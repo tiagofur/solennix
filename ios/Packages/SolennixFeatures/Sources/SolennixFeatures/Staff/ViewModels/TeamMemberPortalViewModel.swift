@@ -344,110 +344,89 @@ public final class TeamMemberPortalViewModel {
                 return
             }
 
-            // Re-resolve local side AFTER GET so concurrent mid-flight edits win.
-            // Soft revalidate: live cache key presence is truth (including
-            // intentional `.defaultState`) — do NOT fall back to frozen legacy
-            // when the key exists. Hard load: UserDefaults blob only.
-            let localProgress: AssignmentExecutionState? = {
-                if softRevalidate {
-                    if let current = executionStates[id] {
-                        // Present key (even default) is live truth — no frozen fallback.
-                        return current.isDefault ? nil : current
+            // Soft revalidate success: live cache is full-state authority.
+            // Never OR-merge with server — that resurrects unchecked toggles when
+            // the user dirtied cache before GET (vs lastSynced) or mid-GET (vs
+            // preGet). Cold first load (below) still migrates/merges UserDefaults.
+            if softRevalidate {
+                if let current = executionStates[id] {
+                    executionStates[id] = current
+                    lastSyncedStates[id] = serverState
+                    if current == serverState {
+                        markServerSeededReady(id)
+                        clearExecutionError(for: id)
+                        UserDefaults.standard.removeObject(forKey: legacyKey)
+                        return
                     }
-                    if let pre = preGetCache, !pre.isDefault {
-                        return pre
+                    Self.writeLegacyState(current, forKey: legacyKey)
+                    var putResult = await enqueueExecutionStatePut(
+                        for: assignment,
+                        requireReady: true
+                    )
+                    if Task.isCancelled,
+                       putResult != .serverAcked,
+                       putResult != .offlineQueued {
+                        putResult = .cancelled
                     }
-                    if let blob = legacyFromDefaults, !blob.isDefault {
-                        return blob
+                    switch putResult {
+                    case .serverAcked:
+                        UserDefaults.standard.removeObject(forKey: legacyKey)
+                        markServerSeededReady(id)
+                        clearExecutionError(for: id)
+                    case .offlineQueued:
+                        Self.writeLegacyState(
+                            executionStates[id] ?? current,
+                            forKey: legacyKey
+                        )
+                        markServerSeededReady(id)
+                        clearExecutionError(for: id)
+                    case .failed:
+                        // Keep live cache; lastSynced remains serverState (honest baseline).
+                        executionStates[id] = current
+                        lastSyncedStates[id] = serverState
+                        Self.writeLegacyState(current, forKey: legacyKey)
+                        markServerSeededReady(id)
+                        setExecutionError(
+                            tr(
+                                "team_portal.execution_save_error",
+                                "No pudimos guardar el checklist de ejecución."
+                            ),
+                            for: id
+                        )
+                    case .cancelled:
+                        executionLoadStates[id] = .ready
                     }
-                    return nil
+                    return
                 }
+                // Soft revalidate but live key gone — apply pure server.
+                executionStates[id] = serverState
+                lastSyncedStates[id] = serverState
+                markServerSeededReady(id)
+                clearExecutionError(for: id)
+                if UserDefaults.standard.data(forKey: legacyKey) != nil {
+                    UserDefaults.standard.removeObject(forKey: legacyKey)
+                }
+                return
+            }
+
+            // Cold first load: UserDefaults legacy migrate / OR-merge only.
+            let localProgress: AssignmentExecutionState? = {
                 if let blob = legacyFromDefaults, !blob.isDefault {
                     return blob
                 }
                 return nil
             }()
-            let cacheAdvancedDuringGet = softRevalidate
-                && preGetCache != nil
-                && executionStates[id] != nil
-                && executionStates[id] != preGetCache
-
-            // Mid-edit during soft revalidate: live cache is authoritative for
-            // subtractive edits (uncheck / clear-to-default). Do NOT OR-merge
-            // with server — that would resurrect server-true bits the user
-            // intentionally cleared. Keep dirty and push current via serial PUT.
-            // Mark server-seeded after successful GET so we do not re-GET-loop.
-            if cacheAdvancedDuringGet, let current = executionStates[id] {
-                executionStates[id] = current
-                lastSyncedStates[id] = serverState
-                if current == serverState {
-                    markServerSeededReady(id)
-                    clearExecutionError(for: id)
-                    UserDefaults.standard.removeObject(forKey: legacyKey)
-                    return
-                }
-                Self.writeLegacyState(current, forKey: legacyKey)
-                var putResult = await enqueueExecutionStatePut(
-                    for: assignment,
-                    requireReady: true
-                )
-                if Task.isCancelled,
-                   putResult != .serverAcked,
-                   putResult != .offlineQueued {
-                    putResult = .cancelled
-                }
-                switch putResult {
-                case .serverAcked:
-                    UserDefaults.standard.removeObject(forKey: legacyKey)
-                    markServerSeededReady(id)
-                    clearExecutionError(for: id)
-                case .offlineQueued:
-                    Self.writeLegacyState(
-                        executionStates[id] ?? current,
-                        forKey: legacyKey
-                    )
-                    markServerSeededReady(id)
-                    clearExecutionError(for: id)
-                case .failed:
-                    // Keep live cache; lastSynced remains serverState (honest baseline).
-                    executionStates[id] = current
-                    lastSyncedStates[id] = serverState
-                    Self.writeLegacyState(current, forKey: legacyKey)
-                    markServerSeededReady(id)
-                    setExecutionError(
-                        tr(
-                            "team_portal.execution_save_error",
-                            "No pudimos guardar el checklist de ejecución."
-                        ),
-                        for: id
-                    )
-                case .cancelled:
-                    executionLoadStates[id] = .ready
-                }
-                return
-            }
 
             if let localProgress, !localProgress.isDefault {
                 if serverState.isDefault {
                     // Server empty + local progress → migrate via the serial PUT queue.
                     // Stay in `.loading` until migrate finishes so concurrent edits
                     // cannot race a mid-migrate PUT of incomplete defaults.
-                    // Soft revalidate already has cache + ready — keep editing on.
-                    if !softRevalidate {
-                        executionStates[id] = localProgress
-                        lastSyncedStates[id] = .defaultState
-                    } else {
-                        // Ensure cache reflects local progress (including mid-GET edits).
-                        if executionStates[id] == nil {
-                            executionStates[id] = localProgress
-                        }
-                        if lastSyncedStates[id] == nil {
-                            lastSyncedStates[id] = .defaultState
-                        }
-                    }
+                    executionStates[id] = localProgress
+                    lastSyncedStates[id] = .defaultState
                     var putResult = await enqueueExecutionStatePut(
                         for: assignment,
-                        requireReady: softRevalidate
+                        requireReady: false
                     )
                     // Sheet dismiss can race a hard PUT outcome — prefer cancel idle.
                     if Task.isCancelled,
@@ -473,46 +452,28 @@ public final class TeamMemberPortalViewModel {
                         markServerSeededReady(id)
                         clearExecutionError(for: id)
                     case .failed:
-                        if softRevalidate {
-                            // Keep offline-ready local truth; surface save error.
-                            executionLoadStates[id] = .ready
-                            setExecutionError(
-                                tr(
-                                    "team_portal.execution_save_error",
-                                    "No pudimos guardar el checklist de ejecución."
-                                ),
-                                for: id
-                            )
-                        } else {
-                            // Keep legacy in UserDefaults; clear cache so reopen retries
-                            // GET+migrate instead of sticky-caching the rolled-back default.
-                            cancelNoteDebounce(for: id)
-                            executionStates[id] = nil
-                            lastSyncedStates[id] = nil
-                            executionServerSeeded[id] = false
-                            executionLoadStates[id] = .failed
-                            setExecutionError(
-                                tr(
-                                    "team_portal.execution_save_error",
-                                    "No pudimos guardar el checklist de ejecución."
-                                ),
-                                for: id
-                            )
-                        }
+                        // Keep legacy in UserDefaults; clear cache so reopen retries
+                        // GET+migrate instead of sticky-caching the rolled-back default.
+                        cancelNoteDebounce(for: id)
+                        executionStates[id] = nil
+                        lastSyncedStates[id] = nil
+                        executionServerSeeded[id] = false
+                        executionLoadStates[id] = .failed
+                        setExecutionError(
+                            tr(
+                                "team_portal.execution_save_error",
+                                "No pudimos guardar el checklist de ejecución."
+                            ),
+                            for: id
+                        )
                     case .cancelled:
                         // Sheet dismiss mid-migrate — no banner; keep legacy for reopen.
-                        if softRevalidate {
-                            executionLoadStates[id] = .ready
-                        } else {
-                            resetExecutionLoadAfterCancelledMigrate(id)
-                        }
+                        resetExecutionLoadAfterCancelledMigrate(id)
                     }
                     return
                 }
 
                 // Server + local both non-default → union merge (never silent-drop).
-                // Always use post-GET localProgress (not a frozen pre-GET snapshot).
-                // Mid-edit cache advances are handled above (authoritative live cache).
                 let merged = Self.mergeExecutionStates(server: serverState, legacy: localProgress)
                 if merged == serverState {
                     // Server already covers local — pure-server overwrite.
@@ -531,7 +492,7 @@ public final class TeamMemberPortalViewModel {
                 Self.writeLegacyState(merged, forKey: legacyKey)
                 var putResult = await enqueueExecutionStatePut(
                     for: assignment,
-                    requireReady: softRevalidate
+                    requireReady: false
                 )
                 // Sheet dismiss can race a hard PUT outcome — prefer cancel idle.
                 if Task.isCancelled,
@@ -580,17 +541,12 @@ public final class TeamMemberPortalViewModel {
                     )
                 case .cancelled:
                     // Sheet dismiss mid-merge — no banner; keep legacy for reopen.
-                    if softRevalidate {
-                        executionLoadStates[id] = .ready
-                    } else {
-                        resetExecutionLoadAfterCancelledMigrate(id)
-                    }
+                    resetExecutionLoadAfterCancelledMigrate(id)
                 }
                 return
             }
 
-            // No non-default local (and no mid-edit advance). Prefer server;
-            // drop empty leftover key. Mid-edit advances handled above.
+            // No non-default local. Prefer server; drop empty leftover key.
             executionStates[id] = serverState
             lastSyncedStates[id] = serverState
             markServerSeededReady(id)
@@ -609,11 +565,20 @@ public final class TeamMemberPortalViewModel {
             }
 
             // Cold-start offline / GET fail: surface non-default local so field
-            // staff can keep editing. Prefer live cache (soft revalidate mid-edit),
-            // then pre-GET snapshot, then UserDefaults blob.
+            // staff can keep editing.
+            // Soft revalidate: live cache key presence is truth (including
+            // intentional `.defaultState`) — do NOT fall back to preGet/legacy
+            // and do NOT set lastSynced to a resurrected snapshot.
+            // Cold load: live non-default → pre-GET → UserDefaults blob.
             // Do NOT mark serverSeeded — next open soft-revalidates with a re-GET.
             let seedCandidate: AssignmentExecutionState? = {
-                if let current = executionStates[id], !current.isDefault {
+                if softRevalidate {
+                    if let current = executionStates[id] {
+                        // Present key (even default) is live truth — no frozen fallback.
+                        return current.isDefault ? nil : current
+                    }
+                    // Key absent — may seed from preGet / legacy below.
+                } else if let current = executionStates[id], !current.isDefault {
                     return current
                 }
                 if let pre = preGetCache, !pre.isDefault {
@@ -633,8 +598,8 @@ public final class TeamMemberPortalViewModel {
                 return
             }
 
-            // Soft revalidate with no local progress: fall through to failed only
-            // if we have nothing to show.
+            // Soft revalidate with live key present (incl. intentional default):
+            // keep it and stay ready — do not resurrect preGet into lastSynced.
             if softRevalidate, executionStates[id] != nil {
                 executionLoadStates[id] = .ready
                 return

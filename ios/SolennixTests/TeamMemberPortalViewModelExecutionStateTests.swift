@@ -1866,6 +1866,159 @@ final class TeamMemberPortalViewModelExecutionStateTests: XCTestCase {
         XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
     }
 
+    // MARK: - Soft revalidate GET fail: intentional default stays default
+
+    @MainActor
+    func testSoftRevalidate_GetFail_MidClearDefault_KeepsDefault() async throws {
+        let eventId = "ev_soft_fail_default"
+        let assignment = try makeAssignment(
+            eventStaffId: "es_soft_fail_default",
+            eventId: eventId
+        )
+        try seedLegacy(
+            eventId: eventId,
+            arrival: true,
+            materials: true,
+            quickNote: "preGet progress that must not resurrect"
+        )
+        defer { clearLegacy(eventId: eventId) }
+
+        let getGate = Gate()
+        var getCount = 0
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                getCount += 1
+                if getCount == 1 {
+                    return errorResponse(url: url, status: 422)
+                }
+                getGate.waitSync()
+                // Soft revalidate GET fails after mid clear-to-default.
+                return errorResponse(url: url, status: 422)
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+        XCTAssertEqual(viewModel.executionServerSeeded[assignment.eventStaffId], false)
+        XCTAssertEqual(
+            viewModel.executionStates[assignment.eventStaffId]?.quickNote,
+            "preGet progress that must not resurrect"
+        )
+
+        let revalidateTask = Task { @MainActor in
+            await viewModel.loadExecutionState(for: assignment)
+        }
+        try await Task.sleep(nanoseconds: 50_000_000)
+        XCTAssertEqual(getCount, 2)
+
+        // Mid-GET intentional clear to default while soft revalidate GET is in flight.
+        viewModel.applyLocalExecutionState(.defaultState, for: assignment)
+        XCTAssertTrue(
+            viewModel.executionStates[assignment.eventStaffId]?.isDefault == true,
+            "live cache must be intentional default before GET fails"
+        )
+
+        getGate.open()
+        await revalidateTask.value
+
+        let final = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
+        XCTAssertTrue(
+            final.isDefault,
+            "GET fail must keep intentional default — not resurrect preGet/legacy"
+        )
+        XCTAssertNotEqual(final.quickNote, "preGet progress that must not resurrect")
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+        XCTAssertEqual(viewModel.executionServerSeeded[assignment.eventStaffId], false)
+        // Live stays intentional default. lastSynced may still hold the prior offline
+        // baseline (honest dirty marker) — it must NOT be reassigned from a
+        // resurrected seed path that also overwrote executionStates.
+        XCTAssertNotEqual(
+            viewModel.executionStates[assignment.eventStaffId],
+            viewModel.lastSyncedStates[assignment.eventStaffId],
+            "intentional default must remain dirty vs lastSynced baseline, not equal to resurrected seed"
+        )
+    }
+
+    // MARK: - Soft revalidate pre-GET dirty uncheck: no OR resurrect
+
+    @MainActor
+    func testSoftRevalidate_PreGetUncheck_DirtyVsLastSynced_KeepsFalse() async throws {
+        let eventId = "ev_soft_preget_uncheck"
+        let assignment = try makeAssignment(
+            eventStaffId: "es_soft_preget_uncheck",
+            eventId: eventId
+        )
+        // Offline seed materials true — lastSynced will match seed after cold fail seed.
+        try seedLegacy(
+            eventId: eventId,
+            arrival: true,
+            materials: true,
+            quickNote: "offline materials true"
+        )
+        defer { clearLegacy(eventId: eventId) }
+
+        var getCount = 0
+        var putBodies: [Data] = []
+
+        MockURLProtocol.requestHandler = { [self] request in
+            let url = request.url!
+            if request.httpMethod == "GET", url.path.contains("execution-state") {
+                getCount += 1
+                if getCount == 1 {
+                    return errorResponse(url: url, status: 422)
+                }
+                // Soft revalidate: server still materials true — OR-merge would resurrect.
+                return okResponse(
+                    url: url,
+                    data: executionStateJSON(
+                        arrival: true,
+                        materials: true,
+                        quickNote: "server still true"
+                    )
+                )
+            }
+            if request.httpMethod == "PUT", url.path.contains("execution-state") {
+                putBodies.append(request.httpBody ?? Data())
+                return okResponse(url: url, data: request.httpBody ?? Data())
+            }
+            return errorResponse(url: url)
+        }
+
+        await viewModel.loadExecutionState(for: assignment)
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+        XCTAssertEqual(viewModel.executionServerSeeded[assignment.eventStaffId], false)
+        XCTAssertTrue(viewModel.executionStates[assignment.eventStaffId]?.checklist.materials == true)
+
+        // Pre-GET subtractive edit (not mid-GET): dirty live vs lastSynced before revalidate.
+        var preGetUncheck = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
+        preGetUncheck.checklist.materials = false
+        viewModel.applyLocalExecutionState(preGetUncheck, for: assignment)
+        XCTAssertTrue(viewModel.executionStates[assignment.eventStaffId]?.checklist.materials == false)
+        XCTAssertNotEqual(
+            viewModel.executionStates[assignment.eventStaffId],
+            viewModel.lastSyncedStates[assignment.eventStaffId],
+            "pre-GET uncheck must be dirty vs lastSynced"
+        )
+
+        // Soft revalidate with no further mid-GET edit (live == preGetCache, dirty vs lastSynced).
+        await viewModel.loadExecutionState(for: assignment)
+
+        let final = try XCTUnwrap(viewModel.executionStates[assignment.eventStaffId])
+        XCTAssertFalse(
+            final.checklist.materials,
+            "pre-GET uncheck must stay false — soft revalidate must not OR-merge server true"
+        )
+        XCTAssertTrue(final.checklist.arrival)
+        XCTAssertEqual(viewModel.executionLoadStates[assignment.eventStaffId], .ready)
+        XCTAssertFalse(
+            putBodies.isEmpty,
+            "dirty live vs server must push live full-state via PUT"
+        )
+    }
+
     // MARK: - Offline mutation flush notification clears serverSeeded only
 
     @MainActor
