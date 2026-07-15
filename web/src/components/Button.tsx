@@ -20,7 +20,7 @@ export const Button: React.FC<ButtonProps> = ({
     <button
       disabled={disabled || loading}
       className={clsx(
-        "inline-flex items-center justify-center font-semibold transition-all active-ios-scale disabled:opacity-50 disabled:pointer-events-none cursor-pointer",
+        "inline-flex items-center justify-center font-semibold transition-all active-ios-scale disabled:opacity-50 disabled:pointer-events-none cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
         // Variants
         variant === 'primary' && "bg-linear-to-br from-primary to-primary-dark text-on-primary shadow-xs hover:shadow-sm active:opacity-90",
         variant === 'secondary' && "bg-surface-alt border border-border text-text hover:bg-surface-alt/80",

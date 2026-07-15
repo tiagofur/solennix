@@ -1174,7 +1174,7 @@ export const EventForm: React.FC = () => {
                       if (activeStep > step.id) setActiveStep(step.id);
                     }}
                     disabled={activeStep < step.id}
-                    className="group flex flex-col items-center focus:outline-hidden"
+                    className="group flex flex-col items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary rounded-lg"
                   >
                     <span
                       className={`relative z-10 w-12 h-12 flex items-center justify-center rounded-2xl transition-all duration-500 ${

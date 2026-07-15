@@ -242,9 +242,10 @@ export const EventFormLinksPage: React.FC = () => {
                     <button
                       onClick={() => handleDelete(link.id)}
                       className="inline-flex items-center px-3 py-2 rounded-lg border border-border text-sm text-error/70 hover:bg-error/5 hover:text-error transition-colors"
+                      aria-label={t("admin_links.revoke")}
                       title={t("admin_links.revoke")}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </>
                 )}

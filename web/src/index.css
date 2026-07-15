@@ -214,6 +214,18 @@
     background-color: var(--color-surface-grouped);
     color: var(--color-text);
   }
+
+  /*
+   * Global focus-visible ring (#889).
+   * Ensures every interactive element has a visible focus indicator for
+   * keyboard-only navigation. Only fires on keyboard focus (not mouse click)
+   * via :focus-visible. Components that already define their own focus styles
+   * (inputs with focus:ring-*) take precedence due to specificity.
+   */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
 }
 
 /*
