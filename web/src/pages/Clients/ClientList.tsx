@@ -364,7 +364,7 @@ export const ClientList: React.FC = () => {
                       checked={selection.allSelected}
                       ref={(el) => { if (el) el.indeterminate = selection.someSelected; }}
                       onChange={selection.toggleAll}
-                      aria-label="Seleccionar todos los clientes"
+                      aria-label={t("common:a11y.select_all_clients")}
                     />
                   </th>
                   <th
@@ -423,7 +423,7 @@ export const ClientList: React.FC = () => {
                         className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer align-middle"
                         checked={selection.selected.has(client.id)}
                         onChange={() => selection.toggle(client.id)}
-                        aria-label={`Seleccionar ${client.name}`}
+                        aria-label={t("common:a11y.select_named", { name: client.name })}
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

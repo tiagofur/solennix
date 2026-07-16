@@ -620,7 +620,7 @@ export const InventoryList: React.FC = () => {
                         checked={selection.allSelected}
                         ref={(el) => { if (el) el.indeterminate = selection.someSelected; }}
                         onChange={selection.toggleAll}
-                        aria-label="Seleccionar todos los ítems"
+                        aria-label={t("common:a11y.select_all_items")}
                       />
                     </th>
                     <th
@@ -680,7 +680,7 @@ export const InventoryList: React.FC = () => {
                             className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer align-middle"
                             checked={selection.selected.has(item.id)}
                             onChange={() => selection.toggle(item.id)}
-                            aria-label={`Seleccionar ${item.ingredient_name}`}
+                            aria-label={t("common:a11y.select_named", { name: item.ingredient_name })}
                           />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">

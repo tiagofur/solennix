@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 
 type SplitPaneProps = {
@@ -29,6 +30,7 @@ export function SplitPane({
   detailClassName,
   className,
 }: SplitPaneProps) {
+  const { t } = useTranslation('common')
   return (
     <div
       className={cn(
@@ -39,11 +41,12 @@ export function SplitPane({
       <div className={cn('min-w-0', masterClassName)}>{master}</div>
       {/* Detail pane: hidden below xl; the list route owns full-page nav there. */}
       <div
+        role="region"
         className={cn(
           'hidden xl:block xl:min-h-0 xl:overflow-y-auto',
           detailClassName,
         )}
-        aria-label="Detail panel"
+        aria-label={t('a11y.detail_panel')}
       >
         {detail}
       </div>

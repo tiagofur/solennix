@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 /**
  * Base shimmer block — a single rounded rectangle with animate-shimmer.
@@ -17,8 +18,11 @@ export const SkeletonLine: React.FC<{
  */
 export const SkeletonCard: React.FC<{
   rows?: number;
-}> = ({ rows = 5 }) => (
-  <div role="status" aria-label="Cargando..." className="space-y-4 p-6">
+}> = ({ rows = 5 }) => {
+  const { t } = useTranslation("common");
+  const loadingLabel = t("action.loading");
+  return (
+  <div role="status" aria-label={loadingLabel} className="space-y-4 p-6">
     {Array.from({ length: rows }).map((_, i) => (
       <div key={i} className="flex items-center space-x-4 animate-shimmer">
         <div className="h-10 w-10 rounded-full bg-surface-alt shrink-0" />
@@ -28,9 +32,9 @@ export const SkeletonCard: React.FC<{
         </div>
       </div>
     ))}
-    <span className="sr-only">Cargando...</span>
   </div>
-);
+  );
+};
 
 interface SkeletonTableColumn {
   /** Tailwind width class for the column (e.g. "w-32", "w-48"). */
@@ -60,8 +64,11 @@ interface SkeletonTableColumn {
 export const SkeletonTable: React.FC<{
   columns: SkeletonTableColumn[];
   rows?: number;
-}> = ({ columns, rows = 5 }) => (
-  <div role="status" aria-label="Cargando..." className="overflow-x-auto">
+}> = ({ columns, rows = 5 }) => {
+  const { t } = useTranslation("common");
+  const loadingLabel = t("action.loading");
+  return (
+  <div role="status" aria-label={loadingLabel} className="overflow-x-auto">
     {/* Header shimmer */}
     <div className="bg-surface-alt px-6 py-3 flex items-center gap-6 border-b border-border">
       {columns.map((col, i) => (
@@ -100,6 +107,6 @@ export const SkeletonTable: React.FC<{
         ))}
       </div>
     ))}
-    <span className="sr-only">Cargando...</span>
   </div>
-);
+  );
+};

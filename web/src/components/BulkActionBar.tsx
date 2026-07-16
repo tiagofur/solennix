@@ -1,5 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 
 export interface BulkActionBarProps {
   /** Number of selected rows. Bar is hidden when 0. */
@@ -24,6 +25,8 @@ export const BulkActionBar: React.FC<BulkActionBarProps> = ({
   children,
   className,
 }) => {
+  const { t } = useTranslation('common');
+
   if (count === 0) return null;
 
   return (
@@ -36,10 +39,10 @@ export const BulkActionBar: React.FC<BulkActionBarProps> = ({
         className,
       )}
       role="toolbar"
-      aria-label="Acciones en lote"
+      aria-label={t('a11y.bulk_actions')}
     >
       <span className="text-sm font-semibold text-text whitespace-nowrap">
-        {count} {count === 1 ? 'seleccionado' : 'seleccionados'}
+        {t(count === 1 ? 'a11y.selected_one' : 'a11y.selected_other', { count })}
       </span>
       <div className="h-6 w-px bg-border" role="separator" />
       <div className="flex items-center gap-2">{children}</div>
@@ -47,8 +50,8 @@ export const BulkActionBar: React.FC<BulkActionBarProps> = ({
       <button
         type="button"
         onClick={onClear}
-        className="p-1.5 text-text-secondary hover:text-text hover:bg-surface-alt rounded-lg transition-colors"
-        aria-label="Limpiar selección"
+        className="p-1.5 text-text-secondary hover:text-text hover:bg-surface-alt rounded-lg transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        aria-label={t('a11y.clear_selection')}
       >
         ✕
       </button>

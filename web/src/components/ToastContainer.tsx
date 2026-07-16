@@ -39,10 +39,9 @@ export const ToastContainer: React.FC = () => {
           <button
             type="button"
             onClick={() => removeToast(toast.id)}
-            className="ml-auto -mx-1.5 -my-1.5 p-1.5 inline-flex items-center justify-center h-8 w-8 rounded-lg text-text-secondary hover:text-text focus:outline-hidden"
+            className="ml-auto -mx-1.5 -my-1.5 p-1.5 inline-flex items-center justify-center h-8 w-8 rounded-lg text-text-secondary hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             aria-label={t('action.close_notification')}
           >
-            <span className="sr-only">{t('action.close')}</span>
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>

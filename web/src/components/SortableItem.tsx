@@ -2,6 +2,7 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface SortableItemProps {
   id: string;
@@ -9,6 +10,7 @@ interface SortableItemProps {
 }
 
 export const SortableItem: React.FC<SortableItemProps> = ({ id, children }) => {
+  const { t } = useTranslation('common');
   const {
     attributes,
     listeners,
@@ -31,7 +33,7 @@ export const SortableItem: React.FC<SortableItemProps> = ({ id, children }) => {
         <button
           type="button"
           className="flex items-center justify-center w-6 shrink-0 text-text-tertiary hover:text-text-secondary cursor-grab active:cursor-grabbing touch-none"
-          aria-label="Arrastrar para reordenar"
+          aria-label={t('image.drag_reorder')}
           {...attributes}
           {...listeners}
         >

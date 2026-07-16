@@ -70,7 +70,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           </p>
         </div>
         <div>
-          <nav className="isolate inline-flex -space-x-px rounded-xl shadow-xs overflow-hidden" aria-label="Pagination">
+          <nav className="isolate inline-flex -space-x-px rounded-xl shadow-xs overflow-hidden" aria-label={t('a11y.pagination')}>
             <button
               type="button"
               onClick={() => onPageChange(currentPage - 1)}

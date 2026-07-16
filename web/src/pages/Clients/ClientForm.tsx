@@ -188,11 +188,17 @@ export const ClientForm: React.FC = () => {
             <div className="sm:col-span-6 flex justify-center">
               <div className="relative">
                 <div
-                  className="h-24 w-24 rounded-full bg-surface-alt flex items-center justify-center overflow-hidden border-2 border-border cursor-pointer hover:opacity-80 transition-opacity"
+                  className="h-24 w-24 rounded-full bg-surface-alt flex items-center justify-center overflow-hidden border-2 border-border cursor-pointer hover:opacity-80 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                   onClick={() => fileInputRef.current?.click()}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
+                  aria-label={t("clients:form.upload_photo")}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      fileInputRef.current?.click();
+                    }
+                  }}
                 >
                   {photoPreview ? (
                     <img src={photoPreview} alt="" className="h-full w-full object-cover" />
@@ -209,9 +215,10 @@ export const ClientForm: React.FC = () => {
                   <button
                     type="button"
                     onClick={removePhoto}
-                    className="absolute -top-1 -right-1 bg-error text-white rounded-full p-0.5 hover:bg-error/90 transition-colors"
+                    className="absolute -top-1 -right-1 bg-error text-white rounded-full p-0.5 hover:bg-error/90 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    aria-label={t("clients:form.remove_photo")}
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <X className="h-3.5 w-3.5" aria-hidden="true" />
                   </button>
                 )}
                 <input

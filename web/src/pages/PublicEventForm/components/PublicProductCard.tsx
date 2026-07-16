@@ -100,10 +100,11 @@ export const PublicProductCard: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={onDecrement}
-                  className="px-2 py-1 hover:bg-surface-alt transition-colors text-text-secondary"
+                  className="px-2 py-1 hover:bg-surface-alt transition-colors text-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                   disabled={quantity <= 1}
+                  aria-label={t("common:a11y.decrease_quantity")}
                 >
-                  <Minus className="h-3 w-3" />
+                  <Minus className="h-3 w-3" aria-hidden="true" />
                 </button>
                 <input
                   type="number"
@@ -113,13 +114,15 @@ export const PublicProductCard: React.FC<Props> = ({
                     onQuantityChange(parseInt(e.target.value) || 1)
                   }
                   className="w-12 text-center text-sm bg-card text-text border-x border-border py-1 focus:outline-none"
+                  aria-label={t("common:quantity")}
                 />
                 <button
                   type="button"
                   onClick={onIncrement}
-                  className="px-2 py-1 hover:bg-surface-alt transition-colors text-text-secondary"
+                  className="px-2 py-1 hover:bg-surface-alt transition-colors text-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  aria-label={t("common:a11y.increase_quantity")}
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="h-3 w-3" aria-hidden="true" />
                 </button>
               </div>
             </div>

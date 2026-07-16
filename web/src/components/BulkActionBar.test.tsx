@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent } from '@tests/customRender';
 import { BulkActionBar } from './BulkActionBar';
 
 describe('BulkActionBar', () => {
@@ -50,6 +50,15 @@ describe('BulkActionBar', () => {
     );
     fireEvent.click(screen.getByLabelText('Limpiar selección'));
     expect(onClear).toHaveBeenCalledTimes(1);
+  });
+
+  it('exposes localized toolbar accessible name', () => {
+    render(
+      <BulkActionBar count={2} onClear={() => {}}>
+        <button>Export</button>
+      </BulkActionBar>,
+    );
+    expect(screen.getByRole('toolbar', { name: 'Acciones en lote' })).toBeInTheDocument();
   });
 
   it('is desktop-only (hidden below lg)', () => {

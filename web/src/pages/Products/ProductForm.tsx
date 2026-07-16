@@ -399,8 +399,10 @@ export const ProductForm: React.FC = () => {
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ")
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
                         fileInputRef.current?.click();
+                      }
                     }}
                     aria-label={t("products:form.upload_photo")}
                   >
