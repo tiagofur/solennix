@@ -193,7 +193,12 @@ export const ClientForm: React.FC = () => {
                   role="button"
                   tabIndex={0}
                   aria-label={t("clients:form.upload_photo")}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      fileInputRef.current?.click();
+                    }
+                  }}
                 >
                   {photoPreview ? (
                     <img src={photoPreview} alt="" className="h-full w-full object-cover" />

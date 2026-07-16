@@ -26,8 +26,10 @@ export const RowActionMenu: React.FC<RowActionMenuProps> = ({ items }) => {
   const close = useCallback(() => setOpen(false), []);
 
   const closeAndRestoreFocus = useCallback(() => {
+    // Focus the trigger before unmounting the portal so Tab/Escape never
+    // leaves keyboard focus stranded on document.body.
+    buttonRef.current?.focus();
     setOpen(false);
-    requestAnimationFrame(() => buttonRef.current?.focus());
   }, []);
 
   // Calculate position when opening
@@ -91,9 +93,11 @@ export const RowActionMenu: React.FC<RowActionMenuProps> = ({ items }) => {
         return;
       }
 
-      // APG Menu Button: Tab leaves the menu and dismisses it
+      // APG Menu Button: Tab closes the menu and returns focus to the trigger
+      // so sequential Tab continues from the row control (portal is at body end).
       if (e.key === "Tab") {
-        close();
+        e.preventDefault();
+        closeAndRestoreFocus();
         return;
       }
 

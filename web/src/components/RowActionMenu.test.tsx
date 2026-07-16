@@ -30,17 +30,19 @@ describe('RowActionMenu a11y', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
-  it('dismisses on Tab per APG menu button pattern', () => {
+  it('dismisses on Tab and restores focus to the trigger', () => {
     render(
       <MemoryRouter>
         <RowActionMenu items={items} />
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /acciones/i }));
+    const trigger = screen.getByRole('button', { name: /acciones/i });
+    fireEvent.click(trigger);
     expect(screen.getByRole('menu')).toBeInTheDocument();
 
     fireEvent.keyDown(document, { key: 'Tab' });
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(trigger);
   });
 });
