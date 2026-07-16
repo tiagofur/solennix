@@ -33,7 +33,9 @@ export const Modal: React.FC<ModalProps> = ({
   // Keep latest onClose without re-running the focus effect (inline arrows
   // change identity every parent render and would steal focus mid-typing).
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
 
   useEffect(() => {
     if (!isOpen) return;
