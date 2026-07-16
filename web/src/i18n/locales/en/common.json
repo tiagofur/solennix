@@ -451,6 +451,7 @@
     "teams_table": "Teams table",
     "event_extras_table": "Additional event extras",
     "decrease_quantity": "Decrease quantity",
-    "increase_quantity": "Increase quantity"
+    "increase_quantity": "Increase quantity",
+    "select_named": "Select {{name}}"
   }
 }

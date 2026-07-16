@@ -1127,7 +1127,7 @@ export const EventList: React.FC = () => {
                           className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer align-middle"
                           checked={selection.selected.has(event.id)}
                           onChange={() => selection.toggle(event.id)}
-                          aria-label={`Seleccionar ${event.client?.name ?? "evento"}`}
+                          aria-label={t("common:a11y.select_named", { name: event.client?.name ?? t("common:nav.events") })}
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

@@ -188,10 +188,11 @@ export const ClientForm: React.FC = () => {
             <div className="sm:col-span-6 flex justify-center">
               <div className="relative">
                 <div
-                  className="h-24 w-24 rounded-full bg-surface-alt flex items-center justify-center overflow-hidden border-2 border-border cursor-pointer hover:opacity-80 transition-opacity"
+                  className="h-24 w-24 rounded-full bg-surface-alt flex items-center justify-center overflow-hidden border-2 border-border cursor-pointer hover:opacity-80 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                   onClick={() => fileInputRef.current?.click()}
                   role="button"
                   tabIndex={0}
+                  aria-label={t("clients:form.upload_photo")}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
                 >
                   {photoPreview ? (

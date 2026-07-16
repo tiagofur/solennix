@@ -373,7 +373,7 @@ export const ProductList: React.FC = () => {
                         className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer align-middle"
                         checked={selection.selected.has(product.id)}
                         onChange={() => selection.toggle(product.id)}
-                        aria-label={`Seleccionar ${product.name}`}
+                        aria-label={t("common:a11y.select_named", { name: product.name })}
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

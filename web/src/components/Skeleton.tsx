@@ -32,7 +32,6 @@ export const SkeletonCard: React.FC<{
         </div>
       </div>
     ))}
-    <span className="sr-only">{loadingLabel}</span>
   </div>
   );
 };
@@ -108,7 +107,6 @@ export const SkeletonTable: React.FC<{
         ))}
       </div>
     ))}
-    <span className="sr-only">{loadingLabel}</span>
   </div>
   );
 };

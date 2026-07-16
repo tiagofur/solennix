@@ -45,7 +45,8 @@
       "photo_too_large": "La foto debe ser menor a 10 MB",
       "photo_upload_error": "No se pudo subir la foto"
     },
-    "remove_photo": "Quitar foto del cliente"
+    "remove_photo": "Quitar foto del cliente",
+    "upload_photo": "Subir foto del cliente"
   },
   "details": {
     "title": "Detalle del Cliente",

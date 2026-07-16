@@ -453,6 +453,7 @@
     "teams_table": "Tabla de equipos",
     "event_extras_table": "Extras adicionales del evento",
     "decrease_quantity": "Disminuir cantidad",
-    "increase_quantity": "Aumentar cantidad"
+    "increase_quantity": "Aumentar cantidad",
+    "select_named": "Seleccionar {{name}}"
   }
 }

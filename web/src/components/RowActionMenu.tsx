@@ -91,6 +91,12 @@ export const RowActionMenu: React.FC<RowActionMenuProps> = ({ items }) => {
         return;
       }
 
+      // APG Menu Button: Tab leaves the menu and dismisses it
+      if (e.key === "Tab") {
+        close();
+        return;
+      }
+
       if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && e.key !== "Home" && e.key !== "End") {
         return;
       }

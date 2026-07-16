@@ -164,4 +164,23 @@ describe('Modal', () => {
     fireEvent.keyDown(window, { key: 'Tab' });
     expect(dialog.contains(document.activeElement)).toBe(true);
   });
+
+  it('does not re-steal focus when onClose identity changes while open', () => {
+    const { rerender } = render(
+      <Modal {...defaultProps} onClose={() => {}}>
+        <input aria-label="reason" defaultValue="" />
+      </Modal>,
+    );
+    const input = screen.getByLabelText('reason');
+    input.focus();
+    expect(document.activeElement).toBe(input);
+
+    // Parent re-render with a new inline onClose must not refocus the dialog
+    rerender(
+      <Modal {...defaultProps} onClose={() => { /* new identity */ }}>
+        <input aria-label="reason" defaultValue="a" />
+      </Modal>,
+    );
+    expect(document.activeElement).toBe(screen.getByLabelText('reason'));
+  });
 });

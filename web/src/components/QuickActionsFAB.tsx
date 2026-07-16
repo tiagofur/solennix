@@ -16,11 +16,16 @@ export const QuickActionsFAB: React.FC = () => {
     setIsOpen(false);
   }, [location.pathname]);
 
-  // Close on Escape
+  const fabButtonRef = React.useRef<HTMLButtonElement>(null);
+
+  // Close on Escape and restore focus to the FAB trigger
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsOpen(false);
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+        requestAnimationFrame(() => fabButtonRef.current?.focus());
+      }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
@@ -76,6 +81,7 @@ export const QuickActionsFAB: React.FC = () => {
 
         {/* Main FAB button */}
         <button
+          ref={fabButtonRef}
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={clsx(

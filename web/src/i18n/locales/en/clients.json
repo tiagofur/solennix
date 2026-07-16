@@ -45,7 +45,8 @@
       "photo_too_large": "Photo must be smaller than 10 MB",
       "photo_upload_error": "Could not upload photo"
     },
-    "remove_photo": "Remove client photo"
+    "remove_photo": "Remove client photo",
+    "upload_photo": "Upload client photo"
   },
   "details": {
     "title": "Client Details",

@@ -29,4 +29,18 @@ describe('RowActionMenu a11y', () => {
 
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
+
+  it('dismisses on Tab per APG menu button pattern', () => {
+    render(
+      <MemoryRouter>
+        <RowActionMenu items={items} />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /acciones/i }));
+    expect(screen.getByRole('menu')).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: 'Tab' });
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
 });

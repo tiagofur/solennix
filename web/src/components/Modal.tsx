@@ -30,6 +30,10 @@ export const Modal: React.FC<ModalProps> = ({
   const resolvedTitleId = titleId ?? generatedTitleId;
   const dialogRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+  // Keep latest onClose without re-running the focus effect (inline arrows
+  // change identity every parent render and would steal focus mid-typing).
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -53,15 +57,21 @@ export const Modal: React.FC<ModalProps> = ({
       );
     };
 
-    // Initial focus: first focusable control inside the dialog (usually close).
+    // Initial focus: prefer an element marked autoFocus, else first focusable.
     requestAnimationFrame(() => {
+      const root = dialogRef.current;
+      const autoFocused = root?.querySelector<HTMLElement>('[autofocus], [data-autofocus]');
+      if (autoFocused) {
+        autoFocused.focus();
+        return;
+      }
       const focusable = getFocusable();
       (focusable[0] ?? dialogRef.current)?.focus();
     });
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key !== 'Tab') return;
@@ -96,7 +106,7 @@ export const Modal: React.FC<ModalProps> = ({
       previouslyFocusedRef.current?.focus?.();
       previouslyFocusedRef.current = null;
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
