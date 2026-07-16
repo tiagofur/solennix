@@ -445,7 +445,7 @@ export const AdminUsers: React.FC = () => {
                 type="button"
                 onClick={handleBlockCancel}
                 className="p-2 rounded-xl hover:bg-surface-alt text-text-secondary transition-colors"
-                aria-label="Cerrar modal"
+                aria-label={t("common:modal.close")}
               >
                 <X className="h-5 w-5" />
               </button>

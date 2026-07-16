@@ -222,21 +222,23 @@ export const EventFormLinksPage: React.FC = () => {
                     <button
                       onClick={() => handleCopy(link.url, link.id)}
                       className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-sm text-text-secondary hover:bg-surface-alt transition-colors"
+                      aria-label={t("admin_links.copy")}
                       title={t("admin_links.copy")}
                     >
                       {copiedId === link.id ? (
-                        <Check className="h-4 w-4 text-success" />
+                        <Check className="h-4 w-4 text-success" aria-hidden="true" />
                       ) : (
-                        <Copy className="h-4 w-4" />
+                        <Copy className="h-4 w-4" aria-hidden="true" />
                       )}
                       <span className="hidden sm:inline">{t("admin_links.copy")}</span>
                     </button>
                     <button
                       onClick={() => handleShare(link.url, link.label)}
                       className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-sm text-text-secondary hover:bg-surface-alt transition-colors"
+                      aria-label={t("admin_links.share")}
                       title={t("admin_links.share")}
                     >
-                      <Share2 className="h-4 w-4" />
+                      <Share2 className="h-4 w-4" aria-hidden="true" />
                       <span className="hidden sm:inline">{t("admin_links.share")}</span>
                     </button>
                     <button

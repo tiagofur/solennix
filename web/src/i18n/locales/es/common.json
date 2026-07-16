@@ -434,5 +434,25 @@
     "banner_title": "Sin conexión",
     "banner_description": "Algunas funciones no estarán disponibles hasta que vuelvas a conectar.",
     "back_online": "Conexión restablecida"
+  },
+  "a11y": {
+    "bulk_actions": "Acciones en lote",
+    "clear_selection": "Limpiar selección",
+    "selected_one": "{{count}} seleccionado",
+    "selected_other": "{{count}} seleccionados",
+    "breadcrumb": "Miga de pan",
+    "pagination": "Paginación",
+    "detail_panel": "Panel de detalle",
+    "select_all_events": "Seleccionar todos los eventos",
+    "select_all_clients": "Seleccionar todos los clientes",
+    "select_all_products": "Seleccionar todos los productos",
+    "select_all_items": "Seleccionar todos los ítems",
+    "select_all_staff": "Seleccionar todos los colaboradores",
+    "select_all_teams": "Seleccionar todos los equipos",
+    "staff_table": "Tabla de colaboradores",
+    "teams_table": "Tabla de equipos",
+    "event_extras_table": "Extras adicionales del evento",
+    "decrease_quantity": "Disminuir cantidad",
+    "increase_quantity": "Aumentar cantidad"
   }
 }

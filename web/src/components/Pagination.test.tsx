@@ -28,7 +28,7 @@ describe('Pagination', () => {
 
   it('renders pagination when totalPages > 1', () => {
     render(<Pagination {...defaultProps} />);
-    expect(screen.getByLabelText('Pagination')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Paginación|Pagination/i)).toBeInTheDocument();
   });
 
   it('displays correct item range text', () => {

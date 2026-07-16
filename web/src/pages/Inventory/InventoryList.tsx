@@ -620,7 +620,7 @@ export const InventoryList: React.FC = () => {
                         checked={selection.allSelected}
                         ref={(el) => { if (el) el.indeterminate = selection.someSelected; }}
                         onChange={selection.toggleAll}
-                        aria-label="Seleccionar todos los ítems"
+                        aria-label={t("common:a11y.select_all_items")}
                       />
                     </th>
                     <th

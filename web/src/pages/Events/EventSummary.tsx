@@ -882,7 +882,7 @@ export const EventSummary: React.FC = () => {
                 <Zap className="h-5 w-5 text-primary" />
                 {t('events:general.extras')}
               </h2>
-              <table className="w-full text-sm" aria-label="Extras adicionales del evento">
+              <table className="w-full text-sm" aria-label={t("common:a11y.event_extras_table")}>
                 <thead>
                   <tr className="text-left text-text-tertiary border-b border-border">
                     <th className="pb-3 px-1 font-semibold uppercase tracking-wide text-xs">{t('common:description')}</th>

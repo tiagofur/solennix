@@ -432,5 +432,25 @@
     "banner_title": "You're offline",
     "banner_description": "Some features won't be available until you reconnect.",
     "back_online": "Back online"
+  },
+  "a11y": {
+    "bulk_actions": "Bulk actions",
+    "clear_selection": "Clear selection",
+    "selected_one": "{{count}} selected",
+    "selected_other": "{{count}} selected",
+    "breadcrumb": "Breadcrumb",
+    "pagination": "Pagination",
+    "detail_panel": "Detail panel",
+    "select_all_events": "Select all events",
+    "select_all_clients": "Select all clients",
+    "select_all_products": "Select all products",
+    "select_all_items": "Select all items",
+    "select_all_staff": "Select all staff members",
+    "select_all_teams": "Select all teams",
+    "staff_table": "Staff table",
+    "teams_table": "Teams table",
+    "event_extras_table": "Additional event extras",
+    "decrease_quantity": "Decrease quantity",
+    "increase_quantity": "Increase quantity"
   }
 }

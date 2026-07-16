@@ -1071,7 +1071,7 @@ export const EventList: React.FC = () => {
                         checked={selection.allSelected}
                         ref={(el) => { if (el) el.indeterminate = selection.someSelected; }}
                         onChange={selection.toggleAll}
-                        aria-label="Seleccionar todos los eventos"
+                        aria-label={t("common:a11y.select_all_events")}
                       />
                     </th>
                     <th

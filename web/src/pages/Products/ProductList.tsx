@@ -320,7 +320,7 @@ export const ProductList: React.FC = () => {
                       checked={selection.allSelected}
                       ref={(el) => { if (el) el.indeterminate = selection.someSelected; }}
                       onChange={selection.toggleAll}
-                      aria-label="Seleccionar todos los productos"
+                      aria-label={t("common:a11y.select_all_products")}
                     />
                   </th>
                   <th

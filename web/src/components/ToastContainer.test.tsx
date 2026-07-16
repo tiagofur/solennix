@@ -157,12 +157,14 @@ describe('ToastContainer', () => {
     expect(container).toBeInTheDocument();
   });
 
-  it('renders sr-only "Cerrar" text inside close button', () => {
+  it('close button uses focus-visible outline classes (not outline-hidden)', () => {
     act(() => {
       useToast.getState().addToast('Test toast', 'success');
     });
 
     render(<ToastContainer />);
-    expect(screen.getByText(/Cerrar|action\.close/i)).toBeInTheDocument();
+    const closeButton = screen.getByLabelText(/Cerrar notificación|action\.close_notification/i);
+    expect(closeButton.className).toContain('focus-visible:outline-2');
+    expect(closeButton.className).not.toContain('outline-hidden');
   });
 });

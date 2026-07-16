@@ -128,6 +128,14 @@ describe('Modal', () => {
     expect(dialog).toHaveAttribute('aria-describedby', 'modal-desc');
   });
 
+  it('always sets aria-labelledby even without titleId prop', () => {
+    render(<Modal {...defaultProps} />);
+    const dialog = screen.getByRole('dialog');
+    const labelledBy = dialog.getAttribute('aria-labelledby');
+    expect(labelledBy).toBeTruthy();
+    expect(document.getElementById(labelledBy!)).toHaveTextContent('Test Modal');
+  });
+
   it('has aria-modal="true"', () => {
     render(<Modal {...defaultProps} />);
     expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true');
@@ -137,5 +145,23 @@ describe('Modal', () => {
     render(<Modal {...defaultProps} titleId="my-title" />);
     const title = screen.getByText('Test Modal');
     expect(title).toHaveAttribute('id', 'my-title');
+  });
+
+  it('marks close icon as decorative and traps Tab focus', () => {
+    render(
+      <Modal {...defaultProps}>
+        <button type="button">First</button>
+        <button type="button">Second</button>
+      </Modal>,
+    );
+    const dialog = screen.getByRole('dialog');
+    const closeBtn = screen.getByLabelText('Cerrar modal');
+    expect(closeBtn.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+
+    // Focus last control, Tab should wrap to first focusable inside dialog
+    const second = screen.getByRole('button', { name: 'Second' });
+    second.focus();
+    fireEvent.keyDown(window, { key: 'Tab' });
+    expect(dialog.contains(document.activeElement)).toBe(true);
   });
 });

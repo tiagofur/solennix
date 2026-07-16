@@ -104,7 +104,7 @@ export const StaffTeamList: React.FC = () => {
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="data-table" aria-label="Tabla de equipos">
+            <table className="data-table" aria-label={t("common:a11y.teams_table")}>
               <caption className="sr-only">
                 {t("staff:teams.list.table.summary", { count: teams.length })}
               </caption>
@@ -118,7 +118,7 @@ export const StaffTeamList: React.FC = () => {
                       checked={selection.allSelected}
                       ref={(el) => { if (el) el.indeterminate = selection.someSelected; }}
                       onChange={selection.toggleAll}
-                      aria-label="Seleccionar todos los equipos"
+                      aria-label={t("common:a11y.select_all_teams")}
                     />
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-text-secondary">

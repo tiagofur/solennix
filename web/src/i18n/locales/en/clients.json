@@ -44,7 +44,8 @@
       "email_invalid": "Invalid email address. Use format: name@domain.com",
       "photo_too_large": "Photo must be smaller than 10 MB",
       "photo_upload_error": "Could not upload photo"
-    }
+    },
+    "remove_photo": "Remove client photo"
   },
   "details": {
     "title": "Client Details",

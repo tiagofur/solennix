@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 
 type SplitPaneProps = {
@@ -29,6 +30,7 @@ export function SplitPane({
   detailClassName,
   className,
 }: SplitPaneProps) {
+  const { t } = useTranslation('common')
   return (
     <div
       className={cn(
@@ -43,7 +45,7 @@ export function SplitPane({
           'hidden xl:block xl:min-h-0 xl:overflow-y-auto',
           detailClassName,
         )}
-        aria-label="Detail panel"
+        aria-label={t('a11y.detail_panel')}
       >
         {detail}
       </div>

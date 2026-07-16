@@ -50,4 +50,21 @@ describe('QuickActionsFAB', () => {
     const { container } = renderFAB();
     expect(container.firstChild).toBeNull();
   });
+
+  it('does not leave action links in the tab order when closed', () => {
+    mockLocation.mockReturnValue({ pathname: '/dashboard' });
+    renderFAB();
+
+    expect(screen.queryByRole('link', { name: /cotización rápida/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /nuevo evento/i })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /acciones rápidas/i }));
+
+    expect(screen.getByRole('link', { name: /cotización rápida/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /nuevo evento/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /cerrar acciones rápidas/i })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+  });
 });

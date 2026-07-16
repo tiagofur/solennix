@@ -25,6 +25,11 @@ export const RowActionMenu: React.FC<RowActionMenuProps> = ({ items }) => {
 
   const close = useCallback(() => setOpen(false), []);
 
+  const closeAndRestoreFocus = useCallback(() => {
+    setOpen(false);
+    requestAnimationFrame(() => buttonRef.current?.focus());
+  }, []);
+
   // Calculate position when opening
   useEffect(() => {
     if (!open || !buttonRef.current) return;
@@ -65,6 +70,60 @@ export const RowActionMenu: React.FC<RowActionMenuProps> = ({ items }) => {
     return () => document.removeEventListener("click", handleClickOutside, true);
   }, [open, close]);
 
+  // Keyboard: Escape, arrow navigation, initial focus on first item
+  useEffect(() => {
+    if (!open) return;
+
+    const getItems = () =>
+      Array.from(
+        menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [],
+      );
+
+    requestAnimationFrame(() => {
+      getItems()[0]?.focus();
+    });
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        closeAndRestoreFocus();
+        return;
+      }
+
+      if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && e.key !== "Home" && e.key !== "End") {
+        return;
+      }
+
+      const els = getItems();
+      if (els.length === 0) return;
+
+      e.preventDefault();
+      const currentIdx = els.indexOf(document.activeElement as HTMLElement);
+
+      if (e.key === "Home") {
+        els[0].focus();
+        return;
+      }
+      if (e.key === "End") {
+        els[els.length - 1].focus();
+        return;
+      }
+
+      let next =
+        e.key === "ArrowDown"
+          ? (currentIdx + 1) % els.length
+          : (currentIdx - 1 + els.length) % els.length;
+      if (currentIdx < 0) {
+        next = e.key === "ArrowDown" ? 0 : els.length - 1;
+      }
+      els[next].focus();
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open, closeAndRestoreFocus]);
+
   const firstDestructiveIdx = items.findIndex(
     (item) => item.variant === "destructive",
   );
@@ -87,7 +146,7 @@ export const RowActionMenu: React.FC<RowActionMenuProps> = ({ items }) => {
             const isDestructive = item.variant === "destructive";
             const showDivider = idx === firstDestructiveIdx && idx > 0;
 
-            const className = `w-full px-3 py-2 text-sm flex items-center gap-2 transition-colors ${
+            const className = `w-full px-3 py-2 text-sm flex items-center gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
               isDestructive
                 ? "text-error hover:bg-error/10"
                 : "text-text hover:bg-surface-alt"
@@ -103,10 +162,11 @@ export const RowActionMenu: React.FC<RowActionMenuProps> = ({ items }) => {
                     to={item.href}
                     className={className}
                     role="menuitem"
+                    tabIndex={-1}
                     onClick={(e) => {
                       e.stopPropagation();
                       item.onClick();
-                      close();
+                      closeAndRestoreFocus();
                     }}
                   >
                     <Icon className="h-4 w-4" aria-hidden="true" />
@@ -117,10 +177,11 @@ export const RowActionMenu: React.FC<RowActionMenuProps> = ({ items }) => {
                     type="button"
                     className={className}
                     role="menuitem"
+                    tabIndex={-1}
                     onClick={(e) => {
                       e.stopPropagation();
                       item.onClick();
-                      close();
+                      closeAndRestoreFocus();
                     }}
                   >
                     <Icon className="h-4 w-4" aria-hidden="true" />
@@ -146,7 +207,7 @@ export const RowActionMenu: React.FC<RowActionMenuProps> = ({ items }) => {
         }}
         className="p-1.5 text-text-secondary hover:text-primary hover:bg-surface-alt rounded-lg transition-colors inline-block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         aria-label={t('command_palette.actions_group')}
-        aria-haspopup="true"
+        aria-haspopup="menu"
         aria-expanded={open}
       >
         <MoreVertical className="h-4 w-4" aria-hidden="true" />

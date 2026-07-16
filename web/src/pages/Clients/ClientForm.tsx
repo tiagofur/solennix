@@ -209,9 +209,10 @@ export const ClientForm: React.FC = () => {
                   <button
                     type="button"
                     onClick={removePhoto}
-                    className="absolute -top-1 -right-1 bg-error text-white rounded-full p-0.5 hover:bg-error/90 transition-colors"
+                    className="absolute -top-1 -right-1 bg-error text-white rounded-full p-0.5 hover:bg-error/90 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    aria-label={t("clients:form.remove_photo")}
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <X className="h-3.5 w-3.5" aria-hidden="true" />
                   </button>
                 )}
                 <input
