@@ -48,13 +48,13 @@ export const RowActionMenu: React.FC<RowActionMenuProps> = ({ items }) => {
       });
     };
     updatePosition();
-    window.addEventListener("scroll", close, true);
-    window.addEventListener("resize", close);
+    window.addEventListener("scroll", closeAndRestoreFocus, true);
+    window.addEventListener("resize", closeAndRestoreFocus);
     return () => {
-      window.removeEventListener("scroll", close, true);
-      window.removeEventListener("resize", close);
+      window.removeEventListener("scroll", closeAndRestoreFocus, true);
+      window.removeEventListener("resize", closeAndRestoreFocus);
     };
-  }, [open, close]);
+  }, [open, closeAndRestoreFocus]);
 
   // Close on click outside
   useEffect(() => {
@@ -65,12 +65,12 @@ export const RowActionMenu: React.FC<RowActionMenuProps> = ({ items }) => {
         buttonRef.current && !buttonRef.current.contains(target) &&
         menuRef.current && !menuRef.current.contains(target)
       ) {
-        close();
+        closeAndRestoreFocus();
       }
     };
     document.addEventListener("click", handleClickOutside, true);
     return () => document.removeEventListener("click", handleClickOutside, true);
-  }, [open, close]);
+  }, [open, closeAndRestoreFocus]);
 
   // Keyboard: Escape, arrow navigation, initial focus on first item
   useEffect(() => {
