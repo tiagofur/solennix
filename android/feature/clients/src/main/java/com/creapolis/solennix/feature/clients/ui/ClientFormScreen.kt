@@ -57,7 +57,7 @@ import com.creapolis.solennix.feature.clients.viewmodel.ClientFormViewModel
 @Composable
 fun ClientFormScreen(
     viewModel: ClientFormViewModel,
-    onSearchClick: () -> Unit = {},
+    onSearchClick: (() -> Unit)? = null,
     onNavigateBack: () -> Unit
 ) {
     val scrollState = rememberScrollState()

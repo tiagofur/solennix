@@ -70,7 +70,7 @@ fun DashboardScreen(
     onUpgradeClick: () -> Unit = {},
     onNewEventClick: () -> Unit = {},
     onNewClientClick: () -> Unit = {},
-    onSearchClick: () -> Unit = {},
+    onSearchClick: (() -> Unit)? = null,
     onOnboardingAction: (String) -> Unit = {},
     onClientClick: (String) -> Unit = {},
     onProductClick: (String) -> Unit = {}

@@ -81,7 +81,9 @@ fun SearchScreen(
         onInventoryClick(id)
     }
 
-    val filteredState = viewModel.getFilteredResults()
+    val filteredState = remember(uiState, selectedScope) {
+        viewModel.getFilteredResults()
+    }
 
     LaunchedEffect(Unit) {
         if (!initialQuery.isNullOrBlank()) {
@@ -89,7 +91,7 @@ fun SearchScreen(
         }
     }
 
-    val hasNoResults = filteredState.query.isNotBlank() &&
+    val hasNoResults = filteredState.query.trim().length >= 2 &&
         !filteredState.isLoading &&
         filteredState.clients.isEmpty() &&
         filteredState.events.isEmpty() &&

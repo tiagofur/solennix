@@ -75,7 +75,7 @@ fun CalendarScreen(
     viewModel: CalendarViewModel,
     onEventClick: (String) -> Unit,
     onCreateEventClick: (LocalDate) -> Unit = {},
-    onSearchClick: () -> Unit = {}
+    onSearchClick: (() -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()

@@ -44,7 +44,7 @@ import java.util.Locale
 fun InventoryDetailScreen(
     viewModel: InventoryDetailViewModel,
     onNavigateBack: () -> Unit,
-    onSearchClick: () -> Unit = {},
+    onSearchClick: (() -> Unit)? = null,
     onEditClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

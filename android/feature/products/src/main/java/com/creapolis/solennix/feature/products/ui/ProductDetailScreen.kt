@@ -42,7 +42,7 @@ import java.time.temporal.ChronoUnit
 fun ProductDetailScreen(
     viewModel: ProductDetailViewModel,
     onNavigateBack: () -> Unit,
-    onSearchClick: () -> Unit = {},
+    onSearchClick: (() -> Unit)? = null,
     onEditClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

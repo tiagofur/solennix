@@ -47,7 +47,7 @@ fun SettingsScreen(
     onPrivacy: () -> Unit,
     onTerms: () -> Unit,
     onDeleteAccount: () -> Unit = {},
-    onSearchClick: () -> Unit = {},
+    onSearchClick: (() -> Unit)? = null,
     onNavigateBack: () -> Unit
 ) {
     val user by viewModel.currentUser.collectAsStateWithLifecycle()

@@ -73,7 +73,7 @@ fun StaffDetailScreen(
     viewModel: StaffDetailViewModel,
     onNavigateBack: () -> Unit,
     onEditClick: (String) -> Unit,
-    onSearchClick: () -> Unit = {}
+    onSearchClick: (() -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()

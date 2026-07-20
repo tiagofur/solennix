@@ -36,7 +36,7 @@ import com.creapolis.solennix.feature.events.viewmodel.EventChecklistViewModel
 @Composable
 fun EventChecklistScreen(
     viewModel: EventChecklistViewModel,
-    onSearchClick: () -> Unit = {},
+    onSearchClick: (() -> Unit)? = null,
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

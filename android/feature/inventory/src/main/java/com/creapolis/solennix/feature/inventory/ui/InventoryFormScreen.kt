@@ -37,7 +37,7 @@ import com.creapolis.solennix.feature.inventory.viewmodel.InventoryFormViewModel
 @Composable
 fun InventoryFormScreen(
     viewModel: InventoryFormViewModel,
-    onSearchClick: () -> Unit = {},
+    onSearchClick: (() -> Unit)? = null,
     onNavigateToPricing: () -> Unit = {},
     onNavigateBack: () -> Unit
 ) {
