@@ -80,7 +80,7 @@ fun StaffListScreen(
     onStaffClick: (String) -> Unit,
     onStaffEdit: (String) -> Unit,
     onAddStaffClick: () -> Unit,
-    onSearchClick: () -> Unit = {},
+    onSearchClick: (() -> Unit)? = null,
     onTeamsClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

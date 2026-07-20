@@ -142,6 +142,17 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
         }
     }
 
+    // List-screen app-bar search: switch to the Search tab (keeps bottom bar)
+    // instead of stacking the deep-link `search?query=` destination.
+    val openGlobalSearch: () -> Unit = {
+        selectedDestination = TopLevelDestination.SEARCH
+        navController.navigate(TopLevelDestination.SEARCH.route) {
+            popUpTo(navController.graph.startDestinationId) { inclusive = false }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
     // Limit-reached dialog — routes to the subscription screen on confirm.
     if (showLimitDialog && gateVm.limitReachedMessage != null) {
         UpgradePlanDialog(
@@ -233,7 +244,6 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onUpgradeClick = { navController.navigate("pricing") },
                     onNewEventClick = { tryCreateEvent("event_form?eventId=") },
                     onNewClientClick = { navController.navigate("client_form") },
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onClientClick = { id -> navController.navigate("client_detail/$id") },
                     onProductClick = { id -> navController.navigate("product_detail/$id") },
                     onOnboardingAction = { action ->
@@ -252,7 +262,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onEventClick = { id -> navController.navigate("event_detail/$id") },
                     onEventEdit = { id -> navController.navigate("event_form?eventId=$id") },
                     onNavigateBack = { navController.popBackStack() },
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
+                    onSearchClick = openGlobalSearch,
                     onUpgradeClick = { navController.navigate("pricing") },
                     onCreateEventClick = { date -> tryCreateEvent("event_form?eventId=&date=${date}") },
                     showBackButton = false
@@ -264,7 +274,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     viewModel = hiltViewModel(),
                     onClientClick = { id -> navController.navigate("client_detail/$id") },
                     onClientEdit = { id -> navController.navigate("client_form?clientId=$id") },
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
+                    onSearchClick = openGlobalSearch,
                     onAddClientClick = { navController.navigate("client_form") }
                 )
             }
@@ -332,14 +342,13 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onProductClick = { id -> navController.navigate("product_detail/$id") },
                     onAddProductClick = { navController.navigate("product_form") },
                     onEditProduct = { id -> navController.navigate("product_form?productId=$id") },
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
+                    onSearchClick = openGlobalSearch,
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
             composable("product_detail/{productId}") {
                 ProductDetailScreen(
                     viewModel = hiltViewModel(),
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() },
                     onEditClick = { id -> navController.navigate("product_form?productId=$id") }
                 )
@@ -347,7 +356,6 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
             composable("product_form?productId={productId}") {
                 ProductFormScreen(
                     viewModel = hiltViewModel(),
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
@@ -358,14 +366,13 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onItemClick = { id -> navController.navigate("inventory_detail/$id") },
                     onEditItem = { id -> navController.navigate("inventory_form?itemId=$id") },
                     onAddItemClick = { navController.navigate("inventory_form") },
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
+                    onSearchClick = openGlobalSearch,
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
             composable("inventory_detail/{itemId}") {
                 InventoryDetailScreen(
                     viewModel = hiltViewModel(),
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() },
                     onEditClick = { id -> navController.navigate("inventory_form?itemId=$id") }
                 )
@@ -373,7 +380,6 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
             composable("inventory_form?itemId={itemId}") {
                 InventoryFormScreen(
                     viewModel = hiltViewModel(),
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateToPricing = { navController.navigate("pricing") },
                     onNavigateBack = { navController.popBackStack() }
                 )
@@ -394,7 +400,6 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onPrivacy = { uriHandler.openUri("https://creapolis.dev/privacy-policy") },
                     onTerms = { navController.navigate("terms") },
                     onDeleteAccount = { navController.navigate("delete_account") },
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
@@ -450,14 +455,12 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     viewModel = hiltViewModel(),
                     onNavigateBack = { navController.popBackStack() },
                     onEditClick = { id -> navController.navigate("client_form?clientId=$id") },
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onEventClick = { id -> navController.navigate("event_detail/$id") }
                 )
             }
             composable("client_form?clientId={clientId}") {
                 ClientFormScreen(
                     viewModel = hiltViewModel(),
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
@@ -469,7 +472,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onStaffClick = { id -> navController.navigate("staff_detail/$id") },
                     onStaffEdit = { id -> navController.navigate("staff_form?staffId=$id") },
                     onAddStaffClick = { navController.navigate("staff_form") },
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
+                    onSearchClick = openGlobalSearch,
                     onTeamsClick = { navController.navigate("staff_teams") }
                 )
             }
@@ -509,8 +512,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 StaffDetailScreen(
                     viewModel = hiltViewModel(),
                     onNavigateBack = { navController.popBackStack() },
-                    onEditClick = { id -> navController.navigate("staff_form?staffId=$id") },
-                    onSearchClick = { navController.navigate(buildSearchRoute()) }
+                    onEditClick = { id -> navController.navigate("staff_form?staffId=$id") }
                 )
             }
             composable("staff_form?staffId={staffId}", arguments = listOf(navArgument("staffId") {
@@ -520,7 +522,6 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
             })) {
                 StaffFormScreen(
                     viewModel = hiltViewModel(),
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
@@ -528,7 +529,6 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
             composable("staff_form") {
                 StaffFormScreen(
                     viewModel = hiltViewModel(),
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
@@ -541,7 +541,6 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 QuickQuoteScreen(
                     viewModel = hiltViewModel(),
                     onNavigateBack = { navController.popBackStack() },
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onConvertToEvent = { tryCreateEvent("event_form?eventId=") }
                 )
             }
@@ -551,7 +550,6 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     viewModel = hiltViewModel(),
                     onNavigateBack = { navController.popBackStack() },
                     onEditClick = { id -> navController.navigate("event_form?eventId=$id") },
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onChecklistClick = { id -> navController.navigate("event_checklist/$id") },
                     onFinancesClick = { id -> navController.navigate("event_finances/$id") },
                     onPaymentsClick = { id -> navController.navigate("event_payments/$id") },
@@ -603,7 +601,6 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
             composable("event_checklist/{eventId}") {
                 EventChecklistScreen(
                     viewModel = hiltViewModel(),
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
@@ -624,7 +621,6 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
             ) {
                 EventFormScreen(
                     viewModel = hiltViewModel(),
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateToPricing = { navController.navigate("pricing") },
                     onNavigateBack = { navController.popBackStack() }
                 )
@@ -778,8 +774,4 @@ private fun MenuOptionItem(
             )
         }
     }
-}
-
-private fun buildSearchRoute(query: String? = null): String {
-    return "search?query=${Uri.encode(query.orEmpty())}"
 }

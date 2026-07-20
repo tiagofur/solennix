@@ -63,7 +63,7 @@ fun InventoryListScreen(
     onNavigateBack: () -> Unit,
     onItemClick: (String) -> Unit,
     onEditItem: (String) -> Unit = {},
-    onSearchClick: () -> Unit = {},
+    onSearchClick: (() -> Unit)? = null,
     onAddItemClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

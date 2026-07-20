@@ -42,7 +42,7 @@ fun ClientDetailScreen(
     viewModel: ClientDetailViewModel,
     onNavigateBack: () -> Unit,
     onEditClick: (String) -> Unit,
-    onSearchClick: () -> Unit = {},
+    onSearchClick: (() -> Unit)? = null,
     onEventClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

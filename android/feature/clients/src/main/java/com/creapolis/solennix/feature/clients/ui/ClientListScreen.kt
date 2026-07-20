@@ -95,7 +95,7 @@ fun ClientListScreen(
     onClientClick: (String) -> Unit,
     onClientEdit: (String) -> Unit,
     onAddClientClick: () -> Unit,
-    onSearchClick: () -> Unit = {},
+    onSearchClick: (() -> Unit)? = null,
     onUpgradeClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

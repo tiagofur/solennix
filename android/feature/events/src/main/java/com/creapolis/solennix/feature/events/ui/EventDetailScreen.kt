@@ -74,7 +74,7 @@ fun EventDetailScreen(
     viewModel: EventDetailViewModel,
     onNavigateBack: () -> Unit,
     onEditClick: (String) -> Unit,
-    onSearchClick: () -> Unit = {},
+    onSearchClick: (() -> Unit)? = null,
     onChecklistClick: (String) -> Unit = {},
     onFinancesClick: (String) -> Unit = {},
     onPaymentsClick: (String) -> Unit = {},

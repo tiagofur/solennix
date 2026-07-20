@@ -53,7 +53,7 @@ import java.util.Locale
 @Composable
 fun EventFormScreen(
     viewModel: EventFormViewModel,
-    onSearchClick: () -> Unit = {},
+    onSearchClick: (() -> Unit)? = null,
     onNavigateToPricing: () -> Unit = {},
     onNavigateBack: () -> Unit
 ) {

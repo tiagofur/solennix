@@ -54,7 +54,7 @@ import com.creapolis.solennix.feature.products.viewmodel.RecipeItem
 @Composable
 fun ProductFormScreen(
     viewModel: ProductFormViewModel,
-    onSearchClick: () -> Unit = {},
+    onSearchClick: (() -> Unit)? = null,
     onNavigateBack: () -> Unit
 ) {
     val scrollState = rememberScrollState()

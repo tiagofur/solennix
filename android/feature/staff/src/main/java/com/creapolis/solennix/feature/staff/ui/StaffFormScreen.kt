@@ -62,7 +62,7 @@ import com.creapolis.solennix.feature.staff.viewmodel.StaffFormViewModel
 @Composable
 fun StaffFormScreen(
     viewModel: StaffFormViewModel,
-    onSearchClick: () -> Unit = {},
+    onSearchClick: (() -> Unit)? = null,
     onNavigateBack: () -> Unit
 ) {
     val scrollState = rememberScrollState()

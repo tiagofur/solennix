@@ -45,7 +45,7 @@ import com.creapolis.solennix.feature.clients.viewmodel.QuoteItem
 fun QuickQuoteScreen(
     viewModel: QuickQuoteViewModel,
     onNavigateBack: () -> Unit,
-    onSearchClick: () -> Unit = {},
+    onSearchClick: (() -> Unit)? = null,
     onConvertToEvent: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
