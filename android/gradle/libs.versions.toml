@@ -1,6 +1,6 @@
 [versions]
-agp = "9.2.1"
-kotlin = "2.4.0"
+agp = "9.3.0"
+kotlin = "2.4.10"
 compose-bom = "2026.06.01"
 ktor = "3.5.1"
 # Hilt 2.59+ requires AGP 9. Keep on 2.58 while project stays on AGP 8.x.
@@ -21,7 +21,7 @@ firebase-bom = "34.16.0"
 google-services = "4.5.0"
 window = "1.5.1"
 vico = "2.5.2"
-revenuecat = "10.13.0"
+revenuecat = "10.14.1"
 workmanager = "2.11.2"
 paging = "3.5.0"
 junit5 = "6.1.2"
