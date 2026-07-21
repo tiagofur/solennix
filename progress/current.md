@@ -12,14 +12,23 @@
 - **Backend (`auth_handler.go` & `user_repo.go`)**: Se incluyó `registration_platform` en la creación de usuarios via OAuth (Google / Apple) y `CreateWithOAuth`.
 - **Backend Middleware (`auth.go`) & Repo (`user_repo.go`)**: Se actualizó `ActivityTracker` para que actualice retroactivamente la plataforma en la siguiente interacción de usuarios cuyo `registration_platform` sea `'unknown'` o vacío.
 - **Migración DB (`064_backfill_unknown_registration_platforms.up.sql`)**: Inferencia e ingesta directa de plataforma para usuarios `'unknown'` basada en `device_tokens` y `user_platforms`.
+- **Tarea:** `user-cleanup-lifecycle` — Automatización de ciclo de vida para cuentas no confirmadas (60d) y cuentas Free inactivas (12m).
+- **Estado:** Implementado, verificado al 100% y archivado SDD.
+- **Branch:** `feat/1031-user-cleanup-lifecycle`
+
+## Resumen
+- **DB Migración (`065_add_user_cleanup_lifecycle.up.sql`)**: Agregado de columnas de rastreo de inactividad (`inactivity_stage`, `inactivity_warning_sent_at`) e índice de escaneo parcial (`idx_users_inactivity_cleanup`).
+- **Modelo (`models.User`)**: Campos agregados al struct `User`.
+- **Repositorio (`UserCleanupRepo` & `UserRepo`)**: Métodos de escaneo de candidatos por lote, stage updates y purga dura `HardDeleteUser`. Actualizado `UpdateLastActiveAt` para reseteo automático de advertencias ante actividad.
+- **Servicio y Envíos de Correo (`UserCleanupService` & `EmailService`)**: Orquestador del ciclo de vida y plantillas de correo bilingües (`es`/`en`) para aviso de inactividad.
+- **Worker en Segundo Plano (`cmd/server/main.go`)**: Cron goroutine ejecutada diariamente a las 03:00 UTC.
+- **Pruebas (`user_cleanup_service_test.go`)**: Cobertura completa de pruebas unitarias verificadas con `go vet` y `go test`.
 
 ## Últimas sesiones cerradas
-- #855 feat(android): widget font scaling — PR #1016 merged (872b5f78).
-- #853 feat(android): TalkBack audit — PR #1017 abierto, CI verde.
-- #902 fix(backend): i18n writePlanLimitError + dashboard errors — PR #1012 merged.
-- #904 feat(backend): start_date/end_date aliases en GET /events — PR #1013 merged.
-- #890 epic security hardening — cerrado (18 sub-issues backend + 9 deps client-side todos CLOSED).
-- #1014 fix(backend): staff handler i18n (71 strings) — PR #1015 merged.
+- #1029 fix(backend): correct mobile registration platform tracking and backfill unknown users — Branch `fix/1029-mobile-registration-platform-unknown`.
+- #855 feat(android): widget font scaling — PR #1016 merged.
+- #853 feat(android): TalkBack audit — PR #1017.
 
 ## Bloqueos
 - Ninguno.
+
