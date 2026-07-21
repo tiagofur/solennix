@@ -1,16 +1,17 @@
 # Sesión Activa — Solennix Agent Progress
 
 ## Feature en curso
-- **Issue:** #853 — feat(android): TalkBack contentDescription gaps
-- **Estado:** PR #1017 abierto, CI verde, esperando merge.
-- **Branch:** `fix/853-talkback-content-description`
+- **Tarea:** Corrrección de rastreo de plataforma de registro para Mobile (Unknown -> iOS/Android/Web) y retroactivo para usuarios existentes.
+- **Estado:** Implementado y verificado cross-platform (iOS, Android, Web, Backend + Migración 064).
+- **Branch:** `fix/android-search-appbar-1021`
 
 ## Resumen
-- Audit completo: 85 archivos / 218 `contentDescription = null` en `feature/` + `core/`.
-- **217 de 218 son correctas** (decorativas: TextField leadingIcon, Button+Text, Card mergeDescendants, ListItem headlineContent).
-- **1 gap real**: `AccountDeletionScreen.kt:75` — IconButton de back sin label → `stringResource(DesignSystemR.string.cd_back)`.
-- Los 5 archivos del issue (QuickQuoteScreen, PaymentInboxScreen, ClientListScreen, DashboardScreen, EventsScreen) no tienen gaps reales.
-- Test `AccountDeletionAccessibilityTest` guarda el contrato del recurso `cd_back`.
+- **iOS (`APIClient.swift`)**: Se agregó el header `X-Client-Platform: ios` en todas las peticiones salientes.
+- **Android (`KtorClient.kt`)**: Se configuró `X-Client-Platform: android` en `defaultRequest`.
+- **Web (`web/src/lib/api.ts`)**: Se agregó `X-Client-Platform: web` en los headers por defecto.
+- **Backend (`auth_handler.go` & `user_repo.go`)**: Se incluyó `registration_platform` en la creación de usuarios via OAuth (Google / Apple) y `CreateWithOAuth`.
+- **Backend Middleware (`auth.go`) & Repo (`user_repo.go`)**: Se actualizó `ActivityTracker` para que actualice retroactivamente la plataforma en la siguiente interacción de usuarios cuyo `registration_platform` sea `'unknown'` o vacío.
+- **Migración DB (`064_backfill_unknown_registration_platforms.up.sql`)**: Inferencia e ingesta directa de plataforma para usuarios `'unknown'` basada en `device_tokens` y `user_platforms`.
 
 ## Últimas sesiones cerradas
 - #855 feat(android): widget font scaling — PR #1016 merged (872b5f78).

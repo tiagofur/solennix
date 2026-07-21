@@ -490,8 +490,8 @@ func (r *UserRepo) GetByAppleUserID(ctx context.Context, appleUserID string) (*m
 // CreateWithOAuth creates a new user with OAuth provider ID (no password)
 func (r *UserRepo) CreateWithOAuth(ctx context.Context, user *models.User) error {
 	query := `
-		INSERT INTO users (email, name, plan, role, google_user_id, apple_user_id, email_verified_at, default_currency)
-		VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7)
+		INSERT INTO users (email, name, plan, role, google_user_id, apple_user_id, email_verified_at, default_currency, registration_platform)
+		VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7, $8)
 		RETURNING id, created_at, updated_at`
 	if user.Role == "" {
 		user.Role = "user"
@@ -502,8 +502,11 @@ func (r *UserRepo) CreateWithOAuth(ctx context.Context, user *models.User) error
 	if user.DefaultCurrency == "" {
 		user.DefaultCurrency = "MXN"
 	}
+	if user.RegistrationPlatform == "" {
+		user.RegistrationPlatform = "unknown"
+	}
 	return r.pool.QueryRow(ctx, query,
-		user.Email, user.Name, user.Plan, user.Role, user.GoogleUserID, user.AppleUserID, user.DefaultCurrency,
+		user.Email, user.Name, user.Plan, user.Role, user.GoogleUserID, user.AppleUserID, user.DefaultCurrency, user.RegistrationPlatform,
 	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 }
 
@@ -558,7 +561,7 @@ func (r *UserRepo) UpdateRegistrationPlatform(ctx context.Context, id uuid.UUID,
 		UPDATE users
 		SET registration_platform = $2,
 			updated_at = NOW()
-		WHERE id = $1 AND (registration_platform = '' OR registration_platform IS NULL)`
+		WHERE id = $1 AND (registration_platform = '' OR registration_platform IS NULL OR registration_platform = 'unknown')`
 	_, err := r.pool.Exec(ctx, query, id, platform)
 	return err
 }

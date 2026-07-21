@@ -444,6 +444,7 @@ public actor APIClient {
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("ios", forHTTPHeaderField: "X-Client-Platform")
         if method == "POST" || method == "PUT" || method == "DELETE" {
             request.setValue(UUID().uuidString, forHTTPHeaderField: "X-Idempotency-Key")
         }

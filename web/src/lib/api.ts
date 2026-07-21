@@ -106,6 +106,7 @@ class ApiClient {
 		// No Authorization header needed — cookies are included via credentials: 'include'.
 		const headers: Record<string, string> = {
 			"Content-Type": "application/json",
+			"X-Client-Platform": "web",
 		};
 
 		// Include CSRF token if present
