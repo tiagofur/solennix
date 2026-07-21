@@ -320,8 +320,8 @@ func ActivityTracker(repo ActivityTrackerRepo) func(http.Handler) http.Handler {
 						GetActivityBuffer().Increment(userID, platform)
 					}
 
-					// Retroactively set registration platform on next login if it was missing
-					if regPlatform == "" && platform != "unknown" {
+					// Retroactively set registration platform on next login if it was missing or unknown
+					if (regPlatform == "" || regPlatform == "unknown") && platform != "unknown" {
 						if updater, ok := repo.(interface {
 							UpdateRegistrationPlatform(ctx context.Context, id uuid.UUID, platform string) error
 						}); ok {

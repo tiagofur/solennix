@@ -72,6 +72,7 @@ class KtorClient @Inject constructor(
         defaultRequest {
             url(BuildConfig.API_BASE_URL)
             contentType(ContentType.Application.Json)
+            header("X-Client-Platform", "android")
         }
 
         expectSuccess = true

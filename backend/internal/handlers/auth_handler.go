@@ -1288,10 +1288,11 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 
 	// Create new user with Google account
 	newUser := &models.User{
-		Email:        email,
-		Name:         name,
-		Plan:         "basic",
-		GoogleUserID: &googleUserID,
+		Email:                email,
+		Name:                 name,
+		Plan:                 "basic",
+		GoogleUserID:         &googleUserID,
+		RegistrationPlatform: middleware.ParsePlatform(r),
 	}
 	if err := h.userRepo.CreateWithOAuth(r.Context(), newUser); err != nil {
 		// Handle race condition: unique constraint violation means another request created the user
@@ -1704,10 +1705,11 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newUser := &models.User{
-		Email:       email,
-		Name:        name,
-		Plan:        "basic",
-		AppleUserID: &appleUserID,
+		Email:                email,
+		Name:                 name,
+		Plan:                 "basic",
+		AppleUserID:          &appleUserID,
+		RegistrationPlatform: middleware.ParsePlatform(r),
 	}
 
 	if err := h.userRepo.CreateWithOAuth(r.Context(), newUser); err != nil {
@@ -1950,10 +1952,11 @@ func (h *AuthHandler) AppleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	newUser := &models.User{
-		Email:       email,
-		Name:        fullName,
-		Plan:        "basic",
-		AppleUserID: &appleUserID,
+		Email:                email,
+		Name:                 fullName,
+		Plan:                 "basic",
+		AppleUserID:          &appleUserID,
+		RegistrationPlatform: middleware.ParsePlatform(r),
 	}
 	if err := h.userRepo.CreateWithOAuth(r.Context(), newUser); err != nil {
 		slog.Error("Failed to create user from Apple", "error", err)

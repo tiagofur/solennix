@@ -723,3 +723,45 @@ func TestActivityTracker_GivenCachedUser_WhenRequest_ThenDoesNotQueryRepoAgain(t
 	}
 }
 
+func TestActivityTracker_GivenUserUnknownPlatform_WhenRequest_ThenUpdatesRegistrationPlatformRetroactively(t *testing.T) {
+	clearUserCache()
+	buf := GetActivityBuffer()
+	buf.Flush()
+
+	userID := uuid.New()
+	mockRepo := &mockUserActivityRepo{
+		MockUser: &models.User{
+			ID:                   userID,
+			Role:                 "user",
+			RegistrationPlatform: "unknown", // Unknown platform
+		},
+	}
+
+	handler := ActivityTracker(mockRepo)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/api/test", nil)
+	ctx := context.WithValue(req.Context(), UserIDKey, userID)
+	req = req.WithContext(ctx)
+	req.Header.Set("X-Client-Platform", "ios")
+
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	time.Sleep(10 * time.Millisecond)
+
+	mockRepo.mu.Lock()
+	regCalls := mockRepo.UpdateRegistrationCalls
+	seenPlatform := mockRepo.LastRegistrationPlatformSeen
+	mockRepo.mu.Unlock()
+
+	if regCalls != 1 {
+		t.Fatalf("expected 1 UpdateRegistrationPlatform call, got %d", regCalls)
+	}
+	if seenPlatform != "ios" {
+		t.Fatalf("expected platform 'ios' to be passed to updater, got %q", seenPlatform)
+	}
+}
+
+

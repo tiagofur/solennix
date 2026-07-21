@@ -112,6 +112,7 @@ func main() {
 	reviewRepo := repository.NewEventReviewRepo(pool)
 	staffRepo := repository.NewStaffRepo(pool)
 	staffTeamRepo := repository.NewStaffTeamRepo(pool)
+	userCleanupRepo := repository.NewUserCleanupRepo(pool)
 
 	// Set persistent token blacklist (replaces in-memory sync.Map)
 	mw.SetTokenBlacklist(revokedTokenRepo)
@@ -119,6 +120,7 @@ func main() {
 
 	// Initialize notification service
 	notificationService := services.NewNotificationService(pushService, deviceRepo, pool, emailService)
+	userCleanupService := services.NewUserCleanupService(userCleanupRepo, emailService)
 
 	// Initialize Live Activity push service (iOS Dynamic Island updates)
 	liveActivityService := services.NewLiveActivityService(liveActivityRepo, pushService)
@@ -331,6 +333,38 @@ func main() {
 		defer ticker.Stop()
 		for range ticker.C {
 			cleanup()
+		}
+	}()
+
+	// Background job: run user cleanup lifecycle daily at 03:00 UTC.
+	go func() {
+		runCleanup := func() {
+			slog.Info("Starting daily user cleanup lifecycle task...")
+			res, err := userCleanupService.RunLifecycleCleanup(context.Background())
+			if err != nil {
+				slog.Error("Failed to execute user cleanup lifecycle", "error", err)
+			} else {
+				slog.Info("Completed user cleanup lifecycle task",
+					"stage1", res.Stage1Count,
+					"stage2", res.Stage2Count,
+					"stage3", res.Stage3Count,
+					"blocked", res.BlockedCount,
+					"deleted", res.DeletedCount,
+				)
+			}
+		}
+
+		for {
+			now := time.Now().UTC()
+			next0300 := time.Date(now.Year(), now.Month(), now.Day(), 3, 0, 0, 0, time.UTC)
+			if !next0300.After(now) {
+				next0300 = next0300.Add(24 * time.Hour)
+			}
+			timer := time.NewTimer(time.Until(next0300))
+			select {
+			case <-timer.C:
+				runCleanup()
+			}
 		}
 	}()
 
