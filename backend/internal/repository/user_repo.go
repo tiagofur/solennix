@@ -65,7 +65,9 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, 
 		plan, role,
 		COALESCE(account_status, 'active') AS account_status,
 		blocked_at, blocked_reason, blocked_by, deletion_eligible_at, deleted_at,
-		stripe_customer_id, last_active_at, registration_platform, created_at, updated_at
+		stripe_customer_id, last_active_at, registration_platform,
+		COALESCE(inactivity_stage, 0) AS inactivity_stage, inactivity_warning_sent_at,
+		created_at, updated_at
 		FROM users WHERE email = $1`
 	err := r.pool.QueryRow(ctx, query, email).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
@@ -77,7 +79,9 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, 
 		&user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
 		&user.Plan, &user.Role,
 		&user.AccountStatus, &user.BlockedAt, &user.BlockedReason, &user.BlockedBy, &user.DeletionEligibleAt, &user.DeletedAt,
-		&user.StripeCustomerID, &user.LastActiveAt, &user.RegistrationPlatform, &user.CreatedAt, &user.UpdatedAt,
+		&user.StripeCustomerID, &user.LastActiveAt, &user.RegistrationPlatform,
+		&user.InactivityStage, &user.InactivityWarningSentAt,
+		&user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("user not found: %w", err)
@@ -97,7 +101,9 @@ func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, err
 		plan, role,
 		COALESCE(account_status, 'active') AS account_status,
 		blocked_at, blocked_reason, blocked_by, deletion_eligible_at, deleted_at,
-		stripe_customer_id, last_active_at, registration_platform, created_at, updated_at
+		stripe_customer_id, last_active_at, registration_platform,
+		COALESCE(inactivity_stage, 0) AS inactivity_stage, inactivity_warning_sent_at,
+		created_at, updated_at
 		FROM users WHERE id = $1`
 	err := r.pool.QueryRow(ctx, query, id).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
@@ -109,7 +115,9 @@ func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, err
 		&user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
 		&user.Plan, &user.Role,
 		&user.AccountStatus, &user.BlockedAt, &user.BlockedReason, &user.BlockedBy, &user.DeletionEligibleAt, &user.DeletedAt,
-		&user.StripeCustomerID, &user.LastActiveAt, &user.RegistrationPlatform, &user.CreatedAt, &user.UpdatedAt,
+		&user.StripeCustomerID, &user.LastActiveAt, &user.RegistrationPlatform,
+		&user.InactivityStage, &user.InactivityWarningSentAt,
+		&user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("user not found: %w", err)
@@ -544,13 +552,16 @@ func (r *UserRepo) LinkAppleAccount(ctx context.Context, userID uuid.UUID, apple
 	return nil
 }
 
-// UpdateLastActiveAt updates the user's last activity timestamp in a throttled way (once per hour max).
+// UpdateLastActiveAt updates the user's last activity timestamp in a throttled way (once per hour max)
+// and resets inactivity stage flags if set.
 func (r *UserRepo) UpdateLastActiveAt(ctx context.Context, id uuid.UUID) error {
 	query := `
 		UPDATE users
-		SET last_active_at = NOW()
+		SET last_active_at = NOW(),
+			inactivity_stage = 0,
+			inactivity_warning_sent_at = NULL
 		WHERE id = $1
-		  AND (last_active_at IS NULL OR last_active_at < NOW() - INTERVAL '1 hour')`
+		  AND (last_active_at IS NULL OR last_active_at < NOW() - INTERVAL '1 hour' OR inactivity_stage > 0)`
 	_, err := r.pool.Exec(ctx, query, id)
 	return err
 }

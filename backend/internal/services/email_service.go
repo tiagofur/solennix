@@ -181,6 +181,34 @@ func (s *EmailService) SendReviewRequest(email, clientName, organizerName, event
 	return s.sendEmail(email, "¿Cómo te fue con tu evento?", body)
 }
 
+// SendInactivityWarning sends an inactivity warning email for stage 1, 2, or 3.
+func (s *EmailService) SendInactivityWarning(email, userName string, stage int) error {
+	return s.SendInactivityWarningLocalized(email, userName, i18n.DefaultLocale, stage)
+}
+
+// SendInactivityWarningLocalized sends a localized inactivity warning email for stage 1, 2, or 3.
+func (s *EmailService) SendInactivityWarningLocalized(email, userName, locale string, stage int) error {
+	lang := i18n.NormalizeLocale(locale)
+	days := 90
+	subjectKey := "email.inactivity_warning.stage1.subject"
+	if stage == 2 {
+		days = 120
+		subjectKey = "email.inactivity_warning.stage2.subject"
+	} else if stage >= 3 {
+		days = 150
+		subjectKey = "email.inactivity_warning.stage3.subject"
+	}
+
+	loginLink := fmt.Sprintf("%s/login", s.cfg.FrontendURL)
+	body := s.renderTemplate(inactivityWarningBodyForLocale(lang), map[string]any{
+		"UserName":  userName,
+		"Days":      days,
+		"LoginLink": loginLink,
+		"Stage":     stage,
+	})
+	return s.sendEmail(email, i18n.T(lang, subjectKey), body)
+}
+
 // ---------------------------------------------------------------------------
 // Base Layout & Template Rendering
 // ---------------------------------------------------------------------------
@@ -456,3 +484,33 @@ const reviewRequestBody = `
 	<a href="{{.ReviewLink}}" class="button">Dejar reseña</a>
 </div>
 <p style="font-size: 13px; color: #6b7280;">Este enlace es personal y puede vencer en unos días.</p>`
+
+func inactivityWarningBodyForLocale(lang string) string {
+	if lang == "en" {
+		return inactivityWarningBodyEN
+	}
+	return inactivityWarningBodyES
+}
+
+const inactivityWarningBodyES = `
+<h2>Aviso de inactividad de cuenta</h2>
+<p>Hola {{.UserName}},</p>
+<p>Notamos que tu cuenta en Solennix lleva <strong>{{.Days}} días sin actividad</strong>.</p>
+<p>Para proteger tus datos y mantener un servicio eficiente, las cuentas en el plan gratuito sin actividad por más de 180 días son suspendidas temporalmente y posteriormente eliminadas a los 210 días.</p>
+<p>Si deseas conservar tu cuenta y todos tus datos registrados, simplemente inicia sesión:</p>
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{.LoginLink}}" class="button">Iniciar sesión en Solennix</a>
+</div>
+<p>Si no realizas ninguna acción, te mantendremos informado antes de tomar cualquier medida sobre tu cuenta.</p>`
+
+const inactivityWarningBodyEN = `
+<h2>Account Inactivity Notice</h2>
+<p>Hi {{.UserName}},</p>
+<p>We noticed your Solennix account has been inactive for <strong>{{.Days}} days</strong>.</p>
+<p>To protect your privacy and manage system resources, free tier accounts inactive for over 180 days are temporarily suspended and subsequently removed after 210 days.</p>
+<p>If you would like to keep your account and data, simply sign back in:</p>
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{.LoginLink}}" class="button">Log in to Solennix</a>
+</div>
+<p>If no action is taken, we will keep you updated before taking any action on your account.</p>`
+

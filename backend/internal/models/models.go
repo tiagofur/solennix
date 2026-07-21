@@ -71,11 +71,13 @@ type User struct {
 	StripeCustomerID  *string    `json:"-"` // Never expose provider IDs in JSON
 	GoogleUserID      *string    `json:"-"`
 	AppleUserID       *string    `json:"-"`
-	PlanExpiresAt        *time.Time `json:"plan_expires_at,omitempty"`
-	LastActiveAt         *time.Time `json:"last_active_at,omitempty"`
-	RegistrationPlatform string     `json:"registration_platform"`
-	CreatedAt            time.Time  `json:"created_at"`
-	UpdatedAt            time.Time  `json:"updated_at"`
+	PlanExpiresAt           *time.Time `json:"plan_expires_at,omitempty"`
+	LastActiveAt            *time.Time `json:"last_active_at,omitempty"`
+	RegistrationPlatform    string     `json:"registration_platform"`
+	InactivityStage         int        `json:"inactivity_stage"`
+	InactivityWarningSentAt *time.Time `json:"inactivity_warning_sent_at,omitempty"`
+	CreatedAt               time.Time  `json:"created_at"`
+	UpdatedAt               time.Time  `json:"updated_at"`
 }
 
 type Client struct {
