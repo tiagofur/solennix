@@ -182,6 +182,14 @@
       "success": "{{name}} ahora tiene plan Basic"
     },
     "csv": {
+      "button": "Exportar CSV",
+      "reports": {
+        "full": "Lista completa de usuarios",
+        "platform": "Análisis de plataformas",
+        "onboarding": "Diagnóstico de onboarding",
+        "inactivity": "Riesgo de inactividad",
+        "subscriptions": "Suscripciones y licencias"
+      },
       "headers": {
         "name": "Nombre",
         "email": "Email",
@@ -192,7 +200,14 @@
         "clients": "Clientes",
         "products": "Productos",
         "total_activity": "Actividad Total",
-        "registration": "Registro"
+        "registration": "Registro",
+        "registration_platform": "Plataforma Registro",
+        "active_platforms": "Plataformas Activas",
+        "last_active": "Última Actividad",
+        "email_verified": "Email Verificado",
+        "account_status": "Estado Cuenta",
+        "days_inactive": "Días Inactivo",
+        "stripe_id": "ID Cliente Stripe"
       },
       "success": "{{count}} usuarios exportados"
     },

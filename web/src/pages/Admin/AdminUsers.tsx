@@ -48,6 +48,7 @@ interface AdminUser {
   business_name?: string;
   plan: string;
   role: string;
+  stripe_customer_id?: string;
   plan_expires_at?: string;
   has_paid_subscription: boolean;
   account_status: string;
@@ -56,6 +57,9 @@ interface AdminUser {
   events_count: number;
   clients_count: number;
   products_count: number;
+  registration_platform?: string;
+  active_platforms?: string[];
+  last_active_at?: string;
   created_at: string;
 }
 
@@ -112,6 +116,7 @@ export const AdminUsers: React.FC = () => {
   const [blockTarget, setBlockTarget] = useState<AdminUser | null>(null);
   const [blockReason, setBlockReason] = useState('');
   const [blockReasonError, setBlockReasonError] = useState('');
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const blockUser = useBlockUser();
   const { addToast } = useToast();
 
@@ -263,7 +268,23 @@ export const AdminUsers: React.FC = () => {
     );
   };
 
-  const exportCSV = () => {
+  const downloadCSV = (filename: string, headers: string[], rows: (string | number)[][]) => {
+    const csv = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportCSVFull = () => {
+    setExportMenuOpen(false);
     const headers = [
       t('admin:users.csv.headers.name'), 
       t('admin:users.csv.headers.email'), 
@@ -274,7 +295,12 @@ export const AdminUsers: React.FC = () => {
       t('admin:users.csv.headers.clients'), 
       t('admin:users.csv.headers.products'), 
       t('admin:users.csv.headers.total_activity'), 
-      t('admin:users.csv.headers.registration')
+      t('admin:users.csv.headers.registration'),
+      t('admin:users.csv.headers.registration_platform'),
+      t('admin:users.csv.headers.active_platforms'),
+      t('admin:users.csv.headers.last_active'),
+      t('admin:users.csv.headers.email_verified'),
+      t('admin:users.csv.headers.account_status'),
     ];
     const rows = filteredUsers.map((u) => [
       u.name,
@@ -287,19 +313,119 @@ export const AdminUsers: React.FC = () => {
       u.products_count,
       activityScore(u),
       format(parseISO(u.created_at), 'dd/MM/yyyy', { locale: dateLocale }),
+      u.registration_platform || 'unknown',
+      (u.active_platforms || []).join(', '),
+      u.last_active_at ? format(parseISO(u.last_active_at), 'dd/MM/yyyy HH:mm') : '',
+      u.email_verified_at ? 'Verificado' : 'No verificado',
+      u.account_status || 'active',
     ]);
-    const csv = [headers, ...rows]
-      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-      .join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `users-${accountType}-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadCSV(`users-completo-${accountType}-${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+    addToast(t('admin:users.csv.success', { count: filteredUsers.length }), 'success');
+  };
+
+  const exportPlatformAnalytics = () => {
+    setExportMenuOpen(false);
+    const headers = [
+      t('admin:users.csv.headers.name'),
+      t('admin:users.csv.headers.email'),
+      t('admin:users.csv.headers.plan'),
+      t('admin:users.csv.headers.registration_platform'),
+      t('admin:users.csv.headers.active_platforms'),
+      t('admin:users.csv.headers.total_activity'),
+      t('admin:users.csv.headers.last_active'),
+      t('admin:users.csv.headers.registration'),
+    ];
+    const rows = filteredUsers.map((u) => [
+      u.name,
+      u.email,
+      u.plan,
+      u.registration_platform || 'unknown',
+      (u.active_platforms || []).join(', '),
+      activityScore(u),
+      u.last_active_at ? format(parseISO(u.last_active_at), 'dd/MM/yyyy HH:mm') : '',
+      format(parseISO(u.created_at), 'dd/MM/yyyy', { locale: dateLocale }),
+    ]);
+    downloadCSV(`analytics-plataformas-${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+    addToast(t('admin:users.csv.success', { count: filteredUsers.length }), 'success');
+  };
+
+  const exportOnboardingFunnel = () => {
+    setExportMenuOpen(false);
+    const headers = [
+      t('admin:users.csv.headers.name'),
+      t('admin:users.csv.headers.email'),
+      t('admin:users.csv.headers.business'),
+      t('admin:users.csv.headers.email_verified'),
+      t('admin:users.csv.headers.events'),
+      t('admin:users.csv.headers.clients'),
+      t('admin:users.csv.headers.products'),
+      t('admin:users.csv.headers.total_activity'),
+      t('admin:users.csv.headers.registration'),
+    ];
+    const rows = filteredUsers.map((u) => [
+      u.name,
+      u.email,
+      u.business_name || '',
+      u.email_verified_at ? 'Verificado' : 'No verificado',
+      u.events_count,
+      u.clients_count,
+      u.products_count,
+      activityScore(u),
+      format(parseISO(u.created_at), 'dd/MM/yyyy', { locale: dateLocale }),
+    ]);
+    downloadCSV(`diagnostico-onboarding-${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+    addToast(t('admin:users.csv.success', { count: filteredUsers.length }), 'success');
+  };
+
+  const exportInactivityRisk = () => {
+    setExportMenuOpen(false);
+    const headers = [
+      t('admin:users.csv.headers.name'),
+      t('admin:users.csv.headers.email'),
+      t('admin:users.csv.headers.plan'),
+      t('admin:users.csv.headers.last_active'),
+      t('admin:users.csv.headers.days_inactive'),
+      t('admin:users.csv.headers.account_status'),
+      t('admin:users.csv.headers.registration'),
+    ];
+    const rows = filteredUsers.map((u) => {
+      const lastActive = u.last_active_at ? parseISO(u.last_active_at) : parseISO(u.created_at);
+      const daysInactive = differenceInDays(new Date(), lastActive);
+      return [
+        u.name,
+        u.email,
+        u.plan,
+        u.last_active_at ? format(parseISO(u.last_active_at), 'dd/MM/yyyy HH:mm') : 'Nunca',
+        daysInactive,
+        u.account_status || 'active',
+        format(parseISO(u.created_at), 'dd/MM/yyyy', { locale: dateLocale }),
+      ];
+    });
+    downloadCSV(`riesgo-inactividad-${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+    addToast(t('admin:users.csv.success', { count: filteredUsers.length }), 'success');
+  };
+
+  const exportSubscriptionsGrants = () => {
+    setExportMenuOpen(false);
+    const headers = [
+      t('admin:users.csv.headers.name'),
+      t('admin:users.csv.headers.email'),
+      t('admin:users.csv.headers.business'),
+      t('admin:users.csv.headers.plan'),
+      t('admin:users.csv.headers.expires'),
+      t('admin:users.csv.headers.stripe_id'),
+      t('admin:users.csv.headers.registration'),
+    ];
+    const rows = filteredUsers.map((u) => [
+      u.name,
+      u.email,
+      u.business_name || '',
+      u.plan,
+      u.plan_expires_at ? format(parseISO(u.plan_expires_at), 'dd/MM/yyyy') : (u.has_paid_subscription ? 'Permanente (Pagado)' : 'Sin vencimiento'),
+      u.stripe_customer_id || '',
+      format(parseISO(u.created_at), 'dd/MM/yyyy', { locale: dateLocale }),
+    ]);
+    downloadCSV(`suscripciones-licencias-${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
     addToast(t('admin:users.csv.success', { count: filteredUsers.length }), 'success');
   };
 
@@ -629,15 +755,74 @@ export const AdminUsers: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={exportCSV}
-            disabled={loading || filteredUsers.length === 0}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border border-border bg-card text-text-secondary hover:bg-surface-alt hover:text-text transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <Download className="h-4 w-4" />
-            {t('admin:users.actions.export_csv')}
-          </button>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setExportMenuOpen(!exportMenuOpen)}
+              disabled={loading || filteredUsers.length === 0}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border border-border bg-card text-text-secondary hover:bg-surface-alt hover:text-text transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
+            >
+              <Download className="h-4 w-4" />
+              <span>{t('admin:users.csv.button')}</span>
+              <ChevronDown className={clsx('h-4 w-4 transition-transform', exportMenuOpen && 'rotate-180')} />
+            </button>
+
+            {exportMenuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setExportMenuOpen(false)}
+                />
+                <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-card border border-border shadow-xl z-50 py-2 divide-y divide-border text-sm">
+                  <div className="py-1">
+                    <button
+                      type="button"
+                      onClick={exportCSVFull}
+                      className="w-full text-left px-4 py-2.5 hover:bg-surface-alt text-text font-medium flex items-center gap-2 transition-colors"
+                    >
+                      <Download className="h-4 w-4 text-primary" />
+                      <span>{t('admin:users.csv.reports.full')}</span>
+                    </button>
+                  </div>
+                  <div className="py-1 space-y-0.5">
+                    <button
+                      type="button"
+                      onClick={exportPlatformAnalytics}
+                      className="w-full text-left px-4 py-2.5 hover:bg-surface-alt text-text-secondary hover:text-text flex items-center gap-2 transition-colors"
+                    >
+                      <Smartphone className="h-4 w-4 text-info" />
+                      <span>{t('admin:users.csv.reports.platform')}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={exportOnboardingFunnel}
+                      className="w-full text-left px-4 py-2.5 hover:bg-surface-alt text-text-secondary hover:text-text flex items-center gap-2 transition-colors"
+                    >
+                      <Activity className="h-4 w-4 text-success" />
+                      <span>{t('admin:users.csv.reports.onboarding')}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={exportInactivityRisk}
+                      className="w-full text-left px-4 py-2.5 hover:bg-surface-alt text-text-secondary hover:text-text flex items-center gap-2 transition-colors"
+                    >
+                      <AlertTriangle className="h-4 w-4 text-warning" />
+                      <span>{t('admin:users.csv.reports.inactivity')}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={exportSubscriptionsGrants}
+                      className="w-full text-left px-4 py-2.5 hover:bg-surface-alt text-text-secondary hover:text-text flex items-center gap-2 transition-colors"
+                    >
+                      <Crown className="h-4 w-4 text-primary" />
+                      <span>{t('admin:users.csv.reports.subscriptions')}</span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
           <button
             type="button"
             onClick={() => qc.invalidateQueries({ queryKey: queryKeys.admin.users, exact: false })}
