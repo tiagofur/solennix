@@ -182,6 +182,14 @@
       "success": "{{name}} now has Basic plan"
     },
     "csv": {
+      "button": "Export CSV",
+      "reports": {
+        "full": "Full User List",
+        "platform": "Platform Analytics",
+        "onboarding": "Onboarding Funnel",
+        "inactivity": "Inactivity Risk",
+        "subscriptions": "Subscriptions & Grants"
+      },
       "headers": {
         "name": "Name",
         "email": "Email",
@@ -192,7 +200,14 @@
         "clients": "Clients",
         "products": "Products",
         "total_activity": "Total Activity",
-        "registration": "Registration"
+        "registration": "Registration",
+        "registration_platform": "Registration Platform",
+        "active_platforms": "Active Platforms",
+        "last_active": "Last Active",
+        "email_verified": "Email Verified",
+        "account_status": "Account Status",
+        "days_inactive": "Days Inactive",
+        "stripe_id": "Stripe Customer ID"
       },
       "success": "{{count}} users exported"
     },

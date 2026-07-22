@@ -109,11 +109,12 @@ type AdminUser struct {
 	EventsCount        int        `json:"events_count"`
 	ClientsCount       int        `json:"clients_count"`
 	ProductsCount      int        `json:"products_count"`
-	RegistrationPlatform string               `json:"registration_platform"`
+	RegistrationPlatform string                `json:"registration_platform"`
 	PlatformActivity     []models.UserPlatform `json:"platform_activity"`
 	ActivePlatforms      []string              `json:"active_platforms"`
-	CreatedAt          time.Time  `json:"created_at"`
-	UpdatedAt          time.Time  `json:"updated_at"`
+	LastActiveAt         *time.Time            `json:"last_active_at,omitempty"`
+	CreatedAt            time.Time             `json:"created_at"`
+	UpdatedAt            time.Time             `json:"updated_at"`
 }
 
 // SubscriptionOverview holds subscription stats.
@@ -298,7 +299,7 @@ func (r *AdminRepo) GetAllUsers(ctx context.Context, accountType string) ([]Admi
 			COALESCE((SELECT COUNT(*) FROM products p WHERE p.user_id = u.id), 0) AS products_count,
 			COALESCE(u.registration_platform, 'unknown') AS registration_platform,
 			COALESCE((SELECT string_agg(platform, ',') FROM user_platforms WHERE user_id = u.id), '') AS active_platforms_str,
-			u.created_at, u.updated_at
+			u.last_active_at, u.created_at, u.updated_at
 		FROM users u ` + whereClause + `
 		ORDER BY u.created_at DESC`
 
@@ -320,7 +321,7 @@ func (r *AdminRepo) GetAllUsers(ctx context.Context, accountType string) ([]Admi
 			&u.HasPaidSub, &u.PlanExpiresAt,
 			&u.EventsCount, &u.ClientsCount, &u.ProductsCount,
 			&u.RegistrationPlatform, &activePlatsStr,
-			&u.CreatedAt, &u.UpdatedAt,
+			&u.LastActiveAt, &u.CreatedAt, &u.UpdatedAt,
 		)
 		if err == nil {
 			u.PlatformActivity = []models.UserPlatform{}
@@ -359,7 +360,7 @@ func (r *AdminRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*AdminUser, 
 			COALESCE((SELECT COUNT(*) FROM clients c WHERE c.user_id = u.id), 0) AS clients_count,
 			COALESCE((SELECT COUNT(*) FROM products p WHERE p.user_id = u.id), 0) AS products_count,
 			COALESCE(u.registration_platform, 'unknown') AS registration_platform,
-			u.created_at, u.updated_at
+			u.last_active_at, u.created_at, u.updated_at
 		FROM users u
 		WHERE u.id = $1`
 
@@ -372,7 +373,7 @@ func (r *AdminRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*AdminUser, 
 		&u.HasPaidSub, &u.PlanExpiresAt,
 		&u.EventsCount, &u.ClientsCount, &u.ProductsCount,
 		&u.RegistrationPlatform,
-		&u.CreatedAt, &u.UpdatedAt,
+		&u.LastActiveAt, &u.CreatedAt, &u.UpdatedAt,
 	)
 	if err != nil {
 		return nil, ErrAdminUserNotFound
@@ -616,7 +617,9 @@ func (r *AdminRepo) GetInactiveUsers(ctx context.Context, days int) ([]AdminUser
 			COALESCE((SELECT COUNT(*) FROM events e WHERE e.user_id = u.id), 0) AS events_count,
 			COALESCE((SELECT COUNT(*) FROM clients c WHERE c.user_id = u.id), 0) AS clients_count,
 			COALESCE((SELECT COUNT(*) FROM products p WHERE p.user_id = u.id), 0) AS products_count,
-			u.created_at, u.updated_at
+			COALESCE(u.registration_platform, 'unknown') AS registration_platform,
+			COALESCE((SELECT string_agg(platform, ',') FROM user_platforms WHERE user_id = u.id), '') AS active_platforms_str,
+			u.last_active_at, u.created_at, u.updated_at
 		FROM users u
 		WHERE u.role = 'user'
 		  AND u.last_active_at IS NOT NULL
@@ -632,6 +635,7 @@ func (r *AdminRepo) GetInactiveUsers(ctx context.Context, days int) ([]AdminUser
 	var users []AdminUser
 	for rows.Next() {
 		var u AdminUser
+		var activePlatsStr string
 		err := rows.Scan(
 			&u.ID, &u.Email, &u.Name, &u.BusinessName, &u.Plan, &u.Role,
 			&u.AccountStatus, &u.BlockedAt, &u.BlockedReason, &u.BlockedBy, &u.DeletionEligibleAt, &u.DeletedAt,
@@ -639,8 +643,16 @@ func (r *AdminRepo) GetInactiveUsers(ctx context.Context, days int) ([]AdminUser
 			&u.StripeCustomerID,
 			&u.HasPaidSub, &u.PlanExpiresAt,
 			&u.EventsCount, &u.ClientsCount, &u.ProductsCount,
-			&u.CreatedAt, &u.UpdatedAt,
+			&u.RegistrationPlatform, &activePlatsStr,
+			&u.LastActiveAt, &u.CreatedAt, &u.UpdatedAt,
 		)
+		if err == nil {
+			if activePlatsStr != "" {
+				u.ActivePlatforms = strings.Split(activePlatsStr, ",")
+			} else {
+				u.ActivePlatforms = []string{}
+			}
+		}
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan inactive user: %w", err)
 		}
@@ -665,7 +677,9 @@ func (r *AdminRepo) GetUsersWithZeroResources(ctx context.Context) ([]AdminUser,
 			0 AS events_count,
 			0 AS clients_count,
 			0 AS products_count,
-			u.created_at, u.updated_at
+			COALESCE(u.registration_platform, 'unknown') AS registration_platform,
+			COALESCE((SELECT string_agg(platform, ',') FROM user_platforms WHERE user_id = u.id), '') AS active_platforms_str,
+			u.last_active_at, u.created_at, u.updated_at
 		FROM users u
 		WHERE u.role = 'user'
 		  AND NOT EXISTS (SELECT 1 FROM events e WHERE e.user_id = u.id)
@@ -682,6 +696,7 @@ func (r *AdminRepo) GetUsersWithZeroResources(ctx context.Context) ([]AdminUser,
 	var users []AdminUser
 	for rows.Next() {
 		var u AdminUser
+		var activePlatsStr string
 		err := rows.Scan(
 			&u.ID, &u.Email, &u.Name, &u.BusinessName, &u.Plan, &u.Role,
 			&u.AccountStatus, &u.BlockedAt, &u.BlockedReason, &u.BlockedBy, &u.DeletionEligibleAt, &u.DeletedAt,
@@ -689,8 +704,16 @@ func (r *AdminRepo) GetUsersWithZeroResources(ctx context.Context) ([]AdminUser,
 			&u.StripeCustomerID,
 			&u.HasPaidSub, &u.PlanExpiresAt,
 			&u.EventsCount, &u.ClientsCount, &u.ProductsCount,
-			&u.CreatedAt, &u.UpdatedAt,
+			&u.RegistrationPlatform, &activePlatsStr,
+			&u.LastActiveAt, &u.CreatedAt, &u.UpdatedAt,
 		)
+		if err == nil {
+			if activePlatsStr != "" {
+				u.ActivePlatforms = strings.Split(activePlatsStr, ",")
+			} else {
+				u.ActivePlatforms = []string{}
+			}
+		}
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan zero resource user: %w", err)
 		}
