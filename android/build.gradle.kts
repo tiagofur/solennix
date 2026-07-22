@@ -23,7 +23,7 @@ subprojects {
 
     configurations.all {
         resolutionStrategy {
-            force("org.jetbrains.kotlin:kotlin-metadata-jvm:2.4.0")
+            force("org.jetbrains.kotlin:kotlin-metadata-jvm:2.4.10")
         }
     }
 }
