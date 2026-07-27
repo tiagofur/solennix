@@ -73,6 +73,9 @@ var PlanTiers = map[string]map[string]bool{
 		"payment_tracking":       true, // Totals only, no individual submissions
 		"staff_availability":     true,
 		"event_templates":        true,
+		// Public professional profile: Free gets basic projection only
+		"public_profile_basic": true,
+		"public_profile_full":  false,
 
 		// Premium features — gated
 		"payment_submissions":       false,
@@ -97,6 +100,8 @@ var PlanTiers = map[string]map[string]bool{
 		"advanced_payment_tracking": true,
 		"staff_availability":        true,
 		"event_templates":           true,
+		"public_profile_basic":      true,
+		"public_profile_full":       true,
 		"milestones":                true,
 		"chat":                      true,
 		"decisions":                 true,
@@ -118,6 +123,8 @@ var PlanTiers = map[string]map[string]bool{
 		"advanced_payment_tracking": true,
 		"staff_availability":        true,
 		"event_templates":           true,
+		"public_profile_basic":      true,
+		"public_profile_full":       true,
 		"milestones":                true,
 		"chat":                      true,
 		"decisions":                 true,
