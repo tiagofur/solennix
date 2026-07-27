@@ -13,8 +13,11 @@ jobs:
   issue-reference:
     name: Check Issue Reference
     runs-on: ubuntu-latest
+    outputs:
+      issue_number: ${{ steps.validate.outputs.issue_number }}
     steps:
       - name: Validate linked issue in PR body
+        id: validate
         uses: actions/github-script@v9
         with:
           script: |
@@ -23,19 +26,39 @@ jobs:
               return;
             }
 
-            const body = context.payload.pull_request.body || '';
-            const match = body.match(/\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)\b/i);
+            const pr = context.payload.pull_request;
+            const prLabels = pr.labels.map((label) => label.name);
+            const isStacked = prLabels.includes('stacked-pr');
+
+            // Stacked PRs use `Refs` (non-closing) since the parent issue stays
+            // open until the final PR in the chain. Otherwise require a closing verb.
+            const closingRe = /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)\b/i;
+            const refsRe = /\brefs?\s+#(\d+)\b/i;
+
+            const body = pr.body || '';
+            const closingMatch = body.match(closingRe);
+            const refsMatch = body.match(refsRe);
+
+            const match = closingMatch || (isStacked ? refsMatch : null);
 
             if (!match) {
-              core.setFailed('PR body must include `Closes #<issue-number>` (or `Fixes` / `Resolves`).');
+              const hint = isStacked
+                ? ' (stacked-pr: `Refs #N` is also accepted)'
+                : '';
+              core.setFailed(`PR body must include \`Closes #<issue-number>\` (or \`Fixes\` / \`Resolves\`)${hint}.`);
               return;
             }
 
-            core.info(`Linked issue #${match[1]} found in PR body.`);
+            const issueNumber = match[1];
+            core.exportVariable('LINKED_ISSUE_NUMBER', issueNumber);
+            core.setOutput('issue_number', issueNumber);
+            const verb = closingMatch ? 'Closing' : 'Referencing';
+            core.info(`${verb} issue #${issueNumber} found in PR body.`);
 
   issue-approved:
     name: Check Issue Has status:approved
     runs-on: ubuntu-latest
+    needs: issue-reference
     steps:
       - name: Validate linked issue approval status
         uses: actions/github-script@v9
@@ -46,15 +69,12 @@ jobs:
               return;
             }
 
-            const body = context.payload.pull_request.body || '';
-            const match = body.match(/\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)\b/i);
-
-            if (!match) {
+            const issue_number = Number('${{ needs.issue-reference.outputs.issue_number }}');
+            if (!issue_number) {
               core.setFailed('Cannot validate issue approval without a linked issue in the PR body.');
               return;
             }
 
-            const issue_number = Number(match[1]);
             const { owner, repo } = context.repo;
             const labels = await github.paginate(github.rest.issues.listLabelsOnIssue, {
               owner,
@@ -77,6 +97,7 @@ jobs:
   pr-type-label:
     name: Check PR Has type:* Label
     runs-on: ubuntu-latest
+    needs: issue-reference
     steps:
       - name: Validate PR type label
         uses: actions/github-script@v9
@@ -88,7 +109,8 @@ jobs:
             }
 
             const { owner, repo } = context.repo;
-            const issue_number = context.payload.pull_request.number;
+            const pr = context.payload.pull_request;
+            const issue_number = pr.number;
             const labels = await github.paginate(github.rest.issues.listLabelsOnIssue, {
               owner,
               repo,
@@ -100,11 +122,33 @@ jobs:
               .map((label) => label.name)
               .filter((name) => name.startsWith('type:'));
 
-            if (typeLabels.length !== 1) {
-              core.setFailed(
-                `PR must have exactly one type:* label. Found ${typeLabels.length}: ${typeLabels.join(', ') || 'none'}.`,
-              );
+            if (typeLabels.length === 1) {
+              core.info(`PR type label OK: ${typeLabels[0]}`);
               return;
             }
 
-            core.info(`PR type label OK: ${typeLabels[0]}`);
+            // Stacked PRs may omit a PR-level type label and inherit it from the
+            // parent issue. This keeps chained PRs lightweight.
+            const isStacked = labels.map((label) => label.name).includes('stacked-pr');
+            if (isStacked) {
+              const linkedIssueNumber = Number('${{ needs.issue-reference.outputs.issue_number }}');
+              if (linkedIssueNumber) {
+                const issueLabels = await github.paginate(github.rest.issues.listLabelsOnIssue, {
+                  owner,
+                  repo,
+                  issue_number: linkedIssueNumber,
+                  per_page: 100,
+                });
+                const issueTypeLabels = issueLabels
+                  .map((label) => label.name)
+                  .filter((name) => name.startsWith('type:'));
+                if (issueTypeLabels.length >= 1) {
+                  core.info(`Stacked PR inherits type from issue #${linkedIssueNumber}: ${issueTypeLabels[0]}.`);
+                  return;
+                }
+              }
+            }
+
+            core.setFailed(
+              `PR must have exactly one type:* label. Found ${typeLabels.length}: ${typeLabels.join(', ') || 'none'}.`,
+            );
