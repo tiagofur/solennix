@@ -24,7 +24,7 @@ func (r *ProductRepo) CountByUserID(ctx context.Context, userID uuid.UUID) (int,
 }
 
 func (r *ProductRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Product, error) {
-	query := fmt.Sprintf(`SELECT id, user_id, name, category, base_price, recipe, image_url, is_active, staff_team_id, created_at, updated_at
+	query := fmt.Sprintf(`SELECT id, user_id, name, category, base_price, recipe, image_url, is_active, show_on_public_profile, staff_team_id, created_at, updated_at
 		FROM products WHERE user_id = $1 ORDER BY name LIMIT %d`, GetAllSafetyLimit)
 	rows, err := r.pool.Query(ctx, query, userID)
 	if err != nil {
@@ -36,13 +36,42 @@ func (r *ProductRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Pr
 	for rows.Next() {
 		var p models.Product
 		if err := rows.Scan(&p.ID, &p.UserID, &p.Name, &p.Category, &p.BasePrice,
-			&p.Recipe, &p.ImageURL, &p.IsActive, &p.StaffTeamID, &p.CreatedAt, &p.UpdatedAt); err != nil {
+			&p.Recipe, &p.ImageURL, &p.IsActive, &p.ShowOnPublicProfile, &p.StaffTeamID, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, err
 		}
 		products = append(products, p)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("error iterating products: %w", err)
+	}
+	return products, nil
+}
+
+// ListPublicProfileServices returns the active products flagged for public
+// profile visibility for the given organizer, ordered by name. Used by the
+// public aggregate GET; Free-plan capping to 3 is applied by the handler.
+func (r *ProductRepo) ListPublicProfileServices(ctx context.Context, userID uuid.UUID) ([]models.Product, error) {
+	query := `SELECT id, user_id, name, category, base_price, recipe, image_url, is_active, show_on_public_profile, staff_team_id, created_at, updated_at
+		FROM products
+		WHERE user_id = $1 AND is_active = true AND show_on_public_profile = true
+		ORDER BY name`
+	rows, err := r.pool.Query(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	products := make([]models.Product, 0)
+	for rows.Next() {
+		var p models.Product
+		if err := rows.Scan(&p.ID, &p.UserID, &p.Name, &p.Category, &p.BasePrice,
+			&p.Recipe, &p.ImageURL, &p.IsActive, &p.ShowOnPublicProfile, &p.StaffTeamID, &p.CreatedAt, &p.UpdatedAt); err != nil {
+			return nil, err
+		}
+		products = append(products, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating public profile services: %w", err)
 	}
 	return products, nil
 }
@@ -59,7 +88,7 @@ func (r *ProductRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, off
 		return nil, 0, fmt.Errorf("count products: %w", err)
 	}
 
-	query := fmt.Sprintf(`SELECT id, user_id, name, category, base_price, recipe, image_url, is_active, staff_team_id, created_at, updated_at
+	query := fmt.Sprintf(`SELECT id, user_id, name, category, base_price, recipe, image_url, is_active, show_on_public_profile, staff_team_id, created_at, updated_at
 		FROM products WHERE user_id = $1 ORDER BY %s %s LIMIT $2 OFFSET $3`, sortCol, order)
 	rows, err := r.pool.Query(ctx, query, userID, limit, offset)
 	if err != nil {
@@ -71,7 +100,7 @@ func (r *ProductRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, off
 	for rows.Next() {
 		var p models.Product
 		if err := rows.Scan(&p.ID, &p.UserID, &p.Name, &p.Category, &p.BasePrice,
-			&p.Recipe, &p.ImageURL, &p.IsActive, &p.StaffTeamID, &p.CreatedAt, &p.UpdatedAt); err != nil {
+			&p.Recipe, &p.ImageURL, &p.IsActive, &p.ShowOnPublicProfile, &p.StaffTeamID, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, 0, err
 		}
 		products = append(products, p)
@@ -84,11 +113,11 @@ func (r *ProductRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, off
 
 func (r *ProductRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Product, error) {
 	p := &models.Product{}
-	query := `SELECT id, user_id, name, category, base_price, recipe, image_url, is_active, staff_team_id, created_at, updated_at
+	query := `SELECT id, user_id, name, category, base_price, recipe, image_url, is_active, show_on_public_profile, staff_team_id, created_at, updated_at
 		FROM products WHERE id = $1 AND user_id = $2`
 	err := r.pool.QueryRow(ctx, query, id, userID).Scan(
 		&p.ID, &p.UserID, &p.Name, &p.Category, &p.BasePrice,
-		&p.Recipe, &p.ImageURL, &p.IsActive, &p.StaffTeamID, &p.CreatedAt, &p.UpdatedAt)
+		&p.Recipe, &p.ImageURL, &p.IsActive, &p.ShowOnPublicProfile, &p.StaffTeamID, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("product not found: %w", err)
 	}
@@ -223,7 +252,7 @@ func (r *ProductRepo) VerifyOwnership(ctx context.Context, productIDs []uuid.UUI
 
 // Search performs a fuzzy search on products using pg_trgm similarity + ILIKE fallback
 func (r *ProductRepo) Search(ctx context.Context, userID uuid.UUID, query string) ([]models.Product, error) {
-	sqlQuery := `SELECT id, user_id, name, category, base_price, recipe, image_url, is_active, staff_team_id, created_at, updated_at
+	sqlQuery := `SELECT id, user_id, name, category, base_price, recipe, image_url, is_active, show_on_public_profile, staff_team_id, created_at, updated_at
 		FROM products
 		WHERE user_id = $1
 		AND (
@@ -248,7 +277,7 @@ func (r *ProductRepo) Search(ctx context.Context, userID uuid.UUID, query string
 	for rows.Next() {
 		var p models.Product
 		if err := rows.Scan(&p.ID, &p.UserID, &p.Name, &p.Category, &p.BasePrice,
-			&p.Recipe, &p.ImageURL, &p.IsActive, &p.StaffTeamID, &p.CreatedAt, &p.UpdatedAt); err != nil {
+			&p.Recipe, &p.ImageURL, &p.IsActive, &p.ShowOnPublicProfile, &p.StaffTeamID, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, err
 		}
 		products = append(products, p)
