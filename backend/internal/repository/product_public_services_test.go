@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/tiagofur/solennix-backend/internal/models"
 )
 
 // insertProductWithFlag inserts a product with explicit is_active and
@@ -92,5 +93,111 @@ func TestProductRepo_GetByID_ScansShowOnPublicProfileFlag(t *testing.T) {
 	}
 	if !all[0].ShowOnPublicProfile {
 		t.Errorf("GetAll() ShowOnPublicProfile = false, want true (must be scanned)")
+	}
+}
+
+func TestProductRepo_CountPublicProfile(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userID := seedUser(t, pool, "count.public@test.dev")
+	repo := NewProductRepo(pool)
+	ctx := context.Background()
+
+	// Empty -> 0.
+	n, err := repo.CountPublicProfile(ctx, userID)
+	if err != nil {
+		t.Fatalf("CountPublicProfile() error = %v", err)
+	}
+	if n != 0 {
+		t.Errorf("empty count = %d, want 0", n)
+	}
+
+	// 2 public+active, 1 public+inactive (excluded), 1 active+private (excluded).
+	insertProductWithFlag(t, pool, userID, "P1", 10, true, true)
+	insertProductWithFlag(t, pool, userID, "P2", 20, true, true)
+	insertProductWithFlag(t, pool, userID, "P3", 30, false, true)
+	insertProductWithFlag(t, pool, userID, "P4", 40, true, false)
+
+	n, err = repo.CountPublicProfile(ctx, userID)
+	if err != nil {
+		t.Fatalf("CountPublicProfile() error = %v", err)
+	}
+	if n != 2 {
+		t.Errorf("count = %d, want 2 (only active+public)", n)
+	}
+}
+
+func TestProductRepo_Create_PersistsShowOnPublicProfile(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userID := seedUser(t, pool, "create.flag@test.dev")
+	repo := NewProductRepo(pool)
+	ctx := context.Background()
+
+	p := &models.Product{
+		UserID:               userID,
+		Name:                 "Catering Premium",
+		Category:             "main",
+		BasePrice:            500,
+		IsActive:             true,
+		ShowOnPublicProfile:  true,
+	}
+	if err := repo.Create(ctx, p); err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+
+	// Read back via GetByID and confirm the flag persisted as true.
+	got, err := repo.GetByID(ctx, p.ID, userID)
+	if err != nil {
+		t.Fatalf("GetByID() error = %v", err)
+	}
+	if !got.ShowOnPublicProfile {
+		t.Errorf("Create() did not persist ShowOnPublicProfile=true; got false")
+	}
+}
+
+func TestProductRepo_Update_TogglesShowOnPublicProfile(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userID := seedUser(t, pool, "update.flag@test.dev")
+	repo := NewProductRepo(pool)
+	ctx := context.Background()
+
+	// Seed via repo Create with flag=false (default).
+	p := &models.Product{
+		UserID:   userID,
+		Name:     "Service",
+		Category: "main",
+		BasePrice: 100,
+		IsActive: true,
+	}
+	if err := repo.Create(ctx, p); err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+
+	// Update to flag=true.
+	p.ShowOnPublicProfile = true
+	if err := repo.Update(ctx, p); err != nil {
+		t.Fatalf("Update() error = %v", err)
+	}
+	got, _ := repo.GetByID(ctx, p.ID, userID)
+	if !got.ShowOnPublicProfile {
+		t.Errorf("Update() did not set ShowOnPublicProfile=true")
+	}
+
+	// Update back to false.
+	p.ShowOnPublicProfile = false
+	if err := repo.Update(ctx, p); err != nil {
+		t.Fatalf("Update() error = %v", err)
+	}
+	got, _ = repo.GetByID(ctx, p.ID, userID)
+	if got.ShowOnPublicProfile {
+		t.Errorf("Update() did not set ShowOnPublicProfile=false")
 	}
 }
