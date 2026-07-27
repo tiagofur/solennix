@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
 	"github.com/tiagofur/solennix-backend/internal/repository"
@@ -19,6 +18,7 @@ import (
 type EventReviewHandler struct {
 	repo         *repository.EventReviewRepo
 	userRepo     FullUserRepository
+	profileRepo  *repository.PublicProfileRepo
 	emailService *services.EmailService
 	frontendURL  string
 
@@ -27,9 +27,10 @@ type EventReviewHandler struct {
 	getReviewForVisibility func(ctx context.Context, id uuid.UUID) (*models.EventReview, error)
 }
 
-func NewEventReviewHandler(repo *repository.EventReviewRepo, userRepo FullUserRepository, emailService *services.EmailService, frontendURL string) *EventReviewHandler {
+func NewEventReviewHandler(repo *repository.EventReviewRepo, userRepo FullUserRepository, profileRepo *repository.PublicProfileRepo, emailService *services.EmailService, frontendURL string) *EventReviewHandler {
 	h := &EventReviewHandler{
 		repo:         repo,
+		profileRepo:  profileRepo,
 		userRepo:     userRepo,
 		emailService: emailService,
 		frontendURL:  strings.TrimSuffix(frontendURL, "/"),
@@ -313,30 +314,21 @@ func (h *EventReviewHandler) UpdateReviewVisibility(w http.ResponseWriter, r *ht
 	writeJSON(w, http.StatusOK, map[string]any{"data": updated})
 }
 
-// ListPublicPortfolioReviews handles GET /api/public/organizers/{slug}/reviews
+// ListPublicPortfolioReviews handles GET /api/public/organizers/{slug}/reviews.
+// Returns a sanitized PublicReview[] (never the raw EventReview, which carries
+// PII). Yields [] for Free plans, when the reviews feature is unavailable, or
+// when the organizer has show_reviews disabled.
 func (h *EventReviewHandler) ListPublicPortfolioReviews(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
 	slug := strings.TrimSpace(r.PathValue("slug"))
 	if slug == "" {
 		writeError(w, http.StatusBadRequest, "Organizer slug is required")
 		return
 	}
-
-	reviews, err := h.repo.ListPublicByOrganizerSlug(ctx, slug)
-	if err != nil {
-		if strings.Contains(err.Error(), pgx.ErrNoRows.Error()) {
-			writeJSON(w, http.StatusOK, map[string]any{"data": []any{}})
-			return
-		}
-		writeError(w, http.StatusInternalServerError, "Failed to fetch testimonials")
-		return
-	}
-
-	if reviews == nil {
-		reviews = make([]*models.EventReview, 0)
-	}
-
-	writeJSON(w, http.StatusOK, map[string]any{"data": reviews})
+	listPublicReviews(w, r, slug, publicReviewDeps{
+		user:    h.userRepo,
+		profile: h.profileRepo,
+		reviews: h.repo,
+	})
 }
 
 // SendScheduledReviewRequests sends 48h post-event review request emails.

@@ -36,6 +36,14 @@ func (m *MockUserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User,
 	return args.Get(0).(*models.User), args.Error(1)
 }
 
+func (m *MockUserRepo) GetByPublicSlug(ctx context.Context, slug string) (*models.User, error) {
+	args := m.Called(ctx, slug)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.User), args.Error(1)
+}
+
 func (m *MockUserRepo) UpdatePlanAndStripeID(ctx context.Context, id uuid.UUID, plan string, stripeCustomerID *string) error {
 	args := m.Called(ctx, id, plan, stripeCustomerID)
 	return args.Error(0)
