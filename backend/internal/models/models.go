@@ -68,6 +68,8 @@ type User struct {
 	DefaultCurrency   string     `json:"default_currency"`
 	Plan              string     `json:"plan"`
 	Role              string     `json:"role"`
+	// PublicSlug is the opt-in share handle for /u/:slug (users.public_slug).
+	PublicSlug        *string    `json:"public_slug,omitempty"`
 	StripeCustomerID  *string    `json:"-"` // Never expose provider IDs in JSON
 	GoogleUserID      *string    `json:"-"`
 	AppleUserID       *string    `json:"-"`
@@ -137,6 +139,9 @@ type Product struct {
 	Recipe    *string   `json:"recipe,omitempty"`    // JSONB stored as string
 	ImageURL  *string   `json:"image_url,omitempty"` // Product image URL
 	IsActive  bool      `json:"is_active"`
+	// ShowOnPublicProfile controls opt-in visibility on the organizer public page.
+	// Default false; Free plan is capped at 3 true flags (enforced in PR4 handlers).
+	ShowOnPublicProfile bool `json:"show_on_public_profile"`
 	// StaffTeamID (Ola 3) optionally binds a product to a staff team. When the
 	// client adds this product to an event, the UI expands the team's members
 	// into event_staff rows so the organizer can sell "servicio de meseros"
@@ -571,4 +576,101 @@ type EventReview struct {
 	EventLabel    *string `json:"event_label,omitempty"`
 	OrganizerName *string `json:"organizer_name,omitempty"`
 	PublicSlug    *string `json:"public_slug,omitempty"`
+}
+
+// OrganizerPublicProfile is the 1:1 public-profile config for an organizer (auth Settings).
+type OrganizerPublicProfile struct {
+	UserID        uuid.UUID         `json:"user_id"`
+	IsEnabled     bool              `json:"is_enabled"`
+	Headline      *string           `json:"headline,omitempty"`
+	ContactType   *string           `json:"contact_type,omitempty"`  // phone|whatsapp|email|url
+	ContactValue  *string           `json:"contact_value,omitempty"`
+	City          *string           `json:"city,omitempty"`
+	Region        *string           `json:"region,omitempty"`
+	Country       *string           `json:"country,omitempty"`
+	Latitude      *float64          `json:"latitude,omitempty"`  // directory-ready; unused in public JSON v1
+	Longitude     *float64          `json:"longitude,omitempty"`
+	ShowPrices    bool              `json:"show_prices"`
+	ShowServices  bool              `json:"show_services"`
+	ShowReviews   bool              `json:"show_reviews"`
+	ShowPortfolio bool              `json:"show_portfolio"`
+	ShowContact   bool              `json:"show_contact"`
+	Socials       map[string]string `json:"socials,omitempty"`
+	// PublicSlug is denormalized from users.public_slug for Settings convenience.
+	PublicSlug *string   `json:"public_slug,omitempty"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+}
+
+// OrganizerPublicPortfolioItem is a Pro+ curated portfolio row (max 6 per organizer).
+type OrganizerPublicPortfolioItem struct {
+	ID           uuid.UUID  `json:"id"`
+	UserID       uuid.UUID  `json:"user_id"`
+	EventID      *uuid.UUID `json:"event_id,omitempty"`
+	Title        string     `json:"title"`
+	EventDate    *string    `json:"event_date,omitempty"` // DATE "YYYY-MM-DD"
+	PhotoURL     string     `json:"photo_url"`
+	ThumbnailURL *string    `json:"thumbnail_url,omitempty"`
+	SortOrder    int        `json:"sort_order"`
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at"`
+}
+
+// PublicReview is the sanitized public testimonial DTO (never full EventReview / PII).
+type PublicReview struct {
+	Rating            int       `json:"rating"`
+	Comment           *string   `json:"comment,omitempty"`
+	SubmittedAt       time.Time `json:"submitted_at"`
+	OrganizerResponse *string   `json:"organizer_response,omitempty"`
+	DisplayName       string    `json:"display_name"` // server: "A." or "Verified client"
+	EventLabel        *string   `json:"event_label,omitempty"`
+}
+
+// PublicLocation is the public-safe structured location (no lat/lng in v1 JSON).
+type PublicLocation struct {
+	City    *string `json:"city,omitempty"`
+	Region  *string `json:"region,omitempty"`
+	Country *string `json:"country,omitempty"`
+}
+
+// PublicContact is a single public contact channel.
+type PublicContact struct {
+	Type  string `json:"type"` // phone|whatsapp|email|url
+	Value string `json:"value"`
+}
+
+// PublicProfileService is a product projected onto the public profile.
+type PublicProfileService struct {
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	Category  string    `json:"category"`
+	ImageURL  *string   `json:"image_url,omitempty"`
+	BasePrice *float64  `json:"base_price,omitempty"` // only when show_prices=true
+}
+
+// PublicPortfolioItem is the public-safe portfolio projection (no user_id/event_id).
+type PublicPortfolioItem struct {
+	ID           uuid.UUID `json:"id"`
+	Title        string    `json:"title"`
+	EventDate    *string   `json:"event_date,omitempty"`
+	PhotoURL     string    `json:"photo_url"`
+	ThumbnailURL *string   `json:"thumbnail_url,omitempty"`
+	SortOrder    int       `json:"sort_order"`
+}
+
+// PublicOrganizerProfile is the plan-aware aggregate public GET response.
+// Free: basic fields + ≤3 services; omit reviews/portfolio/socials.
+// Pro+: honor section toggles; portfolio ≤6; base_price only if show_prices.
+type PublicOrganizerProfile struct {
+	Slug         string                 `json:"slug"`
+	BusinessName string                 `json:"business_name,omitempty"`
+	LogoURL      *string                `json:"logo_url,omitempty"`
+	BrandColor   *string                `json:"brand_color,omitempty"`
+	Headline     *string                `json:"headline,omitempty"`
+	Location     *PublicLocation        `json:"location,omitempty"`
+	Contact      *PublicContact         `json:"contact,omitempty"`
+	Services     []PublicProfileService `json:"services,omitempty"`
+	Reviews      []PublicReview         `json:"reviews,omitempty"`
+	Portfolio    []PublicPortfolioItem  `json:"portfolio,omitempty"`
+	Socials      map[string]string      `json:"socials,omitempty"`
 }
