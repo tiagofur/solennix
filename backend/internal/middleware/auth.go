@@ -132,6 +132,13 @@ func GetUserID(ctx context.Context) uuid.UUID {
 	return id
 }
 
+// WithUserID returns a copy of ctx carrying the given user ID. Intended for
+// tests that exercise handlers depending on the auth middleware without
+// spinning up the full JWT flow.
+func WithUserID(ctx context.Context, userID uuid.UUID) context.Context {
+	return context.WithValue(ctx, UserIDKey, userID)
+}
+
 // GetUserEmail extracts the user email from the request context.
 func GetUserEmail(ctx context.Context) string {
 	email, _ := ctx.Value(UserEmailKey).(string)

@@ -18,10 +18,12 @@ import {
   ExternalLink,
   Loader2,
   HelpCircle,
+  Globe,
 } from "lucide-react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import clsx from "clsx";
 import { logError } from "@/lib/errorHandler";
+import PublicProfileSettings from "./settings/PublicProfileSettings";
 import { api, getAssetUrl } from "@/lib/api";
 import { subscriptionService } from "@/services/subscriptionService";
 import { useSubscriptionStatus } from "@/hooks/queries/useSubscriptionQueries";
@@ -118,8 +120,12 @@ export const Settings: React.FC = () => {
     push_event_reminder: profile?.push_event_reminder ?? true,
     push_payment_received: profile?.push_payment_received ?? true,
   });
-  const initialTab = searchParams.get("tab") === "subscription" ? "subscription" : searchParams.get("tab") === "notifications" ? "notifications" : "profile";
-  const [activeTab, setActiveTab] = useState<"profile" | "business" | "subscription" | "contracts" | "notifications">(initialTab as any);
+  const initialTab =
+    searchParams.get("tab") === "subscription" ? "subscription"
+    : searchParams.get("tab") === "notifications" ? "notifications"
+    : searchParams.get("tab") === "public-profile" ? "public-profile"
+    : "profile";
+  const [activeTab, setActiveTab] = useState<"profile" | "business" | "subscription" | "contracts" | "notifications" | "public-profile">(initialTab as any);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
 
@@ -375,6 +381,7 @@ export const Settings: React.FC = () => {
               { id: "business", label: t("settings:tabs.business"), icon: Building },
               { id: "contracts", label: t("settings:tabs.contracts"), icon: FileText },
               { id: "notifications", label: t("settings:tabs.notifications"), icon: Bell },
+              { id: "public-profile", label: t("settings:tabs.public_profile"), icon: Globe },
               { id: "subscription", label: t("settings:tabs.subscription"), icon: CreditCard },
             ].map((tab) => (
               <button
@@ -936,6 +943,12 @@ export const Settings: React.FC = () => {
                   ))}
                 </div>
               </div>
+            </Card>
+          )}
+
+          {activeTab === "public-profile" && (
+            <Card variant="glass" padding="lg">
+              <PublicProfileSettings />
             </Card>
           )}
 
