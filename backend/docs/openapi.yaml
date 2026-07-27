@@ -642,8 +642,7 @@ components:
           type: boolean
         show_on_public_profile:
           type: boolean
-          default: false
-          description: When true, product may appear on the organizer public profile (Free max 3)
+          description: When true, product may appear on the organizer public profile (Free max 3). Optional in payloads; defaults to false server-side.
         created_at:
           type: string
           format: date-time

@@ -1299,6 +1299,103 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/organizers/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get public professional profile by slug (rate-limited)
+         * @description Returns plan-aware public projection. 404 when slug is unknown or profile is disabled. Free plan omits reviews, portfolio, and socials.
+         */
+        get: operations["getPublicOrganizerProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/organizers/{slug}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List sanitized public reviews for an organizer
+         * @description Always returns PublicReview[]. Free plan or reviews feature off yields an empty list.
+         */
+        get: operations["listPublicOrganizerReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/me/public-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get authenticated organizer public-profile config */
+        get: operations["getMyPublicProfile"];
+        /**
+         * Create or update authenticated organizer public-profile config
+         * @description Upserts profile settings and optionally renames public_slug. Free plan rejects enabling show_reviews, show_portfolio, or full socials with plan_limit_exceeded.
+         */
+        put: operations["upsertMyPublicProfile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/me/public-profile/portfolio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List portfolio items (Pro+ only) */
+        get: operations["listMyPublicPortfolio"];
+        put?: never;
+        /** Create a portfolio item (Pro+, max 6) */
+        post: operations["createMyPublicPortfolioItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/me/public-profile/portfolio/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update a portfolio item (Pro+) */
+        put: operations["updateMyPublicPortfolioItem"];
+        post?: never;
+        /** Delete a portfolio item (Pro+) */
+        delete: operations["deleteMyPublicPortfolioItem"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1340,6 +1437,8 @@ export interface components {
             default_currency: string;
             /** Format: date-time */
             plan_expires_at?: string | null;
+            /** @description Opt-in share handle for the public professional profile (/u/:slug) */
+            public_slug?: string | null;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -1570,6 +1669,8 @@ export interface components {
             recipe?: string | null;
             image_url?: string | null;
             is_active: boolean;
+            /** @description When true, product may appear on the organizer public profile (Free max 3). Optional in payloads; defaults to false server-side. */
+            show_on_public_profile?: boolean;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -2329,6 +2430,129 @@ export interface components {
                 is_lead?: boolean;
                 position?: number;
             }[];
+        };
+        PublicReview: {
+            rating: number;
+            comment?: string | null;
+            /** Format: date-time */
+            submitted_at: string;
+            organizer_response?: string | null;
+            /** @description Server-computed initials (e.g. "A.") or "Verified client" */
+            display_name: string;
+            event_label?: string | null;
+        };
+        PublicLocation: {
+            city?: string | null;
+            region?: string | null;
+            country?: string | null;
+        };
+        PublicContact: {
+            /** @enum {string} */
+            type: "phone" | "whatsapp" | "email" | "url";
+            value: string;
+        };
+        PublicProfileService: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            category: string;
+            image_url?: string | null;
+            /**
+             * Format: double
+             * @description Present only when organizer show_prices is true
+             */
+            base_price?: number | null;
+        };
+        PublicPortfolioItem: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            /** Format: date */
+            event_date?: string | null;
+            photo_url: string;
+            thumbnail_url?: string | null;
+            sort_order: number;
+        };
+        PublicOrganizerProfile: {
+            slug: string;
+            business_name?: string;
+            logo_url?: string | null;
+            brand_color?: string | null;
+            headline?: string | null;
+            location?: components["schemas"]["PublicLocation"];
+            contact?: components["schemas"]["PublicContact"];
+            services?: components["schemas"]["PublicProfileService"][];
+            /** @description Omitted for Free plan; Pro+ when show_reviews */
+            reviews?: components["schemas"]["PublicReview"][];
+            /** @description Omitted for Free plan; Pro+ when show_portfolio (max 6) */
+            portfolio?: components["schemas"]["PublicPortfolioItem"][];
+            /** @description Omitted for Free plan */
+            socials?: {
+                [key: string]: string;
+            };
+        };
+        OrganizerPublicProfile: {
+            /** Format: uuid */
+            user_id: string;
+            is_enabled: boolean;
+            headline?: string | null;
+            /** @enum {string|null} */
+            contact_type?: "phone" | "whatsapp" | "email" | "url" | null;
+            contact_value?: string | null;
+            city?: string | null;
+            region?: string | null;
+            country?: string | null;
+            /** @default false */
+            show_prices: boolean;
+            show_services: boolean;
+            show_reviews: boolean;
+            show_portfolio: boolean;
+            show_contact: boolean;
+            socials?: {
+                [key: string]: string;
+            };
+            public_slug?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        OrganizerPublicProfileUpsertRequest: {
+            is_enabled?: boolean;
+            public_slug?: string;
+            headline?: string | null;
+            /** @enum {string|null} */
+            contact_type?: "phone" | "whatsapp" | "email" | "url" | null;
+            contact_value?: string | null;
+            city?: string | null;
+            region?: string | null;
+            country?: string | null;
+            show_prices?: boolean;
+            show_services?: boolean;
+            show_reviews?: boolean;
+            show_portfolio?: boolean;
+            show_contact?: boolean;
+            socials?: {
+                [key: string]: string;
+            };
+        };
+        OrganizerPublicPortfolioItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            user_id: string;
+            /** Format: uuid */
+            event_id?: string | null;
+            title: string;
+            /** Format: date */
+            event_date?: string | null;
+            photo_url: string;
+            thumbnail_url?: string | null;
+            sort_order: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
         };
     };
     responses: never;
@@ -6418,6 +6642,376 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
+            };
+        };
+    };
+    getPublicOrganizerProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public organizer profile */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicOrganizerProfile"];
+                };
+            };
+            /** @description Profile not found or disabled */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPublicOrganizerReviews: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sanitized public reviews */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicReview"][];
+                };
+            };
+            /** @description Organizer not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMyPublicProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public profile config (empty defaults if not yet saved) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizerPublicProfile"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Failed to load public profile */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    upsertMyPublicProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganizerPublicProfileUpsertRequest"];
+            };
+        };
+        responses: {
+            /** @description Public profile saved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizerPublicProfile"];
+                };
+            };
+            /** @description Validation error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Plan limit exceeded for Pro-only sections */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description public_slug already taken */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Failed to save public profile */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listMyPublicPortfolio: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Portfolio items */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizerPublicPortfolioItem"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires Pro+ plan */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createMyPublicPortfolioItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title: string;
+                    /** Format: uuid */
+                    event_id?: string | null;
+                    /** Format: date */
+                    event_date?: string | null;
+                    photo_url: string;
+                    thumbnail_url?: string | null;
+                    sort_order: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Portfolio item created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizerPublicPortfolioItem"];
+                };
+            };
+            /** @description Validation error or max items reached */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires Pro+ plan */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateMyPublicPortfolioItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title?: string;
+                    /** Format: uuid */
+                    event_id?: string | null;
+                    /** Format: date */
+                    event_date?: string | null;
+                    photo_url?: string;
+                    thumbnail_url?: string | null;
+                    sort_order?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Portfolio item updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizerPublicPortfolioItem"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires Pro+ plan */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Item not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteMyPublicPortfolioItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Portfolio item deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires Pro+ plan */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Item not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
