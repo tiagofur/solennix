@@ -104,6 +104,13 @@ components:
           type: string
           format: date-time
           nullable: true
+        public_slug:
+          type: string
+          nullable: true
+          minLength: 3
+          maxLength: 140
+          pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+          description: Opt-in share handle for the public professional profile (/u/:slug)
         created_at:
           type: string
           format: date-time
@@ -633,6 +640,10 @@ components:
           nullable: true
         is_active:
           type: boolean
+        show_on_public_profile:
+          type: boolean
+          default: false
+          description: When true, product may appear on the organizer public profile (Free max 3)
         created_at:
           type: string
           format: date-time
@@ -2352,6 +2363,294 @@ components:
                 type: boolean
               position:
                 type: integer
+    # --- Public professional profile (Issue #787) — schemas stubbed in PR1; handlers in later PRs ---
+    PublicReview:
+      type: object
+      required:
+        - rating
+        - submitted_at
+        - display_name
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          nullable: true
+        submitted_at:
+          type: string
+          format: date-time
+        organizer_response:
+          type: string
+          nullable: true
+        display_name:
+          type: string
+          description: Server-computed initials (e.g. "A.") or "Verified client"
+        event_label:
+          type: string
+          nullable: true
+    PublicLocation:
+      type: object
+      properties:
+        city:
+          type: string
+          nullable: true
+        region:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+    PublicContact:
+      type: object
+      required:
+        - type
+        - value
+      properties:
+        type:
+          type: string
+          enum: [phone, whatsapp, email, url]
+        value:
+          type: string
+    PublicProfileService:
+      type: object
+      required:
+        - id
+        - name
+        - category
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          type: string
+        image_url:
+          type: string
+          nullable: true
+        base_price:
+          type: number
+          format: double
+          nullable: true
+          description: Present only when organizer show_prices is true
+    PublicPortfolioItem:
+      type: object
+      required:
+        - id
+        - title
+        - photo_url
+        - sort_order
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        event_date:
+          type: string
+          format: date
+          nullable: true
+        photo_url:
+          type: string
+        thumbnail_url:
+          type: string
+          nullable: true
+        sort_order:
+          type: integer
+          minimum: 0
+          maximum: 5
+    PublicOrganizerProfile:
+      type: object
+      required:
+        - slug
+      properties:
+        slug:
+          type: string
+        business_name:
+          type: string
+        logo_url:
+          type: string
+          nullable: true
+        brand_color:
+          type: string
+          nullable: true
+        headline:
+          type: string
+          nullable: true
+        location:
+          $ref: "#/components/schemas/PublicLocation"
+        contact:
+          $ref: "#/components/schemas/PublicContact"
+        services:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicProfileService"
+        reviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicReview"
+          description: Omitted for Free plan; Pro+ when show_reviews
+        portfolio:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicPortfolioItem"
+          description: Omitted for Free plan; Pro+ when show_portfolio (max 6)
+        socials:
+          type: object
+          additionalProperties:
+            type: string
+          description: Omitted for Free plan
+    OrganizerPublicProfile:
+      type: object
+      required:
+        - user_id
+        - is_enabled
+        - show_prices
+        - show_services
+        - show_reviews
+        - show_portfolio
+        - show_contact
+        - created_at
+        - updated_at
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        is_enabled:
+          type: boolean
+        headline:
+          type: string
+          nullable: true
+          maxLength: 200
+        contact_type:
+          type: string
+          nullable: true
+          enum: [phone, whatsapp, email, url]
+        contact_value:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        region:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        show_prices:
+          type: boolean
+          default: false
+        show_services:
+          type: boolean
+        show_reviews:
+          type: boolean
+        show_portfolio:
+          type: boolean
+        show_contact:
+          type: boolean
+        socials:
+          type: object
+          additionalProperties:
+            type: string
+        public_slug:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    OrganizerPublicProfileUpsertRequest:
+      type: object
+      properties:
+        is_enabled:
+          type: boolean
+        public_slug:
+          type: string
+          minLength: 3
+          maxLength: 140
+          pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+        headline:
+          type: string
+          maxLength: 200
+          nullable: true
+        contact_type:
+          type: string
+          nullable: true
+          enum: [phone, whatsapp, email, url]
+        contact_value:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        region:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        show_prices:
+          type: boolean
+        show_services:
+          type: boolean
+        show_reviews:
+          type: boolean
+        show_portfolio:
+          type: boolean
+        show_contact:
+          type: boolean
+        socials:
+          type: object
+          additionalProperties:
+            type: string
+    OrganizerPublicPortfolioItem:
+      type: object
+      required:
+        - id
+        - user_id
+        - title
+        - photo_url
+        - sort_order
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+          nullable: true
+        title:
+          type: string
+          maxLength: 160
+        event_date:
+          type: string
+          format: date
+          nullable: true
+        photo_url:
+          type: string
+        thumbnail_url:
+          type: string
+          nullable: true
+        sort_order:
+          type: integer
+          minimum: 0
+          maximum: 5
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
 paths:
   /health:
     get:
@@ -5265,3 +5564,275 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  # --- Public professional profile (Issue #787) — path stubs; handlers land in PR2+ ---
+  /api/public/organizers/{slug}:
+    get:
+      security: []
+      operationId: getPublicOrganizerProfile
+      summary: Get public professional profile by slug (rate-limited)
+      description: >
+        Returns plan-aware public projection. 404 when slug is unknown or profile is disabled.
+        Free plan omits reviews, portfolio, and socials.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 140
+      responses:
+        "200":
+          description: Public organizer profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicOrganizerProfile"
+        "404":
+          description: Profile not found or disabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Rate limit exceeded
+  /api/public/organizers/{slug}/reviews:
+    get:
+      security: []
+      operationId: listPublicOrganizerReviews
+      summary: List sanitized public reviews for an organizer
+      description: >
+        Always returns PublicReview[]. Free plan or reviews feature off yields an empty list.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Sanitized public reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PublicReview"
+        "404":
+          description: Organizer not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Rate limit exceeded
+  /api/users/me/public-profile:
+    get:
+      operationId: getMyPublicProfile
+      summary: Get authenticated organizer public-profile config
+      responses:
+        "200":
+          description: Public profile config (empty defaults if not yet saved)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganizerPublicProfile"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to load public profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: upsertMyPublicProfile
+      summary: Create or update authenticated organizer public-profile config
+      description: >
+        Upserts profile settings and optionally renames public_slug.
+        Free plan rejects enabling show_reviews, show_portfolio, or full socials with plan_limit_exceeded.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrganizerPublicProfileUpsertRequest"
+      responses:
+        "200":
+          description: Public profile saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganizerPublicProfile"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Plan limit exceeded for Pro-only sections
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: public_slug already taken
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to save public profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/users/me/public-profile/portfolio:
+    get:
+      operationId: listMyPublicPortfolio
+      summary: List portfolio items (Pro+ only)
+      responses:
+        "200":
+          description: Portfolio items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrganizerPublicPortfolioItem"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Requires Pro+ plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createMyPublicPortfolioItem
+      summary: Create a portfolio item (Pro+, max 6)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - photo_url
+                - sort_order
+              properties:
+                title:
+                  type: string
+                  maxLength: 160
+                event_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+                event_date:
+                  type: string
+                  format: date
+                  nullable: true
+                photo_url:
+                  type: string
+                thumbnail_url:
+                  type: string
+                  nullable: true
+                sort_order:
+                  type: integer
+                  minimum: 0
+                  maximum: 5
+      responses:
+        "201":
+          description: Portfolio item created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganizerPublicPortfolioItem"
+        "400":
+          description: Validation error or max items reached
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Requires Pro+ plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/users/me/public-profile/portfolio/{id}:
+    put:
+      operationId: updateMyPublicPortfolioItem
+      summary: Update a portfolio item (Pro+)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  maxLength: 160
+                event_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+                event_date:
+                  type: string
+                  format: date
+                  nullable: true
+                photo_url:
+                  type: string
+                thumbnail_url:
+                  type: string
+                  nullable: true
+                sort_order:
+                  type: integer
+                  minimum: 0
+                  maximum: 5
+      responses:
+        "200":
+          description: Portfolio item updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganizerPublicPortfolioItem"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Requires Pro+ plan
+        "404":
+          description: Item not found
+    delete:
+      operationId: deleteMyPublicPortfolioItem
+      summary: Delete a portfolio item (Pro+)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Portfolio item deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Requires Pro+ plan
+        "404":
+          description: Item not found
