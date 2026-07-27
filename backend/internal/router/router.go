@@ -23,6 +23,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	paymentSubmissionHandler *handlers.PaymentSubmissionHandler,
 	reviewHandler *handlers.EventReviewHandler,
 	publicProfileHandler *handlers.PublicProfileHandler,
+	publicProfileConfigHandler *handlers.PublicProfileConfigHandler,
 	staffHandler *handlers.StaffHandler,
 	staffTeamHandler *handlers.StaffTeamHandler,
 	pdfHandler *handlers.PDFHandler,
@@ -229,6 +230,8 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		// Users
 		r.Put("/users/me", authHandler.UpdateProfile)
 		r.Delete("/users/me", authHandler.DeleteOwnAccount)
+		r.Get("/users/me/public-profile", publicProfileConfigHandler.GetMyPublicProfile)
+		r.Put("/users/me/public-profile", publicProfileConfigHandler.UpsertMyPublicProfile)
 
 		// Staff (Personal — collaborators catalog)
 		r.Route("/staff", func(r chi.Router) {
