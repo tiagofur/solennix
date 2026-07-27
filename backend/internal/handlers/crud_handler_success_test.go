@@ -1839,10 +1839,13 @@ func TestUpdateProduct_Success(t *testing.T) {
 	userID := uuid.New()
 	productID := uuid.New()
 	productRepo := new(MockProductRepo)
+	userRepo := new(MockFullUserRepo)
 
+	// UpdateProduct now loads the user to evaluate plan-based limits.
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "pro"}, nil)
 	productRepo.On("Update", mock.Anything, mock.AnythingOfType("*models.Product")).Return(nil)
 
-	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), productRepo, new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))
+	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), productRepo, new(MockInventoryRepo), new(MockFullPaymentRepo), userRepo)
 
 	body := `{"name":"Updated Tacos","category":"main_course","base_price":200}`
 	req := makeReqWithIDParam(http.MethodPut, "/api/products/"+productID.String(), body, productID.String(), userID)
@@ -3159,10 +3162,13 @@ func TestUpdateProduct_RepoUpdateError_Returns500(t *testing.T) {
 	userID := uuid.New()
 	productID := uuid.New()
 	productRepo := new(MockProductRepo)
+	userRepo := new(MockFullUserRepo)
 
+	// UpdateProduct loads the user for plan-based limits before reaching Update.
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "pro"}, nil)
 	productRepo.On("Update", mock.Anything, mock.AnythingOfType("*models.Product")).Return(errTest)
 
-	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), productRepo, new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))
+	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), productRepo, new(MockInventoryRepo), new(MockFullPaymentRepo), userRepo)
 
 	body := `{"name":"Updated Tacos","category":"main_course","base_price":200}`
 	req := makeReqWithIDParam(http.MethodPut, "/api/products/"+productID.String(), body, productID.String(), userID)
