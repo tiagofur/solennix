@@ -22,6 +22,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	eventPublicLinkHandler *handlers.EventPublicLinkHandler,
 	paymentSubmissionHandler *handlers.PaymentSubmissionHandler,
 	reviewHandler *handlers.EventReviewHandler,
+	publicProfileHandler *handlers.PublicProfileHandler,
 	staffHandler *handlers.StaffHandler,
 	staffTeamHandler *handlers.StaffTeamHandler,
 	pdfHandler *handlers.PDFHandler,
@@ -203,6 +204,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 
 	apiRouter.Route("/public/organizers", func(r chi.Router) {
 		r.Use(mw.RateLimit(20, 1*time.Minute))
+		r.Get("/{slug}", publicProfileHandler.GetPublicProfile)
 		r.Get("/{slug}/reviews", reviewHandler.ListPublicPortfolioReviews)
 	})
 

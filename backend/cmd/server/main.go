@@ -185,6 +185,7 @@ func main() {
 	eventPublicLinkHandler := handlers.NewEventPublicLinkHandler(eventPublicLinkRepo, eventRepo, clientRepo, userRepo, paymentRepo, cfg.FrontendURL)
 	paymentSubmissionHandler := handlers.NewPaymentSubmissionHandler(paymentSubmissionRepo, paymentRepo, userRepo, pool, cfg.UploadDir, cfg.DefaultTimezone)
 	reviewHandler := handlers.NewEventReviewHandler(reviewRepo, userRepo, publicProfileRepo, emailService, cfg.FrontendURL)
+	publicProfileHandler := handlers.NewPublicProfileHandler(userRepo, publicProfileRepo, productRepo, reviewRepo, cfg.FrontendURL)
 	staffHandler := handlers.NewStaffHandler(staffRepo, userRepo)
 	staffHandler.SetPool(pool)
 	staffHandler.SetInviteSupport(authService, emailService, cfg.FrontendURL)
@@ -192,7 +193,7 @@ func main() {
 	pdfHandler := handlers.NewPDFHandler(eventRepo, clientRepo, paymentRepo, userRepo, cfg.UploadDir)
 
 	// Create router
-	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, dashboardHandler, auditHandler, unavailHandler, deviceHandler, liveActivityHandler, eventFormHandler, eventPublicLinkHandler, paymentSubmissionHandler, reviewHandler, staffHandler, staffTeamHandler, pdfHandler, authService, userRepo, auditRepo, pool, cfg.CORSAllowedOrigins, cfg.UploadDir, cfg.Environment, cfg.TrustProxy)
+	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, dashboardHandler, auditHandler, unavailHandler, deviceHandler, liveActivityHandler, eventFormHandler, eventPublicLinkHandler, paymentSubmissionHandler, reviewHandler, publicProfileHandler, staffHandler, staffTeamHandler, pdfHandler, authService, userRepo, auditRepo, pool, cfg.CORSAllowedOrigins, cfg.UploadDir, cfg.Environment, cfg.TrustProxy)
 
 	// Background job: expire gifted plans that have passed their expiry date.
 	// Runs once at startup then every hour.
