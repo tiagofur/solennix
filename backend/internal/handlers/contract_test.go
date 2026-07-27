@@ -527,3 +527,60 @@ func TestOpenAPISpec_PublicRoutesContract(t *testing.T) {
 	})
 }
 
+func TestOpenAPISpec_PublicProfessionalProfileContract(t *testing.T) {
+	spec := readOpenAPISpec(t)
+
+	tests := []struct {
+		name     string
+		fragment string
+	}{
+		{name: "public organizer profile path", fragment: "/api/public/organizers/{slug}:"},
+		{name: "public organizer reviews path", fragment: "/api/public/organizers/{slug}/reviews:"},
+		{name: "auth public profile path", fragment: "/api/users/me/public-profile:"},
+		{name: "auth portfolio path", fragment: "/api/users/me/public-profile/portfolio:"},
+		{name: "auth portfolio item path", fragment: "/api/users/me/public-profile/portfolio/{id}:"},
+		{name: "get public profile operation", fragment: "operationId: getPublicOrganizerProfile"},
+		{name: "list public reviews operation", fragment: "operationId: listPublicOrganizerReviews"},
+		{name: "get my public profile operation", fragment: "operationId: getMyPublicProfile"},
+		{name: "upsert my public profile operation", fragment: "operationId: upsertMyPublicProfile"},
+		{name: "public review schema", fragment: "PublicReview:"},
+		{name: "public organizer profile schema", fragment: "PublicOrganizerProfile:"},
+		{name: "organizer public profile schema", fragment: "OrganizerPublicProfile:"},
+		{name: "portfolio item schema", fragment: "OrganizerPublicPortfolioItem:"},
+		{name: "user public_slug field", fragment: "public_slug:"},
+		{name: "product show_on_public_profile field", fragment: "show_on_public_profile:"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if !strings.Contains(spec, tt.fragment) {
+				t.Fatalf("openapi spec missing fragment %q", tt.fragment)
+			}
+		})
+	}
+
+	t.Run("public organizer aggregate response shape", func(t *testing.T) {
+		assertContainsInOrder(t, spec,
+			"/api/public/organizers/{slug}:",
+			"operationId: getPublicOrganizerProfile",
+			"responses:",
+			"\"200\":",
+			"description: Public organizer profile",
+			"content:",
+			"application/json:",
+			"$ref: \"#/components/schemas/PublicOrganizerProfile\"",
+		)
+	})
+
+	t.Run("auth upsert public profile body", func(t *testing.T) {
+		assertContainsInOrder(t, spec,
+			"/api/users/me/public-profile:",
+			"operationId: upsertMyPublicProfile",
+			"requestBody:",
+			"$ref: \"#/components/schemas/OrganizerPublicProfileUpsertRequest\"",
+			"\"409\":",
+			"description: public_slug already taken",
+		)
+	})
+}
+

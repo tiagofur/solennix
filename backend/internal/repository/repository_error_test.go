@@ -118,6 +118,12 @@ func TestRepositoryMethodsWithClosedPool(t *testing.T) {
 	if _, err := NewUserRepo(pool).GetByID(ctx, id); err == nil {
 		t.Fatalf("UserRepo.GetByID() expected error with closed pool")
 	}
+	if _, err := NewUserRepo(pool).GetByPublicSlug(ctx, "missing-slug"); err == nil {
+		t.Fatalf("UserRepo.GetByPublicSlug() expected error with closed pool")
+	}
+	if err := NewUserRepo(pool).UpdatePublicSlug(ctx, id, "closed-pool-slug"); err == nil {
+		t.Fatalf("UserRepo.UpdatePublicSlug() expected error with closed pool")
+	}
 	if _, err := NewUserRepo(pool).Update(context.Background(), uuid.New(), nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil); err == nil {
 		t.Fatalf("UserRepo.Update() expected error with closed pool")
 	}

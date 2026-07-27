@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tiagofur/solennix-backend/internal/models"
 )
@@ -18,6 +20,8 @@ var (
 	ErrStaffInviteExpired    = errors.New("staff invite expired")
 	ErrStaffInviteEmailTaken = errors.New("invite email already registered")
 	ErrStaffInviteRoleDenied = errors.New("invite role is not allowed for owner plan")
+	ErrPublicSlugTaken       = errors.New("public slug already taken")
+	ErrUserNotFound          = errors.New("user not found")
 )
 
 type UserRepo struct {
@@ -62,7 +66,7 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, 
 		email_weekly_summary, email_marketing, push_enabled, push_event_reminder, push_payment_received,
 		preferred_language, default_currency,
 		email_verified_at, email_verification_token_hash, email_verification_sent_at, email_verification_expires_at,
-		plan, role,
+		plan, role, public_slug,
 		COALESCE(account_status, 'active') AS account_status,
 		blocked_at, blocked_reason, blocked_by, deletion_eligible_at, deleted_at,
 		stripe_customer_id, last_active_at, registration_platform,
@@ -77,7 +81,7 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, 
 		&user.EmailWeeklySummary, &user.EmailMarketing, &user.PushEnabled, &user.PushEventReminder, &user.PushPaymentReceived,
 		&user.PreferredLanguage, &user.DefaultCurrency,
 		&user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
-		&user.Plan, &user.Role,
+		&user.Plan, &user.Role, &user.PublicSlug,
 		&user.AccountStatus, &user.BlockedAt, &user.BlockedReason, &user.BlockedBy, &user.DeletionEligibleAt, &user.DeletedAt,
 		&user.StripeCustomerID, &user.LastActiveAt, &user.RegistrationPlatform,
 		&user.InactivityStage, &user.InactivityWarningSentAt,
@@ -98,7 +102,7 @@ func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, err
 		email_weekly_summary, email_marketing, push_enabled, push_event_reminder, push_payment_received,
 		preferred_language, default_currency,
 		email_verified_at, email_verification_token_hash, email_verification_sent_at, email_verification_expires_at,
-		plan, role,
+		plan, role, public_slug,
 		COALESCE(account_status, 'active') AS account_status,
 		blocked_at, blocked_reason, blocked_by, deletion_eligible_at, deleted_at,
 		stripe_customer_id, last_active_at, registration_platform,
@@ -113,7 +117,7 @@ func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, err
 		&user.EmailWeeklySummary, &user.EmailMarketing, &user.PushEnabled, &user.PushEventReminder, &user.PushPaymentReceived,
 		&user.PreferredLanguage, &user.DefaultCurrency,
 		&user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
-		&user.Plan, &user.Role,
+		&user.Plan, &user.Role, &user.PublicSlug,
 		&user.AccountStatus, &user.BlockedAt, &user.BlockedReason, &user.BlockedBy, &user.DeletionEligibleAt, &user.DeletedAt,
 		&user.StripeCustomerID, &user.LastActiveAt, &user.RegistrationPlatform,
 		&user.InactivityStage, &user.InactivityWarningSentAt,
@@ -123,6 +127,75 @@ func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, err
 		return nil, fmt.Errorf("user not found: %w", err)
 	}
 	return user, nil
+}
+
+// GetByPublicSlug resolves an organizer by users.public_slug (public profile lookup).
+func (r *UserRepo) GetByPublicSlug(ctx context.Context, slug string) (*models.User, error) {
+	user := &models.User{}
+	query := `SELECT id, email, password_hash, name, business_name, logo_url, brand_color, show_business_name_in_pdf,
+		default_deposit_percent, default_cancellation_days, default_refund_percent,
+		contract_template,
+		email_payment_receipt, email_event_reminder, email_subscription_updates,
+		email_weekly_summary, email_marketing, push_enabled, push_event_reminder, push_payment_received,
+		preferred_language, default_currency,
+		email_verified_at, email_verification_token_hash, email_verification_sent_at, email_verification_expires_at,
+		plan, role, public_slug,
+		COALESCE(account_status, 'active') AS account_status,
+		blocked_at, blocked_reason, blocked_by, deletion_eligible_at, deleted_at,
+		stripe_customer_id, last_active_at, registration_platform,
+		COALESCE(inactivity_stage, 0) AS inactivity_stage, inactivity_warning_sent_at,
+		created_at, updated_at
+		FROM users WHERE public_slug = $1`
+	err := r.pool.QueryRow(ctx, query, slug).Scan(
+		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
+		&user.DefaultDepositPercent, &user.DefaultCancellationDays, &user.DefaultRefundPercent,
+		&user.ContractTemplate,
+		&user.EmailPaymentReceipt, &user.EmailEventReminder, &user.EmailSubscriptionUpdates,
+		&user.EmailWeeklySummary, &user.EmailMarketing, &user.PushEnabled, &user.PushEventReminder, &user.PushPaymentReceived,
+		&user.PreferredLanguage, &user.DefaultCurrency,
+		&user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
+		&user.Plan, &user.Role, &user.PublicSlug,
+		&user.AccountStatus, &user.BlockedAt, &user.BlockedReason, &user.BlockedBy, &user.DeletionEligibleAt, &user.DeletedAt,
+		&user.StripeCustomerID, &user.LastActiveAt, &user.RegistrationPlatform,
+		&user.InactivityStage, &user.InactivityWarningSentAt,
+		&user.CreatedAt, &user.UpdatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("user not found: %w", err)
+		}
+		return nil, fmt.Errorf("user not found: %w", err)
+	}
+	return user, nil
+}
+
+// UpdatePublicSlug renames users.public_slug. Returns ErrPublicSlugTaken on unique conflict.
+func (r *UserRepo) UpdatePublicSlug(ctx context.Context, userID uuid.UUID, slug string) error {
+	tag, err := r.pool.Exec(ctx, `
+		UPDATE users
+		SET public_slug = $2,
+			updated_at = NOW()
+		WHERE id = $1`, userID, slug)
+	if err != nil {
+		if isUniqueViolation(err) {
+			return ErrPublicSlugTaken
+		}
+		return fmt.Errorf("failed to update public slug: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrUserNotFound
+	}
+	return nil
+}
+
+func isUniqueViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		return true
+	}
+	// Fallback for wrapped drivers that strip typed errors.
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "duplicate key") || strings.Contains(msg, "unique constraint")
 }
 
 func (r *UserRepo) Update(ctx context.Context, id uuid.UUID, name, businessName, logoURL, brandColor *string, showBusinessNameInPdf *bool,
@@ -159,7 +232,7 @@ func (r *UserRepo) Update(ctx context.Context, id uuid.UUID, name, businessName,
 			email_weekly_summary, email_marketing, push_enabled, push_event_reminder, push_payment_received,
 			preferred_language, default_currency,
 			email_verified_at, email_verification_token_hash, email_verification_sent_at, email_verification_expires_at,
-			plan, role,
+			plan, role, public_slug,
 			COALESCE(account_status, 'active') AS account_status,
 			blocked_at, blocked_reason, blocked_by, deletion_eligible_at, deleted_at,
 			stripe_customer_id, created_at, updated_at`
@@ -175,7 +248,7 @@ func (r *UserRepo) Update(ctx context.Context, id uuid.UUID, name, businessName,
 		&user.EmailWeeklySummary, &user.EmailMarketing, &user.PushEnabled, &user.PushEventReminder, &user.PushPaymentReceived,
 		&user.PreferredLanguage, &user.DefaultCurrency,
 		&user.EmailVerifiedAt, &user.EmailVerificationHash, &user.EmailVerificationSentAt, &user.EmailVerificationExpiry,
-		&user.Plan, &user.Role,
+		&user.Plan, &user.Role, &user.PublicSlug,
 		&user.AccountStatus, &user.BlockedAt, &user.BlockedReason, &user.BlockedBy, &user.DeletionEligibleAt, &user.DeletedAt,
 		&user.StripeCustomerID, &user.CreatedAt, &user.UpdatedAt,
 	)
