@@ -26,16 +26,34 @@ const mockUser = {
   plan: 'basic',
 };
 
-const defaultProps = {
-  isOpen: true,
-  onClose: vi.fn(),
-  onClientCreated: vi.fn(),
-};
+/** Fill required fields reliably for react-hook-form under Vitest/CI. */
+function fillRequiredClientFields(
+  name = 'Maria Lopez',
+  phone = '5551234567',
+) {
+  fireEvent.change(screen.getByLabelText(/Nombre Completo/i), {
+    target: { value: name },
+  });
+  fireEvent.change(screen.getByLabelText(/Teléfono/i), {
+    target: { value: phone },
+  });
+}
 
 describe('QuickClientModal', () => {
+  let defaultProps: {
+    isOpen: boolean;
+    onClose: ReturnType<typeof vi.fn>;
+    onClientCreated: ReturnType<typeof vi.fn>;
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     (useAuth as any).mockReturnValue({ user: mockUser });
+    defaultProps = {
+      isOpen: true,
+      onClose: vi.fn(),
+      onClientCreated: vi.fn(),
+    };
   });
 
   // =============================================
@@ -183,12 +201,12 @@ describe('QuickClientModal', () => {
     };
     (clientService.create as any).mockResolvedValue(createdClient);
 
-    const user = userEvent.setup();
     render(<QuickClientModal {...defaultProps} />);
 
-    await user.type(screen.getByLabelText('Nombre Completo *'), 'Maria Lopez');
-    await user.type(screen.getByLabelText('Teléfono *'), '5551234567');
-    await user.type(screen.getByLabelText('Email'), 'maria@example.com');
+    fillRequiredClientFields('Maria Lopez', '5551234567');
+    fireEvent.change(screen.getByLabelText(/^Email$/i), {
+      target: { value: 'maria@example.com' },
+    });
     fireEvent.click(screen.getByLabelText('Guardar cliente'));
 
     await waitFor(() => {
@@ -222,11 +240,9 @@ describe('QuickClientModal', () => {
     };
     (clientService.create as any).mockResolvedValue(createdClient);
 
-    const user = userEvent.setup();
     render(<QuickClientModal {...defaultProps} />);
 
-    await user.type(screen.getByLabelText('Nombre Completo *'), 'Juan Test');
-    await user.type(screen.getByLabelText('Teléfono *'), '5559876543');
+    fillRequiredClientFields('Juan Test', '5559876543');
     // Leave email empty
     fireEvent.click(screen.getByLabelText('Guardar cliente'));
 
@@ -250,11 +266,9 @@ describe('QuickClientModal', () => {
       () => new Promise((resolve) => { resolveCreate = resolve; })
     );
 
-    const user = userEvent.setup();
     render(<QuickClientModal {...defaultProps} />);
 
-    await user.type(screen.getByLabelText('Nombre Completo *'), 'Maria Lopez');
-    await user.type(screen.getByLabelText('Teléfono *'), '5551234567');
+    fillRequiredClientFields();
     fireEvent.click(screen.getByLabelText('Guardar cliente'));
 
     await waitFor(() => {
@@ -282,11 +296,9 @@ describe('QuickClientModal', () => {
   it('shows error message when creation fails with error.message', async () => {
     (clientService.create as any).mockRejectedValue(new Error('Servidor no disponible'));
 
-    const user = userEvent.setup();
     render(<QuickClientModal {...defaultProps} />);
 
-    await user.type(screen.getByLabelText('Nombre Completo *'), 'Maria Lopez');
-    await user.type(screen.getByLabelText('Teléfono *'), '5551234567');
+    fillRequiredClientFields();
     fireEvent.click(screen.getByLabelText('Guardar cliente'));
 
     await waitFor(() => {
@@ -294,6 +306,7 @@ describe('QuickClientModal', () => {
       expect(screen.getByRole('alert')).toBeInTheDocument();
     });
 
+    expect(clientService.create).toHaveBeenCalled();
     expect(logError).toHaveBeenCalledWith(
       'Error creating quick client',
       expect.any(Error)
@@ -303,26 +316,24 @@ describe('QuickClientModal', () => {
   it('shows default error message when error has no message', async () => {
     (clientService.create as any).mockRejectedValue({});
 
-    const user = userEvent.setup();
     render(<QuickClientModal {...defaultProps} />);
 
-    await user.type(screen.getByLabelText('Nombre Completo *'), 'Maria Lopez');
-    await user.type(screen.getByLabelText('Teléfono *'), '5551234567');
+    fillRequiredClientFields();
     fireEvent.click(screen.getByLabelText('Guardar cliente'));
 
     await waitFor(() => {
       expect(screen.getByText('Error al crear el cliente')).toBeInTheDocument();
     });
+
+    expect(clientService.create).toHaveBeenCalled();
   });
 
   it('does not call onClientCreated when service returns null/falsy', async () => {
     (clientService.create as any).mockResolvedValue(null);
 
-    const user = userEvent.setup();
     render(<QuickClientModal {...defaultProps} />);
 
-    await user.type(screen.getByLabelText('Nombre Completo *'), 'Maria Lopez');
-    await user.type(screen.getByLabelText('Teléfono *'), '5551234567');
+    fillRequiredClientFields();
     fireEvent.click(screen.getByLabelText('Guardar cliente'));
 
     await waitFor(() => {
@@ -340,11 +351,9 @@ describe('QuickClientModal', () => {
   it('does not submit when there is no authenticated user', async () => {
     (useAuth as any).mockReturnValue({ user: null });
 
-    const user = userEvent.setup();
     render(<QuickClientModal {...defaultProps} />);
 
-    await user.type(screen.getByLabelText('Nombre Completo *'), 'Maria Lopez');
-    await user.type(screen.getByLabelText('Teléfono *'), '5551234567');
+    fillRequiredClientFields();
     fireEvent.click(screen.getByLabelText('Guardar cliente'));
 
     await waitFor(() => {
