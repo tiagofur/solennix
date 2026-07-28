@@ -34,6 +34,44 @@ describe("publicProfileService", () => {
     );
   });
 
+  it("getBySlug rewrites relative logo/service/portfolio media to absolute API URLs", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        data: {
+          slug: "solennix",
+          logo_url: "/api/v1/uploads/u/logo.png",
+          services: [
+            {
+              id: "s1",
+              name: "Pack",
+              category: "main",
+              image_url: "/api/v1/uploads/u/svc.png",
+            },
+          ],
+          portfolio: [
+            {
+              id: "p1",
+              title: "Evento",
+              photo_url: "/api/v1/uploads/u/photo.png",
+              thumbnail_url: "/api/v1/uploads/u/thumb.png",
+              sort_order: 0,
+            },
+          ],
+        },
+      }),
+    });
+
+    const profile = await publicProfileService.getBySlug("solennix");
+
+    expect(profile.logo_url).toMatch(/^https?:\/\//);
+    expect(profile.logo_url).toContain("/api/v1/uploads/u/logo.png");
+    expect(profile.services?.[0]?.image_url).toMatch(/^https?:\/\//);
+    expect(profile.portfolio?.[0]?.photo_url).toMatch(/^https?:\/\//);
+    expect(profile.portfolio?.[0]?.thumbnail_url).toMatch(/^https?:\/\//);
+  });
+
   it("getBySlug encodes the slug in the path", async () => {
     fetchMock.mockResolvedValue({
       ok: true,

@@ -154,6 +154,86 @@ func (r *ProductRepo) CountPublicProfile(ctx context.Context, userID uuid.UUID) 
 	return count, err
 }
 
+// ErrInvalidProductSelection is returned when bulk public-profile service
+// selection includes IDs that are not active products owned by the user.
+var ErrInvalidProductSelection = fmt.Errorf("invalid product selection")
+
+// ListActiveForPublicProfileSettings returns all active products for the
+// organizer (with show_on_public_profile flag) for the Settings multi-select UI.
+func (r *ProductRepo) ListActiveForPublicProfileSettings(ctx context.Context, userID uuid.UUID) ([]models.Product, error) {
+	query := `SELECT id, user_id, name, category, base_price, recipe, image_url, is_active, show_on_public_profile, staff_team_id, created_at, updated_at
+		FROM products
+		WHERE user_id = $1 AND is_active = true
+		ORDER BY name`
+	rows, err := r.pool.Query(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	products := make([]models.Product, 0)
+	for rows.Next() {
+		var p models.Product
+		if err := rows.Scan(&p.ID, &p.UserID, &p.Name, &p.Category, &p.BasePrice,
+			&p.Recipe, &p.ImageURL, &p.IsActive, &p.ShowOnPublicProfile, &p.StaffTeamID, &p.CreatedAt, &p.UpdatedAt); err != nil {
+			return nil, err
+		}
+		products = append(products, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating active products: %w", err)
+	}
+	return products, nil
+}
+
+// SetPublicProfileServices sets show_on_public_profile=true for the given
+// active product IDs owned by userID, and false for all other products of that
+// user. productIDs may be empty (clears all flags). Returns error when any ID
+// is not an active product owned by the user.
+func (r *ProductRepo) SetPublicProfileServices(ctx context.Context, userID uuid.UUID, productIDs []uuid.UUID) error {
+	if productIDs == nil {
+		productIDs = []uuid.UUID{}
+	}
+	if len(productIDs) > 0 {
+		var owned int
+		err := r.pool.QueryRow(ctx, `
+			SELECT COUNT(*) FROM products
+			WHERE user_id = $1 AND is_active = true AND id = ANY($2)`,
+			userID, productIDs,
+		).Scan(&owned)
+		if err != nil {
+			return err
+		}
+		if owned != len(productIDs) {
+			return ErrInvalidProductSelection
+		}
+	}
+
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	// Clear all flags for this user first (including inactive — keeps state clean).
+	if _, err := tx.Exec(ctx, `
+		UPDATE products SET show_on_public_profile = false, updated_at = NOW()
+		WHERE user_id = $1 AND show_on_public_profile = true`, userID); err != nil {
+		return err
+	}
+
+	if len(productIDs) > 0 {
+		if _, err := tx.Exec(ctx, `
+			UPDATE products SET show_on_public_profile = true, updated_at = NOW()
+			WHERE user_id = $1 AND is_active = true AND id = ANY($2)`,
+			userID, productIDs); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit(ctx)
+}
+
 func (r *ProductRepo) Delete(ctx context.Context, id, userID uuid.UUID) error {
 	tag, err := r.pool.Exec(ctx, "DELETE FROM products WHERE id=$1 AND user_id=$2", id, userID)
 	if err != nil {

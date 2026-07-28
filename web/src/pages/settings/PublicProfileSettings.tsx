@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import clsx from "clsx";
 import {
@@ -9,17 +9,22 @@ import {
   Lock,
   Trash2,
   Image as ImageIcon,
+  Package,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/Button";
+import { getAssetUrl } from "@/lib/api";
 import { publicProfileConfigService } from "@/services/publicProfileConfigService";
 import type {
   OrganizerPublicProfile,
   OrganizerPublicProfileUpsertRequest,
   OrganizerPublicPortfolioItem,
+  PublicProfileServiceSelectionItem,
+  PortfolioCandidateEvent,
 } from "@/services/publicProfileConfigService";
 
 const PORTFOLIO_MAX = 6;
+const FREE_SERVICES_MAX = 3;
 
 // kebab-case, 3-140 chars (mirrors backend validatePublicSlug).
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -46,6 +51,18 @@ function isPaidPlan(plan?: string): boolean {
   return plan === "pro" || plan === "business" || plan === "premium";
 }
 
+function formatPrice(amount: number): string {
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: "MXN",
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return `$${amount}`;
+  }
+}
+
 export default function PublicProfileSettings() {
   const { t } = useTranslation("settings");
   const { user } = useAuth();
@@ -67,13 +84,20 @@ export default function PublicProfileSettings() {
   const [slugError, setSlugError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // Services selection (from products catalog)
+  const [services, setServices] = useState<PublicProfileServiceSelectionItem[]>([]);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<Set<string>>(new Set());
+  const [servicesLoading, setServicesLoading] = useState(false);
+  const [servicesSaving, setServicesSaving] = useState(false);
+  const [servicesError, setServicesError] = useState<string | null>(null);
+
   // Portfolio (Pro+)
   const [portfolio, setPortfolio] = useState<OrganizerPublicPortfolioItem[]>([]);
   const [portfolioLoading, setPortfolioLoading] = useState(false);
   const [portfolioError, setPortfolioError] = useState<string | null>(null);
-  const [newTitle, setNewTitle] = useState("");
-  const [newPhotoUrl, setNewPhotoUrl] = useState("");
-  const [newEventDate, setNewEventDate] = useState("");
+  const [candidates, setCandidates] = useState<PortfolioCandidateEvent[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState("");
+  const [selectedPhotoId, setSelectedPhotoId] = useState("");
   const [addingPortfolio, setAddingPortfolio] = useState(false);
 
   useEffect(() => {
@@ -108,18 +132,48 @@ export default function PublicProfileSettings() {
     };
   }, [t, user?.public_slug]);
 
-  // Load portfolio only for paid plans (Free gets 403).
+  // Load services (active products) for selection.
+  useEffect(() => {
+    let cancelled = false;
+    setServicesLoading(true);
+    (async () => {
+      try {
+        const items = await publicProfileConfigService.listServices();
+        if (cancelled) return;
+        setServices(items);
+        setSelectedServiceIds(
+          new Set(items.filter((s) => s.show_on_public_profile).map((s) => s.id)),
+        );
+      } catch {
+        if (!cancelled) setServicesError(t("publicProfile.servicesLoadFailed"));
+      } finally {
+        if (!cancelled) setServicesLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [t]);
+
+  // Load portfolio + candidates only for paid plans (Free gets 403).
   useEffect(() => {
     if (!paid) {
       setPortfolio([]);
+      setCandidates([]);
       return;
     }
     let cancelled = false;
     setPortfolioLoading(true);
     (async () => {
       try {
-        const items = await publicProfileConfigService.listPortfolio();
-        if (!cancelled) setPortfolio(items);
+        const [items, cands] = await Promise.all([
+          publicProfileConfigService.listPortfolio(),
+          publicProfileConfigService.listPortfolioCandidates(),
+        ]);
+        if (!cancelled) {
+          setPortfolio(items);
+          setCandidates(cands);
+        }
       } catch {
         if (!cancelled) setPortfolioError(t("publicProfile.portfolioLoadFailed"));
       } finally {
@@ -130,6 +184,30 @@ export default function PublicProfileSettings() {
       cancelled = true;
     };
   }, [paid, t]);
+
+  const portfolioEventIds = useMemo(
+    () => new Set(portfolio.map((p) => p.event_id).filter(Boolean) as string[]),
+    [portfolio],
+  );
+
+  const availableCandidates = useMemo(
+    () => candidates.filter((c) => !portfolioEventIds.has(c.id)),
+    [candidates, portfolioEventIds],
+  );
+
+  const selectedCandidate = useMemo(
+    () => availableCandidates.find((c) => c.id === selectedEventId) ?? null,
+    [availableCandidates, selectedEventId],
+  );
+
+  useEffect(() => {
+    if (!selectedCandidate) {
+      setSelectedPhotoId("");
+      return;
+    }
+    // Default to first photo when event changes.
+    setSelectedPhotoId(selectedCandidate.photos[0]?.id ?? "");
+  }, [selectedCandidate]);
 
   const validateSlug = useCallback(
     (value: string): string | null => {
@@ -178,12 +256,54 @@ export default function PublicProfileSettings() {
     setSlugError(validateSlug(value));
   };
 
+  const toggleService = (id: string) => {
+    setServicesError(null);
+    setSelectedServiceIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+        return next;
+      }
+      if (!paid && next.size >= FREE_SERVICES_MAX) {
+        setServicesError(t("publicProfile.servicesFreeLimit"));
+        return prev;
+      }
+      next.add(id);
+      return next;
+    });
+  };
+
+  const handleSaveServices = async () => {
+    setServicesError(null);
+    if (!paid && selectedServiceIds.size > FREE_SERVICES_MAX) {
+      setServicesError(t("publicProfile.servicesFreeLimit"));
+      return;
+    }
+    setServicesSaving(true);
+    try {
+      const updated = await publicProfileConfigService.setServices([
+        ...selectedServiceIds,
+      ]);
+      setServices(updated);
+      setSelectedServiceIds(
+        new Set(updated.filter((s) => s.show_on_public_profile).map((s) => s.id)),
+      );
+    } catch (e: any) {
+      const status = e?.status ?? e?.statusCode ?? e?.response?.status;
+      if (status === 403) {
+        setServicesError(t("publicProfile.servicesFreeLimit"));
+      } else {
+        setServicesError(t("publicProfile.servicesSaveFailed"));
+      }
+    } finally {
+      setServicesSaving(false);
+    }
+  };
+
   const handleAddPortfolio = async () => {
     setPortfolioError(null);
-    const title = newTitle.trim();
-    const photo = newPhotoUrl.trim();
-    if (!title || !photo) {
-      setPortfolioError(t("publicProfile.portfolioSaveFailed"));
+    if (!selectedEventId) {
+      setPortfolioError(t("publicProfile.portfolioPickEvent"));
       return;
     }
     if (portfolio.length >= PORTFOLIO_MAX) {
@@ -193,17 +313,15 @@ export default function PublicProfileSettings() {
     setAddingPortfolio(true);
     try {
       const created = await publicProfileConfigService.createPortfolioItem({
-        title,
-        photo_url: photo,
-        event_date: newEventDate.trim() || null,
-        sort_order: portfolio.length, // next free slot 0..5
+        event_id: selectedEventId,
+        photo_id: selectedPhotoId || undefined,
+        sort_order: portfolio.length,
       });
       setPortfolio((prev) =>
         [...prev, created].sort((a, b) => a.sort_order - b.sort_order),
       );
-      setNewTitle("");
-      setNewPhotoUrl("");
-      setNewEventDate("");
+      setSelectedEventId("");
+      setSelectedPhotoId("");
     } catch {
       setPortfolioError(t("publicProfile.portfolioSaveFailed"));
     } finally {
@@ -274,13 +392,14 @@ export default function PublicProfileSettings() {
 
   if (loading) {
     return (
-      <div className="space-y-4 animate-pulse" aria-busy="true">
-        <div className="h-8 bg-surface-alt rounded-xl w-1/3" />
-        <div className="h-24 bg-surface-alt rounded-2xl" />
-        <div className="h-24 bg-surface-alt rounded-2xl" />
+      <div className="space-y-4 animate-pulse">
+        <div className="h-8 bg-surface-alt rounded w-1/3" />
+        <div className="h-32 bg-surface-alt rounded" />
       </div>
     );
   }
+
+  const freeAtLimit = !paid && selectedServiceIds.size >= FREE_SERVICES_MAX;
 
   return (
     <div className="space-y-8">
@@ -294,8 +413,8 @@ export default function PublicProfileSettings() {
         </p>
       </header>
 
-      {/* Enable */}
-      <div className="space-y-4">
+      {/* Enable toggle */}
+      <div className="space-y-3">
         <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">
           {t("publicProfile.enable")}
         </p>
@@ -313,63 +432,60 @@ export default function PublicProfileSettings() {
           {t("publicProfile.slug")}
         </p>
         <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border space-y-3">
-          <label className="text-sm font-bold text-text" htmlFor="pp-slug">
-            {t("publicProfile.slug")}
-          </label>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <input
-              id="pp-slug"
-              type="text"
-              value={slug}
-              onChange={(e) => handleSlugChange(e.target.value)}
-              placeholder="mi-negocio"
-              className={clsx(fieldClass, "flex-1")}
-              data-testid="pp-slug"
-            />
-            {shareUrl && (
-              <div className="flex gap-2 shrink-0">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="md"
-                  onClick={handleCopy}
-                  data-testid="pp-copy"
-                  title={t("publicProfile.copyUrl")}
-                >
-                  {copied ? (
-                    <Check className="h-4 w-4 text-success" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                  <span className="hidden sm:inline">
-                    {copied ? t("publicProfile.copied") : t("publicProfile.copy")}
-                  </span>
-                </Button>
-                <a
-                  href={shareUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center px-5 py-2.5 text-sm rounded-xl border border-border text-text hover:bg-surface-alt transition-all"
-                  title={t("publicProfile.preview")}
-                >
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              </div>
-            )}
-          </div>
-          {slugError && (
-            <p className="text-xs text-error" data-testid="pp-slug-error">
-              {slugError}
-            </p>
-          )}
+        <label className="text-sm font-bold text-text" htmlFor="pp-slug">
+          {t("publicProfile.slug")}
+        </label>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            id="pp-slug"
+            type="text"
+            value={slug}
+            onChange={(e) => handleSlugChange(e.target.value)}
+            placeholder="mi-negocio"
+            className={clsx(fieldClass, "flex-1")}
+            data-testid="pp-slug"
+          />
           {shareUrl && (
-            <p
-              className="text-xs text-text-secondary break-all"
-              data-testid="pp-share-url"
-            >
-              {shareUrl}
-            </p>
+            <div className="flex gap-2 shrink-0">
+              <Button
+                type="button"
+                variant="outline"
+                size="md"
+                onClick={handleCopy}
+                data-testid="pp-copy"
+                title={t("publicProfile.copyUrl")}
+              >
+                {copied ? (
+                  <Check className="h-4 w-4 text-success" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+                <span className="hidden sm:inline">
+                  {copied ? t("publicProfile.copied") : t("publicProfile.copy")}
+                </span>
+              </Button>
+              <a
+                href={shareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center px-5 py-2.5 text-sm rounded-xl border border-border text-text hover:bg-surface-alt transition-all"
+                title={t("publicProfile.preview")}
+              >
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </div>
           )}
+        </div>
+        {slugError && (
+          <p className="text-xs text-error" data-testid="pp-slug-error">
+            {slugError}
+          </p>
+        )}
+        {shareUrl && (
+          <p className="text-xs text-text-secondary break-all" data-testid="pp-share-url">
+            {shareUrl}
+          </p>
+        )}
         </div>
       </div>
 
@@ -379,16 +495,16 @@ export default function PublicProfileSettings() {
           {t("publicProfile.headline")}
         </p>
         <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border">
-          <input
-            id="pp-headline"
-            type="text"
-            value={headline}
-            onChange={(e) => setHeadline(e.target.value)}
-            maxLength={200}
-            className={fieldClass}
-            data-testid="pp-headline"
-            placeholder={t("publicProfile.headline")}
-          />
+        <input
+          id="pp-headline"
+          type="text"
+          value={headline}
+          onChange={(e) => setHeadline(e.target.value)}
+          maxLength={200}
+          className={fieldClass}
+          data-testid="pp-headline"
+          placeholder={t("publicProfile.headline")}
+        />
         </div>
       </div>
 
@@ -398,30 +514,30 @@ export default function PublicProfileSettings() {
           {t("publicProfile.location")}
         </p>
         <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <input
-              type="text"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              placeholder={t("publicProfile.city")}
-              className={fieldClass}
-              data-testid="pp-city"
-            />
-            <input
-              type="text"
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-              placeholder={t("publicProfile.region")}
-              className={fieldClass}
-            />
-            <input
-              type="text"
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              placeholder={t("publicProfile.country")}
-              className={fieldClass}
-            />
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <input
+            type="text"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            placeholder={t("publicProfile.city")}
+            className={fieldClass}
+            data-testid="pp-city"
+          />
+          <input
+            type="text"
+            value={region}
+            onChange={(e) => setRegion(e.target.value)}
+            placeholder={t("publicProfile.region")}
+            className={fieldClass}
+          />
+          <input
+            type="text"
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            placeholder={t("publicProfile.country")}
+            className={fieldClass}
+          />
+        </div>
         </div>
       </div>
 
@@ -431,31 +547,31 @@ export default function PublicProfileSettings() {
           {t("publicProfile.contact")}
         </p>
         <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <select
-              value={contactType}
-              onChange={(e) => setContactType(e.target.value as ContactType)}
-              className={clsx(fieldClass, "sm:w-44 shrink-0")}
-              data-testid="pp-contact-type"
-            >
-              {CONTACT_TYPES.map((ct) => (
-                <option key={ct} value={ct}>
-                  {t(`publicProfile.contactTypes.${ct}`)}
-                </option>
-              ))}
-            </select>
-            <input
-              type="text"
-              value={contactValue}
-              onChange={(e) => setContactValue(e.target.value)}
-              className={clsx(fieldClass, "flex-1")}
-              data-testid="pp-contact-value"
-            />
-          </div>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <select
+            value={contactType}
+            onChange={(e) => setContactType(e.target.value as ContactType)}
+            className={clsx(fieldClass, "sm:w-44 shrink-0")}
+            data-testid="pp-contact-type"
+          >
+            {CONTACT_TYPES.map((ct) => (
+              <option key={ct} value={ct}>
+                {t(`publicProfile.contactTypes.${ct}`)}
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            value={contactValue}
+            onChange={(e) => setContactValue(e.target.value)}
+            className={clsx(fieldClass, "flex-1")}
+            data-testid="pp-contact-value"
+          />
+        </div>
         </div>
       </div>
 
-      {/* Visibility toggles */}
+      {/* Toggles */}
       <div className="space-y-4">
         <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">
           {t("publicProfile.showServices")}
@@ -494,47 +610,120 @@ export default function PublicProfileSettings() {
         />
       </div>
 
-      {!paid && (
-        <div className="flex items-start gap-3 p-4 rounded-2xl border border-primary/20 bg-primary/10">
-          <Lock className="h-4 w-4 text-primary shrink-0 mt-0.5" aria-hidden="true" />
-          <div>
-            <p className="text-sm font-bold text-text">
-              {t("publicProfile.planRequired")}
-            </p>
-            <p className="text-xs text-text-secondary mt-0.5">
-              {t("publicProfile.socialsProHint")}
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* Socials (Pro only) */}
-      <div className="space-y-3">
-        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-2">
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           {t("publicProfile.socials")}
-          {!paid && <Lock className="h-3.5 w-3.5" aria-hidden="true" />}
-        </p>
-        <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border space-y-2">
-          <input
-            type="text"
-            value={paid ? socialsText : ""}
-            onChange={(e) => setSocialsText(e.target.value)}
-            disabled={!paid}
-            placeholder={t("publicProfile.socialsPlaceholder")}
-            className={fieldClass}
-            data-testid="pp-socials"
-          />
-          {!paid && (
-            <p className="text-xs text-text-secondary">
-              {t("publicProfile.socialsProHint")}
-            </p>
-          )}
-        </div>
+          {!paid && <Lock className="h-3.5 w-3.5 text-text-secondary" />}
+        </label>
+        <input
+          type="text"
+          value={paid ? socialsText : ""}
+          onChange={(e) => setSocialsText(e.target.value)}
+          disabled={!paid}
+          placeholder={t("publicProfile.socialsPlaceholder")}
+          className={fieldClass}
+          data-testid="pp-socials"
+        />
+        {!paid && (
+          <p className="text-xs text-text-secondary">
+            {t("publicProfile.socialsProHint")}
+          </p>
+        )}
       </div>
 
-      {/* Portfolio (Pro only, max 6) */}
+      {/* Services from products catalog */}
+      <section className="space-y-3" data-testid="pp-services-section">
+        <header>
+          <p className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-2">
+            <Package className="h-3.5 w-3.5" aria-hidden="true" />
+            {t("publicProfile.services")}
+          </p>
+          <p className="text-xs text-text-secondary mt-1">
+            {t("publicProfile.servicesDescription")}
+          </p>
+          {!paid && (
+            <p className="text-xs text-text-secondary mt-1">
+              {t("publicProfile.servicesFreeHint")}
+            </p>
+          )}
+        </header>
+
+        {servicesLoading ? (
+          <div className="h-16 bg-surface-alt rounded animate-pulse" />
+        ) : services.length === 0 ? (
+          <p className="text-xs text-text-secondary" data-testid="pp-services-empty">
+            {t("publicProfile.servicesEmpty")}
+          </p>
+        ) : (
+          <ul className="space-y-2" data-testid="pp-services-list">
+            {services.map((svc) => {
+              const checked = selectedServiceIds.has(svc.id);
+              const disabled = !checked && freeAtLimit;
+              const thumb = getAssetUrl(svc.image_url);
+              return (
+                <li key={svc.id}>
+                  <label
+                    className={clsx(
+                      "flex items-center gap-3 rounded-xl border border-border bg-card p-3",
+                      disabled ? "opacity-50" : "cursor-pointer hover:border-primary/30",
+                    )}
+                    data-testid={`pp-service-${svc.id}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={disabled}
+                      onChange={() => toggleService(svc.id)}
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                      data-testid={`pp-service-check-${svc.id}`}
+                    />
+                    {thumb ? (
+                      <img
+                        src={thumb}
+                        alt=""
+                        className="h-10 w-10 rounded object-cover bg-surface-alt"
+                      />
+                    ) : (
+                      <div className="h-10 w-10 rounded bg-surface-alt" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-text truncate">{svc.name}</p>
+                      <p className="text-xs text-text-secondary">
+                        {formatPrice(svc.base_price)}
+                      </p>
+                    </div>
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        {servicesError && (
+          <p className="text-xs text-error" data-testid="pp-services-error">
+            {servicesError}
+          </p>
+        )}
+
+        <Button
+          type="button"
+          variant="secondary"
+          size="md"
+          onClick={handleSaveServices}
+          disabled={servicesSaving || servicesLoading}
+          loading={servicesSaving}
+          data-testid="pp-services-save"
+        >
+          {servicesSaving
+            ? t("publicProfile.servicesSaving")
+            : t("publicProfile.servicesSave")}
+        </Button>
+      </section>
+
+      {/* Portfolio from events (Pro only, max 6) */}
       <section className="space-y-3" data-testid="pp-portfolio-section">
-        <div>
+        <header>
           <p className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-2">
             <ImageIcon className="h-3.5 w-3.5" aria-hidden="true" />
             {t("publicProfile.portfolio")}
@@ -545,17 +734,14 @@ export default function PublicProfileSettings() {
               ? t("publicProfile.portfolioDescription")
               : t("publicProfile.portfolioProHint")}
           </p>
-        </div>
+        </header>
 
         {paid && (
-          <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border space-y-3">
+          <>
             {portfolioLoading ? (
-              <div className="h-16 bg-surface rounded-xl animate-pulse" />
+              <div className="h-16 bg-surface-alt rounded animate-pulse" />
             ) : portfolio.length === 0 ? (
-              <p
-                className="text-xs text-text-secondary"
-                data-testid="pp-portfolio-empty"
-              >
+              <p className="text-xs text-text-secondary" data-testid="pp-portfolio-empty">
                 {t("publicProfile.portfolioEmpty")}
               </p>
             ) : (
@@ -567,24 +753,23 @@ export default function PublicProfileSettings() {
                     data-testid={`pp-portfolio-item-${item.id}`}
                   >
                     <img
-                      src={item.thumbnail_url || item.photo_url}
+                      src={
+                        getAssetUrl(item.thumbnail_url || item.photo_url) ||
+                        item.photo_url
+                      }
                       alt=""
-                      className="h-12 w-12 rounded-lg object-cover bg-surface-alt border border-border"
+                      className="h-12 w-12 rounded object-cover bg-surface-alt"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-text truncate">
-                        {item.title}
-                      </p>
+                      <p className="text-sm font-medium text-text truncate">{item.title}</p>
                       {item.event_date && (
-                        <p className="text-xs text-text-secondary">
-                          {item.event_date}
-                        </p>
+                        <p className="text-xs text-text-secondary">{item.event_date}</p>
                       )}
                     </div>
                     <button
                       type="button"
                       onClick={() => handleDeletePortfolio(item.id)}
-                      className="p-2 rounded-xl text-error hover:bg-surface transition-colors"
+                      className="p-2 rounded-lg text-error hover:bg-surface-alt"
                       title={t("publicProfile.portfolioDelete")}
                       data-testid={`pp-portfolio-delete-${item.id}`}
                     >
@@ -596,39 +781,73 @@ export default function PublicProfileSettings() {
             )}
 
             {portfolio.length < PORTFOLIO_MAX && (
-              <div className="space-y-3 pt-2 border-t border-border">
-                <input
-                  type="text"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder={t("publicProfile.portfolioTitle")}
-                  maxLength={160}
+              <div className="space-y-3 rounded-2xl border border-border bg-surface-alt/50 p-4">
+                <label className="text-xs font-medium text-text-secondary uppercase tracking-wider" htmlFor="pp-event">
+                  {t("publicProfile.portfolioPickEvent")}
+                </label>
+                <select
+                  id="pp-event"
+                  value={selectedEventId}
+                  onChange={(e) => setSelectedEventId(e.target.value)}
                   className={fieldClass}
-                  data-testid="pp-portfolio-title"
-                />
-                <input
-                  type="url"
-                  value={newPhotoUrl}
-                  onChange={(e) => setNewPhotoUrl(e.target.value)}
-                  placeholder={t("publicProfile.portfolioPhotoUrl")}
-                  className={fieldClass}
-                  data-testid="pp-portfolio-photo"
-                />
-                <input
-                  type="date"
-                  value={newEventDate}
-                  onChange={(e) => setNewEventDate(e.target.value)}
-                  className={fieldClass}
-                  data-testid="pp-portfolio-date"
-                  aria-label={t("publicProfile.portfolioEventDate")}
-                />
+                  data-testid="pp-portfolio-event"
+                >
+                  <option value="">{t("publicProfile.portfolioSelectEvent")}</option>
+                  {availableCandidates.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.service_type}
+                      {c.event_date ? ` — ${c.event_date}` : ""}
+                      {c.city ? ` · ${c.city}` : ""}
+                    </option>
+                  ))}
+                </select>
+
+                {selectedCandidate && selectedCandidate.photos.length > 1 && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-text">
+                      {t("publicProfile.portfolioPickPhoto")}
+                    </p>
+                    <div className="flex flex-wrap gap-2" data-testid="pp-portfolio-photos">
+                      {selectedCandidate.photos.map((ph) => {
+                        const src = getAssetUrl(ph.thumbnail_url || ph.url) || ph.url;
+                        const active = selectedPhotoId === ph.id;
+                        return (
+                          <button
+                            key={ph.id}
+                            type="button"
+                            onClick={() => setSelectedPhotoId(ph.id)}
+                            className={`h-14 w-14 rounded border-2 overflow-hidden ${
+                              active ? "border-primary" : "border-border"
+                            }`}
+                            data-testid={`pp-portfolio-photo-${ph.id}`}
+                          >
+                            <img
+                              src={src}
+                              alt=""
+                              className="h-full w-full object-cover"
+                            />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {availableCandidates.length === 0 && (
+                  <p className="text-xs text-text-secondary" data-testid="pp-portfolio-no-candidates">
+                    {t("publicProfile.portfolioNoCandidates")}
+                  </p>
+                )}
+
                 <Button
                   type="button"
                   variant="secondary"
                   size="md"
                   onClick={handleAddPortfolio}
                   disabled={
-                    addingPortfolio || !newTitle.trim() || !newPhotoUrl.trim()
+                    addingPortfolio ||
+                    !selectedEventId ||
+                    availableCandidates.length === 0
                   }
                   loading={addingPortfolio}
                   data-testid="pp-portfolio-add"
@@ -641,10 +860,7 @@ export default function PublicProfileSettings() {
             )}
 
             {portfolio.length >= PORTFOLIO_MAX && (
-              <p
-                className="text-xs text-text-secondary"
-                data-testid="pp-portfolio-max"
-              >
+              <p className="text-xs text-text-secondary" data-testid="pp-portfolio-max">
                 {t("publicProfile.portfolioMax")}
               </p>
             )}
@@ -654,12 +870,12 @@ export default function PublicProfileSettings() {
                 {portfolioError}
               </p>
             )}
-          </div>
+          </>
         )}
       </section>
 
       {error && (
-        <p className="text-sm text-error font-medium" data-testid="pp-error">
+        <p className="text-sm text-error" data-testid="pp-error">
           {error}
         </p>
       )}
@@ -687,13 +903,7 @@ interface ToggleRowProps {
   testId: string;
 }
 
-function ToggleRow({
-  label,
-  checked,
-  onChange,
-  disabled,
-  testId,
-}: ToggleRowProps) {
+function ToggleRow({ label, checked, onChange, disabled, testId }: ToggleRowProps) {
   return (
     <div
       className={clsx(
@@ -704,10 +914,7 @@ function ToggleRow({
       <div className="flex items-center gap-2 min-w-0">
         <p className="font-bold text-text">{label}</p>
         {disabled && (
-          <Lock
-            className="h-3.5 w-3.5 text-text-secondary shrink-0"
-            aria-hidden="true"
-          />
+          <Lock className="h-3.5 w-3.5 text-text-secondary shrink-0" aria-hidden="true" />
         )}
       </div>
       <button

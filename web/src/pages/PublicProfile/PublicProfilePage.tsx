@@ -17,7 +17,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Logo } from "@/components/Logo";
 import { Card } from "@/components/Card";
 import { localeFromLanguage } from "@/lib/finance";
-import { getAssetUrl } from "@/lib/api";
+import { resolveMediaUrl } from "@/lib/api";
 import {
   publicProfileService,
   PublicProfileNotFoundError,
@@ -222,7 +222,7 @@ export const PublicProfilePage: React.FC = () => {
   const brandStyle = profile.brand_color
     ? ({ ["--brand" as string]: profile.brand_color } as React.CSSProperties)
     : undefined;
-  const logoSrc = profile.logo_url ? getAssetUrl(profile.logo_url) : null;
+  const logoSrc = profile.logo_url ? resolveMediaUrl(profile.logo_url) : null;
   const contactOpenExternal =
     profile.contact?.type === "url" || profile.contact?.type === "whatsapp";
 
@@ -342,7 +342,7 @@ export const PublicProfilePage: React.FC = () => {
             </SectionHeading>
             <ul className="grid gap-3 sm:grid-cols-2">
               {services.map((svc) => {
-                const img = svc.image_url ? getAssetUrl(svc.image_url) : null;
+                const img = svc.image_url ? resolveMediaUrl(svc.image_url) : null;
                 return (
                   <li key={svc.id}>
                     <Card
@@ -454,7 +454,7 @@ export const PublicProfilePage: React.FC = () => {
             </SectionHeading>
             <ul className="grid gap-3 grid-cols-2 sm:grid-cols-3">
               {portfolio.map((item) => {
-                const img = getAssetUrl(item.thumbnail_url || item.photo_url);
+                const img = resolveMediaUrl(item.thumbnail_url || item.photo_url);
                 return (
                   <li key={item.id}>
                     <Card variant="default" padding="none" className="overflow-hidden">

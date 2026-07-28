@@ -89,6 +89,9 @@ export function getAssetUrl(
 	}
 }
 
+/** Normalize relative media paths (uploads) to absolute URLs for public pages. */
+export const resolveMediaUrl = getAssetUrl;
+
 interface RequestOptions extends RequestInit {
 	params?: Record<string, string>;
 }
