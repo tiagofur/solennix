@@ -91,6 +91,7 @@ import com.creapolis.solennix.feature.search.ui.SearchScreen
 import com.creapolis.solennix.feature.settings.ui.AboutScreen
 import com.creapolis.solennix.feature.settings.ui.AccountDeletionScreen
 import com.creapolis.solennix.feature.settings.ui.BusinessSettingsScreen
+import com.creapolis.solennix.feature.settings.ui.PublicProfileSettingsScreen
 import com.creapolis.solennix.feature.settings.ui.ChangePasswordScreen
 import com.creapolis.solennix.feature.settings.ui.ContractDefaultsScreen
 import com.creapolis.solennix.feature.settings.ui.EditProfileScreen
@@ -392,6 +393,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                      onEditProfile = { navController.navigate("edit_profile") },
                      onChangePassword = { navController.navigate("change_password") },
                      onBusinessSettings = { navController.navigate("business_settings") },
+                     onPublicProfileSettings = { navController.navigate("public_profile_settings") },
                      onContractDefaults = { navController.navigate("contract_defaults") },
                      onNotificationPreferences = { navController.navigate("notification_preferences") },
                     onPricing = { navController.navigate("pricing") },
@@ -411,6 +413,12 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
             }
             composable("business_settings") {
                 BusinessSettingsScreen(viewModel = hiltViewModel(), onNavigateBack = { navController.popBackStack() })
+            }
+            composable("public_profile_settings") {
+                PublicProfileSettingsScreen(
+                    viewModel = hiltViewModel(),
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
             composable("contract_defaults") {
                 ContractDefaultsScreen(viewModel = hiltViewModel(), onNavigateBack = { navController.popBackStack() })

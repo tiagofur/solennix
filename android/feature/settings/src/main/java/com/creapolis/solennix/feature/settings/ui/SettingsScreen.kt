@@ -39,6 +39,7 @@ fun SettingsScreen(
     onEditProfile: () -> Unit,
     onChangePassword: () -> Unit,
     onBusinessSettings: () -> Unit,
+    onPublicProfileSettings: () -> Unit = {},
     onContractDefaults: () -> Unit,
     onNotificationPreferences: () -> Unit = {},
     onPricing: () -> Unit,
@@ -138,6 +139,7 @@ fun SettingsScreen(
                             SettingsItem(icon = Icons.Default.Person, label = stringResource(R.string.settings_action_edit_profile), onClick = onEditProfile)
                             SettingsItem(icon = Icons.Default.Lock, label = stringResource(R.string.settings_action_change_password), onClick = onChangePassword)
                             SettingsItem(icon = Icons.Default.Business, label = stringResource(R.string.settings_action_business_settings), onClick = onBusinessSettings)
+                            SettingsItem(icon = Icons.Default.Public, label = stringResource(R.string.settings_action_public_profile), onClick = onPublicProfileSettings)
                             SettingsItem(icon = Icons.Default.Receipt, label = stringResource(R.string.settings_action_contract_defaults), onClick = onContractDefaults)
                             SettingsItem(icon = Icons.Default.Notifications, label = stringResource(R.string.settings_tab_notifications), onClick = onNotificationPreferences)
                             LogoutItem(onClick = { viewModel.logout() })
@@ -169,6 +171,7 @@ fun SettingsScreen(
                     SettingsItem(icon = Icons.Default.Person, label = stringResource(R.string.settings_action_edit_profile), onClick = onEditProfile)
                     SettingsItem(icon = Icons.Default.Lock, label = stringResource(R.string.settings_action_change_password), onClick = onChangePassword)
                     SettingsItem(icon = Icons.Default.Business, label = stringResource(R.string.settings_action_business_settings), onClick = onBusinessSettings)
+                    SettingsItem(icon = Icons.Default.Public, label = stringResource(R.string.settings_action_public_profile), onClick = onPublicProfileSettings)
                     SettingsItem(icon = Icons.Default.Receipt, label = stringResource(R.string.settings_action_contract_defaults), onClick = onContractDefaults)
                     SettingsItem(icon = Icons.Default.Notifications, label = stringResource(R.string.settings_tab_notifications), onClick = onNotificationPreferences)
                     LogoutItem(onClick = { viewModel.logout() })

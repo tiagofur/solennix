@@ -75,6 +75,8 @@
     <string name="products_price_required">Base Price *</string>
     <string name="products_active_product">Active product</string>
     <string name="products_visible_in_quotes">Visible in quotes</string>
+    <string name="products_show_on_public_profile">Show on public profile</string>
+    <string name="products_public_profile_cap_hint">Free plan: max 3 products on the public profile.</string>
     <string name="products_save">Save</string>
     <string name="products_add">Add</string>
     <string name="products_no_added_items">No items added</string>

@@ -57,6 +57,11 @@ interface DataModule {
     ): EventPublicLinkRepository
 
     @Binds
+    fun bindsPublicProfileRepository(
+        repository: DefaultPublicProfileRepository
+    ): PublicProfileRepository
+
+    @Binds
     fun bindsDashboardRepository(
         repository: DashboardRepositoryImpl
     ): DashboardRepository
