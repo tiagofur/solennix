@@ -125,21 +125,33 @@ func (r *ProductRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*model
 }
 
 func (r *ProductRepo) Create(ctx context.Context, p *models.Product) error {
-	query := `INSERT INTO products (user_id, name, category, base_price, recipe, image_url, is_active, staff_team_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+	query := `INSERT INTO products (user_id, name, category, base_price, recipe, image_url, is_active, show_on_public_profile, staff_team_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		RETURNING id, created_at, updated_at`
 	return r.pool.QueryRow(ctx, query,
-		p.UserID, p.Name, p.Category, p.BasePrice, p.Recipe, p.ImageURL, p.IsActive, p.StaffTeamID,
+		p.UserID, p.Name, p.Category, p.BasePrice, p.Recipe, p.ImageURL, p.IsActive, p.ShowOnPublicProfile, p.StaffTeamID,
 	).Scan(&p.ID, &p.CreatedAt, &p.UpdatedAt)
 }
 
 func (r *ProductRepo) Update(ctx context.Context, p *models.Product) error {
-	query := `UPDATE products SET name=$3, category=$4, base_price=$5, recipe=$6, image_url=$7, is_active=$8, staff_team_id=$9, updated_at=NOW()
+	query := `UPDATE products SET name=$3, category=$4, base_price=$5, recipe=$6, image_url=$7, is_active=$8, show_on_public_profile=$9, staff_team_id=$10, updated_at=NOW()
 		WHERE id=$1 AND user_id=$2
 		RETURNING created_at, updated_at`
 	return r.pool.QueryRow(ctx, query,
-		p.ID, p.UserID, p.Name, p.Category, p.BasePrice, p.Recipe, p.ImageURL, p.IsActive, p.StaffTeamID,
+		p.ID, p.UserID, p.Name, p.Category, p.BasePrice, p.Recipe, p.ImageURL, p.IsActive, p.ShowOnPublicProfile, p.StaffTeamID,
 	).Scan(&p.CreatedAt, &p.UpdatedAt)
+}
+
+// CountPublicProfile returns the number of active products flagged for the
+// public profile for the given organizer. Used to enforce the Free-plan cap
+// of 3 public services on create/update.
+func (r *ProductRepo) CountPublicProfile(ctx context.Context, userID uuid.UUID) (int, error) {
+	var count int
+	err := r.pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM products WHERE user_id = $1 AND is_active = true AND show_on_public_profile = true`,
+		userID,
+	).Scan(&count)
+	return count, err
 }
 
 func (r *ProductRepo) Delete(ctx context.Context, id, userID uuid.UUID) error {

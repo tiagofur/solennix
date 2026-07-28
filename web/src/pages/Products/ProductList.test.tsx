@@ -76,6 +76,35 @@ describe('ProductList', () => {
     expect(screen.getAllByText('Postres').length).toBeGreaterThanOrEqual(1);
   });
 
+  it('shows public-profile badge when product is flagged', async () => {
+    (productService.getAll as any).mockResolvedValue([
+      {
+        id: '1',
+        name: 'Churros',
+        category: 'Postres',
+        base_price: 50,
+        is_active: true,
+        show_on_public_profile: true,
+      },
+      {
+        id: '2',
+        name: 'Tacos',
+        category: 'Comida',
+        base_price: 80,
+        is_active: true,
+        show_on_public_profile: false,
+      },
+    ]);
+
+    renderList();
+
+    await waitFor(() => {
+      expect(screen.getByText('Churros')).toBeInTheDocument();
+    });
+    expect(screen.getAllByTestId('public-profile-badge')).toHaveLength(1);
+    expect(screen.getByTestId('public-profile-badge')).toHaveTextContent(/Público|Public/i);
+  });
+
   it('filters products by search term', async () => {
     (productService.getAll as any).mockResolvedValue([
       {

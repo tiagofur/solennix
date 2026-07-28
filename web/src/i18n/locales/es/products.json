@@ -34,7 +34,8 @@
   },
   "status": {
     "active": "Activo",
-    "inactive": "Inactivo"
+    "inactive": "Inactivo",
+    "public_profile": "Público"
   },
   "success_create": "Producto creado exitosamente",
   "success_update": "Producto actualizado exitosamente",
@@ -54,6 +55,9 @@
     "inventory": "Inventario",
     "is_active": "Producto activo",
     "active_desc": "Los productos inactivos no aparecen disponibles en cotizaciones",
+    "show_on_public_profile": "Mostrar en perfil público",
+    "public_profile_desc": "Los productos activos con esta opción aparecen en tu página de perfil público.",
+    "public_profile_cap_hint": "El plan Gratis permite hasta 3 productos públicos. Actualizá tu plan para agregar más.",
     "photo": "Foto (opcional)",
     "composition": "Composición / Insumos",
     "composition_desc": "Define qué insumos y qué cantidad se necesitan para 1 unidad de este producto. Solo insumos generan costo.",

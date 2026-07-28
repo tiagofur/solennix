@@ -587,6 +587,11 @@ func (m *MockProductRepo) CountByUserID(ctx context.Context, userID uuid.UUID) (
 	return args.Int(0), args.Error(1)
 }
 
+func (m *MockProductRepo) CountPublicProfile(ctx context.Context, userID uuid.UUID) (int, error) {
+	args := m.Called(ctx, userID)
+	return args.Int(0), args.Error(1)
+}
+
 func (m *MockProductRepo) GetIngredients(ctx context.Context, productID uuid.UUID) ([]models.ProductIngredient, error) {
 	args := m.Called(ctx, productID)
 	if args.Get(0) == nil {

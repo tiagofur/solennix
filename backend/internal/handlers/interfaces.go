@@ -120,6 +120,7 @@ type ProductRepository interface {
 	Update(ctx context.Context, p *models.Product) error
 	Delete(ctx context.Context, id, userID uuid.UUID) error
 	CountByUserID(ctx context.Context, userID uuid.UUID) (int, error)
+	CountPublicProfile(ctx context.Context, userID uuid.UUID) (int, error)
 	GetIngredients(ctx context.Context, productID uuid.UUID) ([]models.ProductIngredient, error)
 	UpdateIngredients(ctx context.Context, productID uuid.UUID, ingredients []models.ProductIngredient) error
 	GetIngredientsForProducts(ctx context.Context, productIDs []uuid.UUID) ([]models.ProductIngredient, error)
