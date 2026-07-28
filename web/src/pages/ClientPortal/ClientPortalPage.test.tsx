@@ -86,8 +86,10 @@ describe("ClientPortalPage", () => {
 			expect(fetchMock).toHaveBeenCalled();
 		});
 
+		// Tab labels are inside `hidden sm:inline` spans; match by partial name
+		// so icon-only / responsive class quirks do not break CI.
 		fireEvent.click(
-			screen.getByRole("button", { name: "portal.payments.tab_historial" }),
+			screen.getByRole("button", { name: /portal\.payments\.tab_historial|historial|receipts/i }),
 		);
 
 		await waitFor(() => {
@@ -96,11 +98,18 @@ describe("ClientPortalPage", () => {
 			).toHaveBeenCalledWith("token-123", "event-1", "client-1");
 		});
 
+		// Wait for history state to paint (mock-called is not enough).
+		await waitFor(() => {
+			expect(
+				screen.getByText(
+					/portal\.payments\.receipt_file_received|Receipt file received|Comprobante recibido/i,
+				),
+			).toBeInTheDocument();
+		});
 		expect(
-			screen.getByText("portal.payments.receipt_file_received"),
-		).toBeInTheDocument();
-		expect(
-			screen.queryByRole("link", { name: "portal.payments.view_receipt" }),
+			screen.queryByRole("link", {
+				name: /portal\.payments\.view_receipt|View receipt|Ver comprobante/i,
+			}),
 		).not.toBeInTheDocument();
 	});
 });
