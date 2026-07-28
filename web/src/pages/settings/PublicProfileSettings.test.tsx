@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@tests/customRender";
 import PublicProfileSettings from "./PublicProfileSettings";
-import { publicProfileConfigService } from "@/services/publicProfileConfigService";
 
 let mockUser: Record<string, unknown> = { id: "1", plan: "pro", public_slug: "alice" };
 
@@ -12,15 +11,21 @@ vi.mock("@/hooks/useAuth", () => ({
 const getMock = vi.fn();
 const upsertMock = vi.fn();
 const listPortfolioMock = vi.fn();
+const listCandidatesMock = vi.fn();
 const createPortfolioMock = vi.fn();
 const deletePortfolioMock = vi.fn();
+const listServicesMock = vi.fn();
+const setServicesMock = vi.fn();
 vi.mock("@/services/publicProfileConfigService", () => ({
   publicProfileConfigService: {
     getMyPublicProfile: () => getMock(),
     upsertMyPublicProfile: (body: unknown) => upsertMock(body),
     listPortfolio: () => listPortfolioMock(),
+    listPortfolioCandidates: () => listCandidatesMock(),
     createPortfolioItem: (body: unknown) => createPortfolioMock(body),
     deletePortfolioItem: (id: string) => deletePortfolioMock(id),
+    listServices: () => listServicesMock(),
+    setServices: (ids: string[]) => setServicesMock(ids),
   },
 }));
 
@@ -46,6 +51,8 @@ describe("PublicProfileSettings", () => {
       updated_at: "",
     });
     listPortfolioMock.mockResolvedValue([]);
+    listCandidatesMock.mockResolvedValue([]);
+    listServicesMock.mockResolvedValue([]);
   });
 
   it("loads existing profile and renders fields", async () => {
@@ -150,12 +157,22 @@ describe("PublicProfileSettings", () => {
     });
   });
 
-  it("adds a portfolio item via the form", async () => {
+  it("adds a portfolio item from an event candidate", async () => {
+    listCandidatesMock.mockResolvedValue([
+      {
+        id: "e1",
+        service_type: "Gala",
+        event_date: "2024-06-15",
+        photos: [{ id: "ph1", url: "https://cdn.example/g.jpg" }],
+      },
+    ]);
     createPortfolioMock.mockResolvedValue({
       id: "p2",
       user_id: "1",
       title: "Gala",
       photo_url: "https://cdn.example/g.jpg",
+      event_id: "e1",
+      event_date: "2024-06-15",
       sort_order: 0,
       created_at: "",
       updated_at: "",
@@ -166,19 +183,16 @@ describe("PublicProfileSettings", () => {
       expect(screen.getByTestId("pp-portfolio-add")).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByTestId("pp-portfolio-title"), {
-      target: { value: "Gala" },
-    });
-    fireEvent.change(screen.getByTestId("pp-portfolio-photo"), {
-      target: { value: "https://cdn.example/g.jpg" },
+    fireEvent.change(screen.getByTestId("pp-portfolio-event"), {
+      target: { value: "e1" },
     });
     fireEvent.click(screen.getByTestId("pp-portfolio-add"));
 
     await waitFor(() => {
       expect(createPortfolioMock).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: "Gala",
-          photo_url: "https://cdn.example/g.jpg",
+          event_id: "e1",
+          photo_id: "ph1",
         }),
       );
     });
@@ -193,6 +207,77 @@ describe("PublicProfileSettings", () => {
     });
     expect(screen.queryByTestId("pp-portfolio-add")).not.toBeInTheDocument();
     expect(listPortfolioMock).not.toHaveBeenCalled();
+    expect(listCandidatesMock).not.toHaveBeenCalled();
+    mockUser = { id: "1", plan: "pro", public_slug: "alice" };
+  });
+
+  it("loads services and saves selection", async () => {
+    listServicesMock.mockResolvedValue([
+      {
+        id: "s1",
+        name: "Catering",
+        category: "main",
+        base_price: 100,
+        show_on_public_profile: false,
+      },
+      {
+        id: "s2",
+        name: "Bar",
+        category: "side",
+        base_price: 50,
+        show_on_public_profile: true,
+      },
+    ]);
+    setServicesMock.mockResolvedValue([
+      {
+        id: "s1",
+        name: "Catering",
+        category: "main",
+        base_price: 100,
+        show_on_public_profile: true,
+      },
+      {
+        id: "s2",
+        name: "Bar",
+        category: "side",
+        base_price: 50,
+        show_on_public_profile: true,
+      },
+    ]);
+
+    render(<PublicProfileSettings />);
+    await waitFor(() => {
+      expect(screen.getByTestId("pp-services-list")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Catering")).toBeInTheDocument();
+    expect(screen.getByTestId("pp-service-check-s2")).toBeChecked();
+
+    fireEvent.click(screen.getByTestId("pp-service-check-s1"));
+    fireEvent.click(screen.getByTestId("pp-services-save"));
+
+    await waitFor(() => {
+      expect(setServicesMock).toHaveBeenCalled();
+    });
+    const ids = setServicesMock.mock.calls[0][0] as string[];
+    expect(ids).toEqual(expect.arrayContaining(["s1", "s2"]));
+  });
+
+  it("enforces Free max 3 services on client", async () => {
+    mockUser = { id: "1", plan: "basic", public_slug: "alice" };
+    listServicesMock.mockResolvedValue([
+      { id: "a", name: "A", category: "main", base_price: 1, show_on_public_profile: true },
+      { id: "b", name: "B", category: "main", base_price: 2, show_on_public_profile: true },
+      { id: "c", name: "C", category: "main", base_price: 3, show_on_public_profile: true },
+      { id: "d", name: "D", category: "main", base_price: 4, show_on_public_profile: false },
+    ]);
+
+    render(<PublicProfileSettings />);
+    await waitFor(() => {
+      expect(screen.getByTestId("pp-services-list")).toBeInTheDocument();
+    });
+
+    // Fourth checkbox should be disabled when already at Free limit.
+    expect(screen.getByTestId("pp-service-check-d")).toBeDisabled();
     mockUser = { id: "1", plan: "pro", public_slug: "alice" };
   });
 });

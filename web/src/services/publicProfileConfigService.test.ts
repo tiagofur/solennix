@@ -44,12 +44,75 @@ describe("publicProfileConfigService", () => {
     expect(api.get).toHaveBeenCalledWith("/users/me/public-profile/portfolio");
   });
 
-  it("createPortfolioItem posts title + photo_url", async () => {
-    const created = { id: "i2", title: "Gala", photo_url: "https://x", sort_order: 1 };
+  it("listServices calls GET services path", async () => {
+    const items = [
+      {
+        id: "p1",
+        name: "Catering",
+        category: "main",
+        base_price: 100,
+        show_on_public_profile: true,
+      },
+    ];
+    (api.get as any).mockResolvedValue(items);
+
+    await expect(publicProfileConfigService.listServices()).resolves.toEqual(items);
+    expect(api.get).toHaveBeenCalledWith("/users/me/public-profile/services");
+  });
+
+  it("setServices puts product_ids bulk selection", async () => {
+    const items = [
+      {
+        id: "p1",
+        name: "Catering",
+        category: "main",
+        base_price: 100,
+        show_on_public_profile: true,
+      },
+    ];
+    (api.put as any).mockResolvedValue(items);
+
+    await expect(publicProfileConfigService.setServices(["p1", "p2"])).resolves.toEqual(
+      items,
+    );
+    expect(api.put).toHaveBeenCalledWith("/users/me/public-profile/services", {
+      product_ids: ["p1", "p2"],
+    });
+  });
+
+  it("listPortfolioCandidates calls candidates path", async () => {
+    const items = [
+      {
+        id: "e1",
+        service_type: "Wedding",
+        event_date: "2024-06-15",
+        photos: [{ id: "ph1", url: "https://x" }],
+      },
+    ];
+    (api.get as any).mockResolvedValue(items);
+
+    await expect(publicProfileConfigService.listPortfolioCandidates()).resolves.toEqual(
+      items,
+    );
+    expect(api.get).toHaveBeenCalledWith(
+      "/users/me/public-profile/portfolio/candidates",
+    );
+  });
+
+  it("createPortfolioItem posts event_id primary path", async () => {
+    const created = {
+      id: "i2",
+      title: "Wedding",
+      photo_url: "https://x",
+      sort_order: 1,
+      event_id: "e1",
+    };
     (api.post as any).mockResolvedValue(created);
 
-    const body = { title: "Gala", photo_url: "https://x", sort_order: 1 };
-    await expect(publicProfileConfigService.createPortfolioItem(body)).resolves.toEqual(created);
+    const body = { event_id: "e1", photo_id: "ph1" };
+    await expect(publicProfileConfigService.createPortfolioItem(body)).resolves.toEqual(
+      created,
+    );
     expect(api.post).toHaveBeenCalledWith("/users/me/public-profile/portfolio", body);
   });
 
