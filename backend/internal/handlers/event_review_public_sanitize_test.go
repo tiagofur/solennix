@@ -143,3 +143,57 @@ func TestListPublicReviews_UnknownSlug_404(t *testing.T) {
 		t.Errorf("unknown slug reviews = %d, want 0", len(resp.Data))
 	}
 }
+
+func TestListPublicReviews_DisabledProfile_ReturnsEmptyWithoutCallingRepo(t *testing.T) {
+	uid := uuid.New()
+	reviews := &reviewListerStub{reviews: []*models.EventReview{{Rating: 5, ClientName: strPtrS("Ana")}}}
+	deps := publicReviewDeps{
+		user: &reviewUserResolverStub{user: &models.User{ID: uid, Plan: "pro", AccountStatus: "active"}},
+		profile: &reviewProfileResolverStub{profile: &models.OrganizerPublicProfile{
+			UserID: uid, IsEnabled: false, ShowReviews: true,
+		}},
+		reviews: reviews,
+	}
+	rr := httptest.NewRecorder()
+	listPublicReviews(rr, httptest.NewRequest("GET", "/", nil), "pro", deps)
+
+	if reviews.called {
+		t.Errorf("repo must NOT be called when profile is_enabled=false")
+	}
+	var resp struct {
+		Data []models.PublicReview `json:"data"`
+	}
+	if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if len(resp.Data) != 0 {
+		t.Errorf("disabled profile reviews = %d, want 0", len(resp.Data))
+	}
+}
+
+func TestListPublicReviews_BlockedAccount_ReturnsEmpty(t *testing.T) {
+	uid := uuid.New()
+	reviews := &reviewListerStub{reviews: []*models.EventReview{{Rating: 5}}}
+	deps := publicReviewDeps{
+		user: &reviewUserResolverStub{user: &models.User{
+			ID: uid, Plan: "pro", AccountStatus: "blocked",
+		}},
+		profile: &reviewProfileResolverStub{profile: &models.OrganizerPublicProfile{
+			UserID: uid, IsEnabled: true, ShowReviews: true,
+		}},
+		reviews: reviews,
+	}
+	rr := httptest.NewRecorder()
+	listPublicReviews(rr, httptest.NewRequest("GET", "/", nil), "blocked", deps)
+
+	if reviews.called {
+		t.Errorf("repo must NOT be called for blocked account")
+	}
+	var resp struct {
+		Data []models.PublicReview `json:"data"`
+	}
+	_ = json.Unmarshal(rr.Body.Bytes(), &resp)
+	if len(resp.Data) != 0 {
+		t.Errorf("blocked account reviews = %d, want 0", len(resp.Data))
+	}
+}

@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/tiagofur/solennix-backend/internal/models"
+	"github.com/tiagofur/solennix-backend/internal/repository"
 )
 
 // --- fakes ---
@@ -83,8 +84,8 @@ func TestGetPublicProfile_404_ProfileMissing(t *testing.T) {
 	uid := uuid.New()
 	slug := "alice"
 	h := newHandler(
-		&fakeUserRepo{user: &models.User{ID: uid, PublicSlug: &slug, Plan: "pro"}},
-		&fakeProfileRepo{err: errors.New("public profile not found: no rows")},
+		&fakeUserRepo{user: &models.User{ID: uid, PublicSlug: &slug, Plan: "pro", AccountStatus: "active"}},
+		&fakeProfileRepo{err: repository.ErrPublicProfileNotFound},
 		&fakeProductRepo{}, &fakeReviewRepo{},
 	)
 	req := httptest.NewRequest(http.MethodGet, "/api/public/organizers/alice", nil)
@@ -94,6 +95,42 @@ func TestGetPublicProfile_404_ProfileMissing(t *testing.T) {
 	h.GetPublicProfile(rr, req)
 	if rr.Code != http.StatusNotFound {
 		t.Fatalf("status = %d, want 404 (missing profile)", rr.Code)
+	}
+}
+
+func TestGetPublicProfile_500_ProfileDBError(t *testing.T) {
+	uid := uuid.New()
+	slug := "alice"
+	h := newHandler(
+		&fakeUserRepo{user: &models.User{ID: uid, PublicSlug: &slug, Plan: "pro", AccountStatus: "active"}},
+		&fakeProfileRepo{err: errors.New("connection refused")},
+		&fakeProductRepo{}, &fakeReviewRepo{},
+	)
+	req := httptest.NewRequest(http.MethodGet, "/api/public/organizers/alice", nil)
+	req.SetPathValue("slug", "alice")
+	rr := httptest.NewRecorder()
+
+	h.GetPublicProfile(rr, req)
+	if rr.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want 500 (DB outage must not mask as 404)", rr.Code)
+	}
+}
+
+func TestGetPublicProfile_404_BlockedAccount(t *testing.T) {
+	uid := uuid.New()
+	slug := "alice"
+	h := newHandler(
+		&fakeUserRepo{user: &models.User{ID: uid, PublicSlug: &slug, Plan: "pro", AccountStatus: "blocked"}},
+		&fakeProfileRepo{profile: &models.OrganizerPublicProfile{UserID: uid, IsEnabled: true}},
+		&fakeProductRepo{}, &fakeReviewRepo{},
+	)
+	req := httptest.NewRequest(http.MethodGet, "/api/public/organizers/alice", nil)
+	req.SetPathValue("slug", "alice")
+	rr := httptest.NewRecorder()
+
+	h.GetPublicProfile(rr, req)
+	if rr.Code != http.StatusNotFound {
+		t.Fatalf("status = %d, want 404 for blocked account", rr.Code)
 	}
 }
 

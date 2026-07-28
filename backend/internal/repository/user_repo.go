@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -13,6 +14,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tiagofur/solennix-backend/internal/models"
 )
+
+// nonSlugChars matches anything that is not a-z / 0-9 for public_slug generation.
+var nonSlugChars = regexp.MustCompile(`[^a-z0-9]+`)
 
 var (
 	ErrStaffInviteNotFound   = errors.New("staff invite not found")
@@ -52,9 +56,60 @@ func (r *UserRepo) Create(ctx context.Context, user *models.User) error {
 	if user.DefaultCurrency == "" {
 		user.DefaultCurrency = "MXN"
 	}
-	return r.pool.QueryRow(ctx, query,
+	if err := r.pool.QueryRow(ctx, query,
 		user.Email, user.PasswordHash, user.Name, user.BusinessName, user.LogoURL, user.BrandColor, user.ShowBusinessNameInPdf, user.Plan, user.Role, user.RegistrationPlatform, user.DefaultCurrency,
-	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
+	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt); err != nil {
+		return err
+	}
+
+	if err := r.assignPublicSlug(ctx, user); err != nil {
+		return err
+	}
+	return nil
+}
+
+// assignPublicSlug sets a unique default public_slug on a newly created user.
+func (r *UserRepo) assignPublicSlug(ctx context.Context, user *models.User) error {
+	slug := defaultPublicSlugForUser(user)
+	if err := r.UpdatePublicSlug(ctx, user.ID, slug); err != nil {
+		// Extremely rare collision: append more of the UUID.
+		if errors.Is(err, ErrPublicSlugTaken) {
+			slug = slug + "-" + strings.ReplaceAll(user.ID.String(), "-", "")[:12]
+			if err2 := r.UpdatePublicSlug(ctx, user.ID, slug); err2 != nil {
+				return fmt.Errorf("assign public_slug after create: %w", err2)
+			}
+		} else {
+			return fmt.Errorf("assign public_slug after create: %w", err)
+		}
+	}
+	user.PublicSlug = &slug
+	return nil
+}
+
+// defaultPublicSlugForUser builds a kebab slug from business_name/name/email
+// plus an 8-char id suffix (same idea as 054_add_users_public_slug).
+func defaultPublicSlugForUser(user *models.User) string {
+	base := ""
+	if user.BusinessName != nil && strings.TrimSpace(*user.BusinessName) != "" {
+		base = *user.BusinessName
+	} else if strings.TrimSpace(user.Name) != "" {
+		base = user.Name
+	} else if at := strings.Index(user.Email, "@"); at > 0 {
+		base = user.Email[:at]
+	} else {
+		base = "user"
+	}
+	base = strings.ToLower(strings.TrimSpace(base))
+	base = nonSlugChars.ReplaceAllString(base, "-")
+	base = strings.Trim(base, "-")
+	if base == "" {
+		base = "user"
+	}
+	idPart := strings.ReplaceAll(user.ID.String(), "-", "")
+	if len(idPart) > 8 {
+		idPart = idPart[:8]
+	}
+	return base + "-" + idPart
 }
 
 func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, error) {
@@ -145,7 +200,10 @@ func (r *UserRepo) GetByPublicSlug(ctx context.Context, slug string) (*models.Us
 		stripe_customer_id, last_active_at, registration_platform,
 		COALESCE(inactivity_stage, 0) AS inactivity_stage, inactivity_warning_sent_at,
 		created_at, updated_at
-		FROM users WHERE public_slug = $1`
+		FROM users
+		WHERE public_slug = $1
+		  AND COALESCE(account_status, 'active') = 'active'
+		  AND deleted_at IS NULL`
 	err := r.pool.QueryRow(ctx, query, slug).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
 		&user.DefaultDepositPercent, &user.DefaultCancellationDays, &user.DefaultRefundPercent,
@@ -493,6 +551,16 @@ func (r *UserRepo) AcceptStaffInvite(ctx context.Context, tokenHash, passwordHas
 		return nil, fmt.Errorf("create user from staff invite: %w", err)
 	}
 
+	// Same default public_slug assignment as UserRepo.Create (within the invite tx).
+	slug := defaultPublicSlugForUser(createdUser)
+	if _, err = tx.Exec(ctx, `
+		UPDATE users SET public_slug = $2, updated_at = NOW() WHERE id = $1`,
+		createdUser.ID, slug,
+	); err != nil {
+		return nil, fmt.Errorf("assign public_slug for staff invite user: %w", err)
+	}
+	createdUser.PublicSlug = &slug
+
 	if _, err = tx.Exec(ctx,
 		`UPDATE staff SET invited_user_id = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3`,
 		createdUser.ID,
@@ -586,9 +654,12 @@ func (r *UserRepo) CreateWithOAuth(ctx context.Context, user *models.User) error
 	if user.RegistrationPlatform == "" {
 		user.RegistrationPlatform = "unknown"
 	}
-	return r.pool.QueryRow(ctx, query,
+	if err := r.pool.QueryRow(ctx, query,
 		user.Email, user.Name, user.Plan, user.Role, user.GoogleUserID, user.AppleUserID, user.DefaultCurrency, user.RegistrationPlatform,
-	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
+	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt); err != nil {
+		return err
+	}
+	return r.assignPublicSlug(ctx, user)
 }
 
 // LinkGoogleAccount links a Google account to an existing user
