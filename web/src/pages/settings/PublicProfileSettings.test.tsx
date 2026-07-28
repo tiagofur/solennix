@@ -11,16 +11,23 @@ vi.mock("@/hooks/useAuth", () => ({
 
 const getMock = vi.fn();
 const upsertMock = vi.fn();
+const listPortfolioMock = vi.fn();
+const createPortfolioMock = vi.fn();
+const deletePortfolioMock = vi.fn();
 vi.mock("@/services/publicProfileConfigService", () => ({
   publicProfileConfigService: {
     getMyPublicProfile: () => getMock(),
     upsertMyPublicProfile: (body: unknown) => upsertMock(body),
+    listPortfolio: () => listPortfolioMock(),
+    createPortfolioItem: (body: unknown) => createPortfolioMock(body),
+    deletePortfolioItem: (id: string) => deletePortfolioMock(id),
   },
 }));
 
 describe("PublicProfileSettings", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUser = { id: "1", plan: "pro", public_slug: "alice" };
     getMock.mockResolvedValue({
       user_id: "1",
       is_enabled: true,
@@ -38,6 +45,7 @@ describe("PublicProfileSettings", () => {
       created_at: "",
       updated_at: "",
     });
+    listPortfolioMock.mockResolvedValue([]);
   });
 
   it("loads existing profile and renders fields", async () => {
@@ -114,5 +122,77 @@ describe("PublicProfileSettings", () => {
     await waitFor(() => {
       expect(screen.getByTestId("pp-error")).toBeInTheDocument();
     });
+  });
+
+  it("loads portfolio items for Pro plan and allows delete", async () => {
+    listPortfolioMock.mockResolvedValue([
+      {
+        id: "p1",
+        user_id: "1",
+        title: "Wedding",
+        photo_url: "https://cdn.example/w.jpg",
+        sort_order: 0,
+        created_at: "",
+        updated_at: "",
+      },
+    ]);
+    deletePortfolioMock.mockResolvedValue(undefined);
+
+    render(<PublicProfileSettings />);
+    await waitFor(() => {
+      expect(screen.getByTestId("pp-portfolio-list")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Wedding")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("pp-portfolio-delete-p1"));
+    await waitFor(() => {
+      expect(deletePortfolioMock).toHaveBeenCalledWith("p1");
+    });
+  });
+
+  it("adds a portfolio item via the form", async () => {
+    createPortfolioMock.mockResolvedValue({
+      id: "p2",
+      user_id: "1",
+      title: "Gala",
+      photo_url: "https://cdn.example/g.jpg",
+      sort_order: 0,
+      created_at: "",
+      updated_at: "",
+    });
+
+    render(<PublicProfileSettings />);
+    await waitFor(() => {
+      expect(screen.getByTestId("pp-portfolio-add")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByTestId("pp-portfolio-title"), {
+      target: { value: "Gala" },
+    });
+    fireEvent.change(screen.getByTestId("pp-portfolio-photo"), {
+      target: { value: "https://cdn.example/g.jpg" },
+    });
+    fireEvent.click(screen.getByTestId("pp-portfolio-add"));
+
+    await waitFor(() => {
+      expect(createPortfolioMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Gala",
+          photo_url: "https://cdn.example/g.jpg",
+        }),
+      );
+    });
+    expect(screen.getByText("Gala")).toBeInTheDocument();
+  });
+
+  it("hides portfolio form on Free plan", async () => {
+    mockUser = { id: "1", plan: "basic", public_slug: "alice" };
+    render(<PublicProfileSettings />);
+    await waitFor(() => {
+      expect(screen.getByTestId("pp-portfolio-section")).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId("pp-portfolio-add")).not.toBeInTheDocument();
+    expect(listPortfolioMock).not.toHaveBeenCalled();
+    mockUser = { id: "1", plan: "pro", public_slug: "alice" };
   });
 });

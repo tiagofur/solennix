@@ -1,12 +1,15 @@
 import { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Copy, Check, ExternalLink, Globe, Lock } from "lucide-react";
+import { Copy, Check, ExternalLink, Globe, Lock, Trash2, Image as ImageIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { publicProfileConfigService } from "@/services/publicProfileConfigService";
 import type {
   OrganizerPublicProfile,
   OrganizerPublicProfileUpsertRequest,
+  OrganizerPublicPortfolioItem,
 } from "@/services/publicProfileConfigService";
+
+const PORTFOLIO_MAX = 6;
 
 // kebab-case, 3-140 chars (mirrors backend validatePublicSlug).
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -51,6 +54,15 @@ export default function PublicProfileSettings() {
   const [slugError, setSlugError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // Portfolio (Pro+)
+  const [portfolio, setPortfolio] = useState<OrganizerPublicPortfolioItem[]>([]);
+  const [portfolioLoading, setPortfolioLoading] = useState(false);
+  const [portfolioError, setPortfolioError] = useState<string | null>(null);
+  const [newTitle, setNewTitle] = useState("");
+  const [newPhotoUrl, setNewPhotoUrl] = useState("");
+  const [newEventDate, setNewEventDate] = useState("");
+  const [addingPortfolio, setAddingPortfolio] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -82,6 +94,29 @@ export default function PublicProfileSettings() {
       cancelled = true;
     };
   }, [t, user?.public_slug]);
+
+  // Load portfolio only for paid plans (Free gets 403).
+  useEffect(() => {
+    if (!paid) {
+      setPortfolio([]);
+      return;
+    }
+    let cancelled = false;
+    setPortfolioLoading(true);
+    (async () => {
+      try {
+        const items = await publicProfileConfigService.listPortfolio();
+        if (!cancelled) setPortfolio(items);
+      } catch {
+        if (!cancelled) setPortfolioError(t("publicProfile.portfolioLoadFailed"));
+      } finally {
+        if (!cancelled) setPortfolioLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [paid, t]);
 
   const validateSlug = useCallback(
     (value: string): string | null => {
@@ -128,6 +163,49 @@ export default function PublicProfileSettings() {
   const handleSlugChange = (value: string) => {
     setSlug(value);
     setSlugError(validateSlug(value));
+  };
+
+  const handleAddPortfolio = async () => {
+    setPortfolioError(null);
+    const title = newTitle.trim();
+    const photo = newPhotoUrl.trim();
+    if (!title || !photo) {
+      setPortfolioError(t("publicProfile.portfolioSaveFailed"));
+      return;
+    }
+    if (portfolio.length >= PORTFOLIO_MAX) {
+      setPortfolioError(t("publicProfile.portfolioMax"));
+      return;
+    }
+    setAddingPortfolio(true);
+    try {
+      const created = await publicProfileConfigService.createPortfolioItem({
+        title,
+        photo_url: photo,
+        event_date: newEventDate.trim() || null,
+        sort_order: portfolio.length, // next free slot 0..5
+      });
+      setPortfolio((prev) =>
+        [...prev, created].sort((a, b) => a.sort_order - b.sort_order),
+      );
+      setNewTitle("");
+      setNewPhotoUrl("");
+      setNewEventDate("");
+    } catch {
+      setPortfolioError(t("publicProfile.portfolioSaveFailed"));
+    } finally {
+      setAddingPortfolio(false);
+    }
+  };
+
+  const handleDeletePortfolio = async (id: string) => {
+    setPortfolioError(null);
+    try {
+      await publicProfileConfigService.deletePortfolioItem(id);
+      setPortfolio((prev) => prev.filter((p) => p.id !== id));
+    } catch {
+      setPortfolioError(t("publicProfile.portfolioDeleteFailed"));
+    }
   };
 
   const handleSave = async () => {
@@ -408,6 +486,118 @@ export default function PublicProfileSettings() {
           </p>
         )}
       </div>
+
+      {/* Portfolio (Pro only, max 6) */}
+      <section className="space-y-3" data-testid="pp-portfolio-section">
+        <header>
+          <h3 className="text-sm font-semibold text-text flex items-center gap-2">
+            <ImageIcon className="h-4 w-4" />
+            {t("publicProfile.portfolio")}
+            {!paid && <Lock className="h-3.5 w-3.5 text-text-secondary" />}
+          </h3>
+          <p className="text-xs text-text-secondary mt-1">
+            {paid
+              ? t("publicProfile.portfolioDescription")
+              : t("publicProfile.portfolioProHint")}
+          </p>
+        </header>
+
+        {paid && (
+          <>
+            {portfolioLoading ? (
+              <div className="h-16 bg-surface-alt rounded animate-pulse" />
+            ) : portfolio.length === 0 ? (
+              <p className="text-xs text-text-secondary" data-testid="pp-portfolio-empty">
+                {t("publicProfile.portfolioEmpty")}
+              </p>
+            ) : (
+              <ul className="space-y-2" data-testid="pp-portfolio-list">
+                {portfolio.map((item) => (
+                  <li
+                    key={item.id}
+                    className="flex items-center gap-3 rounded-lg border border-border bg-surface p-2"
+                    data-testid={`pp-portfolio-item-${item.id}`}
+                  >
+                    <img
+                      src={item.thumbnail_url || item.photo_url}
+                      alt=""
+                      className="h-12 w-12 rounded object-cover bg-surface-alt"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-text truncate">{item.title}</p>
+                      {item.event_date && (
+                        <p className="text-xs text-text-secondary">{item.event_date}</p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeletePortfolio(item.id)}
+                      className="p-2 rounded-lg text-error hover:bg-surface-alt"
+                      title={t("publicProfile.portfolioDelete")}
+                      data-testid={`pp-portfolio-delete-${item.id}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {portfolio.length < PORTFOLIO_MAX && (
+              <div className="space-y-2 rounded-lg border border-border p-3">
+                <input
+                  type="text"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder={t("publicProfile.portfolioTitle")}
+                  maxLength={160}
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
+                  data-testid="pp-portfolio-title"
+                />
+                <input
+                  type="url"
+                  value={newPhotoUrl}
+                  onChange={(e) => setNewPhotoUrl(e.target.value)}
+                  placeholder={t("publicProfile.portfolioPhotoUrl")}
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
+                  data-testid="pp-portfolio-photo"
+                />
+                <input
+                  type="date"
+                  value={newEventDate}
+                  onChange={(e) => setNewEventDate(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
+                  data-testid="pp-portfolio-date"
+                  aria-label={t("publicProfile.portfolioEventDate")}
+                />
+                <button
+                  type="button"
+                  onClick={handleAddPortfolio}
+                  disabled={addingPortfolio || !newTitle.trim() || !newPhotoUrl.trim()}
+                  className="px-3 py-2 rounded-lg border border-border bg-surface text-sm font-medium text-text hover:bg-surface-alt disabled:opacity-50"
+                  data-testid="pp-portfolio-add"
+                >
+                  {addingPortfolio
+                    ? t("publicProfile.portfolioAdding")
+                    : t("publicProfile.portfolioAdd")}
+                </button>
+              </div>
+            )}
+
+            {portfolio.length >= PORTFOLIO_MAX && (
+              <p className="text-xs text-text-secondary" data-testid="pp-portfolio-max">
+                {t("publicProfile.portfolioMax")}
+              </p>
+            )}
+
+            {portfolioError && (
+              <p className="text-xs text-error" data-testid="pp-portfolio-error">
+                {portfolioError}
+              </p>
+            )}
+          </>
+        )}
+      </section>
 
       {error && (
         <p className="text-sm text-error" data-testid="pp-error">

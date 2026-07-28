@@ -35,4 +35,27 @@ describe("publicProfileConfigService", () => {
     ).resolves.toEqual(saved);
     expect(api.put).toHaveBeenCalledWith("/users/me/public-profile", body);
   });
+
+  it("listPortfolio calls GET portfolio path", async () => {
+    const items = [{ id: "i1", title: "Gala", photo_url: "https://x", sort_order: 0 }];
+    (api.get as any).mockResolvedValue(items);
+
+    await expect(publicProfileConfigService.listPortfolio()).resolves.toEqual(items);
+    expect(api.get).toHaveBeenCalledWith("/users/me/public-profile/portfolio");
+  });
+
+  it("createPortfolioItem posts title + photo_url", async () => {
+    const created = { id: "i2", title: "Gala", photo_url: "https://x", sort_order: 1 };
+    (api.post as any).mockResolvedValue(created);
+
+    const body = { title: "Gala", photo_url: "https://x", sort_order: 1 };
+    await expect(publicProfileConfigService.createPortfolioItem(body)).resolves.toEqual(created);
+    expect(api.post).toHaveBeenCalledWith("/users/me/public-profile/portfolio", body);
+  });
+
+  it("deletePortfolioItem calls DELETE with id", async () => {
+    (api.delete as any).mockResolvedValue({});
+    await publicProfileConfigService.deletePortfolioItem("abc");
+    expect(api.delete).toHaveBeenCalledWith("/users/me/public-profile/portfolio/abc");
+  });
 });
