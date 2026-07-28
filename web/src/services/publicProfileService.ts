@@ -1,4 +1,5 @@
 import type { components } from "@/types/api";
+import { resolveMediaUrl } from "@/lib/mediaUrl";
 
 /**
  * Unauthenticated public organizer profile (GET /api/public/organizers/{slug}).
@@ -23,6 +24,26 @@ export class PublicProfileNotFoundError extends Error {
   }
 }
 
+/** Rewrite relative upload paths so images load from the API host on the SPA. */
+export function normalizePublicProfileMedia(
+  profile: PublicOrganizerProfile,
+): PublicOrganizerProfile {
+  return {
+    ...profile,
+    logo_url: resolveMediaUrl(profile.logo_url) ?? profile.logo_url,
+    services: profile.services?.map((svc) => ({
+      ...svc,
+      image_url: resolveMediaUrl(svc.image_url) ?? svc.image_url,
+    })),
+    portfolio: profile.portfolio?.map((item) => ({
+      ...item,
+      photo_url: resolveMediaUrl(item.photo_url) ?? item.photo_url,
+      thumbnail_url:
+        resolveMediaUrl(item.thumbnail_url) ?? item.thumbnail_url,
+    })),
+  };
+}
+
 export const publicProfileService = {
   /**
    * Fetches the plan-aware public profile aggregate by slug.
@@ -44,14 +65,17 @@ export const publicProfileService = {
     }
     const json: unknown = await res.json();
     // Backend wraps as { data: PublicOrganizerProfile }.
+    let profile: PublicOrganizerProfile;
     if (
       json &&
       typeof json === "object" &&
       "data" in json &&
       (json as { data: unknown }).data
     ) {
-      return (json as { data: PublicOrganizerProfile }).data;
+      profile = (json as { data: PublicOrganizerProfile }).data;
+    } else {
+      profile = json as PublicOrganizerProfile;
     }
-    return json as PublicOrganizerProfile;
+    return normalizePublicProfileMedia(profile);
   },
 };
