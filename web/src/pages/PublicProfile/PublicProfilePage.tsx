@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "@/hooks/useTheme";
 import { Logo } from "@/components/Logo";
 import { localeFromLanguage } from "@/lib/finance";
+import { resolveMediaUrl } from "@/lib/api";
 import {
   publicProfileService,
   PublicProfileNotFoundError,
@@ -232,7 +233,7 @@ export const PublicProfilePage: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-start gap-5">
             {profile.logo_url ? (
               <img
-                src={profile.logo_url}
+                src={resolveMediaUrl(profile.logo_url) || profile.logo_url}
                 alt=""
                 className="h-20 w-20 rounded-2xl object-cover border border-border shrink-0 bg-surface-alt"
               />
@@ -328,7 +329,7 @@ export const PublicProfilePage: React.FC = () => {
                 >
                   {svc.image_url ? (
                     <img
-                      src={svc.image_url}
+                      src={resolveMediaUrl(svc.image_url) || svc.image_url}
                       alt=""
                       className="h-14 w-14 rounded-lg object-cover border border-border shrink-0"
                     />
@@ -437,7 +438,10 @@ export const PublicProfilePage: React.FC = () => {
                   className="rounded-xl border border-border bg-surface overflow-hidden"
                 >
                   <img
-                    src={item.thumbnail_url || item.photo_url}
+                    src={
+                      resolveMediaUrl(item.thumbnail_url || item.photo_url) ||
+                      item.photo_url
+                    }
                     alt=""
                     className="aspect-[4/3] w-full object-cover bg-surface-alt"
                     loading="lazy"

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -1314,4 +1315,83 @@ func (r *EventRepo) SearchEventsAdvanced(ctx context.Context, userID uuid.UUID, 
 	}
 
 	return events, nil
+}
+
+// ListPublicPortfolioCandidates returns the organizer's completed (or past
+// confirmed) events that have at least one photo. Response is intentionally
+// sanitized: no client_id, client name, or phone.
+func (r *EventRepo) ListPublicPortfolioCandidates(ctx context.Context, userID uuid.UUID) ([]models.PortfolioCandidateEvent, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT e.id,
+			e.service_type,
+			to_char(e.event_date, 'YYYY-MM-DD') AS event_date,
+			e.city,
+			e.photos
+		FROM events e
+		WHERE e.user_id = $1
+			AND (
+				e.status = 'completed'
+				OR (e.status = 'confirmed' AND e.event_date < CURRENT_DATE)
+			)
+			AND e.photos IS NOT NULL
+			AND jsonb_typeof(e.photos) = 'array'
+			AND jsonb_array_length(e.photos) > 0
+		ORDER BY e.event_date DESC
+		LIMIT 100`, userID)
+	if err != nil {
+		return nil, fmt.Errorf("list portfolio candidates: %w", err)
+	}
+	defer rows.Close()
+
+	out := make([]models.PortfolioCandidateEvent, 0)
+	for rows.Next() {
+		var (
+			id          uuid.UUID
+			serviceType string
+			eventDate   string
+			city        *string
+			photosRaw   []byte
+		)
+		if err := rows.Scan(&id, &serviceType, &eventDate, &city, &photosRaw); err != nil {
+			return nil, fmt.Errorf("scan portfolio candidate: %w", err)
+		}
+		photos := parsePortfolioCandidatePhotos(photosRaw)
+		if len(photos) == 0 {
+			continue
+		}
+		out = append(out, models.PortfolioCandidateEvent{
+			ID:          id,
+			ServiceType: serviceType,
+			EventDate:   eventDate,
+			City:        city,
+			Photos:      photos,
+		})
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate portfolio candidates: %w", err)
+	}
+	return out, nil
+}
+
+// parsePortfolioCandidatePhotos extracts only id/url/thumbnail from event photos JSONB.
+func parsePortfolioCandidatePhotos(raw []byte) []models.PortfolioCandidatePhoto {
+	if len(raw) == 0 {
+		return nil
+	}
+	var photos []models.EventPhoto
+	if err := json.Unmarshal(raw, &photos); err != nil {
+		return nil
+	}
+	out := make([]models.PortfolioCandidatePhoto, 0, len(photos))
+	for _, p := range photos {
+		if p.URL == "" {
+			continue
+		}
+		out = append(out, models.PortfolioCandidatePhoto{
+			ID:           p.ID,
+			URL:          p.URL,
+			ThumbnailURL: p.ThumbnailURL,
+		})
+	}
+	return out
 }

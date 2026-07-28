@@ -1,15 +1,28 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Copy, Check, ExternalLink, Globe, Lock, Trash2, Image as ImageIcon } from "lucide-react";
+import {
+  Copy,
+  Check,
+  ExternalLink,
+  Globe,
+  Lock,
+  Trash2,
+  Image as ImageIcon,
+  Package,
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { getAssetUrl } from "@/lib/api";
 import { publicProfileConfigService } from "@/services/publicProfileConfigService";
 import type {
   OrganizerPublicProfile,
   OrganizerPublicProfileUpsertRequest,
   OrganizerPublicPortfolioItem,
+  PublicProfileServiceSelectionItem,
+  PortfolioCandidateEvent,
 } from "@/services/publicProfileConfigService";
 
 const PORTFOLIO_MAX = 6;
+const FREE_SERVICES_MAX = 3;
 
 // kebab-case, 3-140 chars (mirrors backend validatePublicSlug).
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -33,6 +46,18 @@ function isPaidPlan(plan?: string): boolean {
   return plan === "pro" || plan === "business" || plan === "premium";
 }
 
+function formatPrice(amount: number): string {
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: "MXN",
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return `$${amount}`;
+  }
+}
+
 export default function PublicProfileSettings() {
   const { t } = useTranslation("settings");
   const { user } = useAuth();
@@ -54,13 +79,20 @@ export default function PublicProfileSettings() {
   const [slugError, setSlugError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // Services selection (from products catalog)
+  const [services, setServices] = useState<PublicProfileServiceSelectionItem[]>([]);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<Set<string>>(new Set());
+  const [servicesLoading, setServicesLoading] = useState(false);
+  const [servicesSaving, setServicesSaving] = useState(false);
+  const [servicesError, setServicesError] = useState<string | null>(null);
+
   // Portfolio (Pro+)
   const [portfolio, setPortfolio] = useState<OrganizerPublicPortfolioItem[]>([]);
   const [portfolioLoading, setPortfolioLoading] = useState(false);
   const [portfolioError, setPortfolioError] = useState<string | null>(null);
-  const [newTitle, setNewTitle] = useState("");
-  const [newPhotoUrl, setNewPhotoUrl] = useState("");
-  const [newEventDate, setNewEventDate] = useState("");
+  const [candidates, setCandidates] = useState<PortfolioCandidateEvent[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState("");
+  const [selectedPhotoId, setSelectedPhotoId] = useState("");
   const [addingPortfolio, setAddingPortfolio] = useState(false);
 
   useEffect(() => {
@@ -95,18 +127,48 @@ export default function PublicProfileSettings() {
     };
   }, [t, user?.public_slug]);
 
-  // Load portfolio only for paid plans (Free gets 403).
+  // Load services (active products) for selection.
+  useEffect(() => {
+    let cancelled = false;
+    setServicesLoading(true);
+    (async () => {
+      try {
+        const items = await publicProfileConfigService.listServices();
+        if (cancelled) return;
+        setServices(items);
+        setSelectedServiceIds(
+          new Set(items.filter((s) => s.show_on_public_profile).map((s) => s.id)),
+        );
+      } catch {
+        if (!cancelled) setServicesError(t("publicProfile.servicesLoadFailed"));
+      } finally {
+        if (!cancelled) setServicesLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [t]);
+
+  // Load portfolio + candidates only for paid plans (Free gets 403).
   useEffect(() => {
     if (!paid) {
       setPortfolio([]);
+      setCandidates([]);
       return;
     }
     let cancelled = false;
     setPortfolioLoading(true);
     (async () => {
       try {
-        const items = await publicProfileConfigService.listPortfolio();
-        if (!cancelled) setPortfolio(items);
+        const [items, cands] = await Promise.all([
+          publicProfileConfigService.listPortfolio(),
+          publicProfileConfigService.listPortfolioCandidates(),
+        ]);
+        if (!cancelled) {
+          setPortfolio(items);
+          setCandidates(cands);
+        }
       } catch {
         if (!cancelled) setPortfolioError(t("publicProfile.portfolioLoadFailed"));
       } finally {
@@ -117,6 +179,30 @@ export default function PublicProfileSettings() {
       cancelled = true;
     };
   }, [paid, t]);
+
+  const portfolioEventIds = useMemo(
+    () => new Set(portfolio.map((p) => p.event_id).filter(Boolean) as string[]),
+    [portfolio],
+  );
+
+  const availableCandidates = useMemo(
+    () => candidates.filter((c) => !portfolioEventIds.has(c.id)),
+    [candidates, portfolioEventIds],
+  );
+
+  const selectedCandidate = useMemo(
+    () => availableCandidates.find((c) => c.id === selectedEventId) ?? null,
+    [availableCandidates, selectedEventId],
+  );
+
+  useEffect(() => {
+    if (!selectedCandidate) {
+      setSelectedPhotoId("");
+      return;
+    }
+    // Default to first photo when event changes.
+    setSelectedPhotoId(selectedCandidate.photos[0]?.id ?? "");
+  }, [selectedCandidate]);
 
   const validateSlug = useCallback(
     (value: string): string | null => {
@@ -165,12 +251,54 @@ export default function PublicProfileSettings() {
     setSlugError(validateSlug(value));
   };
 
+  const toggleService = (id: string) => {
+    setServicesError(null);
+    setSelectedServiceIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+        return next;
+      }
+      if (!paid && next.size >= FREE_SERVICES_MAX) {
+        setServicesError(t("publicProfile.servicesFreeLimit"));
+        return prev;
+      }
+      next.add(id);
+      return next;
+    });
+  };
+
+  const handleSaveServices = async () => {
+    setServicesError(null);
+    if (!paid && selectedServiceIds.size > FREE_SERVICES_MAX) {
+      setServicesError(t("publicProfile.servicesFreeLimit"));
+      return;
+    }
+    setServicesSaving(true);
+    try {
+      const updated = await publicProfileConfigService.setServices([
+        ...selectedServiceIds,
+      ]);
+      setServices(updated);
+      setSelectedServiceIds(
+        new Set(updated.filter((s) => s.show_on_public_profile).map((s) => s.id)),
+      );
+    } catch (e: any) {
+      const status = e?.status ?? e?.statusCode ?? e?.response?.status;
+      if (status === 403) {
+        setServicesError(t("publicProfile.servicesFreeLimit"));
+      } else {
+        setServicesError(t("publicProfile.servicesSaveFailed"));
+      }
+    } finally {
+      setServicesSaving(false);
+    }
+  };
+
   const handleAddPortfolio = async () => {
     setPortfolioError(null);
-    const title = newTitle.trim();
-    const photo = newPhotoUrl.trim();
-    if (!title || !photo) {
-      setPortfolioError(t("publicProfile.portfolioSaveFailed"));
+    if (!selectedEventId) {
+      setPortfolioError(t("publicProfile.portfolioPickEvent"));
       return;
     }
     if (portfolio.length >= PORTFOLIO_MAX) {
@@ -180,17 +308,15 @@ export default function PublicProfileSettings() {
     setAddingPortfolio(true);
     try {
       const created = await publicProfileConfigService.createPortfolioItem({
-        title,
-        photo_url: photo,
-        event_date: newEventDate.trim() || null,
-        sort_order: portfolio.length, // next free slot 0..5
+        event_id: selectedEventId,
+        photo_id: selectedPhotoId || undefined,
+        sort_order: portfolio.length,
       });
       setPortfolio((prev) =>
         [...prev, created].sort((a, b) => a.sort_order - b.sort_order),
       );
-      setNewTitle("");
-      setNewPhotoUrl("");
-      setNewEventDate("");
+      setSelectedEventId("");
+      setSelectedPhotoId("");
     } catch {
       setPortfolioError(t("publicProfile.portfolioSaveFailed"));
     } finally {
@@ -267,6 +393,8 @@ export default function PublicProfileSettings() {
       </div>
     );
   }
+
+  const freeAtLimit = !paid && selectedServiceIds.size >= FREE_SERVICES_MAX;
 
   return (
     <div className="space-y-6">
@@ -487,7 +615,93 @@ export default function PublicProfileSettings() {
         )}
       </div>
 
-      {/* Portfolio (Pro only, max 6) */}
+      {/* Services from products catalog */}
+      <section className="space-y-3" data-testid="pp-services-section">
+        <header>
+          <h3 className="text-sm font-semibold text-text flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            {t("publicProfile.services")}
+          </h3>
+          <p className="text-xs text-text-secondary mt-1">
+            {t("publicProfile.servicesDescription")}
+          </p>
+          {!paid && (
+            <p className="text-xs text-text-secondary mt-1">
+              {t("publicProfile.servicesFreeHint")}
+            </p>
+          )}
+        </header>
+
+        {servicesLoading ? (
+          <div className="h-16 bg-surface-alt rounded animate-pulse" />
+        ) : services.length === 0 ? (
+          <p className="text-xs text-text-secondary" data-testid="pp-services-empty">
+            {t("publicProfile.servicesEmpty")}
+          </p>
+        ) : (
+          <ul className="space-y-2" data-testid="pp-services-list">
+            {services.map((svc) => {
+              const checked = selectedServiceIds.has(svc.id);
+              const disabled = !checked && freeAtLimit;
+              const thumb = getAssetUrl(svc.image_url);
+              return (
+                <li key={svc.id}>
+                  <label
+                    className={`flex items-center gap-3 rounded-lg border border-border bg-surface p-2 ${
+                      disabled ? "opacity-50" : "cursor-pointer"
+                    }`}
+                    data-testid={`pp-service-${svc.id}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={disabled}
+                      onChange={() => toggleService(svc.id)}
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                      data-testid={`pp-service-check-${svc.id}`}
+                    />
+                    {thumb ? (
+                      <img
+                        src={thumb}
+                        alt=""
+                        className="h-10 w-10 rounded object-cover bg-surface-alt"
+                      />
+                    ) : (
+                      <div className="h-10 w-10 rounded bg-surface-alt" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-text truncate">{svc.name}</p>
+                      <p className="text-xs text-text-secondary">
+                        {formatPrice(svc.base_price)}
+                      </p>
+                    </div>
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        {servicesError && (
+          <p className="text-xs text-error" data-testid="pp-services-error">
+            {servicesError}
+          </p>
+        )}
+
+        <button
+          type="button"
+          onClick={handleSaveServices}
+          disabled={servicesSaving || servicesLoading}
+          className="px-3 py-2 rounded-lg border border-border bg-surface text-sm font-medium text-text hover:bg-surface-alt disabled:opacity-50"
+          data-testid="pp-services-save"
+        >
+          {servicesSaving
+            ? t("publicProfile.servicesSaving")
+            : t("publicProfile.servicesSave")}
+        </button>
+      </section>
+
+      {/* Portfolio from events (Pro only, max 6) */}
       <section className="space-y-3" data-testid="pp-portfolio-section">
         <header>
           <h3 className="text-sm font-semibold text-text flex items-center gap-2">
@@ -519,7 +733,10 @@ export default function PublicProfileSettings() {
                     data-testid={`pp-portfolio-item-${item.id}`}
                   >
                     <img
-                      src={item.thumbnail_url || item.photo_url}
+                      src={
+                        getAssetUrl(item.thumbnail_url || item.photo_url) ||
+                        item.photo_url
+                      }
                       alt=""
                       className="h-12 w-12 rounded object-cover bg-surface-alt"
                     />
@@ -545,35 +762,71 @@ export default function PublicProfileSettings() {
 
             {portfolio.length < PORTFOLIO_MAX && (
               <div className="space-y-2 rounded-lg border border-border p-3">
-                <input
-                  type="text"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder={t("publicProfile.portfolioTitle")}
-                  maxLength={160}
+                <label className="text-xs font-medium text-text" htmlFor="pp-event">
+                  {t("publicProfile.portfolioPickEvent")}
+                </label>
+                <select
+                  id="pp-event"
+                  value={selectedEventId}
+                  onChange={(e) => setSelectedEventId(e.target.value)}
                   className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
-                  data-testid="pp-portfolio-title"
-                />
-                <input
-                  type="url"
-                  value={newPhotoUrl}
-                  onChange={(e) => setNewPhotoUrl(e.target.value)}
-                  placeholder={t("publicProfile.portfolioPhotoUrl")}
-                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
-                  data-testid="pp-portfolio-photo"
-                />
-                <input
-                  type="date"
-                  value={newEventDate}
-                  onChange={(e) => setNewEventDate(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
-                  data-testid="pp-portfolio-date"
-                  aria-label={t("publicProfile.portfolioEventDate")}
-                />
+                  data-testid="pp-portfolio-event"
+                >
+                  <option value="">{t("publicProfile.portfolioSelectEvent")}</option>
+                  {availableCandidates.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.service_type}
+                      {c.event_date ? ` — ${c.event_date}` : ""}
+                      {c.city ? ` · ${c.city}` : ""}
+                    </option>
+                  ))}
+                </select>
+
+                {selectedCandidate && selectedCandidate.photos.length > 1 && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-text">
+                      {t("publicProfile.portfolioPickPhoto")}
+                    </p>
+                    <div className="flex flex-wrap gap-2" data-testid="pp-portfolio-photos">
+                      {selectedCandidate.photos.map((ph) => {
+                        const src = getAssetUrl(ph.thumbnail_url || ph.url) || ph.url;
+                        const active = selectedPhotoId === ph.id;
+                        return (
+                          <button
+                            key={ph.id}
+                            type="button"
+                            onClick={() => setSelectedPhotoId(ph.id)}
+                            className={`h-14 w-14 rounded border-2 overflow-hidden ${
+                              active ? "border-primary" : "border-border"
+                            }`}
+                            data-testid={`pp-portfolio-photo-${ph.id}`}
+                          >
+                            <img
+                              src={src}
+                              alt=""
+                              className="h-full w-full object-cover"
+                            />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {availableCandidates.length === 0 && (
+                  <p className="text-xs text-text-secondary" data-testid="pp-portfolio-no-candidates">
+                    {t("publicProfile.portfolioNoCandidates")}
+                  </p>
+                )}
+
                 <button
                   type="button"
                   onClick={handleAddPortfolio}
-                  disabled={addingPortfolio || !newTitle.trim() || !newPhotoUrl.trim()}
+                  disabled={
+                    addingPortfolio ||
+                    !selectedEventId ||
+                    availableCandidates.length === 0
+                  }
                   className="px-3 py-2 rounded-lg border border-border bg-surface text-sm font-medium text-text hover:bg-surface-alt disabled:opacity-50"
                   data-testid="pp-portfolio-add"
                 >

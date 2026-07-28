@@ -12,10 +12,38 @@ export type OrganizerPublicProfileUpsertRequest =
 export type OrganizerPublicPortfolioItem =
   components["schemas"]["OrganizerPublicPortfolioItem"];
 
+/** Active product row for public-profile service multi-select. */
+export type PublicProfileServiceSelectionItem = {
+  id: string;
+  name: string;
+  category: string;
+  base_price: number;
+  image_url?: string | null;
+  show_on_public_profile: boolean;
+};
+
+export type PortfolioCandidatePhoto = {
+  id: string;
+  url: string;
+  thumbnail_url?: string | null;
+};
+
+/** Sanitized event eligible for portfolio (no client PII). */
+export type PortfolioCandidateEvent = {
+  id: string;
+  service_type: string;
+  event_date: string;
+  city?: string | null;
+  photos: PortfolioCandidatePhoto[];
+};
+
 export type PortfolioCreateRequest = {
-  title: string;
-  photo_url: string;
+  /** Optional when event_id is provided (defaults to service_type). */
+  title?: string;
+  /** Optional when event_id is provided (defaults to first/selected photo). */
+  photo_url?: string;
   event_id?: string | null;
+  photo_id?: string | null;
   event_date?: string | null;
   thumbnail_url?: string | null;
   sort_order?: number;
@@ -50,6 +78,25 @@ class PublicProfileConfigService {
     return response.data;
   }
 
+  /** GET /api/users/me/public-profile/services — active products for selection. */
+  async listServices(): Promise<PublicProfileServiceSelectionItem[]> {
+    const items = await api.get<PublicProfileServiceSelectionItem[]>(
+      "/users/me/public-profile/services",
+    );
+    return items ?? [];
+  }
+
+  /** PUT /api/users/me/public-profile/services — bulk set selection (Free max 3). */
+  async setServices(
+    productIds: string[],
+  ): Promise<PublicProfileServiceSelectionItem[]> {
+    const items = await api.put<PublicProfileServiceSelectionItem[]>(
+      "/users/me/public-profile/services",
+      { product_ids: productIds },
+    );
+    return items ?? [];
+  }
+
   /** GET /api/users/me/public-profile/portfolio — Pro+ list. */
   async listPortfolio(): Promise<OrganizerPublicPortfolioItem[]> {
     const items = await api.get<OrganizerPublicPortfolioItem[]>(
@@ -58,7 +105,15 @@ class PublicProfileConfigService {
     return items ?? [];
   }
 
-  /** POST /api/users/me/public-profile/portfolio — Pro+, max 6. */
+  /** GET /api/users/me/public-profile/portfolio/candidates — Pro+ event picker. */
+  async listPortfolioCandidates(): Promise<PortfolioCandidateEvent[]> {
+    const items = await api.get<PortfolioCandidateEvent[]>(
+      "/users/me/public-profile/portfolio/candidates",
+    );
+    return items ?? [];
+  }
+
+  /** POST /api/users/me/public-profile/portfolio — Pro+, max 6. Prefer event_id. */
   async createPortfolioItem(
     body: PortfolioCreateRequest,
   ): Promise<OrganizerPublicPortfolioItem> {

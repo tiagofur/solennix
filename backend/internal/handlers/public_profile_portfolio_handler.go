@@ -14,9 +14,11 @@ import (
 
 // PublicProfilePortfolioHandler serves authenticated portfolio CRUD under
 // /api/users/me/public-profile/portfolio. Pro+ only; max 6 items (sort_order 0–5).
+// Portfolio items are primarily created from existing events (event_id + optional photo_id).
 type PublicProfilePortfolioHandler struct {
 	userRepo      portfolioAuthUserRepo
 	portfolioRepo portfolioItemRepo
+	eventRepo     portfolioEventRepo
 }
 
 type portfolioAuthUserRepo interface {
@@ -31,20 +33,28 @@ type portfolioItemRepo interface {
 	DeletePortfolioItem(ctx context.Context, userID, id uuid.UUID) error
 }
 
+type portfolioEventRepo interface {
+	GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Event, error)
+	ListPublicPortfolioCandidates(ctx context.Context, userID uuid.UUID) ([]models.PortfolioCandidateEvent, error)
+}
+
 // NewPublicProfilePortfolioHandler assembles the handler with concrete repos.
 func NewPublicProfilePortfolioHandler(
 	userRepo *repository.UserRepo,
 	profileRepo *repository.PublicProfileRepo,
+	eventRepo *repository.EventRepo,
 ) *PublicProfilePortfolioHandler {
 	return &PublicProfilePortfolioHandler{
 		userRepo:      userRepo,
 		portfolioRepo: profileRepo,
+		eventRepo:     eventRepo,
 	}
 }
 
 type portfolioCreateRequest struct {
 	Title        string     `json:"title"`
 	EventID      *uuid.UUID `json:"event_id"`
+	PhotoID      *uuid.UUID `json:"photo_id"`
 	EventDate    *string    `json:"event_date"`
 	PhotoURL     string     `json:"photo_url"`
 	ThumbnailURL *string    `json:"thumbnail_url"`
@@ -77,7 +87,31 @@ func (h *PublicProfilePortfolioHandler) ListPortfolioItems(w http.ResponseWriter
 	writeJSON(w, http.StatusOK, items)
 }
 
+// ListPortfolioCandidates handles GET /api/users/me/public-profile/portfolio/candidates.
+// Pro+ only. Returns sanitized past events with photos (no client PII).
+func (h *PublicProfilePortfolioHandler) ListPortfolioCandidates(w http.ResponseWriter, r *http.Request) {
+	user, ok := h.requireProPlan(w, r)
+	if !ok {
+		return
+	}
+	if h.eventRepo == nil {
+		writeError(w, http.StatusInternalServerError, "Failed to load portfolio candidates")
+		return
+	}
+	candidates, err := h.eventRepo.ListPublicPortfolioCandidates(r.Context(), user.ID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to load portfolio candidates")
+		return
+	}
+	if candidates == nil {
+		candidates = []models.PortfolioCandidateEvent{}
+	}
+	writeJSON(w, http.StatusOK, candidates)
+}
+
 // CreatePortfolioItem handles POST /api/users/me/public-profile/portfolio.
+// Primary path: { "event_id": "uuid", "photo_id": "optional" } fills title/date/photo
+// from the owned event. Manual title+photo_url remains supported as override/fallback.
 func (h *PublicProfilePortfolioHandler) CreatePortfolioItem(w http.ResponseWriter, r *http.Request) {
 	user, ok := h.requireProPlan(w, r)
 	if !ok {
@@ -95,6 +129,70 @@ func (h *PublicProfilePortfolioHandler) CreatePortfolioItem(w http.ResponseWrite
 
 	title := strings.TrimSpace(req.Title)
 	photo := strings.TrimSpace(req.PhotoURL)
+	eventDate := req.EventDate
+	thumb := req.ThumbnailURL
+	eventID := req.EventID
+
+	// Resolve fields from event when event_id is provided (primary path).
+	if req.EventID != nil {
+		if h.eventRepo == nil {
+			writeError(w, http.StatusInternalServerError, "Failed to load event")
+			return
+		}
+		// Reject duplicate event_id already in portfolio.
+		existing, err := h.portfolioRepo.ListPortfolioByUserID(r.Context(), user.ID)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to load portfolio")
+			return
+		}
+		for _, it := range existing {
+			if it.EventID != nil && *it.EventID == *req.EventID {
+				writeError(w, http.StatusBadRequest, "Event is already in portfolio")
+				return
+			}
+		}
+
+		ev, err := h.eventRepo.GetByID(r.Context(), *req.EventID, user.ID)
+		if err != nil || ev == nil {
+			writeError(w, http.StatusNotFound, "Event not found")
+			return
+		}
+		photos := parseEventPhotos(ev.Photos)
+		if len(photos) == 0 {
+			writeError(w, http.StatusBadRequest, "Event has no photos")
+			return
+		}
+		chosen := photos[0]
+		if req.PhotoID != nil {
+			found := false
+			for _, p := range photos {
+				if p.ID == *req.PhotoID {
+					chosen = p
+					found = true
+					break
+				}
+			}
+			if !found {
+				writeError(w, http.StatusBadRequest, "photo_id not found on event")
+				return
+			}
+		}
+		if title == "" {
+			title = strings.TrimSpace(ev.ServiceType)
+		}
+		if photo == "" {
+			photo = strings.TrimSpace(chosen.URL)
+		}
+		if thumb == nil && chosen.ThumbnailURL != nil {
+			thumb = chosen.ThumbnailURL
+		}
+		if eventDate == nil && ev.EventDate != "" {
+			d := ev.EventDate
+			eventDate = &d
+		}
+		eventID = req.EventID
+	}
+
 	if title == "" {
 		writeError(w, http.StatusBadRequest, "title is required")
 		return
@@ -152,11 +250,11 @@ func (h *PublicProfilePortfolioHandler) CreatePortfolioItem(w http.ResponseWrite
 
 	item := &models.OrganizerPublicPortfolioItem{
 		UserID:       user.ID,
-		EventID:      req.EventID,
+		EventID:      eventID,
 		Title:        title,
-		EventDate:    req.EventDate,
+		EventDate:    eventDate,
 		PhotoURL:     photo,
-		ThumbnailURL: req.ThumbnailURL,
+		ThumbnailURL: thumb,
 		SortOrder:    sortOrder,
 	}
 	if err := h.portfolioRepo.CreatePortfolioItem(r.Context(), item); err != nil {
