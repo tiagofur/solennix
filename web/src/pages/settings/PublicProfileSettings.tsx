@@ -1,7 +1,17 @@
 import { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Copy, Check, ExternalLink, Globe, Lock, Trash2, Image as ImageIcon } from "lucide-react";
+import clsx from "clsx";
+import {
+  Copy,
+  Check,
+  ExternalLink,
+  Globe,
+  Lock,
+  Trash2,
+  Image as ImageIcon,
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/Button";
 import { publicProfileConfigService } from "@/services/publicProfileConfigService";
 import type {
   OrganizerPublicProfile,
@@ -16,6 +26,9 @@ const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const CONTACT_TYPES = ["phone", "whatsapp", "email", "url"] as const;
 type ContactType = (typeof CONTACT_TYPES)[number];
+
+const fieldClass =
+  "w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm text-text focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all disabled:opacity-50";
 
 const DEFAULT_PROFILE: OrganizerPublicProfile = {
   user_id: "",
@@ -261,175 +274,192 @@ export default function PublicProfileSettings() {
 
   if (loading) {
     return (
-      <div className="space-y-4 animate-pulse">
-        <div className="h-8 bg-surface-alt rounded w-1/3" />
-        <div className="h-32 bg-surface-alt rounded" />
+      <div className="space-y-4 animate-pulse" aria-busy="true">
+        <div className="h-8 bg-surface-alt rounded-xl w-1/3" />
+        <div className="h-24 bg-surface-alt rounded-2xl" />
+        <div className="h-24 bg-surface-alt rounded-2xl" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <header>
-        <h2 className="text-xl font-bold text-text flex items-center gap-2">
-          <Globe className="h-5 w-5" />
+        <h3 className="text-lg font-bold text-text flex items-center gap-2">
+          <Globe className="h-5 w-5 text-primary" aria-hidden="true" />
           {t("publicProfile.title")}
-        </h2>
+        </h3>
         <p className="text-sm text-text-secondary mt-1">
           {t("publicProfile.description")}
         </p>
       </header>
 
-      {/* Enable toggle */}
-      <label className="flex items-center gap-3 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={profile.is_enabled}
-          onChange={(e) =>
-            setProfile({ ...profile, is_enabled: e.target.checked })
-          }
-          className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-          data-testid="pp-enabled"
-        />
-        <span className="text-sm font-medium text-text">
+      {/* Enable */}
+      <div className="space-y-4">
+        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">
           {t("publicProfile.enable")}
-        </span>
-      </label>
+        </p>
+        <ToggleRow
+          label={t("publicProfile.enable")}
+          checked={profile.is_enabled}
+          onChange={(v) => setProfile({ ...profile, is_enabled: v })}
+          testId="pp-enabled"
+        />
+      </div>
 
       {/* Slug + share */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-text" htmlFor="pp-slug">
+      <div className="space-y-3">
+        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">
           {t("publicProfile.slug")}
-        </label>
-        <div className="flex gap-2">
-          <input
-            id="pp-slug"
-            type="text"
-            value={slug}
-            onChange={(e) => handleSlugChange(e.target.value)}
-            placeholder="mi-negocio"
-            className="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary focus:border-primary"
-            data-testid="pp-slug"
-          />
+        </p>
+        <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border space-y-3">
+          <label className="text-sm font-bold text-text" htmlFor="pp-slug">
+            {t("publicProfile.slug")}
+          </label>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              id="pp-slug"
+              type="text"
+              value={slug}
+              onChange={(e) => handleSlugChange(e.target.value)}
+              placeholder="mi-negocio"
+              className={clsx(fieldClass, "flex-1")}
+              data-testid="pp-slug"
+            />
+            {shareUrl && (
+              <div className="flex gap-2 shrink-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  onClick={handleCopy}
+                  data-testid="pp-copy"
+                  title={t("publicProfile.copyUrl")}
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4 text-success" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {copied ? t("publicProfile.copied") : t("publicProfile.copy")}
+                  </span>
+                </Button>
+                <a
+                  href={shareUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center px-5 py-2.5 text-sm rounded-xl border border-border text-text hover:bg-surface-alt transition-all"
+                  title={t("publicProfile.preview")}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </div>
+            )}
+          </div>
+          {slugError && (
+            <p className="text-xs text-error" data-testid="pp-slug-error">
+              {slugError}
+            </p>
+          )}
           {shareUrl && (
-            <>
-              <button
-                type="button"
-                onClick={handleCopy}
-                className="px-3 py-2 rounded-lg border border-border bg-surface text-text hover:bg-surface-alt text-sm flex items-center gap-1.5"
-                data-testid="pp-copy"
-                title={t("publicProfile.copyUrl")}
-              >
-                {copied ? (
-                  <Check className="h-4 w-4 text-success" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-                <span className="hidden sm:inline">
-                  {copied ? t("publicProfile.copied") : t("publicProfile.copy")}
-                </span>
-              </button>
-              <a
-                href={shareUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-2 rounded-lg border border-border bg-surface text-text hover:bg-surface-alt text-sm flex items-center gap-1.5"
-                title={t("publicProfile.preview")}
-              >
-                <ExternalLink className="h-4 w-4" />
-              </a>
-            </>
+            <p
+              className="text-xs text-text-secondary break-all"
+              data-testid="pp-share-url"
+            >
+              {shareUrl}
+            </p>
           )}
         </div>
-        {slugError && (
-          <p className="text-xs text-error" data-testid="pp-slug-error">
-            {slugError}
-          </p>
-        )}
-        {shareUrl && (
-          <p className="text-xs text-text-secondary" data-testid="pp-share-url">
-            {shareUrl}
-          </p>
-        )}
       </div>
 
       {/* Headline */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-text" htmlFor="pp-headline">
+      <div className="space-y-3">
+        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">
           {t("publicProfile.headline")}
-        </label>
-        <input
-          id="pp-headline"
-          type="text"
-          value={headline}
-          onChange={(e) => setHeadline(e.target.value)}
-          maxLength={200}
-          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
-          data-testid="pp-headline"
-        />
+        </p>
+        <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border">
+          <input
+            id="pp-headline"
+            type="text"
+            value={headline}
+            onChange={(e) => setHeadline(e.target.value)}
+            maxLength={200}
+            className={fieldClass}
+            data-testid="pp-headline"
+            placeholder={t("publicProfile.headline")}
+          />
+        </div>
       </div>
 
       {/* Location */}
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-medium text-text">
+      <div className="space-y-3">
+        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">
           {t("publicProfile.location")}
-        </legend>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          <input
-            type="text"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            placeholder={t("publicProfile.city")}
-            className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
-            data-testid="pp-city"
-          />
-          <input
-            type="text"
-            value={region}
-            onChange={(e) => setRegion(e.target.value)}
-            placeholder={t("publicProfile.region")}
-            className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
-          />
-          <input
-            type="text"
-            value={country}
-            onChange={(e) => setCountry(e.target.value)}
-            placeholder={t("publicProfile.country")}
-            className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
-          />
+        </p>
+        <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <input
+              type="text"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder={t("publicProfile.city")}
+              className={fieldClass}
+              data-testid="pp-city"
+            />
+            <input
+              type="text"
+              value={region}
+              onChange={(e) => setRegion(e.target.value)}
+              placeholder={t("publicProfile.region")}
+              className={fieldClass}
+            />
+            <input
+              type="text"
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              placeholder={t("publicProfile.country")}
+              className={fieldClass}
+            />
+          </div>
         </div>
-      </fieldset>
+      </div>
 
       {/* Contact */}
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-medium text-text">
-          {t("publicProfile.contact")}
-        </legend>
-        <div className="flex gap-2">
-          <select
-            value={contactType}
-            onChange={(e) => setContactType(e.target.value as ContactType)}
-            className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
-            data-testid="pp-contact-type"
-          >
-            {CONTACT_TYPES.map((ct) => (
-              <option key={ct} value={ct}>
-                {t(`publicProfile.contactTypes.${ct}`)}
-              </option>
-            ))}
-          </select>
-          <input
-            type="text"
-            value={contactValue}
-            onChange={(e) => setContactValue(e.target.value)}
-            className="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
-            data-testid="pp-contact-value"
-          />
-        </div>
-      </fieldset>
-
-      {/* Toggles */}
       <div className="space-y-3">
+        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">
+          {t("publicProfile.contact")}
+        </p>
+        <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <select
+              value={contactType}
+              onChange={(e) => setContactType(e.target.value as ContactType)}
+              className={clsx(fieldClass, "sm:w-44 shrink-0")}
+              data-testid="pp-contact-type"
+            >
+              {CONTACT_TYPES.map((ct) => (
+                <option key={ct} value={ct}>
+                  {t(`publicProfile.contactTypes.${ct}`)}
+                </option>
+              ))}
+            </select>
+            <input
+              type="text"
+              value={contactValue}
+              onChange={(e) => setContactValue(e.target.value)}
+              className={clsx(fieldClass, "flex-1")}
+              data-testid="pp-contact-value"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Visibility toggles */}
+      <div className="space-y-4">
+        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">
+          {t("publicProfile.showServices")}
+        </p>
         <ToggleRow
           label={t("publicProfile.showPrices")}
           checked={profile.show_prices}
@@ -448,7 +478,6 @@ export default function PublicProfileSettings() {
           onChange={(v) => setProfile({ ...profile, show_contact: v })}
           testId="pp-show-contact"
         />
-        {/* Pro-only toggles: disabled on Free with upgrade hint */}
         <ToggleRow
           label={t("publicProfile.showReviews")}
           checked={paid ? profile.show_reviews : false}
@@ -465,49 +494,68 @@ export default function PublicProfileSettings() {
         />
       </div>
 
+      {!paid && (
+        <div className="flex items-start gap-3 p-4 rounded-2xl border border-primary/20 bg-primary/10">
+          <Lock className="h-4 w-4 text-primary shrink-0 mt-0.5" aria-hidden="true" />
+          <div>
+            <p className="text-sm font-bold text-text">
+              {t("publicProfile.planRequired")}
+            </p>
+            <p className="text-xs text-text-secondary mt-0.5">
+              {t("publicProfile.socialsProHint")}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Socials (Pro only) */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-text flex items-center gap-2">
+      <div className="space-y-3">
+        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-2">
           {t("publicProfile.socials")}
-          {!paid && <Lock className="h-3.5 w-3.5 text-text-secondary" />}
-        </label>
-        <input
-          type="text"
-          value={paid ? socialsText : ""}
-          onChange={(e) => setSocialsText(e.target.value)}
-          disabled={!paid}
-          placeholder={t("publicProfile.socialsPlaceholder")}
-          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary disabled:opacity-50"
-          data-testid="pp-socials"
-        />
-        {!paid && (
-          <p className="text-xs text-text-secondary">
-            {t("publicProfile.socialsProHint")}
-          </p>
-        )}
+          {!paid && <Lock className="h-3.5 w-3.5" aria-hidden="true" />}
+        </p>
+        <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border space-y-2">
+          <input
+            type="text"
+            value={paid ? socialsText : ""}
+            onChange={(e) => setSocialsText(e.target.value)}
+            disabled={!paid}
+            placeholder={t("publicProfile.socialsPlaceholder")}
+            className={fieldClass}
+            data-testid="pp-socials"
+          />
+          {!paid && (
+            <p className="text-xs text-text-secondary">
+              {t("publicProfile.socialsProHint")}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Portfolio (Pro only, max 6) */}
       <section className="space-y-3" data-testid="pp-portfolio-section">
-        <header>
-          <h3 className="text-sm font-semibold text-text flex items-center gap-2">
-            <ImageIcon className="h-4 w-4" />
+        <div>
+          <p className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-2">
+            <ImageIcon className="h-3.5 w-3.5" aria-hidden="true" />
             {t("publicProfile.portfolio")}
-            {!paid && <Lock className="h-3.5 w-3.5 text-text-secondary" />}
-          </h3>
+            {!paid && <Lock className="h-3.5 w-3.5" aria-hidden="true" />}
+          </p>
           <p className="text-xs text-text-secondary mt-1">
             {paid
               ? t("publicProfile.portfolioDescription")
               : t("publicProfile.portfolioProHint")}
           </p>
-        </header>
+        </div>
 
         {paid && (
-          <>
+          <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border space-y-3">
             {portfolioLoading ? (
-              <div className="h-16 bg-surface-alt rounded animate-pulse" />
+              <div className="h-16 bg-surface rounded-xl animate-pulse" />
             ) : portfolio.length === 0 ? (
-              <p className="text-xs text-text-secondary" data-testid="pp-portfolio-empty">
+              <p
+                className="text-xs text-text-secondary"
+                data-testid="pp-portfolio-empty"
+              >
                 {t("publicProfile.portfolioEmpty")}
               </p>
             ) : (
@@ -515,24 +563,28 @@ export default function PublicProfileSettings() {
                 {portfolio.map((item) => (
                   <li
                     key={item.id}
-                    className="flex items-center gap-3 rounded-lg border border-border bg-surface p-2"
+                    className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
                     data-testid={`pp-portfolio-item-${item.id}`}
                   >
                     <img
                       src={item.thumbnail_url || item.photo_url}
                       alt=""
-                      className="h-12 w-12 rounded object-cover bg-surface-alt"
+                      className="h-12 w-12 rounded-lg object-cover bg-surface-alt border border-border"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-text truncate">{item.title}</p>
+                      <p className="text-sm font-bold text-text truncate">
+                        {item.title}
+                      </p>
                       {item.event_date && (
-                        <p className="text-xs text-text-secondary">{item.event_date}</p>
+                        <p className="text-xs text-text-secondary">
+                          {item.event_date}
+                        </p>
                       )}
                     </div>
                     <button
                       type="button"
                       onClick={() => handleDeletePortfolio(item.id)}
-                      className="p-2 rounded-lg text-error hover:bg-surface-alt"
+                      className="p-2 rounded-xl text-error hover:bg-surface transition-colors"
                       title={t("publicProfile.portfolioDelete")}
                       data-testid={`pp-portfolio-delete-${item.id}`}
                     >
@@ -544,14 +596,14 @@ export default function PublicProfileSettings() {
             )}
 
             {portfolio.length < PORTFOLIO_MAX && (
-              <div className="space-y-2 rounded-lg border border-border p-3">
+              <div className="space-y-3 pt-2 border-t border-border">
                 <input
                   type="text"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder={t("publicProfile.portfolioTitle")}
                   maxLength={160}
-                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
+                  className={fieldClass}
                   data-testid="pp-portfolio-title"
                 />
                 <input
@@ -559,33 +611,40 @@ export default function PublicProfileSettings() {
                   value={newPhotoUrl}
                   onChange={(e) => setNewPhotoUrl(e.target.value)}
                   placeholder={t("publicProfile.portfolioPhotoUrl")}
-                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
+                  className={fieldClass}
                   data-testid="pp-portfolio-photo"
                 />
                 <input
                   type="date"
                   value={newEventDate}
                   onChange={(e) => setNewEventDate(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
+                  className={fieldClass}
                   data-testid="pp-portfolio-date"
                   aria-label={t("publicProfile.portfolioEventDate")}
                 />
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="md"
                   onClick={handleAddPortfolio}
-                  disabled={addingPortfolio || !newTitle.trim() || !newPhotoUrl.trim()}
-                  className="px-3 py-2 rounded-lg border border-border bg-surface text-sm font-medium text-text hover:bg-surface-alt disabled:opacity-50"
+                  disabled={
+                    addingPortfolio || !newTitle.trim() || !newPhotoUrl.trim()
+                  }
+                  loading={addingPortfolio}
                   data-testid="pp-portfolio-add"
                 >
                   {addingPortfolio
                     ? t("publicProfile.portfolioAdding")
                     : t("publicProfile.portfolioAdd")}
-                </button>
+                </Button>
               </div>
             )}
 
             {portfolio.length >= PORTFOLIO_MAX && (
-              <p className="text-xs text-text-secondary" data-testid="pp-portfolio-max">
+              <p
+                className="text-xs text-text-secondary"
+                data-testid="pp-portfolio-max"
+              >
                 {t("publicProfile.portfolioMax")}
               </p>
             )}
@@ -595,25 +654,27 @@ export default function PublicProfileSettings() {
                 {portfolioError}
               </p>
             )}
-          </>
+          </div>
         )}
       </section>
 
       {error && (
-        <p className="text-sm text-error" data-testid="pp-error">
+        <p className="text-sm text-error font-medium" data-testid="pp-error">
           {error}
         </p>
       )}
 
-      <button
+      <Button
         type="button"
+        variant="primary"
+        size="md"
         onClick={handleSave}
         disabled={saving}
-        className="px-4 py-2 rounded-lg bg-primary text-on-primary text-sm font-semibold disabled:opacity-50 hover:opacity-90"
+        loading={saving}
         data-testid="pp-save"
       >
         {saving ? t("publicProfile.saving") : t("publicProfile.save")}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -626,21 +687,49 @@ interface ToggleRowProps {
   testId: string;
 }
 
-function ToggleRow({ label, checked, onChange, disabled, testId }: ToggleRowProps) {
+function ToggleRow({
+  label,
+  checked,
+  onChange,
+  disabled,
+  testId,
+}: ToggleRowProps) {
   return (
-    <label
-      className={`flex items-center gap-3 ${disabled ? "opacity-60" : "cursor-pointer"}`}
+    <div
+      className={clsx(
+        "flex items-center justify-between gap-4 p-4 bg-surface-alt/50 rounded-2xl border border-border",
+        disabled && "opacity-60",
+      )}
     >
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
+      <div className="flex items-center gap-2 min-w-0">
+        <p className="font-bold text-text">{label}</p>
+        {disabled && (
+          <Lock
+            className="h-3.5 w-3.5 text-text-secondary shrink-0"
+            aria-hidden="true"
+          />
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={() => !disabled && onChange(!checked)}
         disabled={disabled}
-        className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+        className={clsx(
+          "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+          checked ? "bg-primary" : "bg-surface-alt border border-border",
+        )}
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
         data-testid={testId}
-      />
-      <span className="text-sm font-medium text-text">{label}</span>
-      {disabled && <Lock className="h-3.5 w-3.5 text-text-secondary" />}
-    </label>
+      >
+        <span
+          className={clsx(
+            "inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform",
+            checked ? "translate-x-6" : "translate-x-1",
+          )}
+        />
+      </button>
+    </div>
   );
 }

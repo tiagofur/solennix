@@ -15,7 +15,9 @@ import {
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/hooks/useTheme";
 import { Logo } from "@/components/Logo";
+import { Card } from "@/components/Card";
 import { localeFromLanguage } from "@/lib/finance";
+import { getAssetUrl } from "@/lib/api";
 import {
   publicProfileService,
   PublicProfileNotFoundError,
@@ -82,6 +84,23 @@ function setMetaDescription(content: string) {
     document.head.appendChild(meta);
   }
   meta.setAttribute("content", content);
+}
+
+function SectionHeading({
+  id,
+  children,
+}: {
+  id: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <h2
+      id={id}
+      className="text-xs font-medium text-text-secondary uppercase tracking-wider"
+    >
+      {children}
+    </h2>
+  );
 }
 
 export const PublicProfilePage: React.FC = () => {
@@ -171,7 +190,11 @@ export const PublicProfilePage: React.FC = () => {
   if (state === "not-found" || state === "error") {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center p-4">
-        <div className="max-w-md w-full text-center space-y-6">
+        <Card
+          variant="default"
+          padding="lg"
+          className="max-w-md w-full text-center space-y-6"
+        >
           <div className="mx-auto w-16 h-16 rounded-2xl bg-warning/10 flex items-center justify-center">
             <AlertCircle className="h-8 w-8 text-warning" />
           </div>
@@ -185,11 +208,11 @@ export const PublicProfilePage: React.FC = () => {
           </div>
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+            className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary shadow-xs hover:opacity-90 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             {t("profile.back_home")}
           </Link>
-        </div>
+        </Card>
       </div>
     );
   }
@@ -199,6 +222,9 @@ export const PublicProfilePage: React.FC = () => {
   const brandStyle = profile.brand_color
     ? ({ ["--brand" as string]: profile.brand_color } as React.CSSProperties)
     : undefined;
+  const logoSrc = profile.logo_url ? getAssetUrl(profile.logo_url) : null;
+  const contactOpenExternal =
+    profile.contact?.type === "url" || profile.contact?.type === "whatsapp";
 
   return (
     <div className="min-h-screen bg-bg transition-colors" style={brandStyle}>
@@ -228,19 +254,20 @@ export const PublicProfilePage: React.FC = () => {
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8">
         {/* Header card */}
-        <section className="rounded-2xl border border-border bg-surface p-6 sm:p-8">
+        <Card variant="default" padding="lg">
           <div className="flex flex-col sm:flex-row sm:items-start gap-5">
-            {profile.logo_url ? (
+            {logoSrc ? (
               <img
-                src={profile.logo_url}
+                src={logoSrc}
                 alt=""
-                className="h-20 w-20 rounded-2xl object-cover border border-border shrink-0 bg-surface-alt"
+                className="h-20 w-20 rounded-2xl object-cover border border-border shrink-0 bg-surface-alt shadow-sm"
               />
             ) : (
               <div
-                className="h-20 w-20 rounded-2xl shrink-0 flex items-center justify-center text-2xl font-bold text-white"
+                className="h-20 w-20 rounded-2xl shrink-0 flex items-center justify-center text-2xl font-bold text-on-primary shadow-sm"
                 style={{
-                  backgroundColor: profile.brand_color || "var(--color-primary, #C4A265)",
+                  backgroundColor:
+                    profile.brand_color || "var(--color-primary, #C4A265)",
                 }}
                 aria-hidden="true"
               >
@@ -259,7 +286,7 @@ export const PublicProfilePage: React.FC = () => {
               )}
               {locationLabel && (
                 <p className="flex items-center gap-1.5 text-sm text-text-secondary">
-                  <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <MapPin className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                   <span>{locationLabel}</span>
                 </p>
               )}
@@ -270,19 +297,14 @@ export const PublicProfilePage: React.FC = () => {
             <div className="mt-6">
               <a
                 href={contactHref(profile.contact)}
-                target={
-                  profile.contact.type === "url" ||
-                  profile.contact.type === "whatsapp"
-                    ? "_blank"
+                target={contactOpenExternal ? "_blank" : undefined}
+                rel={contactOpenExternal ? "noopener noreferrer" : undefined}
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary shadow-xs hover:opacity-90 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                style={
+                  profile.brand_color
+                    ? { backgroundColor: profile.brand_color }
                     : undefined
                 }
-                rel={
-                  profile.contact.type === "url" ||
-                  profile.contact.type === "whatsapp"
-                    ? "noopener noreferrer"
-                    : undefined
-                }
-                className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
               >
                 <ContactIcon type={profile.contact.type} />
                 {t("profile.contact_cta")}
@@ -295,12 +317,10 @@ export const PublicProfilePage: React.FC = () => {
               {socialEntries.map(([key, url]) => (
                 <li key={key}>
                   <a
-                    href={
-                      /^https?:\/\//i.test(url) ? url : `https://${url}`
-                    }
+                    href={/^https?:\/\//i.test(url) ? url : `https://${url}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface-alt px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-primary hover:border-primary/40 transition-colors capitalize"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface-alt/50 px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-primary hover:border-primary/40 transition-colors capitalize"
                   >
                     <ExternalLink className="h-3 w-3" aria-hidden="true" />
                     {key}
@@ -309,109 +329,114 @@ export const PublicProfilePage: React.FC = () => {
               ))}
             </ul>
           )}
-        </section>
+        </Card>
 
         {/* Services */}
         {services.length > 0 && (
-          <section aria-labelledby="public-services-heading" className="space-y-4">
-            <h2
-              id="public-services-heading"
-              className="text-lg font-semibold text-text"
-            >
+          <section
+            aria-labelledby="public-services-heading"
+            className="space-y-4"
+          >
+            <SectionHeading id="public-services-heading">
               {t("profile.services_title")}
-            </h2>
+            </SectionHeading>
             <ul className="grid gap-3 sm:grid-cols-2">
-              {services.map((svc) => (
-                <li
-                  key={svc.id}
-                  className="rounded-xl border border-border bg-surface p-4 flex gap-3"
-                >
-                  {svc.image_url ? (
-                    <img
-                      src={svc.image_url}
-                      alt=""
-                      className="h-14 w-14 rounded-lg object-cover border border-border shrink-0"
-                    />
-                  ) : (
-                    <div className="h-14 w-14 rounded-lg bg-primary/10 shrink-0" />
-                  )}
-                  <div className="min-w-0">
-                    <p className="font-medium text-text truncate">{svc.name}</p>
-                    {svc.category && (
-                      <p className="text-xs text-text-tertiary mt-0.5 capitalize">
-                        {svc.category}
-                      </p>
-                    )}
-                    {svc.base_price != null && (
-                      <p className="text-sm text-primary font-semibold mt-1">
-                        {formatPrice(svc.base_price, i18n.language)}
-                      </p>
-                    )}
-                  </div>
-                </li>
-              ))}
+              {services.map((svc) => {
+                const img = svc.image_url ? getAssetUrl(svc.image_url) : null;
+                return (
+                  <li key={svc.id}>
+                    <Card
+                      variant="default"
+                      padding="sm"
+                      className="h-full flex gap-3 !p-4"
+                    >
+                      {img ? (
+                        <img
+                          src={img}
+                          alt=""
+                          className="h-14 w-14 rounded-xl object-cover border border-border shrink-0"
+                        />
+                      ) : (
+                        <div className="h-14 w-14 rounded-xl bg-primary/10 shrink-0" />
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-bold text-text truncate">{svc.name}</p>
+                        {svc.category && (
+                          <p className="text-xs text-text-tertiary mt-0.5 capitalize">
+                            {svc.category}
+                          </p>
+                        )}
+                        {svc.base_price != null && (
+                          <p className="text-sm text-primary font-semibold mt-1">
+                            {formatPrice(svc.base_price, i18n.language)}
+                          </p>
+                        )}
+                      </div>
+                    </Card>
+                  </li>
+                );
+              })}
             </ul>
           </section>
         )}
 
         {/* Reviews */}
         {reviews.length > 0 && (
-          <section aria-labelledby="public-reviews-heading" className="space-y-4">
-            <h2
-              id="public-reviews-heading"
-              className="text-lg font-semibold text-text"
-            >
+          <section
+            aria-labelledby="public-reviews-heading"
+            className="space-y-4"
+          >
+            <SectionHeading id="public-reviews-heading">
               {t("profile.reviews_title")}
-            </h2>
+            </SectionHeading>
             <ul className="space-y-3">
               {reviews.map((review, idx) => (
-                <li
-                  key={`${review.display_name}-${review.submitted_at}-${idx}`}
-                  className="rounded-xl border border-border bg-surface p-4 space-y-2"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-medium text-text">
-                      {review.display_name}
-                    </p>
-                    <div
-                      className="flex items-center gap-0.5"
-                      aria-label={t("profile.rating_aria", {
-                        rating: review.rating,
-                      })}
-                    >
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-3.5 w-3.5 ${
-                            i < review.rating
-                              ? "fill-primary text-primary"
-                              : "text-border"
-                          }`}
-                          aria-hidden="true"
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  {review.event_label && (
-                    <p className="text-xs text-text-tertiary">
-                      {review.event_label}
-                    </p>
-                  )}
-                  {review.comment?.trim() && (
-                    <p className="text-sm text-text-secondary leading-relaxed">
-                      {review.comment}
-                    </p>
-                  )}
-                  {review.organizer_response?.trim() && (
-                    <div className="mt-2 rounded-lg bg-surface-alt border border-border px-3 py-2">
-                      <p className="text-xs font-medium text-text-secondary mb-1">
-                        {t("profile.organizer_response")}
+                <li key={`${review.display_name}-${review.submitted_at}-${idx}`}>
+                  <Card variant="default" padding="sm" className="!p-4 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-bold text-text">
+                        {review.display_name}
                       </p>
-                      <p className="text-sm text-text-secondary">
-                        {review.organizer_response}
-                      </p>
+                      <div
+                        className="flex items-center gap-0.5"
+                        aria-label={t("profile.rating_aria", {
+                          rating: review.rating,
+                        })}
+                      >
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-3.5 w-3.5 ${
+                              i < review.rating
+                                ? "fill-primary text-primary"
+                                : "text-border"
+                            }`}
+                            aria-hidden="true"
+                          />
+                        ))}
+                      </div>
                     </div>
-                  )}
+                    {review.event_label && (
+                      <p className="text-xs text-text-tertiary">
+                        {review.event_label}
+                      </p>
+                    )}
+                    {review.comment?.trim() && (
+                      <p className="text-sm text-text-secondary leading-relaxed">
+                        {review.comment}
+                      </p>
+                    )}
+                    {review.organizer_response?.trim() && (
+                      <div className="mt-2 rounded-xl bg-surface-alt/50 border border-border px-3 py-2">
+                        <p className="text-xs font-medium text-text-secondary mb-1">
+                          {t("profile.organizer_response")}
+                        </p>
+                        <p className="text-sm text-text-secondary">
+                          {review.organizer_response}
+                        </p>
+                      </div>
+                    )}
+                  </Card>
                 </li>
               ))}
             </ul>
@@ -424,36 +449,35 @@ export const PublicProfilePage: React.FC = () => {
             aria-labelledby="public-portfolio-heading"
             className="space-y-4"
           >
-            <h2
-              id="public-portfolio-heading"
-              className="text-lg font-semibold text-text"
-            >
+            <SectionHeading id="public-portfolio-heading">
               {t("profile.portfolio_title")}
-            </h2>
+            </SectionHeading>
             <ul className="grid gap-3 grid-cols-2 sm:grid-cols-3">
-              {portfolio.map((item) => (
-                <li
-                  key={item.id}
-                  className="rounded-xl border border-border bg-surface overflow-hidden"
-                >
-                  <img
-                    src={item.thumbnail_url || item.photo_url}
-                    alt=""
-                    className="aspect-[4/3] w-full object-cover bg-surface-alt"
-                    loading="lazy"
-                  />
-                  <div className="p-3">
-                    <p className="text-sm font-medium text-text truncate">
-                      {item.title}
-                    </p>
-                    {item.event_date && (
-                      <p className="text-xs text-text-tertiary mt-0.5">
-                        {item.event_date}
-                      </p>
-                    )}
-                  </div>
-                </li>
-              ))}
+              {portfolio.map((item) => {
+                const img = getAssetUrl(item.thumbnail_url || item.photo_url);
+                return (
+                  <li key={item.id}>
+                    <Card variant="default" padding="none" className="overflow-hidden">
+                      <img
+                        src={img}
+                        alt=""
+                        className="aspect-[4/3] w-full object-cover bg-surface-alt"
+                        loading="lazy"
+                      />
+                      <div className="p-3">
+                        <p className="text-sm font-bold text-text truncate">
+                          {item.title}
+                        </p>
+                        {item.event_date && (
+                          <p className="text-xs text-text-tertiary mt-0.5">
+                            {item.event_date}
+                          </p>
+                        )}
+                      </div>
+                    </Card>
+                  </li>
+                );
+              })}
             </ul>
           </section>
         )}
@@ -462,7 +486,7 @@ export const PublicProfilePage: React.FC = () => {
       <footer className="border-t border-border py-6 mt-4">
         <p className="text-center text-xs text-text-tertiary">
           {t("profile.powered_by")}{" "}
-          <Link to="/" className="text-primary hover:underline">
+          <Link to="/" className="text-primary font-medium hover:underline">
             Solennix
           </Link>
         </p>
