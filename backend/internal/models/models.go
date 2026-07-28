@@ -658,6 +658,24 @@ type PublicPortfolioItem struct {
 	SortOrder    int       `json:"sort_order"`
 }
 
+// PortfolioCandidatePhoto is a public-safe event photo for portfolio picker UI.
+// Never includes client PII.
+type PortfolioCandidatePhoto struct {
+	ID           uuid.UUID `json:"id"`
+	URL          string    `json:"url"`
+	ThumbnailURL *string   `json:"thumbnail_url,omitempty"`
+}
+
+// PortfolioCandidateEvent is a sanitized event eligible for portfolio selection.
+// Intentionally omits client_id, client name/phone, and any other PII.
+type PortfolioCandidateEvent struct {
+	ID          uuid.UUID                 `json:"id"`
+	ServiceType string                    `json:"service_type"`
+	EventDate   string                    `json:"event_date"` // YYYY-MM-DD
+	City        *string                   `json:"city,omitempty"`
+	Photos      []PortfolioCandidatePhoto `json:"photos"`
+}
+
 // PublicOrganizerProfile is the plan-aware aggregate public GET response.
 // Free: basic fields + ≤3 services; omit reviews/portfolio/socials.
 // Pro+: honor section toggles; portfolio ≤6; base_price only if show_prices.
