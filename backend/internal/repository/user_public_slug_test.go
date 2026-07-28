@@ -104,6 +104,68 @@ func TestUserRepo_GetByPublicSlug_NotFound(t *testing.T) {
 	}
 }
 
+func TestUserRepo_Create_AssignsPublicSlug(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	repo := NewUserRepo(pool)
+	ctx := context.Background()
+	user := &models.User{
+		Email:        "slug.create@test.dev",
+		PasswordHash: "hash",
+		Name:         "Slug Create",
+		Plan:         "basic",
+	}
+	if err := repo.Create(ctx, user); err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+	if user.PublicSlug == nil || *user.PublicSlug == "" {
+		t.Fatal("Create() must assign PublicSlug")
+	}
+	found, err := repo.GetByPublicSlug(ctx, *user.PublicSlug)
+	if err != nil {
+		t.Fatalf("GetByPublicSlug after Create error = %v", err)
+	}
+	if found.ID != user.ID {
+		t.Fatalf("GetByPublicSlug ID = %s, want %s", found.ID, user.ID)
+	}
+}
+
+func TestUserRepo_GetByPublicSlug_BlockedAccount_NotFound(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	repo := NewUserRepo(pool)
+	ctx := context.Background()
+	user := &models.User{
+		Email:        "blocked.slug@test.dev",
+		PasswordHash: "hash",
+		Name:         "Blocked",
+		Plan:         "pro",
+	}
+	if err := repo.Create(ctx, user); err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+	slug := "blocked-organizer"
+	if err := repo.UpdatePublicSlug(ctx, user.ID, slug); err != nil {
+		t.Fatalf("UpdatePublicSlug() error = %v", err)
+	}
+	if _, err := pool.Exec(ctx, `
+		UPDATE users SET account_status = 'blocked', blocked_at = NOW() WHERE id = $1`, user.ID); err != nil {
+		t.Fatalf("block user: %v", err)
+	}
+
+	_, err := repo.GetByPublicSlug(ctx, slug)
+	if err == nil {
+		t.Fatal("GetByPublicSlug() expected error for blocked account")
+	}
+	if !errors.Is(err, pgx.ErrNoRows) && !strings.Contains(err.Error(), "not found") {
+		t.Fatalf("GetByPublicSlug() error = %v, want not found", err)
+	}
+}
+
 func TestUserRepo_UpdatePublicSlug_Conflict(t *testing.T) {
 	pool := openTestPool(t)
 	defer pool.Close()

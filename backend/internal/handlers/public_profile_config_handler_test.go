@@ -238,6 +238,64 @@ func TestUpsertMyPublicProfile_SlugConflict_409(t *testing.T) {
 	if rr.Code != http.StatusConflict {
 		t.Fatalf("status = %d, want 409; body=%s", rr.Code, rr.Body.String())
 	}
+	// Slug is applied before Upsert — conflict must not leave a partial config write.
+	if p.upsertRr != 0 {
+		t.Errorf("Upsert must NOT run when slug rename conflicts; called %d", p.upsertRr)
+	}
+}
+
+func TestUpsertMyPublicProfile_Free_FirstSave_ForcesProTogglesOff(t *testing.T) {
+	// Omitted show_reviews/show_portfolio would inherit defaults true; Free must force false.
+	p := &cfgProfileRepo{}
+	s := &slugRenamer{}
+	h, user := newConfigHandler(&cfgUserRepo{}, p, s, "basic")
+	body := `{"is_enabled":true,"public_slug":"free-org","show_services":true,"show_contact":true}`
+	rr := httptest.NewRecorder()
+	h.UpsertMyPublicProfile(rr, putWithUser(t, user.ID, body))
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200; body=%s", rr.Code, rr.Body.String())
+	}
+	if p.upsertIn == nil {
+		t.Fatal("expected Upsert input")
+	}
+	if p.upsertIn.ShowReviews || p.upsertIn.ShowPortfolio {
+		t.Errorf("Free first save must force show_reviews/show_portfolio false; got reviews=%v portfolio=%v",
+			p.upsertIn.ShowReviews, p.upsertIn.ShowPortfolio)
+	}
+	if len(p.upsertIn.Socials) != 0 {
+		t.Errorf("Free first save must clear socials; got %v", p.upsertIn.Socials)
+	}
+}
+
+func TestUpsertMyPublicProfile_InvalidContactType_400(t *testing.T) {
+	p := &cfgProfileRepo{}
+	s := &slugRenamer{}
+	h, user := newConfigHandler(&cfgUserRepo{}, p, s, "pro")
+	body := `{"is_enabled":true,"public_slug":"org","contact_type":"telegram"}`
+	rr := httptest.NewRecorder()
+	h.UpsertMyPublicProfile(rr, putWithUser(t, user.ID, body))
+	if rr.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400; body=%s", rr.Code, rr.Body.String())
+	}
+	if p.upsertRr != 0 {
+		t.Errorf("Upsert must NOT run on invalid contact_type")
+	}
+}
+
+func TestUpsertMyPublicProfile_EnableWithoutSlug_400(t *testing.T) {
+	p := &cfgProfileRepo{}
+	s := &slugRenamer{}
+	// User has no public_slug yet.
+	h, user := newConfigHandler(&cfgUserRepo{}, p, s, "pro")
+	body := `{"is_enabled":true,"show_services":true}`
+	rr := httptest.NewRecorder()
+	h.UpsertMyPublicProfile(rr, putWithUser(t, user.ID, body))
+	if rr.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400; body=%s", rr.Code, rr.Body.String())
+	}
+	if p.upsertRr != 0 {
+		t.Errorf("Upsert must NOT run when enabling without slug")
+	}
 }
 
 func TestUpsertMyPublicProfile_Pro_AcceptsProToggles(t *testing.T) {

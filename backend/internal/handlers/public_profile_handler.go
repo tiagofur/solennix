@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -10,6 +11,23 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/models"
 	"github.com/tiagofur/solennix-backend/internal/repository"
 )
+
+// isPubliclyVisibleAccount reports whether the organizer may appear on public
+// surfaces (profile page, reviews sub-route). Blocked / soft-deleted accounts
+// must not be discoverable even if a public_slug remains set.
+func isPubliclyVisibleAccount(user *models.User) bool {
+	if user == nil {
+		return false
+	}
+	if user.DeletedAt != nil {
+		return false
+	}
+	status := strings.TrimSpace(user.AccountStatus)
+	if status == "" {
+		status = repository.AccountStatusActive
+	}
+	return status == repository.AccountStatusActive
+}
 
 // PublicProfileHandler serves the unauthenticated public aggregate GET for an
 // organizer's professional profile. It is plan-aware: Free plans get the basic
@@ -74,11 +92,21 @@ func (h *PublicProfileHandler) GetPublicProfile(w http.ResponseWriter, r *http.R
 		writeError(w, http.StatusInternalServerError, "Failed to load profile")
 		return
 	}
+	// Defense in depth if the repo ever returns non-active accounts.
+	if !isPubliclyVisibleAccount(user) {
+		writeError(w, http.StatusNotFound, "Profile not found")
+		return
+	}
 
 	profile, err := h.profileRepo.GetByUserID(r.Context(), user.ID)
 	if err != nil {
 		// Missing profile row -> not enabled -> 404 from the visitor's view.
-		writeError(w, http.StatusNotFound, "Profile not found")
+		// Other errors (DB outage) must not be masked as 404.
+		if errors.Is(err, repository.ErrPublicProfileNotFound) || isPgxNoRows(err) {
+			writeError(w, http.StatusNotFound, "Profile not found")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "Failed to load profile")
 		return
 	}
 	if !profile.IsEnabled {

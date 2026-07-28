@@ -182,18 +182,48 @@ func (h *PublicProfileConfigHandler) UpsertMyPublicProfile(w http.ResponseWriter
 		}
 	}
 
-	// Build the profile to upsert. Merge onto existing row so omitted fields
-	// keep their current values instead of being zeroed.
-	existing, _ := h.profileRepo.GetByUserID(r.Context(), userID)
-	merged := mergeProfile(existing, h.defaultProfile(userID), &req, userID)
+	if req.ContactType != nil && *req.ContactType != "" {
+		if err := validateContactType(*req.ContactType); err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+	}
 
-	stored, err := h.profileRepo.Upsert(r.Context(), merged)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to save public profile")
+	// Require a public slug when enabling the profile (new or existing).
+	effectiveSlug := ""
+	if req.PublicSlug != nil {
+		effectiveSlug = strings.TrimSpace(*req.PublicSlug)
+	} else if user.PublicSlug != nil {
+		effectiveSlug = *user.PublicSlug
+	}
+	if req.IsEnabled != nil && *req.IsEnabled && effectiveSlug == "" {
+		writeError(w, http.StatusBadRequest, "public_slug is required when enabling the profile")
 		return
 	}
 
-	// Rename slug if a new one was provided and differs from current.
+	// Build the profile to upsert. Merge onto existing row so omitted fields
+	// keep their current values instead of being zeroed.
+	existing, err := h.profileRepo.GetByUserID(r.Context(), userID)
+	if err != nil && !errors.Is(err, repository.ErrPublicProfileNotFound) {
+		writeError(w, http.StatusInternalServerError, "Failed to load public profile")
+		return
+	}
+	if errors.Is(err, repository.ErrPublicProfileNotFound) {
+		existing = nil
+	}
+	merged := mergeProfile(existing, h.defaultProfile(userID), &req, userID)
+
+	// Free: force Pro-only section flags off even when request omits them
+	// (defaults would otherwise leave show_reviews/show_portfolio true).
+	if !fullPlan {
+		merged.ShowReviews = false
+		merged.ShowPortfolio = false
+		merged.Socials = map[string]string{}
+	}
+
+	// Slug rename BEFORE profile upsert so a 409 conflict never leaves a
+	// partial config write from this request.
+	finalSlug := user.PublicSlug
 	if req.PublicSlug != nil && (user.PublicSlug == nil || *user.PublicSlug != *req.PublicSlug) {
 		if err := h.slugUpdater.UpdatePublicSlug(r.Context(), userID, *req.PublicSlug); err != nil {
 			if errors.Is(err, repository.ErrPublicSlugTaken) {
@@ -203,12 +233,27 @@ func (h *PublicProfileConfigHandler) UpsertMyPublicProfile(w http.ResponseWriter
 			writeError(w, http.StatusInternalServerError, "Failed to save public slug")
 			return
 		}
-		stored.PublicSlug = req.PublicSlug
-	} else {
-		stored.PublicSlug = user.PublicSlug
+		finalSlug = req.PublicSlug
 	}
 
+	stored, err := h.profileRepo.Upsert(r.Context(), merged)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to save public profile")
+		return
+	}
+	stored.PublicSlug = finalSlug
+
 	writeJSON(w, http.StatusOK, map[string]any{"data": stored})
+}
+
+// validateContactType enforces the DB CHECK values so callers get 400 instead of 500.
+func validateContactType(v string) error {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "phone", "whatsapp", "email", "url":
+		return nil
+	default:
+		return errors.New("contact_type must be one of: phone, whatsapp, email, url")
+	}
 }
 
 // mergeProfile combines the existing row, the request, and defaults into the

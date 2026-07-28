@@ -32,15 +32,23 @@ type publicReviewLister interface {
 
 // listPublicReviews writes the sanitized PublicReview[] for the given slug.
 // Returns [] (never nil) when:
-//   - the organizer is unknown (no user found),
+//   - the organizer is unknown / inactive (no user found via GetByPublicSlug),
+//   - the public profile is disabled or missing,
 //   - the plan is Free (reviews are Pro+ only),
 //   - the reviews feature is not available for the plan,
 //   - show_reviews toggle is off.
 // Otherwise fetches and sanitizes each EventReview via toPublicReview (no PII).
+// Must stay aligned with GET /api/public/organizers/{slug}: disabled profiles
+// must not leak reviews on this sub-route.
 func listPublicReviews(w http.ResponseWriter, r *http.Request, slug string, deps publicReviewDeps) {
 	ctx := r.Context()
 	user, err := deps.user.GetByPublicSlug(ctx, slug)
 	if err != nil || user == nil {
+		writeJSON(w, http.StatusOK, map[string]any{"data": []models.PublicReview{}})
+		return
+	}
+	// Defense in depth if the repo ever returns non-active accounts.
+	if !isPubliclyVisibleAccount(user) {
 		writeJSON(w, http.StatusOK, map[string]any{"data": []models.PublicReview{}})
 		return
 	}
@@ -50,7 +58,7 @@ func listPublicReviews(w http.ResponseWriter, r *http.Request, slug string, deps
 		return
 	}
 	profile, err := deps.profile.GetByUserID(ctx, user.ID)
-	if err != nil || profile == nil || !profile.ShowReviews {
+	if err != nil || profile == nil || !profile.IsEnabled || !profile.ShowReviews {
 		writeJSON(w, http.StatusOK, map[string]any{"data": []models.PublicReview{}})
 		return
 	}

@@ -20,6 +20,7 @@
     "preview": "View public page",
     "slugLengthError": "Slug must be between 3 and 140 characters.",
     "slugFormatError": "Lowercase letters, digits, and single hyphens only (no leading/trailing hyphen).",
+    "slugRequiredOnEnable": "Set a public address (slug) before enabling your profile.",
     "slugTaken": "That address is already in use. Try another.",
     "planRequired": "Your plan does not include this feature. Consider upgrading to Pro.",
     "headline": "Headline",
