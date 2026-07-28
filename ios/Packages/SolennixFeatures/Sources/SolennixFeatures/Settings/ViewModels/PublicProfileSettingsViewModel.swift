@@ -23,7 +23,8 @@ public final class PublicProfileSettingsViewModel {
     public static let portfolioMax = 6
     public static let freePublicProductMax = 3
     /// kebab-case, 3-140 chars (mirrors backend validatePublicSlug).
-    public static let slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+    /// Use NSRegularExpression-style string (Swift regex literal `$/` confuses the parser).
+    public static let slugPattern = "^[a-z0-9]+(?:-[a-z0-9]+)*$"
 
     // MARK: - Form state
 
@@ -182,7 +183,8 @@ public final class PublicProfileSettingsViewModel {
                 "El slug debe tener entre 3 y 140 caracteres."
             )
         }
-        if trimmed.wholeMatch(of: Self.slugRegex) == nil {
+        // Full-string match (pattern includes ^ and $).
+        if trimmed.range(of: Self.slugPattern, options: .regularExpression) == nil {
             return tr(
                 "settings.public_profile.slug_format_error",
                 "Solo minúsculas, números y guiones (sin guiones al inicio/final)."
@@ -272,7 +274,12 @@ public final class PublicProfileSettingsViewModel {
                     "settings.public_profile.slug_taken",
                     "Esa dirección ya está en uso. Probá otra."
                 )
-            case .serverError(let code, _) where code == 403, .planLimitExceeded:
+            case .serverError(let code, _) where code == 403:
+                errorMessage = tr(
+                    "settings.public_profile.plan_required",
+                    "Tu plan no incluye esta función. Considerá mejorar a Pro."
+                )
+            case .planLimitExceeded(_, _, _, _):
                 errorMessage = tr(
                     "settings.public_profile.plan_required",
                     "Tu plan no incluye esta función. Considerá mejorar a Pro."
