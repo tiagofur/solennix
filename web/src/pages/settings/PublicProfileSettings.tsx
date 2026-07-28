@@ -132,7 +132,13 @@ export default function PublicProfileSettings() {
 
   const handleSave = async () => {
     setError(null);
-    const slugErr = validateSlug(slug);
+    const trimmedSlug = slug.trim();
+    // Enabling the public page requires a shareable slug (server enforces too).
+    if (profile.is_enabled && !trimmedSlug && !(profile.public_slug || user?.public_slug)) {
+      setSlugError(t("publicProfile.slugRequiredOnEnable"));
+      return;
+    }
+    const slugErr = validateSlug(trimmedSlug);
     if (slugErr) {
       setSlugError(slugErr);
       return;
@@ -141,7 +147,7 @@ export default function PublicProfileSettings() {
     // Free plan: force Pro-only toggles off client-side (server also rejects).
     const body: OrganizerPublicProfileUpsertRequest = {
       is_enabled: profile.is_enabled,
-      public_slug: slug || undefined,
+      public_slug: trimmedSlug || undefined,
       headline: headline || null,
       contact_type: contactType,
       contact_value: contactValue || null,

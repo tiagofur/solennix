@@ -20,6 +20,7 @@
     "preview": "Ver página pública",
     "slugLengthError": "El slug debe tener entre 3 y 140 caracteres.",
     "slugFormatError": "Solo minúsculas, números y guiones (sin guiones al inicio/final).",
+    "slugRequiredOnEnable": "Definí una dirección pública (slug) antes de activar el perfil.",
     "slugTaken": "Esa dirección ya está en uso. Probá otra.",
     "planRequired": "Tu plan no incluye esta función. Considerá mejorar a Pro.",
     "headline": "Frase destacada",
