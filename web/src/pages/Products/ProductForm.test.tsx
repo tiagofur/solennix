@@ -7,6 +7,7 @@ import { inventoryService } from '../../services/inventoryService';
 
 const mockNavigate = vi.fn();
 let mockParams: { id?: string } = {};
+let mockUser: { id: string; plan: string } = { id: 'user-1', plan: 'pro' };
 
 vi.mock('../../services/productService', () => ({
   productService: {
@@ -33,6 +34,13 @@ vi.mock('../../services/inventoryService', () => ({
   },
 }));
 
+vi.mock('../../services/staffService', () => ({
+  staffService: {
+    listTeams: vi.fn().mockResolvedValue([]),
+    getAll: vi.fn().mockResolvedValue([]),
+  },
+}));
+
 let mockPlanLimits = {
   canCreateProduct: true,
   productsCount: 0,
@@ -41,7 +49,7 @@ let mockPlanLimits = {
 };
 
 vi.mock('../../contexts/AuthContext', () => ({
-  useAuth: () => ({ user: { id: 'user-1', plan: 'pro' } }),
+  useAuth: () => ({ user: mockUser }),
 }));
 
 vi.mock('../../hooks/usePlanLimits', () => ({
@@ -77,6 +85,7 @@ describe('ProductForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockParams = {};
+    mockUser = { id: 'user-1', plan: 'pro' };
     mockPlanLimits = {
       canCreateProduct: true,
       productsCount: 0,
@@ -86,6 +95,7 @@ describe('ProductForm', () => {
     (inventoryService.getAll as any).mockResolvedValue([
       { id: 'inv-1', ingredient_name: 'Harina', unit: 'kg', unit_cost: 2.5, type: 'ingredient' },
     ]);
+    (productService.getAll as any).mockResolvedValue([]);
   });
 
   it('adds ingredient and calculates total', async () => {
@@ -143,6 +153,7 @@ describe('ProductForm', () => {
         base_price: 50,
         image_url: null,
         is_active: true,
+        show_on_public_profile: false,
         recipe: null,
         staff_team_id: null,
       });
@@ -191,6 +202,7 @@ describe('ProductForm', () => {
         base_price: 60,
         image_url: null,
         is_active: true,
+        show_on_public_profile: false,
         staff_team_id: null,
       });
     });
@@ -403,5 +415,82 @@ describe('ProductForm', () => {
       expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Editar Producto');
     });
     expect(screen.queryByText(/Límite de Catálogo Alcanzado/i)).not.toBeInTheDocument();
+  });
+
+  it('renders the show-on-public-profile toggle', async () => {
+    renderForm();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('show-on-public-profile-toggle')).toBeInTheDocument();
+    });
+    expect(screen.getByText(/Mostrar en perfil público|Show on public profile/i)).toBeInTheDocument();
+    const toggle = screen.getByTestId('show-on-public-profile-toggle');
+    expect(toggle).toHaveAttribute('aria-checked', 'false');
+    expect(toggle).not.toBeDisabled();
+  });
+
+  it('disables public-profile toggle on Free when 3 products are already public', async () => {
+    mockUser = { id: 'user-1', plan: 'free' };
+    (productService.getAll as any).mockResolvedValue([
+      { id: 'p1', name: 'A', category: 'c', base_price: 1, is_active: true, show_on_public_profile: true },
+      { id: 'p2', name: 'B', category: 'c', base_price: 1, is_active: true, show_on_public_profile: true },
+      { id: 'p3', name: 'C', category: 'c', base_price: 1, is_active: true, show_on_public_profile: true },
+    ]);
+
+    renderForm();
+
+    await waitFor(() => {
+      const toggle = screen.getByTestId('show-on-public-profile-toggle');
+      expect(toggle).toBeDisabled();
+    });
+    expect(
+      screen.getByText(/permite hasta 3|allows up to 3/i),
+    ).toBeInTheDocument();
+  });
+
+  it('keeps public-profile toggle enabled on Pro with 3+ public products', async () => {
+    mockUser = { id: 'user-1', plan: 'pro' };
+    (productService.getAll as any).mockResolvedValue([
+      { id: 'p1', name: 'A', category: 'c', base_price: 1, is_active: true, show_on_public_profile: true },
+      { id: 'p2', name: 'B', category: 'c', base_price: 1, is_active: true, show_on_public_profile: true },
+      { id: 'p3', name: 'C', category: 'c', base_price: 1, is_active: true, show_on_public_profile: true },
+      { id: 'p4', name: 'D', category: 'c', base_price: 1, is_active: true, show_on_public_profile: true },
+    ]);
+
+    renderForm();
+
+    await waitFor(() => {
+      const toggle = screen.getByTestId('show-on-public-profile-toggle');
+      expect(toggle).not.toBeDisabled();
+    });
+  });
+
+  it('includes show_on_public_profile when creating after toggle on', async () => {
+    (productService.create as any).mockResolvedValue({ id: 'prod-1' });
+    (productService.updateIngredients as any).mockResolvedValue({});
+
+    const { container } = renderForm();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('show-on-public-profile-toggle')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId('show-on-public-profile-toggle'));
+    fireEvent.change(container.querySelector('input[name="name"]')!, {
+      target: { value: 'Churros' },
+    });
+    fireEvent.change(container.querySelector('input[name="category"]')!, {
+      target: { value: 'Postres' },
+    });
+    fireEvent.change(container.querySelector('input[name="base_price"]')!, {
+      target: { value: '50' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Guardar producto/i }));
+
+    await waitFor(() => {
+      expect(productService.create).toHaveBeenCalledWith(
+        expect.objectContaining({ show_on_public_profile: true }),
+      );
+    });
   });
 });

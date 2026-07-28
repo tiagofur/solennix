@@ -25,7 +25,7 @@ import { UpgradeBanner } from "../../components/UpgradeBanner";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { Input } from "../../components/Input";
-import { useProduct, useProductIngredients, useCreateProduct, useUpdateProduct, useUploadProductImage } from "../../hooks/queries/useProductQueries";
+import { useProduct, useProductIngredients, useCreateProduct, useUpdateProduct, useUploadProductImage, useProducts } from "../../hooks/queries/useProductQueries";
 import { useInventoryItems } from "../../hooks/queries/useInventoryQueries";
 import { useStaffTeams } from "../../hooks/queries/useStaffQueries";
 
@@ -36,6 +36,7 @@ export const ProductForm: React.FC = () => {
   const { user } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(true);
+  const [showOnPublicProfile, setShowOnPublicProfile] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [staffTeamId, setStaffTeamId] = useState<string | null>(null);
@@ -60,11 +61,25 @@ export const ProductForm: React.FC = () => {
   const { data: staffTeams = [] } = useStaffTeams();
   const { data: existingProduct, isLoading: isLoadingProduct } = useProduct(id);
   const { data: existingIngredients } = useProductIngredients(id);
+  const { data: allProducts = [] } = useProducts();
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   const uploadImage = useUploadProductImage();
 
   const isLoading = isLoadingProduct || createProduct.isPending || updateProduct.isPending;
+
+  // Free-plan cap: at most 3 active products with show_on_public_profile=true.
+  // The checkbox is disabled when the cap is reached AND this product wouldn't
+  // count toward it (i.e. it's currently off).
+  const FREE_PUBLIC_PROFILE_LIMIT = 3;
+  const isPaidPlan = user?.plan === "pro" || user?.plan === "business" || user?.plan === "premium";
+  const publicProfileProductCount = allProducts.filter(
+    (p) => p.is_active && p.show_on_public_profile,
+  ).length;
+  const capReached =
+    !isPaidPlan &&
+    publicProfileProductCount >= FREE_PUBLIC_PROFILE_LIMIT &&
+    !showOnPublicProfile;
 
   const [recipeIngredients, setRecipeIngredients] = useState<
     {
@@ -103,6 +118,7 @@ export const ProductForm: React.FC = () => {
         base_price: existingProduct.base_price || 0,
       });
       setIsActive(existingProduct.is_active ?? true);
+      setShowOnPublicProfile(existingProduct.show_on_public_profile ?? false);
       if (existingProduct.image_url) {
         setImageUrl(existingProduct.image_url);
         setImagePreview(existingProduct.image_url);
@@ -286,6 +302,7 @@ export const ProductForm: React.FC = () => {
             ...data,
             image_url: imageUrl || null,
             is_active: isActive,
+            show_on_public_profile: showOnPublicProfile,
             staff_team_id: staffTeamId,
           },
           ingredients: ingredientsToSave,
@@ -299,6 +316,7 @@ export const ProductForm: React.FC = () => {
             ...data,
             image_url: imageUrl || null,
             is_active: isActive,
+            show_on_public_profile: showOnPublicProfile,
             recipe: null,
             staff_team_id: staffTeamId,
           },
@@ -493,6 +511,39 @@ export const ProductForm: React.FC = () => {
                   >
                     <span
                       className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition-transform ${isActive ? "translate-x-5" : "translate-x-0"}`}
+                    />
+                  </button>
+                </div>
+              </div>
+
+              <div className="sm:col-span-6">
+                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-surface-alt/50">
+                  <div>
+                    <p className="text-sm font-medium text-text">
+                      {t("products:form.show_on_public_profile")}
+                    </p>
+                    <p className="text-xs text-text-secondary mt-0.5">
+                      {capReached
+                        ? t("products:form.public_profile_cap_hint")
+                        : t("products:form.public_profile_desc")}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={showOnPublicProfile}
+                    aria-disabled={capReached}
+                    disabled={capReached}
+                    onClick={() => !capReached && setShowOnPublicProfile(!showOnPublicProfile)}
+                    data-testid="show-on-public-profile-toggle"
+                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 ${
+                      capReached
+                        ? "cursor-not-allowed opacity-50"
+                        : "cursor-pointer"
+                    } ${showOnPublicProfile ? "bg-primary" : "bg-border"}`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition-transform ${showOnPublicProfile ? "translate-x-5" : "translate-x-0"}`}
                     />
                   </button>
                 </div>

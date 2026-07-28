@@ -401,6 +401,14 @@ export const ProductList: React.FC = () => {
                                 {t("products:status.inactive")}
                               </span>
                             )}
+                            {product.show_on_public_profile && (
+                              <span
+                                className="px-1.5 py-0.5 text-xs font-semibold rounded bg-info/10 text-info border border-info/20"
+                                data-testid="public-profile-badge"
+                              >
+                                {t("products:status.public_profile")}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
