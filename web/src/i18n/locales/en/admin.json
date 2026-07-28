@@ -237,14 +237,23 @@
         "delete": "Delete",
         "login": "Login",
         "login_failed": "Failed login attempt",
+        "auth_failed": "Authentication failed",
         "block": "Block",
         "unblock": "Unblock"
       },
       "reasons": {
         "email_not_verified": "Email not verified",
         "invalid_credentials": "Invalid credentials",
+        "invalid_password": "Wrong password",
         "wrong_password": "Wrong password",
         "user_not_found": "User not found",
+        "refresh_user_not_found": "Refresh: user not found",
+        "refresh_user_lookup_failed": "Refresh: user lookup failed (transient)",
+        "refresh_account_blocked": "Refresh: account blocked",
+        "refresh_account_deleted": "Refresh: account deleted",
+        "refresh_token_reuse_detected": "Refresh: token reuse detected",
+        "account_blocked": "Account blocked",
+        "account_deleted": "Account deleted",
         "blocked": "Account blocked"
       }
     }
