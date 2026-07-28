@@ -90,6 +90,7 @@ public final class CachedProduct {
             recipe: recipe,
             imageUrl: imageUrl,
             isActive: isActive,
+            showOnPublicProfile: false,
             createdAt: createdAt,
             updatedAt: updatedAt
         )

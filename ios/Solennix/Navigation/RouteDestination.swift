@@ -114,6 +114,8 @@ struct RouteDestination: View {
             ChangePasswordView(apiClient: apiClient, authManager: authManager)
         case .businessSettings:
             BusinessSettingsView(apiClient: apiClient)
+        case .publicProfileSettings:
+            PublicProfileSettingsView(apiClient: apiClient)
         case .contractDefaults:
             ContractDefaultsView(apiClient: apiClient)
         case .pricing:

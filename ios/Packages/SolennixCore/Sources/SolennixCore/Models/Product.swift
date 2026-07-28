@@ -13,6 +13,9 @@ public struct Product: Codable, Identifiable, Sendable, Hashable {
     /// tocan eventos ya guardados.
     public var staffTeamId: String?
     public let isActive: Bool
+    /// When true, product appears on the organizer's public profile services list.
+    /// Free plan is capped at 3 active products with this flag (server-enforced).
+    public var showOnPublicProfile: Bool
     public let createdAt: String
     public let updatedAt: String
 
@@ -28,6 +31,7 @@ public struct Product: Codable, Identifiable, Sendable, Hashable {
         imageUrl: String? = nil,
         staffTeamId: String? = nil,
         isActive: Bool,
+        showOnPublicProfile: Bool = false,
         createdAt: String,
         updatedAt: String
     ) {
@@ -40,7 +44,48 @@ public struct Product: Codable, Identifiable, Sendable, Hashable {
         self.imageUrl = imageUrl
         self.staffTeamId = staffTeamId
         self.isActive = isActive
+        self.showOnPublicProfile = showOnPublicProfile
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+    }
+
+    // MARK: - Codable
+
+    private enum CodingKeys: String, CodingKey {
+        case id, userId, name, category, basePrice, recipe, imageUrl
+        case staffTeamId, isActive, showOnPublicProfile, createdAt, updatedAt
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        userId = try c.decode(String.self, forKey: .userId)
+        name = try c.decode(String.self, forKey: .name)
+        category = try c.decode(String.self, forKey: .category)
+        basePrice = try c.decode(Double.self, forKey: .basePrice)
+        recipe = try c.decodeIfPresent(AnyCodable.self, forKey: .recipe)
+        imageUrl = try c.decodeIfPresent(String.self, forKey: .imageUrl)
+        staffTeamId = try c.decodeIfPresent(String.self, forKey: .staffTeamId)
+        isActive = try c.decode(Bool.self, forKey: .isActive)
+        // Older payloads omit the field — default false (Free/safe).
+        showOnPublicProfile = try c.decodeIfPresent(Bool.self, forKey: .showOnPublicProfile) ?? false
+        createdAt = try c.decode(String.self, forKey: .createdAt)
+        updatedAt = try c.decode(String.self, forKey: .updatedAt)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(userId, forKey: .userId)
+        try c.encode(name, forKey: .name)
+        try c.encode(category, forKey: .category)
+        try c.encode(basePrice, forKey: .basePrice)
+        try c.encodeIfPresent(recipe, forKey: .recipe)
+        try c.encodeIfPresent(imageUrl, forKey: .imageUrl)
+        try c.encodeIfPresent(staffTeamId, forKey: .staffTeamId)
+        try c.encode(isActive, forKey: .isActive)
+        try c.encode(showOnPublicProfile, forKey: .showOnPublicProfile)
+        try c.encode(createdAt, forKey: .createdAt)
+        try c.encode(updatedAt, forKey: .updatedAt)
     }
 }

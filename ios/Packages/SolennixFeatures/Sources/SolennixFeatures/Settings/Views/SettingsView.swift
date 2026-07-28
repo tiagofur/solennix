@@ -253,6 +253,13 @@ public struct SettingsView: View {
 
             Divider()
 
+            NavigationLink(value: Route.publicProfileSettings) {
+                SettingsNavRow(title: SettingsStrings.actionPublicProfile, systemImage: "globe")
+            }
+            .buttonStyle(.plain)
+
+            Divider()
+
             NavigationLink(value: Route.contractDefaults) {
                 SettingsNavRow(title: SettingsStrings.actionContractDefaults, systemImage: "doc.text")
             }
@@ -397,6 +404,11 @@ public struct SettingsView: View {
     private var businessContent: some View {
         NavigationLink(value: Route.businessSettings) {
             Label(SettingsStrings.actionBusinessSettings, systemImage: "building.2")
+        }
+        .listRowSeparator(.hidden)
+
+        NavigationLink(value: Route.publicProfileSettings) {
+            Label(SettingsStrings.actionPublicProfile, systemImage: "globe")
         }
         .listRowSeparator(.hidden)
 

@@ -226,6 +226,15 @@ public enum Endpoint {
     public static let updateProfile = "/users/me"
     public static let deleteAccount = "/users/me"
 
+    // MARK: - Public Profile (organizer settings)
+
+    public static let myPublicProfile = "/users/me/public-profile"
+    public static let myPublicProfilePortfolio = "/users/me/public-profile/portfolio"
+
+    public static func myPublicProfilePortfolioItem(_ id: String) -> String {
+        "/users/me/public-profile/portfolio/\(id)"
+    }
+
     // MARK: - Subscriptions
 
     public static let subscriptionStatus = "/subscriptions/status"
