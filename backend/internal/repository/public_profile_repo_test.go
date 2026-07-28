@@ -211,3 +211,78 @@ func TestPublicProfileRepo_Upsert_SavesExplicitValues(t *testing.T) {
 	}
 	_ = uuid.Nil // keep uuid import used even if signature expands later
 }
+
+func TestPublicProfileRepo_PortfolioCRUD_MaxSix(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userID := seedUser(t, pool, "portfolio.crud@test.dev")
+	repo := NewPublicProfileRepo(pool)
+	ctx := context.Background()
+
+	// Create 6 items with sort_order 0–5.
+	for i := 0; i < MaxPublicPortfolioItems; i++ {
+		item := &models.OrganizerPublicPortfolioItem{
+			UserID:    userID,
+			Title:     "Item",
+			PhotoURL:  "https://cdn.example/p.jpg",
+			SortOrder: i,
+		}
+		if err := repo.CreatePortfolioItem(ctx, item); err != nil {
+			t.Fatalf("CreatePortfolioItem(%d) error = %v", i, err)
+		}
+		if item.ID == uuid.Nil {
+			t.Fatalf("CreatePortfolioItem(%d) did not set ID", i)
+		}
+	}
+
+	count, err := repo.CountPortfolioByUserID(ctx, userID)
+	if err != nil {
+		t.Fatalf("CountPortfolioByUserID error = %v", err)
+	}
+	if count != 6 {
+		t.Fatalf("count = %d, want 6", count)
+	}
+
+	// 7th must fail with ErrPortfolioFull.
+	seventh := &models.OrganizerPublicPortfolioItem{
+		UserID: userID, Title: "Too many", PhotoURL: "https://x", SortOrder: 0,
+	}
+	if err := repo.CreatePortfolioItem(ctx, seventh); !errors.Is(err, ErrPortfolioFull) {
+		t.Fatalf("7th create err = %v, want ErrPortfolioFull", err)
+	}
+
+	// List returns ≤6 ordered.
+	items, err := repo.ListPortfolioByUserID(ctx, userID)
+	if err != nil {
+		t.Fatalf("ListPortfolioByUserID error = %v", err)
+	}
+	if len(items) != 6 {
+		t.Fatalf("list len = %d, want 6", len(items))
+	}
+	for i, it := range items {
+		if it.SortOrder != i {
+			t.Errorf("items[%d].SortOrder = %d, want %d", i, it.SortOrder, i)
+		}
+	}
+
+	// Update + delete.
+	items[0].Title = "Updated"
+	if err := repo.UpdatePortfolioItem(ctx, &items[0]); err != nil {
+		t.Fatalf("UpdatePortfolioItem error = %v", err)
+	}
+	got, err := repo.GetPortfolioItem(ctx, userID, items[0].ID)
+	if err != nil {
+		t.Fatalf("GetPortfolioItem error = %v", err)
+	}
+	if got.Title != "Updated" {
+		t.Errorf("Title = %q, want Updated", got.Title)
+	}
+	if err := repo.DeletePortfolioItem(ctx, userID, items[0].ID); err != nil {
+		t.Fatalf("DeletePortfolioItem error = %v", err)
+	}
+	if _, err := repo.GetPortfolioItem(ctx, userID, items[0].ID); !errors.Is(err, ErrPortfolioItemNotFound) {
+		t.Fatalf("after delete Get err = %v, want ErrPortfolioItemNotFound", err)
+	}
+}

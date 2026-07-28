@@ -34,11 +34,12 @@ func isPubliclyVisibleAccount(user *models.User) bool {
 // projection (≤3 services, no reviews/portfolio/socials), Pro+ honor section
 // toggles. Prices are omitted unless the profile has show_prices=true.
 type PublicProfileHandler struct {
-	userRepo    publicProfileUserRepo
-	profileRepo publicProfileConfigRepo
-	productRepo publicProfileProductRepo
-	reviewRepo  publicProfileReviewRepo
-	frontendURL string
+	userRepo      publicProfileUserRepo
+	profileRepo   publicProfileConfigRepo
+	productRepo   publicProfileProductRepo
+	reviewRepo    publicProfileReviewRepo
+	portfolioRepo publicProfilePortfolioRepo
+	frontendURL   string
 }
 
 // Local interface slices of the concrete repos, so the handler is unit-testable
@@ -56,6 +57,9 @@ type publicProfileProductRepo interface {
 type publicProfileReviewRepo interface {
 	ListPublicByOrganizerSlug(ctx context.Context, slug string) ([]*models.EventReview, error)
 }
+type publicProfilePortfolioRepo interface {
+	ListPortfolioByUserID(ctx context.Context, userID uuid.UUID) ([]models.OrganizerPublicPortfolioItem, error)
+}
 
 // NewPublicProfileHandler assembles the handler with its repository deps.
 func NewPublicProfileHandler(
@@ -66,11 +70,12 @@ func NewPublicProfileHandler(
 	frontendURL string,
 ) *PublicProfileHandler {
 	return &PublicProfileHandler{
-		userRepo:    userRepo,
-		profileRepo: profileRepo,
-		productRepo: productRepo,
-		reviewRepo:  reviewRepo,
-		frontendURL: strings.TrimSuffix(frontendURL, "/"),
+		userRepo:      userRepo,
+		profileRepo:   profileRepo,
+		productRepo:   productRepo,
+		reviewRepo:    reviewRepo,
+		portfolioRepo: profileRepo, // *PublicProfileRepo implements portfolio list
+		frontendURL:   strings.TrimSuffix(frontendURL, "/"),
 	}
 }
 
@@ -151,7 +156,11 @@ func (h *PublicProfileHandler) buildProjection(ctx context.Context, user *models
 		dto.Reviews = h.projectReviews(ctx, user.PublicSlug)
 	}
 
-	// Portfolio: Pro+ AND toggle on. No portfolio repo yet (PR5); left omitted.
+	// Portfolio: Pro+ AND show_portfolio. Free omits the key entirely (spec).
+	if fullPlan && profile.ShowPortfolio {
+		dto.Portfolio = h.projectPortfolio(ctx, user.ID)
+	}
+
 	// Socials: Pro+ only.
 	if fullPlan {
 		dto.Socials = profile.Socials
@@ -193,6 +202,31 @@ func (h *PublicProfileHandler) projectReviews(ctx context.Context, slug *string)
 	out := make([]models.PublicReview, 0, len(raw))
 	for _, er := range raw {
 		out = append(out, toPublicReview(er))
+	}
+	return out
+}
+
+func (h *PublicProfileHandler) projectPortfolio(ctx context.Context, userID uuid.UUID) []models.PublicPortfolioItem {
+	if h.portfolioRepo == nil {
+		return nil
+	}
+	raw, err := h.portfolioRepo.ListPortfolioByUserID(ctx, userID)
+	if err != nil || len(raw) == 0 {
+		return nil
+	}
+	if len(raw) > 6 {
+		raw = raw[:6]
+	}
+	out := make([]models.PublicPortfolioItem, 0, len(raw))
+	for _, it := range raw {
+		out = append(out, models.PublicPortfolioItem{
+			ID:           it.ID,
+			Title:        it.Title,
+			EventDate:    it.EventDate,
+			PhotoURL:     it.PhotoURL,
+			ThumbnailURL: it.ThumbnailURL,
+			SortOrder:    it.SortOrder,
+		})
 	}
 	return out
 }

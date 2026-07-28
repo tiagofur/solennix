@@ -331,3 +331,131 @@ func TestGetPublicProfile_BodyHasNoPII(t *testing.T) {
 		}
 	}
 }
+
+// --- PR5: public aggregate portfolio projection ---
+
+type fakePortfolioRepo struct {
+	items []models.OrganizerPublicPortfolioItem
+	err   error
+}
+
+func (f *fakePortfolioRepo) ListPortfolioByUserID(ctx context.Context, userID uuid.UUID) ([]models.OrganizerPublicPortfolioItem, error) {
+	return f.items, f.err
+}
+
+func TestGetPublicProfile_Free_OmitsPortfolioEvenWhenItemsExist(t *testing.T) {
+	uid := uuid.New()
+	slug := "free-port"
+	h := &PublicProfileHandler{
+		userRepo:    &fakeUserRepo{user: &models.User{ID: uid, PublicSlug: &slug, Plan: "basic", AccountStatus: "active"}},
+		profileRepo: &fakeProfileRepo{profile: &models.OrganizerPublicProfile{UserID: uid, IsEnabled: true, ShowPortfolio: true}},
+		productRepo: &fakeProductRepo{},
+		reviewRepo:  &fakeReviewRepo{},
+		portfolioRepo: &fakePortfolioRepo{items: []models.OrganizerPublicPortfolioItem{
+			{ID: uuid.New(), UserID: uid, Title: "Secret", PhotoURL: "https://x", SortOrder: 0},
+		}},
+	}
+	req := httptest.NewRequest(http.MethodGet, "/api/public/organizers/free-port", nil)
+	req.SetPathValue("slug", slug)
+	rr := httptest.NewRecorder()
+	h.GetPublicProfile(rr, req)
+
+	var resp struct {
+		Data models.PublicOrganizerProfile `json:"data"`
+	}
+	_ = json.Unmarshal(rr.Body.Bytes(), &resp)
+	if resp.Data.Portfolio != nil {
+		t.Errorf("Free must omit portfolio; got %+v", resp.Data.Portfolio)
+	}
+}
+
+func TestGetPublicProfile_Pro_OmitsPortfolioWhenToggleOff(t *testing.T) {
+	uid := uuid.New()
+	slug := "pro-hide-port"
+	h := &PublicProfileHandler{
+		userRepo:    &fakeUserRepo{user: &models.User{ID: uid, PublicSlug: &slug, Plan: "pro", AccountStatus: "active"}},
+		profileRepo: &fakeProfileRepo{profile: &models.OrganizerPublicProfile{UserID: uid, IsEnabled: true, ShowPortfolio: false}},
+		productRepo: &fakeProductRepo{},
+		reviewRepo:  &fakeReviewRepo{},
+		portfolioRepo: &fakePortfolioRepo{items: []models.OrganizerPublicPortfolioItem{
+			{ID: uuid.New(), UserID: uid, Title: "Hidden", PhotoURL: "https://x", SortOrder: 0},
+		}},
+	}
+	req := httptest.NewRequest(http.MethodGet, "/api/public/organizers/pro-hide-port", nil)
+	req.SetPathValue("slug", slug)
+	rr := httptest.NewRecorder()
+	h.GetPublicProfile(rr, req)
+
+	var resp struct {
+		Data models.PublicOrganizerProfile `json:"data"`
+	}
+	_ = json.Unmarshal(rr.Body.Bytes(), &resp)
+	if resp.Data.Portfolio != nil {
+		t.Errorf("show_portfolio=false must omit portfolio; got %+v", resp.Data.Portfolio)
+	}
+}
+
+func TestGetPublicProfile_Pro_EmbedsPortfolioWhenEnabled(t *testing.T) {
+	uid := uuid.New()
+	slug := "pro-port"
+	itemID := uuid.New()
+	date := "2024-05-01"
+	thumb := "https://cdn.example/t.jpg"
+	h := &PublicProfileHandler{
+		userRepo:    &fakeUserRepo{user: &models.User{ID: uid, PublicSlug: &slug, Plan: "pro", AccountStatus: "active"}},
+		profileRepo: &fakeProfileRepo{profile: &models.OrganizerPublicProfile{UserID: uid, IsEnabled: true, ShowPortfolio: true}},
+		productRepo: &fakeProductRepo{},
+		reviewRepo:  &fakeReviewRepo{},
+		portfolioRepo: &fakePortfolioRepo{items: []models.OrganizerPublicPortfolioItem{
+			{ID: itemID, UserID: uid, Title: "Wedding", EventDate: &date, PhotoURL: "https://cdn.example/p.jpg", ThumbnailURL: &thumb, SortOrder: 2},
+			// extra items beyond 6 should be capped (simulate repo returning more)
+			{ID: uuid.New(), UserID: uid, Title: "2", PhotoURL: "https://2", SortOrder: 0},
+			{ID: uuid.New(), UserID: uid, Title: "3", PhotoURL: "https://3", SortOrder: 1},
+			{ID: uuid.New(), UserID: uid, Title: "4", PhotoURL: "https://4", SortOrder: 3},
+			{ID: uuid.New(), UserID: uid, Title: "5", PhotoURL: "https://5", SortOrder: 4},
+			{ID: uuid.New(), UserID: uid, Title: "6", PhotoURL: "https://6", SortOrder: 5},
+			{ID: uuid.New(), UserID: uid, Title: "7-should-cap", PhotoURL: "https://7", SortOrder: 0},
+		}},
+	}
+	req := httptest.NewRequest(http.MethodGet, "/api/public/organizers/pro-port", nil)
+	req.SetPathValue("slug", slug)
+	rr := httptest.NewRecorder()
+	h.GetPublicProfile(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200; body=%s", rr.Code, rr.Body.String())
+	}
+	var resp struct {
+		Data models.PublicOrganizerProfile `json:"data"`
+	}
+	if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if len(resp.Data.Portfolio) == 0 {
+		t.Fatal("expected portfolio items for Pro+ with show_portfolio")
+	}
+	if len(resp.Data.Portfolio) > 6 {
+		t.Errorf("portfolio len = %d, want ≤6", len(resp.Data.Portfolio))
+	}
+	// Public projection must not leak user_id/event_id
+	body := rr.Body.String()
+	if strings.Contains(body, "user_id") || strings.Contains(body, "event_id") {
+		t.Errorf("public portfolio must not include user_id/event_id; body=%s", body)
+	}
+	// First public item shape
+	found := false
+	for _, p := range resp.Data.Portfolio {
+		if p.ID == itemID {
+			found = true
+			if p.Title != "Wedding" || p.PhotoURL == "" || p.SortOrder != 2 {
+				t.Errorf("item = %+v", p)
+			}
+			if p.EventDate == nil || *p.EventDate != date {
+				t.Errorf("EventDate = %v, want %s", p.EventDate, date)
+			}
+		}
+	}
+	if !found {
+		t.Errorf("expected item %s in portfolio", itemID)
+	}
+}
