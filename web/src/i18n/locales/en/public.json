@@ -417,5 +417,24 @@
       "appStore": "iOS — App Store",
       "playStore": "Android — Google Play"
     }
+  },
+  "profile": {
+    "loading": "Loading profile...",
+    "fallback_name": "Organizer",
+    "not_found_title": "Profile not available",
+    "not_found_desc": "This public profile does not exist or is not currently published.",
+    "back_home": "Back to Solennix",
+    "contact_cta": "Contact",
+    "services_title": "Services",
+    "reviews_title": "Reviews",
+    "portfolio_title": "Portfolio",
+    "organizer_response": "Organizer response",
+    "rating_aria": "{{rating}} out of 5 stars",
+    "powered_by": "Powered by",
+    "theme_light": "Switch to light mode",
+    "theme_dark": "Switch to dark mode",
+    "seo_title": "{{name}} | Solennix",
+    "seo_title_with_city": "{{name}} · {{city}} | Solennix",
+    "seo_description": "Public professional profile of {{name}}{{location}} on Solennix."
   }
 }

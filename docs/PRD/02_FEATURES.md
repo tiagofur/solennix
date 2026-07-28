@@ -721,62 +721,52 @@ Dashboard administrativo exclusivo para el equipo de Solennix. Protegido por mid
 
 ---
 
-### 16. Perfil Profesional Público [Web] (⬜ Futuro)
+### 16. Perfil Profesional Público [Web] (✅ Implementado)
 
-> [!info] Feature planificada — primera etapa rumbo a marketplace
-> Perfil público del organizador para que clientes potenciales vean sus servicios, productos y eventos pasados. Web-first; iOS/Android pendiente.
+> [!success] Feature implementada (Issue #787, PRs #1049–#1055 chain) — primera etapa rumbo a marketplace
+> Perfil público opt-in del organizador en `/u/:slug`. Web-first; **UI móvil (iOS/Android) fuera de scope v1** (modelos aditivos opcionales únicamente).
 
 **Concepto:**
-- El organizador puede tener un perfil público (`solennix.com/u/username`) que muestra sus servicios
-- Los **Productos del catálogo** son la base de "servicios ofrecidos" — no se crea una entidad nueva
-- Cada producto tiene un checkbox "Mostrar en perfil público" (solo productos `is_active=true` pueden ser públicos)
-- Galería de eventos pasados (máximo 6) con fotos seleccionables por el organizador
-- Datos de contacto: teléfono, ciudad, redes sociales
-- Todo es opt-in: el perfil NO es público por defecto; el usuario debe activarlo
+- El organizador activa un perfil público en Settings → Perfil público (`/u/{slug}`)
+- Los **Productos del catálogo** son la base de "servicios ofrecidos" — flag `show_on_public_profile` (default false); solo `is_active=true`
+- Portafolio curado (máx 6 ítems) Pro+; reseñas sanitizadas Pro+ (`display_name` iniciales, sin PII de cliente)
+- Ubicación **estructurada** (city / region / country); lat/lng reservado para directorio futuro
+- Contacto único (phone | whatsapp | email | url) + socials (Pro+)
+- Todo es opt-in: el perfil NO es público por defecto (`is_enabled=false`)
 
-**Pantallas a crear (Web):**
+**Pantallas (Web):**
 | Pantalla | Descripción |
 |----------|-------------|
-| `/profile` (configuración) | Datos personales: teléfono, ciudad, redes sociales, toggle "hacer perfil público" |
-| `/profile/events` (selección) | Elegir qué eventos (máx 6) y fotos mostrar en el perfil |
-| `/u/:username` (pública) | Página pública que ven los clientes: header + productos públicos + eventos seleccionados |
+| Settings → `public-profile` | Enable, slug + share/copy, headline, location, contact, `show_prices`, toggles Pro, portfolio manage |
+| ProductForm | Checkbox "Mostrar en perfil público" + cap Free máx 3 |
+| `/u/:slug` (shell-less) | Página pública: header, CTA contacto, servicios, reseñas, portafolio (secciones solo si hay data) |
 
-**Cambios Backend:**
-| Cambio | Descripción |
-|--------|-------------|
-| Migration | `ALTER TABLE products ADD COLUMN public_profile BOOLEAN DEFAULT false;` |
-| Handler | Nuevo `GET /api/public/profile/:username` (público, sin auth) |
-| Handler | `PUT /api/users/me` actualiza campos extra del perfil |
-| Model | `PublicProfileView` con productos públicos + eventos seleccionados + datos de contacto |
-
-**Cambios Web:**
-| Archivo | Cambio |
-|--------|--------|
-| `types/entities.ts` | Añadir `public_profile?: boolean` a Product |
-| `services/productService.ts` | Actualizar create/update para incluir flag |
-| `pages/Products/ProductForm.tsx` | Checkbox "Mostrar en perfil público" |
-| `pages/Products/ProductList.tsx` | Indicador visual (icono) de productos públicos |
-| `pages/Profile/UserProfile.tsx` (NUEVA) | Configurar datos personales + toggle público |
-| `pages/Profile/EventSelection.tsx` (NUEVA) | Selector de eventos visibles (máx 6) |
-| `pages/PublicProfile/PublicProfilePage.tsx` (NUEVA) | Página pública read-only |
+**API (implementada):**
+| Método | Path | Notas |
+|--------|------|-------|
+| GET | `/api/public/organizers/{slug}` | Aggregate plan-aware; 404 si disabled/missing; rate-limited |
+| GET | `/api/public/organizers/{slug}/reviews` | Siempre `PublicReview[]`; Free → `[]` |
+| GET/PUT | `/api/users/me/public-profile` | Config auth; Free rechaza toggles Pro |
+| CRUD | `/api/users/me/public-profile/portfolio[/{id}]` | Pro+ only, máx 6 |
+| Product CRUD | existing | `show_on_public_profile`; Free máx 3 flags true |
 
 **Reglas de privacidad (NO-NEGOCIABLE):**
-- Datos del cliente (nombre, contacto, montos) NUNCA se exponen en el perfil
-- Eventos solo muestran: foto, tipo de servicio, fecha genérica ("Boda en Hacienda Los Arcos")
-- Sin precios en el perfil público (solo catálogo visual)
-- El organizador controla 100% qué aparece
+- Datos del cliente (nombre completo, contacto, montos de eventos, ids internos) NUNCA se exponen
+- Reseñas públicas: `display_name` server-computed (iniciales o `"Verified client"`), sin `client_id` / `event_id` / email
+- Portafolio: solo campos públicos (title, date, photo URLs)
+- El organizador controla 100% qué aparece (toggles + flags + enable)
 
-**Tier gating (pendiente decisión):**
-- **Gratis**: perfil básico o sin perfil
-- **Pro**: perfil público completo
-- **Business**: destacado en directorio (futuro)
+**Precios (`show_prices`):**
+- Default **false** — no se emite `base_price` en el aggregate
+- Cuando el organizador activa `show_prices=true`, `base_price` **puede** aparecer en servicios públicos
+- Free **puede** setear `show_prices` (sobre su cap de ≤3 servicios)
 
-**Estimación de esfuerzo:**
-- Backend: ~4-6h (migración + endpoint público)
-- Web: ~12-16h (3 pantallas + modificaciones)
-- **Total**: ~16-22 horas
+**Tier gating (server-side):**
+- **Gratis (`public_profile_basic`)**: perfil básico — logo/name, headline, location, contact, ≤3 servicios; **omite** reviews, portfolio, socials
+- **Pro+ (`public_profile_full`)**: reseñas, portfolio (≤6), socials, servicios sin cap Free, honra toggles de sección
+- **Business**: mismo full; destacado en directorio = futuro (no-goal v1)
 
-**Estado:** Planificado — documentado 2026-06-30. No implementado aún.
+**Estado:** Implementado en web + backend (2026-07). iOS/Android UI pendiente (excepción documentada).
 
 ---
 

@@ -25,16 +25,19 @@ status: active
 **Fecha:** Junio 2026
 **Version:** 1.10
 
-> [!success] 2026-06-30 — Perfil Profesional Público planificado (feature futura)
-> Se diseñó y documentó la feature de Perfiles Profesionales Públicos como primera etapa rumbo a un marketplace de servicios de eventos.
-> - **Concepto:** Perfil público (`solennix.com/u/username`) que muestra productos del catálogo (con checkbox "mostrar en perfil público" + solo activos) + eventos pasados seleccionables (máx 6) + datos de contacto.
-> - **Stack:** Web-first; iOS/Android pendiente.
-> - **Cambios Backend:** Migration `public_profile` en `products` + endpoint público `GET /api/public/profile/:username`.
-> - **Cambios Web:** 3 pantallas nuevas (UserProfile configuración, EventSelection, PublicProfilePage) + modificaciones en ProductForm/ProductList.
-> - **Privacidad:** Datos de clientes NUNCA expuestos; organizador controla 100% qué aparece; perfil NO es público por defecto (opt-in).
-> - **Estimación:** ~16-22 horas (4-6h backend + 12-16h web).
-> - **Documentado en:** `docs/PRD/02_FEATURES.md` §16 (Perfil Profesional Público).
-> - **Estado:** Planificado, no implementado aún.
+> [!success] 2026-07-28 — Perfil Profesional Público implementado (Issue #787, chain PR1–PR6)
+> Perfil público opt-in del organizador en `/u/:slug` con aggregate plan-aware y Settings de configuración. **Web + Backend completos; UI móvil fuera de scope v1.**
+> - **API pública:** `GET /api/public/organizers/{slug}` (404 si disabled/missing) + `GET .../reviews` sanitizado (`PublicReview`, Free → `[]`).
+> - **API auth:** `GET/PUT /api/users/me/public-profile` (slug, location estructurada, contact, `show_prices` default false, toggles); portfolio CRUD Pro+ máx 6.
+> - **Productos:** `show_on_public_profile` + Free máx 3; Pro+ sin cap Free.
+> - **Plan gating:** Free basic (omite reviews/portfolio/socials); Pro+ full con toggles. Server-side only.
+> - **Web:** Settings tab `public-profile`, ProductForm checkbox, página shell-less `PublicProfilePage` con tokens Landing (light/dark).
+> - **Privacidad:** sin PII de cliente; `display_name` server-computed; precios solo si `show_prices=true`.
+> - **Documentado en:** `docs/PRD/02_FEATURES.md` §16.
+> - **Estado:** ✅ Implementado (web/backend). iOS/Android UI pendiente.
+
+> [!success] 2026-06-30 — Perfil Profesional Público planificado (histórico)
+> Diseño inicial documentado; supersedido por la implementación 2026-07 (Issue #787).
 
 > [!success] 2026-07-09 — Optimización de Layouts para iPad y macOS (ios-layout-optimizations, COMPLETO)
 > Optimización de la navegación, pantallas de detalle y formularios de registro en dispositivos iPad y macOS Catalyst para cumplir con los estándares de diseño nativos de Apple (HIG) y maximizar el uso de pantalla. **Issue #788.**
