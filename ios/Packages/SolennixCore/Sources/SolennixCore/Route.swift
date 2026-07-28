@@ -70,6 +70,7 @@ public enum Route: Hashable, Codable {
     case editProfile
     case changePassword
     case businessSettings
+    case publicProfileSettings
     case contractDefaults
     case pricing
     case subscription

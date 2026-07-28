@@ -30,7 +30,9 @@ data class User(
     val plan: Plan = Plan.BASIC,
     @SerialName("created_at") val createdAt: String = "",
     @SerialName("updated_at") val updatedAt: String = "",
-    @SerialName("default_currency") val defaultCurrency: String? = "MXN"
+    @SerialName("default_currency") val defaultCurrency: String? = "MXN",
+    /** Opt-in public profile URL segment (`/u/{publicSlug}`). */
+    @SerialName("public_slug") val publicSlug: String? = null
 ) {
     val defaultCurrencyCode: String get() = defaultCurrency ?: "MXN"
 }
@@ -52,5 +54,8 @@ enum class Plan {
     @SerialName("basic") BASIC,
     @SerialName("pro") PRO,
     @SerialName("business") BUSINESS,
-    @SerialName("premium") PREMIUM // legacy — treat as paid tier
+    @SerialName("premium") PREMIUM; // legacy — treat as paid tier
+
+    /** True for any paid tier (pro, business, legacy premium). */
+    val isPaid: Boolean get() = this != BASIC
 }

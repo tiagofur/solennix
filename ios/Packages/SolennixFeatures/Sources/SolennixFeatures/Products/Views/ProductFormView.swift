@@ -371,6 +371,27 @@ public struct ProductFormView: View {
                 }
             }
             .solennixRow()
+
+            // Public profile toggle (Free max 3)
+            Toggle(isOn: Binding(
+                get: { viewModel.showOnPublicProfile },
+                set: { newValue in
+                    if newValue && viewModel.publicProfileCapReached { return }
+                    viewModel.showOnPublicProfile = newValue
+                }
+            )) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(ProductStrings.showOnPublicProfile)
+                        .foregroundStyle(SolennixColors.text)
+                    if viewModel.publicProfileCapReached {
+                        Text(ProductStrings.publicProfileCapHint)
+                            .font(.caption)
+                            .foregroundStyle(SolennixColors.textTertiary)
+                    }
+                }
+            }
+            .disabled(viewModel.publicProfileCapReached && !viewModel.showOnPublicProfile)
+            .solennixRow()
         } header: {
             Text(ProductStrings.productInfo)
         }

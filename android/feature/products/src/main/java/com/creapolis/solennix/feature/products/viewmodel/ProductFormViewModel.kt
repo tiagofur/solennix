@@ -72,6 +72,10 @@ class ProductFormViewModel @Inject constructor(
     var basePrice by mutableStateOf("")
     var imageUrl by mutableStateOf("")
     var isActive by mutableStateOf(true)
+    /** Show this product on the organizer public profile. */
+    var showOnPublicProfile by mutableStateOf(false)
+    /** Free plan: at most 3 active products with showOnPublicProfile=true. */
+    var publicProfileCapReached by mutableStateOf(false)
 
     // Ola 3 — equipo opcional. Al agregar el producto a un evento, el cliente
     // expande los miembros en asignaciones de staff.
@@ -124,6 +128,11 @@ class ProductFormViewModel @Inject constructor(
                 }
                 allInventoryItems = inventoryRepository.getInventoryItems().first()
 
+                // Prefer network-synced products for Free public-profile cap accuracy.
+                try {
+                    productRepository.syncProducts()
+                } catch (_: Exception) { }
+
                 // Load existing categories from products
                 val products = productRepository.getProducts().first()
                 existingCategories = products.map { it.category }.distinct().sorted()
@@ -144,6 +153,13 @@ class ProductFormViewModel @Inject constructor(
                     val plan = authManager.currentUser.value?.plan ?: Plan.BASIC
                     limitCheckResult = planLimitsManager.canCreateProduct(plan)
                 }
+
+                // Free-plan client hint: at most 3 active products with show_on_public_profile.
+                val plan = authManager.currentUser.value?.plan ?: Plan.BASIC
+                val publicCount = products.count {
+                    it.isActive && it.showOnPublicProfile && it.id != productId
+                }
+                publicProfileCapReached = !plan.isPaid && publicCount >= 3 && !showOnPublicProfile
             } catch (e: Exception) {
                 errorMessage = ProductStrings.loadDataError(e.message)
             } finally {
@@ -167,6 +183,7 @@ class ProductFormViewModel @Inject constructor(
                 basePrice = product.basePrice.toString()
                 imageUrl = product.imageUrl ?: ""
                 isActive = product.isActive
+                showOnPublicProfile = product.showOnPublicProfile
                 staffTeamId = product.staffTeamId
             }
 
@@ -238,6 +255,7 @@ class ProductFormViewModel @Inject constructor(
                     recipe = null,
                     imageUrl = imageUrl.takeIf { it.isNotBlank() },
                     isActive = isActive,
+                    showOnPublicProfile = showOnPublicProfile,
                     staffTeamId = staffTeamId,
                     createdAt = null,
                     updatedAt = null

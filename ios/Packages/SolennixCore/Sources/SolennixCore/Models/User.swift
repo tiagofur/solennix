@@ -56,6 +56,8 @@ public struct User: Codable, Identifiable, Sendable, Hashable {
     public let createdAt: String
     public let updatedAt: String
     public var defaultCurrency: String?
+    /// Opt-in public profile URL segment (`/u/{publicSlug}`).
+    public var publicSlug: String?
 
     // MARK: - Custom Init & Codable
 
@@ -86,7 +88,8 @@ public struct User: Codable, Identifiable, Sendable, Hashable {
         accountStatus: String? = nil,
         createdAt: String,
         updatedAt: String,
-        defaultCurrency: String? = "MXN"
+        defaultCurrency: String? = "MXN",
+        publicSlug: String? = nil
     ) {
         self.id = id
         self.email = email
@@ -115,5 +118,6 @@ public struct User: Codable, Identifiable, Sendable, Hashable {
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.defaultCurrency = defaultCurrency ?? "MXN"
+        self.publicSlug = publicSlug
     }
 }

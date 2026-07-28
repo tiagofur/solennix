@@ -26,6 +26,7 @@ enum SettingsStrings {
     static var tabCalendarSync: String { FeatureL10n.text("settings.tab.calendar_sync", "Sincronizar calendario") }
     static var actionManagePlan: String { FeatureL10n.text("settings.action.manage_plan", "Gestionar plan") }
     static var actionBusinessSettings: String { FeatureL10n.text("settings.action.business_settings", "Ajustes del negocio") }
+    static var actionPublicProfile: String { FeatureL10n.text("settings.action.public_profile", "Perfil público") }
     static var actionContractDefaults: String { FeatureL10n.text("settings.action.contract_defaults", "Valores del contrato") }
     static var actionReviews: String { FeatureL10n.text("settings.action.reviews", "Reseñas de clientes") }
     static var actionHelp: String { FeatureL10n.text("settings.action.help", "Centro de ayuda") }

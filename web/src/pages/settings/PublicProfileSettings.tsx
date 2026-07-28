@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import clsx from "clsx";
 import {
   Copy,
   Check,
@@ -11,6 +12,7 @@ import {
   Package,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/Button";
 import { getAssetUrl } from "@/lib/api";
 import { publicProfileConfigService } from "@/services/publicProfileConfigService";
 import type {
@@ -29,6 +31,9 @@ const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const CONTACT_TYPES = ["phone", "whatsapp", "email", "url"] as const;
 type ContactType = (typeof CONTACT_TYPES)[number];
+
+const fieldClass =
+  "w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm text-text focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all disabled:opacity-50";
 
 const DEFAULT_PROFILE: OrganizerPublicProfile = {
   user_id: "",
@@ -397,54 +402,56 @@ export default function PublicProfileSettings() {
   const freeAtLimit = !paid && selectedServiceIds.size >= FREE_SERVICES_MAX;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <header>
-        <h2 className="text-xl font-bold text-text flex items-center gap-2">
-          <Globe className="h-5 w-5" />
+        <h3 className="text-lg font-bold text-text flex items-center gap-2">
+          <Globe className="h-5 w-5 text-primary" aria-hidden="true" />
           {t("publicProfile.title")}
-        </h2>
+        </h3>
         <p className="text-sm text-text-secondary mt-1">
           {t("publicProfile.description")}
         </p>
       </header>
 
       {/* Enable toggle */}
-      <label className="flex items-center gap-3 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={profile.is_enabled}
-          onChange={(e) =>
-            setProfile({ ...profile, is_enabled: e.target.checked })
-          }
-          className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-          data-testid="pp-enabled"
-        />
-        <span className="text-sm font-medium text-text">
+      <div className="space-y-3">
+        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">
           {t("publicProfile.enable")}
-        </span>
-      </label>
+        </p>
+        <ToggleRow
+          label={t("publicProfile.enable")}
+          checked={profile.is_enabled}
+          onChange={(v) => setProfile({ ...profile, is_enabled: v })}
+          testId="pp-enabled"
+        />
+      </div>
 
       {/* Slug + share */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-text" htmlFor="pp-slug">
+      <div className="space-y-3">
+        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">
+          {t("publicProfile.slug")}
+        </p>
+        <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border space-y-3">
+        <label className="text-sm font-bold text-text" htmlFor="pp-slug">
           {t("publicProfile.slug")}
         </label>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             id="pp-slug"
             type="text"
             value={slug}
             onChange={(e) => handleSlugChange(e.target.value)}
             placeholder="mi-negocio"
-            className="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary focus:border-primary"
+            className={clsx(fieldClass, "flex-1")}
             data-testid="pp-slug"
           />
           {shareUrl && (
-            <>
-              <button
+            <div className="flex gap-2 shrink-0">
+              <Button
                 type="button"
+                variant="outline"
+                size="md"
                 onClick={handleCopy}
-                className="px-3 py-2 rounded-lg border border-border bg-surface text-text hover:bg-surface-alt text-sm flex items-center gap-1.5"
                 data-testid="pp-copy"
                 title={t("publicProfile.copyUrl")}
               >
@@ -456,17 +463,17 @@ export default function PublicProfileSettings() {
                 <span className="hidden sm:inline">
                   {copied ? t("publicProfile.copied") : t("publicProfile.copy")}
                 </span>
-              </button>
+              </Button>
               <a
                 href={shareUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-3 py-2 rounded-lg border border-border bg-surface text-text hover:bg-surface-alt text-sm flex items-center gap-1.5"
+                className="inline-flex items-center justify-center px-5 py-2.5 text-sm rounded-xl border border-border text-text hover:bg-surface-alt transition-all"
                 title={t("publicProfile.preview")}
               >
                 <ExternalLink className="h-4 w-4" />
               </a>
-            </>
+            </div>
           )}
         </div>
         {slugError && (
@@ -475,40 +482,45 @@ export default function PublicProfileSettings() {
           </p>
         )}
         {shareUrl && (
-          <p className="text-xs text-text-secondary" data-testid="pp-share-url">
+          <p className="text-xs text-text-secondary break-all" data-testid="pp-share-url">
             {shareUrl}
           </p>
         )}
+        </div>
       </div>
 
       {/* Headline */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-text" htmlFor="pp-headline">
+      <div className="space-y-3">
+        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">
           {t("publicProfile.headline")}
-        </label>
+        </p>
+        <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border">
         <input
           id="pp-headline"
           type="text"
           value={headline}
           onChange={(e) => setHeadline(e.target.value)}
           maxLength={200}
-          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
+          className={fieldClass}
           data-testid="pp-headline"
+          placeholder={t("publicProfile.headline")}
         />
+        </div>
       </div>
 
       {/* Location */}
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-medium text-text">
+      <div className="space-y-3">
+        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">
           {t("publicProfile.location")}
-        </legend>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        </p>
+        <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <input
             type="text"
             value={city}
             onChange={(e) => setCity(e.target.value)}
             placeholder={t("publicProfile.city")}
-            className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
+            className={fieldClass}
             data-testid="pp-city"
           />
           <input
@@ -516,28 +528,30 @@ export default function PublicProfileSettings() {
             value={region}
             onChange={(e) => setRegion(e.target.value)}
             placeholder={t("publicProfile.region")}
-            className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
+            className={fieldClass}
           />
           <input
             type="text"
             value={country}
             onChange={(e) => setCountry(e.target.value)}
             placeholder={t("publicProfile.country")}
-            className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
+            className={fieldClass}
           />
         </div>
-      </fieldset>
+        </div>
+      </div>
 
       {/* Contact */}
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-medium text-text">
+      <div className="space-y-3">
+        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">
           {t("publicProfile.contact")}
-        </legend>
-        <div className="flex gap-2">
+        </p>
+        <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border">
+        <div className="flex flex-col sm:flex-row gap-3">
           <select
             value={contactType}
             onChange={(e) => setContactType(e.target.value as ContactType)}
-            className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
+            className={clsx(fieldClass, "sm:w-44 shrink-0")}
             data-testid="pp-contact-type"
           >
             {CONTACT_TYPES.map((ct) => (
@@ -550,14 +564,18 @@ export default function PublicProfileSettings() {
             type="text"
             value={contactValue}
             onChange={(e) => setContactValue(e.target.value)}
-            className="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
+            className={clsx(fieldClass, "flex-1")}
             data-testid="pp-contact-value"
           />
         </div>
-      </fieldset>
+        </div>
+      </div>
 
       {/* Toggles */}
-      <div className="space-y-3">
+      <div className="space-y-4">
+        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">
+          {t("publicProfile.showServices")}
+        </p>
         <ToggleRow
           label={t("publicProfile.showPrices")}
           checked={profile.show_prices}
@@ -576,7 +594,6 @@ export default function PublicProfileSettings() {
           onChange={(v) => setProfile({ ...profile, show_contact: v })}
           testId="pp-show-contact"
         />
-        {/* Pro-only toggles: disabled on Free with upgrade hint */}
         <ToggleRow
           label={t("publicProfile.showReviews")}
           checked={paid ? profile.show_reviews : false}
@@ -605,7 +622,7 @@ export default function PublicProfileSettings() {
           onChange={(e) => setSocialsText(e.target.value)}
           disabled={!paid}
           placeholder={t("publicProfile.socialsPlaceholder")}
-          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary disabled:opacity-50"
+          className={fieldClass}
           data-testid="pp-socials"
         />
         {!paid && (
@@ -618,10 +635,10 @@ export default function PublicProfileSettings() {
       {/* Services from products catalog */}
       <section className="space-y-3" data-testid="pp-services-section">
         <header>
-          <h3 className="text-sm font-semibold text-text flex items-center gap-2">
-            <Package className="h-4 w-4" />
+          <p className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-2">
+            <Package className="h-3.5 w-3.5" aria-hidden="true" />
             {t("publicProfile.services")}
-          </h3>
+          </p>
           <p className="text-xs text-text-secondary mt-1">
             {t("publicProfile.servicesDescription")}
           </p>
@@ -647,9 +664,10 @@ export default function PublicProfileSettings() {
               return (
                 <li key={svc.id}>
                   <label
-                    className={`flex items-center gap-3 rounded-lg border border-border bg-surface p-2 ${
-                      disabled ? "opacity-50" : "cursor-pointer"
-                    }`}
+                    className={clsx(
+                      "flex items-center gap-3 rounded-xl border border-border bg-card p-3",
+                      disabled ? "opacity-50" : "cursor-pointer hover:border-primary/30",
+                    )}
                     data-testid={`pp-service-${svc.id}`}
                   >
                     <input
@@ -688,27 +706,29 @@ export default function PublicProfileSettings() {
           </p>
         )}
 
-        <button
+        <Button
           type="button"
+          variant="secondary"
+          size="md"
           onClick={handleSaveServices}
           disabled={servicesSaving || servicesLoading}
-          className="px-3 py-2 rounded-lg border border-border bg-surface text-sm font-medium text-text hover:bg-surface-alt disabled:opacity-50"
+          loading={servicesSaving}
           data-testid="pp-services-save"
         >
           {servicesSaving
             ? t("publicProfile.servicesSaving")
             : t("publicProfile.servicesSave")}
-        </button>
+        </Button>
       </section>
 
       {/* Portfolio from events (Pro only, max 6) */}
       <section className="space-y-3" data-testid="pp-portfolio-section">
         <header>
-          <h3 className="text-sm font-semibold text-text flex items-center gap-2">
-            <ImageIcon className="h-4 w-4" />
+          <p className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-2">
+            <ImageIcon className="h-3.5 w-3.5" aria-hidden="true" />
             {t("publicProfile.portfolio")}
-            {!paid && <Lock className="h-3.5 w-3.5 text-text-secondary" />}
-          </h3>
+            {!paid && <Lock className="h-3.5 w-3.5" aria-hidden="true" />}
+          </p>
           <p className="text-xs text-text-secondary mt-1">
             {paid
               ? t("publicProfile.portfolioDescription")
@@ -729,7 +749,7 @@ export default function PublicProfileSettings() {
                 {portfolio.map((item) => (
                   <li
                     key={item.id}
-                    className="flex items-center gap-3 rounded-lg border border-border bg-surface p-2"
+                    className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
                     data-testid={`pp-portfolio-item-${item.id}`}
                   >
                     <img
@@ -761,15 +781,15 @@ export default function PublicProfileSettings() {
             )}
 
             {portfolio.length < PORTFOLIO_MAX && (
-              <div className="space-y-2 rounded-lg border border-border p-3">
-                <label className="text-xs font-medium text-text" htmlFor="pp-event">
+              <div className="space-y-3 rounded-2xl border border-border bg-surface-alt/50 p-4">
+                <label className="text-xs font-medium text-text-secondary uppercase tracking-wider" htmlFor="pp-event">
                   {t("publicProfile.portfolioPickEvent")}
                 </label>
                 <select
                   id="pp-event"
                   value={selectedEventId}
                   onChange={(e) => setSelectedEventId(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:ring-2 focus:ring-primary"
+                  className={fieldClass}
                   data-testid="pp-portfolio-event"
                 >
                   <option value="">{t("publicProfile.portfolioSelectEvent")}</option>
@@ -819,21 +839,23 @@ export default function PublicProfileSettings() {
                   </p>
                 )}
 
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="md"
                   onClick={handleAddPortfolio}
                   disabled={
                     addingPortfolio ||
                     !selectedEventId ||
                     availableCandidates.length === 0
                   }
-                  className="px-3 py-2 rounded-lg border border-border bg-surface text-sm font-medium text-text hover:bg-surface-alt disabled:opacity-50"
+                  loading={addingPortfolio}
                   data-testid="pp-portfolio-add"
                 >
                   {addingPortfolio
                     ? t("publicProfile.portfolioAdding")
                     : t("publicProfile.portfolioAdd")}
-                </button>
+                </Button>
               </div>
             )}
 
@@ -858,15 +880,17 @@ export default function PublicProfileSettings() {
         </p>
       )}
 
-      <button
+      <Button
         type="button"
+        variant="primary"
+        size="md"
         onClick={handleSave}
         disabled={saving}
-        className="px-4 py-2 rounded-lg bg-primary text-on-primary text-sm font-semibold disabled:opacity-50 hover:opacity-90"
+        loading={saving}
         data-testid="pp-save"
       >
         {saving ? t("publicProfile.saving") : t("publicProfile.save")}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -881,19 +905,38 @@ interface ToggleRowProps {
 
 function ToggleRow({ label, checked, onChange, disabled, testId }: ToggleRowProps) {
   return (
-    <label
-      className={`flex items-center gap-3 ${disabled ? "opacity-60" : "cursor-pointer"}`}
+    <div
+      className={clsx(
+        "flex items-center justify-between gap-4 p-4 bg-surface-alt/50 rounded-2xl border border-border",
+        disabled && "opacity-60",
+      )}
     >
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
+      <div className="flex items-center gap-2 min-w-0">
+        <p className="font-bold text-text">{label}</p>
+        {disabled && (
+          <Lock className="h-3.5 w-3.5 text-text-secondary shrink-0" aria-hidden="true" />
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={() => !disabled && onChange(!checked)}
         disabled={disabled}
-        className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+        className={clsx(
+          "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+          checked ? "bg-primary" : "bg-surface-alt border border-border",
+        )}
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
         data-testid={testId}
-      />
-      <span className="text-sm font-medium text-text">{label}</span>
-      {disabled && <Lock className="h-3.5 w-3.5 text-text-secondary" />}
-    </label>
+      >
+        <span
+          className={clsx(
+            "inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform",
+            checked ? "translate-x-6" : "translate-x-1",
+          )}
+        />
+      </button>
+    </div>
   );
 }

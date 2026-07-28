@@ -323,6 +323,40 @@ fun ProductFormScreen(
                     }
                 )
 
+                // Public profile toggle (Free max 3)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = ProductStrings.showOnPublicProfile,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = SolennixTheme.colors.primaryText
+                        )
+                        if (viewModel.publicProfileCapReached) {
+                            Text(
+                                text = ProductStrings.publicProfileCapHint,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = SolennixTheme.colors.secondaryText
+                            )
+                        }
+                    }
+                    Switch(
+                        checked = viewModel.showOnPublicProfile,
+                        onCheckedChange = { newValue ->
+                            if (newValue && viewModel.publicProfileCapReached) return@Switch
+                            viewModel.showOnPublicProfile = newValue
+                        },
+                        enabled = !viewModel.publicProfileCapReached || viewModel.showOnPublicProfile,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = SolennixTheme.colors.primary,
+                            checkedTrackColor = SolennixTheme.colors.primaryLight
+                        )
+                    )
+                }
+
                 // Recipe sections
                 RecipeSectionCard(
                     title = ProductStrings.compositionTitle,

@@ -89,6 +89,11 @@ object Endpoints {
     const val UPDATE_PROFILE = "users/me"
     const val DELETE_ACCOUNT = "users/me"
 
+    // Public Profile (organizer settings)
+    const val MY_PUBLIC_PROFILE = "users/me/public-profile"
+    const val MY_PUBLIC_PROFILE_PORTFOLIO = "users/me/public-profile/portfolio"
+    fun myPublicProfilePortfolioItem(id: String) = "users/me/public-profile/portfolio/$id"
+
     // Subscriptions
     const val SUBSCRIPTION_STATUS = "subscriptions/status"
 

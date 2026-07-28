@@ -40,7 +40,7 @@ const val DATABASE_NAME = "solennix-database"
         CachedStaff::class,
         CachedEventStaff::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = true
 )
 @TypeConverters(JsonConverters::class)
@@ -170,7 +170,28 @@ abstract class SolennixDatabase : RoomDatabase() {
             }
         }
 
-        val ALL_MIGRATIONS = arrayOf(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
+        /**
+         * v11 — Public professional profile: products.show_on_public_profile.
+         * Free plan caps active public products at 3 (server-enforced).
+         */
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                Log.d(TAG, "Running migration 10 -> 11: add show_on_public_profile to products")
+                db.execSQL(
+                    "ALTER TABLE products ADD COLUMN show_on_public_profile INTEGER NOT NULL DEFAULT 0"
+                )
+            }
+        }
+
+        val ALL_MIGRATIONS = arrayOf(
+            MIGRATION_4_5,
+            MIGRATION_5_6,
+            MIGRATION_6_7,
+            MIGRATION_7_8,
+            MIGRATION_8_9,
+            MIGRATION_9_10,
+            MIGRATION_10_11
+        )
 
         /**
          * Manual singleton for use in contexts without Hilt (e.g., Glance widgets).
