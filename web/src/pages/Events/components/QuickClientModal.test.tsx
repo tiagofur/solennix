@@ -40,19 +40,24 @@ function fillRequiredClientFields(
 }
 
 describe('QuickClientModal', () => {
+  // Typed mocks so `npm run check` (tsc) accepts props and assertions still work.
+  let onClose: ReturnType<typeof vi.fn<() => void>>;
+  let onClientCreated: ReturnType<typeof vi.fn<(client: unknown) => void>>;
   let defaultProps: {
     isOpen: boolean;
-    onClose: ReturnType<typeof vi.fn>;
-    onClientCreated: ReturnType<typeof vi.fn>;
+    onClose: () => void;
+    onClientCreated: (client: unknown) => void;
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
     (useAuth as any).mockReturnValue({ user: mockUser });
+    onClose = vi.fn<() => void>();
+    onClientCreated = vi.fn<(client: unknown) => void>();
     defaultProps = {
       isOpen: true,
-      onClose: vi.fn(),
-      onClientCreated: vi.fn(),
+      onClose,
+      onClientCreated,
     };
   });
 
@@ -90,14 +95,14 @@ describe('QuickClientModal', () => {
     render(<QuickClientModal {...defaultProps} />);
 
     fireEvent.click(screen.getByLabelText('Cerrar modal'));
-    expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it('calls onClose when the Cancelar button is clicked', () => {
     render(<QuickClientModal {...defaultProps} />);
 
     fireEvent.click(screen.getByText(/Cancelar|action\.cancel/i));
-    expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it('calls onClose when clicking the backdrop overlay', async () => {
@@ -108,7 +113,7 @@ describe('QuickClientModal', () => {
     const overlay = screen.getByRole('dialog').previousSibling as HTMLElement;
     expect(overlay).toBeTruthy();
     await user.click(overlay);
-    expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   // =============================================
@@ -218,8 +223,8 @@ describe('QuickClientModal', () => {
     });
 
     await waitFor(() => {
-      expect(defaultProps.onClientCreated).toHaveBeenCalledWith(createdClient);
-      expect(defaultProps.onClose).toHaveBeenCalled();
+      expect(onClientCreated).toHaveBeenCalledWith(createdClient);
+      expect(onClose).toHaveBeenCalled();
     });
   });
 
@@ -340,8 +345,8 @@ describe('QuickClientModal', () => {
       expect(clientService.create).toHaveBeenCalled();
     });
 
-    expect(defaultProps.onClientCreated).not.toHaveBeenCalled();
-    expect(defaultProps.onClose).not.toHaveBeenCalled();
+    expect(onClientCreated).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   // =============================================
