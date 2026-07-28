@@ -488,11 +488,13 @@ func TestAuthHandlerErrorBranchesWithClosedRepo(t *testing.T) {
 	})
 
 	t.Run("LoginRepoError", func(t *testing.T) {
+		// Closed pool is a transient lookup failure, not "user missing".
+		// Must return 500 so clients don't treat it as bad credentials / session death.
 		req := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(`{"email":"x@test.dev","password":"123456"}`))
 		rr := httptest.NewRecorder()
 		h.Login(rr, req)
-		if rr.Code != http.StatusUnauthorized {
-			t.Fatalf("status = %d, want %d", rr.Code, http.StatusUnauthorized)
+		if rr.Code != http.StatusInternalServerError {
+			t.Fatalf("status = %d, want %d", rr.Code, http.StatusInternalServerError)
 		}
 	})
 
