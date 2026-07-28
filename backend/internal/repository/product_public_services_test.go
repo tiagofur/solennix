@@ -201,3 +201,85 @@ func TestProductRepo_Update_TogglesShowOnPublicProfile(t *testing.T) {
 		t.Errorf("Update() did not set ShowOnPublicProfile=false")
 	}
 }
+
+func TestProductRepo_ListActiveForPublicProfileSettings(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userID := seedUser(t, pool, "settings.products@test.dev")
+	repo := NewProductRepo(pool)
+	ctx := context.Background()
+
+	insertProductWithFlag(t, pool, userID, "Alpha", 100, true, true)
+	insertProductWithFlag(t, pool, userID, "Beta", 200, true, false)
+	insertProductWithFlag(t, pool, userID, "Inactive", 300, false, true)
+
+	got, err := repo.ListActiveForPublicProfileSettings(ctx, userID)
+	if err != nil {
+		t.Fatalf("ListActiveForPublicProfileSettings() error = %v", err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("len = %d, want 2 active; got %+v", len(got), got)
+	}
+	if got[0].Name != "Alpha" || !got[0].ShowOnPublicProfile {
+		t.Errorf("got[0] = %+v, want Alpha public", got[0])
+	}
+	if got[1].Name != "Beta" || got[1].ShowOnPublicProfile {
+		t.Errorf("got[1] = %+v, want Beta private", got[1])
+	}
+}
+
+func TestProductRepo_SetPublicProfileServices(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userID := seedUser(t, pool, "set.public@test.dev")
+	repo := NewProductRepo(pool)
+	ctx := context.Background()
+
+	insertProductWithFlag(t, pool, userID, "A", 10, true, true)
+	insertProductWithFlag(t, pool, userID, "B", 20, true, false)
+	insertProductWithFlag(t, pool, userID, "C", 30, true, false)
+
+	all, err := repo.ListActiveForPublicProfileSettings(ctx, userID)
+	if err != nil {
+		t.Fatalf("list: %v", err)
+	}
+	var bID, cID uuid.UUID
+	for _, p := range all {
+		if p.Name == "B" {
+			bID = p.ID
+		}
+		if p.Name == "C" {
+			cID = p.ID
+		}
+	}
+
+	if err := repo.SetPublicProfileServices(ctx, userID, []uuid.UUID{bID, cID}); err != nil {
+		t.Fatalf("SetPublicProfileServices() error = %v", err)
+	}
+
+	all, err = repo.ListActiveForPublicProfileSettings(ctx, userID)
+	if err != nil {
+		t.Fatalf("list after set: %v", err)
+	}
+	for _, p := range all {
+		switch p.Name {
+		case "A":
+			if p.ShowOnPublicProfile {
+				t.Errorf("A should be cleared")
+			}
+		case "B", "C":
+			if !p.ShowOnPublicProfile {
+				t.Errorf("%s should be selected", p.Name)
+			}
+		}
+	}
+
+	// Invalid ID rejected.
+	if err := repo.SetPublicProfileServices(ctx, userID, []uuid.UUID{uuid.New()}); err == nil {
+		t.Error("expected error for foreign product id")
+	}
+}
