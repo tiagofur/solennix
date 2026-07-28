@@ -488,11 +488,13 @@ func TestAuthHandlerErrorBranchesWithClosedRepo(t *testing.T) {
 	})
 
 	t.Run("LoginRepoError", func(t *testing.T) {
+		// Closed pool is a transient lookup failure, not "user missing".
+		// Must return 500 so clients don't treat it as bad credentials / session death.
 		req := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(`{"email":"x@test.dev","password":"123456"}`))
 		rr := httptest.NewRecorder()
 		h.Login(rr, req)
-		if rr.Code != http.StatusUnauthorized {
-			t.Fatalf("status = %d, want %d", rr.Code, http.StatusUnauthorized)
+		if rr.Code != http.StatusInternalServerError {
+			t.Fatalf("status = %d, want %d", rr.Code, http.StatusInternalServerError)
 		}
 	})
 
@@ -515,6 +517,8 @@ func TestNewAuthHandler(t *testing.T) {
 }
 
 func TestAuthHandlerMe(t *testing.T) {
+	// Closed pool → transient lookup failure must return 500, not 404.
+	// Clients treat 404/401 as definitive session death.
 	pool, err := pgxpool.New(context.Background(), "postgres://solennix_user:solennix_password@localhost:5433/solennix?sslmode=disable")
 	if err != nil {
 		t.Skipf("pgxpool.New failed: %v", err)
@@ -528,8 +532,8 @@ func TestAuthHandlerMe(t *testing.T) {
 	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, uuid.New()))
 	rr := httptest.NewRecorder()
 	h.Me(rr, req)
-	if rr.Code != http.StatusNotFound {
-		t.Fatalf("status = %d, want %d", rr.Code, http.StatusNotFound)
+	if rr.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want %d", rr.Code, http.StatusInternalServerError)
 	}
 }
 
@@ -827,7 +831,7 @@ func TestAuthHandler_Login_HappyPaths(t *testing.T) {
 			authService: authService,
 		}
 
-		mockRepo.On("GetByEmail", mock.Anything, "notfound@test.dev").Return(nil, fmt.Errorf("not found"))
+		mockRepo.On("GetByEmail", mock.Anything, "notfound@test.dev").Return(nil, repository.ErrUserNotFound)
 
 		body := `{"email":"notfound@test.dev","password":"123456"}`
 		req := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(body))
@@ -1168,7 +1172,7 @@ func TestAuthHandler_Me_HappyPaths(t *testing.T) {
 		h := &AuthHandler{userRepo: mockRepo}
 
 		userID := uuid.New()
-		mockRepo.On("GetByID", mock.Anything, userID).Return(nil, fmt.Errorf("not found"))
+		mockRepo.On("GetByID", mock.Anything, userID).Return(nil, repository.ErrUserNotFound)
 
 		req := httptest.NewRequest(http.MethodGet, "/api/auth/me", nil)
 		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
@@ -1177,6 +1181,22 @@ func TestAuthHandler_Me_HappyPaths(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, rr.Code)
 		assert.Contains(t, rr.Body.String(), "User not found")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("LookupFailed_Returns500", func(t *testing.T) {
+		mockRepo := new(MockFullUserRepo)
+		h := &AuthHandler{userRepo: mockRepo}
+
+		userID := uuid.New()
+		mockRepo.On("GetByID", mock.Anything, userID).Return(nil, fmt.Errorf("get user by id: connection reset"))
+
+		req := httptest.NewRequest(http.MethodGet, "/api/auth/me", nil)
+		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+		rr := httptest.NewRecorder()
+		h.Me(rr, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rr.Code)
 		mockRepo.AssertExpectations(t)
 	})
 
@@ -2204,9 +2224,9 @@ func TestAuthHandler_RefreshToken_UserNotFound(t *testing.T) {
 	pair, err := authService.GenerateTokenPair(userID, "deleted@test.dev")
 	assert.NoError(t, err)
 
-	// Mock repo returns not found for the user (simulating a deleted user)
+	// Mock repo returns not found for the user (simulating a hard-deleted user)
 	mockRepo := new(MockFullUserRepo)
-	mockRepo.On("GetByID", mock.Anything, userID).Return(nil, fmt.Errorf("not found"))
+	mockRepo.On("GetByID", mock.Anything, userID).Return(nil, repository.ErrUserNotFound)
 
 	h := &AuthHandler{authService: authService, userRepo: mockRepo}
 
@@ -2217,6 +2237,28 @@ func TestAuthHandler_RefreshToken_UserNotFound(t *testing.T) {
 
 	assert.Equal(t, http.StatusUnauthorized, rr.Code)
 	assert.Contains(t, rr.Body.String(), "Invalid or expired token")
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAuthHandler_RefreshToken_UserLookupFailed_Returns500(t *testing.T) {
+	userID := uuid.New()
+	authService := services.NewAuthService("test-secret", 1)
+
+	pair, err := authService.GenerateTokenPair(userID, "active@test.dev")
+	assert.NoError(t, err)
+
+	// Transient DB failure must NOT become 401 — clients clear tokens on 401 refresh.
+	mockRepo := new(MockFullUserRepo)
+	mockRepo.On("GetByID", mock.Anything, userID).Return(nil, fmt.Errorf("get user by id: connection reset"))
+
+	h := &AuthHandler{authService: authService, userRepo: mockRepo}
+
+	body := `{"refresh_token":"` + pair.RefreshToken + `"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", strings.NewReader(body))
+	rr := httptest.NewRecorder()
+	h.RefreshToken(rr, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
 	mockRepo.AssertExpectations(t)
 }
 

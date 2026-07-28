@@ -237,14 +237,23 @@
         "delete": "Eliminar",
         "login": "Iniciar sesión",
         "login_failed": "Intento de inicio de sesión fallido",
+        "auth_failed": "Fallo de autenticación",
         "block": "Bloquear",
         "unblock": "Desbloquear"
       },
       "reasons": {
         "email_not_verified": "Correo no verificado",
         "invalid_credentials": "Credenciales inválidas",
+        "invalid_password": "Contraseña incorrecta",
         "wrong_password": "Contraseña incorrecta",
         "user_not_found": "Usuario no encontrado",
+        "refresh_user_not_found": "Refresh: usuario no encontrado",
+        "refresh_user_lookup_failed": "Refresh: error al consultar usuario (transitorio)",
+        "refresh_account_blocked": "Refresh: cuenta bloqueada",
+        "refresh_account_deleted": "Refresh: cuenta eliminada",
+        "refresh_token_reuse_detected": "Refresh: reutilización de token detectada",
+        "account_blocked": "Cuenta bloqueada",
+        "account_deleted": "Cuenta eliminada",
         "blocked": "Cuenta bloqueada"
       }
     }
