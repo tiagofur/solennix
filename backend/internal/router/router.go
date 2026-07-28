@@ -24,6 +24,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	reviewHandler *handlers.EventReviewHandler,
 	publicProfileHandler *handlers.PublicProfileHandler,
 	publicProfileConfigHandler *handlers.PublicProfileConfigHandler,
+	publicProfilePortfolioHandler *handlers.PublicProfilePortfolioHandler,
 	staffHandler *handlers.StaffHandler,
 	staffTeamHandler *handlers.StaffTeamHandler,
 	pdfHandler *handlers.PDFHandler,
@@ -232,6 +233,10 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Delete("/users/me", authHandler.DeleteOwnAccount)
 		r.Get("/users/me/public-profile", publicProfileConfigHandler.GetMyPublicProfile)
 		r.Put("/users/me/public-profile", publicProfileConfigHandler.UpsertMyPublicProfile)
+		r.Get("/users/me/public-profile/portfolio", publicProfilePortfolioHandler.ListPortfolioItems)
+		r.Post("/users/me/public-profile/portfolio", publicProfilePortfolioHandler.CreatePortfolioItem)
+		r.Put("/users/me/public-profile/portfolio/{id}", publicProfilePortfolioHandler.UpdatePortfolioItem)
+		r.Delete("/users/me/public-profile/portfolio/{id}", publicProfilePortfolioHandler.DeletePortfolioItem)
 
 		// Staff (Personal — collaborators catalog)
 		r.Route("/staff", func(r chi.Router) {
