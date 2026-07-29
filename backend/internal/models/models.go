@@ -10,9 +10,10 @@ import (
 // NormalizePlan maps historical and cross-platform plan aliases to stable tier keys.
 //
 // Mapping:
-//   "gratis" | "free" | "basic" | "plan_basic" → "basic"
-//   "pro"    | "plan_pro" | "premium"           → "pro"
-//   "business" | "plan_business" | "enterprise" → "business"
+//
+//	"gratis" | "free" | "basic" | "plan_basic" → "basic"
+//	"pro"    | "plan_pro" | "premium"           → "pro"
+//	"business" | "plan_business" | "enterprise" → "business"
 //
 // Default: the input value lowercased and trimmed (pass-through for already-stable
 // keys and unknown values). The handlers package previously defaulted unknown values
@@ -64,15 +65,15 @@ type User struct {
 	PushEventReminder        *bool `json:"push_event_reminder,omitempty"`
 	PushPaymentReceived      *bool `json:"push_payment_received,omitempty"`
 	// i18n: user's preferred language for emails and notifications ('es' | 'en')
-	PreferredLanguage string     `json:"preferred_language"`
-	DefaultCurrency   string     `json:"default_currency"`
-	Plan              string     `json:"plan"`
-	Role              string     `json:"role"`
+	PreferredLanguage string `json:"preferred_language"`
+	DefaultCurrency   string `json:"default_currency"`
+	Plan              string `json:"plan"`
+	Role              string `json:"role"`
 	// PublicSlug is the opt-in share handle for /u/:slug (users.public_slug).
-	PublicSlug        *string    `json:"public_slug,omitempty"`
-	StripeCustomerID  *string    `json:"-"` // Never expose provider IDs in JSON
-	GoogleUserID      *string    `json:"-"`
-	AppleUserID       *string    `json:"-"`
+	PublicSlug              *string    `json:"public_slug,omitempty"`
+	StripeCustomerID        *string    `json:"-"` // Never expose provider IDs in JSON
+	GoogleUserID            *string    `json:"-"`
+	AppleUserID             *string    `json:"-"`
 	PlanExpiresAt           *time.Time `json:"plan_expires_at,omitempty"`
 	LastActiveAt            *time.Time `json:"last_active_at,omitempty"`
 	RegistrationPlatform    string     `json:"registration_platform"`
@@ -83,18 +84,18 @@ type User struct {
 }
 
 type Client struct {
-	ID          uuid.UUID `json:"id"`
-	UserID      uuid.UUID `json:"user_id"`
-	Name        string    `json:"name"`
-	Phone       string    `json:"phone"`
-	Email       *string   `json:"email,omitempty"`
-	Address     *string   `json:"address,omitempty"`
-	City        *string   `json:"city,omitempty"`
-	Notes       *string   `json:"notes,omitempty"`
-	PhotoURL    *string   `json:"photo_url,omitempty"`
-	TotalEvents    int      `json:"total_events"`
-	TotalSpent     float64  `json:"total_spent"`
-	PendingBalance *float64 `json:"pending_balance,omitempty"`
+	ID             uuid.UUID `json:"id"`
+	UserID         uuid.UUID `json:"user_id"`
+	Name           string    `json:"name"`
+	Phone          string    `json:"phone"`
+	Email          *string   `json:"email,omitempty"`
+	Address        *string   `json:"address,omitempty"`
+	City           *string   `json:"city,omitempty"`
+	Notes          *string   `json:"notes,omitempty"`
+	PhotoURL       *string   `json:"photo_url,omitempty"`
+	TotalEvents    int       `json:"total_events"`
+	TotalSpent     float64   `json:"total_spent"`
+	PendingBalance *float64  `json:"pending_balance,omitempty"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
 }
@@ -583,12 +584,12 @@ type OrganizerPublicProfile struct {
 	UserID        uuid.UUID         `json:"user_id"`
 	IsEnabled     bool              `json:"is_enabled"`
 	Headline      *string           `json:"headline,omitempty"`
-	ContactType   *string           `json:"contact_type,omitempty"`  // phone|whatsapp|email|url
+	ContactType   *string           `json:"contact_type,omitempty"` // phone|whatsapp|email|url
 	ContactValue  *string           `json:"contact_value,omitempty"`
 	City          *string           `json:"city,omitempty"`
 	Region        *string           `json:"region,omitempty"`
 	Country       *string           `json:"country,omitempty"`
-	Latitude      *float64          `json:"latitude,omitempty"`  // directory-ready; unused in public JSON v1
+	Latitude      *float64          `json:"latitude,omitempty"` // directory-ready; unused in public JSON v1
 	Longitude     *float64          `json:"longitude,omitempty"`
 	ShowPrices    bool              `json:"show_prices"`
 	ShowServices  bool              `json:"show_services"`
@@ -680,15 +681,16 @@ type PortfolioCandidateEvent struct {
 // Free: basic fields + ≤3 services; omit reviews/portfolio/socials.
 // Pro+: honor section toggles; portfolio ≤6; base_price only if show_prices.
 type PublicOrganizerProfile struct {
-	Slug         string                 `json:"slug"`
-	BusinessName string                 `json:"business_name,omitempty"`
-	LogoURL      *string                `json:"logo_url,omitempty"`
-	BrandColor   *string                `json:"brand_color,omitempty"`
-	Headline     *string                `json:"headline,omitempty"`
-	Location     *PublicLocation        `json:"location,omitempty"`
-	Contact      *PublicContact         `json:"contact,omitempty"`
-	Services     []PublicProfileService `json:"services,omitempty"`
-	Reviews      []PublicReview         `json:"reviews,omitempty"`
-	Portfolio    []PublicPortfolioItem  `json:"portfolio,omitempty"`
-	Socials      map[string]string      `json:"socials,omitempty"`
+	Slug             string                 `json:"slug"`
+	BusinessName     string                 `json:"business_name,omitempty"`
+	ShowBusinessName bool                   `json:"show_business_name"`
+	LogoURL          *string                `json:"logo_url,omitempty"`
+	BrandColor       *string                `json:"brand_color,omitempty"`
+	Headline         *string                `json:"headline,omitempty"`
+	Location         *PublicLocation        `json:"location,omitempty"`
+	Contact          *PublicContact         `json:"contact,omitempty"`
+	Services         []PublicProfileService `json:"services,omitempty"`
+	Reviews          []PublicReview         `json:"reviews,omitempty"`
+	Portfolio        []PublicPortfolioItem  `json:"portfolio,omitempty"`
+	Socials          map[string]string      `json:"socials,omitempty"`
 }

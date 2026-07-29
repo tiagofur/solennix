@@ -223,6 +223,7 @@ export const PublicProfilePage: React.FC = () => {
     ? ({ ["--brand" as string]: profile.brand_color } as React.CSSProperties)
     : undefined;
   const logoSrc = profile.logo_url ? resolveMediaUrl(profile.logo_url) : null;
+  const showName = profile.show_business_name ?? true;
   const contactOpenExternal =
     profile.contact?.type === "url" || profile.contact?.type === "whatsapp";
 
@@ -259,8 +260,8 @@ export const PublicProfilePage: React.FC = () => {
             {logoSrc ? (
               <img
                 src={logoSrc}
-                alt=""
-                className="h-20 w-20 rounded-2xl object-cover border border-border shrink-0 bg-surface-alt shadow-sm"
+                alt={showName ? "" : displayName}
+                className="h-20 w-auto max-w-[280px] rounded-xl object-contain border border-border shrink-0 bg-surface-alt shadow-sm"
               />
             ) : (
               <div
@@ -271,14 +272,16 @@ export const PublicProfilePage: React.FC = () => {
                 }}
                 aria-hidden="true"
               >
-                {displayName.charAt(0).toUpperCase()}
+                {showName ? displayName.charAt(0).toUpperCase() : null}
               </div>
             )}
 
             <div className="min-w-0 flex-1 space-y-2">
-              <h1 className="text-2xl sm:text-3xl font-bold text-text tracking-tight break-words">
-                {displayName}
-              </h1>
+              {showName && (
+                <h1 className="text-2xl sm:text-3xl font-bold text-text tracking-tight break-words">
+                  {displayName}
+                </h1>
+              )}
               {profile.headline?.trim() && (
                 <p className="text-text-secondary text-base leading-relaxed">
                   {profile.headline}
