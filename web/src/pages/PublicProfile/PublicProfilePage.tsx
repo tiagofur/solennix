@@ -21,6 +21,8 @@ import { Card } from "@/components/Card";
 import { localeFromLanguage } from "@/lib/finance";
 import { resolveMediaUrl } from "@/lib/api";
 import { PublicLeadModal } from "./PublicLeadModal";
+import { PublicProfileQuickActions } from "./PublicProfileQuickActions";
+import { PublicProfileMap } from "./PublicProfileMap";
 import {
   publicProfileService,
   PublicProfileNotFoundError,
@@ -391,6 +393,15 @@ export const PublicProfilePage: React.FC = () => {
             )}
           </div>
 
+          <PublicProfileQuickActions
+            profile={profile}
+            onScrollToMap={() => {
+              document
+                .getElementById("profile-location")
+                ?.scrollIntoView({ behavior: "smooth" });
+            }}
+          />
+
           {socialEntries.length > 0 && (
             <ul className="mt-4 flex flex-wrap gap-2">
               {socialEntries.map(([key, url]) => (
@@ -601,6 +612,13 @@ export const PublicProfilePage: React.FC = () => {
               })}
             </ul>
           </section>
+        )}
+
+        {profile.location && (
+          <PublicProfileMap
+            location={profile.location}
+            businessName={displayName}
+          />
         )}
       </main>
 

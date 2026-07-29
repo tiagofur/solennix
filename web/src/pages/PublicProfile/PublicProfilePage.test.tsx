@@ -97,7 +97,7 @@ describe("PublicProfilePage", () => {
 
     expect(await screen.findByRole("heading", { name: "Alice Events" })).toBeInTheDocument();
     expect(screen.getByText("Unforgettable weddings")).toBeInTheDocument();
-    expect(screen.getByText(/Lisbon/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Lisbon/).length).toBeGreaterThan(0);
     expect(screen.getByText("Full package")).toBeInTheDocument();
     expect(screen.getByText("Amazing")).toBeInTheDocument();
     // "A." now appears in both the featured testimonial and the reviews list.

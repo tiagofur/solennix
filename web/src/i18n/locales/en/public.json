@@ -462,8 +462,16 @@
     "message_placeholder": "Do you have any specific requirements or budget in mind?",
     "submit_quote": "Submit Request",
     "submitting_quote": "Submitting...",
-    "quote_success_title": "Request sent!",
-    "quote_success_desc": "Your message has been sent directly to {{name}}. They will contact you very soon.",
-    "close_modal": "Close"
+    "quote_success_title": "Inquiry sent!",
+    "quote_success_desc": "Your message was sent directly to {{name}}. They will get in touch with you shortly.",
+    "close_modal": "Close",
+    "actions": {
+      "save_contact": "Save contact",
+      "share": "Share",
+      "copy_link": "Copy link",
+      "link_copied": "Copied!",
+      "location_heading": "Location",
+      "get_directions": "Get directions"
+    }
   }
 }

@@ -464,6 +464,14 @@
     "submitting_quote": "Enviando...",
     "quote_success_title": "¡Solicitud enviada!",
     "quote_success_desc": "Tu mensaje ha sido enviado directamente a {{name}}. Se pondrán en contacto contigo muy pronto.",
-    "close_modal": "Cerrar"
+    "close_modal": "Cerrar",
+    "actions": {
+      "save_contact": "Guardar contacto",
+      "share": "Compartir",
+      "copy_link": "Copiar enlace",
+      "link_copied": "¡Copiado!",
+      "location_heading": "Ubicación",
+      "get_directions": "Cómo llegar"
+    }
   }
 }
