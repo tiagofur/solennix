@@ -602,7 +602,12 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.userRepo.GetByID(r.Context(), userID)
 	if err != nil {
-		writeAuthI18nError(w, r, http.StatusNotFound, "auth.user_not_found")
+		if errors.Is(err, repository.ErrUserNotFound) {
+			writeAuthI18nError(w, r, http.StatusNotFound, "auth.user_not_found")
+			return
+		}
+		slog.Error("Me: db error querying user", "error", err, "user_id", userID)
+		writeAuthI18nError(w, r, http.StatusServiceUnavailable, "auth.service_unavailable")
 		return
 	}
 
@@ -644,12 +649,23 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 
 	// Verify user still exists (prevent deleted/suspended users from refreshing)
 	user, err := h.userRepo.GetByID(r.Context(), claims.UserID)
-	if err != nil || user == nil {
-		slog.Warn("auth.event", "action", "token_refresh_failed", "reason", "user_not_found", "user_id", claims.UserID, "ip", clientIP(r))
+	if err != nil {
+		if errors.Is(err, repository.ErrUserNotFound) {
+			// User genuinely does not exist — token is invalid
+			slog.Warn("auth.event", "action", "token_refresh_failed", "reason", "user_not_found", "user_id", claims.UserID, "ip", clientIP(r))
+			middleware.LogSecurityAuditEvent(claims.UserID, "auth_failed", "session", map[string]any{
+				"reason": "refresh_user_not_found",
+			}, clientIP(r), r.UserAgent())
+			writeAuthI18nError(w, r, http.StatusUnauthorized, "auth.token_invalid_or_expired")
+			return
+		}
+		// Transient DB error — do NOT invalidate the session, return 503 so the
+		// client knows to retry rather than wiping local credentials.
+		slog.Error("auth.event", "action", "token_refresh_failed", "reason", "db_error", "user_id", claims.UserID, "error", err, "ip", clientIP(r))
 		middleware.LogSecurityAuditEvent(claims.UserID, "auth_failed", "session", map[string]any{
-			"reason": "refresh_user_not_found",
+			"reason": "refresh_db_error",
 		}, clientIP(r), r.UserAgent())
-		writeAuthI18nError(w, r, http.StatusUnauthorized, "auth.token_invalid_or_expired")
+		writeAuthI18nError(w, r, http.StatusServiceUnavailable, "auth.service_unavailable")
 		return
 	}
 
@@ -958,9 +974,14 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 
 	// Get user from token claims
 	user, err := h.userRepo.GetByID(r.Context(), claims.UserID)
-	if err != nil || user == nil {
-		slog.Warn("auth.event", "action", "password_reset_failed", "reason", "user_not_found", "user_id", claims.UserID, "ip", clientIP(r))
-		writeAuthI18nError(w, r, http.StatusUnauthorized, "auth.reset_token_invalid_or_expired")
+	if err != nil {
+		if errors.Is(err, repository.ErrUserNotFound) {
+			slog.Warn("auth.event", "action", "password_reset_failed", "reason", "user_not_found", "user_id", claims.UserID, "ip", clientIP(r))
+			writeAuthI18nError(w, r, http.StatusUnauthorized, "auth.reset_token_invalid_or_expired")
+			return
+		}
+		slog.Error("auth.event", "action", "password_reset_failed", "reason", "db_error", "user_id", claims.UserID, "error", err, "ip", clientIP(r))
+		writeAuthI18nError(w, r, http.StatusServiceUnavailable, "auth.service_unavailable")
 		return
 	}
 
@@ -1022,9 +1043,14 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 
 	// Get user to verify current password
 	user, err := h.userRepo.GetByID(r.Context(), userID)
-	if err != nil || user == nil {
-		slog.Warn("auth.event", "action", "change_password_failed", "reason", "user_not_found", "user_id", userID, "ip", clientIP(r))
-		writeAuthI18nError(w, r, http.StatusUnauthorized, "auth.invalid_credentials_generic")
+	if err != nil {
+		if errors.Is(err, repository.ErrUserNotFound) {
+			slog.Warn("auth.event", "action", "change_password_failed", "reason", "user_not_found", "user_id", userID, "ip", clientIP(r))
+			writeAuthI18nError(w, r, http.StatusUnauthorized, "auth.invalid_credentials_generic")
+			return
+		}
+		slog.Error("auth.event", "action", "change_password_failed", "reason", "db_error", "user_id", userID, "error", err, "ip", clientIP(r))
+		writeAuthI18nError(w, r, http.StatusServiceUnavailable, "auth.service_unavailable")
 		return
 	}
 
@@ -1107,7 +1133,7 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		}
 
 		user, err := h.userRepo.GetByID(r.Context(), userID)
-		if err != nil || user == nil {
+		if err != nil {
 			slog.Error("Failed to load user for contract template update", "error", err, "user_id", userID)
 			writeAuthI18nError(w, r, http.StatusInternalServerError, "auth.profile_update_failed")
 			return

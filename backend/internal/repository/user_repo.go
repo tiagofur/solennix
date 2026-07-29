@@ -179,7 +179,10 @@ func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, err
 		&user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("user not found: %w", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+		return nil, fmt.Errorf("db error querying user by id: %w", err)
 	}
 	return user, nil
 }

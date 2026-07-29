@@ -237,6 +237,7 @@
         "delete": "Delete",
         "login": "Login",
         "login_failed": "Failed login attempt",
+        "auth_failed": "Authentication failure",
         "block": "Block",
         "unblock": "Unblock"
       },
@@ -245,7 +246,12 @@
         "invalid_credentials": "Invalid credentials",
         "wrong_password": "Wrong password",
         "user_not_found": "User not found",
-        "blocked": "Account blocked"
+        "blocked": "Account blocked",
+        "refresh_user_not_found": "User not found during token refresh",
+        "refresh_account_blocked": "Account blocked during token refresh",
+        "refresh_account_deleted": "Account deleted during token refresh",
+        "refresh_token_reuse_detected": "Token reuse detected",
+        "refresh_db_error": "Database error (transient)"
       }
     }
   },
