@@ -503,13 +503,19 @@ final class WidgetSyncCoordinatorTests: XCTestCase {
         let cache = try! makeCacheManagerWithDateOnlyEvents()
         let mock = MockWidgetSyncing()
         let coordinator = WidgetSyncCoordinator(sync: mock)
-        coordinator.start(cache: cache, isAuthorized: { authenticated })
+        // Pin the wall clock to mid-month so day offsets (+0/+3/+10) never cross
+        // a month boundary: `monthlyRevenue`/`pendingPayments` assertions stay
+        // deterministic regardless of the day the CI runs (the production
+        // `Date()` made them flip near month end — see WidgetSyncCoordinator).
+        coordinator.start(cache: cache, isAuthorized: { authenticated }, now: { Self.pinnedNow })
         return CoordinatorFixture(coordinator: coordinator, mock: mock, cache: cache)
     }
 
     /// Production-shaped fixture: `event.eventDate` is a date-only `yyyy-MM-dd`
     /// string (LOCAL-anchored, the shape `Date.fromServerDayLocal` parses and
-    /// the shape the buggy `ISO8601DateFormatter()` returned nil for).
+    /// the shape the buggy `ISO8601DateFormatter()` returned nil for). Event
+    /// dates are offset from `pinnedNow` (not `Date()`) so they align with the
+    /// coordinator's injected clock — the whole derivation is deterministic.
     private func makeCacheManagerWithDateOnlyEvents() throws -> CacheManager {
         let cache = try makeCacheManager()
         try cache.cacheClients([
@@ -517,21 +523,38 @@ final class WidgetSyncCoordinatorTests: XCTestCase {
                    createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-02T00:00:00Z")
         ])
         try cache.cacheEvents([
-            makeEvent(id: "e_a",         clientId: "c_1", status: .confirmed, totalAmount: 1000, eventDate: localDayString(offset: 0)),
-            makeEvent(id: "e_b",         clientId: "c_1", status: .confirmed, totalAmount: 2000, eventDate: localDayString(offset: 3)),
-            makeEvent(id: "e_completed", clientId: "c_1", status: .completed, totalAmount: 500,  eventDate: localDayString(offset: 0)),
-            makeEvent(id: "e_quoted",    clientId: "c_1", status: .quoted,    totalAmount: 3000, eventDate: localDayString(offset: 10))
+            makeEvent(id: "e_a",         clientId: "c_1", status: .confirmed, totalAmount: 1000, eventDate: localDayString(offset: 0,  from: Self.pinnedNow)),
+            makeEvent(id: "e_b",         clientId: "c_1", status: .confirmed, totalAmount: 2000, eventDate: localDayString(offset: 3,  from: Self.pinnedNow)),
+            makeEvent(id: "e_completed", clientId: "c_1", status: .completed, totalAmount: 500,  eventDate: localDayString(offset: 0,  from: Self.pinnedNow)),
+            makeEvent(id: "e_quoted",    clientId: "c_1", status: .quoted,    totalAmount: 3000, eventDate: localDayString(offset: 10, from: Self.pinnedNow))
         ])
         return cache
     }
 
-    /// `yyyy-MM-dd` string for `offset` days from now in the LOCAL timezone.
-    private func localDayString(offset: Int) -> String {
+    /// Fixed "now" (mid-month, a Wednesday) so day offsets never roll into the
+    /// next month / week. Used by the date-only fixture and injected into the
+    /// coordinator so cache dates and the KPI clock agree. Built from
+    /// `Calendar.current` start-of-day (not UTC) to stay anchored in the same
+    /// timezone the coordinator and `localDayString` use.
+    private static let pinnedNow: Date = {
+        var components = DateComponents()
+        components.year = 2026
+        components.month = 7
+        components.day = 15
+        let calendar = Calendar.current
+        let day = calendar.date(from: components) ?? Date()
+        return calendar.startOfDay(for: day)
+    }()
+
+    /// `yyyy-MM-dd` string for `offset` days from `from` (default: now) in the
+    /// LOCAL timezone. Passing an explicit `from` keeps fixture dates aligned
+    /// with the coordinator's pinned clock.
+    private func localDayString(offset: Int, from: Date = Date()) -> String {
         let dayFormatter = DateFormatter()
         dayFormatter.locale = Locale(identifier: "en_US_POSIX")
         dayFormatter.dateFormat = "yyyy-MM-dd"
         dayFormatter.timeZone = .current
-        let date = Calendar.current.date(byAdding: .day, value: offset, to: Date())!
+        let date = Calendar.current.date(byAdding: .day, value: offset, to: from)!
         return dayFormatter.string(from: date)
     }
 
