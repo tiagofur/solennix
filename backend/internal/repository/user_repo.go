@@ -28,6 +28,25 @@ var (
 	ErrUserNotFound          = errors.New("user not found")
 )
 
+// IsUserNotFound reports whether err represents a missing user row (not a DB outage).
+// Callers must use this to avoid treating transient lookup failures as auth failures.
+func IsUserNotFound(err error) bool {
+	return errors.Is(err, ErrUserNotFound) || errors.Is(err, pgx.ErrNoRows)
+}
+
+// mapUserLookupError maps a QueryRow/Scan error from a user SELECT.
+// Missing rows become ErrUserNotFound; all other errors keep their cause
+// without the misleading "user not found" prefix.
+func mapUserLookupError(err error, op string) error {
+	if err == nil {
+		return nil
+	}
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ErrUserNotFound
+	}
+	return fmt.Errorf("%s: %w", op, err)
+}
+
 type UserRepo struct {
 	pool *pgxpool.Pool
 }
@@ -143,7 +162,7 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, 
 		&user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("user not found: %w", err)
+		return nil, mapUserLookupError(err, "get user by email")
 	}
 	return user, nil
 }
@@ -179,10 +198,7 @@ func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, err
 		&user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrUserNotFound
-		}
-		return nil, fmt.Errorf("db error querying user by id: %w", err)
+		return nil, mapUserLookupError(err, "get user by id")
 	}
 	return user, nil
 }
@@ -222,10 +238,7 @@ func (r *UserRepo) GetByPublicSlug(ctx context.Context, slug string) (*models.Us
 		&user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("user not found: %w", err)
-		}
-		return nil, fmt.Errorf("user not found: %w", err)
+		return nil, mapUserLookupError(err, "get user by public slug")
 	}
 	return user, nil
 }

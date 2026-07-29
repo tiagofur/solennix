@@ -435,6 +435,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Find user
 	user, err := h.userRepo.GetByEmail(r.Context(), req.Email)
 	if err != nil || user == nil {
+		// Transient DB failures must not look like bad credentials — that confuses
+		// operators and can cascade into lockouts when clients retry aggressively.
+		if err != nil && !repository.IsUserNotFound(err) {
+			slog.Error("auth.event", "action", "login_failed", "email", maskEmail(req.Email), "reason", "user_lookup_failed", "error", err, "ip", clientIP(r))
+			writeAuthI18nError(w, r, http.StatusInternalServerError, "auth.internal_server_error")
+			return
+		}
 		// Perform dummy bcrypt comparison to normalize response timing,
 		// preventing user enumeration via timing side-channels.
 		_ = bcrypt.CompareHashAndPassword(dummyHash, []byte(req.Password))
@@ -602,7 +609,7 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.userRepo.GetByID(r.Context(), userID)
 	if err != nil {
-		if errors.Is(err, repository.ErrUserNotFound) {
+		if repository.IsUserNotFound(err) {
 			writeAuthI18nError(w, r, http.StatusNotFound, "auth.user_not_found")
 			return
 		}
@@ -647,10 +654,12 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify user still exists (prevent deleted/suspended users from refreshing)
+	// Verify user still exists (prevent deleted/suspended users from refreshing).
+	// Critical: do NOT map transient DB/lookup failures to 401 — mobile clients
+	// treat 401/403 from /auth/refresh as definitive session death and clear tokens.
 	user, err := h.userRepo.GetByID(r.Context(), claims.UserID)
 	if err != nil {
-		if errors.Is(err, repository.ErrUserNotFound) {
+		if repository.IsUserNotFound(err) {
 			// User genuinely does not exist — token is invalid
 			slog.Warn("auth.event", "action", "token_refresh_failed", "reason", "user_not_found", "user_id", claims.UserID, "ip", clientIP(r))
 			middleware.LogSecurityAuditEvent(claims.UserID, "auth_failed", "session", map[string]any{
