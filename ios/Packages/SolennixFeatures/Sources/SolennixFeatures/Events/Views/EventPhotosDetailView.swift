@@ -46,6 +46,11 @@ public struct EventPhotosDetailView: View {
         .background(SolennixColors.surfaceGrouped)
         .navigationTitle(tr("events.photos.title", "Fotos del Evento"))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                photosPickerButton
+            }
+        }
         .task { await viewModel.loadData(eventId: eventId) }
         .fullScreenCover(item: $lightboxIndex) { index in
             lightboxView(index: index)
@@ -54,74 +59,56 @@ public struct EventPhotosDetailView: View {
 
     // MARK: - Subviews
 
+    private var photosPickerButton: some View {
+        PhotosPicker(
+            selection: $selectedPhotos,
+            maxSelectionCount: 5,
+            matching: .images
+        ) {
+            if isBusy {
+                ProgressView()
+                    .tint(SolennixColors.primary)
+            } else {
+                Image(systemName: "plus")
+                    .font(.body)
+                    .foregroundStyle(SolennixColors.primary)
+                    .accessibilityLabel(tr("events.photos.add", "Agregar Fotos"))
+            }
+        }
+        .disabled(isBusy)
+        .onChange(of: selectedPhotos) { _, newItems in
+            handlePhotosSelection(newItems)
+        }
+    }
+
+    private func handlePhotosSelection(_ newItems: [PhotosPickerItem]) {
+        guard !newItems.isEmpty else { return }
+        isProcessingSelection = true
+        Task {
+            defer {
+                isProcessingSelection = false
+                selectedPhotos = []
+            }
+            var imageDataArray: [Data] = []
+            for item in newItems {
+                if let data = try? await item.loadTransferable(type: Data.self) {
+                    imageDataArray.append(data)
+                }
+            }
+            if !imageDataArray.isEmpty {
+                await viewModel.addPhotos(data: imageDataArray, eventId: eventId)
+            }
+        }
+    }
+
     private var content: some View {
         ScrollView {
-            VStack(spacing: Spacing.lg) {
-                // Header with title, count, and compact upload button
-                HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: Spacing.xxs) {
-                        Text(tr("events.photos.title", "Fotos del Evento"))
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundStyle(SolennixColors.textPrimary)
-
-                        if !viewModel.eventPhotos.isEmpty {
-                            Text(FeatureL10n.plural("events.photos.count", "%lld fotos", count: viewModel.eventPhotos.count))
-                                .font(.subheadline)
-                                .foregroundStyle(SolennixColors.textSecondary)
-                        }
-                    }
-
-                    Spacer()
-
-                    PhotosPicker(
-                        selection: $selectedPhotos,
-                        maxSelectionCount: 5,
-                        matching: .images
-                    ) {
-                        HStack(spacing: Spacing.xs) {
-                            if isBusy {
-                                ProgressView()
-                                    .tint(.white)
-                                Text(tr("events.photos.uploading", "Subiendo..."))
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
-                            } else {
-                                Image(systemName: "plus.circle.fill")
-                                    .font(.subheadline)
-                                Text(tr("events.photos.add", "Agregar Fotos"))
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
-                            }
-                        }
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, Spacing.md)
-                        .padding(.vertical, Spacing.sm)
-                        .background(isBusy ? SolennixColors.primary.opacity(0.6) : SolennixColors.primary)
-                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-                    }
-                    .disabled(isBusy)
-                    .onChange(of: selectedPhotos) { _, newItems in
-                        guard !newItems.isEmpty else { return }
-                        isProcessingSelection = true
-                        Task {
-                            defer {
-                                isProcessingSelection = false
-                                selectedPhotos = []
-                            }
-                            var imageDataArray: [Data] = []
-                            for item in newItems {
-                                if let data = try? await item.loadTransferable(type: Data.self) {
-                                    imageDataArray.append(data)
-                                }
-                            }
-                            if !imageDataArray.isEmpty {
-                                await viewModel.addPhotos(data: imageDataArray, eventId: eventId)
-                            }
-                        }
-                    }
+            VStack(alignment: .leading, spacing: Spacing.md) {
+                if !viewModel.eventPhotos.isEmpty {
+                    Text(FeatureL10n.plural("events.photos.count", "%lld fotos", count: viewModel.eventPhotos.count))
+                        .font(.subheadline)
+                        .foregroundStyle(SolennixColors.textSecondary)
                 }
-                .padding(.bottom, Spacing.xs)
 
                 if viewModel.eventPhotos.isEmpty {
                     VStack(spacing: Spacing.md) {
