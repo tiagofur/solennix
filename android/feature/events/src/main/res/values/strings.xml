@@ -403,6 +403,7 @@
     <string name="events_photos_source_gallery">Galería</string>
     <string name="events_photos_delete_title">Eliminar foto</string>
     <string name="events_photos_delete_message">¿Estás seguro de que deseas eliminar esta foto?</string>
+    <string name="events_photos_uploading">Subiendo foto...</string>
 
     <string name="events_checklist_title">Checklist</string>
     <string name="events_checklist_reset_a11y">Reiniciar</string>
