@@ -132,7 +132,7 @@ public struct EventPhotosDetailView: View {
                     let columns = [GridItem(.adaptive(minimum: 140, maximum: 220), spacing: Spacing.md)]
 
                     LazyVGrid(columns: columns, spacing: Spacing.md) {
-                        ForEach(Array(viewModel.eventPhotos.enumerated()), id: \.offset) { index, url in
+                        ForEach(Array(viewModel.eventPhotos.enumerated()), id: \.offset) { index, photo in
                             ZStack(alignment: .topTrailing) {
                                 Button {
                                     lightboxIndex = index
@@ -140,7 +140,7 @@ public struct EventPhotosDetailView: View {
                                     Color.clear
                                         .aspectRatio(1, contentMode: .fill)
                                         .overlay(
-                                            AsyncImage(url: APIClient.resolveURL(url)) { image in
+                                            AsyncImage(url: APIClient.resolveURL(photo.url)) { image in
                                                 image
                                                     .resizable()
                                                     .scaledToFill()
@@ -181,7 +181,7 @@ public struct EventPhotosDetailView: View {
             Color.black.ignoresSafeArea()
 
             if index >= 0 && index < viewModel.eventPhotos.count {
-                AsyncImage(url: APIClient.resolveURL(viewModel.eventPhotos[index])) { image in
+                AsyncImage(url: APIClient.resolveURL(viewModel.eventPhotos[index].url)) { image in
                     image
                         .resizable()
                         .scaledToFit()

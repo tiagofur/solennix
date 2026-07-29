@@ -49,7 +49,7 @@ struct EventDetailPhotosSummaryCard: View {
 
 struct EventDetailPhotosPreviewCard: View {
     let title: String
-    let photos: [String]
+    let photos: [EventPhoto]
     let route: Route
 
     var body: some View {
@@ -69,8 +69,8 @@ struct EventDetailPhotosPreviewCard: View {
             }
 
             HStack(spacing: Spacing.sm) {
-                ForEach(Array(photos.prefix(4).enumerated()), id: \.offset) { index, url in
-                    AsyncImage(url: APIClient.resolveURL(url)) { image in
+                ForEach(Array(photos.prefix(4).enumerated()), id: \.offset) { index, photo in
+                    AsyncImage(url: APIClient.resolveURL(photo.displayUrl)) { image in
                         image
                             .resizable()
                             .scaledToFill()

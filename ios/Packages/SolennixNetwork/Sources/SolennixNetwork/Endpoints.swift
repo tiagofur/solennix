@@ -56,6 +56,20 @@ public enum Endpoint {
         "/events/\(id)/supplies"
     }
 
+    /// Dedicated event-photos sub-resource (GET / POST). Replaces the legacy
+    /// pattern of rewriting the whole `event.photos` JSON string via PUT
+    /// /events/{id}; that shape (an array of bare URL strings) was
+    /// incompatible with the backend's object-array schema and silently made
+    /// iOS-uploaded photos invisible on web/Android (#1067).
+    public static func eventPhotos(_ id: String) -> String {
+        "/events/\(id)/photos"
+    }
+
+    /// Single event photo (DELETE).
+    public static func eventPhoto(_ id: String, _ photoId: String) -> String {
+        "/events/\(id)/photos/\(photoId)"
+    }
+
     public static let equipmentConflicts = "/events/equipment/conflicts"
     public static let equipmentSuggestions = "/events/equipment/suggestions"
     public static let equipmentAvailability = "/events/equipment/availability"
