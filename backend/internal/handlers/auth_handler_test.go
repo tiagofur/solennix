@@ -642,8 +642,8 @@ func TestAuthHandlerResetPassword(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/auth/reset-password", strings.NewReader(`{"token":"`+token+`","new_password":"Test1234!"}`))
 		rr := httptest.NewRecorder()
 		hh.ResetPassword(rr, req)
-		if rr.Code != http.StatusUnauthorized {
-			t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusUnauthorized, rr.Body.String())
+		if rr.Code != http.StatusServiceUnavailable {
+			t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusServiceUnavailable, rr.Body.String())
 		}
 	})
 
@@ -1188,7 +1188,7 @@ func TestAuthHandler_Me_HappyPaths(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("LookupFailed_Returns500", func(t *testing.T) {
+	t.Run("LookupFailed_Returns503", func(t *testing.T) {
 		mockRepo := new(MockFullUserRepo)
 		h := &AuthHandler{userRepo: mockRepo}
 
@@ -1200,7 +1200,7 @@ func TestAuthHandler_Me_HappyPaths(t *testing.T) {
 		rr := httptest.NewRecorder()
 		h.Me(rr, req)
 
-		assert.Equal(t, http.StatusInternalServerError, rr.Code)
+		assert.Equal(t, http.StatusServiceUnavailable, rr.Code)
 		mockRepo.AssertExpectations(t)
 	})
 
@@ -2245,7 +2245,7 @@ func TestAuthHandler_RefreshToken_UserNotFound(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestAuthHandler_RefreshToken_UserLookupFailed_Returns500(t *testing.T) {
+func TestAuthHandler_RefreshToken_UserLookupFailed_Returns503(t *testing.T) {
 	userID := uuid.New()
 	authService := services.NewAuthService("test-secret", 1)
 
@@ -2263,7 +2263,7 @@ func TestAuthHandler_RefreshToken_UserLookupFailed_Returns500(t *testing.T) {
 	rr := httptest.NewRecorder()
 	h.RefreshToken(rr, req)
 
-	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	assert.Equal(t, http.StatusServiceUnavailable, rr.Code)
 	mockRepo.AssertExpectations(t)
 }
 
@@ -2647,7 +2647,7 @@ func TestAuthHandler_ChangePassword(t *testing.T) {
 		h := &AuthHandler{userRepo: mockRepo, authService: authService}
 
 		userID := uuid.New()
-		mockRepo.On("GetByID", mock.Anything, userID).Return(nil, fmt.Errorf("not found"))
+		mockRepo.On("GetByID", mock.Anything, userID).Return(nil, repository.ErrUserNotFound)
 
 		body := `{"current_password":"OldPass123","new_password":"NewPass1234!"}`
 		req := authedReq(userID, body)
