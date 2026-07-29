@@ -439,6 +439,31 @@
     "theme_dark": "Cambiar a modo oscuro",
     "seo_title": "{{name}} | Solennix",
     "seo_title_with_city": "{{name}} · {{city}} | Solennix",
-    "seo_description": "Perfil profesional público de {{name}}{{location}} en Solennix."
+    "seo_description": "Perfil profesional público de {{name}}{{location}} en Solennix.",
+    "request_quote_cta": "Solicitar Cotización",
+    "quote_modal_title": "Solicitar Cotización",
+    "quote_modal_subtitle": "Envía los detalles de tu evento y {{name}} te contactará a la brevedad.",
+    "name_label": "Nombre completo",
+    "contact_label": "Correo electrónico o WhatsApp",
+    "contact_placeholder": "ej. maria@ejemplo.com o +52 33...",
+    "event_type_label": "Tipo de evento",
+    "event_type_select": "Selecciona el tipo de evento",
+    "event_types": {
+      "wedding": "Boda",
+      "birthday": "Cumpleaños / Fiesta",
+      "xv_years": "XV Años",
+      "corporate": "Evento Corporativo",
+      "graduation": "Graduación",
+      "other": "Otro evento"
+    },
+    "event_date_label": "Fecha estimada del evento",
+    "num_guests_label": "Número estimado de invitados",
+    "message_label": "Detalles o mensaje adicional",
+    "message_placeholder": "¿Tienes algún requerimiento o presupuesto en mente?",
+    "submit_quote": "Enviar Solicitud",
+    "submitting_quote": "Enviando...",
+    "quote_success_title": "¡Solicitud enviada!",
+    "quote_success_desc": "Tu mensaje ha sido enviado directamente a {{name}}. Se pondrán en contacto contigo muy pronto.",
+    "close_modal": "Cerrar"
   }
 }

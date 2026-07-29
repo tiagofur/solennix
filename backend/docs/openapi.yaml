@@ -2536,6 +2536,67 @@ components:
           type: integer
           nullable: true
           description: Number of public reviews; omitted unless reviews are visible and there is at least one
+    SubmitPublicLeadRequest:
+      type: object
+      required:
+        - name
+        - contact
+      properties:
+        name:
+          type: string
+          maxLength: 120
+        contact:
+          type: string
+          maxLength: 255
+          description: How the organizer should reach back (email, phone, WhatsApp)
+        event_date:
+          type: string
+          format: date
+          nullable: true
+        event_type:
+          type: string
+          nullable: true
+          maxLength: 80
+        num_guests:
+          type: integer
+          nullable: true
+          minimum: 1
+        message:
+          type: string
+          nullable: true
+        source:
+          type: string
+          default: form
+    PublicLead:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        contact:
+          type: string
+        event_date:
+          type: string
+          format: date
+          nullable: true
+        event_type:
+          type: string
+          nullable: true
+        num_guests:
+          type: integer
+          nullable: true
+        message:
+          type: string
+          nullable: true
+        source:
+          type: string
+        is_read:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
     OrganizerPublicProfile:
       type: object
       required:
@@ -5691,6 +5752,36 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "429":
           description: Rate limit exceeded
+  /api/public/organizers/{slug}/leads:
+    post:
+      security: []
+      operationId: submitPublicLead
+      summary: Submit an inquiry to an organizer's public profile (rate-limited, unauthenticated)
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitPublicLeadRequest"
+      responses:
+        "201":
+          description: Inquiry submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicLead"
+        "400":
+          description: Invalid request body
+        "404":
+          description: Profile not found or disabled
+        "429":
+          description: Rate limit exceeded (5 / minute)
   /api/public/organizers/{slug}/reviews:
     get:
       security: []

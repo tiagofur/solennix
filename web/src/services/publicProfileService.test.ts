@@ -126,4 +126,38 @@ describe("publicProfileService", () => {
       expect.objectContaining({ signal: controller.signal }),
     );
   });
+
+  it("submitLead posts to /public/organizers/{slug}/leads and returns created lead", async () => {
+    const created = { id: "l1", name: "Maria", contact: "m@test.com" };
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({ data: created }),
+    });
+
+    const payload = { name: "Maria", contact: "m@test.com", event_type: "wedding" };
+    const res = await publicProfileService.submitLead("alice", payload);
+
+    expect(res).toEqual(created);
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringMatching(/\/public\/organizers\/alice\/leads$/),
+      expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }),
+    );
+  });
+
+  it("submitLead throws error message on non-ok response", async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({ error: "name and contact are required" }),
+    });
+
+    await expect(
+      publicProfileService.submitLead("alice", { name: "", contact: "" }),
+    ).rejects.toThrow("name and contact are required");
+  });
 });

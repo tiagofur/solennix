@@ -28,6 +28,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	publicProfileServicesHandler *handlers.PublicProfileServicesHandler,
 	staffHandler *handlers.StaffHandler,
 	staffTeamHandler *handlers.StaffTeamHandler,
+	publicLeadHandler *handlers.PublicLeadHandler,
 	pdfHandler *handlers.PDFHandler,
 	authService *services.AuthService, userRepo *repository.UserRepo, auditRepo mw.AuditLogger, pool *pgxpool.Pool, corsOrigins []string, uploadDir string, environment string, trustProxy bool) http.Handler {
 
@@ -209,6 +210,8 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Use(mw.RateLimit(20, 1*time.Minute))
 		r.Get("/{slug}", publicProfileHandler.GetPublicProfile)
 		r.Get("/{slug}/reviews", reviewHandler.ListPublicPortfolioReviews)
+		// Tighter rate limit for lead submissions (form spam protection).
+		r.With(mw.RateLimit(5, 1*time.Minute)).Post("/{slug}/leads", publicLeadHandler.SubmitPublicLead)
 	})
 
 	// Protected routes
@@ -377,6 +380,12 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Get("/", reviewHandler.ListOrganizerReviews)
 			r.Patch("/{id}/response", reviewHandler.UpdateOrganizerResponse)
 			r.Patch("/{id}/visibility", reviewHandler.UpdateReviewVisibility)
+		})
+
+		// Public-profile leads (inquiries) inbox for the organizer.
+		r.Route("/leads", func(r chi.Router) {
+			r.Get("/", publicLeadHandler.ListLeads)
+			r.Post("/{id}/read", publicLeadHandler.MarkLeadRead)
 		})
 
 		// Backward-compatible alias for older organizer clients still calling the prefixed path.

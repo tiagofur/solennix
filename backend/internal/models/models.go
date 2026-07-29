@@ -700,3 +700,19 @@ type PublicOrganizerProfile struct {
 	AverageRating   *float64 `json:"average_rating,omitempty"`
 	ReviewsCount    *int     `json:"reviews_count,omitempty"`
 }
+
+// PublicLead is an inquiry submitted by an unauthenticated visitor to an
+// organizer's public profile. Stored for the organizer to follow up.
+type PublicLead struct {
+	ID              uuid.UUID `json:"id"`
+	OrganizerUserID uuid.UUID `json:"-"`
+	Name            string    `json:"name"`
+	Contact         string    `json:"contact"`
+	EventDate       *string   `json:"event_date,omitempty"`
+	EventType       *string   `json:"event_type,omitempty"`
+	NumGuests       *int      `json:"num_guests,omitempty"`
+	Message         *string   `json:"message,omitempty"`
+	Source          string    `json:"source"`
+	IsRead          bool      `json:"is_read"`
+	CreatedAt       time.Time `json:"created_at"`
+}

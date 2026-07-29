@@ -12,6 +12,7 @@ import {
   Moon,
   Sun,
   AlertCircle,
+  Calendar,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/hooks/useTheme";
@@ -19,6 +20,7 @@ import { Logo } from "@/components/Logo";
 import { Card } from "@/components/Card";
 import { localeFromLanguage } from "@/lib/finance";
 import { resolveMediaUrl } from "@/lib/api";
+import { PublicLeadModal } from "./PublicLeadModal";
 import {
   publicProfileService,
   PublicProfileNotFoundError,
@@ -111,6 +113,7 @@ export const PublicProfilePage: React.FC = () => {
 
   const [state, setState] = useState<PageState>("loading");
   const [profile, setProfile] = useState<PublicOrganizerProfile | null>(null);
+  const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
 
   useEffect(() => {
     if (!slug?.trim()) {
@@ -359,24 +362,34 @@ export const PublicProfilePage: React.FC = () => {
             </div>
           </div>
 
-          {profile.contact && (
-            <div className="mt-6">
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setIsQuoteModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary shadow-xs hover:opacity-90 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary cursor-pointer"
+              style={
+                profile.brand_color
+                  ? { backgroundColor: profile.brand_color }
+                  : undefined
+              }
+              data-testid="public-request-quote-button"
+            >
+              <Calendar className="h-4 w-4" aria-hidden="true" />
+              {t("profile.request_quote_cta")}
+            </button>
+
+            {profile.contact && (
               <a
                 href={contactHref(profile.contact)}
                 target={contactOpenExternal ? "_blank" : undefined}
                 rel={contactOpenExternal ? "noopener noreferrer" : undefined}
-                className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary shadow-xs hover:opacity-90 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                style={
-                  profile.brand_color
-                    ? { backgroundColor: profile.brand_color }
-                    : undefined
-                }
+                className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface-alt/70 px-4 py-2.5 text-sm font-semibold text-text hover:bg-surface-alt transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 <ContactIcon type={profile.contact.type} />
                 {t("profile.contact_cta")}
               </a>
-            </div>
-          )}
+            )}
+          </div>
 
           {socialEntries.length > 0 && (
             <ul className="mt-4 flex flex-wrap gap-2">
@@ -590,6 +603,14 @@ export const PublicProfilePage: React.FC = () => {
           </section>
         )}
       </main>
+
+      <PublicLeadModal
+        isOpen={isQuoteModalOpen}
+        onClose={() => setIsQuoteModalOpen(false)}
+        slug={profile.slug || slug || ""}
+        businessName={displayName}
+        brandColor={profile.brand_color}
+      />
 
       <footer className="border-t border-border py-6 mt-4">
         <p className="text-center text-xs text-text-tertiary">
