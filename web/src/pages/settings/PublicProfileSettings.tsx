@@ -10,6 +10,8 @@ import {
   Trash2,
   Image as ImageIcon,
   Package,
+  MapPin,
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/Button";
@@ -412,6 +414,85 @@ export default function PublicProfileSettings() {
           {t("publicProfile.description")}
         </p>
       </header>
+
+      {/* Live Header Preview Card */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-medium text-text-secondary uppercase tracking-wider flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+            {t("publicProfile.livePreviewTitle", { defaultValue: "Vista previa en vivo" })}
+          </p>
+          <span
+            className={clsx(
+              "text-xs font-medium px-2 py-0.5 rounded-full border",
+              profile.is_enabled
+                ? "bg-success/10 text-success border-success/20"
+                : "bg-surface-alt text-text-secondary border-border",
+            )}
+          >
+            {profile.is_enabled
+              ? t("publicProfile.statusActive", { defaultValue: "Público" })
+              : t("publicProfile.statusInactive", { defaultValue: "Borrador" })}
+          </span>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
+          {/* Cover */}
+          <div
+            className="relative h-28 sm:h-36 w-full bg-surface-alt"
+            style={{
+              backgroundImage: user?.cover_url
+                ? undefined
+                : `linear-gradient(135deg, ${user?.brand_color || "var(--color-primary, #C4A265)"} 0%, color-mix(in srgb, ${user?.brand_color || "var(--color-primary, #C4A265)"} 45%, transparent) 100%)`,
+            }}
+          >
+            {user?.cover_url && (
+              <img
+                src={getAssetUrl(user.cover_url)}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            )}
+          </div>
+          {/* Logo & Info */}
+          <div className="p-4 sm:p-5 pt-0">
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-start gap-4">
+              {user?.logo_url ? (
+                <img
+                  src={getAssetUrl(user.logo_url)}
+                  alt=""
+                  className="-mt-8 sm:-mt-10 h-16 w-auto max-w-[180px] rounded-xl object-contain border-4 border-bg shrink-0 bg-surface-alt shadow-xs"
+                />
+              ) : (
+                <div
+                  className="-mt-8 sm:-mt-10 h-16 w-16 rounded-xl shrink-0 flex items-center justify-center text-xl font-bold text-on-primary border-4 border-bg shadow-xs"
+                  style={{
+                    backgroundColor: user?.brand_color || "var(--color-primary, #C4A265)",
+                  }}
+                >
+                  {(user?.business_name || slug || "S").charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div className="min-w-0 flex-1 space-y-1 pt-1 sm:pt-2">
+                <h4 className="text-base sm:text-lg font-bold text-text truncate">
+                  {user?.business_name || slug || t("publicProfile.fallbackName", { defaultValue: "Nombre del Negocio" })}
+                </h4>
+                {headline && (
+                  <p className="text-xs sm:text-sm text-text-secondary line-clamp-2 leading-relaxed">
+                    {headline}
+                  </p>
+                )}
+                {(city || region || country) && (
+                  <p className="text-xs text-text-tertiary flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5 text-primary shrink-0" aria-hidden="true" />
+                    <span>{[city, region, country].filter(Boolean).join(", ")}</span>
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Enable toggle */}
       <div className="space-y-3">

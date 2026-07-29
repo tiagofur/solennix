@@ -296,16 +296,16 @@ export const PublicProfilePage: React.FC = () => {
           </div>
 
           {/* Logo + identity row (logo overlaps the hero bottom) */}
-          <div className="flex flex-col sm:flex-row sm:items-start gap-5 -mt-10 sm:-mt-12">
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-start gap-5">
             {logoSrc ? (
               <img
                 src={logoSrc}
                 alt={showName ? "" : displayName}
-                className="h-20 w-auto max-w-[280px] rounded-xl object-contain border-4 border-bg shrink-0 bg-surface-alt shadow-sm"
+                className="-mt-10 sm:-mt-12 h-20 w-auto max-w-[280px] rounded-xl object-contain border-4 border-bg shrink-0 bg-surface-alt shadow-sm"
               />
             ) : (
               <div
-                className="h-20 w-20 rounded-2xl shrink-0 flex items-center justify-center text-2xl font-bold text-on-primary border-4 border-bg shadow-sm"
+                className="-mt-10 sm:-mt-12 h-20 w-20 rounded-2xl shrink-0 flex items-center justify-center text-2xl font-bold text-on-primary border-4 border-bg shadow-sm"
                 style={{
                   backgroundColor:
                     profile.brand_color || "var(--color-primary, #C4A265)",
@@ -316,7 +316,7 @@ export const PublicProfilePage: React.FC = () => {
               </div>
             )}
 
-            <div className="min-w-0 flex-1 space-y-2 sm:pt-10">
+            <div className="min-w-0 flex-1 space-y-2 pt-3 sm:pt-4">
               {showName && (
                 <h1 className="text-2xl sm:text-3xl font-bold text-text tracking-tight break-words">
                   {displayName}
