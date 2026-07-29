@@ -51,7 +51,7 @@ func TestUserRepoIntegration(t *testing.T) {
 	}
 
 	newName := "Updated Name"
-	updatedUser, err := repo.Update(context.Background(), user.ID, &newName, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	updatedUser, err := repo.Update(context.Background(), user.ID, &newName, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("Update() error = %v", err)
 	}
@@ -1600,7 +1600,7 @@ func TestEventRepoGetEquipmentAvailabilityIntegration(t *testing.T) {
 	const targetDate = "2026-07-01"
 	const otherDate = "2026-08-01"
 
-	onDateEvent := seedEvent(t, pool, userID, clientID, targetDate)  // quoted, counts
+	onDateEvent := seedEvent(t, pool, userID, clientID, targetDate) // quoted, counts
 	offDateEvent := seedEvent(t, pool, userID, clientID, otherDate) // different date, must NOT count
 
 	seedEventEquipment(t, pool, onDateEvent, itemID, 3)

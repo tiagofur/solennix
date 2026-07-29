@@ -124,7 +124,7 @@ func TestRepositoryMethodsWithClosedPool(t *testing.T) {
 	if err := NewUserRepo(pool).UpdatePublicSlug(ctx, id, "closed-pool-slug"); err == nil {
 		t.Fatalf("UserRepo.UpdatePublicSlug() expected error with closed pool")
 	}
-	if _, err := NewUserRepo(pool).Update(context.Background(), uuid.New(), nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil); err == nil {
+	if _, err := NewUserRepo(pool).Update(context.Background(), uuid.New(), nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil); err == nil {
 		t.Fatalf("UserRepo.Update() expected error with closed pool")
 	}
 
@@ -571,6 +571,7 @@ func TestUserRepoUpdateWithAllParams(t *testing.T) {
 	name := "Test User"
 	biz := "Test Business"
 	logo := "https://example.com/logo.png"
+	cover := "https://example.com/cover.png"
 	color := "#ff0000"
 	showBiz := true
 	dep := 50.0
@@ -579,7 +580,7 @@ func TestUserRepoUpdateWithAllParams(t *testing.T) {
 	contract := "template"
 
 	repo := NewUserRepo(pool)
-	if _, err := repo.Update(ctx, id, &name, &biz, &logo, &color, &showBiz, &dep, &cancel, &refund, &contract, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil); err == nil {
+	if _, err := repo.Update(ctx, id, &name, &biz, &logo, &cover, &color, &showBiz, &dep, &cancel, &refund, &contract, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil); err == nil {
 		t.Fatal("UserRepo.Update(all params) expected error with closed pool")
 	}
 }
@@ -652,7 +653,7 @@ func TestUserRepoUpdatePartialParams(t *testing.T) {
 	// Only name + business name
 	name := "Partial User"
 	biz := "Partial Business"
-	if _, err := repo.Update(ctx, id, &name, &biz, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil); err == nil {
+	if _, err := repo.Update(ctx, id, &name, &biz, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil); err == nil {
 		t.Fatal("UserRepo.Update(partial params) expected error with closed pool")
 	}
 
@@ -660,7 +661,7 @@ func TestUserRepoUpdatePartialParams(t *testing.T) {
 	logo := "https://example.com/logo.png"
 	color := "#abcdef"
 	showBiz := false
-	if _, err := repo.Update(ctx, id, nil, nil, &logo, &color, &showBiz, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil); err == nil {
+	if _, err := repo.Update(ctx, id, nil, nil, &logo, nil, &color, &showBiz, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil); err == nil {
 		t.Fatal("UserRepo.Update(logo/color/showBiz) expected error with closed pool")
 	}
 
@@ -669,7 +670,7 @@ func TestUserRepoUpdatePartialParams(t *testing.T) {
 	cancel := 14.0
 	refund := 80.0
 	contract := "custom template"
-	if _, err := repo.Update(ctx, id, nil, nil, nil, nil, nil, &dep, &cancel, &refund, &contract, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil); err == nil {
+	if _, err := repo.Update(ctx, id, nil, nil, nil, nil, nil, nil, &dep, &cancel, &refund, &contract, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil); err == nil {
 		t.Fatal("UserRepo.Update(contract defaults) expected error with closed pool")
 	}
 }

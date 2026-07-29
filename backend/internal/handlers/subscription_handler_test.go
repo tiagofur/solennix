@@ -75,8 +75,8 @@ func (m *MockUserRepo) GetByEmail(ctx context.Context, email string) (*models.Us
 	return args.Get(0).(*models.User), args.Error(1)
 }
 
-func (m *MockUserRepo) Update(ctx context.Context, id uuid.UUID, name, businessName, logoURL, brandColor *string, showBusinessNameInPdf *bool, depositPercent, cancellationDays, refundPercent *float64) (*models.User, error) {
-	args := m.Called(ctx, id, name, businessName, logoURL, brandColor, showBusinessNameInPdf, depositPercent, cancellationDays, refundPercent)
+func (m *MockUserRepo) Update(ctx context.Context, id uuid.UUID, name, businessName, logoURL, coverURL, brandColor *string, showBusinessNameInPdf *bool, depositPercent, cancellationDays, refundPercent *float64) (*models.User, error) {
+	args := m.Called(ctx, id, name, businessName, logoURL, coverURL, brandColor, showBusinessNameInPdf, depositPercent, cancellationDays, refundPercent)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

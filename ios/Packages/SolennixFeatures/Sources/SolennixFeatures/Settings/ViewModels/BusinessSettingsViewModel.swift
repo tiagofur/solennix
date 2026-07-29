@@ -97,6 +97,11 @@ public final class BusinessSettingsViewModel {
     public var selectedPhoto: PhotosPickerItem?
     public var isUploadingLogo: Bool = false
 
+    // Cover
+    public var coverUrl: String?
+    public var selectedCoverPhoto: PhotosPickerItem?
+    public var isUploadingCover: Bool = false
+
     // MARK: - Dependencies
 
     private let apiClient: APIClient
@@ -130,6 +135,7 @@ public final class BusinessSettingsViewModel {
         businessName = user.businessName ?? ""
         showBusinessNameInPdf = user.showBusinessNameInPdf ?? true
         logoUrl = user.logoUrl
+        coverUrl = user.coverUrl
         depositPercent = user.defaultDepositPercent ?? 50
         cancellationDays = user.defaultCancellationDays ?? 7
         refundPercent = user.defaultRefundPercent ?? 50
@@ -227,6 +233,40 @@ public final class BusinessSettingsViewModel {
 
         isUploadingLogo = false
         self.selectedPhoto = nil
+    }
+
+    // MARK: - Upload Cover
+
+    @MainActor
+    public func handleCoverSelection() async {
+        guard let selectedCoverPhoto = selectedCoverPhoto else { return }
+
+        isUploadingCover = true
+        errorMessage = nil
+
+        do {
+            guard let data = try await selectedCoverPhoto.loadTransferable(type: Data.self) else {
+                errorMessage = tr("settings.business.cover.load_error", "No se pudo cargar la imagen")
+                isUploadingCover = false
+                return
+            }
+
+            let response: UploadResponse = try await apiClient.upload(
+                Endpoint.uploadImage,
+                data: data,
+                filename: "cover.jpg"
+            )
+
+            // Update profile with new cover URL
+            let body = ["cover_url": response.url]
+            user = try await apiClient.put(Endpoint.updateProfile, body: body)
+            coverUrl = response.url
+        } catch {
+            errorMessage = mapError(error)
+        }
+
+        isUploadingCover = false
+        self.selectedCoverPhoto = nil
     }
 
     // MARK: - Error Mapping

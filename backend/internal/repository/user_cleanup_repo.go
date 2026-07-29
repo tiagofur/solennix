@@ -22,7 +22,7 @@ func NewUserCleanupRepo(pool *pgxpool.Pool) *UserCleanupRepo {
 func scanUser(row pgx.Row) (*models.User, error) {
 	user := &models.User{}
 	err := row.Scan(
-		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
+		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.CoverURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
 		&user.DefaultDepositPercent, &user.DefaultCancellationDays, &user.DefaultRefundPercent,
 		&user.ContractTemplate,
 		&user.EmailPaymentReceipt, &user.EmailEventReminder, &user.EmailSubscriptionUpdates,
@@ -41,7 +41,7 @@ func scanUser(row pgx.Row) (*models.User, error) {
 	return user, nil
 }
 
-const selectUserColumns = `SELECT id, email, password_hash, name, business_name, logo_url, brand_color, show_business_name_in_pdf,
+const selectUserColumns = `SELECT id, email, password_hash, name, business_name, logo_url, cover_url, brand_color, show_business_name_in_pdf,
 	default_deposit_percent, default_cancellation_days, default_refund_percent,
 	contract_template,
 	email_payment_receipt, email_event_reminder, email_subscription_updates,

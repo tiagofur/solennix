@@ -43,6 +43,10 @@ components:
         logo_url:
           type: string
           nullable: true
+        cover_url:
+          type: string
+          nullable: true
+          description: Public profile hero cover image URL
         brand_color:
           type: string
           nullable: true
@@ -260,6 +264,10 @@ components:
         logo_url:
           type: string
           nullable: true
+        cover_url:
+          type: string
+          nullable: true
+          description: Public profile hero cover image URL
         brand_color:
           type: string
           nullable: true
@@ -1980,6 +1988,10 @@ components:
         logo_url:
           type: string
           nullable: true
+        cover_url:
+          type: string
+          nullable: true
+          description: Public profile hero cover image URL
         brand_color:
           type: string
           nullable: true
@@ -2167,6 +2179,10 @@ components:
         logo_url:
           type: string
           nullable: true
+        cover_url:
+          type: string
+          nullable: true
+          description: Public profile hero cover image URL
         brand_color:
           type: string
           nullable: true
@@ -2475,6 +2491,10 @@ components:
         logo_url:
           type: string
           nullable: true
+        cover_url:
+          type: string
+          nullable: true
+          description: Public profile hero cover image URL
         brand_color:
           type: string
           nullable: true

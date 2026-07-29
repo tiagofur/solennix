@@ -102,6 +102,7 @@ export const Settings: React.FC = () => {
     profile?.contract_template || DEFAULT_CONTRACT_TEMPLATE,
   );
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [brandColor, setBrandColor] = useState(
     profile?.brand_color || "#C4A265"
   );
@@ -258,6 +259,29 @@ export const Settings: React.FC = () => {
       logError("Error uploading logo", error);
     } finally {
       setIsUploadingLogo(false);
+    }
+  };
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Cover is a wide banner; allow a slightly larger payload than the logo.
+    if (file.size > 4 * 1024 * 1024) {
+      addToast(t("settings:business.logo_error_size"), "error");
+      return;
+    }
+
+    try {
+      setIsUploadingCover(true);
+      const formData = new FormData();
+      formData.append('file', file);
+      const result = await api.postFormData<{ url: string }>('/uploads/image', formData);
+      await updateProfile({ cover_url: result.url });
+    } catch (error) {
+      logError("Error uploading cover", error);
+    } finally {
+      setIsUploadingCover(false);
     }
   };
 
@@ -727,6 +751,32 @@ export const Settings: React.FC = () => {
                     <label className="inline-block bg-card text-text font-bold text-sm px-6 py-2.5 rounded-xl border border-border shadow-sm hover:shadow-md transition-all cursor-pointer">
                       {t("settings:business.logo_select")}
                       <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cover Upload */}
+              <div className="space-y-4">
+                <label className="text-xs font-medium text-text-secondary">{t("settings:business.cover_label")}</label>
+                <div className="space-y-3">
+                  <div className="relative h-32 sm:h-40 w-full bg-surface-alt/50 rounded-2xl border-2 border-dashed border-border overflow-hidden flex items-center justify-center">
+                    {profile?.cover_url ? (
+                      <img src={getAssetUrl(profile.cover_url)} alt="Cover" className="absolute inset-0 h-full w-full object-cover" />
+                    ) : (
+                      <ImageIcon className="h-10 w-10 text-text-secondary" />
+                    )}
+                    {isUploadingCover && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <Zap className="h-6 w-6 text-white animate-pulse" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs text-text-secondary flex-1">{t("settings:business.cover_desc")}</p>
+                    <label className="inline-block bg-card text-text font-bold text-sm px-5 py-2 rounded-xl border border-border shadow-sm hover:shadow-md transition-all cursor-pointer shrink-0">
+                      {t("settings:business.cover_select")}
+                      <input type="file" className="hidden" accept="image/*" onChange={handleCoverUpload} />
                     </label>
                   </div>
                 </div>

@@ -12,6 +12,7 @@ data class User(
     @SerialName("preferred_language") val preferredLanguage: String? = null,
     @SerialName("business_name") val businessName: String? = null,
     @SerialName("logo_url") val logoUrl: String? = null,
+    @SerialName("cover_url") val coverUrl: String? = null,
     @SerialName("brand_color") val brandColor: String? = null,
     @SerialName("show_business_name_in_pdf") val showBusinessNameInPdf: Boolean? = null,
     @SerialName("default_deposit_percent") val defaultDepositPercent: Double? = null,

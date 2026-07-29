@@ -1455,6 +1455,8 @@ export interface components {
             name: string;
             business_name?: string | null;
             logo_url?: string | null;
+            /** @description Public profile hero cover image URL */
+            cover_url?: string | null;
             brand_color?: string | null;
             show_business_name_in_pdf?: boolean | null;
             /** Format: double */
@@ -1547,6 +1549,8 @@ export interface components {
             name?: string | null;
             business_name?: string | null;
             logo_url?: string | null;
+            /** @description Public profile hero cover image URL */
+            cover_url?: string | null;
             brand_color?: string | null;
             show_business_name_in_pdf?: boolean | null;
             /** Format: double */
@@ -2312,6 +2316,8 @@ export interface components {
         PublicOrganizer: {
             business_name?: string | null;
             logo_url?: string | null;
+            /** @description Public profile hero cover image URL */
+            cover_url?: string | null;
             brand_color?: string | null;
         };
         EventFormDataResponse: {
@@ -2393,6 +2399,8 @@ export interface components {
         PublicOrganizerBrand: {
             business_name?: string | null;
             logo_url?: string | null;
+            /** @description Public profile hero cover image URL */
+            cover_url?: string | null;
             brand_color?: string | null;
         };
         PublicClientInfo: {
@@ -2526,6 +2534,8 @@ export interface components {
             /** @description Whether the business name should be shown as text (mirrors show_business_name_in_pdf; defaults to true) */
             show_business_name?: boolean;
             logo_url?: string | null;
+            /** @description Public profile hero cover image URL */
+            cover_url?: string | null;
             brand_color?: string | null;
             headline?: string | null;
             location?: components["schemas"]["PublicLocation"];
