@@ -1,6 +1,60 @@
 # Sesión Activa — Solennix Agent Progress
 
-## Feature en curso
+## Sesión 2026-07-29 — Fix fotos de eventos invisibles en web (#1067)
+
+**Branch:** `fix/1067-event-photo-upload-relative-urls`
+
+### Causa raíz
+Desacuerdo de esquema en `events.photos`: iOS escribía un array de strings
+(`["/api/uploads/.../a.jpg"]`) vía `PUT /events/{id}`, pero backend/Android/Web
+leen/escriben un array de objetos `EventPhoto` vía `POST /events/{id}/photos`.
+`parseEventPhotos` hacía `json.Unmarshal` de strings en `[]models.EventPhoto` →
+fallaba → devolvía `[]` → la web no mostraba nada. (Las URLs relativas que ya
+se habían arreglado en esta branch eran un síntoma secundario.)
+
+### Cambios (2 commits)
+1. `fix(backend): make parseEventPhotos tolerant of legacy iOS string-array photos`
+   — `crud_handler.go`: tras fallar el unmarshal de objetos, reintenta como
+   `[]string` y mapea cada URL a un `EventPhoto` sintético. Recupera fotos ya
+   subidas sin migrar la DB. Tests en `crud_handler_events_coverage_test.go`.
+2. `fix(ios): use dedicated event photos endpoint instead of rewriting event.photos`
+   — Nuevo modelo `EventPhoto` (SolennixCore), endpoints
+   `eventPhotos`/`eventPhoto` (SolennixNetwork), `EventDetailViewModel` ahora
+   usa GET/POST/DELETE `/events/{id}/photos`, y las 3 vistas consumidoras
+   (`EventPhotosDetailView`, `EventDetailMediaComponents`, `EventDetailView`)
+   pasaron de `[String]` a `[EventPhoto]`.
+
+### Verificación
+- Backend: `go test ./internal/handlers/...` verde (incluye tests legacy nuevos).
+- Web: `./init.sh` → 1463 tests Vitest en verde (sin cambios web en este fix).
+- iOS: typecheck de los 4 paquetes (259 fuentes) contra iOS Simulator SDK →
+  solo error preexistente `no such module 'RevenueCat'` (tercero), cero errores
+  en los archivos tocados. Build con `xcodebuild` bloqueado por sandbox del
+  entorno (`sandbox-exec: Operation not permitted`), no por el código.
+
+### Android — modelo EventPhoto roto (mismo bug, segunda sesión)
+Android NO veía fotos subidas desde la web NI podía subir. Causa raíz única:
+el modelo `EventPhoto` declaraba `eventId: String` (mapeado a `event_id`) como
+campo **requerido**, pero el backend nunca emite `event_id`. kotlinx.serialization
+lanza `MissingFieldException` al deserializar **cualquier** `EventPhoto` → la
+lista (GET) y la respuesta del upload (POST 201) fallaban ambas. El archivo sí
+subía y el backend sí persistía, pero el cliente rompía al decodificar la
+respuesta. El campo `eventId` no se usaba en ningún lado (campo muerto).
+- Fix: `android/core/model/.../EventPhoto.kt` — se removió `eventId`.
+- Test: `EventPhotoSerializationTest.kt` decodifica el JSON exacto del backend
+  (lista y objeto único, sin `event_id`) como guard de regresión.
+- Verificación: `./gradlew :core:model:testDebugUnitTest` verde;
+  `:feature:events:compileDebugKotlin` verde (sin uso de `eventId`).
+
+### Fuera de scope
+- Android/Web: sin cambios (ya usan el endpoint correcto; el fix del backend
+  restaura sus datos automáticamente).
+- Migración física de DB (strings→objetos): no necesaria; el mapeo tolerante
+  la cubre.
+
+---
+
+## Feature en curso (trabajo previo)
 - **Change (SDD):** `public-professional-profile` · **Issue:** [#787](https://github.com/tiagofur/solennix/issues/787)
 - **Estado:** PR1 verde (técnico) abierto · PR2 **implementado y abierto** · governance fix en #1047
 - **Branch PR1:** `feat/787-public-profile-pr1-foundation` → [PR #1046](https://github.com/tiagofur/solennix/pull/1046)

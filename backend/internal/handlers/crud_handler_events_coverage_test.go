@@ -107,6 +107,26 @@ func TestParseEventPhotos(t *testing.T) {
 		assert.Len(t, got, 1)
 		assert.Equal(t, "https://x", got[0].URL)
 	})
+
+	t.Run("legacy iOS string array is lifted into EventPhoto objects (#1067)", func(t *testing.T) {
+		raw := `["/api/uploads/u/a.jpg","https://cdn/b.png"]`
+		got := parseEventPhotos(&raw)
+		require.Len(t, got, 2)
+		assert.Equal(t, "/api/uploads/u/a.jpg", got[0].URL)
+		assert.Equal(t, "https://cdn/b.png", got[1].URL)
+		// Synthetic IDs are assigned so each entry remains addressable for DELETE.
+		for _, p := range got {
+			assert.NotEqual(t, uuid.Nil, p.ID)
+			assert.Nil(t, p.ThumbnailURL)
+			assert.Nil(t, p.Caption)
+		}
+	})
+
+	t.Run("empty legacy string array returns empty slice", func(t *testing.T) {
+		raw := `[]`
+		got := parseEventPhotos(&raw)
+		assert.Equal(t, []models.EventPhoto{}, got)
+	})
 }
 
 // ---------------------------------------------------------------------------
@@ -176,6 +196,29 @@ func TestGetEventPhotos_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, rr.Code)
 	assert.Contains(t, rr.Body.String(), "https://img/1")
+}
+
+// Legacy iOS builds stored photos as a JSON array of bare URL strings. That
+// shape must still be served as EventPhoto objects so previously uploaded
+// photos render on web/Android (#1067).
+func TestGetEventPhotos_LegacyStringArray_ReturnsObjects(t *testing.T) {
+	eventRepo := new(MockFullEventRepo)
+	userID := uuid.New()
+	eventID := uuid.New()
+
+	photosJSON := `["/api/uploads/u/a.jpg","https://cdn/b.png"]`
+	eventRepo.On("GetByID", mock.Anything, eventID, userID).
+		Return(&models.Event{ID: eventID, UserID: userID, Photos: &photosJSON}, nil)
+
+	h := eventCoverageHandler(eventRepo)
+	req := makeReqWithIDParam(http.MethodGet, "/api/events/"+eventID.String()+"/photos", "", eventID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.GetEventPhotos(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), "/api/uploads/u/a.jpg")
+	assert.Contains(t, rr.Body.String(), "https://cdn/b.png")
+	assert.Contains(t, rr.Body.String(), `"id"`)
 }
 
 func TestGetEventPhotos_InvalidEventID(t *testing.T) {

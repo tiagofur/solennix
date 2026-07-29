@@ -21,7 +21,7 @@ public final class EventDetailViewModel {
     public var equipment: [EventEquipment] = []
     public var supplies: [EventSupply] = []
     public var payments: [Payment] = []
-    public var eventPhotos: [String] = []
+    public var eventPhotos: [EventPhoto] = []
     public var eventStaff: [EventStaff] = []
 
     /// Per-product ingredient cost cache (productId -> unit cost). Populated
@@ -149,14 +149,12 @@ public final class EventDetailViewModel {
             let fetchedEvent: Event = try await apiClient.get(Endpoint.event(eventId))
             event = fetchedEvent
 
-            // Parse photos from event.photos JSON string
-            if let photosString = fetchedEvent.photos,
-               let data = photosString.data(using: .utf8),
-               let urls = try? JSONDecoder().decode([String].self, from: data) {
-                eventPhotos = urls
-            } else {
-                eventPhotos = []
-            }
+            // Photos live on a dedicated sub-resource (GET /events/{id}/photos)
+            // rather than being parsed out of the `event.photos` JSON string.
+            // The legacy parse assumed a bare-URL-string array, which is
+            // incompatible with the backend's object schema and made
+            // iOS-uploaded photos vanish on web/Android (#1067).
+            eventPhotos = (try? await apiClient.get(Endpoint.eventPhotos(eventId))) ?? []
 
             // Fetch related data in parallel using TaskGroup to avoid async let dealloc crash
             await withTaskGroup(of: Void.self) { group in
@@ -540,14 +538,19 @@ public final class EventDetailViewModel {
             for (index, imageData) in data.enumerated() {
                 let filename = "event_\(eventId)_\(Date().timeIntervalSince1970)_\(index).jpg"
                 let response = try await apiClient.upload(Endpoint.uploadImage, data: imageData, filename: filename)
-                eventPhotos.append(response.url)
+                // Register each upload via the dedicated sub-resource so the
+                // backend stores it as an EventPhoto object (object-array
+                // schema). The legacy flow rewrote `event.photos` as a
+                // string array, which the backend then failed to parse back
+                // into objects — making iOS photos invisible on web/Android
+                // (#1067). POST returns the created EventPhoto with its id,
+                // so the local list stays in lockstep with the server.
+                let photo: EventPhoto = try await apiClient.post(
+                    Endpoint.eventPhotos(eventId),
+                    body: ["url": response.url]
+                )
+                eventPhotos.append(photo)
             }
-
-            // Update event photos
-            let photosJson = try JSONEncoder().encode(eventPhotos)
-            let photosString = String(data: photosJson, encoding: .utf8) ?? "[]"
-            let body: [String: String] = ["photos": photosString]
-            let _: Event = try await apiClient.put(Endpoint.event(eventId), body: body)
         } catch {
             errorMessage = tr("events.detail.error.upload_photos", "Error al subir las fotos")
         }
@@ -558,20 +561,17 @@ public final class EventDetailViewModel {
     @MainActor
     public func removePhoto(at index: Int, eventId: String) async {
         guard index >= 0 && index < eventPhotos.count else { return }
-        // Snapshot before mutating so we can restore on PUT failure — otherwise
-        // the UI and backend diverge permanently (photo hidden locally, still
-        // on the server). Mirrors the `softDeleteClient` undo pattern.
+        // Snapshot before mutating so we can restore on DELETE failure —
+        // otherwise the UI and backend diverge permanently (photo hidden
+        // locally, still on the server). Mirrors the `softDeleteClient`
+        // undo pattern.
         let snapshot = eventPhotos
         let removed = eventPhotos.remove(at: index)
 
         do {
-            let photosJson = try JSONEncoder().encode(eventPhotos)
-            let photosString = String(data: photosJson, encoding: .utf8) ?? "[]"
-            let body: [String: String] = ["photos": photosString]
-            let _: Event = try await apiClient.put(Endpoint.event(eventId), body: body)
+            try await apiClient.delete(Endpoint.eventPhoto(eventId, removed.id))
         } catch {
             eventPhotos = snapshot
-            _ = removed
             errorMessage = tr("events.detail.error.delete_photo", "Error al eliminar la foto")
         }
     }
