@@ -131,6 +131,7 @@ vi.mock('../../lib/api', () => ({
   api: {
     postFormData: vi.fn(),
   },
+  getAssetUrl: (url: string) => url,
 }));
 
 vi.mock('react-router-dom', async () => {
