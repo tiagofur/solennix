@@ -23,6 +23,12 @@ public struct EventPhotosDetailView: View {
     @ScaledMetric(relativeTo: .body) private var emptyIconSize: CGFloat = 48
     private var cappedEmptyIconSize: CGFloat { min(emptyIconSize, 64) }
 
+    @State private var isProcessingSelection = false
+
+    private var isBusy: Bool {
+        isProcessingSelection || viewModel.isUploadingPhoto
+    }
+
     public init(eventId: String, apiClient: APIClient) {
         self.eventId = eventId
         self._viewModel = State(initialValue: EventDetailViewModel(apiClient: apiClient))
@@ -46,6 +52,8 @@ public struct EventPhotosDetailView: View {
         }
     }
 
+    // MARK: - Subviews
+
     private var content: some View {
         ScrollView {
             VStack(spacing: Spacing.lg) {
@@ -56,20 +64,25 @@ public struct EventPhotosDetailView: View {
                     matching: .images
                 ) {
                     HStack(spacing: Spacing.sm) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title3)
-                            .foregroundStyle(SolennixColors.primary)
+                        if isBusy {
+                            ProgressView()
+                                .padding(.trailing, Spacing.xs)
+                            Text(tr("events.photos.uploading", "Procesando y subiendo..."))
+                                .font(.body)
+                                .fontWeight(.medium)
+                                .foregroundStyle(SolennixColors.textSecondary)
+                        } else {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.title3)
+                                .foregroundStyle(SolennixColors.primary)
 
-                        Text(tr("events.photos.add", "Agregar Fotos"))
-                            .font(.body)
-                            .fontWeight(.medium)
-                            .foregroundStyle(SolennixColors.primary)
+                            Text(tr("events.photos.add", "Agregar Fotos"))
+                                .font(.body)
+                                .fontWeight(.medium)
+                                .foregroundStyle(SolennixColors.primary)
+                        }
 
                         Spacer()
-
-                        if viewModel.isUploadingPhoto {
-                            ProgressView()
-                        }
                     }
                     .padding(Spacing.md)
                     .background(SolennixColors.primaryLight)
@@ -79,8 +92,15 @@ public struct EventPhotosDetailView: View {
                             .strokeBorder(SolennixColors.primary.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [6]))
                     )
                 }
+                .disabled(isBusy)
                 .onChange(of: selectedPhotos) { _, newItems in
+                    guard !newItems.isEmpty else { return }
+                    isProcessingSelection = true
                     Task {
+                        defer {
+                            isProcessingSelection = false
+                            selectedPhotos = []
+                        }
                         var imageDataArray: [Data] = []
                         for item in newItems {
                             if let data = try? await item.loadTransferable(type: Data.self) {
@@ -90,7 +110,6 @@ public struct EventPhotosDetailView: View {
                         if !imageDataArray.isEmpty {
                             await viewModel.addPhotos(data: imageDataArray, eventId: eventId)
                         }
-                        selectedPhotos = []
                     }
                 }
 
