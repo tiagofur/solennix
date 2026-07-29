@@ -1174,11 +1174,8 @@ func TestAuthHandler_Me_HappyPaths(t *testing.T) {
 		h := &AuthHandler{userRepo: mockRepo}
 
 		userID := uuid.New()
-<<<<<<< HEAD
 		// Use the sentinel so the handler routes to the 404 branch (user genuinely missing)
 		// rather than the 503 branch (transient DB error).
-=======
->>>>>>> origin/main
 		mockRepo.On("GetByID", mock.Anything, userID).Return(nil, repository.ErrUserNotFound)
 
 		req := httptest.NewRequest(http.MethodGet, "/api/auth/me", nil)
