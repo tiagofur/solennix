@@ -162,6 +162,10 @@
     <string name="settings_business_logo_upload">Subir logo</string>
     <string name="settings_business_logo_uploading">Subiendo...</string>
     <string name="settings_business_logo_hint">Tu logo aparecerá en los contratos y cotizaciones que generes.</string>
+    <string name="settings_business_cover_description">Imagen de portada del perfil público</string>
+    <string name="settings_business_cover_change">Cambiar portada</string>
+    <string name="settings_business_cover_upload">Subir portada</string>
+    <string name="settings_business_cover_error">Error al subir la portada: %1$s</string>
     <string name="settings_business_name_section">Nombre del negocio</string>
     <string name="settings_business_name_label">Nombre del negocio</string>
     <string name="settings_business_show_pdfs">Mostrar en PDFs</string>

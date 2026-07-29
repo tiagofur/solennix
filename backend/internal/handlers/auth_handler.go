@@ -1104,6 +1104,7 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		Name                    *string  `json:"name"`
 		BusinessName            *string  `json:"business_name"`
 		LogoURL                 *string  `json:"logo_url"`
+		CoverURL                *string  `json:"cover_url"`
 		BrandColor              *string  `json:"brand_color"`
 		ShowBusinessNameInPdf   *bool    `json:"show_business_name_in_pdf"`
 		DefaultDepositPercent   *float64 `json:"default_deposit_percent"`
@@ -1120,7 +1121,7 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		PushEventReminder        *bool   `json:"push_event_reminder"`
 		PushPaymentReceived      *bool   `json:"push_payment_received"`
 		PreferredLanguage        *string `json:"preferred_language"`
-		DefaultCurrency         *string `json:"default_currency"`
+		DefaultCurrency          *string `json:"default_currency"`
 	}
 
 	if err := decodeJSON(w, r, &req); err != nil {
@@ -1155,7 +1156,7 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := h.userRepo.Update(r.Context(), userID,
-		req.Name, req.BusinessName, req.LogoURL, req.BrandColor, req.ShowBusinessNameInPdf,
+		req.Name, req.BusinessName, req.LogoURL, req.CoverURL, req.BrandColor, req.ShowBusinessNameInPdf,
 		req.DefaultDepositPercent, req.DefaultCancellationDays, req.DefaultRefundPercent, req.ContractTemplate,
 		req.EmailPaymentReceipt, req.EmailEventReminder, req.EmailSubscriptionUpdates,
 		req.EmailWeeklySummary, req.EmailMarketing, req.PushEnabled, req.PushEventReminder, req.PushPaymentReceived,

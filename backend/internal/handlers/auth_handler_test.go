@@ -1264,7 +1264,7 @@ func TestAuthHandler_UpdateProfile_HappyPaths(t *testing.T) {
 		}
 
 		mockRepo.On("Update", mock.Anything, userID,
-			&newName, &newBusiness, (*string)(nil), (*string)(nil), (*bool)(nil),
+			&newName, &newBusiness, (*string)(nil), (*string)(nil), (*string)(nil), (*bool)(nil),
 			(*float64)(nil), (*float64)(nil), (*float64)(nil), (*string)(nil),
 			(*bool)(nil), (*bool)(nil), (*bool)(nil), (*bool)(nil), (*bool)(nil), (*bool)(nil), (*bool)(nil), (*bool)(nil),
 			(*string)(nil), (*string)(nil),
@@ -1304,6 +1304,7 @@ func TestAuthHandler_UpdateProfile_HappyPaths(t *testing.T) {
 		mockRepo.On("Update", mock.Anything, userID,
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+			mock.Anything,
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 			mock.Anything, mock.Anything,
 		).Return(nil, fmt.Errorf("db error"))
@@ -1668,7 +1669,7 @@ func TestAuthHandler_UpdateProfile_WithValidContractTemplate(t *testing.T) {
 		Plan: "pro",
 	}, nil)
 	mockRepo.On("Update", mock.Anything, userID,
-		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 		mock.Anything,
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
@@ -1726,7 +1727,7 @@ func TestAuthHandler_UpdateProfile_WithAllFields(t *testing.T) {
 	}
 
 	mockRepo.On("Update", mock.Anything, userID,
-		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 		mock.Anything,
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
@@ -1764,6 +1765,7 @@ func TestAuthHandler_UpdateProfile_Paths(t *testing.T) {
 			mock.AnythingOfType("*string"), // name
 			mock.AnythingOfType("*string"), // businessName
 			mock.AnythingOfType("*string"), // logoURL
+			mock.AnythingOfType("*string"), // coverURL
 			mock.AnythingOfType("*string"), // brandColor
 			(*bool)(nil),                   // showBusinessNameInPdf
 			(*float64)(nil),                // depositPercent
@@ -1821,7 +1823,7 @@ func TestAuthHandler_UpdateProfile_Paths(t *testing.T) {
 
 		userID := uuid.New()
 		mockRepo.On("Update", mock.Anything, userID,
-			mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 			mock.Anything,
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
@@ -2022,7 +2024,7 @@ func TestAuthHandler_UpdateProfile_SuccessWithAllFieldsIncludingContractTemplate
 		Plan: "pro",
 	}, nil)
 	mockRepo.On("Update", mock.Anything, userID,
-		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 		mock.Anything,
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
@@ -3004,10 +3006,10 @@ func (e *errTokenBlacklist) Revoke(_ context.Context, _ string, _ time.Time) err
 
 func TestAppleInit_SetsCookieAndStateInRedirectURL(t *testing.T) {
 	cfg := &config.Config{
-		AppleTeamID:     "TEAM1",
-		AppleKeyID:      "KEY1",
+		AppleTeamID:      "TEAM1",
+		AppleKeyID:       "KEY1",
 		AppleRedirectURI: "https://example.com/callback",
-		AppleClientIDs:  []string{"com.solennix.web"},
+		AppleClientIDs:   []string{"com.solennix.web"},
 	}
 	h := &AuthHandler{cfg: cfg}
 
@@ -3045,10 +3047,10 @@ func TestAppleInit_SetsCookieAndStateInRedirectURL(t *testing.T) {
 
 func TestAppleCallback_MissingCookieAndState_Returns400(t *testing.T) {
 	cfg := &config.Config{
-		AppleTeamID:     "TEAM1",
-		AppleKeyID:      "KEY1",
+		AppleTeamID:      "TEAM1",
+		AppleKeyID:       "KEY1",
 		AppleRedirectURI: "https://example.com/callback",
-		AppleClientIDs:  []string{"com.solennix.web"},
+		AppleClientIDs:   []string{"com.solennix.web"},
 	}
 	h := &AuthHandler{cfg: cfg}
 
@@ -3065,10 +3067,10 @@ func TestAppleCallback_MissingCookieAndState_Returns400(t *testing.T) {
 
 func TestAppleCallback_MismatchedState_Returns400(t *testing.T) {
 	cfg := &config.Config{
-		AppleTeamID:     "TEAM1",
-		AppleKeyID:      "KEY1",
+		AppleTeamID:      "TEAM1",
+		AppleKeyID:       "KEY1",
 		AppleRedirectURI: "https://example.com/callback",
-		AppleClientIDs:  []string{"com.solennix.web"},
+		AppleClientIDs:   []string{"com.solennix.web"},
 	}
 	h := &AuthHandler{cfg: cfg}
 
@@ -3091,10 +3093,10 @@ func TestAppleCallback_ValidState_ClearsStateCookieAndContinues(t *testing.T) {
 	//   3. The handler proceeds past state validation (we expect a 5xx from the
 	//      failed Apple token exchange, NOT a 400 for state).
 	cfg := &config.Config{
-		AppleTeamID:     "TEAM1",
-		AppleKeyID:      "KEY1",
+		AppleTeamID:      "TEAM1",
+		AppleKeyID:       "KEY1",
 		AppleRedirectURI: "https://example.com/callback",
-		AppleClientIDs:  []string{"com.solennix.web"},
+		AppleClientIDs:   []string{"com.solennix.web"},
 	}
 	h := &AuthHandler{cfg: cfg}
 

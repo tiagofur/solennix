@@ -75,6 +75,19 @@ fun BusinessSettingsScreen(
         }
     }
 
+    val coverPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            val inputStream = context.contentResolver.openInputStream(it)
+            val bytes = inputStream?.readBytes()
+            inputStream?.close()
+            if (bytes != null) {
+                viewModel.uploadCover(bytes)
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             SolennixTopAppBar(
@@ -190,6 +203,100 @@ fun BusinessSettingsScreen(
 
                 Text(
                     text = stringResource(R.string.settings_business_logo_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = SolennixTheme.colors.secondaryText,
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Cover Section
+                Text(
+                    text = stringResource(R.string.settings_business_cover_description),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = SolennixTheme.colors.primary,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    color = SolennixTheme.colors.card,
+                    tonalElevation = 1.dp
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Cover preview
+                        val resolvedCoverUrl = viewModel.coverUrl?.let { UrlResolver.resolve(it) }
+
+                        if (resolvedCoverUrl != null) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(context)
+                                    .data(resolvedCoverUrl)
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = stringResource(R.string.settings_business_cover_description),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(120.dp)
+                                    .clip(RoundedCornerShape(12.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(120.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(SolennixTheme.colors.surfaceGrouped),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.Business,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(32.dp),
+                                    tint = SolennixTheme.colors.secondaryText
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Upload button
+                        OutlinedButton(
+                            onClick = { coverPickerLauncher.launch("image/*") },
+                            enabled = !viewModel.isUploadingCover
+                        ) {
+                            if (viewModel.isUploadingCover) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp,
+                                    color = SolennixTheme.colors.primary
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(stringResource(R.string.settings_business_logo_uploading))
+                            } else {
+                                Icon(
+                                    Icons.Default.PhotoCamera,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    if (viewModel.coverUrl != null) stringResource(R.string.settings_business_cover_change)
+                                    else stringResource(R.string.settings_business_cover_upload)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = stringResource(R.string.settings_business_cover_description),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText,
                     modifier = Modifier.padding(horizontal = 4.dp)

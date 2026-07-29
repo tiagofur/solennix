@@ -84,6 +84,11 @@ public struct BusinessSettingsView: View {
                 scoped?.start { await viewModel.handleLogoSelection() }
             }
         }
+        .onChange(of: viewModel.selectedCoverPhoto) { _, newValue in
+            if newValue != nil {
+                scoped?.start { await viewModel.handleCoverSelection() }
+            }
+        }
         .sheet(isPresented: $showPricingSheet) {
             PricingView(apiClient: apiClient, authManager: authManager)
         }
@@ -173,6 +178,82 @@ public struct BusinessSettingsView: View {
                 Text(tr("settings.business.logo.title", "Logo"))
             } footer: {
                 Text(tr("settings.business.logo.hint", "Tu logo aparecerá en los contratos y cotizaciones que generes."))
+            }
+
+            // Cover section
+            Section {
+                HStack {
+                    Spacer()
+
+                    VStack(spacing: Spacing.md) {
+                        // Cover preview
+                        if let coverUrl = viewModel.coverUrl, let url = APIClient.resolveURL(coverUrl) {
+                            AsyncImage(url: url) { phase in
+                                switch phase {
+                                case .success(let image):
+                                    image
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 320, height: 120)
+                                        .clipped()
+                                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                                case .failure:
+                                    coverPlaceholder
+                                case .empty:
+                                    ProgressView()
+                                        .frame(width: 320, height: 120)
+                                @unknown default:
+                                    coverPlaceholder
+                                }
+                            }
+                        } else {
+                            coverPlaceholder
+                        }
+
+                        // Upload button
+                        if viewModel.canCustomizeBranding {
+                            PhotosPicker(
+                                selection: $viewModel.selectedCoverPhoto,
+                                matching: .images
+                            ) {
+                                HStack {
+                                    if viewModel.isUploadingCover {
+                                        ProgressView()
+                                            .progressViewStyle(.circular)
+                                    } else {
+                                        Image(systemName: "photo")
+                                        Text(viewModel.coverUrl != nil ? tr("settings.business.cover.change", "Cambiar portada") : tr("settings.business.cover.upload", "Subir portada"))
+                                    }
+                                }
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            }
+                            .disabled(viewModel.isUploadingCover)
+                        } else {
+                            Button {
+                                showPricingSheet = true
+                            } label: {
+                                HStack {
+                                    Image(systemName: "photo")
+                                    Text(viewModel.coverUrl != nil ? tr("settings.business.cover.change", "Cambiar portada") : tr("settings.business.cover.upload", "Subir portada"))
+                                    Image(systemName: "lock.fill")
+                                        .font(.caption)
+                                        .foregroundStyle(SolennixColors.textTertiary)
+                                }
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            }
+                        }
+                    }
+
+                    Spacer()
+                }
+                .padding(.vertical, Spacing.md)
+                .solennixRow()
+            } header: {
+                Text(tr("settings.business.cover.title", "Portada"))
+            } footer: {
+                Text(tr("settings.business.cover.hint", "La portada aparecerá en la parte superior de tu perfil público."))
             }
 
             // Business name + Brand color section (2-col on iPad)
@@ -268,6 +349,20 @@ public struct BusinessSettingsView: View {
                 .frame(width: 100, height: 100)
 
             Image(systemName: "building.2")
+                .font(.system(.largeTitle))
+                .foregroundStyle(SolennixColors.textTertiary)
+        }
+    }
+
+    // MARK: - Cover Placeholder
+
+    private var coverPlaceholder: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: CornerRadius.md)
+                .fill(SolennixColors.surface)
+                .frame(width: 320, height: 120)
+
+            Image(systemName: "photo")
                 .font(.system(.largeTitle))
                 .foregroundStyle(SolennixColors.textTertiary)
         }

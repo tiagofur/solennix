@@ -16,7 +16,7 @@ type FullUserRepository interface {
 	GetByEmail(ctx context.Context, email string) (*models.User, error)
 	Create(ctx context.Context, user *models.User) error
 	AcceptStaffInvite(ctx context.Context, tokenHash, passwordHash string) (*models.User, error)
-	Update(ctx context.Context, id uuid.UUID, name, businessName, logoURL, brandColor *string, showBusinessNameInPdf *bool, depositPercent, cancellationDays, refundPercent *float64, contractTemplate *string, emailPaymentReceipt, emailEventReminder, emailSubscriptionUpdates, emailWeeklySummary, emailMarketing, pushEnabled, pushEventReminder, pushPaymentReceived *bool, preferredLanguage, defaultCurrency *string) (*models.User, error)
+	Update(ctx context.Context, id uuid.UUID, name, businessName, logoURL, coverURL, brandColor *string, showBusinessNameInPdf *bool, depositPercent, cancellationDays, refundPercent *float64, contractTemplate *string, emailPaymentReceipt, emailEventReminder, emailSubscriptionUpdates, emailWeeklySummary, emailMarketing, pushEnabled, pushEventReminder, pushPaymentReceived *bool, preferredLanguage, defaultCurrency *string) (*models.User, error)
 	UpdatePassword(ctx context.Context, userID uuid.UUID, passwordHash string) error
 	SetEmailVerificationToken(ctx context.Context, userID uuid.UUID, tokenHash string, sentAt, expiresAt time.Time) error
 	VerifyEmailByTokenHash(ctx context.Context, tokenHash string) (*models.User, error)

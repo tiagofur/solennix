@@ -49,6 +49,7 @@ type User struct {
 	Name                    string     `json:"name"`
 	BusinessName            *string    `json:"business_name,omitempty"`
 	LogoURL                 *string    `json:"logo_url,omitempty"`
+	CoverURL                *string    `json:"cover_url,omitempty"`
 	BrandColor              *string    `json:"brand_color,omitempty"`
 	ShowBusinessNameInPdf   *bool      `json:"show_business_name_in_pdf,omitempty"`
 	DefaultDepositPercent   *float64   `json:"default_deposit_percent,omitempty"`
@@ -685,6 +686,7 @@ type PublicOrganizerProfile struct {
 	BusinessName     string                 `json:"business_name,omitempty"`
 	ShowBusinessName bool                   `json:"show_business_name"`
 	LogoURL          *string                `json:"logo_url,omitempty"`
+	CoverURL         *string                `json:"cover_url,omitempty"`
 	BrandColor       *string                `json:"brand_color,omitempty"`
 	Headline         *string                `json:"headline,omitempty"`
 	Location         *PublicLocation        `json:"location,omitempty"`

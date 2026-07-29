@@ -34,6 +34,7 @@ public struct User: Codable, Identifiable, Sendable, Hashable {
     public var preferredLanguage: String?
     public var businessName: String?
     public var logoUrl: String?
+    public var coverUrl: String?
     public var brandColor: String?
     public var showBusinessNameInPdf: Bool?
     public var defaultDepositPercent: Double?
@@ -69,6 +70,7 @@ public struct User: Codable, Identifiable, Sendable, Hashable {
         preferredLanguage: String? = nil,
         businessName: String? = nil,
         logoUrl: String? = nil,
+        coverUrl: String? = nil,
         brandColor: String? = nil,
         showBusinessNameInPdf: Bool? = nil,
         defaultDepositPercent: Double? = nil,
@@ -98,6 +100,7 @@ public struct User: Codable, Identifiable, Sendable, Hashable {
         self.preferredLanguage = preferredLanguage
         self.businessName = businessName
         self.logoUrl = logoUrl
+        self.coverUrl = coverUrl
         self.brandColor = brandColor
         self.showBusinessNameInPdf = showBusinessNameInPdf
         self.defaultDepositPercent = defaultDepositPercent

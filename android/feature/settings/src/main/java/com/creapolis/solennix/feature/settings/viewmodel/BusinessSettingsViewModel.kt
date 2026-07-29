@@ -40,11 +40,13 @@ class BusinessSettingsViewModel @Inject constructor(
     var businessName by mutableStateOf("")
     var showBusinessNameInPdf by mutableStateOf(false)
     var logoUrl by mutableStateOf<String?>(null)
+    var coverUrl by mutableStateOf<String?>(null)
     var brandColor by mutableStateOf("#007AFF")
 
     var isLoading by mutableStateOf(true)
     var isSaving by mutableStateOf(false)
     var isUploadingLogo by mutableStateOf(false)
+    var isUploadingCover by mutableStateOf(false)
     var errorMessage by mutableStateOf<String?>(null)
     var saveSuccess by mutableStateOf(false)
 
@@ -77,6 +79,7 @@ class BusinessSettingsViewModel @Inject constructor(
         businessName = user.businessName ?: ""
         showBusinessNameInPdf = user.showBusinessNameInPdf ?: true
         logoUrl = user.logoUrl
+        coverUrl = user.coverUrl
         brandColor = user.brandColor ?: "#007AFF"
     }
 
@@ -127,6 +130,36 @@ class BusinessSettingsViewModel @Inject constructor(
                 errorMessage = context.getString(R.string.settings_business_logo_error, e.message ?: e.javaClass.simpleName)
             } finally {
                 isUploadingLogo = false
+            }
+        }
+    }
+
+    fun uploadCover(bytes: ByteArray) {
+        viewModelScope.launch {
+            isUploadingCover = true
+            errorMessage = null
+            try {
+                // Compress image in a background thread
+                val compressedBytes = withContext(Dispatchers.Default) {
+                    ImageCompressor.compress(bytes)
+                }
+
+                val response = apiService.upload(
+                    Endpoints.UPLOAD_IMAGE,
+                    compressedBytes,
+                    "cover.jpg",
+                    "image/jpeg"
+                )
+
+                // Update profile with new cover URL
+                val payload = mapOf("cover_url" to response.url)
+                val updatedUser: User = apiService.put(Endpoints.UPDATE_PROFILE, payload)
+                authManager.storeUser(updatedUser)
+                coverUrl = response.url
+            } catch (e: Exception) {
+                errorMessage = context.getString(R.string.settings_business_cover_error, e.message ?: e.javaClass.simpleName)
+            } finally {
+                isUploadingCover = false
             }
         }
     }

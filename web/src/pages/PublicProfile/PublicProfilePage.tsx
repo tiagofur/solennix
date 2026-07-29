@@ -224,6 +224,10 @@ export const PublicProfilePage: React.FC = () => {
     : undefined;
   const logoSrc = profile.logo_url ? resolveMediaUrl(profile.logo_url) : null;
   const showName = profile.show_business_name ?? true;
+  const coverSrc = profile.cover_url ? resolveMediaUrl(profile.cover_url) : null;
+  // Hero background when there's no cover image: a soft gradient from the brand
+  // color (or the Solennix gold) into the page background.
+  const heroFallbackColor = profile.brand_color || "var(--color-primary, #C4A265)";
   const contactOpenExternal =
     profile.contact?.type === "url" || profile.contact?.type === "whatsapp";
 
@@ -255,17 +259,41 @@ export const PublicProfilePage: React.FC = () => {
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8">
         {/* Header card */}
-        <Card variant="default" padding="lg">
-          <div className="flex flex-col sm:flex-row sm:items-start gap-5">
+        <Card variant="default" padding="lg" className="overflow-hidden">
+          {/* Hero cover banner */}
+          <div className="-mx-8 -mt-8">
+            <div
+              className="relative h-32 sm:h-40 w-full bg-surface-alt"
+              style={
+                coverSrc
+                  ? undefined
+                  : {
+                      backgroundImage: `linear-gradient(135deg, ${heroFallbackColor} 0%, color-mix(in srgb, ${heroFallbackColor} 45%, transparent) 100%)`,
+                    }
+              }
+            >
+              {coverSrc && (
+                <img
+                  src={coverSrc}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover"
+                  loading="lazy"
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Logo + identity row (logo overlaps the hero bottom) */}
+          <div className="flex flex-col sm:flex-row sm:items-start gap-5 -mt-10 sm:-mt-12">
             {logoSrc ? (
               <img
                 src={logoSrc}
                 alt={showName ? "" : displayName}
-                className="h-20 w-auto max-w-[280px] rounded-xl object-contain border border-border shrink-0 bg-surface-alt shadow-sm"
+                className="h-20 w-auto max-w-[280px] rounded-xl object-contain border-4 border-bg shrink-0 bg-surface-alt shadow-sm"
               />
             ) : (
               <div
-                className="h-20 w-20 rounded-2xl shrink-0 flex items-center justify-center text-2xl font-bold text-on-primary shadow-sm"
+                className="h-20 w-20 rounded-2xl shrink-0 flex items-center justify-center text-2xl font-bold text-on-primary border-4 border-bg shadow-sm"
                 style={{
                   backgroundColor:
                     profile.brand_color || "var(--color-primary, #C4A265)",
@@ -276,7 +304,7 @@ export const PublicProfilePage: React.FC = () => {
               </div>
             )}
 
-            <div className="min-w-0 flex-1 space-y-2">
+            <div className="min-w-0 flex-1 space-y-2 sm:pt-10">
               {showName && (
                 <h1 className="text-2xl sm:text-3xl font-bold text-text tracking-tight break-words">
                   {displayName}
