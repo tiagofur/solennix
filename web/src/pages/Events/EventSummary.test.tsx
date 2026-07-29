@@ -144,6 +144,7 @@ vi.mock('../../lib/api', () => ({
   api: {
     postFormData: vi.fn(),
   },
+  getAssetUrl: (url: string) => url,
 }));
 
 const mockNavigate = vi.fn();
