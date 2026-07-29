@@ -238,6 +238,7 @@
         "login": "Login",
         "login_failed": "Failed login attempt",
         "auth_failed": "Authentication failure",
+        "rate_limited": "Rate limit exceeded",
         "block": "Block",
         "unblock": "Unblock"
       },
@@ -247,6 +248,7 @@
         "wrong_password": "Wrong password",
         "user_not_found": "User not found",
         "blocked": "Account blocked",
+        "user_plan_limit_exceeded": "User plan limit exceeded",
         "refresh_user_not_found": "User not found during token refresh",
         "refresh_account_blocked": "Account blocked during token refresh",
         "refresh_account_deleted": "Account deleted during token refresh",

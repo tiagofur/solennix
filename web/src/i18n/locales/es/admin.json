@@ -238,6 +238,7 @@
         "login": "Iniciar sesión",
         "login_failed": "Intento de inicio de sesión fallido",
         "auth_failed": "Fallo de autenticación",
+        "rate_limited": "Límite excedido",
         "block": "Bloquear",
         "unblock": "Desbloquear"
       },
@@ -247,6 +248,7 @@
         "wrong_password": "Contraseña incorrecta",
         "user_not_found": "Usuario no encontrado",
         "blocked": "Cuenta bloqueada",
+        "user_plan_limit_exceeded": "Límite del plan del usuario alcanzado",
         "refresh_user_not_found": "Usuario no encontrado al refrescar token",
         "refresh_account_blocked": "Cuenta bloqueada durante refresco",
         "refresh_account_deleted": "Cuenta eliminada durante refresco",
