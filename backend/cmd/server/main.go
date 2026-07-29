@@ -185,7 +185,7 @@ func main() {
 	eventPublicLinkHandler := handlers.NewEventPublicLinkHandler(eventPublicLinkRepo, eventRepo, clientRepo, userRepo, paymentRepo, cfg.FrontendURL)
 	paymentSubmissionHandler := handlers.NewPaymentSubmissionHandler(paymentSubmissionRepo, paymentRepo, userRepo, pool, cfg.UploadDir, cfg.DefaultTimezone)
 	reviewHandler := handlers.NewEventReviewHandler(reviewRepo, userRepo, publicProfileRepo, emailService, cfg.FrontendURL)
-	publicProfileHandler := handlers.NewPublicProfileHandler(userRepo, publicProfileRepo, productRepo, reviewRepo, cfg.FrontendURL)
+	publicProfileHandler := handlers.NewPublicProfileHandler(userRepo, publicProfileRepo, productRepo, reviewRepo, eventRepo, cfg.FrontendURL)
 	publicProfileConfigHandler := handlers.NewPublicProfileConfigHandler(userRepo, publicProfileRepo, cfg.FrontendURL)
 	publicProfilePortfolioHandler := handlers.NewPublicProfilePortfolioHandler(userRepo, publicProfileRepo, eventRepo)
 	publicProfileServicesHandler := handlers.NewPublicProfileServicesHandler(userRepo, productRepo)

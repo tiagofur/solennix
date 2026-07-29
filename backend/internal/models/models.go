@@ -693,4 +693,8 @@ type PublicOrganizerProfile struct {
 	Reviews          []PublicReview         `json:"reviews,omitempty"`
 	Portfolio        []PublicPortfolioItem  `json:"portfolio,omitempty"`
 	Socials          map[string]string      `json:"socials,omitempty"`
+	// Social-proof aggregates.
+	EventsCompleted int      `json:"events_completed"`
+	AverageRating   *float64 `json:"average_rating,omitempty"`
+	ReviewsCount    *int     `json:"reviews_count,omitempty"`
 }

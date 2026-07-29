@@ -236,12 +236,25 @@ func (r *EventRepo) GetUpcoming(ctx context.Context, userID uuid.UUID, limit int
 }
 
 func (r *EventRepo) CountCurrentMonth(ctx context.Context, userID uuid.UUID) (int, error) {
-	query := `SELECT count(*) FROM events 
-		WHERE user_id = $1 
+	query := `SELECT count(*) FROM events
+		WHERE user_id = $1
 		AND date_trunc('month', event_date) = date_trunc('month', CURRENT_DATE)`
 
 	var count int
 	err := r.pool.QueryRow(ctx, query, userID).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// CountCompletedByUser returns the number of events with status 'completed'
+// for an organizer. Used as a public-profile social-proof metric.
+func (r *EventRepo) CountCompletedByUser(ctx context.Context, userID uuid.UUID) (int, error) {
+	var count int
+	err := r.pool.QueryRow(ctx,
+		`SELECT count(*) FROM events WHERE user_id = $1 AND status = 'completed'`,
+		userID).Scan(&count)
 	if err != nil {
 		return 0, err
 	}

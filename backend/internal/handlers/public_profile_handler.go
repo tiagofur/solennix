@@ -39,6 +39,7 @@ type PublicProfileHandler struct {
 	productRepo   publicProfileProductRepo
 	reviewRepo    publicProfileReviewRepo
 	portfolioRepo publicProfilePortfolioRepo
+	eventRepo     publicProfileEventRepo
 	frontendURL   string
 }
 
@@ -60,6 +61,9 @@ type publicProfileReviewRepo interface {
 type publicProfilePortfolioRepo interface {
 	ListPortfolioByUserID(ctx context.Context, userID uuid.UUID) ([]models.OrganizerPublicPortfolioItem, error)
 }
+type publicProfileEventRepo interface {
+	CountCompletedByUser(ctx context.Context, userID uuid.UUID) (int, error)
+}
 
 // NewPublicProfileHandler assembles the handler with its repository deps.
 func NewPublicProfileHandler(
@@ -67,6 +71,7 @@ func NewPublicProfileHandler(
 	profileRepo *repository.PublicProfileRepo,
 	productRepo *repository.ProductRepo,
 	reviewRepo *repository.EventReviewRepo,
+	eventRepo *repository.EventRepo,
 	frontendURL string,
 ) *PublicProfileHandler {
 	return &PublicProfileHandler{
@@ -75,6 +80,7 @@ func NewPublicProfileHandler(
 		productRepo:   productRepo,
 		reviewRepo:    reviewRepo,
 		portfolioRepo: profileRepo, // *PublicProfileRepo implements portfolio list
+		eventRepo:     eventRepo,
 		frontendURL:   strings.TrimSuffix(frontendURL, "/"),
 	}
 }
@@ -154,7 +160,19 @@ func (h *PublicProfileHandler) buildProjection(ctx context.Context, user *models
 
 	// Pro+ only AND toggle on. Free omits the reviews key entirely (spec).
 	if reviewsAllowed {
-		dto.Reviews = h.projectReviews(ctx, user.PublicSlug)
+		reviews, avg, count := h.projectReviews(ctx, user.PublicSlug)
+		dto.Reviews = reviews
+		if count > 0 {
+			dto.AverageRating = &avg
+			dto.ReviewsCount = &count
+		}
+	}
+
+	// Events completed: always-visible social proof (no plan/toggle gate).
+	if h.eventRepo != nil {
+		if completed, err := h.eventRepo.CountCompletedByUser(ctx, user.ID); err == nil {
+			dto.EventsCompleted = completed
+		}
 	}
 
 	// Portfolio: Pro+ AND show_portfolio. Free omits the key entirely (spec).
@@ -192,19 +210,29 @@ func (h *PublicProfileHandler) projectServices(ctx context.Context, userID uuid.
 	return out
 }
 
-func (h *PublicProfileHandler) projectReviews(ctx context.Context, slug *string) []models.PublicReview {
+// projectReviews returns the public reviews list plus the average rating and
+// count derived from the same fetch (no extra DB round-trip).
+func (h *PublicProfileHandler) projectReviews(ctx context.Context, slug *string) ([]models.PublicReview, float64, int) {
+	emptyAvg, emptyCount := 0.0, 0
 	if slug == nil || *slug == "" {
-		return []models.PublicReview{}
+		return []models.PublicReview{}, emptyAvg, emptyCount
 	}
 	raw, err := h.reviewRepo.ListPublicByOrganizerSlug(ctx, *slug)
 	if err != nil {
-		return []models.PublicReview{}
+		return []models.PublicReview{}, emptyAvg, emptyCount
 	}
 	out := make([]models.PublicReview, 0, len(raw))
+	var sum int
 	for _, er := range raw {
 		out = append(out, toPublicReview(er))
+		sum += er.Rating
 	}
-	return out
+	count := len(raw)
+	avg := emptyAvg
+	if count > 0 {
+		avg = float64(sum) / float64(count)
+	}
+	return out, avg, count
 }
 
 func (h *PublicProfileHandler) projectPortfolio(ctx context.Context, userID uuid.UUID) []models.PublicPortfolioItem {
