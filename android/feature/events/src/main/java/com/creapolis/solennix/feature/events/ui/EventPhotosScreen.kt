@@ -98,7 +98,7 @@ fun EventPhotosScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { showSourceDialog = true },
+                onClick = { if (!uiState.isPhotoUploading) showSourceDialog = true },
                 containerColor = SolennixTheme.colors.primary
             ) {
                 if (uiState.isPhotoUploading) {
@@ -124,6 +124,33 @@ fun EventPhotosScreen(
         } else if (uiState.photos.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (uiState.isPhotoUploading) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.primaryLight)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp,
+                                    color = SolennixTheme.colors.primary
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    stringResource(R.string.events_photos_uploading),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = SolennixTheme.colors.primary
+                                )
+                            }
+                        }
+                    }
+
                     Icon(
                         Icons.Default.PhotoLibrary,
                         contentDescription = null,
@@ -146,6 +173,33 @@ fun EventPhotosScreen(
             }
         } else {
             Column(modifier = Modifier.padding(padding).padding(16.dp)) {
+                if (uiState.isPhotoUploading) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp),
+                        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.primaryLight)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = SolennixTheme.colors.primary
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                stringResource(R.string.events_photos_uploading),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = SolennixTheme.colors.primary
+                            )
+                        }
+                    }
+                }
+
                 Text(
                     pluralStringResource(R.plurals.events_photos_count, uiState.photos.size, uiState.photos.size),
                     style = MaterialTheme.typography.bodySmall,
