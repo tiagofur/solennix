@@ -1,8 +1,17 @@
 # Sesión Activa — Solennix Agent Progress
 
-## Sesión 2026-07-29 — Fix fotos de eventos invisibles en web (#1067)
+## Sesión 2026-07-29 — Fix perfil público & Live Preview en Ajustes
 
-**Branch:** `fix/1067-event-photo-upload-relative-urls`
+**Branch:** `feat/public-profile-contact-cta`
+
+### Cambios (1 commit: `9faef45d`)
+1. `fix(web): fix public profile header text overlay and add live header preview`
+   - `PublicProfilePage.tsx`: Se aisló el margen superior negativo (`-mt-10 sm:-mt-12`) únicamente para la imagen/avatar del logo, añadiendo `relative z-10` en la fila de identidad para evitar que la portada solape la información comercial.
+   - `PublicProfileSettings.tsx`: Se añadió la tarjeta de vista previa en tiempo real (`Live Header Preview`) para que el organizador observe inmediatamente cómo luce su encabezado mientras edita su información.
+
+### Verificación
+- Web tests: 13 tests en verde (`PublicProfilePage.test.tsx` + `PublicProfileSettings.test.tsx`).
+- Backend tests: `go test ./internal/handlers/... ./internal/services/...` en verde.
 
 ### Causa raíz
 Desacuerdo de esquema en `events.photos`: iOS escribía un array de strings

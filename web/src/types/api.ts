@@ -1319,6 +1319,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/organizers/{slug}/leads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit an inquiry to an organizer's public profile (rate-limited, unauthenticated) */
+        post: operations["submitPublicLead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/organizers/{slug}/reviews": {
         parameters: {
             query?: never;
@@ -2558,6 +2575,33 @@ export interface components {
             average_rating?: number | null;
             /** @description Number of public reviews; omitted unless reviews are visible and there is at least one */
             reviews_count?: number | null;
+        };
+        SubmitPublicLeadRequest: {
+            name: string;
+            /** @description How the organizer should reach back (email, phone, WhatsApp) */
+            contact: string;
+            /** Format: date */
+            event_date?: string | null;
+            event_type?: string | null;
+            num_guests?: number | null;
+            message?: string | null;
+            /** @default form */
+            source: string;
+        };
+        PublicLead: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+            contact?: string;
+            /** Format: date */
+            event_date?: string | null;
+            event_type?: string | null;
+            num_guests?: number | null;
+            message?: string | null;
+            source?: string;
+            is_read?: boolean;
+            /** Format: date-time */
+            created_at?: string;
         };
         OrganizerPublicProfile: {
             /** Format: uuid */
@@ -6768,6 +6812,53 @@ export interface operations {
                 };
             };
             /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitPublicLead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitPublicLeadRequest"];
+            };
+        };
+        responses: {
+            /** @description Inquiry submitted */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicLead"];
+                };
+            };
+            /** @description Invalid request body */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Profile not found or disabled */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limit exceeded (5 / minute) */
             429: {
                 headers: {
                     [name: string]: unknown;

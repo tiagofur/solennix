@@ -439,6 +439,31 @@
     "theme_dark": "Switch to dark mode",
     "seo_title": "{{name}} | Solennix",
     "seo_title_with_city": "{{name}} · {{city}} | Solennix",
-    "seo_description": "Public professional profile of {{name}}{{location}} on Solennix."
+    "seo_description": "Public professional profile of {{name}}{{location}} on Solennix.",
+    "request_quote_cta": "Request Quote",
+    "quote_modal_title": "Request a Quote",
+    "quote_modal_subtitle": "Send your event details and {{name}} will get in touch with you shortly.",
+    "name_label": "Full name",
+    "contact_label": "Email or WhatsApp",
+    "contact_placeholder": "e.g. maria@example.com or +1 555...",
+    "event_type_label": "Event type",
+    "event_type_select": "Select event type",
+    "event_types": {
+      "wedding": "Wedding",
+      "birthday": "Birthday / Party",
+      "xv_years": "Quinceañera (XV Years)",
+      "corporate": "Corporate Event",
+      "graduation": "Graduation",
+      "other": "Other event"
+    },
+    "event_date_label": "Estimated event date",
+    "num_guests_label": "Estimated number of guests",
+    "message_label": "Additional details or message",
+    "message_placeholder": "Do you have any specific requirements or budget in mind?",
+    "submit_quote": "Submit Request",
+    "submitting_quote": "Submitting...",
+    "quote_success_title": "Request sent!",
+    "quote_success_desc": "Your message has been sent directly to {{name}}. They will contact you very soon.",
+    "close_modal": "Close"
   }
 }
