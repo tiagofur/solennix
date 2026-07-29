@@ -165,6 +165,7 @@ public struct EventDetailView: View {
             }
         } label: {
             Image(systemName: "ellipsis.circle")
+                .foregroundStyle(SolennixColors.primary)
                 .accessibilityLabel(tr("events.detail.action.more", "Acciones del evento"))
         }
     }

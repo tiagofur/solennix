@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { productService } from "@/services/productService";
-import { api } from "@/lib/api";
+import { api, getAssetUrl } from "@/lib/api";
 import {
   ArrowLeft,
   FileText,
@@ -1389,6 +1389,7 @@ export const EventSummary: React.FC = () => {
               type="file"
               accept="image/*"
               multiple
+              disabled={isUploadingPhoto}
               className="hidden"
               onChange={handlePhotoUpload}
             />
@@ -1404,24 +1405,27 @@ export const EventSummary: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {eventPhotos.map((photo, idx) => (
-                <div key={photo.id || `photo-${idx}`} className="relative group aspect-square rounded-xl overflow-hidden bg-surface-alt">
-                  <OptimizedImage
-                    src={photo.url}
-                    alt={`Foto ${idx + 1} del evento`}
-                    className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                    onClick={() => setLightboxPhoto(photo.url)}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemovePhoto(photo.id)}
-                    className="absolute top-2 right-2 bg-error text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-error/90"
-                    aria-label={t('events:summary.photos.delete_aria', { index: idx + 1 })}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              ))}
+              {eventPhotos.map((photo, idx) => {
+                const resolvedUrl = getAssetUrl(photo.url) || photo.url;
+                return (
+                  <div key={photo.id || `photo-${idx}`} className="relative group aspect-square rounded-xl overflow-hidden bg-surface-alt">
+                    <OptimizedImage
+                      src={resolvedUrl}
+                      alt={`Foto ${idx + 1} del evento`}
+                      className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => setLightboxPhoto(resolvedUrl)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemovePhoto(photo.id)}
+                      className="absolute top-2 right-2 bg-error text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-error/90"
+                      aria-label={t('events:summary.photos.delete_aria', { index: idx + 1 })}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

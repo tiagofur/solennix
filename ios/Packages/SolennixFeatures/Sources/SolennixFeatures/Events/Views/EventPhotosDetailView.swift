@@ -23,6 +23,12 @@ public struct EventPhotosDetailView: View {
     @ScaledMetric(relativeTo: .body) private var emptyIconSize: CGFloat = 48
     private var cappedEmptyIconSize: CGFloat { min(emptyIconSize, 64) }
 
+    @State private var isProcessingSelection = false
+
+    private var isBusy: Bool {
+        isProcessingSelection || viewModel.isUploadingPhoto
+    }
+
     public init(eventId: String, apiClient: APIClient) {
         self.eventId = eventId
         self._viewModel = State(initialValue: EventDetailViewModel(apiClient: apiClient))
@@ -40,58 +46,68 @@ public struct EventPhotosDetailView: View {
         .background(SolennixColors.surfaceGrouped)
         .navigationTitle(tr("events.photos.title", "Fotos del Evento"))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                photosPickerButton
+            }
+        }
         .task { await viewModel.loadData(eventId: eventId) }
         .fullScreenCover(item: $lightboxIndex) { index in
             lightboxView(index: index)
         }
     }
 
+    // MARK: - Subviews
+
+    private var photosPickerButton: some View {
+        PhotosPicker(
+            selection: $selectedPhotos,
+            maxSelectionCount: 5,
+            matching: .images
+        ) {
+            if isBusy {
+                ProgressView()
+                    .tint(SolennixColors.primary)
+            } else {
+                Image(systemName: "plus")
+                    .font(.body)
+                    .foregroundStyle(SolennixColors.primary)
+                    .accessibilityLabel(tr("events.photos.add", "Agregar Fotos"))
+            }
+        }
+        .disabled(isBusy)
+        .onChange(of: selectedPhotos) { _, newItems in
+            handlePhotosSelection(newItems)
+        }
+    }
+
+    private func handlePhotosSelection(_ newItems: [PhotosPickerItem]) {
+        guard !newItems.isEmpty else { return }
+        isProcessingSelection = true
+        Task {
+            defer {
+                isProcessingSelection = false
+                selectedPhotos = []
+            }
+            var imageDataArray: [Data] = []
+            for item in newItems {
+                if let data = try? await item.loadTransferable(type: Data.self) {
+                    imageDataArray.append(data)
+                }
+            }
+            if !imageDataArray.isEmpty {
+                await viewModel.addPhotos(data: imageDataArray, eventId: eventId)
+            }
+        }
+    }
+
     private var content: some View {
         ScrollView {
-            VStack(spacing: Spacing.lg) {
-                // Upload button
-                PhotosPicker(
-                    selection: $selectedPhotos,
-                    maxSelectionCount: 5,
-                    matching: .images
-                ) {
-                    HStack(spacing: Spacing.sm) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title3)
-                            .foregroundStyle(SolennixColors.primary)
-
-                        Text(tr("events.photos.add", "Agregar Fotos"))
-                            .font(.body)
-                            .fontWeight(.medium)
-                            .foregroundStyle(SolennixColors.primary)
-
-                        Spacer()
-
-                        if viewModel.isUploadingPhoto {
-                            ProgressView()
-                        }
-                    }
-                    .padding(Spacing.md)
-                    .background(SolennixColors.primaryLight)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: CornerRadius.lg)
-                            .strokeBorder(SolennixColors.primary.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [6]))
-                    )
-                }
-                .onChange(of: selectedPhotos) { _, newItems in
-                    Task {
-                        var imageDataArray: [Data] = []
-                        for item in newItems {
-                            if let data = try? await item.loadTransferable(type: Data.self) {
-                                imageDataArray.append(data)
-                            }
-                        }
-                        if !imageDataArray.isEmpty {
-                            await viewModel.addPhotos(data: imageDataArray, eventId: eventId)
-                        }
-                        selectedPhotos = []
-                    }
+            VStack(alignment: .leading, spacing: Spacing.md) {
+                if !viewModel.eventPhotos.isEmpty {
+                    Text(FeatureL10n.plural("events.photos.count", "%lld fotos", count: viewModel.eventPhotos.count))
+                        .font(.subheadline)
+                        .foregroundStyle(SolennixColors.textSecondary)
                 }
 
                 if viewModel.eventPhotos.isEmpty {
@@ -112,44 +128,45 @@ public struct EventPhotosDetailView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Spacing.xxl)
                 } else {
-                    // Photo grid
-                    let columns = [GridItem(.adaptive(minimum: 100, maximum: 150), spacing: Spacing.sm)]
+                    // Photo grid with clean 1:1 aspect ratio tiles
+                    let columns = [GridItem(.adaptive(minimum: 140, maximum: 220), spacing: Spacing.md)]
 
-                    LazyVGrid(columns: columns, spacing: Spacing.sm) {
+                    LazyVGrid(columns: columns, spacing: Spacing.md) {
                         ForEach(Array(viewModel.eventPhotos.enumerated()), id: \.offset) { index, url in
                             ZStack(alignment: .topTrailing) {
                                 Button {
                                     lightboxIndex = index
                                 } label: {
-                                    AsyncImage(url: APIClient.resolveURL(url)) { image in
-                                        image
-                                            .resizable()
-                                            .scaledToFill()
-                                    } placeholder: {
-                                        ProgressView()
-                                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                            .background(SolennixColors.surfaceAlt)
-                                    }
-                                    .frame(height: 120)
-                                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                                    Color.clear
+                                        .aspectRatio(1, contentMode: .fill)
+                                        .overlay(
+                                            AsyncImage(url: APIClient.resolveURL(url)) { image in
+                                                image
+                                                    .resizable()
+                                                    .scaledToFill()
+                                            } placeholder: {
+                                                ProgressView()
+                                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                                    .background(SolennixColors.surfaceAlt)
+                                            }
+                                        )
+                                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
                                 }
+                                .buttonStyle(.plain)
 
                                 Button {
                                     Task { await viewModel.removePhoto(at: index, eventId: eventId) }
                                 } label: {
                                     Image(systemName: "xmark.circle.fill")
-                                        .font(.body)
+                                        .font(.title3)
                                         .foregroundStyle(.white)
-                                        .shadow(radius: 2)
+                                        .background(Color.black.opacity(0.4), in: Circle())
                                         .padding(Spacing.xs)
                                 }
+                                .buttonStyle(.plain)
                             }
                         }
                     }
-
-                    Text(FeatureL10n.plural("events.photos.count", "%lld fotos", count: viewModel.eventPhotos.count))
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textSecondary)
                 }
             }
             .padding(.horizontal, sizeClass == .regular ? Spacing.xl : Spacing.md)
