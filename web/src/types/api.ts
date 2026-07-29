@@ -2549,6 +2549,15 @@ export interface components {
             socials?: {
                 [key: string]: string;
             };
+            /** @description Count of events with status 'completed' (always present) */
+            events_completed?: number;
+            /**
+             * Format: float
+             * @description Average of public review ratings (1-5); omitted unless reviews are visible and there is at least one
+             */
+            average_rating?: number | null;
+            /** @description Number of public reviews; omitted unless reviews are visible and there is at least one */
+            reviews_count?: number | null;
         };
         OrganizerPublicProfile: {
             /** Format: uuid */

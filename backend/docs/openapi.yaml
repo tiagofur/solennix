@@ -2524,6 +2524,18 @@ components:
           additionalProperties:
             type: string
           description: Omitted for Free plan
+        events_completed:
+          type: integer
+          description: Count of events with status 'completed' (always present)
+        average_rating:
+          type: number
+          format: float
+          nullable: true
+          description: Average of public review ratings (1-5); omitted unless reviews are visible and there is at least one
+        reviews_count:
+          type: integer
+          nullable: true
+          description: Number of public reviews; omitted unless reviews are visible and there is at least one
     OrganizerPublicProfile:
       type: object
       required:

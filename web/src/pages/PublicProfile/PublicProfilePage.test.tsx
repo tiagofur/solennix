@@ -100,7 +100,8 @@ describe("PublicProfilePage", () => {
     expect(screen.getByText(/Lisbon/)).toBeInTheDocument();
     expect(screen.getByText("Full package")).toBeInTheDocument();
     expect(screen.getByText("Amazing")).toBeInTheDocument();
-    expect(screen.getByText("A.")).toBeInTheDocument();
+    // "A." now appears in both the featured testimonial and the reviews list.
+    expect(screen.getAllByText("A.").length).toBeGreaterThan(0);
     expect(screen.getByText("Garden wedding")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /profile\.contact_cta|Contact/i }),

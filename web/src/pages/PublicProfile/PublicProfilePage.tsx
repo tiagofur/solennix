@@ -8,6 +8,7 @@ import {
   MessageCircle,
   ExternalLink,
   Star,
+  Quote,
   Moon,
   Sun,
   AlertCircle,
@@ -176,6 +177,17 @@ export const PublicProfilePage: React.FC = () => {
     ([, v]) => Boolean(v?.trim()),
   );
 
+  // Social-proof aggregates.
+  const eventsCompleted = profile?.events_completed ?? 0;
+  const reviewsCount = profile?.reviews_count ?? 0;
+  const averageRating = profile?.average_rating ?? 0;
+  const ratingLabel = averageRating > 0 ? averageRating.toFixed(1) : null;
+  // Pick the highest-rated review as a featured testimonial.
+  const featuredReview =
+    reviews.length > 0
+      ? [...reviews].sort((a, b) => b.rating - a.rating)[0]
+      : null;
+
   if (state === "loading") {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
@@ -321,6 +333,29 @@ export const PublicProfilePage: React.FC = () => {
                   <span>{locationLabel}</span>
                 </p>
               )}
+
+              {/* Social-proof badges */}
+              {(ratingLabel || eventsCompleted > 0) && (
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  {ratingLabel && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
+                      <Star
+                        className="h-4 w-4 fill-primary text-primary"
+                        aria-hidden="true"
+                      />
+                      {ratingLabel}
+                      <span className="font-normal text-text-secondary">
+                        · {reviewsCount} {t("profile.reviews_count", { count: reviewsCount })}
+                      </span>
+                    </span>
+                  )}
+                  {eventsCompleted > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-surface-alt px-3 py-1 text-sm font-medium text-text-secondary">
+                      {t("profile.events_completed", { count: eventsCompleted })}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -409,6 +444,48 @@ export const PublicProfilePage: React.FC = () => {
               })}
             </ul>
           </section>
+        )}
+
+        {/* Featured testimonial */}
+        {featuredReview && (
+          <Card variant="default" padding="lg" className="border-l-4 border-primary">
+            <div className="flex items-start gap-3">
+              <Quote
+                className="h-8 w-8 shrink-0 text-primary/40"
+                aria-hidden="true"
+              />
+              <div className="space-y-2">
+                {featuredReview.comment?.trim() && (
+                  <p className="text-lg font-medium text-text leading-relaxed">
+                    “{featuredReview.comment}”
+                  </p>
+                )}
+                <div className="flex items-center gap-2">
+                  <div
+                    className="flex items-center gap-0.5"
+                    aria-label={t("profile.rating_aria", {
+                      rating: featuredReview.rating,
+                    })}
+                  >
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-3.5 w-3.5 ${
+                          i < featuredReview.rating
+                            ? "fill-primary text-primary"
+                            : "text-border"
+                        }`}
+                        aria-hidden="true"
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm font-semibold text-text">
+                    {featuredReview.display_name}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </Card>
         )}
 
         {/* Reviews */}

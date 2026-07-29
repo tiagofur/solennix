@@ -53,10 +53,20 @@ func (f *fakeReviewRepo) ListPublicByOrganizerSlug(ctx context.Context, slug str
 	return f.reviews, f.err
 }
 
+type fakeEventRepo struct {
+	completed int
+	err       error
+}
+
+func (f *fakeEventRepo) CountCompletedByUser(ctx context.Context, userID uuid.UUID) (int, error) {
+	return f.completed, f.err
+}
+
 // newHandler wires a PublicProfileHandler with fakes.
 func newHandler(u *fakeUserRepo, p *fakeProfileRepo, pr *fakeProductRepo, rv *fakeReviewRepo) *PublicProfileHandler {
 	return &PublicProfileHandler{
 		userRepo: u, profileRepo: p, productRepo: pr, reviewRepo: rv,
+		eventRepo: &fakeEventRepo{},
 	}
 }
 
