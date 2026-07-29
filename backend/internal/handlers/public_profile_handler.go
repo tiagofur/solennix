@@ -143,6 +143,13 @@ func (h *PublicProfileHandler) buildProjection(ctx context.Context, user *models
 	dto.CoverURL = user.CoverURL
 	dto.BrandColor = user.BrandColor
 	dto.Headline = profile.Headline
+	dto.About = profile.About
+	dto.ServiceAreas = profile.ServiceAreas
+	dto.MinGuests = profile.MinGuests
+	dto.MaxGuests = profile.MaxGuests
+	dto.EventTypes = profile.EventTypes
+	dto.ResponseTime = profile.ResponseTime
+	dto.Languages = profile.Languages
 
 	if profile.City != nil || profile.Region != nil || profile.Country != nil {
 		dto.Location = &models.PublicLocation{

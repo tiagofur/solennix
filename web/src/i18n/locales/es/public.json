@@ -472,6 +472,17 @@
       "link_copied": "¡Copiado!",
       "location_heading": "Ubicación",
       "get_directions": "Cómo llegar"
+    },
+    "about": {
+      "heading": "Sobre el negocio",
+      "capacity_label": "Capacidad",
+      "capacity_value": "{{min}} - {{max}} invitados",
+      "capacity_value_min_only": "Desde {{min}} invitados",
+      "capacity_value_max_only": "Hasta {{max}} invitados",
+      "coverage_heading": "Zonas de cobertura",
+      "response_time_heading": "Tiempo de respuesta",
+      "languages_heading": "Idiomas de atención",
+      "event_types_heading": "Especialidad de eventos"
     }
   }
 }

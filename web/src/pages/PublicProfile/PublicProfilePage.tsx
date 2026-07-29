@@ -23,6 +23,7 @@ import { resolveMediaUrl } from "@/lib/api";
 import { PublicLeadModal } from "./PublicLeadModal";
 import { PublicProfileQuickActions } from "./PublicProfileQuickActions";
 import { PublicProfileMap } from "./PublicProfileMap";
+import { PublicProfileAboutSection } from "./PublicProfileAboutSection";
 import {
   publicProfileService,
   PublicProfileNotFoundError,
@@ -613,6 +614,8 @@ export const PublicProfilePage: React.FC = () => {
             </ul>
           </section>
         )}
+
+        <PublicProfileAboutSection profile={profile} />
 
         {profile.location && (
           <PublicProfileMap
