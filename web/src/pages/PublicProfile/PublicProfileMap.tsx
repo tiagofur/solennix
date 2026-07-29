@@ -15,7 +15,7 @@ export const PublicProfileMap: React.FC<PublicProfileMapProps> = ({
 }) => {
   const { t } = useTranslation("public");
 
-  const addressText = [location.address, location.city, location.state]
+  const addressText = [location.city, location.region, location.country]
     .filter(Boolean)
     .join(", ");
 

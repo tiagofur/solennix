@@ -10,15 +10,12 @@ vi.mock("@/lib/vcard", () => ({
 
 describe("PublicProfileQuickActions", () => {
   const mockProfile: PublicOrganizerProfile = {
-    user_id: "u1",
     slug: "alice-events",
-    name: "Alice Smith",
     business_name: "Alice Events",
     location: {
       city: "Guadalajara",
-      state: "Jalisco",
+      region: "Jalisco",
     },
-    is_enabled: true,
   };
 
   beforeEach(() => {

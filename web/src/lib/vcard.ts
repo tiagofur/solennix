@@ -14,9 +14,9 @@ function sanitizeVCardValue(value: string): string {
 export function buildVCardString(profile: PublicOrganizerProfile): string {
   const name =
     profile.business_name?.trim() ||
-    profile.name?.trim() ||
+    profile.slug?.trim() ||
     "Solennix Organizer";
-  const org = profile.business_name?.trim() || profile.name?.trim() || "";
+  const org = profile.business_name?.trim() || "";
   const lines: string[] = [
     "BEGIN:VCARD",
     "VERSION:3.0",
@@ -46,14 +46,14 @@ export function buildVCardString(profile: PublicOrganizerProfile): string {
   }
 
   if (profile.location) {
-    const street = profile.location.address || "";
     const city = profile.location.city || "";
-    const state = profile.location.state || "";
-    lines.push(`ADR;TYPE=WORK:;;${sanitizeVCardValue(street)};${sanitizeVCardValue(city)};${sanitizeVCardValue(state)};;`);
+    const region = profile.location.region || "";
+    const country = profile.location.country || "";
+    lines.push(`ADR;TYPE=WORK:;;;${sanitizeVCardValue(city)};${sanitizeVCardValue(region)};;${sanitizeVCardValue(country)}`);
   }
 
-  if (profile.bio) {
-    lines.push(`NOTE:${sanitizeVCardValue(profile.bio)}`);
+  if (profile.headline) {
+    lines.push(`NOTE:${sanitizeVCardValue(profile.headline)}`);
   }
 
   lines.push("END:VCARD");
@@ -71,7 +71,6 @@ export function downloadVCard(profile: PublicOrganizerProfile): void {
 
   const fileName = (
     profile.business_name ||
-    profile.name ||
     profile.slug ||
     "contacto"
   )

@@ -4,31 +4,21 @@ import type { PublicOrganizerProfile } from "@/services/publicProfileService";
 
 describe("vcard utility", () => {
   const mockProfile: PublicOrganizerProfile = {
-    user_id: "u123",
     slug: "alice-events",
-    name: "Alice Smith",
     business_name: "Alice Events & Catering",
     headline: "Event Planner & Designer",
-    bio: "Creating magical wedding experiences.",
     contact: {
       type: "whatsapp",
       value: "+525512345678",
     },
     location: {
       city: "Guadalajara",
-      state: "Jalisco",
-      address: "Av Vallarta 1234",
+      region: "Jalisco",
+      country: "Mexico",
     },
-    socials: {
-      instagram: "aliceevents",
-    },
-    metrics: {
-      years_experience: 5,
-      completed_events_count: 50,
-      rating_avg: 4.9,
-      reviews_count: 12,
-    },
-    is_enabled: true,
+    events_completed: 50,
+    average_rating: 4.9,
+    reviews_count: 12,
   };
 
   it("builds valid vCard 3.0 string with all profile fields", () => {
@@ -41,8 +31,8 @@ describe("vcard utility", () => {
     expect(vcard).toContain("TITLE:Event Planner & Designer");
     expect(vcard).toContain("TEL;TYPE=CELL,VOICE:+525512345678");
     expect(vcard).toContain("/u/alice-events");
-    expect(vcard).toContain("ADR;TYPE=WORK:;;Av Vallarta 1234;Guadalajara;Jalisco;;");
-    expect(vcard).toContain("NOTE:Creating magical wedding experiences.");
+    expect(vcard).toContain("ADR;TYPE=WORK:;;;Guadalajara;Jalisco;;Mexico");
+    expect(vcard).toContain("NOTE:Event Planner & Designer");
     expect(vcard).toContain("END:VCARD");
   });
 

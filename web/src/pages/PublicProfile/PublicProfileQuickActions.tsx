@@ -40,8 +40,8 @@ export const PublicProfileQuickActions: React.FC<PublicProfileQuickActionsProps>
 
   const handleShare = async () => {
     const shareData = {
-      title: profile.business_name || profile.name || "Solennix",
-      text: profile.headline || profile.bio || "Perfil profesional en Solennix",
+      title: profile.business_name || profile.slug || "Solennix",
+      text: profile.headline || "Perfil profesional en Solennix",
       url: window.location.href,
     };
 
@@ -111,7 +111,7 @@ export const PublicProfileQuickActions: React.FC<PublicProfileQuickActionsProps>
         >
           <MapPin className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
           <span>
-            {[profile.location.city, profile.location.state].filter(Boolean).join(", ")}
+            {[profile.location.city, profile.location.region].filter(Boolean).join(", ")}
           </span>
         </button>
       )}
