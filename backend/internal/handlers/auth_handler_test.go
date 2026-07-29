@@ -642,6 +642,7 @@ func TestAuthHandlerResetPassword(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/auth/reset-password", strings.NewReader(`{"token":"`+token+`","new_password":"Test1234!"}`))
 		rr := httptest.NewRecorder()
 		hh.ResetPassword(rr, req)
+		// Closed pool → DB error (not ErrUserNotFound) → handler returns 503.
 		if rr.Code != http.StatusServiceUnavailable {
 			t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusServiceUnavailable, rr.Body.String())
 		}
@@ -2253,6 +2254,7 @@ func TestAuthHandler_RefreshToken_UserLookupFailed_Returns503(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Transient DB failure must NOT become 401 — clients clear tokens on 401 refresh.
+	// Since Go 1.21 the fix: non-ErrUserNotFound errors return 503 Service Unavailable.
 	mockRepo := new(MockFullUserRepo)
 	mockRepo.On("GetByID", mock.Anything, userID).Return(nil, fmt.Errorf("get user by id: connection reset"))
 
@@ -2647,6 +2649,7 @@ func TestAuthHandler_ChangePassword(t *testing.T) {
 		h := &AuthHandler{userRepo: mockRepo, authService: authService}
 
 		userID := uuid.New()
+		// Use ErrUserNotFound sentinel so handler routes to 401 branch.
 		mockRepo.On("GetByID", mock.Anything, userID).Return(nil, repository.ErrUserNotFound)
 
 		body := `{"current_password":"OldPass123","new_password":"NewPass1234!"}`
