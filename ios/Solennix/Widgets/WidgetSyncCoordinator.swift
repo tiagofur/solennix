@@ -35,6 +35,16 @@ final class WidgetSyncCoordinator {
     /// coordinator never syncs for a logged-out user. Defaults to `false`.
     private var isAuthorized: () -> Bool = { false }
 
+    /// Wall clock used for all date filtering ("today", "this month",
+    /// "this week", 7-day window). Injectable so the KPI derivation is
+    /// unit-testable with a pinned date — `Date()` makes `monthlyRevenue`
+    /// non-deterministic near month boundaries. Defaults to the real clock.
+    private var now: () -> Date = { Date() }
+
+    /// Calendar used for granularity / interval math. Defaults to the user's
+    /// calendar; injectable in tests so date-window assertions are stable.
+    private var calendar: () -> Calendar = { Calendar.current }
+
     /// Last server-aggregated KPIs received from `DashboardViewModel` (issue
     /// #802). When present, `deriveKPIs` uses these as the source of truth for
     /// revenue / month count / low stock so the widget matches the dashboard;
@@ -57,9 +67,19 @@ final class WidgetSyncCoordinator {
 
     /// Attaches the cache + auth gate and begins observing sync triggers.
     /// Idempotent: calling again replaces previously registered observers.
-    func start(cache: CacheManager, isAuthorized: @escaping () -> Bool) {
+    ///
+    /// `now` and `calendar` default to the real wall clock / user calendar and
+    /// are only injected by tests to pin the date window deterministically.
+    func start(
+        cache: CacheManager,
+        isAuthorized: @escaping () -> Bool,
+        now: @escaping () -> Date = { Date() },
+        calendar: @escaping () -> Calendar = { Calendar.current }
+    ) {
         self.cacheManager = cache
         self.isAuthorized = isAuthorized
+        self.now = now
+        self.calendar = calendar
         stop()
 
         let center = NotificationCenter.default
@@ -133,7 +153,7 @@ final class WidgetSyncCoordinator {
         // date, capped at 5 — mirrors the dashboard's upcoming list (issue #802,
         // divergence #3). Date parse uses the local-day anchor so the widget's
         // "today" matches what the user sees.
-        let startOfToday = Calendar.current.startOfDay(for: Date())
+        let startOfToday = calendar().startOfDay(for: now())
         let widgetEvents = events
             .filter { event in
                 guard event.status == .confirmed else { return false }
@@ -193,8 +213,8 @@ final class WidgetSyncCoordinator {
         inventory: [InventoryItem],
         cacheManager: CacheManager
     ) -> WidgetKPIData {
-        let now = Date()
-        let calendar = Calendar.current
+        let now = now()
+        let calendar = calendar()
         let server = lastServerKPIs
 
         // --- Month count: server first, cache fallback ---
