@@ -934,21 +934,21 @@ func TestAddEventPhoto_InvalidScheme_Javascript(t *testing.T) {
 	assert.Contains(t, rr.Body.String(), "invalid photo URL")
 }
 
-func TestAddEventPhoto_RelativeURL_Rejected(t *testing.T) {
+func TestAddEventPhoto_RelativeURL_Accepted(t *testing.T) {
 	eventRepo := new(MockFullEventRepo)
 	userID := uuid.New()
 	eventID := uuid.New()
 	eventRepo.On("GetByID", mock.Anything, eventID, userID).
 		Return(&models.Event{ID: eventID, UserID: userID}, nil)
+	eventRepo.On("Update", mock.Anything, mock.Anything).Return(nil)
 
 	h := eventCoverageHandler(eventRepo)
 	req := makeReqWithIDParam(http.MethodPost, "/api/events/"+eventID.String()+"/photos",
-		`{"url":"/relative/path"}`, eventID.String(), userID)
+		`{"url":"/api/v1/uploads/user1/photo.jpg"}`, eventID.String(), userID)
 	rr := httptest.NewRecorder()
 	h.AddEventPhoto(rr, req)
 
-	assert.Equal(t, http.StatusBadRequest, rr.Code)
-	assert.Contains(t, rr.Body.String(), "invalid photo URL")
+	assert.Equal(t, http.StatusCreated, rr.Code)
 }
 
 func TestAddEventPhoto_ValidHTTPS_Accepted(t *testing.T) {

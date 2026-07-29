@@ -1654,13 +1654,27 @@ func (h *CRUDHandler) AddEventPhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if u, err := url.Parse(req.URL); err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+	isValidPhotoURL := func(rawURL string) bool {
+		if rawURL == "" {
+			return false
+		}
+		if strings.HasPrefix(rawURL, "/") {
+			return true
+		}
+		u, err := url.Parse(rawURL)
+		if err != nil {
+			return false
+		}
+		return (u.Scheme == "http" || u.Scheme == "https") && u.Host != ""
+	}
+
+	if !isValidPhotoURL(req.URL) {
 		writeError(w, http.StatusBadRequest, "invalid photo URL")
 		return
 	}
 
 	if req.ThumbnailURL != nil && *req.ThumbnailURL != "" {
-		if u, err := url.Parse(*req.ThumbnailURL); err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+		if !isValidPhotoURL(*req.ThumbnailURL) {
 			writeError(w, http.StatusBadRequest, "invalid thumbnail URL")
 			return
 		}
