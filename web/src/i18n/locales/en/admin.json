@@ -237,7 +237,8 @@
         "delete": "Delete",
         "login": "Login",
         "login_failed": "Failed login attempt",
-        "auth_failed": "Authentication failed",
+        "auth_failed": "Authentication failure",
+        "rate_limited": "Rate limit exceeded",
         "block": "Block",
         "unblock": "Unblock"
       },
@@ -247,14 +248,16 @@
         "invalid_password": "Wrong password",
         "wrong_password": "Wrong password",
         "user_not_found": "User not found",
-        "refresh_user_not_found": "Refresh: user not found",
-        "refresh_user_lookup_failed": "Refresh: user lookup failed (transient)",
-        "refresh_account_blocked": "Refresh: account blocked",
-        "refresh_account_deleted": "Refresh: account deleted",
-        "refresh_token_reuse_detected": "Refresh: token reuse detected",
+        "blocked": "Account blocked",
         "account_blocked": "Account blocked",
         "account_deleted": "Account deleted",
-        "blocked": "Account blocked"
+        "user_plan_limit_exceeded": "User plan limit exceeded",
+        "refresh_user_not_found": "User not found during token refresh",
+        "refresh_user_lookup_failed": "Refresh: user lookup failed (transient)",
+        "refresh_account_blocked": "Account blocked during token refresh",
+        "refresh_account_deleted": "Account deleted during token refresh",
+        "refresh_token_reuse_detected": "Token reuse detected",
+        "refresh_db_error": "Database error (transient)"
       }
     }
   },

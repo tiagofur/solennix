@@ -532,8 +532,10 @@ func TestAuthHandlerMe(t *testing.T) {
 	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, uuid.New()))
 	rr := httptest.NewRecorder()
 	h.Me(rr, req)
-	if rr.Code != http.StatusInternalServerError {
-		t.Fatalf("status = %d, want %d", rr.Code, http.StatusInternalServerError)
+	// A closed pool produces a transient DB error, which now correctly returns 503
+	// instead of a misleading 404.
+	if rr.Code != http.StatusServiceUnavailable {
+		t.Fatalf("status = %d, want %d (closed pool should yield 503, not 404)", rr.Code, http.StatusServiceUnavailable)
 	}
 }
 
@@ -1172,6 +1174,11 @@ func TestAuthHandler_Me_HappyPaths(t *testing.T) {
 		h := &AuthHandler{userRepo: mockRepo}
 
 		userID := uuid.New()
+<<<<<<< HEAD
+		// Use the sentinel so the handler routes to the 404 branch (user genuinely missing)
+		// rather than the 503 branch (transient DB error).
+=======
+>>>>>>> origin/main
 		mockRepo.On("GetByID", mock.Anything, userID).Return(nil, repository.ErrUserNotFound)
 
 		req := httptest.NewRequest(http.MethodGet, "/api/auth/me", nil)
@@ -1445,7 +1452,7 @@ func TestAuthHandler_ResetPassword_Paths(t *testing.T) {
 		assert.Contains(t, rr.Body.String(), "Password must be at least 8 characters and contain at least one uppercase letter, one lowercase letter, one digit, and one symbol")
 	})
 
-	t.Run("UserNotFoundFromToken_Returns404", func(t *testing.T) {
+	t.Run("UserNotFoundFromToken_Returns401", func(t *testing.T) {
 		mockRepo := new(MockFullUserRepo)
 		h := &AuthHandler{
 			userRepo:    mockRepo,
@@ -1454,7 +1461,8 @@ func TestAuthHandler_ResetPassword_Paths(t *testing.T) {
 
 		userID := uuid.New()
 		token, _ := authService.GenerateResetToken(userID, "missing@test.dev")
-		mockRepo.On("GetByID", mock.Anything, userID).Return(nil, fmt.Errorf("not found"))
+		// Use the sentinel so the handler routes to the 401 branch (user genuinely missing).
+		mockRepo.On("GetByID", mock.Anything, userID).Return(nil, repository.ErrUserNotFound)
 
 		body := fmt.Sprintf(`{"token":"%s","new_password":"Test1234!"}`, token)
 		req := httptest.NewRequest(http.MethodPost, "/api/auth/reset-password", strings.NewReader(body))

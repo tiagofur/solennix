@@ -238,6 +238,7 @@
         "login": "Iniciar sesión",
         "login_failed": "Intento de inicio de sesión fallido",
         "auth_failed": "Fallo de autenticación",
+        "rate_limited": "Límite excedido",
         "block": "Bloquear",
         "unblock": "Desbloquear"
       },
@@ -247,14 +248,16 @@
         "invalid_password": "Contraseña incorrecta",
         "wrong_password": "Contraseña incorrecta",
         "user_not_found": "Usuario no encontrado",
-        "refresh_user_not_found": "Refresh: usuario no encontrado",
-        "refresh_user_lookup_failed": "Refresh: error al consultar usuario (transitorio)",
-        "refresh_account_blocked": "Refresh: cuenta bloqueada",
-        "refresh_account_deleted": "Refresh: cuenta eliminada",
-        "refresh_token_reuse_detected": "Refresh: reutilización de token detectada",
+        "blocked": "Cuenta bloqueada",
         "account_blocked": "Cuenta bloqueada",
         "account_deleted": "Cuenta eliminada",
-        "blocked": "Cuenta bloqueada"
+        "user_plan_limit_exceeded": "Límite del plan del usuario alcanzado",
+        "refresh_user_not_found": "Usuario no encontrado al refrescar token",
+        "refresh_user_lookup_failed": "Refresh: error al consultar usuario (transitorio)",
+        "refresh_account_blocked": "Cuenta bloqueada durante refresco",
+        "refresh_account_deleted": "Cuenta eliminada durante refresco",
+        "refresh_token_reuse_detected": "Reutilización de token detectada",
+        "refresh_db_error": "Error de base de datos (transitorio)"
       }
     }
   },
