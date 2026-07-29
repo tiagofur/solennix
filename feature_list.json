@@ -465,6 +465,19 @@
         "EventFormView centers form content, caps width to 640pt and applies systemGroupedBackground natively in regular class.",
         "iOS package build and tests run 100% green."
       ]
+    },
+    {
+      "id": 38,
+      "name": "public-professional-profile",
+      "description": "feat(web/backend): Perfil Profesional Público, hero cover, live preview, lead capture modal, and social-proof aggregates (Issue #787)",
+      "status": "done",
+      "acceptance_criteria": [
+        "Unauthenticated public organizer profile page at /u/:slug with hero cover, full-width logo, and social-proof aggregates",
+        "Direct quote request / lead capture modal posting to /api/public/organizers/:slug/leads",
+        "Public Profile Settings in web with real-time Live Header Preview card and plan-aware toggles",
+        "Full unit test coverage across Go backend handlers and Vitest frontend components",
+        "Global init.sh validation suite runs and passes 100% green"
+      ]
     }
   ]
 }

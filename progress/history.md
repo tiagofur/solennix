@@ -583,3 +583,24 @@ iOS `PlanLimitsManager` envía `start_date`/`end_date`; el backend solo leía `s
 - 2 tests: alias resuelto + canónico gana.
 
 (Resumen migrado desde `progress/current.md` al iniciar sesión #1014.)
+
+---
+
+## Sesión 2026-07-29 — Perfil Profesional Público & Solicitud de Cotización (Issue #787 / PR #1089)
+- **PR:** #1089 (merged)
+- **Branch:** `feat/public-profile-contact-cta`
+
+### Resumen
+Implementación completa del Perfil Profesional Público (`/u/:slug`), Live Preview en Ajustes, y Modal de Solicitud de Cotización / Captura de Prospectos Directa.
+
+### Entregables
+- **DB:** Migración `068_create_public_leads.up.sql` (y `down.sql`).
+- **Backend:** `PublicLeadRepo` y `PublicLeadHandler` (`POST /api/public/organizers/{slug}/leads`, `GET /api/leads`, `POST /api/leads/{id}/read`). Tests en `public_lead_handler_test.go`.
+- **Frontend (Web):**
+  - Fix de capa sobre texto en el encabezado de perfil público.
+  - Tarjeta `Live Header Preview` en `PublicProfileSettings.tsx`.
+  - Componente modal `PublicLeadModal.tsx` con formulario, validación, vista de confirmación e i18n completo (ES/EN).
+  - Integración del botón **"Solicitar Cotización"** en `PublicProfilePage.tsx`.
+  - Tests unitarios en Vitest (`PublicLeadModal.test.tsx`, `PublicProfilePage.test.tsx`, `publicProfileService.test.ts`).
+- **Fix de CI:** Actualizadas llamadas a `router.New` en `router_test.go` y `router_api_integration_test.go` para coincidir con el parámetro `publicLeadHandler`.
+
