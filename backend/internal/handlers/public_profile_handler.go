@@ -132,6 +132,7 @@ func (h *PublicProfileHandler) buildProjection(ctx context.Context, user *models
 	if user.BusinessName != nil {
 		dto.BusinessName = *user.BusinessName
 	}
+	dto.ShowBusinessName = user.ShowBusinessNameInPdf == nil || *user.ShowBusinessNameInPdf
 	dto.LogoURL = user.LogoURL
 	dto.BrandColor = user.BrandColor
 	dto.Headline = profile.Headline

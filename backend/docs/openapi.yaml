@@ -2469,6 +2469,9 @@ components:
           type: string
         business_name:
           type: string
+        show_business_name:
+          type: boolean
+          description: Whether the business name should be shown as text (mirrors show_business_name_in_pdf; defaults to true)
         logo_url:
           type: string
           nullable: true

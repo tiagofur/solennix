@@ -1360,6 +1360,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/users/me/public-profile/services": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List active products for public-profile service selection
+         * @description Returns active products with show_on_public_profile for the Settings multi-select. Prices and images always come from the product row.
+         */
+        get: operations["listMyPublicProfileServices"];
+        /**
+         * Bulk-set which products appear on the public profile
+         * @description Sets show_on_public_profile=true for the given product IDs (owned + active) and false for all other user products. Free plan max 3.
+         */
+        put: operations["setMyPublicProfileServices"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/users/me/public-profile/portfolio": {
         parameters: {
             query?: never;
@@ -1370,8 +1394,31 @@ export interface paths {
         /** List portfolio items (Pro+ only) */
         get: operations["listMyPublicPortfolio"];
         put?: never;
-        /** Create a portfolio item (Pro+, max 6) */
+        /**
+         * Create a portfolio item (Pro+, max 6)
+         * @description Primary path uses event_id (and optional photo_id) to fill title/date/photo from an owned event. Manual title+photo_url remain optional overrides.
+         */
         post: operations["createMyPublicPortfolioItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/me/public-profile/portfolio/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List events eligible for portfolio (Pro+ only)
+         * @description Completed or past confirmed events with at least one photo. Never includes client name, phone, or client_id.
+         */
+        get: operations["listMyPublicPortfolioCandidates"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2476,6 +2523,8 @@ export interface components {
         PublicOrganizerProfile: {
             slug: string;
             business_name?: string;
+            /** @description Whether the business name should be shown as text (mirrors show_business_name_in_pdf; defaults to true) */
+            show_business_name?: boolean;
             logo_url?: string | null;
             brand_color?: string | null;
             headline?: string | null;
@@ -2553,6 +2602,31 @@ export interface components {
             created_at: string;
             /** Format: date-time */
             updated_at: string;
+        };
+        PublicProfileServiceSelectionItem: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            category: string;
+            base_price: number;
+            image_url?: string | null;
+            show_on_public_profile: boolean;
+        };
+        PortfolioCandidatePhoto: {
+            /** Format: uuid */
+            id: string;
+            url: string;
+            thumbnail_url?: string | null;
+        };
+        /** @description Sanitized event for portfolio picker — never includes client PII */
+        PortfolioCandidateEvent: {
+            /** Format: uuid */
+            id: string;
+            service_type: string;
+            /** Format: date */
+            event_date: string;
+            city?: string | null;
+            photos: components["schemas"]["PortfolioCandidatePhoto"][];
         };
     };
     responses: never;
@@ -6824,6 +6898,84 @@ export interface operations {
             };
         };
     };
+    listMyPublicProfileServices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active products for selection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicProfileServiceSelectionItem"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    setMyPublicProfileServices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    product_ids: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Updated selection list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicProfileServiceSelectionItem"][];
+                };
+            };
+            /** @description Invalid product selection */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Free plan exceeded max 3 services */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     listMyPublicPortfolio: {
         parameters: {
             query?: never;
@@ -6870,14 +7022,24 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    title: string;
-                    /** Format: uuid */
+                    /** @description Optional override; defaults to event service_type when event_id is set */
+                    title?: string;
+                    /**
+                     * Format: uuid
+                     * @description Preferred path — create from owned event
+                     */
                     event_id?: string | null;
+                    /**
+                     * Format: uuid
+                     * @description Optional event photo id; defaults to first photo
+                     */
+                    photo_id?: string | null;
                     /** Format: date */
                     event_date?: string | null;
-                    photo_url: string;
+                    /** @description Required when event_id is omitted */
+                    photo_url?: string;
                     thumbnail_url?: string | null;
-                    sort_order: number;
+                    sort_order?: number;
                 };
             };
         };
@@ -6891,13 +7053,58 @@ export interface operations {
                     "application/json": components["schemas"]["OrganizerPublicPortfolioItem"];
                 };
             };
-            /** @description Validation error or max items reached */
+            /** @description Validation error, duplicate event, or max items reached */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires Pro+ plan */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Event not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listMyPublicPortfolioCandidates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sanitized event candidates */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortfolioCandidateEvent"][];
                 };
             };
             /** @description Unauthorized */
