@@ -1761,16 +1761,37 @@ func (h *CRUDHandler) DeleteEventPhoto(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// parseEventPhotos parses the photos JSON string into a slice of EventPhoto
+// parseEventPhotos parses the photos JSON string into a slice of EventPhoto.
+//
+// It tolerates two on-disk shapes for events.photos:
+//   - the canonical shape, an array of EventPhoto objects; and
+//   - a legacy shape written by older iOS builds, a JSON array of bare URL
+//     strings (e.g. `["/api/uploads/.../a.jpg"]`). Those rows otherwise make
+//     GetEventPhotos return [] silently, so event photos uploaded from iOS
+//     never render on web/Android. Each legacy URL is lifted into a synthetic
+//     EventPhoto so no data migration is required (#1067).
 func parseEventPhotos(photosJSON *string) []models.EventPhoto {
 	if photosJSON == nil || *photosJSON == "" || *photosJSON == "null" {
 		return []models.EventPhoto{}
 	}
 
 	var photos []models.EventPhoto
-	if err := json.Unmarshal([]byte(*photosJSON), &photos); err != nil {
+	if err := json.Unmarshal([]byte(*photosJSON), &photos); err == nil {
+		return photos
+	}
+
+	// Fallback: legacy iOS shape — a JSON array of bare URL strings.
+	var urls []string
+	if err := json.Unmarshal([]byte(*photosJSON), &urls); err != nil {
 		slog.Warn("Failed to parse event photos JSON", "error", err)
 		return []models.EventPhoto{}
+	}
+	photos = make([]models.EventPhoto, 0, len(urls))
+	for _, u := range urls {
+		photos = append(photos, models.EventPhoto{
+			ID:  uuid.New(),
+			URL: u,
+		})
 	}
 	return photos
 }
