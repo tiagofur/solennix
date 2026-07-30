@@ -2613,6 +2613,7 @@ components:
         policies:
           allOf:
             - $ref: "#/components/schemas/PublicPolicies"
+          type: object
           nullable: true
           description: Organizer commercial terms (deposit/cancellation/refund); omitted when show_policies is off
         events_completed:
