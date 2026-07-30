@@ -426,6 +426,8 @@
     "back_home": "Volver a Solennix",
     "contact_cta": "Contactar",
     "services_title": "Servicios",
+    "services_all_categories": "Todos",
+    "services_show_all": "Ver todos los servicios ({{count}})",
     "reviews_title": "Reseñas",
     "portfolio_title": "Portafolio",
     "portfolio_open": "Abrir {{title}}",
