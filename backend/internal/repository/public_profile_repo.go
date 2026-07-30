@@ -24,6 +24,12 @@ func NewPublicProfileRepo(pool *pgxpool.Pool) *PublicProfileRepo {
 // MaxPublicPortfolioItems is the hard cap for Pro+ portfolio (sort_order 0–5).
 const MaxPublicPortfolioItems = 6
 
+// MaxPublicPackages is the hard cap for curated packages per organizer.
+const MaxPublicPackages = 6
+
+// MaxPublicFaqItems is the hard cap for FAQ entries per organizer.
+const MaxPublicFaqItems = 12
+
 // ErrPublicProfileNotFound is returned by GetByUserID when the organizer has
 // no profile row yet. Callers map this to a 404 on public endpoints.
 var ErrPublicProfileNotFound = fmt.Errorf("public profile not found")
@@ -37,6 +43,18 @@ var ErrPortfolioFull = fmt.Errorf("portfolio max items reached")
 // ErrPortfolioSortTaken is returned when (user_id, sort_order) is already used.
 var ErrPortfolioSortTaken = fmt.Errorf("portfolio sort_order already taken")
 
+// ErrPackageNotFound is returned when a package is missing or not owned.
+var ErrPackageNotFound = fmt.Errorf("package not found")
+
+// ErrPackagesFull is returned when create would exceed MaxPublicPackages.
+var ErrPackagesFull = fmt.Errorf("packages max items reached")
+
+// ErrFaqItemNotFound is returned when an FAQ item is missing or not owned.
+var ErrFaqItemNotFound = fmt.Errorf("faq item not found")
+
+// ErrFaqFull is returned when create would exceed MaxPublicFaqItems.
+var ErrFaqFull = fmt.Errorf("faq max items reached")
+
 // GetByUserID loads the organizer public-profile config. Returns
 // ErrPublicProfileNotFound (wrapping pgx.ErrNoRows) when no row exists.
 func (r *PublicProfileRepo) GetByUserID(ctx context.Context, userID uuid.UUID) (*models.OrganizerPublicProfile, error) {
@@ -45,6 +63,7 @@ func (r *PublicProfileRepo) GetByUserID(ctx context.Context, userID uuid.UUID) (
 			city, region, country, latitude, longitude,
 			show_prices, show_services, show_reviews, show_portfolio, show_contact,
 			socials, about, service_areas, min_guests, max_guests, event_types, response_time, languages,
+			show_packages, show_faq, show_policies,
 			created_at, updated_at
 		FROM organizer_public_profiles WHERE user_id = $1`, userID)
 	p, err := scanProfile(row)
@@ -87,8 +106,9 @@ func (r *PublicProfileRepo) Upsert(ctx context.Context, p *models.OrganizerPubli
 			user_id, is_enabled, headline, contact_type, contact_value,
 			city, region, country, latitude, longitude,
 			show_prices, show_services, show_reviews, show_portfolio, show_contact, socials,
-			about, service_areas, min_guests, max_guests, event_types, response_time, languages
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+			about, service_areas, min_guests, max_guests, event_types, response_time, languages,
+			show_packages, show_faq, show_policies
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
 		ON CONFLICT (user_id) DO UPDATE SET
 			is_enabled     = EXCLUDED.is_enabled,
 			headline       = EXCLUDED.headline,
@@ -112,16 +132,21 @@ func (r *PublicProfileRepo) Upsert(ctx context.Context, p *models.OrganizerPubli
 			event_types    = EXCLUDED.event_types,
 			response_time  = EXCLUDED.response_time,
 			languages      = EXCLUDED.languages,
+			show_packages  = EXCLUDED.show_packages,
+			show_faq       = EXCLUDED.show_faq,
+			show_policies  = EXCLUDED.show_policies,
 			updated_at     = NOW()
 		RETURNING user_id, is_enabled, headline, contact_type, contact_value,
 			city, region, country, latitude, longitude,
 			show_prices, show_services, show_reviews, show_portfolio, show_contact,
 			socials, about, service_areas, min_guests, max_guests, event_types, response_time, languages,
+			show_packages, show_faq, show_policies,
 			created_at, updated_at`,
 		p.UserID, p.IsEnabled, p.Headline, p.ContactType, p.ContactValue,
 		p.City, p.Region, p.Country, p.Latitude, p.Longitude,
 		p.ShowPrices, p.ShowServices, p.ShowReviews, p.ShowPortfolio, p.ShowContact, socials,
 		p.About, serviceAreas, p.MinGuests, p.MaxGuests, eventTypes, p.ResponseTime, languages,
+		p.ShowPackages, p.ShowFaq, p.ShowPolicies,
 	)
 	stored, err := scanProfile(row)
 	if err != nil {
@@ -146,6 +171,7 @@ func scanProfile(row rowScanner) (*models.OrganizerPublicProfile, error) {
 		&p.City, &p.Region, &p.Country, &p.Latitude, &p.Longitude,
 		&p.ShowPrices, &p.ShowServices, &p.ShowReviews, &p.ShowPortfolio, &p.ShowContact,
 		&socials, &p.About, &p.ServiceAreas, &p.MinGuests, &p.MaxGuests, &p.EventTypes, &p.ResponseTime, &p.Languages,
+		&p.ShowPackages, &p.ShowFaq, &p.ShowPolicies,
 		&p.CreatedAt, &p.UpdatedAt,
 	); err != nil {
 		return nil, err
@@ -353,4 +379,302 @@ func nullStr(s *string) string {
 		return ""
 	}
 	return *s
+}
+
+// -----------------------------------------------------------------------------
+// Packages (organizer_public_packages)
+// -----------------------------------------------------------------------------
+
+// ListPackagesByUserID returns curated packages for the organizer ordered by
+// sort_order. Caps at MaxPublicPackages for safety even if data is inconsistent.
+func (r *PublicProfileRepo) ListPackagesByUserID(ctx context.Context, userID uuid.UUID) ([]models.OrganizerPublicPackage, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT id, user_id, title, description, from_price, inclusions, image_url,
+			is_featured, sort_order, created_at, updated_at
+		FROM organizer_public_packages
+		WHERE user_id = $1
+		ORDER BY sort_order ASC
+		LIMIT $2`, userID, MaxPublicPackages)
+	if err != nil {
+		return nil, fmt.Errorf("list packages: %w", err)
+	}
+	defer rows.Close()
+
+	items := make([]models.OrganizerPublicPackage, 0)
+	for rows.Next() {
+		item, err := scanPackage(rows)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, *item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("list packages rows: %w", err)
+	}
+	return items, nil
+}
+
+// CountPackagesByUserID returns how many packages the organizer has.
+func (r *PublicProfileRepo) CountPackagesByUserID(ctx context.Context, userID uuid.UUID) (int, error) {
+	var n int
+	err := r.pool.QueryRow(ctx, `
+		SELECT COUNT(*) FROM organizer_public_packages WHERE user_id = $1`, userID).Scan(&n)
+	if err != nil {
+		return 0, fmt.Errorf("count packages: %w", err)
+	}
+	return n, nil
+}
+
+// CreatePackage inserts a package row. Enforces the MaxPublicPackages cap.
+func (r *PublicProfileRepo) CreatePackage(ctx context.Context, pkg *models.OrganizerPublicPackage) error {
+	count, err := r.CountPackagesByUserID(ctx, pkg.UserID)
+	if err != nil {
+		return err
+	}
+	if count >= MaxPublicPackages {
+		return ErrPackagesFull
+	}
+
+	inclusions, err := json.Marshal(pkg.Inclusions)
+	if err != nil {
+		return fmt.Errorf("encode inclusions: %w", err)
+	}
+
+	row := r.pool.QueryRow(ctx, `
+		INSERT INTO organizer_public_packages
+			(user_id, title, description, from_price, inclusions, image_url, is_featured, sort_order)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING id, user_id, title, description, from_price, inclusions, image_url,
+			is_featured, sort_order, created_at, updated_at`,
+		pkg.UserID, pkg.Title, pkg.Description, pkg.FromPrice, inclusions,
+		pkg.ImageURL, pkg.IsFeatured, pkg.SortOrder,
+	)
+	stored, err := scanPackage(row)
+	if err != nil {
+		return fmt.Errorf("create package: %w", err)
+	}
+	*pkg = *stored
+	return nil
+}
+
+// UpdatePackage updates fields of an owned package.
+func (r *PublicProfileRepo) UpdatePackage(ctx context.Context, pkg *models.OrganizerPublicPackage) error {
+	inclusions, err := json.Marshal(pkg.Inclusions)
+	if err != nil {
+		return fmt.Errorf("encode inclusions: %w", err)
+	}
+	row := r.pool.QueryRow(ctx, `
+		UPDATE organizer_public_packages SET
+			title = $3,
+			description = $4,
+			from_price = $5,
+			inclusions = $6,
+			image_url = $7,
+			is_featured = $8,
+			sort_order = $9,
+			updated_at = NOW()
+		WHERE id = $1 AND user_id = $2
+		RETURNING id, user_id, title, description, from_price, inclusions, image_url,
+			is_featured, sort_order, created_at, updated_at`,
+		pkg.ID, pkg.UserID, pkg.Title, pkg.Description, pkg.FromPrice, inclusions,
+		pkg.ImageURL, pkg.IsFeatured, pkg.SortOrder,
+	)
+	stored, err := scanPackage(row)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return ErrPackageNotFound
+		}
+		return fmt.Errorf("update package: %w", err)
+	}
+	*pkg = *stored
+	return nil
+}
+
+// DeletePackage removes an owned package.
+func (r *PublicProfileRepo) DeletePackage(ctx context.Context, userID, id uuid.UUID) error {
+	tag, err := r.pool.Exec(ctx, `
+		DELETE FROM organizer_public_packages WHERE id = $1 AND user_id = $2`, id, userID)
+	if err != nil {
+		return fmt.Errorf("delete package: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrPackageNotFound
+	}
+	return nil
+}
+
+// GetPackage loads one owned package.
+func (r *PublicProfileRepo) GetPackage(ctx context.Context, userID, id uuid.UUID) (*models.OrganizerPublicPackage, error) {
+	row := r.pool.QueryRow(ctx, `
+		SELECT id, user_id, title, description, from_price, inclusions, image_url,
+			is_featured, sort_order, created_at, updated_at
+		FROM organizer_public_packages
+		WHERE id = $1 AND user_id = $2`, id, userID)
+	pkg, err := scanPackage(row)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, ErrPackageNotFound
+		}
+		return nil, fmt.Errorf("get package: %w", err)
+	}
+	return pkg, nil
+}
+
+type packageRowScanner interface {
+	Scan(dest ...interface{}) error
+}
+
+// scanPackage decodes a package row, including the JSONB inclusions field, into
+// a fully-populated *models.OrganizerPublicPackage.
+func scanPackage(row packageRowScanner) (*models.OrganizerPublicPackage, error) {
+	var pkg models.OrganizerPublicPackage
+	var inclusions []byte
+	if err := row.Scan(
+		&pkg.ID, &pkg.UserID, &pkg.Title, &pkg.Description, &pkg.FromPrice, &inclusions,
+		&pkg.ImageURL, &pkg.IsFeatured, &pkg.SortOrder, &pkg.CreatedAt, &pkg.UpdatedAt,
+	); err != nil {
+		return nil, err
+	}
+	if len(inclusions) > 0 && string(inclusions) != "null" {
+		if err := json.Unmarshal(inclusions, &pkg.Inclusions); err != nil {
+			return nil, fmt.Errorf("decode inclusions: %w", err)
+		}
+	}
+	return &pkg, nil
+}
+
+// -----------------------------------------------------------------------------
+// FAQ (organizer_public_faq)
+// -----------------------------------------------------------------------------
+
+// ListFaqByUserID returns FAQ entries for the organizer ordered by sort_order.
+// Caps at MaxPublicFaqItems for safety even if data is inconsistent.
+func (r *PublicProfileRepo) ListFaqByUserID(ctx context.Context, userID uuid.UUID) ([]models.OrganizerPublicFaqItem, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT id, user_id, question, answer, sort_order, created_at, updated_at
+		FROM organizer_public_faq
+		WHERE user_id = $1
+		ORDER BY sort_order ASC
+		LIMIT $2`, userID, MaxPublicFaqItems)
+	if err != nil {
+		return nil, fmt.Errorf("list faq: %w", err)
+	}
+	defer rows.Close()
+
+	items := make([]models.OrganizerPublicFaqItem, 0)
+	for rows.Next() {
+		item, err := scanFaqItem(rows)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, *item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("list faq rows: %w", err)
+	}
+	return items, nil
+}
+
+// CountFaqByUserID returns how many FAQ entries the organizer has.
+func (r *PublicProfileRepo) CountFaqByUserID(ctx context.Context, userID uuid.UUID) (int, error) {
+	var n int
+	err := r.pool.QueryRow(ctx, `
+		SELECT COUNT(*) FROM organizer_public_faq WHERE user_id = $1`, userID).Scan(&n)
+	if err != nil {
+		return 0, fmt.Errorf("count faq: %w", err)
+	}
+	return n, nil
+}
+
+// CreateFaqItem inserts an FAQ row. Enforces the MaxPublicFaqItems cap.
+func (r *PublicProfileRepo) CreateFaqItem(ctx context.Context, item *models.OrganizerPublicFaqItem) error {
+	count, err := r.CountFaqByUserID(ctx, item.UserID)
+	if err != nil {
+		return err
+	}
+	if count >= MaxPublicFaqItems {
+		return ErrFaqFull
+	}
+
+	row := r.pool.QueryRow(ctx, `
+		INSERT INTO organizer_public_faq
+			(user_id, question, answer, sort_order)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, user_id, question, answer, sort_order, created_at, updated_at`,
+		item.UserID, item.Question, item.Answer, item.SortOrder,
+	)
+	stored, err := scanFaqItem(row)
+	if err != nil {
+		return fmt.Errorf("create faq item: %w", err)
+	}
+	*item = *stored
+	return nil
+}
+
+// UpdateFaqItem updates fields of an owned FAQ entry.
+func (r *PublicProfileRepo) UpdateFaqItem(ctx context.Context, item *models.OrganizerPublicFaqItem) error {
+	row := r.pool.QueryRow(ctx, `
+		UPDATE organizer_public_faq SET
+			question = $3,
+			answer = $4,
+			sort_order = $5,
+			updated_at = NOW()
+		WHERE id = $1 AND user_id = $2
+		RETURNING id, user_id, question, answer, sort_order, created_at, updated_at`,
+		item.ID, item.UserID, item.Question, item.Answer, item.SortOrder,
+	)
+	stored, err := scanFaqItem(row)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return ErrFaqItemNotFound
+		}
+		return fmt.Errorf("update faq item: %w", err)
+	}
+	*item = *stored
+	return nil
+}
+
+// DeleteFaqItem removes an owned FAQ entry.
+func (r *PublicProfileRepo) DeleteFaqItem(ctx context.Context, userID, id uuid.UUID) error {
+	tag, err := r.pool.Exec(ctx, `
+		DELETE FROM organizer_public_faq WHERE id = $1 AND user_id = $2`, id, userID)
+	if err != nil {
+		return fmt.Errorf("delete faq item: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrFaqItemNotFound
+	}
+	return nil
+}
+
+// GetFaqItem loads one owned FAQ entry.
+func (r *PublicProfileRepo) GetFaqItem(ctx context.Context, userID, id uuid.UUID) (*models.OrganizerPublicFaqItem, error) {
+	row := r.pool.QueryRow(ctx, `
+		SELECT id, user_id, question, answer, sort_order, created_at, updated_at
+		FROM organizer_public_faq
+		WHERE id = $1 AND user_id = $2`, id, userID)
+	item, err := scanFaqItem(row)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, ErrFaqItemNotFound
+		}
+		return nil, fmt.Errorf("get faq item: %w", err)
+	}
+	return item, nil
+}
+
+type faqRowScanner interface {
+	Scan(dest ...interface{}) error
+}
+
+// scanFaqItem decodes an FAQ row into a *models.OrganizerPublicFaqItem.
+func scanFaqItem(row faqRowScanner) (*models.OrganizerPublicFaqItem, error) {
+	var item models.OrganizerPublicFaqItem
+	if err := row.Scan(
+		&item.ID, &item.UserID, &item.Question, &item.Answer,
+		&item.SortOrder, &item.CreatedAt, &item.UpdatedAt,
+	); err != nil {
+		return nil, err
+	}
+	return &item, nil
 }

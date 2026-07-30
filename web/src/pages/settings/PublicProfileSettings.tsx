@@ -17,6 +17,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/Button";
 import { getAssetUrl } from "@/lib/api";
 import { publicProfileConfigService } from "@/services/publicProfileConfigService";
+import { PackagesManager } from "./PackagesManager";
+import { FaqManager } from "./FaqManager";
 import type {
   OrganizerPublicProfile,
   OrganizerPublicProfileUpsertRequest,
@@ -45,6 +47,9 @@ const DEFAULT_PROFILE: OrganizerPublicProfile = {
   show_reviews: true,
   show_portfolio: true,
   show_contact: true,
+  show_packages: true,
+  show_faq: true,
+  show_policies: false,
   created_at: "",
   updated_at: "",
 };
@@ -392,6 +397,9 @@ export default function PublicProfileSettings() {
       show_reviews: paid ? profile.show_reviews : false,
       show_portfolio: paid ? profile.show_portfolio : false,
       show_contact: profile.show_contact,
+      show_packages: paid ? profile.show_packages : false,
+      show_faq: paid ? profile.show_faq : false,
+      show_policies: paid ? profile.show_policies : false,
       socials: paid ? parseSocials(socialsText) : {},
     };
 
@@ -815,6 +823,26 @@ export default function PublicProfileSettings() {
           disabled={!paid}
           testId="pp-show-portfolio"
         />
+        <ToggleRow
+          label={t("publicProfile.showPackages")}
+          checked={paid ? profile.show_packages : false}
+          onChange={(v) => paid && setProfile({ ...profile, show_packages: v })}
+          disabled={!paid}
+          testId="pp-show-packages"
+        />
+        <ToggleRow
+          label={t("publicProfile.showFaq")}
+          checked={paid ? profile.show_faq : false}
+          onChange={(v) => paid && setProfile({ ...profile, show_faq: v })}
+          disabled={!paid}
+          testId="pp-show-faq"
+        />
+        <ToggleRow
+          label={t("publicProfile.showPolicies")}
+          checked={profile.show_policies}
+          onChange={(v) => setProfile({ ...profile, show_policies: v })}
+          testId="pp-show-policies"
+        />
       </div>
 
       {/* Socials (Pro only) */}
@@ -1079,6 +1107,24 @@ export default function PublicProfileSettings() {
             )}
           </>
         )}
+      </section>
+
+      {/* Packages (Pro+ only) */}
+      <section className="space-y-3">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
+          {t("publicProfile.packages", { defaultValue: "Packages" })}
+          {!paid && <Lock className="h-3.5 w-3.5 text-text-secondary" />}
+        </label>
+        <PackagesManager enabled={paid} />
+      </section>
+
+      {/* FAQ (Pro+ only) */}
+      <section className="space-y-3">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
+          {t("publicProfile.faq", { defaultValue: "FAQ" })}
+          {!paid && <Lock className="h-3.5 w-3.5 text-text-secondary" />}
+        </label>
+        <FaqManager enabled={paid} />
       </section>
 
       {error && (
