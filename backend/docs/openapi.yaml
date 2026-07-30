@@ -2501,6 +2501,30 @@ components:
         headline:
           type: string
           nullable: true
+        about:
+          type: string
+          nullable: true
+        service_areas:
+          type: array
+          items:
+            type: string
+        min_guests:
+          type: integer
+          nullable: true
+        max_guests:
+          type: integer
+          nullable: true
+        event_types:
+          type: array
+          items:
+            type: string
+        response_time:
+          type: string
+          nullable: true
+        languages:
+          type: array
+          items:
+            type: string
         location:
           $ref: "#/components/schemas/PublicLocation"
         contact:
@@ -2650,6 +2674,30 @@ components:
           type: object
           additionalProperties:
             type: string
+        about:
+          type: string
+          nullable: true
+        service_areas:
+          type: array
+          items:
+            type: string
+        min_guests:
+          type: integer
+          nullable: true
+        max_guests:
+          type: integer
+          nullable: true
+        event_types:
+          type: array
+          items:
+            type: string
+        response_time:
+          type: string
+          nullable: true
+        languages:
+          type: array
+          items:
+            type: string
         public_slug:
           type: string
           nullable: true
@@ -2702,6 +2750,30 @@ components:
         socials:
           type: object
           additionalProperties:
+            type: string
+        about:
+          type: string
+          nullable: true
+        service_areas:
+          type: array
+          items:
+            type: string
+        min_guests:
+          type: integer
+          nullable: true
+        max_guests:
+          type: integer
+          nullable: true
+        event_types:
+          type: array
+          items:
+            type: string
+        response_time:
+          type: string
+          nullable: true
+        languages:
+          type: array
+          items:
             type: string
     OrganizerPublicPortfolioItem:
       type: object

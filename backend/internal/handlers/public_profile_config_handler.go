@@ -112,6 +112,13 @@ type upsertRequest struct {
 	ShowPortfolio *bool              `json:"show_portfolio"`
 	ShowContact   *bool              `json:"show_contact"`
 	Socials       map[string]string  `json:"socials"`
+	About         *string            `json:"about"`
+	ServiceAreas  []string           `json:"service_areas"`
+	MinGuests     *int               `json:"min_guests"`
+	MaxGuests     *int               `json:"max_guests"`
+	EventTypes    []string           `json:"event_types"`
+	ResponseTime  *string            `json:"response_time"`
+	Languages     []string           `json:"languages"`
 }
 
 // GetMyPublicProfile handles GET /api/users/me/public-profile.
@@ -306,6 +313,27 @@ func mergeProfile(existing *models.OrganizerPublicProfile, def *models.Organizer
 	}
 	if req.Socials != nil {
 		p.Socials = req.Socials
+	}
+	if req.About != nil {
+		p.About = req.About
+	}
+	if req.ServiceAreas != nil {
+		p.ServiceAreas = req.ServiceAreas
+	}
+	if req.MinGuests != nil {
+		p.MinGuests = req.MinGuests
+	}
+	if req.MaxGuests != nil {
+		p.MaxGuests = req.MaxGuests
+	}
+	if req.EventTypes != nil {
+		p.EventTypes = req.EventTypes
+	}
+	if req.ResponseTime != nil {
+		p.ResponseTime = req.ResponseTime
+	}
+	if req.Languages != nil {
+		p.Languages = req.Languages
 	}
 	return &p
 }

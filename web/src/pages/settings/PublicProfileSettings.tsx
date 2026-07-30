@@ -80,6 +80,14 @@ export default function PublicProfileSettings() {
   const [contactValue, setContactValue] = useState("");
   const [socialsText, setSocialsText] = useState(""); // "instagram=@x,twitter=@y"
 
+  const [about, setAbout] = useState("");
+  const [serviceAreasText, setServiceAreasText] = useState("");
+  const [minGuests, setMinGuests] = useState<number | "">("");
+  const [maxGuests, setMaxGuests] = useState<number | "">("");
+  const [eventTypesText, setEventTypesText] = useState("");
+  const [responseTime, setResponseTime] = useState("");
+  const [languagesText, setLanguagesText] = useState("");
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,6 +119,13 @@ export default function PublicProfileSettings() {
         setProfile(data);
         setSlug(data.public_slug ?? user?.public_slug ?? "");
         setHeadline(data.headline ?? "");
+        setAbout(data.about ?? "");
+        setServiceAreasText(data.service_areas?.join(", ") ?? "");
+        setMinGuests(data.min_guests ?? "");
+        setMaxGuests(data.max_guests ?? "");
+        setEventTypesText(data.event_types?.join(", ") ?? "");
+        setResponseTime(data.response_time ?? "");
+        setLanguagesText(data.languages?.join(", ") ?? "");
         setCity(data.city ?? "");
         setRegion(data.region ?? "");
         setCountry(data.country ?? "");
@@ -360,6 +375,13 @@ export default function PublicProfileSettings() {
       is_enabled: profile.is_enabled,
       public_slug: trimmedSlug || undefined,
       headline: headline || null,
+      about: about.trim() || null,
+      service_areas: serviceAreasText.split(",").map((s) => s.trim()).filter(Boolean),
+      min_guests: typeof minGuests === "number" ? minGuests : null,
+      max_guests: typeof maxGuests === "number" ? maxGuests : null,
+      event_types: eventTypesText.split(",").map((s) => s.trim()).filter(Boolean),
+      response_time: responseTime.trim() || null,
+      languages: languagesText.split(",").map((s) => s.trim()).filter(Boolean),
       contact_type: contactType,
       contact_value: contactValue || null,
       city: city || null,
@@ -586,6 +608,110 @@ export default function PublicProfileSettings() {
           data-testid="pp-headline"
           placeholder={t("publicProfile.headline")}
         />
+        </div>
+      </div>
+
+      {/* About story */}
+      <div className="space-y-3">
+        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">
+          Sobre el negocio (Historia / Descripción)
+        </p>
+        <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border">
+          <textarea
+            id="pp-about"
+            value={about}
+            onChange={(e) => setAbout(e.target.value)}
+            rows={4}
+            className={fieldClass}
+            data-testid="pp-about"
+            placeholder="Cuenta la historia de tu negocio, tu visión y qué te diferencia..."
+          />
+        </div>
+      </div>
+
+      {/* Capacity & Operational info */}
+      <div className="space-y-3">
+        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">
+          Capacidad y Tiempos de Respuesta
+        </p>
+        <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-text-tertiary mb-1">Mínimo de invitados</label>
+              <input
+                type="number"
+                value={minGuests}
+                onChange={(e) => setMinGuests(e.target.value ? parseInt(e.target.value, 10) : "")}
+                placeholder="ej. 20"
+                className={fieldClass}
+                data-testid="pp-min-guests"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-text-tertiary mb-1">Máximo de invitados</label>
+              <input
+                type="number"
+                value={maxGuests}
+                onChange={(e) => setMaxGuests(e.target.value ? parseInt(e.target.value, 10) : "")}
+                placeholder="ej. 500"
+                className={fieldClass}
+                data-testid="pp-max-guests"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs text-text-tertiary mb-1">Tiempo de respuesta habitual</label>
+            <input
+              type="text"
+              value={responseTime}
+              onChange={(e) => setResponseTime(e.target.value)}
+              placeholder="ej. Responde en menos de 2 horas"
+              className={fieldClass}
+              data-testid="pp-response-time"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Service Coverage & Event types */}
+      <div className="space-y-3">
+        <p className="text-xs font-medium text-text-secondary uppercase tracking-wider">
+          Cobertura, Tipos de Eventos e Idiomas
+        </p>
+        <div className="p-4 bg-surface-alt/50 rounded-2xl border border-border space-y-3">
+          <div>
+            <label className="block text-xs text-text-tertiary mb-1">Zonas de servicio (separadas por coma)</label>
+            <input
+              type="text"
+              value={serviceAreasText}
+              onChange={(e) => setServiceAreasText(e.target.value)}
+              placeholder="ej. Guadalajara, Zapopan, Tlaquepaque, Puerto Vallarta"
+              className={fieldClass}
+              data-testid="pp-service-areas"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-text-tertiary mb-1">Tipos de evento (separados por coma)</label>
+            <input
+              type="text"
+              value={eventTypesText}
+              onChange={(e) => setEventTypesText(e.target.value)}
+              placeholder="ej. wedding, birthday, xv_years, corporate"
+              className={fieldClass}
+              data-testid="pp-event-types"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-text-tertiary mb-1">Idiomas de atención (separados por coma)</label>
+            <input
+              type="text"
+              value={languagesText}
+              onChange={(e) => setLanguagesText(e.target.value)}
+              placeholder="ej. Español, English"
+              className={fieldClass}
+              data-testid="pp-languages"
+            />
+          </div>
         </div>
       </div>
 

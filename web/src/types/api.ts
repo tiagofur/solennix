@@ -2555,6 +2555,13 @@ export interface components {
             cover_url?: string | null;
             brand_color?: string | null;
             headline?: string | null;
+            about?: string | null;
+            service_areas?: string[];
+            min_guests?: number | null;
+            max_guests?: number | null;
+            event_types?: string[];
+            response_time?: string | null;
+            languages?: string[];
             location?: components["schemas"]["PublicLocation"];
             contact?: components["schemas"]["PublicContact"];
             services?: components["schemas"]["PublicProfileService"][];
@@ -2623,6 +2630,13 @@ export interface components {
             socials?: {
                 [key: string]: string;
             };
+            about?: string | null;
+            service_areas?: string[];
+            min_guests?: number | null;
+            max_guests?: number | null;
+            event_types?: string[];
+            response_time?: string | null;
+            languages?: string[];
             public_slug?: string | null;
             /** Format: date-time */
             created_at: string;
@@ -2647,6 +2661,13 @@ export interface components {
             socials?: {
                 [key: string]: string;
             };
+            about?: string | null;
+            service_areas?: string[];
+            min_guests?: number | null;
+            max_guests?: number | null;
+            event_types?: string[];
+            response_time?: string | null;
+            languages?: string[];
         };
         OrganizerPublicPortfolioItem: {
             /** Format: uuid */

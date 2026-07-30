@@ -472,6 +472,17 @@
       "link_copied": "Copied!",
       "location_heading": "Location",
       "get_directions": "Get directions"
+    },
+    "about": {
+      "heading": "About the business",
+      "capacity_label": "Capacity",
+      "capacity_value": "{{min}} - {{max}} guests",
+      "capacity_value_min_only": "From {{min}} guests",
+      "capacity_value_max_only": "Up to {{max}} guests",
+      "coverage_heading": "Service coverage areas",
+      "response_time_heading": "Response time",
+      "languages_heading": "Languages spoken",
+      "event_types_heading": "Event specialties"
     }
   }
 }

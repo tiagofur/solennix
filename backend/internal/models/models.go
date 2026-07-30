@@ -598,6 +598,13 @@ type OrganizerPublicProfile struct {
 	ShowPortfolio bool              `json:"show_portfolio"`
 	ShowContact   bool              `json:"show_contact"`
 	Socials       map[string]string `json:"socials,omitempty"`
+	About         *string           `json:"about,omitempty"`
+	ServiceAreas  []string          `json:"service_areas,omitempty"`
+	MinGuests     *int              `json:"min_guests,omitempty"`
+	MaxGuests     *int              `json:"max_guests,omitempty"`
+	EventTypes    []string          `json:"event_types,omitempty"`
+	ResponseTime  *string           `json:"response_time,omitempty"`
+	Languages     []string          `json:"languages,omitempty"`
 	// PublicSlug is denormalized from users.public_slug for Settings convenience.
 	PublicSlug *string   `json:"public_slug,omitempty"`
 	CreatedAt  time.Time `json:"created_at"`
@@ -689,6 +696,13 @@ type PublicOrganizerProfile struct {
 	CoverURL         *string                `json:"cover_url,omitempty"`
 	BrandColor       *string                `json:"brand_color,omitempty"`
 	Headline         *string                `json:"headline,omitempty"`
+	About            *string                `json:"about,omitempty"`
+	ServiceAreas     []string               `json:"service_areas,omitempty"`
+	MinGuests        *int                   `json:"min_guests,omitempty"`
+	MaxGuests        *int                   `json:"max_guests,omitempty"`
+	EventTypes       []string               `json:"event_types,omitempty"`
+	ResponseTime     *string                `json:"response_time,omitempty"`
+	Languages        []string               `json:"languages,omitempty"`
 	Location         *PublicLocation        `json:"location,omitempty"`
 	Contact          *PublicContact         `json:"contact,omitempty"`
 	Services         []PublicProfileService `json:"services,omitempty"`

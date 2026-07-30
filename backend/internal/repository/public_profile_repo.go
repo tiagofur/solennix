@@ -43,7 +43,8 @@ func (r *PublicProfileRepo) GetByUserID(ctx context.Context, userID uuid.UUID) (
 		SELECT user_id, is_enabled, headline, contact_type, contact_value,
 			city, region, country, latitude, longitude,
 			show_prices, show_services, show_reviews, show_portfolio, show_contact,
-			socials, created_at, updated_at
+			socials, about, service_areas, min_guests, max_guests, event_types, response_time, languages,
+			created_at, updated_at
 		FROM organizer_public_profiles WHERE user_id = $1`, userID)
 	p, err := scanProfile(row)
 	if err != nil {
@@ -67,12 +68,26 @@ func (r *PublicProfileRepo) Upsert(ctx context.Context, p *models.OrganizerPubli
 		return nil, fmt.Errorf("encode socials: %w", err)
 	}
 
+	serviceAreas := p.ServiceAreas
+	if serviceAreas == nil {
+		serviceAreas = []string{}
+	}
+	eventTypes := p.EventTypes
+	if eventTypes == nil {
+		eventTypes = []string{}
+	}
+	languages := p.Languages
+	if languages == nil {
+		languages = []string{}
+	}
+
 	row := r.pool.QueryRow(ctx, `
 		INSERT INTO organizer_public_profiles (
 			user_id, is_enabled, headline, contact_type, contact_value,
 			city, region, country, latitude, longitude,
-			show_prices, show_services, show_reviews, show_portfolio, show_contact, socials
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+			show_prices, show_services, show_reviews, show_portfolio, show_contact, socials,
+			about, service_areas, min_guests, max_guests, event_types, response_time, languages
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
 		ON CONFLICT (user_id) DO UPDATE SET
 			is_enabled     = EXCLUDED.is_enabled,
 			headline       = EXCLUDED.headline,
@@ -89,14 +104,23 @@ func (r *PublicProfileRepo) Upsert(ctx context.Context, p *models.OrganizerPubli
 			show_portfolio = EXCLUDED.show_portfolio,
 			show_contact   = EXCLUDED.show_contact,
 			socials        = EXCLUDED.socials,
+			about          = EXCLUDED.about,
+			service_areas  = EXCLUDED.service_areas,
+			min_guests     = EXCLUDED.min_guests,
+			max_guests     = EXCLUDED.max_guests,
+			event_types    = EXCLUDED.event_types,
+			response_time  = EXCLUDED.response_time,
+			languages      = EXCLUDED.languages,
 			updated_at     = NOW()
 		RETURNING user_id, is_enabled, headline, contact_type, contact_value,
 			city, region, country, latitude, longitude,
 			show_prices, show_services, show_reviews, show_portfolio, show_contact,
-			socials, created_at, updated_at`,
+			socials, about, service_areas, min_guests, max_guests, event_types, response_time, languages,
+			created_at, updated_at`,
 		p.UserID, p.IsEnabled, p.Headline, p.ContactType, p.ContactValue,
 		p.City, p.Region, p.Country, p.Latitude, p.Longitude,
 		p.ShowPrices, p.ShowServices, p.ShowReviews, p.ShowPortfolio, p.ShowContact, socials,
+		p.About, serviceAreas, p.MinGuests, p.MaxGuests, eventTypes, p.ResponseTime, languages,
 	)
 	stored, err := scanProfile(row)
 	if err != nil {
@@ -120,7 +144,8 @@ func scanProfile(row rowScanner) (*models.OrganizerPublicProfile, error) {
 		&p.UserID, &p.IsEnabled, &p.Headline, &p.ContactType, &p.ContactValue,
 		&p.City, &p.Region, &p.Country, &p.Latitude, &p.Longitude,
 		&p.ShowPrices, &p.ShowServices, &p.ShowReviews, &p.ShowPortfolio, &p.ShowContact,
-		&socials, &p.CreatedAt, &p.UpdatedAt,
+		&socials, &p.About, &p.ServiceAreas, &p.MinGuests, &p.MaxGuests, &p.EventTypes, &p.ResponseTime, &p.Languages,
+		&p.CreatedAt, &p.UpdatedAt,
 	); err != nil {
 		return nil, err
 	}
