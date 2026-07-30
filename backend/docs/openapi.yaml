@@ -5824,6 +5824,44 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "429":
           description: Rate limit exceeded
+  /api/public/organizers/{slug}/og-image:
+    get:
+      security: []
+      operationId: getPublicProfileOGImage
+      summary: Social preview image for an organizer's public profile
+      description: >
+        Redirects to the organizer's cover/logo image when available (absolute URL),
+        otherwise renders a branded PNG fallback (1200x630). Use as og:image / twitter:image.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Rendered PNG image
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        "302":
+          description: Redirect to the organizer's cover/logo image
+        "404":
+          description: Profile not found
+  /api/public/sitemap-profiles.xml:
+    get:
+      security: []
+      operationId: getPublicProfilesSitemap
+      summary: XML sitemap of enabled public profiles
+      responses:
+        "200":
+          description: Sitemap XML
+          content:
+            application/xml:
+              schema:
+                type: string
   /api/public/organizers/{slug}/leads:
     post:
       security: []
