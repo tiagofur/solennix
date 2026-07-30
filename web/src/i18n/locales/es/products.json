@@ -58,6 +58,8 @@
     "show_on_public_profile": "Mostrar en perfil público",
     "public_profile_desc": "Los productos activos con esta opción aparecen en tu página de perfil público.",
     "public_profile_cap_hint": "El plan Gratis permite hasta 3 productos públicos. Actualizá tu plan para agregar más.",
+    "is_featured": "Destacar en perfil",
+    "featured_desc": "Los servicios destacados aparecen primero en tu perfil público.",
     "photo": "Foto (opcional)",
     "composition": "Composición / Insumos",
     "composition_desc": "Define qué insumos y qué cantidad se necesitan para 1 unidad de este producto. Solo insumos generan costo.",

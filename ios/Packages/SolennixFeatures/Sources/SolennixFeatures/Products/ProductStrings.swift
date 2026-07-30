@@ -78,6 +78,8 @@ enum ProductStrings {
     static var visibleInQuotes: String { FeatureL10n.text("products.visible_in_quotes", "Visible en cotizaciones") }
     static var showOnPublicProfile: String { FeatureL10n.text("products.show_on_public_profile", "Mostrar en perfil público") }
     static var publicProfileCapHint: String { FeatureL10n.text("products.public_profile_cap_hint", "Plan Gratis: máximo 3 productos en el perfil público.") }
+    static var isFeatured: String { FeatureL10n.text("products.is_featured", "Destacar en perfil") }
+    static var featuredHint: String { FeatureL10n.text("products.featured_hint", "Los servicios destacados aparecen primero en tu perfil público.") }
     static var existingCategories: String { FeatureL10n.text("products.existing_categories", "Categorías Existentes") }
     static var newCategory: String { FeatureL10n.text("products.new_category", "Nueva Categoría") }
     static var newCategoryPlaceholder: String { FeatureL10n.text("products.new_category_placeholder", "Nueva categoría...") }

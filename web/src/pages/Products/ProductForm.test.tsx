@@ -154,6 +154,7 @@ describe('ProductForm', () => {
         image_url: null,
         is_active: true,
         show_on_public_profile: false,
+        is_featured: false,
         recipe: null,
         staff_team_id: null,
       });
@@ -203,6 +204,7 @@ describe('ProductForm', () => {
         image_url: null,
         is_active: true,
         show_on_public_profile: false,
+        is_featured: false,
         staff_team_id: null,
       });
     });

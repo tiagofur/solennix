@@ -16,6 +16,9 @@ public struct Product: Codable, Identifiable, Sendable, Hashable {
     /// When true, product appears on the organizer's public profile services list.
     /// Free plan is capped at 3 active products with this flag (server-enforced).
     public var showOnPublicProfile: Bool
+    /// When true, the service is highlighted and sorts first on the public profile.
+    /// Orthogonal to showOnPublicProfile (visibility vs. hierarchy).
+    public var isFeatured: Bool
     public let createdAt: String
     public let updatedAt: String
 
@@ -32,6 +35,7 @@ public struct Product: Codable, Identifiable, Sendable, Hashable {
         staffTeamId: String? = nil,
         isActive: Bool,
         showOnPublicProfile: Bool = false,
+        isFeatured: Bool = false,
         createdAt: String,
         updatedAt: String
     ) {
@@ -45,6 +49,7 @@ public struct Product: Codable, Identifiable, Sendable, Hashable {
         self.staffTeamId = staffTeamId
         self.isActive = isActive
         self.showOnPublicProfile = showOnPublicProfile
+        self.isFeatured = isFeatured
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
@@ -53,7 +58,7 @@ public struct Product: Codable, Identifiable, Sendable, Hashable {
 
     private enum CodingKeys: String, CodingKey {
         case id, userId, name, category, basePrice, recipe, imageUrl
-        case staffTeamId, isActive, showOnPublicProfile, createdAt, updatedAt
+        case staffTeamId, isActive, showOnPublicProfile, isFeatured, createdAt, updatedAt
     }
 
     public init(from decoder: Decoder) throws {
@@ -69,6 +74,7 @@ public struct Product: Codable, Identifiable, Sendable, Hashable {
         isActive = try c.decode(Bool.self, forKey: .isActive)
         // Older payloads omit the field — default false (Free/safe).
         showOnPublicProfile = try c.decodeIfPresent(Bool.self, forKey: .showOnPublicProfile) ?? false
+        isFeatured = try c.decodeIfPresent(Bool.self, forKey: .isFeatured) ?? false
         createdAt = try c.decode(String.self, forKey: .createdAt)
         updatedAt = try c.decode(String.self, forKey: .updatedAt)
     }
@@ -85,6 +91,7 @@ public struct Product: Codable, Identifiable, Sendable, Hashable {
         try c.encodeIfPresent(staffTeamId, forKey: .staffTeamId)
         try c.encode(isActive, forKey: .isActive)
         try c.encode(showOnPublicProfile, forKey: .showOnPublicProfile)
+        try c.encode(isFeatured, forKey: .isFeatured)
         try c.encode(createdAt, forKey: .createdAt)
         try c.encode(updatedAt, forKey: .updatedAt)
     }

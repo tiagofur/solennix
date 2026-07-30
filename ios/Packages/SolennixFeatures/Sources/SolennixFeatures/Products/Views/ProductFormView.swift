@@ -392,6 +392,21 @@ public struct ProductFormView: View {
             }
             .disabled(viewModel.publicProfileCapReached && !viewModel.showOnPublicProfile)
             .solennixRow()
+
+            // Featured toggle (no plan cap; sorts first on the public profile)
+            Toggle(isOn: Binding(
+                get: { viewModel.isFeatured },
+                set: { viewModel.isFeatured = $0 }
+            )) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(ProductStrings.isFeatured)
+                        .foregroundStyle(SolennixColors.text)
+                    Text(ProductStrings.featuredHint)
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+            }
+            .solennixRow()
         } header: {
             Text(ProductStrings.productInfo)
         }

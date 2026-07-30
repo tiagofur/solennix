@@ -154,6 +154,31 @@ function SectionHeading({
   );
 }
 
+function CategoryChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
+        active
+          ? "bg-primary text-primary-foreground"
+          : "bg-surface-alt text-text-secondary hover:bg-border"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
 export const PublicProfilePage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { t, i18n } = useTranslation("public");
@@ -257,7 +282,44 @@ export const PublicProfilePage: React.FC = () => {
     setJsonLd("public-profile-jsonld", ld);
   }, [state, profile, displayName, locationLabel, t]);
 
-  const services = profile?.services?.filter(Boolean) ?? [];
+  // Featured services sort first (hierarchy), mirroring the backend's
+  // is_featured DESC ordering so the order is consistent even if the API
+  // contract changes.
+  const services = [...(profile?.services?.filter(Boolean) ?? [])].sort(
+    (a, b) => Number(b.is_featured) - Number(a.is_featured),
+  );
+  // Category filter + progressive disclosure for the services section.
+  const SERVICES_PREVIEW_LIMIT = 6;
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [showAllServices, setShowAllServices] = useState(false);
+  const categories = useMemo(
+    () =>
+      Array.from(
+        new Set(services.map((s) => s.category).filter(Boolean)),
+      ).sort((a, b) => a.localeCompare(b)),
+    [services],
+  );
+  // Reset filter/expansion when the profile changes (e.g. navigating to a
+  // different organizer's profile within the same component instance).
+  useEffect(() => {
+    setActiveCategory(null);
+    setShowAllServices(false);
+  }, [slug]);
+  const filteredServices = useMemo(
+    () =>
+      activeCategory
+        ? services.filter((s) => s.category === activeCategory)
+        : services,
+    [services, activeCategory],
+  );
+  // When a category filter is active, show all of that category (the count is
+  // already bounded by the organizer's curation); only cap the unfiltered list.
+  const isFiltering = activeCategory !== null;
+  const visibleServices =
+    isFiltering || showAllServices
+      ? filteredServices
+      : filteredServices.slice(0, SERVICES_PREVIEW_LIMIT);
+  const hiddenServicesCount = filteredServices.length - visibleServices.length;
   const reviews = profile?.reviews?.filter(Boolean) ?? [];
   const portfolio = profile?.portfolio?.filter(Boolean) ?? [];
   // Full-size images for the lightbox (carousel navigates this list).
@@ -512,8 +574,31 @@ export const PublicProfilePage: React.FC = () => {
             <SectionHeading id="public-services-heading">
               {t("profile.services_title")}
             </SectionHeading>
+            {categories.length > 1 && (
+              <div
+                className="flex flex-wrap gap-2"
+                role="group"
+                aria-label={t("profile.services_title")}
+              >
+                <CategoryChip
+                  active={activeCategory === null}
+                  onClick={() => setActiveCategory(null)}
+                >
+                  {t("profile.services_all_categories")}
+                </CategoryChip>
+                {categories.map((cat) => (
+                  <CategoryChip
+                    key={cat}
+                    active={activeCategory === cat}
+                    onClick={() => setActiveCategory(cat)}
+                  >
+                    {cat}
+                  </CategoryChip>
+                ))}
+              </div>
+            )}
             <ul className="grid gap-3 sm:grid-cols-2">
-              {services.map((svc) => {
+              {visibleServices.map((svc) => {
                 const img = svc.image_url ? resolveMediaUrl(svc.image_url) : null;
                 return (
                   <li key={svc.id}>
@@ -549,6 +634,18 @@ export const PublicProfilePage: React.FC = () => {
                 );
               })}
             </ul>
+            {hiddenServicesCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowAllServices(true)}
+                data-testid="show-all-services"
+                className="w-full rounded-xl border border-border bg-surface-alt/50 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-alt hover:text-text"
+              >
+                {t("profile.services_show_all", {
+                  count: hiddenServicesCount,
+                })}
+              </button>
+            )}
           </section>
         )}
 

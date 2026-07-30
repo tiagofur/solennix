@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@tests/customRender";
+import { fireEvent, render, screen, waitFor } from "@tests/customRender";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { PublicProfilePage } from "./PublicProfilePage";
 import {
@@ -142,5 +142,67 @@ describe("PublicProfilePage", () => {
     expect(
       screen.queryByRole("link", { name: /profile\.contact_cta/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("renders category filter chips and filters services by category", async () => {
+    vi.mocked(publicProfileService.getBySlug).mockResolvedValue({
+      slug: "multi",
+      business_name: "Multi Cat",
+      services: [
+        { id: "a", name: "Churros", category: "Postres" },
+        { id: "b", name: "Mesas", category: "Mobiliario" },
+        { id: "c", name: "Barra", category: "Postres" },
+      ],
+    });
+
+    renderAt("multi");
+
+    // Chips render only when there are 2+ distinct categories.
+    await screen.findByText("Churros");
+    expect(
+      screen.getByRole("button", { name: "profile.services_all_categories" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Postres" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Mobiliario" }),
+    ).toBeInTheDocument();
+
+    // Filter to "Postres" — Mobiliario service disappears.
+    fireEvent.click(screen.getByRole("button", { name: "Postres" }));
+    expect(screen.getByText("Churros")).toBeInTheDocument();
+    expect(screen.getByText("Barra")).toBeInTheDocument();
+    expect(screen.queryByText("Mesas")).not.toBeInTheDocument();
+  });
+
+  it("caps the services list and reveals the rest via 'show all'", async () => {
+    // 8 services in a single category → no chips, but the list is capped at 6.
+    const services = Array.from({ length: 8 }, (_, i) => ({
+      id: `s${i}`,
+      name: `Service ${i}`,
+      category: "Single",
+    }));
+    vi.mocked(publicProfileService.getBySlug).mockResolvedValue({
+      slug: "many",
+      business_name: "Many Co",
+      services,
+    });
+
+    renderAt("many");
+
+    // Only the first 6 render initially.
+    await screen.findByText("Service 0");
+    for (let i = 0; i < 6; i++) {
+      expect(screen.getByText(`Service ${i}`)).toBeInTheDocument();
+    }
+    expect(screen.queryByText("Service 6")).not.toBeInTheDocument();
+
+    // The "show all" button renders (the i18n mock returns the key verbatim;
+    // the interpolation is covered by the locale files, not the test harness).
+    const showAll = await screen.findByTestId("show-all-services");
+    expect(showAll).toHaveTextContent("profile.services_show_all");
+
+    fireEvent.click(showAll);
+    expect(screen.getByText("Service 6")).toBeInTheDocument();
+    expect(screen.getByText("Service 7")).toBeInTheDocument();
   });
 });

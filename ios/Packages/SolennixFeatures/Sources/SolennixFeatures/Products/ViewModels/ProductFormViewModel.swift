@@ -13,6 +13,7 @@ private struct ProductBody: Encodable {
     let basePrice: Double
     let isActive: Bool
     let showOnPublicProfile: Bool
+    let isFeatured: Bool
     let imageUrl: String?
     let staffTeamId: String?
 }
@@ -75,6 +76,9 @@ public final class ProductFormViewModel {
     public var isActive: Bool = true
     /// Show this product on the organizer public profile.
     public var showOnPublicProfile: Bool = false
+    /// Highlight this service (sorts first on the public profile). Orthogonal to
+    /// showOnPublicProfile (visibility vs. hierarchy). No plan cap.
+    public var isFeatured: Bool = false
     /// Free plan: at most 3 active products with showOnPublicProfile=true.
     public var publicProfileCapReached: Bool = false
     public var imageUrl: String?
@@ -136,6 +140,7 @@ public final class ProductFormViewModel {
     private var initialBasePrice: Double = 0
     private var initialIsActive: Bool = true
     private var initialShowOnPublicProfile: Bool = false
+    private var initialIsFeatured: Bool = false
     private var initialStaffTeamId: String?
     private var initialRecipeSnapshot: [RecipeSnapshot] = []
 
@@ -146,6 +151,7 @@ public final class ProductFormViewModel {
             || basePrice != initialBasePrice
             || isActive != initialIsActive
             || showOnPublicProfile != initialShowOnPublicProfile
+            || isFeatured != initialIsFeatured
             || staffTeamId != initialStaffTeamId
             || localImageData != nil
             || currentRecipeSnapshot != initialRecipeSnapshot
@@ -253,6 +259,7 @@ public final class ProductFormViewModel {
         basePrice = product.basePrice
         isActive = product.isActive
         showOnPublicProfile = product.showOnPublicProfile
+        isFeatured = product.isFeatured
         imageUrl = product.imageUrl
         staffTeamId = product.staffTeamId
         // Snapshot initial values so isDirty can compare
@@ -261,6 +268,7 @@ public final class ProductFormViewModel {
         initialBasePrice = basePrice
         initialIsActive = isActive
         initialShowOnPublicProfile = showOnPublicProfile
+        initialIsFeatured = isFeatured
         initialStaffTeamId = staffTeamId
     }
 
@@ -428,6 +436,7 @@ public final class ProductFormViewModel {
                 basePrice: basePrice,
                 isActive: isActive,
                 showOnPublicProfile: showOnPublicProfile,
+                isFeatured: isFeatured,
                 imageUrl: finalImageUrl,
                 staffTeamId: staffTeamId
             )

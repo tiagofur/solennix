@@ -122,6 +122,8 @@ object ProductStrings {
     val visibleInQuotes: String get() = getString(R.string.products_visible_in_quotes)
     val showOnPublicProfile: String get() = getString(R.string.products_show_on_public_profile)
     val publicProfileCapHint: String get() = getString(R.string.products_public_profile_cap_hint)
+    val isFeatured: String get() = getString(R.string.products_is_featured)
+    val featuredHint: String get() = getString(R.string.products_featured_hint)
     val save: String get() = getString(R.string.products_save)
     val add: String get() = getString(R.string.products_add)
     val noAddedItems: String get() = getString(R.string.products_no_added_items)

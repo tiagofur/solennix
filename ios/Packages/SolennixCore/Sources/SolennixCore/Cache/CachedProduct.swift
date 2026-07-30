@@ -20,6 +20,9 @@ public final class CachedProduct {
     public var recipeJSON: String?
     public var imageUrl: String?
     public var isActive: Bool
+    /// Persisted public-profile flags (previously dropped on cache round-trip).
+    public var showOnPublicProfile: Bool
+    public var isFeatured: Bool
     public var createdAt: String
     public var updatedAt: String
 
@@ -34,6 +37,8 @@ public final class CachedProduct {
         recipeJSON: String? = nil,
         imageUrl: String? = nil,
         isActive: Bool,
+        showOnPublicProfile: Bool = false,
+        isFeatured: Bool = false,
         createdAt: String,
         updatedAt: String
     ) {
@@ -45,6 +50,8 @@ public final class CachedProduct {
         self.recipeJSON = recipeJSON
         self.imageUrl = imageUrl
         self.isActive = isActive
+        self.showOnPublicProfile = showOnPublicProfile
+        self.isFeatured = isFeatured
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
@@ -67,6 +74,8 @@ public final class CachedProduct {
             recipeJSON: recipeString,
             imageUrl: product.imageUrl,
             isActive: product.isActive,
+            showOnPublicProfile: product.showOnPublicProfile,
+            isFeatured: product.isFeatured,
             createdAt: product.createdAt,
             updatedAt: product.updatedAt
         )
@@ -90,7 +99,8 @@ public final class CachedProduct {
             recipe: recipe,
             imageUrl: imageUrl,
             isActive: isActive,
-            showOnPublicProfile: false,
+            showOnPublicProfile: showOnPublicProfile,
+            isFeatured: isFeatured,
             createdAt: createdAt,
             updatedAt: updatedAt
         )

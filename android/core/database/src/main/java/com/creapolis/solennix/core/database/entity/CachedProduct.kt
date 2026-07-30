@@ -16,6 +16,7 @@ data class CachedProduct(
     @ColumnInfo(name = "image_url") val imageUrl: String?,
     @ColumnInfo(name = "is_active") val isActive: Boolean,
     @ColumnInfo(name = "show_on_public_profile") val showOnPublicProfile: Boolean = false,
+    @ColumnInfo(name = "is_featured") val isFeatured: Boolean = false,
     @ColumnInfo(name = "staff_team_id") val staffTeamId: String?,
     @ColumnInfo(name = "created_at") val createdAt: String,
     @ColumnInfo(name = "updated_at") val updatedAt: String
@@ -31,6 +32,7 @@ fun CachedProduct.asExternalModel() = Product(
     imageUrl = imageUrl,
     isActive = isActive,
     showOnPublicProfile = showOnPublicProfile,
+    isFeatured = isFeatured,
     staffTeamId = staffTeamId,
     createdAt = createdAt,
     updatedAt = updatedAt
@@ -46,6 +48,7 @@ fun Product.asEntity() = CachedProduct(
     imageUrl = imageUrl,
     isActive = isActive,
     showOnPublicProfile = showOnPublicProfile,
+    isFeatured = isFeatured,
     staffTeamId = staffTeamId,
     createdAt = createdAt ?: "",
     updatedAt = updatedAt ?: ""

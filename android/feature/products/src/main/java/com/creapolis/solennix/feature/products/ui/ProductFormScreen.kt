@@ -357,6 +357,34 @@ fun ProductFormScreen(
                     )
                 }
 
+                // Featured toggle (no plan cap; sorts first on the public profile)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = ProductStrings.isFeatured,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = SolennixTheme.colors.primaryText
+                        )
+                        Text(
+                            text = ProductStrings.featuredHint,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = SolennixTheme.colors.secondaryText
+                        )
+                    }
+                    Switch(
+                        checked = viewModel.isFeatured,
+                        onCheckedChange = { viewModel.isFeatured = it },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = SolennixTheme.colors.primary,
+                            checkedTrackColor = SolennixTheme.colors.primaryLight
+                        )
+                    )
+                }
+
                 // Recipe sections
                 RecipeSectionCard(
                     title = ProductStrings.compositionTitle,
