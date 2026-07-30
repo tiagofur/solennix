@@ -208,7 +208,7 @@ export const InventoryList: React.FC = () => {
   }, [setSearchParams]);
 
   const { data: rawItems, isLoading: loading } = useInventoryItems();
-  const items = rawItems ?? [];
+  const items = useMemo(() => rawItems ?? [], [rawItems]);
   const deleteItem = useDeleteInventoryItem();
   const updateItem = useUpdateInventoryItem();
   const [searchTerm, setSearchTerm] = useState("");

@@ -20,6 +20,7 @@ export type PublicProfileServiceSelectionItem = {
   base_price: number;
   image_url?: string | null;
   show_on_public_profile: boolean;
+  is_featured: boolean;
 };
 
 export type PortfolioCandidatePhoto = {

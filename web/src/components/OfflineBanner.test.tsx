@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, vi, afterAll } from 'vitest';
 import { render, screen } from '@tests/customRender';
 import { OfflineBanner } from './OfflineBanner';
 

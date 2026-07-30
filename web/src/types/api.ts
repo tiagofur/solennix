@@ -2879,6 +2879,8 @@ export interface components {
             base_price: number;
             image_url?: string | null;
             show_on_public_profile: boolean;
+            /** @description When true, the service is highlighted and sorts first on the public profile. */
+            is_featured: boolean;
         };
         PortfolioCandidatePhoto: {
             /** Format: uuid */

@@ -37,6 +37,15 @@ vi.mock("@/services/publicProfileConfigService", () => ({
   },
 }));
 
+const getProductByIdMock = vi.fn();
+const updateProductMock = vi.fn();
+vi.mock("@/services/productService", () => ({
+  productService: {
+    getById: (id: string) => getProductByIdMock(id),
+    update: (id: string, body: unknown) => updateProductMock(id, body),
+  },
+}));
+
 describe("PublicProfileSettings", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -290,5 +299,24 @@ describe("PublicProfileSettings", () => {
     // Fourth checkbox should be disabled when already at Free limit.
     expect(screen.getByTestId("pp-service-check-d")).toBeDisabled();
     mockUser = { id: "1", plan: "pro", public_slug: "alice" };
+  });
+
+  it("toggles service featured status using productService", async () => {
+    listServicesMock.mockResolvedValue([
+      { id: "s1", name: "Catering", category: "main", base_price: 100, show_on_public_profile: true, is_featured: false },
+    ]);
+    getProductByIdMock.mockResolvedValue({ id: "s1", name: "Catering", base_price: 100, is_featured: false });
+    updateProductMock.mockResolvedValue({ id: "s1", name: "Catering", base_price: 100, is_featured: true });
+
+    render(<PublicProfileSettings />);
+    await waitFor(() => {
+      expect(screen.getByTestId("pp-service-featured-s1")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId("pp-service-featured-s1"));
+    await waitFor(() => {
+      expect(getProductByIdMock).toHaveBeenCalledWith("s1");
+      expect(updateProductMock).toHaveBeenCalledWith("s1", expect.objectContaining({ is_featured: true }));
+    });
   });
 });

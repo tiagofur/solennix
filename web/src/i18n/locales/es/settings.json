@@ -55,6 +55,8 @@
     "servicesSave": "Guardar servicios",
     "servicesSaving": "Guardando servicios…",
     "servicesSaveFailed": "No se pudo guardar la selección de servicios.",
+    "toggleFeatured": "Destacar {{name}} en el perfil público",
+    "featuredSaveFailed": "No se pudo actualizar el estado de destacado.",
     "portfolio": "Portafolio",
     "portfolioDescription": "Elegí hasta 6 eventos pasados (con fotos) de tu catálogo. El título y la fecha vienen del evento.",
     "portfolioProHint": "El portafolio está disponible en el plan Pro.",

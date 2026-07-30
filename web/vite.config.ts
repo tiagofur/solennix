@@ -1,10 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import tsconfigPaths from "vite-tsconfig-paths";
 import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vite.dev/config/
 export default defineConfig({
+  resolve: {
+    tsconfigPaths: true,
+  },
   build: {
     sourcemap: 'hidden',
   },
@@ -14,7 +16,6 @@ export default defineConfig({
         plugins: process.env.NODE_ENV !== 'production' ? ['react-dev-locator'] : [],
       },
     }),
-    tsconfigPaths(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'pwa-192x192.png'],

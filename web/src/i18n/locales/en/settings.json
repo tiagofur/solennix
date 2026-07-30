@@ -55,6 +55,8 @@
     "servicesSave": "Save services",
     "servicesSaving": "Saving services…",
     "servicesSaveFailed": "Failed to save service selection.",
+    "toggleFeatured": "Feature {{name}} on the public profile",
+    "featuredSaveFailed": "Failed to update featured status.",
     "portfolio": "Portfolio",
     "portfolioDescription": "Choose up to 6 past events (with photos) from your catalog. Title and date come from the event.",
     "portfolioProHint": "Portfolio is available on the Pro plan.",
