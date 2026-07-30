@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
-  Loader2,
   MapPin,
   Mail,
   Phone,
@@ -18,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "@/hooks/useTheme";
 import { Logo } from "@/components/Logo";
 import { Card } from "@/components/Card";
+import { Reveal } from "@/components/Reveal";
 import { localeFromLanguage } from "@/lib/finance";
 import { resolveMediaUrl } from "@/lib/api";
 import { PublicLeadModal } from "./PublicLeadModal";
@@ -25,6 +25,7 @@ import { Lightbox } from "./Lightbox";
 import { PublicProfileQuickActions } from "./PublicProfileQuickActions";
 import { PublicProfileMap } from "./PublicProfileMap";
 import { PublicProfileAboutSection } from "./PublicProfileAboutSection";
+import { PublicProfileSkeleton } from "./PublicProfileSkeleton";
 import { PackagesSection } from "./PackagesSection";
 import { FaqSection } from "./FaqSection";
 import { PoliciesSection } from "./PoliciesSection";
@@ -282,14 +283,7 @@ export const PublicProfilePage: React.FC = () => {
       : null;
 
   if (state === "loading") {
-    return (
-      <div className="min-h-screen bg-bg flex items-center justify-center">
-        <Loader2
-          className="h-8 w-8 animate-spin text-primary"
-          aria-label={t("profile.loading")}
-        />
-      </div>
-    );
+    return <PublicProfileSkeleton />;
   }
 
   if (state === "not-found" || state === "error") {
@@ -513,7 +507,7 @@ export const PublicProfilePage: React.FC = () => {
         {services.length > 0 && (
           <section
             aria-labelledby="public-services-heading"
-            className="space-y-4"
+            className="space-y-4 animate-fade-in-up"
           >
             <SectionHeading id="public-services-heading">
               {t("profile.services_title")}
@@ -744,18 +738,28 @@ export const PublicProfilePage: React.FC = () => {
           </section>
         )}
 
-        <PublicProfileAboutSection profile={profile} />
+        <Reveal>
+          <PublicProfileAboutSection profile={profile} />
+        </Reveal>
 
         {profile.location && (
-          <PublicProfileMap
-            location={profile.location}
-            businessName={displayName}
-          />
+          <Reveal delay={80}>
+            <PublicProfileMap
+              location={profile.location}
+              businessName={displayName}
+            />
+          </Reveal>
         )}
 
-        <PackagesSection profile={profile} />
-        <PoliciesSection profile={profile} />
-        <FaqSection profile={profile} />
+        <Reveal delay={120}>
+          <PackagesSection profile={profile} />
+        </Reveal>
+        <Reveal delay={80}>
+          <PoliciesSection profile={profile} />
+        </Reveal>
+        <Reveal>
+          <FaqSection profile={profile} />
+        </Reveal>
       </main>
 
       <PublicLeadModal
