@@ -82,15 +82,55 @@ function ContactIcon({ type }: { type: PublicContact["type"] }) {
   }
 }
 
-function setMetaDescription(content: string) {
-  let meta = document.querySelector('meta[name="description"]');
-  if (!meta) {
-    meta = document.createElement("meta");
-    meta.setAttribute("name", "description");
-    document.head.appendChild(meta);
+/** Create or update a <meta> element (by attribute key/value, e.g. name/property). */
+function upsertMeta(
+  attr: "name" | "property",
+  key: string,
+  content: string,
+) {
+  let el = document.head.querySelector<HTMLMetaElement>(
+    `meta[${attr}="${key}"]`,
+  );
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute(attr, key);
+    document.head.appendChild(el);
   }
-  meta.setAttribute("content", content);
+  el.setAttribute("content", content);
 }
+
+function setMetaDescription(content: string) {
+  upsertMeta("name", "description", content);
+}
+
+/** Inject (or replace) a JSON-LD structured-data script by id. */
+function setJsonLd(id: string, data: unknown) {
+  let el = document.getElementById(id);
+  if (!el) {
+    el = document.createElement("script");
+    el.id = id;
+    el.setAttribute("type", "application/ld+json");
+    document.head.appendChild(el);
+  }
+  el.textContent = JSON.stringify(data);
+}
+
+function setCanonical(href: string) {
+  let el = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  if (!el) {
+    el = document.createElement("link");
+    el.setAttribute("rel", "canonical");
+    document.head.appendChild(el);
+  }
+  el.setAttribute("href", href);
+}
+
+function cleanupMeta(attr: "name" | "property", key: string) {
+  document
+    .head.querySelector(`meta[${attr}="${key}"]`)
+    ?.remove();
+}
+
 
 function SectionHeading({
   id,
@@ -168,12 +208,47 @@ export const PublicProfilePage: React.FC = () => {
       : t("profile.seo_title", { name: displayName });
     document.title = title;
     const locationSuffix = locationLabel ? ` · ${locationLabel}` : "";
-    setMetaDescription(
-      t("profile.seo_description", {
-        name: displayName,
-        location: locationSuffix,
-      }),
-    );
+    const description = t("profile.seo_description", {
+      name: displayName,
+      location: locationSuffix,
+    });
+    setMetaDescription(description);
+
+    // Social sharing + structured data (per-slug).
+    const appURL = (import.meta.env.VITE_APP_URL || "https://solennix.app").replace(/\/$/, "");
+    const apiBase = (import.meta.env.VITE_API_URL || "http://localhost:8080/api").replace(/\/$/, "");
+    const canonical = `${appURL}/u/${encodeURIComponent(profile.slug)}`;
+    const ogImage = `${apiBase}/public/organizers/${encodeURIComponent(profile.slug)}/og-image`;
+
+    setCanonical(canonical);
+    upsertMeta("property", "og:title", title);
+    upsertMeta("property", "og:description", description);
+    upsertMeta("property", "og:type", "profile");
+    upsertMeta("property", "og:url", canonical);
+    upsertMeta("property", "og:image", ogImage);
+    upsertMeta("name", "twitter:card", "summary_large_image");
+    upsertMeta("name", "twitter:title", title);
+    upsertMeta("name", "twitter:description", description);
+    upsertMeta("name", "twitter:image", ogImage);
+
+    // LocalBusiness structured data for rich results.
+    const ld: Record<string, unknown> = {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      name: displayName,
+      url: canonical,
+      image: ogImage,
+    };
+    if (profile.headline?.trim()) ld.description = profile.headline;
+    if (locationLabel) ld.areaServed = locationLabel;
+    if (profile.average_rating != null && profile.reviews_count) {
+      ld.aggregateRating = {
+        "@type": "AggregateRating",
+        ratingValue: profile.average_rating.toFixed(1),
+        reviewCount: profile.reviews_count,
+      };
+    }
+    setJsonLd("public-profile-jsonld", ld);
   }, [state, profile, displayName, locationLabel, t]);
 
   const services = profile?.services?.filter(Boolean) ?? [];

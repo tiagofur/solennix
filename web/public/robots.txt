@@ -1,0 +1,18 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Public profiles are indexable.
+Allow: /u/
+
+# App-internal authenticated areas.
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /clients
+Disallow: /events
+Disallow: /inventory
+Disallow: /products
+
+# Sitemaps (static routes + dynamic organizer profiles).
+Sitemap: https://solennix.app/sitemap.xml
+Sitemap: https://solennix.app/sitemap-profiles.xml

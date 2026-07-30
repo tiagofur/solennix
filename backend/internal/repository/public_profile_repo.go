@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -299,6 +300,41 @@ type portfolioRowScanner interface {
 	Scan(dest ...interface{}) error
 }
 
+// PublicProfileSlug is a lightweight (slug, updated_at) row for the sitemap.
+type PublicProfileSlug struct {
+	Slug      string
+	UpdatedAt time.Time
+}
+
+// ListEnabledSlugs returns the public_slug of every enabled public profile
+// whose owner account is active (for the dynamic sitemap). Ordered by update.
+func (r *PublicProfileRepo) ListEnabledSlugs(ctx context.Context) ([]PublicProfileSlug, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT u.public_slug, COALESCE(opp.updated_at, u.updated_at) AS updated_at
+		FROM organizer_public_profiles opp
+		JOIN users u ON u.id = opp.user_id
+		WHERE opp.is_enabled = true
+		  AND u.public_slug IS NOT NULL AND u.public_slug <> ''
+		  AND COALESCE(u.account_status, 'active') = 'active'
+		  AND u.deleted_at IS NULL
+		ORDER BY updated_at DESC
+		LIMIT $1`, GetAllSafetyLimit)
+	if err != nil {
+		return nil, fmt.Errorf("list enabled public slugs: %w", err)
+	}
+	defer rows.Close()
+
+	var out []PublicProfileSlug
+	for rows.Next() {
+		var s PublicProfileSlug
+		if err := rows.Scan(&s.Slug, &s.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scan public slug: %w", err)
+		}
+		out = append(out, s)
+	}
+	return out, rows.Err()
+}
+
 func scanPortfolioItem(row portfolioRowScanner) (*models.OrganizerPublicPortfolioItem, error) {
 	var item models.OrganizerPublicPortfolioItem
 	var eventDate *string
@@ -318,4 +354,3 @@ func nullStr(s *string) string {
 	}
 	return *s
 }
-

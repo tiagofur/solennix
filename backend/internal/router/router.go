@@ -29,6 +29,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	staffHandler *handlers.StaffHandler,
 	staffTeamHandler *handlers.StaffTeamHandler,
 	publicLeadHandler *handlers.PublicLeadHandler,
+	seoHandler *handlers.SEOHandler,
 	pdfHandler *handlers.PDFHandler,
 	authService *services.AuthService, userRepo *repository.UserRepo, auditRepo mw.AuditLogger, pool *pgxpool.Pool, corsOrigins []string, uploadDir string, environment string, trustProxy bool) http.Handler {
 
@@ -210,8 +211,16 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Use(mw.RateLimit(20, 1*time.Minute))
 		r.Get("/{slug}", publicProfileHandler.GetPublicProfile)
 		r.Get("/{slug}/reviews", reviewHandler.ListPublicPortfolioReviews)
+		// Per-profile social preview image (redirects to cover/logo or renders a branded PNG).
+		r.Get("/{slug}/og-image", seoHandler.OGImage)
 		// Tighter rate limit for lead submissions (form spam protection).
 		r.With(mw.RateLimit(5, 1*time.Minute)).Post("/{slug}/leads", publicLeadHandler.SubmitPublicLead)
+	})
+
+	// Crawler artifacts.
+	apiRouter.Route("/public", func(r chi.Router) {
+		r.Use(mw.RateLimit(30, 1*time.Minute))
+		r.Get("/sitemap-profiles.xml", seoHandler.SitemapProfiles)
 	})
 
 	// Protected routes
