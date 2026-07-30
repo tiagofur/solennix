@@ -1848,6 +1848,8 @@ export interface components {
             is_active: boolean;
             /** @description When true, product may appear on the organizer public profile (Free max 3). Optional in payloads; defaults to false server-side. */
             show_on_public_profile?: boolean;
+            /** @description When true, the service is highlighted and sorts first on the public profile. Orthogonal to show_on_public_profile (visibility vs. hierarchy). Optional in payloads; defaults to false server-side. */
+            is_featured?: boolean;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -2643,6 +2645,8 @@ export interface components {
              * @description Present only when organizer show_prices is true
              */
             base_price?: number | null;
+            /** @description When true, the service sorts first on the public profile. */
+            is_featured?: boolean;
         };
         PublicPortfolioItem: {
             /** Format: uuid */

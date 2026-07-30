@@ -37,6 +37,7 @@ export const ProductForm: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(true);
   const [showOnPublicProfile, setShowOnPublicProfile] = useState(false);
+  const [isFeatured, setIsFeatured] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [staffTeamId, setStaffTeamId] = useState<string | null>(null);
@@ -119,6 +120,7 @@ export const ProductForm: React.FC = () => {
       });
       setIsActive(existingProduct.is_active ?? true);
       setShowOnPublicProfile(existingProduct.show_on_public_profile ?? false);
+      setIsFeatured(existingProduct.is_featured ?? false);
       if (existingProduct.image_url) {
         setImageUrl(existingProduct.image_url);
         setImagePreview(existingProduct.image_url);
@@ -303,6 +305,7 @@ export const ProductForm: React.FC = () => {
             image_url: imageUrl || null,
             is_active: isActive,
             show_on_public_profile: showOnPublicProfile,
+            is_featured: isFeatured,
             staff_team_id: staffTeamId,
           },
           ingredients: ingredientsToSave,
@@ -317,6 +320,7 @@ export const ProductForm: React.FC = () => {
             image_url: imageUrl || null,
             is_active: isActive,
             show_on_public_profile: showOnPublicProfile,
+            is_featured: isFeatured,
             recipe: null,
             staff_team_id: staffTeamId,
           },
@@ -544,6 +548,31 @@ export const ProductForm: React.FC = () => {
                   >
                     <span
                       className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition-transform ${showOnPublicProfile ? "translate-x-5" : "translate-x-0"}`}
+                    />
+                  </button>
+                </div>
+              </div>
+
+              <div className="sm:col-span-6">
+                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-surface-alt/50">
+                  <div>
+                    <p className="text-sm font-medium text-text">
+                      {t("products:form.is_featured")}
+                    </p>
+                    <p className="text-xs text-text-secondary mt-0.5">
+                      {t("products:form.featured_desc")}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={isFeatured}
+                    onClick={() => setIsFeatured(!isFeatured)}
+                    data-testid="is-featured-toggle"
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 ${isFeatured ? "bg-primary" : "bg-border"}`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition-transform ${isFeatured ? "translate-x-5" : "translate-x-0"}`}
                     />
                   </button>
                 </div>

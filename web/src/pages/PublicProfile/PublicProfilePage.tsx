@@ -257,7 +257,12 @@ export const PublicProfilePage: React.FC = () => {
     setJsonLd("public-profile-jsonld", ld);
   }, [state, profile, displayName, locationLabel, t]);
 
-  const services = profile?.services?.filter(Boolean) ?? [];
+  // Featured services sort first (hierarchy), mirroring the backend's
+  // is_featured DESC ordering so the order is consistent even if the API
+  // contract changes.
+  const services = [...(profile?.services?.filter(Boolean) ?? [])].sort(
+    (a, b) => Number(b.is_featured) - Number(a.is_featured),
+  );
   const reviews = profile?.reviews?.filter(Boolean) ?? [];
   const portfolio = profile?.portfolio?.filter(Boolean) ?? [];
   // Full-size images for the lightbox (carousel navigates this list).

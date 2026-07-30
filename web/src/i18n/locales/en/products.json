@@ -58,6 +58,8 @@
     "show_on_public_profile": "Show on public profile",
     "public_profile_desc": "Active products with this enabled appear on your public profile page.",
     "public_profile_cap_hint": "Free plan allows up to 3 public products. Upgrade to add more.",
+    "is_featured": "Feature on profile",
+    "featured_desc": "Featured services appear first on your public profile.",
     "photo": "Photo (optional)",
     "composition": "Composition / Ingredients",
     "composition_desc": "Define which ingredients and what quantity are needed for 1 unit of this product. Only ingredients generate cost.",
