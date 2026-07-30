@@ -651,6 +651,9 @@ components:
         show_on_public_profile:
           type: boolean
           description: When true, product may appear on the organizer public profile (Free max 3). Optional in payloads; defaults to false server-side.
+        is_featured:
+          type: boolean
+          description: When true, the service is highlighted and sorts first on the public profile. Orthogonal to show_on_public_profile (visibility vs. hierarchy). Optional in payloads; defaults to false server-side.
         created_at:
           type: string
           format: date-time
@@ -2450,6 +2453,9 @@ components:
           format: double
           nullable: true
           description: Present only when organizer show_prices is true
+        is_featured:
+          type: boolean
+          description: When true, the service sorts first on the public profile.
     PublicPortfolioItem:
       type: object
       required:

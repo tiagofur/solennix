@@ -283,6 +283,7 @@ func (h *PublicProfileHandler) projectServices(ctx context.Context, userID uuid.
 	for _, p := range products {
 		svc := models.PublicProfileService{
 			ID: p.ID, Name: p.Name, Category: p.Category, ImageURL: p.ImageURL,
+			IsFeatured: p.IsFeatured,
 		}
 		if profile.ShowPrices {
 			bp := p.BasePrice

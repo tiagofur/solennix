@@ -144,6 +144,10 @@ type Product struct {
 	// ShowOnPublicProfile controls opt-in visibility on the organizer public page.
 	// Default false; Free plan is capped at 3 true flags (enforced in PR4 handlers).
 	ShowOnPublicProfile bool `json:"show_on_public_profile"`
+	// IsFeatured marks a service as highlighted/priority. Orthogonal to
+	// ShowOnPublicProfile (visibility vs. hierarchy): featured services sort
+	// first on the public profile. No plan cap.
+	IsFeatured bool `json:"is_featured"`
 	// StaffTeamID (Ola 3) optionally binds a product to a staff team. When the
 	// client adds this product to an event, the UI expands the team's members
 	// into event_staff rows so the organizer can sell "servicio de meseros"
@@ -653,11 +657,12 @@ type PublicContact struct {
 
 // PublicProfileService is a product projected onto the public profile.
 type PublicProfileService struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	Category  string    `json:"category"`
-	ImageURL  *string   `json:"image_url,omitempty"`
-	BasePrice *float64  `json:"base_price,omitempty"` // only when show_prices=true
+	ID         uuid.UUID `json:"id"`
+	Name       string    `json:"name"`
+	Category   string    `json:"category"`
+	ImageURL   *string   `json:"image_url,omitempty"`
+	BasePrice  *float64  `json:"base_price,omitempty"` // only when show_prices=true
+	IsFeatured bool      `json:"is_featured"`
 }
 
 // PublicPortfolioItem is the public-safe portfolio projection (no user_id/event_id).
