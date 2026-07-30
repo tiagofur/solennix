@@ -353,6 +353,14 @@ func (f *fakePortfolioRepo) ListPortfolioByUserID(ctx context.Context, userID uu
 	return f.items, f.err
 }
 
+func (f *fakePortfolioRepo) ListPackagesByUserID(ctx context.Context, userID uuid.UUID) ([]models.OrganizerPublicPackage, error) {
+	return nil, nil
+}
+
+func (f *fakePortfolioRepo) ListFaqByUserID(ctx context.Context, userID uuid.UUID) ([]models.OrganizerPublicFaqItem, error) {
+	return nil, nil
+}
+
 func TestGetPublicProfile_Free_OmitsPortfolioEvenWhenItemsExist(t *testing.T) {
 	uid := uuid.New()
 	slug := "free-port"

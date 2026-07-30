@@ -2476,6 +2476,58 @@ components:
           type: integer
           minimum: 0
           maximum: 5
+    PublicPackage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        from_price:
+          type: number
+          format: double
+          nullable: true
+        inclusions:
+          type: array
+          items:
+            type: string
+        image_url:
+          type: string
+          nullable: true
+        is_featured:
+          type: boolean
+        sort_order:
+          type: integer
+    PublicFaqItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        question:
+          type: string
+        answer:
+          type: string
+        sort_order:
+          type: integer
+    PublicPolicies:
+      type: object
+      properties:
+        deposit_percent:
+          type: number
+          format: double
+          nullable: true
+        cancellation_days:
+          type: integer
+          nullable: true
+        refund_percent:
+          type: number
+          format: double
+          nullable: true
     PublicOrganizerProfile:
       type: object
       required:
@@ -2548,6 +2600,21 @@ components:
           additionalProperties:
             type: string
           description: Omitted for Free plan
+        packages:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicPackage"
+          description: Omitted when show_packages is off or empty
+        faq:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicFaqItem"
+          description: Omitted when show_faq is off or empty
+        policies:
+          allOf:
+            - $ref: "#/components/schemas/PublicPolicies"
+          nullable: true
+          description: Organizer commercial terms (deposit/cancellation/refund); omitted when show_policies is off
         events_completed:
           type: integer
           description: Count of events with status 'completed' (always present)
@@ -2670,6 +2737,15 @@ components:
           type: boolean
         show_contact:
           type: boolean
+        show_packages:
+          type: boolean
+          default: true
+        show_faq:
+          type: boolean
+          default: true
+        show_policies:
+          type: boolean
+          default: false
         socials:
           type: object
           additionalProperties:
@@ -2747,6 +2823,15 @@ components:
           type: boolean
         show_contact:
           type: boolean
+        show_packages:
+          type: boolean
+          default: true
+        show_faq:
+          type: boolean
+          default: true
+        show_policies:
+          type: boolean
+          default: false
         socials:
           type: object
           additionalProperties:
@@ -2812,6 +2897,58 @@ components:
           type: integer
           minimum: 0
           maximum: 5
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    OrganizerPublicPackage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 160
+        description:
+          type: string
+          nullable: true
+        from_price:
+          type: number
+          format: double
+          nullable: true
+        inclusions:
+          type: array
+          items:
+            type: string
+        image_url:
+          type: string
+          nullable: true
+        is_featured:
+          type: boolean
+        sort_order:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    OrganizerPublicFaqItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        question:
+          type: string
+          maxLength: 280
+        answer:
+          type: string
+        sort_order:
+          type: integer
         created_at:
           type: string
           format: date-time
@@ -6136,6 +6273,158 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /api/users/me/public-profile/packages:
+    get:
+      operationId: listMyPublicPackages
+      summary: List public profile packages (Pro+ only, max 6)
+      responses:
+        "200":
+          description: Packages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrganizerPublicPackage"
+        "403":
+          description: Requires Pro+ plan
+    post:
+      operationId: createMyPublicPackage
+      summary: Create a public profile package (Pro+, max 6)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+                  maxLength: 160
+                description:
+                  type: string
+                  nullable: true
+                from_price:
+                  type: number
+                  format: double
+                  nullable: true
+                inclusions:
+                  type: array
+                  items:
+                    type: string
+                image_url:
+                  type: string
+                  nullable: true
+                is_featured:
+                  type: boolean
+                sort_order:
+                  type: integer
+      responses:
+        "201":
+          description: Created
+        "403":
+          description: Requires Pro+ plan
+        "400":
+          description: Invalid request or limit reached
+  /api/users/me/public-profile/packages/{id}:
+    put:
+      operationId: updateMyPublicPackage
+      summary: Update a public profile package (Pro+ only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Updated
+        "404":
+          description: Package not found
+    delete:
+      operationId: deleteMyPublicPackage
+      summary: Delete a public profile package (Pro+ only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Package not found
+  /api/users/me/public-profile/faq:
+    get:
+      operationId: listMyPublicFaq
+      summary: List public profile FAQ items (Pro+ only, max 12)
+      responses:
+        "200":
+          description: FAQ items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrganizerPublicFaqItem"
+    post:
+      operationId: createMyPublicFaqItem
+      summary: Create a public profile FAQ item (Pro+, max 12)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question, answer]
+              properties:
+                question:
+                  type: string
+                  maxLength: 280
+                answer:
+                  type: string
+                sort_order:
+                  type: integer
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Invalid request or limit reached
+  /api/users/me/public-profile/faq/{id}:
+    put:
+      operationId: updateMyPublicFaqItem
+      summary: Update a public profile FAQ item (Pro+ only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Updated
+        "404":
+          description: FAQ item not found
+    delete:
+      operationId: deleteMyPublicFaqItem
+      summary: Delete a public profile FAQ item (Pro+ only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: FAQ item not found
   /api/users/me/public-profile/portfolio/candidates:
     get:
       operationId: listMyPublicPortfolioCandidates

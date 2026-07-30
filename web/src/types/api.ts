@@ -1459,6 +1459,78 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/users/me/public-profile/packages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List public profile packages (Pro+ only, max 6) */
+        get: operations["listMyPublicPackages"];
+        put?: never;
+        /** Create a public profile package (Pro+, max 6) */
+        post: operations["createMyPublicPackage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/me/public-profile/packages/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update a public profile package (Pro+ only) */
+        put: operations["updateMyPublicPackage"];
+        post?: never;
+        /** Delete a public profile package (Pro+ only) */
+        delete: operations["deleteMyPublicPackage"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/me/public-profile/faq": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List public profile FAQ items (Pro+ only, max 12) */
+        get: operations["listMyPublicFaq"];
+        put?: never;
+        /** Create a public profile FAQ item (Pro+, max 12) */
+        post: operations["createMyPublicFaqItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/me/public-profile/faq/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update a public profile FAQ item (Pro+ only) */
+        put: operations["updateMyPublicFaqItem"];
+        post?: never;
+        /** Delete a public profile FAQ item (Pro+ only) */
+        delete: operations["deleteMyPublicFaqItem"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/users/me/public-profile/portfolio/candidates": {
         parameters: {
             query?: never;
@@ -2582,6 +2654,32 @@ export interface components {
             thumbnail_url?: string | null;
             sort_order: number;
         };
+        PublicPackage: {
+            /** Format: uuid */
+            id?: string;
+            title?: string;
+            description?: string | null;
+            /** Format: double */
+            from_price?: number | null;
+            inclusions?: string[];
+            image_url?: string | null;
+            is_featured?: boolean;
+            sort_order?: number;
+        };
+        PublicFaqItem: {
+            /** Format: uuid */
+            id?: string;
+            question?: string;
+            answer?: string;
+            sort_order?: number;
+        };
+        PublicPolicies: {
+            /** Format: double */
+            deposit_percent?: number | null;
+            cancellation_days?: number | null;
+            /** Format: double */
+            refund_percent?: number | null;
+        };
         PublicOrganizerProfile: {
             slug: string;
             business_name?: string;
@@ -2610,6 +2708,12 @@ export interface components {
             socials?: {
                 [key: string]: string;
             };
+            /** @description Omitted when show_packages is off or empty */
+            packages?: components["schemas"]["PublicPackage"][];
+            /** @description Omitted when show_faq is off or empty */
+            faq?: components["schemas"]["PublicFaqItem"][];
+            /** @description Organizer commercial terms (deposit/cancellation/refund); omitted when show_policies is off */
+            policies?: components["schemas"]["PublicPolicies"] | null;
             /** @description Count of events with status 'completed' (always present) */
             events_completed?: number;
             /**
@@ -2664,6 +2768,12 @@ export interface components {
             show_reviews: boolean;
             show_portfolio: boolean;
             show_contact: boolean;
+            /** @default true */
+            show_packages: boolean;
+            /** @default true */
+            show_faq: boolean;
+            /** @default false */
+            show_policies: boolean;
             socials?: {
                 [key: string]: string;
             };
@@ -2695,6 +2805,12 @@ export interface components {
             show_reviews?: boolean;
             show_portfolio?: boolean;
             show_contact?: boolean;
+            /** @default true */
+            show_packages: boolean;
+            /** @default true */
+            show_faq: boolean;
+            /** @default false */
+            show_policies: boolean;
             socials?: {
                 [key: string]: string;
             };
@@ -2723,6 +2839,33 @@ export interface components {
             created_at: string;
             /** Format: date-time */
             updated_at: string;
+        };
+        OrganizerPublicPackage: {
+            /** Format: uuid */
+            id?: string;
+            title?: string;
+            description?: string | null;
+            /** Format: double */
+            from_price?: number | null;
+            inclusions?: string[];
+            image_url?: string | null;
+            is_featured?: boolean;
+            sort_order?: number;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
+        };
+        OrganizerPublicFaqItem: {
+            /** Format: uuid */
+            id?: string;
+            question?: string;
+            answer?: string;
+            sort_order?: number;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
         };
         PublicProfileServiceSelectionItem: {
             /** Format: uuid */
@@ -7310,6 +7453,239 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
+            };
+        };
+    };
+    listMyPublicPackages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Packages */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizerPublicPackage"][];
+                };
+            };
+            /** @description Requires Pro+ plan */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createMyPublicPackage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title: string;
+                    description?: string | null;
+                    /** Format: double */
+                    from_price?: number | null;
+                    inclusions?: string[];
+                    image_url?: string | null;
+                    is_featured?: boolean;
+                    sort_order?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request or limit reached */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires Pro+ plan */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateMyPublicPackage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Package not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteMyPublicPackage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Package not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMyPublicFaq: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description FAQ items */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizerPublicFaqItem"][];
+                };
+            };
+        };
+    };
+    createMyPublicFaqItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    question: string;
+                    answer: string;
+                    sort_order?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request or limit reached */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateMyPublicFaqItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description FAQ item not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteMyPublicFaqItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description FAQ item not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

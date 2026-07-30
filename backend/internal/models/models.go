@@ -597,6 +597,9 @@ type OrganizerPublicProfile struct {
 	ShowReviews   bool              `json:"show_reviews"`
 	ShowPortfolio bool              `json:"show_portfolio"`
 	ShowContact   bool              `json:"show_contact"`
+	ShowPackages  bool              `json:"show_packages"`
+	ShowFaq       bool              `json:"show_faq"`
+	ShowPolicies  bool              `json:"show_policies"`
 	Socials       map[string]string `json:"socials,omitempty"`
 	About         *string           `json:"about,omitempty"`
 	ServiceAreas  []string          `json:"service_areas,omitempty"`
@@ -667,6 +670,59 @@ type PublicPortfolioItem struct {
 	SortOrder    int       `json:"sort_order"`
 }
 
+// OrganizerPublicPackage is a curated package/combo for the public profile.
+type OrganizerPublicPackage struct {
+	ID          uuid.UUID `json:"id"`
+	UserID      uuid.UUID `json:"-"`
+	Title       string    `json:"title"`
+	Description *string   `json:"description,omitempty"`
+	FromPrice   *float64  `json:"from_price,omitempty"`
+	Inclusions  []string  `json:"inclusions,omitempty"`
+	ImageURL    *string   `json:"image_url,omitempty"`
+	IsFeatured  bool      `json:"is_featured"`
+	SortOrder   int       `json:"sort_order"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// PublicPackage is the public-safe package projection (no user_id).
+type PublicPackage struct {
+	ID          uuid.UUID `json:"id"`
+	Title       string    `json:"title"`
+	Description *string   `json:"description,omitempty"`
+	FromPrice   *float64  `json:"from_price,omitempty"`
+	Inclusions  []string  `json:"inclusions,omitempty"`
+	ImageURL    *string   `json:"image_url,omitempty"`
+	IsFeatured  bool      `json:"is_featured"`
+	SortOrder   int       `json:"sort_order"`
+}
+
+// OrganizerPublicFaqItem is an organizer-authored FAQ entry.
+type OrganizerPublicFaqItem struct {
+	ID        uuid.UUID `json:"id"`
+	UserID    uuid.UUID `json:"-"`
+	Question  string    `json:"question"`
+	Answer    string    `json:"answer"`
+	SortOrder int       `json:"sort_order"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// PublicFaqItem is the public-safe FAQ projection (no user_id).
+type PublicFaqItem struct {
+	ID        uuid.UUID `json:"id"`
+	Question  string    `json:"question"`
+	Answer    string    `json:"answer"`
+	SortOrder int       `json:"sort_order"`
+}
+
+// PublicPolicies are the organizer's default commercial terms shown publicly.
+type PublicPolicies struct {
+	DepositPercent   *float64 `json:"deposit_percent,omitempty"`
+	CancellationDays *int     `json:"cancellation_days,omitempty"`
+	RefundPercent    *float64 `json:"refund_percent,omitempty"`
+}
+
 // PortfolioCandidatePhoto is a public-safe event photo for portfolio picker UI.
 // Never includes client PII.
 type PortfolioCandidatePhoto struct {
@@ -709,6 +765,10 @@ type PublicOrganizerProfile struct {
 	Reviews          []PublicReview         `json:"reviews,omitempty"`
 	Portfolio        []PublicPortfolioItem  `json:"portfolio,omitempty"`
 	Socials          map[string]string      `json:"socials,omitempty"`
+	// Commercial sections (Issue #1081).
+	Packages []PublicPackage `json:"packages,omitempty"`
+	Faq      []PublicFaqItem `json:"faq,omitempty"`
+	Policies *PublicPolicies `json:"policies,omitempty"`
 	// Social-proof aggregates.
 	EventsCompleted int      `json:"events_completed"`
 	AverageRating   *float64 `json:"average_rating,omitempty"`

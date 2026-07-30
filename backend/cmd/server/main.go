@@ -191,6 +191,7 @@ func main() {
 	seoHandler := handlers.NewSEOHandler(userRepo, publicProfileRepo, cfg.FrontendURL)
 	publicProfileConfigHandler := handlers.NewPublicProfileConfigHandler(userRepo, publicProfileRepo, cfg.FrontendURL)
 	publicProfilePortfolioHandler := handlers.NewPublicProfilePortfolioHandler(userRepo, publicProfileRepo, eventRepo)
+	publicProfilePackagesHandler := handlers.NewPublicProfilePackagesHandler(userRepo, publicProfileRepo)
 	publicProfileServicesHandler := handlers.NewPublicProfileServicesHandler(userRepo, productRepo)
 	staffHandler := handlers.NewStaffHandler(staffRepo, userRepo)
 	staffHandler.SetPool(pool)
@@ -199,7 +200,7 @@ func main() {
 	pdfHandler := handlers.NewPDFHandler(eventRepo, clientRepo, paymentRepo, userRepo, cfg.UploadDir)
 
 	// Create router
-	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, dashboardHandler, auditHandler, unavailHandler, deviceHandler, liveActivityHandler, eventFormHandler, eventPublicLinkHandler, paymentSubmissionHandler, reviewHandler, publicProfileHandler, publicProfileConfigHandler, publicProfilePortfolioHandler, publicProfileServicesHandler, staffHandler, staffTeamHandler, publicLeadHandler, seoHandler, pdfHandler, authService, userRepo, auditRepo, pool, cfg.CORSAllowedOrigins, cfg.UploadDir, cfg.Environment, cfg.TrustProxy)
+	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, dashboardHandler, auditHandler, unavailHandler, deviceHandler, liveActivityHandler, eventFormHandler, eventPublicLinkHandler, paymentSubmissionHandler, reviewHandler, publicProfileHandler, publicProfileConfigHandler, publicProfilePortfolioHandler, publicProfilePackagesHandler, publicProfileServicesHandler, staffHandler, staffTeamHandler, publicLeadHandler, seoHandler, pdfHandler, authService, userRepo, auditRepo, pool, cfg.CORSAllowedOrigins, cfg.UploadDir, cfg.Environment, cfg.TrustProxy)
 
 	// Background job: expire gifted plans that have passed their expiry date.
 	// Runs once at startup then every hour.

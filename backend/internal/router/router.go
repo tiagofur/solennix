@@ -25,6 +25,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	publicProfileHandler *handlers.PublicProfileHandler,
 	publicProfileConfigHandler *handlers.PublicProfileConfigHandler,
 	publicProfilePortfolioHandler *handlers.PublicProfilePortfolioHandler,
+	publicProfilePackagesHandler *handlers.PublicProfilePackagesHandler,
 	publicProfileServicesHandler *handlers.PublicProfileServicesHandler,
 	staffHandler *handlers.StaffHandler,
 	staffTeamHandler *handlers.StaffTeamHandler,
@@ -253,6 +254,18 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Get("/users/me/public-profile/portfolio/candidates", publicProfilePortfolioHandler.ListPortfolioCandidates)
 		r.Put("/users/me/public-profile/portfolio/{id}", publicProfilePortfolioHandler.UpdatePortfolioItem)
 		r.Delete("/users/me/public-profile/portfolio/{id}", publicProfilePortfolioHandler.DeletePortfolioItem)
+
+		// Packages / combos (Issue #1081)
+		r.Get("/users/me/public-profile/packages", publicProfilePackagesHandler.ListPackages)
+		r.Post("/users/me/public-profile/packages", publicProfilePackagesHandler.CreatePackage)
+		r.Put("/users/me/public-profile/packages/{id}", publicProfilePackagesHandler.UpdatePackage)
+		r.Delete("/users/me/public-profile/packages/{id}", publicProfilePackagesHandler.DeletePackage)
+
+		// FAQ (Issue #1081)
+		r.Get("/users/me/public-profile/faq", publicProfilePackagesHandler.ListFaq)
+		r.Post("/users/me/public-profile/faq", publicProfilePackagesHandler.CreateFaqItem)
+		r.Put("/users/me/public-profile/faq/{id}", publicProfilePackagesHandler.UpdateFaqItem)
+		r.Delete("/users/me/public-profile/faq/{id}", publicProfilePackagesHandler.DeleteFaqItem)
 
 		// Staff (Personal — collaborators catalog)
 		r.Route("/staff", func(r chi.Router) {

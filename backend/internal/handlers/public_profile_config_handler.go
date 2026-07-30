@@ -111,6 +111,9 @@ type upsertRequest struct {
 	ShowReviews   *bool              `json:"show_reviews"`
 	ShowPortfolio *bool              `json:"show_portfolio"`
 	ShowContact   *bool              `json:"show_contact"`
+	ShowPackages  *bool              `json:"show_packages"`
+	ShowFaq       *bool              `json:"show_faq"`
+	ShowPolicies  *bool              `json:"show_policies"`
 	Socials       map[string]string  `json:"socials"`
 	About         *string            `json:"about"`
 	ServiceAreas  []string           `json:"service_areas"`
@@ -310,6 +313,15 @@ func mergeProfile(existing *models.OrganizerPublicProfile, def *models.Organizer
 	}
 	if req.ShowContact != nil {
 		p.ShowContact = *req.ShowContact
+	}
+	if req.ShowPackages != nil {
+		p.ShowPackages = *req.ShowPackages
+	}
+	if req.ShowFaq != nil {
+		p.ShowFaq = *req.ShowFaq
+	}
+	if req.ShowPolicies != nil {
+		p.ShowPolicies = *req.ShowPolicies
 	}
 	if req.Socials != nil {
 		p.Socials = req.Socials

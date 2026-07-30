@@ -60,6 +60,8 @@ type publicProfileReviewRepo interface {
 }
 type publicProfilePortfolioRepo interface {
 	ListPortfolioByUserID(ctx context.Context, userID uuid.UUID) ([]models.OrganizerPublicPortfolioItem, error)
+	ListPackagesByUserID(ctx context.Context, userID uuid.UUID) ([]models.OrganizerPublicPackage, error)
+	ListFaqByUserID(ctx context.Context, userID uuid.UUID) ([]models.OrganizerPublicFaqItem, error)
 }
 type publicProfileEventRepo interface {
 	CountCompletedByUser(ctx context.Context, userID uuid.UUID) (int, error)
@@ -188,12 +190,85 @@ func (h *PublicProfileHandler) buildProjection(ctx context.Context, user *models
 		dto.Portfolio = h.projectPortfolio(ctx, user.ID)
 	}
 
+	// Packages: toggle-gated (default on). Visible to all plans.
+	if profile.ShowPackages {
+		dto.Packages = h.projectPackages(ctx, user.ID)
+	}
+
+	// FAQ: toggle-gated (default on).
+	if profile.ShowFaq {
+		dto.Faq = h.projectFaq(ctx, user.ID)
+	}
+
+	// Policies: toggle-gated (default off). Sourced from the organizer's defaults.
+	if profile.ShowPolicies {
+		dto.Policies = buildPublicPolicies(user)
+	}
+
 	// Socials: Pro+ only.
 	if fullPlan {
 		dto.Socials = profile.Socials
 	}
 
 	return dto
+}
+
+func (h *PublicProfileHandler) projectPackages(ctx context.Context, userID uuid.UUID) []models.PublicPackage {
+	if h.portfolioRepo == nil {
+		return nil
+	}
+	raw, err := h.portfolioRepo.ListPackagesByUserID(ctx, userID)
+	if err != nil || len(raw) == 0 {
+		return nil
+	}
+	out := make([]models.PublicPackage, 0, len(raw))
+	for _, p := range raw {
+		out = append(out, models.PublicPackage{
+			ID:          p.ID,
+			Title:       p.Title,
+			Description: p.Description,
+			FromPrice:   p.FromPrice,
+			Inclusions:  p.Inclusions,
+			ImageURL:    p.ImageURL,
+			IsFeatured:  p.IsFeatured,
+			SortOrder:   p.SortOrder,
+		})
+	}
+	return out
+}
+
+func (h *PublicProfileHandler) projectFaq(ctx context.Context, userID uuid.UUID) []models.PublicFaqItem {
+	if h.portfolioRepo == nil {
+		return nil
+	}
+	raw, err := h.portfolioRepo.ListFaqByUserID(ctx, userID)
+	if err != nil || len(raw) == 0 {
+		return nil
+	}
+	out := make([]models.PublicFaqItem, 0, len(raw))
+	for _, f := range raw {
+		out = append(out, models.PublicFaqItem{
+			ID:        f.ID,
+			Question:  f.Question,
+			Answer:    f.Answer,
+			SortOrder: f.SortOrder,
+		})
+	}
+	return out
+}
+
+// buildPublicPolicies projects the organizer's default commercial terms.
+func buildPublicPolicies(user *models.User) *models.PublicPolicies {
+	p := &models.PublicPolicies{DepositPercent: user.DefaultDepositPercent}
+	if user.DefaultCancellationDays != nil {
+		days := int(*user.DefaultCancellationDays)
+		p.CancellationDays = &days
+	}
+	p.RefundPercent = user.DefaultRefundPercent
+	if p.DepositPercent == nil && p.CancellationDays == nil && p.RefundPercent == nil {
+		return nil
+	}
+	return p
 }
 
 func (h *PublicProfileHandler) projectServices(ctx context.Context, userID uuid.UUID, profile *models.OrganizerPublicProfile, fullPlan bool) []models.PublicProfileService {

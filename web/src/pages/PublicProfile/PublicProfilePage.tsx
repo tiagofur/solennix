@@ -25,6 +25,9 @@ import { Lightbox } from "./Lightbox";
 import { PublicProfileQuickActions } from "./PublicProfileQuickActions";
 import { PublicProfileMap } from "./PublicProfileMap";
 import { PublicProfileAboutSection } from "./PublicProfileAboutSection";
+import { PackagesSection } from "./PackagesSection";
+import { FaqSection } from "./FaqSection";
+import { PoliciesSection } from "./PoliciesSection";
 import {
   publicProfileService,
   PublicProfileNotFoundError,
@@ -749,6 +752,10 @@ export const PublicProfilePage: React.FC = () => {
             businessName={displayName}
           />
         )}
+
+        <PackagesSection profile={profile} />
+        <PoliciesSection profile={profile} />
+        <FaqSection profile={profile} />
       </main>
 
       <PublicLeadModal

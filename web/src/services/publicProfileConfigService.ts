@@ -58,6 +58,28 @@ export type PortfolioUpdateRequest = {
   sort_order?: number;
 };
 
+export type OrganizerPublicPackage =
+  components["schemas"]["OrganizerPublicPackage"];
+export type PackageCreateRequest = {
+  title: string;
+  description?: string | null;
+  from_price?: number | null;
+  inclusions?: string[];
+  image_url?: string | null;
+  is_featured?: boolean;
+  sort_order?: number;
+};
+export type PackageUpdateRequest = Partial<PackageCreateRequest>;
+
+export type OrganizerPublicFaqItem =
+  components["schemas"]["OrganizerPublicFaqItem"];
+export type FaqCreateRequest = {
+  question: string;
+  answer: string;
+  sort_order?: number;
+};
+export type FaqUpdateRequest = Partial<FaqCreateRequest>;
+
 class PublicProfileConfigService {
   /** GET /api/users/me/public-profile — current config (or DB defaults). */
   async getMyPublicProfile(): Promise<OrganizerPublicProfile> {
@@ -137,6 +159,72 @@ class PublicProfileConfigService {
   /** DELETE /api/users/me/public-profile/portfolio/{id}. */
   async deletePortfolioItem(id: string): Promise<void> {
     await api.delete(`/users/me/public-profile/portfolio/${id}`);
+  }
+
+  // ---- Packages (Issue #1081) ----
+
+  /** GET /api/users/me/public-profile/packages. */
+  async listPackages(): Promise<OrganizerPublicPackage[]> {
+    return api.get<OrganizerPublicPackage[]>(
+      "/users/me/public-profile/packages",
+    );
+  }
+
+  /** POST /api/users/me/public-profile/packages. */
+  async createPackage(
+    payload: PackageCreateRequest,
+  ): Promise<OrganizerPublicPackage> {
+    return api.post<OrganizerPublicPackage>(
+      "/users/me/public-profile/packages",
+      payload,
+    );
+  }
+
+  /** PUT /api/users/me/public-profile/packages/{id}. */
+  async updatePackage(
+    id: string,
+    payload: PackageUpdateRequest,
+  ): Promise<OrganizerPublicPackage> {
+    return api.put<OrganizerPublicPackage>(
+      `/users/me/public-profile/packages/${id}`,
+      payload,
+    );
+  }
+
+  /** DELETE /api/users/me/public-profile/packages/{id}. */
+  async deletePackage(id: string): Promise<void> {
+    await api.delete(`/users/me/public-profile/packages/${id}`);
+  }
+
+  // ---- FAQ (Issue #1081) ----
+
+  /** GET /api/users/me/public-profile/faq. */
+  async listFaq(): Promise<OrganizerPublicFaqItem[]> {
+    return api.get<OrganizerPublicFaqItem[]>("/users/me/public-profile/faq");
+  }
+
+  /** POST /api/users/me/public-profile/faq. */
+  async createFaqItem(payload: FaqCreateRequest): Promise<OrganizerPublicFaqItem> {
+    return api.post<OrganizerPublicFaqItem>(
+      "/users/me/public-profile/faq",
+      payload,
+    );
+  }
+
+  /** PUT /api/users/me/public-profile/faq/{id}. */
+  async updateFaqItem(
+    id: string,
+    payload: FaqUpdateRequest,
+  ): Promise<OrganizerPublicFaqItem> {
+    return api.put<OrganizerPublicFaqItem>(
+      `/users/me/public-profile/faq/${id}`,
+      payload,
+    );
+  }
+
+  /** DELETE /api/users/me/public-profile/faq/{id}. */
+  async deleteFaqItem(id: string): Promise<void> {
+    await api.delete(`/users/me/public-profile/faq/${id}`);
   }
 }
 
