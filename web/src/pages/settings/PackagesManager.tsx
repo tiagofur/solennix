@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { Plus, Trash2, Star, Loader2 } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Plus, Trash2, Star, Loader2, Image as ImageIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   publicProfileConfigService,
   type OrganizerPublicPackage,
 } from "@/services/publicProfileConfigService";
+import { productService } from "@/services/productService";
+import { getAssetUrl } from "@/lib/api";
 import { logError } from "@/lib/errorHandler";
 
 interface PackagesManagerProps {
@@ -26,6 +28,14 @@ export const PackagesManager: React.FC<PackagesManagerProps> = ({ enabled }) => 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState(emptyDraft);
+  // Draft image: pending File (uploaded on add) + object URL preview.
+  const [draftImageFile, setDraftImageFile] = useState<File | null>(null);
+  const [draftImagePreview, setDraftImagePreview] = useState<string | null>(null);
+  const draftFileInputRef = useRef<HTMLInputElement>(null);
+  // Per-item image upload in-progress id.
+  const [uploadingImageId, setUploadingImageId] = useState<string | null>(null);
+  const itemFileInputRef = useRef<HTMLInputElement>(null);
+  const [pendingItemId, setPendingItemId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!enabled) {
@@ -43,6 +53,12 @@ export const PackagesManager: React.FC<PackagesManagerProps> = ({ enabled }) => 
     if (!draft.title.trim()) return;
     setSaving(true);
     try {
+      // Upload the draft image (if any) before creating the package.
+      let imageUrl: string | null = null;
+      if (draftImageFile) {
+        const { url } = await productService.uploadImage(draftImageFile);
+        imageUrl = url;
+      }
       const created = await publicProfileConfigService.createPackage({
         title: draft.title.trim(),
         description: draft.description.trim() || null,
@@ -52,14 +68,34 @@ export const PackagesManager: React.FC<PackagesManagerProps> = ({ enabled }) => 
           .map((s) => s.trim())
           .filter(Boolean),
         is_featured: draft.is_featured,
+        image_url: imageUrl,
         sort_order: items.length,
       });
       setItems([...items, created]);
       setDraft(emptyDraft);
+      setDraftImageFile(null);
+      setDraftImagePreview(null);
     } catch (e) {
       logError("create package", e);
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Upload a new photo for an existing package (persists image_url).
+  const onUploadItemPhoto = async (pkg: OrganizerPublicPackage, file: File) => {
+    setUploadingImageId(pkg.id);
+    try {
+      const { url } = await productService.uploadImage(file);
+      const updated = await publicProfileConfigService.updatePackage(pkg.id, {
+        image_url: url,
+      });
+      setItems(items.map((p) => (p.id === pkg.id ? updated : p)));
+    } catch (e) {
+      logError("upload package photo", e);
+    } finally {
+      setUploadingImageId(null);
+      setPendingItemId(null);
     }
   };
 
@@ -118,6 +154,35 @@ export const PackagesManager: React.FC<PackagesManagerProps> = ({ enabled }) => 
                   }`}
                 />
               </button>
+              {(() => {
+                const img = pkg.image_url ? getAssetUrl(pkg.image_url) : null;
+                return (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPendingItemId(pkg.id);
+                      itemFileInputRef.current?.click();
+                    }}
+                    disabled={uploadingImageId === pkg.id}
+                    aria-label={t("publicProfile.packagePhoto", {
+                      defaultValue: "Package photo",
+                    })}
+                    className="p-1 rounded hover:bg-surface-alt disabled:opacity-50 shrink-0"
+                  >
+                    {uploadingImageId === pkg.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-text-secondary" />
+                    ) : img ? (
+                      <img
+                        src={img}
+                        alt=""
+                        className="h-8 w-8 rounded object-cover bg-surface-alt"
+                      />
+                    ) : (
+                      <ImageIcon className="h-4 w-4 text-text-tertiary" />
+                    )}
+                  </button>
+                );
+              })()}
               <span className="flex-1 text-sm font-medium text-text truncate">
                 {pkg.title}
                 {pkg.from_price != null && (
@@ -140,7 +205,78 @@ export const PackagesManager: React.FC<PackagesManagerProps> = ({ enabled }) => 
         </ul>
       )}
 
+      {/* Hidden file input for per-item photo upload. */}
+      <input
+        type="file"
+        accept="image/*"
+        ref={itemFileInputRef}
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          const id = pendingItemId;
+          if (file && id) {
+            const pkg = items.find((p) => p.id === id);
+            if (pkg) onUploadItemPhoto(pkg, file);
+          }
+          // Reset so picking the same file again re-triggers onChange.
+          e.target.value = "";
+        }}
+      />
+
       <div className="space-y-2 p-3 rounded-xl border border-dashed border-border">
+        {/* Draft photo picker + preview. Uploaded on create. */}
+        <div className="flex items-center gap-3">
+          {draftImagePreview ? (
+            <img
+              src={draftImagePreview}
+              alt=""
+              className="h-12 w-12 rounded-lg object-cover bg-surface-alt"
+            />
+          ) : (
+            <div className="h-12 w-12 rounded-lg bg-surface-alt flex items-center justify-center">
+              <ImageIcon className="h-5 w-5 text-text-tertiary" />
+            </div>
+          )}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => draftFileInputRef.current?.click()}
+              className="text-xs font-medium text-primary"
+            >
+              {t("publicProfile.packagePhotoPick", {
+                defaultValue: draftImagePreview ? "Change photo" : "Add photo",
+              })}
+            </button>
+            {draftImagePreview && (
+              <button
+                type="button"
+                onClick={() => {
+                  setDraftImageFile(null);
+                  setDraftImagePreview(null);
+                }}
+                className="text-xs font-medium text-text-secondary"
+              >
+                {t("publicProfile.packagePhotoRemove", {
+                  defaultValue: "Remove",
+                })}
+              </button>
+            )}
+          </div>
+          <input
+            type="file"
+            accept="image/*"
+            ref={draftFileInputRef}
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                setDraftImageFile(file);
+                setDraftImagePreview(URL.createObjectURL(file));
+              }
+              e.target.value = "";
+            }}
+          />
+        </div>
         <input
           type="text"
           value={draft.title}

@@ -50,6 +50,7 @@ type publicProfileServiceDTO struct {
 	BasePrice           float64   `json:"base_price"`
 	ImageURL            *string   `json:"image_url,omitempty"`
 	ShowOnPublicProfile bool      `json:"show_on_public_profile"`
+	IsFeatured          bool      `json:"is_featured"`
 }
 
 type setPublicProfileServicesRequest struct {
@@ -74,6 +75,7 @@ func (h *PublicProfileServicesHandler) ListMyPublicProfileServices(w http.Respon
 			BasePrice:           p.BasePrice,
 			ImageURL:            p.ImageURL,
 			ShowOnPublicProfile: p.ShowOnPublicProfile,
+			IsFeatured:          p.IsFeatured,
 		})
 	}
 	writeJSON(w, http.StatusOK, out)
@@ -142,6 +144,7 @@ func (h *PublicProfileServicesHandler) SetMyPublicProfileServices(w http.Respons
 			BasePrice:           p.BasePrice,
 			ImageURL:            p.ImageURL,
 			ShowOnPublicProfile: p.ShowOnPublicProfile,
+			IsFeatured:          p.IsFeatured,
 		})
 	}
 	writeJSON(w, http.StatusOK, out)

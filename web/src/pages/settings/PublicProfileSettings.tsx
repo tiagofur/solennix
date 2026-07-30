@@ -12,11 +12,13 @@ import {
   Package,
   MapPin,
   Sparkles,
+  Star,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/Button";
 import { getAssetUrl } from "@/lib/api";
 import { publicProfileConfigService } from "@/services/publicProfileConfigService";
+import { productService } from "@/services/productService";
 import { PackagesManager } from "./PackagesManager";
 import { FaqManager } from "./FaqManager";
 import type {
@@ -293,6 +295,32 @@ export default function PublicProfileSettings() {
       next.add(id);
       return next;
     });
+  };
+
+  // Toggles a service's featured flag. PUT /products/{id} is a full-row replace,
+  // so fetch the complete product first, flip is_featured, and persist — avoiding
+  // any clobber of fields the Settings DTO doesn't carry.
+  const [featuredSavingId, setFeaturedSavingId] = useState<string | null>(null);
+  const toggleFeaturedService = async (
+    svc: PublicProfileServiceSelectionItem,
+  ) => {
+    setFeaturedSavingId(svc.id);
+    try {
+      const full = await productService.getById(svc.id);
+      await productService.update(svc.id, {
+        ...full,
+        is_featured: !svc.is_featured,
+      });
+      setServices((prev) =>
+        prev.map((s) =>
+          s.id === svc.id ? { ...s, is_featured: !svc.is_featured } : s,
+        ),
+      );
+    } catch {
+      setServicesError(t("publicProfile.featuredSaveFailed"));
+    } finally {
+      setFeaturedSavingId(null);
+    }
   };
 
   const handleSaveServices = async () => {
@@ -928,6 +956,33 @@ export default function PublicProfileSettings() {
                         {formatPrice(svc.base_price)}
                       </p>
                     </div>
+                    {checked && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          // Prevent the parent <label> checkbox from toggling.
+                          e.preventDefault();
+                          e.stopPropagation();
+                          toggleFeaturedService(svc);
+                        }}
+                        disabled={featuredSavingId === svc.id}
+                        aria-label={t("publicProfile.toggleFeatured", {
+                          name: svc.name,
+                        })}
+                        aria-pressed={svc.is_featured}
+                        data-testid={`pp-service-featured-${svc.id}`}
+                        className="p-1 rounded hover:bg-surface-alt disabled:opacity-50"
+                      >
+                        <Star
+                          className={clsx(
+                            "h-4 w-4",
+                            svc.is_featured
+                              ? "fill-primary text-primary"
+                              : "text-text-tertiary",
+                          )}
+                        />
+                      </button>
+                    )}
                   </label>
                 </li>
               );

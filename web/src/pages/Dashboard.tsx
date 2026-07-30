@@ -40,7 +40,7 @@ import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 import { PaymentFormFields, PaymentFormData } from "../components/PaymentFormFields";
 import { useToast } from "../hooks/useToast";
-import { getEventTotalCharged, PAYMENT_COMPLETION_EPSILON } from "../lib/finance";
+import { PAYMENT_COMPLETION_EPSILON } from "../lib/finance";
 import { StatusDropdown, EventStatus } from "../components/StatusDropdown";
 import { OnboardingChecklist } from "../components/OnboardingChecklist";
 import { RecentActivityCard } from "../components/RecentActivityCard";

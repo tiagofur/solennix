@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@tests/customRender";
-import { SocialIcon, isKnownSocialPlatform } from "./SocialIcon";
+import { SocialIcon } from "./SocialIcon";
+import { isKnownSocialPlatform } from "./socialUtils";
 
 describe("SocialIcon", () => {
   it("renders a branded <svg> for known platforms", () => {

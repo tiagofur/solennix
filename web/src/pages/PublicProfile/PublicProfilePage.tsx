@@ -131,13 +131,6 @@ function setCanonical(href: string) {
   el.setAttribute("href", href);
 }
 
-function cleanupMeta(attr: "name" | "property", key: string) {
-  document
-    .head.querySelector(`meta[${attr}="${key}"]`)
-    ?.remove();
-}
-
-
 function SectionHeading({
   id,
   children,
@@ -570,6 +563,11 @@ export const PublicProfilePage: React.FC = () => {
           )}
         </Card>
 
+        {/* Packages (combos) — shown above services for visual hierarchy */}
+        <Reveal delay={120}>
+          <PackagesSection profile={profile} />
+        </Reveal>
+
         {/* Services */}
         {services.length > 0 && (
           <section
@@ -853,9 +851,6 @@ export const PublicProfilePage: React.FC = () => {
           </Reveal>
         )}
 
-        <Reveal delay={120}>
-          <PackagesSection profile={profile} />
-        </Reveal>
         <Reveal delay={80}>
           <PoliciesSection profile={profile} />
         </Reveal>

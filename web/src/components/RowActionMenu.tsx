@@ -23,8 +23,6 @@ export const RowActionMenu: React.FC<RowActionMenuProps> = ({ items }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ top: 0, left: 0, openUp: false });
 
-  const close = useCallback(() => setOpen(false), []);
-
   const closeAndRestoreFocus = useCallback(() => {
     // Focus the trigger before unmounting the portal so Tab/Escape never
     // leaves keyboard focus stranded on document.body.

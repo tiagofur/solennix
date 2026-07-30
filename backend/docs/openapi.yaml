@@ -2970,6 +2970,7 @@ components:
         - category
         - base_price
         - show_on_public_profile
+        - is_featured
       properties:
         id:
           type: string
@@ -2985,6 +2986,9 @@ components:
           nullable: true
         show_on_public_profile:
           type: boolean
+        is_featured:
+          type: boolean
+          description: When true, the service is highlighted and sorts first on the public profile.
     PortfolioCandidatePhoto:
       type: object
       required:

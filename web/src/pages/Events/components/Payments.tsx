@@ -4,7 +4,6 @@ import { Trash2, DollarSign, CheckCircle, AlertCircle, Calendar, CreditCard, Ban
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { Modal } from "../../../components/Modal";
 import { PaymentFormFields, PaymentFormData } from "../../../components/PaymentFormFields";
-import { useToast } from "../../../hooks/useToast";
 import clsx from "clsx";
 import { useTranslation } from "react-i18next";
 import { parseEventDate } from "../../../lib/dateUtils";
@@ -53,7 +52,6 @@ export const Payments: React.FC<PaymentsProps> = ({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const { addToast } = useToast();
 
   const formatCurrency = (amount: number) => libFormatCurrency(amount, currency);
   const formatDate = (value: string) => parseEventDate(value).toLocaleDateString(i18n.language === "en" ? "en-US" : "es-MX");
