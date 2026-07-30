@@ -77,6 +77,8 @@
     <string name="products_visible_in_quotes">Visible en cotizaciones</string>
     <string name="products_show_on_public_profile">Mostrar en perfil público</string>
     <string name="products_public_profile_cap_hint">Plan Gratis: máximo 3 productos en el perfil público.</string>
+    <string name="products_is_featured">Destacar en perfil</string>
+    <string name="products_featured_hint">Los servicios destacados aparecen primero en tu perfil público.</string>
     <string name="products_save">Guardar</string>
     <string name="products_add">Agregar</string>
     <string name="products_no_added_items">No hay elementos agregados</string>

@@ -40,7 +40,7 @@ const val DATABASE_NAME = "solennix-database"
         CachedStaff::class,
         CachedEventStaff::class
     ],
-    version = 11,
+    version = 12,
     exportSchema = true
 )
 @TypeConverters(JsonConverters::class)
@@ -183,6 +183,20 @@ abstract class SolennixDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * v12 — Featured products: products.is_featured. Orthogonal to
+         * show_on_public_profile (visibility vs. hierarchy). Featured services
+         * sort first on the public profile. No plan cap.
+         */
+        val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                Log.d(TAG, "Running migration 11 -> 12: add is_featured to products")
+                db.execSQL(
+                    "ALTER TABLE products ADD COLUMN is_featured INTEGER NOT NULL DEFAULT 0"
+                )
+            }
+        }
+
         val ALL_MIGRATIONS = arrayOf(
             MIGRATION_4_5,
             MIGRATION_5_6,
@@ -190,7 +204,8 @@ abstract class SolennixDatabase : RoomDatabase() {
             MIGRATION_7_8,
             MIGRATION_8_9,
             MIGRATION_9_10,
-            MIGRATION_10_11
+            MIGRATION_10_11,
+            MIGRATION_11_12
         )
 
         /**

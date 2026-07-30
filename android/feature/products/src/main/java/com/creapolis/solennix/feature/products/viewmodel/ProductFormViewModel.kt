@@ -74,6 +74,9 @@ class ProductFormViewModel @Inject constructor(
     var isActive by mutableStateOf(true)
     /** Show this product on the organizer public profile. */
     var showOnPublicProfile by mutableStateOf(false)
+    /** Highlight this service (sorts first on the public profile). Orthogonal to
+     *  showOnPublicProfile (visibility vs. hierarchy). No plan cap. */
+    var isFeatured by mutableStateOf(false)
     /** Free plan: at most 3 active products with showOnPublicProfile=true. */
     var publicProfileCapReached by mutableStateOf(false)
 
@@ -184,6 +187,7 @@ class ProductFormViewModel @Inject constructor(
                 imageUrl = product.imageUrl ?: ""
                 isActive = product.isActive
                 showOnPublicProfile = product.showOnPublicProfile
+                isFeatured = product.isFeatured
                 staffTeamId = product.staffTeamId
             }
 
@@ -256,6 +260,7 @@ class ProductFormViewModel @Inject constructor(
                     imageUrl = imageUrl.takeIf { it.isNotBlank() },
                     isActive = isActive,
                     showOnPublicProfile = showOnPublicProfile,
+                    isFeatured = isFeatured,
                     staffTeamId = staffTeamId,
                     createdAt = null,
                     updatedAt = null
