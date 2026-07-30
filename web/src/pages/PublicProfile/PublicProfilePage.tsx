@@ -26,6 +26,7 @@ import { PublicProfileQuickActions } from "./PublicProfileQuickActions";
 import { PublicProfileMap } from "./PublicProfileMap";
 import { PublicProfileAboutSection } from "./PublicProfileAboutSection";
 import { PublicProfileSkeleton } from "./PublicProfileSkeleton";
+import { SocialIcon } from "./SocialIcon";
 import { PackagesSection } from "./PackagesSection";
 import { FaqSection } from "./FaqSection";
 import { PoliciesSection } from "./PoliciesSection";
@@ -548,19 +549,23 @@ export const PublicProfilePage: React.FC = () => {
 
           {socialEntries.length > 0 && (
             <ul className="mt-4 flex flex-wrap gap-2">
-              {socialEntries.map(([key, url]) => (
-                <li key={key}>
-                  <a
-                    href={/^https?:\/\//i.test(url) ? url : `https://${url}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface-alt/50 px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-primary hover:border-primary/40 transition-colors capitalize"
-                  >
-                    <ExternalLink className="h-3 w-3" aria-hidden="true" />
-                    {key}
-                  </a>
-                </li>
-              ))}
+              {socialEntries.map(([key, url]) => {
+                const label = key.charAt(0).toUpperCase() + key.slice(1);
+                return (
+                  <li key={key}>
+                    <a
+                      href={/^https?:\/\//i.test(url) ? url : `https://${url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={label}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface-alt/50 px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-primary hover:border-primary/40 transition-colors capitalize"
+                    >
+                      <SocialIcon platform={key} className="h-3 w-3" />
+                      {key}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </Card>
