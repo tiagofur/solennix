@@ -21,6 +21,7 @@ import { Card } from "@/components/Card";
 import { localeFromLanguage } from "@/lib/finance";
 import { resolveMediaUrl } from "@/lib/api";
 import { PublicLeadModal } from "./PublicLeadModal";
+import { Lightbox } from "./Lightbox";
 import { PublicProfileQuickActions } from "./PublicProfileQuickActions";
 import { PublicProfileMap } from "./PublicProfileMap";
 import { PublicProfileAboutSection } from "./PublicProfileAboutSection";
@@ -157,6 +158,7 @@ export const PublicProfilePage: React.FC = () => {
   const [state, setState] = useState<PageState>("loading");
   const [profile, setProfile] = useState<PublicOrganizerProfile | null>(null);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (!slug?.trim()) {
@@ -254,6 +256,13 @@ export const PublicProfilePage: React.FC = () => {
   const services = profile?.services?.filter(Boolean) ?? [];
   const reviews = profile?.reviews?.filter(Boolean) ?? [];
   const portfolio = profile?.portfolio?.filter(Boolean) ?? [];
+  // Full-size images for the lightbox (carousel navigates this list).
+  const lightboxItems = portfolio.map((item) => ({
+    id: item.id,
+    src: resolveMediaUrl(item.photo_url) ?? "",
+    title: item.title,
+    caption: item.event_date ?? undefined,
+  }));
   const socialEntries = Object.entries(profile?.socials ?? {}).filter(
     ([, v]) => Boolean(v?.trim()),
   );
@@ -660,29 +669,71 @@ export const PublicProfilePage: React.FC = () => {
             <SectionHeading id="public-portfolio-heading">
               {t("profile.portfolio_title")}
             </SectionHeading>
+
+            {/* Featured carousel (horizontal scroll) */}
+            <ul className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory">
+              {portfolio.map((item, idx) => {
+                const img = resolveMediaUrl(item.photo_url);
+                return (
+                  <li
+                    key={item.id}
+                    className="shrink-0 w-[80%] sm:w-[60%] snap-center"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setLightboxIndex(idx)}
+                      className="block w-full text-left rounded-2xl overflow-hidden border border-border shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary bg-surface-alt"
+                      aria-label={t("profile.portfolio_open", {
+                        defaultValue: "Open {{title}}",
+                        title: item.title,
+                      })}
+                    >
+                      <img
+                        src={img}
+                        alt={item.title}
+                        className="aspect-[16/9] w-full object-cover"
+                        loading="lazy"
+                      />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {/* Thumbnail grid */}
             <ul className="grid gap-3 grid-cols-2 sm:grid-cols-3">
-              {portfolio.map((item) => {
+              {portfolio.map((item, idx) => {
                 const img = resolveMediaUrl(item.thumbnail_url || item.photo_url);
                 return (
                   <li key={item.id}>
-                    <Card variant="default" padding="none" className="overflow-hidden">
-                      <img
-                        src={img}
-                        alt=""
-                        className="aspect-[4/3] w-full object-cover bg-surface-alt"
-                        loading="lazy"
-                      />
-                      <div className="p-3">
-                        <p className="text-sm font-bold text-text truncate">
-                          {item.title}
-                        </p>
-                        {item.event_date && (
-                          <p className="text-xs text-text-tertiary mt-0.5">
-                            {item.event_date}
+                    <button
+                      type="button"
+                      onClick={() => setLightboxIndex(idx)}
+                      className="block w-full text-left h-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary rounded-2xl"
+                      aria-label={t("profile.portfolio_open", {
+                        defaultValue: "Open {{title}}",
+                        title: item.title,
+                      })}
+                    >
+                      <Card variant="default" padding="none" className="overflow-hidden h-full">
+                        <img
+                          src={img}
+                          alt={item.title}
+                          className="aspect-[4/3] w-full object-cover bg-surface-alt"
+                          loading="lazy"
+                        />
+                        <div className="p-3">
+                          <p className="text-sm font-bold text-text truncate">
+                            {item.title}
                           </p>
-                        )}
-                      </div>
-                    </Card>
+                          {item.event_date && (
+                            <p className="text-xs text-text-tertiary mt-0.5">
+                              {item.event_date}
+                            </p>
+                          )}
+                        </div>
+                      </Card>
+                    </button>
                   </li>
                 );
               })}
@@ -707,6 +758,15 @@ export const PublicProfilePage: React.FC = () => {
         businessName={displayName}
         brandColor={profile.brand_color}
       />
+
+      {lightboxIndex !== null && (
+        <Lightbox
+          items={lightboxItems}
+          index={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onIndexChange={setLightboxIndex}
+        />
+      )}
 
       <footer className="border-t border-border py-6 mt-4">
         <p className="text-center text-xs text-text-tertiary">
