@@ -650,7 +650,7 @@ components:
           type: boolean
         show_on_public_profile:
           type: boolean
-          description: When true, product may appear on the organizer public profile (Free max 3). Optional in payloads; defaults to false server-side.
+          description: When true, product may appear on the organizer public profile. Optional in payloads; defaults to true server-side (no plan cap).
         is_featured:
           type: boolean
           description: When true, the service is highlighted and sorts first on the public profile. Orthogonal to show_on_public_profile (visibility vs. hierarchy). Optional in payloads; defaults to false server-side.
@@ -6157,7 +6157,7 @@ paths:
       summary: Bulk-set which products appear on the public profile
       description: >
         Sets show_on_public_profile=true for the given product IDs (owned + active)
-        and false for all other user products. Free plan max 3.
+        and false for all other user products. No plan cap.
       requestBody:
         required: true
         content:
@@ -6189,12 +6189,6 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "401":
           description: Unauthorized
-        "403":
-          description: Free plan exceeded max 3 services
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
   /api/users/me/public-profile/portfolio:
     get:
       operationId: listMyPublicPortfolio

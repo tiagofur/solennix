@@ -15,15 +15,6 @@ import (
 
 // --- fakes for services selection ---
 
-type servicesUserRepo struct {
-	user *models.User
-	err  error
-}
-
-func (f *servicesUserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
-	return f.user, f.err
-}
-
 type servicesProductStore struct {
 	products []models.Product
 	listErr  error
@@ -65,13 +56,12 @@ func (f *servicesProductStore) SetPublicProfileServices(ctx context.Context, use
 	return nil
 }
 
-func newServicesHandler(plan string, store *servicesProductStore) (*PublicProfileServicesHandler, uuid.UUID) {
+func newServicesHandler(store *servicesProductStore) (*PublicProfileServicesHandler, uuid.UUID) {
 	uid := uuid.New()
 	if store == nil {
 		store = &servicesProductStore{}
 	}
 	h := &PublicProfileServicesHandler{
-		userRepo:    &servicesUserRepo{user: &models.User{ID: uid, Plan: plan}},
 		productRepo: store,
 	}
 	return h, uid
@@ -98,7 +88,6 @@ func TestListPublicProfileServices_ReturnsActiveWithFlag(t *testing.T) {
 		{ID: uuid.New(), UserID: uid, Name: "Inactive", Category: "main", BasePrice: 10, IsActive: false, ShowOnPublicProfile: true},
 	}}
 	h := &PublicProfileServicesHandler{
-		userRepo:    &servicesUserRepo{user: &models.User{ID: uid, Plan: "basic"}},
 		productRepo: store,
 	}
 	rr := httptest.NewRecorder()
@@ -144,62 +133,9 @@ func TestListPublicProfileServices_ReturnsActiveWithFlag(t *testing.T) {
 	}
 }
 
-func TestSetPublicProfileServices_Free_MaxThree(t *testing.T) {
-	store := &servicesProductStore{}
-	h, uid := newServicesHandler("basic", store)
-	ids := []string{uuid.New().String(), uuid.New().String(), uuid.New().String(), uuid.New().String()}
-	body := `{"product_ids":["` + strings.Join(ids, `","`) + `"]}`
-	rr := httptest.NewRecorder()
-
-	h.SetMyPublicProfileServices(rr, servicesReq(t, http.MethodPut, "/api/users/me/public-profile/services", body, uid))
-
-	if rr.Code != http.StatusForbidden {
-		t.Fatalf("status = %d, want 403; body=%s", rr.Code, rr.Body.String())
-	}
-	if !strings.Contains(rr.Body.String(), "plan_limit_exceeded") {
-		t.Errorf("body must contain plan_limit_exceeded; got %s", rr.Body.String())
-	}
-	if store.setIDs != nil {
-		t.Errorf("Free over-limit must not call SetPublicProfileServices; got %v", store.setIDs)
-	}
-}
-
-func TestSetPublicProfileServices_Free_ThreeOK(t *testing.T) {
-	uid := uuid.New()
-	p1, p2, p3 := uuid.New(), uuid.New(), uuid.New()
-	store := &servicesProductStore{products: []models.Product{
-		{ID: p1, UserID: uid, Name: "A", Category: "main", BasePrice: 1, IsActive: true},
-		{ID: p2, UserID: uid, Name: "B", Category: "main", BasePrice: 2, IsActive: true},
-		{ID: p3, UserID: uid, Name: "C", Category: "main", BasePrice: 3, IsActive: true},
-		{ID: uuid.New(), UserID: uid, Name: "D", Category: "main", BasePrice: 4, IsActive: true, ShowOnPublicProfile: true},
-	}}
-	h := &PublicProfileServicesHandler{
-		userRepo:    &servicesUserRepo{user: &models.User{ID: uid, Plan: "basic"}},
-		productRepo: store,
-	}
-	body := `{"product_ids":["` + p1.String() + `","` + p2.String() + `","` + p3.String() + `"]}`
-	rr := httptest.NewRecorder()
-
-	h.SetMyPublicProfileServices(rr, servicesReq(t, http.MethodPut, "/api/users/me/public-profile/services", body, uid))
-
-	if rr.Code != http.StatusOK {
-		t.Fatalf("status = %d, want 200; body=%s", rr.Code, rr.Body.String())
-	}
-	if len(store.setIDs) != 3 {
-		t.Fatalf("setIDs len = %d, want 3", len(store.setIDs))
-	}
-	// D must be cleared.
-	for _, p := range store.products {
-		if p.Name == "D" && p.ShowOnPublicProfile {
-			t.Errorf("unselected product D must have show_on_public_profile=false")
-		}
-		if (p.ID == p1 || p.ID == p2 || p.ID == p3) && !p.ShowOnPublicProfile {
-			t.Errorf("selected product %s must be true", p.Name)
-		}
-	}
-}
-
-func TestSetPublicProfileServices_Pro_UnlimitedPractical(t *testing.T) {
+// With the Free-plan cap removed, any number of services may be selected — there
+// is no longer a 3-service limit on Free.
+func TestSetPublicProfileServices_Free_NoCap(t *testing.T) {
 	uid := uuid.New()
 	ids := make([]uuid.UUID, 5)
 	products := make([]models.Product, 0, 5)
@@ -210,10 +146,7 @@ func TestSetPublicProfileServices_Pro_UnlimitedPractical(t *testing.T) {
 		})
 	}
 	store := &servicesProductStore{products: products}
-	h := &PublicProfileServicesHandler{
-		userRepo:    &servicesUserRepo{user: &models.User{ID: uid, Plan: "pro"}},
-		productRepo: store,
-	}
+	h, _ := newServicesHandler(store)
 	parts := make([]string, 0, 5)
 	for _, id := range ids {
 		parts = append(parts, id.String())
@@ -227,7 +160,7 @@ func TestSetPublicProfileServices_Pro_UnlimitedPractical(t *testing.T) {
 		t.Fatalf("status = %d, want 200; body=%s", rr.Code, rr.Body.String())
 	}
 	if len(store.setIDs) != 5 {
-		t.Errorf("setIDs len = %d, want 5", len(store.setIDs))
+		t.Errorf("setIDs len = %d, want 5 (no Free cap)", len(store.setIDs))
 	}
 }
 
@@ -238,7 +171,6 @@ func TestSetPublicProfileServices_EmptyClearsAll(t *testing.T) {
 		{ID: p1, UserID: uid, Name: "A", Category: "main", BasePrice: 1, IsActive: true, ShowOnPublicProfile: true},
 	}}
 	h := &PublicProfileServicesHandler{
-		userRepo:    &servicesUserRepo{user: &models.User{ID: uid, Plan: "basic"}},
 		productRepo: store,
 	}
 	body := `{"product_ids":[]}`

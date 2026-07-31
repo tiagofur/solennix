@@ -11,6 +11,7 @@ import {
   Image as ImageIcon,
   Package,
   MapPin,
+  Search,
   Sparkles,
   Star,
 } from "lucide-react";
@@ -30,7 +31,6 @@ import type {
 } from "@/services/publicProfileConfigService";
 
 const PORTFOLIO_MAX = 6;
-const FREE_SERVICES_MAX = 3;
 
 // kebab-case, 3-140 chars (mirrors backend validatePublicSlug).
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -107,6 +107,8 @@ export default function PublicProfileSettings() {
   const [servicesLoading, setServicesLoading] = useState(false);
   const [servicesSaving, setServicesSaving] = useState(false);
   const [servicesError, setServicesError] = useState<string | null>(null);
+  const [serviceQuery, setServiceQuery] = useState("");
+
 
   // Portfolio (Pro+)
   const [portfolio, setPortfolio] = useState<OrganizerPublicPortfolioItem[]>([]);
@@ -209,6 +211,17 @@ export default function PublicProfileSettings() {
     };
   }, [paid, t]);
 
+  // Services filtered by the search box (name/category, case-insensitive).
+  const filteredServices = useMemo(() => {
+    const q = serviceQuery.trim().toLowerCase();
+    if (!q) return services;
+    return services.filter(
+      (s) =>
+        s.name.toLowerCase().includes(q) ||
+        (s.category?.toLowerCase().includes(q) ?? false),
+    );
+  }, [services, serviceQuery]);
+
   const portfolioEventIds = useMemo(
     () => new Set(portfolio.map((p) => p.event_id).filter(Boolean) as string[]),
     [portfolio],
@@ -288,10 +301,6 @@ export default function PublicProfileSettings() {
         next.delete(id);
         return next;
       }
-      if (!paid && next.size >= FREE_SERVICES_MAX) {
-        setServicesError(t("publicProfile.servicesFreeLimit"));
-        return prev;
-      }
       next.add(id);
       return next;
     });
@@ -325,10 +334,6 @@ export default function PublicProfileSettings() {
 
   const handleSaveServices = async () => {
     setServicesError(null);
-    if (!paid && selectedServiceIds.size > FREE_SERVICES_MAX) {
-      setServicesError(t("publicProfile.servicesFreeLimit"));
-      return;
-    }
     setServicesSaving(true);
     try {
       const updated = await publicProfileConfigService.setServices([
@@ -338,13 +343,8 @@ export default function PublicProfileSettings() {
       setSelectedServiceIds(
         new Set(updated.filter((s) => s.show_on_public_profile).map((s) => s.id)),
       );
-    } catch (e: any) {
-      const status = e?.status ?? e?.statusCode ?? e?.response?.status;
-      if (status === 403) {
-        setServicesError(t("publicProfile.servicesFreeLimit"));
-      } else {
-        setServicesError(t("publicProfile.servicesSaveFailed"));
-      }
+    } catch {
+      setServicesError(t("publicProfile.servicesSaveFailed"));
     } finally {
       setServicesSaving(false);
     }
@@ -458,8 +458,6 @@ export default function PublicProfileSettings() {
       </div>
     );
   }
-
-  const freeAtLimit = !paid && selectedServiceIds.size >= FREE_SERVICES_MAX;
 
   return (
     <div className="space-y-8">
@@ -905,11 +903,6 @@ export default function PublicProfileSettings() {
           <p className="text-xs text-text-secondary mt-1">
             {t("publicProfile.servicesDescription")}
           </p>
-          {!paid && (
-            <p className="text-xs text-text-secondary mt-1">
-              {t("publicProfile.servicesFreeHint")}
-            </p>
-          )}
         </header>
 
         {servicesLoading ? (
@@ -919,75 +912,111 @@ export default function PublicProfileSettings() {
             {t("publicProfile.servicesEmpty")}
           </p>
         ) : (
-          <ul className="space-y-2" data-testid="pp-services-list">
-            {services.map((svc) => {
-              const checked = selectedServiceIds.has(svc.id);
-              const disabled = !checked && freeAtLimit;
-              const thumb = getAssetUrl(svc.image_url);
-              return (
-                <li key={svc.id}>
-                  <label
-                    className={clsx(
-                      "flex items-center gap-3 rounded-xl border border-border bg-card p-3",
-                      disabled ? "opacity-50" : "cursor-pointer hover:border-primary/30",
-                    )}
-                    data-testid={`pp-service-${svc.id}`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      disabled={disabled}
-                      onChange={() => toggleService(svc.id)}
-                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-                      data-testid={`pp-service-check-${svc.id}`}
-                    />
-                    {thumb ? (
-                      <img
-                        src={thumb}
-                        alt=""
-                        className="h-10 w-10 rounded object-cover bg-surface-alt"
-                      />
-                    ) : (
-                      <div className="h-10 w-10 rounded bg-surface-alt" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-text truncate">{svc.name}</p>
-                      <p className="text-xs text-text-secondary">
-                        {formatPrice(svc.base_price)}
-                      </p>
-                    </div>
-                    {checked && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          // Prevent the parent <label> checkbox from toggling.
-                          e.preventDefault();
-                          e.stopPropagation();
-                          toggleFeaturedService(svc);
-                        }}
-                        disabled={featuredSavingId === svc.id}
-                        aria-label={t("publicProfile.toggleFeatured", {
-                          name: svc.name,
-                        })}
-                        aria-pressed={svc.is_featured}
-                        data-testid={`pp-service-featured-${svc.id}`}
-                        className="p-1 rounded hover:bg-surface-alt disabled:opacity-50"
+          <>
+            {/* Search + selection count for large catalogs */}
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search
+                  className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary pointer-events-none"
+                  aria-hidden="true"
+                />
+                <input
+                  type="search"
+                  value={serviceQuery}
+                  onChange={(e) => setServiceQuery(e.target.value)}
+                  placeholder={t("publicProfile.servicesSearchPlaceholder")}
+                  aria-label={t("publicProfile.servicesSearchPlaceholder")}
+                  className={clsx(fieldClass, "pl-9")}
+                  data-testid="pp-services-search"
+                />
+              </div>
+              <span
+                className="text-xs text-text-secondary whitespace-nowrap tabular-nums"
+                data-testid="pp-services-selected-count"
+              >
+                {t("publicProfile.servicesSelectedCount", {
+                  count: selectedServiceIds.size,
+                })}
+              </span>
+            </div>
+
+            {filteredServices.length === 0 ? (
+              <p
+                className="text-xs text-text-secondary"
+                data-testid="pp-services-no-results"
+              >
+                {t("publicProfile.servicesNoResults")}
+              </p>
+            ) : (
+              <ul
+                className="space-y-2 max-h-80 overflow-y-auto pr-1 -mr-1"
+                data-testid="pp-services-list"
+              >
+                {filteredServices.map((svc) => {
+                  const checked = selectedServiceIds.has(svc.id);
+                  const thumb = getAssetUrl(svc.image_url);
+                  return (
+                    <li key={svc.id}>
+                      <label
+                        className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 cursor-pointer hover:border-primary/30"
+                        data-testid={`pp-service-${svc.id}`}
                       >
-                        <Star
-                          className={clsx(
-                            "h-4 w-4",
-                            svc.is_featured
-                              ? "fill-primary text-primary"
-                              : "text-text-tertiary",
-                          )}
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleService(svc.id)}
+                          className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                          data-testid={`pp-service-check-${svc.id}`}
                         />
-                      </button>
-                    )}
-                  </label>
-                </li>
-              );
-            })}
-          </ul>
+                        {thumb ? (
+                          <img
+                            src={thumb}
+                            alt=""
+                            className="h-10 w-10 rounded object-cover bg-surface-alt"
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded bg-surface-alt" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-text truncate">{svc.name}</p>
+                          <p className="text-xs text-text-secondary">
+                            {formatPrice(svc.base_price)}
+                          </p>
+                        </div>
+                        {checked && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              // Prevent the parent <label> checkbox from toggling.
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleFeaturedService(svc);
+                            }}
+                            disabled={featuredSavingId === svc.id}
+                            aria-label={t("publicProfile.toggleFeatured", {
+                              name: svc.name,
+                            })}
+                            aria-pressed={svc.is_featured}
+                            data-testid={`pp-service-featured-${svc.id}`}
+                            className="p-1 rounded hover:bg-surface-alt disabled:opacity-50"
+                          >
+                            <Star
+                              className={clsx(
+                                "h-4 w-4",
+                                svc.is_featured
+                                  ? "fill-primary text-primary"
+                                  : "text-text-tertiary",
+                              )}
+                            />
+                          </button>
+                        )}
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </>
         )}
 
         {servicesError && (

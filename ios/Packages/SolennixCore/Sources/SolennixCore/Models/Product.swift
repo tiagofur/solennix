@@ -14,7 +14,7 @@ public struct Product: Codable, Identifiable, Sendable, Hashable {
     public var staffTeamId: String?
     public let isActive: Bool
     /// When true, product appears on the organizer's public profile services list.
-    /// Free plan is capped at 3 active products with this flag (server-enforced).
+    /// New products default to visible (DB default true); no plan cap applies.
     public var showOnPublicProfile: Bool
     /// When true, the service is highlighted and sorts first on the public profile.
     /// Orthogonal to showOnPublicProfile (visibility vs. hierarchy).
@@ -34,7 +34,7 @@ public struct Product: Codable, Identifiable, Sendable, Hashable {
         imageUrl: String? = nil,
         staffTeamId: String? = nil,
         isActive: Bool,
-        showOnPublicProfile: Bool = false,
+        showOnPublicProfile: Bool = true,
         isFeatured: Bool = false,
         createdAt: String,
         updatedAt: String
@@ -72,8 +72,8 @@ public struct Product: Codable, Identifiable, Sendable, Hashable {
         imageUrl = try c.decodeIfPresent(String.self, forKey: .imageUrl)
         staffTeamId = try c.decodeIfPresent(String.self, forKey: .staffTeamId)
         isActive = try c.decode(Bool.self, forKey: .isActive)
-        // Older payloads omit the field — default false (Free/safe).
-        showOnPublicProfile = try c.decodeIfPresent(Bool.self, forKey: .showOnPublicProfile) ?? false
+        // Older payloads omit the field — default true (new DB default).
+        showOnPublicProfile = try c.decodeIfPresent(Bool.self, forKey: .showOnPublicProfile) ?? true
         isFeatured = try c.decodeIfPresent(Bool.self, forKey: .isFeatured) ?? false
         createdAt = try c.decode(String.self, forKey: .createdAt)
         updatedAt = try c.decode(String.self, forKey: .updatedAt)

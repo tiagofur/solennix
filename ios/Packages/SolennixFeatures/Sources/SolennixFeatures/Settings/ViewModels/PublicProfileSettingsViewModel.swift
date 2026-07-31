@@ -21,7 +21,6 @@ public final class PublicProfileSettingsViewModel {
     // MARK: - Constants
 
     public static let portfolioMax = 6
-    public static let freePublicProductMax = 3
     /// kebab-case, 3-140 chars (mirrors backend validatePublicSlug).
     /// Use NSRegularExpression-style string (Swift regex literal `$/` confuses the parser).
     public static let slugPattern = "^[a-z0-9]+(?:-[a-z0-9]+)*$"

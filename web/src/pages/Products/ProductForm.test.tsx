@@ -153,7 +153,7 @@ describe('ProductForm', () => {
         base_price: 50,
         image_url: null,
         is_active: true,
-        show_on_public_profile: false,
+        show_on_public_profile: true,
         is_featured: false,
         recipe: null,
         staff_team_id: null,
@@ -203,7 +203,7 @@ describe('ProductForm', () => {
         base_price: 60,
         image_url: null,
         is_active: true,
-        show_on_public_profile: false,
+        show_on_public_profile: true,
         is_featured: false,
         staff_team_id: null,
       });
@@ -419,7 +419,7 @@ describe('ProductForm', () => {
     expect(screen.queryByText(/Límite de Catálogo Alcanzado/i)).not.toBeInTheDocument();
   });
 
-  it('renders the show-on-public-profile toggle', async () => {
+  it('renders the show-on-public-profile toggle enabled and on by default', async () => {
     renderForm();
 
     await waitFor(() => {
@@ -427,11 +427,13 @@ describe('ProductForm', () => {
     });
     expect(screen.getByText(/Mostrar en perfil público|Show on public profile/i)).toBeInTheDocument();
     const toggle = screen.getByTestId('show-on-public-profile-toggle');
-    expect(toggle).toHaveAttribute('aria-checked', 'false');
+    expect(toggle).toHaveAttribute('aria-checked', 'true');
     expect(toggle).not.toBeDisabled();
   });
 
-  it('disables public-profile toggle on Free when 3 products are already public', async () => {
+  it('never disables public-profile toggle regardless of plan or public count (no cap)', async () => {
+    // The Free-plan cap was removed: even with 3 public products on Free the
+    // toggle stays enabled and on by default.
     mockUser = { id: 'user-1', plan: 'free' };
     (productService.getAll as any).mockResolvedValue([
       { id: 'p1', name: 'A', category: 'c', base_price: 1, is_active: true, show_on_public_profile: true },
@@ -443,11 +445,9 @@ describe('ProductForm', () => {
 
     await waitFor(() => {
       const toggle = screen.getByTestId('show-on-public-profile-toggle');
-      expect(toggle).toBeDisabled();
+      expect(toggle).not.toBeDisabled();
+      expect(toggle).toHaveAttribute('aria-checked', 'true');
     });
-    expect(
-      screen.getByText(/permite hasta 3|allows up to 3/i),
-    ).toBeInTheDocument();
   });
 
   it('keeps public-profile toggle enabled on Pro with 3+ public products', async () => {
@@ -467,7 +467,7 @@ describe('ProductForm', () => {
     });
   });
 
-  it('includes show_on_public_profile when creating after toggle on', async () => {
+  it('persists show_on_public_profile=false when the default toggle is turned off', async () => {
     (productService.create as any).mockResolvedValue({ id: 'prod-1' });
     (productService.updateIngredients as any).mockResolvedValue({});
 
@@ -477,6 +477,7 @@ describe('ProductForm', () => {
       expect(screen.getByTestId('show-on-public-profile-toggle')).toBeInTheDocument();
     });
 
+    // Default is on; turn it off before saving.
     fireEvent.click(screen.getByTestId('show-on-public-profile-toggle'));
     fireEvent.change(container.querySelector('input[name="name"]')!, {
       target: { value: 'Churros' },
@@ -491,7 +492,7 @@ describe('ProductForm', () => {
 
     await waitFor(() => {
       expect(productService.create).toHaveBeenCalledWith(
-        expect.objectContaining({ show_on_public_profile: true }),
+        expect.objectContaining({ show_on_public_profile: false }),
       );
     });
   });

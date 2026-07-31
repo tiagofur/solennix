@@ -335,21 +335,12 @@ fun ProductFormScreen(
                             style = MaterialTheme.typography.bodyLarge,
                             color = SolennixTheme.colors.primaryText
                         )
-                        if (viewModel.publicProfileCapReached) {
-                            Text(
-                                text = ProductStrings.publicProfileCapHint,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = SolennixTheme.colors.secondaryText
-                            )
-                        }
                     }
                     Switch(
                         checked = viewModel.showOnPublicProfile,
                         onCheckedChange = { newValue ->
-                            if (newValue && viewModel.publicProfileCapReached) return@Switch
                             viewModel.showOnPublicProfile = newValue
                         },
-                        enabled = !viewModel.publicProfileCapReached || viewModel.showOnPublicProfile,
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = SolennixTheme.colors.primary,
                             checkedTrackColor = SolennixTheme.colors.primaryLight

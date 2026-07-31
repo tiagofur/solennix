@@ -192,7 +192,7 @@ func main() {
 	publicProfileConfigHandler := handlers.NewPublicProfileConfigHandler(userRepo, publicProfileRepo, cfg.FrontendURL)
 	publicProfilePortfolioHandler := handlers.NewPublicProfilePortfolioHandler(userRepo, publicProfileRepo, eventRepo)
 	publicProfilePackagesHandler := handlers.NewPublicProfilePackagesHandler(userRepo, publicProfileRepo)
-	publicProfileServicesHandler := handlers.NewPublicProfileServicesHandler(userRepo, productRepo)
+	publicProfileServicesHandler := handlers.NewPublicProfileServicesHandler(productRepo)
 	staffHandler := handlers.NewStaffHandler(staffRepo, userRepo)
 	staffHandler.SetPool(pool)
 	staffHandler.SetInviteSupport(authService, emailService, cfg.FrontendURL)

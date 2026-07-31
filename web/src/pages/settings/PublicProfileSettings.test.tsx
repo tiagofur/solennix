@@ -216,7 +216,11 @@ describe("PublicProfileSettings", () => {
         }),
       );
     });
-    expect(screen.getByText("Gala")).toBeInTheDocument();
+    // Wrap in waitFor: the new portfolio item re-renders async after the
+    // create promise resolves (flaky on slow CI without the await).
+    await waitFor(() => {
+      expect(screen.getByText("Gala")).toBeInTheDocument();
+    });
   });
 
   it("hides portfolio form on Free plan", async () => {
@@ -282,7 +286,7 @@ describe("PublicProfileSettings", () => {
     expect(ids).toEqual(expect.arrayContaining(["s1", "s2"]));
   });
 
-  it("enforces Free max 3 services on client", async () => {
+  it("does not cap services on Free (cap removed)", async () => {
     mockUser = { id: "1", plan: "basic", public_slug: "alice" };
     listServicesMock.mockResolvedValue([
       { id: "a", name: "A", category: "main", base_price: 1, show_on_public_profile: true },
@@ -296,9 +300,11 @@ describe("PublicProfileSettings", () => {
       expect(screen.getByTestId("pp-services-list")).toBeInTheDocument();
     });
 
-    // Fourth checkbox should be disabled when already at Free limit.
-    expect(screen.getByTestId("pp-service-check-d")).toBeDisabled();
-    mockUser = { id: "1", plan: "pro", public_slug: "alice" };
+    // No cap: the fourth checkbox must be enabled and selectable.
+    const dCheck = screen.getByTestId("pp-service-check-d");
+    expect(dCheck).not.toBeDisabled();
+    fireEvent.click(dCheck);
+    expect(dCheck).toBeChecked();
   });
 
   it("toggles service featured status using productService", async () => {

@@ -16,7 +16,7 @@ data class Product(
     @EncodeDefault(EncodeDefault.Mode.ALWAYS)
     @SerialName("is_active") val isActive: Boolean = true,
     @EncodeDefault(EncodeDefault.Mode.ALWAYS)
-    @SerialName("show_on_public_profile") val showOnPublicProfile: Boolean = false,
+    @SerialName("show_on_public_profile") val showOnPublicProfile: Boolean = true,
     @EncodeDefault(EncodeDefault.Mode.ALWAYS)
     @SerialName("is_featured") val isFeatured: Boolean = false,
     @SerialName("staff_team_id") val staffTeamId: String? = null,

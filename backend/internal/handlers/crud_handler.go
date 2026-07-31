@@ -1874,21 +1874,6 @@ func (h *CRUDHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 
 	product.UserID = userID
 
-	// Free-plan cap: at most 3 products with show_on_public_profile=true.
-	// Only checked when the new product would consume a public slot.
-	if normalizePlan(user.Plan) == "basic" && product.ShowOnPublicProfile {
-		const publicProfileProductLimit = 3
-		count, err := h.productRepo.CountPublicProfile(r.Context(), userID)
-		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Failed to verify public profile limit")
-			return
-		}
-		if count >= publicProfileProductLimit {
-			writePlanLimitError(w, r, "public_profile_products", count, publicProfileProductLimit)
-			return
-		}
-	}
-
 	// Tenant check on staff_team_id — prevent a client from attaching another
 	// user's team. The FK alone can't enforce this because staff_teams doesn't
 	// carry a denormalized user_id check on its own row in this query.
@@ -2006,37 +1991,6 @@ func (h *CRUDHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 
 	product.ID = id
 	product.UserID = userID
-
-	// Load user for plan-based limits (public-profile cap).
-	user, err := h.userRepo.GetByID(r.Context(), userID)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to fetch user limits")
-		return
-	}
-
-	// Free-plan cap: at most 3 products with show_on_public_profile=true.
-	// Only enforced when this update would ACTIVATE the flag on a product that
-	// currently has it off (i.e. consumes a new slot). Toggling off or keeping
-	// it on is always allowed.
-	if normalizePlan(user.Plan) == "basic" && product.ShowOnPublicProfile {
-		existing, err := h.productRepo.GetByID(r.Context(), id, userID)
-		if err != nil {
-			writeError(w, http.StatusNotFound, "Product not found")
-			return
-		}
-		if !existing.ShowOnPublicProfile {
-			const publicProfileProductLimit = 3
-			count, err := h.productRepo.CountPublicProfile(r.Context(), userID)
-			if err != nil {
-				writeError(w, http.StatusInternalServerError, "Failed to verify public profile limit")
-				return
-			}
-			if count >= publicProfileProductLimit {
-				writePlanLimitError(w, r, "public_profile_products", count, publicProfileProductLimit)
-				return
-			}
-		}
-	}
 
 	if product.StaffTeamID != nil && h.staffTeamRepo != nil {
 		if _, err := h.staffTeamRepo.GetByID(r.Context(), *product.StaffTeamID, userID); err != nil {
