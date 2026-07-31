@@ -8,7 +8,7 @@ aliases:
   - Roadmap
   - Timeline
 date: 2026-03-20
-updated: 2026-06-30
+updated: 2026-07-31
 status: active
 ---
 
@@ -155,15 +155,31 @@ Items pendientes: staff seats, portal cliente shape-based gate, payment submissi
 - Backend: `event_reviews` + cron 48h post-evento.
 - Web: UI pública para review + portfolio público `/organizer/:slug/reviews`.
 
-#### Sprint 11 — Perfil Profesional Público (Planificado, pendiente ejecución)
-**Decisión 2026-06-30:** primera etapa rumbo a marketplace de servicios. Web-first; iOS/Android pendiente.
-- **Backend:** migration `public_profile` en `products` + endpoint público `GET /api/public/profile/:username`.
-- **Web:** 3 pantallas nuevas (UserProfile configuración, EventSelection, PublicProfilePage) + modificaciones en ProductForm/ProductList.
-- **Privacidad:** Datos de clientes NUNCA expuestos; organizador controla 100% qué aparece; perfil NO es público por defecto (opt-in).
-- **Estimación:** ~16-22 horas (4-6h backend + 12-16h web).
-- **Documentado en:** `docs/PRD/02_FEATURES.md` §16.
+#### Sprint 11 — Perfil Profesional Público (✅ Implementado web+backend, 2026-07)
+**Decisión 2026-06-30:** primera etapa del inbound del proveedor. **NG1 ratificado 2026-07-31** (ver [[15_MARKETPLACE_V2]]) — v2.0 es inbound tooling del proveedor, no marketplace.
+- **Implementado (Issue #787, PR chain #1097–#1102):** endpoint público `GET /api/public/organizers/{slug}`, Settings de configuración, ProductForm checkbox, página `PublicProfilePage`, portfolio, packages, `is_featured`, social icons, services visible by default.
+- **Pendiente:** UI móvil iOS/Android (Sprint 14).
 
-### Bloqueantes externos (acción del usuario, 2-4h)
+### Sprint 12-16 — Solennix v2.0: Discovery & Inbound Layer (planificado 2026-07-31)
+
+> [!important] Encuadre — 2026-07-31
+> v2.0 añade al SaaS del proveedor **herramientas de inbound y descubrimiento** (directorio `/proveedores`, perfil público `/u/:slug` indexable, solicitudes de cotización estructuradas). **NG1 se mantiene íntegro** — el cliente es audiencia del proveedor, no de Solennix. No hay cuenta de cliente, no hay pay-per-lead, no hay intermediación. Modelo: inbound tooling del proveedor, no marketplace. Plan completo en [[15_MARKETPLACE_V2]].
+
+Mapeo de fases a sprints (cada sprint es aditivo, reversible, no rompe apps existentes):
+
+| Sprint | Fase | Alcance | Issues |
+| --- | --- | --- | --- |
+| **S12** | F0 | Decisiones fundacionales (docs + legal). NG1 ratificado, ToS reforzado, monetización confirmada | #1112, #1113 |
+| **S13** | F1 | Foundation backend + web (directorio + solicitudes + SEO) | #1115, #1116, #1117, #1118, #1119, #1120 |
+| **S14** | F2 | Provider Mobile Parity (inbox + push + responder + UI PublicProfile en iOS/Android) | #1121, #1122, #1123, #1124, #1125, #1126 |
+| **S15** | F3 | Discovery Polish (geo-search + filtros avanzados + featured ranking + moderación) | #1127, #1128, #1129, #1130, #1131 |
+| **S16** | F4 | PWA + Polish (PWA installable sin cuenta cliente) | #1132 |
+
+**Dependencias entre sprints:** S13 requiere S12. S14 requiere S13. S15 requiere S13 (geo puede hacerse en paralelo a S14 si hay manos). S16 es opcional e independiente.
+
+**Postergados a v3.0** (solo si se decide levantar NG1 con eyes wide open): cuenta de cliente autenticada, pay-per-lead, verificación documental + Verified badge, app nativa de cliente, pagos intermediados. "Es otra empresa."
+
+Cada sprint valida el siguiente con métricas (PRD §9). Si S13/F1 no muestra demanda, no se ejecuta S14.
 
 > [!warning] Sprint 7 bloqueado hasta completar
 > Stripe Dashboard (productos Pro/Business + webhook + portal), App Store Connect (subscription group + intro offer 14d), Google Play Console (subscription products), RevenueCat Dashboard (entitlement + offerings + webhook). Detalle completo en root `PRD/09_ROADMAP.md` §5 (a portar al Obsidian si se mantiene este flujo).

@@ -7,7 +7,7 @@ aliases:
   - Visión del Producto
   - Product Vision
 date: 2026-03-20
-updated: 2026-04-17
+updated: 2026-07-31
 status: active
 ---
 
@@ -92,14 +92,17 @@ Cada competidor cubre 1-2. **Solennix cubre los 6.** Ver [[03_COMPETITIVE_ANALYS
 | NG5 | Sin project management genérico    | Optimizado para ciclo de vida de eventos, no Kanban       |
 | NG6 | Sin integración con redes sociales | Las redes son marketing del organizador, fuera del scope  |
 
-### Anti-posicionamiento (2026-04-16)
+### Anti-posicionamiento (2026-04-16, ratificado 2026-07-31)
 
 > [!info] Lo que NO somos
 >
 > - No somos una **red social** de eventos.
 > - No somos un **marketplace** entre organizadores y clientes.
-> - No somos un **CRM genérico** — estamos especializados en eventos.
+> - No somos un **CRM genérico** — estamos especializado en eventos.
 > - No somos una herramienta para **equipos de 50+** con permisos granulares — somos para el founder/operador y un equipo chico (1–8).
+
+> [!note] Aclaración (2026-07-31) — v2.0 respeta NG1
+> v2.0 añade al SaaS del proveedor **herramientas de inbound y descubrimiento** (directorio `/proveedores`, perfil público `/u/:slug` indexable, solicitudes de cotización estructuradas). Esto **NO levanta NG1**: el cliente sigue siendo audiencia del proveedor, no de Solennix. Solennix no intermedia, no conecta dos lados del mercado, no procesa pagos del servicio (decisión 2026-05-01). Detalle en [[15_MARKETPLACE_V2]].
 
 ---
 
