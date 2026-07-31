@@ -22,6 +22,9 @@ public final class CachedClient {
     public var photoUrl: String?
     public var totalEvents: Int?
     public var totalSpent: Double?
+    /// Computed server-side on GET /clients/{id} only (absent on list/search).
+    /// Cached so the offline detail screen can still show the KPI.
+    public var pendingBalance: Double?
     public var createdAt: String
     public var updatedAt: String
 
@@ -39,6 +42,7 @@ public final class CachedClient {
         photoUrl: String? = nil,
         totalEvents: Int? = nil,
         totalSpent: Double? = nil,
+        pendingBalance: Double? = nil,
         createdAt: String,
         updatedAt: String
     ) {
@@ -53,6 +57,7 @@ public final class CachedClient {
         self.photoUrl = photoUrl
         self.totalEvents = totalEvents
         self.totalSpent = totalSpent
+        self.pendingBalance = pendingBalance
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
@@ -71,6 +76,7 @@ public final class CachedClient {
             photoUrl: client.photoUrl,
             totalEvents: client.totalEvents,
             totalSpent: client.totalSpent,
+            pendingBalance: client.pendingBalance,
             createdAt: client.createdAt,
             updatedAt: client.updatedAt
         )
@@ -92,6 +98,7 @@ public final class CachedClient {
             photoUrl: photoUrl,
             totalEvents: totalEvents,
             totalSpent: totalSpent,
+            pendingBalance: pendingBalance,
             createdAt: createdAt,
             updatedAt: updatedAt
         )

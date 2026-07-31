@@ -195,7 +195,7 @@ status: active
 > - **Hub insetGrouped:** ScrollView + cards con sombras → `List` insetGrouped con skeleton in-List fiel; strip inferior de 3 botones eliminado (editar/nuevo evento/eliminar van al Menu del toolbar; una sola fila primaria dorada "Nuevo evento para este cliente").
 > - **Contacto accionable:** chips Llamar (tel: normalizado a dígitos+`+`), WhatsApp (`wa.me`, guard ≥8 dígitos) y Email — la pantalla del cliente ahora iguala la card de cliente de Event Detail.
 > - **Bugs:** error de borrado ya no se traga (alert bidireccional); bug `trf` con fallback interpolado → `%lld`; `.white`→`textInverse`; frames con `@ScaledMetric` cappeado; promedio de ticket consistente sobre el historial completo; haptics del form migrados a `sensoryFeedback` con counters.
-> - **Pendiente cross-platform anotado:** KPI de saldo pendiente del cliente requiere `pendingBalance` en la API (backend + iOS/Android/Web).
+> - **Pendiente cross-platform anotado:** KPI de saldo pendiente del cliente requiere `pendingBalance` en la API (backend + iOS/Android/Web). _(Resuelto luego en issue #553 — backend + iOS + Web + Android. Esta línea es el estado al cierre de esta sesión; quedó como histórico.)_
 > - **Commits:** 92fb2c05, 6938d035, accef3be. Build verde por ronda.
 
 > [!success] 2026-06-12 — Event Detail: Judgment Day + edición seccional + wow pass (branch `feat/ios-liquid-glass`)

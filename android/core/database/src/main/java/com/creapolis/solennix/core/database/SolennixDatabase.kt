@@ -40,7 +40,7 @@ const val DATABASE_NAME = "solennix-database"
         CachedStaff::class,
         CachedEventStaff::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = true
 )
 @TypeConverters(JsonConverters::class)
@@ -197,6 +197,19 @@ abstract class SolennixDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * v13 — Cache the client pending-balance KPI so the offline detail
+         * screen can still show it. The field is computed server-side on
+         * GET /clients/{id} (absent on list/search); nullable so pre-existing
+         * rows cache as null (KPI hidden) until the next detail refresh.
+         */
+        val MIGRATION_12_13 = object : Migration(12, 13) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                Log.d(TAG, "Running migration 12 -> 13: add pending_balance to clients")
+                db.execSQL("ALTER TABLE clients ADD COLUMN pending_balance REAL")
+            }
+        }
+
         val ALL_MIGRATIONS = arrayOf(
             MIGRATION_4_5,
             MIGRATION_5_6,
@@ -205,7 +218,8 @@ abstract class SolennixDatabase : RoomDatabase() {
             MIGRATION_8_9,
             MIGRATION_9_10,
             MIGRATION_10_11,
-            MIGRATION_11_12
+            MIGRATION_11_12,
+            MIGRATION_12_13
         )
 
         /**
