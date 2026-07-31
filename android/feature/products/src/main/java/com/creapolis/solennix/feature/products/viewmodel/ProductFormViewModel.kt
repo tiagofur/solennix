@@ -72,13 +72,12 @@ class ProductFormViewModel @Inject constructor(
     var basePrice by mutableStateOf("")
     var imageUrl by mutableStateOf("")
     var isActive by mutableStateOf(true)
-    /** Show this product on the organizer public profile. */
-    var showOnPublicProfile by mutableStateOf(false)
+    /** Show this product on the organizer public profile. New products default
+     *  to visible; no plan cap applies. */
+    var showOnPublicProfile by mutableStateOf(true)
     /** Highlight this service (sorts first on the public profile). Orthogonal to
      *  showOnPublicProfile (visibility vs. hierarchy). No plan cap. */
     var isFeatured by mutableStateOf(false)
-    /** Free plan: at most 3 active products with showOnPublicProfile=true. */
-    var publicProfileCapReached by mutableStateOf(false)
 
     // Ola 3 — equipo opcional. Al agregar el producto a un evento, el cliente
     // expande los miembros en asignaciones de staff.
@@ -156,13 +155,6 @@ class ProductFormViewModel @Inject constructor(
                     val plan = authManager.currentUser.value?.plan ?: Plan.BASIC
                     limitCheckResult = planLimitsManager.canCreateProduct(plan)
                 }
-
-                // Free-plan client hint: at most 3 active products with show_on_public_profile.
-                val plan = authManager.currentUser.value?.plan ?: Plan.BASIC
-                val publicCount = products.count {
-                    it.isActive && it.showOnPublicProfile && it.id != productId
-                }
-                publicProfileCapReached = !plan.isPaid && publicCount >= 3 && !showOnPublicProfile
             } catch (e: Exception) {
                 errorMessage = ProductStrings.loadDataError(e.message)
             } finally {

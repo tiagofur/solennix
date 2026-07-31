@@ -11,19 +11,11 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/repository"
 )
 
-// MaxFreePublicProfileServices is the Free-plan cap for show_on_public_profile.
-const MaxFreePublicProfileServices = 3
-
 // PublicProfileServicesHandler serves authenticated bulk service selection under
 // /api/users/me/public-profile/services. Selection drives which active products
 // appear on the public page; prices/images always come from the product row.
 type PublicProfileServicesHandler struct {
-	userRepo    servicesAuthUserRepo
 	productRepo servicesProductRepo
-}
-
-type servicesAuthUserRepo interface {
-	GetByID(ctx context.Context, id uuid.UUID) (*models.User, error)
 }
 
 type servicesProductRepo interface {
@@ -32,12 +24,8 @@ type servicesProductRepo interface {
 }
 
 // NewPublicProfileServicesHandler assembles the handler with concrete repos.
-func NewPublicProfileServicesHandler(
-	userRepo *repository.UserRepo,
-	productRepo *repository.ProductRepo,
-) *PublicProfileServicesHandler {
+func NewPublicProfileServicesHandler(productRepo *repository.ProductRepo) *PublicProfileServicesHandler {
 	return &PublicProfileServicesHandler{
-		userRepo:    userRepo,
 		productRepo: productRepo,
 	}
 }
@@ -59,6 +47,7 @@ type setPublicProfileServicesRequest struct {
 
 // ListMyPublicProfileServices handles GET /api/users/me/public-profile/services.
 // Returns all active products with the public-profile flag for the Settings UI.
+// New products default to visible (show_on_public_profile=true) on creation.
 func (h *PublicProfileServicesHandler) ListMyPublicProfileServices(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	products, err := h.productRepo.ListActiveForPublicProfileSettings(r.Context(), userID)
@@ -83,14 +72,9 @@ func (h *PublicProfileServicesHandler) ListMyPublicProfileServices(w http.Respon
 
 // SetMyPublicProfileServices handles PUT /api/users/me/public-profile/services.
 // Body: { "product_ids": ["uuid", ...] }. Sets show_on_public_profile=true for
-// those owned active products and false for all other user products. Free: max 3.
+// those owned active products and false for all other user products.
 func (h *PublicProfileServicesHandler) SetMyPublicProfileServices(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
-	user, err := h.userRepo.GetByID(r.Context(), userID)
-	if err != nil || user == nil {
-		writeError(w, http.StatusInternalServerError, "Failed to load account")
-		return
-	}
 
 	var req setPublicProfileServicesRequest
 	if err := decodeJSON(w, r, &req); err != nil {
@@ -113,11 +97,6 @@ func (h *PublicProfileServicesHandler) SetMyPublicProfileServices(w http.Respons
 		}
 		seen[id] = true
 		ids = append(ids, id)
-	}
-
-	if normalizePlan(user.Plan) == "basic" && len(ids) > MaxFreePublicProfileServices {
-		writePlanLimitError(w, r, "public_profile_services", len(ids), MaxFreePublicProfileServices)
-		return
 	}
 
 	if err := h.productRepo.SetPublicProfileServices(r.Context(), userID, ids); err != nil {

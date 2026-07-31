@@ -1428,7 +1428,7 @@ export interface paths {
         get: operations["listMyPublicProfileServices"];
         /**
          * Bulk-set which products appear on the public profile
-         * @description Sets show_on_public_profile=true for the given product IDs (owned + active) and false for all other user products. Free plan max 3.
+         * @description Sets show_on_public_profile=true for the given product IDs (owned + active) and false for all other user products. No plan cap.
          */
         put: operations["setMyPublicProfileServices"];
         post?: never;
@@ -1846,7 +1846,7 @@ export interface components {
             recipe?: string | null;
             image_url?: string | null;
             is_active: boolean;
-            /** @description When true, product may appear on the organizer public profile (Free max 3). Optional in payloads; defaults to false server-side. */
+            /** @description When true, product may appear on the organizer public profile. Optional in payloads; defaults to true server-side (no plan cap). */
             show_on_public_profile?: boolean;
             /** @description When true, the service is highlighted and sorts first on the public profile. Orthogonal to show_on_public_profile (visibility vs. hierarchy). Optional in payloads; defaults to false server-side. */
             is_featured?: boolean;
@@ -7337,15 +7337,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-            /** @description Free plan exceeded max 3 services */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
             };
         };
     };

@@ -372,25 +372,16 @@ public struct ProductFormView: View {
             }
             .solennixRow()
 
-            // Public profile toggle (Free max 3)
+            // Public profile toggle (no plan cap; on by default for new products)
             Toggle(isOn: Binding(
                 get: { viewModel.showOnPublicProfile },
-                set: { newValue in
-                    if newValue && viewModel.publicProfileCapReached { return }
-                    viewModel.showOnPublicProfile = newValue
-                }
+                set: { viewModel.showOnPublicProfile = $0 }
             )) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(ProductStrings.showOnPublicProfile)
                         .foregroundStyle(SolennixColors.text)
-                    if viewModel.publicProfileCapReached {
-                        Text(ProductStrings.publicProfileCapHint)
-                            .font(.caption)
-                            .foregroundStyle(SolennixColors.textTertiary)
-                    }
                 }
             }
-            .disabled(viewModel.publicProfileCapReached && !viewModel.showOnPublicProfile)
             .solennixRow()
 
             // Featured toggle (no plan cap; sorts first on the public profile)

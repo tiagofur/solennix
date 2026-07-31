@@ -10,42 +10,20 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/models"
 )
 
-// CreateProduct — Free public-profile cap (max 3 products with flag=true).
+// CreateProduct — the public-profile cap was removed, so flagging a product
+// true is allowed for any plan regardless of how many are already flagged.
 
-func TestCreateProduct_BasicUser_PublicProfileCap_AtLimit_Forbidden(t *testing.T) {
-	userID := uuid.New()
-	productRepo := new(MockProductRepo)
-	userRepo := new(MockFullUserRepo)
-
-	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "basic"}, nil)
-	// Already 3 public-profile products -> a 4th flagged must be rejected
-	// before any INSERT.
-	productRepo.On("CountPublicProfile", mock.Anything, userID).Return(3, nil)
-
-	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), productRepo, new(MockInventoryRepo), new(MockFullPaymentRepo), userRepo)
-
-	body := `{"name":"Fourth","category":"main","base_price":100,"show_on_public_profile":true}`
-	req := makeReqWithUserID(http.MethodPost, "/api/products", body, userID)
-	rr := httptest.NewRecorder()
-	h.CreateProduct(rr, req)
-
-	if rr.Code != http.StatusForbidden {
-		t.Fatalf("status = %d, want 403; body=%s", rr.Code, rr.Body.String())
-	}
-	productRepo.AssertNotCalled(t, "Create")
-}
-
-func TestCreateProduct_BasicUser_PublicProfileCap_UnderLimit_Success(t *testing.T) {
+func TestCreateProduct_BasicUser_FlagTrue_NotCapped(t *testing.T) {
 	userID := uuid.New()
 	productRepo := new(MockProductRepo)
 	inventoryRepo := new(MockInventoryRepo)
 	userRepo := new(MockFullUserRepo)
 
 	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "basic"}, nil)
-	productRepo.On("CountPublicProfile", mock.Anything, userID).Return(2, nil)
 	// Catalog limit fallback path (pool nil in unit tests).
 	productRepo.On("CountByUserID", mock.Anything, userID).Return(2, nil)
 	inventoryRepo.On("CountByUserID", mock.Anything, userID).Return(2, nil)
+	// The public-profile flag must pass straight through to Create untouched.
 	productRepo.On("Create", mock.Anything, mock.AnythingOfType("*models.Product")).Return(nil).Run(func(args mock.Arguments) {
 		p := args.Get(1).(*models.Product)
 		if !p.ShowOnPublicProfile {
@@ -55,7 +33,7 @@ func TestCreateProduct_BasicUser_PublicProfileCap_UnderLimit_Success(t *testing.
 
 	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), productRepo, inventoryRepo, new(MockFullPaymentRepo), userRepo)
 
-	body := `{"name":"Third","category":"main","base_price":100,"show_on_public_profile":true}`
+	body := `{"name":"Fourth","category":"main","base_price":100,"show_on_public_profile":true}`
 	req := makeReqWithUserID(http.MethodPost, "/api/products", body, userID)
 	rr := httptest.NewRecorder()
 	h.CreateProduct(rr, req)
@@ -63,19 +41,25 @@ func TestCreateProduct_BasicUser_PublicProfileCap_UnderLimit_Success(t *testing.
 	if rr.Code != http.StatusCreated {
 		t.Fatalf("status = %d, want 201; body=%s", rr.Code, rr.Body.String())
 	}
+	// No cap lookup should happen anymore.
+	productRepo.AssertNotCalled(t, "CountPublicProfile")
 }
 
-func TestCreateProduct_BasicUser_FlagFalse_DoesNotCheckCap(t *testing.T) {
+func TestCreateProduct_BasicUser_FlagFalse_PassesThrough(t *testing.T) {
 	userID := uuid.New()
 	productRepo := new(MockProductRepo)
 	inventoryRepo := new(MockInventoryRepo)
 	userRepo := new(MockFullUserRepo)
 
 	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "basic"}, nil)
-	// CountPublicProfile must NOT be called when the new product has flag=false.
 	productRepo.On("CountByUserID", mock.Anything, userID).Return(2, nil)
 	inventoryRepo.On("CountByUserID", mock.Anything, userID).Return(2, nil)
-	productRepo.On("Create", mock.Anything, mock.AnythingOfType("*models.Product")).Return(nil)
+	productRepo.On("Create", mock.Anything, mock.AnythingOfType("*models.Product")).Return(nil).Run(func(args mock.Arguments) {
+		p := args.Get(1).(*models.Product)
+		if p.ShowOnPublicProfile {
+			t.Errorf("Create received ShowOnPublicProfile=true, want false")
+		}
+	})
 
 	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), productRepo, inventoryRepo, new(MockFullPaymentRepo), userRepo)
 
@@ -90,71 +74,23 @@ func TestCreateProduct_BasicUser_FlagFalse_DoesNotCheckCap(t *testing.T) {
 	productRepo.AssertNotCalled(t, "CountPublicProfile")
 }
 
-func TestCreateProduct_ProUser_PublicProfileCap_NotEnforced(t *testing.T) {
-	userID := uuid.New()
-	productRepo := new(MockProductRepo)
-	userRepo := new(MockFullUserRepo)
+// UpdateProduct — no cap check regardless of plan/flag change.
 
-	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "pro"}, nil)
-	// Pro: cap not enforced, Create called directly.
-	productRepo.On("Create", mock.Anything, mock.AnythingOfType("*models.Product")).Return(nil)
-
-	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), productRepo, new(MockInventoryRepo), new(MockFullPaymentRepo), userRepo)
-
-	body := `{"name":"Tenth","category":"main","base_price":100,"show_on_public_profile":true}`
-	req := makeReqWithUserID(http.MethodPost, "/api/products", body, userID)
-	rr := httptest.NewRecorder()
-	h.CreateProduct(rr, req)
-
-	if rr.Code != http.StatusCreated {
-		t.Fatalf("status = %d, want 201; body=%s", rr.Code, rr.Body.String())
-	}
-	productRepo.AssertNotCalled(t, "CountPublicProfile")
-}
-
-// UpdateProduct — Free public-profile cap.
-
-func TestUpdateProduct_BasicUser_ActivatesFourthFlag_Forbidden(t *testing.T) {
+func TestUpdateProduct_BasicUser_ActivatesFlag_Allowed(t *testing.T) {
 	userID := uuid.New()
 	productID := uuid.New()
 	productRepo := new(MockProductRepo)
-	userRepo := new(MockFullUserRepo)
 
-	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "basic"}, nil)
-	// Existing product currently has flag=false.
-	productRepo.On("GetByID", mock.Anything, productID, userID).Return(&models.Product{
-		ID: productID, UserID: userID, ShowOnPublicProfile: false,
-	}, nil)
-	// 3 already flagged -> activating a 4th must be rejected.
-	productRepo.On("CountPublicProfile", mock.Anything, userID).Return(3, nil)
+	productRepo.On("Update", mock.Anything, mock.AnythingOfType("*models.Product")).Return(nil).Run(func(args mock.Arguments) {
+		p := args.Get(1).(*models.Product)
+		if !p.ShowOnPublicProfile {
+			t.Errorf("Update received ShowOnPublicProfile=false, want true")
+		}
+	})
 
-	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), productRepo, new(MockInventoryRepo), new(MockFullPaymentRepo), userRepo)
+	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), productRepo, new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))
 
 	body := `{"name":"X","category":"main","base_price":100,"show_on_public_profile":true}`
-	req := makeReqWithUserID(http.MethodPut, "/api/products/"+productID.String(), body, userID)
-	req = withURLParam(req, "id", productID.String())
-	rr := httptest.NewRecorder()
-	h.UpdateProduct(rr, req)
-
-	if rr.Code != http.StatusForbidden {
-		t.Fatalf("status = %d, want 403; body=%s", rr.Code, rr.Body.String())
-	}
-	productRepo.AssertNotCalled(t, "Update")
-}
-
-func TestUpdateProduct_BasicUser_DeactivatesFlag_Allowed(t *testing.T) {
-	userID := uuid.New()
-	productID := uuid.New()
-	productRepo := new(MockProductRepo)
-	userRepo := new(MockFullUserRepo)
-
-	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "basic"}, nil)
-	// Existing has flag=true; update sets it false -> no cap check needed.
-	productRepo.On("Update", mock.Anything, mock.AnythingOfType("*models.Product")).Return(nil)
-
-	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), productRepo, new(MockInventoryRepo), new(MockFullPaymentRepo), userRepo)
-
-	body := `{"name":"X","category":"main","base_price":100,"show_on_public_profile":false}`
 	req := makeReqWithUserID(http.MethodPut, "/api/products/"+productID.String(), body, userID)
 	req = withURLParam(req, "id", productID.String())
 	rr := httptest.NewRecorder()
@@ -166,23 +102,21 @@ func TestUpdateProduct_BasicUser_DeactivatesFlag_Allowed(t *testing.T) {
 	productRepo.AssertNotCalled(t, "CountPublicProfile")
 }
 
-func TestUpdateProduct_BasicUser_KeepsFlagTrue_Allowed(t *testing.T) {
+func TestUpdateProduct_BasicUser_DeactivatesFlag_Allowed(t *testing.T) {
 	userID := uuid.New()
 	productID := uuid.New()
 	productRepo := new(MockProductRepo)
-	userRepo := new(MockFullUserRepo)
 
-	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "basic"}, nil)
-	// Existing flag=true, update keeps it true -> the product is already in
-	// the count, so no new slot is consumed. Allowed without cap check.
-	productRepo.On("GetByID", mock.Anything, productID, userID).Return(&models.Product{
-		ID: productID, UserID: userID, ShowOnPublicProfile: true,
-	}, nil)
-	productRepo.On("Update", mock.Anything, mock.AnythingOfType("*models.Product")).Return(nil)
+	productRepo.On("Update", mock.Anything, mock.AnythingOfType("*models.Product")).Return(nil).Run(func(args mock.Arguments) {
+		p := args.Get(1).(*models.Product)
+		if p.ShowOnPublicProfile {
+			t.Errorf("Update received ShowOnPublicProfile=true, want false")
+		}
+	})
 
-	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), productRepo, new(MockInventoryRepo), new(MockFullPaymentRepo), userRepo)
+	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), productRepo, new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))
 
-	body := `{"name":"Renamed","category":"main","base_price":100,"show_on_public_profile":true}`
+	body := `{"name":"X","category":"main","base_price":100,"show_on_public_profile":false}`
 	req := makeReqWithUserID(http.MethodPut, "/api/products/"+productID.String(), body, userID)
 	req = withURLParam(req, "id", productID.String())
 	rr := httptest.NewRecorder()

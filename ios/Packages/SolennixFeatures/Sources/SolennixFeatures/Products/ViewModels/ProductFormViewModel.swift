@@ -74,13 +74,12 @@ public final class ProductFormViewModel {
     public var category: String = ""
     public var basePrice: Double = 0
     public var isActive: Bool = true
-    /// Show this product on the organizer public profile.
-    public var showOnPublicProfile: Bool = false
+    /// Show this product on the organizer public profile. New products default
+    /// to visible; no plan cap applies.
+    public var showOnPublicProfile: Bool = true
     /// Highlight this service (sorts first on the public profile). Orthogonal to
     /// showOnPublicProfile (visibility vs. hierarchy). No plan cap.
     public var isFeatured: Bool = false
-    /// Free plan: at most 3 active products with showOnPublicProfile=true.
-    public var publicProfileCapReached: Bool = false
     public var imageUrl: String?
     public var selectedPhoto: PhotosPickerItem?
     public var localImageData: Data?
@@ -139,7 +138,7 @@ public final class ProductFormViewModel {
     private var initialCategory: String = ""
     private var initialBasePrice: Double = 0
     private var initialIsActive: Bool = true
-    private var initialShowOnPublicProfile: Bool = false
+    private var initialShowOnPublicProfile: Bool = true
     private var initialIsFeatured: Bool = false
     private var initialStaffTeamId: String?
     private var initialRecipeSnapshot: [RecipeSnapshot] = []
@@ -207,7 +206,7 @@ public final class ProductFormViewModel {
                 inventoryItems = []
             }
 
-            // Load existing products for categories + Free public-profile cap.
+            // Load existing products for the category picker.
             let products: [Product] = try await apiClient.getAll(Endpoint.products)
 
             // Extract unique categories
@@ -230,22 +229,6 @@ public final class ProductFormViewModel {
                 let productIngredients: [ProductIngredient] = try await apiClient.get(Endpoint.productIngredients(id))
                 populateRecipe(from: productIngredients)
             }
-
-            // Free-plan client hint: at most 3 active products with show_on_public_profile.
-            // Server still enforces; this only locks the toggle when the cap is already hit.
-            let isPaid: Bool
-            do {
-                let me: User = try await apiClient.get(Endpoint.me)
-                isPaid = me.plan.isPaid
-            } catch {
-                isPaid = false
-            }
-            let publicCount = products.filter {
-                $0.isActive && $0.showOnPublicProfile && $0.id != productId
-            }.count
-            publicProfileCapReached = !isPaid
-                && publicCount >= 3
-                && !showOnPublicProfile
         } catch {
             errorMessage = mapError(error)
         }

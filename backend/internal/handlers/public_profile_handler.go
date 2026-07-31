@@ -165,7 +165,7 @@ func (h *PublicProfileHandler) buildProjection(ctx context.Context, user *models
 	}
 
 	if profile.ShowServices {
-		dto.Services = h.projectServices(ctx, user.ID, profile, fullPlan)
+		dto.Services = h.projectServices(ctx, user.ID, profile)
 	}
 
 	// Pro+ only AND toggle on. Free omits the reviews key entirely (spec).
@@ -271,13 +271,10 @@ func buildPublicPolicies(user *models.User) *models.PublicPolicies {
 	return p
 }
 
-func (h *PublicProfileHandler) projectServices(ctx context.Context, userID uuid.UUID, profile *models.OrganizerPublicProfile, fullPlan bool) []models.PublicProfileService {
+func (h *PublicProfileHandler) projectServices(ctx context.Context, userID uuid.UUID, profile *models.OrganizerPublicProfile) []models.PublicProfileService {
 	products, err := h.productRepo.ListPublicProfileServices(ctx, userID)
 	if err != nil {
 		return []models.PublicProfileService{}
-	}
-	if !fullPlan && len(products) > 3 {
-		products = products[:3]
 	}
 	out := make([]models.PublicProfileService, 0, len(products))
 	for _, p := range products {

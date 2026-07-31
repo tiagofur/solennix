@@ -162,12 +162,12 @@ func TestGetPublicProfile_404_Disabled(t *testing.T) {
 	}
 }
 
-func TestGetPublicProfile_Free_OmitsProSectionsAndCapsServices(t *testing.T) {
+func TestGetPublicProfile_Free_OmitsProSections(t *testing.T) {
 	uid := uuid.New()
 	slug := "free-organizer"
 	biz := "Free Catering"
 	contactType := "email"
-	// 5 public services; Free must cap to 3.
+	// 5 public services; the Free cap was removed so all 5 are projected.
 	prods := []models.Product{
 		{ID: uuid.New(), Name: "S1", Category: "main", BasePrice: 10},
 		{ID: uuid.New(), Name: "S2", Category: "main", BasePrice: 20},
@@ -220,9 +220,9 @@ func TestGetPublicProfile_Free_OmitsProSectionsAndCapsServices(t *testing.T) {
 		t.Errorf("Contact = %+v, want email/a@b.com", dto.Contact)
 	}
 
-	// Services capped to 3.
-	if len(dto.Services) != 3 {
-		t.Errorf("Services len = %d, want 3 (Free cap)", len(dto.Services))
+	// Services: the Free cap was removed, so all 5 are projected.
+	if len(dto.Services) != 5 {
+		t.Errorf("Services len = %d, want 5 (no Free cap)", len(dto.Services))
 	}
 	// No base_price when show_prices=false.
 	for _, s := range dto.Services {
