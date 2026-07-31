@@ -7,10 +7,16 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.core.data.repository.PublicProfileRepository
+import com.creapolis.solennix.core.model.FaqCreateRequest
+import com.creapolis.solennix.core.model.OrganizerPublicFaqItem
+import com.creapolis.solennix.core.model.OrganizerPublicPackage
 import com.creapolis.solennix.core.model.OrganizerPublicPortfolioItem
 import com.creapolis.solennix.core.model.OrganizerPublicProfile
 import com.creapolis.solennix.core.model.OrganizerPublicProfileUpsertRequest
+import com.creapolis.solennix.core.model.PackageCreateRequest
 import com.creapolis.solennix.core.model.PortfolioCreateRequest
+import com.creapolis.solennix.core.model.PublicProfileServiceSelectionItem
+import com.creapolis.solennix.core.model.SetPublicProfileServicesRequest
 import com.creapolis.solennix.core.model.SolennixUrls
 import com.creapolis.solennix.core.model.User
 import com.creapolis.solennix.core.network.ApiService
@@ -34,6 +40,8 @@ class PublicProfileSettingsViewModel @Inject constructor(
 
     companion object {
         const val PORTFOLIO_MAX = 6
+        const val PACKAGES_MAX = 6
+        const val FAQ_MAX = 12
         val SLUG_REGEX = Regex("^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
         fun parseSocials(text: String): Map<String, String> {
@@ -49,6 +57,16 @@ class PublicProfileSettingsViewModel @Inject constructor(
             }
             return out
         }
+
+        /** Splits a comma-separated string into a trimmed, non-empty list. */
+        fun splitList(text: String): List<String> =
+            text.split(",")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+
+        /** Comma-joins a list for TextField editing. */
+        fun joinList(list: List<String>?): String =
+            list?.joinToString(", ").orEmpty()
     }
 
     var isEnabled by mutableStateOf(false)
@@ -64,6 +82,16 @@ class PublicProfileSettingsViewModel @Inject constructor(
     var showReviews by mutableStateOf(true)
     var showPortfolio by mutableStateOf(true)
     var showContact by mutableStateOf(true)
+    var showPackages by mutableStateOf(true)
+    var showFaq by mutableStateOf(true)
+    var showPolicies by mutableStateOf(false)
+    var about by mutableStateOf("")
+    var serviceAreasText by mutableStateOf("")
+    var eventTypesText by mutableStateOf("")
+    var languagesText by mutableStateOf("")
+    var minGuestsText by mutableStateOf("")
+    var maxGuestsText by mutableStateOf("")
+    var responseTime by mutableStateOf("")
     var socialsText by mutableStateOf("")
 
     var portfolio by mutableStateOf<List<OrganizerPublicPortfolioItem>>(emptyList())
@@ -73,6 +101,27 @@ class PublicProfileSettingsViewModel @Inject constructor(
     var newPortfolioPhotoUrl by mutableStateOf("")
     var newPortfolioEventDate by mutableStateOf("")
     var isAddingPortfolio by mutableStateOf(false)
+
+    var services by mutableStateOf<List<PublicProfileServiceSelectionItem>>(emptyList())
+    var servicesLoading by mutableStateOf(false)
+    var servicesError by mutableStateOf<String?>(null)
+    var isSavingServices by mutableStateOf(false)
+
+    var packages by mutableStateOf<List<OrganizerPublicPackage>>(emptyList())
+    var packagesLoading by mutableStateOf(false)
+    var packagesError by mutableStateOf<String?>(null)
+    var newPackageTitle by mutableStateOf("")
+    var newPackageDescription by mutableStateOf("")
+    var newPackagePrice by mutableStateOf("")
+    var newPackageInclusions by mutableStateOf("")
+    var isAddingPackage by mutableStateOf(false)
+
+    var faq by mutableStateOf<List<OrganizerPublicFaqItem>>(emptyList())
+    var faqLoading by mutableStateOf(false)
+    var faqError by mutableStateOf<String?>(null)
+    var newFaqQuestion by mutableStateOf("")
+    var newFaqAnswer by mutableStateOf("")
+    var isAddingFaq by mutableStateOf(false)
 
     var isLoading by mutableStateOf(true)
     var isSaving by mutableStateOf(false)
@@ -119,9 +168,15 @@ class PublicProfileSettingsViewModel @Inject constructor(
 
             if (isPaid) {
                 loadPortfolio()
+                loadPackages()
+                loadFaq()
             } else {
                 portfolio = emptyList()
+                packages = emptyList()
+                faq = emptyList()
             }
+            // Services selection has no plan gate.
+            loadServices()
         }
     }
 
@@ -160,6 +215,16 @@ class PublicProfileSettingsViewModel @Inject constructor(
         if (isPaid) {
             showReviews = profile.showReviews
             showPortfolio = profile.showPortfolio
+            showPackages = profile.showPackages
+            showFaq = profile.showFaq
+            showPolicies = profile.showPolicies
+            about = profile.about.orEmpty()
+            serviceAreasText = joinList(profile.serviceAreas)
+            eventTypesText = joinList(profile.eventTypes)
+            languagesText = joinList(profile.languages)
+            minGuestsText = profile.minGuests?.toString().orEmpty()
+            maxGuestsText = profile.maxGuests?.toString().orEmpty()
+            responseTime = profile.responseTime.orEmpty()
             socialsText = profile.socials
                 ?.entries
                 ?.sortedBy { it.key }
@@ -168,6 +233,16 @@ class PublicProfileSettingsViewModel @Inject constructor(
         } else {
             showReviews = false
             showPortfolio = false
+            showPackages = false
+            showFaq = false
+            showPolicies = false
+            about = ""
+            serviceAreasText = ""
+            eventTypesText = ""
+            languagesText = ""
+            minGuestsText = ""
+            maxGuestsText = ""
+            responseTime = ""
             socialsText = ""
         }
     }
@@ -222,6 +297,16 @@ class PublicProfileSettingsViewModel @Inject constructor(
                     showReviews = if (isPaid) showReviews else false,
                     showPortfolio = if (isPaid) showPortfolio else false,
                     showContact = showContact,
+                    showPackages = if (isPaid) showPackages else false,
+                    showFaq = if (isPaid) showFaq else false,
+                    showPolicies = if (isPaid) showPolicies else false,
+                    about = if (isPaid && about.isNotBlank()) about else null,
+                    serviceAreas = if (isPaid) splitList(serviceAreasText) else null,
+                    eventTypes = if (isPaid) splitList(eventTypesText) else null,
+                    languages = if (isPaid) splitList(languagesText) else null,
+                    minGuests = if (isPaid) minGuestsText.trim().toIntOrNull() else null,
+                    maxGuests = if (isPaid) maxGuestsText.trim().toIntOrNull() else null,
+                    responseTime = if (isPaid && responseTime.isNotBlank()) responseTime else null,
                     socials = if (isPaid) parseSocials(socialsText) else emptyMap()
                 )
                 val saved = publicProfileRepository.upsertMyPublicProfile(body)
@@ -294,6 +379,202 @@ class PublicProfileSettingsViewModel @Inject constructor(
             } catch (_: Exception) {
                 portfolioError = context.getString(
                     R.string.settings_public_profile_portfolio_delete_failed
+                )
+            }
+        }
+    }
+
+    // MARK: - Services
+
+    private fun loadServices() {
+        viewModelScope.launch {
+            servicesLoading = true
+            servicesError = null
+            try {
+                services = publicProfileRepository.listServices()
+                    .sortedWith(compareByDescending<PublicProfileServiceSelectionItem> { it.isFeatured }.thenBy { it.name })
+            } catch (_: Exception) {
+                servicesError = context.getString(
+                    R.string.settings_public_profile_services_load_failed
+                )
+            } finally {
+                servicesLoading = false
+            }
+        }
+    }
+
+    fun toggleService(id: String) {
+        viewModelScope.launch {
+            val idx = services.indexOfFirst { it.id == id }
+            if (idx < 0) return@launch
+            services = services.toMutableList().also {
+                it[idx] = it[idx].copy(showOnPublicProfile = !it[idx].showOnPublicProfile)
+            }
+            saveServices()
+        }
+    }
+
+    private fun saveServices() {
+        viewModelScope.launch {
+            servicesError = null
+            isSavingServices = true
+            try {
+                val ids = services.filter { it.showOnPublicProfile }.map { it.id }
+                val updated = publicProfileRepository.setServices(
+                    SetPublicProfileServicesRequest(productIds = ids)
+                )
+                services = updated.sortedWith(
+                    compareByDescending<PublicProfileServiceSelectionItem> { it.isFeatured }.thenBy { it.name }
+                )
+            } catch (_: Exception) {
+                servicesError = context.getString(
+                    R.string.settings_public_profile_services_save_failed
+                )
+            } finally {
+                isSavingServices = false
+            }
+        }
+    }
+
+    // MARK: - Packages (Pro+)
+
+    private fun loadPackages() {
+        viewModelScope.launch {
+            packagesLoading = true
+            packagesError = null
+            try {
+                packages = publicProfileRepository.listPackages()
+                    .sortedWith(compareByDescending<OrganizerPublicPackage> { it.isFeatured }.thenBy { it.sortOrder })
+            } catch (_: Exception) {
+                packagesError = context.getString(
+                    R.string.settings_public_profile_packages_load_failed
+                )
+            } finally {
+                packagesLoading = false
+            }
+        }
+    }
+
+    fun addPackage() {
+        viewModelScope.launch {
+            packagesError = null
+            val title = newPackageTitle.trim()
+            if (title.isEmpty()) {
+                packagesError = context.getString(
+                    R.string.settings_public_profile_packages_save_failed
+                )
+                return@launch
+            }
+            if (packages.size >= PACKAGES_MAX) {
+                packagesError = context.getString(
+                    R.string.settings_public_profile_packages_max
+                )
+                return@launch
+            }
+            isAddingPackage = true
+            try {
+                val inclusions = splitList(newPackageInclusions)
+                val created = publicProfileRepository.createPackage(
+                    PackageCreateRequest(
+                        title = title,
+                        description = newPackageDescription.trim().ifEmpty { null },
+                        fromPrice = newPackagePrice.trim().toDoubleOrNull(),
+                        inclusions = inclusions.ifEmpty { null },
+                        sortOrder = packages.size
+                    )
+                )
+                packages = (packages + created)
+                    .sortedWith(compareByDescending<OrganizerPublicPackage> { it.isFeatured }.thenBy { it.sortOrder })
+                newPackageTitle = ""
+                newPackageDescription = ""
+                newPackagePrice = ""
+                newPackageInclusions = ""
+            } catch (_: Exception) {
+                packagesError = context.getString(
+                    R.string.settings_public_profile_packages_save_failed
+                )
+            } finally {
+                isAddingPackage = false
+            }
+        }
+    }
+
+    fun deletePackage(id: String) {
+        viewModelScope.launch {
+            packagesError = null
+            try {
+                publicProfileRepository.deletePackage(id)
+                packages = packages.filterNot { it.id == id }
+            } catch (_: Exception) {
+                packagesError = context.getString(
+                    R.string.settings_public_profile_packages_delete_failed
+                )
+            }
+        }
+    }
+
+    // MARK: - FAQ (Pro+)
+
+    private fun loadFaq() {
+        viewModelScope.launch {
+            faqLoading = true
+            faqError = null
+            try {
+                faq = publicProfileRepository.listFaq().sortedBy { it.sortOrder }
+            } catch (_: Exception) {
+                faqError = context.getString(
+                    R.string.settings_public_profile_faq_load_failed
+                )
+            } finally {
+                faqLoading = false
+            }
+        }
+    }
+
+    fun addFaqItem() {
+        viewModelScope.launch {
+            faqError = null
+            val question = newFaqQuestion.trim()
+            val answer = newFaqAnswer.trim()
+            if (question.isEmpty() || answer.isEmpty()) {
+                faqError = context.getString(
+                    R.string.settings_public_profile_faq_save_failed
+                )
+                return@launch
+            }
+            if (faq.size >= FAQ_MAX) {
+                faqError = context.getString(
+                    R.string.settings_public_profile_faq_max
+                )
+                return@launch
+            }
+            isAddingFaq = true
+            try {
+                val created = publicProfileRepository.createFaqItem(
+                    FaqCreateRequest(question = question, answer = answer, sortOrder = faq.size)
+                )
+                faq = (faq + created).sortedBy { it.sortOrder }
+                newFaqQuestion = ""
+                newFaqAnswer = ""
+            } catch (_: Exception) {
+                faqError = context.getString(
+                    R.string.settings_public_profile_faq_save_failed
+                )
+            } finally {
+                isAddingFaq = false
+            }
+        }
+    }
+
+    fun deleteFaqItem(id: String) {
+        viewModelScope.launch {
+            faqError = null
+            try {
+                publicProfileRepository.deleteFaqItem(id)
+                faq = faq.filterNot { it.id == id }
+            } catch (_: Exception) {
+                faqError = context.getString(
+                    R.string.settings_public_profile_faq_delete_failed
                 )
             }
         }

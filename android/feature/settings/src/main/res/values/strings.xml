@@ -73,6 +73,59 @@
     <string name="settings_public_profile_portfolio_load_failed">No se pudo cargar el portafolio.</string>
     <string name="settings_public_profile_portfolio_save_failed">No se pudo guardar el elemento.</string>
     <string name="settings_public_profile_portfolio_delete_failed">No se pudo quitar el elemento.</string>
+
+    <!-- About / business details (Pro+) -->
+    <string name="settings_public_profile_about_section">Sobre tu negocio</string>
+    <string name="settings_public_profile_about">Sobre tu negocio</string>
+    <string name="settings_public_profile_about_pro_hint">La descripción y los detalles del negocio están disponibles en el plan Pro.</string>
+    <string name="settings_public_profile_service_areas">Zonas de servicio</string>
+    <string name="settings_public_profile_event_types">Tipos de evento</string>
+    <string name="settings_public_profile_languages">Idiomas</string>
+    <string name="settings_public_profile_min_guests">Invitados mín.</string>
+    <string name="settings_public_profile_max_guests">Invitados máx.</string>
+    <string name="settings_public_profile_response_time">Tiempo de respuesta</string>
+    <string name="settings_public_profile_lists_hint">Listas separadas por coma (ej. Bodas, Corporativos, Cumpleaños).</string>
+
+    <!-- Visibility toggles (new) -->
+    <string name="settings_public_profile_show_packages">Mostrar paquetes</string>
+    <string name="settings_public_profile_show_faq">Mostrar preguntas frecuentes</string>
+    <string name="settings_public_profile_show_policies">Mostrar políticas</string>
+
+    <!-- Services selection -->
+    <string name="settings_public_profile_services_section">Servicios en la página pública</string>
+    <string name="settings_public_profile_services_hint">Activá los servicios que querés mostrar. Precios e imágenes salen de tus productos.</string>
+    <string name="settings_public_profile_services_empty">Todavía no hay productos activos. Creá productos en tu catálogo primero.</string>
+    <string name="settings_public_profile_services_load_failed">No se pudieron cargar los servicios.</string>
+    <string name="settings_public_profile_services_save_failed">No se pudo guardar la selección de servicios.</string>
+
+    <!-- Packages (Pro+) -->
+    <string name="settings_public_profile_packages_section">Paquetes</string>
+    <string name="settings_public_profile_packages_description">Mostrá hasta 6 paquetes o combos en tu página pública.</string>
+    <string name="settings_public_profile_packages_pro_hint">Los paquetes están disponibles en el plan Pro.</string>
+    <string name="settings_public_profile_packages_empty">Todavía no hay paquetes.</string>
+    <string name="settings_public_profile_package_title">Título del paquete</string>
+    <string name="settings_public_profile_package_description">Descripción</string>
+    <string name="settings_public_profile_package_price">Precio desde</string>
+    <string name="settings_public_profile_package_inclusions">Incluye (separado por coma)</string>
+    <string name="settings_public_profile_package_add">Agregar paquete</string>
+    <string name="settings_public_profile_packages_max">Ya tenés 6 paquetes.</string>
+    <string name="settings_public_profile_packages_load_failed">No se pudieron cargar los paquetes.</string>
+    <string name="settings_public_profile_packages_save_failed">No se pudo guardar el paquete.</string>
+    <string name="settings_public_profile_packages_delete_failed">No se pudo quitar el paquete.</string>
+
+    <!-- FAQ (Pro+) -->
+    <string name="settings_public_profile_faq_section">Preguntas frecuentes</string>
+    <string name="settings_public_profile_faq_description">Hasta 12 preguntas y respuestas para tu página pública.</string>
+    <string name="settings_public_profile_faq_pro_hint">Las preguntas frecuentes están disponibles en el plan Pro.</string>
+    <string name="settings_public_profile_faq_empty">Todavía no hay preguntas frecuentes.</string>
+    <string name="settings_public_profile_faq_question">Pregunta</string>
+    <string name="settings_public_profile_faq_answer">Respuesta</string>
+    <string name="settings_public_profile_faq_add">Agregar pregunta</string>
+    <string name="settings_public_profile_faq_max">Ya tenés 12 preguntas.</string>
+    <string name="settings_public_profile_faq_load_failed">No se pudieron cargar las preguntas.</string>
+    <string name="settings_public_profile_faq_save_failed">No se pudo guardar la pregunta.</string>
+    <string name="settings_public_profile_faq_delete_failed">No se pudo quitar la pregunta.</string>
+
     <string name="settings_public_profile_save">Guardar</string>
     <string name="settings_public_profile_saving">Guardando…</string>
     <string name="settings_public_profile_saved">Perfil público guardado</string>
