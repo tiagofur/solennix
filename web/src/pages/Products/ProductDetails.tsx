@@ -1,47 +1,25 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { eventService } from "@/services/eventService";
-import {
-  ArrowLeft,
-  Edit,
-  Package,
-  DollarSign,
-  Tag,
-  Trash2,
-  Wrench,
-  Layers,
-  TrendingUp,
-  Calendar,
-  CheckCircle,
-  AlertTriangle,
-  Users,
-  Fuel,
-} from "lucide-react";
+import { Fuel, Layers, Wrench } from "lucide-react";
 import { logError } from "@/lib/errorHandler";
-import { OptimizedImage } from "@/components/OptimizedImage";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { SkeletonCard } from "@/components/Skeleton";
-import { Button } from "@/components/Button";
-import { Card } from "@/components/Card";
 import { getAssetUrl } from "@/lib/api";
-import clsx from "clsx";
 import { useProduct, useProductIngredients, useDeleteProduct } from "@/hooks/queries/useProductQueries";
 import type { ProductIngredientWithInventory } from "@/services/productService";
 import { parseEventDate } from "@/lib/dateUtils";
-
-type ProductIngredientRow = ProductIngredientWithInventory;
+import { groupIngredients } from "./lib/groupIngredients";
+import { ProductDetailsSkeleton } from "./components/ProductDetailsSkeleton";
+import { ProductDetailHeader } from "./components/ProductDetailHeader";
+import { ProductKpiGrid } from "./components/ProductKpiGrid";
+import { ProductImageCard } from "./components/ProductImageCard";
+import { DemandAlertCard } from "./components/DemandAlertCard";
+import { DemandForecastCard, type DemandEntry } from "./components/DemandForecastCard";
+import { ProductIngredientTable } from "./components/ProductIngredientTable";
 
 type EventWithClientName = { client?: { name: string } | null };
-
-type DemandEntry = {
-  date: string;
-  eventId: string;
-  eventName?: string;
-  quantity: number;
-  numPeople: number;
-};
 
 type ProductDetailPanelProps = {
   productId: string;
@@ -148,34 +126,7 @@ export const ProductDetailPanel: React.FC<ProductDetailPanelProps> = ({
   }, [productId, deleteProductMutation, navigate, embedded, onDeleted]);
 
   if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <div className="h-9 w-9 rounded-full bg-surface-alt animate-pulse" />
-          <div className="space-y-1">
-            <div className="h-7 w-48 rounded-md bg-surface-alt animate-pulse" />
-            <div className="h-5 w-20 rounded-full bg-surface-alt animate-pulse" />
-          </div>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="bg-card rounded-2xl border border-border p-5"
-            >
-              <div className="h-3 w-20 rounded-md bg-surface-alt animate-pulse mb-3" />
-              <div className="h-8 w-16 rounded-md bg-surface-alt animate-pulse" />
-            </div>
-          ))}
-        </div>
-        <div className="bg-card rounded-2xl border border-border p-6">
-          <SkeletonCard rows={3} />
-        </div>
-        <div className="bg-card rounded-2xl border border-border p-6">
-          <SkeletonCard rows={4} />
-        </div>
-      </div>
-    );
+    return <ProductDetailsSkeleton />;
   }
 
   if (error || !product) {
@@ -195,13 +146,16 @@ export const ProductDetailPanel: React.FC<ProductDetailPanelProps> = ({
     );
   }
 
-  const unitCost = ingredients
-    .filter((i: ProductIngredientRow) => i.type === "ingredient")
-    .reduce(
-      (sum: number, ing: ProductIngredientRow) =>
-        sum + ing.quantity_required * (ing.unit_cost || 0),
-      0,
-    );
+  // Group ingredients once for all three tables + composition counts.
+  const grouped = groupIngredients(ingredients as ProductIngredientWithInventory[]);
+  const ingredientRows = grouped.ingredient;
+  const supplyRows = grouped.supply;
+  const equipmentRows = grouped.equipment;
+
+  const unitCost = ingredientRows.reduce(
+    (sum, ing) => sum + ing.quantity_required * (ing.unit_cost || 0),
+    0,
+  );
 
   const margin =
     product.base_price > 0
@@ -223,6 +177,10 @@ export const ProductDetailPanel: React.FC<ProductDetailPanelProps> = ({
   const totalDemand = demandForecast.reduce((sum, d) => sum + d.quantity, 0);
   const estimatedRevenue = totalDemand * product.base_price;
   const productImageSrc = getAssetUrl(product.image_url);
+  const supplyTotal = supplyRows.reduce(
+    (sum, ing) => sum + ing.quantity_required * (ing.unit_cost || 0),
+    0,
+  );
 
   return (
     <div className="space-y-6">
@@ -240,626 +198,116 @@ export const ProductDetailPanel: React.FC<ProductDetailPanelProps> = ({
         <Breadcrumb items={[{ label: t("products:title"), href: '/products' }, { label: product.name }]} />
       )}
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          {!embedded && (
-            <button
-              type="button"
-              onClick={() => navigate("/products")}
-              className="p-2 rounded-full hover:bg-surface-alt text-text-secondary transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-          )}
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-text">
-              {product.name}
-            </h1>
-            <span className="px-2.5 py-0.5 mt-1 inline-flex text-xs font-semibold rounded-full bg-primary/10 text-primary border border-primary/20">
-              {product.category}
-            </span>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Link
-            to={`/products/${productId}/edit`}
-            className="inline-flex items-center justify-center font-semibold transition-all active-ios-scale disabled:opacity-50 disabled:pointer-events-none cursor-pointer liquid-glass text-text hover:bg-surface/60 px-5 py-2.5 text-sm rounded-xl gap-2"
-          >
-            <Edit className="h-4 w-4 mr-2" />
-            {t("common:action.edit")}
-          </Link>
-          <Button
-            variant="danger"
-            onClick={() => setConfirmDeleteOpen(true)}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            {t("common:action.delete")}
-          </Button>
-        </div>
-      </div>
+      <ProductDetailHeader
+        product={product}
+        embedded={embedded}
+        onBack={() => navigate("/products")}
+        onDeleteClick={() => setConfirmDeleteOpen(true)}
+      />
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card variant="glass" padding="sm" className="shadow-sm">
-          <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="h-4 w-4 text-primary" />
-            <p className="text-xs text-text-secondary uppercase tracking-wide">
-              {t("products:form.base_price")}
-            </p>
-          </div>
-          <p className="text-3xl font-black text-text">
-            $
-            {product.base_price.toLocaleString(moneyLocale, {
-              minimumFractionDigits: 2,
-            })}
-          </p>
-          <p className="text-xs text-text-secondary mt-1">{t("products:details.per_unit")}</p>
-        </Card>
-
-        <Card variant="glass" padding="sm" className="shadow-sm">
-          <div className="flex items-center gap-2 mb-2">
-            <Layers className="h-4 w-4 text-text-secondary" />
-            <p className="text-xs text-text-secondary uppercase tracking-wide">
-              {t("products:details.unit_cost")}
-            </p>
-          </div>
-          <p className="text-3xl font-black text-text">
-            ${unitCost.toLocaleString(moneyLocale, { minimumFractionDigits: 2 })}
-          </p>
-          <p className="text-xs text-text-secondary mt-1">{t("products:details.in_supplies")}</p>
-        </Card>
-
-        <Card
-          variant={margin >= 20 && margin < 50 ? "glass" : "default"}
-          padding="sm"
-          className={clsx(
-            "border shadow-sm",
-            margin >= 50
-              ? "bg-success/5 border-success/20"
-              : margin < 20
-                ? "bg-warning/5 border-warning/20"
-                : ""
-          )}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp
-              className={clsx(
-                "h-4 w-4",
-                margin >= 50
-                  ? "text-success"
-                  : margin >= 20
-                    ? "text-primary"
-                    : "text-warning",
-              )}
-            />
-            <p className="text-xs text-text-secondary uppercase tracking-wide">
-              {t("products:details.margin")}
-            </p>
-          </div>
-          <p
-            className={clsx(
-              "text-3xl font-black",
-              margin >= 50
-                ? "text-success"
-                : margin >= 20
-                  ? "text-text"
-                  : "text-warning",
-            )}
-          >
-            {margin.toFixed(1)}%
-          </p>
-          <p className="text-xs text-text-secondary mt-1">{t("products:details.margin_desc")}</p>
-        </Card>
-
-        <Card variant="glass" padding="sm" className="shadow-sm">
-          <div className="flex items-center gap-2 mb-2">
-            <Calendar className="h-4 w-4 text-primary" />
-            <p className="text-xs text-text-secondary uppercase tracking-wide">
-              {t("products:details.upcoming_events")}
-            </p>
-          </div>
-          {demandLoading ? (
-            <div className="h-8 w-10 rounded-md bg-surface-alt animate-pulse" />
-          ) : (
-            <p className="text-3xl font-black text-text">
-              {demandForecast.length}
-            </p>
-          )}
-          <p className="text-xs text-text-secondary mt-1">{t("common:status.confirmed")}</p>
-        </Card>
-      </div>
+      <ProductKpiGrid
+        basePrice={product.base_price}
+        unitCost={unitCost}
+        margin={margin}
+        demandCount={demandForecast.length}
+        demandLoading={demandLoading}
+        moneyLocale={moneyLocale}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-6">
-          <Card variant="glass" padding="md" className="shadow-sm">
-            <div className="mb-4 rounded-2xl border border-border bg-surface-alt/30 p-2">
-              {productImageSrc ? (
-                <OptimizedImage
-                  src={productImageSrc}
-                  alt={product.name}
-                  className="w-full h-44 object-cover rounded-xl"
-                />
-              ) : (
-                <div className="w-full h-44 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Package className="h-12 w-12 text-primary opacity-40" />
-                </div>
-              )}
-            </div>
-            {!productImageSrc && (
-              <div className="mb-4 -mt-1 text-xs text-text-secondary">
-                {t("products:form.upload_photo")}
-              </div>
-            )}
-            <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-4 border-b border-border pb-2">
-               {t("products:details.general_info")}
-            </h2>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <Tag className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs text-text-secondary">{t("products:form.category")}</p>
-                  <p className="text-sm font-medium text-text">
-                    {product.category}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <DollarSign className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs text-text-secondary">{t("products:form.base_price")}</p>
-                  <p className="text-sm font-medium text-text">
-                    $
-                    {product.base_price.toLocaleString(moneyLocale, {
-                      minimumFractionDigits: 2,
-                    })}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Layers className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs text-text-secondary">{t("products:form.composition")}</p>
-                  <p className="text-sm font-medium text-text">
-                    {ingredients.length}{" "}
-                    {t("products:list.ingredients")}
-                    {ingredients.filter((i: ProductIngredientRow) => i.type === "supply")
-                      .length > 0 &&
-                      `, ${ingredients.filter((i: ProductIngredientRow) => i.type === "supply").length} ${t("products:list.supplies")}`}
-                    {ingredients.filter((i: ProductIngredientRow) => i.type === "equipment")
-                      .length > 0 &&
-                      `, ${ingredients.filter((i: ProductIngredientRow) => i.type === "equipment").length} ${t("products:list.equipment")}`}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Card>
+          <ProductImageCard
+            product={product}
+            imageSrc={productImageSrc}
+            ingredientCounts={{
+              total: ingredients.length,
+              supply: supplyRows.length,
+              equipment: equipmentRows.length,
+            }}
+            moneyLocale={moneyLocale}
+          />
 
           {!demandLoading && (
-            <Card
-              variant={demand7Days > 0 ? "default" : "glass"}
-              padding="sm"
-              className={clsx(
-                "border shadow-sm",
-                demand7Days > 0
-                  ? "bg-primary/5 border-primary/20"
-                  : "",
-              )}
-            >
-              <div className="flex items-start gap-3">
-                {demand7Days > 0 ? (
-                  <AlertTriangle className="h-6 w-6 text-primary shrink-0 mt-0.5" />
-                ) : (
-                  <CheckCircle className="h-6 w-6 text-success shrink-0 mt-0.5" />
-                )}
-                <div className="flex-1">
-                  <p
-                    className={clsx(
-                      "font-semibold text-sm",
-                      demand7Days > 0 ? "text-primary" : "text-success",
-                    )}
-                  >
-                    {demand7Days > 0
-                      ? t("products:details.demand_warning", { count: demand7Days })
-                      : demandForecast.length > 0
-                        ? t("products:details.demand_no_urgent")
-                        : t("products:details.demand_no_events")}
-                  </p>
-                  <p className="text-sm text-text-secondary mt-1">
-                    {demand7Days > 0 ? (
-                      <>
-                        {t("products:details.demand_high_this_week")}{" "}
-                        {estimatedRevenue > 0 && (
-                          <>
-                            {t("products:details.estimated_revenue")}:{" "}
-                            <strong className="text-text">
-                              $
-                              {estimatedRevenue.toLocaleString(moneyLocale, {
-                                minimumFractionDigits: 2,
-                              })}
-                            </strong>
-                            .
-                          </>
-                        )}
-                      </>
-                    ) : demandForecast.length > 0 ? (
-                      <>
-                        {t("products:details.demand_forecast_summary", { 
-                          units: totalDemand, 
-                          events: demandForecast.length 
-                        })}
-                      </>
-                    ) : (
-                      t("products:details.demand_no_confirmed_events")
-                    )}
-                  </p>
-                </div>
-              </div>
-            </Card>
+            <DemandAlertCard
+              demand7Days={demand7Days}
+              totalDemand={totalDemand}
+              eventCount={demandForecast.length}
+              estimatedRevenue={estimatedRevenue}
+              moneyLocale={moneyLocale}
+            />
           )}
         </div>
 
         <div className="lg:col-span-2 space-y-6">
-          <Card variant="glass" padding="md" className="shadow-sm">
-            <div className="flex items-center gap-2 mb-4 pb-4 border-b border-border">
-              <Calendar className="h-5 w-5 text-primary" />
-              <h2 className="text-sm font-semibold text-text">
-                {t("products:details.demand_by_date")}
-              </h2>
-              <span className="ml-auto text-xs text-text-secondary">
-                 {t("common:status.confirmed")}
-              </span>
-            </div>
+          <DemandForecastCard
+            entries={demandForecast}
+            loading={demandLoading}
+            today={today}
+            moneyLocale={moneyLocale}
+            basePrice={product.base_price}
+            totalDemand={totalDemand}
+            estimatedRevenue={estimatedRevenue}
+          />
 
-            {demandLoading ? (
-              <SkeletonCard rows={3} />
-            ) : demandForecast.length === 0 ? (
-              <div className="text-center py-10">
-                <Calendar className="h-9 w-9 text-text-secondary opacity-25 mx-auto mb-3" />
-                <p className="text-sm text-text-secondary">
-                  {t("products:details.demand_no_confirmed_events")}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {demandForecast.map((entry, idx) => {
-                  const dateObj = new Date(entry.date + "T00:00:00");
-                  const diffDays = Math.ceil(
-                    (dateObj.getTime() - today.getTime()) /
-                      (1000 * 60 * 60 * 24),
-                  );
-                  const isUrgent = diffDays <= 3;
+          <ProductIngredientTable
+            icon={Layers}
+            iconColor="text-primary"
+            title={t("products:form.composition")}
+            rows={ingredientRows}
+            columns={[
+              { type: 'inventory', header: t("products:form.inventory") },
+              { type: 'quantity', header: t("products:list.quantity") },
+              {
+                type: 'cost',
+                header: `${t("products:form.cost")} ${t("products:details.estimated_short")}`,
+              },
+            ]}
+            emptyStateCta={{
+              message: t("products:details.no_ingredients"),
+              linkTo: `/products/${productId}/edit`,
+              linkLabel: t("products:details.configure_composition"),
+            }}
+            footerLabel={t("products:form.total_unit_cost")}
+            footerValue={unitCost}
+            footerTone="default"
+            moneyLocale={moneyLocale}
+          />
 
-                  return (
-                    <div
-                      key={`${entry.eventId}-${idx}`}
-                      className={clsx(
-                        "flex items-center justify-between px-4 py-3 rounded-xl border",
-                        isUrgent
-                          ? "bg-primary/5 border-primary/20"
-                          : diffDays <= 7
-                            ? "bg-warning/5 border-warning/20"
-                            : "bg-surface-alt border-border",
-                      )}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div
-                          className={clsx(
-                            "w-2 h-2 rounded-full shrink-0",
-                            isUrgent
-                              ? "bg-primary"
-                              : diffDays <= 7
-                                ? "bg-warning"
-                                : "bg-primary/40",
-                          )}
-                        />
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-medium text-text">
-                              {dateObj.toLocaleDateString(moneyLocale, {
-                                day: "numeric",
-                                month: "short",
-                              })}
-                            </span>
-                            {diffDays === 0 && (
-                              <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-md">
-                                {t("common:date.today")}
-                              </span>
-                            )}
-                            {diffDays === 1 && (
-                              <span className="text-xs bg-warning/10 text-warning px-1.5 py-0.5 rounded-md">
-                                {t("common:date.tomorrow")}
-                              </span>
-                            )}
-                            {diffDays > 1 && diffDays <= 7 && (
-                              <span className="text-xs text-text-secondary">
-                                {t("common:date.in_days", { count: diffDays })}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <Link
-                              to={`/events/${entry.eventId}`}
-                              className="text-xs text-text-secondary hover:text-primary truncate max-w-[160px] transition-colors"
-                            >
-                              {entry.eventName}
-                            </Link>
-                            {entry.numPeople > 0 && (
-                              <span className="text-xs text-text-secondary flex items-center gap-1 shrink-0">
-                                <Users className="h-3 w-3" />
-                                {entry.numPeople}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0 ml-3">
-                        <span className="text-sm font-bold text-text">
-                          {entry.quantity} {t("products:list.units")}
-                        </span>
-                        <p className="text-xs text-text-secondary">
-                          $
-                          {(entry.quantity * product.base_price).toLocaleString(
-                            moneyLocale,
-                            {
-                              minimumFractionDigits: 2,
-                            },
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {totalDemand > 0 && (
-                  <div className="flex items-center justify-between px-4 py-3 mt-2 border-t border-border">
-                    <div>
-                      <span className="text-xs text-text-secondary uppercase tracking-wide">
-                        {t("products:details.total_demand")}
-                      </span>
-                      <p className="text-xs text-text-secondary">
-                         {t("products:list.events_count", { count: demandForecast.length })}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-sm font-bold text-text">
-                        {totalDemand} {t("products:list.units")}
-                      </span>
-                      <p className="text-xs text-text-secondary">
-                        $
-                        {estimatedRevenue.toLocaleString(moneyLocale, {
-                          minimumFractionDigits: 2,
-                        })}{" "}
-                        {t("products:details.est_suffix")}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </Card>
-
-          <Card variant="glass" padding="none" className="overflow-hidden shadow-sm">
-            <div className="p-6 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <Layers className="h-5 w-5 text-primary" />
-                <h2 className="text-lg font-semibold text-text">
-                  {t("products:form.composition")}
-                </h2>
-              </div>
-            </div>
-
-            {ingredients.length === 0 ? (
-              <div className="p-12 text-center">
-                <Package className="h-12 w-12 text-text-secondary mx-auto mb-4 opacity-20" />
-                <p className="text-text-secondary">
-                  {t("products:details.no_ingredients")}
-                </p>
-                <Link
-                  to={`/products/${productId}/edit`}
-                  className="text-primary hover:underline mt-2 inline-block text-sm"
-                >
-                  {t("products:details.configure_composition")}
-                </Link>
-              </div>
-            ) : (
-              <>
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                        {t("products:form.inventory")}
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                        {t("products:list.quantity")}
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                        {t("products:form.cost")} {t("products:details.estimated_short")}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {ingredients.map((ing: ProductIngredientRow) => (
-                        <tr
-                          key={ing.inventory_id}
-                          className="hover:bg-surface-alt/50 transition-colors"
-                        >
-                          <td className="px-6 py-4">
-                            <Link
-                              to={`/inventory/${ing.inventory_id}`}
-                              className="text-sm font-medium text-text hover:text-primary transition-colors"
-                            >
-                              {ing.ingredient_name || t("products:list.unknown")}
-                            </Link>
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <span className="text-sm text-text font-bold">
-                              {ing.quantity_required} {ing.unit || ""}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <span className="text-sm font-medium text-text">
-                              {ing.unit_cost
-                                ? `$${(ing.quantity_required * ing.unit_cost).toLocaleString(moneyLocale, { minimumFractionDigits: 2 })}`
-                                : "—"}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-                <div className="px-6 py-4 border-t border-border flex justify-between items-center">
-                  <span className="text-sm text-text-secondary">
-                    {t("products:form.total_unit_cost")}
-                  </span>
-                  <span className="text-lg font-bold text-text">
-                    $
-                    {unitCost.toLocaleString(moneyLocale, {
-                      minimumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-              </>
-            )}
-          </Card>
-
-          {ingredients.filter((i: ProductIngredientRow) => i.type === "supply").length > 0 && (
-            <Card variant="glass" padding="none" className="overflow-hidden shadow-sm">
-              <div className="p-6 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <Fuel className="h-5 w-5 text-warning" />
-                  <h2 className="text-lg font-semibold text-text">
-                    {t("products:form.event_supplies")}
-                  </h2>
-                </div>
-                <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-warning/10 text-warning">
-                  {t("products:details.fixed_cost_per_event")}
-                </span>
-              </div>
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                      {t("products:form.inventory")}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                      {t("products:list.quantity")}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                      {t("products:form.cost")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ingredients
-                    .filter((i: ProductIngredientRow) => i.type === "supply")
-                    .map((ing: ProductIngredientRow) => (
-                      <tr
-                        key={ing.inventory_id}
-                        className="hover:bg-surface-alt/50 transition-colors"
-                      >
-                        <td className="px-6 py-4">
-                          <Link
-                            to={`/inventory/${ing.inventory_id}`}
-                            className="text-sm font-medium text-text hover:text-primary transition-colors"
-                          >
-                            {ing.ingredient_name || t("products:list.unknown")}
-                          </Link>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <span className="text-sm text-text font-bold">
-                            {ing.quantity_required} {ing.unit || ""}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <span className="text-sm font-medium text-warning">
-                            {ing.unit_cost
-                              ? `$${(ing.quantity_required * ing.unit_cost).toLocaleString(moneyLocale, { minimumFractionDigits: 2 })}`
-                              : "—"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-              <div className="px-6 py-4 border-t border-border flex justify-between items-center">
-                <span className="text-sm text-text-secondary">
-                  {t("products:form.total_event_cost")}
-                </span>
-                <span className="text-lg font-bold text-warning">
-                  $
-                  {ingredients
-                    .filter((i: ProductIngredientRow) => i.type === "supply")
-                    .reduce(
-                      (sum: number, ing: ProductIngredientRow) =>
-                        sum + ing.quantity_required * (ing.unit_cost || 0),
-                      0,
-                    )
-                    .toLocaleString(moneyLocale, { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-            </Card>
+          {supplyRows.length > 0 && (
+            <ProductIngredientTable
+              icon={Fuel}
+              iconColor="text-warning"
+              title={t("products:form.event_supplies")}
+              badge={t("products:details.fixed_cost_per_event")}
+              badgeTone="warning"
+              rows={supplyRows}
+              columns={[
+                { type: 'inventory', header: t("products:form.inventory") },
+                { type: 'quantity', header: t("products:list.quantity") },
+                { type: 'cost', header: t("products:form.cost") },
+              ]}
+              footerLabel={t("products:form.total_event_cost")}
+              footerValue={supplyTotal}
+              footerTone="warning"
+              moneyLocale={moneyLocale}
+            />
           )}
 
-          {ingredients.filter((i: ProductIngredientRow) => i.type === "equipment").length >
-            0 && (
-            <Card variant="glass" padding="none" className="overflow-hidden shadow-sm">
-              <div className="p-6 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <Wrench className="h-5 w-5 text-info" />
-                  <h2 className="text-lg font-semibold text-text">
-                    {t("products:form.equipment")}
-                  </h2>
-                </div>
-                <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-info/10 text-info">
-                  {t("products:form.reusable_no_cost")}
-                </span>
-              </div>
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                      {t("products:form.equipment")}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                      {t("products:list.quantity")}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                      {t("products:form.capacity")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ingredients
-                    .filter((i: ProductIngredientRow) => i.type === "equipment")
-                    .map((ing: ProductIngredientRow) => (
-                      <tr
-                        key={ing.inventory_id}
-                        className="hover:bg-surface-alt/50 transition-colors"
-                      >
-                        <td className="px-6 py-4">
-                          <Link
-                            to={`/inventory/${ing.inventory_id}`}
-                            className="text-sm font-medium text-text hover:text-primary transition-colors"
-                          >
-                            {ing.ingredient_name || t("products:list.unknown")}
-                          </Link>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <span className="text-sm text-text font-bold">
-                            {ing.quantity_required} {ing.unit || ""}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <span className="text-xs text-text-secondary">
-                            {ing.capacity
-                              ? t("products:form.capacity_help", { count: ing.capacity })
-                              : t("products:form.capacity_fixed")}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </Card>
+          {equipmentRows.length > 0 && (
+            <ProductIngredientTable
+              icon={Wrench}
+              iconColor="text-info"
+              title={t("products:form.equipment")}
+              badge={t("products:form.reusable_no_cost")}
+              badgeTone="info"
+              rows={equipmentRows}
+              columns={[
+                { type: 'inventory', header: t("products:form.equipment") },
+                { type: 'quantity', header: t("products:list.quantity") },
+                { type: 'capacity', header: t("products:form.capacity") },
+              ]}
+              moneyLocale={moneyLocale}
+            />
           )}
         </div>
       </div>
