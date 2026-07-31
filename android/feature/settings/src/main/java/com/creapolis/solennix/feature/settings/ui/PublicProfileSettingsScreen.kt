@@ -371,6 +371,36 @@ fun PublicProfileSettingsScreen(
                             enabled = viewModel.isPaid,
                             locked = !viewModel.isPaid
                         )
+                        ToggleDivider()
+                        ToggleRow(
+                            label = stringResource(R.string.settings_public_profile_show_packages),
+                            checked = if (viewModel.isPaid) viewModel.showPackages else false,
+                            onCheckedChange = {
+                                if (viewModel.isPaid) viewModel.showPackages = it
+                            },
+                            enabled = viewModel.isPaid,
+                            locked = !viewModel.isPaid
+                        )
+                        ToggleDivider()
+                        ToggleRow(
+                            label = stringResource(R.string.settings_public_profile_show_faq),
+                            checked = if (viewModel.isPaid) viewModel.showFaq else false,
+                            onCheckedChange = {
+                                if (viewModel.isPaid) viewModel.showFaq = it
+                            },
+                            enabled = viewModel.isPaid,
+                            locked = !viewModel.isPaid
+                        )
+                        ToggleDivider()
+                        ToggleRow(
+                            label = stringResource(R.string.settings_public_profile_show_policies),
+                            checked = if (viewModel.isPaid) viewModel.showPolicies else false,
+                            onCheckedChange = {
+                                if (viewModel.isPaid) viewModel.showPolicies = it
+                            },
+                            enabled = viewModel.isPaid,
+                            locked = !viewModel.isPaid
+                        )
                     }
 
                     if (!viewModel.isPaid) {
@@ -436,6 +466,406 @@ fun PublicProfileSettingsScreen(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = SolennixTheme.colors.secondaryText
                             )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // ── About / business details (Pro+) ──────────────────
+                    SectionLabel(
+                        title = stringResource(R.string.settings_public_profile_about_section),
+                        locked = !viewModel.isPaid
+                    )
+                    SettingsCard {
+                        if (!viewModel.isPaid) {
+                            Text(
+                                text = stringResource(
+                                    R.string.settings_public_profile_about_pro_hint
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = SolennixTheme.colors.secondaryText
+                            )
+                        } else {
+                            SolennixTextField(
+                                value = viewModel.about,
+                                onValueChange = { viewModel.about = it },
+                                label = stringResource(
+                                    R.string.settings_public_profile_about
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            SolennixTextField(
+                                value = viewModel.serviceAreasText,
+                                onValueChange = { viewModel.serviceAreasText = it },
+                                label = stringResource(
+                                    R.string.settings_public_profile_service_areas
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            SolennixTextField(
+                                value = viewModel.eventTypesText,
+                                onValueChange = { viewModel.eventTypesText = it },
+                                label = stringResource(
+                                    R.string.settings_public_profile_event_types
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            SolennixTextField(
+                                value = viewModel.languagesText,
+                                onValueChange = { viewModel.languagesText = it },
+                                label = stringResource(
+                                    R.string.settings_public_profile_languages
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            AdaptiveFormRow(
+                                left = {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        SolennixTextField(
+                                            value = viewModel.minGuestsText,
+                                            onValueChange = { viewModel.minGuestsText = it.filter { c -> c.isDigit() } },
+                                            label = stringResource(
+                                                R.string.settings_public_profile_min_guests
+                                            ),
+                                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        SolennixTextField(
+                                            value = viewModel.maxGuestsText,
+                                            onValueChange = { viewModel.maxGuestsText = it.filter { c -> c.isDigit() } },
+                                            label = stringResource(
+                                                R.string.settings_public_profile_max_guests
+                                            ),
+                                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                },
+                                right = {
+                                    SolennixTextField(
+                                        value = viewModel.responseTime,
+                                        onValueChange = { viewModel.responseTime = it },
+                                        label = stringResource(
+                                            R.string.settings_public_profile_response_time
+                                        ),
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = stringResource(
+                                    R.string.settings_public_profile_lists_hint
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = SolennixTheme.colors.secondaryText
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // ── Services (no plan gate) ──────────────────────────
+                    SectionLabel(stringResource(R.string.settings_public_profile_services_section))
+                    SettingsCard {
+                        Text(
+                            text = stringResource(
+                                R.string.settings_public_profile_services_hint
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = SolennixTheme.colors.secondaryText
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        when {
+                            viewModel.servicesLoading -> {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        color = SolennixTheme.colors.primary
+                                    )
+                                }
+                            }
+
+                            viewModel.services.isEmpty() -> {
+                                Text(
+                                    text = stringResource(
+                                        R.string.settings_public_profile_services_empty
+                                    ),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = SolennixTheme.colors.secondaryText
+                                )
+                            }
+
+                            else -> {
+                                viewModel.services.forEachIndexed { index, svc ->
+                                    if (index > 0) ToggleDivider()
+                                    ToggleRow(
+                                        label = svc.name + (svc.category.takeIf { it.isNotBlank() }?.let { " · $it" } ?: ""),
+                                        checked = svc.showOnPublicProfile,
+                                        onCheckedChange = { viewModel.toggleService(svc.id) },
+                                        enabled = !viewModel.isSavingServices
+                                    )
+                                }
+                            }
+                        }
+
+                        if (viewModel.isSavingServices) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = SolennixTheme.colors.primary
+                                )
+                            }
+                        }
+
+                        viewModel.servicesError?.let {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = SolennixTheme.colors.error
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // ── Packages (Pro+) ──────────────────────────────────
+                    SectionLabel(
+                        title = stringResource(R.string.settings_public_profile_packages_section),
+                        locked = !viewModel.isPaid
+                    )
+                    SettingsCard {
+                        if (!viewModel.isPaid) {
+                            Text(
+                                text = stringResource(
+                                    R.string.settings_public_profile_packages_pro_hint
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = SolennixTheme.colors.secondaryText
+                            )
+                        } else {
+                            when {
+                                viewModel.packagesLoading -> {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            color = SolennixTheme.colors.primary
+                                        )
+                                    }
+                                }
+
+                                viewModel.packages.isEmpty() -> {
+                                    Text(
+                                        text = stringResource(
+                                            R.string.settings_public_profile_packages_empty
+                                        ),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = SolennixTheme.colors.secondaryText
+                                    )
+                                }
+
+                                else -> {
+                                    viewModel.packages.forEachIndexed { index, pkg ->
+                                        if (index > 0) ToggleDivider()
+                                        PackageItemRow(
+                                            title = pkg.title,
+                                            price = pkg.fromPrice,
+                                            onDelete = { viewModel.deletePackage(pkg.id) }
+                                        )
+                                    }
+                                }
+                            }
+
+                            if (viewModel.packages.size <
+                                PublicProfileSettingsViewModel.PACKAGES_MAX
+                            ) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                SolennixTextField(
+                                    value = viewModel.newPackageTitle,
+                                    onValueChange = { viewModel.newPackageTitle = it },
+                                    label = stringResource(
+                                        R.string.settings_public_profile_package_title
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                SolennixTextField(
+                                    value = viewModel.newPackageDescription,
+                                    onValueChange = { viewModel.newPackageDescription = it },
+                                    label = stringResource(
+                                        R.string.settings_public_profile_package_description
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                SolennixTextField(
+                                    value = viewModel.newPackagePrice,
+                                    onValueChange = { viewModel.newPackagePrice = it },
+                                    label = stringResource(
+                                        R.string.settings_public_profile_package_price
+                                    ),
+                                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                SolennixTextField(
+                                    value = viewModel.newPackageInclusions,
+                                    onValueChange = { viewModel.newPackageInclusions = it },
+                                    label = stringResource(
+                                        R.string.settings_public_profile_package_inclusions
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                PremiumButton(
+                                    text = stringResource(
+                                        R.string.settings_public_profile_package_add
+                                    ),
+                                    onClick = { viewModel.addPackage() },
+                                    enabled = !viewModel.isAddingPackage &&
+                                        viewModel.newPackageTitle.isNotBlank(),
+                                    isLoading = viewModel.isAddingPackage,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            } else {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = stringResource(
+                                        R.string.settings_public_profile_packages_max
+                                    ),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = SolennixTheme.colors.secondaryText
+                                )
+                            }
+
+                            viewModel.packagesError?.let {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = it,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = SolennixTheme.colors.error
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // ── FAQ (Pro+) ───────────────────────────────────────
+                    SectionLabel(
+                        title = stringResource(R.string.settings_public_profile_faq_section),
+                        locked = !viewModel.isPaid
+                    )
+                    SettingsCard {
+                        if (!viewModel.isPaid) {
+                            Text(
+                                text = stringResource(
+                                    R.string.settings_public_profile_faq_pro_hint
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = SolennixTheme.colors.secondaryText
+                            )
+                        } else {
+                            when {
+                                viewModel.faqLoading -> {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            color = SolennixTheme.colors.primary
+                                        )
+                                    }
+                                }
+
+                                viewModel.faq.isEmpty() -> {
+                                    Text(
+                                        text = stringResource(
+                                            R.string.settings_public_profile_faq_empty
+                                        ),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = SolennixTheme.colors.secondaryText
+                                    )
+                                }
+
+                                else -> {
+                                    viewModel.faq.forEachIndexed { index, item ->
+                                        if (index > 0) ToggleDivider()
+                                        FaqItemRow(
+                                            question = item.question,
+                                            answer = item.answer,
+                                            onDelete = { viewModel.deleteFaqItem(item.id) }
+                                        )
+                                    }
+                                }
+                            }
+
+                            if (viewModel.faq.size <
+                                PublicProfileSettingsViewModel.FAQ_MAX
+                            ) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                SolennixTextField(
+                                    value = viewModel.newFaqQuestion,
+                                    onValueChange = { viewModel.newFaqQuestion = it },
+                                    label = stringResource(
+                                        R.string.settings_public_profile_faq_question
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                SolennixTextField(
+                                    value = viewModel.newFaqAnswer,
+                                    onValueChange = { viewModel.newFaqAnswer = it },
+                                    label = stringResource(
+                                        R.string.settings_public_profile_faq_answer
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                PremiumButton(
+                                    text = stringResource(
+                                        R.string.settings_public_profile_faq_add
+                                    ),
+                                    onClick = { viewModel.addFaqItem() },
+                                    enabled = !viewModel.isAddingFaq &&
+                                        viewModel.newFaqQuestion.isNotBlank() &&
+                                        viewModel.newFaqAnswer.isNotBlank(),
+                                    isLoading = viewModel.isAddingFaq,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            } else {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = stringResource(
+                                        R.string.settings_public_profile_faq_max
+                                    ),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = SolennixTheme.colors.secondaryText
+                                )
+                            }
+
+                            viewModel.faqError?.let {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = it,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = SolennixTheme.colors.error
+                                )
+                            }
                         }
                     }
                     Spacer(modifier = Modifier.height(24.dp))
@@ -732,6 +1162,81 @@ private fun PortfolioItemRow(
                     color = SolennixTheme.colors.secondaryText
                 )
             }
+        }
+        IconButton(onClick = onDelete) {
+            Icon(
+                Icons.Default.Delete,
+                contentDescription = stringResource(
+                    R.string.settings_public_profile_portfolio_delete
+                ),
+                tint = SolennixTheme.colors.error
+            )
+        }
+    }
+}
+
+@Composable
+private fun PackageItemRow(
+    title: String,
+    price: Double?,
+    onDelete: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                color = SolennixTheme.colors.primaryText
+            )
+            price?.let {
+                Text(
+                    text = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("es", "MX"))
+                        .format(it),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = SolennixTheme.colors.primary
+                )
+            }
+        }
+        IconButton(onClick = onDelete) {
+            Icon(
+                Icons.Default.Delete,
+                contentDescription = stringResource(
+                    R.string.settings_public_profile_portfolio_delete
+                ),
+                tint = SolennixTheme.colors.error
+            )
+        }
+    }
+}
+
+@Composable
+private fun FaqItemRow(
+    question: String,
+    answer: String,
+    onDelete: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = question,
+                style = MaterialTheme.typography.bodyMedium,
+                color = SolennixTheme.colors.primaryText
+            )
+            Text(
+                text = answer,
+                style = MaterialTheme.typography.bodySmall,
+                color = SolennixTheme.colors.secondaryText
+            )
         }
         IconButton(onClick = onDelete) {
             Icon(

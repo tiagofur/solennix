@@ -21,6 +21,8 @@ public final class PublicProfileSettingsViewModel {
     // MARK: - Constants
 
     public static let portfolioMax = 6
+    public static let packagesMax = 6
+    public static let faqMax = 12
     /// kebab-case, 3-140 chars (mirrors backend validatePublicSlug).
     /// Use NSRegularExpression-style string (Swift regex literal `$/` confuses the parser).
     public static let slugPattern = "^[a-z0-9]+(?:-[a-z0-9]+)*$"
@@ -40,6 +42,16 @@ public final class PublicProfileSettingsViewModel {
     public var showReviews: Bool = true
     public var showPortfolio: Bool = true
     public var showContact: Bool = true
+    public var showPackages: Bool = true
+    public var showFaq: Bool = true
+    public var showPolicies: Bool = false
+    public var about: String = ""
+    public var serviceAreasText: String = ""
+    public var eventTypesText: String = ""
+    public var languagesText: String = ""
+    public var responseTime: String = ""
+    public var minGuestsText: String = ""
+    public var maxGuestsText: String = ""
     public var socialsText: String = ""
 
     // MARK: - Portfolio (Pro+)
@@ -51,6 +63,33 @@ public final class PublicProfileSettingsViewModel {
     public var newPortfolioPhotoUrl: String = ""
     public var newPortfolioEventDate: String = ""
     public var isAddingPortfolio: Bool = false
+
+    // MARK: - Services selection (no plan gate)
+
+    public var services: [PublicProfileServiceSelectionItem] = []
+    public var servicesLoading: Bool = false
+    public var servicesError: String?
+    public var isSavingServices: Bool = false
+
+    // MARK: - Packages (Pro+)
+
+    public var packages: [OrganizerPublicPackage] = []
+    public var packagesLoading: Bool = false
+    public var packagesError: String?
+    public var newPackageTitle: String = ""
+    public var newPackageDescription: String = ""
+    public var newPackagePrice: String = ""
+    public var newPackageInclusions: String = ""
+    public var isAddingPackage: Bool = false
+
+    // MARK: - FAQ (Pro+)
+
+    public var faq: [OrganizerPublicFaqItem] = []
+    public var faqLoading: Bool = false
+    public var faqError: String?
+    public var newFaqQuestion: String = ""
+    public var newFaqAnswer: String = ""
+    public var isAddingFaq: Bool = false
 
     // MARK: - UI state
 
@@ -108,10 +147,16 @@ public final class PublicProfileSettingsViewModel {
 
         isLoading = false
 
+        // Services selection has no plan gate; packages + FAQ are Pro-only.
+        await loadServices()
         if isPaid {
             await loadPortfolio()
+            await loadPackages()
+            await loadFaq()
         } else {
             portfolio = []
+            packages = []
+            faq = []
         }
     }
 
@@ -153,10 +198,20 @@ public final class PublicProfileSettingsViewModel {
         showPrices = profile.showPrices
         showServices = profile.showServices
         showContact = profile.showContact
-        // Free: force Pro-only toggles off in UI.
+        // Free: force Pro-only toggles/fields off in UI.
         if isPaid {
             showReviews = profile.showReviews
             showPortfolio = profile.showPortfolio
+            showPackages = profile.showPackages
+            showFaq = profile.showFaq
+            showPolicies = profile.showPolicies
+            about = profile.about ?? ""
+            serviceAreasText = Self.joinList(profile.serviceAreas)
+            eventTypesText = Self.joinList(profile.eventTypes)
+            languagesText = Self.joinList(profile.languages)
+            minGuestsText = profile.minGuests.map(String.init) ?? ""
+            maxGuestsText = profile.maxGuests.map(String.init) ?? ""
+            responseTime = profile.responseTime ?? ""
             if let socials = profile.socials, !socials.isEmpty {
                 socialsText = socials
                     .map { "\($0.key)=\($0.value)" }
@@ -168,8 +223,30 @@ public final class PublicProfileSettingsViewModel {
         } else {
             showReviews = false
             showPortfolio = false
+            showPackages = false
+            showFaq = false
+            showPolicies = false
+            about = ""
+            serviceAreasText = ""
+            eventTypesText = ""
+            languagesText = ""
+            minGuestsText = ""
+            maxGuestsText = ""
+            responseTime = ""
             socialsText = ""
         }
+    }
+
+    /// Comma-joins an optional string list for TextField editing.
+    private static func joinList(_ list: [String]?) -> String {
+        (list ?? []).joined(separator: ", ")
+    }
+
+    /// Splits a comma-separated TextField value into a trimmed, non-empty list.
+    public static func splitList(_ text: String) -> [String] {
+        text.split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
     }
 
     /// Returns a localized slug error, or `nil` if valid / empty.
@@ -252,6 +329,16 @@ public final class PublicProfileSettingsViewModel {
             showReviews: isPaid ? showReviews : false,
             showPortfolio: isPaid ? showPortfolio : false,
             showContact: showContact,
+            showPackages: isPaid ? showPackages : false,
+            showFaq: isPaid ? showFaq : false,
+            showPolicies: isPaid ? showPolicies : false,
+            about: isPaid && !about.isEmpty ? about : nil,
+            serviceAreas: isPaid ? Self.splitList(serviceAreasText) : nil,
+            eventTypes: isPaid ? Self.splitList(eventTypesText) : nil,
+            languages: isPaid ? Self.splitList(languagesText) : nil,
+            minGuests: isPaid ? Int(minGuestsText.trimmingCharacters(in: .whitespacesAndNewlines)) : nil,
+            maxGuests: isPaid ? Int(maxGuestsText.trimmingCharacters(in: .whitespacesAndNewlines)) : nil,
+            responseTime: isPaid && !responseTime.isEmpty ? responseTime : nil,
             socials: isPaid ? Self.parseSocials(socialsText) : [:]
         )
 
@@ -359,6 +446,230 @@ public final class PublicProfileSettingsViewModel {
             portfolioError = tr(
                 "settings.public_profile.portfolio_delete_failed",
                 "No se pudo quitar el elemento."
+            )
+        }
+    }
+
+    // MARK: - Services mutations
+
+    @MainActor
+    public func loadServices() async {
+        servicesLoading = true
+        servicesError = nil
+        do {
+            let items: [PublicProfileServiceSelectionItem] = try await apiClient.get(
+                Endpoint.myPublicProfileServices
+            )
+            services = items.sorted {
+                ($0.isFeatured ? 0 : 1, $0.name) < ($1.isFeatured ? 0 : 1, $1.name)
+            }
+        } catch {
+            servicesError = tr(
+                "settings.public_profile.services_load_failed",
+                "No se pudieron cargar los servicios."
+            )
+        }
+        servicesLoading = false
+    }
+
+    /// Toggles a service's visibility and persists the full selection (batch PUT).
+    @MainActor
+    public func toggleService(id: String) async {
+        guard let idx = services.firstIndex(where: { $0.id == id }) else { return }
+        services[idx].showOnPublicProfile.toggle()
+        await saveServices()
+    }
+
+    @MainActor
+    public func saveServices() async {
+        servicesError = nil
+        isSavingServices = true
+        defer { isSavingServices = false }
+        let ids = services.filter(\.showOnPublicProfile).map(\.id)
+        let body = SetPublicProfileServicesRequest(productIds: ids)
+        do {
+            let updated: [PublicProfileServiceSelectionItem] = try await apiClient.put(
+                Endpoint.myPublicProfileServices,
+                body: body
+            )
+            services = updated.sorted {
+                ($0.isFeatured ? 0 : 1, $0.name) < ($1.isFeatured ? 0 : 1, $1.name)
+            }
+        } catch {
+            servicesError = tr(
+                "settings.public_profile.services_save_failed",
+                "No se pudo guardar la selección de servicios."
+            )
+        }
+    }
+
+    // MARK: - Packages mutations (Pro+)
+
+    @MainActor
+    public func loadPackages() async {
+        guard isPaid else {
+            packages = []
+            return
+        }
+        packagesLoading = true
+        packagesError = nil
+        do {
+            let items: [OrganizerPublicPackage] = try await apiClient.get(
+                Endpoint.myPublicProfilePackages
+            )
+            packages = items.sorted {
+                ($0.isFeatured ? 0 : 1, $0.sortOrder) < ($1.isFeatured ? 0 : 1, $1.sortOrder)
+            }
+        } catch {
+            packagesError = tr(
+                "settings.public_profile.packages_load_failed",
+                "No se pudieron cargar los paquetes."
+            )
+        }
+        packagesLoading = false
+    }
+
+    @MainActor
+    public func addPackage() async {
+        packagesError = nil
+        let title = newPackageTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !title.isEmpty else {
+            packagesError = tr(
+                "settings.public_profile.packages_save_failed",
+                "No se pudo guardar el paquete."
+            )
+            return
+        }
+        guard packages.count < Self.packagesMax else {
+            packagesError = tr(
+                "settings.public_profile.packages_max",
+                "Ya tenés 6 paquetes."
+            )
+            return
+        }
+
+        isAddingPackage = true
+        defer { isAddingPackage = false }
+
+        let inclusions = Self.splitList(newPackageInclusions)
+        let price = Double(newPackagePrice.trimmingCharacters(in: .whitespacesAndNewlines))
+        let body = PackageCreateRequest(
+            title: title,
+            description: newPackageDescription.isEmpty ? nil : newPackageDescription,
+            fromPrice: price,
+            inclusions: inclusions.isEmpty ? nil : inclusions,
+            sortOrder: packages.count
+        )
+
+        do {
+            let created: OrganizerPublicPackage = try await apiClient.post(
+                Endpoint.myPublicProfilePackages,
+                body: body
+            )
+            packages = (packages + [created]).sorted {
+                ($0.isFeatured ? 0 : 1, $0.sortOrder) < ($1.isFeatured ? 0 : 1, $1.sortOrder)
+            }
+            newPackageTitle = ""
+            newPackageDescription = ""
+            newPackagePrice = ""
+            newPackageInclusions = ""
+        } catch {
+            packagesError = tr(
+                "settings.public_profile.packages_save_failed",
+                "No se pudo guardar el paquete."
+            )
+        }
+    }
+
+    @MainActor
+    public func deletePackage(id: String) async {
+        packagesError = nil
+        do {
+            try await apiClient.delete(Endpoint.myPublicProfilePackage(id))
+            packages.removeAll { $0.id == id }
+        } catch {
+            packagesError = tr(
+                "settings.public_profile.packages_delete_failed",
+                "No se pudo quitar el paquete."
+            )
+        }
+    }
+
+    // MARK: - FAQ mutations (Pro+)
+
+    @MainActor
+    public func loadFaq() async {
+        guard isPaid else {
+            faq = []
+            return
+        }
+        faqLoading = true
+        faqError = nil
+        do {
+            let items: [OrganizerPublicFaqItem] = try await apiClient.get(
+                Endpoint.myPublicProfileFaq
+            )
+            faq = items.sorted { $0.sortOrder < $1.sortOrder }
+        } catch {
+            faqError = tr(
+                "settings.public_profile.faq_load_failed",
+                "No se pudieron cargar las preguntas."
+            )
+        }
+        faqLoading = false
+    }
+
+    @MainActor
+    public func addFaqItem() async {
+        faqError = nil
+        let question = newFaqQuestion.trimmingCharacters(in: .whitespacesAndNewlines)
+        let answer = newFaqAnswer.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !question.isEmpty, !answer.isEmpty else {
+            faqError = tr(
+                "settings.public_profile.faq_save_failed",
+                "No se pudo guardar la pregunta."
+            )
+            return
+        }
+        guard faq.count < Self.faqMax else {
+            faqError = tr(
+                "settings.public_profile.faq_max",
+                "Ya tenés 12 preguntas."
+            )
+            return
+        }
+
+        isAddingFaq = true
+        defer { isAddingFaq = false }
+
+        let body = FaqCreateRequest(question: question, answer: answer, sortOrder: faq.count)
+
+        do {
+            let created: OrganizerPublicFaqItem = try await apiClient.post(
+                Endpoint.myPublicProfileFaq,
+                body: body
+            )
+            faq = (faq + [created]).sorted { $0.sortOrder < $1.sortOrder }
+            newFaqQuestion = ""
+            newFaqAnswer = ""
+        } catch {
+            faqError = tr(
+                "settings.public_profile.faq_save_failed",
+                "No se pudo guardar la pregunta."
+            )
+        }
+    }
+
+    @MainActor
+    public func deleteFaqItem(id: String) async {
+        faqError = nil
+        do {
+            try await apiClient.delete(Endpoint.myPublicProfileFaqItem(id))
+            faq.removeAll { $0.id == id }
+        } catch {
+            faqError = tr(
+                "settings.public_profile.faq_delete_failed",
+                "No se pudo quitar la pregunta."
             )
         }
     }

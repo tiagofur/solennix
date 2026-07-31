@@ -279,6 +279,33 @@ public struct PublicProfileSettingsView: View {
                     ),
                     locked: !viewModel.isPaid
                 )
+                visibilityToggle(
+                    title: tr("settings.public_profile.show_packages", "Mostrar paquetes"),
+                    icon: "shippingbox.fill",
+                    isOn: Binding(
+                        get: { viewModel.isPaid ? viewModel.showPackages : false },
+                        set: { if viewModel.isPaid { viewModel.showPackages = $0 } }
+                    ),
+                    locked: !viewModel.isPaid
+                )
+                visibilityToggle(
+                    title: tr("settings.public_profile.show_faq", "Mostrar preguntas frecuentes"),
+                    icon: "questionmark.bubble",
+                    isOn: Binding(
+                        get: { viewModel.isPaid ? viewModel.showFaq : false },
+                        set: { if viewModel.isPaid { viewModel.showFaq = $0 } }
+                    ),
+                    locked: !viewModel.isPaid
+                )
+                visibilityToggle(
+                    title: tr("settings.public_profile.show_policies", "Mostrar políticas"),
+                    icon: "doc.text",
+                    isOn: Binding(
+                        get: { viewModel.isPaid ? viewModel.showPolicies : false },
+                        set: { if viewModel.isPaid { viewModel.showPolicies = $0 } }
+                    ),
+                    locked: !viewModel.isPaid
+                )
             } header: {
                 Text(tr("settings.public_profile.visibility", "Visibilidad"))
             } footer: {
@@ -371,6 +398,18 @@ public struct PublicProfileSettingsView: View {
                 )
             }
 
+            // About + business details (Pro+)
+            aboutSection
+
+            // Services selection (no plan gate)
+            servicesSection
+
+            // Packages (Pro+)
+            packagesSection
+
+            // FAQ (Pro+)
+            faqSection
+
             // Portfolio (Pro+)
             portfolioSection
 
@@ -417,6 +456,463 @@ public struct PublicProfileSettingsView: View {
                 showPricingSheet = true
             }
         }
+    }
+
+    // MARK: - About / business details section (Pro+)
+
+    @ViewBuilder
+    private var aboutSection: some View {
+        Section {
+            if !viewModel.isPaid {
+                Text(
+                    tr(
+                        "settings.public_profile.about_pro_hint",
+                        "La descripción y los detalles del negocio están disponibles en el plan Pro."
+                    )
+                )
+                .font(.caption)
+                .foregroundStyle(SolennixColors.textTertiary)
+                .solennixRow()
+            } else {
+                TextField(
+                    tr("settings.public_profile.about", "Sobre tu negocio"),
+                    text: $viewModel.about,
+                    axis: .vertical
+                )
+                .lineLimit(3...6)
+                .solennixRow()
+
+                TextField(
+                    tr("settings.public_profile.service_areas", "Zonas de servicio"),
+                    text: $viewModel.serviceAreasText
+                )
+                .solennixRow()
+
+                TextField(
+                    tr("settings.public_profile.event_types", "Tipos de evento"),
+                    text: $viewModel.eventTypesText
+                )
+                .solennixRow()
+
+                TextField(
+                    tr("settings.public_profile.languages", "Idiomas"),
+                    text: $viewModel.languagesText
+                )
+                .solennixRow()
+
+                AdaptiveFormRow {
+                    HStack(spacing: Spacing.sm) {
+                        TextField(
+                            tr("settings.public_profile.min_guests", "Invitados mín."),
+                            text: $viewModel.minGuestsText
+                        )
+                        .keyboardType(.numberPad)
+                        TextField(
+                            tr("settings.public_profile.max_guests", "Invitados máx."),
+                            text: $viewModel.maxGuestsText
+                        )
+                        .keyboardType(.numberPad)
+                    }
+                } right: {
+                    TextField(
+                        tr("settings.public_profile.response_time", "Tiempo de respuesta"),
+                        text: $viewModel.responseTime
+                    )
+                }
+                .solennixRow()
+            }
+        } header: {
+            HStack(spacing: Spacing.xs) {
+                Text(tr("settings.public_profile.about_section", "Sobre tu negocio"))
+                if !viewModel.isPaid {
+                    Image(systemName: "lock.fill")
+                        .font(.caption2)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+            }
+        } footer: {
+            if viewModel.isPaid {
+                Text(
+                    tr(
+                        "settings.public_profile.lists_hint",
+                        "Listas separadas por coma (ej. Bodas, Corporativos, Cumpleaños)."
+                    )
+                )
+            }
+        }
+    }
+
+    // MARK: - Services section
+
+    @ViewBuilder
+    private var servicesSection: some View {
+        Section {
+            if viewModel.servicesLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .solennixRow()
+            } else if viewModel.services.isEmpty {
+                Text(
+                    tr(
+                        "settings.public_profile.services_empty",
+                        "Todavía no hay productos activos. Creá productos en tu catálogo primero."
+                    )
+                )
+                .font(.subheadline)
+                .foregroundStyle(SolennixColors.textSecondary)
+                .solennixRow()
+            } else {
+                ForEach(viewModel.services) { svc in
+                    Toggle(isOn: Binding(
+                        get: { svc.showOnPublicProfile },
+                        set: { _ in
+                            scoped?.start {
+                                await viewModel.toggleService(id: svc.id)
+                            }
+                        }
+                    )) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(svc.name)
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(SolennixColors.text)
+                            if !svc.category.isEmpty {
+                                Text(svc.category)
+                                    .font(.caption)
+                                    .foregroundStyle(SolennixColors.textSecondary)
+                            }
+                        }
+                    }
+                    .disabled(viewModel.isSavingServices)
+                    .solennixRow()
+                }
+            }
+
+            if viewModel.isSavingServices {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .solennixRow()
+            }
+
+            if let servicesError = viewModel.servicesError {
+                Text(servicesError)
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.error)
+                    .solennixRow()
+            }
+        } header: {
+            Text(tr("settings.public_profile.services_section", "Servicios en la página pública"))
+        } footer: {
+            Text(
+                tr(
+                    "settings.public_profile.services_hint",
+                    "Activá los servicios que querés mostrar. Precios e imágenes salen de tus productos."
+                )
+            )
+        }
+    }
+
+    // MARK: - Packages section (Pro+)
+
+    @ViewBuilder
+    private var packagesSection: some View {
+        Section {
+            if !viewModel.isPaid {
+                Text(
+                    tr(
+                        "settings.public_profile.packages_pro_hint",
+                        "Los paquetes están disponibles en el plan Pro."
+                    )
+                )
+                .font(.caption)
+                .foregroundStyle(SolennixColors.textTertiary)
+                .solennixRow()
+            } else if viewModel.packagesLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .solennixRow()
+            } else if viewModel.packages.isEmpty {
+                Text(
+                    tr(
+                        "settings.public_profile.packages_empty",
+                        "Todavía no hay paquetes."
+                    )
+                )
+                .font(.subheadline)
+                .foregroundStyle(SolennixColors.textSecondary)
+                .solennixRow()
+            } else {
+                ForEach(viewModel.packages) { pkg in
+                    packageRow(pkg)
+                        .solennixRow()
+                }
+            }
+
+            if viewModel.isPaid, viewModel.packages.count < PublicProfileSettingsViewModel.packagesMax {
+                TextField(
+                    tr("settings.public_profile.package_title", "Título del paquete"),
+                    text: $viewModel.newPackageTitle
+                )
+                .solennixRow()
+
+                TextField(
+                    tr("settings.public_profile.package_description", "Descripción"),
+                    text: $viewModel.newPackageDescription,
+                    axis: .vertical
+                )
+                .lineLimit(2...4)
+                .solennixRow()
+
+                TextField(
+                    tr("settings.public_profile.package_price", "Precio desde"),
+                    text: $viewModel.newPackagePrice
+                )
+                .keyboardType(.decimalPad)
+                .solennixRow()
+
+                TextField(
+                    tr("settings.public_profile.package_inclusions", "Incluye (separado por coma)"),
+                    text: $viewModel.newPackageInclusions
+                )
+                .solennixRow()
+
+                Button {
+                    scoped?.start {
+                        await viewModel.addPackage()
+                    }
+                } label: {
+                    HStack {
+                        Spacer()
+                        if viewModel.isAddingPackage {
+                            ProgressView()
+                        } else {
+                            Label(
+                                tr("settings.public_profile.package_add", "Agregar paquete"),
+                                systemImage: "plus.circle.fill"
+                            )
+                            .font(.subheadline.weight(.semibold))
+                        }
+                        Spacer()
+                    }
+                }
+                .disabled(
+                    viewModel.isAddingPackage
+                        || viewModel.newPackageTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                )
+                .solennixRow()
+            }
+
+            if viewModel.isPaid, viewModel.packages.count >= PublicProfileSettingsViewModel.packagesMax {
+                Text(
+                    tr(
+                        "settings.public_profile.packages_max",
+                        "Ya tenés 6 paquetes."
+                    )
+                )
+                .font(.caption)
+                .foregroundStyle(SolennixColors.textSecondary)
+                .solennixRow()
+            }
+
+            if let packagesError = viewModel.packagesError {
+                Text(packagesError)
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.error)
+                    .solennixRow()
+            }
+        } header: {
+            HStack(spacing: Spacing.xs) {
+                Text(tr("settings.public_profile.packages_section", "Paquetes"))
+                if !viewModel.isPaid {
+                    Image(systemName: "lock.fill")
+                        .font(.caption2)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+            }
+        } footer: {
+            if viewModel.isPaid {
+                Text(
+                    tr(
+                        "settings.public_profile.packages_description",
+                        "Mostrá hasta 6 paquetes o combos en tu página pública."
+                    )
+                )
+            }
+        }
+    }
+
+    private func packageRow(_ pkg: OrganizerPublicPackage) -> some View {
+        HStack(spacing: Spacing.sm) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(pkg.title)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(SolennixColors.text)
+                    .lineLimit(1)
+                if let price = pkg.fromPrice {
+                    Text(price.formatted(.currency(code: "MXN")))
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.primary)
+                }
+            }
+
+            Spacer()
+
+            Button(role: .destructive) {
+                scoped?.start {
+                    await viewModel.deletePackage(id: pkg.id)
+                }
+            } label: {
+                Image(systemName: "trash")
+                    .foregroundStyle(SolennixColors.error)
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel(tr("common.delete", "Eliminar"))
+        }
+        .padding(.vertical, Spacing.xs)
+    }
+
+    // MARK: - FAQ section (Pro+)
+
+    @ViewBuilder
+    private var faqSection: some View {
+        Section {
+            if !viewModel.isPaid {
+                Text(
+                    tr(
+                        "settings.public_profile.faq_pro_hint",
+                        "Las preguntas frecuentes están disponibles en el plan Pro."
+                    )
+                )
+                .font(.caption)
+                .foregroundStyle(SolennixColors.textTertiary)
+                .solennixRow()
+            } else if viewModel.faqLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .solennixRow()
+            } else if viewModel.faq.isEmpty {
+                Text(
+                    tr(
+                        "settings.public_profile.faq_empty",
+                        "Todavía no hay preguntas frecuentes."
+                    )
+                )
+                .font(.subheadline)
+                .foregroundStyle(SolennixColors.textSecondary)
+                .solennixRow()
+            } else {
+                ForEach(viewModel.faq) { item in
+                    faqRow(item)
+                        .solennixRow()
+                }
+            }
+
+            if viewModel.isPaid, viewModel.faq.count < PublicProfileSettingsViewModel.faqMax {
+                TextField(
+                    tr("settings.public_profile.faq_question", "Pregunta"),
+                    text: $viewModel.newFaqQuestion
+                )
+                .solennixRow()
+
+                TextField(
+                    tr("settings.public_profile.faq_answer", "Respuesta"),
+                    text: $viewModel.newFaqAnswer,
+                    axis: .vertical
+                )
+                .lineLimit(2...4)
+                .solennixRow()
+
+                Button {
+                    scoped?.start {
+                        await viewModel.addFaqItem()
+                    }
+                } label: {
+                    HStack {
+                        Spacer()
+                        if viewModel.isAddingFaq {
+                            ProgressView()
+                        } else {
+                            Label(
+                                tr("settings.public_profile.faq_add", "Agregar pregunta"),
+                                systemImage: "plus.circle.fill"
+                            )
+                            .font(.subheadline.weight(.semibold))
+                        }
+                        Spacer()
+                    }
+                }
+                .disabled(
+                    viewModel.isAddingFaq
+                        || viewModel.newFaqQuestion.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        || viewModel.newFaqAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                )
+                .solennixRow()
+            }
+
+            if viewModel.isPaid, viewModel.faq.count >= PublicProfileSettingsViewModel.faqMax {
+                Text(
+                    tr(
+                        "settings.public_profile.faq_max",
+                        "Ya tenés 12 preguntas."
+                    )
+                )
+                .font(.caption)
+                .foregroundStyle(SolennixColors.textSecondary)
+                .solennixRow()
+            }
+
+            if let faqError = viewModel.faqError {
+                Text(faqError)
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.error)
+                    .solennixRow()
+            }
+        } header: {
+            HStack(spacing: Spacing.xs) {
+                Text(tr("settings.public_profile.faq_section", "Preguntas frecuentes"))
+                if !viewModel.isPaid {
+                    Image(systemName: "lock.fill")
+                        .font(.caption2)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+            }
+        } footer: {
+            if viewModel.isPaid {
+                Text(
+                    tr(
+                        "settings.public_profile.faq_description",
+                        "Hasta 12 preguntas y respuestas para tu página pública."
+                    )
+                )
+            }
+        }
+    }
+
+    private func faqRow(_ item: OrganizerPublicFaqItem) -> some View {
+        HStack(alignment: .top, spacing: Spacing.sm) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.question)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(SolennixColors.text)
+                Text(item.answer)
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textSecondary)
+                    .lineLimit(3)
+            }
+
+            Spacer()
+
+            Button(role: .destructive) {
+                scoped?.start {
+                    await viewModel.deleteFaqItem(id: item.id)
+                }
+            } label: {
+                Image(systemName: "trash")
+                    .foregroundStyle(SolennixColors.error)
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel(tr("common.delete", "Eliminar"))
+        }
+        .padding(.vertical, Spacing.xs)
     }
 
     // MARK: - Portfolio section

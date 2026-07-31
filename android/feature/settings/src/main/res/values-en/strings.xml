@@ -73,6 +73,59 @@
     <string name="settings_public_profile_portfolio_load_failed">Could not load the portfolio.</string>
     <string name="settings_public_profile_portfolio_save_failed">Could not save the item.</string>
     <string name="settings_public_profile_portfolio_delete_failed">Could not remove the item.</string>
+
+    <!-- About / business details (Pro+) -->
+    <string name="settings_public_profile_about_section">About your business</string>
+    <string name="settings_public_profile_about">About your business</string>
+    <string name="settings_public_profile_about_pro_hint">Business details are available on the Pro plan.</string>
+    <string name="settings_public_profile_service_areas">Service areas</string>
+    <string name="settings_public_profile_event_types">Event types</string>
+    <string name="settings_public_profile_languages">Languages</string>
+    <string name="settings_public_profile_min_guests">Min guests</string>
+    <string name="settings_public_profile_max_guests">Max guests</string>
+    <string name="settings_public_profile_response_time">Response time</string>
+    <string name="settings_public_profile_lists_hint">Comma-separated lists (e.g. Weddings, Corporate, Birthdays).</string>
+
+    <!-- Visibility toggles (new) -->
+    <string name="settings_public_profile_show_packages">Show packages</string>
+    <string name="settings_public_profile_show_faq">Show FAQ</string>
+    <string name="settings_public_profile_show_policies">Show policies</string>
+
+    <!-- Services selection -->
+    <string name="settings_public_profile_services_section">Services on public page</string>
+    <string name="settings_public_profile_services_hint">Enable the services you want to show. Prices and images come from your products.</string>
+    <string name="settings_public_profile_services_empty">No active products yet. Create products in your catalog first.</string>
+    <string name="settings_public_profile_services_load_failed">Failed to load services.</string>
+    <string name="settings_public_profile_services_save_failed">Failed to save the service selection.</string>
+
+    <!-- Packages (Pro+) -->
+    <string name="settings_public_profile_packages_section">Packages</string>
+    <string name="settings_public_profile_packages_description">Show up to 6 packages or combos on your public page.</string>
+    <string name="settings_public_profile_packages_pro_hint">Packages are available on the Pro plan.</string>
+    <string name="settings_public_profile_packages_empty">No packages yet.</string>
+    <string name="settings_public_profile_package_title">Package title</string>
+    <string name="settings_public_profile_package_description">Description</string>
+    <string name="settings_public_profile_package_price">Price from</string>
+    <string name="settings_public_profile_package_inclusions">Includes (comma-separated)</string>
+    <string name="settings_public_profile_package_add">Add package</string>
+    <string name="settings_public_profile_packages_max">You already have 6 packages.</string>
+    <string name="settings_public_profile_packages_load_failed">Failed to load packages.</string>
+    <string name="settings_public_profile_packages_save_failed">Failed to save the package.</string>
+    <string name="settings_public_profile_packages_delete_failed">Failed to remove the package.</string>
+
+    <!-- FAQ (Pro+) -->
+    <string name="settings_public_profile_faq_section">Frequently asked questions</string>
+    <string name="settings_public_profile_faq_description">Up to 12 Q&amp;A entries for your public page.</string>
+    <string name="settings_public_profile_faq_pro_hint">FAQ is available on the Pro plan.</string>
+    <string name="settings_public_profile_faq_empty">No FAQ yet.</string>
+    <string name="settings_public_profile_faq_question">Question</string>
+    <string name="settings_public_profile_faq_answer">Answer</string>
+    <string name="settings_public_profile_faq_add">Add question</string>
+    <string name="settings_public_profile_faq_max">You already have 12 questions.</string>
+    <string name="settings_public_profile_faq_load_failed">Failed to load FAQ.</string>
+    <string name="settings_public_profile_faq_save_failed">Failed to save the question.</string>
+    <string name="settings_public_profile_faq_delete_failed">Failed to remove the question.</string>
+
     <string name="settings_public_profile_save">Save</string>
     <string name="settings_public_profile_saving">Saving…</string>
     <string name="settings_public_profile_saved">Public profile saved</string>

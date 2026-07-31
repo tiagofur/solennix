@@ -94,6 +94,17 @@ object Endpoints {
     const val MY_PUBLIC_PROFILE_PORTFOLIO = "users/me/public-profile/portfolio"
     fun myPublicProfilePortfolioItem(id: String) = "users/me/public-profile/portfolio/$id"
 
+    /** Service multi-select (GET list / PUT selected product IDs). */
+    const val MY_PUBLIC_PROFILE_SERVICES = "users/me/public-profile/services"
+
+    /** Pro+ packages (GET list / POST create). */
+    const val MY_PUBLIC_PROFILE_PACKAGES = "users/me/public-profile/packages"
+    fun myPublicProfilePackage(id: String) = "users/me/public-profile/packages/$id"
+
+    /** Pro+ FAQ (GET list / POST create). */
+    const val MY_PUBLIC_PROFILE_FAQ = "users/me/public-profile/faq"
+    fun myPublicProfileFaqItem(id: String) = "users/me/public-profile/faq/$id"
+
     // Subscriptions
     const val SUBSCRIPTION_STATUS = "subscriptions/status"
 

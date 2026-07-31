@@ -249,6 +249,21 @@ public enum Endpoint {
         "/users/me/public-profile/portfolio/\(id)"
     }
 
+    /// Service multi-select (GET list / PUT selected product IDs).
+    public static let myPublicProfileServices = "/users/me/public-profile/services"
+
+    /// Pro+ packages (GET list / POST create).
+    public static let myPublicProfilePackages = "/users/me/public-profile/packages"
+    public static func myPublicProfilePackage(_ id: String) -> String {
+        "/users/me/public-profile/packages/\(id)"
+    }
+
+    /// Pro+ FAQ (GET list / POST create).
+    public static let myPublicProfileFaq = "/users/me/public-profile/faq"
+    public static func myPublicProfileFaqItem(_ id: String) -> String {
+        "/users/me/public-profile/faq/\(id)"
+    }
+
     // MARK: - Subscriptions
 
     public static let subscriptionStatus = "/subscriptions/status"
