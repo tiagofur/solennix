@@ -1,45 +1,36 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { productService } from "@/services/productService";
-import { api, getAssetUrl } from "@/lib/api";
 import {
   ArrowLeft,
-  FileText,
   ShoppingCart,
-  FileCheck,
-  Download,
   DollarSign,
   Trash2,
-  MoreVertical,
   UserCog,
   Building,
   Zap,
-  Camera,
-  X,
-  ImagePlus,
   Wrench,
-  ClipboardList,
-  AlertCircle,
   Fuel,
-  CheckSquare,
-  Square,
-  Package,
   Edit,
   Calendar,
   Clock,
   Users,
 } from "lucide-react";
-import { useToast } from "@/hooks/useToast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { OptimizedImage } from "@/components/OptimizedImage";
 import { useAuth } from "@/hooks/useAuth";
-import { downloadEventPDF } from "@/services/pdfService";
 import { logError } from "@/lib/errorHandler";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { getEventTotalCharged, getEventTaxAmount, getEventNetSales, localeFromLanguage, PAYMENT_COMPLETION_EPSILON } from "@/lib/finance";
 import { computeEventFinancials, productUnitCostFromIngredients } from "@/lib/EventFinancials";
 import { Payments } from "./components/Payments";
 import { ClientPortalShareCard } from "./components/ClientPortalShareCard";
+import { EventActionsMenu } from "./components/EventActionsMenu";
+import { EventTabBar } from "./components/EventTabBar";
+import { FinancialsCard } from "./components/FinancialsCard";
+import { IngredientsView } from "./components/IngredientsView";
+import { ContractView, type UserProfile } from "./components/ContractView";
+import { EventPhotosView } from "./components/EventPhotosView";
+import { EventChecklistView } from "./components/EventChecklistView";
 import { StatusDropdown, EventStatus } from "@/components/StatusDropdown";
 import { SkeletonLine } from "@/components/Skeleton";
 import { useQuery } from "@tanstack/react-query";
@@ -49,10 +40,8 @@ import {
   useEventExtras,
   useEventEquipment,
   useEventSupplies,
-  useDeleteEvent,
   useEventPhotos,
-  useAddEventPhoto,
-  useDeleteEventPhoto,
+  useDeleteEvent,
 } from "@/hooks/queries/useEventQueries";
 import { useEventStaff } from "@/hooks/queries/useStaffQueries";
 import { usePaymentsByEvent } from "@/hooks/queries/usePaymentQueries";
@@ -61,17 +50,11 @@ import { queryKeys } from "@/hooks/queries/queryKeys";
 
 import clsx from "clsx";
 import { ContractTemplateError, renderContractTemplate } from "@/lib/contractTemplate";
-import { renderFormattedReact } from "@/lib/inlineFormatting";
-import type { Event, Client, User, EventExtra, EventEquipment, EventSupply, EventStaff as EventStaffType, ProductIngredient } from "@/types/entities";
+import type { Event, Client, EventExtra, EventEquipment, EventSupply, EventStaff as EventStaffType, ProductIngredient } from "@/types/entities";
 import { aggregateIngredients } from "./lib/aggregateIngredients";
 
 // API response types — backend returns `client` (singular)
 type EventWithClient = Event & { client?: Client | null };
-
-// Matches UserProfile in pdfGenerator (User + optional template fields)
-type UserProfile = User & {
-  contract_template?: string | null;
-};
 
 interface EventProductWithDetails {
   id: string;
@@ -102,7 +85,6 @@ export const EventSummary: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
-  const { addToast } = useToast();
 
   const { t, i18n } = useTranslation(['events', 'common']);
   const moneyLocale = localeFromLanguage(i18n.language);
@@ -119,12 +101,13 @@ export const EventSummary: React.FC = () => {
   const equipment = useMemo(() => (Array.isArray(equipmentRaw) ? equipmentRaw : []), [equipmentRaw]);
   const { data: suppliesRaw = [] } = useEventSupplies(id);
   const supplies = useMemo(() => (Array.isArray(suppliesRaw) ? suppliesRaw : []), [suppliesRaw]);
+  // Read-only photos count for the tab badge. The full photo list + upload
+  // flow live inside EventPhotosView; this just subscribes to the same
+  // (deduped) query so the badge stays in sync even off the photos tab.
   const { data: eventPhotosRaw = [] } = useEventPhotos(id);
-  const eventPhotos = Array.isArray(eventPhotosRaw) ? eventPhotosRaw : [];
+  const eventPhotosCount = Array.isArray(eventPhotosRaw) ? eventPhotosRaw.length : 0;
   const { data: eventStaffRaw = [] } = useEventStaff(id);
   const eventStaff = Array.isArray(eventStaffRaw) ? eventStaffRaw : [];
-  const addEventPhotoMutation = useAddEventPhoto(id);
-  const deleteEventPhotoMutation = useDeleteEventPhoto(id);
   const { data: paymentsRaw = [] } = usePaymentsByEvent(id);
   const payments = Array.isArray(paymentsRaw) ? paymentsRaw : [];
   const deleteEventMutation = useDeleteEvent();
@@ -133,15 +116,12 @@ export const EventSummary: React.FC = () => {
 
   // ── Local UI state ──
   const [viewMode, setViewMode] = useState<ViewMode>("summary");
-  const [actionsDropdownOpen, setActionsDropdownOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-  const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
-  const photoInputRef = React.useRef<HTMLInputElement>(null);
   const [autoOpenPayment, setAutoOpenPayment] = useState(false);
   const [paymentInitialAmount, setPaymentInitialAmount] = useState(0);
-  const [checklistItems, setChecklistItems] = useState<{ id: string; name: string; quantity: number; unit: string; section: "equipment" | "stock" | "purchase" | "extra" }[]>([]);
-  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
+  // Live checklist progress, reported by EventChecklistView while the
+  // checklist tab is mounted. Defaults to 0 (nothing checked) on other tabs.
+  const [checklistProgress, setChecklistProgress] = useState(0);
 
   // ── Derived: product quantities map (stable via sorted JSON key) ──
   const productIdsSorted = useMemo(
@@ -181,24 +161,18 @@ export const EventSummary: React.FC = () => {
     [allProdIngredients, productQuantities],
   );
 
-  // Photos are now fetched from the dedicated endpoint via useEventPhotos().
-  // The legacy path that parsed event.photos as JSON was removed — the
-  // backend owns the photo list server-side, so the Web never has to
-  // serialize or deserialize the array itself.
+  // ── Derived: checklist items (pure build from cached query data) ──
+  // Computed here (not inside EventChecklistView) so the always-visible tab
+  // badge can show the item count even when the checklist tab isn't mounted.
+  // EventChecklistView owns the interactive checked-state on top of this list.
+  const checklistItems = useMemo(() => {
+    if (!event) return [];
+    const clItems: { id: string; name: string; quantity: number; unit: string; section: "equipment" | "stock" | "purchase" | "extra" }[] = [];
 
-  // ── Build checklist items from cached query data (no additional fetches) ──
-  // NOTE: separated from the checked-state restore so background refetches
-  // rebuild the item list without clobbering in-flight toggles (A-006).
-  useEffect(() => {
-    if (!event) return;
-    const clItems: typeof checklistItems = [];
-
-    // Equipment
     (equipment as EventEquipment[]).forEach((eq) => {
       clItems.push({ id: `eq_${eq.id}`, name: eq.equipment_name || t('events:summary.equipment_fallback'), quantity: eq.quantity || 1, unit: eq.unit || t('events:summary.unit_piece'), section: "equipment" });
     });
 
-    // Product ingredients with bring_to_event (from already-cached allProdIngredients)
     const aggregated: Record<string, { name: string; quantity: number; unit: string }> = {};
     (allProdIngredients || [])
       .filter((ing: ProductIngredientWithInventory) => ing.type === "ingredient" && ing.bring_to_event)
@@ -214,58 +188,18 @@ export const EventSummary: React.FC = () => {
       clItems.push({ id: `ing_${invId}`, name: info.name, quantity: info.quantity, unit: info.unit, section: "stock" });
     });
 
-    // Supplies
     (supplies as EventSupply[]).forEach((s) => {
       clItems.push({ id: `sup_${s.id}`, name: s.supply_name || t('events:summary.supply_fallback'), quantity: s.quantity || 1, unit: s.unit || t('events:summary.unit_each'), section: s.source === "stock" ? "stock" : "purchase" });
     });
 
-    // Extras with include_in_checklist
     (extras as EventExtra[]).filter((e) => e.include_in_checklist !== false && e.description).forEach((e) => {
       clItems.push({ id: `ext_${e.id}`, name: e.description, quantity: 1, unit: t('events:summary.unit_piece'), section: "extra" });
     });
 
-    setChecklistItems(clItems);
+    return clItems;
   }, [event, equipment, supplies, extras, allProdIngredients, productQuantities, t]);
 
-  // ── Restore checked state from localStorage ──
-  // Runs only on event change (mount/id switch), NOT on background refetches,
-  // so toggles made during the session survive query invalidation.
-  useEffect(() => {
-    const savedChecked = localStorage.getItem(`event_checklist_${id}`);
-    if (savedChecked) {
-      try { setCheckedIds(new Set(JSON.parse(savedChecked))); } catch { setCheckedIds(new Set()); }
-    } else {
-      setCheckedIds(new Set());
-    }
-  }, [id]);
-
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    const handleClickOutside = () => {
-      setActionsDropdownOpen(false);
-    };
-    if (actionsDropdownOpen) {
-      document.addEventListener("click", handleClickOutside);
-    }
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, [actionsDropdownOpen]);
-
-  // StatusDropdown handles its own API call; onStatusChange is optional
-
-  const toggleChecklistItem = useCallback((itemId: string) => {
-    setCheckedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(itemId)) {
-        next.delete(itemId);
-      } else {
-        next.add(itemId);
-      }
-      localStorage.setItem(`event_checklist_${id}`, JSON.stringify(Array.from(next)));
-      return next;
-    });
-  }, [id]);
-
-  const checklistProgress = checklistItems.length > 0 ? checkedIds.size / checklistItems.length : 0;
+  // Photos are fetched inside EventPhotosView (self-contained).
 
   const handleDeleteEvent = () => {
     if (!id) return;
@@ -275,56 +209,7 @@ export const EventSummary: React.FC = () => {
     });
   };
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || !id) return;
-
-    setIsUploadingPhoto(true);
-    try {
-      let uploadedCount = 0;
-      for (const file of Array.from(files)) {
-        if (file.size > 10 * 1024 * 1024) {
-          addToast(t('events:summary.photos.error_too_large', { name: file.name }), "error");
-          continue;
-        }
-        // Step 1: upload the binary to the generic uploads endpoint to
-        // obtain a persistent URL. This endpoint is shared by all upload
-        // flows (client photos, product images, logos) and is intentionally
-        // decoupled from any resource.
-        const formData = new FormData();
-        formData.append('file', file);
-        const uploaded = await api.postFormData<{ url: string }>('/uploads/image', formData);
-
-        // Step 2: register the photo on the event via the dedicated
-        // endpoint. The backend assigns the id and timestamps and appends
-        // it to the event.photos array server-side; the Web never has to
-        // serialize the array itself.
-        await addEventPhotoMutation.mutateAsync({ url: uploaded.url });
-        uploadedCount += 1;
-      }
-
-      if (uploadedCount > 0) {
-        addToast(t('events:summary.photos.uploaded_success', { count: uploadedCount }), "success");
-      }
-    } catch (err) {
-      logError("Error uploading event photos", err);
-      addToast(t('events:summary.photos.error_uploading'), "error");
-    } finally {
-      setIsUploadingPhoto(false);
-      if (photoInputRef.current) photoInputRef.current.value = "";
-    }
-  };
-
-  const handleRemovePhoto = async (photoId: string) => {
-    if (!id) return;
-    try {
-      await deleteEventPhotoMutation.mutateAsync(photoId);
-      addToast(t('events:summary.photos.deleted_success'), "success");
-    } catch (err) {
-      logError("Error removing photo", err);
-      addToast(t('events:summary.photos.error_deleting'), "error");
-    }
-  };
+  // StatusDropdown handles its own API call; onStatusChange is optional
 
   if (loading) {
     return (
@@ -473,119 +358,12 @@ export const EventSummary: React.FC = () => {
         </div>
         <div className="flex items-center space-x-2">
           {/* Actions Dropdown (PDFs) */}
-          <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
-            <button
-              type="button"
-              onClick={() => setActionsDropdownOpen(!actionsDropdownOpen)}
-              className="h-10 w-10 sm:h-9 sm:w-9 flex items-center justify-center rounded-xl border border-border bg-card hover:bg-surface-alt transition-colors text-text-secondary hover:text-text"
-              aria-label={t('common:actions.more')}
-              aria-expanded={actionsDropdownOpen}
-              aria-haspopup="menu"
-            >
-              <MoreVertical className="h-4 w-4" aria-hidden="true" />
-            </button>
-            {actionsDropdownOpen && (
-              <div className="absolute right-0 mt-1 w-56 sm:w-72 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden py-1" role="menu">
-                <p className="px-4 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wider border-b border-border mb-1">
-                  {t('events:summary.actions.export_pdf')}
-                </p>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      await downloadEventPDF(id, 'budget');
-                    } catch (err) {
-                      logError("Error generating budget PDF", err);
-                      addToast(t('events:summary.error_pdf'), "error");
-                    }
-                    setActionsDropdownOpen(false);
-                  }}
-                  className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
-                  role="menuitem"
-                >
-                  <Download className="h-5 w-5 mr-3 text-text-secondary" />
-                  {t('events:summary.actions.budget')}
-                </button>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      await downloadEventPDF(id, 'shopping-list');
-                    } catch (err) {
-                      logError("Error generating shopping list PDF", err);
-                      addToast(t('events:summary.error_pdf'), "error");
-                    }
-                    setActionsDropdownOpen(false);
-                  }}
-                  className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
-                  role="menuitem"
-                >
-                  <ShoppingCart className="h-5 w-5 mr-3 text-text-secondary" />
-                  {t('events:summary.actions.shopping_list')}
-                </button>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      await downloadEventPDF(id, 'checklist');
-                    } catch (err) {
-                      logError("Error generating checklist PDF", err);
-                      addToast(t('events:summary.error_checklist'), "error");
-                    }
-                    setActionsDropdownOpen(false);
-                  }}
-                  className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
-                  role="menuitem"
-                >
-                  <ClipboardList className="h-5 w-5 mr-3 text-text-secondary" />
-                  {t('events:summary.actions.checklist')}
-                </button>
-                <button
-                  type="button"
-                  disabled={!isDownpaymentMet}
-                  onClick={async () => {
-                    try {
-                      await downloadEventPDF(id, 'contract');
-                    } catch (err) {
-                      logError("Error generating contract PDF", err);
-                      addToast(t('events:summary.error_pdf'), "error");
-                    }
-                    setActionsDropdownOpen(false);
-                  }}
-                  className={clsx(
-                    "w-full flex items-center px-4 py-2.5 text-sm transition-colors",
-                    !isDownpaymentMet
-                      ? "text-text-tertiary cursor-not-allowed bg-surface-alt/50"
-                      : "text-text hover:bg-surface-alt dark:hover:bg-surface"
-                  )}
-                  role="menuitem"
-                >
-                  <FileCheck className={clsx("h-5 w-5 mr-3", !isDownpaymentMet ? "text-warning/50" : "text-text-secondary")} />
-                  {t('events:summary.actions.contract')} {!isDownpaymentMet && `(${t('events:summary.actions.settle_downpayment')})`}
-                </button>
-                {viewMode === "payments" && payments.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        await downloadEventPDF(id, 'payment-report');
-                      } catch (err) {
-                        logError("Error generating payment report PDF", err);
-                        addToast(t('events:summary.error_pdf'), "error");
-                      }
-                      setActionsDropdownOpen(false);
-                    }}
-                    className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
-                    role="menuitem"
-                  >
-                    <Download className="h-5 w-5 mr-3 text-text-secondary" />
-                    {t('events:summary.actions.payment_report')}
-                  </button>
-                )}
-
-              </div>
-            )}
-          </div>
+          <EventActionsMenu
+            eventId={id}
+            isDownpaymentMet={isDownpaymentMet}
+            viewMode={viewMode}
+            paymentsCount={payments.length}
+          />
           {/* Edit */}
           <Link
             to={`/events/${id}/edit`}
@@ -609,111 +387,15 @@ export const EventSummary: React.FC = () => {
       </div>
 
       {/* Tab bar */}
-      <div className="print:hidden flex justify-center">
-        <div className="inline-flex bg-surface-alt dark:bg-surface-alt/50 rounded-2xl p-1.5 overflow-x-auto no-scrollbar shadow-sm" role="group" aria-label={t('events:summary.view_modes_aria')}>
-          <button
-            type="button"
-            onClick={() => setViewMode("summary")}
-            className={clsx(
-              "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
-              viewMode === "summary"
-                ? "bg-card text-primary shadow-sm"
-                : "text-text-secondary hover:text-text hover:bg-surface-alt"
-            )}
-            aria-pressed={viewMode === "summary"}
-            aria-label={t('events:summary.tabs.summary')}
-          >
-            <FileText className="h-4 w-4 sm:mr-2" aria-hidden="true" />
-            <span className="hidden sm:inline">{t('events:summary.tabs.summary')}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("payments")}
-            className={clsx(
-              "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
-              viewMode === "payments"
-                ? "bg-card text-primary shadow-sm"
-                : "text-text-secondary hover:text-text hover:bg-surface-alt"
-            )}
-            aria-pressed={viewMode === "payments"}
-            aria-label={t('events:summary.tabs.payments')}
-          >
-            <DollarSign className="h-4 w-4 sm:mr-2" aria-hidden="true" />
-            <span className="hidden sm:inline">{t('events:summary.tabs.payments')}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("ingredients")}
-            className={clsx(
-              "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
-              viewMode === "ingredients"
-                ? "bg-card text-primary shadow-sm"
-                : "text-text-secondary hover:text-text hover:bg-surface-alt"
-            )}
-            aria-pressed={viewMode === "ingredients"}
-            aria-label={t('events:summary.tabs.shopping')}
-          >
-            <ShoppingCart className="h-4 w-4 sm:mr-2" aria-hidden="true" />
-            <span className="hidden sm:inline">{t('events:summary.tabs.shopping')}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("contract")}
-            className={clsx(
-              "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
-              viewMode === "contract"
-                ? "bg-card text-primary shadow-sm"
-                : "text-text-secondary hover:text-text hover:bg-surface-alt",
-              !isDownpaymentMet && "opacity-50 grayscale-[0.5]"
-            )}
-            aria-pressed={viewMode === "contract"}
-            aria-label={t('events:summary.tabs.contract')}
-          >
-            <FileCheck className={clsx("h-4 w-4 sm:mr-2", !isDownpaymentMet && "text-warning")} aria-hidden="true" />
-            <span className="hidden sm:inline">{t('events:summary.tabs.contract')}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("photos")}
-            className={clsx(
-              "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
-              viewMode === "photos"
-                ? "bg-card text-primary shadow-sm"
-                : "text-text-secondary hover:text-text hover:bg-surface-alt"
-            )}
-            aria-pressed={viewMode === "photos"}
-            aria-label={t('events:summary.tabs.photos')}
-          >
-            <Camera className="h-4 w-4 sm:mr-2" aria-hidden="true" />
-            <span className="hidden sm:inline">{t('events:summary.tabs.photos')}</span>
-            {eventPhotos.length > 0 && (
-              <span className="ml-1.5 bg-primary/10 text-primary text-xs font-bold rounded-full px-1.5 py-0.5">
-                {eventPhotos.length}
-              </span>
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("checklist")}
-            className={clsx(
-              "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
-              viewMode === "checklist"
-                ? "bg-card text-primary shadow-sm"
-                : "text-text-secondary hover:text-text hover:bg-surface-alt"
-            )}
-            aria-pressed={viewMode === "checklist"}
-            aria-label={t('events:summary.tabs.checklist')}
-          >
-            <ClipboardList className="h-4 w-4 sm:mr-2" aria-hidden="true" />
-            <span className="hidden sm:inline">{t('events:summary.tabs.checklist')}</span>
-            {checklistItems.length > 0 && (
-              <span className="ml-1.5 bg-primary/10 text-primary text-xs font-bold rounded-full px-1.5 py-0.5">
-                {Math.round(checklistProgress * 100)}%
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
+      <EventTabBar
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        photosCount={eventPhotosCount}
+        checklistItemsCount={checklistItems.length}
+        checklistProgress={checklistProgress}
+        isDownpaymentMet={isDownpaymentMet}
+      />
+
 
       {viewMode === "payments" && id && user && (
         <Payments
@@ -1036,627 +718,76 @@ export const EventSummary: React.FC = () => {
             </div>
           )}
 
-          <div className="print:hidden">
-            <div className="bg-card shadow-lg rounded-2xl p-6 sm:p-8 border border-border overflow-hidden relative">
-              <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-                <DollarSign className="h-32 w-32 text-primary" />
-              </div>
-              <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-text">
-                <DollarSign className="h-5 w-5 text-primary" />
-                {t('events:financials.title')}
-              </h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">{t('events:financials.net_sales')}</p>
-                  <p className="text-xl font-black text-text">{netSales.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">{t('events:financials.tax')}</p>
-                  <p className="text-xl font-black text-text">{taxAmount.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">{t('events:financials.costs')}</p>
-                  <p className="text-xl font-black text-error">{totalCost.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">{t('events:financials.net_profit')}</p>
-                  <p className="text-xl font-black text-success">{profit.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">{t('common:pending')}</p>
-                  <p className={clsx("text-xl font-black", remainingValue > 0 ? "text-warning" : "text-success")}>
-                    {remainingValue.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}
-                  </p>
-                </div>
-              </div>
-
-              {/* Payment Progress Bar */}
-              {totalCharged > 0 && (
-                <div className="mt-8 pt-6 border-t border-border relative z-10">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">{t('events:summary.payment_progress')}</span>
-                    <span className="text-sm font-bold text-text">
-                      {Math.min(100, ((totalPaid / totalCharged) * 100)).toFixed(0)}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-surface-alt rounded-full h-3 overflow-hidden">
-                    <div
-                      className={clsx(
-                        "h-full rounded-full transition-all duration-500",
-                        totalPaid >= totalCharged ? "bg-success" : "bg-primary"
-                      )}
-                      style={{ width: `${Math.min(100, (totalPaid / totalCharged) * 100)}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between mt-2 text-xs text-text-secondary">
-                    <span>{t('events:summary.charged')}: {totalPaid.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}</span>
-                    <span>{t('common:total')}: {totalCharged.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}</span>
-                  </div>
-                  {remainingValue > 0 && currentStatus !== "cancelled" && (
-                    <div className="flex flex-wrap gap-3 mt-3">
-                       {event.deposit_percent > 0 && !isDownpaymentMet && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPaymentInitialAmount(depositAmount - totalPaid);
-                            setAutoOpenPayment(true);
-                            setViewMode("payments");
-                          }}
-                          className="flex items-center gap-2 px-4 py-2 bg-warning text-white rounded-xl text-sm font-bold hover:bg-warning/90 transition-colors shadow-md shadow-warning/20"
-                        >
-                          <DollarSign className="h-4 w-4" />
-                          {t('events:summary.actions.deposit_short')}
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPaymentInitialAmount(0);
-                          setAutoOpenPayment(false);
-                          setViewMode("payments");
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 bg-surface-alt text-text border border-border rounded-xl text-sm font-bold hover:bg-surface-alt/80 transition-colors"
-                      >
-                        <DollarSign className="h-4 w-4" />
-                        {t('events:summary.actions.payment_short')}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+          <FinancialsCard
+            netSales={netSales}
+            taxAmount={taxAmount}
+            totalCost={totalCost}
+            profit={profit}
+            remainingValue={remainingValue}
+            totalPaid={totalPaid}
+            totalCharged={totalCharged}
+            moneyLocale={moneyLocale}
+            eventCurrency={eventCurrency}
+            currentStatus={currentStatus}
+            isDownpaymentMet={isDownpaymentMet}
+            depositPercent={event.deposit_percent || 0}
+            onRegisterDeposit={(amount) => {
+              setPaymentInitialAmount(amount);
+              setAutoOpenPayment(true);
+              setViewMode("payments");
+            }}
+            onAddPayment={() => {
+              setPaymentInitialAmount(0);
+              setAutoOpenPayment(false);
+              setViewMode("payments");
+            }}
+          />
         </div>
       )}
 
       {viewMode === "ingredients" && (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 border border-border">
-            <h1 className="text-2xl font-black text-text uppercase tracking-tight mb-2">
-              {t('events:summary.supplies_list')}
-            </h1>
-            <p className="text-text-secondary text-sm flex items-center gap-2">
-              <ShoppingCart className="h-4 w-4 text-primary" />
-              {event.service_type} • {new Date(event.event_date + "T12:00:00").toLocaleDateString(moneyLocale)}
-            </p>
-          </div>
-
-          <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 border border-border overflow-hidden">
-            <table className="w-full text-sm" aria-label={t('events:summary.aria_supplies_needed')}>
-              <caption className="sr-only">{t('events:summary.supplies_caption')}</caption>
-              <thead>
-                <tr className="text-left text-text-secondary border-b border-border">
-                  <th className="pb-3 pt-2">{t('common:supply')}</th>
-                  <th className="pb-3 pt-2 text-right">{t('common:required')}</th>
-                  <th className="pb-3 pt-2 text-right">{t('common:in_stock')}</th>
-                  <th className="pb-3 pt-2 text-right">{t('common:action')}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {ingredients.map((ing) => {
-                  const needsMore = ing.quantity > (ing.currentStock || 0);
-                  return (
-                    <tr key={`${ing.name}-${ing.unit}`} className="hover:bg-surface-alt/50 transition-colors">
-                      <td className="py-3 font-medium text-text">
-                        {ing.name}
-                        <div className="text-xs text-text-secondary uppercase tracking-tight">{ing.unit || t('common:unit_short')}</div>
-                      </td>
-                      <td className="py-3 text-right text-text font-bold">
-                        {ing.quantity.toFixed(2)}
-                      </td>
-                      <td className="py-3 text-right">
-                        <span className={clsx(
-                          "px-2 py-0.5 rounded-full text-xs font-semibold",
-                          needsMore 
-                            ? "bg-error/10 text-error border border-error/20"
-                            : "bg-success/10 text-success border border-success/20"
-                        )}>
-                          {(ing.currentStock || 0).toFixed(2)}
-                        </span>
-                      </td>
-                      <td className="py-3 text-right">
-                        {needsMore ? (
-                          <Link 
-                            to="/inventory" 
-                            className="text-primary hover:text-primary/80 font-bold text-xs underline decoration-dotted"
-                          >
-                            {t('common:buy')}
-                          </Link>
-                        ) : (
-                          <span className="text-text-secondary text-xs">OK</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-                {ingredients.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={3}
-                      className="py-4 text-center text-text-secondary italic"
-                    >
-                      {t('events:summary.no_supplies_calculated')}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Per-event supplies: purchase */}
-          {supplies.filter((s: EventSupply) => s.source === 'purchase').length > 0 && (
-            <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 border border-border overflow-hidden">
-              <h2 className="text-lg font-bold text-text mb-1">{t('events:summary.supplies_purchase_title')}</h2>
-              <p className="text-xs text-text-secondary mb-4">{t('events:summary.supplies_purchase_desc')}</p>
-              <table className="w-full text-sm" aria-label={t('events:summary.aria_supplies_purchase')}>
-                <thead>
-                  <tr className="text-left text-text-secondary border-b border-border">
-                    <th className="pb-3 pt-2">{t('common:supply')}</th>
-                    <th className="pb-3 pt-2 text-right">{t('common:quantity')}</th>
-                    <th className="pb-3 pt-2 text-right">{t('common:unit_cost')}</th>
-                    <th className="pb-3 pt-2 text-right">{t('common:subtotal')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {supplies.filter((s: EventSupply) => s.source === 'purchase').map((s: EventSupply, idx) => (
-                    <tr key={s.id || `purchase-${idx}`} className="hover:bg-surface-alt/50 transition-colors">
-                      <td className="py-3 font-medium text-text">
-                        {s.supply_name || t('common:supply')}
-                        <div className="text-xs text-text-secondary uppercase tracking-tight">{s.unit || t('common:unit_short')}</div>
-                      </td>
-                      <td className="py-3 text-right text-text font-bold">{s.quantity}</td>
-                      <td className="py-3 text-right text-text-secondary">
-                        {(s.unit_cost || 0).toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}
-                      </td>
-                      <td className="py-3 text-right text-text font-bold">
-                        {((s.quantity || 0) * (s.unit_cost || 0)).toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Per-event supplies: from stock */}
-          {supplies.filter((s: EventSupply) => s.source === 'stock').length > 0 && (
-            <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 border border-border overflow-hidden">
-              <h2 className="text-lg font-bold text-text mb-1">{t('events:summary.supplies_stock_title')}</h2>
-              <p className="text-xs text-text-secondary mb-4">{t('events:summary.supplies_stock_desc')}</p>
-              <table className="w-full text-sm" aria-label={t('events:summary.aria_supplies_stock')}>
-                <thead>
-                  <tr className="text-left text-text-secondary border-b border-border">
-                    <th className="pb-3 pt-2">{t('common:supply')}</th>
-                    <th className="pb-3 pt-2 text-right">{t('common:quantity')}</th>
-                    <th className="pb-3 pt-2 text-right">{t('common:in_stock')}</th>
-                    <th className="pb-3 pt-2 text-right">{t('common:status')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {supplies.filter((s: EventSupply) => s.source === 'stock').map((s: EventSupply, idx) => {
-                    const needsMore = s.quantity > (s.current_stock || 0);
-                    return (
-                      <tr key={s.id || `stock-${idx}`} className="hover:bg-surface-alt/50 transition-colors">
-                        <td className="py-3 font-medium text-text">
-                          {s.supply_name || t('events:summary.supply_fallback')}
-                          <div className="text-xs text-text-secondary uppercase tracking-tight">{s.unit || t('events:summary.unit_each')}</div>
-                        </td>
-                        <td className="py-3 text-right text-text font-bold">{s.quantity}</td>
-                        <td className="py-3 text-right">
-                          <span className={clsx(
-                            "px-2 py-0.5 rounded-full text-xs font-semibold",
-                            needsMore
-                              ? "bg-error/10 text-error border border-error/20"
-                              : "bg-success/10 text-success border border-success/20"
-                          )}>
-                            {(s.current_stock || 0)}
-                          </span>
-                        </td>
-                        <td className="py-3 text-right">
-                          {needsMore ? (
-                            <span className="text-error text-xs font-bold">{t('common:insufficient')}</span>
-                          ) : (
-                            <span className="text-success text-xs font-bold">OK</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        <IngredientsView
+          event={event}
+          ingredients={ingredients}
+          supplies={supplies}
+          moneyLocale={moneyLocale}
+          eventCurrency={eventCurrency}
+        />
       )}
 
       {viewMode === "contract" && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="bg-card shadow-xl rounded-[40px] p-12 sm:p-20 border border-border font-serif text-text leading-relaxed max-w-4xl mx-auto relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-2 bg-primary"></div>
-            <div className="text-center mb-16">
-              <h1 className="text-3xl font-black uppercase tracking-[0.2em] text-text">
-                {t('events:summary.contract_title')}
-              </h1>
-              <div className="w-24 h-1 bg-primary mx-auto mt-4"></div>
-            </div>
-
-          {contractPreviewMissingTokens.length > 0 ? (
-            <div className="space-y-4 text-center">
-              <p className="text-error font-semibold">
-                {t('events:summary.contract_missing_data')}
-              </p>
-              <p className="text-sm text-text-secondary">
-                {t('events:summary.contract_complete_fields')}: {contractPreviewMissingTokens.map((token) => `[${token}]`).join(", ")}
-              </p>
-            </div>
-          ) : !isDownpaymentMet ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-              <div className="bg-warning/10 p-6 rounded-full">
-                <AlertCircle className="h-12 w-12 text-warning" />
-              </div>
-              <h3 className="text-2xl font-black text-text uppercase">{t('events:summary.deposit_required')}</h3>
-              <p className="text-text-secondary max-w-md">
-                {t('events:summary.deposit_required_desc', { percent: event.deposit_percent })}
-                ({depositAmount.toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency })}).
-              </p>
-              <p className="text-sm text-warning font-bold">
-                {t('events:summary.deposit_missing', { amount: (depositAmount - totalPaid).toLocaleString(moneyLocale, { style: 'currency', currency: eventCurrency }) })}
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setPaymentInitialAmount(depositAmount - totalPaid);
-                  setAutoOpenPayment(true);
-                  setViewMode("payments");
-                }}
-                className="mt-4 px-8 py-3 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95"
-              >
-                {t('events:summary.actions.register_deposit_now')}
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4 text-justify whitespace-pre-line">
-              {contractPreview.split(/\n\n+/).map((paragraph, index) => (
-                <p key={index}>{renderFormattedReact(paragraph)}</p>
-              ))}
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-16 mt-24 pt-12">
-            <div className="text-center border-t border-border pt-4">
-              <p className="font-bold">
-                {profile?.business_name || profile?.name || t('events:summary.the_provider')}
-              </p>
-              <p className="text-sm text-text-secondary mt-1">
-                {t('events:summary.signature')}
-              </p>
-            </div>
-            <div className="text-center border-t border-border pt-4">
-              <p className="font-bold">{event.client?.name}</p>
-              <p className="text-sm text-text-secondary mt-1">
-                {t('events:summary.signature_client')}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+        <ContractView
+          contractPreview={contractPreview}
+          contractPreviewMissingTokens={contractPreviewMissingTokens}
+          isDownpaymentMet={isDownpaymentMet}
+          depositAmount={depositAmount}
+          totalPaid={totalPaid}
+          moneyLocale={moneyLocale}
+          eventCurrency={eventCurrency}
+          event={event}
+          profile={profile as UserProfile | null}
+          onRegisterDeposit={(amount) => {
+            setPaymentInitialAmount(amount);
+            setAutoOpenPayment(true);
+            setViewMode("payments");
+          }}
+        />
       )}
 
-      {viewMode === "photos" && (
-        <div className="bg-card shadow-sm rounded-2xl border border-border p-6 print:hidden">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-text">{t('events:summary.photos.title')}</h2>
-            <button
-              type="button"
-              onClick={() => photoInputRef.current?.click()}
-              disabled={isUploadingPhoto}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white premium-gradient hover:opacity-90 shadow-sm transition-opacity disabled:opacity-50"
-            >
-              {isUploadingPhoto ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                  {t('common:uploading')}...
-                </>
-              ) : (
-                <>
-                  <ImagePlus className="h-4 w-4 mr-2" aria-hidden="true" />
-                  {t('events:summary.photos.add_photos')}
-                </>
-              )}
-            </button>
-            <input
-              ref={photoInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              disabled={isUploadingPhoto}
-              className="hidden"
-              onChange={handlePhotoUpload}
-            />
-          </div>
-
-          {eventPhotos.length === 0 ? (
-            <div className="text-center py-12">
-              <Camera className="mx-auto h-12 w-12 text-text-secondary mb-3" aria-hidden="true" />
-              <p className="text-text-secondary">{t('events:summary.photos.no_photos')}</p>
-              <p className="text-sm text-text-secondary mt-1">
-                {t('events:summary.photos.add_photos_desc')}
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {eventPhotos.map((photo, idx) => {
-                const resolvedUrl = getAssetUrl(photo.url) || photo.url;
-                return (
-                  <div key={photo.id || `photo-${idx}`} className="relative group aspect-square rounded-xl overflow-hidden bg-surface-alt">
-                    <OptimizedImage
-                      src={resolvedUrl}
-                      alt={`Foto ${idx + 1} del evento`}
-                      className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                      onClick={() => setLightboxPhoto(resolvedUrl)}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleRemovePhoto(photo.id)}
-                      className="absolute top-2 right-2 bg-error text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-error/90"
-                      aria-label={t('events:summary.photos.delete_aria', { index: idx + 1 })}
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+      {viewMode === "photos" && id && (
+        <EventPhotosView eventId={id} />
       )}
 
       {viewMode === "checklist" && (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {/* Header card */}
-          <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 border border-border">
-            <h1 className="text-2xl font-black text-text uppercase tracking-tight mb-2">
-              {t('events:summary.checklist_title')}
-            </h1>
-            <p className="text-text-secondary text-sm flex items-center gap-2">
-              <ClipboardList className="h-4 w-4 text-primary" />
-              {event.service_type} • {new Date(event.event_date + "T12:00:00").toLocaleDateString(moneyLocale)}
-            </p>
-
-            {checklistItems.length > 0 && (
-              <div className="mt-4">
-                <div className="flex items-center justify-between text-sm mb-2">
-                  <span className="text-text-secondary">
-                    {t('events:summary.checklist_count', { current: checkedIds.size, total: checklistItems.length })}
-                  </span>
-                  <span className="font-bold text-primary">
-                    {Math.round(checklistProgress * 100)}%
-                  </span>
-                </div>
-                <div className="w-full bg-surface-alt rounded-full h-3 overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500 ease-out premium-gradient"
-                    style={{ width: `${Math.round(checklistProgress * 100)}%` }}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {checklistItems.length === 0 ? (
-            <div className="bg-card shadow-sm rounded-2xl border border-border p-8 text-center">
-              <ClipboardList className="mx-auto h-12 w-12 text-text-secondary mb-3" aria-hidden="true" />
-              <p className="text-text-secondary">{t('events:summary.checklist_empty')}</p>
-              <p className="text-sm text-text-secondary mt-1">
-                {t('events:summary.checklist_empty_desc')}
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Equipment section */}
-              {checklistItems.filter((i) => i.section === "equipment").length > 0 && (
-                <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 border border-border">
-                  <h2 className="text-sm font-black text-text uppercase tracking-tight mb-4 flex items-center gap-2">
-                    <Wrench className="h-4 w-4 text-primary" aria-hidden="true" />
-                    {t('common:equipment')}
-                  </h2>
-                  <div className="space-y-1">
-                    {checklistItems.filter((i) => i.section === "equipment").map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => toggleChecklistItem(item.id)}
-                        className={clsx(
-                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left",
-                          checkedIds.has(item.id)
-                            ? "bg-success/5 hover:bg-success/10"
-                            : "hover:bg-surface-alt"
-                        )}
-                      >
-                        {checkedIds.has(item.id) ? (
-                          <CheckSquare className="h-5 w-5 text-success shrink-0" />
-                        ) : (
-                          <Square className="h-5 w-5 text-text-secondary shrink-0" />
-                        )}
-                        <span className={clsx(
-                          "flex-1 text-sm font-medium",
-                          checkedIds.has(item.id) ? "line-through text-text-secondary" : "text-text"
-                        )}>
-                          {item.name}
-                        </span>
-                        <span className="text-xs text-text-secondary shrink-0">
-                          {item.quantity} {item.unit}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Stock supplies section */}
-              {checklistItems.filter((i) => i.section === "stock").length > 0 && (
-                <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 border border-border">
-                  <h2 className="text-sm font-black text-text uppercase tracking-tight mb-4 flex items-center gap-2">
-                    <Package className="h-4 w-4 text-primary" aria-hidden="true" />
-                    {t('events:summary.warehouse_supplies')}
-                  </h2>
-                  <div className="space-y-1">
-                    {checklistItems.filter((i) => i.section === "stock").map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => toggleChecklistItem(item.id)}
-                        className={clsx(
-                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left",
-                          checkedIds.has(item.id)
-                            ? "bg-success/5 hover:bg-success/10"
-                            : "hover:bg-surface-alt"
-                        )}
-                      >
-                        {checkedIds.has(item.id) ? (
-                          <CheckSquare className="h-5 w-5 text-success shrink-0" />
-                        ) : (
-                          <Square className="h-5 w-5 text-text-secondary shrink-0" />
-                        )}
-                        <span className={clsx(
-                          "flex-1 text-sm font-medium",
-                          checkedIds.has(item.id) ? "line-through text-text-secondary" : "text-text"
-                        )}>
-                          {item.name}
-                        </span>
-                        <span className="text-xs text-text-secondary shrink-0">
-                          {item.quantity.toFixed(2)} {item.unit || t('common:unit_short')}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Purchase supplies section */}
-              {checklistItems.filter((i) => i.section === "purchase").length > 0 && (
-                <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 border border-border">
-                  <h2 className="text-sm font-black text-text uppercase tracking-tight mb-4 flex items-center gap-2">
-                    <ShoppingCart className="h-4 w-4 text-warning" aria-hidden="true" />
-                    {t('events:summary.supplies_to_buy')}
-                  </h2>
-                  <div className="space-y-1">
-                    {checklistItems.filter((i) => i.section === "purchase").map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => toggleChecklistItem(item.id)}
-                        className={clsx(
-                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left",
-                          checkedIds.has(item.id)
-                            ? "bg-success/5 hover:bg-success/10"
-                            : "hover:bg-surface-alt"
-                        )}
-                      >
-                        {checkedIds.has(item.id) ? (
-                          <CheckSquare className="h-5 w-5 text-success shrink-0" />
-                        ) : (
-                          <Square className="h-5 w-5 text-text-secondary shrink-0" />
-                        )}
-                        <span className={clsx(
-                          "flex-1 text-sm font-medium",
-                          checkedIds.has(item.id) ? "line-through text-text-secondary" : "text-text"
-                        )}>
-                          {item.name}
-                        </span>
-                        <span className="text-xs text-text-secondary shrink-0">
-                          {item.quantity} {item.unit}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Extras section */}
-              {checklistItems.filter((i) => i.section === "extra").length > 0 && (
-                <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 border border-border">
-                  <h2 className="text-sm font-black text-text uppercase tracking-tight mb-4 flex items-center gap-2">
-                    <Zap className="h-4 w-4 text-primary" aria-hidden="true" />
-                    {t('events:general.extras')}
-                  </h2>
-                  <div className="space-y-1">
-                    {checklistItems.filter((i) => i.section === "extra").map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => toggleChecklistItem(item.id)}
-                        className={clsx(
-                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left",
-                          checkedIds.has(item.id)
-                            ? "bg-success/5 hover:bg-success/10"
-                            : "hover:bg-surface-alt"
-                        )}
-                      >
-                        {checkedIds.has(item.id) ? (
-                          <CheckSquare className="h-5 w-5 text-success shrink-0" />
-                        ) : (
-                          <Square className="h-5 w-5 text-text-secondary shrink-0" />
-                        )}
-                        <span className={clsx(
-                          "flex-1 text-sm font-medium",
-                          checkedIds.has(item.id) ? "line-through text-text-secondary" : "text-text"
-                        )}>
-                          {item.name}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Lightbox */}
-      {lightboxPhoto && (
-        <div
-          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
-          onClick={() => setLightboxPhoto(null)}
-          role="dialog"
-          aria-label={t('events:summary.photos.lightbox_aria')}
-        >
-          <button
-            type="button"
-            onClick={() => setLightboxPhoto(null)}
-            className="absolute top-4 right-4 text-white hover:text-white/70 transition-colors"
-            aria-label={t('common:actions.close')}
-          >
-            <X className="h-8 w-8" />
-          </button>
-          <img
-            src={lightboxPhoto}
-            alt={t('events:summary.photos.lightbox_img_alt')}
-            className="max-w-full max-h-[90vh] rounded-xl object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
+        <EventChecklistView
+          eventId={id}
+          event={event}
+          checklistItems={checklistItems}
+          moneyLocale={moneyLocale}
+          onProgressChange={(_checked, _total, progress) =>
+            setChecklistProgress(progress)
+          }
+        />
       )}
 
       <div className="mt-12 text-center text-xs text-text-secondary print:mt-12">

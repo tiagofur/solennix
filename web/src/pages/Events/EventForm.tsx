@@ -11,21 +11,10 @@ import { z } from "zod";
 import { eventService } from "@/services/eventService";
 import { productService } from "@/services/productService";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  ArrowLeft,
-  Save,
-  FileText,
-  ChevronRight,
-  CheckCircle,
-  AlertCircle,
-  Info,
-  Package,
-  Sparkles,
-  ShoppingCart,
-  DollarSign,
-} from "lucide-react";
+import { ArrowLeft, Info, Package, Sparkles, ShoppingCart, DollarSign } from "lucide-react";
 import { logError } from "@/lib/errorHandler";
 import { productUnitCostFromIngredients } from "@/lib/EventFinancials";
+import { isoToLocalHHmm, serializeShift, isValidUuid } from "@/lib/eventShifts";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { EventGeneralInfo } from "./components/EventGeneralInfo";
 import { EventProducts } from "./components/EventProducts";
@@ -33,6 +22,10 @@ import { EventExtras } from "./components/EventExtras";
 import { EventFinancials } from "./components/EventFinancials";
 import { EventEquipment } from "./components/EventEquipment";
 import { EventStaff, type SelectedStaffAssignment } from "./components/EventStaff";
+import { EventFormHeader } from "./components/EventFormHeader";
+import { EventFormStepper } from "./components/EventFormStepper";
+import { EventFormErrorBanners } from "./components/EventFormErrorBanners";
+import { EventFormNavButtons } from "./components/EventFormNavButtons";
 import { useStaff } from "@/hooks/queries/useStaffQueries";
 import { staffService } from "@/services/staffService";
 import { EventSupplies } from "./components/EventSupplies";
@@ -75,61 +68,8 @@ interface Product {
   staff_team_id?: string | null;
 }
 
-// Convert an ISO8601 UTC string (e.g. the backend's shift_start) to the
-// browser-local HH:mm representation used by <input type="time">. Returns
-// null when the input is empty/invalid so the field stays cleared.
-const isoToLocalHHmm = (iso: string | null | undefined): string | null => {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mm = String(d.getMinutes()).padStart(2, "0");
-  return `${hh}:${mm}`;
-};
-
-// Combine a YYYY-MM-DD event date with a HH:mm local time into an ISO8601
-// UTC string. `dayOffset` shifts the day by N (used for overnight shifts).
-// Returns null when either piece is missing.
-const hhmmToUtcIso = (
-  eventDate: string | null | undefined,
-  hhmm: string | null,
-  dayOffset = 0,
-): string | null => {
-  if (!eventDate || !hhmm) return null;
-  const [h, m] = hhmm.split(":").map((n) => Number(n));
-  if (Number.isNaN(h) || Number.isNaN(m)) return null;
-  const [y, mo, d] = eventDate.split("-").map((n) => Number(n));
-  if (Number.isNaN(y) || Number.isNaN(mo) || Number.isNaN(d)) return null;
-  const local = new Date(y, mo - 1, d + dayOffset, h, m, 0, 0);
-  if (Number.isNaN(local.getTime())) return null;
-  return local.toISOString();
-};
-
-// Serialize a shift range, bumping the end by +1 day when the user chose an
-// end time on or before the start (overnight turno). Backend enforces
-// CHECK (shift_end > shift_start), so "19:00 → 02:00" would otherwise be
-// rejected.
-const serializeShift = (
-  eventDate: string | null | undefined,
-  start: string | null,
-  end: string | null,
-): { shiftStart: string | null; shiftEnd: string | null } => {
-  const shiftStart = hhmmToUtcIso(eventDate, start);
-  if (!end) return { shiftStart, shiftEnd: null };
-  if (!start) return { shiftStart: null, shiftEnd: hhmmToUtcIso(eventDate, end) };
-  const [sh, sm] = start.split(":").map(Number);
-  const [eh, em] = end.split(":").map(Number);
-  const overnight = eh * 60 + em <= sh * 60 + sm;
-  return {
-    shiftStart,
-    shiftEnd: hhmmToUtcIso(eventDate, end, overnight ? 1 : 0),
-  };
-};
-
-const isValidUuid = (value: string): boolean =>
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    value.trim(),
-  );
+// Shift time helpers (isoToLocalHHmm / serializeShift / isValidUuid) live in
+// @/lib/eventShifts.ts — pure, unit-testable, reused across the wizard.
 
 type EventFormData = {
   client_id: string;
@@ -1121,133 +1061,25 @@ export const EventForm: React.FC = () => {
   return (
     <div className="space-y-6">
       <Breadcrumb items={[{ label: t('common:nav.dashboard'), href: '/dashboard' }, { label: id ? t('events:form.title_edit') : t('events:form.title_new') }]} />
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center">
-          <button
-            type="button"
-            onClick={() => navigate("/events?view=calendar")}
-            className="mr-4 p-2 rounded-full hover:bg-surface-alt text-text-secondary"
-            aria-label={t("events:form.back_to_calendar_aria")}
-          >
-            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-          </button>
-          <h1 className="text-2xl font-bold tracking-tight text-text">
-            {id ? t("events:form.title_edit") : t("events:form.title_new")}
-          </h1>
-        </div>
-        {id && (
-          <button
-            type="button"
-            onClick={() => navigate(`/events/${id}/summary`)}
-            className="inline-flex items-center px-4 py-2 border border-border rounded-xl shadow-xs text-sm font-medium text-text-secondary bg-card hover:bg-surface-alt transition-colors"
-          >
-            <FileText className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
-            {t("events:list.actions.view_summary")}
-          </button>
-        )}
-      </div>
+      <EventFormHeader
+        isEdit={Boolean(id)}
+        eventId={id}
+        onBack={() => navigate("/events?view=calendar")}
+        onViewSummary={() => navigate(`/events/${id}/summary`)}
+      />
 
-      <nav aria-label={t("events:form.progress_aria")} className="mb-8">
-        <div className="relative">
-          {/* Progress Line */}
-          <div
-            className="absolute top-1/2 left-0 w-full h-1 bg-border -translate-y-1/2 rounded-full overflow-hidden"
-            aria-hidden="true"
-          >
-            <div
-              className="h-full bg-primary transition-all duration-500 ease-in-out"
-              style={{ width: `${((activeStep - 1) / (STEPS.length - 1)) * 100}%` }}
-            />
-          </div>
+      <EventFormStepper
+        steps={STEPS}
+        activeStep={activeStep}
+        onSelectStep={(stepId) => setActiveStep(stepId)}
+      />
 
-          <ol role="list" className="relative flex justify-between w-full">
-            {STEPS.map((step) => {
-              const Icon = step.icon;
-              const isCompleted = activeStep > step.id;
-              const isActive = activeStep === step.id;
-
-              return (
-                <li key={step.id} className="relative">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (activeStep > step.id) setActiveStep(step.id);
-                    }}
-                    disabled={activeStep < step.id}
-                    className="group flex flex-col items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary rounded-lg"
-                  >
-                    <span
-                      className={`relative z-10 w-12 h-12 flex items-center justify-center rounded-2xl transition-all duration-500 ${
-                        isCompleted
-                          ? "bg-primary text-white shadow-lg shadow-primary/20"
-                          : isActive
-                            ? "bg-card border-2 border-primary text-primary shadow-xl ring-4 ring-primary/10 scale-110"
-                            : "bg-surface-alt border-2 border-border text-text-tertiary"
-                      }`}
-                    >
-                      {isCompleted ? (
-                        <CheckCircle className="w-6 h-6" aria-hidden="true" />
-                      ) : (
-                        <Icon className="w-6 h-6" aria-hidden="true" />
-                      )}
-                      
-                      {isActive && (
-                        <span className="absolute -inset-1 rounded-2xl animate-pulse bg-primary/20 blur-sm -z-10" />
-                      )}
-                    </span>
-                    <span
-                      className={`mt-3 text-xs font-black uppercase tracking-widest transition-colors duration-300 ${
-                        isActive ? "text-primary" : "text-text-secondary"
-                      }`}
-                    >
-                      {step.title}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-      </nav>
-
-      {error && (
-        <div
-          className="bg-error/5 border-l-4 border-error p-4 rounded-md"
-          role="alert"
-        >
-          <div className="flex">
-            <AlertCircle className="h-5 w-5 text-error" aria-hidden="true" />
-            <div className="ml-3">
-              <p className="text-sm text-error">{error}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isSubmitted && !isValid && (
-        <div
-          className="bg-error/5 border border-error/20 p-5 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-500"
-          role="alert"
-        >
-          <div className="flex gap-4">
-            <div className="p-2 bg-error/10 rounded-xl h-fit">
-              <AlertCircle className="h-6 w-6 text-error" aria-hidden="true" />
-            </div>
-            <div>
-              <p className="text-sm text-error font-black uppercase tracking-tight mb-2">{t("events:form.error_title")}</p>
-              <p className="text-sm text-text-secondary mb-3">{t("events:form.error_save")}</p>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 list-none">
-                {Object.entries(errors).map(([key, err]) => (
-                  <li key={key} className="text-xs text-error/80 flex items-center">
-                    <span className="mr-2 opacity-50">●</span>
-                    {(err as { message?: string })?.message}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      )}
+      <EventFormErrorBanners
+        error={error}
+        errors={errors}
+        isSubmitted={isSubmitted}
+        isValid={isValid}
+      />
 
       <FormProvider {...methods}>
         <form
@@ -1344,40 +1176,15 @@ export const EventForm: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex justify-between pt-4">
-            <button
-              type="button"
-              onClick={prevStep}
-              disabled={activeStep === 1}
-              className={`px-4 py-2 border border-border rounded-xl shadow-sm text-sm font-medium text-text-secondary bg-card hover:bg-surface-alt transition-colors ${activeStep === 1 ? "invisible" : ""}`}
-              aria-label={t("events:form.previous")}
-            >
-              {t("events:form.previous")}
-            </button>
-
-            {activeStep < STEPS.length ? (
-              <button
-                type="button"
-                onClick={nextStep}
-                disabled={isStepLoading}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-xs text-sm font-medium rounded-xl text-white premium-gradient hover:opacity-90 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 transition-opacity"
-                aria-label={t("events:form.next")}
-              >
-                {isStepLoading ? t("events:form.loading") : t("events:form.next")}
-                <ChevronRight className="ml-2 h-4 w-4" aria-hidden="true" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleSubmit(onSubmit)}
-                disabled={isLoading || isStepLoading}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-xs text-sm font-medium rounded-xl text-white bg-success hover:bg-success/90 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-success/50 disabled:opacity-50 transition-colors"
-              >
-                <Save className="h-5 w-5 mr-2" aria-hidden="true" />
-                {isLoading ? t("events:form.saving") : t("events:form.save")}
-              </button>
-            )}
-          </div>
+          <EventFormNavButtons
+            activeStep={activeStep}
+            totalSteps={STEPS.length}
+            isStepLoading={isStepLoading}
+            isLoading={isLoading}
+            onPrev={prevStep}
+            onNext={nextStep}
+            onSubmit={() => handleSubmit(onSubmit)()}
+          />
         </form>
       </FormProvider>
     </div>
