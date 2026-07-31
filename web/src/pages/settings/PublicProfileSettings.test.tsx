@@ -216,7 +216,11 @@ describe("PublicProfileSettings", () => {
         }),
       );
     });
-    expect(screen.getByText("Gala")).toBeInTheDocument();
+    // Wrap in waitFor: the new portfolio item re-renders async after the
+    // create promise resolves (flaky on slow CI without the await).
+    await waitFor(() => {
+      expect(screen.getByText("Gala")).toBeInTheDocument();
+    });
   });
 
   it("hides portfolio form on Free plan", async () => {
