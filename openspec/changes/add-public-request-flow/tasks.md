@@ -17,12 +17,12 @@
 
 ## Phase 3: Service (lógica de negocio)
 
-- [ ] 3.1 Crear `backend/internal/services/public_request_service.go` con `PublicRequestService`: validación perfil habilitado + servicios válidos (delegado a `ProductRepo`/`PublicProfileRepo`) en `CreatePublicRequest`; cap 100 pendientes → error.
-- [ ] 3.2 Implementar máquina de estados `transition(current, action)` con mapa de transiciones válidas → error `ErrInvalidTransition`.
-- [ ] 3.3 Implementar `Respond`, `Decline`, `RequestInfo`, `MarkRead` (delegan a repo + service de transición).
-- [ ] 3.4 Implementar `ConvertToEvent`: buscar/crear `Client` por `(organizer_user_id, email)`, crear `Event(status=quoted)`, `SetEventID`, `UpdateStatus(booked)`; idempotente (409 si `event_id` ya set).
-- [ ] 3.5 Implementar `ClientAction` (accept/decline) validando `client_token` + estado `responded`.
-- [ ] 3.6 Tests unitarios service (mock repo): todas las transiciones válidas/inválidas, conversión idempotente, cap excedido.
+- [x] 3.1 Crear `backend/internal/services/public_request_service.go` con `PublicRequestService`: validación perfil habilitado + servicios válidos (delegado a `ProductRepo`/`PublicProfileRepo`) en `CreatePublicRequest`; cap 100 pendientes → error.
+- [x] 3.2 Implementar máquina de estados `canTransition(from, to)` con mapa de transiciones válidas → error `ErrInvalidTransition`.
+- [x] 3.3 Implementar `Respond`, `Decline`, `RequestInfo`, `MarkRead` (delegan a repo + service de transición).
+- [x] 3.4 Implementar `ConvertToEvent`: crea `Client` (nuevo, mismo patrón que EventFormLink — dedup por email postergado) + `Event(status=quoted)` en tx reutilizando helpers `CreateClientTx`/`CreateEventTx`/`CreateEventProductsTx`/`UpdateClientStatsTx`; `SetEventID` → booked; idempotente (ErrAlreadyConverted si `event_id` ya set).
+- [x] 3.5 Implementar `ClientAction` (accept/decline) validando `client_token` + estados `responded`/`accepted`.
+- [x] 3.6 Tests unitarios service con mocks manuales (19 tests): transiciones válidas/inválidas, conversión idempotente + guard de estado, cap excedido, perfil deshabilitado, servicios inválidos, wrong token, helpers.
 
 ## Phase 4: Handler + Router
 
