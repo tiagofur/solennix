@@ -32,9 +32,9 @@
 
 ## Phase 5: Job de expiración
 
-- [ ] 5.1 Añadir `ExpireStaleRequests(ctx)` en `PublicRequestService` + repo `MarkExpiredOlderThan(days)`.
-- [ ] 5.2 Registrar job diario en el scheduler existente (ver patrón `notification_service.go` scheduler).
-- [ ] 5.3 Test del job con clock mockeado (request 15 días → expired; request 10 días → sin cambio).
+- [x] 5.1 `ExpireStale(ctx)` ya implementado en `PublicRequestService` (Phase 3) + repo `ExpireStale(inactiveDays)` (Phase 2, con índice parcial `idx_public_requests_expiry`).
+- [x] 5.2 Job diario registrado en `cmd/server/main.go` (patrón "expire stale event form links"): run al startup + `time.NewTicker(24h)`. Loguea count o error.
+- [x] 5.3 Cobertura: el job es puro wiring (4 líneas de lógica). La lógica ya está testeada en Phase 2 (`TestPublicRequestRepoExpireStale` con fecha backdateada → expired) y Phase 3 (`TestExpireStale_DelegatesToRepo`, `TestExpireStale_PropagatesError`).
 
 ## Phase 6: OpenAPI + cleanup
 
