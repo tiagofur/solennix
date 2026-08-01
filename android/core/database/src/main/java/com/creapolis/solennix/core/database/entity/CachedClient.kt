@@ -20,6 +20,9 @@ data class CachedClient(
     @ColumnInfo(name = "total_spent") val totalSpent: Double?,
     @ColumnInfo(name = "created_at") val createdAt: String,
     @ColumnInfo(name = "updated_at") val updatedAt: String,
+    // Computed server-side on GET /clients/{id} only; absent on list/search.
+    // Cached so the offline detail screen can still show the KPI.
+    @ColumnInfo(name = "pending_balance") val pendingBalance: Double? = null,
     @ColumnInfo(name = "sync_status") val syncStatus: SyncStatus = SyncStatus.SYNCED
 )
 
@@ -35,6 +38,7 @@ fun CachedClient.asExternalModel() = Client(
     photoUrl = photoUrl,
     totalEvents = totalEvents,
     totalSpent = totalSpent,
+    pendingBalance = pendingBalance,
     createdAt = createdAt,
     updatedAt = updatedAt
 )
@@ -53,5 +57,6 @@ fun Client.asEntity(syncStatus: SyncStatus = SyncStatus.SYNCED) = CachedClient(
     totalSpent = totalSpent,
     createdAt = createdAt,
     updatedAt = updatedAt,
+    pendingBalance = pendingBalance,
     syncStatus = syncStatus
 )
