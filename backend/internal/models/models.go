@@ -782,6 +782,9 @@ type PublicOrganizerProfile struct {
 
 // PublicLead is an inquiry submitted by an unauthenticated visitor to an
 // organizer's public profile. Stored for the organizer to follow up.
+//
+// Soft-deprecated in v2.0 (#1115): new structured requests live in PublicRequest.
+// The /leads endpoint stays until web migrates to /requests (#1118).
 type PublicLead struct {
 	ID              uuid.UUID `json:"id"`
 	OrganizerUserID uuid.UUID `json:"-"`
@@ -794,4 +797,84 @@ type PublicLead struct {
 	Source          string    `json:"source"`
 	IsRead          bool      `json:"is_read"`
 	CreatedAt       time.Time `json:"created_at"`
+}
+
+// RequestStatus is the lifecycle state of a PublicRequest.
+//
+// Transitions (validated in PublicRequestService, enforced by DB CHECK):
+//
+//	pending      -> info_requested | responded | declined_provider | expired
+//	info_requested -> pending
+//	responded    -> accepted_by_client | declined_client | booked | expired
+//	accepted_by_client -> booked | expired
+//	any non-terminal -> expired (job, after 14d inactivity)
+type RequestStatus string
+
+const (
+	RequestStatusPending          RequestStatus = "pending"
+	RequestStatusInfoRequested    RequestStatus = "info_requested"
+	RequestStatusResponded        RequestStatus = "responded"
+	RequestStatusAcceptedByClient RequestStatus = "accepted_by_client"
+	RequestStatusDeclinedProvider RequestStatus = "declined_provider"
+	RequestStatusDeclinedClient   RequestStatus = "declined_client"
+	RequestStatusBooked           RequestStatus = "booked"
+	RequestStatusExpired          RequestStatus = "expired"
+)
+
+// IsTerminal reports whether the status is a final state (no further transitions).
+func (s RequestStatus) IsTerminal() bool {
+	switch s {
+	case RequestStatusDeclinedProvider, RequestStatusDeclinedClient,
+		RequestStatusBooked, RequestStatusExpired:
+		return true
+	}
+	return false
+}
+
+// PublicRequestServiceSnapshot captures a service the visitor selected at
+// submission time. Stored as a JSONB snapshot in PublicRequest.Services so the
+// historical quote survives catalog changes (price edits, product deletion).
+type PublicRequestServiceSnapshot struct {
+	ProductID    uuid.UUID `json:"product_id"`
+	Name         string    `json:"name"`
+	Price        *float64  `json:"price,omitempty"`
+	IsFeatured   bool      `json:"is_featured,omitempty"`
+}
+
+// PublicRequest is a structured quote request submitted by an unauthenticated
+// visitor (contact_email) to an organizer's public profile. The visitor acts on
+// their own request via client_token (no account, NG1 ratified).
+type PublicRequest struct {
+	ID                uuid.UUID                     `json:"id"`
+	OrganizerUserID   uuid.UUID                     `json:"-"`
+	ClientToken       uuid.UUID                     `json:"-"`
+	ContactEmail      string                        `json:"contact_email"`
+	ContactName       *string                       `json:"contact_name,omitempty"`
+	EventType         *string                       `json:"event_type,omitempty"`
+	EventDate         *string                       `json:"event_date,omitempty"`
+	Location          *string                       `json:"location,omitempty"`
+	GuestCount        *int                          `json:"guest_count,omitempty"`
+	Budget            *float64                      `json:"budget,omitempty"`
+	Currency          string                        `json:"currency"`
+	Services          []PublicRequestServiceSnapshot `json:"services"`
+	Message           *string                       `json:"message,omitempty"`
+	Status            RequestStatus                 `json:"status"`
+	IsRead            bool                          `json:"is_read"`
+	EventID           *uuid.UUID                    `json:"event_id,omitempty"`
+	DeclinedReason    *string                       `json:"declined_reason,omitempty"`
+	LastStatusChange  time.Time                     `json:"last_status_change"`
+	CreatedAt         time.Time                     `json:"created_at"`
+	UpdatedAt         time.Time                     `json:"updated_at"`
+}
+
+// PublicResponse is a quote the organizer sends in reply to a PublicRequest.
+type PublicResponse struct {
+	ID        uuid.UUID `json:"id"`
+	RequestID uuid.UUID `json:"request_id"`
+	QuoteAmount float64  `json:"quote_amount"`
+	Currency    string   `json:"currency"`
+	Inclusions  []string `json:"inclusions"`
+	ValidUntil  *string  `json:"valid_until,omitempty"`
+	Message     *string  `json:"message,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
 }
