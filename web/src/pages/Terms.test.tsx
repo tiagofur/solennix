@@ -37,7 +37,7 @@ describe('Terms', () => {
     it('renders the last updated date', () => {
       renderTerms();
 
-      expect(screen.getByText(/Última actualización: 1 de enero de 2025/)).toBeInTheDocument();
+      expect(screen.getByText(/Última actualización: 31 de julio de 2026/)).toBeInTheDocument();
     });
 
     it('renders section 1 - use of service', () => {
@@ -105,6 +105,9 @@ describe('Terms', () => {
       expect(screen.getByText('No somos responsables de pérdidas de datos por causas ajenas a nosotros')).toBeInTheDocument();
       expect(screen.getByText('Nuestra responsabilidad total no superará el monto pagado en los últimos 3 meses de servicio')).toBeInTheDocument();
       expect(screen.getByText('No somos responsables de daños indirectos o consecuentes')).toBeInTheDocument();
+      // v2.0: cláusula reforzada "no garante" del servicio prestado por el organizador
+      expect(screen.getByText(/NO es parte del contrato de servicio entre el organizador y sus clientes/)).toBeInTheDocument();
+      expect(screen.getByText(/Cualquier disputa sobre un evento o servicio se resuelve exclusivamente/)).toBeInTheDocument();
     });
 
     it('renders section 7 - modifications', () => {
@@ -132,6 +135,19 @@ describe('Terms', () => {
       expect(
         screen.getByText(/Para cualquier consulta sobre estos términos/)
       ).toBeInTheDocument();
+    });
+
+    it('renders section 10 - public profile, directory and quote requests (v2.0)', () => {
+      renderTerms();
+
+      expect(screen.getByText('10. Perfil público, directorio y solicitudes de cotización')).toBeInTheDocument();
+      expect(
+        screen.getByText(/Solennix ofrece a los organizadores herramientas opcionales de promoción/)
+      ).toBeInTheDocument();
+      // Cláusulas clave de protección (no garante, responsabilidad del organizador, indemnidad)
+      expect(screen.getByText(/El organizador es el único y absoluto responsable/)).toBeInTheDocument();
+      expect(screen.getByText(/Solennix no procesa ni custodia pagos del servicio/)).toBeInTheDocument();
+      expect(screen.getByText(/El organizador mantendrá indemne a Solennix/)).toBeInTheDocument();
     });
 
     it('renders contact email link', () => {

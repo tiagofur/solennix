@@ -9,7 +9,7 @@ aliases:
   - Monetización
   - Monetization
 date: 2026-03-20
-updated: 2026-04-17
+updated: 2026-07-31
 status: active
 ---
 
@@ -104,6 +104,58 @@ Para activar pricing en producción se requieren:
 > - [[01_PRODUCT_VISION]] — Vision del producto y mercado objetivo
 > - [[02_FEATURES]] — Features completas con tabla de paridad cross-platform
 > - [[11_CURRENT_STATUS]] — Estado actual de implementacion y brechas
+> - [[15_MARKETPLACE_V2]] — v2.0 Discovery & Inbound Layer (extension de monetizacion)
+
+---
+
+## 0 bis. Extension v2.0 — Discovery & Inbound Layer (2026-07-31)
+
+> [!important] NG1 ratificado — sin pay-per-lead ni comision
+> v2.0 extiende el SaaS del proveedor con **inbound y descubrimiento** (directorio `/proveedores`, perfil público `/u/:slug` indexable, solicitudes de cotizacion estructuradas). El cliente sigue siendo audiencia del proveedor, **no** de Solennix. No hay cuenta de cliente, no hay intermediacion.
+>
+> **Modelos descartados para v2.0** (requieren levantar NG1, postergados a v3.0):
+> - Pay-per-lead (creditos por lead cualificado): exige que Solennix mida y atestigüe la calidad del lead → rol de intermediacion → cruza NG1.
+> - Comision por transaccion: exige intermediacion de pagos → revierte la decision 2026-05-01.
+
+### 0 bis.1 Unica fuente nueva: Listing destacado (Business)
+
+| Modelo | A quien | Cuando | Fase | Estado |
+| --- | --- | --- | --- | --- |
+| SaaS suscripcion (vigente §0) | Proveedor | Mensual/anual | Ya | ✅ Vigente |
+| **Listing destacado en directorio** | Proveedor Business | Mensual (incluido en tier Business) | F3 (#1129) | **A confirmar** |
+| ~~Pay-per-lead~~ | — | — | — | ❌ Descartado (NG1) |
+| ~~Comision por transaccion~~ | — | — | — | ❌ Descartado (NG1) |
+
+El listing destacado **no es un cargo adicional**: es un beneficio incluido en el tier Business (y superior) que ya existe. El upgrade driver es **visibilidad en el directorio**, no un nuevo flujo de cobro.
+
+### 0 bis.2 Matriz de directorio por plan (extension de §0.2)
+
+| Plan | Perfil público `/u/:slug` | Directorio `/proveedores` |
+| --- | --- | --- |
+| `free` | Basico (sin reviews/portfolio, PRD [[02_FEATURES]] §16) | Listado basico |
+| `pro` | Full (reviews, portfolio) | Listado estandar |
+| `business` | Full + branding propio | **Destacado** (ranking prioritario, badge) |
+| `premium` | Full | Top placement |
+
+### 0 bis.3 Ranking del directorio (#1129)
+
+Orden default `sort=relevance` del endpoint `GET /api/public/organizers`:
+
+1. **Featured** (plan Business+) primero, dentro de cada bloque geografico/filtro.
+2. **Rating** + reviews_count (peso combinado).
+3. **Recientes** (ultima actividad).
+4. **Distancia** (si hay geo query, #1127).
+
+**Anti-degeneracion:** featured reordena pero no elimina a los no-featured de los resultados. Cap de slots featured por pagina.
+
+### 0 bis.4 Driver economico (NG1-compatible)
+
+La economia de v2.0 funciona SI y SOLO SI los proveedores comparten su `/u/:slug` activamente (CAC ~$0 por canal organico). La monetizacion escala con:
+
+- Mas proveedores → mas perfiles indexables → mas SEO → mas inbound orgánico.
+- Inbound orgánico → el proveedor ve valor → upgrade a Business para destacarse.
+
+**No se monetiza al cliente** (no es usuario Solennix). **No se cobra por lead.** El unico ingreso nuevo es el SaaS de los proveedores que suben a Business por visibilidad.
 
 ---
 

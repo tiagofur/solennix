@@ -285,7 +285,7 @@
   "terms": {
     "back": "Back",
     "title": "Terms and Conditions",
-    "last_update": "Last update: January 1, 2025",
+    "last_update": "Last update: July 31, 2026",
     "sections": {
       "1": {
         "title": "1. Use of the service",
@@ -334,7 +334,9 @@
           "We do not guarantee that the service will be error-free",
           "We are not responsible for data loss due to causes beyond our control",
           "Our total liability will not exceed the amount paid in the last 3 months of service",
-          "We are not responsible for indirect or consequential damages"
+          "We are not responsible for indirect or consequential damages",
+          "Solennix is NOT a party to the service contract between the organizer and their clients, and does not act as guarantor of the services rendered by the organizer",
+          "Any dispute regarding an event or service is resolved exclusively between the organizer and their client; Solennix does not participate in its resolution"
         ]
       },
       "7": {
@@ -348,6 +350,21 @@
       "9": {
         "title": "9. Contact",
         "content": "For any inquiries regarding these terms:"
+      },
+      "10": {
+        "title": "10. Public profile, directory and quote requests",
+        "content": "Solennix offers organizers optional promotional tools: a public profile at `/u/:your-slug`, the option to appear in the `/providers` directory, and a public form to receive quote requests from visitors. These tools are part of the SaaS service contracted by the organizer, not an intermediation service.",
+        "list_header": "In relation to these tools, it is expressly established that:",
+        "items": [
+          "The public profile, directory and request form are marketing and inbound tools of the organizer, not an intermediation service of Solennix",
+          "Solennix is NOT a party to the service contract between the organizer and the client who contacts them through these tools",
+          "The organizer is the sole and absolute responsible party for the contact, quote, agreement and delivery of the service to clients who reach them via Solennix",
+          "The financial agreement (price, payment method, terms) is arranged directly between the organizer and their client, outside the platform; Solennix does not process or hold service payments",
+          "Solennix does not guarantee the quality, timeliness, legality or outcome of the service rendered by the organizer, nor the solvency or identity of clients who contact them",
+          "The organizer shall hold Solennix harmless from any claim, complaint or action arising from the services it provides to its clients, including those contacted through the platform",
+          "Solennix may, at its discretion, moderate, hide or remove public profiles or requests that breach these terms, without generating any right to compensation"
+        ],
+        "disclaimer_form": "The agreement is direct with the provider. Solennix only facilitates contact."
       }
     }
   },
