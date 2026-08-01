@@ -150,6 +150,24 @@ export const Terms: React.FC = () => {
             </a>
           </p>
         </div>
+
+        {/* Section 10 — Public profile, directory and quote requests (v2.0) */}
+        <div className="bg-card border border-border rounded-2xl p-6 mb-4 shadow-sm">
+          <h2 className="text-lg font-semibold text-text mb-3">
+            {t('static:terms.sections.10.title')}
+          </h2>
+          <p className="text-sm text-text-secondary leading-relaxed mb-3">
+            {t('static:terms.sections.10.content')}
+          </p>
+          <p className="text-sm text-text-secondary leading-relaxed mb-2">
+            {t('static:terms.sections.10.list_header')}
+          </p>
+          <ul className="text-sm text-text-secondary leading-relaxed space-y-1 list-disc list-inside">
+            {(t('static:terms.sections.10.items', { returnObjects: true }) as string[]).map((item, i) => (
+              <li key={i}>{item}</li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   );
