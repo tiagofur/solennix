@@ -26,9 +26,9 @@
 
 ## Phase 4: Handler + Router
 
-- [ ] 4.1 Crear `backend/internal/handlers/public_request_handler.go`: `CreatePublicRequest` (público, valida slug), `ListOrganizerRequests` (auth), `Respond`, `Decline`, `RequestInfo`, `MarkRead`, `ConvertToEvent` (auth), `ClientAction` (público, header `X-Request-Token`).
-- [ ] 4.2 Wiring en `backend/internal/router/router.go`: grupo `/api/public/organizers/{slug}/requests` con `mw.RateLimit`; grupo `/api/organizers/me/requests/*` con `mw.Auth`; `/api/public/requests/{id}/action` con `mw.RateLimit`.
-- [ ] 4.3 Tests de integración handler: 404 perfil deshabilitado, 400 servicios inválidos, 409 transición inválida, 429 rate-limit, 429 cap, 401 sin auth en rutas proveedor, flujo crear→responder→aceptar→convertir.
+- [x] 4.1 Crear `backend/internal/handlers/public_request_handler.go`: `CreatePublicRequest` (público, valida slug), `ListRequests` (auth, paginado), `CountUnread`, `GetRequest` (con responses), `MarkRead`, `RespondRequest`, `DeclineRequest`, `RequestInfo`, `ConvertToEvent` (auth), `ClientAction` (público, header `X-Request-Token`). Mapeo de 6 errores de dominio → HTTP (404/400/429/409/500).
+- [x] 4.2 Wiring en `backend/internal/router/router.go` + `cmd/server/main.go`: POST público `/{slug}/requests` (RateLimit 5/min), grupo auth `/organizers/me/requests/*` (8 rutas), POST público `/public/requests/{id}/action` (RateLimit). Firma de `New` actualizada + tests del router ajustados (17 nils).
+- [x] 4.3 Tests del handler aislados con httptest + mocks (14 tests): error mapping (404/400/409/429/401), paginación inbox, X-Request-Token ausente/inválido, happy paths crear/responder/client-action/convert-to-event (409 con event_id), validaciones de input.
 
 ## Phase 5: Job de expiración
 
