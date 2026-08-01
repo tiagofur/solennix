@@ -11,9 +11,9 @@
 
 ## Phase 2: Repository
 
-- [ ] 2.1 Crear `backend/internal/repository/public_request_repo.go` con interfaz `PublicRequestRepo`: `Create`, `GetByID`, `GetByClientToken`, `ListByOrganizer` (cursor+filtros), `UpdateStatus`, `SetEventID`, `MarkRead`, `CountPendingByOrganizer`.
-- [ ] 2.2 Implementar `public_responses` repo (`CreateResponse`, `ListByRequest`) en mismo archivo o `public_response_repo.go`.
-- [ ] 2.3 Tests unitarios repo con pgxmock: paginación cursor sin solapamiento, filtros status/date, cap count.
+- [x] 2.1 Crear `backend/internal/repository/public_request_repo.go` con `PublicRequestRepo`: `Create`, `GetByID`, `GetByIDAndToken`, `ListByOrganizer` (LIMIT/OFFSET + filtros + total), `UpdateStatus`, `SetEventID`, `MarkRead`, `CountUnreadByOrganizer`, `CountPendingByOrganizer`, `ExpireStale`.
+- [x] 2.2 Implementar `public_responses` repo (`CreateResponse`, `ListResponsesByRequest`) en mismo archivo.
+- [x] 2.3 Tests de integración con DB real (openTestPool): paginación LIMIT/OFFSET sin solapamiento, filtros status/date, cap count, tenant isolation, expire stale. Nota: cursor → LIMIT/OFFSET para consistencia con ClientRepo/EventRepo.
 
 ## Phase 3: Service (lógica de negocio)
 

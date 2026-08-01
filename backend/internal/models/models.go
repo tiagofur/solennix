@@ -869,12 +869,13 @@ type PublicRequest struct {
 
 // PublicResponse is a quote the organizer sends in reply to a PublicRequest.
 type PublicResponse struct {
-	ID        uuid.UUID `json:"id"`
-	RequestID uuid.UUID `json:"request_id"`
-	QuoteAmount float64  `json:"quote_amount"`
-	Currency    string   `json:"currency"`
-	Inclusions  []string `json:"inclusions"`
-	ValidUntil  *string  `json:"valid_until,omitempty"`
-	Message     *string  `json:"message,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
+	ID              uuid.UUID `json:"id"`
+	RequestID       uuid.UUID `json:"request_id"`
+	OrganizerUserID uuid.UUID `json:"-"`
+	QuoteAmount     float64   `json:"quote_amount"`
+	Currency        string    `json:"currency"`
+	Inclusions      []string  `json:"inclusions"`
+	ValidUntil      *string   `json:"valid_until,omitempty"`
+	Message         *string   `json:"message,omitempty"`
+	CreatedAt       time.Time `json:"created_at"`
 }
