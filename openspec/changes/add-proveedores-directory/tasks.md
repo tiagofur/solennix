@@ -23,9 +23,9 @@
 
 ## Phase 4: Routing + cleanup + verify
 
-- [ ] 4.1 Añadir `<Route path="/proveedores" element={<ProveedoresPage/>} />` en `web/src/App.tsx` (sección pública, sin AuthGuard).
-- [ ] 4.2 `tsc --noEmit` limpio; ESLint pasa; `vitest run` verde.
-- [ ] 4.3 verify-report.md + abrir PR linkeando #1117.
+- [x] 4.1 Añadir lazy import + `<Route path="/proveedores">` en App.tsx (sección pública, sin AuthGuard, agrupada con /u/:slug).
+- [x] 4.2 `tsc --noEmit` limpio; ESLint pasa (corregí Math.random() impuro en key → fallback index); `vitest run` verde (1520 tests, +30 nuevos).
+- [x] 4.3 verify-report.md escrito (PASS WITH WARNINGS); PR abierto.
 
 ## Implementation Order
 

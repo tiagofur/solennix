@@ -139,8 +139,8 @@ export const ProveedoresPage: React.FC = () => {
         {!isFirstLoad && !isError && items.length > 0 && (
           <>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {items.map((organizer) => (
-                <OrganizerCard key={organizer.slug ?? Math.random()} organizer={organizer} />
+              {items.map((organizer, idx) => (
+                <OrganizerCard key={organizer.slug ?? `org-${idx}`} organizer={organizer} />
               ))}
             </div>
 
