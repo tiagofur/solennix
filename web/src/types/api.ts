@@ -1299,6 +1299,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/organizers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search the public organizers directory (paginated, unauthenticated, v2.0
+         * @description Returns a paginated slice of PublicOrganizerCard with plan-aware ranking (Business first). Only "publicable" profiles appear (cover/logo, headline/ about, city+country, ≥1 visible service). Free plan cards omit rating/ reviews (social-proof gating). NG1: visitor has no account.
+         */
+        get: operations["searchPublicOrganizers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/organizers/{slug}": {
         parameters: {
             query?: never;
@@ -2727,6 +2747,36 @@ export interface components {
             average_rating?: number | null;
             /** @description Number of public reviews; omitted unless reviews are visible and there is at least one */
             reviews_count?: number | null;
+        };
+        /** @description Lightweight projection for the public directory listing (#1116). Omits services/reviews/portfolio/faq/packages — those live on the full profile at /{slug}. Minimizes payload and query cost. */
+        PublicOrganizerCard: {
+            slug?: string;
+            business_name?: string;
+            headline?: string | null;
+            city?: string | null;
+            country?: string | null;
+            /** Format: uri */
+            cover_url?: string | null;
+            /** Format: uri */
+            logo_url?: string | null;
+            primary_event_types?: string[];
+            /**
+             * Format: double
+             * @description Omitted for Free plan (social-proof gating).
+             */
+            average_rating?: number | null;
+            /** @description Omitted for Free plan (social-proof gating). */
+            reviews_count?: number | null;
+            /** @description true for Business plan (ranks first in relevance sort). */
+            is_featured?: boolean;
+            response_time?: string | null;
+        };
+        PaginatedOrganizersResponse: {
+            data: components["schemas"]["PublicOrganizerCard"][];
+            total: number;
+            page: number;
+            limit: number;
+            total_pages: number;
         };
         SubmitPublicLeadRequest: {
             name: string;
@@ -6979,6 +7029,54 @@ export interface operations {
                 };
             };
             /** @description Failed to delete team */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    searchPublicOrganizers: {
+        parameters: {
+            query?: {
+                /** @description Case-insensitive partial match. */
+                city?: string;
+                country?: string;
+                /** @description Membership in the organizer's event_types[]. */
+                event_type?: string;
+                /** @description Text search across business_name/headline/about/city. */
+                q?: string;
+                sort?: "relevance" | "rating" | "recent";
+                order?: "asc" | "desc";
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated directory */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedOrganizersResponse"];
+                };
+            };
+            /** @description Rate limit exceeded (20 / minute) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Internal error */
             500: {
                 headers: {
                     [name: string]: unknown;

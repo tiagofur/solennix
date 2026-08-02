@@ -2634,6 +2634,74 @@ components:
           type: integer
           nullable: true
           description: Number of public reviews; omitted unless reviews are visible and there is at least one
+    PublicOrganizerCard:
+      type: object
+      description: >
+        Lightweight projection for the public directory listing (#1116).
+        Omits services/reviews/portfolio/faq/packages — those live on the full
+        profile at /{slug}. Minimizes payload and query cost.
+      properties:
+        slug:
+          type: string
+        business_name:
+          type: string
+        headline:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        cover_url:
+          type: string
+          nullable: true
+          format: uri
+        logo_url:
+          type: string
+          nullable: true
+          format: uri
+        primary_event_types:
+          type: array
+          items:
+            type: string
+        average_rating:
+          type: number
+          format: double
+          nullable: true
+          description: Omitted for Free plan (social-proof gating).
+        reviews_count:
+          type: integer
+          nullable: true
+          description: Omitted for Free plan (social-proof gating).
+        is_featured:
+          type: boolean
+          description: true for Business plan (ranks first in relevance sort).
+        response_time:
+          type: string
+          nullable: true
+    PaginatedOrganizersResponse:
+      type: object
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - total_pages
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicOrganizerCard"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        total_pages:
+          type: integer
     SubmitPublicLeadRequest:
       type: object
       required:
@@ -5941,6 +6009,76 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
   # --- Public professional profile (Issue #787) — path stubs; handlers land in PR2+ ---
+  /api/public/organizers:
+    get:
+      security: []
+      operationId: searchPublicOrganizers
+      summary: Search the public organizers directory (paginated, unauthenticated, v2.0 #1116)
+      description: >
+        Returns a paginated slice of PublicOrganizerCard with plan-aware ranking
+        (Business first). Only "publicable" profiles appear (cover/logo, headline/
+        about, city+country, ≥1 visible service). Free plan cards omit rating/
+        reviews (social-proof gating). NG1: visitor has no account.
+      parameters:
+        - name: city
+          in: query
+          schema:
+            type: string
+          description: Case-insensitive partial match.
+        - name: country
+          in: query
+          schema:
+            type: string
+        - name: event_type
+          in: query
+          schema:
+            type: string
+          description: Membership in the organizer's event_types[].
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: Text search across business_name/headline/about/city.
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [relevance, rating, recent]
+            default: relevance
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Paginated directory
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedOrganizersResponse"
+        "429":
+          description: Rate limit exceeded (20 / minute)
+        "500":
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /api/public/organizers/{slug}:
     get:
       security: []

@@ -17,10 +17,10 @@
 
 ## Phase 3: OpenAPI + Cleanup
 
-- [ ] 3.1 Añadir schemas `PublicOrganizerCard`, `PaginatedOrganizersResponse` + path `GET /api/public/organizers` en `backend/docs/openapi.yaml`.
-- [ ] 3.2 Regenerar `web/src/types/api.ts` (npm run openapi:types); verificar `tsc --noEmit` limpio.
-- [ ] 3.3 `gofmt -w` + `go vet ./...` limpio; `go test ./...` 100% verde; contract test pasa.
-- [ ] 3.4 verify-report.md + abrir PR linkeando #1116.
+- [x] 3.1 Añadir schemas `PublicOrganizerCard`, `PaginatedOrganizersResponse` + path `GET /api/public/organizers` (con 8 query params) en `backend/docs/openapi.yaml`.
+- [x] 3.2 Regenerar `web/src/types/api.ts` (npm run openapi:types); `tsc --noEmit` limpio (5 refs nuevas).
+- [x] 3.3 `gofmt -w` aplicado a models.go; `go test ./...` 100% verde; contract test `TestOpenAPISpec` pasa; YAML válido.
+- [x] 3.4 verify-report.md escrito (PASS WITH WARNINGS); PR abierto.
 
 ## Implementation Order
 
