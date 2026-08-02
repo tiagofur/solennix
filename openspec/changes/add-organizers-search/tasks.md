@@ -11,9 +11,9 @@
 
 ## Phase 2: Handler + Router
 
-- [ ] 2.1 Añadir `SearchOrganizers` handler en `public_profile_handler.go`: parsea query params (city/country/event_type/q/sort/order/page/limit) con `parsePaginationParams`, mapea a `SearchPublicProfilesFilters`, llama al repo, devuelve `writePaginatedJSON`.
-- [ ] 2.2 Wiring en `router.go`: `r.Get("/", publicProfileHandler.SearchOrganizers)` en grupo `/public/organizers` (raíz, ANTES de `/{slug}` para evitar conflicto de rutas).
-- [ ] 2.3 Tests handler (httptest + mock repo): parseo de params, mapeo filters, happy path paginado, repo error → 500.
+- [x] 2.1 Añadir `SearchOrganizers` handler en `public_profile_handler.go`: interfaz nueva `publicProfileSearchRepo` + field `searchRepo` (el constructor cablea `profileRepo` que ya implementa SearchPublicProfiles). Handler parsea query params con `parsePaginationParams`, mapea a `SearchPublicProfilesFilters`, devuelve `writePaginatedJSON`. Repo error → 500; searchRepo nil → 501 (defensivo).
+- [x] 2.2 Wiring en `router.go`: `r.Get("/", publicProfileHandler.SearchOrganizers)` al inicio del grupo `/public/organizers`, antes de `/{slug}` (comentario explica por qué). Hereda RateLimit(20, 1min) del grupo.
+- [x] 2.3 Tests handler (7, httptest + fakeSearchRepo manual como fakeUserRepo/fakeProfileRepo): happy path paginado, defaults sin params, mapeo de todos los filtros, repo error→500, nil searchRepo→501, empty results (`data:[]`), Free card sin rating (pass-through).
 
 ## Phase 3: OpenAPI + Cleanup
 

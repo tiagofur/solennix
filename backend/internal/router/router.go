@@ -210,6 +210,9 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 
 	apiRouter.Route("/public/organizers", func(r chi.Router) {
 		r.Use(mw.RateLimit(20, 1*time.Minute))
+		// Directory listing (v2.0, #1116). Declared before /{slug} so Chi matches
+		// the static root; the param route never catches an empty path segment.
+		r.Get("/", publicProfileHandler.SearchOrganizers)
 		r.Get("/{slug}", publicProfileHandler.GetPublicProfile)
 		r.Get("/{slug}/reviews", reviewHandler.ListPublicPortfolioReviews)
 		// Per-profile social preview image (redirects to cover/logo or renders a branded PNG).
