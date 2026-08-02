@@ -1,0 +1,85 @@
+import type { components } from "@/types/api";
+
+/**
+ * Public organizers directory service (#1117). Consumes
+ * GET /api/public/organizers (#1116) — unauthenticated, NG1 ratified.
+ * Source of truth: backend/docs/openapi.yaml — PaginatedOrganizersResponse.
+ */
+export type PublicOrganizerCard =
+  components["schemas"]["PublicOrganizerCard"];
+export type PaginatedOrganizersResponse =
+  components["schemas"]["PaginatedOrganizersResponse"];
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+
+/** Filters for the directory search. All optional; empty = first page default. */
+export interface DirectoryFilters {
+  city?: string;
+  event_type?: string;
+  q?: string;
+  page?: number;
+  limit?: number;
+  sort?: string;
+  order?: string;
+}
+
+/** Shape returned by the service (normalized, never undefined fields). */
+export interface DirectorySearchResult {
+  data: PublicOrganizerCard[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
+export class DirectorySearchError extends Error {
+  constructor(message = "Failed to search directory", public status?: number) {
+    super(message);
+    this.name = "DirectorySearchError";
+  }
+}
+
+function buildQueryString(filters: DirectoryFilters): string {
+  const params = new URLSearchParams();
+  if (filters.city && filters.city.trim()) params.set("city", filters.city.trim());
+  if (filters.event_type && filters.event_type.trim())
+    params.set("event_type", filters.event_type.trim());
+  if (filters.q && filters.q.trim()) params.set("q", filters.q.trim());
+  if (filters.sort) params.set("sort", filters.sort);
+  if (filters.order) params.set("order", filters.order);
+  if (filters.page && filters.page > 0) params.set("page", String(filters.page));
+  if (filters.limit && filters.limit > 0) params.set("limit", String(filters.limit));
+  const qs = params.toString();
+  return qs ? `?${qs}` : "";
+}
+
+export const organizersDirectoryService = {
+  /**
+   * Search publicable organizers. Unauthenticated.
+   * Throws DirectorySearchError on non-2xx (status attached).
+   */
+  async search(
+    filters: DirectoryFilters,
+    signal?: AbortSignal,
+  ): Promise<DirectorySearchResult> {
+    const res = await fetch(
+      `${API_BASE}/public/organizers${buildQueryString(filters)}`,
+      { signal },
+    );
+    if (!res.ok) {
+      throw new DirectorySearchError(
+        `Failed to search directory (${res.status})`,
+        res.status,
+      );
+    }
+    const json = (await res.json()) as PaginatedOrganizersResponse;
+    // Normalize: ensure data is always an array (defensive against malformed payloads).
+    return {
+      data: Array.isArray(json.data) ? json.data : [],
+      total: json.total ?? 0,
+      page: json.page ?? 1,
+      limit: json.limit ?? 20,
+      total_pages: json.total_pages ?? 0,
+    };
+  },
+};
