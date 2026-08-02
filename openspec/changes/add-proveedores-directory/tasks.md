@@ -15,10 +15,11 @@
 
 ## Phase 3: Hook + Página
 
-- [ ] 3.1 Crear `web/src/pages/Proveedores/useDirectoryFilters.ts`: lee/escribe URLSearchParams (city, event_type, q, page), debounce 300ms en inputs texto, setters.
-- [ ] 3.2 Crear `web/src/pages/Proveedores/ProveedoresPage.tsx`: hero + buscador inline (ciudad + select tipo + q) + grid responsive (1/2/3 cols) + Pagination + SkeletonCard (carga) + Empty con CTA (0 resultados). Usa React Query con keepPreviousData.
-- [ ] 3.3 Tests useDirectoryFilters: sync URL↔state, debounce.
-- [ ] 3.4 Tests ProveedoresPage: render inicial, buscador filtra, empty + CTA resetea, paginación cambia URL, skeletons visibles en carga.
+- [x] 3.1 Crear `useDirectoryFilters.ts`: URL como source of truth (D3), debounce 300ms solo en city/q (D4), setters (setCity/setQ/setEventType/setPage/clear), cambiar filtro resetea page a 1.
+- [x] 3.2 Crear `useSearchOrganizers.ts`: useQuery con keepPreviousData (D2) + staleTime 1min.
+- [x] 3.3 Crear `ProveedoresPage.tsx`: hero + buscador inline (ciudad + select tipo + q) + grid responsive (1/2/3 cols) + Pagination + DirectoryCardSkeleton (carga con role=status) + Empty con CTA (0 resultados) + error state + scroll-to-top on page change + refetch indicator (Loader2).
+- [x] 3.4 Tests hook (7): URL→state, setCity/setEventType/setPage, filtro resetea page, clear, debounce lag.
+- [x] 3.5 Tests página (8): hero/inputs render, grid resultados, empty + CTA, clear resetea URL, error 500, paginación condicional, sin paginación con 1 página, skeletons aria-busy.
 
 ## Phase 4: Routing + cleanup + verify
 
