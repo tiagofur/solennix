@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -40,6 +41,7 @@ type PublicProfileHandler struct {
 	reviewRepo    publicProfileReviewRepo
 	portfolioRepo publicProfilePortfolioRepo
 	eventRepo     publicProfileEventRepo
+	searchRepo    publicProfileSearchRepo
 	frontendURL   string
 }
 
@@ -66,6 +68,9 @@ type publicProfilePortfolioRepo interface {
 type publicProfileEventRepo interface {
 	CountCompletedByUser(ctx context.Context, userID uuid.UUID) (int, error)
 }
+type publicProfileSearchRepo interface {
+	SearchPublicProfiles(ctx context.Context, f repository.SearchPublicProfilesFilters) ([]models.PublicOrganizerCard, int, error)
+}
 
 // NewPublicProfileHandler assembles the handler with its repository deps.
 func NewPublicProfileHandler(
@@ -83,6 +88,7 @@ func NewPublicProfileHandler(
 		reviewRepo:    reviewRepo,
 		portfolioRepo: profileRepo, // *PublicProfileRepo implements portfolio list
 		eventRepo:     eventRepo,
+		searchRepo:    profileRepo, // *PublicProfileRepo implements SearchPublicProfiles
 		frontendURL:   strings.TrimSuffix(frontendURL, "/"),
 	}
 }
@@ -129,6 +135,38 @@ func (h *PublicProfileHandler) GetPublicProfile(w http.ResponseWriter, r *http.R
 
 	dto := h.buildProjection(r.Context(), user, profile)
 	writeJSON(w, http.StatusOK, map[string]any{"data": dto})
+}
+
+// SearchOrganizers handles GET /api/public/organizers (directory listing, #1116).
+// Public, unauthenticated. Returns a paginated slice of PublicOrganizerCard with
+// plan-aware ranking. Publicability + filters are enforced in the repo query.
+func (h *PublicProfileHandler) SearchOrganizers(w http.ResponseWriter, r *http.Request) {
+	if h.searchRepo == nil {
+		writeError(w, http.StatusNotImplemented, "search not configured")
+		return
+	}
+	params := parsePaginationParams(r, nil, "")
+	if params == nil {
+		params = &PaginationParams{Page: 1, Limit: 20, Order: "DESC"}
+	}
+
+	filters := repository.SearchPublicProfilesFilters{
+		City:      strings.TrimSpace(r.URL.Query().Get("city")),
+		Country:   strings.TrimSpace(r.URL.Query().Get("country")),
+		EventType: strings.TrimSpace(r.URL.Query().Get("event_type")),
+		Query:     strings.TrimSpace(r.URL.Query().Get("q")),
+		SortBy:    strings.TrimSpace(r.URL.Query().Get("sort")),
+		Order:     params.Order,
+		Limit:     params.Limit,
+		Offset:    (params.Page - 1) * params.Limit,
+	}
+	items, total, err := h.searchRepo.SearchPublicProfiles(r.Context(), filters)
+	if err != nil {
+		slog.Error("public directory search failed", "error", err, "filters", filters)
+		writeError(w, http.StatusInternalServerError, "Failed to load directory")
+		return
+	}
+	writePaginatedJSON(w, http.StatusOK, items, total, params)
 }
 
 // buildProjection assembles the plan-aware PublicOrganizerProfile.
