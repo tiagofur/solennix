@@ -9,9 +9,9 @@
 
 ## Phase 2: Componentes presentacionales
 
-- [ ] 2.1 Crear `web/src/pages/Proveedores/OrganizerCard.tsx`: cover (lazy + fallback), business_name, headline, ubicación, rating condicional (`4.8 ★ (23)` o nada si null), primary_event_types chips, badge "Destacado" si is_featured, link a `/u/:slug`.
-- [ ] 2.2 Crear `web/src/i18n/locales/{es,en}/directory.json` + registrar namespace en i18n config.
-- [ ] 2.3 Tests OrganizerCard: datos completos, Free sin rating, featured con badge, sin cover (fallback).
+- [x] 2.1 Crear `web/src/pages/Proveedores/OrganizerCard.tsx`: cover (lazy load + fallback gradient con iniciales), business_name, headline, ubicación (city/country), rating condicional (4.8 + count o nada si null — Free gating D7), primary_event_types chips (max 3), badge "Destacado" si is_featured, link a /u/:slug.
+- [x] 2.2 Strings i18n añadidos al namespace `public` existente (sección `directory`, ES+EN) — reutiliza namespace en vez de crear `directory.json` (cohesión con /u/:slug). 8 tipos de evento + search/empty/card labels.
+- [x] 2.3 Tests OrganizerCard (8): datos completos, link /u/:slug, Free sin rating (null), featured badge condicional, sin cover (fallback — no img rota), sin ubicación, max 3 chips, slug como nombre fallback.
 
 ## Phase 3: Hook + Página
 

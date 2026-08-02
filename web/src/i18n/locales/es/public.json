@@ -500,5 +500,41 @@
       "languages_heading": "Idiomas de atención",
       "event_types_heading": "Especialidad de eventos"
     }
+  },
+  "directory": {
+    "title": "Encontrá el proveedor perfecto para tu evento",
+    "subtitle": "Organizadores verificados de eventos en LATAM",
+    "search": {
+      "city_label": "Ciudad",
+      "city_placeholder": "¿En qué ciudad?",
+      "event_type_label": "Tipo de evento",
+      "event_type_any": "Cualquier tipo",
+      "event_type_options": {
+        "boda": "Boda",
+        "corporativo": "Corporativo",
+        "xv": "XV años",
+        "infantil": "Fiesta infantil",
+        "baby_shower": "Baby shower",
+        "bautizo": "Bautizo / Comunión",
+        "banquete": "Banquete / Catering",
+        "social": "Evento social"
+      },
+      "q_label": "Buscar",
+      "q_placeholder": "Nombre, servicio, palabra clave...",
+      "submit": "Buscar"
+    },
+    "card": {
+      "featured_badge": "Destacado",
+      "reviews_count": "({{count}})",
+      "no_rating": "Sin reseñas",
+      "no_city": "Ubicación no informada"
+    },
+    "empty": {
+      "title": "Sin resultados",
+      "message": "No encontramos proveedores con esos filtros.",
+      "clear_cta": "Limpiar filtros"
+    },
+    "error_title": "No pudimos cargar el directorio",
+    "loading": "Cargando proveedores..."
   }
 }

@@ -500,5 +500,41 @@
       "languages_heading": "Languages spoken",
       "event_types_heading": "Event specialties"
     }
+  },
+  "directory": {
+    "title": "Find the perfect provider for your event",
+    "subtitle": "Verified event organizers across LATAM",
+    "search": {
+      "city_label": "City",
+      "city_placeholder": "Which city?",
+      "event_type_label": "Event type",
+      "event_type_any": "Any type",
+      "event_type_options": {
+        "boda": "Wedding",
+        "corporativo": "Corporate",
+        "xv": "Quinceañera",
+        "infantil": "Kids party",
+        "baby_shower": "Baby shower",
+        "bautizo": "Baptism / Communion",
+        "banquete": "Banquet / Catering",
+        "social": "Social event"
+      },
+      "q_label": "Search",
+      "q_placeholder": "Name, service, keyword...",
+      "submit": "Search"
+    },
+    "card": {
+      "featured_badge": "Featured",
+      "reviews_count": "({{count}})",
+      "no_rating": "No reviews",
+      "no_city": "Location not provided"
+    },
+    "empty": {
+      "title": "No results",
+      "message": "We couldn't find providers with those filters.",
+      "clear_cta": "Clear filters"
+    },
+    "error_title": "We couldn't load the directory",
+    "loading": "Loading providers..."
   }
 }
