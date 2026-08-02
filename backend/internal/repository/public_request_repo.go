@@ -38,13 +38,13 @@ const publicRequestFields = `
 // PublicRequestListFilters controls ListByOrganizer pagination + filtering.
 // Status is optional ("" = all). FromDate/ToDate filter on event_date.
 type PublicRequestListFilters struct {
-	Status   string // models.RequestStatus; empty = all
-	FromDay  string // YYYY-MM-DD inclusive, optional
-	ToDay    string // YYYY-MM-DD inclusive, optional
-	SortBy   string // "created_at" (default) | "event_date"
-	Order    string // "desc" (default) | "asc"
-	Limit    int
-	Offset   int
+	Status  string // models.RequestStatus; empty = all
+	FromDay string // YYYY-MM-DD inclusive, optional
+	ToDay   string // YYYY-MM-DD inclusive, optional
+	SortBy  string // "created_at" (default) | "event_date"
+	Order   string // "desc" (default) | "asc"
+	Limit   int
+	Offset  int
 }
 
 // Create inserts a public request and returns the stored row (id, tokens,
@@ -260,7 +260,7 @@ func (r *PublicRequestRepo) ExpireStale(ctx context.Context, inactiveDays int) (
 		UPDATE public_requests
 		SET status = $1, last_status_change = NOW(), updated_at = NOW()
 		WHERE status IN ('pending', 'info_requested', 'responded', 'accepted_by_client')
-		  AND last_status_change < NOW() - ($2 || ' days')::interval`,
+		  AND last_status_change < NOW() - ($2 * INTERVAL '1 day')`,
 		string(models.RequestStatusExpired), inactiveDays)
 	if err != nil {
 		return 0, fmt.Errorf("expire stale public requests: %w", err)

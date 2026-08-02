@@ -4,10 +4,10 @@
 
 ## Phase 1: Foundation (DB + modelos)
 
-- [ ] 1.1 Crear `backend/internal/database/migrations/073_add_public_requests.up.sql` con `public_requests` + `public_responses` (ver data model en design.md D1-D3): CHECK status, FKs, índices (`idx_public_requests_organizer`, `idx_public_requests_expiry`, `idx_public_requests_token` unique).
-- [ ] 1.2 Crear `073_add_public_requests.down.sql` con `DROP TABLE public_responses; DROP TABLE public_requests;`.
-- [ ] 1.3 Verificar round-trip up/down con `go test ./internal/database/...` (o comando de migraciones del repo).
-- [ ] 1.4 Añadir `PublicRequest`, `PublicResponse` structs + `RequestStatus` enum en `backend/internal/models/models.go` (mapeo snake_case→camelCase via tags).
+- [x] 1.1 Crear `backend/internal/database/migrations/073_add_public_requests.up.sql` con `public_requests` + `public_responses` (ver data model en design.md D1-D3): CHECK status, FKs, índices (`idx_public_requests_organizer`, `idx_public_requests_expiry`, `idx_public_requests_token` unique).
+- [x] 1.2 Crear `073_add_public_requests.down.sql` con `DROP TABLE public_responses; DROP TABLE public_requests;`.
+- [x] 1.3 Verificar round-trip up/down — el helper openTestPool corre database.Migrate (incluye 073) en cada test de repo; suite database 100% verde.
+- [x] 1.4 Añadir `PublicRequest`, `PublicResponse` structs + `RequestStatus` enum + `IsTerminal()` + `PublicRequestServiceSnapshot` en `backend/internal/models/models.go`.
 
 ## Phase 2: Repository
 
@@ -38,10 +38,10 @@
 
 ## Phase 6: OpenAPI + cleanup
 
-- [ ] 6.1 Sincronizar `backend/openapi.yaml` con nuevos schemas (`PublicRequest`, `PublicResponse`, `RequestStatus`) y paths.
-- [ ] 6.2 Regenerar tipos web (`web/src/types/`) desde OpenAPI si el pipeline lo requiere.
-- [ ] 6.3 `gofmt` + `golangci-lint run` en verde; `go test ./...` 100% verde.
-- [ ] 6.4 Comentario de soft-deprecation en `public_lead_handler.go` apuntando a `/requests`.
+- [x] 6.1 Sincronizar `backend/docs/openapi.yaml` con nuevos schemas (`PublicRequestStatus`, `PublicRequestServiceSnapshot`, `CreatePublicRequestRequest`, `PublicRequest`, `CreatePublicResponseRequest`, `PublicResponse`, `PaginatedPublicRequestsResponse`) y 9 paths (público `/requests` + visitor `/action` + 7 auth inbox/acciones).
+- [x] 6.2 Regenerar tipos web (`web/src/types/api.ts`) desde OpenAPI — 35 refs nuevas, typecheck web limpio.
+- [x] 6.3 `gofmt -w` aplicado a 5 archivos; `go vet ./...` limpio; `go test ./...` 100% verde; contract test `TestOpenAPISpec` pasa.
+- [x] 6.4 Comentario de soft-deprecation en `PublicLead` (models.go) apuntando a `PublicRequest` (hecho en Phase 1).
 
 ## Implementation Order
 

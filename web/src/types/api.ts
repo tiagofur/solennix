@@ -1373,6 +1373,185 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/organizers/{slug}/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit a structured quote request to an organizer (rate-limited, unauthenticated, v2.0)
+         * @description NG1 ratified: the requester is a visitor with a contact email, NOT a Solennix user. The organizer's pending-inbox cap also applies (429 inbox_full).
+         */
+        post: operations["createPublicRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/requests/{id}/action": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Visitor accepts or declines a quote they received (v2.0, NG1)
+         * @description Identified by the X-Request-Token header (issued when the request was created). The visitor has no account.
+         */
+        post: operations["publicRequestClientAction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizers/me/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the organizer's quote-request inbox (paginated, v2.0) */
+        get: operations["listOrganizerPublicRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizers/me/requests/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Unread public-request count for the inbox badge (v2.0) */
+        get: operations["countOrganizerUnreadPublicRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizers/me/requests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a public request with its response history (v2.0) */
+        get: operations["getOrganizerPublicRequest"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizers/me/requests/{id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark a public request as read (v2.0) */
+        post: operations["markPublicRequestRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizers/me/requests/{id}/responses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Organizer sends a quote in reply to a public request (v2.0) */
+        post: operations["respondPublicRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizers/me/requests/{id}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Organizer declines a public request (v2.0) */
+        post: operations["declinePublicRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizers/me/requests/{id}/request-info": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Organizer asks the visitor for clarification (v2.0) */
+        post: operations["requestPublicRequestInfo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizers/me/requests/{id}/convert-to-event": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Convert an accepted/responded request into an Event (status=quoted, v2.0)
+         * @description Idempotent: returns 409 already_converted with the existing event_id if the request was already converted. Reuses the EventFormLink flow.
+         */
+        post: operations["convertPublicRequestToEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/organizers/{slug}/reviews": {
         parameters: {
             query?: never;
@@ -2752,6 +2931,103 @@ export interface components {
             message?: string | null;
             source?: string;
             is_read?: boolean;
+            /** Format: date-time */
+            created_at?: string;
+        };
+        /**
+         * @description Lifecycle state of a public quote request (v2.0,
+         * @enum {string}
+         */
+        PublicRequestStatus: "pending" | "info_requested" | "responded" | "accepted_by_client" | "declined_provider" | "declined_client" | "booked" | "expired";
+        /** @description Snapshot of a service the visitor selected at submission time. Stored as JSONB so the historical quote survives later catalog changes (price edits, product deletion). NG1: the visitor is unauthenticated. */
+        PublicRequestServiceSnapshot: {
+            /** Format: uuid */
+            product_id?: string;
+            name?: string;
+            /** Format: double */
+            price?: number | null;
+            is_featured?: boolean;
+        };
+        /** @description Unauthenticated visitor payload submitting a structured quote request. */
+        CreatePublicRequestRequest: {
+            /** Format: email */
+            contact_email: string;
+            contact_name?: string | null;
+            event_type?: string | null;
+            /** Format: date */
+            event_date?: string | null;
+            location?: string | null;
+            guest_count?: number | null;
+            /** Format: double */
+            budget?: number | null;
+            /** @default MXN */
+            currency: string;
+            /** @description IDs of the organizer's public services to quote. Validated against the catalog. */
+            service_ids?: string[];
+            message?: string | null;
+        };
+        /** @description A structured quote request from a visitor to an organizer's public profile. */
+        PublicRequest: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: email */
+            contact_email?: string;
+            contact_name?: string | null;
+            event_type?: string | null;
+            /** Format: date */
+            event_date?: string | null;
+            location?: string | null;
+            guest_count?: number | null;
+            /** Format: double */
+            budget?: number | null;
+            currency?: string;
+            services?: components["schemas"]["PublicRequestServiceSnapshot"][];
+            message?: string | null;
+            status?: components["schemas"]["PublicRequestStatus"];
+            is_read?: boolean;
+            /**
+             * Format: uuid
+             * @description Set when the organizer converts the request into an Event.
+             */
+            event_id?: string | null;
+            declined_reason?: string | null;
+            /** Format: date-time */
+            last_status_change?: string;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
+        };
+        /** @description Organizer's quote reply to a public request. */
+        CreatePublicResponseRequest: {
+            /** Format: double */
+            quote_amount: number;
+            /** @default MXN */
+            currency: string;
+            inclusions?: string[];
+            /** Format: date */
+            valid_until?: string | null;
+            message?: string | null;
+        };
+        PaginatedPublicRequestsResponse: {
+            data: components["schemas"]["PublicRequest"][];
+            total: number;
+            page: number;
+            limit: number;
+            total_pages: number;
+        };
+        PublicResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            request_id?: string;
+            /** Format: double */
+            quote_amount?: number;
+            currency?: string;
+            inclusions?: string[];
+            /** Format: date */
+            valid_until?: string | null;
+            message?: string | null;
             /** Format: date-time */
             created_at?: string;
         };
@@ -7123,6 +7399,440 @@ export interface operations {
             };
             /** @description Rate limit exceeded (5 / minute) */
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePublicRequestRequest"];
+            };
+        };
+        responses: {
+            /** @description Request submitted */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicRequest"];
+                };
+            };
+            /** @description Invalid body or service_ids */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Profile not found or disabled */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limit exceeded (5 / minute) or organizer inbox full (inbox_full) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    publicRequestClientAction: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Request-Token": string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    action: "accept" | "decline";
+                };
+            };
+        };
+        responses: {
+            /** @description Action applied */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid action */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid X-Request-Token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request not found (wrong id or token) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Action not allowed for the current request state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listOrganizerPublicRequests: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                status?: components["schemas"]["PublicRequestStatus"];
+                from_date?: string;
+                to_date?: string;
+                sort?: "created_at" | "event_date";
+                order?: "asc" | "desc";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated inbox */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedPublicRequestsResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    countOrganizerUnreadPublicRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Unread count */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: {
+                            count?: number;
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getOrganizerPublicRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Request detail with responses */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: {
+                            responses?: components["schemas"]["PublicResponse"][];
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    markPublicRequestRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Marked read */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    respondPublicRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePublicResponseRequest"];
+            };
+        };
+        responses: {
+            /** @description Response created, request moved to "responded" */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicResponse"];
+                };
+            };
+            /** @description Invalid body (e.g. negative quote_amount) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid status transition for this request */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    declinePublicRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    reason?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Declined */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid status transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    requestPublicRequestInfo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Moved to "info_requested" */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid status transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    convertPublicRequestToEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Event created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: {
+                            /** Format: uuid */
+                            event_id?: string;
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description already_converted (with event_id) or invalid status transition */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

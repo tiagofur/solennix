@@ -46,8 +46,10 @@ func (m *mockRequestStore) UpdateStatus(_ context.Context, _, _ uuid.UUID, s mod
 	m.updateStatus = s
 	return m.updateErr
 }
-func (m *mockRequestStore) SetEventID(_ context.Context, _, _, _ uuid.UUID) error { return m.setEventIDErr }
-func (m *mockRequestStore) MarkRead(_ context.Context, _, _ uuid.UUID) error      { return m.markReadErr }
+func (m *mockRequestStore) SetEventID(_ context.Context, _, _, _ uuid.UUID) error {
+	return m.setEventIDErr
+}
+func (m *mockRequestStore) MarkRead(_ context.Context, _, _ uuid.UUID) error { return m.markReadErr }
 func (m *mockRequestStore) CountPendingByOrganizer(_ context.Context, _ uuid.UUID) (int, error) {
 	return m.pendingCount, m.pendingErr
 }

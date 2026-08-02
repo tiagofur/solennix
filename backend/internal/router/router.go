@@ -223,19 +223,19 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.With(mw.RateLimit(5, 1*time.Minute)).Post("/{slug}/requests", publicRequestHandler.CreatePublicRequest)
 	})
 
-		// Crawler artifacts.
-		apiRouter.Route("/public", func(r chi.Router) {
-			r.Use(mw.RateLimit(30, 1*time.Minute))
-			r.Get("/sitemap-profiles.xml", seoHandler.SitemapProfiles)
-		})
+	// Crawler artifacts.
+	apiRouter.Route("/public", func(r chi.Router) {
+		r.Use(mw.RateLimit(30, 1*time.Minute))
+		r.Get("/sitemap-profiles.xml", seoHandler.SitemapProfiles)
+	})
 
-		// Visitor action on their own request (v2.0, #1115). Public, identified by
-		// the X-Request-Token header (NG1: visitor has no account). Tight rate limit
-		// to resist token-guessing abuse.
-		apiRouter.Route("/public/requests", func(r chi.Router) {
-			r.Use(mw.RateLimit(10, 1*time.Minute))
-			r.With(mw.RateLimit(5, 1*time.Minute)).Post("/{id}/action", publicRequestHandler.ClientAction)
-		})
+	// Visitor action on their own request (v2.0, #1115). Public, identified by
+	// the X-Request-Token header (NG1: visitor has no account). Tight rate limit
+	// to resist token-guessing abuse.
+	apiRouter.Route("/public/requests", func(r chi.Router) {
+		r.Use(mw.RateLimit(10, 1*time.Minute))
+		r.With(mw.RateLimit(5, 1*time.Minute)).Post("/{id}/action", publicRequestHandler.ClientAction)
+	})
 
 	// Protected routes
 	apiRouter.Group(func(r chi.Router) {

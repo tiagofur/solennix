@@ -224,8 +224,8 @@ func (s *PublicRequestService) buildServicesSnapshot(ctx context.Context, organi
 // validates the value, not the transition).
 var validTransitions = map[models.RequestStatus]map[models.RequestStatus]bool{
 	models.RequestStatusPending: {
-		models.RequestStatusInfoRequested: true,
-		models.RequestStatusResponded:     true,
+		models.RequestStatusInfoRequested:    true,
+		models.RequestStatusResponded:        true,
 		models.RequestStatusDeclinedProvider: true,
 	},
 	models.RequestStatusInfoRequested: {

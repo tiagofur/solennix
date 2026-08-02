@@ -24,7 +24,7 @@ import (
 //
 // See openspec/changes/add-public-request-flow/specs/public-request/spec.md.
 type PublicRequestHandler struct {
-	svc        publicRequestService
+	svc         publicRequestService
 	requestRepo publicRequestInboxStore
 }
 
