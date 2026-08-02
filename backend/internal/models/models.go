@@ -780,6 +780,25 @@ type PublicOrganizerProfile struct {
 	ReviewsCount    *int     `json:"reviews_count,omitempty"`
 }
 
+// PublicOrganizerCard is the lightweight projection used by the public
+// directory listing (#1116). It deliberately omits services[]/reviews/portfolio/
+// faq/packages — those live on the full profile at /{slug}. The card minimizes
+// payload and query cost for paginated directory browsing.
+type PublicOrganizerCard struct {
+	Slug             string   `json:"slug"`
+	BusinessName     string   `json:"business_name,omitempty"`
+	Headline         *string  `json:"headline,omitempty"`
+	City             *string  `json:"city,omitempty"`
+	Country          *string  `json:"country,omitempty"`
+	CoverURL         *string  `json:"cover_url,omitempty"`
+	LogoURL          *string  `json:"logo_url,omitempty"`
+	PrimaryEventTypes []string `json:"primary_event_types,omitempty"`
+	AverageRating    *float64 `json:"average_rating,omitempty"`
+	ReviewsCount     *int     `json:"reviews_count,omitempty"`
+	IsFeatured       bool     `json:"is_featured"`
+	ResponseTime     *string  `json:"response_time,omitempty"`
+}
+
 // PublicLead is an inquiry submitted by an unauthenticated visitor to an
 // organizer's public profile. Stored for the organizer to follow up.
 type PublicLead struct {

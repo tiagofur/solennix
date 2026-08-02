@@ -361,6 +361,158 @@ func (r *PublicProfileRepo) ListEnabledSlugs(ctx context.Context) ([]PublicProfi
 	return out, rows.Err()
 }
 
+// SearchPublicProfilesFilters controls the directory search (#1116).
+// All fields optional; empty filters return all publicable organizers.
+type SearchPublicProfilesFilters struct {
+	City      string // case-insensitive partial (ILIKE)
+	Country   string // case-insensitive exact
+	EventType string // membership in opp.event_types[]
+	Query     string // case-insensitive partial across name/headline/about/city
+	SortBy    string // "relevance" (default) | "rating" | "recent"
+	Order     string // "desc" (default) | "asc"
+	Limit     int
+	Offset    int
+}
+
+// SearchPublicProfiles returns a paginated slice of publicable organizer cards
+// (#1116 directory). Publicability criteria (cover/logo, headline/about, city+
+// country, ≥1 visible service) are enforced in SQL via EXISTS subquery, not in
+// Go — so we never load rows we'd discard. Plan-aware ranking (Business first)
+// and review aggregates (visibility='public') are computed in the same query.
+//
+// See openspec/changes/add-organizers-search/design.md (D3, D4, D5, D6).
+func (r *PublicProfileRepo) SearchPublicProfiles(ctx context.Context, f SearchPublicProfilesFilters) ([]models.PublicOrganizerCard, int, error) {
+	if f.Limit <= 0 || f.Limit > GetAllSafetyLimit {
+		f.Limit = 20
+	}
+	if f.Offset < 0 {
+		f.Offset = 0
+	}
+
+	// Build WHERE clause + args for the publicability + visitor filters.
+	where := `
+		WHERE opp.is_enabled = true
+		  AND u.deleted_at IS NULL
+		  AND COALESCE(u.account_status, 'active') = 'active'
+		  AND u.public_slug IS NOT NULL AND u.public_slug <> ''
+		  AND (u.cover_url IS NOT NULL OR u.logo_url IS NOT NULL)
+		  AND ( (opp.headline IS NOT NULL AND opp.headline <> '')
+		        OR (opp.about IS NOT NULL AND opp.about <> '') )
+		  AND opp.city IS NOT NULL AND opp.city <> ''
+		  AND opp.country IS NOT NULL AND opp.country <> ''
+		  AND EXISTS (
+		    SELECT 1 FROM products p
+		    WHERE p.user_id = u.id AND p.is_active = true AND p.show_on_public_profile = true
+		  )`
+	args := []any{}
+	n := 1
+	if f.City != "" {
+		where += fmt.Sprintf(" AND opp.city ILIKE $%d", n)
+		args = append(args, "%"+f.City+"%")
+		n++
+	}
+	if f.Country != "" {
+		where += fmt.Sprintf(" AND opp.country ILIKE $%d", n)
+		args = append(args, f.Country)
+		n++
+	}
+	if f.EventType != "" {
+		where += fmt.Sprintf(" AND $%d = ANY(COALESCE(opp.event_types, '{}'::text[]))", n)
+		args = append(args, f.EventType)
+		n++
+	}
+	if f.Query != "" {
+		where += fmt.Sprintf(` AND (
+			u.business_name ILIKE $%d
+			OR opp.headline ILIKE $%d
+			OR opp.about ILIKE $%d
+			OR opp.city ILIKE $%d)`, n, n, n, n)
+		args = append(args, "%"+f.Query+"%")
+		n++
+	}
+
+	// Ranking. Default relevance = plan-featured → rating → reviews → recency.
+	// sort=rating/recent override the order column (still plan-first for relevance
+	// only; explicit sorts respect the user's intent fully).
+	orderClause := "ORDER BY (u.plan = 'business') DESC NULLS LAST, avg_rating DESC NULLS LAST, review_count DESC NULLS LAST, u.updated_at DESC"
+	switch f.SortBy {
+	case "rating":
+		orderClause = "ORDER BY avg_rating DESC NULLS LAST, review_count DESC NULLS LAST"
+		if f.Order == "asc" {
+			orderClause = "ORDER BY avg_rating ASC NULLS LAST, review_count ASC NULLS LAST"
+		}
+	case "recent":
+		orderClause = "ORDER BY u.updated_at DESC"
+		if f.Order == "asc" {
+			orderClause = "ORDER BY u.updated_at ASC"
+		}
+	}
+
+	// Count first (cheap, no joins to reviews).
+	var total int
+	countQuery := `SELECT count(*) FROM organizer_public_profiles opp JOIN users u ON u.id = opp.user_id ` + where
+	if err := r.pool.QueryRow(ctx, countQuery, args...).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("count public organizers: %w", err)
+	}
+
+	listQuery := fmt.Sprintf(`
+		SELECT
+			u.public_slug,
+			COALESCE(u.business_name, ''),
+			opp.headline,
+			opp.city,
+			opp.country,
+			u.cover_url,
+			u.logo_url,
+			COALESCE(opp.event_types, '{}'::text[]),
+			-- Free plan gating: do not expose rating/reviews social proof (spec).
+			-- Pro+ (plan in pro/business/premium) gets aggregates; basic gets NULL.
+			CASE WHEN u.plan IN ('pro', 'business', 'premium') THEN AVG(er.rating)::float8 ELSE NULL END AS avg_rating,
+			CASE WHEN u.plan IN ('pro', 'business', 'premium') THEN COUNT(er.id)::int ELSE 0 END AS review_count,
+			(u.plan = 'business') AS is_featured,
+			opp.response_time
+		FROM organizer_public_profiles opp
+		JOIN users u ON u.id = opp.user_id
+		LEFT JOIN event_reviews er ON er.user_id = u.id AND er.visibility = 'public'
+		%s
+		GROUP BY u.public_slug, u.business_name, opp.headline, opp.city, opp.country,
+		         u.cover_url, u.logo_url, opp.event_types, u.plan, opp.response_time, u.updated_at
+		%s
+		LIMIT $%d OFFSET $%d`, where, orderClause, n, n+1)
+	args = append(args, f.Limit, f.Offset)
+
+	rows, err := r.pool.Query(ctx, listQuery, args...)
+	if err != nil {
+		return nil, 0, fmt.Errorf("search public organizers: %w", err)
+	}
+	defer rows.Close()
+
+	out := make([]models.PublicOrganizerCard, 0)
+	for rows.Next() {
+		var c models.PublicOrganizerCard
+		var avgRating *float64
+		var reviewCount int
+		if err := rows.Scan(
+			&c.Slug, &c.BusinessName, &c.Headline, &c.City, &c.Country,
+			&c.CoverURL, &c.LogoURL, &c.PrimaryEventTypes,
+			&avgRating, &reviewCount, &c.IsFeatured, &c.ResponseTime,
+		); err != nil {
+			return nil, 0, fmt.Errorf("scan public organizer card: %w", err)
+		}
+		// Aggregates are NULL for Free (basic) — see CASE WHEN in the SELECT.
+		// Populate the card only when the DB returned a real rating.
+		if avgRating != nil {
+			c.AverageRating = avgRating
+			c.ReviewsCount = &reviewCount
+		}
+		out = append(out, c)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("iterate public organizer cards: %w", err)
+	}
+	return out, total, nil
+}
+
 func scanPortfolioItem(row portfolioRowScanner) (*models.OrganizerPublicPortfolioItem, error) {
 	var item models.OrganizerPublicPortfolioItem
 	var eventDate *string
