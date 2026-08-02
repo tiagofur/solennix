@@ -516,6 +516,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	setAuthCookie(w, r, tokens.AccessToken)
 
 	slog.Info("auth.event", "action", "login_success", "user_id", user.ID, "email", maskEmail(user.Email), "method", "email", "ip", clientIP(r))
+	middleware.LogSecurityAuditEvent(user.ID, "login", "session", map[string]any{
+		"method": "email",
+	}, clientIP(r), r.UserAgent())
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"user":   user,
@@ -659,6 +662,10 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	// treat 401/403 from /auth/refresh as definitive session death and clear tokens.
 	user, err := h.userRepo.GetByID(r.Context(), claims.UserID)
 	if err != nil {
+		if errors.Is(r.Context().Err(), context.Canceled) || errors.Is(err, context.Canceled) {
+			slog.Debug("auth.event", "action", "token_refresh_canceled", "user_id", claims.UserID)
+			return
+		}
 		if repository.IsUserNotFound(err) {
 			// User genuinely does not exist — token is invalid
 			slog.Warn("auth.event", "action", "token_refresh_failed", "reason", "user_not_found", "user_id", claims.UserID, "ip", clientIP(r))
