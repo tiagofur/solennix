@@ -1,0 +1,48 @@
+# Tasks: Add Public Request Flow
+
+> Branch: `feat/v2-public-request` (única). Refs: proposal.md, design.md, specs/public-request/spec.md, Issue #1115.
+
+## Phase 1: Foundation (DB + modelos)
+
+- [x] 1.1 Crear `backend/internal/database/migrations/073_add_public_requests.up.sql` con `public_requests` + `public_responses` (ver data model en design.md D1-D3): CHECK status, FKs, índices (`idx_public_requests_organizer`, `idx_public_requests_expiry`, `idx_public_requests_token` unique).
+- [x] 1.2 Crear `073_add_public_requests.down.sql` con `DROP TABLE public_responses; DROP TABLE public_requests;`.
+- [x] 1.3 Verificar round-trip up/down — el helper openTestPool corre database.Migrate (incluye 073) en cada test de repo; suite database 100% verde.
+- [x] 1.4 Añadir `PublicRequest`, `PublicResponse` structs + `RequestStatus` enum + `IsTerminal()` + `PublicRequestServiceSnapshot` en `backend/internal/models/models.go`.
+
+## Phase 2: Repository
+
+- [x] 2.1 Crear `backend/internal/repository/public_request_repo.go` con `PublicRequestRepo`: `Create`, `GetByID`, `GetByIDAndToken`, `ListByOrganizer` (LIMIT/OFFSET + filtros + total), `UpdateStatus`, `SetEventID`, `MarkRead`, `CountUnreadByOrganizer`, `CountPendingByOrganizer`, `ExpireStale`.
+- [x] 2.2 Implementar `public_responses` repo (`CreateResponse`, `ListResponsesByRequest`) en mismo archivo.
+- [x] 2.3 Tests de integración con DB real (openTestPool): paginación LIMIT/OFFSET sin solapamiento, filtros status/date, cap count, tenant isolation, expire stale. Nota: cursor → LIMIT/OFFSET para consistencia con ClientRepo/EventRepo.
+
+## Phase 3: Service (lógica de negocio)
+
+- [x] 3.1 Crear `backend/internal/services/public_request_service.go` con `PublicRequestService`: validación perfil habilitado + servicios válidos (delegado a `ProductRepo`/`PublicProfileRepo`) en `CreatePublicRequest`; cap 100 pendientes → error.
+- [x] 3.2 Implementar máquina de estados `canTransition(from, to)` con mapa de transiciones válidas → error `ErrInvalidTransition`.
+- [x] 3.3 Implementar `Respond`, `Decline`, `RequestInfo`, `MarkRead` (delegan a repo + service de transición).
+- [x] 3.4 Implementar `ConvertToEvent`: crea `Client` (nuevo, mismo patrón que EventFormLink — dedup por email postergado) + `Event(status=quoted)` en tx reutilizando helpers `CreateClientTx`/`CreateEventTx`/`CreateEventProductsTx`/`UpdateClientStatsTx`; `SetEventID` → booked; idempotente (ErrAlreadyConverted si `event_id` ya set).
+- [x] 3.5 Implementar `ClientAction` (accept/decline) validando `client_token` + estados `responded`/`accepted`.
+- [x] 3.6 Tests unitarios service con mocks manuales (19 tests): transiciones válidas/inválidas, conversión idempotente + guard de estado, cap excedido, perfil deshabilitado, servicios inválidos, wrong token, helpers.
+
+## Phase 4: Handler + Router
+
+- [x] 4.1 Crear `backend/internal/handlers/public_request_handler.go`: `CreatePublicRequest` (público, valida slug), `ListRequests` (auth, paginado), `CountUnread`, `GetRequest` (con responses), `MarkRead`, `RespondRequest`, `DeclineRequest`, `RequestInfo`, `ConvertToEvent` (auth), `ClientAction` (público, header `X-Request-Token`). Mapeo de 6 errores de dominio → HTTP (404/400/429/409/500).
+- [x] 4.2 Wiring en `backend/internal/router/router.go` + `cmd/server/main.go`: POST público `/{slug}/requests` (RateLimit 5/min), grupo auth `/organizers/me/requests/*` (8 rutas), POST público `/public/requests/{id}/action` (RateLimit). Firma de `New` actualizada + tests del router ajustados (17 nils).
+- [x] 4.3 Tests del handler aislados con httptest + mocks (14 tests): error mapping (404/400/409/429/401), paginación inbox, X-Request-Token ausente/inválido, happy paths crear/responder/client-action/convert-to-event (409 con event_id), validaciones de input.
+
+## Phase 5: Job de expiración
+
+- [x] 5.1 `ExpireStale(ctx)` ya implementado en `PublicRequestService` (Phase 3) + repo `ExpireStale(inactiveDays)` (Phase 2, con índice parcial `idx_public_requests_expiry`).
+- [x] 5.2 Job diario registrado en `cmd/server/main.go` (patrón "expire stale event form links"): run al startup + `time.NewTicker(24h)`. Loguea count o error.
+- [x] 5.3 Cobertura: el job es puro wiring (4 líneas de lógica). La lógica ya está testeada en Phase 2 (`TestPublicRequestRepoExpireStale` con fecha backdateada → expired) y Phase 3 (`TestExpireStale_DelegatesToRepo`, `TestExpireStale_PropagatesError`).
+
+## Phase 6: OpenAPI + cleanup
+
+- [x] 6.1 Sincronizar `backend/docs/openapi.yaml` con nuevos schemas (`PublicRequestStatus`, `PublicRequestServiceSnapshot`, `CreatePublicRequestRequest`, `PublicRequest`, `CreatePublicResponseRequest`, `PublicResponse`, `PaginatedPublicRequestsResponse`) y 9 paths (público `/requests` + visitor `/action` + 7 auth inbox/acciones).
+- [x] 6.2 Regenerar tipos web (`web/src/types/api.ts`) desde OpenAPI — 35 refs nuevas, typecheck web limpio.
+- [x] 6.3 `gofmt -w` aplicado a 5 archivos; `go vet ./...` limpio; `go test ./...` 100% verde; contract test `TestOpenAPISpec` pasa.
+- [x] 6.4 Comentario de soft-deprecation en `PublicLead` (models.go) apuntando a `PublicRequest` (hecho en Phase 1).
+
+## Implementation Order
+
+Lineal: 1 → 2 → 3 → 4 → 5 → 6. Cada phase habilita la siguiente (modelos antes que repo, repo antes que service, service antes que handler). Fase 5 y 6 pueden paralelizarse con 4 si hace falta, pero el orden lineal minimiza risk.

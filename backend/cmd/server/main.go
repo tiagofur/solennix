@@ -112,6 +112,7 @@ func main() {
 	reviewRepo := repository.NewEventReviewRepo(pool)
 	publicProfileRepo := repository.NewPublicProfileRepo(pool)
 	publicLeadRepo := repository.NewPublicLeadRepo(pool)
+	publicRequestRepo := repository.NewPublicRequestRepo(pool)
 	staffRepo := repository.NewStaffRepo(pool)
 	staffTeamRepo := repository.NewStaffTeamRepo(pool)
 	userCleanupRepo := repository.NewUserCleanupRepo(pool)
@@ -188,6 +189,8 @@ func main() {
 	reviewHandler := handlers.NewEventReviewHandler(reviewRepo, userRepo, publicProfileRepo, emailService, cfg.FrontendURL)
 	publicProfileHandler := handlers.NewPublicProfileHandler(userRepo, publicProfileRepo, productRepo, reviewRepo, eventRepo, cfg.FrontendURL)
 	publicLeadHandler := handlers.NewPublicLeadHandler(publicLeadRepo, userRepo, publicProfileRepo)
+	publicRequestService := services.NewPublicRequestService(publicRequestRepo, publicProfileRepo, productRepo, userRepo, pool, 0)
+	publicRequestHandler := handlers.NewPublicRequestHandler(publicRequestService, publicRequestRepo)
 	seoHandler := handlers.NewSEOHandler(userRepo, publicProfileRepo, cfg.FrontendURL)
 	publicProfileConfigHandler := handlers.NewPublicProfileConfigHandler(userRepo, publicProfileRepo, cfg.FrontendURL)
 	publicProfilePortfolioHandler := handlers.NewPublicProfilePortfolioHandler(userRepo, publicProfileRepo, eventRepo)
@@ -200,7 +203,7 @@ func main() {
 	pdfHandler := handlers.NewPDFHandler(eventRepo, clientRepo, paymentRepo, userRepo, cfg.UploadDir)
 
 	// Create router
-	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, dashboardHandler, auditHandler, unavailHandler, deviceHandler, liveActivityHandler, eventFormHandler, eventPublicLinkHandler, paymentSubmissionHandler, reviewHandler, publicProfileHandler, publicProfileConfigHandler, publicProfilePortfolioHandler, publicProfilePackagesHandler, publicProfileServicesHandler, staffHandler, staffTeamHandler, publicLeadHandler, seoHandler, pdfHandler, authService, userRepo, auditRepo, pool, cfg.CORSAllowedOrigins, cfg.UploadDir, cfg.Environment, cfg.TrustProxy)
+	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, dashboardHandler, auditHandler, unavailHandler, deviceHandler, liveActivityHandler, eventFormHandler, eventPublicLinkHandler, paymentSubmissionHandler, reviewHandler, publicProfileHandler, publicProfileConfigHandler, publicProfilePortfolioHandler, publicProfilePackagesHandler, publicProfileServicesHandler, staffHandler, staffTeamHandler, publicLeadHandler, publicRequestHandler, seoHandler, pdfHandler, authService, userRepo, auditRepo, pool, cfg.CORSAllowedOrigins, cfg.UploadDir, cfg.Environment, cfg.TrustProxy)
 
 	// Background job: expire gifted plans that have passed their expiry date.
 	// Runs once at startup then every hour.
@@ -374,6 +377,27 @@ func main() {
 			case <-timer.C:
 				runCleanup()
 			}
+		}
+	}()
+
+	// Background job: expire stale public quote requests (#1115).
+	// Marks requests with no activity for 14 days as "expired" (cleans the
+	// organizer inbox and stops the visitor from acting on a stale quote).
+	// Runs once at startup then daily.
+	go func() {
+		runExpiry := func() {
+			count, err := publicRequestService.ExpireStale(context.Background())
+			if err != nil {
+				slog.Error("Failed to expire stale public requests", "error", err)
+			} else if count > 0 {
+				slog.Info("Expired stale public requests", "count", count)
+			}
+		}
+		runExpiry()
+		ticker := time.NewTicker(24 * time.Hour)
+		defer ticker.Stop()
+		for range ticker.C {
+			runExpiry()
 		}
 	}()
 

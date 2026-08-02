@@ -30,6 +30,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	staffHandler *handlers.StaffHandler,
 	staffTeamHandler *handlers.StaffTeamHandler,
 	publicLeadHandler *handlers.PublicLeadHandler,
+	publicRequestHandler *handlers.PublicRequestHandler,
 	seoHandler *handlers.SEOHandler,
 	pdfHandler *handlers.PDFHandler,
 	authService *services.AuthService, userRepo *repository.UserRepo, auditRepo mw.AuditLogger, pool *pgxpool.Pool, corsOrigins []string, uploadDir string, environment string, trustProxy bool) http.Handler {
@@ -216,12 +217,24 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Get("/{slug}/og-image", seoHandler.OGImage)
 		// Tighter rate limit for lead submissions (form spam protection).
 		r.With(mw.RateLimit(5, 1*time.Minute)).Post("/{slug}/leads", publicLeadHandler.SubmitPublicLead)
+		// Structured quote requests (v2.0 inbound tooling, #1115). Same anti-spam
+		// tightness as the legacy leads form; the service also enforces a per-organizer
+		// pending cap.
+		r.With(mw.RateLimit(5, 1*time.Minute)).Post("/{slug}/requests", publicRequestHandler.CreatePublicRequest)
 	})
 
 	// Crawler artifacts.
 	apiRouter.Route("/public", func(r chi.Router) {
 		r.Use(mw.RateLimit(30, 1*time.Minute))
 		r.Get("/sitemap-profiles.xml", seoHandler.SitemapProfiles)
+	})
+
+	// Visitor action on their own request (v2.0, #1115). Public, identified by
+	// the X-Request-Token header (NG1: visitor has no account). Tight rate limit
+	// to resist token-guessing abuse.
+	apiRouter.Route("/public/requests", func(r chi.Router) {
+		r.Use(mw.RateLimit(10, 1*time.Minute))
+		r.With(mw.RateLimit(5, 1*time.Minute)).Post("/{id}/action", publicRequestHandler.ClientAction)
 	})
 
 	// Protected routes
@@ -408,6 +421,18 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Route("/leads", func(r chi.Router) {
 			r.Get("/", publicLeadHandler.ListLeads)
 			r.Post("/{id}/read", publicLeadHandler.MarkLeadRead)
+		})
+
+		// Structured quote-request inbox + actions for the organizer (v2.0, #1115).
+		r.Route("/organizers/me/requests", func(r chi.Router) {
+			r.Get("/", publicRequestHandler.ListRequests)
+			r.Get("/unread-count", publicRequestHandler.CountUnread)
+			r.Get("/{id}", publicRequestHandler.GetRequest)
+			r.Post("/{id}/read", publicRequestHandler.MarkRead)
+			r.Post("/{id}/responses", publicRequestHandler.RespondRequest)
+			r.Post("/{id}/decline", publicRequestHandler.DeclineRequest)
+			r.Post("/{id}/request-info", publicRequestHandler.RequestInfo)
+			r.Post("/{id}/convert-to-event", publicRequestHandler.ConvertToEvent)
 		})
 
 		// Backward-compatible alias for older organizer clients still calling the prefixed path.

@@ -1,0 +1,377 @@
+package handlers
+
+import (
+	"context"
+	"errors"
+	"log/slog"
+	"net/http"
+	"strings"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/tiagofur/solennix-backend/internal/middleware"
+	"github.com/tiagofur/solennix-backend/internal/models"
+	"github.com/tiagofur/solennix-backend/internal/repository"
+	"github.com/tiagofur/solennix-backend/internal/services"
+)
+
+// PublicRequestHandler exposes the public quote-request endpoint and the
+// authenticated organizer-facing inbox + response endpoints.
+//
+// The public endpoint (POST /api/public/organizers/{slug}/requests) accepts a
+// visitor's structured quote request. The visitor later acts on their own
+// request via the X-Request-Token header (no account, NG1 ratified).
+//
+// See openspec/changes/add-public-request-flow/specs/public-request/spec.md.
+type PublicRequestHandler struct {
+	svc         publicRequestService
+	requestRepo publicRequestInboxStore
+}
+
+// publicRequestService is the subset of *services.PublicRequestService the
+// handler uses. Interface for testability.
+type publicRequestService interface {
+	CreatePublicRequest(ctx context.Context, in services.CreatePublicRequestInput) (*models.PublicRequest, error)
+	Respond(ctx context.Context, requestID, organizerUserID uuid.UUID, resp *models.PublicResponse) error
+	RequestInfo(ctx context.Context, requestID, organizerUserID uuid.UUID) error
+	Decline(ctx context.Context, requestID, organizerUserID uuid.UUID, reason *string) error
+	MarkRead(ctx context.Context, requestID, organizerUserID uuid.UUID) error
+	ClientAction(ctx context.Context, requestID uuid.UUID, clientToken uuid.UUID, action string) error
+	ConvertToEvent(ctx context.Context, requestID, organizerUserID uuid.UUID) (*uuid.UUID, error)
+}
+
+// publicRequestInboxStore is the subset of *repository.PublicRequestRepo used
+// directly by the handler for listing (the service owns state transitions).
+type publicRequestInboxStore interface {
+	ListByOrganizer(ctx context.Context, organizerUserID uuid.UUID, f repository.PublicRequestListFilters) ([]models.PublicRequest, int, error)
+	ListResponsesByRequest(ctx context.Context, requestID, organizerUserID uuid.UUID) ([]models.PublicResponse, error)
+	CountUnreadByOrganizer(ctx context.Context, organizerUserID uuid.UUID) (int, error)
+}
+
+func NewPublicRequestHandler(svc *services.PublicRequestService, requestRepo *repository.PublicRequestRepo) *PublicRequestHandler {
+	return &PublicRequestHandler{svc: svc, requestRepo: requestRepo}
+}
+
+// --- Public endpoint ---
+
+// CreatePublicRequestRequest is the unauthenticated visitor payload.
+type CreatePublicRequestRequest struct {
+	ContactEmail string   `json:"contact_email"`
+	ContactName  *string  `json:"contact_name,omitempty"`
+	EventType    *string  `json:"event_type,omitempty"`
+	EventDate    *string  `json:"event_date,omitempty"`
+	Location     *string  `json:"location,omitempty"`
+	GuestCount   *int     `json:"guest_count,omitempty"`
+	Budget       *float64 `json:"budget,omitempty"`
+	Currency     string   `json:"currency,omitempty"`
+	ServiceIDs   []string `json:"service_ids,omitempty"`
+	Message      *string  `json:"message,omitempty"`
+}
+
+// CreatePublicRequest handles POST /api/public/organizers/{slug}/requests
+func (h *PublicRequestHandler) CreatePublicRequest(w http.ResponseWriter, r *http.Request) {
+	slug := strings.TrimSpace(r.PathValue("slug"))
+	if slug == "" {
+		writeError(w, http.StatusBadRequest, "Organizer slug is required")
+		return
+	}
+
+	var req CreatePublicRequestRequest
+	if err := decodeJSON(w, r, &req); err != nil {
+		return
+	}
+
+	email := strings.TrimSpace(req.ContactEmail)
+	if email == "" {
+		writeError(w, http.StatusBadRequest, "contact_email is required")
+		return
+	}
+	if len(email) > 320 {
+		writeError(w, http.StatusBadRequest, "contact_email too long")
+		return
+	}
+
+	serviceIDs, ok := parseServiceIDs(w, req.ServiceIDs)
+	if !ok {
+		return
+	}
+
+	in := services.CreatePublicRequestInput{
+		OrganizerSlug: slug,
+		ContactEmail:  email,
+		ContactName:   trimStrPtr(req.ContactName),
+		EventType:     trimStrPtr(req.EventType),
+		EventDate:     trimStrPtr(req.EventDate),
+		Location:      trimStrPtr(req.Location),
+		GuestCount:    req.GuestCount,
+		Budget:        req.Budget,
+		Currency:      strings.TrimSpace(req.Currency),
+		ServiceIDs:    serviceIDs,
+		Message:       trimStrPtr(req.Message),
+	}
+
+	created, err := h.svc.CreatePublicRequest(r.Context(), in)
+	if err != nil {
+		writePublicRequestError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, map[string]any{"data": created})
+}
+
+// --- Organizer inbox (auth) ---
+
+// ListRequests handles GET /api/organizers/me/requests
+func (h *PublicRequestHandler) ListRequests(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	params := parsePaginationParams(r, publicRequestSortAllowlist, "created_at")
+	if params == nil {
+		// Backward-compatible flat response: default first page, limit 50.
+		params = &PaginationParams{Page: 1, Limit: 50, Sort: "created_at", Order: "DESC"}
+	}
+
+	filters := repository.PublicRequestListFilters{
+		Status:  strings.TrimSpace(r.URL.Query().Get("status")),
+		FromDay: strings.TrimSpace(r.URL.Query().Get("from_date")),
+		ToDay:   strings.TrimSpace(r.URL.Query().Get("to_date")),
+		SortBy:  params.Sort,
+		Order:   params.Order,
+		Limit:   params.Limit,
+		Offset:  (params.Page - 1) * params.Limit,
+	}
+	items, total, err := h.requestRepo.ListByOrganizer(r.Context(), userID, filters)
+	if err != nil {
+		slog.Error("public_request: list organizer requests failed", "error", err)
+		writeError(w, http.StatusInternalServerError, "Failed to load requests")
+		return
+	}
+	writePaginatedJSON(w, http.StatusOK, items, total, params)
+}
+
+// CountUnread handles GET /api/organizers/me/requests/unread-count
+func (h *PublicRequestHandler) CountUnread(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	n, err := h.requestRepo.CountUnreadByOrganizer(r.Context(), userID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to count unread")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": map[string]int{"count": n}})
+}
+
+// GetRequest handles GET /api/organizers/me/requests/{id} (with responses history).
+func (h *PublicRequestHandler) GetRequest(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	id, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request id")
+		return
+	}
+	responses, err := h.requestRepo.ListResponsesByRequest(r.Context(), id, userID)
+	if err != nil {
+		slog.Error("public_request: list responses failed", "error", err)
+		writeError(w, http.StatusInternalServerError, "Failed to load responses")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": map[string]any{"responses": responses}})
+}
+
+// MarkRead handles POST /api/organizers/me/requests/{id}/read
+func (h *PublicRequestHandler) MarkRead(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	id, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request id")
+		return
+	}
+	if err := h.svc.MarkRead(r.Context(), id, userID); err != nil {
+		writePublicRequestError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": map[string]bool{"ok": true}})
+}
+
+// --- Organizer actions on a request (auth) ---
+
+// RespondRequest handles POST /api/organizers/me/requests/{id}/responses
+func (h *PublicRequestHandler) RespondRequest(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	id, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request id")
+		return
+	}
+	var body struct {
+		QuoteAmount *float64 `json:"quote_amount"`
+		Currency    string   `json:"currency,omitempty"`
+		Inclusions  []string `json:"inclusions,omitempty"`
+		ValidUntil  *string  `json:"valid_until,omitempty"`
+		Message     *string  `json:"message,omitempty"`
+	}
+	if err := decodeJSON(w, r, &body); err != nil {
+		return
+	}
+	if body.QuoteAmount == nil || *body.QuoteAmount < 0 {
+		writeError(w, http.StatusBadRequest, "quote_amount must be a non-negative number")
+		return
+	}
+	currency := strings.TrimSpace(body.Currency)
+	if currency == "" {
+		currency = "MXN"
+	}
+	resp := &models.PublicResponse{
+		QuoteAmount: *body.QuoteAmount,
+		Currency:    currency,
+		Inclusions:  body.Inclusions,
+		ValidUntil:  trimStrPtr(body.ValidUntil),
+		Message:     trimStrPtr(body.Message),
+	}
+	if err := h.svc.Respond(r.Context(), id, userID, resp); err != nil {
+		writePublicRequestError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, map[string]any{"data": resp})
+}
+
+// DeclineRequest handles POST /api/organizers/me/requests/{id}/decline
+func (h *PublicRequestHandler) DeclineRequest(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	id, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request id")
+		return
+	}
+	var body struct {
+		Reason *string `json:"reason,omitempty"`
+	}
+	// Body optional — decline may carry no reason.
+	_ = decodeJSON(w, r, &body)
+	if err := h.svc.Decline(r.Context(), id, userID, trimStrPtr(body.Reason)); err != nil {
+		writePublicRequestError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": map[string]bool{"ok": true}})
+}
+
+// RequestInfo handles POST /api/organizers/me/requests/{id}/request-info
+func (h *PublicRequestHandler) RequestInfo(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	id, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request id")
+		return
+	}
+	if err := h.svc.RequestInfo(r.Context(), id, userID); err != nil {
+		writePublicRequestError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": map[string]bool{"ok": true}})
+}
+
+// ConvertToEvent handles POST /api/organizers/me/requests/{id}/convert-to-event
+func (h *PublicRequestHandler) ConvertToEvent(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	id, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request id")
+		return
+	}
+	eventID, err := h.svc.ConvertToEvent(r.Context(), id, userID)
+	if err != nil {
+		// Idempotent: already converted returns 409 with the existing event_id.
+		if errors.Is(err, services.ErrAlreadyConverted) {
+			writeJSON(w, http.StatusConflict, map[string]any{
+				"error":    "already_converted",
+				"event_id": eventID,
+			})
+			return
+		}
+		writePublicRequestError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, map[string]any{"data": map[string]any{"event_id": eventID}})
+}
+
+// --- Visitor action (public, via X-Request-Token) ---
+
+// ClientAction handles POST /api/public/requests/{id}/action
+func (h *PublicRequestHandler) ClientAction(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request id")
+		return
+	}
+	token, err := uuid.Parse(strings.TrimSpace(r.Header.Get("X-Request-Token")))
+	if err != nil || token == uuid.Nil {
+		writeError(w, http.StatusUnauthorized, "Missing or invalid X-Request-Token")
+		return
+	}
+	var body struct {
+		Action string `json:"action"`
+	}
+	if err := decodeJSON(w, r, &body); err != nil {
+		return
+	}
+	action := strings.TrimSpace(body.Action)
+	if action != "accept" && action != "decline" {
+		writeError(w, http.StatusBadRequest, "action must be 'accept' or 'decline'")
+		return
+	}
+	if err := h.svc.ClientAction(r.Context(), id, token, action); err != nil {
+		writePublicRequestError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"data": map[string]bool{"ok": true}})
+}
+
+// --- helpers ---
+
+var publicRequestSortAllowlist = map[string]string{
+	"created_at": "created_at",
+	"event_date": "event_date",
+}
+
+// parseServiceIDs converts the request's string slice to uuids, validating format.
+// Writes the error response and returns ok=false on the first invalid ID.
+func parseServiceIDs(w http.ResponseWriter, raw []string) ([]uuid.UUID, bool) {
+	if len(raw) == 0 {
+		return nil, true
+	}
+	out := make([]uuid.UUID, 0, len(raw))
+	for _, s := range raw {
+		s = strings.TrimSpace(s)
+		if s == "" {
+			continue
+		}
+		id, err := uuid.Parse(s)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "Invalid service_id: "+s)
+			return nil, false
+		}
+		out = append(out, id)
+	}
+	return out, true
+}
+
+// writePublicRequestError maps service domain errors to HTTP statuses.
+func writePublicRequestError(w http.ResponseWriter, err error) {
+	switch {
+	case errors.Is(err, services.ErrPublicProfileDisabled):
+		writeError(w, http.StatusNotFound, "Profile not found")
+	case errors.Is(err, services.ErrInvalidServices):
+		writeError(w, http.StatusBadRequest, "One or more selected services are not available")
+	case errors.Is(err, services.ErrPendingCapExceeded):
+		writeJSON(w, http.StatusTooManyRequests, map[string]string{
+			"error":   "inbox_full",
+			"message": "This organizer's inbox is full. Please try again later.",
+		})
+	case errors.Is(err, services.ErrRequestNotFound):
+		writeError(w, http.StatusNotFound, "Request not found")
+	case errors.Is(err, services.ErrInvalidTransition):
+		writeError(w, http.StatusConflict, "This action is not allowed for the current request state")
+	case errors.Is(err, pgx.ErrNoRows):
+		writeError(w, http.StatusNotFound, "Not found")
+	default:
+		slog.Error("public_request: unexpected service error", "error", err)
+		writeError(w, http.StatusInternalServerError, "Something went wrong")
+	}
+}
