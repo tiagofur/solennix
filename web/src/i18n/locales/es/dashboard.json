@@ -106,5 +106,17 @@
     "no_client": "Cliente",
     "pax": "pax",
     "summary_talkback": "{{client}}{{separator}}{{service}}, fecha {{date}}, estado {{status}}"
+  },
+  "share": {
+    "title": "Compartí tu perfil público",
+    "incentive": "Cada vez que compartís tu perfil, podés recibir solicitudes nuevas.",
+    "copy_link": "Copiar link",
+    "copied": "¡Copiado!",
+    "whatsapp": "WhatsApp",
+    "share_native": "Compartir",
+    "whatsapp_text": "Mirá mi perfil en Solennix: {{link}}",
+    "empty_title": "Tu perfil público no está activo",
+    "empty_message": "Configurá tu perfil público para que los clientes te encuentren y te contacten.",
+    "empty_cta": "Configurar perfil público"
   }
 }
