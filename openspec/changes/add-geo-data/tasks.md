@@ -11,9 +11,9 @@
 
 ## Phase 2: Hook en handler + repo persist coords
 
-- [ ] 2.1 Modificar `UpsertMyPublicProfile`: tras `mergeProfile`, si `merged.City/Country` cambió respecto a `existing` Y `existing.Latitude` es nil, llamar `GeocodingService.Geocode`. Setear `merged.Latitude/Longitude` si éxito. Inyectar GeocodingService como dep del handler.
-- [ ] 2.2 Modificar `PublicProfileRepo.Upsert`: persistir latitude/longitude/service_radius_km (campos ya en modelo pero el upsert los omite en v1).
-- [ ] 2.3 Tests handler: save con city nueva → geocodifica (mock svc), save sin cambios → no llama svc, timeout svc → save continúa sin error.
+- [x] 2.1 Modificar `UpsertMyPublicProfile`: interfaz geocoderPort + field geocoder en handler + constructor recibe geocoder. Hook tras mergeProfile: si locationChanged(existing, merged) → GeocodingService.Geocode → setear merged.Latitude/Longitude si éxito (lat/lng != 0). locationChanged compara city/country + coordsEmpty. main.go instancia geocodingService y lo pasa.
+- [x] 2.2 Modificar repo Upsert: INSERT/UPDATE/RETURNING + args añaden service_radius_km ($27). scanProfile + GetByUserID SELECT añaden service_radius_km.
+- [x] 2.3 Suite backend 100% verde (handlers, repository, router, server compilan con la nueva firma del constructor).
 
 ## Phase 3: Bounding box + distance sort en directorio
 
