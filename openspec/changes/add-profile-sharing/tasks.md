@@ -10,9 +10,9 @@
 
 ## Phase 2: Wiring + verify + PR
 
-- [ ] 2.1 Inyectar `<ShareProfileCard />` en `web/src/pages/Dashboard.tsx` (sección prominente, arriba).
-- [ ] 2.2 `tsc --noEmit` limpio; ESLint pasa; `vitest run` verde.
-- [ ] 2.3 verify-report.md + abrir PR linkeando #1120.
+- [x] 2.1 Inyectar `<ShareProfileCard />` en Dashboard.tsx (sección prominente, tras OnboardingChecklist + UpgradeBanner, antes del ATTENTION SECTION).
+- [x] 2.2 `tsc --noEmit` limpio; ESLint pasa; `vitest run` verde (1546 tests, 0 FAILs).
+- [x] 2.3 verify-report.md escrito (PASS); PR abierto.
 
 ## Implementation Order
 

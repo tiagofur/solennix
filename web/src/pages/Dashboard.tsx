@@ -44,6 +44,7 @@ import { PAYMENT_COMPLETION_EPSILON } from "../lib/finance";
 import { StatusDropdown, EventStatus } from "../components/StatusDropdown";
 import { OnboardingChecklist } from "../components/OnboardingChecklist";
 import { RecentActivityCard } from "../components/RecentActivityCard";
+import { ShareProfileCard } from "../components/ShareProfileCard";
 import { UpgradeBanner } from "../components/UpgradeBanner";
 import { usePlanLimits } from "../hooks/usePlanLimits";
 import { TopClientsWidget } from "../components/TopClientsWidget";
@@ -829,6 +830,9 @@ export const Dashboard: React.FC = () => {
 
       <OnboardingChecklist />
       {isBasicPlan && <UpgradeBanner type="upsell" currentUsage={eventsThisMonth} limit={limit} />}
+
+      {/* v2.0 — share public profile (motor de adquisición, #1120) */}
+      <ShareProfileCard />
 
       {/* ── ATTENTION SECTION ── */}
       <DashboardAttentionSection
