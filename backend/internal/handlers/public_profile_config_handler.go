@@ -46,11 +46,17 @@ type PublicProfileConfigHandler struct {
 	userRepo    configUserRepo
 	profileRepo configProfileRepo
 	slugUpdater configSlugUpdater
+	geocoder    geocoderPort
 	frontendURL string
 	// defaultProfile builds the response shape returned when the organizer has
 	// no profile row yet. Overridable for tests; production uses the package
 	// default which mirrors the DB defaults.
 	defaultProfile func(userID uuid.UUID) *models.OrganizerPublicProfile
+}
+
+// geocoderPort is satisfied by *services.GeocodingService. Interface for testability.
+type geocoderPort interface {
+	Geocode(ctx context.Context, city, country string) (lat, lng float64, err error)
 }
 
 // Local interface slices of the concrete repos so the handler is unit-testable
@@ -70,12 +76,14 @@ type configSlugUpdater interface {
 func NewPublicProfileConfigHandler(
 	userRepo *repository.UserRepo,
 	profileRepo *repository.PublicProfileRepo,
+	geocoder geocoderPort,
 	frontendURL string,
 ) *PublicProfileConfigHandler {
 	return &PublicProfileConfigHandler{
 		userRepo:       userRepo,
 		profileRepo:    profileRepo,
 		slugUpdater:    userRepo, // *UserRepo implements configSlugUpdater
+		geocoder:       geocoder,
 		frontendURL:    strings.TrimSuffix(frontendURL, "/"),
 		defaultProfile: defaultPublicProfile,
 	}
@@ -98,30 +106,30 @@ func defaultPublicProfile(userID uuid.UUID) *models.OrganizerPublicProfile {
 // upsertRequest is the PUT body shape. All fields optional except where noted;
 // omitted booleans default to the DB/profile defaults on first save.
 type upsertRequest struct {
-	IsEnabled     *bool              `json:"is_enabled"`
-	PublicSlug    *string            `json:"public_slug"`
-	Headline      *string            `json:"headline"`
-	ContactType   *string            `json:"contact_type"`
-	ContactValue  *string            `json:"contact_value"`
-	City          *string            `json:"city"`
-	Region        *string            `json:"region"`
-	Country       *string            `json:"country"`
-	ShowPrices    *bool              `json:"show_prices"`
-	ShowServices  *bool              `json:"show_services"`
-	ShowReviews   *bool              `json:"show_reviews"`
-	ShowPortfolio *bool              `json:"show_portfolio"`
-	ShowContact   *bool              `json:"show_contact"`
-	ShowPackages  *bool              `json:"show_packages"`
-	ShowFaq       *bool              `json:"show_faq"`
-	ShowPolicies  *bool              `json:"show_policies"`
-	Socials       map[string]string  `json:"socials"`
-	About         *string            `json:"about"`
-	ServiceAreas  []string           `json:"service_areas"`
-	MinGuests     *int               `json:"min_guests"`
-	MaxGuests     *int               `json:"max_guests"`
-	EventTypes    []string           `json:"event_types"`
-	ResponseTime  *string            `json:"response_time"`
-	Languages     []string           `json:"languages"`
+	IsEnabled     *bool             `json:"is_enabled"`
+	PublicSlug    *string           `json:"public_slug"`
+	Headline      *string           `json:"headline"`
+	ContactType   *string           `json:"contact_type"`
+	ContactValue  *string           `json:"contact_value"`
+	City          *string           `json:"city"`
+	Region        *string           `json:"region"`
+	Country       *string           `json:"country"`
+	ShowPrices    *bool             `json:"show_prices"`
+	ShowServices  *bool             `json:"show_services"`
+	ShowReviews   *bool             `json:"show_reviews"`
+	ShowPortfolio *bool             `json:"show_portfolio"`
+	ShowContact   *bool             `json:"show_contact"`
+	ShowPackages  *bool             `json:"show_packages"`
+	ShowFaq       *bool             `json:"show_faq"`
+	ShowPolicies  *bool             `json:"show_policies"`
+	Socials       map[string]string `json:"socials"`
+	About         *string           `json:"about"`
+	ServiceAreas  []string          `json:"service_areas"`
+	MinGuests     *int              `json:"min_guests"`
+	MaxGuests     *int              `json:"max_guests"`
+	EventTypes    []string          `json:"event_types"`
+	ResponseTime  *string           `json:"response_time"`
+	Languages     []string          `json:"languages"`
 }
 
 // GetMyPublicProfile handles GET /api/users/me/public-profile.
@@ -246,6 +254,22 @@ func (h *PublicProfileConfigHandler) UpsertMyPublicProfile(w http.ResponseWriter
 		finalSlug = req.PublicSlug
 	}
 
+	// Geo-coding hook (#1127): if the city/country changed (or coords are empty
+	// and a city is now present), geocode via Nominatim. Failures are graceful
+	// — lat/lng stay nil and the save proceeds (the organizer still appears by
+	// city text in the directory).
+	if h.geocoder != nil && locationChanged(existing, merged) {
+		city := derefStr(merged.City)
+		country := derefStr(merged.Country)
+		if city != "" || country != "" {
+			lat, lng, _ := h.geocoder.Geocode(r.Context(), city, country)
+			if lat != 0 || lng != 0 {
+				merged.Latitude = &lat
+				merged.Longitude = &lng
+			}
+		}
+	}
+
 	stored, err := h.profileRepo.Upsert(r.Context(), merged)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to save public profile")
@@ -348,4 +372,33 @@ func mergeProfile(existing *models.OrganizerPublicProfile, def *models.Organizer
 		p.Languages = req.Languages
 	}
 	return &p
+}
+
+// locationChanged reports whether the city or country differs between the
+// existing profile and the merged one, OR if coords are still empty and a
+// city is now present. Used to decide whether to re-geocode (#1127 D7).
+func locationChanged(existing, merged *models.OrganizerPublicProfile) bool {
+	if existing == nil {
+		// Fresh profile — geocode if any location is present.
+		return merged != nil && (derefStr(merged.City) != "" || derefStr(merged.Country) != "")
+	}
+	if merged == nil {
+		return false
+	}
+	// Re-geocode if city/country changed, OR if coords are empty but city is set.
+	cityChanged := !strPtrEqual(existing.City, merged.City)
+	countryChanged := !strPtrEqual(existing.Country, merged.Country)
+	coordsEmpty := merged.Latitude == nil || merged.Longitude == nil
+	hasCity := derefStr(merged.City) != ""
+	return cityChanged || countryChanged || (coordsEmpty && hasCity)
+}
+
+func strPtrEqual(a, b *string) bool {
+	if a == nil || *a == "" {
+		return b == nil || *b == ""
+	}
+	if b == nil {
+		return false
+	}
+	return *a == *b
 }

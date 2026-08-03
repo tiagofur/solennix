@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/google/uuid"
@@ -63,7 +64,7 @@ func (r *PublicProfileRepo) GetByUserID(ctx context.Context, userID uuid.UUID) (
 			city, region, country, latitude, longitude,
 			show_prices, show_services, show_reviews, show_portfolio, show_contact,
 			socials, about, service_areas, min_guests, max_guests, event_types, response_time, languages,
-			show_packages, show_faq, show_policies,
+			show_packages, show_faq, show_policies, service_radius_km,
 			created_at, updated_at
 		FROM organizer_public_profiles WHERE user_id = $1`, userID)
 	p, err := scanProfile(row)
@@ -107,46 +108,47 @@ func (r *PublicProfileRepo) Upsert(ctx context.Context, p *models.OrganizerPubli
 			city, region, country, latitude, longitude,
 			show_prices, show_services, show_reviews, show_portfolio, show_contact, socials,
 			about, service_areas, min_guests, max_guests, event_types, response_time, languages,
-			show_packages, show_faq, show_policies
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
+			show_packages, show_faq, show_policies, service_radius_km
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
 		ON CONFLICT (user_id) DO UPDATE SET
-			is_enabled     = EXCLUDED.is_enabled,
-			headline       = EXCLUDED.headline,
-			contact_type   = EXCLUDED.contact_type,
-			contact_value  = EXCLUDED.contact_value,
-			city           = EXCLUDED.city,
-			region         = EXCLUDED.region,
-			country        = EXCLUDED.country,
-			latitude       = EXCLUDED.latitude,
-			longitude      = EXCLUDED.longitude,
-			show_prices    = EXCLUDED.show_prices,
-			show_services  = EXCLUDED.show_services,
-			show_reviews   = EXCLUDED.show_reviews,
-			show_portfolio = EXCLUDED.show_portfolio,
-			show_contact   = EXCLUDED.show_contact,
-			socials        = EXCLUDED.socials,
-			about          = EXCLUDED.about,
-			service_areas  = EXCLUDED.service_areas,
-			min_guests     = EXCLUDED.min_guests,
-			max_guests     = EXCLUDED.max_guests,
-			event_types    = EXCLUDED.event_types,
-			response_time  = EXCLUDED.response_time,
-			languages      = EXCLUDED.languages,
-			show_packages  = EXCLUDED.show_packages,
-			show_faq       = EXCLUDED.show_faq,
-			show_policies  = EXCLUDED.show_policies,
-			updated_at     = NOW()
+			is_enabled       = EXCLUDED.is_enabled,
+			headline         = EXCLUDED.headline,
+			contact_type     = EXCLUDED.contact_type,
+			contact_value    = EXCLUDED.contact_value,
+			city             = EXCLUDED.city,
+			region           = EXCLUDED.region,
+			country          = EXCLUDED.country,
+			latitude         = EXCLUDED.latitude,
+			longitude        = EXCLUDED.longitude,
+			show_prices      = EXCLUDED.show_prices,
+			show_services    = EXCLUDED.show_services,
+			show_reviews     = EXCLUDED.show_reviews,
+			show_portfolio   = EXCLUDED.show_portfolio,
+			show_contact     = EXCLUDED.show_contact,
+			socials          = EXCLUDED.socials,
+			about            = EXCLUDED.about,
+			service_areas    = EXCLUDED.service_areas,
+			min_guests       = EXCLUDED.min_guests,
+			max_guests       = EXCLUDED.max_guests,
+			event_types      = EXCLUDED.event_types,
+			response_time    = EXCLUDED.response_time,
+			languages        = EXCLUDED.languages,
+			show_packages    = EXCLUDED.show_packages,
+			show_faq         = EXCLUDED.show_faq,
+			show_policies    = EXCLUDED.show_policies,
+			service_radius_km = EXCLUDED.service_radius_km,
+			updated_at       = NOW()
 		RETURNING user_id, is_enabled, headline, contact_type, contact_value,
 			city, region, country, latitude, longitude,
 			show_prices, show_services, show_reviews, show_portfolio, show_contact,
 			socials, about, service_areas, min_guests, max_guests, event_types, response_time, languages,
-			show_packages, show_faq, show_policies,
+			show_packages, show_faq, show_policies, service_radius_km,
 			created_at, updated_at`,
 		p.UserID, p.IsEnabled, p.Headline, p.ContactType, p.ContactValue,
 		p.City, p.Region, p.Country, p.Latitude, p.Longitude,
 		p.ShowPrices, p.ShowServices, p.ShowReviews, p.ShowPortfolio, p.ShowContact, socials,
 		p.About, serviceAreas, p.MinGuests, p.MaxGuests, eventTypes, p.ResponseTime, languages,
-		p.ShowPackages, p.ShowFaq, p.ShowPolicies,
+		p.ShowPackages, p.ShowFaq, p.ShowPolicies, p.ServiceRadiusKm,
 	)
 	stored, err := scanProfile(row)
 	if err != nil {
@@ -171,7 +173,7 @@ func scanProfile(row rowScanner) (*models.OrganizerPublicProfile, error) {
 		&p.City, &p.Region, &p.Country, &p.Latitude, &p.Longitude,
 		&p.ShowPrices, &p.ShowServices, &p.ShowReviews, &p.ShowPortfolio, &p.ShowContact,
 		&socials, &p.About, &p.ServiceAreas, &p.MinGuests, &p.MaxGuests, &p.EventTypes, &p.ResponseTime, &p.Languages,
-		&p.ShowPackages, &p.ShowFaq, &p.ShowPolicies,
+		&p.ShowPackages, &p.ShowFaq, &p.ShowPolicies, &p.ServiceRadiusKm,
 		&p.CreatedAt, &p.UpdatedAt,
 	); err != nil {
 		return nil, err
@@ -364,12 +366,15 @@ func (r *PublicProfileRepo) ListEnabledSlugs(ctx context.Context) ([]PublicProfi
 // SearchPublicProfilesFilters controls the directory search (#1116).
 // All fields optional; empty filters return all publicable organizers.
 type SearchPublicProfilesFilters struct {
-	City      string // case-insensitive partial (ILIKE)
-	Country   string // case-insensitive exact
-	EventType string // membership in opp.event_types[]
-	Query     string // case-insensitive partial across name/headline/about/city
-	SortBy    string // "relevance" (default) | "rating" | "recent"
-	Order     string // "desc" (default) | "asc"
+	City      string   // case-insensitive partial (ILIKE)
+	Country   string   // case-insensitive exact
+	EventType string   // membership in opp.event_types[]
+	Query     string   // case-insensitive partial across name/headline/about/city
+	SortBy    string   // "relevance" (default) | "rating" | "recent" | "distance"
+	Order     string   // "desc" (default) | "asc"
+	Lat       *float64 // visitor latitude for bounding-box geo filter + distance sort (#1127)
+	Lng       *float64 // visitor longitude
+	RadiusKm  *float64 // bounding-box radius (default 50 if Lat/Lng present but RadiusKm nil)
 	Limit     int
 	Offset    int
 }
@@ -431,9 +436,29 @@ func (r *PublicProfileRepo) SearchPublicProfiles(ctx context.Context, f SearchPu
 		n++
 	}
 
+	// Bounding-box geo filter (#1127 D4). Computa un rectángulo aproximado
+	// alrededor del visitante: 1° lat ≈ 111km, 1° lng ≈ 111*cos(lat) km.
+	// Sin PostGIS — simple WHERE BETWEEN, soportado por idx_public_profiles_geo.
+	visitorLat := 0.0
+	visitorLng := 0.0
+	if f.Lat != nil && f.Lng != nil {
+		visitorLat = *f.Lat
+		visitorLng = *f.Lng
+		radiusKm := 50.0
+		if f.RadiusKm != nil && *f.RadiusKm > 0 {
+			radiusKm = *f.RadiusKm
+		}
+		latDelta := radiusKm / 111.0
+		lngDelta := radiusKm / (111.0 * cosDeg(visitorLat))
+		where += fmt.Sprintf(` AND opp.latitude IS NOT NULL AND opp.longitude IS NOT NULL
+			AND opp.latitude BETWEEN $%d AND $%d
+			AND opp.longitude BETWEEN $%d AND $%d`, n, n+1, n+2, n+3)
+		args = append(args, visitorLat-latDelta, visitorLat+latDelta, visitorLng-lngDelta, visitorLng+lngDelta)
+		n += 4
+	}
+
 	// Ranking. Default relevance = plan-featured → rating → reviews → recency.
-	// sort=rating/recent override the order column (still plan-first for relevance
-	// only; explicit sorts respect the user's intent fully).
+	// sort=rating/recent/distance override the order column.
 	orderClause := "ORDER BY (u.plan = 'business') DESC NULLS LAST, avg_rating DESC NULLS LAST, review_count DESC NULLS LAST, u.updated_at DESC"
 	switch f.SortBy {
 	case "rating":
@@ -445,6 +470,14 @@ func (r *PublicProfileRepo) SearchPublicProfiles(ctx context.Context, f SearchPu
 		orderClause = "ORDER BY u.updated_at DESC"
 		if f.Order == "asc" {
 			orderClause = "ORDER BY u.updated_at ASC"
+		}
+	case "distance":
+		// Euclidean distance squared (sufficient for ranking; haversine is overkill).
+		// Requires visitor coords; if absent, falls back to relevance.
+		if f.Lat != nil && f.Lng != nil {
+			orderClause = fmt.Sprintf(
+				"ORDER BY POWER(opp.latitude - %f, 2) + POWER(opp.longitude - %f, 2) ASC NULLS LAST",
+				visitorLat, visitorLng)
 		}
 	}
 
@@ -476,7 +509,8 @@ func (r *PublicProfileRepo) SearchPublicProfiles(ctx context.Context, f SearchPu
 		LEFT JOIN event_reviews er ON er.user_id = u.id AND er.visibility = 'public'
 		%s
 		GROUP BY u.public_slug, u.business_name, opp.headline, opp.city, opp.country,
-		         u.cover_url, u.logo_url, opp.event_types, u.plan, opp.response_time, u.updated_at
+		         u.cover_url, u.logo_url, opp.event_types, u.plan, opp.response_time, u.updated_at,
+		         opp.latitude, opp.longitude
 		%s
 		LIMIT $%d OFFSET $%d`, where, orderClause, n, n+1)
 	args = append(args, f.Limit, f.Offset)
@@ -829,4 +863,10 @@ func scanFaqItem(row faqRowScanner) (*models.OrganizerPublicFaqItem, error) {
 		return nil, err
 	}
 	return &item, nil
+}
+
+// cosDeg returns the cosine of an angle given in degrees (used for bounding-box
+// longitude delta computation: 1° lng ≈ 111*cos(lat) km).
+func cosDeg(deg float64) float64 {
+	return math.Cos(deg * math.Pi / 180.0)
 }
