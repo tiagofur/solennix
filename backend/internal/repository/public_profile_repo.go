@@ -509,7 +509,8 @@ func (r *PublicProfileRepo) SearchPublicProfiles(ctx context.Context, f SearchPu
 		LEFT JOIN event_reviews er ON er.user_id = u.id AND er.visibility = 'public'
 		%s
 		GROUP BY u.public_slug, u.business_name, opp.headline, opp.city, opp.country,
-		         u.cover_url, u.logo_url, opp.event_types, u.plan, opp.response_time, u.updated_at
+		         u.cover_url, u.logo_url, opp.event_types, u.plan, opp.response_time, u.updated_at,
+		         opp.latitude, opp.longitude
 		%s
 		LIMIT $%d OFFSET $%d`, where, orderClause, n, n+1)
 	args = append(args, f.Limit, f.Offset)
