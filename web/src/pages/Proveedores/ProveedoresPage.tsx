@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Search as SearchIcon, MapPin, Calendar, Loader2, AlertCircle } from "lucide-react";
 import Empty from "@/components/Empty";
 import { Pagination } from "@/components/Pagination";
+import { upsertMeta, setDocumentTitle } from "@/lib/seo";
 import { useDirectoryFilters } from "./useDirectoryFilters";
 import { useSearchOrganizers } from "./useSearchOrganizers";
 import { OrganizerCard } from "./OrganizerCard";
@@ -31,6 +32,18 @@ export const ProveedoresPage: React.FC = () => {
   useEffect(() => {
     if (page > 1) window.scrollTo({ top: 0, behavior: "smooth" });
   }, [page]);
+
+  // SEO meta tags (#1119) — title, description, Open Graph.
+  useEffect(() => {
+    const title = t("public:directory.title");
+    const subtitle = t("public:directory.subtitle");
+    setDocumentTitle(title);
+    upsertMeta("name", "description", subtitle);
+    upsertMeta("property", "og:title", title);
+    upsertMeta("property", "og:description", subtitle);
+    upsertMeta("property", "og:type", "website");
+    upsertMeta("name", "robots", "index, follow");
+  }, [t]);
 
   return (
     <div className="min-h-screen bg-bg">
