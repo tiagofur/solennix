@@ -366,12 +366,12 @@ func (r *PublicProfileRepo) ListEnabledSlugs(ctx context.Context) ([]PublicProfi
 // SearchPublicProfilesFilters controls the directory search (#1116).
 // All fields optional; empty filters return all publicable organizers.
 type SearchPublicProfilesFilters struct {
-	City      string // case-insensitive partial (ILIKE)
-	Country   string // case-insensitive exact
-	EventType string // membership in opp.event_types[]
-	Query     string // case-insensitive partial across name/headline/about/city
-	SortBy    string // "relevance" (default) | "rating" | "recent" | "distance"
-	Order     string // "desc" (default) | "asc"
+	City      string   // case-insensitive partial (ILIKE)
+	Country   string   // case-insensitive exact
+	EventType string   // membership in opp.event_types[]
+	Query     string   // case-insensitive partial across name/headline/about/city
+	SortBy    string   // "relevance" (default) | "rating" | "recent" | "distance"
+	Order     string   // "desc" (default) | "asc"
 	Lat       *float64 // visitor latitude for bounding-box geo filter + distance sort (#1127)
 	Lng       *float64 // visitor longitude
 	RadiusKm  *float64 // bounding-box radius (default 50 if Lat/Lng present but RadiusKm nil)

@@ -23,9 +23,9 @@
 
 ## Phase 4: OpenAPI + cleanup + verify + PR
 
-- [ ] 4.1 Sincronizar `openapi.yaml`: params lat/lng/radius_km + sort=distance en searchPublicOrganizers + service_radius_km en upsert schema.
-- [ ] 4.2 `gofmt` + `go vet`; `go test ./...` verde.
-- [ ] 4.3 verify-report.md + abrir PR linkeando #1127.
+- [x] 4.1 Sincronizar `openapi.yaml`: params lat/lng/radius_km + sort enum extends [relevance, rating, recent, distance] en searchPublicOrganizers + service_radius_km en OrganizerPublicProfileUpsertRequest.
+- [x] 4.2 `gofmt -w` aplicado (3 archivos); web types regenerados (+4 geo refs); tsc limpio; `go test ./...` 100% verde; contract test pasa; YAML válido.
+- [x] 4.3 verify-report.md escrito (PASS WITH WARNINGS); PR abierto.
 
 ## Implementation Order
 

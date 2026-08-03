@@ -586,33 +586,33 @@ type EventReview struct {
 
 // OrganizerPublicProfile is the 1:1 public-profile config for an organizer (auth Settings).
 type OrganizerPublicProfile struct {
-	UserID        uuid.UUID         `json:"user_id"`
-	IsEnabled     bool              `json:"is_enabled"`
-	Headline      *string           `json:"headline,omitempty"`
-	ContactType   *string           `json:"contact_type,omitempty"` // phone|whatsapp|email|url
-	ContactValue  *string           `json:"contact_value,omitempty"`
-	City          *string           `json:"city,omitempty"`
-	Region        *string           `json:"region,omitempty"`
-	Country       *string           `json:"country,omitempty"`
-	Latitude        *float64          `json:"latitude,omitempty"`        // directory-ready; populated by geocoding (#1127)
+	UserID          uuid.UUID         `json:"user_id"`
+	IsEnabled       bool              `json:"is_enabled"`
+	Headline        *string           `json:"headline,omitempty"`
+	ContactType     *string           `json:"contact_type,omitempty"` // phone|whatsapp|email|url
+	ContactValue    *string           `json:"contact_value,omitempty"`
+	City            *string           `json:"city,omitempty"`
+	Region          *string           `json:"region,omitempty"`
+	Country         *string           `json:"country,omitempty"`
+	Latitude        *float64          `json:"latitude,omitempty"` // directory-ready; populated by geocoding (#1127)
 	Longitude       *float64          `json:"longitude,omitempty"`
 	ServiceRadiusKm *float64          `json:"service_radius_km,omitempty"` // coverage radius for geo-search (#1127); null = no limit
 	ShowPrices      bool              `json:"show_prices"`
-	ShowServices  bool              `json:"show_services"`
-	ShowReviews   bool              `json:"show_reviews"`
-	ShowPortfolio bool              `json:"show_portfolio"`
-	ShowContact   bool              `json:"show_contact"`
-	ShowPackages  bool              `json:"show_packages"`
-	ShowFaq       bool              `json:"show_faq"`
-	ShowPolicies  bool              `json:"show_policies"`
-	Socials       map[string]string `json:"socials,omitempty"`
-	About         *string           `json:"about,omitempty"`
-	ServiceAreas  []string          `json:"service_areas,omitempty"`
-	MinGuests     *int              `json:"min_guests,omitempty"`
-	MaxGuests     *int              `json:"max_guests,omitempty"`
-	EventTypes    []string          `json:"event_types,omitempty"`
-	ResponseTime  *string           `json:"response_time,omitempty"`
-	Languages     []string          `json:"languages,omitempty"`
+	ShowServices    bool              `json:"show_services"`
+	ShowReviews     bool              `json:"show_reviews"`
+	ShowPortfolio   bool              `json:"show_portfolio"`
+	ShowContact     bool              `json:"show_contact"`
+	ShowPackages    bool              `json:"show_packages"`
+	ShowFaq         bool              `json:"show_faq"`
+	ShowPolicies    bool              `json:"show_policies"`
+	Socials         map[string]string `json:"socials,omitempty"`
+	About           *string           `json:"about,omitempty"`
+	ServiceAreas    []string          `json:"service_areas,omitempty"`
+	MinGuests       *int              `json:"min_guests,omitempty"`
+	MaxGuests       *int              `json:"max_guests,omitempty"`
+	EventTypes      []string          `json:"event_types,omitempty"`
+	ResponseTime    *string           `json:"response_time,omitempty"`
+	Languages       []string          `json:"languages,omitempty"`
 	// PublicSlug is denormalized from users.public_slug for Settings convenience.
 	PublicSlug *string   `json:"public_slug,omitempty"`
 	CreatedAt  time.Time `json:"created_at"`

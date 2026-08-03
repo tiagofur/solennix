@@ -3099,6 +3099,11 @@ components:
         country:
           type: string
           nullable: true
+        service_radius_km:
+          type: number
+          format: double
+          nullable: true
+          description: Coverage radius in km for geo-search (#1127). null = no limit.
         show_prices:
           type: boolean
         show_services:
@@ -6254,8 +6259,27 @@ paths:
           in: query
           schema:
             type: string
-            enum: [relevance, rating, recent]
+            enum: [relevance, rating, recent, distance]
             default: relevance
+        - name: lat
+          in: query
+          schema:
+            type: number
+            format: double
+          description: Visitor latitude for bounding-box geo filter + distance sort (#1127). Required with lng for geo.
+        - name: lng
+          in: query
+          schema:
+            type: number
+            format: double
+          description: Visitor longitude for bounding-box geo filter.
+        - name: radius_km
+          in: query
+          schema:
+            type: number
+            format: double
+            default: 50
+          description: Bounding-box radius in km (default 50 when lat/lng present).
         - name: order
           in: query
           schema:

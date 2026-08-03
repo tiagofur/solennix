@@ -3130,6 +3130,11 @@ export interface components {
             city?: string | null;
             region?: string | null;
             country?: string | null;
+            /**
+             * Format: double
+             * @description Coverage radius in km for geo-search (#1127). null = no limit.
+             */
+            service_radius_km?: number | null;
             show_prices?: boolean;
             show_services?: boolean;
             show_reviews?: boolean;
@@ -7325,7 +7330,13 @@ export interface operations {
                 event_type?: string;
                 /** @description Text search across business_name/headline/about/city. */
                 q?: string;
-                sort?: "relevance" | "rating" | "recent";
+                sort?: "relevance" | "rating" | "recent" | "distance";
+                /** @description Visitor latitude for bounding-box geo filter + distance sort (#1127). Required with lng for geo. */
+                lat?: number;
+                /** @description Visitor longitude for bounding-box geo filter. */
+                lng?: number;
+                /** @description Bounding-box radius in km (default 50 when lat/lng present). */
+                radius_km?: number;
                 order?: "asc" | "desc";
                 page?: number;
                 limit?: number;

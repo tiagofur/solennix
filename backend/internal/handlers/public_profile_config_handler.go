@@ -106,30 +106,30 @@ func defaultPublicProfile(userID uuid.UUID) *models.OrganizerPublicProfile {
 // upsertRequest is the PUT body shape. All fields optional except where noted;
 // omitted booleans default to the DB/profile defaults on first save.
 type upsertRequest struct {
-	IsEnabled     *bool              `json:"is_enabled"`
-	PublicSlug    *string            `json:"public_slug"`
-	Headline      *string            `json:"headline"`
-	ContactType   *string            `json:"contact_type"`
-	ContactValue  *string            `json:"contact_value"`
-	City          *string            `json:"city"`
-	Region        *string            `json:"region"`
-	Country       *string            `json:"country"`
-	ShowPrices    *bool              `json:"show_prices"`
-	ShowServices  *bool              `json:"show_services"`
-	ShowReviews   *bool              `json:"show_reviews"`
-	ShowPortfolio *bool              `json:"show_portfolio"`
-	ShowContact   *bool              `json:"show_contact"`
-	ShowPackages  *bool              `json:"show_packages"`
-	ShowFaq       *bool              `json:"show_faq"`
-	ShowPolicies  *bool              `json:"show_policies"`
-	Socials       map[string]string  `json:"socials"`
-	About         *string            `json:"about"`
-	ServiceAreas  []string           `json:"service_areas"`
-	MinGuests     *int               `json:"min_guests"`
-	MaxGuests     *int               `json:"max_guests"`
-	EventTypes    []string           `json:"event_types"`
-	ResponseTime  *string            `json:"response_time"`
-	Languages     []string           `json:"languages"`
+	IsEnabled     *bool             `json:"is_enabled"`
+	PublicSlug    *string           `json:"public_slug"`
+	Headline      *string           `json:"headline"`
+	ContactType   *string           `json:"contact_type"`
+	ContactValue  *string           `json:"contact_value"`
+	City          *string           `json:"city"`
+	Region        *string           `json:"region"`
+	Country       *string           `json:"country"`
+	ShowPrices    *bool             `json:"show_prices"`
+	ShowServices  *bool             `json:"show_services"`
+	ShowReviews   *bool             `json:"show_reviews"`
+	ShowPortfolio *bool             `json:"show_portfolio"`
+	ShowContact   *bool             `json:"show_contact"`
+	ShowPackages  *bool             `json:"show_packages"`
+	ShowFaq       *bool             `json:"show_faq"`
+	ShowPolicies  *bool             `json:"show_policies"`
+	Socials       map[string]string `json:"socials"`
+	About         *string           `json:"about"`
+	ServiceAreas  []string          `json:"service_areas"`
+	MinGuests     *int              `json:"min_guests"`
+	MaxGuests     *int              `json:"max_guests"`
+	EventTypes    []string          `json:"event_types"`
+	ResponseTime  *string           `json:"response_time"`
+	Languages     []string          `json:"languages"`
 }
 
 // GetMyPublicProfile handles GET /api/users/me/public-profile.
