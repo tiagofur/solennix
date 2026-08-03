@@ -284,3 +284,153 @@ func mustGetEventID(t *testing.T, pool *pgxpool.Pool, userID uuid.UUID) uuid.UUI
 
 // Ensure unused import guard (models referenced only if tests expand).
 var _ = models.PublicOrganizerCard{}
+
+// --- Geo tests (#1127 bounding box + distance sort) ---
+
+// setCoords updates lat/lng on an organizer's public profile.
+func setCoords(t *testing.T, pool *pgxpool.Pool, userID uuid.UUID, lat, lng float64) {
+	t.Helper()
+	if _, err := pool.Exec(context.Background(),
+		`UPDATE organizer_public_profiles SET latitude = $2, longitude = $3 WHERE user_id = $1`,
+		userID, lat, lng); err != nil {
+		t.Fatalf("set coords: %v", err)
+	}
+}
+
+func floatPtr(v float64) *float64 { return &v }
+
+func TestSearchPublicProfiles_BoundingBoxFilters(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	// CDMX organizer (~19.43, -99.13)
+	near := seedPublicableOrganizer(t, pool, "cdmx@test.dev", "pro", "Mexico City", "Mexico")
+	setCoords(t, pool, near, 19.43, -99.13)
+
+	// Guadalajara organizer (~20.66, -103.34)
+	far := seedPublicableOrganizer(t, pool, "gdl@test.dev", "pro", "Guadalajara", "Mexico")
+	setCoords(t, pool, far, 20.66, -103.34)
+
+	repo := NewPublicProfileRepo(pool)
+
+	// Visitor in CDMX, radius 50km → should find near only.
+	items, total, err := repo.SearchPublicProfiles(context.Background(), SearchPublicProfilesFilters{
+		Lat: floatPtr(19.43), Lng: floatPtr(-99.13), RadiusKm: floatPtr(50), Limit: 20,
+	})
+	if err != nil {
+		t.Fatalf("Search error = %v", err)
+	}
+	if total != 1 {
+		t.Fatalf("bbox total = %d, want 1 (only near)", total)
+	}
+	if len(items) != 1 || items[0].Slug != "slug-cdmx@test.dev" {
+		t.Fatalf("bbox items = %+v, want only cdmx", items)
+	}
+}
+
+func TestSearchPublicProfiles_BoundingBoxLargeRadiusFindsBoth(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	near := seedPublicableOrganizer(t, pool, "cdmx@test.dev", "pro", "Mexico City", "Mexico")
+	setCoords(t, pool, near, 19.43, -99.13)
+	far := seedPublicableOrganizer(t, pool, "gdl@test.dev", "pro", "Guadalajara", "Mexico")
+	setCoords(t, pool, far, 20.66, -103.34)
+
+	repo := NewPublicProfileRepo(pool)
+	items, total, err := repo.SearchPublicProfiles(context.Background(), SearchPublicProfilesFilters{
+		Lat: floatPtr(19.43), Lng: floatPtr(-99.13), RadiusKm: floatPtr(600), Limit: 20,
+	})
+	if err != nil {
+		t.Fatalf("Search error = %v", err)
+	}
+	if total != 2 {
+		t.Fatalf("large bbox total = %d, want 2", total)
+	}
+	_ = items
+}
+
+func TestSearchPublicProfiles_NoCoordsExcludedFromGeo(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	// Organizer WITHOUT coords.
+	seedPublicableOrganizer(t, pool, "nocoords@test.dev", "pro", "Mexico City", "Mexico")
+
+	repo := NewPublicProfileRepo(pool)
+	items, total, err := repo.SearchPublicProfiles(context.Background(), SearchPublicProfilesFilters{
+		Lat: floatPtr(19.43), Lng: floatPtr(-99.13), RadiusKm: floatPtr(50), Limit: 20,
+	})
+	if err != nil {
+		t.Fatalf("Search error = %v", err)
+	}
+	if total != 0 {
+		t.Fatalf("geo filter total = %d, want 0 (no coords excluded)", total)
+	}
+	_ = items
+}
+
+func TestSearchPublicProfiles_DistanceSort(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	// Three organizers at increasing distance from visitor (19.43, -99.13).
+	close10 := seedPublicableOrganizer(t, pool, "close@test.dev", "pro", "Mexico City", "Mexico")
+	setCoords(t, pool, close10, 19.43, -99.13)
+
+	mid30 := seedPublicableOrganizer(t, pool, "mid@test.dev", "pro", "Puebla", "Mexico")
+	setCoords(t, pool, mid30, 19.50, -99.30)
+
+	far50 := seedPublicableOrganizer(t, pool, "far@test.dev", "pro", "Toluca", "Mexico")
+	setCoords(t, pool, far50, 19.60, -99.50)
+
+	repo := NewPublicProfileRepo(pool)
+	items, _, err := repo.SearchPublicProfiles(context.Background(), SearchPublicProfilesFilters{
+		Lat: floatPtr(19.43), Lng: floatPtr(-99.13), RadiusKm: floatPtr(100),
+		SortBy: "distance", Limit: 20,
+	})
+	if err != nil {
+		t.Fatalf("Search error = %v", err)
+	}
+	if len(items) < 3 {
+		t.Fatalf("distance sort items = %d, want ≥ 3", len(items))
+	}
+	// Closest first.
+	if items[0].Slug != "slug-close@test.dev" {
+		t.Fatalf("distance sort first = %s, want close", items[0].Slug)
+	}
+	if items[len(items)-1].Slug != "slug-far@test.dev" {
+		t.Fatalf("distance sort last = %s, want far", items[len(items)-1].Slug)
+	}
+}
+
+func TestSearchPublicProfiles_GeoCombinedWithCityFilter(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	near := seedPublicableOrganizer(t, pool, "cdmx@test.dev", "pro", "Mexico City", "Mexico")
+	setCoords(t, pool, near, 19.43, -99.13)
+
+	// Same coords but different city → should be excluded by city filter.
+	other := seedPublicableOrganizer(t, pool, "other@test.dev", "pro", "Puebla", "Mexico")
+	setCoords(t, pool, other, 19.43, -99.13)
+
+	repo := NewPublicProfileRepo(pool)
+	items, total, err := repo.SearchPublicProfiles(context.Background(), SearchPublicProfilesFilters{
+		City: "Mexico", Lat: floatPtr(19.43), Lng: floatPtr(-99.13), RadiusKm: floatPtr(50), Limit: 20,
+	})
+	if err != nil {
+		t.Fatalf("Search error = %v", err)
+	}
+	if total != 1 {
+		t.Fatalf("geo+city total = %d, want 1", total)
+	}
+	if items[0].Slug != "slug-cdmx@test.dev" {
+		t.Fatalf("geo+city item = %s, want cdmx", items[0].Slug)
+	}
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/google/uuid"
@@ -369,8 +370,11 @@ type SearchPublicProfilesFilters struct {
 	Country   string // case-insensitive exact
 	EventType string // membership in opp.event_types[]
 	Query     string // case-insensitive partial across name/headline/about/city
-	SortBy    string // "relevance" (default) | "rating" | "recent"
+	SortBy    string // "relevance" (default) | "rating" | "recent" | "distance"
 	Order     string // "desc" (default) | "asc"
+	Lat       *float64 // visitor latitude for bounding-box geo filter + distance sort (#1127)
+	Lng       *float64 // visitor longitude
+	RadiusKm  *float64 // bounding-box radius (default 50 if Lat/Lng present but RadiusKm nil)
 	Limit     int
 	Offset    int
 }
@@ -432,9 +436,29 @@ func (r *PublicProfileRepo) SearchPublicProfiles(ctx context.Context, f SearchPu
 		n++
 	}
 
+	// Bounding-box geo filter (#1127 D4). Computa un rectángulo aproximado
+	// alrededor del visitante: 1° lat ≈ 111km, 1° lng ≈ 111*cos(lat) km.
+	// Sin PostGIS — simple WHERE BETWEEN, soportado por idx_public_profiles_geo.
+	visitorLat := 0.0
+	visitorLng := 0.0
+	if f.Lat != nil && f.Lng != nil {
+		visitorLat = *f.Lat
+		visitorLng = *f.Lng
+		radiusKm := 50.0
+		if f.RadiusKm != nil && *f.RadiusKm > 0 {
+			radiusKm = *f.RadiusKm
+		}
+		latDelta := radiusKm / 111.0
+		lngDelta := radiusKm / (111.0 * cosDeg(visitorLat))
+		where += fmt.Sprintf(` AND opp.latitude IS NOT NULL AND opp.longitude IS NOT NULL
+			AND opp.latitude BETWEEN $%d AND $%d
+			AND opp.longitude BETWEEN $%d AND $%d`, n, n+1, n+2, n+3)
+		args = append(args, visitorLat-latDelta, visitorLat+latDelta, visitorLng-lngDelta, visitorLng+lngDelta)
+		n += 4
+	}
+
 	// Ranking. Default relevance = plan-featured → rating → reviews → recency.
-	// sort=rating/recent override the order column (still plan-first for relevance
-	// only; explicit sorts respect the user's intent fully).
+	// sort=rating/recent/distance override the order column.
 	orderClause := "ORDER BY (u.plan = 'business') DESC NULLS LAST, avg_rating DESC NULLS LAST, review_count DESC NULLS LAST, u.updated_at DESC"
 	switch f.SortBy {
 	case "rating":
@@ -446,6 +470,14 @@ func (r *PublicProfileRepo) SearchPublicProfiles(ctx context.Context, f SearchPu
 		orderClause = "ORDER BY u.updated_at DESC"
 		if f.Order == "asc" {
 			orderClause = "ORDER BY u.updated_at ASC"
+		}
+	case "distance":
+		// Euclidean distance squared (sufficient for ranking; haversine is overkill).
+		// Requires visitor coords; if absent, falls back to relevance.
+		if f.Lat != nil && f.Lng != nil {
+			orderClause = fmt.Sprintf(
+				"ORDER BY POWER(opp.latitude - %f, 2) + POWER(opp.longitude - %f, 2) ASC NULLS LAST",
+				visitorLat, visitorLng)
 		}
 	}
 
@@ -830,4 +862,10 @@ func scanFaqItem(row faqRowScanner) (*models.OrganizerPublicFaqItem, error) {
 		return nil, err
 	}
 	return &item, nil
+}
+
+// cosDeg returns the cosine of an angle given in degrees (used for bounding-box
+// longitude delta computation: 1° lng ≈ 111*cos(lat) km).
+func cosDeg(deg float64) float64 {
+	return math.Cos(deg * math.Pi / 180.0)
 }

@@ -17,9 +17,9 @@
 
 ## Phase 3: Bounding box + distance sort en directorio
 
-- [ ] 3.1 Extender `SearchPublicProfilesFilters` con `Lat`, `Lng`, `RadiusKm`. Si lat/lng presentes, aplicar bounding box WHERE. Añadir `sort=distance` (ORDER BY euclidiano).
-- [ ] 3.2 Modificar `SearchPublicProfiles`: construir bounding box en Go (1° lat ≈ 111km), WHERE latitude/longitude BETWEEN, ORDER BY distance si sort=distance.
-- [ ] 3.3 Tests repo: bounding box filtra (seed coords dentro/fuera), distance sort ordena correcto, sin coords excluido de geo filter, combinable con city filter.
+- [x] 3.1 Extender `SearchPublicProfilesFilters` con `Lat`, `Lng`, `RadiusKm` (*float64) + `SortBy="distance"`.
+- [x] 3.2 Modificar `SearchPublicProfiles`: bounding box WHERE (1° lat ≈ 111km, 1° lng ≈ 111*cos(lat)km, helper cosDeg), lat/lng BETWEEN con 4 params. `sort=distance` ORDER BY euclidiano (POWER diff^2). Helper cosDeg (math.Cos en grados).
+- [x] 3.3 Tests repo (5, DB real): bbox filtra cerca/lejos (radius 50/600km), sin coords excluido, distance sort ordena cercanía (3 orgs a distancias crecientes), geo combinable con city filter AND.
 
 ## Phase 4: OpenAPI + cleanup + verify + PR
 
