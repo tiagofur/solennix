@@ -1,129 +1,193 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@tests/customRender";
+import { http, HttpResponse } from "msw";
+import { server } from "../../../tests/mocks/server";
 import { PublicLeadModal } from "./PublicLeadModal";
-import { publicProfileService } from "@/services/publicProfileService";
 
+const API_BASE = "http://localhost:8080/api";
+
+// Mock publicRequestService via MSW (real fetch interception, consistent with
+// service tests). publicProfileService import is kept only for the type.
 vi.mock("@/services/publicProfileService", () => ({
-  publicProfileService: {
-    submitLead: vi.fn(),
-  },
+  publicProfileService: {},
 }));
 
-describe("PublicLeadModal", () => {
+const services = [
+  { id: "svc-1", name: "DJ", category: "musica", base_price: 500 },
+  { id: "svc-2", name: "Catering", category: "comida", base_price: 1500 },
+];
+
+function renderModal(overrides: Record<string, unknown> = {}) {
+  return render(
+    <PublicLeadModal
+      isOpen
+      onClose={vi.fn()}
+      slug="alice"
+      businessName="Alice Catering"
+      services={services}
+      {...overrides}
+    />,
+  );
+}
+
+function fillValidForm() {
+  fireEvent.change(screen.getByTestId("lead-email-input"), {
+    target: { value: "client@example.com" },
+  });
+}
+
+describe("PublicLeadModal (solicitud estructurada, #1118)", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    server.resetHandlers();
   });
 
-  it("does not render when isOpen is false", () => {
-    render(
-      <PublicLeadModal
-        isOpen={false}
-        onClose={vi.fn()}
-        slug="alice"
-        businessName="Alice Events"
-      />,
-    );
+  it("renders null when closed", () => {
+    render(<PublicLeadModal isOpen={false} onClose={vi.fn()} slug="alice" businessName="Alice" />);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("renders form fields when isOpen is true", () => {
-    render(
-      <PublicLeadModal
-        isOpen={true}
-        onClose={vi.fn()}
-        slug="alice"
-        businessName="Alice Events"
-      />,
-    );
+  it("renders dialog with new structured fields when open", () => {
+    renderModal();
     expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByTestId("lead-name-input")).toBeInTheDocument();
-    expect(screen.getByTestId("lead-contact-input")).toBeInTheDocument();
-    expect(screen.getByTestId("lead-event-type-select")).toBeInTheDocument();
+    expect(screen.getByTestId("lead-email-input")).toBeInTheDocument();
+    expect(screen.getByTestId("lead-location-input")).toBeInTheDocument();
+    expect(screen.getByTestId("lead-budget-input")).toBeInTheDocument();
+    expect(screen.getByTestId("lead-services-section")).toBeInTheDocument();
     expect(screen.getByTestId("lead-submit-button")).toBeInTheDocument();
   });
 
-  it("submits lead data and displays success view", async () => {
-    vi.mocked(publicProfileService.submitLead).mockResolvedValue({
-      id: "l1",
-      organizer_user_id: "u1",
-      name: "Maria",
-      contact: "maria@test.com",
-      created_at: "2026-07-29T12:00:00Z",
-    });
+  it("shows the legal disclaimer", () => {
+    renderModal();
+    expect(screen.getByTestId("lead-disclaimer")).toBeInTheDocument();
+    expect(screen.getByTestId("lead-disclaimer").textContent).toMatch(/acuerdo|direct/i);
+  });
 
-    const onCloseMock = vi.fn();
-    render(
-      <PublicLeadModal
-        isOpen={true}
-        onClose={onCloseMock}
-        slug="alice"
-        businessName="Alice Events"
-      />,
+  it("hides services section when organizer has no services", () => {
+    renderModal({ services: [] });
+    expect(screen.queryByTestId("lead-services-section")).not.toBeInTheDocument();
+  });
+
+  it("submits structured payload to /requests on valid form", async () => {
+    let capturedBody: Record<string, unknown> = {};
+    server.use(
+      http.post(`${API_BASE}/public/organizers/alice/requests`, async ({ request }) => {
+        capturedBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(
+          { data: { id: "req-1", status: "pending" } },
+          { status: 201 },
+        );
+      }),
     );
+    renderModal();
 
-    fireEvent.change(screen.getByTestId("lead-name-input"), {
-      target: { value: "Maria Gonzalez" },
-    });
-    fireEvent.change(screen.getByTestId("lead-contact-input"), {
-      target: { value: "maria@test.com" },
-    });
+    fillValidForm();
     fireEvent.change(screen.getByTestId("lead-event-type-select"), {
       target: { value: "wedding" },
     });
-    fireEvent.change(screen.getByTestId("lead-event-date-input"), {
-      target: { value: "2026-10-15" },
-    });
-    fireEvent.change(screen.getByTestId("lead-guests-input"), {
-      target: { value: "150" },
-    });
-    fireEvent.change(screen.getByTestId("lead-message-input"), {
-      target: { value: "Looking for full catering" },
-    });
+    fireEvent.click(screen.getByTestId("lead-service-svc-1"));
 
     fireEvent.click(screen.getByTestId("lead-submit-button"));
 
     await waitFor(() => {
-      expect(publicProfileService.submitLead).toHaveBeenCalledWith("alice", {
-        name: "Maria Gonzalez",
-        contact: "maria@test.com",
-        event_type: "wedding",
-        event_date: "2026-10-15",
-        num_guests: 150,
-        message: "Looking for full catering",
-        source: "public_profile",
-      });
+      expect(screen.getByTestId("lead-success-view")).toBeInTheDocument();
     });
-
-    expect(await screen.findByTestId("lead-success-view")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByTestId("lead-success-close"));
-    expect(onCloseMock).toHaveBeenCalled();
+    expect(capturedBody.contact_email).toBe("client@example.com");
+    expect(capturedBody.event_type).toBe("wedding");
+    expect(capturedBody.service_ids).toEqual(["svc-1"]);
+    expect(capturedBody.currency).toBe("MXN");
   });
 
-  it("shows error alert when submission fails", async () => {
-    vi.mocked(publicProfileService.submitLead).mockRejectedValue(
-      new Error("Failed to submit inquiry"),
-    );
-
-    render(
-      <PublicLeadModal
-        isOpen={true}
-        onClose={vi.fn()}
-        slug="alice"
-        businessName="Alice Events"
-      />,
-    );
-
-    fireEvent.change(screen.getByTestId("lead-name-input"), {
-      target: { value: "Maria" },
-    });
-    fireEvent.change(screen.getByTestId("lead-contact-input"), {
-      target: { value: "maria@test.com" },
+  it("rejects invalid email with client-side validation", async () => {
+    renderModal();
+    fireEvent.change(screen.getByTestId("lead-email-input"), {
+      target: { value: "not-an-email" },
     });
     fireEvent.click(screen.getByTestId("lead-submit-button"));
+    expect(screen.getByTestId("lead-error")).toBeInTheDocument();
+    expect(screen.getByTestId("lead-error").textContent).toMatch(/correo|email/i);
+  });
 
-    expect(await screen.findByTestId("lead-error")).toHaveTextContent(
-      "Failed to submit inquiry",
+  it("rejects past event date with client-side validation", async () => {
+    renderModal();
+    fireEvent.change(screen.getByTestId("lead-email-input"), {
+      target: { value: "client@example.com" },
+    });
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    fireEvent.change(screen.getByTestId("lead-event-date-input"), {
+      target: { value: yesterday.toISOString().slice(0, 10) },
+    });
+    fireEvent.click(screen.getByTestId("lead-submit-button"));
+    expect(screen.getByTestId("lead-error").textContent).toMatch(/fecha|future/i);
+  });
+
+  it("shows inbox_full message on 429 inbox_full", async () => {
+    server.use(
+      http.post(`${API_BASE}/public/organizers/alice/requests`, () =>
+        HttpResponse.json(
+          { error: "inbox_full", message: "inbox full" },
+          { status: 429 },
+        ),
+      ),
     );
+    renderModal();
+    fillValidForm();
+    fireEvent.click(screen.getByTestId("lead-submit-button"));
+    await waitFor(() => {
+      expect(screen.getByTestId("lead-error").textContent).toMatch(/bandeja|inbox/i);
+    });
+  });
+
+  it("shows not_found message on 404", async () => {
+    server.use(
+      http.post(`${API_BASE}/public/organizers/alice/requests`, () =>
+        HttpResponse.json({ error: "not_found" }, { status: 404 }),
+      ),
+    );
+    renderModal();
+    fillValidForm();
+    fireEvent.click(screen.getByTestId("lead-submit-button"));
+    await waitFor(() => {
+      expect(screen.getByTestId("lead-error").textContent).toMatch(/disponible|available/i);
+    });
+  });
+
+  it("shows generic error on 500", async () => {
+    server.use(
+      http.post(`${API_BASE}/public/organizers/alice/requests`, () =>
+        HttpResponse.json({ error: "boom" }, { status: 500 }),
+      ),
+    );
+    renderModal();
+    fillValidForm();
+    fireEvent.click(screen.getByTestId("lead-submit-button"));
+    await waitFor(() => {
+      expect(screen.getByTestId("lead-error")).toBeInTheDocument();
+    });
+  });
+
+  it("toggles service selection on click", () => {
+    renderModal();
+    const chip = screen.getByTestId("lead-service-svc-1");
+    expect(chip).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(chip);
+    expect(chip).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(chip);
+    expect(chip).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("disables submit button while submitting", async () => {
+    server.use(
+      http.post(`${API_BASE}/public/organizers/alice/requests`, async () => {
+        await new Promise((r) => setTimeout(r, 500));
+        return HttpResponse.json({ data: { id: "x" } }, { status: 201 });
+      }),
+    );
+    renderModal();
+    fillValidForm();
+    fireEvent.click(screen.getByTestId("lead-submit-button"));
+    await waitFor(() => {
+      expect(screen.getByTestId("lead-submit-button")).toBeDisabled();
+    });
   });
 });

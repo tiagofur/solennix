@@ -865,6 +865,7 @@ export const PublicProfilePage: React.FC = () => {
         slug={profile.slug || slug || ""}
         businessName={displayName}
         brandColor={profile.brand_color}
+        services={profile.services ?? []}
       />
 
       {lightboxIndex !== null && (
