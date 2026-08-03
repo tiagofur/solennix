@@ -15,9 +15,9 @@
 
 ## Phase 3: Wiring + cleanup + verify
 
-- [ ] 3.1 Modificar `PublicProfilePage.tsx`: pasar `services={profile.services ?? []}` al modal.
-- [ ] 3.2 `tsc --noEmit` limpio; ESLint pasa; `vitest run` verde.
-- [ ] 3.3 verify-report.md + abrir PR linkeando #1118.
+- [x] 3.1 Modificar `PublicProfilePage.tsx`: pasar `services={profile.services ?? []}` al modal.
+- [x] 3.2 `tsc --noEmit` limpio; ESLint pasa; `vitest run` verde (1536 tests, 0 FAILs).
+- [x] 3.3 verify-report.md escrito (PASS WITH WARNINGS); PR abierto.
 
 ## Implementation Order
 
