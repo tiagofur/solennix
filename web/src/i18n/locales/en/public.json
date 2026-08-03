@@ -499,6 +499,23 @@
       "response_time_heading": "Response time",
       "languages_heading": "Languages spoken",
       "event_types_heading": "Event specialties"
+    },
+    "request": {
+      "email_label": "Email *",
+      "email_placeholder": "e.g. mary@example.com",
+      "email_invalid": "Please enter a valid email address.",
+      "location_label": "Event location",
+      "location_placeholder": "e.g. Polanco, CDMX",
+      "budget_label": "Approximate budget",
+      "budget_placeholder": "e.g. 15000",
+      "services_label": "Services of interest",
+      "services_none": "Select at least one service (optional)",
+      "disclaimer": "The agreement is direct with the provider. Solennix only facilitates contact.",
+      "error_inbox_full": "This organizer's inbox is full. Please try again later.",
+      "error_generic": "We couldn't send your request. Please try again.",
+      "error_not_found": "This profile is no longer available.",
+      "date_past": "The event date must be in the future.",
+      "budget_invalid": "Budget must be a positive number."
     }
   },
   "directory": {

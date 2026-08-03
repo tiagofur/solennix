@@ -9,9 +9,9 @@
 
 ## Phase 2: Modal evolución
 
-- [ ] 2.1 Añadir strings i18n `request.*` al namespace `public` (ES+EN): labels, placeholders, errores, disclaimer, success.
-- [ ] 2.2 Modificar `PublicLeadModal.tsx`: nueva prop `services: PublicProfileService[]`. Cambiar submit a `publicRequestService.submit`. Añadir campos: contact_email (obligatorio), location, budget, services[] (checkboxes). Mantener event_type/event_date/guest_count/message. Añadir disclaimer visible. Validación client-side (email regex, fecha futura, budget ≥ 0). Mapeo de errores (429 inbox_full → mensaje específico).
-- [ ] 2.3 Tests modal: render con servicios, submit exitoso (mock service), validación email/fecha/budget, 429 inbox_full mensaje, multi-select toggle, sin servicios (oculto), disclaimer presente, success view.
+- [x] 2.1 Strings i18n `profile.request.*` añadidos al namespace `public` (ES+EN): labels email/location/budget/services, placeholders, errores (email_invalid, date_past, budget_invalid, inbox_full, not_found, generic), disclaimer legal.
+- [x] 2.2 Modificar `PublicLeadModal.tsx`: prop `services` (D4), submit vía `publicRequestService.submit` (D2), campos nuevos (contact_email obligatorio type=text+inputMode=email + regex validate, location, budget, services checkboxes D5), disclaimer visible (ToS #1112), validación client-side (D6 regex, fecha futura, budget≥0), mapeo errores por code/status (D7: inbox_full/not_found/generic).
+- [x] 2.3 Tests modal (12): null cerrado, dialog+campos nuevos, disclaimer, sin servicios oculta sección, submit estructurado a /requests, validación email, validación fecha pasada, 429 inbox_full, 404 not_found, 500 generic, toggle services, submit disabled mientras submitting.
 
 ## Phase 3: Wiring + cleanup + verify
 

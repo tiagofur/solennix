@@ -499,6 +499,23 @@
       "response_time_heading": "Tiempo de respuesta",
       "languages_heading": "Idiomas de atención",
       "event_types_heading": "Especialidad de eventos"
+    },
+    "request": {
+      "email_label": "Correo electrónico *",
+      "email_placeholder": "ej. maria@ejemplo.com",
+      "email_invalid": "Ingresa un correo electrónico válido.",
+      "location_label": "Ubicación del evento",
+      "location_placeholder": "ej. Polanco, CDMX",
+      "budget_label": "Presupuesto aproximado",
+      "budget_placeholder": "ej. 15000",
+      "services_label": "Servicios de interés",
+      "services_none": "Selecciona al menos un servicio (opcional)",
+      "disclaimer": "El acuerdo es directo con el proveedor. Solennix solo facilita el contacto.",
+      "error_inbox_full": "La bandeja de este organizador está llena. Probá más tarde.",
+      "error_generic": "No pudimos enviar tu solicitud. Probá de nuevo.",
+      "error_not_found": "Este perfil ya no está disponible.",
+      "date_past": "La fecha del evento debe ser futura.",
+      "budget_invalid": "El presupuesto debe ser un número positivo."
     }
   },
   "directory": {

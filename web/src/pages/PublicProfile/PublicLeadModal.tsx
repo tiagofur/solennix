@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { X, CheckCircle2, Loader2, Calendar, Users, Send } from "lucide-react";
-import { publicProfileService } from "@/services/publicProfileService";
+import { X, CheckCircle2, Loader2, Calendar, Users, Send, MapPin, DollarSign, Info } from "lucide-react";
+import { publicRequestService, PublicRequestError } from "@/services/publicRequestService";
+import type { PublicProfileServiceItem } from "@/services/publicProfileService";
 
 interface PublicLeadModalProps {
   isOpen: boolean;
@@ -9,7 +10,11 @@ interface PublicLeadModalProps {
   slug: string;
   businessName: string;
   brandColor?: string | null;
+  /** Public services of the organizer, for the multi-select (D4). */
+  services?: PublicProfileServiceItem[];
 }
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
   isOpen,
@@ -17,14 +22,18 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
   slug,
   businessName,
   brandColor,
+  services = [],
 }) => {
   const { t } = useTranslation("public");
 
-  const [name, setName] = useState("");
-  const [contact, setContact] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactName, setContactName] = useState("");
   const [eventType, setEventType] = useState("wedding");
   const [eventDate, setEventDate] = useState("");
+  const [location, setLocation] = useState("");
   const [numGuests, setNumGuests] = useState("");
+  const [budget, setBudget] = useState("");
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [message, setMessage] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
@@ -33,11 +42,14 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      setName("");
-      setContact("");
+      setContactEmail("");
+      setContactName("");
       setEventType("wedding");
       setEventDate("");
+      setLocation("");
       setNumGuests("");
+      setBudget("");
+      setSelectedServices([]);
       setMessage("");
       setError(null);
       setSubmitted(false);
@@ -56,31 +68,69 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
 
   if (!isOpen) return null;
 
+  const validate = (): string | null => {
+    if (!EMAIL_REGEX.test(contactEmail.trim())) {
+      return t("profile.request.email_invalid");
+    }
+    if (eventDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const entered = new Date(eventDate);
+      if (entered < today) {
+        return t("profile.request.date_past");
+      }
+    }
+    if (budget && parseFloat(budget) < 0) {
+      return t("profile.request.budget_invalid");
+    }
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !contact.trim()) {
-      setError(t("profile.name_contact_required", { defaultValue: "Por favor ingresa tu nombre y un método de contacto." }));
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
       return;
     }
     setError(null);
     setSubmitting(true);
 
     try {
-      await publicProfileService.submitLead(slug, {
-        name: name.trim(),
-        contact: contact.trim(),
+      await publicRequestService.submit(slug, {
+        contact_email: contactEmail.trim(),
+        contact_name: contactName.trim() || undefined,
         event_type: eventType || undefined,
         event_date: eventDate || undefined,
-        num_guests: numGuests ? parseInt(numGuests, 10) : undefined,
+        location: location.trim() || undefined,
+        guest_count: numGuests ? parseInt(numGuests, 10) : undefined,
+        budget: budget ? parseFloat(budget) : undefined,
+        currency: "MXN",
+        service_ids: selectedServices.length > 0 ? selectedServices : undefined,
         message: message.trim() || undefined,
-        source: "public_profile",
       });
       setSubmitted(true);
-    } catch (err: any) {
-      setError(err?.message || t("profile.submit_error", { defaultValue: "Error al enviar la solicitud. Por favor intenta de nuevo." }));
+    } catch (err) {
+      if (err instanceof PublicRequestError) {
+        if (err.code === "inbox_full") {
+          setError(t("profile.request.error_inbox_full"));
+        } else if (err.status === 404) {
+          setError(t("profile.request.error_not_found"));
+        } else {
+          setError(t("profile.request.error_generic"));
+        }
+      } else {
+        setError(t("profile.request.error_generic"));
+      }
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const toggleService = (id: string) => {
+    setSelectedServices((prev) =>
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
+    );
   };
 
   const fieldStyle =
@@ -95,7 +145,7 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
       aria-labelledby="quote-modal-title"
     >
       <div
-        className="relative w-full max-w-lg rounded-2xl bg-card border border-border p-6 shadow-xl space-y-5 overflow-hidden"
+        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-card border border-border p-6 shadow-xl space-y-5"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -141,6 +191,14 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
               </p>
             </div>
 
+            {/* Disclaimer legal (ToS #1112) */}
+            <div className="flex items-start gap-2 rounded-xl bg-primary/5 border border-primary/10 p-3" data-testid="lead-disclaimer">
+              <Info className="h-4 w-4 flex-shrink-0 text-primary mt-0.5" aria-hidden="true" />
+              <p className="text-xs text-text-secondary leading-relaxed">
+                {t("profile.request.disclaimer")}
+              </p>
+            </div>
+
             {error && (
               <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-xs text-error font-medium" data-testid="lead-error">
                 {error}
@@ -148,40 +206,42 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Email (obligatorio) + name */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
+                  <label className="text-xs font-medium text-text-secondary" htmlFor="lead-email">
+                    {t("profile.request.email_label")}
+                  </label>
+                  <input
+                    id="lead-email"
+                    type="text"
+                    inputMode="email"
+                    autoComplete="email"
+                    required
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    placeholder={t("profile.request.email_placeholder")}
+                    className={fieldStyle}
+                    data-testid="lead-email-input"
+                  />
+                </div>
+                <div className="space-y-1">
                   <label className="text-xs font-medium text-text-secondary" htmlFor="lead-name">
-                    {t("profile.name_label")} *
+                    {t("profile.name_label")}
                   </label>
                   <input
                     id="lead-name"
                     type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    value={contactName}
+                    onChange={(e) => setContactName(e.target.value)}
                     placeholder="ej. María González"
                     className={fieldStyle}
                     data-testid="lead-name-input"
                   />
                 </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-text-secondary" htmlFor="lead-contact">
-                    {t("profile.contact_label")} *
-                  </label>
-                  <input
-                    id="lead-contact"
-                    type="text"
-                    required
-                    value={contact}
-                    onChange={(e) => setContact(e.target.value)}
-                    placeholder={t("profile.contact_placeholder")}
-                    className={fieldStyle}
-                    data-testid="lead-contact-input"
-                  />
-                </div>
               </div>
 
+              {/* Event type + date + guests (existentes) */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1 sm:col-span-1">
                   <label className="text-xs font-medium text-text-secondary" htmlFor="lead-event-type">
@@ -202,7 +262,6 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
                     <option value="other">{t("profile.event_types.other")}</option>
                   </select>
                 </div>
-
                 <div className="space-y-1 sm:col-span-1">
                   <label className="text-xs font-medium text-text-secondary flex items-center gap-1" htmlFor="lead-event-date">
                     <Calendar className="h-3 w-3 text-primary" />
@@ -217,7 +276,6 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
                     data-testid="lead-event-date-input"
                   />
                 </div>
-
                 <div className="space-y-1 sm:col-span-1">
                   <label className="text-xs font-medium text-text-secondary flex items-center gap-1" htmlFor="lead-guests">
                     <Users className="h-3 w-3 text-primary" />
@@ -235,6 +293,71 @@ export const PublicLeadModal: React.FC<PublicLeadModalProps> = ({
                   />
                 </div>
               </div>
+
+              {/* Location + budget (nuevos) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-text-secondary flex items-center gap-1" htmlFor="lead-location">
+                    <MapPin className="h-3 w-3 text-primary" />
+                    {t("profile.request.location_label")}
+                  </label>
+                  <input
+                    id="lead-location"
+                    type="text"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder={t("profile.request.location_placeholder")}
+                    className={fieldStyle}
+                    data-testid="lead-location-input"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-text-secondary flex items-center gap-1" htmlFor="lead-budget">
+                    <DollarSign className="h-3 w-3 text-primary" />
+                    {t("profile.request.budget_label")}
+                  </label>
+                  <input
+                    id="lead-budget"
+                    type="number"
+                    min="0"
+                    value={budget}
+                    onChange={(e) => setBudget(e.target.value)}
+                    placeholder={t("profile.request.budget_placeholder")}
+                    className={fieldStyle}
+                    data-testid="lead-budget-input"
+                  />
+                </div>
+              </div>
+
+              {/* Services multi-select (checkboxes, D5) — oculto si no hay */}
+              {services.length > 0 && (
+                <div className="space-y-2" data-testid="lead-services-section">
+                  <label className="text-xs font-medium text-text-secondary">
+                    {t("profile.request.services_label")}
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {services.map((svc) => {
+                      const isSelected = selectedServices.includes(svc.id);
+                      return (
+                        <button
+                          key={svc.id}
+                          type="button"
+                          onClick={() => toggleService(svc.id)}
+                          className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                            isSelected
+                              ? "border-primary bg-primary text-on-primary"
+                              : "border-border bg-surface text-text hover:border-primary/50"
+                          }`}
+                          data-testid={`lead-service-${svc.id}`}
+                          aria-pressed={isSelected}
+                        >
+                          {svc.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-1">
                 <label className="text-xs font-medium text-text-secondary" htmlFor="lead-message">
