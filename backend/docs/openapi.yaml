@@ -3016,6 +3016,28 @@ components:
           type: integer
         total_pages:
           type: integer
+    CursorPaginatedPublicRequestsResponse:
+      type: object
+      description: >
+        Keyset (cursor) pagination envelope for mobile inbox (#1121).
+        Prefer over offset when scrolling large lists; no total count.
+      required:
+        - data
+        - has_more
+        - limit
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicRequest"
+        next_cursor:
+          type: string
+          nullable: true
+          description: Opaque cursor for the next page; null when has_more is false
+        has_more:
+          type: boolean
+        limit:
+          type: integer
     PublicResponse:
       type: object
       properties:
@@ -6605,12 +6627,30 @@ paths:
     get:
       operationId: listOrganizerPublicRequests
       summary: List the organizer's quote-request inbox (paginated, v2.0)
+      description: >
+        Dual pagination. Web uses `page` (offset + total). Mobile uses `cursor`
+        (keyset, no total) — pass empty `cursor` on the first page and
+        `next_cursor` thereafter (#1121). Also accepts `pagination=cursor`.
       parameters:
         - name: page
           in: query
+          description: Offset page (web). Ignored when cursor mode is active.
           schema:
             type: integer
             minimum: 1
+        - name: cursor
+          in: query
+          description: >
+            Opaque keyset cursor. Presence of this parameter (even empty) enables
+            cursor mode for mobile clients.
+          schema:
+            type: string
+        - name: pagination
+          in: query
+          description: Set to `cursor` to force keyset mode without a cursor token.
+          schema:
+            type: string
+            enum: [cursor]
         - name: limit
           in: query
           schema:
@@ -6633,6 +6673,7 @@ paths:
             format: date
         - name: sort
           in: query
+          description: Only applies to offset (page) mode. Cursor mode sorts by created_at+id.
           schema:
             type: string
             enum: [created_at, event_date]
@@ -6643,11 +6684,15 @@ paths:
             enum: [asc, desc]
       responses:
         "200":
-          description: Paginated inbox
+          description: Paginated inbox (offset or cursor envelope depending on query)
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedPublicRequestsResponse"
+                oneOf:
+                  - $ref: "#/components/schemas/PaginatedPublicRequestsResponse"
+                  - $ref: "#/components/schemas/CursorPaginatedPublicRequestsResponse"
+        "400":
+          description: Invalid cursor token
         "401":
           description: Unauthorized
   /api/organizers/me/requests/unread-count:

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -163,6 +164,80 @@ func TestPublicRequestRepoListPaginationAndFilters(t *testing.T) {
 			t.Fatalf("foreign organizer: total=%d items=%d, want 0/0", total, len(items))
 		}
 	})
+
+	t.Run("cursor pages without overlap and has_more", func(t *testing.T) {
+		page1, next1, err := repo.ListByOrganizerCursor(ctx, userID, PublicRequestCursorFilters{Limit: 3})
+		if err != nil {
+			t.Fatalf("cursor page1 error = %v", err)
+		}
+		if len(page1) != 3 {
+			t.Fatalf("page1 len = %d, want 3", len(page1))
+		}
+		if next1 == nil {
+			t.Fatal("expected next_cursor after full page")
+		}
+		createdAt, id, err := DecodeRequestCursor(*next1)
+		if err != nil || createdAt == nil || id == nil {
+			t.Fatalf("decode next_cursor: %v", err)
+		}
+		page2, next2, err := repo.ListByOrganizerCursor(ctx, userID, PublicRequestCursorFilters{
+			Limit: 3, CursorCreatedAt: createdAt, CursorID: id,
+		})
+		if err != nil {
+			t.Fatalf("cursor page2 error = %v", err)
+		}
+		if len(page2) != 3 {
+			t.Fatalf("page2 len = %d, want 3", len(page2))
+		}
+		if next2 == nil {
+			t.Fatal("expected next_cursor on page2 (8 total, 3+3 left)")
+		}
+		seen := map[uuid.UUID]bool{}
+		for _, r := range page1 {
+			seen[r.ID] = true
+		}
+		for _, r := range page2 {
+			if seen[r.ID] {
+				t.Fatalf("cursor overlap id %v", r.ID)
+			}
+		}
+		// Drain remaining (2 left) — has_more false.
+		createdAt2, id2, _ := DecodeRequestCursor(*next2)
+		page3, next3, err := repo.ListByOrganizerCursor(ctx, userID, PublicRequestCursorFilters{
+			Limit: 3, CursorCreatedAt: createdAt2, CursorID: id2,
+		})
+		if err != nil {
+			t.Fatalf("cursor page3 error = %v", err)
+		}
+		if len(page3) != 2 {
+			t.Fatalf("page3 len = %d, want 2", len(page3))
+		}
+		if next3 != nil {
+			t.Fatalf("expected no next_cursor on last page, got %v", *next3)
+		}
+	})
+}
+
+func TestEncodeDecodeRequestCursor_RoundTrip(t *testing.T) {
+	id := uuid.New()
+	ts := time.Date(2026, 8, 3, 12, 30, 45, 123456789, time.UTC)
+	tok := EncodeRequestCursor(ts, id)
+	gotT, gotID, err := DecodeRequestCursor(tok)
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if gotID == nil || *gotID != id {
+		t.Fatalf("id mismatch: got %v want %v", gotID, id)
+	}
+	if gotT == nil || !gotT.Equal(ts) {
+		t.Fatalf("time mismatch: got %v want %v", gotT, ts)
+	}
+	if _, _, err := DecodeRequestCursor("!!!bad"); err == nil {
+		t.Fatal("expected error for garbage cursor")
+	}
+	if t1, i1, err := DecodeRequestCursor(""); err != nil || t1 != nil || i1 != nil {
+		t.Fatalf("empty cursor should be first page, got %v %v %v", t1, i1, err)
+	}
 }
 
 func TestPublicRequestRepoStatusTransitionAndMarkRead(t *testing.T) {

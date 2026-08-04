@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -45,9 +46,19 @@ type publicRequestService interface {
 // directly by the handler for listing (the service owns state transitions).
 type publicRequestInboxStore interface {
 	ListByOrganizer(ctx context.Context, organizerUserID uuid.UUID, f repository.PublicRequestListFilters) ([]models.PublicRequest, int, error)
+	ListByOrganizerCursor(ctx context.Context, organizerUserID uuid.UUID, f repository.PublicRequestCursorFilters) ([]models.PublicRequest, *string, error)
 	GetByID(ctx context.Context, id, organizerUserID uuid.UUID) (*models.PublicRequest, error)
 	ListResponsesByRequest(ctx context.Context, requestID, organizerUserID uuid.UUID) ([]models.PublicResponse, error)
 	CountUnreadByOrganizer(ctx context.Context, organizerUserID uuid.UUID) (int, error)
+}
+
+// CursorPaginatedResponse is the mobile-friendly keyset envelope (#1121).
+// No total/count — clients stop when next_cursor is null.
+type CursorPaginatedResponse struct {
+	Data       interface{} `json:"data"`
+	NextCursor *string     `json:"next_cursor"`
+	HasMore    bool        `json:"has_more"`
+	Limit      int         `json:"limit"`
 }
 
 func NewPublicRequestHandler(svc *services.PublicRequestService, requestRepo *repository.PublicRequestRepo) *PublicRequestHandler {
@@ -191,8 +202,67 @@ func toCreatePublicRequestResponse(created *models.PublicRequest) createPublicRe
 // --- Organizer inbox (auth) ---
 
 // ListRequests handles GET /api/organizers/me/requests
+//
+// Dual pagination (#1121):
+//   - Cursor (mobile): pass `cursor` query key (empty on first page) → keyset
+//     envelope { data, next_cursor, has_more, limit }.
+//   - Offset (web): pass `page` → existing PaginatedResponse.
+//
+// When neither is present, defaults to offset page=1 (web backward-compatible).
 func (h *PublicRequestHandler) ListRequests(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
+	q := r.URL.Query()
+	status := strings.TrimSpace(q.Get("status"))
+	fromDay := strings.TrimSpace(q.Get("from_date"))
+	toDay := strings.TrimSpace(q.Get("to_date"))
+
+	// Cursor mode when the client includes the cursor key (even empty) or
+	// pagination=cursor. Mobile apps should use this; web keeps page/offset.
+	if _, hasCursor := q["cursor"]; hasCursor || q.Get("pagination") == "cursor" {
+		limit := 20
+		if l := q.Get("limit"); l != "" {
+			if n, err := strconv.Atoi(l); err == nil && n > 0 {
+				limit = n
+			}
+		}
+		if limit > 100 {
+			limit = 100
+		}
+		order := "desc"
+		if q.Get("order") == "asc" {
+			order = "asc"
+		}
+		createdAt, cursorID, err := repository.DecodeRequestCursor(q.Get("cursor"))
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "Invalid cursor")
+			return
+		}
+		items, next, err := h.requestRepo.ListByOrganizerCursor(r.Context(), userID, repository.PublicRequestCursorFilters{
+			Status:          status,
+			FromDay:         fromDay,
+			ToDay:           toDay,
+			Order:           order,
+			Limit:           limit,
+			CursorCreatedAt: createdAt,
+			CursorID:        cursorID,
+		})
+		if err != nil {
+			slog.Error("public_request: list organizer requests cursor failed", "error", err)
+			writeError(w, http.StatusInternalServerError, "Failed to load requests")
+			return
+		}
+		if items == nil {
+			items = []models.PublicRequest{}
+		}
+		writeJSON(w, http.StatusOK, CursorPaginatedResponse{
+			Data:       items,
+			NextCursor: next,
+			HasMore:    next != nil,
+			Limit:      limit,
+		})
+		return
+	}
+
 	params := parsePaginationParams(r, publicRequestSortAllowlist, "created_at")
 	if params == nil {
 		// Backward-compatible flat response: default first page, limit 50.
@@ -200,9 +270,9 @@ func (h *PublicRequestHandler) ListRequests(w http.ResponseWriter, r *http.Reque
 	}
 
 	filters := repository.PublicRequestListFilters{
-		Status:  strings.TrimSpace(r.URL.Query().Get("status")),
-		FromDay: strings.TrimSpace(r.URL.Query().Get("from_date")),
-		ToDay:   strings.TrimSpace(r.URL.Query().Get("to_date")),
+		Status:  status,
+		FromDay: fromDay,
+		ToDay:   toDay,
 		SortBy:  params.Sort,
 		Order:   params.Order,
 		Limit:   params.Limit,
