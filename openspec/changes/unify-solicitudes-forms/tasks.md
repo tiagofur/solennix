@@ -63,10 +63,12 @@
 
 ## Phase 7: Docs + cleanup
 
-- [ ] 7.1 Update `docs/*/Módulo Formularios Compartibles.md` → point to Solicitudes / archive or rewrite as “Links de Solicitud”.
-- [ ] 7.2 PRD/status note: unified inbound; remove dual-path language in marketplace docs if present.
-- [ ] 7.3 Delete dead web/mobile/backend files; `./init.sh` or platform test suites green.
-- [ ] 7.4 Mark this change ready for verify/archive.
+- [x] 7.1 Update `docs/*/Módulo Formularios Compartibles.md` → point to Solicitudes / archive or rewrite as “Links de Solicitud”.
+- [x] 7.2 PRD/status note: unified inbound; remove dual-path language in marketplace docs if present.
+- [x] 7.3 Delete dead web/mobile/backend files; `./init.sh` or platform test suites green.
+- [x] 7.4 Mark this change ready for verify/archive.
+
+> **Ready for verify/archive.** Implementation phases 0–7 complete on branch `feat/unify-solicitudes-backend-pr1`. Split into chained PRs before merge (backend / web / mobile / docs as needed).
 
 ---
 

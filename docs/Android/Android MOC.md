@@ -53,7 +53,7 @@
 | Vista de calendario | [[Módulo Calendario]] |
 | Configuración y perfil | [[Módulo Settings]] |
 | Generación de PDFs | [[Sistema de PDFs]] |
-| Formularios compartibles | [[Módulo Formularios Compartibles]] |
+| Links de Solicitud (ex formularios) | [[Módulo Formularios Compartibles]] |
 
 ## Calidad
 

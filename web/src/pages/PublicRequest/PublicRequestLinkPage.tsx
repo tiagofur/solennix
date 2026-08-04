@@ -13,7 +13,7 @@ import {
   PUBLIC_REQUEST_TOKEN_KEY,
   type CreatePublicRequestRequest,
 } from "@/services/publicRequestService";
-import { PublicFormExpired } from "@/pages/PublicEventForm/components/PublicFormExpired";
+import { PublicFormExpired } from "@/components/requests/PublicFormExpired";
 import { resolveMediaUrl } from "@/lib/api";
 
 /**
