@@ -27,7 +27,12 @@
       "platform_summary": "across the platform",
       "landing_views": "Landing views",
       "landing_unique": "Landing uniques",
-      "landing_help": "home page · 30 days"
+      "landing_help": "home page · 30 days",
+      "funnel_register_views": "Register views",
+      "funnel_registered": "Registered",
+      "funnel_email_verified": "Email verified",
+      "funnel_first_login": "First login",
+      "funnel_help": "registration funnel · 30 days"
     },
     "charts": {
       "plans_title": "Plan Distribution",
@@ -42,7 +47,9 @@
       "month": "Month",
       "landing_series_title": "Landing views (30 days)",
       "device_title": "Visitors by device",
-      "country_title": "Visitors by country (top)"
+      "country_title": "Visitors by country (top)",
+      "funnel_title": "Registration funnel (30 days)",
+      "funnel_method_title": "Registered by method"
     },
     "subscriptions": {
       "active": "Active",

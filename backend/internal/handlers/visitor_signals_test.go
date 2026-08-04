@@ -48,3 +48,36 @@ func TestNormalizeMarketingPageKey(t *testing.T) {
 		t.Fatalf("got %q", got)
 	}
 }
+
+func TestNormalizeFunnelStep(t *testing.T) {
+	cases := map[string]string{
+		"register_view":   "register_view",
+		"REGISTER_VIEW":   "register_view",
+		"registered":      "registered",
+		"email_verified":  "email_verified",
+		"first_login":     "first_login",
+		"bogus":           "",
+		"":                "",
+		"  first_login  ": "first_login",
+	}
+	for in, want := range cases {
+		if got := NormalizeFunnelStep(in); got != want {
+			t.Fatalf("NormalizeFunnelStep(%q)=%q want %q", in, got, want)
+		}
+	}
+}
+
+func TestNormalizeFunnelMethod(t *testing.T) {
+	cases := map[string]string{
+		"email":  "email",
+		"Google": "google",
+		"APPLE":  "apple",
+		"":       "unknown",
+		"sms":    "unknown",
+	}
+	for in, want := range cases {
+		if got := NormalizeFunnelMethod(in); got != want {
+			t.Fatalf("NormalizeFunnelMethod(%q)=%q want %q", in, got, want)
+		}
+	}
+}

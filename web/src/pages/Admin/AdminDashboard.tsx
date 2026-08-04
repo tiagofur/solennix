@@ -445,6 +445,92 @@ export const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Slice 3: registration funnel */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+          <p className="text-xs text-text-secondary uppercase tracking-wide">{t("admin:dashboard.stats.funnel_register_views")}</p>
+          <p className="text-3xl font-black text-text mt-1">{loading ? "..." : (stats?.funnel_register_views_last_30d ?? 0)}</p>
+          <p className="text-[11px] text-text-tertiary mt-1">{t("admin:dashboard.stats.funnel_help")}</p>
+        </div>
+        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+          <p className="text-xs text-text-secondary uppercase tracking-wide">{t("admin:dashboard.stats.funnel_registered")}</p>
+          <p className="text-3xl font-black text-text mt-1">{loading ? "..." : (stats?.funnel_registered_last_30d ?? 0)}</p>
+          <p className="text-[11px] text-text-tertiary mt-1">{t("admin:dashboard.stats.funnel_help")}</p>
+        </div>
+        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+          <p className="text-xs text-text-secondary uppercase tracking-wide">{t("admin:dashboard.stats.funnel_email_verified")}</p>
+          <p className="text-3xl font-black text-text mt-1">{loading ? "..." : (stats?.funnel_email_verified_last_30d ?? 0)}</p>
+          <p className="text-[11px] text-text-tertiary mt-1">{t("admin:dashboard.stats.funnel_help")}</p>
+        </div>
+        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+          <p className="text-xs text-text-secondary uppercase tracking-wide">{t("admin:dashboard.stats.funnel_first_login")}</p>
+          <p className="text-3xl font-black text-text mt-1">{loading ? "..." : (stats?.funnel_first_login_last_30d ?? 0)}</p>
+          <p className="text-[11px] text-text-tertiary mt-1">{t("admin:dashboard.stats.funnel_help")}</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <div className="bg-card shadow-sm border border-border rounded-2xl p-6 xl:col-span-2">
+          <h3 className="text-base font-semibold text-text mb-4">
+            {t("admin:dashboard.charts.funnel_title")}
+          </h3>
+          <div className="h-56">
+            {loading ? (
+              <div className="h-full flex items-center justify-center">
+                <RefreshCw className="h-8 w-8 animate-spin text-text-tertiary" />
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                <BarChart
+                  data={[
+                    { name: t("admin:dashboard.stats.funnel_register_views"), value: stats?.funnel_register_views_last_30d ?? 0 },
+                    { name: t("admin:dashboard.stats.funnel_registered"), value: stats?.funnel_registered_last_30d ?? 0 },
+                    { name: t("admin:dashboard.stats.funnel_email_verified"), value: stats?.funnel_email_verified_last_30d ?? 0 },
+                    { name: t("admin:dashboard.stats.funnel_first_login"), value: stats?.funnel_first_login_last_30d ?? 0 },
+                  ]}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
+                  <XAxis dataKey="name" tick={{ fill: "var(--color-text-tertiary)", fontSize: 11 }} interval={0} />
+                  <YAxis allowDecimals={false} tick={{ fill: "var(--color-text-tertiary)", fontSize: 12 }} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="var(--color-primary)" radius={[4, 4, 0, 0]} name="Funnel" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+        <div className="bg-card shadow-sm border border-border rounded-2xl p-6">
+          <h3 className="text-base font-semibold text-text mb-4">
+            {t("admin:dashboard.charts.funnel_method_title")}
+          </h3>
+          <div className="h-56 overflow-y-auto">
+            {loading ? (
+              <div className="h-full flex items-center justify-center">
+                <RefreshCw className="h-8 w-8 animate-spin text-text-tertiary" />
+              </div>
+            ) : Object.keys(stats?.funnel_registered_by_method ?? {}).length > 0 ? (
+              <ul className="space-y-2">
+                {Object.entries(stats?.funnel_registered_by_method ?? {})
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([method, count]) => (
+                    <li
+                      key={method}
+                      className="flex items-center justify-between text-sm border border-border rounded-xl px-3 py-2 bg-surface-alt/40"
+                    >
+                      <span className="font-semibold text-text tracking-wide capitalize">{method}</span>
+                      <span className="text-text-secondary tabular-nums">{count}</span>
+                    </li>
+                  ))}
+              </ul>
+            ) : (
+              <div className="h-full flex items-center justify-center text-text-secondary text-sm">
+                {t("admin:dashboard.charts.no_data")}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Total Usuarios */}

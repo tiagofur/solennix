@@ -190,6 +190,7 @@ type AuthHandler struct {
 	passwordBreachCheck passwordBreachCheckFunc
 	validateGoogleToken validateGoogleTokenFunc
 	validateAppleToken  validateAppleTokenFunc
+	funnel              registrationFunnelRecorder
 }
 
 func NewAuthHandler(userRepo FullUserRepository, authService *services.AuthService, emailService *services.EmailService, cfg *config.Config) *AuthHandler {
@@ -240,6 +241,55 @@ func (h *AuthHandler) validatePasswordPolicy(ctx context.Context, password strin
 // SetRefreshTokenRepo configures refresh token rotation. If not set, old behavior is used.
 func (h *AuthHandler) SetRefreshTokenRepo(repo RefreshTokenRepository) {
 	h.refreshTokenRepo = repo
+}
+
+// SetRegistrationFunnel wires product-analytics registration funnel recording (slice 3).
+func (h *AuthHandler) SetRegistrationFunnel(r registrationFunnelRecorder) {
+	h.funnel = r
+}
+
+// trackFunnel records a registration-funnel step asynchronously (best-effort, never blocks UX).
+func (h *AuthHandler) trackFunnel(r *http.Request, step, method string, userID *uuid.UUID) {
+	if h == nil || h.funnel == nil || r == nil {
+		return
+	}
+	step = NormalizeFunnelStep(step)
+	if step == "" {
+		return
+	}
+	method = NormalizeFunnelMethod(method)
+	platform := middleware.ParsePlatform(r)
+	ua := r.UserAgent()
+	device := ClassifyDeviceClass(ua)
+	var countryPtr *string
+	if cc := CoarseCountryCode(r); cc != "" {
+		countryPtr = &cc
+	}
+	ip := inboundClientIP(r)
+	day := time.Now().UTC().Format("2006-01-02")
+	sum := sha256.Sum256([]byte(ip + "|" + ua + "|" + day + "|funnel:" + step))
+	hash := hex.EncodeToString(sum[:])
+	var uid *uuid.UUID
+	if userID != nil && *userID != uuid.Nil {
+		id := *userID
+		uid = &id
+	}
+	event := repository.RegistrationFunnelEvent{
+		Step:        step,
+		Method:      method,
+		Platform:    platform,
+		VisitorHash: hash,
+		UserID:      uid,
+		DeviceClass: device,
+		CountryCode: countryPtr,
+	}
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		if err := h.funnel.Record(ctx, event); err != nil {
+			slog.Warn("registration funnel: track failed", "step", step, "error", err)
+		}
+	}()
 }
 
 // setAuthCookie sets the httpOnly auth cookie for the access token.
@@ -315,8 +365,8 @@ func issueSessionCookies(w http.ResponseWriter, r *http.Request, accessToken, re
 }
 
 // recordSuccessfulLogin updates last_login_at (async) after credential/OAuth success.
-// Not used on token refresh.
-func (h *AuthHandler) recordSuccessfulLogin(userID uuid.UUID) {
+// Not used on token refresh. Also emits first_login funnel (unique index dedupes).
+func (h *AuthHandler) recordSuccessfulLogin(userID uuid.UUID, method string, r *http.Request) {
 	if h.userRepo == nil || userID == uuid.Nil {
 		return
 	}
@@ -327,12 +377,14 @@ func (h *AuthHandler) recordSuccessfulLogin(userID uuid.UUID) {
 			slog.Warn("auth: failed to update last_login_at", "user_id", userID, "error", err)
 		}
 	}()
+	uid := userID
+	h.trackFunnel(r, "first_login", method, &uid)
 }
 
-// issueLoginSession sets session cookies and records last_login_at.
-func (h *AuthHandler) issueLoginSession(w http.ResponseWriter, r *http.Request, accessToken, refreshToken string, userID uuid.UUID) {
+// issueLoginSession sets session cookies and records last_login_at (+ first_login funnel).
+func (h *AuthHandler) issueLoginSession(w http.ResponseWriter, r *http.Request, accessToken, refreshToken string, userID uuid.UUID, method string) {
 	issueSessionCookies(w, r, accessToken, refreshToken)
-	h.recordSuccessfulLogin(userID)
+	h.recordSuccessfulLogin(userID, method, r)
 }
 
 type registerRequest struct {
@@ -451,6 +503,8 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		writeAuthI18nError(w, r, http.StatusInternalServerError, "auth.create_account_failed")
 		return
 	}
+	uid := user.ID
+	h.trackFunnel(r, "registered", "email", &uid)
 
 	verificationToken, err := newEmailVerificationToken()
 	if err != nil {
@@ -581,7 +635,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
 
 	// Set httpOnly cookie for auth token (SECURE)
-	h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID)
+	h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID, "email")
 
 	slog.Info("auth.event", "action", "login_success", "user_id", user.ID, "email", maskEmail(user.Email), "method", "email", "ip", clientIP(r))
 	middleware.LogSecurityAuditEvent(user.ID, "login", "session", map[string]any{
@@ -616,6 +670,9 @@ func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 			}
 		}()
 	}
+
+	uid := user.ID
+	h.trackFunnel(r, "email_verified", "email", &uid)
 
 	slog.Info("auth.event", "action", "email_verified", "user_id", user.ID, "email", maskEmail(user.Email), "ip", clientIP(r))
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -1018,7 +1075,7 @@ func (h *AuthHandler) AcceptTeamInvite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
-	h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID)
+	h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID, "unknown")
 
 	slog.Info("auth.event", "action", "team_invite_accepted", "user_id", user.ID, "email", maskEmail(user.Email), "ip", clientIP(r))
 
@@ -1357,7 +1414,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
-		h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID)
+		h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID, "google")
 		slog.Info("auth.event", "action", "google_login", "user_id", user.ID, "email", email, "ip", clientIP(r))
 		writeJSON(w, http.StatusOK, map[string]interface{}{
 			"user":   user,
@@ -1382,7 +1439,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
-			h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID)
+			h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID, "google")
 			slog.Info("auth.event", "action", "google_login", "user_id", user.ID, "email", email, "ip", clientIP(r))
 			writeJSON(w, http.StatusOK, map[string]interface{}{
 				"user":   user,
@@ -1406,7 +1463,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
-		h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID)
+		h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID, "google")
 		slog.Info("auth.event", "action", "google_link_and_login", "user_id", user.ID, "email", email, "ip", clientIP(r))
 		writeJSON(w, http.StatusOK, map[string]interface{}{
 			"user":   user,
@@ -1445,7 +1502,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				h.storeRefreshToken(r.Context(), tokens.RefreshToken, existingUser.ID)
-				h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, existingUser.ID)
+				h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, existingUser.ID, "google")
 				writeJSON(w, http.StatusOK, map[string]interface{}{
 					"user":   existingUser,
 					"tokens": tokens,
@@ -1468,7 +1525,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			h.storeRefreshToken(r.Context(), tokens.RefreshToken, existingUser.ID)
-			h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, existingUser.ID)
+			h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, existingUser.ID, "google")
 			slog.Info("auth.event", "action", "google_link_and_login_race", "user_id", existingUser.ID, "email", email, "ip", clientIP(r))
 			writeJSON(w, http.StatusOK, map[string]interface{}{
 				"user":   existingUser,
@@ -1480,6 +1537,8 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "Failed to create account")
 		return
 	}
+	uid := newUser.ID
+	h.trackFunnel(r, "registered", "google", &uid)
 
 	tokens, err := h.authService.GenerateTokenPair(newUser.ID, newUser.Email)
 	if err != nil {
@@ -1489,7 +1548,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.storeRefreshToken(r.Context(), tokens.RefreshToken, newUser.ID)
-	h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, newUser.ID)
+	h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, newUser.ID, "google")
 	slog.Info("auth.event", "action", "google_register", "user_id", newUser.ID, "email", newUser.Email, "ip", clientIP(r))
 
 	writeJSON(w, http.StatusCreated, map[string]interface{}{
@@ -1764,7 +1823,7 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
-		h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID)
+		h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID, "apple")
 		slog.Info("auth.event", "action", "apple_login", "user_id", user.ID, "email", user.Email, "ip", clientIP(r))
 		writeJSON(w, http.StatusOK, map[string]interface{}{
 			"user":                   user,
@@ -1791,7 +1850,7 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
-				h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID)
+				h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID, "apple")
 				slog.Info("auth.event", "action", "apple_login", "user_id", user.ID, "email", email, "ip", clientIP(r))
 				writeJSON(w, http.StatusOK, map[string]interface{}{
 					"user":                   user,
@@ -1816,7 +1875,7 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
-			h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID)
+			h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID, "apple")
 			slog.Info("auth.event", "action", "apple_link", "user_id", user.ID, "email", email, "ip", clientIP(r))
 			writeJSON(w, http.StatusOK, map[string]interface{}{
 				"user":                   user,
@@ -1846,6 +1905,8 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "Failed to create account")
 		return
 	}
+	uid := newUser.ID
+	h.trackFunnel(r, "registered", "apple", &uid)
 
 	tokens, err := h.authService.GenerateTokenPair(newUser.ID, newUser.Email)
 	if err != nil {
@@ -1854,7 +1915,7 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.storeRefreshToken(r.Context(), tokens.RefreshToken, newUser.ID)
-	h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, newUser.ID)
+	h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, newUser.ID, "apple")
 
 	slog.Info("auth.event", "action", "apple_register", "user_id", newUser.ID, "email", newUser.Email, "ip", clientIP(r))
 	writeJSON(w, http.StatusCreated, map[string]interface{}{
@@ -2051,7 +2112,7 @@ func (h *AuthHandler) AppleCallback(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
-		h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID)
+		h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID, "apple")
 		http.Redirect(w, r, h.cfg.FrontendURL+"/dashboard", http.StatusFound)
 		return
 	}
@@ -2070,7 +2131,7 @@ func (h *AuthHandler) AppleCallback(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
-			h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID)
+			h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, user.ID, "apple")
 			http.Redirect(w, r, h.cfg.FrontendURL+"/dashboard", http.StatusFound)
 			return
 		}
@@ -2092,6 +2153,8 @@ func (h *AuthHandler) AppleCallback(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "Failed to create account")
 		return
 	}
+	uid := newUser.ID
+	h.trackFunnel(r, "registered", "apple", &uid)
 
 	tokens, tokenErr := h.authService.GenerateTokenPair(newUser.ID, newUser.Email)
 	if tokenErr != nil {
@@ -2100,7 +2163,7 @@ func (h *AuthHandler) AppleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.storeRefreshToken(r.Context(), tokens.RefreshToken, newUser.ID)
-	h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, newUser.ID)
+	h.issueLoginSession(w, r, tokens.AccessToken, tokens.RefreshToken, newUser.ID, "apple")
 	http.Redirect(w, r, h.cfg.FrontendURL+"/dashboard", http.StatusFound)
 }
 

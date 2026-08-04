@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "../hooks/useTheme";
 import { Logo } from "../components/Logo";
+import { recordRegistrationFunnelStep } from "@/services/registrationFunnelService";
 
 export const Register: React.FC = () => {
   const { t } = useTranslation(["auth", "common"]);
@@ -34,6 +35,10 @@ export const Register: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    void recordRegistrationFunnelStep("register_view");
+  }, []);
 
   const registerSchema = useMemo(() => z
     .object({

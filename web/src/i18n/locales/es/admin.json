@@ -36,7 +36,12 @@
       "visitor_help": "perfiles públicos · 30 días",
       "landing_views": "Vistas landing",
       "landing_unique": "Únicos landing",
-      "landing_help": "página de inicio · 30 días"
+      "landing_help": "página de inicio · 30 días",
+      "funnel_register_views": "Vistas registro",
+      "funnel_registered": "Registrados",
+      "funnel_email_verified": "Email verificado",
+      "funnel_first_login": "Primer login",
+      "funnel_help": "embudo de registro · 30 días"
     },
     "charts": {
       "plans_title": "Distribución de Planes",
@@ -47,6 +52,8 @@
       "landing_series_title": "Vistas de landing (30 días)",
       "device_title": "Visitantes por dispositivo",
       "country_title": "Visitantes por país (top)",
+      "funnel_title": "Embudo de registro (30 días)",
+      "funnel_method_title": "Registrados por método",
       "no_data": "Sin datos disponibles",
       "loading": "Cargando...",
       "today": "Hoy",

@@ -33,6 +33,12 @@ export interface PlatformStats {
   landing_views_by_day?: Array<{ date: string; count: number }>;
   visitor_by_device?: Record<string, number>;
   visitor_by_country?: Record<string, number>;
+  /** Product analytics slice 3 — registration funnel (30d) */
+  funnel_register_views_last_30d?: number;
+  funnel_registered_last_30d?: number;
+  funnel_email_verified_last_30d?: number;
+  funnel_first_login_last_30d?: number;
+  funnel_registered_by_method?: Record<string, number>;
 }
 
 export interface AdminUser {
