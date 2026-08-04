@@ -49,8 +49,15 @@ type SubmitPublicLeadRequest struct {
 	Source    string  `json:"source,omitempty"`
 }
 
-// SubmitPublicLead handles POST /api/public/organizers/{slug}/leads
+// SubmitPublicLead handles POST /api/public/organizers/{slug}/leads.
+// Soft-deprecated in v2.0 (#1115): new structured flow is POST .../requests.
+// Kept for backward compatibility; clients should migrate. Emits Deprecation.
 func (h *PublicLeadHandler) SubmitPublicLead(w http.ResponseWriter, r *http.Request) {
+	// RFC 8594-style signals for deprecated endpoints.
+	w.Header().Set("Deprecation", "true")
+	w.Header().Set("Sunset", "Sat, 01 Aug 2027 00:00:00 GMT")
+	w.Header().Set("Link", `</api/public/organizers/{slug}/requests>; rel="successor-version"`)
+
 	slug := strings.TrimSpace(r.PathValue("slug"))
 	if slug == "" {
 		writeError(w, http.StatusBadRequest, "Organizer slug is required")
@@ -108,7 +115,12 @@ func (h *PublicLeadHandler) SubmitPublicLead(w http.ResponseWriter, r *http.Requ
 }
 
 // ListLeads handles GET /api/leads (authenticated organizer).
+// Soft-deprecated: prefer GET /api/organizers/me/requests.
 func (h *PublicLeadHandler) ListLeads(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Deprecation", "true")
+	w.Header().Set("Sunset", "Sat, 01 Aug 2027 00:00:00 GMT")
+	w.Header().Set("Link", `</api/organizers/me/requests>; rel="successor-version"`)
+
 	userID := middleware.GetUserID(r.Context())
 	leads, err := h.leadRepo.ListByOrganizer(r.Context(), userID)
 	if err != nil {

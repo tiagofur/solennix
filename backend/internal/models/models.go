@@ -804,7 +804,8 @@ type PublicOrganizerCard struct {
 // organizer's public profile. Stored for the organizer to follow up.
 //
 // Soft-deprecated in v2.0 (#1115): new structured requests live in PublicRequest.
-// The /leads endpoint stays until web migrates to /requests (#1118).
+// Web form uses /requests (#1118). /leads remains for backward compatibility with
+// Deprecation/Sunset headers until removed (target 2027-08).
 type PublicLead struct {
 	ID              uuid.UUID `json:"id"`
 	OrganizerUserID uuid.UUID `json:"-"`
