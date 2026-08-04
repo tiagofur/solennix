@@ -127,9 +127,10 @@ type upsertRequest struct {
 	ServiceAreas  []string          `json:"service_areas"`
 	MinGuests     *int              `json:"min_guests"`
 	MaxGuests     *int              `json:"max_guests"`
-	EventTypes    []string          `json:"event_types"`
-	ResponseTime  *string           `json:"response_time"`
-	Languages     []string          `json:"languages"`
+	EventTypes      []string          `json:"event_types"`
+	ResponseTime    *string           `json:"response_time"`
+	Languages       []string          `json:"languages"`
+	ServiceRadiusKm *float64          `json:"service_radius_km"` // null/omit keep; 0 clears (unlimited)
 }
 
 // GetMyPublicProfile handles GET /api/users/me/public-profile.
@@ -370,6 +371,14 @@ func mergeProfile(existing *models.OrganizerPublicProfile, def *models.Organizer
 	}
 	if req.Languages != nil {
 		p.Languages = req.Languages
+	}
+	// service_radius_km: explicit 0 means "no limit" (store NULL); positive sets km.
+	if req.ServiceRadiusKm != nil {
+		if *req.ServiceRadiusKm <= 0 {
+			p.ServiceRadiusKm = nil
+		} else {
+			p.ServiceRadiusKm = req.ServiceRadiusKm
+		}
 	}
 	return &p
 }

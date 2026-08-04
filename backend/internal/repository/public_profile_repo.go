@@ -334,8 +334,10 @@ type PublicProfileSlug struct {
 	UpdatedAt time.Time
 }
 
-// ListEnabledSlugs returns the public_slug of every enabled public profile
-// whose owner account is active (for the dynamic sitemap). Ordered by update.
+// ListEnabledSlugs returns the public_slug of every *directory-publicable*
+// profile (same criteria as SearchPublicProfiles) for the dynamic sitemap.
+// Incomplete enabled profiles remain reachable via /u/:slug but are not
+// advertised to crawlers.
 func (r *PublicProfileRepo) ListEnabledSlugs(ctx context.Context) ([]PublicProfileSlug, error) {
 	rows, err := r.pool.Query(ctx, `
 		SELECT u.public_slug, COALESCE(opp.updated_at, u.updated_at) AS updated_at
@@ -345,6 +347,15 @@ func (r *PublicProfileRepo) ListEnabledSlugs(ctx context.Context) ([]PublicProfi
 		  AND u.public_slug IS NOT NULL AND u.public_slug <> ''
 		  AND COALESCE(u.account_status, 'active') = 'active'
 		  AND u.deleted_at IS NULL
+		  AND u.cover_url IS NOT NULL AND u.cover_url <> ''
+		  AND ( (opp.headline IS NOT NULL AND opp.headline <> '')
+		        OR (opp.about IS NOT NULL AND opp.about <> '') )
+		  AND opp.city IS NOT NULL AND opp.city <> ''
+		  AND opp.country IS NOT NULL AND opp.country <> ''
+		  AND EXISTS (
+		    SELECT 1 FROM products p
+		    WHERE p.user_id = u.id AND p.is_active = true AND p.show_on_public_profile = true
+		  )
 		ORDER BY updated_at DESC
 		LIMIT $1`, GetAllSafetyLimit)
 	if err != nil {
@@ -380,7 +391,7 @@ type SearchPublicProfilesFilters struct {
 }
 
 // SearchPublicProfiles returns a paginated slice of publicable organizer cards
-// (#1116 directory). Publicability criteria (cover/logo, headline/about, city+
+// (#1116 directory). Publicability criteria (cover image, headline/about, city+
 // country, ≥1 visible service) are enforced in SQL via EXISTS subquery, not in
 // Go — so we never load rows we'd discard. Plan-aware ranking (Business first)
 // and review aggregates (visibility='public') are computed in the same query.
@@ -395,12 +406,13 @@ func (r *PublicProfileRepo) SearchPublicProfiles(ctx context.Context, f SearchPu
 	}
 
 	// Build WHERE clause + args for the publicability + visitor filters.
+	// Cover is required (PRD §4.4); logo alone is not enough for the directory.
 	where := `
 		WHERE opp.is_enabled = true
 		  AND u.deleted_at IS NULL
 		  AND COALESCE(u.account_status, 'active') = 'active'
 		  AND u.public_slug IS NOT NULL AND u.public_slug <> ''
-		  AND (u.cover_url IS NOT NULL OR u.logo_url IS NOT NULL)
+		  AND u.cover_url IS NOT NULL AND u.cover_url <> ''
 		  AND ( (opp.headline IS NOT NULL AND opp.headline <> '')
 		        OR (opp.about IS NOT NULL AND opp.about <> '') )
 		  AND opp.city IS NOT NULL AND opp.city <> ''
@@ -455,6 +467,18 @@ func (r *PublicProfileRepo) SearchPublicProfiles(ctx context.Context, f SearchPu
 			AND opp.longitude BETWEEN $%d AND $%d`, n, n+1, n+2, n+3)
 		args = append(args, visitorLat-latDelta, visitorLat+latDelta, visitorLng-lngDelta, visitorLng+lngDelta)
 		n += 4
+		// Honor provider service_radius_km when set: approx km distance must be
+		// within the organizer's declared coverage (null = unlimited coverage).
+		// Uses the same equirectangular approximation as distance sort.
+		where += fmt.Sprintf(` AND (
+			opp.service_radius_km IS NULL
+			OR (
+				POWER((opp.latitude - $%d) * 111.0, 2)
+				+ POWER((opp.longitude - $%d) * 111.0 * $%d, 2)
+			) <= POWER(opp.service_radius_km, 2)
+		)`, n, n+1, n+2)
+		args = append(args, visitorLat, visitorLng, cosDeg(visitorLat))
+		n += 3
 	}
 
 	// Ranking. Default relevance = plan-featured → rating → reviews → recency.
