@@ -66,6 +66,13 @@ func (m *mockPublicRequestInboxStore) ListByOrganizer(ctx context.Context, organ
 	}
 	return args.Get(0).([]models.PublicRequest), args.Int(1), args.Error(2)
 }
+func (m *mockPublicRequestInboxStore) GetByID(ctx context.Context, id, organizerUserID uuid.UUID) (*models.PublicRequest, error) {
+	args := m.Called(ctx, id, organizerUserID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.PublicRequest), args.Error(1)
+}
 func (m *mockPublicRequestInboxStore) ListResponsesByRequest(ctx context.Context, requestID, organizerUserID uuid.UUID) ([]models.PublicResponse, error) {
 	args := m.Called(ctx, requestID, organizerUserID)
 	if args.Get(0) == nil {
@@ -88,7 +95,11 @@ func TestCreatePublicRequest_HappyPath(t *testing.T) {
 	store := new(mockPublicRequestInboxStore)
 	h := newReqHandler(svc, store)
 
-	created := &models.PublicRequest{ID: uuid.New(), ContactEmail: "c@x.dev", Status: models.RequestStatusPending}
+	token := uuid.New()
+	created := &models.PublicRequest{
+		ID: uuid.New(), ClientToken: token, ContactEmail: "c@x.dev",
+		Status: models.RequestStatusPending, Currency: "MXN",
+	}
 	svc.On("CreatePublicRequest", mock.Anything, mock.AnythingOfType("services.CreatePublicRequestInput")).
 		Return(created, nil)
 
@@ -100,7 +111,27 @@ func TestCreatePublicRequest_HappyPath(t *testing.T) {
 	h.CreatePublicRequest(w, req)
 
 	assert.Equal(t, http.StatusCreated, w.Code)
+	var resp map[string]any
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	data := resp["data"].(map[string]any)
+	assert.Equal(t, token.String(), data["client_token"])
+	assert.Equal(t, created.ID.String(), data["id"])
 	svc.AssertExpectations(t)
+}
+
+func TestCreatePublicRequest_HoneypotFilled_Fake201NoServiceCall(t *testing.T) {
+	svc := new(mockPublicRequestService)
+	h := newReqHandler(svc, new(mockPublicRequestInboxStore))
+
+	body := `{"contact_email":"bot@x.dev","website":"https://spam.example"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/public/organizers/alice/requests", bytes.NewBufferString(body))
+	req.SetPathValue("slug", "alice")
+	w := httptest.NewRecorder()
+
+	h.CreatePublicRequest(w, req)
+
+	assert.Equal(t, http.StatusCreated, w.Code)
+	svc.AssertNotCalled(t, "CreatePublicRequest")
 }
 
 func TestCreatePublicRequest_MissingEmail_Returns400(t *testing.T) {
