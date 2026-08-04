@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Settings
@@ -108,6 +109,8 @@ import com.creapolis.solennix.feature.staff.ui.StaffTeamDetailScreen
 import com.creapolis.solennix.feature.staff.ui.StaffTeamFormScreen
 import com.creapolis.solennix.feature.staff.ui.StaffTeamListScreen
 import com.creapolis.solennix.feature.payments.ui.PaymentInboxScreen
+import com.creapolis.solennix.feature.requests.ui.RequestDetailScreen
+import com.creapolis.solennix.feature.requests.ui.RequestsInboxScreen
 import com.creapolis.solennix.feature.settings.ui.ReviewsScreen
 import com.creapolis.solennix.ui.plan.EventPlanGateViewModel
 
@@ -302,12 +305,33 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onEventFormLinksClick = { navController.navigate("event_form_links") },
                     onSettingsClick = { navController.navigate("settings") },
                     onPaymentInboxClick = { navController.navigate("payment_inbox") },
+                    onRequestsInboxClick = { navController.navigate("requests_inbox") },
                     onReviewsClick = { navController.navigate("reviews") }
                 )
             }
 
             composable("payment_inbox") {
                 PaymentInboxScreen(
+                    viewModel = hiltViewModel(),
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable("requests_inbox") {
+                RequestsInboxScreen(
+                    viewModel = hiltViewModel(),
+                    onNavigateBack = { navController.popBackStack() },
+                    onOpenDetail = { id -> navController.navigate("request_detail/$id") }
+                )
+            }
+
+            composable(
+                "request_detail/{id}",
+                arguments = listOf(navArgument("id") { type = NavType.StringType })
+            ) { entry ->
+                val id = entry.arguments?.getString("id").orEmpty()
+                RequestDetailScreen(
+                    requestId = id,
                     viewModel = hiltViewModel(),
                     onNavigateBack = { navController.popBackStack() }
                 )
@@ -646,6 +670,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
     onEventFormLinksClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onPaymentInboxClick: () -> Unit = {},
+    onRequestsInboxClick: () -> Unit = {},
     onReviewsClick: () -> Unit = {}
 ) {
     Scaffold(topBar = { SolennixTopAppBar(title = { Text(stringResource(R.string.nav_more)) }) }) { padding ->
@@ -685,6 +710,13 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 icon = Icons.Default.Wallet,
                 iconColor = SolennixTheme.colors.primary,
                 onClick = onPaymentInboxClick
+            )
+            MenuOptionItem(
+                title = stringResource(R.string.nav_public_requests),
+                subtitle = stringResource(R.string.nav_public_requests_subtitle),
+                icon = Icons.Default.Inbox,
+                iconColor = SolennixTheme.colors.iconSage,
+                onClick = onRequestsInboxClick
             )
             MenuOptionItem(
                 title = stringResource(R.string.nav_staff),

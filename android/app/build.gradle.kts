@@ -250,6 +250,7 @@ dependencies {
     implementation(project(":feature:staff"))
     implementation(project(":feature:events"))
     implementation(project(":feature:payments"))
+    implementation(project(":feature:requests"))
     implementation(project(":widget"))
 
     implementation(libs.kotlinx.serialization.json)

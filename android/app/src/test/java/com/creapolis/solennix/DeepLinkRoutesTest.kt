@@ -32,6 +32,18 @@ class DeepLinkRoutesTest {
     }
 
     @Test
+    fun `parse requests deep link maps inbox and detail`() {
+        assertEquals(
+            "requests_inbox",
+            parseAppDeepLinkRoute("solennix", "requests", emptyList())
+        )
+        assertEquals(
+            "request_detail/req-1",
+            parseAppDeepLinkRoute("solennix", "requests", listOf("req-1"))
+        )
+    }
+
+    @Test
     fun `parse auth deep link encodes token`() {
         assertEquals(
             "reset-password?token=t%201",
