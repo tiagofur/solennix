@@ -54,11 +54,18 @@ func CreateEventProductsTx(ctx context.Context, tx pgx.Tx, eventID uuid.UUID, pr
 }
 
 // UpdateClientStatsTx updates a client's total_events and total_spent within a transaction.
+// Same rules as EventRepo.UpdateClientStats (non-cancelled count; confirmed+completed spend).
 func UpdateClientStatsTx(ctx context.Context, tx pgx.Tx, clientID uuid.UUID) error {
 	query := `
 		UPDATE clients SET
-			total_events = (SELECT COUNT(*) FROM events WHERE client_id = $1),
-			total_spent = COALESCE((SELECT SUM(total_amount) FROM events WHERE client_id = $1), 0),
+			total_events = (
+				SELECT COUNT(*) FROM events
+				WHERE client_id = $1 AND status <> 'cancelled'
+			),
+			total_spent = COALESCE((
+				SELECT SUM(total_amount) FROM events
+				WHERE client_id = $1 AND status IN ('confirmed', 'completed')
+			), 0),
 			updated_at = NOW()
 		WHERE id = $1`
 

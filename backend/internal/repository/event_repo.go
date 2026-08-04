@@ -368,10 +368,22 @@ func (r *EventRepo) Delete(ctx context.Context, id, userID uuid.UUID) error {
 
 // UpdateClientStats recalculates total_events and total_spent for a client.
 // This replaces the Supabase trigger `update_client_stats`.
+//
+// Rules (aligned with pending_balance / revenue KPIs):
+//   - total_events: non-cancelled events linked to the client
+//   - total_spent: sum of total_amount for confirmed + completed only
+//     (quoted is a prospect; cancelled is excluded)
 func (r *EventRepo) UpdateClientStats(ctx context.Context, clientID uuid.UUID) error {
 	query := `UPDATE clients SET
-		total_events = (SELECT COUNT(*) FROM events WHERE client_id = $1 AND status = 'completed'),
-		total_spent = (SELECT COALESCE(SUM(total_amount), 0) FROM events WHERE client_id = $1 AND status = 'completed')
+		total_events = (
+			SELECT COUNT(*) FROM events
+			WHERE client_id = $1 AND status <> 'cancelled'
+		),
+		total_spent = (
+			SELECT COALESCE(SUM(total_amount), 0) FROM events
+			WHERE client_id = $1 AND status IN ('confirmed', 'completed')
+		),
+		updated_at = NOW()
 		WHERE id = $1`
 	_, err := r.pool.Exec(ctx, query, clientID)
 	return err
