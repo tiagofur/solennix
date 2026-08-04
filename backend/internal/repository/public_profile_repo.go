@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -374,7 +375,7 @@ func (r *PublicProfileRepo) ListEnabledSlugs(ctx context.Context) ([]PublicProfi
 	return out, rows.Err()
 }
 
-// SearchPublicProfilesFilters controls the directory search (#1116).
+// SearchPublicProfilesFilters controls the directory search (#1116 / #1128).
 // All fields optional; empty filters return all publicable organizers.
 type SearchPublicProfilesFilters struct {
 	City      string   // case-insensitive partial (ILIKE)
@@ -386,8 +387,13 @@ type SearchPublicProfilesFilters struct {
 	Lat       *float64 // visitor latitude for bounding-box geo filter + distance sort (#1127)
 	Lng       *float64 // visitor longitude
 	RadiusKm  *float64 // bounding-box radius (default 50 if Lat/Lng present but RadiusKm nil)
-	Limit     int
-	Offset    int
+	// #1128 advanced filters
+	MinBudget       *float64 // any public package/product price >= min
+	MaxBudget       *float64 // any public package/product price <= max
+	ServiceCategory string   // product category (ILIKE partial); public active products only
+	AvailableOn     string   // YYYY-MM-DD — exclude organizers with unavailable_dates covering that day
+	Limit           int
+	Offset          int
 }
 
 // SearchPublicProfiles returns a paginated slice of publicable organizer cards
@@ -445,6 +451,56 @@ func (r *PublicProfileRepo) SearchPublicProfiles(ctx context.Context, f SearchPu
 			OR opp.about ILIKE $%d
 			OR opp.city ILIKE $%d)`, n, n, n, n)
 		args = append(args, "%"+f.Query+"%")
+		n++
+	}
+
+	// Budget (#1128): organizer has at least one public price (package from_price
+	// or product base_price) within [min, max]. No priced offers → excluded.
+	if f.MinBudget != nil || f.MaxBudget != nil {
+		priceSub := `
+			SELECT from_price AS price
+			FROM organizer_public_packages pkg
+			WHERE pkg.user_id = u.id AND pkg.from_price IS NOT NULL
+			UNION ALL
+			SELECT p.base_price AS price
+			FROM products p
+			WHERE p.user_id = u.id AND p.is_active = true
+			  AND p.show_on_public_profile = true AND p.base_price > 0`
+		budgetClause := " AND EXISTS (SELECT 1 FROM (" + priceSub + ") priced WHERE 1=1"
+		if f.MinBudget != nil {
+			budgetClause += fmt.Sprintf(" AND priced.price >= $%d", n)
+			args = append(args, *f.MinBudget)
+			n++
+		}
+		if f.MaxBudget != nil {
+			budgetClause += fmt.Sprintf(" AND priced.price <= $%d", n)
+			args = append(args, *f.MaxBudget)
+			n++
+		}
+		budgetClause += ")"
+		where += budgetClause
+	}
+
+	// Service category (#1128): active public product with matching category.
+	if cat := strings.TrimSpace(f.ServiceCategory); cat != "" {
+		where += fmt.Sprintf(` AND EXISTS (
+			SELECT 1 FROM products p
+			WHERE p.user_id = u.id AND p.is_active = true AND p.show_on_public_profile = true
+			  AND p.category ILIKE $%d
+		)`, n)
+		args = append(args, "%"+cat+"%")
+		n++
+	}
+
+	// Availability (#1128): no full-day (or multi-day) block covering available_on.
+	if day := strings.TrimSpace(f.AvailableOn); day != "" {
+		where += fmt.Sprintf(` AND NOT EXISTS (
+			SELECT 1 FROM unavailable_dates ud
+			WHERE ud.user_id = u.id
+			  AND ud.start_date <= $%d::date
+			  AND ud.end_date >= $%d::date
+		)`, n, n)
+		args = append(args, day)
 		n++
 	}
 

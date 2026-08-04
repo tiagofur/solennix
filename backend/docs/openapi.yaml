@@ -6299,6 +6299,35 @@ paths:
             format: double
             default: 50
           description: Bounding-box radius in km (default 50 when lat/lng present).
+        - name: min_budget
+          in: query
+          schema:
+            type: number
+            format: double
+            minimum: 0
+          description: >
+            #1128 — match organizers with at least one public package/product price >= min_budget.
+        - name: max_budget
+          in: query
+          schema:
+            type: number
+            format: double
+            minimum: 0
+          description: >
+            #1128 — match organizers with at least one public package/product price <= max_budget.
+        - name: service_category
+          in: query
+          schema:
+            type: string
+          description: >
+            #1128 — case-insensitive partial match on active public product category.
+        - name: available_on
+          in: query
+          schema:
+            type: string
+            format: date
+          description: >
+            #1128 — YYYY-MM-DD; exclude organizers with unavailable_dates covering that day.
         - name: order
           in: query
           schema:

@@ -135,6 +135,37 @@ func TestSearchOrganizers_GeoIgnoresInvalidNumbers(t *testing.T) {
 	assert.Nil(t, repo.captured.Lng)
 }
 
+func TestSearchOrganizers_MapsAdvancedFilters1128(t *testing.T) {
+	repo := &fakeSearchRepo{}
+	h := newSearchHandler(repo)
+
+	req := httptest.NewRequest(http.MethodGet,
+		"/api/public/organizers?min_budget=1000&max_budget=5000&service_category=catering&available_on=2026-09-15", nil)
+	w := httptest.NewRecorder()
+	h.SearchOrganizers(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	f := repo.captured
+	require.NotNil(t, f.MinBudget)
+	require.NotNil(t, f.MaxBudget)
+	assert.InDelta(t, 1000, *f.MinBudget, 0.01)
+	assert.InDelta(t, 5000, *f.MaxBudget, 0.01)
+	assert.Equal(t, "catering", f.ServiceCategory)
+	assert.Equal(t, "2026-09-15", f.AvailableOn)
+}
+
+func TestSearchOrganizers_IgnoresMalformedAvailableOn(t *testing.T) {
+	repo := &fakeSearchRepo{}
+	h := newSearchHandler(repo)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/public/organizers?available_on=not-a-date", nil)
+	w := httptest.NewRecorder()
+	h.SearchOrganizers(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "", repo.captured.AvailableOn)
+}
+
 func TestSearchOrganizers_RepoError_Returns500(t *testing.T) {
 	repo := &fakeSearchRepo{err: errors.New("db down")}
 	h := newSearchHandler(repo)

@@ -174,6 +174,20 @@ func (h *PublicProfileHandler) SearchOrganizers(w http.ResponseWriter, r *http.R
 			}
 		}
 	}
+	// Advanced filters (#1128): budget, service category, availability date.
+	if minB, ok := parseOptionalFloatQuery(r, "min_budget"); ok && minB >= 0 {
+		filters.MinBudget = &minB
+	}
+	if maxB, ok := parseOptionalFloatQuery(r, "max_budget"); ok && maxB >= 0 {
+		filters.MaxBudget = &maxB
+	}
+	filters.ServiceCategory = strings.TrimSpace(r.URL.Query().Get("service_category"))
+	if day := strings.TrimSpace(r.URL.Query().Get("available_on")); day != "" {
+		// Accept only YYYY-MM-DD; ignore malformed dates (no 400).
+		if len(day) == 10 && day[4] == '-' && day[7] == '-' {
+			filters.AvailableOn = day
+		}
+	}
 	items, total, err := h.searchRepo.SearchPublicProfiles(r.Context(), filters)
 	if err != nil {
 		slog.Error("public directory search failed", "error", err, "filters", filters)
