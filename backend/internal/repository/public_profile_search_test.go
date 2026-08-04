@@ -434,3 +434,92 @@ func TestSearchPublicProfiles_GeoCombinedWithCityFilter(t *testing.T) {
 		t.Fatalf("geo+city item = %s, want cdmx", items[0].Slug)
 	}
 }
+
+func TestSearchPublicProfiles_BudgetFilter(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+	ctx := context.Background()
+
+	cheap := seedPublicableOrganizer(t, pool, "cheap@test.dev", "pro", "CDMX", "MX")
+	// seed creates product base_price=100; bump to 500
+	if _, err := pool.Exec(ctx, `UPDATE products SET base_price = 500 WHERE user_id = $1`, cheap); err != nil {
+		t.Fatalf("update cheap price: %v", err)
+	}
+	pricey := seedPublicableOrganizer(t, pool, "pricey@test.dev", "pro", "CDMX", "MX")
+	if _, err := pool.Exec(ctx, `UPDATE products SET base_price = 8000 WHERE user_id = $1`, pricey); err != nil {
+		t.Fatalf("update pricey price: %v", err)
+	}
+
+	repo := NewPublicProfileRepo(pool)
+	items, total, err := repo.SearchPublicProfiles(ctx, SearchPublicProfilesFilters{
+		MaxBudget: floatPtr(1000), Limit: 20,
+	})
+	if err != nil {
+		t.Fatalf("Search error = %v", err)
+	}
+	if total != 1 || len(items) != 1 || items[0].Slug != "slug-cheap@test.dev" {
+		t.Fatalf("max_budget=1000 → total=%d items=%v, want only cheap", total, items)
+	}
+
+	items, total, err = repo.SearchPublicProfiles(ctx, SearchPublicProfilesFilters{
+		MinBudget: floatPtr(5000), Limit: 20,
+	})
+	if err != nil {
+		t.Fatalf("Search error = %v", err)
+	}
+	if total != 1 || items[0].Slug != "slug-pricey@test.dev" {
+		t.Fatalf("min_budget=5000 → total=%d first=%v, want pricey", total, items)
+	}
+}
+
+func TestSearchPublicProfiles_ServiceCategoryFilter(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+	ctx := context.Background()
+
+	cat := seedPublicableOrganizer(t, pool, "cat@test.dev", "pro", "CDMX", "MX")
+	if _, err := pool.Exec(ctx, `UPDATE products SET category = 'Catering premium' WHERE user_id = $1`, cat); err != nil {
+		t.Fatalf("update category: %v", err)
+	}
+	seedPublicableOrganizer(t, pool, "other@test.dev", "pro", "CDMX", "MX") // default category "categoria"
+
+	repo := NewPublicProfileRepo(pool)
+	items, total, err := repo.SearchPublicProfiles(ctx, SearchPublicProfilesFilters{
+		ServiceCategory: "catering", Limit: 20,
+	})
+	if err != nil {
+		t.Fatalf("Search error = %v", err)
+	}
+	if total != 1 || items[0].Slug != "slug-cat@test.dev" {
+		t.Fatalf("service_category catering → total=%d items=%v", total, items)
+	}
+}
+
+func TestSearchPublicProfiles_AvailableOnExcludesBlocked(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+	ctx := context.Background()
+
+	free := seedPublicableOrganizer(t, pool, "free@test.dev", "pro", "CDMX", "MX")
+	blocked := seedPublicableOrganizer(t, pool, "blocked@test.dev", "pro", "CDMX", "MX")
+	if _, err := pool.Exec(ctx, `
+		INSERT INTO unavailable_dates (user_id, start_date, end_date, reason)
+		VALUES ($1, '2026-09-15', '2026-09-15', 'personal')`, blocked); err != nil {
+		t.Fatalf("insert unavailable: %v", err)
+	}
+	_ = free
+
+	repo := NewPublicProfileRepo(pool)
+	items, total, err := repo.SearchPublicProfiles(ctx, SearchPublicProfilesFilters{
+		AvailableOn: "2026-09-15", Limit: 20,
+	})
+	if err != nil {
+		t.Fatalf("Search error = %v", err)
+	}
+	if total != 1 || items[0].Slug != "slug-free@test.dev" {
+		t.Fatalf("available_on → total=%d items=%v, want only free", total, items)
+	}
+}

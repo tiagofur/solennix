@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -140,6 +141,7 @@ func (h *PublicProfileHandler) GetPublicProfile(w http.ResponseWriter, r *http.R
 // SearchOrganizers handles GET /api/public/organizers (directory listing, #1116).
 // Public, unauthenticated. Returns a paginated slice of PublicOrganizerCard with
 // plan-aware ranking. Publicability + filters are enforced in the repo query.
+// Geo params lat/lng/radius_km (#1127) are parsed here and forwarded to the repo.
 func (h *PublicProfileHandler) SearchOrganizers(w http.ResponseWriter, r *http.Request) {
 	if h.searchRepo == nil {
 		writeError(w, http.StatusNotImplemented, "search not configured")
@@ -160,6 +162,32 @@ func (h *PublicProfileHandler) SearchOrganizers(w http.ResponseWriter, r *http.R
 		Limit:     params.Limit,
 		Offset:    (params.Page - 1) * params.Limit,
 	}
+	// Geo: both lat and lng required; radius_km optional (repo default 50).
+	// Invalid numbers are ignored (no 400) so partial/malformed query strings
+	// still return text-filtered results instead of hard-failing the page.
+	if lat, ok := parseOptionalFloatQuery(r, "lat"); ok {
+		if lng, okLng := parseOptionalFloatQuery(r, "lng"); okLng {
+			filters.Lat = &lat
+			filters.Lng = &lng
+			if radius, okR := parseOptionalFloatQuery(r, "radius_km"); okR && radius > 0 {
+				filters.RadiusKm = &radius
+			}
+		}
+	}
+	// Advanced filters (#1128): budget, service category, availability date.
+	if minB, ok := parseOptionalFloatQuery(r, "min_budget"); ok && minB >= 0 {
+		filters.MinBudget = &minB
+	}
+	if maxB, ok := parseOptionalFloatQuery(r, "max_budget"); ok && maxB >= 0 {
+		filters.MaxBudget = &maxB
+	}
+	filters.ServiceCategory = strings.TrimSpace(r.URL.Query().Get("service_category"))
+	if day := strings.TrimSpace(r.URL.Query().Get("available_on")); day != "" {
+		// Accept only YYYY-MM-DD; ignore malformed dates (no 400).
+		if len(day) == 10 && day[4] == '-' && day[7] == '-' {
+			filters.AvailableOn = day
+		}
+	}
 	items, total, err := h.searchRepo.SearchPublicProfiles(r.Context(), filters)
 	if err != nil {
 		slog.Error("public directory search failed", "error", err, "filters", filters)
@@ -167,6 +195,19 @@ func (h *PublicProfileHandler) SearchOrganizers(w http.ResponseWriter, r *http.R
 		return
 	}
 	writePaginatedJSON(w, http.StatusOK, items, total, params)
+}
+
+// parseOptionalFloatQuery reads a float64 query param. ok=false when missing or invalid.
+func parseOptionalFloatQuery(r *http.Request, key string) (float64, bool) {
+	raw := strings.TrimSpace(r.URL.Query().Get(key))
+	if raw == "" {
+		return 0, false
+	}
+	v, err := strconv.ParseFloat(raw, 64)
+	if err != nil {
+		return 0, false
+	}
+	return v, true
 }
 
 // buildProjection assembles the plan-aware PublicOrganizerProfile.

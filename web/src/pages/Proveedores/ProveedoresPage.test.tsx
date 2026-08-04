@@ -55,6 +55,19 @@ describe("ProveedoresPage", () => {
     expect(screen.getByPlaceholderText(/ciudad/i)).toBeInTheDocument();
   });
 
+  it("renders advanced filters (#1128 budget, service, date)", () => {
+    server.use(
+      http.get(`${API_BASE}/public/organizers`, () =>
+        HttpResponse.json(makeResponse([], 0)),
+      ),
+    );
+    renderPage();
+    expect(screen.getByTestId("advanced-filters")).toBeInTheDocument();
+    expect(screen.getByTestId("budget-select")).toBeInTheDocument();
+    expect(screen.getByTestId("service-category-select")).toBeInTheDocument();
+    expect(screen.getByTestId("available-on-input")).toBeInTheDocument();
+  });
+
   it("renders results grid on successful search", async () => {
     server.use(
       http.get(`${API_BASE}/public/organizers`, () =>
@@ -147,5 +160,15 @@ describe("ProveedoresPage", () => {
     );
     renderPage();
     expect(screen.getByRole("status", { busy: true })).toBeInTheDocument();
+  });
+
+  it("renders Near me geo button", () => {
+    server.use(
+      http.get(`${API_BASE}/public/organizers`, () =>
+        HttpResponse.json(makeResponse([], 0)),
+      ),
+    );
+    renderPage();
+    expect(screen.getByTestId("geo-near-me-btn")).toBeInTheDocument();
   });
 });

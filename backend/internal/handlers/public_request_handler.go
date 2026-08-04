@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -44,6 +45,7 @@ type publicRequestService interface {
 // directly by the handler for listing (the service owns state transitions).
 type publicRequestInboxStore interface {
 	ListByOrganizer(ctx context.Context, organizerUserID uuid.UUID, f repository.PublicRequestListFilters) ([]models.PublicRequest, int, error)
+	GetByID(ctx context.Context, id, organizerUserID uuid.UUID) (*models.PublicRequest, error)
 	ListResponsesByRequest(ctx context.Context, requestID, organizerUserID uuid.UUID) ([]models.PublicResponse, error)
 	CountUnreadByOrganizer(ctx context.Context, organizerUserID uuid.UUID) (int, error)
 }
@@ -66,6 +68,32 @@ type CreatePublicRequestRequest struct {
 	Currency     string   `json:"currency,omitempty"`
 	ServiceIDs   []string `json:"service_ids,omitempty"`
 	Message      *string  `json:"message,omitempty"`
+	// Website is a honeypot anti-spam field. Real browsers leave it empty;
+	// bots that autofill hidden fields get a fake 201 without persisting.
+	Website string `json:"website,omitempty"`
+}
+
+// createPublicRequestResponse is the create-only DTO. client_token is returned
+// exactly once so the visitor can act later via X-Request-Token; it is never
+// serialized on organizer list/detail responses (model field is json:"-").
+type createPublicRequestResponse struct {
+	ID               string                               `json:"id"`
+	ClientToken      string                               `json:"client_token"`
+	ContactEmail     string                               `json:"contact_email"`
+	ContactName      *string                              `json:"contact_name,omitempty"`
+	EventType        *string                              `json:"event_type,omitempty"`
+	EventDate        *string                              `json:"event_date,omitempty"`
+	Location         *string                              `json:"location,omitempty"`
+	GuestCount       *int                                 `json:"guest_count,omitempty"`
+	Budget           *float64                             `json:"budget,omitempty"`
+	Currency         string                               `json:"currency"`
+	Services         []models.PublicRequestServiceSnapshot `json:"services"`
+	Message          *string                              `json:"message,omitempty"`
+	Status           models.RequestStatus                 `json:"status"`
+	IsRead           bool                                 `json:"is_read"`
+	LastStatusChange time.Time                            `json:"last_status_change"`
+	CreatedAt        time.Time                            `json:"created_at"`
+	UpdatedAt        time.Time                            `json:"updated_at"`
 }
 
 // CreatePublicRequest handles POST /api/public/organizers/{slug}/requests
@@ -78,6 +106,22 @@ func (h *PublicRequestHandler) CreatePublicRequest(w http.ResponseWriter, r *htt
 
 	var req CreatePublicRequestRequest
 	if err := decodeJSON(w, r, &req); err != nil {
+		return
+	}
+
+	// Honeypot: filled field ⇒ silent success (no DB write, no signal to bots).
+	if strings.TrimSpace(req.Website) != "" {
+		writeJSON(w, http.StatusCreated, map[string]any{
+			"data": map[string]any{
+				"id":            uuid.New().String(),
+				"client_token":  uuid.New().String(),
+				"contact_email": strings.TrimSpace(req.ContactEmail),
+				"status":        models.RequestStatusPending,
+				"services":      []any{},
+				"currency":      "MXN",
+				"is_read":       false,
+			},
+		})
 		return
 	}
 
@@ -115,7 +159,33 @@ func (h *PublicRequestHandler) CreatePublicRequest(w http.ResponseWriter, r *htt
 		writePublicRequestError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusCreated, map[string]any{"data": created})
+	writeJSON(w, http.StatusCreated, map[string]any{"data": toCreatePublicRequestResponse(created)})
+}
+
+func toCreatePublicRequestResponse(created *models.PublicRequest) createPublicRequestResponse {
+	services := created.Services
+	if services == nil {
+		services = []models.PublicRequestServiceSnapshot{}
+	}
+	return createPublicRequestResponse{
+		ID:               created.ID.String(),
+		ClientToken:      created.ClientToken.String(),
+		ContactEmail:     created.ContactEmail,
+		ContactName:      created.ContactName,
+		EventType:        created.EventType,
+		EventDate:        created.EventDate,
+		Location:         created.Location,
+		GuestCount:       created.GuestCount,
+		Budget:           created.Budget,
+		Currency:         created.Currency,
+		Services:         services,
+		Message:          created.Message,
+		Status:           created.Status,
+		IsRead:           created.IsRead,
+		LastStatusChange: created.LastStatusChange,
+		CreatedAt:        created.CreatedAt,
+		UpdatedAt:        created.UpdatedAt,
+	}
 }
 
 // --- Organizer inbox (auth) ---
@@ -158,12 +228,22 @@ func (h *PublicRequestHandler) CountUnread(w http.ResponseWriter, r *http.Reques
 	writeJSON(w, http.StatusOK, map[string]any{"data": map[string]int{"count": n}})
 }
 
-// GetRequest handles GET /api/organizers/me/requests/{id} (with responses history).
+// GetRequest handles GET /api/organizers/me/requests/{id} (request row + responses).
 func (h *PublicRequestHandler) GetRequest(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	id, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "Invalid request id")
+		return
+	}
+	req, err := h.requestRepo.GetByID(r.Context(), id, userID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "Request not found")
+			return
+		}
+		slog.Error("public_request: get request failed", "error", err, "id", id)
+		writeError(w, http.StatusInternalServerError, "Failed to load request")
 		return
 	}
 	responses, err := h.requestRepo.ListResponsesByRequest(r.Context(), id, userID)
@@ -172,7 +252,15 @@ func (h *PublicRequestHandler) GetRequest(w http.ResponseWriter, r *http.Request
 		writeError(w, http.StatusInternalServerError, "Failed to load responses")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": map[string]any{"responses": responses}})
+	if responses == nil {
+		responses = []models.PublicResponse{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"data": map[string]any{
+			"request":   req,
+			"responses": responses,
+		},
+	})
 }
 
 // MarkRead handles POST /api/organizers/me/requests/{id}/read

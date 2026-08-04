@@ -480,6 +480,8 @@
     "submitting_quote": "Submitting...",
     "quote_success_title": "Inquiry sent!",
     "quote_success_desc": "Your message was sent directly to {{name}}. They will get in touch with you shortly.",
+    "quote_success_status_link": "Save this link to track your request",
+    "quote_success_status_hint": "Open it later to accept or decline the quote.",
     "close_modal": "Close",
     "actions": {
       "save_contact": "Save contact",
@@ -538,7 +540,46 @@
       },
       "q_label": "Search",
       "q_placeholder": "Name, service, keyword...",
-      "submit": "Search"
+      "submit": "Search",
+      "sort_label": "Sort by",
+      "sort_relevance": "Most relevant",
+      "sort_rating": "Top rated",
+      "sort_recent": "Most recent"
+    },
+    "geo": {
+      "near_me": "Near me",
+      "active": "Near me",
+      "sort_distance": "Closest",
+      "radius_label": "Search radius",
+      "radius_km": "{{km}} km",
+      "error_unsupported": "Your browser does not support location services.",
+      "error_denied": "Location permission was denied. Enable it to search nearby.",
+      "error_generic": "We couldn't get your location. Try again."
+    },
+    "filters": {
+      "budget_label": "Budget",
+      "budget_any": "Any budget",
+      "budget_under_1k": "Up to $1,000",
+      "budget_1k_5k": "$1,000 – $5,000",
+      "budget_over_5k": "Over $5,000",
+      "service_label": "Service",
+      "service_any": "Any service",
+      "service_options": {
+        "catering": "Catering",
+        "comida": "Food",
+        "decoracion": "Decor",
+        "musica": "Music",
+        "dj": "DJ",
+        "fotografia": "Photography",
+        "video": "Video",
+        "flores": "Flowers",
+        "mobiliario": "Furniture",
+        "meseros": "Waitstaff",
+        "animacion": "Entertainment",
+        "pasteleria": "Pastry"
+      },
+      "available_on_label": "Available on",
+      "chip_date": "Available {{date}}"
     },
     "card": {
       "featured_badge": "Featured",
@@ -553,5 +594,30 @@
     },
     "error_title": "We couldn't load the directory",
     "loading": "Loading providers..."
+  },
+  "request_status": {
+    "title": "Your quote request",
+    "loading": "Loading request…",
+    "missing_token": "We need your access link to view this request. Open the link you received when you submitted it.",
+    "not_found": "Request not found or the link is no longer valid.",
+    "error_generic": "Something went wrong. Please try again.",
+    "status_label": "Status",
+    "status": {
+      "pending": "Pending",
+      "info_requested": "More info requested",
+      "responded": "Quote received",
+      "accepted_by_client": "Accepted",
+      "declined_provider": "Declined by provider",
+      "declined_client": "Declined by you",
+      "booked": "Booked",
+      "expired": "Expired"
+    },
+    "accept": "Accept quote",
+    "decline": "Decline",
+    "acting": "Sending…",
+    "action_success_accept": "You accepted the quote. The provider will contact you.",
+    "action_success_decline": "You declined the quote.",
+    "action_error": "We couldn't apply that action. Try again.",
+    "no_actions": "No further action is needed from you right now."
   }
 }

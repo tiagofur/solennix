@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import { render, screen, fireEvent, waitFor } from "@tests/customRender";
 import { http, HttpResponse } from "msw";
 import { server } from "../../../tests/mocks/server";
@@ -19,14 +20,16 @@ const services = [
 
 function renderModal(overrides: Record<string, unknown> = {}) {
   return render(
-    <PublicLeadModal
-      isOpen
-      onClose={vi.fn()}
-      slug="alice"
-      businessName="Alice Catering"
-      services={services}
-      {...overrides}
-    />,
+    <MemoryRouter>
+      <PublicLeadModal
+        isOpen
+        onClose={vi.fn()}
+        slug="alice"
+        businessName="Alice Catering"
+        services={services}
+        {...overrides}
+      />
+    </MemoryRouter>,
   );
 }
 
@@ -42,7 +45,11 @@ describe("PublicLeadModal (solicitud estructurada, #1118)", () => {
   });
 
   it("renders null when closed", () => {
-    render(<PublicLeadModal isOpen={false} onClose={vi.fn()} slug="alice" businessName="Alice" />);
+    render(
+      <MemoryRouter>
+        <PublicLeadModal isOpen={false} onClose={vi.fn()} slug="alice" businessName="Alice" />
+      </MemoryRouter>,
+    );
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
@@ -73,7 +80,13 @@ describe("PublicLeadModal (solicitud estructurada, #1118)", () => {
       http.post(`${API_BASE}/public/organizers/alice/requests`, async ({ request }) => {
         capturedBody = (await request.json()) as Record<string, unknown>;
         return HttpResponse.json(
-          { data: { id: "req-1", status: "pending" } },
+          {
+            data: {
+              id: "req-1",
+              status: "pending",
+              client_token: "tok-1",
+            },
+          },
           { status: 201 },
         );
       }),
@@ -95,6 +108,16 @@ describe("PublicLeadModal (solicitud estructurada, #1118)", () => {
     expect(capturedBody.event_type).toBe("wedding");
     expect(capturedBody.service_ids).toEqual(["svc-1"]);
     expect(capturedBody.currency).toBe("MXN");
+    expect(capturedBody.website).toBe("");
+    expect(screen.getByTestId("lead-status-link")).toBeInTheDocument();
+  });
+
+  it("includes honeypot input hidden from users", () => {
+    renderModal();
+    const honeypot = screen.getByTestId("lead-honeypot");
+    expect(honeypot).toBeInTheDocument();
+    expect(honeypot).toHaveAttribute("tabIndex", "-1");
+    expect(honeypot).toHaveAttribute("autocomplete", "off");
   });
 
   it("rejects invalid email with client-side validation", async () => {

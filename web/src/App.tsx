@@ -61,6 +61,16 @@ const ClientPortalPage = React.lazy(() => import("@/pages/ClientPortal/ClientPor
 const PublicReviewPage = React.lazy(() => import("@/pages/PublicReview/PublicReviewPage").then((m) => ({ default: m.PublicReviewPage })));
 const PublicProfilePage = React.lazy(() => import("@/pages/PublicProfile/PublicProfilePage").then((m) => ({ default: m.PublicProfilePage })));
 const ProveedoresPage = React.lazy(() => import("@/pages/Proveedores/ProveedoresPage").then((m) => ({ default: m.ProveedoresPage })));
+const PublicRequestStatusPage = React.lazy(() =>
+  import("@/pages/PublicRequest/PublicRequestStatusPage").then((m) => ({
+    default: m.PublicRequestStatusPage,
+  })),
+);
+const RequestsInboxPage = React.lazy(() =>
+  import("@/pages/Requests/RequestsInboxPage").then((m) => ({
+    default: m.RequestsInboxPage,
+  })),
+);
 
 const EventFormLinksPage = React.lazy(() => import("@/pages/EventForms/EventFormLinksPage").then((m) => ({ default: m.EventFormLinksPage })));
 const PaymentInboxPage = React.lazy(() => import("@/pages/Payments/PaymentInboxPage").then((m) => ({ default: m.PaymentInboxPage })));
@@ -114,6 +124,7 @@ function App() {
               {/* v2.0 public directory (#1117) — inbound tooling, NG1 ratified */}
               <Route path="/proveedores" element={<ProveedoresPage />} />
               <Route path="/u/:slug" element={<PublicProfilePage />} />
+              <Route path="/solicitud/:id" element={<PublicRequestStatusPage />} />
 
               <Route
                 element={
@@ -157,6 +168,7 @@ function App() {
 
                 <Route path="/event-forms" element={<EventFormLinksPage />} />
                 <Route path="/payments/inbox" element={<PaymentInboxPage />} />
+                <Route path="/requests" element={<RequestsInboxPage />} />
                 <Route path="/reviews" element={<ReviewsPage />} />
                 <Route path="/settings" element={<Settings />} />
 

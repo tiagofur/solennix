@@ -1,0 +1,72 @@
+{
+  "title": "Solicitudes de cotización",
+  "subtitle": "Pedidos entrantes desde tu perfil público",
+  "unread_badge": "{{count}} sin leer",
+  "filter_all": "Todas",
+  "filter_status": "Estado",
+  "empty": "Aún no hay solicitudes",
+  "empty_hint": "Cuando un visitante envíe una solicitud desde tu página pública, aparece acá.",
+  "loading": "Cargando solicitudes…",
+  "error": "No pudimos cargar tu bandeja.",
+  "retry": "Reintentar",
+  "detail_title": "Detalle de la solicitud",
+  "fields": {
+    "contact": "Contacto",
+    "email": "Correo",
+    "event_type": "Tipo de evento",
+    "event_date": "Fecha del evento",
+    "location": "Ubicación",
+    "guests": "Invitados",
+    "budget": "Presupuesto",
+    "message": "Mensaje",
+    "services": "Servicios",
+    "status": "Estado",
+    "created": "Recibida"
+  },
+  "status": {
+    "pending": "Pendiente",
+    "info_requested": "Info pedida",
+    "responded": "Respondida",
+    "accepted_by_client": "Aceptada por el cliente",
+    "declined_provider": "Rechazada por vos",
+    "declined_client": "Rechazada por el cliente",
+    "booked": "Reservada",
+    "expired": "Expirada"
+  },
+  "actions": {
+    "mark_read": "Marcar como leída",
+    "marking_read": "Marcando…",
+    "decline": "Rechazar",
+    "declining": "Rechazando…",
+    "respond": "Enviar cotización",
+    "responding": "Enviando…",
+    "request_info": "Pedir más info",
+    "requesting_info": "Enviando…",
+    "convert": "Convertir a evento",
+    "converting": "Convirtiendo…",
+    "close": "Cerrar"
+  },
+  "respond_form": {
+    "title": "Enviar cotización",
+    "amount": "Monto *",
+    "currency": "Moneda",
+    "message": "Mensaje",
+    "inclusions": "Incluye (separado por comas)",
+    "inclusions_placeholder": "ej. Montaje, limpieza, 4h de servicio",
+    "submit": "Enviar cotización"
+  },
+  "decline_form": {
+    "title": "Rechazar solicitud",
+    "reason": "Motivo (opcional)",
+    "reason_placeholder": "Breve motivo para el cliente…",
+    "submit": "Rechazar"
+  },
+  "toast": {
+    "marked_read": "Marcada como leída",
+    "declined": "Solicitud rechazada",
+    "responded": "Cotización enviada",
+    "info_requested": "Se pidió más información",
+    "converted": "Evento creado",
+    "error": "La acción falló. Probá de nuevo."
+  }
+}
