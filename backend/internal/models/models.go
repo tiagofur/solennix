@@ -370,24 +370,6 @@ type LiveActivityToken struct {
 	ExpiresAt *time.Time `json:"expires_at,omitempty"`
 }
 
-// EventFormLink represents a shareable, single-use link that a prospective client
-// opens in a browser to fill out event details and select products (without prices).
-// On submission it creates a draft Event + Client for the organizer.
-type EventFormLink struct {
-	ID                uuid.UUID  `json:"id"`
-	UserID            uuid.UUID  `json:"user_id"`
-	Token             string     `json:"token"`
-	Label             *string    `json:"label,omitempty"`
-	Status            string     `json:"status"` // "active" | "used" | "expired"
-	SubmittedEventID  *uuid.UUID `json:"submitted_event_id,omitempty"`
-	SubmittedClientID *uuid.UUID `json:"submitted_client_id,omitempty"`
-	ExpiresAt         time.Time  `json:"expires_at"`
-	UsedAt            *time.Time `json:"used_at,omitempty"`
-	CreatedAt         time.Time  `json:"created_at"`
-	UpdatedAt         time.Time  `json:"updated_at"`
-	URL               string     `json:"url,omitempty"` // Computed, not stored
-}
-
 // Staff represents a collaborator (photographer, DJ, waiter, coordinator, etc.)
 // that the organizer keeps in their contact list and assigns to events.
 // Ownership is per user (multi-tenant). Phase 1 is pure CRM; Phase 2 adds
@@ -499,9 +481,8 @@ type StaffTeamMember struct {
 
 // EventPublicLink is a shareable, revocable token that opens a read-only
 // portal (PRD/12 feature A) for the end client of an event — the person who
-// hired the organizer. Unlike EventFormLink (which captures a lead), this
-// link is generated AFTER the event exists so the client can watch timeline,
-// payment status, etc.
+// hired the organizer. Generated AFTER the event exists so the client can watch
+// timeline, payment status, etc.
 //
 // One event may have many rows here (history of rotated tokens). Only one
 // row with status='active' exists at a time — enforced by a partial unique
@@ -818,26 +799,6 @@ type PublicOrganizerCard struct {
 	ResponseTime      *string  `json:"response_time,omitempty"`
 }
 
-// PublicLead is an inquiry submitted by an unauthenticated visitor to an
-// organizer's public profile. Stored for the organizer to follow up.
-//
-// Soft-deprecated in v2.0 (#1115): new structured requests live in PublicRequest.
-// Web form uses /requests (#1118). /leads remains for backward compatibility with
-// Deprecation/Sunset headers until removed (target 2027-08).
-type PublicLead struct {
-	ID              uuid.UUID `json:"id"`
-	OrganizerUserID uuid.UUID `json:"-"`
-	Name            string    `json:"name"`
-	Contact         string    `json:"contact"`
-	EventDate       *string   `json:"event_date,omitempty"`
-	EventType       *string   `json:"event_type,omitempty"`
-	NumGuests       *int      `json:"num_guests,omitempty"`
-	Message         *string   `json:"message,omitempty"`
-	Source          string    `json:"source"`
-	IsRead          bool      `json:"is_read"`
-	CreatedAt       time.Time `json:"created_at"`
-}
-
 // RequestStatus is the lifecycle state of a PublicRequest.
 //
 // Transitions (validated in PublicRequestService, enforced by DB CHECK):
@@ -899,7 +860,7 @@ const (
 )
 
 // PublicRequestLink is a provider-generated shareable URL for quote requests.
-// Replaces EventFormLink as the canonical link primitive (EFL kept until PR2).
+// Canonical shareable link primitive for Solicitudes (replaces former EventFormLink).
 type PublicRequestLink struct {
 	ID              uuid.UUID               `json:"id"`
 	OrganizerUserID uuid.UUID               `json:"organizer_user_id"`

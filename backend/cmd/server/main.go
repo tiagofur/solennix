@@ -106,12 +106,10 @@ func main() {
 	revokedTokenRepo := repository.NewRevokedTokenRepo(pool)
 	refreshTokenRepo := repository.NewRefreshTokenRepo(pool)
 	liveActivityRepo := repository.NewLiveActivityTokenRepo(pool)
-	eventFormLinkRepo := repository.NewEventFormLinkRepo(pool)
 	eventPublicLinkRepo := repository.NewEventPublicLinkRepo(pool)
 	paymentSubmissionRepo := repository.NewPaymentSubmissionRepo(pool)
 	reviewRepo := repository.NewEventReviewRepo(pool)
 	publicProfileRepo := repository.NewPublicProfileRepo(pool)
-	publicLeadRepo := repository.NewPublicLeadRepo(pool)
 	publicRequestRepo := repository.NewPublicRequestRepo(pool)
 	publicRequestLinkRepo := repository.NewPublicRequestLinkRepo(pool)
 	staffRepo := repository.NewStaffRepo(pool)
@@ -185,12 +183,10 @@ func main() {
 	unavailHandler := handlers.NewUnavailableDateHandler(unavailRepo)
 	deviceHandler := handlers.NewDeviceHandler(deviceRepo)
 	liveActivityHandler := handlers.NewLiveActivityHandler(liveActivityRepo)
-	eventFormHandler := handlers.NewEventFormHandler(eventFormLinkRepo, productRepo, userRepo, cfg.FrontendURL, pool)
 	eventPublicLinkHandler := handlers.NewEventPublicLinkHandler(eventPublicLinkRepo, eventRepo, clientRepo, userRepo, paymentRepo, cfg.FrontendURL)
 	paymentSubmissionHandler := handlers.NewPaymentSubmissionHandler(paymentSubmissionRepo, paymentRepo, userRepo, pool, cfg.UploadDir, cfg.DefaultTimezone)
 	reviewHandler := handlers.NewEventReviewHandler(reviewRepo, userRepo, publicProfileRepo, emailService, cfg.FrontendURL)
 	publicProfileHandler := handlers.NewPublicProfileHandler(userRepo, publicProfileRepo, productRepo, reviewRepo, eventRepo, cfg.FrontendURL)
-	publicLeadHandler := handlers.NewPublicLeadHandler(publicLeadRepo, userRepo, publicProfileRepo)
 	publicRequestService := services.NewPublicRequestService(publicRequestRepo, publicProfileRepo, productRepo, userRepo, pool, 0)
 	publicRequestService.SetNotifier(notificationService) // #1124 push on new PublicRequest
 	publicRequestService.SetLinkRepo(publicRequestLinkRepo)
@@ -211,7 +207,7 @@ func main() {
 	pdfHandler := handlers.NewPDFHandler(eventRepo, clientRepo, paymentRepo, userRepo, cfg.UploadDir)
 
 	// Create router
-	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, dashboardHandler, auditHandler, unavailHandler, deviceHandler, liveActivityHandler, eventFormHandler, eventPublicLinkHandler, paymentSubmissionHandler, reviewHandler, publicProfileHandler, publicProfileConfigHandler, publicProfilePortfolioHandler, publicProfilePackagesHandler, publicProfileServicesHandler, staffHandler, staffTeamHandler, publicLeadHandler, publicRequestHandler, requestLinkHandler, seoHandler, pdfHandler, authService, userRepo, auditRepo, pool, cfg.CORSAllowedOrigins, cfg.UploadDir, cfg.Environment, cfg.TrustProxy)
+	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, dashboardHandler, auditHandler, unavailHandler, deviceHandler, liveActivityHandler, eventPublicLinkHandler, paymentSubmissionHandler, reviewHandler, publicProfileHandler, publicProfileConfigHandler, publicProfilePortfolioHandler, publicProfilePackagesHandler, publicProfileServicesHandler, staffHandler, staffTeamHandler, publicRequestHandler, requestLinkHandler, seoHandler, pdfHandler, authService, userRepo, auditRepo, pool, cfg.CORSAllowedOrigins, cfg.UploadDir, cfg.Environment, cfg.TrustProxy)
 
 	// Background job: expire gifted plans that have passed their expiry date.
 	// Runs once at startup then every hour.
@@ -312,16 +308,9 @@ func main() {
 		go sendMarketing()
 	}()
 
-	// Background job: expire stale event form links (legacy until PR2 cutover).
+	// Background job: expire stale public request links.
 	go func() {
 		runExpiry := func() {
-			count, err := eventFormLinkRepo.ExpireStale(context.Background())
-			if err != nil {
-				slog.Error("Failed to expire stale event form links", "error", err)
-			} else if count > 0 {
-				slog.Info("Expired stale event form links", "count", count)
-			}
-			// Also expire unified public request links.
 			linkCount, linkErr := publicRequestService.ExpireStaleLinks(context.Background())
 			if linkErr != nil {
 				slog.Error("Failed to expire stale public request links", "error", linkErr)

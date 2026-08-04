@@ -572,7 +572,7 @@ func (s *PublicRequestService) ClientAction(ctx context.Context, requestID uuid.
 }
 
 // ConvertToEvent creates a Client + Event(status=quoted) from the request,
-// reusing the EventFormLink transactional helpers. Idempotent: if the request
+// reusing the convert transactional helpers. Idempotent: if the request
 // already has an event_id, returns ErrAlreadyConverted.
 //
 // Field mapping (design D8): phone, guest_count→num_people, city, snapshot qty,

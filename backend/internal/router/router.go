@@ -18,7 +18,7 @@ import (
 func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, subHandler *handlers.SubscriptionHandler,
 	searchHandler *handlers.SearchHandler, eventPaymentHandler *handlers.EventPaymentHandler, uploadHandler *handlers.UploadHandler,
 	adminHandler *handlers.AdminHandler, dashboardHandler *handlers.DashboardHandler, auditHandler *handlers.AuditHandler, unavailHandler *handlers.UnavailableDateHandler, deviceHandler *handlers.DeviceHandler,
-	liveActivityHandler *handlers.LiveActivityHandler, eventFormHandler *handlers.EventFormHandler,
+	liveActivityHandler *handlers.LiveActivityHandler,
 	eventPublicLinkHandler *handlers.EventPublicLinkHandler,
 	paymentSubmissionHandler *handlers.PaymentSubmissionHandler,
 	reviewHandler *handlers.EventReviewHandler,
@@ -29,7 +29,6 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	publicProfileServicesHandler *handlers.PublicProfileServicesHandler,
 	staffHandler *handlers.StaffHandler,
 	staffTeamHandler *handlers.StaffTeamHandler,
-	publicLeadHandler *handlers.PublicLeadHandler,
 	publicRequestHandler *handlers.PublicRequestHandler,
 	requestLinkHandler *handlers.RequestLinkHandler,
 	seoHandler *handlers.SEOHandler,
@@ -185,14 +184,6 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		legacyFileServer.ServeHTTP(w, r)
 	})
 
-	// Public event form routes (no auth — validated by token)
-	// Kept until PR2 cutover; new path is /public/request-links.
-	apiRouter.Route("/public/event-forms", func(r chi.Router) {
-		r.Use(mw.RateLimit(10, 1*time.Minute))
-		r.Get("/{token}", eventFormHandler.GetFormData)
-		r.Post("/{token}", eventFormHandler.SubmitForm)
-	})
-
 	// Public request links (unified Solicitudes shareable forms).
 	if requestLinkHandler != nil {
 		apiRouter.Route("/public/request-links", func(r chi.Router) {
@@ -203,8 +194,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	}
 
 	// Public client-portal route (PRD/12 feature A). Tokens are
-	// cryptographically random; same rate limit as event-forms to keep the
-	// abuse surface narrow.
+	// cryptographically random; tight rate limit to keep the abuse surface narrow.
 	apiRouter.Route("/public/events", func(r chi.Router) {
 		r.Use(mw.RateLimit(10, 1*time.Minute))
 		r.Get("/{token}", eventPublicLinkHandler.GetPortalData)
@@ -229,11 +219,8 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Get("/{slug}/reviews", reviewHandler.ListPublicPortfolioReviews)
 		// Per-profile social preview image (redirects to cover/logo or renders a branded PNG).
 		r.Get("/{slug}/og-image", seoHandler.OGImage)
-		// Tighter rate limit for lead submissions (form spam protection).
-		r.With(mw.RateLimit(5, 1*time.Minute)).Post("/{slug}/leads", publicLeadHandler.SubmitPublicLead)
-		// Structured quote requests (v2.0 inbound tooling, #1115). Same anti-spam
-		// tightness as the legacy leads form; the service also enforces a per-organizer
-		// pending cap.
+		// Structured quote requests (v2.0 inbound tooling, #1115). Rate-limited
+		// for form spam protection; the service also enforces a per-organizer pending cap.
 		r.With(mw.RateLimit(5, 1*time.Minute)).Post("/{slug}/requests", publicRequestHandler.CreatePublicRequest)
 	})
 
@@ -435,12 +422,6 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Patch("/{id}/visibility", reviewHandler.UpdateReviewVisibility)
 		})
 
-		// Public-profile leads (inquiries) inbox for the organizer.
-		r.Route("/leads", func(r chi.Router) {
-			r.Get("/", publicLeadHandler.ListLeads)
-			r.Post("/{id}/read", publicLeadHandler.MarkLeadRead)
-		})
-
 		// Structured quote-request inbox + actions for the organizer (v2.0, #1115).
 		r.Route("/organizers/me/requests", func(r chi.Router) {
 			r.Get("/", publicRequestHandler.ListRequests)
@@ -453,7 +434,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Post("/{id}/convert-to-event", publicRequestHandler.ConvertToEvent)
 		})
 
-		// Shareable request links (replaces event-forms for new clients).
+		// Shareable request links (Solicitudes).
 		if requestLinkHandler != nil {
 			r.Route("/organizers/me/request-links", func(r chi.Router) {
 				r.Get("/", requestLinkHandler.ListLinks)
@@ -489,13 +470,6 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Route("/live-activities", func(r chi.Router) {
 			r.Post("/register", liveActivityHandler.Register)
 			r.Delete("/by-event/{eventId}", liveActivityHandler.DeleteByEvent)
-		})
-
-		// Event form links (shareable forms for prospective clients)
-		r.Route("/event-forms", func(r chi.Router) {
-			r.Get("/", eventFormHandler.ListLinks)
-			r.Post("/", eventFormHandler.GenerateLink)
-			r.Delete("/{id}", eventFormHandler.DeleteLink)
 		})
 
 		// Search — rate limited to prevent abuse
