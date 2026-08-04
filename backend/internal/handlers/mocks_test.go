@@ -150,8 +150,15 @@ func (m *MockFullUserRepo) UpdateLastActiveAt(ctx context.Context, id uuid.UUID)
 }
 
 func (m *MockFullUserRepo) UpdateLastLoginAt(ctx context.Context, id uuid.UUID) error {
-	args := m.Called(ctx, id)
-	return args.Error(0)
+	// Optional async side-effect of login. Default no-op so tests that don't
+	// assert login bookkeeping don't panic when the goroutine fires after
+	// the handler returns.
+	for _, c := range m.ExpectedCalls {
+		if c.Method == "UpdateLastLoginAt" {
+			return m.Called(ctx, id).Error(0)
+		}
+	}
+	return nil
 }
 
 func (m *MockFullUserRepo) DeleteOwnAccount(ctx context.Context, id uuid.UUID) error {
